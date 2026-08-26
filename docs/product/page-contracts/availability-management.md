@@ -260,7 +260,9 @@ read-only, and mutation-role matrix before release acceptance.
 - Storing medical, accessibility, family, travel, conduct, or other explanatory
   notes in ordinary Workforce availability.
 - Qualifications, demand, claims, assignment to time, overlap or rest policy,
-  publication, attendance, completion, locking, or shift recovery. These belong
-  to the next Shift contract.
+  publication, attendance, completion, locking, or Shift recovery. The first
+  bounded subset is owned by the separate
+  [Shift planning and My shifts](shift-planning-and-my-shifts.md) contract;
+  Availability never absorbs it.
 - Calendar synchronization, recurrence, notification delivery, bulk organizer
   editing, historical exact-period browsing, or production disposal automation.

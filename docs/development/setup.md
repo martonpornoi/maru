@@ -313,11 +313,14 @@ the documented demo password for a real account or deployment.
 
 The current schema now includes an active two-controller Executive Board for
 each synthetic organization, established through the real representation
-services, plus initial workforce departments, positions,
-volunteer opportunities, applications, onboarding agreements, and position
-assignments. Shifts, programme, dealer-table, accommodation, and case records
-remain future modules. Registration is a real vertical with a local/test-only
-payment adapter. See
+services, plus initial workforce departments, positions, volunteer
+opportunities, applications, onboarding agreements, and position assignments.
+It also includes one deliberately shared Availability plan and one governed
+opening-day Shift demand per current demo edition. A future Shift opens for
+suitable claims; an already-ended fixed-date example remains an honest
+organizer-visible draft. Programme, dealer-table, accommodation, and case
+records remain future modules. Registration is a real vertical with a
+local/test-only payment adapter. See
 [`demo-data.md`](../modules/demo-data.md) for the exact boundary.
 
 Those persona accounts and records remain useful for backend permission tests.

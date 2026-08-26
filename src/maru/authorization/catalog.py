@@ -1127,17 +1127,53 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
+        code="workforce.view_shifts",
+        description=(
+            "View edition Shift demand, coverage state, holder labels, and current "
+            "suitability consequences."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        field_ceiling=frozenset(
+            {
+                "shift_demands",
+                "coverage_states",
+                "holder_display_labels",
+                "suitability_consequences",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="workforce.manage_shifts",
+        description=(
+            "Plan edition Shift demand and confirm, remove, lock, cancel, or "
+            "complete retained coverage."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
         code="workforce.view_self",
         description=(
             "View one's own applications, requested documents, positions, and "
-            "availability."
+            "availability or Shift commitments."
         ),
         maximum_scope=ScopeLevel.RESOURCE,
         persistable=False,
         allow_self=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
         field_ceiling=frozenset(
-            {"applications", "document_requests", "assignments", "availability"}
+            {
+                "applications",
+                "document_requests",
+                "assignments",
+                "availability",
+                "shifts",
+            }
         ),
     ),
     Capability(
@@ -1150,6 +1186,16 @@ CAPABILITY_DEFINITIONS = (
         allow_self=True,
         sensitivity_ceiling=Sensitivity.PERSONAL,
         field_ceiling=frozenset({"availability"}),
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="workforce.manage_self_shifts",
+        description="Claim or withdraw one's own suitable edition Shift work.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        field_ceiling=frozenset({"shifts"}),
         obligations=frozenset({"audit"}),
     ),
     Capability(
@@ -1167,7 +1213,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-08-25.1"
+POLICY_VERSION = "2026-08-25.2"
 
 
 def capability(code: str) -> Capability | None:

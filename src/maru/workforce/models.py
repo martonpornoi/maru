@@ -30,6 +30,9 @@ MAX_STRUCTURE_AFFECTED_DEPARTMENTS = 256
 ASSIGNMENT_PROPOSAL_VERSION = 1
 ASSIGNMENT_DECISION_VERSION = 2
 ASSIGNMENT_END_VERSION = 3
+MAX_SHIFT_HEADCOUNT = 1_024
+MAX_SHIFT_BREAK_MINUTES = 24 * 60
+MAX_SHIFT_REST_MINUTES = 48 * 60
 
 _SHA256_VALIDATOR = RegexValidator(
     regex=r"^[0-9a-f]{64}$",
@@ -49,6 +52,23 @@ def _half_open_availability_interval() -> Func:
     return Func(
         F("starts_at"),
         F("ends_at"),
+        Value("[)"),
+        function="TSTZRANGE",
+        output_field=DateTimeRangeField(),
+    )
+
+
+def _half_open_shift_rest_interval() -> Func:
+    """Return the PostgreSQL range covering work and required post-shift rest.
+
+    Returns
+    -------
+    Func
+        Half-open ``tstzrange`` expression over commitment snapshot columns.
+    """
+    return Func(
+        F("starts_at"),
+        F("rest_ends_at"),
         Value("[)"),
         function="TSTZRANGE",
         output_field=DateTimeRangeField(),
@@ -2395,4 +2415,809 @@ class PersonAvailabilityCommandReceipt(UUIDTimeStampedModel):
         raise ValidationError(
             "Availability command receipts are immutable.",
             code="immutable_availability_command_receipt",
+        )
+
+
+class ShiftDemand(UUIDTimeStampedModel):
+    """One edition-owned request for people to cover a timed Position."""
+
+    class Status(models.TextChoices):
+        """Enumerate the organizer-controlled demand lifecycle."""
+
+        DRAFT = "draft", "Draft"
+        OPEN = "open", "Open for claims"
+        LOCKED = "locked", "Coverage locked"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demands",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demands",
+    )
+    position = models.ForeignKey(
+        Position,
+        on_delete=models.PROTECT,
+        related_name="shift_demands",
+    )
+    title = models.CharField(max_length=160)
+    location_label = models.CharField(max_length=160)
+    briefing = models.CharField(max_length=1_000)
+    supervision_note = models.CharField(max_length=500, blank=True)
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+    required_headcount = models.PositiveSmallIntegerField(
+        validators=(MinValueValidator(1), MaxValueValidator(MAX_SHIFT_HEADCOUNT)),
+    )
+    break_minutes = models.PositiveSmallIntegerField(
+        default=0,
+        validators=(MinValueValidator(0), MaxValueValidator(MAX_SHIFT_BREAK_MINUTES)),
+    )
+    minimum_rest_minutes = models.PositiveSmallIntegerField(
+        default=0,
+        validators=(MinValueValidator(0), MaxValueValidator(MAX_SHIFT_REST_MINUTES)),
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status,
+        default=Status.DRAFT,
+    )
+    command_version = models.PositiveBigIntegerField(editable=False)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demands_created",
+    )
+    published_at = models.DateTimeField(null=True, blank=True, editable=False)
+    published_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demands_published",
+    )
+    locked_at = models.DateTimeField(null=True, blank=True, editable=False)
+    locked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demands_locked",
+    )
+    locked_headcount = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    lock_reason = models.CharField(max_length=240, blank=True, editable=False)
+    completed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demands_completed",
+    )
+    completion_reason = models.CharField(max_length=240, blank=True, editable=False)
+    cancelled_at = models.DateTimeField(null=True, blank=True, editable=False)
+    cancelled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demands_cancelled",
+    )
+    cancellation_reason = models.CharField(max_length=240, blank=True, editable=False)
+
+    class Meta:
+        """Constrain exact-edition demand identity, state, and calendar order."""
+
+        ordering = ("edition_id", "starts_at", "title", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(ends_at__gt=F("starts_at")),
+                name="workforce_shift_time_order",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    required_headcount__gte=1,
+                    required_headcount__lte=MAX_SHIFT_HEADCOUNT,
+                ),
+                name="workforce_shift_headcount_bound",
+            ),
+            models.CheckConstraint(
+                condition=Q(break_minutes__lte=MAX_SHIFT_BREAK_MINUTES),
+                name="workforce_shift_break_bound",
+            ),
+            models.CheckConstraint(
+                condition=Q(minimum_rest_minutes__lte=MAX_SHIFT_REST_MINUTES),
+                name="workforce_shift_rest_bound",
+            ),
+            models.CheckConstraint(
+                condition=Q(command_version__gt=0),
+                name="workforce_shift_version_pos",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "status", "starts_at"),
+                name="wrk_shift_demand_state_idx",
+            ),
+            models.Index(
+                fields=("position", "starts_at"),
+                name="wrk_shift_demand_pos_idx",
+            ),
+        ]
+
+    def clean(self) -> None:
+        """Validate exact scope, time, bounds, and current state evidence.
+
+        Raises
+        ------
+        ValidationError
+            If scope, calendar, limits, or lifecycle evidence is inconsistent.
+        """
+        super().clean()
+        if self.position_id and (
+            self.position.organization_id != self.organization_id
+            or self.position.edition_id != self.edition_id
+        ):
+            raise ValidationError("The Shift must match its Position scope.")
+        if self.edition_id and self.edition.organization_id != self.organization_id:
+            raise ValidationError("The Shift must match its edition scope.")
+        if self.ends_at <= self.starts_at:
+            raise ValidationError({"ends_at": "The Shift must end after it starts."})
+        if not self.title.strip() or not self.location_label.strip():
+            raise ValidationError("A Shift requires a title and operational place.")
+        if not self.briefing.strip():
+            raise ValidationError({"briefing": "Explain what the person should do."})
+        if self.break_minutes * 60 >= (self.ends_at - self.starts_at).total_seconds():
+            raise ValidationError(
+                {"break_minutes": "Break time must be shorter than the Shift."}
+            )
+        if self.command_version < 1:
+            raise ValidationError(
+                {"command_version": "Shift version must be positive."}
+            )
+        published = bool(self.published_at and self.published_by_id)
+        locked = bool(
+            self.locked_at
+            and self.locked_by_id
+            and self.locked_headcount is not None
+            and self.lock_reason.strip()
+        )
+        completed = bool(
+            self.completed_at
+            and self.completed_by_id
+            and self.completion_reason.strip()
+        )
+        cancelled = bool(
+            self.cancelled_at
+            and self.cancelled_by_id
+            and self.cancellation_reason.strip()
+        )
+        if self.status == self.Status.DRAFT and any(
+            (published, locked, completed, cancelled)
+        ):
+            raise ValidationError("A draft Shift cannot contain later-state evidence.")
+        if self.status == self.Status.OPEN and (
+            not published or locked or completed or cancelled
+        ):
+            raise ValidationError("An open Shift requires only publication evidence.")
+        if self.status == self.Status.LOCKED and (
+            not published or not locked or completed or cancelled
+        ):
+            raise ValidationError(
+                "A locked Shift requires publication and lock evidence."
+            )
+        if self.status == self.Status.COMPLETED and (
+            not published or not locked or not completed or cancelled
+        ):
+            raise ValidationError("A completed Shift requires complete lock evidence.")
+        if self.status == self.Status.CANCELLED and (not cancelled or completed):
+            raise ValidationError("A cancelled Shift requires cancellation evidence.")
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the governed Shift demand.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's model save operation.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's model save operation.
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse ordinary deletion of retained Shift demand.
+
+        Parameters
+        ----------
+        *args : Any
+            Unused positional deletion arguments accepted for model parity.
+        **kwargs : Any
+            Unused keyword deletion arguments accepted for model parity.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Framework-compatible deletion counts; unreachable because deletion
+            always raises.
+
+        Raises
+        ------
+        ValidationError
+            Always, because Shift demand ends through cancellation or completion.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Shifts are cancelled or completed instead of deleted.",
+            code="protected_shift_demand",
+        )
+
+    def __str__(self) -> str:
+        """Return the human-readable Shift demand label.
+
+        Returns
+        -------
+        str
+            Shift title and edition label.
+        """
+        return f"{self.title} — {self.edition}"
+
+
+class ShiftDemandCommandReceipt(UUIDTimeStampedModel):
+    """Immutable reason and retry evidence for one Shift-demand command."""
+
+    class Action(models.TextChoices):
+        """Enumerate supported demand commands."""
+
+        CREATED = "created", "Shift created"
+        UPDATED = "updated", "Draft updated"
+        OPENED = "opened", "Claims opened"
+        LOCKED = "locked", "Coverage locked"
+        REOPENED = "reopened", "Coverage reopened"
+        COMPLETED = "completed", "Shift completed"
+        CANCELLED = "cancelled", "Shift cancelled"
+
+    demand = models.ForeignKey(
+        ShiftDemand,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demand_receipts",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demand_receipts",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_demand_commands_acted",
+    )
+    action = models.CharField(max_length=16, choices=Action)
+    resulting_version = models.PositiveBigIntegerField()
+    resulting_status = models.CharField(max_length=16, choices=ShiftDemand.Status)
+    reason = models.CharField(max_length=240)
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(max_length=32)
+
+    class Meta:
+        """Keep one exact receipt per version and organizer retry key."""
+
+        ordering = ("demand_id", "resulting_version", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("demand", "resulting_version"),
+                name="workforce_shift_demand_receipt_ver",
+            ),
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"),
+                name="workforce_shift_demand_retry_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(resulting_version__gt=0),
+                name="workforce_shift_demand_receipt_pos",
+            ),
+            models.CheckConstraint(
+                condition=(~Q(reason="") & ~Q(source_channel="")),
+                name="workforce_shift_demand_evidence_set",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "action", "created_at"),
+                name="wrk_shift_demand_action_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Validate exact resulting demand evidence.
+
+        Raises
+        ------
+        ValidationError
+            If scope, version, state, reason, or source disagrees with demand.
+        """
+        super().clean()
+        demand = self.demand if self.demand_id else None
+        if demand is None or (
+            demand.organization_id != self.organization_id
+            or demand.edition_id != self.edition_id
+            or demand.command_version != self.resulting_version
+            or demand.status != self.resulting_status
+        ):
+            raise ValidationError("Shift demand evidence must match its result.")
+        if not self.reason.strip() or not self.source_channel.strip():
+            raise ValidationError("Shift demand evidence requires reason and source.")
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and insert append-only demand evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's model save operation.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's model save operation.
+
+        Raises
+        ------
+        ValidationError
+            If an existing receipt is mutated.
+        """
+        if not self._state.adding:
+            raise ValidationError(
+                "Shift demand receipts are immutable.",
+                code="immutable_shift_demand_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse deletion of append-only demand evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Unused positional deletion arguments accepted for model parity.
+        **kwargs : Any
+            Unused keyword deletion arguments accepted for model parity.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Framework-compatible deletion counts; unreachable because deletion
+            always raises.
+
+        Raises
+        ------
+        ValidationError
+            Always, because command receipts are immutable evidence.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Shift demand receipts are immutable.",
+            code="immutable_shift_demand_receipt",
+        )
+
+
+class ShiftCommitment(UUIDTimeStampedModel):
+    """One person's retained claim and organizer-confirmed Shift commitment."""
+
+    class Status(models.TextChoices):
+        """Enumerate the person and organizer commitment lifecycle."""
+
+        CLAIMED = "claimed", "Claimed"
+        CONFIRMED = "confirmed", "Confirmed"
+        REMOVED = "removed", "Removed"
+        COMPLETED = "completed", "Completed"
+
+    class RemovalKind(models.TextChoices):
+        """Identify who or what ended an active commitment."""
+
+        WITHDRAWN = "withdrawn", "Withdrawn by person"
+        ORGANIZER = "organizer", "Removed by organizer"
+        CANCELLED = "cancelled", "Removed when Shift was cancelled"
+
+    demand = models.ForeignKey(
+        ShiftDemand,
+        on_delete=models.PROTECT,
+        related_name="commitments",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_commitments",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_commitments",
+    )
+    position_assignment = models.ForeignKey(
+        PositionAssignment,
+        on_delete=models.PROTECT,
+        related_name="shift_commitments",
+    )
+    account = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_commitments",
+    )
+    status = models.CharField(max_length=16, choices=Status)
+    starts_at = models.DateTimeField(editable=False)
+    ends_at = models.DateTimeField(editable=False)
+    rest_ends_at = models.DateTimeField(editable=False)
+    availability_plan = models.ForeignKey(
+        PersonAvailabilityPlan,
+        on_delete=models.PROTECT,
+        related_name="shift_commitments",
+    )
+    availability_version = models.PositiveBigIntegerField(editable=False)
+    command_version = models.PositiveBigIntegerField(editable=False)
+    claimed_at = models.DateTimeField(editable=False)
+    confirmed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    confirmed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_commitments_confirmed",
+    )
+    confirmation_reason = models.CharField(max_length=240, blank=True, editable=False)
+    removed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    removed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_commitments_removed",
+    )
+    removal_kind = models.CharField(
+        max_length=16,
+        blank=True,
+        choices=RemovalKind,
+        editable=False,
+    )
+    removal_reason = models.CharField(max_length=240, blank=True, editable=False)
+    completed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_commitments_completed",
+    )
+    completion_reason = models.CharField(max_length=240, blank=True, editable=False)
+
+    class Meta:
+        """Constrain active uniqueness and work-plus-rest overlap globally."""
+
+        ordering = ("edition_id", "starts_at", "account_id", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("demand", "account"),
+                condition=Q(status__in=("claimed", "confirmed")),
+                name="workforce_shift_one_active_claim",
+            ),
+            ExclusionConstraint(
+                name="workforce_shift_no_active_overlap",
+                expressions=(
+                    ("account", RangeOperators.EQUAL),
+                    (_half_open_shift_rest_interval(), RangeOperators.OVERLAPS),
+                ),
+                condition=Q(status__in=("claimed", "confirmed")),
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(ends_at__gt=F("starts_at")) & Q(rest_ends_at__gte=F("ends_at"))
+                ),
+                name="workforce_shift_commitment_time_order",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    command_version__gt=0,
+                    availability_version__gt=0,
+                ),
+                name="workforce_shift_commitment_versions_pos",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "status", "starts_at"),
+                name="wrk_shift_commit_state_idx",
+            ),
+            models.Index(
+                fields=("account", "status", "starts_at"),
+                name="wrk_shift_commit_person_idx",
+            ),
+        ]
+
+    def clean(self) -> None:
+        """Validate scope, snapshots, owner identity, and state evidence.
+
+        Raises
+        ------
+        ValidationError
+            If the retained commitment is internally inconsistent.
+        """
+        super().clean()
+        if self.account_id:
+            validate_convention_subject(self.account)
+        demand = self.demand if self.demand_id else None
+        assignment = self.position_assignment if self.position_assignment_id else None
+        plan = self.availability_plan if self.availability_plan_id else None
+        if demand is None or (
+            demand.organization_id != self.organization_id
+            or demand.edition_id != self.edition_id
+            or demand.starts_at != self.starts_at
+            or demand.ends_at != self.ends_at
+        ):
+            raise ValidationError("The commitment must match its Shift snapshot.")
+        if assignment is None or (
+            assignment.organization_id != self.organization_id
+            or assignment.edition_id != self.edition_id
+            or assignment.position_id != demand.position_id
+            or assignment.account_id != self.account_id
+        ):
+            raise ValidationError("The commitment must match an exact Position holder.")
+        if plan is None or (
+            plan.organization_id != self.organization_id
+            or plan.edition_id != self.edition_id
+            or plan.account_id != self.account_id
+        ):
+            raise ValidationError("The commitment Availability evidence is mismatched.")
+        if self.rest_ends_at < self.ends_at:
+            raise ValidationError("Required rest cannot end before the Shift.")
+        if self.command_version < 1 or self.availability_version < 1:
+            raise ValidationError("Commitment versions must be positive.")
+        confirmed = bool(
+            self.confirmed_at
+            and self.confirmed_by_id
+            and self.confirmation_reason.strip()
+        )
+        removed = bool(
+            self.removed_at
+            and self.removed_by_id
+            and self.removal_kind
+            and self.removal_reason.strip()
+        )
+        completed = bool(
+            self.completed_at
+            and self.completed_by_id
+            and self.completion_reason.strip()
+        )
+        if self.status == self.Status.CLAIMED and any((confirmed, removed, completed)):
+            raise ValidationError("A claim cannot contain later-state evidence.")
+        if self.status == self.Status.CONFIRMED and (
+            not confirmed or removed or completed
+        ):
+            raise ValidationError("A confirmed commitment requires confirmation only.")
+        if self.status == self.Status.REMOVED and (not removed or completed):
+            raise ValidationError("A removed commitment requires removal evidence.")
+        if self.status == self.Status.COMPLETED and (
+            not confirmed or removed or not completed
+        ):
+            raise ValidationError(
+                "A completed commitment requires confirmation evidence."
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the governed Shift commitment.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's model save operation.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's model save operation.
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse ordinary deletion of retained Shift commitment.
+
+        Parameters
+        ----------
+        *args : Any
+            Unused positional deletion arguments accepted for model parity.
+        **kwargs : Any
+            Unused keyword deletion arguments accepted for model parity.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Framework-compatible deletion counts; unreachable because deletion
+            always raises.
+
+        Raises
+        ------
+        ValidationError
+            Always, because commitments end through governed commands.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Shift commitments are removed or completed instead of deleted.",
+            code="protected_shift_commitment",
+        )
+
+    def __str__(self) -> str:
+        """Return the human-readable Shift commitment label.
+
+        Returns
+        -------
+        str
+            Person and Shift title label.
+        """
+        return f"{self.account} — {self.demand.title}"
+
+
+class ShiftCommitmentCommandReceipt(UUIDTimeStampedModel):
+    """Immutable reason and retry evidence for one commitment command."""
+
+    class Action(models.TextChoices):
+        """Enumerate supported commitment commands."""
+
+        CLAIMED = "claimed", "Shift claimed"
+        CONFIRMED = "confirmed", "Claim confirmed"
+        WITHDRAWN = "withdrawn", "Claim withdrawn"
+        REMOVED = "removed", "Claim removed"
+        COMPLETED = "completed", "Commitment completed"
+        CANCELLED = "cancelled", "Removed by cancellation"
+
+    commitment = models.ForeignKey(
+        ShiftCommitment,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    demand = models.ForeignKey(
+        ShiftDemand,
+        on_delete=models.PROTECT,
+        related_name="commitment_command_receipts",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_commitment_receipts",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_commitment_receipts",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="workforce_shift_commitment_commands_acted",
+    )
+    action = models.CharField(max_length=16, choices=Action)
+    resulting_version = models.PositiveBigIntegerField()
+    resulting_status = models.CharField(max_length=16, choices=ShiftCommitment.Status)
+    reason = models.CharField(max_length=240)
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(max_length=32)
+
+    class Meta:
+        """Keep one exact receipt per version and actor retry key."""
+
+        ordering = ("commitment_id", "resulting_version", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("commitment", "resulting_version"),
+                name="workforce_shift_commit_receipt_ver",
+            ),
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"),
+                name="workforce_shift_commit_retry_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(resulting_version__gt=0),
+                name="workforce_shift_commit_receipt_pos",
+            ),
+            models.CheckConstraint(
+                condition=(~Q(reason="") & ~Q(source_channel="")),
+                name="workforce_shift_commit_evidence_set",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "action", "created_at"),
+                name="wrk_shift_commit_action_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Validate exact resulting commitment evidence.
+
+        Raises
+        ------
+        ValidationError
+            If scope, version, state, reason, or source disagrees with result.
+        """
+        super().clean()
+        commitment = self.commitment if self.commitment_id else None
+        if commitment is None or (
+            commitment.demand_id != self.demand_id
+            or commitment.organization_id != self.organization_id
+            or commitment.edition_id != self.edition_id
+            or commitment.command_version != self.resulting_version
+            or commitment.status != self.resulting_status
+        ):
+            raise ValidationError("Shift commitment evidence must match its result.")
+        if not self.reason.strip() or not self.source_channel.strip():
+            raise ValidationError("Commitment evidence requires reason and source.")
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and insert append-only commitment evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's model save operation.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's model save operation.
+
+        Raises
+        ------
+        ValidationError
+            If an existing receipt is mutated.
+        """
+        if not self._state.adding:
+            raise ValidationError(
+                "Shift commitment receipts are immutable.",
+                code="immutable_shift_commitment_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse deletion of append-only commitment evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Unused positional deletion arguments accepted for model parity.
+        **kwargs : Any
+            Unused keyword deletion arguments accepted for model parity.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Framework-compatible deletion counts; unreachable because deletion
+            always raises.
+
+        Raises
+        ------
+        ValidationError
+            Always, because command receipts are immutable evidence.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Shift commitment receipts are immutable.",
+            code="immutable_shift_commitment_receipt",
         )

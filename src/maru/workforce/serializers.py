@@ -450,6 +450,8 @@ class WorkforceStructureSerializer(serializers.Serializer[dict[str, object]]):
     can_manage_positions = serializers.BooleanField()
     can_manage_assignments = serializers.BooleanField()
     can_view_availability = serializers.BooleanField()
+    can_view_shifts = serializers.BooleanField()
+    can_manage_shifts = serializers.BooleanField()
     governance = WorkforceStructureGovernanceSerializer()
     structure = WorkforceStructureProjectionSerializer()
 

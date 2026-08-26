@@ -271,6 +271,21 @@ architecture documents, implementation issues, tests, and release notes.
   organizer confirmation, removal, completion, and a locked coverage plan.
   Capacity and overlap checks must be transactional; volunteers see their own
   commitment state without gaining access to other volunteers' private records.
+  A published Shift must retain its Position, time, place, briefing, break,
+  rest, and supervision expectation rather than changing silently after a
+  claim. Suitability must use current explicit Position and Availability facts;
+  a claim is not confirmation. Confirmation must be independent from the
+  claimant and recheck current qualification, Availability version, overlap,
+  rest, and capacity. Locking must reject unconfirmed or stale coverage and
+  require an explicit reasoned choice for underfill. A person may withdraw from
+  open planning without supplying a free-text explanation; organizer removal,
+  demand lifecycle changes, and accepted underfill require directly
+  inspectable rationale. Completion may occur only after the locked work ends,
+  cancellation must retain truthful removal evidence, and unfinished demand
+  must prevent closure of its Position. Browser and API adapters must share
+  strict optimistic idempotent commands, bounded complete projections,
+  tenant/person isolation, minimized audit/event evidence, and database-owned
+  capacity, interval, lifecycle, receipt, and dependency enforcement.
 - **HR-010 — Workforce structure projection:** Authorized edition participants
   must be able to understand the department and reporting hierarchy on a
   separate, responsive page. The projection must support nested departments,
@@ -329,8 +344,8 @@ architecture documents, implementation issues, tests, and release notes.
   and outbox evidence; the reason must be directly inspectable in the Position
   workflow. Closure requires exact-title confirmation, is one-way, preserves
   all history, closes any nonfinal opportunity, and must fail while proposed or
-  active assignments, current direct reports, or current/future scoped
-  authority depend on the Position. Generic Position and opportunity model
+  active assignments, current direct reports, unfinished Shift demand, or
+  current/future scoped authority depend on the Position. Generic Position and opportunity model
   forms remain inspection-only once this workflow is mounted. An internally
   consistent legacy Position may begin governed history at its first real
   change without inventing a creation version, actor, or receipt.

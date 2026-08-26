@@ -109,7 +109,8 @@
   <aside class="baseline-boundary" aria-labelledby="availability-planning-boundary-title">
     <p class="baseline-kicker">Next planning stage</p>
     <h2 id="availability-planning-boundary-title">Availability still does not assign work</h2>
-    <p>Use these current periods as an input when shift planning is introduced. A future shift must identify a Position, place, start, end, and publication state; it must never be inferred from this page.</p>
+    <p>Use these current periods as an input—not an assignment. Every Shift separately identifies a Position, place, start, end, care expectations, and publication state.</p>
+    {% if can_view_shifts %}<p><a href="{% url 'organization-workforce-shifts' organization.slug convention_series.slug edition.slug %}">Continue to Shift planning</a></p>{% endif %}
   </aside>
   {% endtimezone %}
 {% endblock %}

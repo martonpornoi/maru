@@ -369,10 +369,17 @@ open-assignment people, operational Position labels, current shared
 consequences, and submitted periods; absent and draft plans are both **Not
 shared**. The UI does not infer Availability from assignments.
 
-Shifts remain an explicit noninteractive future stage. Their contract must
-cover demand, suitability, claims, confirmation, removal, overlap and rest,
-publication, completion, locking, and recovery. Neither Positions nor
-Availability are presented as scheduled work.
+**Shifts** is now a distinct, governed planning stage. Organizers create
+Position-specific demand, open it for claims, review named coverage, confirm or
+remove commitments with accountable rationale, lock a deliberate coverage
+decision, and complete or cancel the demand. People use **My shifts** to see
+only suitable open demand and their own claims or commitments, with briefing,
+break, rest, supervision, and handover instructions retained. A claim is never
+presented as organizer confirmation, personal withdrawal requires explicit
+confirmation but no private explanation, and neither a Position nor an
+Availability period is presented as scheduled work. Broader qualifications,
+maximum-hours policy, publication, reminders, check-in, and timekeeping remain
+later extensions rather than implied behavior.
 
 The implemented Reports destination starts with one purpose-built
 registration preset: attendance totals, country and attendee-level

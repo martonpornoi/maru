@@ -1,0 +1,129 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static tz %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'workforce/organization_structure.css' %}">{% endblock %}
+{% block baseline_page_title %}{{ demand.title }} · Shift planning · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if baseline_can_view_organization %}<a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>{% else %}{{ organization.name }}{% endif %}
+  &rsaquo; {{ convention_series.name }} &rsaquo; {{ edition.name }}
+  &rsaquo; <a href="{% url 'organization-workforce-shifts' organization.slug convention_series.slug edition.slug %}">Shift planning</a>
+  &rsaquo; {{ demand.title }}
+{% endblock %}
+
+{% block baseline_content %}
+  {% timezone edition.time_zone %}
+  <a class="baseline-back-link" href="{% url 'organization-workforce-shifts' organization.slug convention_series.slug edition.slug %}">← All planned Shifts</a>
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">{{ shift_item.department_name }} · {{ shift_item.position_title }}</p>
+    <h1>{{ demand.title }}</h1>
+    <p class="baseline-intro">{{ demand.briefing }}</p>
+    <p class="baseline-record-meta"><span>{{ demand.get_status_display }}</span><span>Version {{ demand.command_version }}</span><span>{{ shift_item.active_count }} active · {{ shift_item.confirmed_count }} confirmed · {{ demand.required_headcount }} needed</span></p>
+  </header>
+  {% if action_error %}<div class="baseline-errors" role="alert"><h2>Nothing changed</h2><p>{{ action_error }}</p></div>{% endif %}
+
+  <section class="baseline-panel" aria-labelledby="shift-facts-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">Work expectation</p><h2 id="shift-facts-title">Time, place, and care</h2></div><span class="baseline-count">{{ demand.get_status_display }}</span></div>
+    <dl class="workforce-position-summary">
+      <div><dt>Starts</dt><dd>{{ demand.starts_at|date:"D, M j, Y, H:i" }}</dd></div>
+      <div><dt>Ends</dt><dd>{{ demand.ends_at|date:"D, M j, Y, H:i" }}</dd></div>
+      <div><dt>Report to</dt><dd>{{ demand.location_label }}</dd></div>
+      <div><dt>People needed</dt><dd>{{ demand.required_headcount }}</dd></div>
+      <div><dt>Planned break</dt><dd>{{ demand.break_minutes }} minutes</dd></div>
+      <div><dt>Rest after</dt><dd>{{ demand.minimum_rest_minutes }} minutes</dd></div>
+    </dl>
+    {% if demand.supervision_note %}<h3>Supervision or handover</h3><p>{{ demand.supervision_note }}</p>{% endif %}
+  </section>
+
+  {% if can_manage_shifts and demand.status == "draft" %}
+    <details class="workforce-structure-command-disclosure"{% if active_action == "edit" %} open{% endif %}>
+      <summary>Edit unpublished Shift</summary>
+      <section class="baseline-panel" aria-labelledby="edit-shift-title">
+        <div class="baseline-section-heading"><p class="baseline-kicker">Still private</p><h2 id="edit-shift-title">Edit draft</h2><p>Once claims open, time, place, Position, demand, and care settings become immutable. Cancel and recreate instead of silently changing someone’s expected work.</p></div>
+        <form method="post" action="{% url 'update-organization-workforce-shift' organization.slug convention_series.slug edition.slug demand.id %}" class="baseline-form" novalidate>
+          {% csrf_token %}{{ edit_form.expected_version }}{{ edit_form.retry_key }}
+          {% include "core/_baseline_form_field.html" with field=edit_form.position_id %}
+          {% include "core/_baseline_form_field.html" with field=edit_form.title %}
+          {% include "core/_baseline_form_field.html" with field=edit_form.location_label %}
+          <div class="workforce-assignment-decision-grid">{% include "core/_baseline_form_field.html" with field=edit_form.starts_at %}{% include "core/_baseline_form_field.html" with field=edit_form.ends_at %}</div>
+          <div class="workforce-assignment-decision-grid">{% include "core/_baseline_form_field.html" with field=edit_form.required_headcount %}{% include "core/_baseline_form_field.html" with field=edit_form.break_minutes %}{% include "core/_baseline_form_field.html" with field=edit_form.minimum_rest_minutes %}</div>
+          {% include "core/_baseline_form_field.html" with field=edit_form.briefing %}
+          {% include "core/_baseline_form_field.html" with field=edit_form.supervision_note %}
+          {% include "core/_baseline_form_field.html" with field=edit_form.reason %}
+          <div class="baseline-form-actions"><button type="submit">Save draft changes</button></div>
+        </form>
+      </section>
+    </details>
+  {% endif %}
+
+  <section class="baseline-panel" aria-labelledby="coverage-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">People chose; organizers decide</p><h2 id="coverage-title">Coverage</h2></div><span class="baseline-count">{{ shift_item.confirmed_count }} confirmed</span></div>
+    {% if commitment_rows %}
+      <ul class="workforce-assignment-list">
+        {% for row in commitment_rows %}
+          <li>
+            <div class="workforce-position-management-heading"><div><h3>{{ row.item.account_label }}</h3><p>{{ row.item.commitment.get_status_display }}</p></div><span class="baseline-count">Version {{ row.item.commitment.command_version }}</span></div>
+            {% if row.item.commitment.status == "claimed" or row.item.commitment.status == "confirmed" %}
+              <dl class="workforce-position-facts">
+                <div><dt>Availability</dt><dd>{% if row.item.availability_current %}Current{% else %}Changed — review required{% endif %}</dd></div>
+                <div><dt>Position qualification</dt><dd>{% if row.item.qualification_current %}Current{% else %}No longer current{% endif %}</dd></div>
+              </dl>
+            {% endif %}
+            <dl class="workforce-position-facts">
+              <div><dt>Claimed</dt><dd>{{ row.item.commitment.claimed_at|date:"SHORT_DATETIME_FORMAT" }}</dd></div>
+              {% if row.item.commitment.confirmation_reason %}<div><dt>Confirmation decision</dt><dd>{{ row.item.commitment.confirmation_reason }} · {{ row.item.commitment.confirmed_at|date:"SHORT_DATETIME_FORMAT" }}</dd></div>{% endif %}
+              {% if row.item.commitment.removal_reason %}<div><dt>{{ row.item.commitment.get_removal_kind_display }}</dt><dd>{{ row.item.commitment.removal_reason }} · {{ row.item.commitment.removed_at|date:"SHORT_DATETIME_FORMAT" }}</dd></div>{% endif %}
+              {% if row.item.commitment.completion_reason %}<div><dt>Completion decision</dt><dd>{{ row.item.commitment.completion_reason }} · {{ row.item.commitment.completed_at|date:"SHORT_DATETIME_FORMAT" }}</dd></div>{% endif %}
+            </dl>
+            {% if can_manage_shifts and demand.status == "open" and row.item.needs_confirmation_review %}
+              <details class="workforce-structure-command-disclosure"><summary>{% if row.item.commitment.status == "confirmed" %}Review confirmation again{% else %}Review claim{% endif %}</summary>
+                <form method="post" action="{% url 'confirm-organization-workforce-shift-commitment' organization.slug convention_series.slug edition.slug demand.id row.item.commitment.id %}" class="baseline-form" novalidate>
+                  {% csrf_token %}{{ row.confirm_form.expected_version }}{{ row.confirm_form.retry_key }}{% include "core/_baseline_form_field.html" with field=row.confirm_form.reason %}<div class="baseline-form-actions"><button type="submit">Confirm commitment</button></div>
+                </form>
+              </details>
+            {% endif %}
+            {% if can_manage_shifts and demand.status == "open" %}
+              {% if row.item.commitment.status == "claimed" or row.item.commitment.status == "confirmed" %}
+                <details class="workforce-structure-command-disclosure workforce-structure-command-disclosure--danger"><summary>Remove from this Shift</summary>
+                  <form method="post" action="{% url 'remove-organization-workforce-shift-commitment' organization.slug convention_series.slug edition.slug demand.id row.item.commitment.id %}" class="baseline-form baseline-danger-form" novalidate>
+                    {% csrf_token %}{{ row.remove_form.expected_version }}{{ row.remove_form.retry_key }}{% include "core/_baseline_form_field.html" with field=row.remove_form.reason %}<div class="baseline-form-actions"><button type="submit">Remove and retain reason</button></div>
+                  </form>
+                </details>
+              {% endif %}
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}<div class="baseline-state"><h3>No claims yet</h3><p>When this Shift is open, only matching active Position holders whose shared Availability fully covers it will see the claim action.</p></div>{% endif %}
+  </section>
+
+  {% if can_manage_shifts %}
+    <section class="baseline-panel" aria-labelledby="shift-next-action-title">
+      <div class="baseline-section-heading"><p class="baseline-kicker">Explicit lifecycle</p><h2 id="shift-next-action-title">Next action</h2></div>
+      {% if demand.status == "draft" %}
+        {% if shift_has_ended %}<div class="baseline-state"><h3>This Shift has ended</h3><p>Claims cannot open after the work has ended. Cancel this draft to retain an accurate planning record.</p></div>{% else %}<form method="post" action="{% url 'open-organization-workforce-shift' organization.slug convention_series.slug edition.slug demand.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ open_form.expected_version }}{{ open_form.retry_key }}{% include "core/_baseline_form_field.html" with field=open_form.reason %}<div class="baseline-form-actions"><button type="submit">Open claims</button></div></form>{% endif %}
+      {% elif demand.status == "open" %}
+        <form method="post" action="{% url 'lock-organization-workforce-shift' organization.slug convention_series.slug edition.slug demand.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ lock_form.expected_version }}{{ lock_form.retry_key }}{% include "core/_baseline_form_field.html" with field=lock_form.allow_understaffed %}{% include "core/_baseline_form_field.html" with field=lock_form.reason %}<p class="baseline-form-help">Locking requires every active claim to be confirmed and every confirmation’s Availability version to remain current.</p><div class="baseline-form-actions"><button type="submit">Lock confirmed coverage</button></div></form>
+      {% elif demand.status == "locked" %}
+        <div class="workforce-assignment-decision-grid">
+          <form method="post" action="{% url 'reopen-organization-workforce-shift' organization.slug convention_series.slug edition.slug demand.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ reopen_form.expected_version }}{{ reopen_form.retry_key }}<h3>Reopen planning</h3>{% include "core/_baseline_form_field.html" with field=reopen_form.reason %}<div class="baseline-form-actions"><button type="submit">Reopen coverage</button></div></form>
+          {% if shift_has_ended %}
+            <form method="post" action="{% url 'complete-organization-workforce-shift' organization.slug convention_series.slug edition.slug demand.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ complete_form.expected_version }}{{ complete_form.retry_key }}<h3>Complete ended work</h3>{% include "core/_baseline_form_field.html" with field=complete_form.reason %}<div class="baseline-form-actions"><button type="submit">Complete Shift</button></div></form>
+          {% else %}
+            <div class="baseline-state"><h3>Complete ended work</h3><p>Completion becomes available after {{ demand.ends_at|date:"D, M j, Y, H:i" }}. Until then, reopen planning if coverage must change.</p></div>
+          {% endif %}
+        </div>
+      {% else %}<div class="baseline-state"><h3>{{ demand.get_status_display }}</h3><p>This Shift is retained and no longer accepts ordinary planning changes.</p></div>{% endif %}
+    </section>
+    {% if demand.status != "completed" and demand.status != "cancelled" %}
+      <details class="workforce-structure-command-disclosure workforce-structure-command-disclosure--danger"><summary>Cancel this Shift</summary>
+        <section class="baseline-danger-zone"><h2>Cancel and retain coverage history</h2><p>Every active claim or confirmation becomes removed. People keep a truthful record that the Shift was cancelled.</p><form method="post" action="{% url 'cancel-organization-workforce-shift' organization.slug convention_series.slug edition.slug demand.id %}" class="baseline-form baseline-danger-form" novalidate>{% csrf_token %}{{ cancel_form.expected_version }}{{ cancel_form.retry_key }}{% include "core/_baseline_form_field.html" with field=cancel_form.reason %}<div class="baseline-form-actions"><button type="submit">Cancel Shift</button></div></form></section>
+      </details>
+    {% endif %}
+  {% endif %}
+
+  <section class="baseline-panel workforce-history-panel" aria-labelledby="shift-history-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">Authorized organizers only</p><h2 id="shift-history-title">Shift decision history</h2></div><span class="baseline-count">Newest first</span></div>
+    <ol class="workforce-history-list">{% for receipt in demand_history %}<li><div><strong>{{ receipt.get_action_display }}</strong><span>Version {{ receipt.resulting_version }} · {{ receipt.created_at|date:"SHORT_DATETIME_FORMAT" }}</span></div><p>{{ receipt.reason }}</p><small>Recorded by {{ receipt.actor }}</small></li>{% empty %}<li>No governed history is available.</li>{% endfor %}</ol>
+  </section>
+  {% endtimezone %}
+{% endblock %}

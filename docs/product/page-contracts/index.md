@@ -31,6 +31,7 @@ contract for the surface being changed, and compare its status with the
 - [Position management](position-management.md)
 - [Assignment management](assignment-management.md)
 - [Availability management](availability-management.md)
+- [Shift planning and My shifts](shift-planning-and-my-shifts.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -43,4 +44,5 @@ contract for the surface being changed, and compare its status with the
 position-management
 assignment-management
 availability-management
+shift-planning-and-my-shifts
 ```

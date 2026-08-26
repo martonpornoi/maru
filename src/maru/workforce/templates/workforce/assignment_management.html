@@ -133,7 +133,15 @@
           <span>A separate audited capability is required to view shared personal planning periods.</span>
         {% endif %}
       </div>
-      <div><strong>Shifts</strong><span>Planned after availability: schedule active Position holders into published work.</span></div>
+      <div>
+        <strong>Shifts</strong>
+        {% if can_view_shifts %}
+          <span>Turn Position demand and current Availability into person-owned claims and confirmed coverage.</span>
+          <a href="{% url 'organization-workforce-shifts' organization.slug convention_series.slug edition.slug %}">Plan shifts</a>
+        {% else %}
+          <span>A separate scoped capability is required to view demand and Shift coverage.</span>
+        {% endif %}
+      </div>
     </div>
   </section>
 {% endblock %}

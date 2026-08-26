@@ -159,10 +159,11 @@ while any of these remain:
 
 - a proposed or active PositionAssignment;
 - a direct report whose Position is not closed; or
+- draft, open, or locked Shift demand; or
 - current or future Position-scoped CapabilityGrant or RoleAssignment
   authority.
 
-The owning assignment, reporting, or access workflow must end that dependency;
+The owning assignment, Shift, reporting, or access workflow must end that dependency;
 Position management does not silently revoke it. Successful closure is
 one-way, records actor and time, retains every related row, and closes a paired
 opportunity unless it is already closed or withdrawn. The page becomes a

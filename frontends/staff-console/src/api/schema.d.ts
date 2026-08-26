@@ -6113,6 +6113,349 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shift-commitments/{commitment_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Confirm or remove one active commitment as an organizer. */
+        post: operations["organizations_editions_workforce_shift_commitments_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shift-commitments/{commitment_id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Confirm or remove one active commitment as an organizer. */
+        post: operations["organizations_editions_workforce_shift_commitments_remove_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shift-commitments/{commitment_id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Withdraw one current person's claim or confirmation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated personal API request with explicit confirmation.
+         *     organization_id : UUID
+         *         Exact related organization identifier from the route.
+         *     edition_id : UUID
+         *         Exact related edition identifier from the route.
+         *     commitment_id : UUID
+         *         Person-owned active commitment identifier.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Minimized removed-commitment command result.
+         */
+        post: operations["workforce_withdraw_shift_claim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shifts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Return complete audited organizer Shift planning.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated API request.
+         *     organization_id : UUID
+         *         Exact organization identifier from the route.
+         *     edition_id : UUID
+         *         Exact edition identifier from the route.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Complete serialized organizer Shift projection.
+         *
+         *     Raises
+         *     ------
+         *     WorkforceShiftDependencyUnavailable
+         *         If a complete, coherent, audited projection cannot be produced.
+         */
+        get: operations["workforce_list_shift_demands"];
+        put?: never;
+        /**
+         * @description Create one draft Shift after authorization and strict parsing.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated API request with one closed JSON command object.
+         *     organization_id : UUID
+         *         Exact organization identifier from the route.
+         *     edition_id : UUID
+         *         Exact edition identifier from the route.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Minimized created-demand command result.
+         */
+        post: operations["workforce_create_shift_demand"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shifts/{demand_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Return one audited demand and its complete coverage.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated API request.
+         *     organization_id : UUID
+         *         Exact organization identifier from the route.
+         *     edition_id : UUID
+         *         Exact edition identifier from the route.
+         *     demand_id : UUID
+         *         Exact Shift demand identifier from the route.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Complete serialized demand, coverage, and history projection.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the authorized projection does not contain the target demand.
+         *     WorkforceShiftDependencyUnavailable
+         *         If a complete, coherent, audited projection cannot be produced.
+         */
+        get: operations["workforce_retrieve_shift_demand"];
+        /**
+         * @description Replace one unpublished demand after strict version checking.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated API request with one closed JSON command object.
+         *     organization_id : UUID
+         *         Exact organization identifier from the route.
+         *     edition_id : UUID
+         *         Exact edition identifier from the route.
+         *     demand_id : UUID
+         *         Draft Shift demand identifier from the route.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Minimized updated-demand command result.
+         */
+        put: operations["workforce_update_shift_demand"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shifts/{demand_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Apply one explicit organizer demand lifecycle action. */
+        post: operations["organizations_editions_workforce_shifts_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shifts/{demand_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Claim one open Shift after strict self authorization.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated personal API request with a closed command object.
+         *     organization_id : UUID
+         *         Exact related organization identifier from the route.
+         *     edition_id : UUID
+         *         Exact related edition identifier from the route.
+         *     demand_id : UUID
+         *         Suitable open Shift demand identifier.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Minimized created-claim command result.
+         */
+        post: operations["workforce_claim_shift"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shifts/{demand_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Apply one explicit organizer demand lifecycle action. */
+        post: operations["organizations_editions_workforce_shifts_complete_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shifts/{demand_id}/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Apply one explicit organizer demand lifecycle action. */
+        post: operations["organizations_editions_workforce_shifts_lock_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shifts/{demand_id}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Apply one explicit organizer demand lifecycle action. */
+        post: operations["organizations_editions_workforce_shifts_open_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shifts/{demand_id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Apply one explicit organizer demand lifecycle action. */
+        post: operations["organizations_editions_workforce_shifts_reopen_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/shifts/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Return the person-owned Shift projection without other people.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated personal API request.
+         *     organization_id : UUID
+         *         Exact related organization identifier from the route.
+         *     edition_id : UUID
+         *         Exact related edition identifier from the route.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Suitable open work and the person's retained commitments.
+         *
+         *     Raises
+         *     ------
+         *     WorkforceShiftDependencyUnavailable
+         *         If the complete personal projection cannot be produced.
+         */
+        get: operations["workforce_retrieve_my_shifts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure": {
         parameters: {
             query?: never;
@@ -8703,6 +9046,8 @@ export interface components {
          * @enum {string}
          */
         BeneficiaryEnum: "convention" | "charity";
+        /** @enum {unknown} */
+        BlankEnum: "";
         /** @description Serialize and validate capacity context data. */
         CapacityContext: {
             readonly code: string;
@@ -9262,6 +9607,15 @@ export interface components {
          * @enum {string}
          */
         DeliveryStateEnum: "pending" | "processing" | "delivered" | "retrying" | "permanent_failed" | "cancelled";
+        /**
+         * @description * `draft` - Draft
+         *     * `open` - Open for claims
+         *     * `locked` - Coverage locked
+         *     * `completed` - Completed
+         *     * `cancelled` - Cancelled
+         * @enum {string}
+         */
+        DemandStatusEnum: "draft" | "open" | "locked" | "completed" | "cancelled";
         /** @description Serialize and validate demo payment data. */
         DemoPayment: {
             /** Format: uuid */
@@ -10177,6 +10531,56 @@ export interface components {
             /** Format: date-time */
             server_time: string;
         };
+        /** @description Serialize one retained commitment without other people or reasons. */
+        MyShiftCommitment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            demand_id: string;
+            position_title: string;
+            department_name: string;
+            title: string;
+            location_label: string;
+            briefing: string;
+            supervision_note: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            break_minutes: number;
+            minimum_rest_minutes: number;
+            demand_status: components["schemas"]["DemandStatusEnum"];
+            status: components["schemas"]["Status188Enum"];
+            command_version: number;
+            availability_current: boolean;
+            qualification_current: boolean;
+            can_withdraw: boolean;
+        };
+        /** @description Serialize one person's suitable work and retained commitments. */
+        MyShiftOverview: {
+            suitable: components["schemas"]["MySuitableShift"][];
+            commitments: components["schemas"]["MyShiftCommitment"][];
+        };
+        /** @description Serialize one currently claimable person-owned opportunity. */
+        MySuitableShift: {
+            /** Format: uuid */
+            id: string;
+            position_title: string;
+            department_name: string;
+            title: string;
+            location_label: string;
+            briefing: string;
+            supervision_note: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            break_minutes: number;
+            minimum_rest_minutes: number;
+            command_version: number;
+            preference: string;
+            remaining_count: number;
+        };
         /** @description Serialize and validate named logistics choice data. */
         NamedLogisticsChoice: {
             /** Format: uuid */
@@ -10393,6 +10797,64 @@ export interface components {
          * @enum {string}
          */
         OperatorEnum: "equals" | "not_equals" | "contains";
+        /** @description Serialize one authorized organizer coverage row. */
+        OrganizerShiftCommitment: {
+            /** Format: uuid */
+            id: string;
+            account_label: string;
+            status: components["schemas"]["Status188Enum"];
+            command_version: number;
+            availability_version: number;
+            availability_current: boolean;
+            qualification_current: boolean;
+            /** Format: date-time */
+            claimed_at: string;
+            /** Format: date-time */
+            confirmed_at: string | null;
+            confirmation_reason: string;
+            /** Format: date-time */
+            removed_at: string | null;
+            removal_kind: components["schemas"]["RemovalKindEnum"] | components["schemas"]["BlankEnum"];
+            removal_reason: string;
+            /** Format: date-time */
+            completed_at: string | null;
+            completion_reason: string;
+        };
+        /** @description Serialize one demand and its complete minimized coverage. */
+        OrganizerShiftDemand: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            position_id: string;
+            department_name: string;
+            position_title: string;
+            title: string;
+            location_label: string;
+            briefing: string;
+            supervision_note: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            required_headcount: number;
+            break_minutes: number;
+            minimum_rest_minutes: number;
+            status: components["schemas"]["StatusD57Enum"];
+            command_version: number;
+            claimed_count: number;
+            confirmed_count: number;
+            active_count: number;
+            remaining_count: number;
+            commitments: components["schemas"]["OrganizerShiftCommitment"][];
+        };
+        /** @description Serialize complete exact-edition Shift planning. */
+        OrganizerShiftOverview: {
+            open_count: number;
+            locked_count: number;
+            attention_count: number;
+            can_manage: boolean;
+            demands: components["schemas"]["OrganizerShiftDemand"][];
+        };
         /** @description Reject undeclared JSON and query properties instead of ignoring them. */
         Owner: {
             kind: components["schemas"]["OwnerKindEnum"];
@@ -11999,6 +12461,13 @@ export interface components {
             /** Format: date-time */
             readonly occurred_at: string;
         };
+        /**
+         * @description * `withdrawn` - Withdrawn by person
+         *     * `organizer` - Removed by organizer
+         *     * `cancelled` - Removed when Shift was cancelled
+         * @enum {string}
+         */
+        RemovalKindEnum: "withdrawn" | "organizer" | "cancelled";
         /** @description Serialize and validate reserve admission tier replacement data. */
         ReserveAdmissionTierReplacement: {
             /** Format: uuid */
@@ -12355,6 +12824,69 @@ export interface components {
          * @enum {string}
          */
         SettlementBatchStatusEnum: "open" | "reconciled" | "exception";
+        /** @description Validate one person-owned versioned Shift claim. */
+        ShiftClaimCommand: {
+            expected_version: number;
+        };
+        /** @description Validate a versioned complete replacement of a Shift draft. */
+        ShiftDemandUpdate: {
+            /** Format: uuid */
+            position_id: string;
+            title: string;
+            location_label: string;
+            briefing: string;
+            /** @default  */
+            supervision_note: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            required_headcount: number;
+            break_minutes: number;
+            minimum_rest_minutes: number;
+            reason: string;
+            expected_version: number;
+        };
+        /** @description Validate one complete organizer Shift-demand representation. */
+        ShiftDemandWrite: {
+            /** Format: uuid */
+            position_id: string;
+            title: string;
+            location_label: string;
+            briefing: string;
+            /** @default  */
+            supervision_note: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            required_headcount: number;
+            break_minutes: number;
+            minimum_rest_minutes: number;
+            reason: string;
+        };
+        /** @description Serialize minimized demand or commitment command evidence. */
+        ShiftMutationResult: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            demand_id?: string;
+            /** Format: uuid */
+            receipt_id: string;
+            resulting_version: number;
+            status: string;
+            replayed: boolean;
+        };
+        /** @description Validate a versioned reasoned Shift state command. */
+        ShiftReasonCommand: {
+            expected_version: number;
+            reason: string;
+        };
+        /** @description Require an explicit withdrawal confirmation without personal rationale. */
+        ShiftWithdrawCommand: {
+            expected_version: number;
+            confirm: boolean;
+        };
         /**
          * @description * `legacy_existing` - legacy_existing
          *     * `blank` - blank
@@ -12686,6 +13218,14 @@ export interface components {
             applicant_edit_until: string;
         };
         /**
+         * @description * `claimed` - Claimed
+         *     * `confirmed` - Confirmed
+         *     * `removed` - Removed
+         *     * `completed` - Completed
+         * @enum {string}
+         */
+        Status188Enum: "claimed" | "confirmed" | "removed" | "completed";
+        /**
          * @description * `pending` - Pending
          *     * `processing` - Processing
          *     * `delivered` - Delivered
@@ -12710,6 +13250,15 @@ export interface components {
          * @enum {string}
          */
         Status810Enum: "pending" | "accepted" | "revoked" | "expired";
+        /**
+         * @description * `draft` - Draft
+         *     * `open` - Open for claims
+         *     * `locked` - Coverage locked
+         *     * `completed` - Completed
+         *     * `cancelled` - Cancelled
+         * @enum {string}
+         */
+        StatusD57Enum: "draft" | "open" | "locked" | "completed" | "cancelled";
         /**
          * @description * `proposed` - Proposed
          *     * `active` - Active
@@ -13475,6 +14024,8 @@ export interface components {
             can_manage_positions: boolean;
             can_manage_assignments: boolean;
             can_view_availability: boolean;
+            can_view_shifts: boolean;
+            can_manage_shifts: boolean;
             governance: components["schemas"]["WorkforceStructureGovernance"];
             structure: components["schemas"]["WorkforceStructureProjection"];
         };
@@ -19703,6 +20254,369 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+        };
+    };
+    organizations_editions_workforce_shift_commitments_confirm_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commitment_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftReasonCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_workforce_shift_commitments_remove_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commitment_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftReasonCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    workforce_withdraw_shift_claim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commitment_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftWithdrawCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    workforce_list_shift_demands: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerShiftOverview"];
+                };
+            };
+        };
+    };
+    workforce_create_shift_demand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftDemandWrite"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    workforce_retrieve_shift_demand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                demand_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerShiftDemand"];
+                };
+            };
+        };
+    };
+    workforce_update_shift_demand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                demand_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftDemandUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_workforce_shifts_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                demand_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftReasonCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    workforce_claim_shift: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                demand_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftClaimCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_workforce_shifts_complete_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                demand_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftReasonCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_workforce_shifts_lock_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                demand_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftReasonCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_workforce_shifts_open_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                demand_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftReasonCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_workforce_shifts_reopen_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                demand_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftReasonCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftMutationResult"];
+                };
+            };
+        };
+    };
+    workforce_retrieve_my_shifts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyShiftOverview"];
                 };
             };
         };

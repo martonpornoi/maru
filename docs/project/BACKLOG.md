@@ -337,6 +337,13 @@ explanations, and attendee/person/department/venue/print projections.
 ### MARU-HR-002 — Volunteer shift commitments (`P1`)
 
 **Requirements:** HR-009, SCH-003, SCH-005, AUD-003
+
+**Current slice:** governed Position-specific demand, suitable personal claims,
+organizer confirmation/removal, person-owned withdrawal, underfill-aware
+locking, reopening, cancellation, and completion are implemented under ADR
+0078. The backlog item remains open for the broader qualification, overlap,
+maximum-hours, publication, check-in, and timekeeping model.
+
 **Deliver:** separate shift demand and claimed, confirmed, removed, locked, and
 completed commitments with qualification, availability, overlap, break,
 capacity, and privacy-aware suitability explanations.

@@ -131,6 +131,15 @@ tool, and published truth remains versioned.
 **Proof of success:** shifts protect the volunteer's time and enable live
 coverage decisions rather than merely filling spreadsheet cells.
 
+The current first Shift journey implements explicit Position demand, current
+Availability and exact-Position suitability, personal claim and withdrawal,
+independent organizer confirmation/removal, transactional headcount and
+overlap/rest checks, reasoned underfill locking, reopening, cancellation, and
+post-end completion. Ranked interests, general qualifications, maximum hours,
+travel, onboarding prerequisites in the Shift card, notifications, check-in,
+late/absent escalation, actual time, handover acceptance, benefits, and
+recognition remain later parts of this workflow rather than implied behavior.
+
 ## 6. Move a room during the live event
 
 1. A venue problem is reported against the room and triaged by the responsible

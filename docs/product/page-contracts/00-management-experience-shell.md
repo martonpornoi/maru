@@ -2,7 +2,7 @@
 
 - Status: Focused shell hierarchy, page framing, personal-surface separation,
   User accounts-to-Board continuity, owner-rehearsed Registration desk, and the
-  read-oriented Workforce journey implemented; full mutation-role,
+  Workforce journey through Shift planning and My shifts implemented; full mutation-role,
   state-matrix, width/zoom, and release accessibility evidence remains pending
 - Canonical authenticated route: `/admin/`
 - Requirements: UX-001 through UX-013, UX-019, UX-020, UX-024, UX-026, UX-027,
@@ -56,8 +56,10 @@ an accidental future filter.
 **My Maru** contains personal, self-owned work. **Administration** contains
 organizer and platform work. Each renders only its own navigation registry and
 pins, with one explicit surface switch where the account may use both. My Maru
-leads with registration, applications, and schedule, then presents lower-
-frequency personal destinations under **More from Maru**. It does not show
+leads with registration, applications, schedule, and **My Workforce**, then
+presents lower-frequency personal destinations under **More from Maru**. My
+Workforce remains one searchable and pinnable **Work** destination throughout
+its Positions, Availability, and Shifts continuations. It does not show
 Platform, Specialist records, or administrative context as personal menu
 groups.
 
@@ -149,11 +151,15 @@ clearly labelled temporary Position and assignment record links.
 Availability is an implemented person-owned continuation. A person may keep a
 private draft or deliberately share one complete exact-edition statement;
 independently authorized organizers receive only the minimized current
-planning consequence. It is never inferred from assignment. Shifts remain
-labelled **Not available yet** and have no controls or fabricated data. Shift
-demand, claim, confirmation, overlap, completion, and locking remain an
-unimplemented HR-009/SCH-001/SCH-005 transactional contract. This placement
-orients the journey without treating Availability as a schedule commitment.
+planning consequence. It is never inferred from assignment. **Shift planning**
+now lets an independently authorized organizer create Position demand, publish
+suitable work, review claims, lock coverage, recover, cancel, and complete.
+**My shifts** lets the person compare suitable open work and retain only their
+own instructions and commitment state. The
+[Shift planning and My shifts](shift-planning-and-my-shifts.md) contract keeps
+claims distinct from confirmation and names check-in, timekeeping, broader
+qualification, maximum-hours, lone-work, accommodations, notifications, and
+schedule publication as later work.
 
 ## First continuous journey
 
@@ -202,6 +208,9 @@ page framing, User accounts and invitation presentation, Board progress,
 purpose-built setup links, the owner-role Registration desk, modal focus and
 Escape return, the Workforce read journey, non-staff specialist-link exclusion,
 denial non-disclosure, and automated axe checks for the Registration and
-Workforce views. The complete rendered width/zoom and state matrices,
+Workforce views. The Shift journey additionally passes an authenticated owner-
+and-volunteer rehearsal at 1,280 and 390 CSS pixels, including task discovery,
+drawer background isolation, focus return, one H1 and one `main`, no duplicate
+identifiers, and no horizontal overflow. The complete rendered width/zoom and state matrices,
 representative screen-reader evidence, mutation-role rehearsals, and release
 accessibility acceptance remain open gates.

@@ -10,7 +10,7 @@
     <header>
       <p class="maru-personal-kicker">Your conventions</p>
       <h1>My Workforce</h1>
-      <p>See responsibilities proposed or assigned to this account, their dates, and any onboarding action still needed.</p>
+      <p>Review your Positions, onboarding, shared Availability, and Shift commitments for each convention.</p>
     </header>
     {% include "core/_page_access_mount.html" %}
     {% if workforce_state_message %}<ul class="messagelist"><li class="warning" role="alert">{{ workforce_state_message }}</li></ul>{% endif %}
@@ -54,7 +54,21 @@
     </section>
     <section class="module" aria-labelledby="my-workforce-shifts-title">
       <h2 id="my-workforce-shifts-title">Shifts</h2>
-      <p>Published work times will appear here when shift planning is introduced. Maru does not infer a shift from an assignment or availability period.</p>
+      <p>Review suitable published work and your own claimed, confirmed, removed, or completed commitments. Maru never infers a Shift from a Position or Availability period.</p>
+      {% if shift_scopes %}
+        <div class="maru-admin-workspace-grid">
+          {% for item in shift_scopes %}
+            <article>
+              <strong>{{ item.edition_name }}</strong>
+              <span>{{ item.organization_name }}</span>
+              <span>{{ item.open_suitable_count }} suitable open Shift{{ item.open_suitable_count|pluralize }} · {{ item.active_commitment_count }} active commitment{{ item.active_commitment_count|pluralize }}</span>
+              <a href="{% url 'my-workforce-shifts' item.organization_slug item.series_slug item.edition_slug %}">Review my shifts</a>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>My shifts will appear after you have a Workforce Position relationship in an edition.</p>
+      {% endif %}
     </section>
   </div>
 {% endblock %}

@@ -991,6 +991,11 @@ button:focus-visible {
   background: var(--body-bg);
 }
 
+.baseline-unified-admin .baseline-panel h3,
+.baseline-unified-admin .baseline-panel h4 {
+  color: var(--body-fg);
+}
+
 .baseline-unified-admin .baseline-structure-tree ol,
 .baseline-unified-admin .baseline-structure-holders {
   border-color: var(--hairline-color);
@@ -1020,6 +1025,8 @@ button:focus-visible {
 }
 
 .baseline-unified-admin .baseline-panel-heading h2,
+.baseline-unified-admin .baseline-panel-heading h3,
+.baseline-unified-admin .baseline-panel-heading h4,
 .baseline-unified-admin .baseline-panel-heading .baseline-kicker {
   color: inherit;
 }

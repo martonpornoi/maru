@@ -244,6 +244,31 @@ from maru.workforce.api import (
     WorkforceStructureTemplateApplicationView,
     WorkforceStructureView,
 )
+from maru.workforce.shift_api import (
+    WorkforceMyShiftClaimView,
+    WorkforceMyShiftsView,
+    WorkforceMyShiftWithdrawView,
+    WorkforceShiftCommitmentActionView,
+    WorkforceShiftDemandActionView,
+    WorkforceShiftDemandCollectionView,
+    WorkforceShiftDemandDetailView,
+)
+from maru.workforce.shift_views import (
+    cancel_organization_workforce_shift,
+    claim_my_workforce_shift,
+    complete_organization_workforce_shift,
+    confirm_organization_workforce_shift_commitment,
+    create_organization_workforce_shift,
+    lock_organization_workforce_shift,
+    my_workforce_shifts,
+    open_organization_workforce_shift,
+    organization_workforce_shift,
+    organization_workforce_shifts,
+    remove_organization_workforce_shift_commitment,
+    reopen_organization_workforce_shift,
+    update_organization_workforce_shift,
+    withdraw_my_workforce_shift,
+)
 from maru.workforce.views import (
     apply_for_opportunity,
     apply_organization_structure_template,
@@ -318,6 +343,31 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         withdraw_my_workforce_availability,
         name="withdraw-my-workforce-availability",
+    ),
+    path(
+        (
+            "my/workforce/<slug:organization_slug>/<slug:series_slug>/"
+            "<slug:edition_slug>/shifts/"
+        ),
+        my_workforce_shifts,
+        name="my-workforce-shifts",
+    ),
+    path(
+        (
+            "my/workforce/<slug:organization_slug>/<slug:series_slug>/"
+            "<slug:edition_slug>/shifts/<uuid:demand_id>/claim/"
+        ),
+        claim_my_workforce_shift,
+        name="claim-my-workforce-shift",
+    ),
+    path(
+        (
+            "my/workforce/<slug:organization_slug>/<slug:series_slug>/"
+            "<slug:edition_slug>/shifts/commitments/"
+            "<uuid:commitment_id>/withdraw/"
+        ),
+        withdraw_my_workforce_shift,
+        name="withdraw-my-workforce-shift",
     ),
     path(
         "my/navigation/pins/",
@@ -607,6 +657,103 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         organization_workforce_availability,
         name="organization-workforce-availability",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/create/"
+        ),
+        create_organization_workforce_shift,
+        name="create-organization-workforce-shift",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+            "<uuid:demand_id>/update/"
+        ),
+        update_organization_workforce_shift,
+        name="update-organization-workforce-shift",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+            "<uuid:demand_id>/open/"
+        ),
+        open_organization_workforce_shift,
+        name="open-organization-workforce-shift",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+            "<uuid:demand_id>/lock/"
+        ),
+        lock_organization_workforce_shift,
+        name="lock-organization-workforce-shift",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+            "<uuid:demand_id>/reopen/"
+        ),
+        reopen_organization_workforce_shift,
+        name="reopen-organization-workforce-shift",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+            "<uuid:demand_id>/complete/"
+        ),
+        complete_organization_workforce_shift,
+        name="complete-organization-workforce-shift",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+            "<uuid:demand_id>/cancel/"
+        ),
+        cancel_organization_workforce_shift,
+        name="cancel-organization-workforce-shift",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+            "<uuid:demand_id>/commitments/<uuid:commitment_id>/confirm/"
+        ),
+        confirm_organization_workforce_shift_commitment,
+        name="confirm-organization-workforce-shift-commitment",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+            "<uuid:demand_id>/commitments/<uuid:commitment_id>/remove/"
+        ),
+        remove_organization_workforce_shift_commitment,
+        name="remove-organization-workforce-shift-commitment",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+            "<uuid:demand_id>/"
+        ),
+        organization_workforce_shift,
+        name="organization-workforce-shift",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/"
+        ),
+        organization_workforce_shifts,
+        name="organization-workforce-shifts",
     ),
     path(
         (
@@ -1188,6 +1335,112 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         WorkforceOrganizerAvailabilityView.as_view(),
         name="api-workforce-availability",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shifts"
+        ),
+        WorkforceShiftDemandCollectionView.as_view(),
+        name="api-workforce-shifts",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shifts/me"
+        ),
+        WorkforceMyShiftsView.as_view(),
+        name="api-workforce-my-shifts",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shifts/"
+            "<uuid:demand_id>/claim"
+        ),
+        WorkforceMyShiftClaimView.as_view(),
+        name="api-workforce-shift-claim",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shift-commitments/"
+            "<uuid:commitment_id>/withdraw"
+        ),
+        WorkforceMyShiftWithdrawView.as_view(),
+        name="api-workforce-shift-withdraw",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shift-commitments/"
+            "<uuid:commitment_id>/confirm"
+        ),
+        WorkforceShiftCommitmentActionView.as_view(action="confirm"),
+        name="api-workforce-shift-confirm",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shift-commitments/"
+            "<uuid:commitment_id>/remove"
+        ),
+        WorkforceShiftCommitmentActionView.as_view(action="remove"),
+        name="api-workforce-shift-remove",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shifts/"
+            "<uuid:demand_id>/open"
+        ),
+        WorkforceShiftDemandActionView.as_view(action="open"),
+        name="api-workforce-shift-open",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shifts/"
+            "<uuid:demand_id>/lock"
+        ),
+        WorkforceShiftDemandActionView.as_view(action="lock"),
+        name="api-workforce-shift-lock",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shifts/"
+            "<uuid:demand_id>/reopen"
+        ),
+        WorkforceShiftDemandActionView.as_view(action="reopen"),
+        name="api-workforce-shift-reopen",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shifts/"
+            "<uuid:demand_id>/complete"
+        ),
+        WorkforceShiftDemandActionView.as_view(action="complete"),
+        name="api-workforce-shift-complete",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shifts/"
+            "<uuid:demand_id>/cancel"
+        ),
+        WorkforceShiftDemandActionView.as_view(action="cancel"),
+        name="api-workforce-shift-cancel",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/shifts/"
+            "<uuid:demand_id>"
+        ),
+        WorkforceShiftDemandDetailView.as_view(),
+        name="api-workforce-shift",
     ),
     path(
         (

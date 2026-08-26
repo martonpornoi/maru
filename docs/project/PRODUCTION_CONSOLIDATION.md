@@ -91,7 +91,7 @@ The state vocabulary is deliberately small:
 | Typed application portfolio | Mounted / bounded | Ten code-owned starters, edition-owned drafts, organizer/applicant/reviewer journeys, exact named/immutable-role review provenance, and typed acceptance receipts are implemented. Real programme/workforce/SecOps/merchandise target adapters, staff answer correction, richer review rubrics, retention execution, and accessibility rehearsal remain. |
 | Programme intake/review | Absent | PRG-001–007. |
 | Venues and operational space bookings | Mounted / bounded | Reusable venue facts, edition selections, immutable physical-member expansion, hard availability, two-clique occupancy, independent approval/publication, and minimized public/My schedule projections are mounted. Guest allocation, programme ownership, full timetable layers/exports, and person/equipment conflicts remain. |
-| Timetable and shifts | Partial | Venue bookings implement safe three-phase physical occupancy and public schedule projection, but shared programme releases, workforce shifts, people/equipment conflicts, operational layers, and exports remain absent. |
+| Timetable and shifts | Partial | Venue bookings implement safe three-phase physical occupancy and public schedule projection. Workforce implements the first Position-demand, suitable-work, personal-claim, independent-confirmation, overlap/rest, lock, recovery, cancellation, and completion journey. Shared programme releases, general qualifications, maximum-hours/lone-work/accommodation policy, check-in/timekeeping, wider people/equipment conflicts, operational layers, notifications, and exports remain absent. |
 | Logistics/storage | Mounted / bounded / deployment-gated | Typed containment/custody/event/manifest/offline workflows, exact capability bindings, mounted routes, retention boundaries, runtime-role profiles, and fail-closed readiness are implemented. The serialized PostgreSQL matrix passes 26/26, the canonical repository gate passes, and scoped authenticated read-only browser rehearsal passes at 1,920 and 390 pixels. LOG-003 demand/reservation, LOG-004 driver/routes, LOG-006 invoice linkage, LOG-007 low-stock/wastage, broader mutation-role/visual/accessibility, restore/PITR, and production activation remain open. |
 | Governed charity partners | Mounted / bounded | Reusable non-tenant partners, private edition review, independent media/confirmation/publication, and minimized public snapshots satisfy FUR-011. Fundraising campaigns, settlement, costs, and public financial reporting remain open. |
 | Edition catalog and owned orders | Mounted / deployment-gated | Product/variant/beneficiary policy, finite stock, attendee orders, payment intents, activity, and same-shell attendee/staff pages are mounted. Real provider certification, order expiry/cancel/refund/exchange, fulfilment/shipping, and accounting export remain. |
@@ -860,8 +860,13 @@ extend information; governed documents are served by context and classification.
 
 ### M7 — Workforce, logistics, and live coordination
 
-- [ ] Shift templates, qualification, availability, demand, claims,
-  confirmation, attendance, hours, rest and handover.
+- [x] First Workforce Shift journey: Position demand, current exact-assignment
+  and shared-Availability suitability, personal claims/withdrawal, independent
+  confirmation/removal, transactional capacity and overlap/rest, reasoned
+  underfill lock, reopen, cancellation, and post-end completion.
+- [ ] Shift templates, general qualifications/interests, maximum hours,
+  lone-work and accommodation policy, attendance, actual time, notification,
+  escalation, handover, and schedule publication.
 - [x] Mount the bounded storage/location graph, containers, boxes, assets,
   stock, and kits.
 - [ ] Add demand/reservation and complete stock planning.

@@ -3281,6 +3281,7 @@ class _DemoSeeder:
             for persona_key, role_code in (
                 ("convention-chair", "convention-chair"),
                 ("board-chair", "board-member"),
+                ("board-vice-chair", "board-member"),
                 ("registration-lead", "registration-lead"),
                 ("front-desk-volunteer", "front-desk"),
                 ("treasurer", "treasurer"),

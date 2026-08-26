@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+{% load static tz %}
+
+{% block title %}My shifts · {{ edition.name }}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-maru-home' %}">My Maru</a> &rsaquo; <a href="{% url 'my-workforce-assignments' %}">Workforce</a> &rsaquo; My shifts</div>{% endblock %}
+
+{% block content %}
+  {% timezone edition.time_zone %}
+  <div id="content-main" class="maru-personal-home">
+    <header><p class="maru-personal-kicker">{{ edition.name }} · {{ organization.name }}</p><h1>My shifts</h1><p>Choose work that matches your active Position and the Availability you shared. Claiming records your request; an organizer then confirms whether it becomes scheduled work.</p></header>
+    {% include "core/_page_access_mount.html" %}
+    {% if action_error %}<ul class="messagelist"><li class="error" role="alert">{{ action_error }}</li></ul>{% endif %}
+
+    <section class="module" aria-labelledby="my-commitments-title">
+      <h2 id="my-commitments-title">Your claims and commitments</h2>
+      {% if commitment_rows %}
+        <div class="maru-admin-workspace-grid">
+          {% for row in commitment_rows %}
+            <article>
+              <h3>{{ row.item.demand.title }}</h3>
+              <span>{{ row.item.position_title }} · {{ row.item.department_name }}</span>
+              <span>{{ row.item.demand.starts_at|date:"D, M j, H:i" }}–{{ row.item.demand.ends_at|date:"H:i" }} · {{ row.item.demand.location_label }}</span>
+              <span>Status: <strong>{{ row.item.commitment.get_status_display }}</strong></span>
+              {% if row.item.commitment.status == "claimed" %}<span>An organizer has not confirmed this claim yet.</span>{% elif row.item.commitment.status == "confirmed" %}<span>This is confirmed work. Coverage may be locked after everyone is reviewed.</span>{% elif row.item.commitment.status == "removed" %}<span>This retained record is no longer active.</span>{% else %}<span>This work is complete.</span>{% endif %}
+              {% if row.item.commitment.status == "claimed" or row.item.commitment.status == "confirmed" %}
+                {% if not row.item.availability_current %}<span class="errornote">Your Availability changed after this was recorded. Contact the organizer or withdraw while planning remains open.</span>{% endif %}
+                {% if not row.item.qualification_current %}<span class="errornote">Your matching Position is no longer active. Contact the organizer.</span>{% endif %}
+              {% endif %}
+              <p>{{ row.item.demand.briefing }}</p>
+              <span>Break: {{ row.item.demand.break_minutes }} minutes · rest after: {{ row.item.demand.minimum_rest_minutes }} minutes</span>
+              {% if row.item.demand.supervision_note %}<span>Supervision or handover: {{ row.item.demand.supervision_note }}</span>{% endif %}
+              {% if row.item.can_withdraw %}
+                <details><summary>Withdraw from this Shift</summary><form method="post" action="{% url 'withdraw-my-workforce-shift' organization.slug convention_series.slug edition.slug row.item.commitment.id %}" novalidate>{% csrf_token %}{{ row.withdraw_form.expected_version }}{{ row.withdraw_form.retry_key }}{{ row.withdraw_form.non_field_errors }}<p>{{ row.withdraw_form.confirm }} {{ row.withdraw_form.confirm.label_tag }}{% if row.withdraw_form.confirm.help_text %}<span class="help">{{ row.withdraw_form.confirm.help_text }}</span>{% endif %}{% if row.withdraw_form.confirm.errors %}{{ row.withdraw_form.confirm.errors }}{% endif %}</p><button type="submit">Withdraw from Shift</button></form></details>
+              {% elif row.item.commitment.status == "claimed" or row.item.commitment.status == "confirmed" %}<span>Coverage is locked. Ask an organizer to reopen planning before a withdrawal.</span>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}<p>You have not claimed a Shift for this edition.</p>{% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="suitable-work-title">
+      <h2 id="suitable-work-title">Suitable open work</h2>
+      <p>These Shifts currently fit one of your active Positions, your complete shared Availability, required rest, remaining coverage, and your other active Shift commitments.</p>
+      {% if suitable_rows %}
+        <div class="maru-admin-workspace-grid">
+          {% for row in suitable_rows %}
+            <article>
+              <h3>{{ row.item.demand.title }}</h3>
+              <span>{{ row.item.position_title }} · {{ row.item.department_name }}</span>
+              <span>{{ row.item.demand.starts_at|date:"D, M j, H:i" }}–{{ row.item.demand.ends_at|date:"H:i" }} · {{ row.item.demand.location_label }}</span>
+              <span>{{ row.item.preference_label }} · {{ row.item.remaining_count }} place{{ row.item.remaining_count|pluralize }} remaining</span>
+              <p>{{ row.item.demand.briefing }}</p>
+              <span>Break: {{ row.item.demand.break_minutes }} minutes · rest after: {{ row.item.demand.minimum_rest_minutes }} minutes</span>
+              {% if row.item.demand.supervision_note %}<span>Supervision or handover: {{ row.item.demand.supervision_note }}</span>{% endif %}
+              <form method="post" action="{% url 'claim-my-workforce-shift' organization.slug convention_series.slug edition.slug row.item.demand.id %}" novalidate>{% csrf_token %}{{ row.claim_form.expected_version }}{{ row.claim_form.retry_key }}{{ row.claim_form.non_field_errors }}<button type="submit">Claim this Shift</button></form>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}<p>No open Shift currently matches all of those conditions. Changing Availability can change what appears here, but it never claims work for you.</p>{% endif %}
+    </section>
+
+    <aside class="module"><h2>What happens next</h2><p>Organizers review claims independently. Before coverage is locked, they recheck the current Position, Availability version, overlap, rest, and headcount. Check-in and timekeeping are not part of this journey yet.</p></aside>
+  </div>
+  {% endtimezone %}
+{% endblock %}

@@ -38,6 +38,7 @@ from maru.workforce.models import (
     Position,
     PositionAssignment,
     PositionTemplate,
+    ShiftDemand,
     VolunteerOpportunity,
 )
 from maru.workforce.queries import (
@@ -2673,6 +2674,21 @@ def close_position(
                 PositionAssignment.Status.ACTIVE,
             ),
         )
+        unfinished_shift_demands = ShiftDemand.objects.select_for_update().filter(
+            position_id=position.id,
+            organization_id=scope.organization.id,
+            edition_id=scope.edition.id,
+            status__in=(
+                ShiftDemand.Status.DRAFT,
+                ShiftDemand.Status.OPEN,
+                ShiftDemand.Status.LOCKED,
+            ),
+        )
+        if unfinished_shift_demands.exists():
+            raise StructureDependencyConflictError(
+                "Draft, open, or locked Shifts still depend on this Position. "
+                "Complete or cancel them before closing it."
+            )
         has_current_direct_report = any(
             item.reports_to_id == position.id and item.status != Position.Status.CLOSED
             for item in scope.positions
