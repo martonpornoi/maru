@@ -193,7 +193,7 @@ def _workspace_item(
 
 
 def _personal_items(request: HttpRequest) -> list[NavigationItem]:
-    return [
+    items = [
         NavigationItem(
             code="my.home",
             label="My Maru",
@@ -309,13 +309,30 @@ def _personal_items(request: HttpRequest) -> list[NavigationItem]:
             current=_route_is(request, "my-representation-invitations"),
         ),
     ]
+    if _route_is(
+        request,
+        "my-workforce-assignments",
+        "my-workforce-availability",
+        "save-my-workforce-availability",
+        "withdraw-my-workforce-availability",
+        "my-workforce-shifts",
+        "claim-my-workforce-shift",
+        "withdraw-my-workforce-shift",
+    ):
+        focused_codes = {"my.home", "my.workforce"}
+        return [item for item in items if item.code in focused_codes]
+    return items
 
 
-def _management_items(request: HttpRequest) -> list[NavigationItem]:
+def _management_items(
+    request: HttpRequest,
+    *,
+    page_context: Mapping[str, Any],
+) -> list[NavigationItem]:
     shell_access = admin_shell_access(request)
     if not shell_access["workspace_available"]:
         return []
-    return [
+    items = [
         _workspace_item(
             request,
             code="work.today",
@@ -406,6 +423,23 @@ def _management_items(request: HttpRequest) -> list[NavigationItem]:
             section="Account",
         ),
     ]
+    routed_edition = page_context.get("edition")
+    selected = (
+        routed_edition
+        if isinstance(routed_edition, EventEdition)
+        else admin_edition_options(request).get("selected")
+    )
+    if isinstance(selected, EventEdition) and selected.adoption_profile_code == (
+        "workforce_only"
+    ):
+        allowed_codes = {
+            "work.today",
+            "work.workforce",
+            "work.setup",
+            "work.security",
+        }
+        return [item for item in items if item.code in allowed_codes]
+    return items
 
 
 def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
@@ -986,6 +1020,17 @@ def _platform_items(request: HttpRequest) -> list[NavigationItem]:
             current=_route_is(request, "baseline-admin-home"),
         ),
         NavigationItem(
+            code="platform.workforce-setup",
+            label="Set up Workforce",
+            url=reverse("workforce-adoption-setup"),
+            section="Platform",
+            description=(
+                "Create or reuse the minimum foundation for volunteer operations."
+            ),
+            keywords=("volunteers", "staff", "progressive adoption", "onboarding"),
+            current=_route_is(request, "workforce-adoption-setup"),
+        ),
+        NavigationItem(
             code="platform.organizations-add",
             label="Add organization",
             url=reverse("baseline-create-organization"),
@@ -1252,7 +1297,7 @@ def project_shell_navigation(
         return {"groups": (), "count": 0}
 
     personal_items = _personal_items(request)
-    management_items = _management_items(request)
+    management_items = _management_items(request, page_context=page_context)
     items = _deduplicate(
         (
             *personal_items,
@@ -1287,13 +1332,21 @@ def project_shell_navigation(
             item for item in surface_items if item.code not in pinned_code_set
         ]
         if admin_shell_access(request)["workspace_available"] or actor.is_staff:
+            administration_label = (
+                "Administration" if actor.is_staff else "Convention workspace"
+            )
+            administration_description = (
+                "Open organizer and platform administration tools."
+                if actor.is_staff
+                else "Open the convention workspaces this account may use."
+            )
             visible_items.append(
                 NavigationItem(
                     code="work.administration",
-                    label="Administration",
+                    label=administration_label,
                     url=reverse("admin:index"),
                     section="Work",
-                    description="Open organizer and platform administration tools.",
+                    description=administration_description,
                     keywords=("staff", "organizer", "management"),
                     pinnable=False,
                 )

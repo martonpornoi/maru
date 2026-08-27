@@ -5,17 +5,18 @@ ADR 0041 containment, version-fenced Department and Position management, and
 the owner-safe Position assignment lifecycle with shared strict HTML/API
 commands, person-owned deliberately shared Availability, and governed Shift
 demand through commitment completion with stopped-writer database enforcement
-are implemented in the canonical current tree; complete rendered
-accessibility, post-edition Availability disposal, recovery, deployment, and
-production acceptance remain gated
-Last updated: 2026-08-25
+are implemented in the canonical current tree; Workforce-only assignment no
+longer manufactures attendee Participation evidence; complete rendered
+accessibility, portability, post-edition Availability disposal, recovery,
+deployment, and production acceptance remain gated
+Last updated: 2026-08-26
 
 ## Purpose and requirements
 
 `maru.workforce` owns the executable HR-007 through HR-014 slices defined by
-ADRs 0019, 0028, 0075, 0076, 0077, and 0078,
-plus IDN-011's non-participation boundary. It turns an edition responsibility
-into explicit structure and person-controlled planning input:
+ADRs 0019, 0028, 0075, 0076, 0077, 0078, and 0080, plus IDN-011,
+IDN-014, EVT-006, UX-030, and NFR-013. It turns an edition responsibility into
+explicit structure and person-controlled planning input:
 
 ```text
 department hierarchy
@@ -23,7 +24,8 @@ department hierarchy
   -> always-present publishable volunteer opportunity
   -> application and requested agreement evidence
   -> independently approved position assignment
-  -> exact role-bundle version and participation capacities
+  -> exact role-bundle version and, only for an adopted Participation profile,
+     historical participation capacities
   -> private or deliberately shared person-owned availability
   -> Position demand, personal claim, independent confirmation, and locked coverage
 ```
@@ -32,6 +34,54 @@ It does not infer access from a job title, an application, a registration
 answer, an uploaded file, or a profile label. Authority remains owned by
 `maru.authorization`; convention participation remains owned by
 `maru.participation`.
+
+## Workforce-only adoption boundary
+
+`workforce_only@1` is the first executable bounded-adoption profile. It keeps
+the complete Structure → Positions → assignments → Availability → Shifts
+journey while excluding attendee Participation, Registration, payments,
+attendance, and unrelated modules. The guided platform workflow is documented
+in the [Set up Workforce contract](../product/page-contracts/workforce-only-adoption-setup.md)
+and the [adoption and recovery runbook](../operations/workforce-only-adoption-and-recovery.md).
+
+Assignment remains responsibility plus exact authority evidence in every
+profile. In a full-convention edition, the established compatibility behavior
+also creates or activates Participation capacities. In a Workforce-only
+edition, approval stores no `Participation` or `ParticipationCapacity` and the
+assignment's nullable capacity pointer must remain empty. Model validation and
+the PostgreSQL assignment guard require evidence to match the immutable edition
+profile; ending a Workforce-only assignment revokes authority and retains
+assignment evidence without touching Participation. Migration `0014` refuses
+downgrade once such active or ended evidence exists.
+
+Candidate discovery already accepts a purpose-bounded relationship: an active
+organization membership, Position application, onboarding request, or prior
+Workforce history can make an active person selectable without Participation.
+Account existence alone is not sufficient, and selection creates no attendee
+state.
+
+Current profile v1 supports the built-in versioned, copy-on-write structure
+template and manual purpose-built editors. General partner imports, a complete
+continuity export, printable rota, offline/manual reconciliation, and automated
+profile removal remain declared production gates rather than hidden promises.
+
+After an accountable operator creates the first Department, a fresh
+Workforce-only organization may still lack the immutable Position meaning
+required by Position creation. The Positions workspace can create one
+code-owned **Workforce volunteer** starter under a different accountable
+controller's approval and a retained reason. Its RoleBundle contains only
+`events.view_basic` and `workforce.view_structure`; the template carries the
+semantic `volunteer` label. The action grants nobody authority and creates no
+Position, opportunity, person relationship, assignment, RoleAssignment,
+Participation, Registration, payment, Availability, or Shift. Incompatible
+organization templates are filtered from the Workforce-only editor rather than
+letting an unadopted capability enter through reusable configuration.
+
+Exact routed editions drive the management menu and workspace selector even
+without saved session context. Public Workforce pages use a Volunteer-only
+shell, and personal Workforce pages focus navigation on My Maru and My
+Workforce. These focused surfaces make the purpose boundary legible while
+policy and database controls remain authoritative.
 
 A platform administrator may initiate or review bootstrap work as an attributed
 actor, but cannot be the subject of a volunteer application, onboarding request,
@@ -42,8 +92,9 @@ reject the platform-only subject classification without rejecting
 ## Legacy empty-organization bootstrap
 
 ADR 0040 supersedes this broad workforce ceremony as the normal way to
-establish first organization authority. A new Draft organization uses Representation & access's
-purpose-built Executive Board lifecycle. The service below remains preserved
+establish first organization authority. A new Draft organization uses
+Representation & access's purpose-built truthful representation lifecycle
+under ADR 0080. The service below remains preserved
 recovery evidence for legacy reconciliation only; it must not compete with
 Representation & access or be used without a separately approved procedure.
 
@@ -173,12 +224,12 @@ route documented in
 Its governance-anchored projection is deliberately composed from two sources:
 
 ```text
-Executive Board — minimized OrganizationRepresentation anchor
+Accountable representation — minimized truthful OrganizationRepresentation anchor
   -> Convention Coordination — top-level edition-owned Department
        -> operational and nested edition Departments
 ```
 
-Executive Board is never copied into Department, Position, PositionAssignment,
+The accountable representation is never copied into Department, Position, PositionAssignment,
 or a generic group. Convention Coordination has no persisted Department parent; the page
 places it visually beneath the organization-owned governance anchor. Every
 other parent edge remains an exact same-organization, same-edition Department

@@ -1,0 +1,30 @@
+{% extends "registration/base_public.html" %}
+
+{% block public_navigation %}
+  <nav aria-label="Volunteer navigation">
+    {% if edition %}
+      <a href="{% url 'workforce-opportunities' edition.id %}">Volunteer opportunities</a>
+    {% elif opportunity %}
+      <a href="{% url 'workforce-opportunities' opportunity.position.edition_id %}">Volunteer opportunities</a>
+    {% elif document_request %}
+      <a href="{% url 'workforce-opportunities' document_request.edition_id %}">Volunteer opportunities</a>
+    {% endif %}
+    {% if request.user.is_authenticated %}
+      <a href="{% url 'my-workforce-assignments' %}">My Workforce</a>
+      <form method="post" action="{% url 'staff-logout' %}">
+        {% csrf_token %}
+        <button type="submit">Sign out</button>
+      </form>
+    {% else %}
+      <a href="{% url 'staff-login' %}?next={{ request.get_full_path|urlencode }}">Sign in</a>
+    {% endif %}
+  </nav>
+{% endblock %}
+
+{% block public_footer %}
+  <footer class="site-footer">
+    Volunteer information belongs to this convention edition and follows its
+    stated Workforce purpose and retention policy. Applying or volunteering
+    does not create attendee registration, attendance, or payment records.
+  </footer>
+{% endblock %}

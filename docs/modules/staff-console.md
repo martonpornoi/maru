@@ -1,11 +1,12 @@
 # Embedded Convention work
 
 Status: API-backed workflow mounted in the focused unified shell with shared
-page framing, an owner-rehearsed Registration desk, accessible modal drawers,
-and a Workforce journey linked to purpose-built Position, Assignment,
-Availability, and Shift management; complete mutation-role, width/zoom, deployment, and
-production evidence remains gated
-Last updated: 2026-08-25
+page framing, adoption-profile-aware navigation, an owner-rehearsed
+Registration desk for full-convention editions, accessible modal drawers, and
+a Workforce-only journey linked to purpose-built Position, Assignment,
+Availability, and Shift management; complete mutation-role, width/zoom,
+deployment, and production evidence remains gated
+Last updated: 2026-08-26
 
 ## Purpose and requirements
 
@@ -25,7 +26,7 @@ platform records use `/admin/platform/`, and existing model routes remain below
 points.
 
 The current backend verifies its route, authorization, and sidebar boundaries;
-the current frontend passes type checking, 28 Vitest tests, production build,
+the current frontend passes type checking, 29 Vitest tests, production build,
 focused automated axe checks, and an owner-role 390-pixel smoke without console
 errors or horizontal overflow. The final consolidated suite and coverage gate
 now pass. Complete width/zoom, representative screen-reader, failure-state,
@@ -115,6 +116,25 @@ public clients may use independent seasonal themes.
   Team inbox, and Live operations, each labelled **Not available yet** and
   rendered without a dead link. Availability and Shifts instead have
   independently authorized implemented continuations inside Workforce.
+
+For `workforce_only@1`, the same shell deliberately narrows rather than
+pretending the convention adopted everything:
+
+- Today replaces attendee, payment, and currency summaries with the selected
+  Workforce workspace and an explicit **No attendee or payment setup** boundary;
+- the home Forms section retains volunteer applications and onboarding
+  documents but omits attendee registration and staff-assisted intake;
+- People attendance, My registration, Registration desk, Reports and badges,
+  and Registration setup are absent;
+- the ordered setup guide is foundation, accountable access, Structure,
+  Positions, assignments, Availability, Shifts, and access management;
+- unrelated planned-capability pressure is omitted; and
+- specialist records are hidden by default but remain available through one
+  explicit **Browse specialist records** disclosure when separately authorized.
+
+These projections consume the backend profile and available-destination
+contract. Client-side filtering never substitutes for exact-edition policy,
+API scope, or access-group compatibility checks.
 
 The initial host uses the built-in local email/password verifier. It is a
 bootstrap identity path, not the production identity-provider or recovery

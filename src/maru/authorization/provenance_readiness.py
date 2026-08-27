@@ -114,7 +114,10 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0011_registration_profile_extension_capabilities"),
     ("authorization", "0017_workforce_availability_capability"),
     ("authorization", "0018_workforce_shift_capabilities"),
+    ("authorization", "0019_progressive_adoption_authority"),
+    ("events", "0010_workforce_adoption_profile"),
     ("organizations", "0013_runtime_executable_function_hardening"),
+    ("organizations", "0014_purpose_bounded_representation"),
     ("workforce", "0005_runtime_executable_function_hardening"),
     ("workforce", "0006_edition_structure_schema"),
     ("workforce", "0007_structure_write_integrity"),
@@ -124,6 +127,7 @@ _ACTIVATION_MIGRATIONS = (
     ("workforce", "0011_owner_assignment_commands"),
     ("workforce", "0012_person_owned_availability"),
     ("workforce", "0013_shift_journey"),
+    ("workforce", "0014_workforce_only_assignment_evidence"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -210,6 +214,12 @@ _TRIGGER_CONTRACTS = (
         _ROW_BEFORE_INSERT_UPDATE,
     ),
     _TriggerContract(
+        "authorization_profile_bound_capability_scope_guard",
+        "authorization_capabilitygrant",
+        "maru_validate_profile_bound_capability_grant_scope()",
+        _ROW_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
         "authorization_capability_grant_no_delete",
         "authorization_capabilitygrant",
         "maru_prevent_authority_record_delete()",
@@ -219,6 +229,12 @@ _TRIGGER_CONTRACTS = (
         "authorization_role_assignment_guard",
         "authorization_roleassignment",
         "maru_validate_role_assignment()",
+        _ROW_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "authorization_profile_bound_role_scope_guard",
+        "authorization_roleassignment",
+        "maru_validate_profile_bound_role_assignment_scope()",
         _ROW_BEFORE_INSERT_UPDATE,
     ),
     _TriggerContract(
@@ -317,6 +333,12 @@ _TRIGGER_CONTRACTS = (
         "authorization_authority_control_insert_guard",
         "authorization_authoritycontrol",
         "maru_validate_authority_control_insert()",
+        _ROW_BEFORE_INSERT,
+    ),
+    _TriggerContract(
+        "authorization_representation_control_type_insert_guard",
+        "authorization_authoritycontrol",
+        "maru_validate_representation_control_type_insert()",
         _ROW_BEFORE_INSERT,
     ),
     _TriggerContract(
@@ -1036,6 +1058,8 @@ _CORE_FUNCTIONS = (
     "maru_assert_active_board_membership_provenance(uuid)",
     "maru_assert_active_executive_board(uuid)",
     "maru_assert_active_executive_board_v0009(uuid)",
+    "maru_assert_active_maru_operators(uuid)",
+    "maru_assert_active_maru_operators_v0009(uuid)",
     ("maru_workforce_role_evidence_matches_position(uuid,uuid,uuid,uuid,uuid,uuid)"),
     "maru_deferred_validate_board_membership_from_representation()",
     "maru_deferred_validate_board_membership_from_appointment()",
@@ -1070,8 +1094,10 @@ _CORE_FUNCTIONS = (
     "maru_authorization_scope_rank(uuid,uuid,uuid)",
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)",
     "maru_validate_capability_grant()",
+    "maru_validate_profile_bound_capability_grant_scope()",
     "maru_prevent_authority_record_delete()",
     "maru_validate_role_assignment()",
+    "maru_validate_profile_bound_role_assignment_scope()",
     "maru_validate_role_bundle_catalog()",
     "maru_prevent_role_bundle_mutation()",
     "maru_validate_scoped_resource_binding()",
@@ -1082,6 +1108,7 @@ _CORE_FUNCTIONS = (
     "maru_validate_authority_issuance_insert()",
     "maru_prevent_authority_issuance_mutation()",
     "maru_validate_authority_control_insert()",
+    "maru_validate_representation_control_type_insert()",
     "maru_prevent_authority_control_mutation()",
     "maru_guard_audit_event()",
     "maru_guard_authority_provenance_activation_audit()",
@@ -1146,13 +1173,19 @@ _FUNCTION_DEFINITION_SHA256 = {
         "3f48371907ea1a45e56bbebf69a92f695fa27dcf95032d55e39afdd6f4158a15"
     ),
     "maru_assert_active_board_membership_provenance(uuid)": (
-        "b585585ccd82abf19501694426c707bb641526115aa87b5bb12c9cfb4fbf93e0"
+        "74cc0516256e96229324e2d79039278ab96c06ef95e651e2be42d552ec1e4752"
     ),
     "maru_assert_active_executive_board(uuid)": (
-        "75a8dffee39937aff7be7ecc5477ca55391aea9851c97ef506d25feacb5b95ab"
+        "48f701b6745b3bda7f96cbd9a47527b8797224977b74a518c68686535f05acee"
     ),
     "maru_assert_active_executive_board_v0009(uuid)": (
         "40715e8c46e578175cc095c4ea912396e9243d20a00d63ff83bb108e815be482"
+    ),
+    "maru_assert_active_maru_operators(uuid)": (
+        "d85e457c88f8758f1807301e1232ea5bad68eef468c5ddd6cd403b02e8399083"
+    ),
+    "maru_assert_active_maru_operators_v0009(uuid)": (
+        "6341a61ec8d12543274fc3b3a24f3b9370e68efb8e9f99e2a252027a8d5a2939"
     ),
     (
         "maru_workforce_role_evidence_matches_position(uuid,uuid,uuid,uuid,uuid,uuid)"
@@ -1191,7 +1224,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1dda9acafc97a1c2e682d5cd75127cde2064022bfbfc686677140ac1ec6baad6"
     ),
     "maru_guard_workforce_assignment()": (
-        "951383463b93672dc404341fd22bf0e156b9a27a97551b8837fb1aefdfe9da9f"
+        "9e50a77b6939a1bc441af8407738f4c898b2e9431b0d168ce9b30f751b1e9f81"
     ),
     "maru_guard_assignment_command_receipt()": (
         "a95e7fd1e33287b9265ec3c166e887fd4b149f834a311e32c751b4a8f98bc95f"
@@ -1245,7 +1278,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1d4ef9c453acc221e452c08d09a8d9f45c70618e3c2ea0c7fbcdfb8781d7bece"
     ),
     "maru_authorization_capability_min_scope(text)": (
-        "f8f7e8cf1ace85ab818df2e4fc57451152e8c9487fc23591484d6b9d22fc5ac0"
+        "9a8c25573e20b0bc9505356b6c5364affce1b42bd0bc8e50ca36365e48c7e17e"
     ),
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)": (
         "093a2f3a81a16d7a09bc782c23711aa4b108274ee7a9baf8fa955e52d82cc481"
@@ -1352,7 +1385,10 @@ _FUNCTION_DEFINITION_SHA256 = {
         "199f6fed15e24d855f070adf990494410999bb6c60f6a9423f6c6c6f10e0ed93"
     ),
     "maru_validate_authority_control_insert()": (
-        "d0d90f0e3ba495244011c1f1b436aa11c0be8c9cb001b5fb693b29f9b0aaa22e"
+        "12bc5c99ffad88ad4231ee91301fe971c9a68e16b8c9fa658afd9e518b6a648a"
+    ),
+    "maru_validate_representation_control_type_insert()": (
+        "b06e54ea1e424e08d705b7744e503af713e6ae4a8e9e58835ea35221b2028f71"
     ),
     "maru_validate_authority_issuance_insert()": (
         "be7ca045f7f38b30c2d65002cd8c50a4e9c2408008f15273d4f823e48132ff40"
@@ -1360,8 +1396,14 @@ _FUNCTION_DEFINITION_SHA256 = {
     "maru_validate_capability_grant()": (
         "8df9e28605db2edfedcd7cc3f5c5a2563c0a6ae243970a71a722679ee9425350"
     ),
+    "maru_validate_profile_bound_capability_grant_scope()": (
+        "74033ee90f0120d0d5aea12bcbbb30bc7438a75a6f5d79403579edad2f1ced85"
+    ),
     "maru_validate_role_assignment()": (
         "a656e41a4ac5864f3089a2f1894d28ad769e4afaaa04df877398e23cdb3982c8"
+    ),
+    "maru_validate_profile_bound_role_assignment_scope()": (
+        "db4f30f9ea7b1d02195ff708810010e6b4f9658c2f561adf0ab7da529101c67e"
     ),
     "maru_validate_role_bundle_catalog()": (
         "1699be8a8d6178919ba7f14e354c9df2341dcc0da9d5bd4dae2e56aab7e69a34"
@@ -1431,8 +1473,10 @@ _FUNCTION_DEFINITION_SHA256 = {
 _DOWNGRADE_FENCE_TRIGGER_NAMES = frozenset(
     {
         "authorization_capability_grant_guard",
+        "authorization_profile_bound_capability_scope_guard",
         "authorization_capability_grant_no_delete",
         "authorization_role_assignment_guard",
+        "authorization_profile_bound_role_scope_guard",
         "authorization_role_assignment_no_delete",
         "authorization_role_bundle_catalog_guard",
         "authorization_role_bundle_immutable",
@@ -1542,6 +1586,8 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_assert_active_board_membership_provenance(uuid)",
         "maru_assert_active_executive_board(uuid)",
         "maru_assert_active_executive_board_v0009(uuid)",
+        "maru_assert_active_maru_operators(uuid)",
+        "maru_assert_active_maru_operators_v0009(uuid)",
         (
             "maru_workforce_role_evidence_matches_position(uuid,uuid,uuid,uuid,"
             "uuid,uuid)"
@@ -1579,8 +1625,10 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_authorization_scope_rank(uuid,uuid,uuid)",
         "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)",
         "maru_validate_capability_grant()",
+        "maru_validate_profile_bound_capability_grant_scope()",
         "maru_prevent_authority_record_delete()",
         "maru_validate_role_assignment()",
+        "maru_validate_profile_bound_role_assignment_scope()",
         "maru_validate_role_bundle_catalog()",
         "maru_prevent_role_bundle_mutation()",
         "maru_validate_scoped_resource_binding()",
@@ -1591,6 +1639,7 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_validate_authority_issuance_insert()",
         "maru_prevent_authority_issuance_mutation()",
         "maru_validate_authority_control_insert()",
+        "maru_validate_representation_control_type_insert()",
         "maru_prevent_authority_control_mutation()",
         "maru_guard_audit_event()",
         "maru_guard_authority_provenance_activation_audit()",

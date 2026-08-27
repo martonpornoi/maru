@@ -194,6 +194,7 @@ def _edition_payload(**changes: object) -> dict[str, object]:
         "time_zone": "Europe/Vienna",
         "language_codes": ["de", "en"],
         "currency_codes": "EUR",
+        "adoption_profile_code": "full_convention",
         "idempotency_key": str(uuid4()),
     }
     payload.update(changes)
@@ -225,9 +226,9 @@ def test_page_8_uses_the_shared_shell_and_strict_post_only_provisioning() -> Non
     assert "Governance invitations" not in content
     assert "My Maru" in content
     assert 'data-navigation-group="personal"' not in content
-    assert "Board setup" in content
+    assert "Accountable-access setup" in content
     assert "Step 1 of 3" in content
-    assert "1. Create the Executive Board" in content
+    assert "1. Choose the truthful representation" in content
     assert "2. Invite at least two controllers" in content
     assert "3. Activate governance" in content
     assert f'href="{reverse("platform-account-inventory")}"' in content
@@ -240,6 +241,7 @@ def test_page_8_uses_the_shared_shell_and_strict_post_only_provisioning() -> Non
     rejected = client.post(
         f"{url}provision/",
         {
+            "representation_code": "executive_board",
             "reason": "Create accountable governance.",
             "organization_id": str(organization.id),
         },
@@ -252,7 +254,10 @@ def test_page_8_uses_the_shared_shell_and_strict_post_only_provisioning() -> Non
 
     created = client.post(
         f"{url}provision/",
-        {"reason": "Create accountable governance."},
+        {
+            "representation_code": "executive_board",
+            "reason": "Create accountable governance.",
+        },
     )
     assert created.status_code == 302
     assert created["Location"] == url
@@ -262,7 +267,7 @@ def test_page_8_uses_the_shared_shell_and_strict_post_only_provisioning() -> Non
     )
     progressed = client.get(url).content.decode()
     assert "Step 2 of 3" in progressed
-    assert "Invite a Board controller" in progressed
+    assert "Invite a controller" in progressed
 
 
 def test_invitation_lookup_is_exact_generic_and_strict() -> None:
@@ -510,7 +515,7 @@ def test_activation_form_is_versioned_strict_and_reveals_active_authority() -> N
     assert "Active Executive Board controllers" in controller_content
     assert appointments[1].account.email in controller_content
     assert "Active role assignment" in controller_content
-    assert "Board setup" in controller_content
+    assert "Accountable-access setup" in controller_content
     assert "Complete" in controller_content
     assert "Review user accounts" not in controller_content
     assert "Activate Executive Board" not in controller_content
@@ -814,7 +819,7 @@ def test_activated_controller_can_complete_pages_3_through_7() -> None:
     )
     assert client.get(create_edition_url).status_code == 200
     created_edition = client.post(create_edition_url, _edition_payload())
-    assert created_edition.status_code == 302
+    assert created_edition.status_code == 302, created_edition.context["form"].errors
     edition = EventEdition.objects.get(series=series)
     edition_url = reverse(
         "baseline-event-edition-record",

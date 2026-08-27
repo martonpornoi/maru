@@ -72,6 +72,8 @@ EDITION_BASIC_FIELD_CEILING = frozenset(
         "name",
         "lifecycle",
         "aggregate_version",
+        "adoption_profile_code",
+        "adoption_profile_version",
         "time_zone",
         "language_codes",
         "currency_codes",
@@ -1213,7 +1215,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-08-25.2"
+POLICY_VERSION = "2026-08-26.1"
 
 
 def capability(code: str) -> Capability | None:

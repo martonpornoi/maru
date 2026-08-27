@@ -2,9 +2,8 @@
 
 from rest_framework import serializers
 
-from maru.authorization.policy import decide, resolve_edition_target
+from maru.events.adoption import ADOPTION_PROFILE_CHOICES
 from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.organizations.models import OrganizationMembership
 from maru.participation.models import Participation, ParticipationCapacity
 
@@ -47,85 +46,46 @@ class CapacityContextSerializer(serializers.ModelSerializer[ParticipationCapacit
         read_only_fields = fields
 
 
-class EditionContextSerializer(serializers.ModelSerializer[Participation]):
+class EditionContextSerializer(serializers.Serializer[dict[str, object]]):
     """Serialize and validate edition context data."""
 
-    organization_id = serializers.UUIDField(source="organization.id")
-    organization_slug = serializers.CharField(source="organization.slug")
-    series_id = serializers.UUIDField(source="edition.series.id")
-    series_slug = serializers.CharField(source="edition.series.slug")
-    series_name = serializers.CharField(source="edition.series.name")
-    edition_id = serializers.UUIDField(source="edition.id")
-    edition_slug = serializers.CharField(source="edition.slug")
-    edition_name = serializers.CharField(source="edition.name")
+    organization_id = serializers.UUIDField()
+    organization_slug = serializers.CharField()
+    series_id = serializers.UUIDField()
+    series_slug = serializers.CharField()
+    series_name = serializers.CharField()
+    edition_id = serializers.UUIDField()
+    edition_slug = serializers.CharField()
+    edition_name = serializers.CharField()
     lifecycle = serializers.ChoiceField(
-        source="edition.lifecycle",
         choices=EventEdition.Lifecycle.choices,
     )
-    time_zone = serializers.CharField(source="edition.time_zone")
+    adoption_profile_code = serializers.ChoiceField(
+        choices=ADOPTION_PROFILE_CHOICES,
+        read_only=True,
+    )
+    adoption_profile_version = serializers.IntegerField(min_value=1, read_only=True)
+    adoption_profile_label = serializers.CharField(read_only=True)
+    adopted_modules = serializers.ListField(
+        child=serializers.CharField(),
+        read_only=True,
+    )
+    available_destinations = serializers.ListField(
+        child=serializers.CharField(),
+        read_only=True,
+    )
+    time_zone = serializers.CharField()
     language_codes = serializers.ListField(
-        source="edition.language_codes",
         child=serializers.CharField(),
     )
     currency_codes = serializers.ListField(
-        source="edition.currency_codes",
         child=serializers.CharField(),
     )
-    starts_on = serializers.DateField(source="edition.starts_on")
-    ends_on = serializers.DateField(source="edition.ends_on")
-    participation_status = serializers.CharField(source="status")
+    starts_on = serializers.DateField()
+    ends_on = serializers.DateField()
+    participation_status = serializers.CharField()
     capacities = CapacityContextSerializer(many=True)
-    can_transition = serializers.SerializerMethodField()
-
-    class Meta:
-        """Configure Django's declarative class metadata."""
-
-        model = Participation
-        fields = (
-            "organization_id",
-            "organization_slug",
-            "series_id",
-            "series_slug",
-            "series_name",
-            "edition_id",
-            "edition_slug",
-            "edition_name",
-            "lifecycle",
-            "time_zone",
-            "language_codes",
-            "currency_codes",
-            "starts_on",
-            "ends_on",
-            "participation_status",
-            "capacities",
-            "can_transition",
-        )
-        read_only_fields = fields
-
-    def get_can_transition(self, obj: Participation) -> bool:
-        """Return can transition.
-
-        Parameters
-        ----------
-        obj : Participation
-            The model instance being validated or presented.
-
-        Returns
-        -------
-        bool
-            `True` when Return can transition; otherwise `False`.
-        """
-        account = self.context.get("account")
-        if not isinstance(account, Account):
-            return False
-        return decide(
-            principal=account,
-            capability_code="events.transition",
-            resource=resolve_edition_target(
-                organization_id=obj.organization_id,
-                edition_id=obj.edition_id,
-            ),
-        ).allowed
+    can_transition = serializers.BooleanField(read_only=True)
 
 
 class ParticipationHistorySerializer(serializers.ModelSerializer[Participation]):

@@ -7,6 +7,7 @@ from maru.authorization import provenance_readiness
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V1,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2,
+    RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
     RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
@@ -35,6 +36,7 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.identity_platforminvitationretentionpolicycontrol",
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
+        "public.events_workforceadoptionsetupreceipt",
         "public.workforce_editionstructurecommandreceipt",
         "public.workforce_positionassignmentcommandreceipt",
         "public.workforce_personavailabilitycommandreceipt",
@@ -189,7 +191,17 @@ def test_v2_function_allowlist_preserves_frozen_v1_and_adds_latch_helper() -> No
     )
 
 
-def test_every_v2_runtime_function_has_a_readiness_definition_fingerprint() -> None:
+def test_v3_function_allowlist_preserves_v2_and_adds_operator_helpers() -> None:
+    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3[:-2] == (
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2
+    )
+    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3[-2:] == (
+        "public.maru_assert_active_maru_operators(uuid)",
+        "public.maru_assert_active_maru_operators_v0009(uuid)",
+    )
+
+
+def test_every_v3_runtime_function_has_a_readiness_definition_fingerprint() -> None:
     def normalize(identity: str) -> str:
         return identity.removeprefix("public.").replace(
             "timestamp with time zone",
@@ -198,14 +210,12 @@ def test_every_v2_runtime_function_has_a_readiness_definition_fingerprint() -> N
 
     allowlisted = {
         normalize(identity)
-        for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2
+        for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3
     }
 
     assert allowlisted <= set(provenance_readiness._CORE_FUNCTIONS)
     assert allowlisted <= set(provenance_readiness._FUNCTION_DEFINITION_SHA256)
-    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2[-1] == (
-        "public.maru_lock_authority_provenance_latch()"
-    )
+    assert len(allowlisted) == len(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3)
 
 
 def _result(**overrides: bool) -> RuntimeDatabaseRoleSafety:
@@ -303,7 +313,7 @@ def test_probe_binds_the_role_and_required_function_identities(
         list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
-        list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2),
+        list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3),
     ]
     configured_connections.__getitem__.assert_called_once_with("security")
     assert result.current_session_is_safe

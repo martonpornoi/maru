@@ -18,6 +18,9 @@ or permission to use production personal data.
   rehearses setup without a pre-populated demo database.
 - [Empty-experience baseline](empty-experience-baseline.md) protects a known
   clean environment.
+- [Workforce-only adoption and recovery](workforce-only-adoption-and-recovery.md)
+  establishes the first bounded profile without attendee or payment side
+  effects.
 
 ## Deploy, observe, and recover
 
@@ -48,6 +51,7 @@ analogy.
 maru-hands-on-tutorial
 clean-convention-onboarding-walkthrough
 empty-experience-baseline
+workforce-only-adoption-and-recovery
 marucon-admin-rehearsal
 page-01-platform-home
 page-02-create-organization

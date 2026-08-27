@@ -53,6 +53,7 @@ from maru.core.views import (
     readiness,
     removed_administration_route,
     update_navigation_pin,
+    workforce_adoption_setup,
 )
 from maru.events.admin_context import change_admin_edition_context
 from maru.events.api import (
@@ -276,6 +277,7 @@ from maru.workforce.views import (
     close_organization_structure_position,
     create_organization_structure_department,
     create_organization_structure_position,
+    create_workforce_starter_position_template,
     delete_organization_structure_department,
     download_onboarding_document,
     end_organization_workforce_assignment,
@@ -484,6 +486,11 @@ urlpatterns: list[URLPattern | URLResolver] = [
         "admin/platform/organizations/",
         baseline_administration_home,
         name="baseline-admin-home",
+    ),
+    path(
+        "admin/platform/setup/workforce/",
+        workforce_adoption_setup,
+        name="workforce-adoption-setup",
     ),
     path(
         "admin/platform/accounts/",
@@ -1029,6 +1036,15 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         registration_setup_configuration,
         name="registration-setup-configuration",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "positions/volunteer-starter/"
+        ),
+        create_workforce_starter_position_template,
+        name="create-workforce-starter-position-template",
     ),
     path(
         (
@@ -2228,6 +2244,7 @@ _BASELINE_PLATFORM_ROUTE_PREFIXES = (
     "admin/account/step-up/",
     "admin/access/",
     "admin/platform/accounts/",
+    "admin/platform/setup/workforce/",
     "health/",
 )
 PLATFORM_URLPATTERNS = [

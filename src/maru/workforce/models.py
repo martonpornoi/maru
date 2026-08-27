@@ -16,6 +16,7 @@ from django.utils import timezone
 
 from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug
+from maru.events.adoption import profile_adopts_module
 from maru.identity.policies import validate_convention_subject
 from maru.participation.models import validate_capacity_code
 from maru.workforce.availability_inputs import (
@@ -1708,13 +1709,20 @@ class PositionAssignment(UUIDTimeStampedModel):
             raise ValidationError(
                 {"approved_by": "A different controller must approve assignment."}
             )
+        participation_adopted = profile_adopts_module(
+            self.edition.adoption_profile_code,
+            "participation",
+        )
+        capacity_matches_profile = (
+            participation_adopted and bool(self.participation_capacity_id)
+        ) or (not participation_adopted and not self.participation_capacity_id)
         if self.status == self.Status.ACTIVE and (
             not self.approved_by_id
             or not self.role_assignment_id
-            or not self.participation_capacity_id
+            or not capacity_matches_profile
         ):
             raise ValidationError(
-                "Active assignments require approval, role, and capacity evidence."
+                "Active assignments require approval and profile-matched evidence."
             )
         if self.command_version is not None:
             has_decision = bool(
@@ -1757,10 +1765,11 @@ class PositionAssignment(UUIDTimeStampedModel):
                 or self.decision_by_id != self.approved_by_id
                 or not self.approved_by_id
                 or not self.role_assignment_id
-                or not self.participation_capacity_id
+                or not capacity_matches_profile
             ):
                 raise ValidationError(
-                    "A governed active assignment requires complete approval evidence."
+                    "A governed assignment requires complete profile-matched "
+                    "approval evidence."
                 )
             has_end = bool(
                 self.ended_at and self.ended_by_id and self.end_reason.strip()

@@ -21,14 +21,38 @@ using it. A bidder, event host, volunteer, or communications operator remains a
 purpose-specific relationship unless another capability is deliberately
 adopted.
 
-The first profile to prove end to end is **Workforce-only**, building on the
-current Structure through Shifts journey without requiring attendee
-registration or payment state. Follow-up profiles are **Programme and event
+The first executable profile is **Workforce-only**, building on the current
+Structure through Shifts journey without attendee Participation, Registration,
+payment, or attendance state. Follow-up profiles are **Programme and event
 submissions**, **Communications publishing**, **Charity art auction**, and
 **Registration without payments**, ordered by partner need and the completeness
 of their import, export, print, degraded-operation, and recovery contracts.
-These profiles are roadmap outcomes, not claims that the current interfaces
-already provide zero-configuration activation or safe production cutover.
+Those follow-up profiles remain roadmap outcomes. Workforce-only now provides
+guided activation and enforced coexistence, but safe production cutover still
+requires the open portability, offline/manual fallback, retention, recovery,
+deployment, and partner-acceptance gates.
+
+## Current progressive-adoption outcome
+
+ADR 0080 implements `workforce_only@1` as an immutable EventEdition boundary.
+**Set up Workforce** creates or reuses only Organization → Convention series →
+Event edition, provisions truthful Maru operators only when no accountable
+representation exists, and redirects through two-person accountability into
+the complete Workforce journey. Existing editions become
+`full_convention@1`; existing Executive Board organizations and evidence are
+unchanged.
+
+Exact-edition authorization rejects an unadopted module before platform policy
+or stored grants. Context, Django navigation, Convention work, generic access
+management, Registration discovery, and Position-assignment evidence consume
+the same profile contract. A Workforce-only assignment retains responsibility
+and exact authority but creates no Participation or attendance capacity.
+
+Profile v1 declares incumbent-system coexistence and the current manual,
+copy-on-write structure setup. General partner import, complete continuity
+export, print/offline packs, automated decommissioning, profile expansion,
+post-edition retention execution, and production recovery remain the next
+trust-building outcomes rather than implied capabilities.
 
 ## Current contributor-documentation outcome
 
@@ -84,8 +108,8 @@ spine precedes M2 governance and computed scoped access; it does not weaken the
 full ADR 0037 outcome. ADR 0039 selects the richer pre-reset record-oriented
 visual grammar without restoring a second menu, Quick Start, direct
 cross-domain saves, or legacy domain assumptions. ADR 0040 now starts M2.1 with
-Representation & access's explicit Executive Board representation lifecycle: exact verified
-accounts accept their own invitations, at least two distinct controllers
+Representation & access's explicit Executive Board representation lifecycle:
+exact verified accounts accept their own invitations, at least two distinct controllers
 cross-approve root authority, activation moves the Draft organization to
 Active atomically, and the platform administrator remains external. Its
 initial schema, service, HTML, authorization, and synthetic-fixture lifecycle
@@ -107,8 +131,10 @@ verified with synthetic data. Production has not been cut over: explicit
 ordinary legacy recreation, representative candidate-cardinality load,
 deployment restore/PITR, and the real activation ceremony remain gates before
 production approval.
+ADR 0080 preserves that Board history and adds truthful Maru-operator
+representation for bounded adoption with the same two-person controls.
 The Organization structure read projection mounts the canonical read-only page and
-strict GET API. It composes the minimized Executive Board governance anchor
+strict GET API. It composes the minimized accountable-representation anchor
 with one version-fenced bounded, complete edition tree, validates holder role
 lineage and active-person state before labels, audits the sensitive read before
 disclosure, retries one aggregate movement, and removes the duplicate React
@@ -430,12 +456,12 @@ component now resolves platform, Board, exact-edition, exact Department, typed
 resource, self, attendee/public, safeguarding, security, and fixed-policy
 contexts. Named relationship reads are audited, and signed exact-person or
 immutable-role preview is capped and read-only; it never creates page ACLs or
-changes the session principal. Draft organizations
-created during this interval must be brought under the IDN-012 Executive Board
-invariant before activation.
+changes the session principal. Draft organizations created during this interval
+must be brought under the IDN-012 truthful accountable-representation invariant
+before activation.
 
 The accepted Representation & access contract is the first Phase 1 scope-v2 slice. It separates
-the Executive Board representation aggregate from membership, departments,
+the accountable representation aggregate from membership, departments,
 participation, and generic role sharing; requires existing active verified
 person accounts and invitee-owned versioned decisions; and defines atomic
 two-or-more-controller activation with value-minimized audit/outbox evidence.
@@ -590,7 +616,7 @@ position opportunities, applications, reviewed PDF agreements, headcount, and
 dual-controlled role/capacity activation. The old one-shot bootstrap remains
 only as an operator command/service for an approved legacy reconciliation; its
 guarded browser ceremony and management API are retired. The canonical
-Organization structure page shows the minimized Executive Board governance
+Organization structure page shows the minimized accountable-representation
 anchor above nested Departments, Positions, current permitted holders, and
 multi-department roles under exact edition scope. The old duplicate Convention
 work destination is removed. The Department management aggregate, built-in-template

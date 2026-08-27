@@ -140,7 +140,7 @@ paths. It also positively proves database connection, every user-schema usage
 path, ordinary runtime relation DML, SELECT-only materialized-view and exact
 marker/latch access with no table- or column-level `REFERENCES`, sequence
 use/read, live
-`session_replication_role=origin`, and the exact versioned v2 policy/trigger-
+`session_replication_role=origin`, and the exact versioned v3 policy/trigger-
 helper function closure. `PUBLIC` function execution or an extra/missing
 runtime execute grant fails closed. The same minimized dependency fails closed
 when any role proof fails, the server major is not the rehearsed PostgreSQL 17
@@ -156,7 +156,7 @@ attachments by table, function signature, event/row type, enabled state,
 `UPDATE OF` columns, and deferred timing. A missing migration-recorder row,
 altered helper definition, disabled/replaced trigger, changed update-column
 set, or changed constraint timing makes readiness unavailable. These helpers
-remain outside the 19-function runtime execute allowlist: they are callable
+remain outside the 21-function runtime execute allowlist: they are callable
 only through their pinned PostgreSQL triggers, with direct execution revoked
 from both `PUBLIC` and the runtime login.
 

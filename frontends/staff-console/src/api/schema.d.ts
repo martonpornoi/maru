@@ -8653,6 +8653,12 @@ export interface components {
          * @enum {string}
          */
         AdmissionTierReplacementStatusEnum: "payment_pending" | "completed" | "expired" | "cancelled";
+        /**
+         * @description * `full_convention` - Full convention
+         *     * `workforce_only` - Workforce only
+         * @enum {string}
+         */
+        AdoptionProfileCodeEnum: "full_convention" | "workforce_only";
         /** @description Serialize and validate application answer projection data. */
         ApplicationAnswerProjection: {
             /** Format: uuid */
@@ -9670,6 +9676,8 @@ export interface components {
             readonly name: string;
             readonly lifecycle: components["schemas"]["EditionLifecycleEnum"];
             readonly aggregate_version: number;
+            readonly adoption_profile_code: string;
+            readonly adoption_profile_version: number;
             readonly time_zone: string;
             readonly language_codes: string[];
             readonly currency_codes: string[];
@@ -9716,6 +9724,11 @@ export interface components {
             edition_slug: string;
             edition_name: string;
             lifecycle: components["schemas"]["EditionLifecycleEnum"];
+            readonly adoption_profile_code: components["schemas"]["AdoptionProfileCodeEnum"];
+            readonly adoption_profile_version: number;
+            readonly adoption_profile_label: string;
+            readonly adopted_modules: string[];
+            readonly available_destinations: string[];
             time_zone: string;
             language_codes: string[];
             currency_codes: string[];
@@ -9725,19 +9738,6 @@ export interface components {
             ends_on: string;
             participation_status: string;
             capacities: components["schemas"]["CapacityContext"][];
-            /**
-             * @description Return can transition.
-             *
-             *     Parameters
-             *     ----------
-             *     obj : Participation
-             *         The model instance being validated or presented.
-             *
-             *     Returns
-             *     -------
-             *     bool
-             *         `True` when Return can transition; otherwise `False`.
-             */
             readonly can_transition: boolean;
         };
         /** @description Serialize and validate edition create request data. */
@@ -9752,6 +9752,8 @@ export interface components {
             currency_codes: string[];
             /** Format: uuid */
             series_id: string;
+            /** @default full_convention */
+            adoption_profile_code: components["schemas"]["AdoptionProfileCodeEnum"];
         };
         /**
          * @description * `draft` - Draft
@@ -14081,6 +14083,7 @@ export interface components {
         WorkforceStructureGovernance: {
             kind: components["schemas"]["WorkforceStructureGovernanceKindEnum"];
             label: string;
+            purpose: string;
             state: components["schemas"]["WorkforceStructureGovernanceStateEnum"];
         };
         /**

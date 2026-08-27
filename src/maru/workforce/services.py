@@ -27,6 +27,7 @@ from maru.authorization.policy import (
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.adoption import profile_adopts_module
 from maru.participation.models import Participation, ParticipationCapacity
 from maru.workforce.edition_write_scope import (
     lock_active_department_write_target,
@@ -574,6 +575,103 @@ def review_onboarding_document(
         return document_request
 
 
+def _activate_position_assignment_capacity(
+    *,
+    position: Position,
+    account: Account,
+    effective_from: datetime,
+) -> ParticipationCapacity | None:
+    """Create legacy Participation evidence only for an adopted profile.
+
+    Parameters
+    ----------
+    position : Position
+        The Workforce position whose adopted capacities are being activated.
+    account : Account
+        The person receiving the active position assignment.
+    effective_from : datetime
+        The instant from which the capacity evidence is effective.
+
+    Returns
+    -------
+    ParticipationCapacity | None
+        The position-specific capacity, or ``None`` when Participation is not
+        part of the edition's adoption profile.
+    """
+    if not profile_adopts_module(
+        position.edition.adoption_profile_code,
+        "participation",
+    ):
+        return None
+    participation, _ = Participation.objects.get_or_create(
+        organization_id=position.organization_id,
+        edition_id=position.edition_id,
+        account=account,
+        defaults={
+            "status": Participation.Status.ACTIVE,
+            "edition_name_snapshot": position.edition.name,
+            "series_name_snapshot": position.edition.series.name,
+        },
+    )
+    if participation.status in {
+        Participation.Status.INTERESTED,
+        Participation.Status.PENDING,
+        Participation.Status.CONFIRMED,
+    }:
+        participation.status = Participation.Status.ACTIVE
+        participation.save(update_fields=("status", "updated_at"))
+    for capacity_code in position.capacity_codes:
+        label = {
+            "volunteer": "Volunteer",
+            "staff": "Staff",
+        }.get(capacity_code, position.title)
+        capacity, created = ParticipationCapacity.objects.get_or_create(
+            participation=participation,
+            code=capacity_code,
+            defaults={
+                "label_snapshot": label,
+                "status": ParticipationCapacity.Status.ACTIVE,
+                "contribution_summary": position.description[:240],
+                "started_at": effective_from,
+            },
+        )
+        if not created and capacity.status != ParticipationCapacity.Status.ACTIVE:
+            capacity.status = ParticipationCapacity.Status.ACTIVE
+            capacity.label_snapshot = label
+            capacity.contribution_summary = position.description[:240]
+            capacity.started_at = effective_from
+            capacity.ended_at = None
+            capacity.save(
+                update_fields=(
+                    "status",
+                    "label_snapshot",
+                    "contribution_summary",
+                    "started_at",
+                    "ended_at",
+                    "updated_at",
+                )
+            )
+    specific_code = f"position.{position.code}"
+    position_capacity, created = ParticipationCapacity.objects.get_or_create(
+        participation=participation,
+        code=specific_code,
+        defaults={
+            "label_snapshot": position.title,
+            "status": ParticipationCapacity.Status.ACTIVE,
+            "contribution_summary": position.description[:240],
+            "started_at": effective_from,
+        },
+    )
+    if not created and position_capacity.status != ParticipationCapacity.Status.ACTIVE:
+        position_capacity.status = ParticipationCapacity.Status.ACTIVE
+        position_capacity.started_at = effective_from
+        position_capacity.ended_at = None
+        position_capacity.save(
+            update_fields=("status", "started_at", "ended_at", "updated_at")
+        )
+    return position_capacity
+
+
 def activate_position_assignment(  # noqa: PLR0912, PLR0915
     *,
     position_id: UUID,
@@ -776,75 +874,11 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
             correlation_id=correlation_id,
             source_channel="workforce",
         )
-        participation, _ = Participation.objects.get_or_create(
-            organization_id=position.organization_id,
-            edition_id=position.edition_id,
+        position_capacity = _activate_position_assignment_capacity(
+            position=position,
             account=account,
-            defaults={
-                "status": Participation.Status.ACTIVE,
-                "edition_name_snapshot": position.edition.name,
-                "series_name_snapshot": position.edition.series.name,
-            },
+            effective_from=effective_from,
         )
-        if participation.status in {
-            Participation.Status.INTERESTED,
-            Participation.Status.PENDING,
-            Participation.Status.CONFIRMED,
-        }:
-            participation.status = Participation.Status.ACTIVE
-            participation.save(update_fields=("status", "updated_at"))
-        for capacity_code in position.capacity_codes:
-            label = {
-                "volunteer": "Volunteer",
-                "staff": "Staff",
-            }.get(capacity_code, position.title)
-            capacity, created = ParticipationCapacity.objects.get_or_create(
-                participation=participation,
-                code=capacity_code,
-                defaults={
-                    "label_snapshot": label,
-                    "status": ParticipationCapacity.Status.ACTIVE,
-                    "contribution_summary": position.description[:240],
-                    "started_at": effective_from,
-                },
-            )
-            if not created and capacity.status != ParticipationCapacity.Status.ACTIVE:
-                capacity.status = ParticipationCapacity.Status.ACTIVE
-                capacity.label_snapshot = label
-                capacity.contribution_summary = position.description[:240]
-                capacity.started_at = effective_from
-                capacity.ended_at = None
-                capacity.save(
-                    update_fields=(
-                        "status",
-                        "label_snapshot",
-                        "contribution_summary",
-                        "started_at",
-                        "ended_at",
-                        "updated_at",
-                    )
-                )
-        specific_code = f"position.{position.code}"
-        position_capacity, created = ParticipationCapacity.objects.get_or_create(
-            participation=participation,
-            code=specific_code,
-            defaults={
-                "label_snapshot": position.title,
-                "status": ParticipationCapacity.Status.ACTIVE,
-                "contribution_summary": position.description[:240],
-                "started_at": effective_from,
-            },
-        )
-        if (
-            not created
-            and position_capacity.status != ParticipationCapacity.Status.ACTIVE
-        ):
-            position_capacity.status = ParticipationCapacity.Status.ACTIVE
-            position_capacity.started_at = effective_from
-            position_capacity.ended_at = None
-            position_capacity.save(
-                update_fields=("status", "started_at", "ended_at", "updated_at")
-            )
         if proposed_assignment_id is None:
             assignment = PositionAssignment.objects.create(
                 position=position,
@@ -899,7 +933,11 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
             correlation_id=correlation_id,
             reason_code="assignment_activated",
             authorization_target=resolve_owned_target(resource=assignment),
-            changed_fields=("assignment", "role_assignment", "participation_capacity"),
+            changed_fields=(
+                "assignment",
+                "role_assignment",
+                *(("participation_capacity",) if position_capacity is not None else ()),
+            ),
             source_channel=source_channel,
             request_id=request_id,
         )

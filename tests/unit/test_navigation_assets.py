@@ -61,4 +61,6 @@ def test_navigation_template_has_stable_accessible_text_and_glyphs() -> None:
     assert "&#9734;" in sidebar
     assert chr(0xE2) not in sidebar
     assert "â" not in sidebar
-    assert "{{ edition.name }} · {{ edition.organization.name }}" in base_site
+    assert (
+        "{{ available_edition.name }} · {{ available_edition.organization.name }}"
+    ) in base_site

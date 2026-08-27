@@ -231,6 +231,10 @@ def test_structure_projection_composes_minimized_governance_and_nested_tree() ->
     assert payload["governance"] == {
         "kind": "governance",
         "label": "Executive Board",
+        "purpose": (
+            "Represents the organization's real accountable Executive Board and "
+            "controls delegated Maru authority."
+        ),
         "state": "provisioning",
     }
     assert payload["structure"]["state"] == "complete"
@@ -1311,7 +1315,8 @@ def test_governance_anchor_is_absent_or_fixed_and_identity_free() -> None:
         )
     ) == {
         "kind": "governance",
-        "label": "Executive Board",
+        "label": "Accountable representation",
+        "purpose": "No accountable Maru representation has been established yet.",
         "state": "absent",
     }
     representation = OrganizationRepresentationFactory(
@@ -1326,6 +1331,10 @@ def test_governance_anchor_is_absent_or_fixed_and_identity_free() -> None:
     ) == {
         "kind": "governance",
         "label": "Executive Board",
+        "purpose": (
+            "Represents the organization's real accountable Executive Board and "
+            "controls delegated Maru authority."
+        ),
         "state": "provisioning",
     }
     assert representation.provisioning_reason not in str(

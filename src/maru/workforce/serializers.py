@@ -343,6 +343,7 @@ class WorkforceStructureGovernanceSerializer(serializers.Serializer[dict[str, ob
 
     kind = serializers.ChoiceField(choices=("governance",))
     label = serializers.CharField()  # type: ignore[assignment]
+    purpose = serializers.CharField()
     state = serializers.ChoiceField(
         choices=("absent", "provisioning", "active", "suspended")
     )

@@ -65,6 +65,14 @@ RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2: Final[tuple[str, ...]] = (
     "public.maru_lock_authority_provenance_latch()",
 )
 
+# ADR 0080 preserves the two earlier closures and adds only the two helpers
+# reached by the purpose-bounded Maru-operators representation validators.
+RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3: Final[tuple[str, ...]] = (
+    *RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2,
+    "public.maru_assert_active_maru_operators(uuid)",
+    "public.maru_assert_active_maru_operators_v0009(uuid)",
+)
+
 # These control relations are deliberately readable, but never writable, by
 # the application login.  Their mutations belong to the controlled
 # migration/cutover owner described in ADR-0046.
@@ -75,14 +83,15 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.identity_platforminvitationretentionpolicycontrol",
 )
 
-# Organization structure evidence is append-only at runtime. The separately
-# credentialed migration/cutover owner retains recovery authority. Registration
-# setup and account onboarding's
+# Workforce adoption and Organization structure evidence is append-only at
+# runtime. The separately credentialed migration/cutover owner retains recovery
+# authority. Registration setup and account onboarding's
 # transitions, command receipts, and reconciliation receipts use the same
 # profile. Delivery attempt/late-outcome provider references and current
 # retention assessments have narrowly trigger-guarded v9 updates and become
 # terminal when the safe result is disposed.
 RUNTIME_DATABASE_SELECT_INSERT_RELATIONS: Final[tuple[str, ...]] = (
+    "public.events_workforceadoptionsetupreceipt",
     "public.workforce_editionstructurecommandreceipt",
     "public.workforce_positionassignmentcommandreceipt",
     "public.workforce_personavailabilitycommandreceipt",
@@ -1051,7 +1060,7 @@ def probe_runtime_database_role_safety(
                 list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
-                list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2),
+                list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3),
             ],
         )
         row = cursor.fetchone()

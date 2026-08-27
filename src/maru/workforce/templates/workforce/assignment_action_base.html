@@ -78,9 +78,16 @@
     <p class="baseline-kicker">Authority boundary</p>
     <h2 id="assignment-authority-boundary-title">Responsibility and access move together only after approval</h2>
     <p>
-      The Position supplies approved role meaning and capacity labels. A second
-      controller's approval activates the scoped role and participation evidence
-      in one transaction; rejection and ending preserve the full organizer history.
+      The Position supplies approved role meaning and capacity labels.
+      {% if edition.adoption_profile_code == "workforce_only" %}
+        A second controller's approval activates only the scoped Workforce role;
+        it creates no attendee Registration, attendance, payment, or Participation
+        record.
+      {% else %}
+        A second controller's approval activates the scoped role and Participation
+        capacity in one transaction.
+      {% endif %}
+      Rejection and ending preserve the full organizer history.
     </p>
   </aside>
 {% endblock %}

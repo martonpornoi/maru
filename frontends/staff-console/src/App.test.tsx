@@ -30,6 +30,20 @@ const context = {
       edition_slug: "marucon-2026",
       edition_name: "MaruCon 2026",
       lifecycle: "preparing",
+      adoption_profile_code: "full_convention",
+      adoption_profile_version: 1,
+      adoption_profile_label: "Full convention",
+      adopted_modules: ["registration", "workforce"],
+      available_destinations: [
+        "today",
+        "my-registration",
+        "people",
+        "workforce",
+        "commerce",
+        "reports",
+        "setup",
+        "security",
+      ],
       time_zone: "Europe/Budapest",
       language_codes: ["en", "hu", "de"],
       currency_codes: ["EUR", "HUF"],
@@ -53,6 +67,24 @@ const context = {
           public_history_visible: true,
         },
       ],
+    },
+  ],
+} as const;
+
+const workforceOnlyContext = {
+  ...context,
+  display_name: "Maru Workforce Operator (Demo)",
+  editions: [
+    {
+      ...context.editions[0],
+      adoption_profile_code: "workforce_only",
+      adoption_profile_label: "Workforce only",
+      adopted_modules: ["workforce"],
+      available_destinations: ["today", "workforce", "setup", "security"],
+      language_codes: ["en"],
+      currency_codes: ["XXX"],
+      participation_status: "not_participating",
+      capacities: [],
     },
   ],
 } as const;
@@ -594,6 +626,85 @@ describe("Management Console", () => {
     );
     expect(document.body.textContent).not.toContain(
       "44444444-4444-4444-8444-444444444444",
+    );
+  });
+
+  it("keeps a Workforce-only workspace focused on volunteer operations", async () => {
+    const originalFetch = vi.mocked(fetch).getMockImplementation();
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init) => {
+      if (String(input) === "/api/v1/me/context") {
+        return jsonResponse(workforceOnlyContext);
+      }
+      return originalFetch?.(input, init) ?? jsonResponse({}, 404);
+    });
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: "MaruCon 2026" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Workforce" }))
+      .toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "People" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "My registration" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Registration desk" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reports & badges" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByText("Currency", { selector: ".metric-label" }))
+      .not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Workforce forms" }))
+      .toBeInTheDocument();
+    expect(screen.getByText("Volunteer applications")).toBeInTheDocument();
+    expect(screen.getByText("Onboarding documents")).toBeInTheDocument();
+    expect(screen.queryByText("Attendee registration")).not.toBeInTheDocument();
+    expect(screen.queryByText("Registration staff intake"))
+      .not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Specialist records" }))
+      .toHaveAttribute(
+        "href",
+        "/admin/?records=open#maru-specialist-heading",
+      );
+
+    await user.click(screen.getByRole("button", { name: "Workforce" }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Appointment is not ordinary access",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/it creates no attendee Registration, attendance, payment/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/participation capacity/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Setup guide" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Setup guide" }),
+    ).toBeInTheDocument();
+    for (const title of [
+      "Organization",
+      "Convention series",
+      "Event edition",
+      "Accountable access",
+      "Structure & Positions",
+      "Assignments",
+      "Availability",
+      "Shifts",
+      "Teams & access",
+    ]) {
+      expect(screen.getByText(title, { selector: "strong" })).toBeInTheDocument();
+    }
+    expect(screen.queryByText("Registration", { selector: "strong" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Planned capabilities" }))
+      .not.toBeInTheDocument();
+    await expectNoAccessibilityViolations(
+      document.querySelector<HTMLElement>(".shell")!,
     );
   });
 
@@ -1156,7 +1267,10 @@ describe("Management Console", () => {
       .toBe(true);
     expect(
       screen.getByRole("link", { name: "Browse specialist records" }),
-    ).toHaveAttribute("href", "/admin/");
+    ).toHaveAttribute(
+      "href",
+      "/admin/?records=open#maru-specialist-heading",
+    );
     const plannedCapabilities = screen
       .getByRole("heading", { name: "Planned capabilities" })
       .closest("section");

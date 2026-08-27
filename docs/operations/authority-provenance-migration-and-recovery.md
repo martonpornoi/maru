@@ -310,13 +310,15 @@ blocker count alone is not permission to proceed.
    Keep the migration and break-glass roles separate. The runtime role must
    positively prove database `CONNECT`, `USAGE` on every intentional
    non-system schema, four-operation DML on ordinary runtime relations,
-   `SELECT`/`INSERT` on `workforce_editionstructurecommandreceipt`,
+   `SELECT`/`INSERT` on `events_workforceadoptionsetupreceipt` and
+   `workforce_editionstructurecommandreceipt`,
    `SELECT`/`INSERT`/`UPDATE` on `workforce_editionstructurecontrol`,
    `USAGE`/`SELECT` (never `UPDATE`) on sequences, and `EXECUTE` on the exact
-   versioned 19-function v2 policy/trigger-helper closure. The structure
-   receipt and control deny `REFERENCES` and `DELETE`; the receipt also denies
-   `UPDATE`. Department retains ordinary DML and its stopped-writer retirement
-   trigger. Materialized views and the exact control trio
+   versioned 21-function v3 policy/trigger-helper closure. The adoption and
+   structure receipts deny `UPDATE`, `DELETE`, and `REFERENCES`; the structure
+   control denies `DELETE` and `REFERENCES`. Department retains ordinary DML
+   and its stopped-writer retirement trigger. Materialized views and the exact
+   control trio
    (`django_migrations`, activation marker, and generation latch) are
    SELECT-only and deny table- and column-level `REFERENCES`. `PUBLIC` must not
    execute any non-system

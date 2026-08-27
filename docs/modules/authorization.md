@@ -1,17 +1,19 @@
 # Authorization module
 
 Status: Implemented exact organization/edition/department/resource authority,
-sealed target resolution, protected Executive Board root, provenance-writing,
-and guarded exact-lineage policy/runtime activation; production legacy
-reconciliation and cutover remain gates
-Last updated: 2026-08-02
+sealed target and immutable adoption-profile resolution, protected Executive
+Board and Maru-operator roots, provenance writing, profile-compatible access
+management, and guarded exact-lineage policy/runtime activation; production
+legacy reconciliation and cutover remain gates
+Last updated: 2026-08-26
 
 ## Purpose and requirements
 
 `maru.authorization` is the deny-by-default authority boundary for IDN-002,
-IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, QRY-003, UX-020, UX-024,
-ADR 0003, ADR 0023, ADR 0040, ADR 0041, and ADR 0044. A membership or familiar role name never
-grants broad access by itself.
+IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, IDN-014, EVT-006, QRY-003,
+UX-020, UX-024, UX-028, UX-030, NFR-013, ADR 0003, ADR 0023, ADR 0040,
+ADR 0041, ADR 0044, and ADR 0080. A membership, account, familiar role name,
+or visible destination never grants broad access by itself.
 
 Platform administration is a separate principal purpose under ADR 0031.
 Capability grants and role assignments reject a platform administrator as
@@ -27,6 +29,13 @@ An inactive account is denied before self-relationship, platform, direct-grant,
 or role-assignment evaluation. This platform-wide login-disable invariant does
 not replace the explainable organizer-scoped restrictions required by ADR 0013.
 
+For an exact edition target, policy resolves the immutable adoption profile in
+the same tenant-scoped query. A capability whose top-level module is not
+adopted returns `module_not_adopted` before platform policy, direct grants, or
+role assignments are considered. Platform oversight is therefore not a hidden
+modularity bypass. Organization-scoped setup remains available where required;
+the bounded denial begins once an exact edition is resolved.
+
 ## Owned data and invariants
 
 - a code-owned, versioned capability catalog;
@@ -35,7 +44,7 @@ not replace the explainable organizer-scoped restrictions required by ADR 0013.
 - scoped, effective, expiring, and revocable role assignments;
 - grant, approval, and revocation provenance for command-managed authority;
 - an append-only typed issuance ledger that pins exact actor/approver sources
-  or the code-owned initial Executive Board ceremony;
+  or the code-owned initial accountable-representation ceremony;
 - bounded delegation linked to the authority that produced it;
 - immutable typed bindings between authorization scope and domain-owned
   resources, beginning with `workforce.position`;
@@ -83,8 +92,20 @@ M2 adds organization basic view, organization profile change, series creation,
 series change, and the security-critical
 `organizations.manage_representation` capability. The representation command
 uses exact organization scope and carries reason, audit, and approval
-obligations. These declarations extend the existing policy; they do not create
-a second Board flag or grant authority from membership alone.
+  obligations. These declarations extend the existing policy; they do not create
+  a second representation flag or grant authority from membership alone.
+
+ADR 0080 adds the immutable `maru-operators@1` root role. It preserves the
+Executive Board's independent-control and provenance model while adding only
+organization setup, edition lifecycle/profile, and implemented Workforce
+capabilities. Registration, payment, Participation, attendance, and unrelated
+module capabilities are absent. Its canonical assignment is the sole
+organization-scoped storage exception for edition-bounded capabilities, so the
+same accountable operators can govern successive Workforce-only editions.
+Ordinary direct grants and roles retain their exact-edition minimum scope;
+database triggers reject broader persistence. Policy also refuses to apply the
+reserved root to a full-convention edition, including one later created by a
+platform administrator in the same organization.
 
 Delegation is dual-authority: the actor must hold an active delegable parent
 grant and a separate `authorization.delegate` capability. A child cannot
@@ -187,15 +208,18 @@ guards it depends on. Audit `0006` adds the reciprocal reserved-operation insert
 guard; authorization `0008` delegates only the latch row lock to a
 revoked-by-default definer helper so the runtime writer remains serialized
 without latch `UPDATE`. Organizations `0013` and workforce `0005` then pin the
-four remaining runtime-executable Board/workforce helpers, and their persistent
+four remaining runtime-executable Board/Workforce helpers, and their persistent
 trigger callers, to `pg_catalog, public, pg_temp` with `public`-qualified object
 and helper references. Authorization `0009` is the convergence leaf and central
 downgrade fence; each owning migration also retains its own active-state fence
 if the recorder row is damaged. Authorization `0010` and workforce `0007`
 extend that same production contract across retired-Department authority and
-the Organization structure writer boundary. Readiness now fingerprints 74
-security-critical functions, including the complete 19-helper runtime closure
-and all 14 Organization structure trigger helpers, and verifies 93 exact trigger attachments.
+the Organization structure writer boundary. Authorization `0019` and
+Organizations `0014` extend the exact catalog for purpose-bounded Maru-operator
+control without rewriting Board evidence. Readiness now fingerprints the
+complete current security-critical function set, including the 21-helper
+runtime closure and all 14 Organization structure trigger helpers, and verifies
+the complete exact trigger-attachment catalog.
 The Organization structure subset is exactly 28 attachments, including statement/row event
 types, enabled state, `UPDATE OF` column lists, and deferred timing, on
 PostgreSQL 17. The downgrade-fence subset also includes all eight
@@ -235,14 +259,15 @@ matches `CURRENT_USER`, `SESSION_USER`, and this backend's
 session-authorization impersonation therefore prove privileges but never a
 healthy runtime login.
 
-`RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2` enumerates the 19 non-trigger
+`RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3` enumerates the 21 non-trigger
 helpers reachable from current triggers and direct policy execution, including
 the narrow definer helper that takes the latch row lock without granting latch
 `UPDATE` to runtime. Every non-system function is closed to `PUBLIC`; the role
 must execute every listed identity, and neither it nor any membership-reachable
 role (including `NOINHERIT` roles available through `SET ROLE`) may execute an
-unlisted one. All 19 helpers, including the three Board validators and the
-workforce evidence matcher, are definition-fingerprinted; the audit-owned
+unlisted one. All 21 helpers, including the Board validators, two purpose-
+bounded Maru-operator validators, and the Workforce evidence matcher, are
+definition-fingerprinted; the audit-owned
 reserved-activation operation guard is pinned too. Only the controlled owner
 mutates the migration recorder, marker, or latch; the reserved
 audit append is valid only as its exact same-transaction companion. The
@@ -388,8 +413,9 @@ administration sidebar or any embedded Convention work area:
 The workspace requires `authorization.manage_roles`; change and removal also
 require `authorization.revoke`, which the API reports separately so the client
 does not offer unsupported controls. It excludes the non-shareable
-`authority-controller` and reserved `executive-board` roles from role lists,
-assignment projections, exact resolution, replacement, and removal. Every
+  `authority-controller`, `executive-board`, and `maru-operators` roles from
+  role lists, assignment projections, exact resolution, replacement, and
+  removal. Every
 query is scoped by trusted organization and edition route values before
 records are returned. Sensitive workspace reads and all underlying authority
 mutations are audited.
@@ -399,6 +425,12 @@ Treasurer, and similar convention teams are familiar sharing concepts. They
 remain complete scoped roles, not Django Groups or page-local allowlists.
 People are shown by display name and exact email; assignment UUIDs are
 transport identities and are not rendered as primary labels.
+
+For an adopted-profile edition, every listed group and assignment must have a
+non-empty capability set wholly inside that profile. The query projection
+filters incompatible historical groups before disclosure; exact role lookup,
+create, replace, and assignment commands reject a crafted incompatible role at
+edition, Department, or resource scope with `module_not_adopted`.
 
 Access sharing is not a workforce appointment. It does not fill a position,
 check an NDA, add hierarchy/reporting relationships, create staff or volunteer
@@ -467,6 +499,9 @@ Access-workspace integration tests additionally cover deny-without-disclosure,
 human group labels, latest-version selection, organization/edition isolation,
 exact-email matching, independent approval, unknown-account rejection,
 atomic replacement, immediate removal, and cross-tenant assignment hiding.
+Workforce-only coverage additionally proves incompatible-group filtering,
+crafted assignment rejection, profile denial before platform policy, and
+retained Workforce groups.
 They also prove that Board controllers and platform administrators cannot use
 generic authority commands or the workspace to list, version, share, replace,
 or revoke reserved Executive Board authority.

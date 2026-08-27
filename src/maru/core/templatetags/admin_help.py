@@ -794,6 +794,7 @@ def admin_page_help(
     path: object = "",
     app_label: object = "",
     model_name: object = "",
+    adoption_profile_code: object = "",
 ) -> str:
     """Return concise help for model, app, index, and account utility pages.
 
@@ -805,6 +806,8 @@ def admin_page_help(
         The human-readable app label shown to authorized readers.
     model_name : object, default=''
         The human-readable model name shown to authorized readers.
+    adoption_profile_code : object, default=''
+        The selected edition's immutable adoption-profile code, when present.
 
     Returns
     -------
@@ -826,9 +829,15 @@ def admin_page_help(
 
     if not help_text and normalized_path.rstrip("/") == "/admin":
         help_text = (
-            "Use this administration home for convention work and specialist "
-            "records. For example: open Registration desk to help an attendee "
-            "or Registration to edit the convention's setup."
+            "Use this administration home for Workforce operations in the "
+            "selected convention. For example: open Workforce to continue "
+            "Departments, Positions, assignments, Availability, or Shifts."
+            if str(adoption_profile_code or "") == "workforce_only"
+            else (
+                "Use this administration home for convention work and specialist "
+                "records. For example: open Registration desk to help an attendee "
+                "or Registration to edit the convention's setup."
+            )
         )
     elif not help_text and normalized_path.rstrip("/") == "/admin/workspace":
         help_text = (

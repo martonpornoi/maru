@@ -30,7 +30,9 @@ from maru.authorization.provenance import (
     authority_issuance_is_current,
     authority_issuances_are_current,
 )
+from maru.events.adoption import AdoptionProfileCode, profile_allows_capability
 from maru.identity.models import Account
+from maru.organizations.representation_catalog import MARU_OPERATORS
 
 _TARGET_SEAL = object()
 EXACT_LINEAGE_POLICY_CONTRACT_VERSION = AUTHORITY_PROVENANCE_CONTRACT_VERSION
@@ -60,6 +62,8 @@ class ResolvedAuthorizationTarget:
         The resource binding identifier within the requested scope.
     owner_account_id
         The owner account identifier within the requested scope.
+    adoption_profile_code
+        The immutable adoption profile for an exact-edition target.
     """
 
     organization_id: UUID
@@ -67,6 +71,7 @@ class ResolvedAuthorizationTarget:
     department_id: UUID | None
     resource_binding_id: UUID | None
     owner_account_id: UUID | None = field(repr=False)
+    adoption_profile_code: str | None = field(repr=False)
     _seal: object = field(repr=False, compare=False)
 
     def __init__(self) -> None:
@@ -162,17 +167,23 @@ def _seal_target(
     department_id: UUID | None = None,
     resource_binding_id: UUID | None = None,
     owner_account_id: UUID | None = None,
+    adoption_profile_code: str | None = None,
 ) -> ResolvedAuthorizationTarget:
     if department_id is not None and edition_id is None:
         raise ValueError("A resolved department target requires an edition.")
     if resource_binding_id is not None and department_id is None:
         raise ValueError("A resolved resource target requires a department.")
+    if edition_id is None and adoption_profile_code is not None:
+        raise ValueError("An adoption profile requires an exact edition.")
+    if edition_id is not None and adoption_profile_code is None:
+        raise ValueError("An exact edition target requires an adoption profile.")
     target = object.__new__(ResolvedAuthorizationTarget)
     object.__setattr__(target, "organization_id", organization_id)
     object.__setattr__(target, "edition_id", edition_id)
     object.__setattr__(target, "department_id", department_id)
     object.__setattr__(target, "resource_binding_id", resource_binding_id)
     object.__setattr__(target, "owner_account_id", owner_account_id)
+    object.__setattr__(target, "adoption_profile_code", adoption_profile_code)
     object.__setattr__(target, "_seal", _TARGET_SEAL)
     return target
 
@@ -237,13 +248,14 @@ def resolve_edition_target(
         EventEdition.objects.filter(
             pk=edition_id,
             organization_id=organization_id,
-        ).values("id", "organization_id")
+        ).values("id", "organization_id", "adoption_profile_code")
     )
     if row is None:
         return None
     return _seal_target(
         organization_id=row["organization_id"],
         edition_id=row["id"],
+        adoption_profile_code=row["adoption_profile_code"],
     )
 
 
@@ -277,7 +289,12 @@ def resolve_department_target(
             organization_id=organization_id,
             edition_id=edition_id,
             retired_at__isnull=True,
-        ).values("id", "organization_id", "edition_id")
+        ).values(
+            "id",
+            "organization_id",
+            "edition_id",
+            adoption_profile_code=F("edition__adoption_profile_code"),
+        )
     )
     if row is None:
         return None
@@ -285,6 +302,7 @@ def resolve_department_target(
         organization_id=row["organization_id"],
         edition_id=row["edition_id"],
         department_id=row["id"],
+        adoption_profile_code=row["adoption_profile_code"],
     )
 
 
@@ -329,6 +347,7 @@ def resolve_resource_target(
             "department_id",
             "resource_kind",
             "resource_id",
+            adoption_profile_code=F("edition__adoption_profile_code"),
         )
     )
     if row is None:
@@ -340,6 +359,7 @@ def resolve_resource_target(
         edition_id=row["edition_id"],
         department_id=row["department_id"],
         resource_binding_id=row["id"],
+        adoption_profile_code=row["adoption_profile_code"],
     )
 
 
@@ -390,6 +410,7 @@ def resolve_owned_target(  # noqa: PLR0911
             organization_id=base.organization_id,
             edition_id=base.edition_id,
             owner_account_id=row["account_id"],
+            adoption_profile_code=base.adoption_profile_code,
         )
     concrete_attnames = {field.attname for field in resource._meta.concrete_fields}  # noqa: SLF001
     if not {"organization_id", "account_id"} <= concrete_attnames:
@@ -420,6 +441,7 @@ def resolve_owned_target(  # noqa: PLR0911
         organization_id=base.organization_id,
         edition_id=base.edition_id,
         owner_account_id=row["account_id"],
+        adoption_profile_code=base.adoption_profile_code,
     )
 
 
@@ -468,6 +490,7 @@ def resolve_self_target(
         organization_id=base.organization_id,
         edition_id=base.edition_id,
         owner_account_id=principal.id,
+        adoption_profile_code=base.adoption_profile_code,
     )
 
 
@@ -657,6 +680,36 @@ def _exact_issuance_allows(
     )
 
 
+def _purpose_bounded_role_matches_target(
+    assignment: RoleAssignment,
+    resource: ResolvedAuthorizationTarget,
+) -> bool:
+    """Keep the Maru-operator root inside Workforce-only editions.
+
+    The accountable root is stored at organization scope so the same two
+    operators can recover and govern successive Workforce-only editions. Its
+    edition authority is nevertheless purpose-bounded: creating a broader
+    profile never silently turns those operators into full-convention owners.
+
+    Parameters
+    ----------
+    assignment : RoleAssignment
+        The active role assignment being evaluated.
+    resource : ResolvedAuthorizationTarget
+        The exact resource and tenant chain requested by the operation.
+
+    Returns
+    -------
+    bool
+        ``True`` when the role may apply to the requested target.
+    """
+    return not (
+        assignment.role_bundle.code == MARU_OPERATORS.role_code
+        and resource.edition_id is not None
+        and resource.adoption_profile_code != AdoptionProfileCode.WORKFORCE_ONLY
+    )
+
+
 def _logistics_manifest_projection_targets(
     bindings: Collection[Mapping[str, Any]],
 ) -> dict[UUID, tuple[UUID, UUID, UUID]]:
@@ -682,6 +735,53 @@ def _logistics_manifest_projection_targets(
             "responsible_department_id",
         )
     }
+
+
+def _edition_projection_targets(
+    edition_ids: Collection[UUID],
+) -> dict[UUID, tuple[UUID, str]]:
+    """Resolve edition ownership and immutable adoption profiles in one query.
+
+    Parameters
+    ----------
+    edition_ids : Collection[UUID]
+        The event-edition identifiers needed by the authority projection.
+
+    Returns
+    -------
+    dict[UUID, tuple[UUID, str]]
+        Each existing edition mapped to its organization and profile code.
+    """
+    from maru.events.models import EventEdition  # noqa: PLC0415
+
+    return {
+        row["id"]: (row["organization_id"], row["adoption_profile_code"])
+        for row in EventEdition.objects.filter(id__in=edition_ids)
+        .order_by()
+        .values("id", "organization_id", "adoption_profile_code")
+    }
+
+
+def _valid_organization_ids(organization_ids: Collection[UUID]) -> set[UUID]:
+    """Return the requested organization IDs that still exist.
+
+    Parameters
+    ----------
+    organization_ids : Collection[UUID]
+        The candidate organization identifiers from projected authority.
+
+    Returns
+    -------
+    set[UUID]
+        The subset backed by current organization records.
+    """
+    from maru.organizations.models import Organization  # noqa: PLC0415
+
+    return set(
+        Organization.objects.filter(id__in=organization_ids)
+        .order_by()
+        .values_list("id", flat=True)
+    )
 
 
 def _bulk_authority_projection_targets(
@@ -710,25 +810,14 @@ def _bulk_authority_projection_targets(
         return {}
 
     from maru.charities.models import CharitySelection  # noqa: PLC0415
-    from maru.events.models import EventEdition  # noqa: PLC0415
-    from maru.organizations.models import Organization  # noqa: PLC0415
     from maru.venues.models import EditionSpaceSelection  # noqa: PLC0415
     from maru.workforce.models import Department, Position  # noqa: PLC0415
 
     organization_ids = {scope[0] for scope in scope_keys}
-    valid_organizations = set(
-        Organization.objects.filter(id__in=organization_ids)
-        .order_by()
-        .values_list("id", flat=True)
-    )
+    valid_organizations = _valid_organization_ids(organization_ids)
 
     requested_edition_ids = {scope[1] for scope in scope_keys if scope[1] is not None}
-    editions = {
-        row["id"]: row["organization_id"]
-        for row in EventEdition.objects.filter(id__in=requested_edition_ids)
-        .order_by()
-        .values("id", "organization_id")
-    }
+    editions = _edition_projection_targets(requested_edition_ids)
 
     requested_department_ids = {
         scope[2] for scope in scope_keys if scope[2] is not None
@@ -827,14 +916,17 @@ def _bulk_authority_projection_targets(
                 continue
             resolved[scope_key] = _seal_target(organization_id=organization_id)
             continue
-        if editions.get(edition_id) != organization_id:
+        edition_scope = editions.get(edition_id)
+        if edition_scope is None or edition_scope[0] != organization_id:
             continue
+        adoption_profile_code = edition_scope[1]
         if department_id is None:
             if binding_id is not None:
                 continue
             resolved[scope_key] = _seal_target(
                 organization_id=organization_id,
                 edition_id=edition_id,
+                adoption_profile_code=adoption_profile_code,
             )
             continue
         if departments.get(department_id) != (organization_id, edition_id):
@@ -844,6 +936,7 @@ def _bulk_authority_projection_targets(
                 organization_id=organization_id,
                 edition_id=edition_id,
                 department_id=department_id,
+                adoption_profile_code=adoption_profile_code,
             )
             continue
         binding = bindings.get(binding_id)
@@ -891,6 +984,7 @@ def _bulk_authority_projection_targets(
             edition_id=edition_id,
             department_id=department_id,
             resource_binding_id=binding_id,
+            adoption_profile_code=adoption_profile_code,
         )
     return resolved
 
@@ -1248,6 +1342,19 @@ def decide(  # noqa: PLR0911
             obligations=frozenset(),
             reason_code="target_unavailable",
         )
+    if resource.edition_id is not None and (
+        resource.adoption_profile_code is None
+        or not profile_allows_capability(
+            resource.adoption_profile_code,
+            capability_code,
+        )
+    ):
+        return PolicyDecision(
+            allowed=False,
+            fields=frozenset(),
+            obligations=frozenset(),
+            reason_code="module_not_adopted",
+        )
 
     permitted_fields = definition.field_ceiling
     if requested_fields is not None:
@@ -1330,6 +1437,11 @@ def decide(  # noqa: PLR0911
         principal=principal,
         role_bundle__capability_codes__contains=[capability_code],
     ).select_related("authority_issuance", "role_bundle")
+    matching_role_assignments = (
+        assignment
+        for assignment in role_assignments
+        if _purpose_bounded_role_matches_target(assignment, resource)
+    )
     role_assignment_allowed = (
         any(
             _exact_issuance_allows(
@@ -1339,10 +1451,10 @@ def decide(  # noqa: PLR0911
                 resource=resource,
                 evaluation_time=evaluation_time,
             )
-            for assignment in role_assignments
+            for assignment in matching_role_assignments
         )
         if exact_lineage_active
-        else role_assignments.exists()
+        else any(True for _assignment in matching_role_assignments)
     )
     if role_assignment_allowed:
         return PolicyDecision(

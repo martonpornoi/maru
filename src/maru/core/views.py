@@ -8,7 +8,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.db import connection
 from django.db.utils import DatabaseError
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
@@ -57,13 +57,19 @@ from maru.events.admin_context import (
     has_active_admin_scope,
     selected_admin_edition,
 )
-from maru.events.forms import EventEditionCreationForm, EventEditionUpdateForm
+from maru.events.adoption import AdoptionProfileCode, adoption_profile
+from maru.events.forms import (
+    EventEditionCreationForm,
+    EventEditionUpdateForm,
+    WorkforceAdoptionSetupForm,
+)
 from maru.events.models import EventEdition
 from maru.events.services import (
     EDITION_PROFILE_EDITABLE_LIFECYCLES,
     create_event_edition,
     update_event_edition,
 )
+from maru.events.workforce_adoption import set_up_workforce_adoption
 from maru.identity.invitation_readiness import (
     platform_invitation_runtime_contract_is_ready,
 )
@@ -144,6 +150,10 @@ SELECT
 
 _BASELINE_PAGE_PRESENTATION = {
     "core/baseline_admin_home.html": ("platform-administration-home", ""),
+    "core/workforce_adoption_setup.html": (
+        "workforce-adoption-setup",
+        "baseline-page--form",
+    ),
     "core/baseline_create_organization.html": (
         "create-organization",
         "baseline-page--form",
@@ -425,6 +435,130 @@ def baseline_administration_home(request: HttpRequest) -> HttpResponse:
         },
         status=status,
     )
+
+
+@login_required(login_url="staff-login")
+def workforce_adoption_setup(request: HttpRequest) -> HttpResponse:
+    """Establish or reuse the minimum foundation for Workforce-only use.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming authenticated platform-administration request.
+
+    Returns
+    -------
+    HttpResponse
+        The guided setup page or the next truthful workflow destination.
+    """
+    actor = _require_platform_administrator(request)
+    form = WorkforceAdoptionSetupForm(request.POST or None)
+    status = 200
+    form_is_valid = form.is_valid() if request.method == "POST" else False
+    if request.method == "POST" and not form_is_valid:
+        malformed_codes = {"invalid_input_cardinality", "unknown_input_field"}
+        if any(
+            error.code in malformed_codes for error in form.non_field_errors().as_data()
+        ):
+            status = 400
+    if request.method == "POST" and form_is_valid:
+        try:
+            result = set_up_workforce_adoption(
+                actor=actor,
+                details=form.setup_input(),
+                idempotency_key=cast_uuid(form.cleaned_data["idempotency_key"]),
+                correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+                source_channel="web",
+            )
+        except ValidationError as error:
+            _add_validation_errors(form, error)
+            if _validation_error_is_conflict(error):
+                status = 409
+        except (DatabaseError, ObjectDoesNotExist, RuntimeError):
+            logger.exception("Unable to complete guided Workforce setup")
+            form.add_error(
+                None,
+                "Workforce setup could not be completed. Nothing was partially "
+                "adopted; try again after the database is available.",
+            )
+            status = 503
+        else:
+            edition = result.edition
+            representation = result.representation
+            if result.replayed:
+                messages.info(
+                    request,
+                    f"{edition.name} was already set up for Workforce; Maru reused it.",
+                )
+            elif representation.state == representation.State.PROVISIONING:
+                messages.success(
+                    request,
+                    (
+                        f"{edition.name} is ready for Workforce setup. Invite at "
+                        "least two Maru operators and let each person accept before "
+                        "activation."
+                    ),
+                )
+            else:
+                messages.success(
+                    request,
+                    (
+                        f"{edition.name} now uses the Workforce-only profile. "
+                        "Registration, payments, and unrelated modules were not set up."
+                    ),
+                )
+
+            if representation.state == representation.State.PROVISIONING:
+                return redirect(
+                    "organization-representation",
+                    organization_slug=edition.organization.slug,
+                )
+            return redirect(
+                "organization-structure",
+                organization_slug=edition.organization.slug,
+                series_slug=edition.series.slug,
+                edition_slug=edition.slug,
+            )
+
+    existing_editions = (
+        EventEdition.objects.filter(
+            adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+        )
+        .select_related("organization", "series")
+        .order_by("organization__name", "series__name", "starts_on", "id")
+    )
+    return _baseline_page_response(
+        request,
+        "core/workforce_adoption_setup.html",
+        {
+            "form": form,
+            "existing_workforce_editions": existing_editions,
+        },
+        status=status,
+    )
+
+
+def cast_uuid(value: object) -> UUID:
+    """Return one already-validated form UUID with a narrow runtime check.
+
+    Parameters
+    ----------
+    value : object
+        The cleaned form value.
+
+    Returns
+    -------
+    UUID
+        The validated UUID.
+
+    Raises
+    ------
+    TypeError
+        If a caller bypasses form validation with a non-UUID value.
+    """
+    if not isinstance(value, UUID):
+        raise TypeError("Expected a validated UUID form value.")
+    return value
 
 
 @login_required(login_url="staff-login")
@@ -1134,6 +1268,7 @@ def baseline_create_event_edition(
                 correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
                 request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
                 source_channel="web",
+                adoption_profile_code=str(form.cleaned_data["adoption_profile_code"]),
             )
         except ValidationError as error:
             _add_validation_errors(form, error)
@@ -1329,6 +1464,7 @@ def baseline_event_edition_record(
             "organization": organization,
             "convention_series": series,
             "edition": edition,
+            "edition_profile": adoption_profile(edition.adoption_profile_code),
             "activity": activity,
             "activity_time_zone": edition.time_zone,
             "form": form,
@@ -1349,6 +1485,7 @@ def _validation_error_is_conflict(error: ValidationError) -> bool:
         "series_parent_closed",
         "stale_series_profile",
         "stale_edition_version",
+        "workforce_setup_idempotency_conflict",
     }
     if hasattr(error, "error_dict"):
         return any(

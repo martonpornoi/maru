@@ -120,7 +120,7 @@
         {% if can_manage_structure %}
           <p>
             Management is a separate current decision. It does not follow from
-            merely viewing this page or from Executive Board status.
+            merely viewing this page or from representation status.
           </p>
         {% endif %}
       </div>
@@ -215,6 +215,7 @@
         </div>
         <span class="baseline-count">{{ governance.state|capfirst }}</span>
       </div>
+      <p>{{ governance.purpose }}</p>
       <div class="baseline-structure-governance">
         <p>
           This is the accountable OrganizationRepresentation from

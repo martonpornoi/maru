@@ -210,7 +210,7 @@ write boundary.
 Production readiness requires the `0007` recorder row, definition fingerprints
 for all 14 Organization structure `SECURITY DEFINER` helpers, and the exact catalog shape of all
 28 trigger attachments. Those helpers stay outside
-`RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2`; direct `PUBLIC` and runtime
+`RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3`; direct `PUBLIC` and runtime
 execution remains revoked. Do not use table presence, a successful ORM save,
 or a manually recreated trigger as readiness evidence. Follow the
 [exact authority-provenance runbook](../operations/authority-provenance-migration-and-recovery.md)

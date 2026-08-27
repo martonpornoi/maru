@@ -30,6 +30,7 @@ For present implementation status, use the
 | [0077](0077-person-owned-workforce-availability.md) | Accepted | Keep Availability person-owned, deliberately shared, and separate from commitments. |
 | [0078](0078-governed-workforce-shift-journey.md) | Accepted | Connect Position demand, personal claims, organizer decisions, and locked coverage without collapsing their meanings. |
 | [0079](0079-repository-scoped-agent-workflow-support.md) | Accepted | Keep always-on repository policy separate from four focused, validated contributor playbooks. |
+| [0080](0080-progressive-workforce-only-adoption.md) | Accepted | Make Workforce-only an immutable edition profile with truthful Maru-operator accountability and no unadopted authority or side effects. |
 
 ADR 0073 partially supersedes the example-data and source-derived-template
 parts of [ADR 0042](0042-synthetic-only-educational-fixtures.md) and

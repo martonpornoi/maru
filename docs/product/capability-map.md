@@ -1,11 +1,18 @@
 # Capability map
 
-Status: Product blueprint  
-Last updated: 2026-07-26
+Status: Product blueprint with progressive-adoption delivery boundary
+Last updated: 2026-08-26
 
 This map defines the complete product horizon. It is deliberately broader than
 the first implementation. Capabilities are delivered through prioritized
 vertical slices, not by scaffolding every module at once.
+
+The map is not one mandatory product bundle. Under NFR-013 and ADR 0080, each
+delivered profile names the subset a convention deliberately adopts, while
+identity, tenant scope, authorization, audit, recovery, and privacy remain
+trustworthy foundations. `workforce_only@1` is the first executable profile;
+it does not imply Registration, payments, attendance, or another capability
+simply because those appear elsewhere in this horizon.
 
 Priority:
 

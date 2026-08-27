@@ -133,6 +133,8 @@ def test_creation_commits_minimized_evidence_without_admin_participation() -> No
         "slug",
         "lifecycle",
         "aggregate_version",
+        "adoption_profile_code",
+        "adoption_profile_version",
         "time_zone",
         "language_codes",
         "currency_codes",
@@ -143,7 +145,12 @@ def test_creation_commits_minimized_evidence_without_admin_participation() -> No
     assert event.aggregate_id == edition.id
     assert event.aggregate_version == 1
     assert event.causation_id == audit.id
-    assert event.payload == {"aggregate_version": "1", "lifecycle": "draft"}
+    assert event.payload == {
+        "aggregate_version": "1",
+        "adoption_profile_code": "full_convention",
+        "adoption_profile_version": "1",
+        "lifecycle": "draft",
+    }
     assert message.status == OutboxMessage.Status.PENDING
     assert message.workload_pool == "core"
     assert edition.name not in str(audit.safe_metadata)

@@ -17,6 +17,10 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from maru.organizations.representation_catalog import (
+    ACCOUNTABLE_REPRESENTATION_NAMES,
+)
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
@@ -121,8 +125,8 @@ def _validate_department_fields(department: StructureDepartmentDefinition) -> No
         or _contains_control_character(department.name)
     ):
         raise ValueError("Department names must satisfy the closed input bounds.")
-    if department.name.casefold() == "executive board":
-        raise ValueError("Executive Board is a governance anchor, not a Department.")
+    if department.name.casefold() in ACCOUNTABLE_REPRESENTATION_NAMES:
+        raise ValueError("An accountable representation is not a Workforce Department.")
     if (
         len(department.description) > _MAX_DESCRIPTION_LENGTH
         or department.description != department.description.strip()

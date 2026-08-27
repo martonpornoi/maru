@@ -16,6 +16,12 @@ from maru.core.localization import (
 from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug, validate_time_zone
 from maru.identity.policies import validate_convention_subject
+from maru.organizations.representation_catalog import (
+    EXECUTIVE_BOARD,
+    MARU_OPERATORS,
+    REPRESENTATION_CODE_CHOICES,
+    representation_definition,
+)
 
 
 def default_organization_languages() -> list[str]:
@@ -300,12 +306,14 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
 
     Representation is deliberately separate from platform administration,
     ordinary organization membership, and edition workforce structure.  The
-    first supported representation type is the Executive Board required by
-    IDN-012.
+    supported types distinguish a real Executive Board from people who are
+    accountable only for operating Maru.
     """
 
-    EXECUTIVE_BOARD_CODE = "executive_board"
-    EXECUTIVE_BOARD_NAME = "Executive Board"
+    EXECUTIVE_BOARD_CODE = EXECUTIVE_BOARD.code
+    EXECUTIVE_BOARD_NAME = EXECUTIVE_BOARD.name
+    MARU_OPERATORS_CODE = MARU_OPERATORS.code
+    MARU_OPERATORS_NAME = MARU_OPERATORS.name
 
     class State(models.TextChoices):
         """Enumerate supported state values."""
@@ -321,6 +329,7 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
     )
     code = models.CharField(
         max_length=40,
+        choices=REPRESENTATION_CODE_CHOICES,
         default=EXECUTIVE_BOARD_CODE,
         editable=False,
     )
@@ -353,12 +362,17 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
         ordering = ("organization__name", "id")
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(code="executive_board"),
-                name="organization_representation_exec_board_code",
-            ),
-            models.CheckConstraint(
-                condition=models.Q(name="Executive Board"),
-                name="organization_representation_exec_board_name",
+                condition=(
+                    models.Q(
+                        code=EXECUTIVE_BOARD.code,
+                        name=EXECUTIVE_BOARD.name,
+                    )
+                    | models.Q(
+                        code=MARU_OPERATORS.code,
+                        name=MARU_OPERATORS.name,
+                    )
+                ),
+                name="organization_representation_type_supported",
             ),
             models.CheckConstraint(
                 condition=models.Q(aggregate_version__gte=1),
@@ -398,6 +412,32 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
             If the submitted state or input violates a domain invariant.
         """
         super().clean()
+        definition = representation_definition(self.code)
+        if definition is None or self.name != definition.name:
+            raise ValidationError(
+                {
+                    "code": ValidationError(
+                        "Choose a supported accountable representation type.",
+                        code="organization_representation_type_unsupported",
+                    )
+                }
+            )
+        if not self._state.adding and self.pk:
+            current_code = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values_list("code", flat=True)
+                .first()
+            )
+            if current_code is not None and current_code != self.code:
+                raise ValidationError(
+                    {
+                        "code": ValidationError(
+                            "The representation type is immutable after provisioning.",
+                            code="organization_representation_type_immutable",
+                        )
+                    }
+                )
         if self.provisioned_by_id and not self.provisioned_by.is_platform_administrator:
             raise ValidationError(
                 {
@@ -432,8 +472,9 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
         **kwargs : Any
             Keyword arguments forwarded to the framework implementation.
         """
-        self.code = self.EXECUTIVE_BOARD_CODE
-        self.name = self.EXECUTIVE_BOARD_NAME
+        definition = representation_definition(self.code)
+        if definition is not None:
+            self.name = definition.name
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -591,17 +632,19 @@ class RepresentationAppointment(UUIDTimeStampedModel):
             validate_convention_subject(self.account)
         if self.role_assignment_id:
             assignment = self.role_assignment
+            definition = representation_definition(self.representation.code)
             if assignment is None or (
-                assignment.organization_id != self.representation.organization_id
+                definition is None
+                or assignment.organization_id != self.representation.organization_id
                 or assignment.principal_id != self.account_id
                 or assignment.edition_id is not None
-                or assignment.role_bundle.code != "executive-board"
+                or assignment.role_bundle.code != definition.role_code
             ):
                 raise ValidationError(
                     {
                         "role_assignment": ValidationError(
-                            "Use this controller's organization-scoped Executive "
-                            "Board assignment.",
+                            "Use this controller's organization-scoped accountable "
+                            "representation assignment.",
                             code="representation_assignment_scope_mismatch",
                         )
                     },

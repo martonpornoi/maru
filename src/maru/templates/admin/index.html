@@ -26,10 +26,18 @@
             Continue convention setup
           {% endif %}
         </h2>
-        <p>
-          Follow the guided checklist for governance, people, registration,
-          and operational readiness. Maru will show the next safe action.
-        </p>
+        {% if maru_home_edition_context.selected.adoption_profile_code == "workforce_only" %}
+          <p>
+            Follow the focused checklist for accountable access, Departments,
+            Positions, assignments, Availability, and Shifts. Unrelated
+            convention tools stay out of this workspace.
+          </p>
+        {% else %}
+          <p>
+            Follow the guided checklist for governance, people, registration,
+            and operational readiness. Maru will show the next safe action.
+          </p>
+        {% endif %}
       </div>
       <div class="maru-admin-workspace-grid">
         {% if maru_home_edition_context.selected or not request.user.is_platform_administrator %}
@@ -47,6 +55,16 @@
           <strong>Today</strong>
           <span>See current status, assigned work, warnings, and deadlines.</span>
         </a>
+        {% if maru_home_edition_context.selected.adoption_profile_code == "workforce_only" %}
+        <a href="{% url 'management-console' %}?view=workforce">
+          <strong>Workforce</strong>
+          <span>Continue Departments, Positions, assignments, Availability, and Shifts.</span>
+        </a>
+        <a href="{% url 'management-console' %}?view=security">
+          <strong>Security history</strong>
+          <span>Review important security events for your own Maru account.</span>
+        </a>
+        {% else %}
         <a href="{% url 'management-console' %}?view=people">
           <strong>People</strong>
           <span>Find attendees, staff, volunteers, and other team members.</span>
@@ -59,6 +77,7 @@
           <strong>Reports &amp; badges</strong>
           <span>Review attendance and export minimized badge data.</span>
         </a>
+        {% endif %}
         {% if request.user.is_platform_administrator %}
           <a href="{% url 'platform-account-inventory' %}">
             <strong>User accounts</strong>
@@ -84,7 +103,7 @@
         </div>
       </section>
     {% endif %}
-    {% if app_list %}
+    {% if app_list and maru_home_edition_context.selected.adoption_profile_code != "workforce_only" or app_list and request.GET.records == "open" %}
     <section class="maru-admin-directory maru-specialist-gateway" aria-labelledby="maru-specialist-heading">
       <h2 id="maru-specialist-heading">Need a technical record?</h2>
       <p>

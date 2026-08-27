@@ -80,6 +80,19 @@
                 </div>
               {% endif %}
 
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="edition-adoption-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Adoption boundary</p>
+                  <h2 id="edition-adoption-title">Choose what this edition will use</h2>
+                  <p>
+                    A focused profile keeps unrelated tools out of navigation
+                    and denies their exact-edition APIs. Existing editions keep
+                    the full-convention behavior.
+                  </p>
+                </div>
+                {% include "core/_baseline_form_field.html" with field=form.adoption_profile_code %}
+              </section>
+
               <section class="baseline-panel baseline-form-panel" aria-labelledby="edition-identity-title">
                 <div class="baseline-section-heading">
                   <p class="baseline-kicker">Dated occurrence</p>

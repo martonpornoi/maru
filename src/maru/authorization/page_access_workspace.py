@@ -20,6 +20,7 @@ from maru.authorization.models import (
     ScopedResourceBinding,
 )
 from maru.authorization.policy import ResolvedAuthorizationTarget, decide
+from maru.events.adoption import profile_allows_capabilities
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
@@ -297,6 +298,12 @@ def _roles_for_target(
             or not definition.persistable
             or _SCOPE_DEPTH[target.scope_level] < _SCOPE_DEPTH[definition.maximum_scope]
             for definition in definitions
+        ) or (
+            target.adoption_profile_code is not None
+            and not profile_allows_capabilities(
+                target.adoption_profile_code,
+                role.capability_codes,
+            )
         ):
             continue
         values.append(
@@ -404,6 +411,11 @@ def _assignments_for_target(
             expires_at=row.expires_at,
         )
         for row in rows
+        if target.adoption_profile_code is None
+        or profile_allows_capabilities(
+            target.adoption_profile_code,
+            row.role_bundle.capability_codes,
+        )
     )
 
 
@@ -530,7 +542,13 @@ def exact_role_version(
         .exclude(code__in=NON_SHAREABLE_ROLE_CODES)
         .first()
     )
-    if role is None:
+    if role is None or (
+        target.adoption_profile_code is not None
+        and not profile_allows_capabilities(
+            target.adoption_profile_code,
+            role.capability_codes,
+        )
+    ):
         raise ValidationError(
             {"role_version_id": "Choose an available immutable group version."}
         )
@@ -601,10 +619,18 @@ def exact_assignment_for_target(
         assignments = assignments.filter(department__isnull=True)
     else:
         assignments = assignments.filter(department_id=target.department_id)
-    assignment = assignments.exclude(
-        role_bundle__code__in=NON_SHAREABLE_ROLE_CODES
-    ).first()
-    if assignment is None:
+    assignment = (
+        assignments.exclude(role_bundle__code__in=NON_SHAREABLE_ROLE_CODES)
+        .select_related("role_bundle")
+        .first()
+    )
+    if assignment is None or (
+        target.adoption_profile_code is not None
+        and not profile_allows_capabilities(
+            target.adoption_profile_code,
+            assignment.role_bundle.capability_codes,
+        )
+    ):
         raise PermissionDenied("The access assignment is unavailable.")
     return assignment
 

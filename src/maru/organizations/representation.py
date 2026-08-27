@@ -1,4 +1,4 @@
-"""Audited Executive Board provisioning and organization activation commands."""
+"""Audited organization representation and activation commands."""
 
 from __future__ import annotations
 
@@ -11,7 +11,10 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
-from maru.authorization.issuance import create_executive_board_issuance
+from maru.authorization.issuance import (
+    create_executive_board_issuance,
+    create_representation_issuance,
+)
 from maru.authorization.models import RoleAssignment, RoleBundle
 from maru.authorization.policy import (
     PolicyDecision,
@@ -31,6 +34,12 @@ from maru.organizations.models import (
     OrganizationRepresentation,
     RepresentationAppointment,
 )
+from maru.organizations.representation_catalog import (
+    EXECUTIVE_BOARD,
+    MARU_OPERATORS,
+    RepresentationDefinition,
+    representation_definition,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -38,32 +47,25 @@ if TYPE_CHECKING:
     from uuid import UUID
 
 MANAGE_REPRESENTATION = "organizations.manage_representation"
-MINIMUM_EXECUTIVE_BOARD_CONTROLLERS = 2
+MINIMUM_REPRESENTATION_CONTROLLERS = 2
+MINIMUM_EXECUTIVE_BOARD_CONTROLLERS = MINIMUM_REPRESENTATION_CONTROLLERS
 MAX_REPRESENTATION_REASON_LENGTH = 240
-EXECUTIVE_BOARD_ROLE_CODE = "executive-board"
-EXECUTIVE_BOARD_ROLE_NAME = OrganizationRepresentation.EXECUTIVE_BOARD_NAME
-EXECUTIVE_BOARD_ROLE_VERSION = 1
-EXECUTIVE_BOARD_MEMBERSHIP_LABEL = "Executive Board controller"
+EXECUTIVE_BOARD_ROLE_CODE = EXECUTIVE_BOARD.role_code
+EXECUTIVE_BOARD_ROLE_NAME = EXECUTIVE_BOARD.role_name
+EXECUTIVE_BOARD_ROLE_VERSION = EXECUTIVE_BOARD.role_version
+EXECUTIVE_BOARD_MEMBERSHIP_LABEL = EXECUTIVE_BOARD.membership_label
+MARU_OPERATOR_ROLE_CODE = MARU_OPERATORS.role_code
+MARU_OPERATOR_ROLE_NAME = MARU_OPERATORS.role_name
+MARU_OPERATOR_ROLE_VERSION = MARU_OPERATORS.role_version
+MARU_OPERATOR_MEMBERSHIP_LABEL = MARU_OPERATORS.membership_label
 REPRESENTATION_SUBJECT_LOCK_NAMESPACE = 0x13A2_91D7_0000_0000
 OPEN_REPRESENTATION_APPOINTMENT_STATES = (
     RepresentationAppointment.State.INVITED,
     RepresentationAppointment.State.ACCEPTED,
     RepresentationAppointment.State.ACTIVE,
 )
-EXECUTIVE_BOARD_CAPABILITIES = (
-    "organizations.view_basic",
-    "organizations.change_profile",
-    "organizations.create_series",
-    "organizations.change_series",
-    "organizations.manage_representation",
-    "events.view_basic",
-    "events.create",
-    "authorization.delegate",
-    "authorization.grant_direct",
-    "authorization.revoke",
-    "authorization.manage_roles",
-    "audit.view_security",
-)
+EXECUTIVE_BOARD_CAPABILITIES = EXECUTIVE_BOARD.capability_codes
+MARU_OPERATOR_CAPABILITIES = MARU_OPERATORS.capability_codes
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,6 +161,18 @@ def _normalized_reason(reason: str) -> str:
     return normalized
 
 
+def _representation_definition(
+    representation: OrganizationRepresentation,
+) -> RepresentationDefinition:
+    definition = representation_definition(representation.code)
+    if definition is None or representation.name != definition.name:
+        raise ValidationError(
+            "The accountable representation type is unsupported.",
+            code="organization_representation_type_unsupported",
+        )
+    return definition
+
+
 def _require_platform_administrator(actor: Account) -> None:
     if not actor.is_active or not actor.is_platform_administrator:
         raise PermissionDenied("Platform administration is required.")
@@ -193,7 +207,7 @@ def _require_representation_manager(
         resource=resolve_organization_target(organization_id=organization_id),
     )
     if not decision.allowed:
-        raise PermissionDenied("Executive Board management authority is required.")
+        raise PermissionDenied("Organization representation authority is required.")
     return decision
 
 
@@ -267,15 +281,16 @@ def _publish_representation_change(
 
 
 @transaction.atomic
-def provision_executive_board(
+def provision_representation(
     *,
     actor: Account,
     organization_id: UUID,
+    representation_code: str,
     reason: str,
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> OrganizationRepresentation:
-    """Provision the fixed representation root without enrolling the operator.
+    """Provision one code-owned representation root without enrolling the actor.
 
     Parameters
     ----------
@@ -283,6 +298,8 @@ def provision_executive_board(
         The authenticated account authorizing the operation.
     organization_id : UUID
         The organization identifier that owns the requested resource.
+    representation_code : str
+        The code-owned accountable representation type to establish.
     reason : str
         The operator-supplied rationale recorded with the change.
     correlation_id : UUID
@@ -302,6 +319,12 @@ def provision_executive_board(
     """
     _require_platform_administrator(actor)
     normalized_reason = _normalized_reason(reason)
+    definition = representation_definition(representation_code)
+    if definition is None:
+        raise ValidationError(
+            {"representation_code": "Choose a supported representation type."},
+            code="organization_representation_type_unsupported",
+        )
     organization = Organization.objects.select_for_update().get(id=organization_id)
     if organization.lifecycle != Organization.Lifecycle.DRAFT:
         raise ValidationError(
@@ -313,12 +336,14 @@ def provision_executive_board(
     ).first()
     if existing is not None:
         raise ValidationError(
-            "This organization already has its Executive Board representation.",
+            "This organization already has its accountable representation.",
             code="representation_exists",
         )
 
     representation = OrganizationRepresentation.objects.create(
         organization=organization,
+        code=definition.code,
+        name=definition.name,
         provisioned_by=actor,
         provisioning_reason=normalized_reason,
     )
@@ -345,6 +370,82 @@ def provision_executive_board(
     return representation
 
 
+def provision_executive_board(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    reason: str,
+    correlation_id: UUID,
+    source_channel: str = "service",
+) -> OrganizationRepresentation:
+    """Provision the real Executive Board representation compatibility path.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated platform administrator.
+    organization_id : UUID
+        The organization identifier that owns the representation.
+    reason : str
+        The retained operator rationale.
+    correlation_id : UUID
+        The audit correlation identifier.
+    source_channel : str, default='service'
+        The closed channel code identifying the caller.
+
+    Returns
+    -------
+    OrganizationRepresentation
+        The newly provisioned Executive Board representation.
+    """
+    return provision_representation(
+        actor=actor,
+        organization_id=organization_id,
+        representation_code=EXECUTIVE_BOARD.code,
+        reason=reason,
+        correlation_id=correlation_id,
+        source_channel=source_channel,
+    )
+
+
+def provision_maru_operators(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    reason: str,
+    correlation_id: UUID,
+    source_channel: str = "service",
+) -> OrganizationRepresentation:
+    """Provision accountable Maru operators without claiming legal office.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated platform administrator.
+    organization_id : UUID
+        The organization identifier that owns the representation.
+    reason : str
+        The retained operator rationale.
+    correlation_id : UUID
+        The audit correlation identifier.
+    source_channel : str, default='service'
+        The closed channel code identifying the caller.
+
+    Returns
+    -------
+    OrganizationRepresentation
+        The newly provisioned Maru-operator representation.
+    """
+    return provision_representation(
+        actor=actor,
+        organization_id=organization_id,
+        representation_code=MARU_OPERATORS.code,
+        reason=reason,
+        correlation_id=correlation_id,
+        source_channel=source_channel,
+    )
+
+
 @transaction.atomic
 def invite_representation_controller(
     *,
@@ -355,7 +456,7 @@ def invite_representation_controller(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> RepresentationAppointment:
-    """Invite an exact active person account to the Executive Board.
+    """Invite an exact active person account to a representation.
 
     Parameters
     ----------
@@ -392,6 +493,7 @@ def invite_representation_controller(
         .select_related("organization")
         .get(id=representation_id)
     )
+    definition = _representation_definition(representation)
     organization = Organization.objects.select_for_update().get(
         id=representation.organization_id
     )
@@ -439,7 +541,7 @@ def invite_representation_controller(
         raise ValidationError(
             {
                 "account": ValidationError(
-                    "This person already has an open Executive Board term.",
+                    f"This person already has an open {definition.name} term.",
                     code="representation_appointment_exists",
                 )
             },
@@ -469,7 +571,7 @@ def invite_representation_controller(
             raise ValidationError(
                 {
                     "account": ValidationError(
-                        "This person already has an open Executive Board term.",
+                        f"This person already has an open {definition.name} term.",
                         code="representation_appointment_exists",
                     )
                 },
@@ -483,7 +585,7 @@ def invite_representation_controller(
             account=account,
             defaults={
                 "state": OrganizationMembership.State.INVITED,
-                "relationship_label": "Executive Board controller",
+                "relationship_label": definition.membership_label,
             },
         )
     if membership.state == OrganizationMembership.State.SUSPENDED:
@@ -499,7 +601,7 @@ def invite_representation_controller(
     if (
         not membership_created
         and membership.state == OrganizationMembership.State.INVITED
-        and membership.relationship_label != "Executive Board controller"
+        and membership.relationship_label != definition.membership_label
     ):
         raise ValidationError(
             {
@@ -512,10 +614,10 @@ def invite_representation_controller(
         )
     if (
         membership.state == OrganizationMembership.State.ENDED
-        and membership.relationship_label == "Executive Board controller"
+        and membership.relationship_label == definition.membership_label
     ):
         membership.state = OrganizationMembership.State.INVITED
-        membership.relationship_label = "Executive Board controller"
+        membership.relationship_label = definition.membership_label
         membership.started_at = None
         membership.ended_at = None
         membership.save(
@@ -622,6 +724,7 @@ def respond_to_representation_invitation(
         .select_related("organization")
         .get(id=representation_id)
     )
+    definition = _representation_definition(representation)
     organization = Organization.objects.select_for_update().get(
         id=representation.organization_id
     )
@@ -636,7 +739,7 @@ def respond_to_representation_invitation(
             organization_id=organization.id,
             account_id=actor.id,
             state=OrganizationMembership.State.INVITED,
-            relationship_label="Executive Board controller",
+            relationship_label=definition.membership_label,
         )
         .first()
     )
@@ -714,27 +817,32 @@ def respond_to_representation_invitation(
     return appointment
 
 
-def _executive_board_bundle(
+def _representation_bundle(
     *,
     representation: OrganizationRepresentation,
     actor: Account,
     controllers: Sequence[RepresentationAppointment],
     reason: str,
 ) -> RoleBundle:
+    definition = _representation_definition(representation)
     if RoleBundle.objects.filter(
         organization_id=representation.organization_id,
-        code=EXECUTIVE_BOARD_ROLE_CODE,
+        code=definition.role_code,
     ).exists():
         raise ValidationError(
-            "The reserved Executive Board authority bundle already exists.",
-            code="executive_board_role_conflict",
+            f"The reserved {definition.name} authority bundle already exists.",
+            code=(
+                "executive_board_role_conflict"
+                if definition.code == EXECUTIVE_BOARD.code
+                else "maru_operator_role_conflict"
+            ),
         )
     return RoleBundle.objects.create(
         organization_id=representation.organization_id,
-        code=EXECUTIVE_BOARD_ROLE_CODE,
-        name=EXECUTIVE_BOARD_ROLE_NAME,
-        version=EXECUTIVE_BOARD_ROLE_VERSION,
-        capability_codes=list(EXECUTIVE_BOARD_CAPABILITIES),
+        code=definition.role_code,
+        name=definition.role_name,
+        version=definition.role_version,
+        capability_codes=list(definition.capability_codes),
         created_by=actor,
         approved_by=controllers[0].account,
         reason=reason,
@@ -745,6 +853,7 @@ def _lock_activation_memberships(
     *,
     organization: Organization,
     controllers: Sequence[RepresentationAppointment],
+    definition: RepresentationDefinition,
 ) -> dict[UUID, OrganizationMembership]:
     controller_account_ids = [appointment.account_id for appointment in controllers]
     memberships = {
@@ -772,7 +881,7 @@ def _lock_activation_memberships(
         )
         or (
             membership.state == OrganizationMembership.State.INVITED
-            and membership.relationship_label != "Executive Board controller"
+            and membership.relationship_label != definition.membership_label
         )
         for membership in memberships.values()
     ):
@@ -829,7 +938,7 @@ def _record_initial_activation(
 
 
 @transaction.atomic
-def activate_executive_board(
+def activate_representation(
     *,
     actor: Account,
     representation_id: UUID,
@@ -838,7 +947,7 @@ def activate_executive_board(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> RepresentationActivationResult:
-    """Activate two-person representation and its canonical authority atomically.
+    """Activate two-person representation and canonical authority atomically.
 
     Parameters
     ----------
@@ -884,22 +993,23 @@ def activate_executive_board(
         .select_related("organization")
         .get(id=representation_id)
     )
+    definition = _representation_definition(representation)
     organization = Organization.objects.select_for_update().get(
         id=representation.organization_id
     )
     if representation.aggregate_version != expected_version:
         raise ValidationError(
-            "This Executive Board changed after the page was loaded.",
+            f"This {definition.name} changed after the page was loaded.",
             code="stale_representation",
         )
     if representation.state != OrganizationRepresentation.State.PROVISIONING:
         raise ValidationError(
-            "Only a Provisioning Executive Board can be activated.",
+            f"Only a Provisioning {definition.name} can be activated.",
             code="representation_not_provisioning",
         )
     if organization.lifecycle != Organization.Lifecycle.DRAFT:
         raise ValidationError(
-            "Initial Executive Board activation requires a Draft organization.",
+            f"Initial {definition.name} activation requires a Draft organization.",
             code="representation_parent_not_draft",
         )
     controllers = list(
@@ -912,11 +1022,11 @@ def activate_executive_board(
         )
         .order_by("responded_at", "id")
     )
-    if len(controllers) < MINIMUM_EXECUTIVE_BOARD_CONTROLLERS:
+    if len(controllers) < MINIMUM_REPRESENTATION_CONTROLLERS:
         raise ValidationError(
             (
                 "At least two distinct invited controllers must accept before "
-                "the Executive Board can be activated."
+                f"the {definition.name} can be activated."
             ),
             code="representation_controllers_incomplete",
         )
@@ -931,6 +1041,7 @@ def activate_executive_board(
     memberships = _lock_activation_memberships(
         organization=organization,
         controllers=controllers,
+        definition=definition,
     )
     controller_account_ids = [appointment.account_id for appointment in controllers]
     locked_accounts = {
@@ -950,7 +1061,7 @@ def activate_executive_board(
             code="representation_controller_ineligible",
         )
     activated_at = timezone.now()
-    role_bundle = _executive_board_bundle(
+    role_bundle = _representation_bundle(
         representation=representation,
         actor=actor,
         controllers=controllers,
@@ -973,7 +1084,7 @@ def activate_executive_board(
         )
         membership = memberships[appointment.account_id]
         membership.state = OrganizationMembership.State.ACTIVE
-        membership.relationship_label = EXECUTIVE_BOARD_MEMBERSHIP_LABEL
+        membership.relationship_label = definition.membership_label
         membership.started_at = membership.started_at or activated_at
         membership.ended_at = None
         membership.save(
@@ -1019,7 +1130,12 @@ def activate_executive_board(
         activated_at=activated_at,
         reason=normalized_reason,
     )
-    create_executive_board_issuance(
+    issuance_writer = (
+        create_executive_board_issuance
+        if representation.code == EXECUTIVE_BOARD.code
+        else create_representation_issuance
+    )
+    issuance_writer(
         target=role_bundle,
         representation=representation,
         actor=actor,
@@ -1027,7 +1143,7 @@ def activate_executive_board(
         evaluated_at=activated_at,
     )
     for assignment, approver_appointment in assignment_controls:
-        create_executive_board_issuance(
+        issuance_writer(
             target=assignment,
             representation=representation,
             actor=actor,
@@ -1064,6 +1180,47 @@ def activate_executive_board(
         representation=representation,
         organization=organization,
         appointments=tuple(controllers),
+    )
+
+
+def activate_executive_board(
+    *,
+    actor: Account,
+    representation_id: UUID,
+    expected_version: int,
+    reason: str,
+    correlation_id: UUID,
+    source_channel: str = "service",
+) -> RepresentationActivationResult:
+    """Activate the compatibility Executive Board command path.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated platform administrator.
+    representation_id : UUID
+        The exact representation identifier.
+    expected_version : int
+        The optimistic aggregate version.
+    reason : str
+        The retained activation rationale.
+    correlation_id : UUID
+        The audit correlation identifier.
+    source_channel : str, default='service'
+        The closed channel code identifying the caller.
+
+    Returns
+    -------
+    RepresentationActivationResult
+        The atomically activated representation and appointments.
+    """
+    return activate_representation(
+        actor=actor,
+        representation_id=representation_id,
+        expected_version=expected_version,
+        reason=reason,
+        correlation_id=correlation_id,
+        source_channel=source_channel,
     )
 
 
@@ -1154,9 +1311,10 @@ def _validate_primary_emergency_removal(
             code="representation_controller_not_open",
         )
     organization = inventory.organizations[representation.organization_id]
+    definition = _representation_definition(representation)
     if representation.aggregate_version != expected_version:
         raise ValidationError(
-            "This Executive Board changed after the operation was prepared.",
+            f"This {definition.name} changed after the operation was prepared.",
             code="stale_representation",
         )
     provisioning_relationship = (
@@ -1186,6 +1344,7 @@ def _build_emergency_plans(
 ) -> tuple[_EmergencyRepresentationPlan, ...]:
     plans: list[_EmergencyRepresentationPlan] = []
     for representation in inventory.representations:
+        definition = _representation_definition(representation)
         organization = inventory.organizations[representation.organization_id]
         local_appointments = tuple(
             item
@@ -1235,7 +1394,7 @@ def _build_emergency_plans(
             or subject_appointment.state != RepresentationAppointment.State.ACTIVE
         ):
             raise ValidationError(
-                "An open Board relationship requires recovery review.",
+                f"An open {definition.name} relationship requires recovery review.",
                 code="representation_controller_evidence_incomplete",
             )
         active_appointments = tuple(
@@ -1244,7 +1403,7 @@ def _build_emergency_plans(
             if item.state == RepresentationAppointment.State.ACTIVE
         )
         quorum_preserved = (
-            len(active_appointments) - 1 >= MINIMUM_EXECUTIVE_BOARD_CONTROLLERS
+            len(active_appointments) - 1 >= MINIMUM_REPRESENTATION_CONTROLLERS
         )
         plans.append(
             _EmergencyRepresentationPlan(
@@ -1328,6 +1487,7 @@ def _validate_emergency_evidence(
     *, plans: Sequence[_EmergencyRepresentationPlan], evidence: _EmergencyEvidence
 ) -> None:
     for plan in plans:
+        definition = _representation_definition(plan.representation)
         for appointment in plan.ended_appointments:
             membership = evidence.memberships.get(
                 (plan.organization.id, appointment.account_id)
@@ -1339,7 +1499,7 @@ def _validate_emergency_evidence(
                     or assignment_id not in evidence.assignments
                     or membership is None
                     or membership.state != OrganizationMembership.State.ACTIVE
-                    or membership.relationship_label != "Executive Board controller"
+                    or membership.relationship_label != definition.membership_label
                     or evidence.assignments[assignment_id].organization_id
                     != plan.organization.id
                     or evidence.assignments[assignment_id].principal_id
@@ -1352,7 +1512,7 @@ def _validate_emergency_evidence(
                     )
             elif membership is not None and (
                 membership.state == OrganizationMembership.State.INVITED
-                and membership.relationship_label != "Executive Board controller"
+                and membership.relationship_label != definition.membership_label
             ):
                 raise ValidationError(
                     "The invitation membership requires recovery review.",
@@ -1371,6 +1531,7 @@ def _end_emergency_appointment(
     source_channel: str,
     changed_at: datetime,
 ) -> None:
+    definition = _representation_definition(plan.representation)
     assignment_id = appointment.role_assignment_id
     if assignment_id is not None:
         assignment = evidence.assignments[assignment_id]
@@ -1404,7 +1565,7 @@ def _end_emergency_appointment(
         appointment.state == RepresentationAppointment.State.ACTIVE
         or (
             membership.state == OrganizationMembership.State.INVITED
-            and membership.relationship_label == "Executive Board controller"
+            and membership.relationship_label == definition.membership_label
         )
     )
     if should_end_membership and membership is not None:
@@ -1524,7 +1685,7 @@ def emergency_remove_executive_board_controller(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> EmergencyControllerRemovalResult:
-    """Contain one account across every open Executive Board relationship.
+    """Contain one account across every open representation relationship.
 
     Parameters
     ----------

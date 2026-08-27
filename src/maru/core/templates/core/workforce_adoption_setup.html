@@ -1,0 +1,180 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script src="{% static 'core/workforce-adoption-setup.js' %}" defer></script>
+{% endblock %}
+
+{% block baseline_page_title %}Set up Workforce · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  <a href="{% url 'baseline-admin-home' %}">Platform administration</a>
+  &rsaquo; Set up Workforce
+{% endblock %}
+
+{% block baseline_content %}
+  <a class="baseline-back-link" href="{% url 'baseline-admin-home' %}">← Organizations</a>
+
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">Progressive adoption</p>
+    <h1>Set up Workforce</h1>
+    <p class="baseline-intro">
+      Give one convention a complete volunteer-management workspace without
+      moving attendee registration, payments, or unrelated operations into
+      Maru. Reuse anything that already exists here.
+    </p>
+  </header>
+
+  {% include "core/_baseline_access_summary.html" with access_operation="set up a Workforce-only convention workspace" %}
+
+  <aside class="baseline-boundary" aria-labelledby="workforce-adoption-boundary-title">
+    <p class="baseline-kicker">Deliberate boundary</p>
+    <h2 id="workforce-adoption-boundary-title">Only Workforce is adopted</h2>
+    <p>
+      This creates the minimum Organization → Convention series → Event edition
+      foundation, then enables Departments, Positions, assignments,
+      Availability, and Shifts. It does not create Registration, tickets,
+      payments, attendance, shops, programme applications, venues, charity, or
+      Logistics records.
+    </p>
+    <p>
+      If a new organization needs accountable access, Maru creates a
+      <strong>Maru operators</strong> representation. Those people are
+      responsible for operating this software; the label does not claim that
+      they belong to the organization's legal Executive Board.
+    </p>
+  </aside>
+
+  {% if existing_workforce_editions %}
+    <section class="baseline-panel" aria-labelledby="existing-workforce-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Continue, do not duplicate</p>
+          <h2 id="existing-workforce-title">Existing Workforce workspaces</h2>
+        </div>
+        <span class="baseline-count">{{ existing_workforce_editions|length }}</span>
+      </div>
+      <div class="baseline-table-wrap">
+        <table class="baseline-table">
+          <caption class="baseline-visually-hidden">
+            Event editions already configured for Workforce-only adoption
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Edition</th>
+              <th scope="col">Organization</th>
+              <th scope="col">Dates</th>
+              <th scope="col">Continue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for edition in existing_workforce_editions %}
+              <tr>
+                <th scope="row" data-label="Edition">
+                  {{ edition.name }}
+                  <span class="baseline-record-slug">{{ edition.series.name }}</span>
+                </th>
+                <td data-label="Organization">{{ edition.organization.name }}</td>
+                <td data-label="Dates">{{ edition.starts_on }} – {{ edition.ends_on }}</td>
+                <td data-label="Continue">
+                  <a href="{% url 'organization-structure' edition.organization.slug edition.series.slug edition.slug %}">
+                    Open Workforce
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if form.non_field_errors %}
+    <div class="baseline-errors" role="alert">
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+
+  <form method="post" class="baseline-form" data-workforce-foundation-form novalidate>
+    {% csrf_token %}
+    {{ form.idempotency_key }}
+    {% if form.idempotency_key.errors %}
+      <div class="baseline-errors" role="alert">{{ form.idempotency_key.errors }}</div>
+    {% endif %}
+
+    <section class="baseline-panel baseline-form-panel" aria-labelledby="foundation-choice-title">
+      <div class="baseline-section-heading">
+        <p class="baseline-kicker">Reuse first</p>
+        <h2 id="foundation-choice-title">Choose the highest level already in Maru</h2>
+        <p>
+          Select one option. Only the matching fields in the next section are
+          required; the other reuse fields are safely ignored.
+        </p>
+      </div>
+      {% include "core/_baseline_form_field.html" with field=form.mode %}
+    </section>
+
+    <section class="baseline-panel baseline-form-panel" aria-labelledby="foundation-details-title">
+      <div class="baseline-section-heading">
+        <p class="baseline-kicker">Organization and convention</p>
+        <h2 id="foundation-details-title">Foundation details</h2>
+        <p>
+          For a new foundation, enter both names. To reuse an organization,
+          select it and enter only the new convention name. To reuse a series,
+          select that series.
+        </p>
+      </div>
+      <div class="baseline-field-grid">
+        <div data-foundation-field="existing_organization">
+          {% include "core/_baseline_form_field.html" with field=form.organization %}
+        </div>
+        <div data-foundation-field="existing_series">
+          {% include "core/_baseline_form_field.html" with field=form.series %}
+        </div>
+      </div>
+      <div class="baseline-field-grid">
+        <div data-foundation-field="new_foundation">
+          {% include "core/_baseline_form_field.html" with field=form.organization_name %}
+        </div>
+        <div data-foundation-field="new_foundation existing_organization">
+          {% include "core/_baseline_form_field.html" with field=form.series_name %}
+        </div>
+      </div>
+      <p class="baseline-help" data-foundation-mode-status aria-live="polite"></p>
+    </section>
+
+    <section class="baseline-panel baseline-form-panel" aria-labelledby="workforce-edition-title">
+      <div class="baseline-section-heading">
+        <p class="baseline-kicker">Workforce workspace</p>
+        <h2 id="workforce-edition-title">Edition and local time</h2>
+        <p>
+          These values are all Workforce needs to interpret Availability and
+          Shift times. Maru records “XXX — no currency involved” internally so
+          this focused setup does not ask an irrelevant payment question.
+        </p>
+      </div>
+      {% include "core/_baseline_form_field.html" with field=form.edition_name %}
+      <div class="baseline-field-grid">
+        {% include "core/_baseline_form_field.html" with field=form.starts_on %}
+        {% include "core/_baseline_form_field.html" with field=form.ends_on %}
+      </div>
+      {% include "core/_baseline_form_field.html" with field=form.time_zone %}
+    </section>
+
+    <aside class="baseline-boundary" aria-labelledby="workforce-next-title">
+      <p class="baseline-kicker">What happens next</p>
+      <h2 id="workforce-next-title">Accountability, then structure</h2>
+      <p>
+        A new Maru-operator representation requires two distinct people to
+        accept before activation. Existing governance is retained as-is. Once
+        access is ready, continue through Structure → Positions → assignments
+        → Availability → Shifts.
+      </p>
+    </aside>
+
+    <div class="baseline-form-actions baseline-form-actions--sticky">
+      <button type="submit">Set up Workforce</button>
+      <a class="baseline-secondary-link" href="{% url 'baseline-admin-home' %}">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

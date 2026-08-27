@@ -31,6 +31,9 @@ from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import ConventionSeries, Organization
+from maru.organizations.representation_catalog import (
+    ACCOUNTABLE_REPRESENTATION_NAMES,
+)
 from maru.workforce.models import (
     Department,
     EditionStructureCommandReceipt,
@@ -760,12 +763,19 @@ def _validate_resulting_hierarchy(
 
 def _validate_manual_name(name: str) -> str:
     normalized = normalize_department_name(name)
-    if normalized.casefold() == "executive board":
+    if normalized.casefold() in ACCOUNTABLE_REPRESENTATION_NAMES:
         raise ValidationError(
             {
                 "name": ValidationError(
-                    "Executive Board is the separate governance anchor.",
-                    code="structure_executive_board_reserved",
+                    (
+                        f"{normalized} is the separate accountable "
+                        "representation, not a Department."
+                    ),
+                    code=(
+                        "structure_executive_board_reserved"
+                        if normalized.casefold() == "executive board"
+                        else "structure_accountable_representation_reserved"
+                    ),
                 )
             },
         )

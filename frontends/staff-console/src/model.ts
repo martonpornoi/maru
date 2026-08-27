@@ -82,6 +82,12 @@ export function weekdayLabel(now = new Date()): string {
 }
 
 export function primaryCapacity(edition: EditionContext): string {
+  if (
+    edition.participation_status === "not_participating" &&
+    edition.adoption_profile_code === "workforce_only"
+  ) {
+    return "Workforce workspace";
+  }
   const genericCodes = new Set(["attendee", "staff", "volunteer"]);
   return (
     edition.capacities.find((capacity) => !genericCodes.has(capacity.code))

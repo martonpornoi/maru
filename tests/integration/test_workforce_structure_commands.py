@@ -541,14 +541,22 @@ def test_outbox_failure_rolls_back_department_control_receipt_and_audit(
     assert not OutboxMessage.objects.exists()
 
 
-def test_confirmation_and_reserved_governance_name_are_strict_inputs() -> None:
+@pytest.mark.parametrize(
+    ("name", "expected_code"),
+    [
+        ("Executive Board", "structure_executive_board_reserved"),
+        ("Maru operators", "structure_accountable_representation_reserved"),
+    ],
+)
+def test_confirmation_and_reserved_governance_name_are_strict_inputs(
+    name: str,
+    expected_code: str,
+) -> None:
     actor = _administrator()
     edition = EventEditionFactory()
     with pytest.raises(ValidationError) as reserved:
-        _create(actor=actor, edition=edition, name="Executive Board")
-    assert reserved.value.error_dict["name"][0].code == (
-        "structure_executive_board_reserved"
-    )
+        _create(actor=actor, edition=edition, name=name)
+    assert reserved.value.error_dict["name"][0].code == expected_code
     with pytest.raises(ValidationError) as confirmation:
         apply_builtin_structure_template(
             actor=actor,

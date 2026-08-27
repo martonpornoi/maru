@@ -24,28 +24,32 @@
           alt="Maru Convention Planning"
         >
       </a>
-      <nav aria-label="Registration navigation">
-        <a href="{% url 'public-registration-index' %}">Conventions</a>
-        {% if request.user.is_authenticated %}
-          <a href="{% url 'management-console' %}?view=my-registration">My Maru</a>
-          <form method="post" action="{% url 'staff-logout' %}">
-            {% csrf_token %}
-            <button type="submit">Sign out</button>
-          </form>
-        {% else %}
-          <a href="{% url 'staff-login' %}?next={% url 'public-registration-index' %}">Sign in</a>
-        {% endif %}
-      </nav>
+      {% block public_navigation %}
+        <nav aria-label="Registration navigation">
+          <a href="{% url 'public-registration-index' %}">Conventions</a>
+          {% if request.user.is_authenticated %}
+            <a href="{% url 'management-console' %}?view=my-registration">My Maru</a>
+            <form method="post" action="{% url 'staff-logout' %}">
+              {% csrf_token %}
+              <button type="submit">Sign out</button>
+            </form>
+          {% else %}
+            <a href="{% url 'staff-login' %}?next={% url 'public-registration-index' %}">Sign in</a>
+          {% endif %}
+        </nav>
+      {% endblock %}
     </header>
     <main id="main-content" class="page-shell">
       {% maru_page_access as maru_page_access_summary %}
       {% include "core/_page_access_summary.html" with maru_page_access=maru_page_access_summary only %}
       {% block content %}{% endblock %}
     </main>
-    <footer class="site-footer">
-      Registration data belongs to the selected convention edition and follows
-      its stated purpose and retention policy.
-    </footer>
+    {% block public_footer %}
+      <footer class="site-footer">
+        Registration data belongs to the selected convention edition and follows
+        its stated purpose and retention policy.
+      </footer>
+    {% endblock %}
     {% block scripts %}{% endblock %}
   </body>
 </html>

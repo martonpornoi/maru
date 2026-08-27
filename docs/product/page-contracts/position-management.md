@@ -7,9 +7,9 @@
 - Overview route:
   `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/positions/`
 - Requirements: HR-007, HR-010, HR-011, HR-012, UX-005 through UX-008,
-  UX-012, UX-020, UX-029, AUD-001, AUD-005, INT-001, NFR-001 through
-  NFR-004, and NFR-008
-- Decisions: ADRs 0019, 0028, 0041, 0044, 0045, 0055, and 0075
+  UX-012, UX-020, UX-029, UX-030, AUD-001, AUD-005, INT-001, NFR-001 through
+  NFR-004, NFR-008, and NFR-013
+- Decisions: ADRs 0019, 0028, 0041, 0044, 0045, 0055, 0075, and 0080
 
 ## Purpose and primary users
 
@@ -51,6 +51,7 @@ The browser route family is:
 
 ```text
 GET  .../structure/positions/
+POST .../structure/positions/volunteer-starter/
 GET  .../structure/positions/new/
 POST .../structure/positions/create/
 GET  .../structure/positions/{position_id}/
@@ -95,6 +96,21 @@ RoleBundle, and capacity codes come from the template. An identical retry
 returns the original minimized result; reuse for a different request conflicts.
 Failure of any paired write, audit, event, outbox message, or binding rolls the
 whole command back.
+
+For a Workforce-only organization with an active Department but no compatible
+published template, the overview gives an active accountable controller one
+inline **Create the safe Volunteer starter** action. It requires the exact
+email of a different active accountable controller and a retained reason. The
+atomic action creates one immutable `workforce-volunteer@1` RoleBundle and
+published Position template containing only `events.view_basic`,
+`workforce.view_structure`, and the semantic `volunteer` capacity label.
+
+The starter creates no Position, opportunity, person relationship, assignment,
+RoleAssignment, Participation, Registration, payment, Availability, or Shift;
+it grants nobody authority. An exact retained starter is an idempotent replay,
+while a reserved identity with different meaning is a reconciliation conflict.
+All templates offered for a Workforce-only Position must have a complete
+capability set allowed by that edition's immutable adoption profile.
 
 The preserved legacy empty-organization recovery bootstrap has one internal,
 non-HTTP exception for its first Convention Chair because historical RoleBundle
@@ -253,7 +269,9 @@ release gate.
 
 ## Deliberate non-goals
 
-This slice does not add Position-template authoring, onboarding-document
+This slice does not add general Position-template authoring. Its one code-owned
+Workforce-only Volunteer starter exists solely to make the first Position
+possible under independent approval. It does not add onboarding-document
 review, person availability, shift demand/claim/confirmation, timekeeping,
 notification, or bulk operations. Assignment proposal, independent decision,
 and retained ending are governed by the separate

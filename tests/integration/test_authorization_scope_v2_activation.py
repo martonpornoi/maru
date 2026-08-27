@@ -558,7 +558,10 @@ def test_active_guards_reject_scope_forgery_mutation_and_catalog_bypass() -> Non
         capability_codes=["events.change_profile"],
     )
     with (
-        pytest.raises(IntegrityError, match="cannot be persisted at this scope"),
+        pytest.raises(
+            IntegrityError,
+            match="purpose-bound role authority requires exact edition scope",
+        ),
         transaction.atomic(),
     ):
         RoleAssignment.objects.bulk_create(

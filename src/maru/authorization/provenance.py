@@ -33,6 +33,11 @@ from maru.organizations.models import (
     OrganizationRepresentation,
     RepresentationAppointment,
 )
+from maru.organizations.representation_catalog import (
+    EXECUTIVE_BOARD,
+    RepresentationDefinition,
+    representation_definition_for_role,
+)
 
 MAX_AUTHORITY_LINEAGE_DEPTH = 64
 _POSTGRESQL_BIGINT_MAX = 9_223_372_036_854_775_807
@@ -729,58 +734,68 @@ def _special_controls_are_historical(
 
 
 def _executive_board_definition() -> tuple[str, str, int, frozenset[str], str]:
-    """Load the representation service's canonical reserved-role definition.
+    """Return the historical Executive Board reserved-role definition.
 
     Returns
     -------
     tuple[str, str, int, frozenset[str], str]
         The matching executive board definition records in deterministic order.
     """
-    from maru.organizations.representation import (  # noqa: PLC0415
-        EXECUTIVE_BOARD_CAPABILITIES,
-        EXECUTIVE_BOARD_MEMBERSHIP_LABEL,
-        EXECUTIVE_BOARD_ROLE_CODE,
-        EXECUTIVE_BOARD_ROLE_NAME,
-        EXECUTIVE_BOARD_ROLE_VERSION,
-    )
-
     return (
-        EXECUTIVE_BOARD_ROLE_CODE,
-        EXECUTIVE_BOARD_ROLE_NAME,
-        EXECUTIVE_BOARD_ROLE_VERSION,
-        frozenset(EXECUTIVE_BOARD_CAPABILITIES),
-        EXECUTIVE_BOARD_MEMBERSHIP_LABEL,
+        EXECUTIVE_BOARD.role_code,
+        EXECUTIVE_BOARD.role_name,
+        EXECUTIVE_BOARD.role_version,
+        frozenset(EXECUTIVE_BOARD.capability_codes),
+        EXECUTIVE_BOARD.membership_label,
     )
 
 
-def _is_executive_board_role(bundle: RoleBundle) -> bool:
-    role_code, _role_name, _role_version, _capabilities, _membership_label = (
-        _executive_board_definition()
-    )
-    return bundle.code == role_code
+def _representation_role_definition(
+    bundle: RoleBundle,
+) -> RepresentationDefinition | None:
+    return representation_definition_for_role(bundle.code)
 
 
-def _executive_board_bundle_shape_is_valid(bundle: RoleBundle) -> bool:
-    role_code, role_name, role_version, capabilities, _membership_label = (
-        _executive_board_definition()
-    )
+def _is_representation_role(bundle: RoleBundle) -> bool:
+    return _representation_role_definition(bundle) is not None
+
+
+def _representation_bundle_shape_is_valid(bundle: RoleBundle) -> bool:
+    definition = _representation_role_definition(bundle)
+    if definition is None:
+        return False
     capability_codes = tuple(bundle.capability_codes)
     return bool(
-        bundle.code == role_code
-        and bundle.name == role_name
-        and bundle.version == role_version
-        and len(capability_codes) == len(capabilities)
-        and frozenset(capability_codes) == capabilities
+        bundle.name == definition.role_name
+        and bundle.version == definition.role_version
+        and len(capability_codes) == len(definition.capability_codes)
+        and frozenset(capability_codes) == frozenset(definition.capability_codes)
     )
 
 
-def _load_special_controls_historical(
+def _load_special_controls_historical(  # noqa: PLR0911
     *,
     context: _LineageContext,
     issuance: AuthorityIssuance,
     organization_id: UUID,
     recipient_id: UUID | None,
 ) -> tuple[OrganizationRepresentation, RepresentationAppointment] | None:
+    target = _issuance_target(context, issuance)
+    if target is None:
+        return None
+    target_record = target[1]
+    target_bundle = (
+        target_record
+        if isinstance(target_record, RoleBundle)
+        else target_record.role_bundle
+        if isinstance(target_record, RoleAssignment)
+        else None
+    )
+    if target_bundle is None:
+        return None
+    definition = _representation_role_definition(target_bundle)
+    if definition is None:
+        return None
     controls = _controls_by_role(context, issuance)
     if controls is None:
         return None
@@ -827,8 +842,8 @@ def _load_special_controls_historical(
     if (
         representation is None
         or appointment is None
-        or representation.code != OrganizationRepresentation.EXECUTIVE_BOARD_CODE
-        or representation.name != OrganizationRepresentation.EXECUTIVE_BOARD_NAME
+        or representation.code != definition.code
+        or representation.name != definition.name
         or appointment.role != RepresentationAppointment.Role.CONTROLLER
         or representation.activated_at != issuance.evaluated_at
         or appointment.responded_at is None
@@ -908,7 +923,7 @@ def _bundle_ceremony_is_historical(
             and target[1].id == bundle.id
             and issuance.evaluated_at <= evaluated_at
         ):
-            if _executive_board_bundle_shape_is_valid(bundle):
+            if _representation_bundle_shape_is_valid(bundle):
                 historical = _special_controls_are_historical(
                     context=context,
                     issuance=issuance,
@@ -922,7 +937,7 @@ def _bundle_ceremony_is_historical(
                         actor_id == representation.activated_by_id
                         and approver_id == appointment.account_id
                     )
-            elif not _is_executive_board_role(bundle):
+            elif not _is_representation_role(bundle):
                 valid = _ordinary_bundle_ceremony_is_historical(
                     context=context,
                     issuance=issuance,
@@ -956,7 +971,7 @@ def _load_board_bundle_ceremony_is_valid(
     bundle: RoleBundle,
     representation_id: UUID,
 ) -> bool:
-    if not _executive_board_bundle_shape_is_valid(bundle):
+    if not _representation_bundle_shape_is_valid(bundle):
         return False
     issuance = context.issuance_for_bundle(bundle.id)
     if issuance is None:
@@ -1010,7 +1025,7 @@ def _load_board_assignment_is_current(
 ) -> bool:
     principal = context.account(assignment.principal_id)
     if (
-        not _executive_board_bundle_shape_is_valid(assignment.role_bundle)
+        not _representation_bundle_shape_is_valid(assignment.role_bundle)
         or assignment.edition_id is not None
         or assignment.department_id is not None
         or assignment.resource_binding_id is not None
@@ -1045,9 +1060,10 @@ def _load_board_assignment_is_current(
     ).first()
     organization_query = context.locked(Organization.objects.all())
     membership_query = context.locked(OrganizationMembership.objects.all())
-    _code, _name, _version, _capabilities, membership_label = (
-        _executive_board_definition()
-    )
+    definition = _representation_role_definition(assignment.role_bundle)
+    if definition is None:
+        return False
+    membership_label = definition.membership_label
     membership = membership_query.filter(
         organization_id=assignment.organization_id,
         account_id=assignment.principal_id,
@@ -1093,7 +1109,7 @@ def _board_assignment_was_current_at(
     evaluated_at: datetime,
 ) -> bool:
     if (
-        not _executive_board_bundle_shape_is_valid(assignment.role_bundle)
+        not _representation_bundle_shape_is_valid(assignment.role_bundle)
         or assignment.edition_id is not None
         or assignment.department_id is not None
         or assignment.resource_binding_id is not None
@@ -1316,7 +1332,7 @@ def _validate_issuance_historical(  # noqa: PLR0911
                 path=next_path,
                 depth=depth,
             )
-    elif _is_executive_board_role(source.role_bundle):
+    elif _is_representation_role(source.role_bundle):
         valid = _board_assignment_was_current_at(
             context=context,
             issuance=issuance,
@@ -1431,7 +1447,7 @@ def _validate_issuance_current(  # noqa: PLR0911, PLR0912
                 path=next_path,
                 depth=depth,
             )
-    elif _is_executive_board_role(source.role_bundle):
+    elif _is_representation_role(source.role_bundle):
         valid = _board_assignment_is_current(
             context=context,
             issuance=issuance,

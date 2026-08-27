@@ -84,6 +84,7 @@ the system.
 | [0077](0077-person-owned-workforce-availability.md) | Accepted | Keep edition availability person-owned, explicitly shared, interval-based, privacy-minimized, and separate from shift commitments |
 | [0078](0078-governed-workforce-shift-journey.md) | Accepted | Govern demand, personal claims, independent confirmation, transactional coverage, and retained completion as one Workforce Shift journey |
 | [0079](0079-repository-scoped-agent-workflow-support.md) | Accepted | Keep always-on repository policy separate from focused, repository-scoped contributor playbooks |
+| [0080](0080-progressive-workforce-only-adoption.md) | Accepted | Make Workforce-only an immutable edition profile with truthful Maru-operator accountability and no unadopted authority or side effects |
 
 New ADRs use the next four-digit number and contain:
 
