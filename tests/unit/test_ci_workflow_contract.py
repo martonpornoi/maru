@@ -67,6 +67,19 @@ def test_every_workflow_parses_and_external_action_is_immutable() -> None:
     assert external_references <= validated_references
 
 
+def test_release_provenance_action_tracks_exact_nested_references() -> None:
+    transitive_references = json.loads(
+        ACTIONS_TRANSITIVE_REFERENCES_PATH.read_text(encoding="utf-8")
+    )
+    parent = "actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a"
+
+    assert transitive_references[parent] == [
+        "actions/attest-build-provenance/predicate@"
+        "864457a58d4733d7f1574bd8821fa24e02cf7538",
+        "actions/attest@daf44fb950173508f38bd2406030372c1d1162b1",
+    ]
+
+
 def test_actions_allowlist_validator_finds_quoted_and_flow_mapping_keys(
     tmp_path: Path,
 ) -> None:
@@ -635,11 +648,9 @@ def test_pages_workflow_is_main_only_locked_and_least_privilege() -> None:
     transitive_references = json.loads(
         ACTIONS_TRANSITIVE_REFERENCES_PATH.read_text(encoding="utf-8")
     )
-    assert transitive_references == {
-        "actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9": [
-            "actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f"
-        ]
-    }
+    assert transitive_references[
+        "actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9"
+    ] == ["actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f"]
 
 
 def test_sphinx_metadata_comes_from_project_version() -> None:

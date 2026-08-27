@@ -15,7 +15,7 @@ rather than replace the curated summary.
 
 No changes have been recorded since the first release candidate was prepared.
 
-## [2026.08.26] - 2026-08-27
+## [2026.08.27] - 2026-08-27
 
 ### Added
 
@@ -50,6 +50,10 @@ No changes have been recorded since the first release candidate was prepared.
 - Protected collaboration, immutable release publication, exact Action pinning,
   dependency review, CodeQL, secret scanning, provenance, SBOM, and release
   asset verification are established as repository-controlled gates.
+- The exact selected-Actions policy now includes audited transitive dependencies
+  of the pinned provenance action. Release publication therefore proves direct
+  workflow references and the nested executable Actions GitHub resolves before
+  any image, tag, draft, or immutable Release is created.
 
 ### Known limitations
 

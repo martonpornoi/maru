@@ -135,6 +135,19 @@ a later verification fails. Inspect that evidence, correct the cause in a new
 pull request if source must change, and use a new candidate sequence or CalVer.
 Gold publication requires an explicit recovery decision.
 
+A failure while GitHub prepares a job can happen before checkout and before any
+workflow step creates an identity-bearing artifact. Do not infer either state:
+inspect the job log, remote tag, Releases API, image boundary, and available run
+artifacts. If no image, draft, tag, or Release exists but the repair advances
+`main`, use a new dedicated release pull request and its newly derived CalVer;
+the older release pull request no longer represents exact current `main`.
+
+Selected-Actions preflight includes composite-action dependencies. Before a
+manual dispatch, require the live selected policy to equal the checked-in direct
+and audited transitive SHA set with both broad trust flags disabled. A live
+policy mutation remains separately authorized and requires exact pre-change and
+post-change readback.
+
 ## Consumer verification
 
 For a published tag, verify GitHub's immutable-release attestation and a

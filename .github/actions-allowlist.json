@@ -3,6 +3,8 @@
   "verified_allowed": false,
   "patterns_allowed": [
     "actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a",
+    "actions/attest-build-provenance/predicate@864457a58d4733d7f1574bd8821fa24e02cf7538",
+    "actions/attest@daf44fb950173508f38bd2406030372c1d1162b1",
     "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
     "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
     "actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d",
