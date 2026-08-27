@@ -76,14 +76,71 @@ jobs:
             exit 1
           fi
 
+  validate-source:
+    name: Validate release source
+    needs: validate-request
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Reject invalid version, changelog, or release identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_PR: ${{ inputs.release_pr }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+          CANDIDATE_NUMBER: ${{ inputs.candidate_number }}
+        run: |
+          CURRENT_MAIN=$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')
+          if [[ "$CURRENT_MAIN" != "$GITHUB_SHA" ]]; then
+            echo "The release commit is no longer the exact current main commit."
+            exit 1
+          fi
+          MERGED_AT=$(gh pr view "$RELEASE_PR" --repo "$GITHUB_REPOSITORY" --json mergedAt --jq .mergedAt)
+          CANDIDATE_ARGS=()
+          if [[ "$RELEASE_CHANNEL" == "candidate" ]]; then
+            CANDIDATE_ARGS=(--candidate-number "$CANDIDATE_NUMBER")
+          fi
+          python scripts/release_metadata.py \
+            --pull-request "$RELEASE_PR" \
+            --merged-at "$MERGED_AT" \
+            --commit "$GITHUB_SHA" \
+            --channel "$RELEASE_CHANNEL" \
+            "${CANDIDATE_ARGS[@]}" \
+            --changelog CHANGELOG.md \
+            --output-directory release-preflight
+          EXPECTED_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          GENERATED_VERSION=$(sed -n 's/^python_version=//p' release-preflight/github-output)
+          if [[ "$EXPECTED_VERSION" != "$GENERATED_VERSION" ]]; then
+            echo "pyproject.toml version $EXPECTED_VERSION must equal $GENERATED_VERSION."
+            exit 1
+          fi
+          TAG=$(sed -n 's/^tag=//p' release-preflight/github-output)
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG"; then
+            echo "Git tag $TAG already exists."
+            exit 1
+          fi
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "GitHub release $TAG already exists."
+            exit 1
+          fi
+
   certify:
     name: Certify exact source
-    needs: validate-request
+    needs: validate-source
     uses: ./.github/workflows/_full-ci.yml
 
   publish:
     name: Publish immutable release
-    needs: [validate-request, certify]
+    needs: [validate-source, certify]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: ${{ inputs.channel == 'gold' && 'gold' || 'candidate' }}
@@ -141,6 +198,7 @@ jobs:
             --commit "$GITHUB_SHA" \
             --channel "$RELEASE_CHANNEL" \
             "${CANDIDATE_ARGS[@]}" \
+            --changelog CHANGELOG.md \
             --output-directory release-assets
           cat release-assets/github-output >> "$GITHUB_OUTPUT"
           EXPECTED_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
@@ -216,8 +274,9 @@ jobs:
         env:
           IMAGE: ${{ steps.image.outputs.image }}
           IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
-          RELEASE_TITLE: ${{ steps.metadata.outputs.title }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
           RELEASE_VERSION: ${{ steps.metadata.outputs.version }}
+          REPOSITORY_URL: ${{ github.server_url }}/${{ github.repository }}
         run: |
           python -c "import json, pathlib; p=pathlib.Path('release-assets/release-manifest.json'); d=json.loads(p.read_text()); d.update({'image': '$IMAGE', 'image_digest': '$IMAGE_DIGEST'}); p.write_text(json.dumps(d, indent=2, sort_keys=True) + '\n')"
           rm -rf release-assets/docs/.doctrees
@@ -226,11 +285,13 @@ jobs:
           rm -rf release-assets/docs release-assets/github-output
           cp openapi.yaml uv.lock LICENSE THIRD_PARTY_NOTICES.md release-assets/
           cp frontends/staff-console/pnpm-lock.yaml release-assets/pnpm-lock.yaml
-          find release-assets -maxdepth 1 -type f ! -name SHA256SUMS -print0 \
+          printf '\n## Release evidence\n\n- Certified source: pull request [#%s](%s/pull/%s) at commit [`%s`](%s/commit/%s).\n- Application image: `%s@%s`.\n- Full history: [`CHANGELOG.md`](%s/blob/%s/CHANGELOG.md) at this immutable tag.\n- Attached evidence: contributor documentation, OpenAPI, dependency locks, licenses, manifest, and checksums.\n' \
+            "${{ inputs.release_pr }}" "$REPOSITORY_URL" "${{ inputs.release_pr }}" \
+            "$GITHUB_SHA" "$REPOSITORY_URL" "$GITHUB_SHA" "$IMAGE" "$IMAGE_DIGEST" \
+            "$REPOSITORY_URL" "$RELEASE_TAG" \
+            >> release-assets/release-notes.md
+          find release-assets -maxdepth 1 -type f ! -name SHA256SUMS ! -name release-notes.md -print0 \
             | sort -z | xargs -0 sha256sum > release-assets/SHA256SUMS
-          printf '%s\n\nOCI image: `%s@%s`\n\nThis release was certified from pull request #%s and exact commit `%s`.\n' \
-            "$RELEASE_TITLE" "$IMAGE" "$IMAGE_DIGEST" "${{ inputs.release_pr }}" "$GITHUB_SHA" \
-            > release-assets/release-notes.md
 
       - name: Create the complete draft GitHub release
         env:

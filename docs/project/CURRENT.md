@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-26
+Last updated: 2026-08-27
 Phase: Progressive adoption and management-experience recovery.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -9,10 +9,10 @@ production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
 
-## Latest working outcome
+## Latest protected-main outcome
 
-The current feature branch makes Workforce-only use an executable product
-profile rather than a navigation promise.
+Protected `main` now makes Workforce-only use an executable product profile
+rather than a navigation promise.
 
 - Every edition has an immutable, versioned adoption profile. Existing
   editions remain `full_convention@1`; the new bounded option is
@@ -50,8 +50,42 @@ profile rather than a navigation promise.
   Workforce destinations.
 
 ADR 0080 records the durable profile, accountability, authority, coexistence,
-and recovery boundaries. The complete branch verification record will be in
+and recovery boundaries. The complete implementation record is in
 the [2026-08-26 Workforce-only adoption checkpoint](../checkpoints/2026-08-26-workforce-only-progressive-adoption.md).
+
+PR #20 merged this outcome to protected `main` as exact squash commit
+`b387748` on 2026-08-27. Pull-request run `33014664319` passed the full
+high-risk acceptance path, including all eight PostgreSQL shards, combined
+branch-aware coverage, and the stable `PR gate`. Protected-main CodeQL run
+`33037058305` and Pages run `33037059040` then passed for that exact commit.
+
+## Current repository experience outcome
+
+The current support branch makes Maru's public GitHub surface easier to
+understand and turns the existing secure release machinery into a curated
+human-facing process.
+
+- The restored Maru header leads a clearer README with the product promise,
+  honest maturity warning, implemented evaluation slices, build/documentation
+  status, and direct routes to Docs, Releases, Issues, Discussions, support,
+  contribution, and security guidance.
+- `CHANGELOG.md` now has a maintained **Unreleased** section. A release pull
+  request must create one non-empty dated section matching the derived CalVer
+  and exact merge date; the workflow validates and places that content before
+  exact source/image evidence and GitHub's supplemental generated notes.
+- Issue Forms now distinguish bounded defects/proposals from exploratory
+  Discussions and request preparation, roles/states, acceptance, non-goals,
+  traceability, safety, and sanitized evidence.
+- Live [issue #21](https://github.com/martonpornoi/maru/issues/21),
+  [issue #22](https://github.com/martonpornoi/maru/issues/22),
+  [issue #23](https://github.com/martonpornoi/maru/issues/23), and
+  [issue #24](https://github.com/martonpornoi/maru/issues/24) track the first
+  curated immutable candidate, Workforce-only continuity, the Workforce/Shift
+  accessibility matrix, and the next attendance/handover/actual-time contract.
+  Requirements, ADRs, the roadmap, and this handoff remain authoritative rather
+  than being replaced by those issues.
+- No release, tag, image, deployment, GitHub Project, social-preview setting,
+  or production approval is created by this branch.
 
 ## Current product baseline
 
@@ -140,6 +174,11 @@ The complete implementation and verification record is in the
 
 ## Established repository and delivery baseline
 
+- PR #20, **Add Workforce-only progressive adoption profile**, merged to
+  protected `main` as exact squash commit `b387748` on 2026-08-27. GitHub
+  Actions run `33014664319` passed all eight PostgreSQL shards, combined
+  coverage, the full acceptance jobs, and the stable `PR gate`; exact-main
+  CodeQL and Pages publication then passed.
 - PR #18 merged the governed Workforce Shift journey to protected `main` as
   exact squash commit `c4e04fe` on 2026-08-26. GitHub Actions run
   `32897740582` passed all eight PostgreSQL shards, combined coverage, the full
@@ -196,7 +235,31 @@ The complete implementation and verification record is in the
 
 ## Verification for this working outcome
 
-### Workforce-only adoption branch
+### GitHub release and collaboration experience branch
+
+Completed locally:
+
+- 64 focused release-metadata, workflow-contract, public-repository-material,
+  and documentation-policy tests pass;
+- focused Ruff lint and formatting pass for the changed Python release code and
+  tests;
+- documentation policy validates 348 Markdown files, four repository skills,
+  and 207 unique requirement identifiers;
+- the broad `scripts/check.ps1 -SkipPythonTests` gate passes package build and
+  verification, Python and JavaScript dependency audits, whole-tree Ruff and
+  strict mypy across 373 source files, PyDocLint, semantic docstrings across
+  383 source files, warning-fatal Sphinx/AutoAPI, migration and Django checks,
+  production-settings validation, OpenAPI generation, TypeScript checking, 29
+  frontend tests, and the production frontend build; and
+- `git diff --check` passes.
+
+The Maru header was visually inspected at its original 1,280 by 640 pixels.
+Authenticated readback confirms live issues #21 through #24 with their intended
+titles and `proposal`/`triage` plus scoped classification labels. Clean-tree
+exact-commit certification remains before review. Hosted acceptance is required
+for the exact eventual pull-request head.
+
+### Merged Workforce-only adoption evidence
 
 Completed locally for the pull-request head:
 
@@ -234,8 +297,9 @@ created verified volunteer identity, not real convention owners or production
 personal data. Pointer interaction verified the mobile drawer; automated tests
 retain the keyboard/Escape/focus contract because the browser abstraction did
 not provide reliable keyboard activation evidence. Representative screen-reader
-acceptance remains open. The exact pull-request head still requires the
-protected hosted acceptance selected by GitHub Actions.
+acceptance remains open. Hosted run `33014664319` subsequently passed the full
+high-risk acceptance path and stable `PR gate` for the exact PR #20 head before
+protected-main squash merge `b387748`.
 
 ### Merged Shift implementation evidence
 
@@ -295,6 +359,17 @@ support branch, a deployment, or production readiness.
 
 ## Known risks and incomplete work
 
+- The GitHub Releases tab remains empty until
+  [issue #21](https://github.com/martonpornoi/maru/issues/21)'s separately
+  reviewed release pull request and explicitly approved immutable `rc.1`
+  dispatch. This support branch does not create a tag, image, release, or
+  production claim.
+- The new header is a repository README asset only. GitHub's live social preview
+  remains unchanged; adopting the asset there must wait for this branch to merge
+  and requires a separate setting mutation plus readback.
+- Issues #21 through #24 start in `triage`. They expose bounded work but do not
+  promise priority, response time, implementation, or acceptance of an
+  unreviewed design.
 - Workforce-only adoption is implemented for trustworthy evaluation, not
   production cutover. General partner bulk import, a complete continuity
   export, printable rota, offline/manual reconciliation pack, profile expansion
@@ -329,21 +404,25 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Build the Workforce-only continuity package: an accepted import schema with
-   preview and correction, scoped export, printable rota/manual fallback,
-   reconciliation evidence, and explicit stop/expand procedures.
-2. Complete the Workforce-only and Shift mutation-role and UX-029 acceptance
-   matrix, prioritizing
-   distinct claimant/confirmer accounts, stale evidence, full capacity,
-   underfill, denied/read-only states, 200 percent zoom, and a representative
-   screen reader.
-3. Accept the next scheduling contract before implementation: check-in,
-   late/absent escalation, handover, actual-time boundaries, and the exact line
-   between an internal commitment and a published personal schedule.
-4. Contract the next standalone profiles by partner need: Programme and event
+1. Merge the current repository-experience branch through the protected pull-
+   request flow, then complete [issue #21](https://github.com/martonpornoi/maru/issues/21)'s
+   dedicated release pull request and separately authorized immutable `rc.1`
+   publication.
+2. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
+   Workforce-only continuity package: preview-first
+   import, scoped export, printable/manual fallback, reconciliation evidence,
+   and explicit stop/expand procedures.
+3. Complete [issue #23](https://github.com/martonpornoi/maru/issues/23)'s
+   Workforce-only and Shift mutation-role, responsive, keyboard, zoom,
+   disclosure, and representative screen-reader matrix.
+4. Accept [issue #24](https://github.com/martonpornoi/maru/issues/24)'s
+   scheduling contract before implementation: check-in, late/absent escalation,
+   handover, actual-time boundaries, and the exact line between an internal
+   commitment and a published personal schedule.
+5. Contract the next standalone profiles by partner need: Programme and event
    submissions, Communications publishing, Charity art auction, and
    Registration without payments.
-5. Define and rehearse the organization-approved Availability disposal policy,
+6. Define and rehearse the organization-approved Availability disposal policy,
    legal holds, worker observability, restore/PITR, and fix-forward behavior.
 
 ## Resume instructions

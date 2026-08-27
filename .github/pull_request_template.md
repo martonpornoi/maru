@@ -27,4 +27,5 @@
 
 ## Release note
 
-<!-- Describe the externally meaningful change, or write "Not user-visible". -->
+- Changelog: <!-- Link the Unreleased entry, or write "Not user-visible". -->
+- Summary: <!-- Describe the externally meaningful change in user language. -->

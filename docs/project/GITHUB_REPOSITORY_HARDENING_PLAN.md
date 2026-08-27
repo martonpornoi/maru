@@ -166,6 +166,14 @@ The first `rc.1` remains separately authorized because it creates a real public
 prerelease and GHCR image. It needs a dedicated release pull request and the
 complete release procedure after this repository candidate is merged.
 
+The current GitHub-experience branch adds the missing public-note contract:
+externally meaningful work is curated under `CHANGELOG.md` **Unreleased**, a
+release pull request creates one dated section matching the derived CalVer and
+merge date, and the workflow places that exact content before source/image
+evidence and GitHub's supplemental generated notes. Live issue #21 tracks the
+separately reviewed first-candidate procedure; it is not publication
+authorization.
+
 State: live setting reconciled and repository verification implemented; first
 candidate rehearsal pending.
 
@@ -235,6 +243,13 @@ a placeholder mailbox. The candidate explicitly records that no private
 project-specific conduct channel or independent reviewer exists, warns against
 sensitive public reports and security-advisory misuse, and scopes GitHub's
 abuse route to GitHub-hosted behavior.
+
+The current GitHub-experience branch adds a purpose-built README header and
+direct public navigation, and refines Issue Forms around bounded outcomes,
+non-goals, traceability, safety, and sanitized evidence. Issues #21 through #24
+are the first maintained execution queue. Projects remains disabled; these
+issues do not replace requirements, accepted ADRs, the roadmap, or the current
+handoff and do not promise response or delivery.
 
 State: complete. GH-008 retains actual multi-maintainer succession, independent
 moderation/security rotation, and approval/release separation.

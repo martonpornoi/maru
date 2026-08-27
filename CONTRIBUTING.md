@@ -25,6 +25,10 @@ to every change.
 - Keep one coherent outcome per pull request and include tests and documentation.
 - Add or update a stable product requirement identifier for product behavior.
 - Record durable architecture decisions as ADRs; never rewrite an accepted ADR.
+- Add externally meaningful changes to the appropriate **Unreleased** category
+  in [`CHANGELOG.md`](CHANGELOG.md); write `Not user-visible` in the pull-request
+  release-note field only when no evaluator, operator, user, or contributor
+  behavior changes.
 - Use synthetic data only. Never commit production data, secrets, credentials,
   private keys, tokens, or customer-identifying examples.
 - Use NumPy-style Python docstrings and keep parameters, returns, yields, raises,
@@ -71,6 +75,19 @@ appropriate tests, documenting the outcome, and satisfying the protected
 `PR gate`.
 
 ## Issue triage and newcomer work
+
+Requirements and accepted ADRs remain the product and architecture authority.
+`ROADMAP.md` sets direction, while `CURRENT.md` records the maintained handoff.
+GitHub Issues are the bounded execution queue: each accepted issue should name
+one observable outcome, affected roles and states, explicit non-goals,
+dependencies, safety implications, and acceptance evidence. Closing an issue
+does not silently change a requirement or decision; the corresponding pull
+request updates those documents when needed.
+
+Use Discussions for setup help and ideas that still need exploration. Do not
+copy every historical backlog note into GitHub or use Issues as a second
+roadmap. Convert maintained next actions only when they are sufficiently
+bounded to implement, review, and close.
 
 New bug reports and proposals start with the `triage` label. The maintainer may
 request a synthetic reproduction, redirect a support question to Discussions,

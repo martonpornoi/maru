@@ -1,29 +1,55 @@
+![Maru convention operations platform](.github/assets/maru-header.png)
+
 # Maru
 
-Maru is the working name for an API-first convention operations platform. It is
-intended to give attendees, volunteers, hosts, dealers, staff, and organizers
-one account and one coherent experience across many independently operated
-conventions.
+**The calm operating system for recurring community conventions.**
 
-Maru is public, pre-production software open to collaboration. It is not
-yet a supported hosted service or PyPI package and must not receive production
-personal data. The primary future release artifact is an immutable Django
-application image in GitHub Container Registry with source provenance, SBOM,
-documentation, OpenAPI, dependency locks, and checksums.
+[Documentation](https://martonpornoi.github.io/maru/) ·
+[Product tour](https://martonpornoi.github.io/maru/start-here/product-tour.html) ·
+[Roadmap](docs/project/ROADMAP.md) ·
+[Releases](https://github.com/martonpornoi/maru/releases) ·
+[Issues](https://github.com/martonpornoi/maru/issues) ·
+[Discussions](https://github.com/martonpornoi/maru/discussions) ·
+[Contributing](CONTRIBUTING.md) ·
+[Support](SUPPORT.md) ·
+[Security](SECURITY.md)
+
+[![PR gate](https://github.com/martonpornoi/maru/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/martonpornoi/maru/actions/workflows/ci.yml)
+[![Contributor documentation](https://github.com/martonpornoi/maru/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/martonpornoi/maru/actions/workflows/pages.yml)
+
+> [!IMPORTANT]
+> Maru is public, actively developed, pre-production software. It is not yet a
+> supported hosted service or PyPI package and must not receive production
+> personal data. Use synthetic data while evaluating or contributing.
+
+Maru gives attendees, volunteers, hosts, dealers, staff, and organizers one
+account and one coherent, permission-controlled experience across independently
+operated conventions. It connects operational work that otherwise lives in
+forms, spreadsheets, inboxes, schedules, and disconnected specialist tools.
+
+Implemented, tested slices include a unified management shell, convention and
+edition administration, bounded Registration and onsite operations, and the
+complete first Workforce journey from organization structure through governed
+Shift commitments. A convention can also evaluate Workforce as its only
+adopted Maru capability without silently creating Registration, payment,
+attendance, or unrelated participation records.
 
 Browse the [public contributor documentation](https://martonpornoi.github.io/maru/)
-for maintained product, architecture, development, operations, and security
-guides plus the statically analysed Python API reference.
+for the maintained product, architecture, development, operations, and security
+guides plus the statically analysed Python API reference. Read
+[the current project state](docs/project/CURRENT.md) for exact implemented
+behavior, verification, limitations, and next actions.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) to work on Maru,
-[SUPPORT.md](SUPPORT.md) for help channels,
-[SECURITY.md](SECURITY.md) for private vulnerability reporting,
-[GOVERNANCE.md](GOVERNANCE.md) for maintainer authority and continuity, and
-[the release process](docs/operations/release-process.md) for CalVer and GitHub
-artifact semantics. Contributions are licensed under
-[Apache-2.0](LICENSE) and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-Bundled third-party components retain the licenses recorded in
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+The primary future release artifact is an immutable Django application image
+in GitHub Container Registry with source provenance, SBOM, documentation,
+OpenAPI, dependency locks, and checksums. Curated changes live in the
+[changelog](CHANGELOG.md) and become the human-facing notes on the
+[GitHub Releases tab](https://github.com/martonpornoi/maru/releases).
+
+Contributions are licensed under [Apache-2.0](LICENSE), follow the
+[Code of Conduct](CODE_OF_CONDUCT.md), and use the authority and continuity
+model in [GOVERNANCE.md](GOVERNANCE.md). Bundled third-party components retain
+the licenses recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Each occurrence of a convention is a first-class event edition, for example
 the fictional `MaruCon 2026` or `MaruDance 2026`. Historical editions remain available so
@@ -54,10 +80,13 @@ Dated test, coverage, migration, and vulnerability evidence stays in those
 maintained handoff documents instead of being duplicated here.
 
 Maru establishes convention authority through verified recipient-owned
-accounts, an explicit multi-person Executive Board ceremony, exact scoped
-assignments, and audited containment. Organization, edition, Department, and
-typed-resource authorization remain deny-by-default without implicit hierarchy
-inheritance. Repository fixtures and tutorials are synthetic-only. See the
+accounts, explicit multi-person accountability, exact scoped assignments, and
+audited containment. Full-convention organizations use the Executive Board
+ceremony; Workforce-only organizations may instead use two independently
+activated Maru operators without inventing a broader governance structure.
+Organization, edition, Department, and typed-resource authorization remain
+deny-by-default without implicit hierarchy inheritance. Repository fixtures
+and tutorials are synthetic-only. See the
 [authorization model](docs/security/authorization-model.md),
 [management shell contract](docs/product/page-contracts/00-management-experience-shell.md),
 and maintained ledgers for the exact mounted behavior and residual production
@@ -147,61 +176,39 @@ rehearsal remains a release gate.
 
 ## Documentation map
 
-- [Public generated contributor documentation](https://martonpornoi.github.io/maru/)
-- [Generated contributor documentation source](docs/index.md)
-- [Product vision](docs/product/vision.md)
-- [Product requirements](docs/product/requirements.md)
-- [Capability map](docs/product/capability-map.md)
-- [Annual lifecycle](docs/product/annual-lifecycle.md)
-- [Personas and jobs](docs/product/personas-and-jobs.md)
-- [Experience and information architecture](docs/product/experience-and-information-architecture.md)
-- [Key workflows](docs/product/key-workflows.md)
-- [Domain model](docs/domain/domain-model.md)
-- [Architecture overview](docs/architecture/overview.md)
-- [Architecture decisions](docs/architecture/decisions/README.md)
-- [Authorization model](docs/security/authorization-model.md)
-- [Data classification and retention](docs/security/data-classification-and-retention.md)
-- [Threat model](docs/security/threat-model.md)
-- [Resilience and offline operation](docs/architecture/resilience-and-offline.md)
-- [Integrations and extensions](docs/architecture/integrations-and-extensions.md)
-- [Reporting and automation](docs/architecture/reporting-and-automation.md)
-- [Activity, audit, and history](docs/architecture/activity-audit-and-history.md)
-- [Implemented module documentation](docs/modules/README.md)
-- [Deployment and service objectives](docs/operations/deployment-and-service-objectives.md)
-- [Observability and operational readiness](docs/operations/observability-and-readiness.md)
-- [Registration operations and tester runbook](docs/operations/registration-runbook.md)
-- [Clean convention and volunteer onboarding walkthrough](docs/operations/clean-convention-onboarding-walkthrough.md)
-- [Marucon admin-first educational rehearsal](docs/operations/marucon-admin-rehearsal.md)
-- [Empty-experience baseline](docs/operations/empty-experience-baseline.md)
-- [Page 1 platform-administration runbook](docs/operations/page-01-platform-home.md)
-- [Organization-to-edition hands-on tutorial](docs/operations/maru-hands-on-tutorial.md)
-- [Edition workspace migration and recovery](docs/operations/edition-workspace-migration-and-recovery.md)
-- [Executive Board migration and recovery](docs/operations/executive-board-migration-and-recovery.md)
-- [IDN-011 convention-subject migration and recovery](docs/operations/idn011-convention-subject-migration-and-recovery.md)
-- [Controlled reset ledger](docs/project/RESET_REBUILD.md)
-- [Registration implementation backlog](docs/project/REGISTRATION_TODO.md)
-- [Research landscape](docs/research/landscape-2026-07.md)
-- [Testing strategy](docs/quality/testing-strategy.md)
-- [Documentation standards](docs/quality/documentation-standards.md)
-- [Development setup](docs/development/setup.md)
-- [Project governance and maintainer continuity](GOVERNANCE.md)
-- [Repository workflow and protection](docs/development/repository-governance.md)
-- [Support policy](SUPPORT.md)
-- [Security policy](SECURITY.md)
-- [GitHub release process](docs/operations/release-process.md)
-- [Public repository readiness](docs/operations/public-repository-readiness.md)
-- [Current project state](docs/project/CURRENT.md)
-- [Production consolidation and live capability ledger](docs/project/PRODUCTION_CONSOLIDATION.md)
-- [Roadmap](docs/project/ROADMAP.md)
-- [Delivery plan](docs/project/DELIVERY_PLAN.md)
-- [Implementation backlog](docs/project/BACKLOG.md)
-- [Progress matrix](docs/project/PROGRESS.md)
-- [MaruCon fictional operating model](docs/research/marucon-operating-model.md)
-- [Checkpoint system](docs/checkpoints/README.md)
+- **Start here:** [product tour](https://martonpornoi.github.io/maru/start-here/product-tour.html),
+  [run locally](https://martonpornoi.github.io/maru/start-here/run-locally.html),
+  [current project state](docs/project/CURRENT.md), and
+  [complete generated documentation](https://martonpornoi.github.io/maru/).
+- **Understand the product:** [vision](docs/product/vision.md),
+  [requirements](docs/product/requirements.md),
+  [capability map](docs/product/capability-map.md),
+  [domain model](docs/domain/domain-model.md), and
+  [implemented modules](docs/modules/README.md).
+- **Understand the design:** [architecture overview](docs/architecture/overview.md),
+  [accepted decisions](docs/architecture/decisions/README.md),
+  [authorization](docs/security/authorization-model.md),
+  [data classification and retention](docs/security/data-classification-and-retention.md),
+  and [threat model](docs/security/threat-model.md).
+- **Build and contribute:** [contribution guide](CONTRIBUTING.md),
+  [development setup](docs/development/setup.md),
+  [testing strategy](docs/quality/testing-strategy.md),
+  [documentation standards](docs/quality/documentation-standards.md), and
+  [protected repository workflow](docs/development/repository-governance.md).
+- **Operate and release:** [operations catalog](docs/operations/index.md),
+  [deployment and service objectives](docs/operations/deployment-and-service-objectives.md),
+  [observability and readiness](docs/operations/observability-and-readiness.md),
+  [release process](docs/operations/release-process.md),
+  [changelog](CHANGELOG.md), and
+  [GitHub Releases](https://github.com/martonpornoi/maru/releases).
+- **Plan and reconstruct:** [roadmap](docs/project/ROADMAP.md),
+  [delivery plan](docs/project/DELIVERY_PLAN.md),
+  [production-consolidation ledger](docs/project/PRODUCTION_CONSOLIDATION.md),
+  and [checkpoint archive](docs/checkpoints/README.md).
 
-The product/architecture baseline and repository-controlled registration
-production-safety vertical are implemented. A selected provider, target
-infrastructure, representative load evidence, partner policy review, and
-edition go/no-go are still required before production personal data. See the
-current-state handoff and registration backlog for the exact tested and
-residual boundaries.
+The product and architecture baseline plus substantial bounded Registration,
+Workforce, Venue, and Logistics slices are implemented. Provider certification,
+target infrastructure, representative load and recovery evidence, partner
+policy review, accessibility acceptance, and edition go/no-go are still
+required before production personal data. The current-state handoff owns the
+exact tested and residual boundaries.

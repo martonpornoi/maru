@@ -231,8 +231,15 @@ only exact `main`, disallow administrator bypass, and have no required reviewer
 while one maintainer exists. Follow the complete procedure and irreversible
 failure rules in [the release process](../operations/release-process.md) and ADR
 0065. Wrong-branch, missing-immutability, invalid candidate/gold input
-combinations, and a release PR that is not merged into `main` at the workflow
-commit fail before complete source certification starts.
+combinations, non-current `main`, version/changelog drift, identity collisions,
+and a release PR that is not merged into `main` at the workflow commit fail
+before complete source certification starts.
+
+The same workflow requires exactly one non-empty dated `CHANGELOG.md` section
+for the derived display CalVer. That curated section leads the GitHub Release
+body; exact pull-request, commit, image, and asset evidence follows it, and
+GitHub's generated categorized change list remains supplementary. A release PR
+must never substitute generated titles for maintained operator-facing notes.
 
 ## Maintainer settings
 
@@ -273,6 +280,14 @@ purpose-built approved asset and a real recipient plus stewardship decision.
 The preview is a live setting; funding links normally come from committed
 `.github/FUNDING.yml`, while connecting a recipient is separate external
 stewardship work.
+
+Issues are the bounded execution queue for observable defects and scoped
+proposals. Requirements and accepted ADRs remain authoritative, `ROADMAP.md`
+sets direction, `CURRENT.md` carries the maintained handoff, and Discussions
+hold setup/design exploration. Do not bulk-copy historical todo documents into
+Issues or enable Projects without demonstrated triage volume. Issue Forms ask
+for preparation, affected behavior, acceptance boundaries, non-goals,
+traceability, and safety evidence without collecting personal or secret data.
 
 Root `GOVERNANCE.md` is the authority and continuity policy;
 `CODE_OF_CONDUCT.md`, `SECURITY.md`, and `SUPPORT.md` own their respective
