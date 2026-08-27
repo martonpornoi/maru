@@ -251,13 +251,19 @@ Completed locally:
   383 source files, warning-fatal Sphinx/AutoAPI, migration and Django checks,
   production-settings validation, OpenAPI generation, TypeScript checking, 29
   frontend tests, and the production frontend build; and
+- clean-tree `scripts/certify.ps1` passes for exact implementation commit
+  `bc9f14668e88b0b3d9c5f8c5bb12770806131c3d`: all 2,060 unit tests, 2,357
+  PostgreSQL integration tests across eight isolated shards, 29 frontend
+  tests, the complete static/documentation/security/package gates, and the 90%
+  combined branch-coverage minimum pass; and
 - `git diff --check` passes.
 
 The Maru header was visually inspected at its original 1,280 by 640 pixels.
 Authenticated readback confirms live issues #21 through #24 with their intended
-titles and `proposal`/`triage` plus scoped classification labels. Clean-tree
-exact-commit certification remains before review. Hosted acceptance is required
-for the exact eventual pull-request head.
+titles and `proposal`/`triage` plus scoped classification labels. The
+documentation-only certification-evidence successor must receive the same
+clean-tree exact-commit certification before review. Hosted acceptance remains
+required for the exact eventual pull-request head.
 
 ### Merged Workforce-only adoption evidence
 

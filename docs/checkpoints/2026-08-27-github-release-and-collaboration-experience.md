@@ -83,14 +83,20 @@ Completed on the working branch:
   383 source files, warning-fatal Sphinx/AutoAPI, migration and Django checks,
   production-settings validation, OpenAPI generation, TypeScript checking, 29
   frontend tests, and the production frontend build;
+- clean-tree `scripts/certify.ps1` passes for exact implementation commit
+  `bc9f14668e88b0b3d9c5f8c5bb12770806131c3d`: all 2,060 unit tests, 2,357
+  PostgreSQL integration tests across eight isolated shards, 29 frontend
+  tests, package/static/documentation/security gates, and the 90% combined
+  branch-coverage minimum pass;
 - `git diff --check` passes;
 - the 1,280 by 640 PNG header was visually inspected at original resolution;
   and
 - authenticated GitHub readback confirms issues #21 through #24 and their
   intended labels.
 
-Clean-tree exact-commit certification remains before pull-request review.
-Hosted `PR gate` acceptance will remain authoritative for the eventual exact
+The documentation-only certification-evidence successor must receive the same
+clean-tree exact-commit certification before pull-request review. Hosted
+`PR gate` acceptance will remain authoritative for the eventual exact
 pull-request head.
 
 ## Data, migration, and deployment notes
@@ -105,14 +111,16 @@ bodies use product contracts and synthetic-data boundaries only.
 
 - The Releases tab remains empty until issue #21's dedicated release pull
   request passes and an `rc.1` dispatch receives separate approval.
-- The release workflow is locally contract-tested but still requires the full
-  protected hosted acceptance selected for workflow changes.
+- The release workflow is locally contract-tested and exact-commit certified,
+  but still requires the full protected hosted acceptance selected for
+  workflow changes.
 - README badges and linked current-state guidance become public only after this
   branch merges; the header is not yet the live social preview.
 
 ## Recommended next actions
 
-1. Complete local checks and protected pull-request delivery for this branch.
+1. Certify the documentation-only evidence successor, then complete protected
+   pull-request delivery for this branch.
 2. Execute issue #21 as a separate release pull request and immutable candidate
    publication, including the administrator immutability preflight.
 3. Progress issues #22 through #24 in their documented order and preserve their
