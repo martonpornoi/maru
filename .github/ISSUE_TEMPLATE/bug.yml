@@ -8,21 +8,48 @@ body:
       value: >-
         Do not report vulnerabilities or include personal data. Use Maru's
         private vulnerability form at
-        https://github.com/martonpornoi/maru/security/advisories/new.
+        https://github.com/martonpornoi/maru/security/advisories/new. Use
+        synthetic data and sanitized evidence only.
+  - type: checkboxes
+    id: preparation
+    attributes:
+      label: Preparation
+      options:
+        - label: I searched existing Issues and Discussions for this behavior.
+          required: true
   - type: textarea
-    id: outcome
+    id: observed
     attributes:
       label: Observed behavior
-      description: What happened, and what did you expect instead?
+      description: What happened? Include the visible failure state or safe error text.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
     validations:
       required: true
   - type: textarea
     id: evidence
     attributes:
-      label: Evidence or reproduction conditions
+      label: Reproduction and sanitized evidence
       description: >-
-        Give the smallest safe synthetic-data reproduction when available.
-        Otherwise describe frequency, triggering conditions, and sanitized logs.
+        Give the smallest safe synthetic-data reproduction, including role,
+        organization/edition scope, sequence, frequency, and sanitized logs.
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      description: Choose the closest observable effect; maintainers will confirm severity.
+      options:
+        - A complete workflow is blocked
+        - A workflow is degraded but has a safe workaround
+        - A visible result is incorrect or confusing
+        - Contributor tooling or documentation is affected
     validations:
       required: true
   - type: input
@@ -37,6 +64,8 @@ body:
     attributes:
       label: Environment
       description: OS, Python, PostgreSQL, browser, and deployment shape where relevant.
+    validations:
+      required: true
   - type: checkboxes
     id: safety
     attributes:

@@ -728,10 +728,13 @@ def test_release_requires_exact_source_unique_calver_and_evidence() -> None:
     for required in (
         "name: Validate release request",
         "Reject invalid release inputs before certification",
+        "name: Validate release source",
+        "Reject invalid version, changelog, or release identity",
         "needs: validate-request",
-        "needs: [validate-request, certify]",
+        "needs: [validate-source, certify]",
         "uses: ./.github/workflows/_full-ci.yml",
         "scripts/release_metadata.py",
+        "--changelog CHANGELOG.md",
         "release_immutability_verified",
         "CURRENT_MAIN=$(git ls-remote --exit-code origin refs/heads/main",
         'MERGE_SHA" != "$GITHUB_SHA',
@@ -742,6 +745,8 @@ def test_release_requires_exact_source_unique_calver_and_evidence() -> None:
         "sbom: true",
         "actions/attest-build-provenance@",
         "release-manifest.json",
+        "release-notes.md",
+        "## Release evidence",
         "SHA256SUMS",
         "gh release create",
         "--draft",
@@ -761,9 +766,16 @@ def test_release_requires_exact_source_unique_calver_and_evidence() -> None:
         "contents": "read",
         "pull-requests": "read",
     }
-    assert jobs["certify"]["needs"] == "validate-request"
-    assert jobs["publish"]["needs"] == ["validate-request", "certify"]
+    assert jobs["validate-source"]["needs"] == "validate-request"
+    assert jobs["validate-source"]["permissions"] == {
+        "contents": "read",
+        "pull-requests": "read",
+    }
+    assert jobs["certify"]["needs"] == "validate-source"
+    assert jobs["publish"]["needs"] == ["validate-source", "certify"]
     assert "org.opencontainers.image.licenses" not in workflow
+    assert "            > release-assets/release-notes.md" not in workflow
+    assert "! -name release-notes.md" in workflow
     assert "rm -rf release-assets/docs/.doctrees" in workflow
     assert "cp LICENSE THIRD_PARTY_NOTICES.md release-assets/docs/" in workflow
     assert (

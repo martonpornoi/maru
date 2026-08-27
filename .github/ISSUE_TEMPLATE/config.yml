@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Current project state and roadmap
+    url: https://github.com/martonpornoi/maru/blob/main/docs/project/CURRENT.md
+    about: Check implemented behavior, known limitations, and the smallest next actions.
   - name: Security report
     url: https://github.com/martonpornoi/maru/security/advisories/new
     about: Report a suspected vulnerability privately to the maintainer.

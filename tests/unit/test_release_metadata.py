@@ -4,7 +4,11 @@ import json
 from typing import TYPE_CHECKING
 
 import pytest
-from scripts.release_metadata import derive_release_metadata, write_release_files
+from scripts.release_metadata import (
+    derive_release_metadata,
+    extract_changelog_section,
+    write_release_files,
+)
 from scripts.verify_release_evidence import (
     ReleaseState,
     asset_digests,
@@ -15,6 +19,22 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 COMMIT = "a" * 40
+CHANGELOG = """# Changelog
+
+## [Unreleased]
+
+- Work in progress.
+
+## [2026.08.2] - 2026-08-19
+
+### Added
+
+- A curated user-facing outcome linked to PR #2.
+
+### Known limitations
+
+- Production approval remains separate.
+"""
 
 
 def test_gold_release_uses_full_year_month_and_pull_request() -> None:
@@ -82,7 +102,7 @@ def test_release_files_are_deterministic_and_workflow_ready(tmp_path: Path) -> N
         candidate_number=1,
     )
 
-    write_release_files(metadata, tmp_path)
+    write_release_files(metadata, tmp_path, changelog=CHANGELOG)
 
     manifest = json.loads(
         (tmp_path / "release-manifest.json").read_text(encoding="utf-8")
@@ -96,6 +116,61 @@ def test_release_files_are_deterministic_and_workflow_ready(tmp_path: Path) -> N
     }
     assert "prerelease=true\n" in outputs
     assert "python_version=2026.8.2\n" in outputs
+    assert (tmp_path / "release-notes.md").read_text(encoding="utf-8") == (
+        "> [!IMPORTANT]\n"
+        "> This is a pre-production release candidate for evaluation with "
+        "synthetic data.\n"
+        "> It is not production approval or a supported hosted service.\n\n"
+        "### Added\n\n"
+        "- A curated user-facing outcome linked to PR #2.\n\n"
+        "### Known limitations\n\n"
+        "- Production approval remains separate.\n"
+    )
+
+
+def test_changelog_extraction_returns_only_the_matching_version() -> None:
+    section = extract_changelog_section(CHANGELOG, "2026.08.2")
+
+    assert "curated user-facing outcome" in section
+    assert "Work in progress" not in section
+
+
+@pytest.mark.parametrize(
+    ("changelog", "match"),
+    [
+        ("# Changelog\n\n## [Unreleased]\n\n- Work.\n", "exactly one"),
+        (
+            "# Changelog\n\n## [2026.08.2]\n\n- Missing date.\n",
+            "release date",
+        ),
+        (
+            "# Changelog\n\n## [2026.08.2] - 2026-99-99\n\n- Invalid date.\n",
+            "invalid release date",
+        ),
+        (
+            "# Changelog\n\n## [2026.08.2] - 2026-08-19\n\nNo entries.\n",
+            "at least one list entry",
+        ),
+        (
+            "# Changelog\n\n"
+            "## [2026.08.2] - 2026-08-19\n\n- First.\n\n"
+            "## [2026.08.2] - 2026-08-20\n\n- Duplicate.\n",
+            "exactly one",
+        ),
+    ],
+)
+def test_invalid_release_changelog_is_rejected(changelog: str, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        extract_changelog_section(changelog, "2026.08.2")
+
+
+def test_release_changelog_date_must_match_the_merge_date() -> None:
+    with pytest.raises(ValueError, match="date must equal 2026-08-20"):
+        extract_changelog_section(
+            CHANGELOG,
+            "2026.08.2",
+            expected_date="2026-08-20",
+        )
 
 
 def _release_payload(

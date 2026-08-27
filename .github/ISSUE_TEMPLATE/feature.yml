@@ -8,7 +8,19 @@ body:
       value: >-
         Do not report vulnerabilities or include personal data. Use Maru's
         private vulnerability form at
-        https://github.com/martonpornoi/maru/security/advisories/new.
+        https://github.com/martonpornoi/maru/security/advisories/new. Use a
+        Discussion for an early idea that does not yet have a bounded outcome.
+        Requirements and accepted ADRs remain authoritative when they differ
+        from issue conversation.
+  - type: checkboxes
+    id: preparation
+    attributes:
+      label: Preparation
+      options:
+        - label: I searched existing Issues and Discussions for overlapping work.
+          required: true
+        - label: I reviewed the current project state and roadmap.
+          required: true
   - type: textarea
     id: problem
     attributes:
@@ -17,17 +29,36 @@ body:
     validations:
       required: true
   - type: textarea
+    id: current_workaround
+    attributes:
+      label: Current workflow or workaround
+      description: How is this job handled today, inside or outside Maru?
+  - type: textarea
     id: acceptance
     attributes:
       label: Acceptance boundary
-      description: Describe observable success and what should remain out of scope.
+      description: Describe observable success for the affected roles and states.
     validations:
       required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Explicit non-goals
+      description: What related behavior should remain outside this issue?
+    validations:
+      required: true
+  - type: textarea
+    id: traceability
+    attributes:
+      label: Requirements, decisions, and dependencies
+      description: Link relevant requirement IDs, ADRs, issues, or prerequisite work when known.
   - type: textarea
     id: safety
     attributes:
       label: Security, privacy, and operations
-      description: Note tenant, permission, data, recovery, and deployment implications.
+      description: >-
+        Note tenant and edition scope, permissions, personal data, retention,
+        recovery, degraded operation, and deployment implications.
     validations:
       required: true
   - type: textarea

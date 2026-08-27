@@ -36,6 +36,27 @@ Branch names never enter a stable release. Before gold, increment `rc.N` for a
 new candidate. After gold, merge a new fix pull request and use its new CalVer;
 never replace a tag, release, image, checksum, SBOM, or attestation.
 
+## Curated public notes
+
+`CHANGELOG.md` is the human-facing source for release notes. Externally
+meaningful pull requests add concise audience-focused entries under
+**Unreleased**. Checkpoints retain detailed implementation and verification
+evidence; pull-request titles and commit history do not replace changelog
+curation.
+
+A dedicated release pull request moves the complete intended set into exactly
+one dated heading such as `## [2026.08.42] - 2026-08-27`. The heading uses the
+padded display CalVer without an `rc.N` suffix, so candidate and gold attempts
+for the same release PR share one curated change set. Its date must equal
+GitHub's release-pull-request merge date. Keep **Unreleased** above the
+versioned history for later work.
+
+The Release workflow rejects a missing, duplicated, undated, or empty matching
+section. The GitHub Release body begins with the exact curated section, adds the
+candidate maturity warning where applicable, and links the certified pull
+request, commit, and OCI image. GitHub's generated categorized pull-request
+list remains supplementary detail below those maintained notes.
+
 ## Public-history and license baseline
 
 The first candidate release requires ADR 0067's accepted GH-003 checkpoint and
@@ -66,8 +87,10 @@ separate destructive authorization.
 ## Candidate and gold procedure
 
 1. Open a dedicated release pull request from current `main`. Update
-   `pyproject.toml` to the derived PEP 440 version and curate release notes,
-   migration/recovery plan, operator limits, and checkpoint.
+   `pyproject.toml` to the derived PEP 440 version, move the intended
+   **Unreleased** entries into the matching dated display-CalVer section, and
+   curate the migration/recovery plan, operator limits, and checkpoint. Recheck
+   the calendar month immediately before merge.
 2. Let `PR gate` pass, resolve conversations, and squash-merge. Do not merge
    another pull request before starting this release: the release workflow
    requires the release PR merge commit to be the exact current `main` commit.
@@ -88,12 +111,13 @@ separate destructive authorization.
    support. Set **release_immutability_verified** only after step 3. The
    workflow-dispatch record preserves this maintainer confirmation. GitHub
    environment approval may pause publication.
-5. The workflow rejects invalid branch, immutability, and channel inputs and
-   requires the release PR to be merged into `main` at the exact workflow commit
-   before rerunning full acceptance. It then rejects identity collisions, builds
-   and pushes the image once, and records its digest and attestations. It creates a
-   draft release with the complete asset set, verifies its exact commit, tag,
-   asset names, uploaded state, and SHA-256 digests, and only then publishes it.
+5. The workflow rejects invalid branch, immutability, channel, version, and
+   changelog inputs and requires the release PR to be merged into `main` at the
+   exact workflow commit before rerunning full acceptance. It then rejects
+   identity collisions, builds and pushes the image once, and records its digest
+   and attestations. It creates a draft release with the curated notes and
+   complete asset set, verifies its exact commit, tag, asset names, uploaded
+   state, and SHA-256 digests, and only then publishes it.
 6. After publication, the workflow requires GitHub to report the release as
    immutable, verifies the release and every attached asset against GitHub's
    release attestation, confirms the tag still targets the certified commit,

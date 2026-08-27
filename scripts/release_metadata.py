@@ -6,7 +6,7 @@ import argparse
 import json
 import re
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -17,6 +17,11 @@ Channel = Literal["candidate", "gold"]
 SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
 APPLICATION_LICENSE_EXPRESSION = "Apache-2.0 AND MIT"
 APPLICATION_LICENSE_FILES = ("LICENSE", "THIRD_PARTY_NOTICES.md")
+CHANGELOG_SECTION_PATTERN = re.compile(
+    r"^## \[(?P<version>[^\]]+)\](?: - (?P<date>\d{4}-\d{2}-\d{2}))?\s*$",
+    re.MULTILINE,
+)
+CHANGELOG_ENTRY_PATTERN = re.compile(r"^- \S", re.MULTILINE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,15 +156,116 @@ def derive_release_metadata(
     )
 
 
-def write_release_files(metadata: ReleaseMetadata, output_directory: Path) -> None:
-    """Write a deterministic release manifest and workflow outputs.
+def extract_changelog_section(
+    changelog: str,
+    version: str,
+    *,
+    expected_date: str | None = None,
+) -> str:
+    """Extract one complete dated release section from the changelog.
+
+    Parameters
+    ----------
+    changelog : str
+        Complete repository changelog text.
+    version : str
+        Padded display CalVer expected in the release heading.
+    expected_date : str | None, default=None
+        ISO calendar date that the heading must match when supplied.
+
+    Returns
+    -------
+    str
+        Curated Markdown below the matching version heading.
+
+    Raises
+    ------
+    ValueError
+        If the version section is missing, duplicated, undated, or empty.
+    """
+    matches = tuple(
+        match
+        for match in CHANGELOG_SECTION_PATTERN.finditer(changelog)
+        if match.group("version") == version
+    )
+    if len(matches) != 1:
+        raise ValueError(
+            f"CHANGELOG.md must contain exactly one section for [{version}]"
+        )
+    match = matches[0]
+    release_date = match.group("date")
+    if release_date is None:
+        raise ValueError(
+            f"CHANGELOG.md section [{version}] must include a release date"
+        )
+    try:
+        date.fromisoformat(release_date)
+    except ValueError as error:
+        raise ValueError(
+            f"CHANGELOG.md section [{version}] has an invalid release date"
+        ) from error
+    if expected_date is not None and release_date != expected_date:
+        raise ValueError(
+            f"CHANGELOG.md section [{version}] date must equal {expected_date}"
+        )
+    next_match = CHANGELOG_SECTION_PATTERN.search(changelog, match.end())
+    section_end = next_match.start() if next_match is not None else len(changelog)
+    section = changelog[match.end() : section_end].strip()
+    if not section or CHANGELOG_ENTRY_PATTERN.search(section) is None:
+        raise ValueError(
+            f"CHANGELOG.md section [{version}] must contain at least one list entry"
+        )
+    return section
+
+
+def _release_notes(metadata: ReleaseMetadata, changelog: str) -> str:
+    """Build the curated prefix for one GitHub Release body.
+
+    Parameters
+    ----------
+    metadata : ReleaseMetadata
+        Validated release identity and channel.
+    changelog : str
+        Complete repository changelog text.
+
+    Returns
+    -------
+    str
+        Deterministic Markdown ready for workflow evidence to be appended.
+    """
+    merged_date = datetime.fromisoformat(metadata.merged_at).date().isoformat()
+    section = extract_changelog_section(
+        changelog,
+        metadata.version,
+        expected_date=merged_date,
+    )
+    candidate_notice = ""
+    if metadata.channel == "candidate":
+        candidate_notice = (
+            "> [!IMPORTANT]\n"
+            "> This is a pre-production release candidate for evaluation with "
+            "synthetic data.\n"
+            "> It is not production approval or a supported hosted service.\n\n"
+        )
+    return f"{candidate_notice}{section}\n"
+
+
+def write_release_files(
+    metadata: ReleaseMetadata,
+    output_directory: Path,
+    *,
+    changelog: str,
+) -> None:
+    """Write deterministic release metadata, notes, and workflow outputs.
 
     Parameters
     ----------
     metadata : ReleaseMetadata
         Validated release identity and provenance.
     output_directory : Path
-        Directory receiving ``release-manifest.json`` and ``github-output``.
+        Directory receiving the manifest, workflow outputs, and release notes.
+    changelog : str
+        Complete changelog containing one dated section for the release version.
     """
     output_directory.mkdir(parents=True, exist_ok=True)
     manifest_path = output_directory / "release-manifest.json"
@@ -187,6 +293,11 @@ def write_release_files(metadata: ReleaseMetadata, output_directory: Path) -> No
         encoding="utf-8",
         newline="\n",
     )
+    (output_directory / "release-notes.md").write_text(
+        _release_notes(metadata, changelog),
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def _argument_parser() -> argparse.ArgumentParser:
@@ -203,6 +314,7 @@ def _argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--commit", required=True)
     parser.add_argument("--channel", choices=("candidate", "gold"), required=True)
     parser.add_argument("--candidate-number", type=int)
+    parser.add_argument("--changelog", type=Path, required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     return parser
 
@@ -228,7 +340,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         channel=namespace.channel,
         candidate_number=namespace.candidate_number,
     )
-    write_release_files(metadata, namespace.output_directory)
+    write_release_files(
+        metadata,
+        namespace.output_directory,
+        changelog=namespace.changelog.read_text(encoding="utf-8"),
+    )
     return 0
 
 

@@ -11,6 +11,9 @@ PRIVATE_REPORT_URL = "https://github.com/martonpornoi/maru/security/advisories/n
 CONDUCT_POLICY_URL = "https://github.com/martonpornoi/maru/blob/main/CODE_OF_CONDUCT.md"
 SUPPORT_POLICY_URL = "https://github.com/martonpornoi/maru/blob/main/SUPPORT.md"
 DISCUSSIONS_URL = "https://github.com/martonpornoi/maru/discussions"
+CURRENT_STATE_URL = (
+    "https://github.com/martonpornoi/maru/blob/main/docs/project/CURRENT.md"
+)
 GITHUB_ABUSE_URL = (
     "https://docs.github.com/en/communities/maintaining-your-safety-on-github/"
     "reporting-abuse-or-spam"
@@ -40,6 +43,28 @@ def _assert_nonempty_text(value: object) -> None:
     assert value.strip()
 
 
+def _assert_checkbox_attributes(attributes: dict[object, object]) -> None:
+    assert set(attributes) <= {"label", "description", "options"}
+    options = attributes.get("options")
+    assert isinstance(options, list)
+    assert options
+    for option in options:
+        assert isinstance(option, dict)
+        assert set(option) == {"label", "required"}
+        _assert_nonempty_text(option["label"])
+        assert isinstance(option["required"], bool)
+
+
+def _assert_dropdown_attributes(attributes: dict[object, object]) -> None:
+    assert set(attributes) <= {"label", "description", "options"}
+    options = attributes.get("options")
+    assert isinstance(options, list)
+    assert len(options) >= 2
+    assert len(options) == len(set(options))
+    for option in options:
+        _assert_nonempty_text(option)
+
+
 def _assert_issue_form_schema(form: object) -> None:
     assert isinstance(form, dict)
     assert set(form) == {"name", "description", "title", "labels", "body"}
@@ -61,7 +86,13 @@ def _assert_issue_form_schema(form: object) -> None:
     for item in body:
         assert isinstance(item, dict)
         item_type = item.get("type")
-        assert item_type in {"checkboxes", "input", "markdown", "textarea"}
+        assert item_type in {
+            "checkboxes",
+            "dropdown",
+            "input",
+            "markdown",
+            "textarea",
+        }
         attributes = item.get("attributes")
         assert isinstance(attributes, dict)
 
@@ -90,15 +121,9 @@ def _assert_issue_form_schema(form: object) -> None:
             assert isinstance(validations["required"], bool)
 
         if item_type == "checkboxes":
-            assert set(attributes) <= {"label", "description", "options"}
-            options = attributes.get("options")
-            assert isinstance(options, list)
-            assert options
-            for option in options:
-                assert isinstance(option, dict)
-                assert set(option) == {"label", "required"}
-                _assert_nonempty_text(option["label"])
-                assert isinstance(option["required"], bool)
+            _assert_checkbox_attributes(attributes)
+        elif item_type == "dropdown":
+            _assert_dropdown_attributes(attributes)
         else:
             assert set(attributes) <= {
                 "label",
@@ -114,9 +139,20 @@ def test_public_community_materials_are_actionable_and_current() -> None:
         assert (REPOSITORY_ROOT / relative_path).is_file(), relative_path
 
     readme = _text("README.md")
-    assert "[SUPPORT.md](SUPPORT.md)" in readme
-    assert "[GOVERNANCE.md](GOVERNANCE.md)" in readme
-    assert "[SECURITY.md](SECURITY.md)" in readme
+    assert readme.startswith(
+        "![Maru convention operations platform](.github/assets/maru-header.png)"
+    )
+    header_path = REPOSITORY_ROOT / ".github" / "assets" / "maru-header.png"
+    assert header_path.is_file()
+    assert header_path.stat().st_size <= 512_000
+    assert header_path.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+    assert "https://github.com/martonpornoi/maru/releases" in readme
+    assert "https://github.com/martonpornoi/maru/issues" in readme
+    assert DISCUSSIONS_URL in readme
+    assert "[changelog](CHANGELOG.md)" in readme
+    assert "(SUPPORT.md)" in readme
+    assert "(GOVERNANCE.md)" in readme
+    assert "(SECURITY.md)" in readme
     assert "[Code of Conduct](CODE_OF_CONDUCT.md)" in readme
     assert not re.search(r"\b\d[\d,]*\s+(?:of\s+\d[\d,]*\s+)?tests?\b", readme)
     assert not re.search(
@@ -125,6 +161,12 @@ def test_public_community_materials_are_actionable_and_current() -> None:
         readme,
         flags=re.IGNORECASE,
     )
+
+    changelog = _text("CHANGELOG.md")
+    assert changelog.count("## [Unreleased]") == 1
+    for category in ("Added", "Changed", "Security", "Known limitations"):
+        assert f"### {category}" in changelog
+    assert "GitHub Releases" in changelog
 
     security = _text("SECURITY.md")
     assert PRIVATE_REPORT_URL in security
@@ -183,6 +225,7 @@ def test_issue_intake_preserves_reviewed_routes_fields_and_labels() -> None:
         CONDUCT_POLICY_URL,
         SUPPORT_POLICY_URL,
         DISCUSSIONS_URL,
+        CURRENT_STATE_URL,
     }
     links_by_url = {link["url"]: link for link in config["contact_links"]}
     assert (
@@ -196,15 +239,22 @@ def test_issue_intake_preserves_reviewed_routes_fields_and_labels() -> None:
     }
     expected_fields_by_form = {
         "bug.yml": {
-            "outcome": ("textarea", True),
+            "preparation": ("checkboxes", False),
+            "observed": ("textarea", True),
+            "expected": ("textarea", True),
             "evidence": ("textarea", True),
+            "impact": ("dropdown", True),
             "version": ("input", True),
-            "environment": ("textarea", False),
+            "environment": ("textarea", True),
             "safety": ("checkboxes", False),
         },
         "feature.yml": {
+            "preparation": ("checkboxes", False),
             "problem": ("textarea", True),
+            "current_workaround": ("textarea", False),
             "acceptance": ("textarea", True),
+            "non_goals": ("textarea", True),
+            "traceability": ("textarea", False),
             "safety": ("textarea", True),
             "alternatives": ("textarea", False),
             "safety_confirmation": ("checkboxes", False),
