@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-08-27
-Phase: Progressive adoption and management-experience recovery.
+Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
 supported hosted service, a production-ready release, or approved for
@@ -76,48 +76,58 @@ process.
 - Issue Forms now distinguish bounded defects/proposals from exploratory
   Discussions and request preparation, roles/states, acceptance, non-goals,
   traceability, safety, and sanitized evidence.
-- Live [issue #21](https://github.com/martonpornoi/maru/issues/21),
+- Completed [issue #21](https://github.com/martonpornoi/maru/issues/21)
+  records the first curated immutable candidate. Live
   [issue #22](https://github.com/martonpornoi/maru/issues/22),
   [issue #23](https://github.com/martonpornoi/maru/issues/23), and
-  [issue #24](https://github.com/martonpornoi/maru/issues/24) track the first
-  curated immutable candidate, Workforce-only continuity, the Workforce/Shift
-  accessibility matrix, and the next attendance/handover/actual-time contract.
-  Requirements, ADRs, the roadmap, and this handoff remain authoritative rather
-  than being replaced by those issues.
+  [issue #24](https://github.com/martonpornoi/maru/issues/24) track
+  Workforce-only continuity, the Workforce/Shift accessibility matrix, and the
+  next attendance/handover/actual-time contract. Requirements, ADRs, the
+  roadmap, and this handoff remain authoritative rather than being replaced by
+  those issues.
 - PR #25 merged this outcome as exact squash commit `5d84ca1` on 2026-08-27.
   Pull-request run `33054662739`, managed CodeQL run `33054564446`, exact-main
   CodeQL run `33064605109`, and Pages run `33064605358` passed.
 
-## First release candidate recovery and replacement
+## First immutable release candidate
 
-Release preparation PR #26 merged as `e3cd11e`, and release workflow
-`33082089911` certified that exact protected-main commit. Publication then
-failed while GitHub prepared the release job because the selected-Actions
-policy omitted two nested Actions invoked by the pinned provenance composite
-Action.
+[Maru 2026.08.27 release candidate 1](https://github.com/martonpornoi/maru/releases/tag/v2026.08.27-rc.1)
+is public, immutable, and explicitly pre-production.
 
-- The failure happened before checkout and before registry login, image build,
-  draft creation, tag creation, or GitHub Release creation. Authenticated
-  readback confirms no `v2026.08.26-rc.1` tag or Release exists; nothing was
-  deleted or overwritten.
-- The pinned upstream action definition confirms the rejected nested SHAs are
-  its exact `predicate@2.0.0` and `actions/attest` v3.0.0 dependencies.
-- Draft PR #27 is the new exact-main release and policy-repair boundary. The
-  curated changelog section becomes `2026.08.27`, project and lock metadata use
-  PEP 440 version `2026.8.27`, and the replacement candidate tag is
-  `v2026.08.27-rc.1`.
-- The checked-in selected-Actions desired state adds only the two audited nested
-  SHAs and retains both broad trust flags as `false`. The live policy still has
-  the prior exact 16 entries; ADR 0064 requires separate owner authorization and
-  exact pre/post readback before changing it to the reviewed 18-entry set.
-- The replacement remains pre-production and synthetic-data-only. It is not a
-  gold release, deployment, hosted-service promise, production personal-data
-  approval, or completion of external operational gates.
+- Release PR [#27](https://github.com/martonpornoi/maru/pull/27) merged as exact
+  squash commit `be0b21d` after local certification and protected run
+  `33096490372` passed the complete high-risk acceptance path.
+- With explicit owner authorization, the live selected-Actions policy moved
+  from the exact protected-main 16-entry state to the reviewed 18-entry state.
+  Immediate readback proved exact parity while `github_owned_allowed` and
+  `verified_allowed` remained `false`.
+- Immediately before dispatch, immutable Releases were enabled, all three live
+  security-alert classes were empty, remote `main` still equalled `be0b21d`,
+  and the candidate tag, Release, package, and image tag were unused.
+- Release run
+  [`33103766556`](https://github.com/martonpornoi/maru/actions/runs/33103766556)
+  passed all 19 jobs, including the complete exact-source certification matrix,
+  and published `v2026.08.27-rc.1` at `2026-08-27T19:53:09Z`.
+- The immutable tag resolves exactly to `be0b21d`. All eight Release assets and
+  their attestations verify; all seven payload hashes match `SHA256SUMS`; and
+  the exact release manifest records PR #27, the candidate identity, and image
+  digest `sha256:a44de03a4fe7bd5b3a5aaf73dd83b565b727a98bf895bf80416981e869eeb445`.
+- The GHCR tag resolves to that same digest. SLSA v1 provenance verifies with
+  the signer constrained to `.github/workflows/release.yml`, source ref
+  `main`, and exact source digest `be0b21d`.
+- The public body leads with the curated changelog and exact evidence, then
+  includes GitHub's categorized generated pull-request titles. Issue #21 is
+  closed with the complete public verification record.
 
-The initial preparation and repair evidence are in the
-[first immutable release candidate checkpoint](../checkpoints/2026-08-27-first-immutable-release-candidate.md)
-and the
-[release provenance policy recovery checkpoint](../checkpoints/2026-08-27-release-provenance-policy-recovery.md).
+This candidate is for synthetic-data evaluation. It is not a gold release,
+production deployment, supported hosted service, production personal-data
+approval, or completion of external operational gates. The complete record is
+in the
+[candidate publication checkpoint](../checkpoints/2026-08-27-first-immutable-release-candidate-published.md),
+with the failed earlier attempt retained in the
+[initial preparation checkpoint](../checkpoints/2026-08-27-first-immutable-release-candidate.md)
+and
+[provenance-policy recovery checkpoint](../checkpoints/2026-08-27-release-provenance-policy-recovery.md).
 
 ## Current product baseline
 
@@ -206,6 +216,11 @@ The complete implementation and verification record is in the
 
 ## Established repository and delivery baseline
 
+- PR #27, **Release Maru 2026.08.27 rc.1 with audited provenance policy**,
+  merged as exact squash commit `be0b21d` on 2026-08-27. Protected run
+  `33096490372` passed the complete high-risk acceptance path; release run
+  `33103766556` then recertified exact `main` and published the first immutable
+  prerelease with exact source, asset, OCI, and provenance evidence.
 - PR #25, **Improve GitHub release and collaboration experience**, merged to
   protected `main` as exact squash commit `5d84ca1` on 2026-08-27. Pull-request
   run `33054662739` passed all eight PostgreSQL shards, combined coverage, the
@@ -272,39 +287,37 @@ The complete implementation and verification record is in the
 
 ## Verification for this working outcome
 
-### First release candidate preparation and recovery
+### First immutable release candidate
 
-Completed for PR #26 and its exact merged source:
+Completed for PR #27, exact merge `be0b21d`, and release run `33103766556`:
 
-- clean-tree local certification passed exact head `c56245c`: locked and built
-  project version `2026.8.26`, package/legal checks, Ruff, mypy, PyDocLint,
-  warning-fatal Sphinx/AutoAPI, dependency audits, 29 frontend tests, 2,060 unit
+- clean-tree local certification passed exact PR head `7873c52`: locked
+  dependencies, package and legal verification, Ruff, mypy, PyDocLint,
+  warning-fatal Sphinx/AutoAPI, dependency audits, 29 frontend tests, 2,061 unit
   tests, 2,357 PostgreSQL integration tests across eight isolated shards, and
   the 90% combined branch-coverage minimum;
-- protected PR run `33074385861` passed all 19 jobs for that exact head, managed
-  CodeQL passed its Actions, JavaScript/TypeScript, and Python analyses, and PR
-  #26 squash-merged as `e3cd11e` at `2026-08-27T14:23:08Z`;
-- immediately before dispatch, the administrator API reported immutable
-  Releases enabled, remote `main` equalled `e3cd11e`, the candidate tag and
-  Release did not exist, and CodeQL, Dependabot, and secret scanning each
-  reported zero open alerts;
-- release run `33082089911` passed request/source validation and the complete
-  exact-main certification matrix, then failed during publication-job Action
-  preparation before checkout or any identity-bearing step; and
-- authenticated upstream and repository readback proves the exact two nested
-  provenance-action SHAs missing from the prior 16-entry selected policy.
-
-For draft PR #27, the allowlist validator accepts exactly 18 direct and audited
-transitive immutable references; 65 focused workflow, release, documentation,
-and public-material tests pass; focused Ruff and formatting pass; documentation
-validation accepts 350 Markdown files, four repository skills, and 207 unique
-requirement identifiers; the 108-package lock is consistent; and simulated
-candidate metadata derives `v2026.08.27-rc.1`. Clean-tree exact-commit
-certification and protected hosted acceptance remain required. Publication also
-requires separate owner authorization to reconcile and read back the live
-18-entry selected-Actions policy, exact current `main`, a fresh immutability
-readback, unused `v2026.08.27-rc.1` identities, verified draft assets, and
-post-publication immutable evidence.
+- protected PR run `33096490372` passed all 22 jobs for that exact head,
+  including the high-risk aggregate `PR gate`; CodeQL's Actions,
+  JavaScript/TypeScript, and Python analyses passed on the same head;
+- the authorized live selected-Actions reconciliation was proved as an exact
+  16-to-18-entry append-only change with both broad trust flags disabled;
+- the immediate pre-dispatch admin read reported immutable Releases enabled,
+  exact remote `main`, zero Dependabot, code-scanning, or secret-scanning
+  alerts, and unused tag, Release, package, and image identities;
+- release run `33103766556` passed request/source validation and the complete
+  exact-main certification matrix before publishing the candidate;
+- GitHub reports the prerelease immutable, `gh release verify` succeeds, the
+  tag resolves exactly to `be0b21d`, all eight downloaded assets pass individual
+  attestation verification, and all checksum and manifest relationships match;
+- GHCR resolves `2026.08.27-rc.1` to
+  `sha256:a44de03a4fe7bd5b3a5aaf73dd83b565b727a98bf895bf80416981e869eeb445`;
+  exact-workflow, exact-source, main-ref SLSA v1 verification succeeds; and
+- the Releases tab visibly presents curated notes followed by categorized
+  generated pull-request titles. Issue #21 is closed as completed with this
+  evidence; and
+- the post-publication handoff passes 19 focused documentation/public-material
+  tests, documentation policy across 351 Markdown files and 207 requirement
+  identifiers, and the complete warning-fatal Sphinx/AutoAPI build.
 
 ### Merged GitHub release and collaboration experience
 
@@ -436,17 +449,14 @@ support branch, a deployment, or production readiness.
 
 ## Known risks and incomplete work
 
-- The GitHub Releases tab remains empty. PR #26 merged and exact-main release
-  certification passed, but publication run `33082089911` failed during Action
-  preparation before creating an image, draft, tag, or Release. Draft PR #27
-  carries the exact transitive policy repair and replacement
-  `v2026.08.27-rc.1` identity. The live selected-Actions mutation remains
-  incomplete until separately owner-authorized and verified; repository files
-  alone do not change that setting.
+- `v2026.08.27-rc.1` is an immutable pre-production candidate, not a gold
+  release or production-readiness claim. Provider certification,
+  representative recovery, deployment, accessibility, policy, and owner
+  acceptance gates remain open.
 - The new header is a repository README asset only. GitHub's live social preview
   remains unchanged; adopting the asset there must wait for this branch to merge
   and requires a separate setting mutation plus readback.
-- Issues #21 through #24 start in `triage`. They expose bounded work but do not
+- Issue #21 is complete. Issues #22 through #24 expose bounded work but do not
   promise priority, response time, implementation, or acceptance of an
   unreviewed design.
 - Workforce-only adoption is implemented for trustworthy evaluation, not
@@ -483,12 +493,10 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Complete draft repair-and-release PR #27 through exact local and protected
-   hosted acceptance. With separate owner authorization, reconcile the live
-   selected-Actions policy from the observed 16-entry set to the reviewed exact
-   18-entry direct-plus-transitive set, read it back, merge PR #27, and complete
-   [issue #21](https://github.com/martonpornoi/maru/issues/21)'s replacement
-   candidate dispatch and full public immutable evidence reconciliation.
+1. Evaluate
+   [Maru 2026.08.27 release candidate 1](https://github.com/martonpornoi/maru/releases/tag/v2026.08.27-rc.1)
+   with synthetic data only. Record defects as bounded issues without treating
+   the candidate as production approval.
 2. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
    Workforce-only continuity package: preview-first
    import, scoped export, printable/manual fallback, reconciliation evidence,
