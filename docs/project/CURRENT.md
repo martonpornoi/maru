@@ -59,11 +59,11 @@ high-risk acceptance path, including all eight PostgreSQL shards, combined
 branch-aware coverage, and the stable `PR gate`. Protected-main CodeQL run
 `33037058305` and Pages run `33037059040` then passed for that exact commit.
 
-## Current repository experience outcome
+## Latest protected-main repository experience
 
-The current support branch makes Maru's public GitHub surface easier to
-understand and turns the existing secure release machinery into a curated
-human-facing process.
+Protected `main` now makes Maru's public GitHub surface easier to understand and
+turns the existing secure release machinery into a curated human-facing
+process.
 
 - The restored Maru header leads a clearer README with the product promise,
   honest maturity warning, implemented evaluation slices, build/documentation
@@ -84,8 +84,29 @@ human-facing process.
   accessibility matrix, and the next attendance/handover/actual-time contract.
   Requirements, ADRs, the roadmap, and this handoff remain authoritative rather
   than being replaced by those issues.
-- No release, tag, image, deployment, GitHub Project, social-preview setting,
-  or production approval is created by this branch.
+- PR #25 merged this outcome as exact squash commit `5d84ca1` on 2026-08-27.
+  Pull-request run `33054662739`, managed CodeQL run `33054564446`, exact-main
+  CodeQL run `33064605109`, and Pages run `33064605358` passed.
+
+## First release candidate preparation
+
+Dedicated draft PR #26 prepares `Maru 2026.08.26 release candidate 1` from the
+exact protected-main repository experience above.
+
+- `CHANGELOG.md` moves the complete curated set into
+  `## [2026.08.26] - 2026-08-27` and retains **Unreleased** for later work.
+- Project and lock metadata use PEP 440 version `2026.8.26`; the intended public
+  tag is `v2026.08.26-rc.1`.
+- The candidate remains explicitly pre-production and synthetic-data-only. It
+  is not a gold release, deployment, hosted-service promise, production
+  personal-data approval, or completion of external operational gates.
+- The protected release PR, exact-current-main check, immediately preceding
+  administrator immutability readback, complete release certification, verified
+  draft boundary, immutable publication, and post-publication attestations all
+  remain mandatory.
+
+The preparation record is in the
+[first immutable release candidate checkpoint](../checkpoints/2026-08-27-first-immutable-release-candidate.md).
 
 ## Current product baseline
 
@@ -174,6 +195,11 @@ The complete implementation and verification record is in the
 
 ## Established repository and delivery baseline
 
+- PR #25, **Improve GitHub release and collaboration experience**, merged to
+  protected `main` as exact squash commit `5d84ca1` on 2026-08-27. Pull-request
+  run `33054662739` passed all eight PostgreSQL shards, combined coverage, the
+  full acceptance jobs, and the stable `PR gate`; exact-main CodeQL run
+  `33064605109` and Pages run `33064605358` then passed.
 - PR #20, **Add Workforce-only progressive adoption profile**, merged to
   protected `main` as exact squash commit `b387748` on 2026-08-27. GitHub
   Actions run `33014664319` passed all eight PostgreSQL shards, combined
@@ -235,7 +261,27 @@ The complete implementation and verification record is in the
 
 ## Verification for this working outcome
 
-### GitHub release and collaboration experience branch
+### First release candidate preparation
+
+Completed before exact-commit certification:
+
+- `uv lock --check` resolves the locked 108-package graph with project version
+  `2026.8.26`;
+- a simulated pull-request #26 candidate-1 metadata preflight accepts the
+  `2026.08.26` dated changelog and derives `v2026.08.26-rc.1`;
+- 47 focused release-metadata, release-evidence, workflow-contract, and public-
+  material tests pass;
+- documentation policy validates 349 Markdown files, four repository skills,
+  and 207 unique requirement identifiers; and
+- `git diff --check` passes.
+
+The exact final release pull-request head still requires clean-tree local
+certification and authoritative hosted acceptance before merge. Publication
+also requires exact current `main`, a fresh administrator immutability
+readback, full release-workflow certification, verified draft assets, and
+post-publication immutable evidence reconciliation.
+
+### Merged GitHub release and collaboration experience
 
 Completed locally:
 
@@ -251,8 +297,8 @@ Completed locally:
   383 source files, warning-fatal Sphinx/AutoAPI, migration and Django checks,
   production-settings validation, OpenAPI generation, TypeScript checking, 29
   frontend tests, and the production frontend build; and
-- clean-tree `scripts/certify.ps1` passes for exact implementation commit
-  `bc9f14668e88b0b3d9c5f8c5bb12770806131c3d`: all 2,060 unit tests, 2,357
+- clean-tree `scripts/certify.ps1` passes for exact merged pull-request head
+  `58b90ab9e8b0b31cb6547abcad89434494713e7e`: all 2,060 unit tests, 2,357
   PostgreSQL integration tests across eight isolated shards, 29 frontend
   tests, the complete static/documentation/security/package gates, and the 90%
   combined branch-coverage minimum pass; and
@@ -260,10 +306,10 @@ Completed locally:
 
 The Maru header was visually inspected at its original 1,280 by 640 pixels.
 Authenticated readback confirms live issues #21 through #24 with their intended
-titles and `proposal`/`triage` plus scoped classification labels. The
-documentation-only certification-evidence successor must receive the same
-clean-tree exact-commit certification before review. Hosted acceptance remains
-required for the exact eventual pull-request head.
+titles and `proposal`/`triage` plus scoped classification labels. Hosted run
+`33054662739` subsequently passed the complete high-risk path and stable
+`PR gate`; PR #25 squash-merged as `5d84ca1`, and exact-main CodeQL and Pages
+publication passed.
 
 ### Merged Workforce-only adoption evidence
 
@@ -365,11 +411,11 @@ support branch, a deployment, or production readiness.
 
 ## Known risks and incomplete work
 
-- The GitHub Releases tab remains empty until
-  [issue #21](https://github.com/martonpornoi/maru/issues/21)'s separately
-  reviewed release pull request and explicitly approved immutable `rc.1`
-  dispatch. This support branch does not create a tag, image, release, or
-  production claim.
+- The GitHub Releases tab remains empty while draft release PR #26 is prepared.
+  It becomes populated only after protected merge, the immediately preceding
+  administrator immutability readback, and the explicitly authorized immutable
+  `v2026.08.26-rc.1` dispatch. Preparation alone creates no tag, image, Release,
+  deployment, or production claim.
 - The new header is a repository README asset only. GitHub's live social preview
   remains unchanged; adopting the asset there must wait for this branch to merge
   and requires a separate setting mutation plus readback.
@@ -410,10 +456,10 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Merge the current repository-experience branch through the protected pull-
-   request flow, then complete [issue #21](https://github.com/martonpornoi/maru/issues/21)'s
-   dedicated release pull request and separately authorized immutable `rc.1`
-   publication.
+1. Complete draft release PR #26 through protected review, then perform
+   [issue #21](https://github.com/martonpornoi/maru/issues/21)'s immediately
+   preceding immutable-release readback, authorized `rc.1` dispatch, and full
+   public evidence reconciliation.
 2. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
    Workforce-only continuity package: preview-first
    import, scoped export, printable/manual fallback, reconciliation evidence,
