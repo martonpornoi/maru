@@ -13,6 +13,10 @@ rather than replace the curated summary.
 
 ## [Unreleased]
 
+No changes have been recorded since the first release candidate was prepared.
+
+## [2026.08.26] - 2026-08-27
+
 ### Added
 
 - Added a purpose-built Maru header and clearer repository landing experience
@@ -49,8 +53,8 @@ rather than replace the curated summary.
 
 ### Known limitations
 
-- Maru has not yet published a candidate or gold release. The current repository
-  remains pre-production, is not a supported hosted service, and is not approved
-  for production personal data.
+- This is Maru's first public pre-production release candidate. No gold release
+  or production-readiness claim exists; Maru is not a supported hosted service
+  and is not approved for production personal data.
 - Provider certification, representative recovery, deployment, accessibility,
   policy, and owner acceptance gates remain before production use.

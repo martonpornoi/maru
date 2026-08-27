@@ -869,7 +869,7 @@ wheels = [
 
 [[package]]
 name = "maru"
-version = "0.1.0a0"
+version = "2026.8.26"
 source = { editable = "." }
 dependencies = [
     { name = "cryptography" },
