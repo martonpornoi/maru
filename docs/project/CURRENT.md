@@ -88,25 +88,36 @@ process.
   Pull-request run `33054662739`, managed CodeQL run `33054564446`, exact-main
   CodeQL run `33064605109`, and Pages run `33064605358` passed.
 
-## First release candidate preparation
+## First release candidate recovery and replacement
 
-Dedicated draft PR #26 prepares `Maru 2026.08.26 release candidate 1` from the
-exact protected-main repository experience above.
+Release preparation PR #26 merged as `e3cd11e`, and release workflow
+`33082089911` certified that exact protected-main commit. Publication then
+failed while GitHub prepared the release job because the selected-Actions
+policy omitted two nested Actions invoked by the pinned provenance composite
+Action.
 
-- `CHANGELOG.md` moves the complete curated set into
-  `## [2026.08.26] - 2026-08-27` and retains **Unreleased** for later work.
-- Project and lock metadata use PEP 440 version `2026.8.26`; the intended public
-  tag is `v2026.08.26-rc.1`.
-- The candidate remains explicitly pre-production and synthetic-data-only. It
-  is not a gold release, deployment, hosted-service promise, production
-  personal-data approval, or completion of external operational gates.
-- The protected release PR, exact-current-main check, immediately preceding
-  administrator immutability readback, complete release certification, verified
-  draft boundary, immutable publication, and post-publication attestations all
-  remain mandatory.
+- The failure happened before checkout and before registry login, image build,
+  draft creation, tag creation, or GitHub Release creation. Authenticated
+  readback confirms no `v2026.08.26-rc.1` tag or Release exists; nothing was
+  deleted or overwritten.
+- The pinned upstream action definition confirms the rejected nested SHAs are
+  its exact `predicate@2.0.0` and `actions/attest` v3.0.0 dependencies.
+- Draft PR #27 is the new exact-main release and policy-repair boundary. The
+  curated changelog section becomes `2026.08.27`, project and lock metadata use
+  PEP 440 version `2026.8.27`, and the replacement candidate tag is
+  `v2026.08.27-rc.1`.
+- The checked-in selected-Actions desired state adds only the two audited nested
+  SHAs and retains both broad trust flags as `false`. The live policy still has
+  the prior exact 16 entries; ADR 0064 requires separate owner authorization and
+  exact pre/post readback before changing it to the reviewed 18-entry set.
+- The replacement remains pre-production and synthetic-data-only. It is not a
+  gold release, deployment, hosted-service promise, production personal-data
+  approval, or completion of external operational gates.
 
-The preparation record is in the
-[first immutable release candidate checkpoint](../checkpoints/2026-08-27-first-immutable-release-candidate.md).
+The initial preparation and repair evidence are in the
+[first immutable release candidate checkpoint](../checkpoints/2026-08-27-first-immutable-release-candidate.md)
+and the
+[release provenance policy recovery checkpoint](../checkpoints/2026-08-27-release-provenance-policy-recovery.md).
 
 ## Current product baseline
 
@@ -261,25 +272,39 @@ The complete implementation and verification record is in the
 
 ## Verification for this working outcome
 
-### First release candidate preparation
+### First release candidate preparation and recovery
 
-Completed before exact-commit certification:
+Completed for PR #26 and its exact merged source:
 
-- `uv lock --check` resolves the locked 108-package graph with project version
-  `2026.8.26`;
-- a simulated pull-request #26 candidate-1 metadata preflight accepts the
-  `2026.08.26` dated changelog and derives `v2026.08.26-rc.1`;
-- 47 focused release-metadata, release-evidence, workflow-contract, and public-
-  material tests pass;
-- documentation policy validates 349 Markdown files, four repository skills,
-  and 207 unique requirement identifiers; and
-- `git diff --check` passes.
+- clean-tree local certification passed exact head `c56245c`: locked and built
+  project version `2026.8.26`, package/legal checks, Ruff, mypy, PyDocLint,
+  warning-fatal Sphinx/AutoAPI, dependency audits, 29 frontend tests, 2,060 unit
+  tests, 2,357 PostgreSQL integration tests across eight isolated shards, and
+  the 90% combined branch-coverage minimum;
+- protected PR run `33074385861` passed all 19 jobs for that exact head, managed
+  CodeQL passed its Actions, JavaScript/TypeScript, and Python analyses, and PR
+  #26 squash-merged as `e3cd11e` at `2026-08-27T14:23:08Z`;
+- immediately before dispatch, the administrator API reported immutable
+  Releases enabled, remote `main` equalled `e3cd11e`, the candidate tag and
+  Release did not exist, and CodeQL, Dependabot, and secret scanning each
+  reported zero open alerts;
+- release run `33082089911` passed request/source validation and the complete
+  exact-main certification matrix, then failed during publication-job Action
+  preparation before checkout or any identity-bearing step; and
+- authenticated upstream and repository readback proves the exact two nested
+  provenance-action SHAs missing from the prior 16-entry selected policy.
 
-The exact final release pull-request head still requires clean-tree local
-certification and authoritative hosted acceptance before merge. Publication
-also requires exact current `main`, a fresh administrator immutability
-readback, full release-workflow certification, verified draft assets, and
-post-publication immutable evidence reconciliation.
+For draft PR #27, the allowlist validator accepts exactly 18 direct and audited
+transitive immutable references; 65 focused workflow, release, documentation,
+and public-material tests pass; focused Ruff and formatting pass; documentation
+validation accepts 350 Markdown files, four repository skills, and 207 unique
+requirement identifiers; the 108-package lock is consistent; and simulated
+candidate metadata derives `v2026.08.27-rc.1`. Clean-tree exact-commit
+certification and protected hosted acceptance remain required. Publication also
+requires separate owner authorization to reconcile and read back the live
+18-entry selected-Actions policy, exact current `main`, a fresh immutability
+readback, unused `v2026.08.27-rc.1` identities, verified draft assets, and
+post-publication immutable evidence.
 
 ### Merged GitHub release and collaboration experience
 
@@ -411,11 +436,13 @@ support branch, a deployment, or production readiness.
 
 ## Known risks and incomplete work
 
-- The GitHub Releases tab remains empty while draft release PR #26 is prepared.
-  It becomes populated only after protected merge, the immediately preceding
-  administrator immutability readback, and the explicitly authorized immutable
-  `v2026.08.26-rc.1` dispatch. Preparation alone creates no tag, image, Release,
-  deployment, or production claim.
+- The GitHub Releases tab remains empty. PR #26 merged and exact-main release
+  certification passed, but publication run `33082089911` failed during Action
+  preparation before creating an image, draft, tag, or Release. Draft PR #27
+  carries the exact transitive policy repair and replacement
+  `v2026.08.27-rc.1` identity. The live selected-Actions mutation remains
+  incomplete until separately owner-authorized and verified; repository files
+  alone do not change that setting.
 - The new header is a repository README asset only. GitHub's live social preview
   remains unchanged; adopting the asset there must wait for this branch to merge
   and requires a separate setting mutation plus readback.
@@ -456,10 +483,12 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Complete draft release PR #26 through protected review, then perform
-   [issue #21](https://github.com/martonpornoi/maru/issues/21)'s immediately
-   preceding immutable-release readback, authorized `rc.1` dispatch, and full
-   public evidence reconciliation.
+1. Complete draft repair-and-release PR #27 through exact local and protected
+   hosted acceptance. With separate owner authorization, reconcile the live
+   selected-Actions policy from the observed 16-entry set to the reviewed exact
+   18-entry direct-plus-transitive set, read it back, merge PR #27, and complete
+   [issue #21](https://github.com/martonpornoi/maru/issues/21)'s replacement
+   candidate dispatch and full public immutable evidence reconciliation.
 2. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
    Workforce-only continuity package: preview-first
    import, scoped export, printable/manual fallback, reconciliation evidence,

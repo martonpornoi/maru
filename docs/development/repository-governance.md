@@ -248,8 +248,13 @@ Action SHAs, keep workflow tokens read-only by default, and grant write
 permissions only to the release job and the issues-only, no-checkout stale-label
 cleanup. Repository Actions run in `selected` mode;
 `.github/actions-allowlist.json` must exactly match every external immutable
-workflow reference. The checked-in CODEOWNERS file is ownership discovery even
-before its review rule is enabled.
+workflow reference plus every explicitly audited nested reference in
+`.github/actions-transitive-references.json`. Composite Actions are executable
+supply-chain boundaries: audit their pinned action definition, record each
+exact nested SHA, and reconcile the complete checked-in set with the live
+selected-Actions policy before relying on a workflow that invokes them. The
+checked-in CODEOWNERS file is ownership discovery even before its review rule is
+enabled.
 
 All contributors follow `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`,
 and `GOVERNANCE.md`. Architecture and requirements remain the durable decision

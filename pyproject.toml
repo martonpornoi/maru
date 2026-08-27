@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maru"
-version = "2026.8.26"
+version = "2026.8.27"
 description = "A multi-convention operating platform for community events"
 readme = "README.md"
 license = "Apache-2.0 AND MIT"
