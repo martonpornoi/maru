@@ -40,6 +40,13 @@ Override settings with environment variables described in `.env.example`.
 Maru does not automatically read `.env`; a shell or supervised runtime supplies
 configuration.
 
+This editable `runserver` path is deliberately separate from release-image
+evidence. To exercise the published immutable candidate with isolated
+PostgreSQL, genuine migration/runtime login separation, exact authority
+activation, health interpretation, and restart, use the
+[synthetic OCI runtime rehearsal](../operations/synthetic-oci-runtime-rehearsal.md).
+It uses no development server and makes no production-readiness claim.
+
 ## API contract and interactive documentation
 
 After signing in as an active platform administrator, use:

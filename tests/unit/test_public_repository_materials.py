@@ -154,6 +154,11 @@ def test_public_community_materials_are_actionable_and_current() -> None:
     assert "(GOVERNANCE.md)" in readme
     assert "(SECURITY.md)" in readme
     assert "[Code of Conduct](CODE_OF_CONDUCT.md)" in readme
+    assert "primary future release artifact" not in readme
+    assert (
+        "[synthetic OCI runtime rehearsal]"
+        "(docs/operations/synthetic-oci-runtime-rehearsal.md)"
+    ) in readme
     assert not re.search(r"\b\d[\d,]*\s+(?:of\s+\d[\d,]*\s+)?tests?\b", readme)
     assert not re.search(
         r"\b\d+(?:\.\d+)?(?:\s*%|\s+percent)\s+"

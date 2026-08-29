@@ -26,6 +26,12 @@ path, and operational controls. It is not a customer-specific fork.
 Local development and CI use replaceable dependencies and synthetic fixtures.
 A rehearsal environment can clone approved configuration and synthetic
 production-shaped data, never unrestricted production personal data.
+The maintained
+[synthetic OCI runtime rehearsal](synthetic-oci-runtime-rehearsal.md) is the
+bounded public evaluator path for the immutable candidate, PostgreSQL 17,
+separate migration/runtime identities, exact authority activation, readiness,
+and ordinary restart. It uses local synthetic settings in an internal network
+and is not a supported production topology.
 
 Federation between independent Maru deployments is not an initial feature.
 Portable export and later standards-based federation are preferable to hidden
@@ -299,6 +305,10 @@ backend-authenticated identity are all the configured login and that live
 `session_replication_role` remains `origin`; all failures remain one minimized
 unavailable dependency. Release smoke uses a genuine fresh login rather than
 owner role switching and never logs the credential.
+The synthetic OCI rehearsal executes that genuine-login proof with the
+reviewed role SQL, then recreates the exact-mode Gunicorn pool before accepting
+readiness. Its count-only receipt supplements, but never replaces, production
+secret-manager, infrastructure, recovery, and audit evidence.
 Maru rejects caller-supplied PostgreSQL `options` in `MARU_DATABASE_URL` and
 owns `search_path=public,pg_temp` for every connection. Restart every pool when
 promoting this boundary. Health verifies the effective trusted schema order,

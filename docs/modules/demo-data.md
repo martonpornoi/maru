@@ -13,6 +13,24 @@ and service boundaries for development; it owns no production data.
 The application is installed only by local and test settings. The production
 settings do not expose its management command.
 
+## Educational fixture versus OCI cutover bootstrap
+
+`seed_demo_data` is the comprehensive educational/browser fixture described
+below. It intentionally includes ordinary role bundles, role assignments, and
+grants. Those records exercise product behavior but cannot be treated as
+historical ADR 0044 issuance evidence. Do not seed this fixture into a database
+that will undergo the exact authority-provenance activation; readiness and the
+database guards must fail closed rather than inventing lineage.
+
+The separate
+[synthetic OCI runtime rehearsal](../operations/synthetic-oci-runtime-rehearsal.md)
+streams a much smaller repository-owned helper into the immutable candidate.
+It creates only one fixed `.invalid` active platform administrator with an
+unusable password, no organization, and no ordinary authority record. The
+actor exists only to drive the isolated cutover, cannot sign in, and is
+idempotently verified after restart. That helper is evaluator tooling, not a
+replacement educational dataset or a production identity bootstrap.
+
 ## Dataset
 
 `seed_demo_data` creates fixture version

@@ -124,8 +124,12 @@ separate destructive authorization.
    confirms the image tag resolves to the certified digest, and verifies the
    image provenance attestation.
 7. Verify the release page, assets and checksums, OCI digest, SBOM/provenance,
-   collected private API assets, synthetic deployment, migrations, readiness,
-   rollback/forward-fix procedure, and required human governance gates.
+   collected private API assets, migrations, readiness, rollback/forward-fix
+   procedure, and required human governance gates. Use the
+   [synthetic OCI runtime rehearsal](synthetic-oci-runtime-rehearsal.md) for the
+   repository-owned exact-image, runtime-role, authority-activation, and
+   ordinary-restart evidence; do not relabel that bounded synthetic result as
+   production approval.
 
 If publication fails after the image, draft, tag, or immutable release was
 created, do not overwrite or delete it merely to reuse the identity. The

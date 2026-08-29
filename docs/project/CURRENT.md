@@ -9,6 +9,44 @@ production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
 
+## Synthetic OCI runtime rehearsal
+
+Issue [#37](https://github.com/martonpornoi/maru/issues/37) now has one
+executable public evaluator path for immutable candidate `v2026.08.27-rc.1`,
+exact source `be0b21d`, and OCI digest
+`sha256:a44de03a4fe7bd5b3a5aaf73dd83b565b727a98bf895bf80416981e869eeb445`.
+The runner binds the image to exact-source runtime-role SQL, uses the currently
+reviewed digest-pinned PostgreSQL 17.11 image, and creates an internal,
+no-host-port synthetic network with separate cluster-administrator,
+migration-owner, and genuine runtime-login credentials.
+
+The full live rehearsal passed all 16 ordered stages on 2026-08-29. It applied
+170 migrations, reproduced the absent-role Logistics `503`, reached
+compatibility readiness `200` through the genuine runtime login, proved the
+exact preactivation `503`, activated exact provenance with zero application
+processes and zero blockers, then returned exact-mode readiness `200`. Web-only
+and database-plus-web restarts retained the same build and governed state.
+Migration replay was a no-op, the non-login synthetic bootstrap returned
+`already_present`, and aggregate state remained one account, one activation
+marker, and one reserved activation audit. The sanitized local receipt reported
+successful label-verified cleanup with no remaining rehearsal resources.
+
+The canonical procedure is the
+[synthetic OCI runtime runbook](../operations/synthetic-oci-runtime-rehearsal.md).
+It deliberately excludes the comprehensive educational demo fixture, which
+contains ordinary authority examples that are not exact issuance history.
+Unit and PostgreSQL integration coverage protect digest/source binding,
+ordering, redaction, isolation, health interpretation, idempotence, collision
+failure, and the non-login bootstrap. No new ADR was needed: this is bounded
+evaluator tooling that implements accepted ADRs 0044, 0046, 0060, and 0065; it
+does not select production infrastructure.
+
+Passing the rehearsal means the bounded synthetic topology is fully ready. It
+does not certify static/edge delivery, providers, workers, restore/PITR, load,
+accessibility, production policy, or human go/no-go. Issue
+[#38](https://github.com/martonpornoi/maru/issues/38) remains the next
+candidate-evaluation repair.
+
 ## First release-candidate synthetic evaluation
 
 Issue [#29](https://github.com/martonpornoi/maru/issues/29) completed the first
@@ -24,14 +62,14 @@ closed because the bounded local runtime had no named runtime database role;
 the default Gunicorn topology also returned 404 for collected static assets.
 
 The candidate remains immutable pre-production evidence, not a gold or
-production-ready release. Issues
-[#37](https://github.com/martonpornoi/maru/issues/37) through
-[#42](https://github.com/martonpornoi/maru/issues/42) separate the six findings
-by remediation boundary. The complete evidence, exact counts, and disposition
-are in the
+production-ready release. Issue #37 now supplies the missing runtime path;
+issues [#38](https://github.com/martonpornoi/maru/issues/38) through
+[#42](https://github.com/martonpornoi/maru/issues/42) retain the other five
+findings by remediation boundary. The complete evaluation evidence, exact
+counts, and disposition are in the
 [synthetic operator evaluation checkpoint](../checkpoints/2026-08-29-first-release-candidate-synthetic-operator-evaluation.md).
 
-## Latest protected-main outcome
+## Workforce-only protected-main outcome
 
 Protected `main` now makes Workforce-only use an executable product profile
 rather than a navigation promise.
@@ -312,6 +350,33 @@ The complete implementation and verification record is in the
 
 ## Verification for this working outcome
 
+### Synthetic OCI runtime rehearsal
+
+Completed for issue #37 against the immutable candidate and reviewed
+PostgreSQL 17.11 digest:
+
+- 37 focused unit tests pass for immutable-reference validation, exact
+  source/SQL binding, resource isolation, command ordering, credential-free
+  arguments/evidence, exact health shapes, irreversible activation postflight,
+  fail-closed retained-job discovery, foreign-collision refusal, and verified
+  final cleanup;
+- four focused PostgreSQL integration tests pass for the streamed bootstrap's
+  first run, exact idempotent replay, unusable password, zero ordinary
+  authority/organization side effects, collision rollback, and explicit
+  local/test-only fence; and
+- the real Docker rehearsal passes every one of its 16 stages in 173 seconds,
+  produces a sanitized schema-v1 receipt, deletes its exact containers,
+  internal network, data volume, and three secret volumes, and leaves no
+  resource with the run label; and
+- a second retained run proves all 19 web, PostgreSQL, and one-shot containers
+  remain discoverable and stopped, then the standalone exact-run cleanup
+  removes them, the internal network, and all four volumes with a final zero
+  label inventory.
+
+This is complete bounded synthetic runtime evidence. It is not production
+deployment, static delivery, provider, recovery, accessibility, or owner
+acceptance evidence.
+
 ### First immutable release candidate
 
 Completed for PR #27, exact merge `be0b21d`, and release run `33103766556`:
@@ -501,18 +566,19 @@ support branch, a deployment, or production readiness.
   release or production-readiness claim. Provider certification,
   representative recovery, deployment, accessibility, policy, and owner
   acceptance gates remain open.
-- The evaluation exposed six bounded defects: no supported exact-image runtime
-  rehearsal (#37), no accepted static-delivery topology (#38), an opaque
-  Assignment authority-interval conflict (#39), incomplete public integrity
-  verification instructions (#40), profile-unaware Participation contracts
-  (#41), and no reproducible end-to-end Workforce-only tutorial (#42).
+- The evaluation's exact-image runtime defect (#37) is resolved by the bounded
+  synthetic rehearsal. Five findings remain: no accepted static-delivery
+  topology (#38), an opaque Assignment authority-interval conflict (#39),
+  incomplete public integrity verification instructions (#40), profile-unaware
+  Participation contracts (#41), and no reproducible end-to-end
+  Workforce-only tutorial (#42).
 - The new header is a repository README asset only. GitHub's live social preview
   remains unchanged; adopting the asset there must wait for this branch to merge
   and requires a separate setting mutation plus readback.
-- Issues #21 and #29 are complete. Issues #22 through #24 and #30 through #42
-  expose bounded work; only #37 through #42 have been prioritized by the
-  completed candidate evidence, and none is accepted as complete before its
-  own tests, documentation, and protected pull request pass.
+- Issues #21, #29, and #37 are complete in repository behavior. Issues #22
+  through #24, #30 through #36, and #38 through #42 expose bounded work; none
+  is accepted as complete before its own tests, documentation, and protected
+  pull request pass.
 - Workforce-only adoption is implemented for trustworthy evaluation, not
   production cutover. General partner bulk import, a complete continuity
   export, printable rota, offline/manual reconciliation pack, profile expansion
@@ -547,9 +613,8 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Resolve the candidate-evaluation findings in their recorded order, one
-   focused protected pull request at a time: exact-image runtime rehearsal
-   [#37](https://github.com/martonpornoi/maru/issues/37), static delivery
+1. Continue resolving the candidate-evaluation findings in their recorded
+   order, one focused protected pull request at a time: static delivery
    [#38](https://github.com/martonpornoi/maru/issues/38), Assignment interval
    recovery [#39](https://github.com/martonpornoi/maru/issues/39), consumer
    verification [#40](https://github.com/martonpornoi/maru/issues/40),
