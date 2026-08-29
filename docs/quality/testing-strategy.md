@@ -197,6 +197,17 @@ empty/error states, and narrow-viewport overflow.
   search, and bulk check-in;
 - safe deployment with active jobs and supported database migrations.
 
+The executable
+[synthetic OCI runtime rehearsal](../operations/synthetic-oci-runtime-rehearsal.md)
+adds the bounded release-environment smoke: digest/source binding, separate
+owner and genuine runtime login, least-privilege SQL, absent-role and exact
+health fences, stopped-process activation, web/database restart, and no-op
+migration/bootstrap replay. Pure unit tests cover its ordering, validation,
+redaction, isolation, and evidence contracts; PostgreSQL integration tests
+cover the streamed minimal bootstrap's idempotence and collision boundary. A
+recorded pass remains synthetic runtime evidence, not backup/PITR or
+production approval.
+
 ## GitHub acceptance topology
 
 Draft pull requests classify the submitted diff and validate only the locked

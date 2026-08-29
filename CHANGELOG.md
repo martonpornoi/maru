@@ -13,7 +13,13 @@ rather than replace the curated summary.
 
 ## [Unreleased]
 
-No changes have been recorded since the first release candidate was prepared.
+### Added
+
+- Added a canonical, executable synthetic OCI rehearsal for the immutable
+  release candidate. It proves isolated PostgreSQL 17 migration, genuine
+  least-privilege runtime identity, exact authority-provenance activation,
+  minimized readiness, idempotent bootstrap, and ordinary restart without
+  claiming production approval ([#37](https://github.com/martonpornoi/maru/issues/37)).
 
 ## [2026.08.27] - 2026-08-27
 

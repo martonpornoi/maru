@@ -118,6 +118,12 @@ These signals link to authorized work queues, not public telemetry.
 A healthy process can still deliver an unhealthy event workflow; domain health
 must be visible separately.
 
+The [synthetic OCI runtime rehearsal](synthetic-oci-runtime-rehearsal.md)
+executes the public health contract at the absent-runtime-role,
+compatibility-ready, exact-preactivation, exact-ready, database-unavailable,
+and restart boundaries. It records only the minimized dependency map and
+count-only cutover evidence.
+
 The public `/health/ready` probe always performs a cheap database/catalog
 check. Before the cutover tables exist, compatibility mode needs nothing more.
 Once they exist, compatibility mode also proves exactly one generation-zero

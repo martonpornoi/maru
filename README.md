@@ -40,9 +40,12 @@ guides plus the statically analysed Python API reference. Read
 [the current project state](docs/project/CURRENT.md) for exact implemented
 behavior, verification, limitations, and next actions.
 
-The primary future release artifact is an immutable Django application image
-in GitHub Container Registry with source provenance, SBOM, documentation,
-OpenAPI, dependency locks, and checksums. Curated changes live in the
+The primary release artifact is an immutable Django application image in
+GitHub Container Registry with source provenance, SBOM, documentation,
+OpenAPI, dependency locks, and checksums. Evaluate the published candidate
+through the isolated
+[synthetic OCI runtime rehearsal](docs/operations/synthetic-oci-runtime-rehearsal.md).
+Curated changes live in the
 [changelog](CHANGELOG.md) and become the human-facing notes on the
 [GitHub Releases tab](https://github.com/martonpornoi/maru/releases).
 

@@ -53,6 +53,7 @@ def _change(path: str, status: str = "M") -> ChangedFile:
         (("pyproject.toml",), (True, False, True, "full")),
         ((".github/workflows/ci.yml",), (False, False, False, "full")),
         (("scripts/validate_docs.py",), (True, False, True, "full")),
+        (("scripts/rehearse_oci_runtime.py",), (True, False, True, "full")),
         ((".githooks/pre-push",), (False, False, False, "full")),
     ],
 )
