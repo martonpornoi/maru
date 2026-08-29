@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-27
+Last updated: 2026-08-29
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -8,6 +8,28 @@ supported hosted service, a production-ready release, or approved for
 production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
+
+## First release-candidate synthetic evaluation
+
+Issue [#29](https://github.com/martonpornoi/maru/issues/29) completed the first
+public-consumer and synthetic operator evaluation of immutable candidate
+`v2026.08.27-rc.1`, exact source `be0b21d`, and OCI digest
+`sha256:a44de03a4fe7bd5b3a5aaf73dd83b565b727a98bf895bf80416981e869eeb445`.
+
+Fourteen recorded areas passed, two failed, none were blocked, and two broad
+acceptance areas were deferred. Supply-chain integrity, fresh PostgreSQL 17
+migration, liveness, the complete semantic Workforce-only journey, exact-edition
+state isolation, and ordinary stop/restart persistence passed. Readiness failed
+closed because the bounded local runtime had no named runtime database role;
+the default Gunicorn topology also returned 404 for collected static assets.
+
+The candidate remains immutable pre-production evidence, not a gold or
+production-ready release. Issues
+[#37](https://github.com/martonpornoi/maru/issues/37) through
+[#42](https://github.com/martonpornoi/maru/issues/42) separate the six findings
+by remediation boundary. The complete evidence, exact counts, and disposition
+are in the
+[synthetic operator evaluation checkpoint](../checkpoints/2026-08-29-first-release-candidate-synthetic-operator-evaluation.md).
 
 ## Latest protected-main outcome
 
@@ -128,6 +150,9 @@ with the failed earlier attempt retained in the
 [initial preparation checkpoint](../checkpoints/2026-08-27-first-immutable-release-candidate.md)
 and
 [provenance-policy recovery checkpoint](../checkpoints/2026-08-27-release-provenance-policy-recovery.md).
+The subsequent synthetic evaluation and retained-candidate disposition are in
+the
+[operator evaluation checkpoint](../checkpoints/2026-08-29-first-release-candidate-synthetic-operator-evaluation.md).
 
 ## Current product baseline
 
@@ -319,6 +344,29 @@ Completed for PR #27, exact merge `be0b21d`, and release run `33103766556`:
   tests, documentation policy across 351 Markdown files and 207 requirement
   identifiers, and the complete warning-fatal Sphinx/AutoAPI build.
 
+### Synthetic release-candidate evaluation
+
+Completed for issue #29 against immutable candidate `v2026.08.27-rc.1`:
+
+- an unauthenticated browser confirmed the public immutable prerelease, while
+  authenticated GitHub CLI verification proved all assets, checksums, manifest,
+  exact tag/source/image relationships, SPDX SBOM, and strict SLSA provenance;
+- the exact non-root image migrated a fresh PostgreSQL 17 database, loaded only
+  repository-owned fictional fixture data, returned exact build identity and
+  liveness, and retained governed state through ordered stop and restart;
+- distinct synthetic sessions completed Workforce-only setup, operator
+  activation, Department, starter, Position, opportunity, application,
+  Assignment, person-owned Availability, and Shift completion after its real
+  scheduled end;
+- organizer-only and unadopted Registration routes each returned a name-free
+  403 to the wrong actor, while the final exact-edition audit recorded zero
+  Participation, Registration, and directly scoped unadopted-module rows;
+- readiness failed closed with Logistics unavailable because the local runtime
+  role was unnamed, and five referenced brand assets returned 404 under the
+  unsupported bare-Gunicorn topology; and
+- six sanitized, bounded defects were opened as issues #37 through #42. The
+  complete matrix records 14 passed, 2 failed, 0 blocked, and 2 deferred areas.
+
 ### Merged GitHub release and collaboration experience
 
 Completed locally:
@@ -453,12 +501,18 @@ support branch, a deployment, or production readiness.
   release or production-readiness claim. Provider certification,
   representative recovery, deployment, accessibility, policy, and owner
   acceptance gates remain open.
+- The evaluation exposed six bounded defects: no supported exact-image runtime
+  rehearsal (#37), no accepted static-delivery topology (#38), an opaque
+  Assignment authority-interval conflict (#39), incomplete public integrity
+  verification instructions (#40), profile-unaware Participation contracts
+  (#41), and no reproducible end-to-end Workforce-only tutorial (#42).
 - The new header is a repository README asset only. GitHub's live social preview
   remains unchanged; adopting the asset there must wait for this branch to merge
   and requires a separate setting mutation plus readback.
-- Issue #21 is complete. Issues #22 through #24 expose bounded work but do not
-  promise priority, response time, implementation, or acceptance of an
-  unreviewed design.
+- Issues #21 and #29 are complete. Issues #22 through #24 and #30 through #42
+  expose bounded work; only #37 through #42 have been prioritized by the
+  completed candidate evidence, and none is accepted as complete before its
+  own tests, documentation, and protected pull request pass.
 - Workforce-only adoption is implemented for trustworthy evaluation, not
   production cutover. General partner bulk import, a complete continuity
   export, printable rota, offline/manual reconciliation pack, profile expansion
@@ -493,10 +547,15 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Evaluate
-   [Maru 2026.08.27 release candidate 1](https://github.com/martonpornoi/maru/releases/tag/v2026.08.27-rc.1)
-   with synthetic data only. Record defects as bounded issues without treating
-   the candidate as production approval.
+1. Resolve the candidate-evaluation findings in their recorded order, one
+   focused protected pull request at a time: exact-image runtime rehearsal
+   [#37](https://github.com/martonpornoi/maru/issues/37), static delivery
+   [#38](https://github.com/martonpornoi/maru/issues/38), Assignment interval
+   recovery [#39](https://github.com/martonpornoi/maru/issues/39), consumer
+   verification [#40](https://github.com/martonpornoi/maru/issues/40),
+   profile-aware contracts [#41](https://github.com/martonpornoi/maru/issues/41),
+   and the Workforce-only tutorial
+   [#42](https://github.com/martonpornoi/maru/issues/42).
 2. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
    Workforce-only continuity package: preview-first
    import, scoped export, printable/manual fallback, reconciliation evidence,
