@@ -289,7 +289,7 @@ class CommandRunner:
         *,
         stage: str,
         timeout_seconds: int,
-        input_text: str | None = None,
+        input_text: str | bytes | None = None,
         allow_failure: bool = False,
     ) -> CommandResult:
         """Run one bounded subprocess.
@@ -302,8 +302,9 @@ class CommandRunner:
             Public stage used for a bounded error.
         timeout_seconds : int
             Positive process deadline.
-        input_text : str | None, default=None
-            Optional private standard input retained only in memory.
+        input_text : str | bytes | None, default=None
+            Optional private standard input retained only in memory. Bytes are
+            transmitted without platform newline translation.
         allow_failure : bool, default=False
             Whether a non-zero exit is returned to the caller.
 
@@ -318,23 +319,40 @@ class CommandRunner:
             If the command times out, cannot start, or returns non-zero.
         """
         try:
-            completed = subprocess.run(  # noqa: S603 - argv is explicit
-                list(arguments),
-                cwd=REPOSITORY_ROOT,
-                input=input_text,
-                text=True,
-                capture_output=True,
-                timeout=timeout_seconds,
-                check=False,
-            )
+            if isinstance(input_text, bytes):
+                completed_binary = subprocess.run(  # noqa: S603 - explicit argv
+                    list(arguments),
+                    cwd=REPOSITORY_ROOT,
+                    input=input_text,
+                    text=False,
+                    capture_output=True,
+                    timeout=timeout_seconds,
+                    check=False,
+                )
+                returncode = completed_binary.returncode
+                stdout = completed_binary.stdout.decode("utf-8", errors="replace")
+                stderr = completed_binary.stderr.decode("utf-8", errors="replace")
+            else:
+                completed_text = subprocess.run(  # noqa: S603 - explicit argv
+                    list(arguments),
+                    cwd=REPOSITORY_ROOT,
+                    input=input_text,
+                    text=True,
+                    capture_output=True,
+                    timeout=timeout_seconds,
+                    check=False,
+                )
+                returncode = completed_text.returncode
+                stdout = completed_text.stdout
+                stderr = completed_text.stderr
         except subprocess.TimeoutExpired as error:
             raise RehearsalError("command_timeout", stage) from error
         except OSError as error:
             raise RehearsalError("command_unavailable", stage) from error
         result = CommandResult(
-            returncode=completed.returncode,
-            stdout=completed.stdout,
-            stderr=completed.stderr,
+            returncode=returncode,
+            stdout=stdout,
+            stderr=stderr,
         )
         if result.returncode != 0 and not allow_failure:
             raise RehearsalError("command_failed", stage)

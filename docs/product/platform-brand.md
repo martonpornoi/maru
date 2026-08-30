@@ -1,7 +1,7 @@
 # Maru platform brand
 
 Status: Implemented platform identity
-Last updated: 2026-07-30
+Last updated: 2026-08-30
 Requirements: UX-007, UX-008, UX-010, REG-014, FUR-010
 Decision: ADR 0021
 
@@ -97,3 +97,9 @@ Automated tests verify asset discovery, dimensions, manifest paths, palette
 anchors, cross-bundle token consistency, template metadata, and the approved
 contrast pairs. Frontend build verification confirms Convention work still
 produces fixed Django-hosted assets.
+The
+[synthetic OCI static delivery rehearsal](../operations/synthetic-oci-static-delivery-rehearsal.md)
+verifies that the immutable candidate's already-collected brand bytes receive
+the expected MIME/cache headers and apply in one declared browser viewport.
+That bounded delivery smoke is not the complete UX-029 accessibility matrix or
+a production edge certification.

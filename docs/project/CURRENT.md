@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -8,6 +8,49 @@ supported hosted service, a production-ready release, or approved for
 production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
+
+## Synthetic OCI static-delivery rehearsal
+
+Issue [#38](https://github.com/martonpornoi/maru/issues/38) now has one
+canonical deployment-shaped evaluator for immutable candidate
+`v2026.08.27-rc.1`, exact source `be0b21d`, and application OCI digest
+`sha256:a44de03a4fe7bd5b3a5aaf73dd83b565b727a98bf895bf80416981e869eeb445`.
+It composes the unchanged candidate with a reviewed digest-pinned unprivileged
+reference edge, an exact read-only collected-static volume, internal Gunicorn
+and PostgreSQL, loopback-only publication, hardened containers, private API
+documentation, restart boundaries, sanitized receipts, and exact-label
+cleanup.
+
+Final automated run `c38e0c7d2f93` passed all 12 stages on 2026-08-30. The
+image and volume matched at 196 regular files, 14,846,309 bytes, and manifest
+SHA-256 `4c8c346b`. Five landing assets, two manifest icons, 12 raw static and
+nine raw media namespace-escape probes, MIME/cache/mutation/missing-path
+boundaries, same-origin Swagger/ReDoc, OpenAPI 3.1, runtime hardening, and
+Gunicorn/edge restarts passed. The run removed its exact resources and an
+independent label-filtered readback found none.
+
+Retained run `d38e0c7d2f94` then passed the same exact configuration and a
+1,440 by 900 browser rehearsal. The landing applied the Maru brand with no
+overflow; Swagger and ReDoc visibly rendered; each UI loaded its schema and
+sidecars from the exact edge origin; ReDoc made no `cdn.redoc.ly` request; and
+all three pages produced zero console warnings or errors. The authenticated tab
+was closed, the edge, web, and database were stopped in that order, exact-run
+cleanup succeeded, and zero containers, networks, and volumes remained.
+
+The immutable ReDoc bundle contains a remote attribution-logo URL. The bounded
+edge serves one deterministic representation that replaces only that URL with
+an inert `data:` image while leaving candidate and volume bytes unchanged and
+retaining visible attribution. Conditional, range, validator, and same-origin
+tests protect that narrow compatibility boundary. The
+[static-delivery runbook](../operations/synthetic-oci-static-delivery-rehearsal.md)
+and [checkpoint](../checkpoints/2026-08-30-synthetic-oci-static-delivery-rehearsal.md)
+record the exact contract and correct the earlier server-HTML-only inference.
+
+No new ADR was needed: this bounded evaluator implements ADRs 0021, 0056,
+0060, and 0065 without selecting production infrastructure. Passing it does
+not certify a target edge/TLS/WAF/provider, edge-image advisories, production
+settings, workers, telemetry, load, restore/PITR, full UX-029 accessibility,
+policy, or human go/no-go.
 
 ## Synthetic OCI runtime rehearsal
 
@@ -41,10 +84,11 @@ failure, and the non-login bootstrap. No new ADR was needed: this is bounded
 evaluator tooling that implements accepted ADRs 0044, 0046, 0060, and 0065; it
 does not select production infrastructure.
 
-Passing the rehearsal means the bounded synthetic topology is fully ready. It
-does not certify static/edge delivery, providers, workers, restore/PITR, load,
-accessibility, production policy, or human go/no-go. Issue
-[#38](https://github.com/martonpornoi/maru/issues/38) remains the next
+Passing the runtime rehearsal means its bounded synthetic topology is fully
+ready. The separate issue #38 evaluator now owns static/edge evidence; neither
+path certifies providers, workers, restore/PITR, load, accessibility,
+production policy, or human go/no-go. Issue
+[#39](https://github.com/martonpornoi/maru/issues/39) is the next
 candidate-evaluation repair.
 
 ## First release-candidate synthetic evaluation
@@ -62,9 +106,10 @@ closed because the bounded local runtime had no named runtime database role;
 the default Gunicorn topology also returned 404 for collected static assets.
 
 The candidate remains immutable pre-production evidence, not a gold or
-production-ready release. Issue #37 now supplies the missing runtime path;
-issues [#38](https://github.com/martonpornoi/maru/issues/38) through
-[#42](https://github.com/martonpornoi/maru/issues/42) retain the other five
+production-ready release. Issues #37 and #38 now supply the missing runtime and
+static-delivery paths; issues
+[#39](https://github.com/martonpornoi/maru/issues/39) through
+[#42](https://github.com/martonpornoi/maru/issues/42) retain the other four
 findings by remediation boundary. The complete evaluation evidence, exact
 counts, and disposition are in the
 [synthetic operator evaluation checkpoint](../checkpoints/2026-08-29-first-release-candidate-synthetic-operator-evaluation.md).
@@ -566,19 +611,19 @@ support branch, a deployment, or production readiness.
   release or production-readiness claim. Provider certification,
   representative recovery, deployment, accessibility, policy, and owner
   acceptance gates remain open.
-- The evaluation's exact-image runtime defect (#37) is resolved by the bounded
-  synthetic rehearsal. Five findings remain: no accepted static-delivery
-  topology (#38), an opaque Assignment authority-interval conflict (#39),
-  incomplete public integrity verification instructions (#40), profile-unaware
-  Participation contracts (#41), and no reproducible end-to-end
-  Workforce-only tutorial (#42).
+- The evaluation's exact-image runtime and static-delivery defects (#37 and
+  #38) are resolved by bounded synthetic rehearsals. Four findings remain: an
+  opaque Assignment authority-interval conflict (#39), incomplete public
+  integrity verification instructions (#40), profile-unaware Participation
+  contracts (#41), and no reproducible end-to-end Workforce-only tutorial
+  (#42).
 - The new header is a repository README asset only. GitHub's live social preview
   remains unchanged; adopting the asset there must wait for this branch to merge
   and requires a separate setting mutation plus readback.
-- Issues #21, #29, and #37 are complete in repository behavior. Issues #22
-  through #24, #30 through #36, and #38 through #42 expose bounded work; none
-  is accepted as complete before its own tests, documentation, and protected
-  pull request pass.
+- Issues #21, #29, #37, and #38 are complete in repository behavior. Issues
+  #22 through #24, #30 through #36, and #39 through #42 expose bounded work;
+  none is accepted as complete before its own tests, documentation, and
+  protected pull request pass.
 - Workforce-only adoption is implemented for trustworthy evaluation, not
   production cutover. General partner bulk import, a complete continuity
   export, printable rota, offline/manual reconciliation pack, profile expansion
@@ -614,8 +659,7 @@ support branch, a deployment, or production readiness.
 ## Smallest sensible next actions
 
 1. Continue resolving the candidate-evaluation findings in their recorded
-   order, one focused protected pull request at a time: static delivery
-   [#38](https://github.com/martonpornoi/maru/issues/38), Assignment interval
+   order, one focused protected pull request at a time: Assignment interval
    recovery [#39](https://github.com/martonpornoi/maru/issues/39), consumer
    verification [#40](https://github.com/martonpornoi/maru/issues/40),
    profile-aware contracts [#41](https://github.com/martonpornoi/maru/issues/41),

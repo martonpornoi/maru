@@ -1,7 +1,7 @@
 # Synthetic OCI runtime rehearsal
 
 Status: executable exact-image evaluator path; synthetic evidence only
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 Scope: issue [#37](https://github.com/martonpornoi/maru/issues/37), parent
 evaluation [#29](https://github.com/martonpornoi/maru/issues/29), OPS-008,
 NFR-001 through NFR-004, NFR-008, NFR-010 through NFR-013, and ADRs 0044,
@@ -28,10 +28,12 @@ The default inputs are:
 The bounded synthetic topology reaches complete application readiness:
 `/health/live` and `/health/ready` both return HTTP `200`, and every reported
 dependency is `ok`, after exact activation. That is **not** production
-readiness. The run deliberately does not certify TLS/edge/static delivery,
-SMTP or another provider, workers/schedulers, backup/PITR, restore, load,
-accessibility, partner policy, or human go/no-go controls. Static delivery is
-tracked separately in [#38](https://github.com/martonpornoi/maru/issues/38).
+readiness. The run deliberately does not itself certify TLS/edge/static
+delivery, SMTP or another provider, workers/schedulers, backup/PITR, restore,
+load, accessibility, partner policy, or human go/no-go controls. The separate
+[synthetic OCI static delivery rehearsal](synthetic-oci-static-delivery-rehearsal.md)
+owns the bounded unchanged-asset, proxy/cache, and browser evidence without
+selecting a production edge.
 
 The topology selects `maru.settings.local` inside an internal Docker network.
 No database or web port is published to the host. Health requests execute over
@@ -253,4 +255,7 @@ those settings production-safe. A production deployment still needs the
 [deployment readiness](deployment-and-service-objectives.md),
 [authority migration/recovery](authority-provenance-migration-and-recovery.md),
 [observability/readiness](observability-and-readiness.md), release, provider,
-restore/PITR, static/edge, security/privacy, and human owner gates.
+restore/PITR, target edge/TLS/WAF, security/privacy, accessibility, and human
+owner gates. The bounded
+[static-delivery evaluator](synthetic-oci-static-delivery-rehearsal.md) does not
+replace those production decisions.

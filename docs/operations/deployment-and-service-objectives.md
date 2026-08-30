@@ -1,7 +1,7 @@
 # Deployment and service objectives
 
 Status: Registration safety services defined; target deployment certification required  
-Last updated: 2026-08-16
+Last updated: 2026-08-30
 
 Maru must be operable by a small professional team and approachable to
 community contributors. It should not require a distributed-systems department
@@ -32,6 +32,12 @@ bounded public evaluator path for the immutable candidate, PostgreSQL 17,
 separate migration/runtime identities, exact authority activation, readiness,
 and ordinary restart. It uses local synthetic settings in an internal network
 and is not a supported production topology.
+The companion
+[synthetic OCI static delivery rehearsal](synthetic-oci-static-delivery-rehearsal.md)
+serves the candidate's already-collected bytes from a read-only volume through
+a reviewed digest-pinned unprivileged reference edge and proxies dynamic
+requests to Gunicorn. It is a bounded evaluator composition, not a selection of
+the production edge, TLS/WAF owner, provider, cache architecture, or settings.
 
 Federation between independent Maru deployments is not an initial feature.
 Portable export and later standards-based federation are preferable to hidden
@@ -63,6 +69,11 @@ flowchart TD
 The actual hosting provider and queue/cache products remain replaceable.
 Kubernetes is not required; use it only if operating capability and scale
 justify it.
+
+The static-delivery evaluator models only the diagram's static/dynamic split on
+a host-loopback endpoint. Its reference edge does not provide or certify the
+diagram's production TLS, WAF, public rate-control, availability, or telemetry
+responsibilities.
 
 ## Environment boundaries
 
@@ -350,10 +361,22 @@ not production approval; all provider, infrastructure, load, accessibility,
 restore/PITR, partner-policy, owner, and go/no-go gates below remain necessary.
 
 The immutable application artifact must run `collectstatic` and include the
-locked `drf-spectacular-sidecar` Swagger/ReDoc assets. Release smoke verifies
-that an active platform administrator can load both private references without
-third-party script, stylesheet, or font requests; the raw schema must remain
-private, non-cacheable, and excluded from registration-client CORS.
+locked `drf-spectacular-sidecar` Swagger/ReDoc assets. Complete release smoke
+must verify that an active platform administrator can load both private
+references without third-party script, stylesheet, or font requests; the raw
+schema must remain private, non-cacheable, and excluded from
+registration-client CORS. The automated static-delivery stage proves the
+authorized server HTML references, exact source sidecar inventory, and exact
+served bytes except for one explicit ReDoc 2.5.3 compatibility representation.
+That representation is derived at the edge from pinned source and output
+hashes solely to replace the bundle's remote footer-logo URL with an inert
+inline image; it does not alter the application image or collected volume. The
+candidate acceptance record must add an authenticated browser-network check
+for script-initiated requests before treating the no-third-party criterion as
+met. The static-delivery rehearsal does not rerun `collectstatic`: it requires
+the exact image directory and a freshly populated static volume to have
+identical paths, file types, lengths, and SHA-256 digests before the read-only
+edge serves them.
 
 ## Database evolution
 

@@ -5,7 +5,7 @@ shared management-page frame, Representation & access governance integration,
 and Organization structure/Department management with Position, Assignment,
 and Availability continuations; broader journey, accessibility, and owner gates
 remain
-Last updated: 2026-08-25
+Last updated: 2026-08-30
 
 ## Purpose and requirements
 
@@ -287,7 +287,16 @@ The schema and both derived references require a current active platform
 administrator, fail closed on database lookup failure, use private `no-store`
 responses, and are excluded from registration-client CORS. Swagger submit
 methods are disabled. The locked sidecar assets must be included by
-`collectstatic`; the ReDoc override makes no external font or CDN request.
+`collectstatic`. The ReDoc template override removes stock Google Fonts and
+other third-party references from the server HTML. Browser execution exposed a
+separate ReDoc 2.5.3 footer-logo request embedded in its local JavaScript. The
+[synthetic OCI static delivery rehearsal](../operations/synthetic-oci-static-delivery-rehearsal.md)
+keeps the candidate image and collected volume exact, then serves one
+hash-pinned ReDoc compatibility representation that localizes that decorative
+image before browser execution. It verifies the remaining exact sidecars and
+the derived representation through a same-origin read-only reference edge. It
+does not make the reference public, weaken these response controls, or select
+production infrastructure.
 
 ## Tests
 

@@ -1,7 +1,7 @@
 # Observability and operational readiness
 
 Status: Executable registration, delivery, finance, privacy, and closure signals defined  
-Last updated: 2026-07-28
+Last updated: 2026-08-30
 
 Observability must answer “what is affected, for whom, since when, why, and what
 can we safely do?” without turning logs into a second ungoverned database of
@@ -123,6 +123,17 @@ executes the public health contract at the absent-runtime-role,
 compatibility-ready, exact-preactivation, exact-ready, database-unavailable,
 and restart boundaries. It records only the minimized dependency map and
 count-only cutover evidence.
+
+The
+[synthetic OCI static delivery rehearsal](synthetic-oci-static-delivery-rehearsal.md)
+records aggregate asset/reference counts, selected HTTP outcomes, the static
+manifest digest, immutable identities, container hardening, and restart
+outcomes. The automated receipt owns those aggregate HTTP and container facts;
+the separate visible browser record adds browser/version, viewport, and
+attributable request, failure, and console counts.
+Both exclude credentials, database URLs, cookies, CSRF tokens, private HTML or
+schema content, raw logs, exception text, and personal data. They are local
+evaluator evidence, not production telemetry.
 
 The public `/health/ready` probe always performs a cheap database/catalog
 check. Before the cutover tables exist, compatibility mode needs nothing more.
