@@ -60,15 +60,22 @@ promise that something copied from last year remains true.
    profile information to share.
 3. Reviewers use a rubric, declare conflicts, request information in the
    application thread, and record a decision.
-4. An accepted offer creates an edition participation and role assignment, not
+4. An accepted application records its typed transition evidence and makes the
+   person eligible for the purpose-bounded Assignment candidate set. It creates
+   no RoleAssignment, capability, or Participation evidence.
+5. An authorized controller separately proposes the Position assignment, and a
+   genuinely different current controller completes stepped-up approval. Only
+   that approval activates the scoped RoleAssignment and, when the immutable
+   edition profile adopts Participation, its configured evidence.
+   Workforce-only creates no attendee Participation; neither profile grants
    permanent blanket access.
-5. The role template generates training, agreement, profile, equipment,
+6. The role template generates training, agreement, profile, equipment,
    meeting, and access tasks with owners and deadlines.
-6. Provisioning adapters create approved external access and report actual
+7. Provisioning adapters create approved external access and report actual
    state back to Maru.
-7. The member and lead see readiness and blockers. Sensitive HR information
+8. The member and lead see readiness and blockers. Sensitive HR information
    remains outside the department cockpit.
-8. A role change recalculates tasks and access; offboarding revokes access,
+9. A role change recalculates tasks and access; offboarding revokes access,
    recovers assets, transfers ownership, and preserves an authorized historical
    record.
 

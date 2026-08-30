@@ -34,6 +34,13 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Position-assignment requirements, operator guidance, and architecture
+  metadata now match each edition's immutable adoption profile.
+  `full_convention@1` retains its required Participation-capacity lifecycle;
+  `workforce_only@1` activates and revokes only scoped authority while its
+  Participation pointer remains null. Recovery now treats either opposite
+  pointer shape as an integrity conflict rather than manufacturing or clearing
+  evidence ([#41](https://github.com/martonpornoi/maru/issues/41)).
 - Position assignment proposal now rejects an interval that the proposer's
   exact current controlling-authority source cannot fully cover before saving
   or reserving headcount. Approval rechecks both controllers and reports a

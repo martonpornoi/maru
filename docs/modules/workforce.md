@@ -46,13 +46,15 @@ and the [adoption and recovery runbook](../operations/workforce-only-adoption-an
 
 Assignment remains responsibility plus exact authority evidence in every
 profile. In a full-convention edition, the established compatibility behavior
-also creates or activates Participation capacities. In a Workforce-only
-edition, approval stores no `Participation` or `ParticipationCapacity` and the
-assignment's nullable capacity pointer must remain empty. Model validation and
-the PostgreSQL assignment guard require evidence to match the immutable edition
-profile; ending a Workforce-only assignment revokes authority and retains
-assignment evidence without touching Participation. Migration `0014` refuses
-downgrade once such active or ended evidence exists.
+also creates or activates Participation capacities and requires the assignment
+pointer to be non-null. In a Workforce-only edition, approval stores no
+`Participation` or `ParticipationCapacity` and the nullable pointer must remain
+empty. Model validation and the PostgreSQL assignment guard require evidence to
+match the immutable edition profile; a null full-convention pointer or non-null
+Workforce-only pointer is an integrity conflict. Ending a Workforce-only
+assignment revokes authority and retains assignment evidence without touching
+Participation. Migration `0014` refuses downgrade once such active or ended
+evidence exists.
 
 Candidate discovery already accepts a purpose-bounded relationship: an active
 organization membership, Position application, onboarding request, or prior
@@ -566,12 +568,14 @@ authority, never edit, backfill, silently rebind, or replace its interval.
 Ending an active assignment requires current assignment and revocation
 authority, fresh step-up, the exact assignment version, and a reason. One
 transaction revokes the linked RoleAssignment through `maru.authorization`,
-marks the assignment ended, completes only Position-specific and configured
-participation capacities no other active assignment for that person needs,
-recalculates Position occupancy, and writes immutable command, audit, event,
-and outbox evidence. An intended expiry does not silently revoke authority; an
-overdue active record is shown as **Expired — ending required** until this
-command succeeds.
+marks the assignment ended, and recalculates Position occupancy. Under
+`full_convention@1`, it completes only Position-specific and configured
+Participation capacities no other active assignment for that person needs.
+Under `workforce_only@1`, it leaves the required null capacity pointer in place
+and creates or touches no Participation evidence. Both paths write immutable
+command, audit, event, and outbox evidence. An intended expiry does not silently
+revoke authority; an overdue active record is shown as **Expired — ending
+required** until this command succeeds.
 
 The organizer detail presents newest-first reasons, versions, times, and actor
 labels. **My Workforce** separately shows a person only their own Position,
@@ -808,7 +812,8 @@ and retry receipts, non-cascading retirement/deletion rules, and fix-forward
 downgrade behavior. Production readiness fingerprints all Organization
 structure, Assignment, Availability, and Shift guard, evidence, and truncate
 functions and their exact attachments, requires the current Workforce migration
-recorder chain through `0013`, and verifies the
+recorder chain through `0014`, including the profile-matched nullable
+assignment-capacity guard and downgrade fence, and verifies the
 exact 13-reference Department FK inventory;
 the runtime login cannot invoke those helpers directly, disable them, or
 bypass their stopped-writer protocol. Reversing `0008` restores the exact
@@ -906,7 +911,8 @@ Staff Console component suite, strict mypy, and repository-wide Ruff checks
 also pass. The visual and complete UX-029 evidence is recorded separately and
 does not remove the deployment retention gate.
 
-The 2026-08-24 Assignment management focus covers relationship-bounded
+The 2026-08-24 Assignment management focus, then exercised under the
+full-convention compatibility profile, covers relationship-bounded
 candidates, incomplete-readiness proposal, headcount reservation, a genuinely
 different decision actor, approval-time authority and onboarding rechecks,
 strict lifecycle and assignment versions, retry replay/conflict, atomic
@@ -921,6 +927,12 @@ lifecycle case passes again in 54.01 seconds. The focused executable
 database-role and hardening gate passes 264 tests. A fresh two-human visual
 browser rehearsal and the complete UX-029 state matrix remain acceptance work,
 not outcomes inferred from those automated cases.
+
+The later cross-profile regression retains that full-convention
+Participation-capacity activation and completion, proves its pointer cannot be
+cleared from governed ended evidence, and separately proves Workforce-only
+approval and ending activate then revoke only the RoleAssignment while keeping
+the capacity pointer null and Participation absent.
 
 The 2026-08-23 owner rehearsal adds focused evidence for the read journey: the
 non-staff convention chair reached Workforce from Registration, retained the

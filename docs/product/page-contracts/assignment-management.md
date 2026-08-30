@@ -9,9 +9,9 @@
 - Overview route:
   `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/assignments/`
 - Personal route: `/my/workforce/`
-- Requirements: HR-004, HR-007, HR-008, HR-010, HR-013, UX-005 through
-  UX-008, UX-012, UX-020, UX-029, AUD-001, AUD-005, INT-001, NFR-001 through
-  NFR-004, NFR-008, and NFR-009
+- Requirements: IDN-014, EVT-006, HR-004, HR-007, HR-008, HR-010, HR-013,
+  UX-005 through UX-008, UX-012, UX-020, UX-029, AUD-001, AUD-005, INT-001,
+  NFR-001 through NFR-004, NFR-008, NFR-009, and NFR-013
 - Decisions: ADRs 0019, 0028, 0041, 0044, 0045, 0049, 0055, 0075, 0076,
   and 0080
 
@@ -24,7 +24,7 @@ one current Position without confusing intent with access. It answers:
 - why and for what interval a person is proposed;
 - which onboarding prerequisites are ready or blocked;
 - whether a genuinely different current controller has decided the proposal;
-- which role and participation evidence approval activates; and
+- which role and profile-matched evidence, if any, approval activates; and
 - why an active responsibility and its authority ended.
 
 The organizer workflow requires `workforce.view_structure` and
@@ -136,8 +136,10 @@ controllers' exact current sources against the proposal's complete immutable
 interval. It then:
 
 1. activates the authorization-owned scoped RoleAssignment;
-2. activates only the Participation and capacity evidence required by the
-   edition's adopted profile, which is none for Workforce-only;
+2. for `full_convention@1`, creates or activates the configured Participation
+   evidence and stores its non-null capacity pointer; for `workforce_only@1`,
+   creates no `Participation` or `ParticipationCapacity` and keeps that pointer
+   null;
 3. changes the proposal to active at the next assignment version;
 4. retains the independent actor, time, and reason; and
 5. writes audit, domain-event, outbox, and exact receipt evidence.
@@ -159,10 +161,12 @@ replaces the retained interval.
 ## Retained ending
 
 An active assignment may be ended by a currently authorized revoker after a
-fresh step-up check. The command revokes the linked RoleAssignment immediately,
-records actor, time, and reason, and completes only Position-specific or
-configured participation capacities that no other active assignment for that
-person still needs. It recalculates the Position's filled or open state and
+fresh step-up check. The command revokes the linked RoleAssignment immediately
+and records actor, time, and reason. For `full_convention@1`, it completes only
+Position-specific or configured Participation capacities that no other active
+assignment for that person still needs. For `workforce_only@1`, it creates or
+touches no `Participation` or `ParticipationCapacity` and keeps the assignment's
+capacity pointer null. It recalculates the Position's filled or open state and
 retains all assignment history.
 
 An expiry timestamp communicates the intended interval but is not silent
@@ -246,6 +250,16 @@ versions, decisions, or reasons. After governed writes, recovery fixes forward
 or restores the complete database to a mutually consistent pre-write point; it
 does not reverse this guard independently.
 
+Migration `0014_workforce_only_assignment_evidence` makes the nullable
+`participation_capacity_id` profile-matched evidence. Null is required for a
+governed active or ended `workforce_only@1` assignment, while non-null is
+required when `full_convention@1` adopts Participation. The opposite state is
+an integrity conflict. Recovery diagnoses the edition profile and complete
+transactional evidence; it never manufactures Participation for Workforce-only
+or clears required full-convention evidence to make one row look consistent.
+Once active or ended Workforce-only evidence exists, the migration's downgrade
+fence requires compatible code and fix-forward or whole-database recovery.
+
 This interval validation needs no migration or backfill. A retained proposal
 that predates the check remains immutable. If approval discovers that its
 interval is outside either controller's current source, the only supported
@@ -267,7 +281,9 @@ independent-controller handoff must remain clear to screen-reader users.
 
 Current automated evidence covers command idempotency and atomicity, exact
 authorization and tenant isolation, candidate bounding, lifecycle, headcount,
-onboarding, dual control, role/capacity activation and revocation, retained
+onboarding, dual control, full-convention role/capacity activation and
+completion, Workforce-only RoleAssignment activation and revocation with no
+Participation evidence, retained
 history, subject minimization, step-up before body parsing, strict API inputs,
 browser proposal-through-ending, raw database-write rejection, and runtime
 readiness. Complete rendered width/zoom, keyboard, screen-reader, recovery,

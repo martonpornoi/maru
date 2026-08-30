@@ -4,8 +4,9 @@
 rehearsing the first bounded Maru adoption profile  
 **Outcome:** Establish or recover a Workforce-only foundation without enabling
 Registration, payments, attendance, or unrelated modules  
-**Requirements:** IDN-012, IDN-014, EVT-006, UX-030, NFR-003, and NFR-013  
-**Decision:** ADR 0080
+**Requirements:** IDN-012, IDN-014, EVT-006, HR-013, UX-030, NFR-003, and
+NFR-013\
+**Decisions:** ADR 0076 as partially superseded by ADR 0080
 
 This runbook describes repository-owned behavior and synthetic rehearsal. It is
 not production approval, a retention policy, or authority to import personal
@@ -31,15 +32,17 @@ all-platform commitment:
 ## Pre-deployment review
 
 1. Back up the database under the deployment's accepted recovery procedure.
-2. Confirm the release contains all three migrations:
+2. Confirm the release contains all four migrations:
 
    - `events.0010_workforce_adoption_profile`;
-   - `authorization.0019_progressive_adoption_authority`; and
-   - `organizations.0014_purpose_bounded_representation`.
+   - `authorization.0019_progressive_adoption_authority`;
+   - `organizations.0014_purpose_bounded_representation`; and
+   - `workforce.0014_workforce_only_assignment_evidence`.
 
-3. Run migration-plan and drift checks. The dependency graph applies Events,
-   then Authorization, then Organizations even though Django may display other
-   independent application migrations between them.
+3. Run migration-plan and drift checks. The dependency graph applies Events
+   first; Workforce and Authorization follow once their dependencies permit,
+   and Organizations follows Authorization. Django may display other
+   independent application migrations between those steps.
 4. Confirm existing editions are expected to become
    `full_convention@1`. The additive migration must not relabel an existing
    representation or create a Maru-operator record.
@@ -93,8 +96,18 @@ fix forward or restore the database.
    one accountable controller uses **Create the safe Volunteer starter**,
    enters a different active accountable controller's exact email, and records
    why the starter is needed.
-9. Create and publish the required Positions, then continue through
-   assignments, Availability, and Shifts.
+9. Create and publish the required Positions. Propose one relationship-bounded
+   synthetic volunteer, then have the other accountable controller approve the
+   exact assignment in a separately authenticated session.
+10. Confirm that approval activated the scoped RoleAssignment while the
+    assignment's `participation_capacity_id` remained null and exact-edition
+    `Participation` and `ParticipationCapacity` counts for that person remained
+    zero.
+11. While the assignment remains active, complete the bounded Availability and
+    Shift journey. Then end the assignment through a freshly authenticated
+    revoker. Confirm that the RoleAssignment is revoked, the retained assignment
+    is ended, its Participation-capacity pointer remains null, and both
+    Participation counts remain zero.
 
 Do not give one human two accounts to simulate independent control. Do not call
 Maru operators an Executive Board unless they genuinely hold that role. If an
@@ -130,7 +143,13 @@ For the exact edition, verify all of the following:
   account is not attendee Registration, attendance, or payment; personal
   Workforce routes focus on My Maru and My Workforce;
 - no Participation or unadopted application row was created by setup, login,
-  context selection, invitation, acceptance, or activation; and
+  context selection, invitation, acceptance, or representation activation;
+- Position-assignment proposal creates no authority or Participation evidence;
+- independent assignment approval creates the scoped RoleAssignment but leaves
+  `participation_capacity_id` null and creates no `Participation` or
+  `ParticipationCapacity` for the exact person and edition;
+- retained ending revokes the RoleAssignment while the assignment pointer stays
+  null and both exact-person, exact-edition Participation counts stay zero; and
 - the specialist record index stays collapsed unless the person explicitly
   asks to browse it.
 
@@ -181,6 +200,19 @@ PUBLIC grants, runtime grants, role attributes, and relation ACLs against the
 current code-owned catalog. Never make a readiness probe pass by granting broad
 function or table privileges.
 
+### Assignment evidence does not match the edition profile
+
+A null `participation_capacity_id` is required for a governed active or ended
+`workforce_only@1` assignment. Do not manufacture attendee Participation to
+"repair" it. In `full_convention@1`, where Participation is adopted, the same
+null pointer is an integrity conflict; a non-null pointer in Workforce-only is
+also an integrity conflict. Stop assignment writes for the exact scope,
+preserve receipts, audit, events, RoleAssignment, Participation, and capacity
+evidence, and diagnose the immutable edition profile and complete transaction.
+Fix forward or restore the mutually consistent database. Never clear valid
+full-convention evidence or create forbidden Workforce-only evidence merely to
+make one row pass validation.
+
 ### Stop using Workforce
 
 Stop new operational writes through an approved edition lifecycle and access-
@@ -207,5 +239,8 @@ state.
   and audit correlation;
 - representation type and activation outcome, without copying unnecessary
   controller contact data;
+- assignment state, RoleAssignment activation or revocation state, nullable
+  Participation-capacity pointer shape, and exact-person, exact-edition
+  Participation and ParticipationCapacity counts;
 - automated test and browser-rehearsal results; and
 - explicit open production gates, fallback owner, and cutover decision.

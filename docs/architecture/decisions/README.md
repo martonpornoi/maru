@@ -80,7 +80,7 @@ the system.
 | [0073](0073-repository-owned-fictional-convention-examples.md) | Accepted | Use repository-owned fictional convention examples and remove real-roster and source-derived taxonomy dependencies from current material |
 | [0074](0074-newcomer-first-curated-sphinx-navigation.md) | Accepted | Present six stable primary documentation hubs and one finite newcomer path while retaining complete searchable catalogs |
 | [0075](0075-governed-position-and-opportunity-management.md) | Accepted | Govern Position and paired-opportunity management through the shared edition structure aggregate and purpose-built owner workflow |
-| [0076](0076-owner-safe-position-assignment-lifecycle.md) | Accepted | Govern Position assignments through relationship-bounded proposals, independent stepped-up decisions, retained ending, and shared command evidence |
+| [0076](0076-owner-safe-position-assignment-lifecycle.md) | Partially superseded | Relationship-bounded proposals, dual control, authority, headcount, onboarding, revocation, audit, retained ending, and evidence lifecycle remain; ADR 0080 makes Participation evidence match the immutable edition profile |
 | [0077](0077-person-owned-workforce-availability.md) | Accepted | Keep edition availability person-owned, explicitly shared, interval-based, privacy-minimized, and separate from shift commitments |
 | [0078](0078-governed-workforce-shift-journey.md) | Accepted | Govern demand, personal claims, independent confirmation, transactional coverage, and retained completion as one Workforce Shift journey |
 | [0079](0079-repository-scoped-agent-workflow-support.md) | Accepted | Keep always-on repository policy separate from focused, repository-scoped contributor playbooks |

@@ -315,3 +315,135 @@ def test_documentation_policy_excludes_local_certification_artifacts(
 
     assert generated not in markdown_files(tmp_path)
     assert ethical_content_failures(tmp_path) == []
+
+
+def test_assignment_evidence_contract_remains_profile_aware() -> None:
+    requirements = (ROOT / "docs" / "product" / "requirements.md").read_text(
+        encoding="utf-8"
+    )
+    roadmap = (ROOT / "docs" / "project" / "ROADMAP.md").read_text(encoding="utf-8")
+    page_contract = (
+        ROOT / "docs" / "product" / "page-contracts" / "assignment-management.md"
+    ).read_text(encoding="utf-8")
+    runbook = (
+        ROOT / "docs" / "operations" / "workforce-only-adoption-and-recovery.md"
+    ).read_text(encoding="utf-8")
+    workforce_module = (ROOT / "docs" / "modules" / "workforce.md").read_text(
+        encoding="utf-8"
+    )
+    experience = (
+        ROOT / "docs" / "product" / "experience-and-information-architecture.md"
+    ).read_text(encoding="utf-8")
+    domain_model = (ROOT / "docs" / "domain" / "domain-model.md").read_text(
+        encoding="utf-8"
+    )
+    key_workflows = (ROOT / "docs" / "product" / "key-workflows.md").read_text(
+        encoding="utf-8"
+    )
+    adr_0076 = (
+        ROOT
+        / "docs"
+        / "architecture"
+        / "decisions"
+        / "0076-owner-safe-position-assignment-lifecycle.md"
+    ).read_text(encoding="utf-8")
+    adr_0080 = (
+        ROOT
+        / "docs"
+        / "architecture"
+        / "decisions"
+        / "0080-progressive-workforce-only-adoption.md"
+    ).read_text(encoding="utf-8")
+    adr_index = (ROOT / "docs" / "architecture" / "decisions" / "index.md").read_text(
+        encoding="utf-8"
+    )
+    adr_status_index = (
+        ROOT / "docs" / "architecture" / "decisions" / "README.md"
+    ).read_text(encoding="utf-8")
+
+    for document in (
+        requirements,
+        roadmap,
+        page_contract,
+        runbook,
+        workforce_module,
+        adr_0080,
+    ):
+        assert "`full_convention@1`" in document
+        assert "`workforce_only@1`" in document
+        assert "integrity conflict" in document
+    assert "independent assignment approval" in runbook
+    assert "retained ending revokes the RoleAssignment" in runbook
+    assert "`participation_capacity_id` null" in runbook
+    assert "Participation counts stay zero" in runbook
+    assert "`workforce.0014_workforce_only_assignment_evidence`" in runbook
+    assert (
+        runbook.index("Confirm that approval")
+        < runbook.index("complete the bounded Availability")
+        < runbook.index("Then end the assignment")
+    )
+    assert "Status: Partially superseded by ADR 0080" in adr_0076
+    assert "The same transaction activates edition" in adr_0076
+    assert "ADR 0076 only where Position" in adr_0080
+    assert "HR-013" in adr_0080
+    assert (
+        "[0076](0076-owner-safe-position-assignment-lifecycle.md) | "
+        "Partially superseded"
+    ) in adr_index
+    assert (
+        "[0076](0076-owner-safe-position-assignment-lifecycle.md) | "
+        "Partially superseded"
+    ) in adr_status_index
+    assert "`workforce_only@1` keeps a null assignment pointer" in adr_index
+    assert "only the evidence" in experience
+    assert "required by the immutable edition profile" in experience
+    assert "An assignment joins a person to a position" in domain_model
+    assert "accepted application records its typed transition evidence" in key_workflows
+    assert (
+        key_workflows.index("accepted application")
+        < key_workflows.index("separately proposes the Position assignment")
+        < key_workflows.index("that approval activates")
+    )
+    assert "Workforce-only creates no attendee Participation" in key_workflows
+
+    collapsed = {
+        name: " ".join(document.split())
+        for name, document in {
+            "requirements": requirements,
+            "roadmap": roadmap,
+            "page_contract": page_contract,
+            "runbook": runbook,
+            "workforce_module": workforce_module,
+            "experience": experience,
+            "domain_model": domain_model,
+            "key_workflows": key_workflows,
+        }.items()
+    }
+    assert (
+        "activate the linked role and adopted-profile capacities"
+        not in collapsed["requirements"]
+    )
+    assert "linked role and participation capacities" not in collapsed["roadmap"]
+    assert "dual-controlled role/capacity activation" not in collapsed["roadmap"]
+    assert (
+        "which role and participation evidence approval activates"
+        not in collapsed["page_contract"]
+    )
+    assert "all three migrations" not in collapsed["runbook"]
+    assert "Then continue through Availability and Shifts" not in collapsed["runbook"]
+    assert (
+        "marks the assignment ended, completes only Position-specific"
+        not in collapsed["workforce_module"]
+    )
+    assert (
+        "approval atomically activates role and participation evidence"
+        not in collapsed["experience"]
+    )
+    assert (
+        "An assignment joins a participation to a position"
+        not in collapsed["domain_model"]
+    )
+    assert (
+        "An accepted offer creates an edition participation and role assignment"
+        not in collapsed["key_workflows"]
+    )

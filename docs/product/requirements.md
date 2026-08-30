@@ -1,7 +1,7 @@
 # Product requirements
 
 Status: Baseline  
-Last updated: 2026-08-15
+Last updated: 2026-08-30
 
 This document defines stable product requirements. Identifiers are used by
 architecture documents, implementation issues, tests, and release notes.
@@ -394,16 +394,25 @@ architecture documents, implementation issues, tests, and release notes.
   provenance, one exact current control source covering the complete interval
   for both proposer and approver, candidate identity, and every required
   onboarding document under one transaction, then activate the linked role and
-  adopted-profile capacities. If that recheck fails, the dedicated conflict
+  only the evidence required by the edition's immutable adoption profile. For
+  `full_convention@1`, approval must create or activate the configured
+  Participation evidence and retain a non-null Participation-capacity pointer.
+  For `workforce_only@1`, approval must create no `Participation` or
+  `ParticipationCapacity`, and that pointer must remain null. If the recheck
+  fails, the dedicated conflict
   must disclose no controller identity, source identifier, source timestamp,
   or raw provenance; it must retain the immutable proposal and truthful
   headcount reservation without granting access or creating participation.
   Recovery is to reject the proposal and recreate it inside current authority,
   never edit, silently rebind, backfill, or replace its interval in place.
-  Ending an active assignment
-  requires fresh step-up authentication and revocation authority, retains its
-  reason, revokes the linked role, and completes only capacities no longer
-  needed by another active assignment. HTML and API adapters must share strict,
+  Ending an active assignment requires fresh step-up authentication and
+  revocation authority, retains its reason, and revokes the linked role. For
+  `full_convention@1`, it completes only configured Participation capacities no
+  longer needed by another active assignment. For `workforce_only@1`, it must
+  create or touch no Participation evidence and must retain the null pointer. A
+  governed active or ended assignment whose pointer does not match its immutable
+  edition profile is an integrity conflict, not a reason to manufacture or
+  discard Participation evidence. HTML and API adapters must share strict,
   idempotent commands with authorization before input parsing, immutable
   receipts, audit and registered domain-event evidence, optimistic assignment
   versions, and stopped-writer database enforcement. The assigned person may

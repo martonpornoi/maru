@@ -777,6 +777,10 @@ def test_assignment_journey_preserves_dual_control_authority_and_history() -> No
     )
     assert len(self_items) == 1
     assert self_items[0].state_label == "Ended"
+    with pytest.raises(IntegrityError, match="governed ending evidence is invalid"):
+        PositionAssignment.objects.filter(pk=assignment.pk).update(
+            participation_capacity=None
+        )
 
 
 def test_workforce_only_assignment_never_creates_participation_evidence() -> None:
@@ -859,7 +863,9 @@ def test_workforce_only_assignment_never_creates_participation_evidence() -> Non
     )
 
     assignment.refresh_from_db()
+    assignment.role_assignment.refresh_from_db()
     assert ended.status == PositionAssignment.Status.ENDED
+    assert assignment.role_assignment.revoked_at is not None
     assert assignment.participation_capacity_id is None
     assert not Participation.objects.filter(
         account=candidate,
