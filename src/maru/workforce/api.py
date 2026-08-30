@@ -46,6 +46,7 @@ from maru.organizations.queries import (
     organization_governance_anchor,
 )
 from maru.workforce.assignment_commands import (
+    AssignmentAuthorityIntervalConflictError,
     AssignmentAuthorizationDeniedError,
     AssignmentCandidateUnavailableError,
     AssignmentCommandError,
@@ -695,6 +696,15 @@ _ASSIGNMENT_CONFLICT_ERRORS: dict[
     AssignmentStateConflictError: (
         AssignmentStateConflictError.reason_code,
         {"non_field_errors": ["Reload the assignment before retrying."]},
+    ),
+    AssignmentAuthorityIntervalConflictError: (
+        AssignmentAuthorityIntervalConflictError.reason_code,
+        {
+            "non_field_errors": [
+                "Reload the assignment, reject this immutable proposal, and "
+                "recreate it within current controlling authority."
+            ]
+        },
     ),
     AssignmentReadinessConflictError: (
         AssignmentReadinessConflictError.reason_code,
@@ -1950,7 +1960,8 @@ class WorkforceAssignmentProposalView(_WorkforceStructureMutationView):
             201: WorkforceAssignmentMutationResultSerializer,
             200: WorkforceAssignmentMutationResultSerializer,
             (400, PROBLEM_CONTENT_TYPE): _problem_response(
-                "The closed proposal request or idempotency key is invalid."
+                "The closed proposal request, authority interval, or idempotency "
+                "key is invalid."
             ),
             (403, PROBLEM_CONTENT_TYPE): _problem_response(
                 "The route or required assignment and role authority is unavailable."
@@ -2104,6 +2115,14 @@ _ASSIGNMENT_DECISION_RESPONSES = {
     ),
 }
 
+_ASSIGNMENT_APPROVAL_RESPONSES = {
+    **_ASSIGNMENT_DECISION_RESPONSES,
+    (409, PROBLEM_CONTENT_TYPE): _problem_response(
+        "Approval conflicts with assignment state, readiness, headcount, or the "
+        "immutable authority interval."
+    ),
+}
+
 
 class WorkforceAssignmentApproveView(_WorkforceStructureMutationView):
     """Approve and activate one proposal under independent control."""
@@ -2112,7 +2131,7 @@ class WorkforceAssignmentApproveView(_WorkforceStructureMutationView):
         operation_id="workforce_approve_position_assignment",
         request=WorkforceAssignmentDecisionSerializer,
         parameters=[_STRUCTURE_IDEMPOTENCY_PARAMETER],
-        responses=_ASSIGNMENT_DECISION_RESPONSES,
+        responses=_ASSIGNMENT_APPROVAL_RESPONSES,
     )
     def post(
         self,

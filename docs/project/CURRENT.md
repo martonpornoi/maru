@@ -9,6 +9,50 @@ production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
 
+## Assignment controlling-authority interval recovery
+
+Issue [#39](https://github.com/martonpornoi/maru/issues/39) now has a focused
+implementation whose protected pull-request gate remains authoritative. A new
+Position assignment proposal proves, after exact retry replay resolution and
+before persistence or headcount reservation, that one exact current proposer
+control source covers its complete interval. Equal
+boundaries are accepted; a bounded source cannot cover an unbounded proposal.
+
+Approval rechecks the original proposer and current independent approver under
+the existing transaction and assignment locks. A failed horizon recheck leaves
+the immutable proposal, version, and truthful headcount reservation intact and
+retains no access, RoleAssignment, Participation, or successful mutation
+evidence. HTML presents an action-local recovery message and the API returns a
+typed, non-disclosing `409`; neither reveals controller identities, source or
+grant identifiers, source timestamps, or raw provenance. Recovery is to reload,
+reject the proposal, and create a new one within current authority, never edit,
+backfill, or silently rebind it.
+
+A synthetic browser rehearsal passed at 1,280 by 900 and 390 by 844 CSS pixels.
+The conflict summary received focus as an alert; each rendering retained one H1
+and one `main`, no duplicate IDs, and no horizontal overflow. Approval was
+disabled after the conflict while reload and a fresh rejection action remained
+available. Rejection retained version 2 and directly inspectable
+history, and both journeys produced zero console warnings or errors.
+
+Focused local acceptance passed all 38 Authorization command tests and all 20
+Workforce assignment command tests. Repository-wide Ruff, mypy, PyDocLint, and
+Python docstring validation passed; warning-fatal Sphinx rendered 357 Markdown
+files; all 29 Staff Console tests plus its typecheck and build passed; and
+OpenAPI validation and checked-in TypeScript regeneration were deterministic.
+Migration detection reported no changes. The local system check retained only
+the expected fail-closed invitation-encryption warning.
+
+No model, migration, runtime-role boundary, or new ADR is required; the change
+implements IDN-005 and HR-013 under ADRs 0044, 0076, and 0080. The rehearsal is
+bounded implementation evidence, not full UX-029 coverage, two-human owner
+acceptance, protected-branch certification, deployment, or production
+approval. The
+[assignment interval checkpoint](../checkpoints/2026-08-30-assignment-authority-interval-recovery.md)
+records the recovery and disclosure contract. Issue
+[#40](https://github.com/martonpornoi/maru/issues/40) is the next bounded
+candidate-evaluation finding.
+
 ## Synthetic OCI static-delivery rehearsal
 
 Issue [#38](https://github.com/martonpornoi/maru/issues/38) now has one
@@ -87,9 +131,8 @@ does not select production infrastructure.
 Passing the runtime rehearsal means its bounded synthetic topology is fully
 ready. The separate issue #38 evaluator now owns static/edge evidence; neither
 path certifies providers, workers, restore/PITR, load, accessibility,
-production policy, or human go/no-go. Issue
-[#39](https://github.com/martonpornoi/maru/issues/39) is the next
-candidate-evaluation repair.
+production policy, or human go/no-go. Issue #39 owns the focused Assignment
+repair; issue [#40](https://github.com/martonpornoi/maru/issues/40) follows it.
 
 ## First release-candidate synthetic evaluation
 
@@ -107,9 +150,10 @@ the default Gunicorn topology also returned 404 for collected static assets.
 
 The candidate remains immutable pre-production evidence, not a gold or
 production-ready release. Issues #37 and #38 now supply the missing runtime and
-static-delivery paths; issues
-[#39](https://github.com/martonpornoi/maru/issues/39) through
-[#42](https://github.com/martonpornoi/maru/issues/42) retain the other four
+static-delivery paths; issue #39 owns the focused Assignment recovery, while
+issues
+[#40](https://github.com/martonpornoi/maru/issues/40) through
+[#42](https://github.com/martonpornoi/maru/issues/42) retain the next three
 findings by remediation boundary. The complete evaluation evidence, exact
 counts, and disposition are in the
 [synthetic operator evaluation checkpoint](../checkpoints/2026-08-29-first-release-candidate-synthetic-operator-evaluation.md).
@@ -612,18 +656,19 @@ support branch, a deployment, or production readiness.
   representative recovery, deployment, accessibility, policy, and owner
   acceptance gates remain open.
 - The evaluation's exact-image runtime and static-delivery defects (#37 and
-  #38) are resolved by bounded synthetic rehearsals. Four findings remain: an
-  opaque Assignment authority-interval conflict (#39), incomplete public
-  integrity verification instructions (#40), profile-unaware Participation
-  contracts (#41), and no reproducible end-to-end Workforce-only tutorial
-  (#42).
+  #38) are resolved by bounded synthetic rehearsals. The Assignment
+  authority-interval repair (#39) is its own focused protected outcome. The
+  next three findings are incomplete public integrity verification
+  instructions (#40), profile-unaware Participation contracts (#41), and no
+  reproducible end-to-end Workforce-only tutorial (#42).
 - The new header is a repository README asset only. GitHub's live social preview
   remains unchanged; adopting the asset there must wait for this branch to merge
   and requires a separate setting mutation plus readback.
-- Issues #21, #29, #37, and #38 are complete in repository behavior. Issues
-  #22 through #24, #30 through #36, and #39 through #42 expose bounded work;
-  none is accepted as complete before its own tests, documentation, and
-  protected pull request pass.
+- Issues #21, #29, #37, and #38 are complete in protected repository behavior;
+  issue #39's focused implementation and bounded rehearsal are recorded above.
+  Issues #22 through #24, #30 through #36, and #40 through #42 expose the
+  remaining bounded work; none is accepted as complete before its own tests,
+  documentation, and protected pull request pass.
 - Workforce-only adoption is implemented for trustworthy evaluation, not
   production cutover. General partner bulk import, a complete continuity
   export, printable rota, offline/manual reconciliation pack, profile expansion
@@ -658,12 +703,11 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Continue resolving the candidate-evaluation findings in their recorded
-   order, one focused protected pull request at a time: Assignment interval
-   recovery [#39](https://github.com/martonpornoi/maru/issues/39), consumer
-   verification [#40](https://github.com/martonpornoi/maru/issues/40),
-   profile-aware contracts [#41](https://github.com/martonpornoi/maru/issues/41),
-   and the Workforce-only tutorial
+1. Continue the candidate-evaluation findings in order, one focused protected
+   pull request at a time: consumer verification
+   [#40](https://github.com/martonpornoi/maru/issues/40), profile-aware
+   contracts [#41](https://github.com/martonpornoi/maru/issues/41), and the
+   Workforce-only tutorial
    [#42](https://github.com/martonpornoi/maru/issues/42).
 2. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
    Workforce-only continuity package: preview-first

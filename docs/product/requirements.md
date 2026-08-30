@@ -381,13 +381,26 @@ architecture documents, implementation issues, tests, and release notes.
   person selector must be bounded to an existing organization, edition,
   application, onboarding, or Workforce relationship and must not become a
   general account directory. A proposal reserves approved headcount but creates
-  no participation, RoleAssignment, capability, or schedule commitment.
+  no participation, RoleAssignment, capability, or schedule commitment. After
+  required current route authorization, the command must resolve an exact
+  idempotent replay before checking the proposer source horizon or persisting a
+  new proposal. Replay after source-interval replacement still requires those
+  current route capabilities. One exact current proposer control source must
+  otherwise cover the complete requested interval. Equal source and assignment
+  boundaries are valid; a bounded source cannot cover an unbounded assignment.
   Approval or rejection requires a different currently authorized controller,
   fresh step-up authentication, a reason, and the exact current assignment
   version. Approval must recheck lifecycle, headcount, immutable RoleBundle
-  provenance, current proposer and approver authority, candidate identity, and
-  every required onboarding document under one transaction, then activate the
-  linked role and participation capacities. Ending an active assignment
+  provenance, one exact current control source covering the complete interval
+  for both proposer and approver, candidate identity, and every required
+  onboarding document under one transaction, then activate the linked role and
+  adopted-profile capacities. If that recheck fails, the dedicated conflict
+  must disclose no controller identity, source identifier, source timestamp,
+  or raw provenance; it must retain the immutable proposal and truthful
+  headcount reservation without granting access or creating participation.
+  Recovery is to reject the proposal and recreate it inside current authority,
+  never edit, silently rebind, backfill, or replace its interval in place.
+  Ending an active assignment
   requires fresh step-up authentication and revocation authority, retains its
   reason, revokes the linked role, and completes only capacities no longer
   needed by another active assignment. HTML and API adapters must share strict,

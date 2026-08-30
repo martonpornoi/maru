@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -16,17 +19,25 @@ from django.utils.html import strip_tags
 from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
-from maru.effects.models import DomainEvent
+from maru.authorization.commands import (
+    grant_capability_direct,
+    revoke_capability_grant,
+)
+from maru.authorization.models import CapabilityGrant, RoleAssignment
+from maru.authorization.policy import resolve_edition_target
+from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.adoption import AdoptionProfileCode
 from maru.identity.models import AccountSession
 from maru.identity.services import session_key_digest
 from maru.participation.models import Participation, ParticipationCapacity
 from maru.workforce.assignment_commands import (
+    AssignmentAuthorityIntervalConflictError,
     AssignmentAuthorizationDeniedError,
     AssignmentCandidateUnavailableError,
     AssignmentHeadcountConflictError,
     AssignmentReadinessConflictError,
     AssignmentRetryConflictError,
+    AssignmentStateConflictError,
     approve_position_assignment,
     end_position_assignment,
     propose_position_assignment,
@@ -48,6 +59,7 @@ from tests.factories import (
     ParticipationFactory,
 )
 from tests.support.authority import (
+    activate_synthetic_board,
     create_provenance_backed_role_bundle,
     grant_board_controllers_edition_capability,
 )
@@ -149,6 +161,107 @@ def _known_candidate(world: _AssignmentWorld) -> Account:
     return candidate
 
 
+def _delegated_assignment_world(
+    *,
+    proposer_role_expires_at: datetime | None = None,
+) -> _AssignmentWorld:
+    """Return a world whose controllers have only exact-edition authority."""
+
+    base = _assignment_world()
+    board_actor, board_approver = activate_synthetic_board(base.edition.organization)
+    target = resolve_edition_target(
+        organization_id=base.edition.organization_id,
+        edition_id=base.edition.id,
+    )
+    assert target is not None
+    proposer = AccountFactory()
+    approver = AccountFactory()
+    for principal in (proposer, approver):
+        for capability_code in (
+            "workforce.view_structure",
+            "workforce.manage_assignments",
+            "authorization.manage_roles",
+            "authorization.revoke",
+        ):
+            grant_capability_direct(
+                actor=board_actor,
+                approver=board_approver,
+                recipient=principal,
+                capability_code=capability_code,
+                target=target,
+                effective_from=timezone.now(),
+                expires_at=(
+                    proposer_role_expires_at
+                    if principal == proposer
+                    and capability_code == "authorization.manage_roles"
+                    else None
+                ),
+                reason="Establish isolated assignment-controller authority.",
+                correlation_id=uuid4(),
+                source_channel="test",
+            )
+    return _AssignmentWorld(
+        edition=base.edition,
+        proposer=proposer,
+        approver=approver,
+        position=base.position,
+    )
+
+
+def _active_role_control_grant(
+    world: _AssignmentWorld,
+    *,
+    principal: Account,
+) -> CapabilityGrant:
+    return CapabilityGrant.objects.get(
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
+        department__isnull=True,
+        resource_binding__isnull=True,
+        principal=principal,
+        capability_code="authorization.manage_roles",
+        revoked_at__isnull=True,
+    )
+
+
+def _replace_role_control_grant(
+    world: _AssignmentWorld,
+    *,
+    principal: Account,
+    effective_from: datetime,
+    expires_at: datetime | None,
+) -> CapabilityGrant:
+    """Replace one exact source through the real revoke and grant commands."""
+
+    target = resolve_edition_target(
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
+    )
+    assert target is not None
+    source = _active_role_control_grant(world, principal=principal)
+    board_actor, board_approver = activate_synthetic_board(world.edition.organization)
+    revoke_capability_grant(
+        actor=board_actor,
+        target=target,
+        grant_id=source.id,
+        reason="Replace the controller's exact authority interval.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    return grant_capability_direct(
+        actor=board_actor,
+        approver=board_approver,
+        recipient=principal,
+        capability_code="authorization.manage_roles",
+        target=target,
+        effective_from=effective_from,
+        expires_at=expires_at,
+        reason="Issue replacement exact assignment-controller authority.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+
+
 def _propose(
     world: _AssignmentWorld,
     *,
@@ -156,6 +269,7 @@ def _propose(
     retry_key=None,
     reason: str = "The applicant matches this responsibility.",
     effective_from=None,
+    expires_at=None,
 ):
     return propose_position_assignment(
         actor=world.proposer,
@@ -165,7 +279,7 @@ def _propose(
         position_id=world.position.id,
         account_id=candidate.id,
         effective_from=effective_from or timezone.now(),
-        expires_at=None,
+        expires_at=expires_at,
         reason=reason,
         retry_key=retry_key or uuid4(),
         correlation_id=uuid4(),
@@ -208,6 +322,297 @@ def _assert_private_no_store(response) -> None:
         item.strip().casefold() for item in response["Cache-Control"].split(",")
     }
     assert {"private", "no-store"}.issubset(directives)
+
+
+@pytest.mark.parametrize(
+    ("field_name", "reason_code"),
+    [
+        ("effective_from", "authority_effective_from_too_early"),
+        ("expires_at", "authority_expiry_too_early"),
+    ],
+)
+def test_proposal_rejects_interval_outside_proposer_exact_authority_without_effects(
+    field_name: str,
+    reason_code: str,
+) -> None:
+    bounded_end = timezone.now() + timedelta(days=1)
+    world = _delegated_assignment_world(
+        proposer_role_expires_at=(bounded_end if field_name == "expires_at" else None)
+    )
+    candidate = _known_candidate(world)
+    source = _active_role_control_grant(world, principal=world.proposer)
+    requested_start = source.effective_from
+    requested_end = None
+    if field_name == "effective_from":
+        requested_start -= timedelta(microseconds=1)
+    else:
+        assert source.expires_at is not None
+        requested_end = source.expires_at + timedelta(microseconds=1)
+    before = (
+        PositionAssignment.objects.count(),
+        PositionAssignmentCommandReceipt.objects.count(),
+        RoleAssignment.objects.count(),
+        ParticipationCapacity.objects.count(),
+        Participation.objects.count(),
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    )
+
+    with pytest.raises(ValidationError) as captured:
+        _propose(
+            world,
+            candidate=candidate,
+            effective_from=requested_start,
+            expires_at=requested_end,
+        )
+
+    assert set(captured.value.error_dict) == {field_name}
+    assert captured.value.error_dict[field_name][0].code == reason_code
+    assert (
+        PositionAssignment.objects.count(),
+        PositionAssignmentCommandReceipt.objects.count(),
+        RoleAssignment.objects.count(),
+        ParticipationCapacity.objects.count(),
+        Participation.objects.count(),
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    ) == before
+    world.position.refresh_from_db()
+    assert world.position.status == Position.Status.OPEN
+
+
+@pytest.mark.parametrize("controller", ["proposer", "approver"])
+@pytest.mark.parametrize("boundary", ["start", "end"])
+def test_approval_rechecks_each_controller_interval_without_partial_activation(
+    controller: str,
+    boundary: str,
+) -> None:
+    world = _delegated_assignment_world()
+    candidate = _known_candidate(world)
+    initial_source = _active_role_control_grant(
+        world,
+        principal=world.proposer,
+    )
+    if boundary == "start":
+        intended_start = initial_source.effective_from
+        intended_end = None
+    else:
+        intended_start = timezone.now() + timedelta(hours=1)
+        intended_end = intended_start + timedelta(days=2)
+    proposed = _propose(
+        world,
+        candidate=candidate,
+        effective_from=intended_start,
+        expires_at=intended_end,
+    )
+    affected = getattr(world, controller)
+    replacement_start = timezone.now()
+    replacement_end = intended_start + timedelta(days=1) if boundary == "end" else None
+    replacement = _replace_role_control_grant(
+        world,
+        principal=affected,
+        effective_from=replacement_start,
+        expires_at=replacement_end,
+    )
+    before = (
+        RoleAssignment.objects.count(),
+        ParticipationCapacity.objects.count(),
+        Participation.objects.count(),
+        PositionAssignmentCommandReceipt.objects.count(),
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    )
+
+    with pytest.raises(AssignmentAuthorityIntervalConflictError) as captured:
+        approve_position_assignment(
+            actor=world.approver,
+            organization_id=world.edition.organization_id,
+            series_id=world.edition.series_id,
+            edition_id=world.edition.id,
+            assignment_id=proposed.assignment_id,
+            expected_version=1,
+            reason="Approve only while both exact controller sources cover it.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+
+    assert captured.value.reason_code == "assignment_authority_interval_conflict"
+    safe_error = str(captured.value)
+    for undisclosed in (
+        str(world.proposer.id),
+        str(world.approver.id),
+        str(replacement.id),
+        replacement.effective_from.isoformat(),
+    ):
+        assert undisclosed not in safe_error
+    assert (
+        RoleAssignment.objects.count(),
+        ParticipationCapacity.objects.count(),
+        Participation.objects.count(),
+        PositionAssignmentCommandReceipt.objects.count(),
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    ) == before
+    assignment = PositionAssignment.objects.get(pk=proposed.assignment_id)
+    assert assignment.status == PositionAssignment.Status.PROPOSED
+    assert assignment.command_version == 1
+    assert assignment.role_assignment_id is None
+    assert assignment.participation_capacity_id is None
+    assert assignment.decision_by_id is None
+    assert assignment.command_receipts.count() == 1
+    assert (
+        PositionAssignment.objects.filter(
+            position=world.position,
+            status=PositionAssignment.Status.PROPOSED,
+        ).count()
+        == world.position.headcount
+    )
+    reservation_actor = world.approver if controller == "proposer" else world.proposer
+    reservation_world = _AssignmentWorld(
+        edition=world.edition,
+        proposer=reservation_actor,
+        approver=affected,
+        position=world.position,
+    )
+    with pytest.raises(AssignmentHeadcountConflictError):
+        _propose(
+            reservation_world,
+            candidate=_known_candidate(world),
+        )
+
+
+@pytest.mark.parametrize("source_loss", ["revoked", "expired"])
+def test_approval_treats_unavailable_proposer_source_as_name_free_denial(
+    source_loss: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bounded_end = timezone.now() + timedelta(days=1)
+    world = _delegated_assignment_world(
+        proposer_role_expires_at=bounded_end if source_loss == "expired" else None
+    )
+    candidate = _known_candidate(world)
+    source = _active_role_control_grant(world, principal=world.proposer)
+    proposed = _propose(
+        world,
+        candidate=candidate,
+        effective_from=source.effective_from,
+        expires_at=source.expires_at,
+    )
+    if source_loss == "revoked":
+        target = resolve_edition_target(
+            organization_id=world.edition.organization_id,
+            edition_id=world.edition.id,
+        )
+        assert target is not None
+        board_actor, _board_approver = activate_synthetic_board(
+            world.edition.organization
+        )
+        revoke_capability_grant(
+            actor=board_actor,
+            target=target,
+            grant_id=source.id,
+            reason="Remove the proposer's exact role-control source.",
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+    else:
+        assert source.expires_at is not None
+        evaluated_after_expiry = source.expires_at + timedelta(microseconds=1)
+        monkeypatch.setattr(timezone, "now", lambda: evaluated_after_expiry)
+    before = (
+        RoleAssignment.objects.count(),
+        ParticipationCapacity.objects.count(),
+        PositionAssignmentCommandReceipt.objects.count(),
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    )
+
+    with pytest.raises(AssignmentAuthorizationDeniedError) as captured:
+        approve_position_assignment(
+            actor=world.approver,
+            organization_id=world.edition.organization_id,
+            series_id=world.edition.series_id,
+            edition_id=world.edition.id,
+            assignment_id=proposed.assignment_id,
+            expected_version=1,
+            reason="Do not activate without both current exact sources.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+
+    assert captured.value.reason_code == "assignment_authorization_denied"
+    safe_error = str(captured.value)
+    for undisclosed in (
+        str(world.proposer.id),
+        str(world.approver.id),
+        str(source.id),
+        source.effective_from.isoformat(),
+    ):
+        assert undisclosed not in safe_error
+    assert (
+        RoleAssignment.objects.count(),
+        ParticipationCapacity.objects.count(),
+        PositionAssignmentCommandReceipt.objects.count(),
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    ) == before
+    assignment = PositionAssignment.objects.get(pk=proposed.assignment_id)
+    assert assignment.status == PositionAssignment.Status.PROPOSED
+    assert assignment.command_version == 1
+    assert assignment.role_assignment_id is None
+    assert assignment.participation_capacity_id is None
+    assert assignment.command_receipts.count() == 1
+
+
+def test_proposal_replay_precedes_rechecking_a_replaced_controller_source() -> None:
+    world = _delegated_assignment_world()
+    candidate = _known_candidate(world)
+    retry_key = uuid4()
+    initial_source = _active_role_control_grant(
+        world,
+        principal=world.proposer,
+    )
+    intended_start = initial_source.effective_from
+    proposed = _propose(
+        world,
+        candidate=candidate,
+        retry_key=retry_key,
+        effective_from=intended_start,
+    )
+    replacement = _replace_role_control_grant(
+        world,
+        principal=world.proposer,
+        effective_from=timezone.now(),
+        expires_at=None,
+    )
+    assert replacement.effective_from > intended_start
+
+    replayed = _propose(
+        world,
+        candidate=candidate,
+        retry_key=retry_key,
+        effective_from=intended_start,
+    )
+    assert replayed.replayed
+    assert replayed.receipt_id == proposed.receipt_id
+    with pytest.raises(AssignmentRetryConflictError):
+        _propose(
+            world,
+            candidate=candidate,
+            retry_key=retry_key,
+            reason="Changed retries remain conflicts before source validation.",
+            effective_from=intended_start,
+        )
+    assert PositionAssignment.objects.count() == 1
+    assert PositionAssignmentCommandReceipt.objects.count() == 1
 
 
 def test_assignment_journey_preserves_dual_control_authority_and_history() -> None:  # noqa: PLR0915
@@ -533,6 +938,192 @@ def test_readiness_candidate_and_headcount_conflicts_do_not_partially_write() ->
     assert not PositionAssignment.objects.filter(account=overflow_candidate).exists()
 
 
+def test_browser_authority_interval_conflict_is_action_local_and_recoverable() -> None:  # noqa: PLR0915
+    world = _delegated_assignment_world()
+    candidate = _known_candidate(world)
+    initial_source = _active_role_control_grant(
+        world,
+        principal=world.proposer,
+    )
+    proposed = _propose(
+        world,
+        candidate=candidate,
+        effective_from=initial_source.effective_from,
+    )
+    replacement = _replace_role_control_grant(
+        world,
+        principal=world.proposer,
+        effective_from=timezone.now(),
+        expires_at=None,
+    )
+    client = Client()
+    client.force_login(world.approver)
+    detail_url = _browser_url(
+        "organization-workforce-assignment",
+        world,
+        assignment_id=proposed.assignment_id,
+    )
+    detail = client.get(detail_url)
+    assert detail.status_code == 200
+    approval_form = detail.context["approve_form"]
+    _mark_current_session_step_up(client, actor=world.approver)
+
+    failed = client.post(
+        _browser_url(
+            "approve-organization-workforce-assignment",
+            world,
+            assignment_id=proposed.assignment_id,
+        ),
+        {
+            "expected_version": str(approval_form["expected_version"].value()),
+            "retry_key": str(approval_form["retry_key"].value()),
+            "reason": "Attempt approval after the proposer source changed.",
+        },
+    )
+
+    recovery = (
+        "This immutable proposal is outside current controlling authority. "
+        "Reload it, reject it, and create a new proposal within current authority."
+    )
+    assert failed.status_code == 409
+    assert failed.context["active_action"] == "approve"
+    assert failed.context["reload_required"] is False
+    assert failed.context["interval_recovery_available"] is True
+    assert failed.context["can_decide_assignment"] is True
+    assert failed.context["can_approve_assignment"] is False
+    assert failed.context["action_error"] == recovery
+    failed_content = failed.content.decode()
+    assert recovery in strip_tags(failed_content)
+    assert "Reload the latest assignment" in strip_tags(failed_content)
+    approve_button = re.search(
+        r'<button type="submit"([^>]*)>Approve and activate</button>',
+        failed_content,
+    )
+    reject_button = re.search(
+        r'<button type="submit"([^>]*)>Reject proposal</button>',
+        failed_content,
+    )
+    assert approve_button is not None
+    assert "disabled" in approve_button.group(1)
+    assert reject_button is not None
+    assert "disabled" not in reject_button.group(1)
+    for undisclosed in (
+        str(initial_source.id),
+        str(replacement.id),
+        initial_source.effective_from.isoformat(),
+        replacement.effective_from.isoformat(),
+    ):
+        assert undisclosed not in failed.context["action_error"]
+    assignment = PositionAssignment.objects.get(pk=proposed.assignment_id)
+    assert assignment.status == PositionAssignment.Status.PROPOSED
+    assert assignment.command_version == 1
+    assert assignment.role_assignment_id is None
+    assert assignment.participation_capacity_id is None
+
+    rejection_form = failed.context["reject_form"]
+    assert rejection_form.is_bound is False
+    assert str(rejection_form["expected_version"].value()) == "1"
+    assert rejection_form["retry_key"].value() != approval_form["retry_key"].value()
+    with patch(
+        "maru.workforce.views.approve_position_assignment",
+        side_effect=AssignmentStateConflictError,
+    ):
+        generic = client.post(
+            _browser_url(
+                "approve-organization-workforce-assignment",
+                world,
+                assignment_id=proposed.assignment_id,
+            ),
+            {
+                "expected_version": "1",
+                "retry_key": str(uuid4()),
+                "reason": "A generic conflict must still require reload.",
+            },
+        )
+    generic_content = generic.content.decode()
+    generic_approve_button = re.search(
+        r'<button type="submit"([^>]*)>Approve and activate</button>',
+        generic_content,
+    )
+    generic_reject_button = re.search(
+        r'<button type="submit"([^>]*)>Reject proposal</button>',
+        generic_content,
+    )
+    assert generic.status_code == 409
+    assert generic.context["reload_required"] is True
+    assert generic.context["interval_recovery_available"] is False
+    assert generic_approve_button is not None
+    assert "disabled" in generic_approve_button.group(1)
+    assert generic_reject_button is not None
+    assert "disabled" in generic_reject_button.group(1)
+    rejected = client.post(
+        _browser_url(
+            "reject-organization-workforce-assignment",
+            world,
+            assignment_id=proposed.assignment_id,
+        ),
+        {
+            "expected_version": str(rejection_form["expected_version"].value()),
+            "retry_key": str(rejection_form["retry_key"].value()),
+            "reason": "Reject the immutable proposal before recreating it.",
+        },
+    )
+    assert rejected.status_code == 302
+    assignment.refresh_from_db()
+    assert assignment.status == PositionAssignment.Status.REJECTED
+    recreated = _propose(
+        world,
+        candidate=candidate,
+        effective_from=replacement.effective_from,
+    )
+    assert recreated.assignment_id != assignment.id
+    assert recreated.status == PositionAssignment.Status.PROPOSED
+
+
+@pytest.mark.parametrize(
+    ("local_effective_from", "expected_code"),
+    [
+        ("2026-03-29T02:30", "nonexistent"),
+        ("2026-10-25T02:30", "ambiguous"),
+    ],
+    ids=("iana-dst-gap", "iana-dst-fold"),
+)
+def test_browser_proposal_rejects_dst_gap_and_fold_without_creating_assignment(
+    local_effective_from: str,
+    expected_code: str,
+) -> None:
+    world = _assignment_world()
+    assert world.edition.time_zone == "Europe/Budapest"
+    candidate = _known_candidate(world)
+    client = Client()
+    client.force_login(world.proposer)
+
+    response = client.post(
+        _browser_url(
+            "propose-organization-workforce-assignment",
+            world,
+            position_id=world.position.id,
+        ),
+        {
+            "account_id": str(candidate.id),
+            "effective_from": local_effective_from,
+            "expires_at": "",
+            "reason": "Reject a local minute that does not identify one instant.",
+            "retry_key": str(uuid4()),
+        },
+    )
+
+    assert response.status_code == 400
+    form = response.context["form"]
+    assert set(form.errors) == {"effective_from"}
+    assert form.errors.as_data()["effective_from"][0].code == expected_code
+    assert form["effective_from"].value() == local_effective_from
+    assert not PositionAssignment.objects.filter(account=candidate).exists()
+    assert not PositionAssignmentCommandReceipt.objects.filter(
+        assignment__account=candidate,
+    ).exists()
+
+
 def test_browser_dual_control_and_self_privacy() -> None:  # noqa: PLR0915
     world = _assignment_world()
     candidate = _known_candidate(world)
@@ -719,6 +1310,121 @@ def test_assignment_api_is_strict_idempotent_and_step_up_gated() -> None:
         "assignment_version": 2,
         "status": PositionAssignment.Status.ACTIVE,
     }
+
+
+def test_assignment_api_returns_field_local_proposer_interval_validation() -> None:
+    world = _delegated_assignment_world()
+    candidate = _known_candidate(world)
+    source = _active_role_control_grant(world, principal=world.proposer)
+    proposal_url = reverse(
+        "api-workforce-position-assignments",
+        args=[
+            world.edition.organization_id,
+            world.edition.id,
+            world.position.id,
+        ],
+    )
+    api_client = APIClient()
+    api_client.force_authenticate(world.proposer)
+
+    response = api_client.post(
+        proposal_url,
+        {
+            "account_id": str(candidate.id),
+            "effective_from": (
+                source.effective_from - timedelta(microseconds=1)
+            ).isoformat(),
+            "expires_at": None,
+            "reason": "Reject the interval before reserving this Position.",
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+
+    payload = response.json()
+    assert response.status_code == 400
+    assert payload["code"] == "authority_effective_from_too_early"
+    assert set(payload["errors"]) == {"effective_from"}
+    assert payload["errors"]["effective_from"] == [
+        "The assignment cannot start before current controlling authority."
+    ]
+    serialized = response.content.decode()
+    assert str(source.id) not in serialized
+    assert str(world.proposer.id) not in serialized
+    assert not PositionAssignment.objects.filter(account=candidate).exists()
+    assert not PositionAssignmentCommandReceipt.objects.filter(
+        assignment__account=candidate
+    ).exists()
+
+
+def test_assignment_api_returns_typed_non_disclosing_approval_interval_conflict() -> (
+    None
+):
+    world = _delegated_assignment_world()
+    candidate = _known_candidate(world)
+    intended_start = timezone.now() + timedelta(hours=1)
+    intended_end = intended_start + timedelta(days=2)
+    proposed = _propose(
+        world,
+        candidate=candidate,
+        effective_from=intended_start,
+        expires_at=intended_end,
+    )
+    replacement = _replace_role_control_grant(
+        world,
+        principal=world.approver,
+        effective_from=timezone.now(),
+        expires_at=intended_start + timedelta(days=1),
+    )
+    approve_url = reverse(
+        "api-workforce-assignment-approve",
+        args=[world.edition.organization_id, world.edition.id, proposed.assignment_id],
+    )
+    api_client = APIClient()
+    api_client.force_login(world.approver)
+    gated = api_client.post(
+        approve_url,
+        {"private_sentinel": "must not be parsed before step-up"},
+        format="json",
+    )
+    assert gated.status_code == 403
+    assert gated.json()["code"] == "step_up_required"
+    _mark_current_session_step_up(api_client, actor=world.approver)
+
+    response = api_client.post(
+        approve_url,
+        {
+            "expected_version": 1,
+            "reason": "Recheck both exact controller intervals at approval.",
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+
+    payload = response.json()
+    assert response.status_code == 409
+    assert payload["code"] == "assignment_authority_interval_conflict"
+    assert payload["errors"] == {
+        "non_field_errors": [
+            "Reload the assignment, reject this immutable proposal, and recreate "
+            "it within current controlling authority."
+        ]
+    }
+    serialized = response.content.decode()
+    for undisclosed in (
+        str(world.proposer.id),
+        str(world.approver.id),
+        str(replacement.id),
+        replacement.effective_from.isoformat(),
+        replacement.expires_at.isoformat() if replacement.expires_at else "",
+    ):
+        assert undisclosed not in serialized
+    assignment = PositionAssignment.objects.get(pk=proposed.assignment_id)
+    assert assignment.status == PositionAssignment.Status.PROPOSED
+    assert assignment.command_version == 1
+    assert assignment.role_assignment_id is None
+    assert assignment.participation_capacity_id is None
+    assert assignment.command_receipts.count() == 1
 
 
 def test_database_requires_exact_receipt_and_keeps_receipts_immutable() -> None:

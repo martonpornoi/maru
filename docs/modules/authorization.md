@@ -5,7 +5,7 @@ sealed target and immutable adoption-profile resolution, protected Executive
 Board and Maru-operator roots, provenance writing, profile-compatible access
 management, and guarded exact-lineage policy/runtime activation; production
 legacy reconciliation and cutover remain gates
-Last updated: 2026-08-26
+Last updated: 2026-08-30
 
 ## Purpose and requirements
 
@@ -64,6 +64,8 @@ bypassed. Revoking any ancestor invalidates its delegated descendants.
 - `create_role_bundle_version(...)`
 - `assign_role(...)`
 - `revoke_role_assignment(...)`
+- `require_authorized_control_horizon(...)`, the transaction- and
+  lock-requiring read-only assertion for compatible domain writers
 - `delegate_capability(...)`
 - internal `select_authorized_control_source(...)`,
   `authority_issuance_is_current(...)`, and
@@ -128,6 +130,17 @@ submit a source identifier. Generic platform policy is ineligible for these
 organizer commands. Role definitions use point-in-time controller authority;
 grants and assignments require the complete requested horizon. A legacy or
 malformed source fails closed without creating the target or partial evidence.
+
+`require_authorized_control_horizon(...)` lets a compatible domain writer
+require one exact current controller source to cover a requested persistent
+interval while the same target transaction holds the selection locks. It
+returns no selected source or provenance. Equal start and expiry boundaries are
+valid; a bounded source cannot cover an unbounded interval. An uncovered start
+and an uncovered ending have distinct stable validation reasons, while
+unavailable, revoked, or expired authority remains a name-free denial. Adapters
+and domain modules must translate those reasons without exposing controller
+identities, issuance or grant identifiers, source timestamps, or raw
+provenance.
 
 Revocation deliberately uses one authorized controller rather than approval:
 removing access must not wait for a second person. Grant and role-assignment

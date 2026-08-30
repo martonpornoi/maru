@@ -54,6 +54,7 @@ from maru.organizations.queries import (
     organization_governance_anchor,
 )
 from maru.workforce.assignment_commands import (
+    AssignmentAuthorityIntervalConflictError,
     AssignmentAuthorizationDeniedError,
     AssignmentCandidateUnavailableError,
     AssignmentCommandError,
@@ -4254,6 +4255,7 @@ def _render_assignment_detail(
     status: int = 200,
     action_error: str = "",
     reload_required: bool = False,
+    interval_recovery_available: bool = False,
 ) -> TemplateResponse:
     read = _load_assignment_page(
         request=request,
@@ -4339,12 +4341,15 @@ def _render_assignment_detail(
             "reject_form": reject_form,
             "end_form": end_form,
             "can_decide_assignment": can_decide,
-            "can_approve_assignment": can_approve and readiness.ready,
+            "can_approve_assignment": bool(
+                can_approve and readiness.ready and not interval_recovery_available
+            ),
             "can_end_assignment": can_end,
             "is_proposer": assignment.proposed_by_id == actor.id,
             "active_action": active_action,
             "action_error": action_error,
             "reload_required": reload_required,
+            "interval_recovery_available": interval_recovery_available,
         }
     )
     return TemplateResponse(
@@ -4376,6 +4381,12 @@ def _assignment_conflict_message(  # noqa: PLR0911
         return (
             "Required onboarding items are not all approved yet. Review readiness "
             "before approving."
+        )
+    if isinstance(error, AssignmentAuthorityIntervalConflictError):
+        return (
+            "This immutable proposal is outside current controlling authority. "
+            "Reload it, reject it, and create a new proposal within current "
+            "authority."
         )
     if isinstance(error, AssignmentCandidateUnavailableError):
         return (
@@ -4831,6 +4842,10 @@ def _assignment_decision_post(  # noqa: PLR0911
     except AssignmentUnavailableError as error:
         raise Http404 from error
     except AssignmentCommandError as error:
+        interval_recovery_available = bool(
+            action == "approve"
+            and isinstance(error, AssignmentAuthorityIntervalConflictError)
+        )
         return _render_assignment_detail(
             request,
             actor=actor,
@@ -4844,7 +4859,8 @@ def _assignment_decision_post(  # noqa: PLR0911
             active_action=action,
             status=409,
             action_error=_assignment_conflict_message(error),
-            reload_required=True,
+            reload_required=not interval_recovery_available,
+            interval_recovery_available=interval_recovery_available,
         )
     except (DatabaseError, RuntimeError):
         logger.exception("Unable to %s Workforce assignment", action)

@@ -14,8 +14,17 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.commands import revoke_role_assignment
-from maru.authorization.policy import PolicyDecision, decide, resolve_edition_target
+from maru.authorization.commands import (
+    AuthorityCommandValidationError,
+    require_authorized_control_horizon,
+    revoke_role_assignment,
+)
+from maru.authorization.policy import (
+    PolicyDecision,
+    ResolvedAuthorizationTarget,
+    decide,
+    resolve_edition_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.adoption import profile_adopts_module
@@ -70,6 +79,16 @@ _EDITABLE_ORGANIZATION_LIFECYCLES = frozenset(
     {Organization.Lifecycle.DRAFT, Organization.Lifecycle.ACTIVE}
 )
 _MAX_OPEN_ASSIGNMENTS = 1_024
+_AUTHORITY_INTERVAL_VALIDATION_ERRORS = {
+    "authority_effective_from_too_early": (
+        "effective_from",
+        "The assignment cannot start before current controlling authority.",
+    ),
+    "authority_expiry_too_early": (
+        "expires_at",
+        "The assignment interval must fit within current controlling authority.",
+    ),
+}
 
 
 class AssignmentCommandError(RuntimeError):
@@ -119,6 +138,12 @@ class AssignmentStateConflictError(AssignmentCommandError):
     """Signal a stale or incompatible assignment or Position state."""
 
     reason_code = "assignment_state_conflict"
+
+
+class AssignmentAuthorityIntervalConflictError(AssignmentCommandError):
+    """Signal an immutable interval outside current controlling authority."""
+
+    reason_code = "assignment_authority_interval_conflict"
 
 
 class AssignmentVersionConflictError(AssignmentCommandError):
@@ -175,7 +200,7 @@ class _AssignmentScope:
     organization_id: UUID
     series_id: UUID
     edition_id: UUID
-    target: object
+    target: ResolvedAuthorizationTarget
     manage_decision: PolicyDecision
     evaluated_at: datetime
     write_scope: LockedWorkforceEditionWriteScope
@@ -226,7 +251,7 @@ def _validate_source_channel(value: str) -> str:
 
 def _route_target(
     *, organization_id: UUID, series_id: UUID, edition_id: UUID
-) -> object:
+) -> ResolvedAuthorizationTarget:
     route_exists = EventEdition.objects.filter(
         id=edition_id,
         organization_id=organization_id,
@@ -252,7 +277,7 @@ def _require_capabilities(
     edition_id: UUID,
     capability_codes: tuple[str, ...],
     at: datetime | None = None,
-) -> tuple[object, PolicyDecision]:
+) -> tuple[ResolvedAuthorizationTarget, PolicyDecision]:
     if actor.pk is None:
         raise AssignmentAuthorizationDeniedError
     target = _route_target(
@@ -264,7 +289,7 @@ def _require_capabilities(
         decide(
             principal=actor,
             capability_code=capability_code,
-            resource=target,  # type: ignore[arg-type]
+            resource=target,
             at=at,
         )
         for capability_code in capability_codes
@@ -539,7 +564,61 @@ def _locked_open_assignments(position: Position) -> tuple[PositionAssignment, ..
     return assignments
 
 
-def propose_position_assignment(
+def _require_assignment_authority_interval(
+    *,
+    actor: Account,
+    scope: _AssignmentScope,
+    effective_from: datetime,
+    expires_at: datetime | None,
+) -> None:
+    """Require the proposer's exact source to cover the submitted interval.
+
+    Parameters
+    ----------
+    actor : Account
+        Authenticated controller proposing the immutable interval.
+    scope : _AssignmentScope
+        Locked exact-edition write scope for the proposal.
+    effective_from : datetime
+        Timezone-aware inclusive assignment start.
+    expires_at : datetime | None
+        Optional timezone-aware assignment end.
+
+    Raises
+    ------
+    AssignmentAuthorizationDeniedError
+        If no current exact role-management source is available.
+    AssignmentStateConflictError
+        If Authorization returns an unknown server-owned validation reason.
+    ValidationError
+        If a current source cannot cover the complete interval.
+    """
+    try:
+        require_authorized_control_horizon(
+            principal=actor,
+            capability_code=MANAGE_ROLES,
+            target=scope.target,
+            requested_effective_from=effective_from,
+            requested_expires_at=expires_at,
+        )
+    except AuthorityCommandValidationError as error:
+        validation = _AUTHORITY_INTERVAL_VALIDATION_ERRORS.get(error.reason_code)
+        if validation is None:
+            raise AssignmentStateConflictError from error
+        field_name, message = validation
+        raise ValidationError(
+            {
+                field_name: ValidationError(
+                    message,
+                    code=error.reason_code,
+                )
+            }
+        ) from error
+    except AuthorizationDenied as error:
+        raise AssignmentAuthorizationDeniedError from error
+
+
+def propose_position_assignment(  # noqa: DOC503 - helper raises field validation
     *,
     actor: Account,
     organization_id: UUID,
@@ -597,6 +676,9 @@ def propose_position_assignment(
         If the authorized Position is unavailable in the exact scope.
     AssignmentHeadcountConflictError
         If proposed and active assignments already reserve all headcount.
+    ValidationError
+        If the proposer's current exact role-management source cannot cover
+        the complete submitted interval.
     AssignmentStateConflictError
         If Position state, an existing assignment, or the bounded candidate
         projection prevents the proposal.
@@ -672,6 +754,12 @@ def propose_position_assignment(
             raise AssignmentStateConflictError(
                 "A closed Position cannot receive assignments."
             )
+        _require_assignment_authority_interval(
+            actor=actor,
+            scope=scope,
+            effective_from=effective_from,
+            expires_at=expires_at,
+        )
         open_assignments = _locked_open_assignments(position)
         if len(open_assignments) >= position.headcount:
             raise AssignmentHeadcountConflictError
@@ -850,6 +938,9 @@ def approve_position_assignment(
         If a required onboarding document is not currently approved.
     AssignmentHeadcountConflictError
         If approved headcount is no longer available.
+    AssignmentAuthorityIntervalConflictError
+        If either controller's current exact role-management source cannot
+        cover the proposal's immutable interval.
     """
     assignment_id = _validate_uuid(assignment_id, field_name="assignment_id")
     expected_version = _validate_expected_version(expected_version)
@@ -934,13 +1025,17 @@ def approve_position_assignment(
             )
         except AuthorizationDenied as error:
             raise AssignmentAuthorizationDeniedError from error
+        except AuthorityCommandValidationError as error:
+            if error.reason_code in _AUTHORITY_INTERVAL_VALIDATION_ERRORS:
+                raise AssignmentAuthorityIntervalConflictError from error
+            raise AssignmentStateConflictError from error
         except ValidationError as error:
             code = getattr(error, "code", None)
             if code == "assignment_documents_incomplete":
                 raise AssignmentReadinessConflictError from error
             if code == "position_headcount_reached":
                 raise AssignmentHeadcountConflictError from error
-            raise AssignmentStateConflictError(str(error)) from error
+            raise AssignmentStateConflictError from error
         receipt = _create_receipt(
             assignment=activated,
             actor=actor,
@@ -1310,7 +1405,7 @@ def end_position_assignment(
             try:
                 revoke_role_assignment(
                     actor=actor,
-                    target=scope.target,  # type: ignore[arg-type]
+                    target=scope.target,
                     assignment_id=role_assignment.id,
                     reason=normalized_reason,
                     correlation_id=correlation_id,

@@ -27,6 +27,15 @@ rather than replace the curated summary.
   candidate or selecting production infrastructure
   ([#38](https://github.com/martonpornoi/maru/issues/38)).
 
+### Changed
+
+- Position assignment proposal now rejects an interval that the proposer's
+  exact current controlling-authority source cannot fully cover before saving
+  or reserving headcount. Approval rechecks both controllers and reports a
+  dedicated non-disclosing conflict with reject-and-recreate recovery while
+  retaining the immutable proposal and its truthful reservation
+  ([#39](https://github.com/martonpornoi/maru/issues/39)).
+
 ## [2026.08.27] - 2026-08-27
 
 ### Added

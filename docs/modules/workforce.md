@@ -9,7 +9,7 @@ are implemented in the canonical current tree; Workforce-only assignment no
 longer manufactures attendee Participation evidence; complete rendered
 accessibility, portability, post-edition Availability disposal, recovery,
 deployment, and production acceptance remain gated
-Last updated: 2026-08-26
+Last updated: 2026-08-30
 
 ## Purpose and requirements
 
@@ -509,6 +509,17 @@ Position, but creates no participation, capacity, RoleAssignment, capability,
 or shift. Incomplete onboarding is therefore visible and allowed at proposal
 time; it remains a hard approval blocker.
 
+After required current route authorization, exact retry replay resolution
+precedes the horizon check for a new proposal or reservation. Workforce then
+asks Authorization to prove that one exact current proposer control source
+covers the complete requested interval. Equal source and proposal boundaries
+are accepted; a bounded source cannot cover an unbounded proposal. An uncovered
+start or ending is returned as a field-local validation result without
+proposal, reservation, audit, event, outbox, authority, or Participation
+effects. An identical successful retry still returns its original immutable
+receipt after a source-interval replacement while the caller retains the
+required current route capabilities; loss of route authority remains a denial.
+
 Browser times use the edition's IANA time zone and reject ambiguous or
 nonexistent local minutes. Strict API timestamps require `Z` or an explicit
 numeric UTC offset.
@@ -528,14 +539,27 @@ Department, Position, and assignment locks:
 - active person subject and unchanged proposal interval;
 - every current Position onboarding requirement;
 - immutable RoleBundle and typed-resource provenance; and
-- both the original proposer and current approver's live authority.
+- one exact current source covering the proposal's full immutable interval for
+  both the original proposer and current approver.
 
 The transaction invokes the authorization module's dual-control role command,
-activates edition participation, adds the configured capacity codes and stable
-`position.<position-code>` capacity, changes the assignment to active, updates
-Position occupancy, and persists decision, audit, event, outbox, and exact
-receipt evidence. Failure rolls everything back. Rejection instead creates a
-final retained decision, frees reserved headcount, and grants nothing.
+activates only the Participation and capacity evidence required by the adopted
+profile, changes the assignment to active, updates Position occupancy, and
+persists decision, audit, event, outbox, and exact receipt evidence. A
+Workforce-only edition creates no Participation or capacity row. Failure rolls
+everything back. Rejection instead creates a final retained decision, frees
+reserved headcount, and grants nothing.
+
+An interval recheck failure is a dedicated non-disclosing conflict. Browser
+recovery stays beside the approval action; the strict API returns stable `409`
+machine-readable recovery. Neither surface reveals which controller failed,
+controller or source identities, source or grant identifiers, source
+timestamps, or raw provenance. The proposal remains proposed and truthfully
+reserves headcount, while access, RoleAssignment, Participation, assignment
+version, receipt, audit, event, outbox, and other success effects remain
+unchanged except for any separately classified failure evidence. Recovery is to
+reload, reject the immutable proposal, and recreate it within current
+authority, never edit, backfill, silently rebind, or replace its interval.
 
 ### Retained ending
 
@@ -630,7 +654,9 @@ and ending require fresh step-up before input parsing. Responses expose only
 assignment identifier, version, status, and replay state. The same strict
 `400`/`403`/`404`/`409`/`503` disclosure boundary as Position management
 applies, with readiness, headcount, stale assignment version, and lifecycle
-represented as conflicts.
+represented as conflicts. A controlling-authority interval failure during
+approval is the dedicated non-disclosing `409`; proposal-time interval failure
+remains field-local `400` validation.
 
 Mounted Availability management API surface:
 
