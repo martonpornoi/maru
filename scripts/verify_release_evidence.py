@@ -227,7 +227,7 @@ def _require_equal(payload: Mapping[str, object], field: str, expected: object) 
         If the response field differs.
     """
     observed = payload.get(field)
-    if observed != expected:
+    if type(observed) is not type(expected) or observed != expected:
         raise ValueError(
             f"release {field} differs: expected={expected!r}; observed={observed!r}"
         )

@@ -9,6 +9,62 @@ production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
 
+## Reproducible release-consumer supply-chain verification
+
+Issue [#40](https://github.com/martonpornoi/maru/issues/40) now has one
+parameterized, fail-closed consumer verifier whose protected pull-request gate
+remains authoritative. Independent repository, tag, source-commit, mutable
+image-tag, and immutable-digest inputs drive the complete Release API,
+Release-attestation, per-asset attestation, checksum, manifest, public Git tag,
+actual merged release PR, OCI tag, digest-bound SPDX, and strict provenance
+sequence. The CalVer tag independently supplies the expected release PR,
+channel, candidate number, version, image tag, title, and prerelease state.
+
+The verifier requires GitHub CLI 2.96.0 or later, a preauthenticated session,
+Git, and Docker Buildx `imagetools`. It creates a new local directory, requires
+the exact eight regular assets, verifies `SHA256SUMS` before trusting its exact
+seven-payload inventory, reads the immutable Release again after asset
+verification, and never executes or extracts downloaded content. It does not
+log in, expose or persist a token, log or persist subprocess output or the
+environment, or mutate a Release, tag, asset, image, attestation, repository
+setting, or deployment. All networked GitHub CLI reads are pinned to
+`github.com`; link, junction, and reparse components are rejected; and mutable
+image plus local asset identities are rechecked immediately before success.
+
+The live candidate path passed for tag `v2026.08.27-rc.1`, source `be0b21d`,
+and OCI index digest `sha256:a44de03a4fe7bd5b3a5aaf73dd83b565b727a98bf895bf80416981e869eeb445`.
+All eight assets and seven checksum payloads matched; manifest, actual merged
+PR #27, and public tag/image relationships matched; the digest-bound SPDX 2.3
+document contained 179 uniquely identified packages and the recorded
+Syft/BuildKit generators; and one exact SLSA v1 result bound Maru's Release
+workflow, `refs/heads/main`, exact source, and a GitHub-hosted runner while
+denying self-hosted runners.
+
+Focused release-consumer and producer-evidence coverage passes all 99 cases.
+Whole-tree Ruff, full PyDocLint, the semantic docstring validator across 387
+source files, strict mypy for the new verifier, documentation policy across 358
+Markdown files and 207 requirement identifiers, and a fresh warning-fatal
+Sphinx/AutoAPI build pass. The protected hosted gate remains the merge
+authority for the final exact pull-request head.
+
+The first live attempt failed safely when Windows decoded Docker's UTF-8 SBOM
+as CP1252. Explicit UTF-8 decoding then passed from a fresh directory, leaving
+the first partial directory local as designed. A final hardened fresh-directory
+run also passed host-pinned PR reconciliation, UTC CalVer validation, unique
+SPDX package identity, and end-of-run asset and mutable-image rechecks. The
+[release-consumer checkpoint](../checkpoints/2026-08-30-release-consumer-supply-chain-verification.md)
+also supersedes only the earlier #29 checkpoint's 62-character transcription
+of the `SHA256SUMS` asset digest with GitHub's verified 64-character value; the
+append-only historical file is unchanged.
+
+No Django module, model, migration, API, browser behavior, permission,
+runtime-role boundary, release publication, or new ADR is involved. This
+implements NFR-002, NFR-003, NFR-011, and NFR-012 under ADRs 0060 and 0065. It
+is bounded supply-chain evidence, not gold promotion, deployment, recovery,
+accessibility, owner acceptance, or production readiness. Issue
+[#41](https://github.com/martonpornoi/maru/issues/41) is the next
+candidate-evaluation finding after protected acceptance.
+
 ## Assignment controlling-authority interval recovery
 
 Issue [#39](https://github.com/martonpornoi/maru/issues/39) now has a focused
@@ -49,9 +105,8 @@ bounded implementation evidence, not full UX-029 coverage, two-human owner
 acceptance, protected-branch certification, deployment, or production
 approval. The
 [assignment interval checkpoint](../checkpoints/2026-08-30-assignment-authority-interval-recovery.md)
-records the recovery and disclosure contract. Issue
-[#40](https://github.com/martonpornoi/maru/issues/40) is the next bounded
-candidate-evaluation finding.
+records the recovery and disclosure contract. Issue #40 now owns the separate
+consumer-verification outcome recorded above.
 
 ## Synthetic OCI static-delivery rehearsal
 
@@ -132,7 +187,8 @@ Passing the runtime rehearsal means its bounded synthetic topology is fully
 ready. The separate issue #38 evaluator now owns static/edge evidence; neither
 path certifies providers, workers, restore/PITR, load, accessibility,
 production policy, or human go/no-go. Issue #39 owns the focused Assignment
-repair; issue [#40](https://github.com/martonpornoi/maru/issues/40) follows it.
+repair; issue #40 owns the consumer-integrity evidence recorded above, and
+issue [#41](https://github.com/martonpornoi/maru/issues/41) follows it.
 
 ## First release-candidate synthetic evaluation
 
@@ -151,9 +207,9 @@ the default Gunicorn topology also returned 404 for collected static assets.
 The candidate remains immutable pre-production evidence, not a gold or
 production-ready release. Issues #37 and #38 now supply the missing runtime and
 static-delivery paths; issue #39 owns the focused Assignment recovery, while
-issues
-[#40](https://github.com/martonpornoi/maru/issues/40) through
-[#42](https://github.com/martonpornoi/maru/issues/42) retain the next three
+issue #40 now owns reproducible consumer verification. Issues
+[#41](https://github.com/martonpornoi/maru/issues/41) and
+[#42](https://github.com/martonpornoi/maru/issues/42) retain the next two
 findings by remediation boundary. The complete evaluation evidence, exact
 counts, and disposition are in the
 [synthetic operator evaluation checkpoint](../checkpoints/2026-08-29-first-release-candidate-synthetic-operator-evaluation.md).
@@ -657,17 +713,18 @@ support branch, a deployment, or production readiness.
   acceptance gates remain open.
 - The evaluation's exact-image runtime and static-delivery defects (#37 and
   #38) are resolved by bounded synthetic rehearsals. The Assignment
-  authority-interval repair (#39) is its own focused protected outcome. The
-  next three findings are incomplete public integrity verification
-  instructions (#40), profile-unaware Participation contracts (#41), and no
-  reproducible end-to-end Workforce-only tutorial (#42).
+  authority-interval repair (#39) is its own focused protected outcome. Issue
+  #40 now has the bounded consumer-integrity implementation recorded above;
+  profile-unaware Participation contracts (#41) and the missing reproducible
+  end-to-end Workforce-only tutorial (#42) remain incomplete.
 - The new header is a repository README asset only. GitHub's live social preview
   remains unchanged; adopting the asset there must wait for this branch to merge
   and requires a separate setting mutation plus readback.
-- Issues #21, #29, #37, and #38 are complete in protected repository behavior;
-  issue #39's focused implementation and bounded rehearsal are recorded above.
-  Issues #22 through #24, #30 through #36, and #40 through #42 expose the
-  remaining bounded work; none is accepted as complete before its own tests,
+- Issues #21, #29, and #37 through #39 are complete in protected repository
+  behavior. Issue #40's focused implementation and live verification are
+  recorded above; its pull-request gate remains authoritative. Issues #22
+  through #24, #30 through #36, and #41 through #42 expose the remaining
+  bounded work; none is accepted as complete before its own tests,
   documentation, and protected pull request pass.
 - Workforce-only adoption is implemented for trustworthy evaluation, not
   production cutover. General partner bulk import, a complete continuity
@@ -703,12 +760,11 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Continue the candidate-evaluation findings in order, one focused protected
-   pull request at a time: consumer verification
-   [#40](https://github.com/martonpornoi/maru/issues/40), profile-aware
-   contracts [#41](https://github.com/martonpornoi/maru/issues/41), and the
-   Workforce-only tutorial
-   [#42](https://github.com/martonpornoi/maru/issues/42).
+1. Complete consumer verification
+   [#40](https://github.com/martonpornoi/maru/issues/40) through its focused
+   protected pull request, then continue in order with profile-aware contracts
+   [#41](https://github.com/martonpornoi/maru/issues/41) and the Workforce-only
+   tutorial [#42](https://github.com/martonpornoi/maru/issues/42).
 2. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
    Workforce-only continuity package: preview-first
    import, scoped export, printable/manual fallback, reconciliation evidence,
