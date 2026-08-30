@@ -20,6 +20,12 @@ rather than replace the curated summary.
   least-privilege runtime identity, exact authority-provenance activation,
   minimized readiness, idempotent bootstrap, and ordinary restart without
   claiming production approval ([#37](https://github.com/martonpornoi/maru/issues/37)).
+- Added a bounded static-delivery rehearsal that serves the immutable
+  candidate's already-collected brand and private API-reference assets through
+  a digest-pinned unprivileged reference edge, verifies cache, proxy, restart,
+  and browser behavior, and produces sanitized evidence without rebuilding the
+  candidate or selecting production infrastructure
+  ([#38](https://github.com/martonpornoi/maru/issues/38)).
 
 ## [2026.08.27] - 2026-08-27
 

@@ -1,7 +1,7 @@
 # Development setup
 
 Status: Production-consolidation M1.1/M2.1 locally migrated and smoke-verified
-Last updated: 2026-08-26
+Last updated: 2026-08-30
 
 ## Prerequisites
 
@@ -45,7 +45,12 @@ evidence. To exercise the published immutable candidate with isolated
 PostgreSQL, genuine migration/runtime login separation, exact authority
 activation, health interpretation, and restart, use the
 [synthetic OCI runtime rehearsal](../operations/synthetic-oci-runtime-rehearsal.md).
-It uses no development server and makes no production-readiness claim.
+To exercise its already-collected assets, private same-origin API sidecars,
+dynamic proxy, cache boundary, and edge/web restart without rebuilding it, use
+the
+[synthetic OCI static delivery rehearsal](../operations/synthetic-oci-static-delivery-rehearsal.md).
+Neither evaluator uses a development server or makes a production-readiness
+claim.
 
 ## API contract and interactive documentation
 
@@ -75,7 +80,10 @@ uv run python src/manage.py spectacular --file openapi.yaml --validate
 The checked-in `openapi.yaml` and generated TypeScript definitions remain the
 build artifacts consumed by clients. Production builds must run
 `collectstatic` and serve the bundled documentation assets from the same
-immutable release.
+immutable release. The
+[synthetic OCI static delivery rehearsal](../operations/synthetic-oci-static-delivery-rehearsal.md)
+verifies that exact collected boundary through a read-only reference edge
+without making the schema public or rerunning `collectstatic`.
 
 ## Contributor documentation
 

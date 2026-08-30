@@ -298,10 +298,13 @@ shapes known to omit files; only a fresh zero-diagnostic managed log can prove
 coverage. Managed run `32485597468` supplies that proof by explicitly extracting
 the Workforce file with zero raw diagnostic. A manual exact-source release
 workflow publishes a CalVer-tagged immutable GHCR image with SBOM/provenance and
-GitHub evidence assets. Pull-request browser smoke, nightly compatibility/
-concurrency/visual matrices, synthetic deployment, and release recovery
-rehearsal remain next testing-infrastructure outcomes; ephemeral Actions
-databases do not satisfy production restore/PITR.
+GitHub evidence assets. Repository-owned bounded exact-candidate runtime and
+static-delivery evaluator procedures now define their separate synthetic
+contracts. Pull-request browser smoke, nightly compatibility/concurrency/visual matrices,
+production-shaped deployment and recovery, and release recovery rehearsal
+remain next testing-infrastructure outcomes; ephemeral Actions databases and
+the bounded evaluators do not satisfy production restore/PITR or target
+infrastructure certification.
 
 ADR 0062's private-repository self-hosted interval is superseded by ADR 0063
 after the 2026-08-20 public transition. Public pull requests now use only

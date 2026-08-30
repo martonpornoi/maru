@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from typing import TYPE_CHECKING
 
 import pytest
@@ -139,6 +140,22 @@ def _owned_labels(run_id: str = "0123456789ab") -> dict[str, str]:
         rehearsal.RESOURCE_LABEL: "1",
         rehearsal.RUN_LABEL: run_id,
     }
+
+
+def test_command_runner_preserves_binary_stdin_without_newline_translation() -> None:
+    runner = rehearsal.CommandRunner()
+    result = runner.run(
+        (
+            sys.executable,
+            "-c",
+            "import sys; print(sys.stdin.buffer.read().hex())",
+        ),
+        stage="test",
+        timeout_seconds=30,
+        input_text=b"a\nb\n",
+    )
+
+    assert result.stdout.strip() == "610a620a"
 
 
 @pytest.mark.parametrize(

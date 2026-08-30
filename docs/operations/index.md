@@ -27,6 +27,10 @@ or permission to use production personal data.
 - [Synthetic OCI runtime rehearsal](synthetic-oci-runtime-rehearsal.md) starts
   the immutable candidate with isolated PostgreSQL, genuine least-privilege
   runtime identity, exact authority activation, and restart evidence.
+- [Synthetic OCI static delivery rehearsal](synthetic-oci-static-delivery-rehearsal.md)
+  serves the candidate's unchanged collected assets through a digest-pinned
+  unprivileged reference edge and records proxy, cache, browser, and restart
+  evidence without selecting production infrastructure.
 - [Deployment and service objectives](deployment-and-service-objectives.md)
 - [Observability and readiness](observability-and-readiness.md)
 - [Effects worker](effects-worker-runbook.md)
@@ -61,6 +65,7 @@ page-02-create-organization
 page-03-organization-record
 page-04-create-convention-series
 synthetic-oci-runtime-rehearsal
+synthetic-oci-static-delivery-rehearsal
 deployment-and-service-objectives
 observability-and-readiness
 effects-worker-runbook

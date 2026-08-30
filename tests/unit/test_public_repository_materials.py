@@ -159,6 +159,10 @@ def test_public_community_materials_are_actionable_and_current() -> None:
         "[synthetic OCI runtime rehearsal]"
         "(docs/operations/synthetic-oci-runtime-rehearsal.md)"
     ) in readme
+    assert (
+        "[synthetic OCI static delivery rehearsal]"
+        "(docs/operations/synthetic-oci-static-delivery-rehearsal.md)"
+    ) in readme
     assert not re.search(r"\b\d[\d,]*\s+(?:of\s+\d[\d,]*\s+)?tests?\b", readme)
     assert not re.search(
         r"\b\d+(?:\.\d+)?(?:\s*%|\s+percent)\s+"

@@ -42,9 +42,12 @@ behavior, verification, limitations, and next actions.
 
 The primary release artifact is an immutable Django application image in
 GitHub Container Registry with source provenance, SBOM, documentation,
-OpenAPI, dependency locks, and checksums. Evaluate the published candidate
-through the isolated
-[synthetic OCI runtime rehearsal](docs/operations/synthetic-oci-runtime-rehearsal.md).
+OpenAPI, dependency locks, and checksums. Evaluate the published candidate's
+database/runtime boundary through the isolated
+[synthetic OCI runtime rehearsal](docs/operations/synthetic-oci-runtime-rehearsal.md)
+and its already-collected assets and dynamic proxy boundary through the
+[synthetic OCI static delivery rehearsal](docs/operations/synthetic-oci-static-delivery-rehearsal.md).
+Both are synthetic evaluator evidence, not deployment approval.
 Curated changes live in the
 [changelog](CHANGELOG.md) and become the human-facing notes on the
 [GitHub Releases tab](https://github.com/martonpornoi/maru/releases).

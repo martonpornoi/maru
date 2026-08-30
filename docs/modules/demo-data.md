@@ -1,7 +1,7 @@
 # Synthetic demonstration data
 
 Status: Implemented repository-owned fictional fixture; roster importer removed
-Last updated: 2026-08-25
+Last updated: 2026-08-30
 
 ## Purpose and requirements
 
@@ -30,6 +30,15 @@ unusable password, no organization, and no ordinary authority record. The
 actor exists only to drive the isolated cutover, cannot sign in, and is
 idempotently verified after restart. That helper is evaluator tooling, not a
 replacement educational dataset or a production identity bootstrap.
+
+The separate
+[synthetic OCI static delivery rehearsal](../operations/synthetic-oci-static-delivery-rehearsal.md)
+uses `seed_demo_data` under local settings only so a repository-owned fictional
+active platform administrator can exercise the private Swagger and ReDoc
+pages. It supplies a generated per-run password on standard input rather than
+using the fixture's documented default and retains neither that credential nor
+its HTTP session material. This compatibility/static smoke does not activate
+exact authority provenance or become #37 runtime evidence.
 
 ## Dataset
 

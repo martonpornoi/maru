@@ -1,7 +1,7 @@
 # Testing strategy
 
 Status: Active
-Last updated: 2026-08-22
+Last updated: 2026-08-30
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
@@ -208,6 +208,18 @@ cover the streamed minimal bootstrap's idempotence and collision boundary. A
 recorded pass remains synthetic runtime evidence, not backup/PITR or
 production approval.
 
+The companion
+[synthetic OCI static delivery rehearsal](../operations/synthetic-oci-static-delivery-rehearsal.md)
+adds the bounded delivery smoke for the candidate's already-collected bytes: an
+image-to-volume manifest equality check, read-only unprivileged edge, exact
+static/dynamic routing, MIME and revalidation headers, private same-origin
+Swagger/ReDoc sidecars, missing/mutation/media denials, and web/edge restart.
+Unit tests protect its immutable-input, configuration, ordering, redaction,
+resource-isolation, and evidence contracts. The separate visible browser step
+proves one declared styled viewport and request-origin boundary only; it is not
+the complete UX-029 responsive, zoom, keyboard, screen-reader, or accessibility
+matrix and is not production approval.
+
 ## GitHub acceptance topology
 
 Draft pull requests classify the submitted diff and validate only the locked
@@ -356,10 +368,12 @@ The next expansion should add:
   dependency-review control, and verify secret-scanning/push-protection alert
   handling;
   and
-- synthetic previous-version restoration, production-shaped recovery rehearsal,
-  and container runtime smoke in the release environment. The existing release
-  workflow already supplies full source certification, an immutable OCI image,
-  SBOM/provenance attestations, and signed-by-checksum evidence assets.
+- synthetic previous-version restoration and production-shaped recovery,
+  target edge/TLS/WAF, provider, and worker-supervision rehearsals. The bounded
+  runtime and static-delivery evaluators supply exact-candidate synthetic
+  evidence; the existing release workflow separately supplies full source
+  certification, an immutable OCI image, SBOM/provenance attestations, and
+  signed-by-checksum evidence assets.
 
 Automated accessibility is supplementary evidence. Representative keyboard,
 screen-reader, owner, restore/PITR, and production-governance acceptance remain
