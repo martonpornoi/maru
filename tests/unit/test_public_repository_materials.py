@@ -30,7 +30,7 @@ COMMUNITY_FILES = (
     ".github/pull_request_template.md",
 )
 ISSUE_FORM_LABELS = {"bug", "proposal", "triage"}
-ISSUE_TEMPLATE_FILES = {"bug.yml", "config.yml", "feature.yml"}
+ISSUE_TEMPLATE_FILES = {"bug.yml", "config.yml", "feature.yml", "umbrella.yml"}
 ISSUE_FIELD_ID_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_-]*")
 
 
@@ -202,6 +202,7 @@ def test_public_community_materials_are_actionable_and_current() -> None:
 
     contributing = _text("CONTRIBUTING.md")
     assert "## Issue triage and newcomer work" in contributing
+    assert "native GitHub sub-issue" in " ".join(contributing.split())
     assert "`good first issue`" in contributing
     assert "`help wanted`" in contributing
 
@@ -245,6 +246,7 @@ def test_issue_intake_preserves_reviewed_routes_fields_and_labels() -> None:
     expected_labels_by_form = {
         "bug.yml": {"bug", "triage"},
         "feature.yml": {"proposal", "triage"},
+        "umbrella.yml": {"proposal", "triage"},
     }
     expected_fields_by_form = {
         "bug.yml": {
@@ -266,6 +268,22 @@ def test_issue_intake_preserves_reviewed_routes_fields_and_labels() -> None:
             "traceability": ("textarea", False),
             "safety": ("textarea", True),
             "alternatives": ("textarea", False),
+            "safety_confirmation": ("checkboxes", False),
+        },
+        "umbrella.yml": {
+            "preparation": ("checkboxes", False),
+            "outcome": ("textarea", True),
+            "current_boundary": ("textarea", True),
+            "roles_states": ("textarea", True),
+            "journey": ("textarea", True),
+            "adoption": ("textarea", True),
+            "decomposition": ("textarea", True),
+            "integrated_acceptance": ("textarea", True),
+            "non_goals": ("textarea", True),
+            "traceability": ("textarea", True),
+            "safety": ("textarea", True),
+            "risks_alternatives": ("textarea", True),
+            "completion_rules": ("checkboxes", False),
             "safety_confirmation": ("checkboxes", False),
         },
     }
@@ -301,3 +319,36 @@ def test_issue_intake_preserves_reviewed_routes_fields_and_labels() -> None:
             )
 
     assert referenced_labels == ISSUE_FORM_LABELS
+
+    umbrella_form = yaml.safe_load(
+        (ISSUE_TEMPLATE_DIRECTORY / "umbrella.yml").read_text(encoding="utf-8")
+    )
+    umbrella_fields = {
+        item["id"]: item for item in umbrella_form["body"] if "id" in item
+    }
+    preparation_labels = {
+        option["label"]
+        for option in umbrella_fields["preparation"]["attributes"]["options"]
+    }
+    assert any(
+        "does not authorize implementation or creation of child issues" in label
+        for label in preparation_labels
+    )
+    assert any(
+        "requirements and accepted ADRs remain authoritative" in label
+        for label in preparation_labels
+    )
+    assert "- [ ]" in umbrella_fields["decomposition"]["attributes"]["placeholder"]
+    assert (
+        "not real people's names"
+        in (umbrella_fields["roles_states"]["attributes"]["description"])
+    )
+    completion_labels = {
+        option["label"]
+        for option in umbrella_fields["completion_rules"]["attributes"]["options"]
+    }
+    assert any("native parent relationship" in label for label in completion_labels)
+    assert any(
+        "remain open through final integrated acceptance" in label
+        for label in completion_labels
+    )

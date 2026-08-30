@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -8,6 +8,35 @@ supported hosted service, a production-ready release, or approved for
 production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
+
+## Umbrella issue intake contract
+
+Maru's checked-in issue intake now distinguishes one closable feature proposal
+from one bounded end-to-end outcome that requires multiple child issues. The
+new **Umbrella proposal** form records current boundaries, roles and states,
+the complete journey, progressive adoption and side effects, ordered child
+outcomes, integrated acceptance, non-goals, traceability, safety, recovery,
+risks, and alternatives. It is planning evidence, not implementation authority.
+
+Every child must use GitHub's native sub-issue relationship, cite the exact
+umbrella checklist item and acceptance criteria it owns, state dependencies,
+and preserve inherited non-goals. The native hierarchy records membership and
+progress; the umbrella body remains the scope and dependency contract and
+stays open through final integrated acceptance. Existing bug and feature
+routes, private security reporting, support, and exploratory Discussions are
+unchanged, and no new label or Project is introduced.
+
+The issue-form schema and complete expected field/label set are repository-
+tested. Contributor, repository-governance, operations, changelog, and
+checkpoint documentation agree. This extends ADRs 0060 and 0068 under NFR-002,
+NFR-003, and NFR-011 without a Django model, migration, API, runtime role,
+production-data flow, live repository-setting mutation, or new ADR. All 20
+focused tests, repository documentation validation, Ruff lint and formatting,
+`git diff --check`, and a fresh warning-fatal Sphinx and AutoAPI build pass;
+independent re-review found no remaining actionable issue. Exact-commit
+certification and protected pull-request acceptance are evaluated as separate
+delivery evidence; the form does not become part of the default-branch issue
+chooser until protected merge.
 
 ## Profile-aware Position-assignment evidence contract
 

@@ -89,6 +89,20 @@ copy every historical backlog note into GitHub or use Issues as a second
 roadmap. Convert maintained next actions only when they are sufficiently
 bounded to implement, review, and close.
 
+Use the feature-proposal form for one independently closable outcome. Use the
+umbrella-proposal form only after one end-to-end outcome is bounded but requires
+multiple dependent child issues. An umbrella is a planning contract, not
+implementation authorization, and remains open until its children and final
+integrated acceptance are complete.
+
+Every child uses GitHub's native sub-issue relationship, cites its parent and
+the exact decomposition item and acceptance criteria it owns, states its
+prerequisites and successors, and preserves the umbrella's non-goals. Replace
+the matching umbrella checklist item with the child link. If discovery changes
+the split, update the umbrella before creating detached work; the native GitHub
+sub-issue hierarchy records membership and progress, while the umbrella body
+records scope and dependency truth.
+
 New bug reports and proposals start with the `triage` label. The maintainer may
 request a synthetic reproduction, redirect a support question to Discussions,
 link a duplicate, or decline work that does not fit the roadmap. Labels express

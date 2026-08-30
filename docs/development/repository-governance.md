@@ -293,6 +293,12 @@ hold setup/design exploration. Do not bulk-copy historical todo documents into
 Issues or enable Projects without demonstrated triage volume. Issue Forms ask
 for preparation, affected behavior, acceptance boundaries, non-goals,
 traceability, and safety evidence without collecting personal or secret data.
+The dedicated umbrella form is reserved for one bounded end-to-end outcome that
+requires multiple independently closable children. Each child uses GitHub's
+native sub-issue relationship and names its owned checklist item, acceptance,
+dependencies, and inherited non-goals. The hierarchy records membership and
+progress; the umbrella body records scope and dependency truth and remains open
+through integrated acceptance.
 
 Root `GOVERNANCE.md` is the authority and continuity policy;
 `CODE_OF_CONDUCT.md`, `SECURITY.md`, and `SUPPORT.md` own their respective
