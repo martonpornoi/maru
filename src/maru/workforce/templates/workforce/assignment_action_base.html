@@ -66,7 +66,7 @@
     >
       <h2>The assignment was not changed</h2>
       <p>{{ action_error }}</p>
-      {% if reload_required %}
+      {% if reload_required or interval_recovery_available %}
         <p>{% block assignment_reload_link %}{% endblock %}</p>
       {% endif %}
     </div>

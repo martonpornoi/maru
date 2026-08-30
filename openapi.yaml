@@ -10268,8 +10268,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/WorkforceProblem'
-          description: The decision conflicts with assignment state, readiness, or
-            headcount.
+          description: Approval conflicts with assignment state, readiness, headcount,
+            or the immutable authority interval.
         '503':
           content:
             application/problem+json:
@@ -11631,7 +11631,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/WorkforceProblem'
-          description: The closed proposal request or idempotency key is invalid.
+          description: The closed proposal request, authority interval, or idempotency
+            key is invalid.
         '403':
           content:
             application/problem+json:

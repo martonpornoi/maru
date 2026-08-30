@@ -19097,7 +19097,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["WorkforceProblem"];
                 };
             };
-            /** @description The decision conflicts with assignment state, readiness, or headcount. */
+            /** @description Approval conflicts with assignment state, readiness, headcount, or the immutable authority interval. */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -20070,7 +20070,7 @@ export interface operations {
                     "application/json": components["schemas"]["WorkforceAssignmentMutationResult"];
                 };
             };
-            /** @description The closed proposal request or idempotency key is invalid. */
+            /** @description The closed proposal request, authority interval, or idempotency key is invalid. */
             400: {
                 headers: {
                     [name: string]: unknown;

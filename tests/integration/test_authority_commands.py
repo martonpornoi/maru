@@ -147,6 +147,7 @@ def _bounded_management_grant(
     organization: Organization,
     capability_code: str,
     expires_at: datetime,
+    effective_from: datetime | None = None,
 ) -> CapabilityGrant:
     actor, approver = _board_controllers(organization)
     return grant_capability_direct(
@@ -155,7 +156,7 @@ def _bounded_management_grant(
         recipient=principal,
         capability_code=capability_code,
         target=_organization_target(organization),
-        effective_from=timezone.now(),
+        effective_from=effective_from or timezone.now(),
         expires_at=expires_at,
         reason="Create bounded provenance-backed controller authority.",
         correlation_id=uuid4(),
@@ -803,7 +804,14 @@ def test_direct_grant_rejects_missing_scope_and_active_duplicate() -> None:
     assert duplicate.value.reason_code == "active_grant_exists"
 
 
-def test_new_authority_cannot_outlive_either_controller() -> None:
+@pytest.mark.parametrize(
+    "requested_expiry_delta",
+    [timedelta(days=1, seconds=1), None],
+    ids=("ends-after-controller", "unbounded-under-bounded-controller"),
+)
+def test_new_authority_cannot_outlive_either_controller(
+    requested_expiry_delta: timedelta | None,
+) -> None:
     organization = OrganizationFactory()
     actor = AccountFactory()
     approver = AccountFactory()
@@ -822,25 +830,112 @@ def test_new_authority_cannot_outlive_either_controller() -> None:
     )
     correlation_id = uuid4()
     requested_start = timezone.now()
+    recipient = AccountFactory()
 
     with pytest.raises(AuthorityCommandValidationError) as captured:
         grant_capability_direct(
             actor=actor,
             approver=approver,
-            recipient=AccountFactory(),
+            recipient=recipient,
             capability_code="events.view_basic",
             target=_organization_target(organization),
             effective_from=requested_start,
-            expires_at=now + timedelta(days=1, seconds=1),
+            expires_at=(
+                now + requested_expiry_delta
+                if requested_expiry_delta is not None
+                else None
+            ),
             reason="The approver does not hold authority for this long.",
             correlation_id=correlation_id,
         )
 
     assert captured.value.reason_code == "authority_expiry_too_early"
+    assert set(captured.value.message_dict) == {"expires_at"}
+    assert not CapabilityGrant.objects.filter(
+        organization=organization,
+        principal=recipient,
+        capability_code="events.view_basic",
+    ).exists()
     assert (
         AuditEvent.objects.get(correlation_id=correlation_id).reason_code
         == "authority_expiry_too_early"
     )
+
+
+def test_new_authority_cannot_start_before_either_controller() -> None:
+    organization = OrganizationFactory()
+    _board_controllers(organization)
+    actor = AccountFactory()
+    approver = AccountFactory()
+    controller_start = timezone.now()
+    controller_expiry = controller_start + timedelta(days=2)
+    for principal in (actor, approver):
+        _bounded_management_grant(
+            principal=principal,
+            organization=organization,
+            capability_code="authorization.grant_direct",
+            effective_from=controller_start,
+            expires_at=controller_expiry,
+        )
+    recipient = AccountFactory()
+    correlation_id = uuid4()
+
+    with pytest.raises(AuthorityCommandValidationError) as captured:
+        grant_capability_direct(
+            actor=actor,
+            approver=approver,
+            recipient=recipient,
+            capability_code="events.view_basic",
+            target=_organization_target(organization),
+            effective_from=controller_start - timedelta(seconds=1),
+            expires_at=controller_expiry,
+            reason="The controllers do not hold authority this early.",
+            correlation_id=correlation_id,
+        )
+
+    assert captured.value.reason_code == "authority_effective_from_too_early"
+    assert set(captured.value.message_dict) == {"effective_from"}
+    assert not CapabilityGrant.objects.filter(
+        organization=organization,
+        principal=recipient,
+        capability_code="events.view_basic",
+    ).exists()
+    assert (
+        AuditEvent.objects.get(correlation_id=correlation_id).reason_code
+        == "authority_effective_from_too_early"
+    )
+
+
+def test_new_authority_accepts_equal_controller_boundaries() -> None:
+    organization = OrganizationFactory()
+    _board_controllers(organization)
+    actor = AccountFactory()
+    approver = AccountFactory()
+    controller_start = timezone.now()
+    controller_expiry = controller_start + timedelta(days=2)
+    for principal in (actor, approver):
+        _bounded_management_grant(
+            principal=principal,
+            organization=organization,
+            capability_code="authorization.grant_direct",
+            effective_from=controller_start,
+            expires_at=controller_expiry,
+        )
+
+    grant = grant_capability_direct(
+        actor=actor,
+        approver=approver,
+        recipient=AccountFactory(),
+        capability_code="events.view_basic",
+        target=_organization_target(organization),
+        effective_from=controller_start,
+        expires_at=controller_expiry,
+        reason="Use the controllers' exact inclusive boundaries.",
+        correlation_id=uuid4(),
+    )
+
+    assert grant.effective_from == controller_start
+    assert grant.expires_at == controller_expiry
 
 
 def test_revocation_is_immediate_preserves_provenance_and_invalidates_descendants() -> (

@@ -1,17 +1,19 @@
 # Assignment management contract
 
-- Status: Proposal, independent stepped-up approval or rejection, active
-  assignment ending, direct reason history, subject self-service, shared strict
-  HTML/API commands, and stopped-writer database enforcement are implemented
-  locally; complete rendered accessibility, recovery, deployment, and owner
-  acceptance remain pending
+- Status: Proposal with exact controlling-authority interval validation,
+  independent stepped-up approval or rejection, active assignment ending,
+  direct reason history, subject self-service, shared strict HTML/API commands,
+  and stopped-writer database enforcement are implemented locally; complete
+  rendered accessibility, recovery, deployment, and owner acceptance remain
+  pending
 - Overview route:
   `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/assignments/`
 - Personal route: `/my/workforce/`
 - Requirements: HR-004, HR-007, HR-008, HR-010, HR-013, UX-005 through
   UX-008, UX-012, UX-020, UX-029, AUD-001, AUD-005, INT-001, NFR-001 through
-  NFR-004, and NFR-008
-- Decisions: ADRs 0019, 0028, 0041, 0044, 0045, 0049, 0055, 0075, and 0076
+  NFR-004, NFR-008, and NFR-009
+- Decisions: ADRs 0019, 0028, 0041, 0044, 0045, 0049, 0055, 0075, 0076,
+  and 0080
 
 ## Purpose and primary users
 
@@ -103,11 +105,22 @@ required normalized reason. Browser times use the edition's IANA time zone and
 reject nonexistent or ambiguous daylight-saving minutes. API timestamps need
 `Z` or an explicit numeric UTC offset.
 
-A proposal reserves one approved headcount place and records immutable command
-evidence at version 1. It deliberately creates no participation, capacity,
-RoleAssignment, capability, or schedule commitment. Incomplete onboarding is
-shown but allowed at proposal time so the intended responsibility can guide the
-remaining work.
+After required current route authorization, the command resolves an exact
+idempotent replay before checking the proposer source horizon or persisting a
+new proposal. A replay after source-interval replacement returns the original
+receipt only while the caller retains those route capabilities. One exact
+current proposer control source must otherwise cover the complete requested
+interval. Equal effective and expiry boundaries are accepted. A bounded source
+cannot cover an unbounded proposal. An uncovered start or ending is a
+field-local `400` validation result that retains submitted values and creates no
+proposal, reservation, audit, event, outbox, authority, or Participation
+evidence.
+
+A valid new proposal reserves one approved headcount place and records
+immutable command evidence at version 1. It deliberately creates no
+participation, capacity, RoleAssignment, capability, or schedule commitment.
+Incomplete onboarding is shown but allowed at proposal time so the intended
+responsibility can guide the remaining work.
 
 ## Independent decision
 
@@ -119,10 +132,12 @@ the submitted reason, retry key, or expected version.
 Approval is available only when every required onboarding item is currently
 approved. Under one transaction it rechecks exact scope, lifecycle, Position
 state, headcount, person identity, immutable RoleBundle provenance, and both
-controllers' authority. It then:
+controllers' exact current sources against the proposal's complete immutable
+interval. It then:
 
 1. activates the authorization-owned scoped RoleAssignment;
-2. activates edition participation and Position capacity evidence;
+2. activates only the Participation and capacity evidence required by the
+   edition's adopted profile, which is none for Workforce-only;
 3. changes the proposal to active at the next assignment version;
 4. retains the independent actor, time, and reason; and
 5. writes audit, domain-event, outbox, and exact receipt evidence.
@@ -130,6 +145,16 @@ controllers' authority. It then:
 Rejection also requires the different controller and fresh step-up. It grants
 nothing, records a final rejected state and decision evidence, and frees the
 reserved headcount. Neither outcome can be reopened or overwritten.
+
+If either controller no longer has one exact current source covering the full
+interval, approval returns a dedicated, action-local conflict. The message
+discloses no controller identity, source or grant identifier, source timestamp,
+or raw provenance. The immutable proposal remains proposed and continues to
+reserve headcount; no RoleAssignment, access, Participation, success receipt,
+success audit, success event, outbox, or other successful mutation evidence is
+retained. The organizer reloads, rejects that proposal, and creates a new one
+within current authority. Maru never edits, backfills, silently rebinds, or
+replaces the retained interval.
 
 ## Retained ending
 
@@ -195,8 +220,11 @@ versions, and offset-bearing timestamps. Authorization precedes header and body
 parsing. Denied or unavailable route scope uses a uniform name-free `403`; an
 authorized unavailable Position, candidate, or assignment uses `404`;
 validation uses `400`; stale version, retry, lifecycle, readiness, headcount,
-or state conflicts use `409`; unavailable canonical dependencies use `503`.
-OpenAPI and generated TypeScript types are checked in.
+state, or controlling-authority interval conflicts use `409`; unavailable
+canonical dependencies use `503`. The authority-interval `409` has a stable
+machine code and a non-field recovery message to reload, reject the immutable
+proposal, and recreate it within current authority. OpenAPI and generated
+TypeScript types are checked in.
 
 ## Database evidence and recovery
 
@@ -217,6 +245,11 @@ The migration preserves internally consistent legacy rows without fabricating
 versions, decisions, or reasons. After governed writes, recovery fixes forward
 or restores the complete database to a mutually consistent pre-write point; it
 does not reverse this guard independently.
+
+This interval validation needs no migration or backfill. A retained proposal
+that predates the check remains immutable. If approval discovers that its
+interval is outside either controller's current source, the only supported
+recovery is rejection followed by a new proposal within current authority.
 
 ## Accessibility and acceptance
 

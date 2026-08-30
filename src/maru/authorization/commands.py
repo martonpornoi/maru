@@ -285,7 +285,7 @@ def _select_one_control_source(
     # legacy row as authority. A current proven source that cannot cover the
     # requested interval is distinct from having no exact source at all.
     if horizon_mode is ControlHorizonMode.PERSISTENT:
-        point_in_time = select_authorized_control_source(
+        current_source = select_authorized_control_source(
             principal=principal,
             role=role,
             capability_code=capability_code,
@@ -295,7 +295,27 @@ def _select_one_control_source(
             evaluated_at=evaluated_at,
             horizon_mode=ControlHorizonMode.POINT_IN_TIME,
         )
-        if point_in_time is not None:
+        if current_source is not None:
+            start_covering_source = select_authorized_control_source(
+                principal=principal,
+                role=role,
+                capability_code=capability_code,
+                target=target,
+                requested_effective_from=requested_effective_from,
+                requested_expires_at=None,
+                evaluated_at=evaluated_at,
+                horizon_mode=ControlHorizonMode.POINT_IN_TIME,
+            )
+            if start_covering_source is None:
+                raise AuthorityCommandValidationError(
+                    {
+                        "effective_from": (
+                            "The new authority cannot begin before either "
+                            "controlling authority."
+                        )
+                    },
+                    reason_code="authority_effective_from_too_early",
+                )
             raise AuthorityCommandValidationError(
                 {
                     "expires_at": (
@@ -307,6 +327,54 @@ def _select_one_control_source(
     raise AuthorizationDenied(
         "Exact controller authority is unavailable.",
         reason_code="authority_source_unavailable",
+    )
+
+
+def require_authorized_control_horizon(  # noqa: DOC502 - selector owns failures
+    *,
+    principal: Account,
+    capability_code: str,
+    target: ResolvedAuthorizationTarget,
+    requested_effective_from: datetime,
+    requested_expires_at: datetime | None,
+) -> None:
+    """Require one exact current source to cover a persistent write interval.
+
+    This read-only assertion must run inside the caller's target-writing
+    transaction. It locks eligible authority sources for the transaction but
+    returns no source identifier or provenance to the caller.
+
+    Parameters
+    ----------
+    principal : Account
+        Authenticated controller whose exact authority is evaluated.
+    capability_code : str
+        Stable capability required by the proposed persistent write.
+    target : ResolvedAuthorizationTarget
+        Exact current resource targeted by the proposed write.
+    requested_effective_from : datetime
+        Timezone-aware inclusive start of the proposed authority interval.
+    requested_expires_at : datetime | None
+        Optional timezone-aware end of the proposed authority interval.
+
+    Raises
+    ------
+    AuthorityCommandValidationError
+        If a current exact source cannot cover the requested interval.
+    AuthorizationDenied
+        If no current exact source authorizes the principal at the target.
+    RuntimeError
+        If the caller has not opened a transaction for source locking.
+    """
+    _select_one_control_source(
+        principal=principal,
+        role=AuthorityControl.Role.ACTOR,
+        capability_code=capability_code,
+        target=target,
+        requested_effective_from=requested_effective_from,
+        requested_expires_at=requested_expires_at,
+        evaluated_at=timezone.now(),
+        horizon_mode=ControlHorizonMode.PERSISTENT,
     )
 
 
