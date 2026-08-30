@@ -253,6 +253,32 @@ def test_release_evidence_rejects_identity_and_state_drift(
         )
 
 
+@pytest.mark.parametrize(
+    ("field", "numeric_value"),
+    [("draft", 1), ("immutable", 0), ("prerelease", 1)],
+)
+def test_release_evidence_rejects_numeric_boolean_values(
+    tmp_path: Path,
+    field: str,
+    numeric_value: int,
+) -> None:
+    asset = tmp_path / "release-manifest.json"
+    asset.write_text("evidence\n", encoding="utf-8")
+    digests = asset_digests([asset])
+    payload = _release_payload(assets=digests, draft=True, immutable=False)
+    payload[field] = numeric_value
+
+    with pytest.raises(ValueError, match=rf"{field} differs"):
+        verify_release_payload(
+            payload,
+            expected_tag="v2026.08.2-rc.1",
+            expected_commit=COMMIT,
+            expected_prerelease=True,
+            expected_state="draft",
+            expected_assets=digests,
+        )
+
+
 def test_release_evidence_rejects_missing_unexpected_and_changed_assets(
     tmp_path: Path,
 ) -> None:

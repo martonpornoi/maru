@@ -158,19 +158,135 @@ post-change readback.
 
 ## Consumer verification
 
-For a published tag, verify GitHub's immutable-release attestation and a
-downloaded asset with:
+Use the repository's fail-closed consumer verifier rather than assembling an
+ad hoc subset of checks. The procedure resolves
+[#40](https://github.com/martonpornoi/maru/issues/40), which was found during
+the first candidate evaluation in
+[#29](https://github.com/martonpornoi/maru/issues/29). The first complete result
+is recorded in the
+[release-consumer verification checkpoint](../checkpoints/2026-08-30-release-consumer-supply-chain-verification.md).
+
+### Prerequisites and trust inputs
+
+Run the verifier from a reviewed Maru checkout with Python 3.12 through 3.14.
+GitHub CLI `2.96.0` or later is required because the procedure
+uses immutable-Release and asset-attestation commands plus strict provenance
+flags. It assumes an existing GitHub CLI session backed by the operator's
+approved credential mechanism; it never logs in, displays, pastes, or newly
+stores a token. Confirm the active session without exposing a credential:
 
 ```powershell
-gh release verify v2026.08.2-rc.1 --repo martonpornoi/maru
-gh release verify-asset v2026.08.2-rc.1 .\downloaded-asset `
-  --repo martonpornoi/maru
+python --version
+gh --version
+gh auth status --active --hostname github.com
+git --version
+docker buildx imagetools inspect --help
 ```
 
-Verify the OCI image provenance by immutable digest rather than by tag alone:
+On Linux or macOS, use the corresponding interpreter name:
+
+```sh
+python3 --version
+gh --version
+gh auth status --active --hostname github.com
+git --version
+docker buildx imagetools inspect --help
+```
+
+Stop if the authentication check fails and establish a read-only session
+through the operator's approved credential process before continuing. Do not
+improvise token handling in shell history, logs, or the download directory.
+
+The first successful evaluation used Git `2.46.0.windows.1`, Docker Engine
+`29.0.1`, and Docker Buildx `0.29.1-desktop.1`. Those are known-good versions,
+not invented minimums. The verifier capability-probes Git and Buildx and fails
+when a required command is unavailable.
+
+Begin with independently obtained expectations. Do not copy the expected
+source or image digest from the downloaded manifest: the manifest is evidence
+that these inputs must confirm. The Release tag encodes its release pull-request
+number, which the verifier derives and reconciles independently. The image
+argument is the mutable tag-derived GHCR reference; the image-digest argument
+is its expected immutable digest. The download path must not exist. A fresh
+generated name makes accidental reuse explicit:
 
 ```powershell
-gh attestation verify `
-  oci://ghcr.io/martonpornoi/maru@sha256:<digest> `
-  --repo martonpornoi/maru
+$Repository = "martonpornoi/maru"
+$Tag = "v2026.08.27-rc.1"
+$SourceCommit = "be0b21db9ba2d2a956bd192a1d66c537d702c4c4"
+$Image = "ghcr.io/martonpornoi/maru:2026.08.27-rc.1"
+$ImageDigest = "sha256:a44de03a4fe7bd5b3a5aaf73dd83b565b727a98bf895bf80416981e869eeb445"
+$DownloadDirectory = Join-Path ".local-ci/release-consumer" `
+  ([guid]::NewGuid().ToString("N"))
+
+python scripts/verify_release_consumer.py `
+  --repository $Repository `
+  --tag $Tag `
+  --source-commit $SourceCommit `
+  --image $Image `
+  --image-digest $ImageDigest `
+  --download-directory $DownloadDirectory
 ```
+
+The equivalent POSIX-shell invocation is:
+
+```sh
+Repository="martonpornoi/maru"
+Tag="v2026.08.27-rc.1"
+SourceCommit="be0b21db9ba2d2a956bd192a1d66c537d702c4c4"
+Image="ghcr.io/martonpornoi/maru:2026.08.27-rc.1"
+ImageDigest="sha256:a44de03a4fe7bd5b3a5aaf73dd83b565b727a98bf895bf80416981e869eeb445"
+DownloadDirectory=".local-ci/release-consumer/$(python3 -c 'import uuid; print(uuid.uuid4().hex)')"
+
+python3 scripts/verify_release_consumer.py \
+  --repository "$Repository" \
+  --tag "$Tag" \
+  --source-commit "$SourceCommit" \
+  --image "$Image" \
+  --image-digest "$ImageDigest" \
+  --download-directory "$DownloadDirectory"
+```
+
+Relative download paths are normalized to absolute paths before any command is
+run, so the verifier and GitHub CLI cannot interpret the destination relative
+to different working directories. Existing symlink, junction, or reparse-point
+components are rejected.
+
+The verifier creates the isolated directory and then, in order:
+
+1. requires an immutable, non-draft Release with the exact tag and expected
+   eight-asset inventory;
+2. verifies the Release attestation, downloads the complete inventory, requires
+   direct regular files only, compares every byte digest with GitHub's Release
+   API, and verifies every attached asset individually;
+3. verifies `SHA256SUMS` before trusting it, then requires its seven-payload
+   inventory to reject missing, extra, duplicate, unsafe, or mismatched files;
+4. reconciles `release-manifest.json` with a host-pinned read of the actual
+   tag-derived release pull request, including its merged state, exact merge
+   commit, `main` base, repository URL, and merge instant; the GitHub merge
+   instant in UTC must establish the CalVer year and month;
+5. independently resolves the public Git tag to the expected source and proves
+   that both the mutable image tag and digest-bound image resolve to the
+   supplied digest;
+6. inspects the digest-bound SPDX 2.3 SBOM, including package and Syft/BuildKit
+   generator metadata;
+7. verifies digest-bound SLSA v1 provenance against Maru's exact Release
+   workflow, `refs/heads/main`, the expected source digest, and GitHub-hosted
+   runners while denying self-hosted runners; and
+8. rechecks the mutable image identity, immutable Release inventory, and every
+   local asset digest immediately before reporting success.
+
+The public Release page, public Git tag, and public GHCR content remain
+independently inspectable facts. GitHub Release/API, Release-asset attestation,
+pull-request, and provenance checks require the preauthenticated GitHub CLI
+session. Every networked GitHub CLI operation is pinned to `github.com`. The
+helper uses read-only GitHub, Git, and registry operations; it does not create,
+edit, retag, publish, run, or extract an artifact.
+
+Any mismatch stops the procedure visibly. Partial downloads remain only in the
+selected local directory for inspection; do not execute them. Retry into a new
+nonexistent directory after correcting a local prerequisite, and never repair a
+failure by mutating the immutable Release, tag, assets, image, or attestations.
+A successful result proves this bounded supply-chain relationship only. It is
+not a gold-release, deployment, recovery, accessibility, owner-acceptance, or
+production-readiness decision.

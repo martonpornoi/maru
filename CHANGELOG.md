@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added one parameterized, fail-closed release-consumer verifier and runbook
+  that independently proves the complete source, asset, checksum, manifest,
+  image-digest, SPDX SBOM, and strict provenance relationship found missing
+  during evaluation [#29](https://github.com/martonpornoi/maru/issues/29)
+  ([#40](https://github.com/martonpornoi/maru/issues/40)).
 - Added a canonical, executable synthetic OCI rehearsal for the immutable
   release candidate. It proves isolated PostgreSQL 17 migration, genuine
   least-privilege runtime identity, exact authority-provenance activation,

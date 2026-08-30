@@ -43,8 +43,9 @@ analogy.
 
 ## Release and domain operations
 
-- [Release process](release-process.md) defines GitHub, image, SBOM, provenance,
-  and immutable-release evidence.
+- [Release process](release-process.md) defines publication and fail-closed
+  consumer verification across source, assets, checksums, manifest, image,
+  SBOM, provenance, and immutable-release evidence.
 - Domain runbooks cover [registration](registration-runbook.md),
   [catalog commerce](catalog-commerce-runbook.md), and
   [logistics](logistics-runbook.md).
