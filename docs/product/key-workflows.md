@@ -1,7 +1,7 @@
 # Key end-to-end workflows
 
-Status: Baseline plus executable Workforce-only adoption and the accepted,
-runtime-absent Programme Operations contract
+Status: Baseline plus executable Workforce-only adoption, dormant Programme
+item/readiness foundation, and inactive Programme Operations contract
 Last updated: 2026-08-31
 
 These narratives test whether modules form a convention operating system rather

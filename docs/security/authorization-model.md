@@ -52,7 +52,7 @@ registration.override_eligibility
 registration.view_self_profile
 registration.manage_self_profile
 registration.moderate_public_profile
-programme.review
+programme.approve_public_copy
 schedule.publish
 workforce.assign_shift
 people.view_legal_name

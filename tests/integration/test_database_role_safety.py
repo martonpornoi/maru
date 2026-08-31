@@ -2093,6 +2093,7 @@ def test_genuine_runtime_login_is_safe_and_persistent_replica_setting_is_not() -
                         "applications_integrity": "ok",
                         "charities_integrity": "ok",
                         "catalog_integrity": "ok",
+                        "programme_integrity": "ok",
                         "venues_integrity": "ok",
                         "logistics": "ok",
                     },

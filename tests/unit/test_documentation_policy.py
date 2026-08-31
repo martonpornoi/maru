@@ -547,7 +547,9 @@ def test_programme_operations_contract_remains_purpose_bounded() -> None:
     )
     assert "operations" not in set().union(*actual_manifest.values())
 
-    assert "Status: Accepted contract, runtime absent" in page_contract
+    assert "Status: Accepted contract, runtime inactive" in page_contract
+    assert "dormant Programme private" in collapsed_page_contract
+    assert "current-profile writer/effect route" in collapsed_page_contract
     assert (
         "non-routable until the complete integrated profile is implemented and accepted"
         in collapsed_page_contract

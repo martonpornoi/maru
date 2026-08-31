@@ -77,14 +77,18 @@ Personal and Work groups on My Maru and My Workforce rather than advertising
 unadopted or unrelated personal workflows.
 
 `programme_operations@1` is an accepted contract, not part of the current
-executable experience. Its reserved setup route does not resolve, and no shell,
+executable experience. A dormant private Programme item/readiness foundation
+is installed for schema and contract validation, but its current-profile policy
+and effect routes deny all use. Its reserved setup route does not resolve, and no shell,
 search, setup choice, API, Staff Console, public page, or personal destination
 may advertise it. The immutable future manifest pins `audit`, `authorization`,
 `effects`, `events`, `identity`, `organizations`, and `privacy` as foundations
 and adopts `applications`, `programme`, `scheduling`, `venues`, and
-`workforce`. Programme and Scheduling namespaces, routes, capabilities,
-destinations, writers, effects, and adapters remain absent until successor
-runtime issues implement and validate the whole profile; no general
+`workforce`. Programme's unpinned namespace, capabilities, event, and reserved
+adapter descriptor do not widen either v1 manifest. Programme routes,
+destinations, production writers/effects, the adapter implementation, and the
+Scheduling namespace remain absent until successor runtime issues implement and
+validate the whole profile; no general
 `operations` namespace is implied.
 
 Recovery and export remain required, explicitly pinned continuity behaviors;
@@ -463,6 +467,13 @@ sheets**. Every continuation reauthorizes. Private Applications evidence never
 becomes a Scheduling layer, a Programme-linked Venue occupancy cannot publish
 a second timetable, and Programme staffing uses only Workforce commands and
 minimized coverage queries.
+
+The dormant item/readiness child establishes the Programme-owned item and its
+working, delivery, Department-discussion, readiness, and approved-public-copy
+layers. It deliberately provides no visible journey, occurrence, placement,
+staffing, or release. The current-profile denial and read-only runtime database
+role are part of that experience contract: an installed backend must not create
+a dead navigation destination or imply that operators can use it.
 
 The timetable workspace uses an unscheduled tray, service-day/room board,
 filters, access-controlled layers, conflict explanation, candidate comparison,

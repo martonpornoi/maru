@@ -46,6 +46,15 @@ pin, even when the caller supplied a formerly valid sealed target. Failure is
 classified as `module_not_adopted`, records only denial or error audit evidence,
 and creates no authority, domain event, or outbox message.
 
+The catalog now also declares nine exact-edition Programme capabilities for
+private items, readiness, delivery facts, Department discussion, and approved
+public copy. Authorization migration `0020_programme_capabilities` teaches the
+PostgreSQL minimum-scope function those closed codes and refuses downgrade once
+authority evidence uses them. This is schema readiness, not admission: neither
+current v1 manifest pins any Programme capability, so policy and authority
+writers still return `module_not_adopted` before evaluating platform or stored
+authority.
+
 ## Owned data and invariants
 
 - a code-owned, versioned capability catalog;
@@ -69,6 +78,10 @@ bypassed. Revoking any ancestor invalidates its delegated descendants.
 ## Public commands and decisions
 
 - `decide(principal, capability_code, resource, requested_fields, at)`
+- `decide_verified_principal_exact_edition(...)`, the identifier-only adapter
+  that reloads current active/email-verified principal state, seals the exact
+  tenant-coherent edition target, and returns a complete ordinary fail-closed
+  `PolicyDecision` without exporting Identity or Events model instances;
 - `grant_capability_direct(...)`
 - `revoke_capability_grant(...)`
 - `create_role_bundle_version(...)`

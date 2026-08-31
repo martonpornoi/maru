@@ -316,6 +316,14 @@ def _validate_application_submission_changed(payload: dict[str, object]) -> None
         )
 
 
+def _validate_programme_item_changed(payload: dict[str, object]) -> None:
+    from maru.programme.events import (  # noqa: PLC0415
+        validate_programme_item_changed_payload,
+    )
+
+    validate_programme_item_changed_payload(payload)
+
+
 def _validate_charity_partner_changed(payload: dict[str, object]) -> None:
     _require_exact_string_fields(
         payload,
@@ -1012,6 +1020,12 @@ EVENT_DEFINITIONS = (
             "An applicant or accountable reviewer advanced a typed application."
         ),
         validator=_validate_application_submission_changed,
+    ),
+    EventDefinition(
+        name="programme.item.changed.v1",
+        schema_version=1,
+        description="A private Programme item or one of its governed layers changed.",
+        validator=_validate_programme_item_changed,
     ),
     EventDefinition(
         name="registration.payment.reconciled.v1",

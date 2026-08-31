@@ -26,8 +26,8 @@ Structure through Shifts journey without attendee Participation, Registration,
 payment, or attendance state. ADR 0081 now contracts the next composite
 profile, **Programme Operations**, from calls and review through an approved
 timetable, staffing projections, and on-site continuity. It remains
-non-executable until the exact-version manifest, bounded authority, real
-Programme and Scheduling modules, adapters, and acceptance gates are
+non-executable until the exact-version manifest, bounded authority, activated
+Programme and a real Scheduling module, adapters, and acceptance gates are
 implemented. Later profiles are **Communications publishing**, **Charity art
 auction**, and **Registration without payments**, ordered by partner need and
 the completeness of their import, export, print, degraded-operation, and
@@ -61,6 +61,14 @@ retains responsibility and exact authority but creates no Participation or
 attendance capacity. This enforcement foundation does not declare or activate
 `programme_operations@1`.
 
+Issue #61 installs a dormant Programme private-domain foundation.
+Canonical edition items, separated working/delivery/discussion layers,
+explainable readiness evidence, reviewed public-copy renditions,
+receipt-backed commands, strict queries/events, database guards, and read-only
+runtime ACLs are implemented without a route or current-profile permission.
+This moves Programme's owned-data contract forward while preserving the same
+non-executable composite profile boundary.
+
 Profile v1 declares incumbent-system coexistence and the current manual,
 copy-on-write structure setup. General partner import, complete continuity
 export, print/offline packs, automated decommissioning, profile expansion,
@@ -76,8 +84,9 @@ Participation, Registration, payments, attendance, accreditation, and
 unrelated modules. The exact profile version must pin its capability,
 destination, writer/effect, and adapter/conflict catalogs so later catalog
 growth cannot silently expand an existing edition. No setup route, navigation,
-authority, runtime module, adapter, or publication behavior is activated by the
-contract-only milestone.
+authority, Programme runtime route, adapter implementation, Scheduling module,
+or publication behavior is activated by the contract milestone or dormant
+Programme foundation.
 
 ## Current contributor-documentation outcome
 
@@ -702,8 +711,15 @@ physical-space approval and occupancy; Workforce owns staffing relationships,
 Availability, Shifts, and work history. Programme-linked Venue bookings cannot
 publish a competing public schedule, and Workforce profiles without attendee
 Participation must retain null assignment-capacity evidence. The first
-contract child is issue #57 under umbrella #48; all runtime behavior remains
-open and must be delivered through the ordered child sequence.
+contract child is issue #57 under umbrella #48. Issue #59 completed the exact-
+manifest prerequisite. Issue #61 implements the dormant private Programme
+item/readiness foundation, including organizer-created core-item semantics and
+public-copy approval, while both current profiles deny its commands and its
+runtime database role remains read-only. Calls, accepted Applications
+ingestion, hosts, Scheduling, staffing, release, continuity, setup, and
+integrated acceptance remain open in dependency order. The immediate successor
+is calls, purpose-scoped host/co-host collaboration, and preview-first import;
+staged review/decisions and the accepted Applications adapter follow later.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme

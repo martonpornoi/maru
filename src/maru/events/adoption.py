@@ -126,6 +126,7 @@ _ADOPTION_MODULE_NAMESPACE_DECLARATIONS = (
     "communications",
     "logistics",
     "participation",
+    "programme",
     "registration",
     "venues",
     "workforce",

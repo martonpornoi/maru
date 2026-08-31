@@ -108,6 +108,51 @@ GRANT SELECT ON TABLE
     public.authorization_provenanceactivationlatch
     TO maru_runtime;
 
+-- Programme issue #61 installs a dormant private aggregate and its evidence
+-- schema without activating an exact adoption profile or mounting a caller.
+-- Keep every Programme relation read-only for the runtime login. The tested
+-- write core remains unavailable to production runtime until a later reviewed
+-- activation deliberately widens only the relations its mounted command needs.
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.programme_programmeeditioncontrol,
+    public.programme_programmeitem,
+    public.programme_programmeitemsourcebinding,
+    public.programme_programmeworkingrevision,
+    public.programme_programmedeliveryrevision,
+    public.programme_programmedepartmentdiscussionentry,
+    public.programme_programmereadinessrequirement,
+    public.programme_programmereadinessrequirementrevision,
+    public.programme_programmereadinessevidence,
+    public.programme_programmepublicrendition,
+    public.programme_programmecommandreceipt
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.programme_programmeeditioncontrol,
+    public.programme_programmeitem,
+    public.programme_programmeitemsourcebinding,
+    public.programme_programmeworkingrevision,
+    public.programme_programmedeliveryrevision,
+    public.programme_programmedepartmentdiscussionentry,
+    public.programme_programmereadinessrequirement,
+    public.programme_programmereadinessrequirementrevision,
+    public.programme_programmereadinessevidence,
+    public.programme_programmepublicrendition,
+    public.programme_programmecommandreceipt
+    FROM PUBLIC;
+GRANT SELECT ON TABLE
+    public.programme_programmeeditioncontrol,
+    public.programme_programmeitem,
+    public.programme_programmeitemsourcebinding,
+    public.programme_programmeworkingrevision,
+    public.programme_programmedeliveryrevision,
+    public.programme_programmedepartmentdiscussionentry,
+    public.programme_programmereadinessrequirement,
+    public.programme_programmereadinessrequirementrevision,
+    public.programme_programmereadinessevidence,
+    public.programme_programmepublicrendition,
+    public.programme_programmecommandreceipt
+    TO maru_runtime;
+
 -- Workforce adoption setup and Organization structure receipts are append-only
 -- runtime evidence. Structure controls are optimistic-concurrency aggregates
 -- that may be inserted and advanced, but never deleted, by runtime. REFERENCES

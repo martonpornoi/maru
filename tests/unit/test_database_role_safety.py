@@ -34,6 +34,17 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.authorization_authorityprovenanceactivation",
         "public.authorization_provenanceactivationlatch",
         "public.identity_platforminvitationretentionpolicycontrol",
+        "public.programme_programmeeditioncontrol",
+        "public.programme_programmeitem",
+        "public.programme_programmeitemsourcebinding",
+        "public.programme_programmeworkingrevision",
+        "public.programme_programmedeliveryrevision",
+        "public.programme_programmedepartmentdiscussionentry",
+        "public.programme_programmereadinessrequirement",
+        "public.programme_programmereadinessrequirementrevision",
+        "public.programme_programmereadinessevidence",
+        "public.programme_programmepublicrendition",
+        "public.programme_programmecommandreceipt",
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
         "public.effects_effectreplayreceipt",
@@ -152,6 +163,27 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         for right in profiles[index + 1 :]
     )
     assert "public.workforce_department" not in set().union(*profiles)
+
+
+def test_dormant_programme_relations_are_completely_select_only() -> None:
+    programme_relations = {
+        f"public.{model._meta.db_table}"
+        for model in apps.get_app_config("programme").get_models()
+    }
+    select_only_programme_relations = {
+        identity
+        for identity in RUNTIME_DATABASE_SELECT_ONLY_RELATIONS
+        if identity.startswith("public.programme_")
+    }
+    runtime_dml_relations = set().union(
+        RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
+        RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS,
+        RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
+        RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
+    )
+
+    assert programme_relations == select_only_programme_relations
+    assert not programme_relations & runtime_dml_relations
 
 
 def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:

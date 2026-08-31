@@ -1,8 +1,9 @@
 # Set up Programme Operations contract
 
-- Status: Accepted contract, runtime absent; the profile, route, capabilities,
-  destinations, writers, effects, adapters, and Programme/Scheduling
-  namespaces are not implemented or active
+- Status: Accepted contract, runtime inactive; a dormant Programme private
+  item/readiness foundation and its unpinned catalogs are installed, while the
+  profile, route, destinations, current-profile writers/effects, adapter
+  implementation, and Scheduling namespace remain absent
 - Reserved route: `/admin/platform/setup/programme-operations/` (deliberately
   non-routable until the complete integrated profile is implemented and
   accepted)
@@ -26,8 +27,9 @@ organizers, volunteers, independent approvers, publishers, and on-site readers
 then use purpose-bounded workspaces. None of those relationships makes a person
 an attendee or creates edition Participation.
 
-This page describes a future capability. No current page, API, navigation
-entry, setup command, profile choice, or database value may imply that
+This page describes a future composite capability. The installed dormant
+Programme schema and catalogs are not adoption. No current page, API, navigation
+entry, setup command, profile choice, or edition database value may imply that
 `programme_operations@1` is executable. The reserved route must return the
 ordinary safe not-found response until the complete manifest and its runtime
 guards are implemented and validated.
@@ -311,8 +313,10 @@ or relocation-pending overlay before degraded display.
 
 ## States and safe failure
 
-- **Not implemented:** no route, link, profile option, capability, writer,
-  effect, or destination exists.
+- **Dormant foundation:** private Programme tables, exact-edition capability
+  declarations, one event schema, and one reserved adapter descriptor exist,
+  but no route, link, profile option, current-profile writer/effect route,
+  destination, or Scheduling continuation exists.
 - **Empty setup:** explain the composite boundary, excluded modules, and
   existing-authority requirements before collecting foundation facts.
 - **Existing foundation:** show only authorized reusable organizations,
@@ -357,6 +361,7 @@ protected pull-request gate remain authoritative for this documentation slice.
 
 Runtime successors require focused unit, PostgreSQL, API, frontend, browser,
 accessibility, concurrency, migration, recovery, and complete synthetic
-setup-to-on-site acceptance. Passing this contract does not activate the
-profile, implement a child capability, approve production data, or certify
+setup-to-on-site acceptance. Passing this contract or its dormant Programme
+child does not activate the profile, expose a usable Programme workflow,
+approve production data, or certify
 deployment, owner acceptance, recovery, or production readiness.

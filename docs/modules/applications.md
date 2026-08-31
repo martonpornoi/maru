@@ -27,6 +27,15 @@ the answer sheet into Programme, make private review material public, grant a
 host broader convention access, or create attendee Participation. The host-
 panel starter and adapter remain successor runtime work.
 
+The dormant Programme foundation now reserves a structural
+`applications_accepted` source binding and declares
+`programme.accepted-application-source@1`. Neither is an adapter
+implementation: no current profile pins that descriptor and no Applications
+command invokes it. A future child must validate one exact immutable
+`ApplicationTargetRecord`, preserve idempotency across both modules, and create
+only the typed Programme binding and receipt in one documented orchestration
+transaction.
+
 ADR 0047's governed-writer rules apply: route scope is untrusted, commands use
 closed inputs and expected versions, API retries use canonical UUID keys, and
 successful mutations commit minimized audit, domain-event, and outbox evidence

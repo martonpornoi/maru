@@ -73,6 +73,16 @@ ACKNOWLEDGED_INTERNAL_EVENTS = frozenset(
     }
 )
 
+# Registered event schemas may deliberately remain unhandled while their
+# owning module is installed but absent from every executable adoption profile.
+# Keeping this set explicit prevents registry growth from silently mounting a
+# handler or weakening the closed-registry coverage test.
+ACKNOWLEDGED_DORMANT_EVENTS = frozenset(
+    {
+        "programme.item.changed.v1",
+    }
+)
+
 
 def acknowledge_internal_fact(
     event: DomainEvent,

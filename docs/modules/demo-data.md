@@ -258,8 +258,10 @@ implemented.
 
 ## Limitations
 
-Qualifications, programme items, dealer tables, accommodation, cases, assets,
-and lost-and-found belong to later vertical slices. The fixture includes the
+The dormant Programme schema is installed, but this fixture intentionally
+creates no Programme item, readiness, rendition, or purpose relationship.
+Qualifications, dealer tables, accommodation, cases, assets, and lost-and-
+found belong to later vertical slices. The fixture includes the
 implemented departments, positions, opportunities, applications, onboarding
 agreements, position assignments, person-owned Availability, and governed
 Shift demand. It starts with no synthetic claim so a human can rehearse the

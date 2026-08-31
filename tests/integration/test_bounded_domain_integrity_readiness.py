@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 import pytest
-from django.db import connection
+from django.db import DatabaseError, connection, transaction
 from psycopg import sql
 
 from maru.applications.readiness import APPLICATIONS_INTEGRITY_CONTRACT
@@ -14,6 +14,11 @@ from maru.charities.readiness import CHARITIES_INTEGRITY_CONTRACT
 from maru.core.database_integrity_readiness import (
     DatabaseIntegrityContract,
     inspect_database_integrity_catalog,
+)
+from maru.programme.readiness import (
+    PROGRAMME_INTEGRITY_CONTRACT,
+    inspect_programme_schema_catalog,
+    programme_database_integrity_is_ready,
 )
 from maru.venues.readiness import VENUES_INTEGRITY_CONTRACT
 
@@ -24,13 +29,210 @@ CONTRACTS = (
     CHARITIES_INTEGRITY_CONTRACT,
     CATALOG_INTEGRITY_CONTRACT,
     VENUES_INTEGRITY_CONTRACT,
+    PROGRAMME_INTEGRITY_CONTRACT,
 )
+
+PROGRAMME_RELATIONS = tuple(
+    sorted(
+        {trigger.table for trigger in PROGRAMME_INTEGRITY_CONTRACT.triggers.values()}
+    )
+)
+
+
+def _truncate_programme_relation(relation: str) -> None:
+    """Attempt one test-reset-disabled Programme truncate."""
+    truncate = sql.SQL("TRUNCATE TABLE public.{} CASCADE").format(
+        sql.Identifier(relation)
+    )
+    with transaction.atomic(), connection.cursor() as cursor:
+        cursor.execute("SET LOCAL maru.authority_provenance_test_reset = 'off'")
+        cursor.execute(truncate)
 
 
 def test_current_bounded_domain_integrity_catalogs_are_ready() -> None:
     catalogs = [inspect_database_integrity_catalog(contract) for contract in CONTRACTS]
 
     assert all(catalog.ready for catalog in catalogs)
+    assert inspect_programme_schema_catalog().ready
+    assert programme_database_integrity_is_ready()
+
+
+@pytest.mark.parametrize(
+    ("relation", "constraint_name"),
+    [
+        (
+            "programme_programmecommandreceipt",
+            "programme_command_retry_uq",
+        ),
+        (
+            "programme_programmeworkingrevision",
+            "programme_working_item_version_uq",
+        ),
+    ],
+)
+def test_missing_critical_programme_unique_blocks_readiness_transactionally(
+    relation: str,
+    constraint_name: str,
+) -> None:
+    """Detect idempotency or aggregate-version uniqueness drift immediately."""
+    drop = sql.SQL("ALTER TABLE public.{} DROP CONSTRAINT {}").format(
+        sql.Identifier(relation),
+        sql.Identifier(constraint_name),
+    )
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(drop)
+        catalog = inspect_programme_schema_catalog()
+        assert not catalog.constraints_current
+        assert not catalog.ready
+        assert not programme_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_programme_schema_catalog().ready
+
+
+def test_missing_critical_programme_foreign_key_blocks_readiness_transactionally() -> (
+    None
+):
+    """Detect removal of the item-to-edition tenant boundary without row reads."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT constraint_record.conname
+                  FROM pg_catalog.pg_constraint AS constraint_record
+                  JOIN pg_catalog.pg_class AS relation
+                    ON relation.oid = constraint_record.conrelid
+                  JOIN pg_catalog.pg_attribute AS attribute
+                    ON attribute.attrelid = relation.oid
+                   AND attribute.attnum = ANY(constraint_record.conkey)
+                 WHERE relation.oid = pg_catalog.to_regclass(
+                           'public.programme_programmeitem'
+                       )
+                   AND constraint_record.contype = 'f'
+                   AND attribute.attname = 'edition_id'
+                """
+            )
+            row = cursor.fetchone()
+            assert row is not None
+            cursor.execute(
+                sql.SQL(
+                    "ALTER TABLE public.programme_programmeitem DROP CONSTRAINT {}"
+                ).format(sql.Identifier(str(row[0])))
+            )
+        catalog = inspect_programme_schema_catalog()
+        assert not catalog.constraints_current
+        assert not catalog.ready
+        assert not programme_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_programme_schema_catalog().ready
+
+
+def test_weakened_same_name_programme_check_blocks_readiness_transactionally() -> None:
+    """Detect a same-named CHECK whose expression no longer protects data."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.programme_programmeitem
+                DROP CONSTRAINT programme_item_version_pos
+                """
+            )
+            cursor.execute(
+                """
+                ALTER TABLE public.programme_programmeitem
+                ADD CONSTRAINT programme_item_version_pos CHECK (TRUE)
+                """
+            )
+        catalog = inspect_programme_schema_catalog()
+        assert not catalog.constraints_current
+        assert not catalog.ready
+        assert not programme_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_programme_schema_catalog().ready
+
+
+def test_changed_same_name_partial_unique_blocks_readiness_transactionally() -> None:
+    """Detect a same-named partial unique whose predicate was weakened."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                DROP INDEX public.programme_command_item_version_uq
+                """
+            )
+            cursor.execute(
+                """
+                CREATE UNIQUE INDEX programme_command_item_version_uq
+                ON public.programme_programmecommandreceipt (
+                    item_id,
+                    resulting_item_version
+                )
+                WHERE operation <> 'item_create'
+                """
+            )
+        catalog = inspect_programme_schema_catalog()
+        assert not catalog.indexes_current
+        assert not catalog.ready
+        assert not programme_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_programme_schema_catalog().ready
+
+
+def test_changed_programme_column_collation_blocks_readiness_transactionally() -> None:
+    """Detect a same-type text column switched away from database default."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.programme_programmeworkingrevision
+                ALTER COLUMN internal_title
+                TYPE varchar(240) COLLATE "C"
+                USING internal_title::varchar(240)
+                """
+            )
+        catalog = inspect_programme_schema_catalog()
+        assert not catalog.columns_current
+        assert not catalog.ready
+        assert not programme_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_programme_schema_catalog().ready
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        ("ALTER TABLE public.programme_programmeitem ENABLE ROW LEVEL SECURITY"),
+        ("ALTER TABLE public.programme_programmeitem FORCE ROW LEVEL SECURITY"),
+        ("ALTER TABLE public.programme_programmeitem REPLICA IDENTITY NOTHING"),
+    ],
+    ids=["enable-rls", "force-rls", "replica-identity"],
+)
+def test_changed_programme_relation_semantics_block_readiness_transactionally(
+    statement: str,
+) -> None:
+    """Detect security and replication flags on an otherwise intact table."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(statement)
+        catalog = inspect_programme_schema_catalog()
+        assert not catalog.relations_current
+        assert not catalog.ready
+        assert not programme_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_programme_schema_catalog().ready
+
+
+@pytest.mark.parametrize("relation", PROGRAMME_RELATIONS)
+def test_every_programme_relation_refuses_truncate(relation: str) -> None:
+    """Keep retained Programme rows protected from statement-level deletion."""
+    with pytest.raises(DatabaseError, match="cannot be truncated"):
+        _truncate_programme_relation(relation)
 
 
 @pytest.mark.parametrize(

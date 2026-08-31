@@ -89,7 +89,7 @@ The state vocabulary is deliberately small:
 | Attendee registration and admission commerce | Mounted / deployment-gated | Public/self registration, My Maru, exact-difference upward replacement, hard-ceiling capacity adjustments, strict FIFO batches, and hosted/demo payment boundaries are executable. Real provider/webhook, printer/device, load, retention, recovery, accessibility, refund/transfer, and fulfilment gates remain. |
 | Registration extension fields | Mounted / cutover incomplete | Versioned definitions, closed self/staff/exact-Department/confirmed/public audiences, append-only values, audited API/directory projections, and self/staff browser editing are mounted. Compatibility-writer retirement, stopped-writer activation, and complete browser/accessibility evidence remain. |
 | Typed application portfolio | Mounted / bounded | Ten code-owned starters, edition-owned drafts, organizer/applicant/reviewer journeys, exact named/immutable-role review provenance, and typed acceptance receipts are implemented. Real programme/workforce/SecOps/merchandise target adapters, staff answer correction, richer review rubrics, retention execution, and accessibility rehearsal remain. |
-| Programme intake/review | Contract accepted / runtime absent | ADR 0081 and PRG-001–008 define the Applications-to-Programme boundary, host relationships, privacy, and progressive profile. The current executable profiles now use exact-version manifests and fail-closed consumers, completing Programme's enforcement prerequisite without declaring `programme_operations@1`. No Programme model, route, adapter, or setup behavior is active. |
+| Programme intake/review | Dormant private foundation / runtime inactive | ADR 0081 and PRG-001–008 define the Applications-to-Programme boundary, host relationships, privacy, and progressive profile. Exact-profile enforcement and a guarded Programme item/readiness schema, separated information layers, reviewed public copy, commands, queries, and event contract are implemented. Both current profiles deny Programme, the runtime role is SELECT-only, and no route, accepted-item adapter implementation, Scheduling continuation, or setup behavior is active. |
 | Venues and operational space bookings | Mounted / bounded | Reusable venue facts, edition selections, immutable physical-member expansion, hard availability, two-clique occupancy, independent approval/publication, and minimized public/My schedule projections are mounted. Guest allocation, programme ownership, full timetable layers/exports, and person/equipment conflicts remain. |
 | Timetable and shifts | Partial / shared release contract accepted | Venue bookings implement safe three-phase physical occupancy and an independent public schedule projection. Workforce implements the first Position-demand, suitable-work, personal-claim, independent-confirmation, overlap/rest, lock, recovery, cancellation, and completion journey. ADR 0081 assigns the future single Programme release, candidate/conflict evidence, projections, and Programme-linked Venue reconciliation to Scheduling without changing current runtime. General qualifications, maximum-hours/lone-work/accommodation policy, check-in/timekeeping, wider people/equipment conflicts, operational layers, notifications, and exports remain absent. |
 | Logistics/storage | Mounted / bounded / deployment-gated | Typed containment/custody/event/manifest/offline workflows, exact capability bindings, mounted routes, retention boundaries, runtime-role profiles, and fail-closed readiness are implemented. The serialized PostgreSQL matrix passes 26/26, the canonical repository gate passes, and scoped authenticated read-only browser rehearsal passes at 1,920 and 390 pixels. LOG-003 demand/reservation, LOG-004 driver/routes, LOG-006 invoice linkage, LOG-007 low-stock/wastage, broader mutation-role/visual/accessibility, restore/PITR, and production activation remain open. |
@@ -835,11 +835,15 @@ programme adapter above.
 - [x] Accept Programme/Scheduling/Venue/Workforce ownership, one-release
   publication, exact-version adoption, purpose-account, and recovery contracts
   in ADR 0081; no runtime behavior is implied.
-- [ ] Programme readiness and public-rendition separation.
+- [x] Add the dormant canonical Programme item, organizer-core provenance,
+  separated private layers, receipt-backed command/query contract, and guarded
+  read-only runtime boundary.
+- [x] Programme readiness and public-rendition separation.
 - [ ] Schedule WIP/version/release models.
 - [ ] Four-instant work envelope and complete conflict engine.
 - [ ] Visual and keyboard editor with move/resize preview and optimistic lock.
-- [ ] Department comments, operational layers, and shift demand.
+- [ ] Extend the implemented Programme Department comments and delivery layers
+  with Scheduling placement layers and Workforce-owned Shift demand.
 - [ ] Immutable releases, changelog, public/credentialed API, calendar and
   signage projections.
 - [ ] Concurrency, daylight-saving, combined-room, person/equipment, override,

@@ -74,13 +74,27 @@ RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3: Final[tuple[str, ...]] = (
 )
 
 # These control relations are deliberately readable, but never writable, by
-# the application login.  Their mutations belong to the controlled
-# migration/cutover owner described in ADR-0046.
+# the application login. Their mutations belong to the controlled
+# migration/cutover owner described in ADR-0046. The Programme schema is also
+# select-only while issue #61 remains dormant: no current exact profile or
+# mounted caller may create or advance Programme state. A later activation
+# migration must deliberately reclassify only the relations its writer needs.
 RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.django_migrations",
     "public.authorization_authorityprovenanceactivation",
     "public.authorization_provenanceactivationlatch",
     "public.identity_platforminvitationretentionpolicycontrol",
+    "public.programme_programmeeditioncontrol",
+    "public.programme_programmeitem",
+    "public.programme_programmeitemsourcebinding",
+    "public.programme_programmeworkingrevision",
+    "public.programme_programmedeliveryrevision",
+    "public.programme_programmedepartmentdiscussionentry",
+    "public.programme_programmereadinessrequirement",
+    "public.programme_programmereadinessrequirementrevision",
+    "public.programme_programmereadinessevidence",
+    "public.programme_programmepublicrendition",
+    "public.programme_programmecommandreceipt",
 )
 
 # Effects replay, Workforce adoption, and Organization structure evidence is

@@ -1,6 +1,7 @@
 # Implemented modules
 
-Only modules with executable behavior appear here.
+Implemented bounded modules appear here. Each guide states whether its behavior
+is mounted, API-only, deployment-gated, or deliberately dormant.
 
 ADR 0030 retained these backend modules while the controlled interface mounted
 Sign in and the platform setup record journey. ADR 0039 now integrates that spine, Convention work,
@@ -44,6 +45,8 @@ pre-reset implementation unless the paragraph explicitly identifies the ADR
   attendee orders, governed stock, and payment reconciliation
 - [`applications`](applications.md) - versioned typed form definitions,
   append-only applications, assigned review queues, and target adapters
+- [`programme`](programme.md) - dormant private items, structurally separated
+  information layers, evidence-backed readiness, and reviewed public copy
 - [`charities`](charities.md) - reusable partners, governed edition selection,
   independent review, approved media, and minimized public snapshots
 - [`venues`](venues.md) - reusable hotels and venues, exact edition space

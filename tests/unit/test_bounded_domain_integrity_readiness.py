@@ -10,6 +10,7 @@ from maru.applications.readiness import APPLICATIONS_INTEGRITY_CONTRACT
 from maru.catalog.readiness import CATALOG_INTEGRITY_CONTRACT
 from maru.charities.readiness import CHARITIES_INTEGRITY_CONTRACT
 from maru.core import database_integrity_readiness as integrity
+from maru.programme.readiness import PROGRAMME_INTEGRITY_CONTRACT
 from maru.venues.readiness import VENUES_INTEGRITY_CONTRACT
 
 if TYPE_CHECKING:
@@ -20,6 +21,7 @@ CONTRACTS = (
     CHARITIES_INTEGRITY_CONTRACT,
     CATALOG_INTEGRITY_CONTRACT,
     VENUES_INTEGRITY_CONTRACT,
+    PROGRAMME_INTEGRITY_CONTRACT,
 )
 
 
@@ -38,6 +40,7 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
         ("venues_integrity", True, 13, 9, 1),
+        ("programme_integrity", True, 38, 15, 2),
     ]
     for contract in CONTRACTS:
         relations = set(integrity.bounded_context_relation_names(contract.app_label))
@@ -70,6 +73,14 @@ def test_trigger_contracts_pin_events_timing_attachment_and_constraint_shape() -
     assert venue_binding.is_constraint
     assert venue_binding.deferrable
     assert venue_binding.initially_deferred
+
+    programme_receipt = PROGRAMME_INTEGRITY_CONTRACT.triggers[
+        "programme_receipt_item_evidence_guard"
+    ]
+    assert programme_receipt.trigger_type == 5
+    assert programme_receipt.is_constraint
+    assert programme_receipt.deferrable
+    assert programme_receipt.initially_deferred
 
     active_product = CATALOG_INTEGRITY_CONTRACT.triggers[
         "catalog_active_product_immutable"

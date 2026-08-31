@@ -140,8 +140,11 @@ The accepted ADR 0081 boundary starts this vertical without attendee
 Participation, Registration, payments, or unrelated modules. Applications
 owns proposals and review evidence; Programme begins at the accepted target
 receipt and owns readiness/public content; Scheduling owns placement and
-release. The profile, setup, modules, adapters, and user journeys remain
-successor implementation work.
+release. The dormant Programme module now provides canonical private items,
+separated operational layers, readiness evidence, approved public renditions,
+and guarded command/query contracts. It remains unreachable under both current
+profiles. Calls, the accepted-item adapter, Scheduling, the composite profile,
+setup, and user journeys remain successor implementation work.
 
 **Exit:** proposal to revised live release passes all workflow, permission,
 localization, impact, and history scenarios.
