@@ -215,9 +215,14 @@ readiness, and reserved headcount but no authority. A genuinely different
 currently authorized controller must use a fresh authenticated session to
 approve or reject. Approval rechecks onboarding, headcount, lifecycle,
 RoleBundle provenance, and both controllers before atomically activating the
-linked role and participation capacities. Ending requires fresh revocation
-authority and atomically revokes the role, completes only unused capacities,
-and retains history. Shared strict HTML/API commands, immutable receipts, and
+linked role and only the evidence required by the immutable edition profile.
+For `full_convention@1`, that includes configured Participation capacities and
+a non-null assignment pointer. For `workforce_only@1`, approval and ending
+create or touch no Participation evidence and the pointer remains null. Ending
+requires fresh revocation authority, atomically revokes the role, completes
+only unused full-convention capacities, and retains history. The opposite
+pointer state is an integrity conflict in either profile. Shared strict
+HTML/API commands, immutable receipts, and
 Workforce migration `0011` enforce the same lifecycle; **My Workforce** gives
 the subject a reason-minimized personal state view.
 
@@ -616,7 +621,8 @@ Repository status: the first workforce onboarding slice is implemented:
 one-shot empty-organization chair bootstrap, reusable furry-convention
 position templates, edition department/reporting hierarchy, publishable
 position opportunities, applications, reviewed PDF agreements, headcount, and
-dual-controlled role/capacity activation. The old one-shot bootstrap remains
+dual-controlled role activation with profile-matched Participation evidence.
+The old one-shot bootstrap remains
 only as an operator command/service for an approved legacy reconciliation; its
 guarded browser ceremony and management API are retired. The canonical
 Organization structure page shows the minimized accountable-representation

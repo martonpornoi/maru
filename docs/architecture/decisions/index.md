@@ -26,7 +26,7 @@ For present implementation status, use the
 | [0073](0073-repository-owned-fictional-convention-examples.md) | Accepted | Keep current examples in Maru's fictional namespace and prohibit real convention rosters or copied organization charts as example data. |
 | [0074](0074-newcomer-first-curated-sphinx-navigation.md) | Accepted | Present exactly six primary hubs, one five-step newcomer route, and complete maintained material behind reachable catalogs. |
 | [0075](0075-governed-position-and-opportunity-management.md) | Accepted | Manage Positions and paired volunteer opportunities through the versioned edition structure boundary and a purpose-oriented owner workflow. |
-| [0076](0076-owner-safe-position-assignment-lifecycle.md) | Accepted | Govern Position assignments through independent decisions and retained relationship evidence. |
+| [0076](0076-owner-safe-position-assignment-lifecycle.md) | Partially superseded | Govern Position assignments through independent decisions and retained relationship evidence; ADR 0080 makes Participation evidence profile-matched. |
 | [0077](0077-person-owned-workforce-availability.md) | Accepted | Keep Availability person-owned, deliberately shared, and separate from commitments. |
 | [0078](0078-governed-workforce-shift-journey.md) | Accepted | Connect Position demand, personal claims, organizer decisions, and locked coverage without collapsing their meanings. |
 | [0079](0079-repository-scoped-agent-workflow-support.md) | Accepted | Keep always-on repository policy separate from four focused, validated contributor playbooks. |
@@ -36,7 +36,14 @@ ADR 0073 partially supersedes the example-data and source-derived-template
 parts of [ADR 0042](0042-synthetic-only-educational-fixtures.md) and
 [ADR 0045](0045-governance-anchored-copy-on-write-edition-structure.md).
 Their synthetic-person, copy-on-write, versioning, provenance, authorization,
-and structure-management boundaries remain accepted. Use the
+and structure-management boundaries remain accepted. ADR 0080 partially
+supersedes [ADR 0076](0076-owner-safe-position-assignment-lifecycle.md) only
+where ADR 0076 requires Participation evidence regardless of profile:
+`full_convention@1` keeps its configured capacity lifecycle, while
+`workforce_only@1` keeps a null assignment pointer and creates or touches no
+Participation evidence. ADR 0076's proposal, dual-control, authority,
+headcount, onboarding, revocation, audit, and retained-history boundaries
+remain accepted. Use the
 [complete status index](README.md) for every decision.
 
 ```{toctree}

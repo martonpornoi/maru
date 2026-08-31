@@ -1,6 +1,7 @@
 # ADR 0076: Govern Position assignments through independent decisions
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0080 (unconditional Participation
+  activation and completion only)
 - Date: 2026-08-24
 - Extends: ADRs 0019, 0028, 0041, 0044, 0045, 0049, 0055, and 0075
 - Requirements: HR-004, HR-007, HR-008, HR-010, HR-013, UX-005 through

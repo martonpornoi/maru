@@ -9,6 +9,46 @@ production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
 
+## Profile-aware Position-assignment evidence contract
+
+Issue [#41](https://github.com/martonpornoi/maru/issues/41), a bounded finding
+from the first release-candidate evaluation
+[#29](https://github.com/martonpornoi/maru/issues/29), now has one consistent
+current contract. Position-assignment proposal remains side-effect free in
+every profile. Approval always activates the scoped RoleAssignment, but
+Participation evidence follows the immutable edition profile:
+`full_convention@1` requires configured capacity evidence and a non-null
+assignment pointer, while `workforce_only@1` creates no `Participation` or
+`ParticipationCapacity` and requires that pointer to remain null.
+
+Ending always revokes the linked authority and retains assignment history. It
+completes only no-longer-needed full-convention capacities; Workforce-only
+ending touches no Participation evidence and preserves the null pointer. The
+opposite pointer shape in either profile is an integrity conflict requiring
+stopped writes plus fix-forward or mutually consistent whole-database recovery,
+not manufactured Workforce-only Participation or discarded full-convention
+evidence.
+
+ADR 0080 now explicitly partially supersedes ADR 0076 only where the older
+decision made Participation activation and completion unconditional. ADR
+0076's relationship-bounded proposal, dual control, role authority, headcount,
+onboarding, retained ending, audit, and recovery boundaries remain accepted.
+Requirements, roadmap, domain and workflow summaries, Assignment page
+contract, Workforce module, Workforce-only runbook, ADR catalogs, and release
+notes now agree. The
+[profile-aware contract checkpoint](../checkpoints/2026-08-30-profile-aware-position-assignment-contracts.md)
+preserves the correction without rewriting the historical Assignment
+checkpoint.
+
+All 18 documentation-policy tests pass. The existing full-convention and
+Workforce-only PostgreSQL assignment journeys pass through approval and ending;
+the full-convention case now also proves the database rejects clearing its
+required pointer. No runtime implementation, model, schema, migration, API,
+permission, or browser behavior changed. The protected pull-request gate
+remains authoritative for the final exact head, and issue
+[#42](https://github.com/martonpornoi/maru/issues/42) is the next bounded
+candidate-evaluation finding.
+
 ## Reproducible release-consumer supply-chain verification
 
 Issue [#40](https://github.com/martonpornoi/maru/issues/40) now has one
@@ -61,9 +101,9 @@ No Django module, model, migration, API, browser behavior, permission,
 runtime-role boundary, release publication, or new ADR is involved. This
 implements NFR-002, NFR-003, NFR-011, and NFR-012 under ADRs 0060 and 0065. It
 is bounded supply-chain evidence, not gold promotion, deployment, recovery,
-accessibility, owner acceptance, or production readiness. Issue
-[#41](https://github.com/martonpornoi/maru/issues/41) is the next
-candidate-evaluation finding after protected acceptance.
+accessibility, owner acceptance, or production readiness. Issue #41's
+profile-aware contract correction is recorded above; issue
+[#42](https://github.com/martonpornoi/maru/issues/42) follows it.
 
 ## Assignment controlling-authority interval recovery
 
@@ -187,8 +227,9 @@ Passing the runtime rehearsal means its bounded synthetic topology is fully
 ready. The separate issue #38 evaluator now owns static/edge evidence; neither
 path certifies providers, workers, restore/PITR, load, accessibility,
 production policy, or human go/no-go. Issue #39 owns the focused Assignment
-repair; issue #40 owns the consumer-integrity evidence recorded above, and
-issue [#41](https://github.com/martonpornoi/maru/issues/41) follows it.
+repair; issue #40 owns the consumer-integrity evidence recorded above; issue
+#41 owns the profile-aware contract correction above; and issue
+[#42](https://github.com/martonpornoi/maru/issues/42) follows them.
 
 ## First release-candidate synthetic evaluation
 
@@ -206,11 +247,11 @@ the default Gunicorn topology also returned 404 for collected static assets.
 
 The candidate remains immutable pre-production evidence, not a gold or
 production-ready release. Issues #37 and #38 now supply the missing runtime and
-static-delivery paths; issue #39 owns the focused Assignment recovery, while
-issue #40 now owns reproducible consumer verification. Issues
-[#41](https://github.com/martonpornoi/maru/issues/41) and
-[#42](https://github.com/martonpornoi/maru/issues/42) retain the next two
-findings by remediation boundary. The complete evaluation evidence, exact
+static-delivery paths; issue #39 owns the focused Assignment recovery, issue
+#40 owns reproducible consumer verification, and issue #41 owns profile-aware
+assignment contracts. Issue
+[#42](https://github.com/martonpornoi/maru/issues/42) retains the next finding
+by remediation boundary. The complete evaluation evidence, exact
 counts, and disposition are in the
 [synthetic operator evaluation checkpoint](../checkpoints/2026-08-29-first-release-candidate-synthetic-operator-evaluation.md).
 
@@ -714,16 +755,17 @@ support branch, a deployment, or production readiness.
 - The evaluation's exact-image runtime and static-delivery defects (#37 and
   #38) are resolved by bounded synthetic rehearsals. The Assignment
   authority-interval repair (#39) is its own focused protected outcome. Issue
-  #40 now has the bounded consumer-integrity implementation recorded above;
-  profile-unaware Participation contracts (#41) and the missing reproducible
-  end-to-end Workforce-only tutorial (#42) remain incomplete.
+  #40 now has the bounded consumer-integrity implementation recorded above,
+  and #41 has the profile-aware Participation contract correction above. The
+  missing reproducible end-to-end Workforce-only tutorial (#42) remains
+  incomplete.
 - The new header is a repository README asset only. GitHub's live social preview
   remains unchanged; adopting the asset there must wait for this branch to merge
   and requires a separate setting mutation plus readback.
-- Issues #21, #29, and #37 through #39 are complete in protected repository
-  behavior. Issue #40's focused implementation and live verification are
+- Issues #21, #29, and #37 through #40 are complete in protected repository
+  behavior. Issue #41's focused contract correction and verification are
   recorded above; its pull-request gate remains authoritative. Issues #22
-  through #24, #30 through #36, and #41 through #42 expose the remaining
+  through #24, #30 through #36, and #42 expose the remaining
   bounded work; none is accepted as complete before its own tests,
   documentation, and protected pull request pass.
 - Workforce-only adoption is implemented for trustworthy evaluation, not
@@ -760,11 +802,9 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Complete consumer verification
-   [#40](https://github.com/martonpornoi/maru/issues/40) through its focused
-   protected pull request, then continue in order with profile-aware contracts
-   [#41](https://github.com/martonpornoi/maru/issues/41) and the Workforce-only
-   tutorial [#42](https://github.com/martonpornoi/maru/issues/42).
+1. Publish the reproducible end-to-end Workforce-only operator-and-volunteer
+   tutorial [#42](https://github.com/martonpornoi/maru/issues/42) as the next
+   bounded release-candidate finding.
 2. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
    Workforce-only continuity package: preview-first
    import, scoped export, printable/manual fallback, reconciliation evidence,

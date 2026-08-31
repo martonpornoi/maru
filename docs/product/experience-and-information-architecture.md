@@ -390,10 +390,13 @@ Each Position retains its directly inspectable organizer reasons.
 Assignment management continues from a Position into a relationship-bounded
 known-person proposal, visible onboarding readiness, and a genuinely different
 controller's stepped-up approval or rejection. Proposal reserves headcount but
-grants nothing; approval atomically activates role and participation evidence;
-ending revokes linked authority and retains its reason. **My Workforce** gives
-the subject a separate reason-minimized state and dates view. Non-staff owners
-see purpose-built continuations rather than inaccessible specialist links.
+grants nothing; approval atomically activates the role and only the evidence
+required by the immutable edition profile. Full-convention editions retain
+their Participation projection, while Workforce-only approval and ending touch
+no Participation evidence and keep the assignment pointer null. Ending revokes
+linked authority and retains its reason. **My Workforce** gives the subject a
+separate reason-minimized state and dates view. Non-staff owners see
+purpose-built continuations rather than inaccessible specialist links.
 
 Availability is now a person-owned continuation in **My Workforce** and a
 separately capability-scoped organizer projection. A person may keep a private

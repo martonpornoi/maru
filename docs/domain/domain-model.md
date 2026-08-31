@@ -41,7 +41,8 @@ flowchart TD
     Participation --> Capacity["Capacity and role records"]
     Edition --> Department["Edition department"]
     Department --> Assignment["Role and work assignment"]
-    Participation --> Assignment
+    Account --> Assignment
+    Participation -. "profile-matched evidence" .-> Assignment
 
     Edition --> Plan["Plan and readiness graph"]
     Edition --> Registration["Registration and order"]
@@ -126,8 +127,12 @@ budget, readiness, and escalation. A position is a versioned role design with
 outcomes, workload, qualifications, onboarding, system capabilities, and
 handover expectations.
 
-An assignment joins a participation to a position for an effective period and
-scope. It never grants permissions merely by matching a display label.
+An assignment joins a person to a position for an effective period and scope.
+When the immutable edition profile adopts Participation, approval also projects
+the configured Participation evidence and retains its non-null capacity
+pointer. A Workforce-only assignment keeps that pointer null and creates or
+touches no Participation evidence. It never grants permissions merely by
+matching a display label.
 
 ### Work graph
 

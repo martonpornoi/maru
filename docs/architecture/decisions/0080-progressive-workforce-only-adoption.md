@@ -3,9 +3,12 @@
 - Status: Accepted
 - Date: 2026-08-26
 - Supersedes: ADR 0040 only where it requires every organization
-  representation to be an Executive Board
+  representation to be an Executive Board; ADR 0076 only where Position
+  assignment approval and ending require Participation or
+  ParticipationCapacity evidence regardless of the immutable edition adoption
+  profile
 - Extends: ADRs 0003, 0031, 0039, 0041, 0044, 0049, 0055, and 0075–0079
-- Requirements: IDN-011, IDN-012, IDN-014, EVT-006, UX-019, UX-023 through
+- Requirements: IDN-011, IDN-012, IDN-014, EVT-006, HR-013, UX-019, UX-023 through
   UX-025, UX-027 through UX-030, NFR-003, and NFR-013
 
 ## Context
@@ -77,6 +80,25 @@ authority; that broader setup requires an active platform administrator.
 
 These declared limitations make the profile suitable for incremental product
 use and honest evaluation, not an assertion of production cutover readiness.
+
+### Match Position-assignment evidence to the adopted profile
+
+This relationship clarification was recorded on 2026-08-30. ADR 0080
+partially supersedes ADR 0076 only where that earlier decision made
+Participation activation and completion unconditional. The proposal,
+independent approval, scoped RoleAssignment, headcount, onboarding, retained
+ending, audit, and recovery decisions remain accepted.
+
+For `full_convention@1`, approval creates or activates the configured
+Participation evidence and stores a non-null assignment capacity pointer;
+ending completes only capacities no other active assignment needs. For
+`workforce_only@1`, approval and ending create or touch no `Participation` or
+`ParticipationCapacity`, and the pointer remains null. Migration
+`0014_workforce_only_assignment_evidence`, model validation, and the PostgreSQL
+guard reject the opposite shape as an integrity conflict. Recovery fixes
+forward or restores the mutually consistent database; it never manufactures
+forbidden Workforce-only Participation or clears required full-convention
+evidence.
 
 ### Provide one minimum guided setup
 
