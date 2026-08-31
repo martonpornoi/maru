@@ -40,11 +40,12 @@ from maru.authorization.policy import (
 )
 from maru.authorization.provenance import role_bundle_provenance_is_historical
 from maru.events.admin_context import authorized_admin_edition_for_route
-from maru.events.adoption import (
-    AdoptionProfileCode,
-    profile_allows_capabilities,
-)
+from maru.events.adoption import profile_allows_capabilities
 from maru.events.models import EventEdition
+from maru.events.queries import (
+    adoption_profile_filter_for_adapter,
+    adoption_profile_filter_for_module,
+)
 from maru.identity.models import Account
 from maru.identity.queries import account_display_labels
 from maru.identity.services import require_recent_step_up
@@ -52,6 +53,11 @@ from maru.organizations.models import ConventionSeries, Organization
 from maru.organizations.queries import (
     OrganizationGovernanceAnchor,
     organization_governance_anchor,
+)
+from maru.workforce.adoption import (
+    WORKFORCE_SELF_ADAPTER,
+    AssignmentAdoptionProfileError,
+    assignment_uses_participation_evidence,
 )
 from maru.workforce.assignment_commands import (
     AssignmentAuthorityIntervalConflictError,
@@ -153,6 +159,7 @@ from maru.workforce.starter_templates import (
     WorkforceStarterTemplateConflictError,
     can_provision_workforce_starter_template,
     provision_workforce_starter_template,
+    workforce_starter_is_adopted,
 )
 from maru.workforce.structure_audit import append_structure_read_audit
 from maru.workforce.structure_commands import (
@@ -912,6 +919,7 @@ def _position_template_choices(
     *,
     organization_id: UUID,
     adoption_profile_code: str,
+    adoption_profile_version: int,
 ) -> tuple[tuple[str, str], ...]:
     templates = tuple(
         PositionTemplate.objects.select_related("role_bundle")
@@ -938,6 +946,7 @@ def _position_template_choices(
         if (
             profile_allows_capabilities(
                 adoption_profile_code,
+                adoption_profile_version,
                 template.role_bundle.capability_codes,
             )
             and role_bundle_provenance_is_historical(
@@ -1387,6 +1396,8 @@ def _render_structure_template_application(
         form = StructureTemplateApplicationForm(
             edition_name=snapshot.edition.name,
             expected_version=snapshot.structure.aggregate_version,
+            profile_code=snapshot.edition.adoption_profile_code,
+            profile_version=snapshot.edition.adoption_profile_version,
         )
     context = _structure_page_context(
         request,
@@ -1398,7 +1409,9 @@ def _render_structure_template_application(
             "title": f"Use built-in reference — {snapshot.edition.name}",
             "form": form,
             "template_application_available": bool(
-                _structure_mutations_allowed(read) and eligible
+                _structure_mutations_allowed(read)
+                and eligible
+                and form.template_application_available
             ),
             "show_submitted_form": form.is_bound,
             "action_error": action_error,
@@ -1876,6 +1889,8 @@ def apply_organization_structure_template(  # noqa: PLR0911
         request.POST,
         edition_name=snapshot.edition.name,
         expected_version=snapshot.structure.aggregate_version,
+        profile_code=snapshot.edition.adoption_profile_code,
+        profile_version=snapshot.edition.adoption_profile_version,
     )
     if not form.is_valid():
         return _render_structure_action_failure(
@@ -2695,11 +2710,10 @@ def _render_position_management(
     template_choices = _position_template_choices(
         organization_id=snapshot.organization.id,
         adoption_profile_code=snapshot.edition.adoption_profile_code,
+        adoption_profile_version=snapshot.edition.adoption_profile_version,
     )
     department_choices = _position_department_choices(snapshot.structure)
-    workforce_only = (
-        snapshot.edition.adoption_profile_code == AdoptionProfileCode.WORKFORCE_ONLY
-    )
+    workforce_only = workforce_starter_is_adopted(snapshot.edition)
     starter_template_available = bool(
         workforce_only
         and not template_choices
@@ -2771,6 +2785,7 @@ def _render_position_create(
     template_choices = _position_template_choices(
         organization_id=snapshot.organization.id,
         adoption_profile_code=snapshot.edition.adoption_profile_code,
+        adoption_profile_version=snapshot.edition.adoption_profile_version,
     )
     department_choices = _position_department_choices(snapshot.structure)
     reporting_choices = _position_reporting_choices(snapshot.structure)
@@ -3363,6 +3378,7 @@ def create_organization_structure_position(  # noqa: PLR0911
         template_choices=_position_template_choices(
             organization_id=snapshot.organization.id,
             adoption_profile_code=snapshot.edition.adoption_profile_code,
+            adoption_profile_version=snapshot.edition.adoption_profile_version,
         ),
         department_choices=_position_department_choices(snapshot.structure),
         reporting_choices=_position_reporting_choices(snapshot.structure),
@@ -4016,6 +4032,7 @@ def _assignment_page_context(
     read: _AssignmentPageRead,
     page_id: str,
 ) -> dict[str, object]:
+    assignment_evidence_mode = _assignment_evidence_mode(read.snapshot.edition)
     context = _position_context(
         request,
         read=read.structure_read,
@@ -4027,9 +4044,34 @@ def _assignment_page_context(
             "can_issue_assignment_authority": read.can_issue_authority,
             "can_end_assignment_authority": read.can_end_authority,
             "assignment_access_label": _structure_access_label(read.manage_decision),
+            "assignment_evidence_mode": assignment_evidence_mode,
         }
     )
     return context
+
+
+def _assignment_evidence_mode(edition: EventEdition) -> str:
+    """Resolve disclosure copy from the edition's exact assignment adapter.
+
+    Parameters
+    ----------
+    edition : EventEdition
+        Edition whose immutable adoption manifest owns assignment semantics.
+
+    Returns
+    -------
+    str
+        ``participation`` or ``workforce`` for a recognized exact adapter;
+        otherwise ``unsupported`` so presentation and activation fail closed.
+    """
+    try:
+        uses_participation = assignment_uses_participation_evidence(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+        )
+    except AssignmentAdoptionProfileError:
+        return "unsupported"
+    return "participation" if uses_participation else "workforce"
 
 
 def _assignment_route_kwargs(
@@ -4208,8 +4250,12 @@ def _render_assignment_proposal(
             PositionAssignment.Status.ACTIVE,
         ),
     ).count()
+    assignment_evidence_mode = _assignment_evidence_mode(
+        read.snapshot.edition,
+    )
     proposal_available = bool(
-        _assignment_lifecycle_allows(read)
+        assignment_evidence_mode != "unsupported"
+        and _assignment_lifecycle_allows(read)
         and position.status != Position.Status.CLOSED
         and open_assignment_count < position.headcount
         and candidates
@@ -4305,7 +4351,11 @@ def _render_assignment_detail(
         and assignment.proposed_by_id != actor.id
         and _assignment_lifecycle_allows(read, cleanup=True)
     )
-    can_approve = bool(can_decide and _assignment_lifecycle_allows(read))
+    can_approve = bool(
+        can_decide
+        and _assignment_lifecycle_allows(read)
+        and _assignment_evidence_mode(read.snapshot.edition) != "unsupported"
+    )
     can_end = bool(
         assignment.status == PositionAssignment.Status.ACTIVE
         and read.can_end_authority
@@ -5090,6 +5140,7 @@ def _personal_availability_page(
     """
     scope = (
         EventEdition.objects.filter(
+            adoption_profile_filter_for_adapter(WORKFORCE_SELF_ADAPTER),
             organization__slug__iexact=organization_slug,
             series__slug__iexact=series_slug,
             series__organization_id=models.F("organization_id"),
@@ -6089,20 +6140,24 @@ def my_workforce_assignments(request: HttpRequest) -> HttpResponse:
             message="This page does not accept filters or other URL parameters.",
         )
     try:
+        workforce_self_filter = adoption_profile_filter_for_adapter(
+            WORKFORCE_SELF_ADAPTER,
+            field_prefix="edition",
+        )
         assignment_scope_rows = tuple(
-            PositionAssignment.objects.filter(account=actor)
+            PositionAssignment.objects.filter(workforce_self_filter, account=actor)
             .order_by("organization_id", "edition_id")
             .values_list("organization_id", "edition_id")
             .distinct()[: MAX_PERSONAL_ASSIGNMENT_SCOPES + 1]
         )
         plan_scope_rows = tuple(
-            PersonAvailabilityPlan.objects.filter(account=actor)
+            PersonAvailabilityPlan.objects.filter(workforce_self_filter, account=actor)
             .order_by("organization_id", "edition_id")
             .values_list("organization_id", "edition_id")
             .distinct()[: MAX_PERSONAL_ASSIGNMENT_SCOPES + 1]
         )
         commitment_scope_rows = tuple(
-            ShiftCommitment.objects.filter(account=actor)
+            ShiftCommitment.objects.filter(workforce_self_filter, account=actor)
             .order_by("organization_id", "edition_id")
             .values_list("organization_id", "edition_id")
             .distinct()[: MAX_PERSONAL_ASSIGNMENT_SCOPES + 1]
@@ -6165,6 +6220,14 @@ def my_workforce_assignments(request: HttpRequest) -> HttpResponse:
             account=actor,
             permitted_scopes=frozenset(permitted_scopes),
         )
+        personal_profile_pairs = tuple(
+            EventEdition.objects.filter(
+                adoption_profile_filter_for_adapter(WORKFORCE_SELF_ADAPTER),
+                id__in={edition_id for _, edition_id in permitted_scopes},
+            )
+            .values_list("adoption_profile_code", "adoption_profile_version")
+            .distinct()
+        )
     except (
         AssignmentReadLimitExceededError,
         AvailabilityReadLimitExceededError,
@@ -6190,6 +6253,7 @@ def my_workforce_assignments(request: HttpRequest) -> HttpResponse:
             "assignments": assignments,
             "availability_scopes": availability_scopes,
             "shift_scopes": shift_scopes,
+            "maru_personal_profile_pairs": personal_profile_pairs,
         }
     )
     return TemplateResponse(request, "workforce/my_assignments.html", context)
@@ -6214,7 +6278,9 @@ def volunteer_opportunities(
         The HTTP response for this request.
     """
     edition = get_object_or_404(
-        EventEdition.objects.exclude(lifecycle__in=("archived", "cancelled")),
+        EventEdition.objects.filter(
+            adoption_profile_filter_for_module("workforce"),
+        ).exclude(lifecycle__in=("archived", "cancelled")),
         id=edition_id,
     )
     candidates = list(
@@ -6289,11 +6355,12 @@ def apply_for_opportunity(
     if account is None:
         raise Http404
     opportunity = get_object_or_404(
-        VolunteerOpportunity.objects.select_related(
-            "position",
-            "position__edition",
-            "position__department",
-        ),
+        VolunteerOpportunity.objects.filter(
+            adoption_profile_filter_for_module(
+                "workforce",
+                field_prefix="position__edition",
+            ),
+        ).select_related("position", "position__edition", "position__department"),
         id=opportunity_id,
         position__edition_id=edition_id,
         status=VolunteerOpportunity.Status.PUBLISHED,
@@ -6345,7 +6412,12 @@ def my_onboarding_documents(
     account = _account(request)
     if account is None:
         raise Http404
-    edition = get_object_or_404(EventEdition, id=edition_id)
+    edition = get_object_or_404(
+        EventEdition.objects.filter(
+            adoption_profile_filter_for_adapter(WORKFORCE_SELF_ADAPTER),
+        ),
+        id=edition_id,
+    )
     requests = list(
         OnboardingDocumentRequest.objects.filter(
             edition=edition,
@@ -6392,10 +6464,12 @@ def upload_onboarding_document_view(
     if account is None:
         raise Http404
     document_request = get_object_or_404(
-        OnboardingDocumentRequest.objects.select_related(
-            "document_type",
-            "edition",
-        ),
+        OnboardingDocumentRequest.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
+        ).select_related("document_type", "edition"),
         id=document_request_id,
         edition_id=edition_id,
         account=account,
@@ -6448,7 +6522,13 @@ def download_onboarding_document(
     if actor is None:
         raise Http404
     document_request = (
-        OnboardingDocumentRequest.objects.filter(id=document_request_id)
+        OnboardingDocumentRequest.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
+            id=document_request_id,
+        )
         .select_related("account", "document_type")
         .first()
     )

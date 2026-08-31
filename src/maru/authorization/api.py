@@ -165,11 +165,23 @@ def _edition(*, organization_id: UUID, edition_id: UUID) -> EventEdition:
     return edition
 
 
-def _role_matches_profile(role: RoleBundle, profile_code: str) -> bool:
-    return profile_allows_capabilities(profile_code, role.capability_codes)
+def _role_matches_profile(
+    role: RoleBundle,
+    profile_code: str,
+    profile_version: int,
+) -> bool:
+    return profile_allows_capabilities(
+        profile_code,
+        profile_version,
+        role.capability_codes,
+    )
 
 
-def _latest_roles(organization_id: UUID, profile_code: str) -> list[RoleBundle]:
+def _latest_roles(
+    organization_id: UUID,
+    profile_code: str,
+    profile_version: int,
+) -> list[RoleBundle]:
     roles = (
         RoleBundle.objects.filter(organization_id=organization_id)
         .exclude(code__in=NON_SHAREABLE_ROLE_CODES)
@@ -177,7 +189,7 @@ def _latest_roles(organization_id: UUID, profile_code: str) -> list[RoleBundle]:
     )
     latest: dict[str, RoleBundle] = {}
     for role in roles:
-        if _role_matches_profile(role, profile_code):
+        if _role_matches_profile(role, profile_code, profile_version):
             latest.setdefault(role.code, role)
     return sorted(
         latest.values(),
@@ -269,6 +281,7 @@ def _current_assignments(
     organization_id: UUID,
     edition_id: UUID,
     profile_code: str,
+    profile_version: int,
 ) -> Iterable[RoleAssignment]:
     now = timezone.now()
     rows = (
@@ -292,7 +305,9 @@ def _current_assignments(
         )
     )
     return tuple(
-        row for row in rows if _role_matches_profile(row.role_bundle, profile_code)
+        row
+        for row in rows
+        if _role_matches_profile(row.role_bundle, profile_code, profile_version)
     )
 
 
@@ -310,6 +325,7 @@ def _workspace_payload(
             organization_id=edition.organization_id,
             edition_id=edition.id,
             profile_code=edition.adoption_profile_code,
+            profile_version=edition.adoption_profile_version,
         )
     )
     return {
@@ -342,6 +358,7 @@ def _workspace_payload(
             for role in _latest_roles(
                 edition.organization_id,
                 edition.adoption_profile_code,
+                edition.adoption_profile_version,
             )
         ],
         "assignments": [
@@ -381,6 +398,7 @@ def _exact_role(
     organization_id: UUID,
     code: str,
     profile_code: str,
+    profile_version: int,
 ) -> RoleBundle:
     role = (
         RoleBundle.objects.filter(
@@ -391,7 +409,11 @@ def _exact_role(
         .order_by("-version", "id")
         .first()
     )
-    if role is None or not _role_matches_profile(role, profile_code):
+    if role is None or not _role_matches_profile(
+        role,
+        profile_code,
+        profile_version,
+    ):
         raise ValidationError({"group_code": "Choose an available access group."})
     return role
 
@@ -401,6 +423,7 @@ def _exact_role_version(
     organization_id: UUID,
     role_version_id: UUID,
     profile_code: str,
+    profile_version: int,
 ) -> RoleBundle:
     role = (
         RoleBundle.objects.filter(
@@ -410,7 +433,11 @@ def _exact_role_version(
         .exclude(code__in=NON_SHAREABLE_ROLE_CODES)
         .first()
     )
-    if role is None or not _role_matches_profile(role, profile_code):
+    if role is None or not _role_matches_profile(
+        role,
+        profile_code,
+        profile_version,
+    ):
         raise ValidationError(
             {"role_version_id": "Choose an available immutable role version."}
         )
@@ -620,6 +647,7 @@ class EditionAccessWorkspaceView(APIView):
             organization_id=organization_id,
             code=str(values["group_code"]),
             profile_code=edition.adoption_profile_code,
+            profile_version=edition.adoption_profile_version,
         )
         try:
             assign_role(
@@ -726,6 +754,7 @@ class EditionAccessPreviewView(APIView):
                     organization_id=organization_id,
                     role_version_id=cast("UUID", values["role_version_id"]),
                     profile_code=edition.adoption_profile_code,
+                    profile_version=edition.adoption_profile_version,
                 )
                 result = preview_role_bundle_access(
                     viewer=account,
@@ -842,6 +871,7 @@ class EditionAccessAssignmentView(APIView):
             organization_id=organization_id,
             code=str(values["group_code"]),
             profile_code=edition.adoption_profile_code,
+            profile_version=edition.adoption_profile_version,
         )
         try:
             with transaction.atomic():

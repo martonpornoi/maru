@@ -37,6 +37,9 @@ POSTGRES_IMAGE: Final = (
     "postgres:17.11-alpine@"
     "sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73"
 )
+# This digest belongs to DEFAULT_SOURCE_REVISION's immutable release artifact,
+# not to the evolving provisioning example in the current checkout. Change it
+# only with a reviewed image/source pair for a later immutable release.
 EXPECTED_PROVISIONING_SQL_SHA256: Final = (
     "709f644dbea546351e210fd58c6fe5ee6a502882b0b94058c049412533f7b49e"
 )

@@ -79,13 +79,16 @@
     <h2 id="assignment-authority-boundary-title">Responsibility and access move together only after approval</h2>
     <p>
       The Position supplies approved role meaning and capacity labels.
-      {% if edition.adoption_profile_code == "workforce_only" %}
+      {% if assignment_evidence_mode == "workforce" %}
         A second controller's approval activates only the scoped Workforce role;
         it creates no attendee Registration, attendance, payment, or Participation
         record.
-      {% else %}
+      {% elif assignment_evidence_mode == "participation" %}
         A second controller's approval activates the scoped role and Participation
         capacity in one transaction.
+      {% else %}
+        Assignment activation is unavailable because this release does not
+        recognize an exact assignment-evidence adapter for the edition profile.
       {% endif %}
       Rejection and ending preserve the full organizer history.
     </p>

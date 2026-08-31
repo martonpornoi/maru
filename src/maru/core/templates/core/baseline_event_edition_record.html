@@ -157,12 +157,15 @@
                 <dd>{{ edition.language_codes|join:", " }}</dd>
               </div>
               <div>
-                {% if edition.adoption_profile_code == "workforce_only" %}
+                {% if edition_adopts_registration %}
+                  <dt>Operating currencies</dt>
+                  <dd>{{ edition.currency_codes|join:", " }}</dd>
+                {% elif edition_profile %}
                   <dt>Payments and attendee registration</dt>
                   <dd>Not adopted</dd>
                 {% else %}
-                  <dt>Operating currencies</dt>
-                  <dd>{{ edition.currency_codes|join:", " }}</dd>
+                  <dt>Payment settings</dt>
+                  <dd>Unavailable for this exact profile</dd>
                 {% endif %}
               </div>
               <div>
@@ -230,22 +233,26 @@
                 <div class="baseline-section-heading">
                   <p class="baseline-kicker">Edition defaults</p>
                   <h2 id="edition-profile-locale-title">
-                    {% if edition.adoption_profile_code == "workforce_only" %}Languages{% else %}Languages and currencies{% endif %}
+                    {% if edition_adopts_registration %}Languages and currencies{% else %}Languages{% endif %}
                   </h2>
                   <p>
-                    {% if edition.adoption_profile_code == "workforce_only" %}
-                      Languages support volunteer-facing content. Payment
-                      currency is absent because this edition has not adopted
-                      attendee registration or payments.
-                    {% else %}
+                    {% if edition_adopts_registration %}
                       These codes define later localized content and money-entry
                       boundaries for this edition.
+                    {% elif edition_profile %}
+                      Languages support this profile's adopted workflows.
+                      Payment currency is absent because this edition has not
+                      adopted attendee registration or payments.
+                    {% else %}
+                      Language codes remain inspectable. Payment fields stay
+                      unavailable until this release recognizes the edition's
+                      exact adoption profile.
                     {% endif %}
                   </p>
                 </div>
                 <div class="baseline-field-grid baseline-field-grid--locale">
                   {% include "core/_baseline_form_field.html" with field=form.language_codes %}
-                  {% if edition.adoption_profile_code != "workforce_only" %}
+                  {% if edition_adopts_registration %}
                     {% include "core/_baseline_form_field.html" with field=form.currency_codes %}
                   {% endif %}
                 </div>

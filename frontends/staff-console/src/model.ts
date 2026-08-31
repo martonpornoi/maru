@@ -2,6 +2,40 @@ import type { EditionContext, Participation } from "./api/client";
 
 const activeLifecycles = new Set(["preparing", "ready", "live", "closing"]);
 
+export const staffConsoleDestinations = [
+  "today",
+  "my-registration",
+  "people",
+  "workforce",
+  "commerce",
+  "reports",
+  "setup",
+  "security",
+] as const;
+
+export type StaffConsoleDestination = (typeof staffConsoleDestinations)[number];
+
+const staffConsoleDestinationSet = new Set<string>(staffConsoleDestinations);
+
+export function isStaffConsoleDestinationAvailable(
+  edition: EditionContext,
+  destination: string,
+): destination is StaffConsoleDestination {
+  return (
+    staffConsoleDestinationSet.has(destination) &&
+    edition.available_destinations.includes(destination)
+  );
+}
+
+export function availableStaffConsoleDestinations(
+  edition: EditionContext,
+): StaffConsoleDestination[] {
+  return edition.available_destinations.filter(
+    (destination): destination is StaffConsoleDestination =>
+      staffConsoleDestinationSet.has(destination),
+  );
+}
+
 export function chooseInitialEdition(
   editions: EditionContext[],
   preferredEditionId?: string,
@@ -82,11 +116,11 @@ export function weekdayLabel(now = new Date()): string {
 }
 
 export function primaryCapacity(edition: EditionContext): string {
-  if (
-    edition.participation_status === "not_participating" &&
-    edition.adoption_profile_code === "workforce_only"
-  ) {
-    return "Workforce workspace";
+  if (!availableStaffConsoleDestinations(edition).length) {
+    return "Workspace unavailable";
+  }
+  if (edition.participation_status === "not_participating") {
+    return `${edition.adoption_profile_label} workspace`;
   }
   const genericCodes = new Set(["attendee", "staff", "volunteer"]);
   return (

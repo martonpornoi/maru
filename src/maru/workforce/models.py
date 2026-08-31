@@ -16,9 +16,9 @@ from django.utils import timezone
 
 from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug
-from maru.events.adoption import profile_adopts_module
 from maru.identity.policies import validate_convention_subject
 from maru.participation.models import validate_capacity_code
+from maru.workforce.adoption import assignment_uses_participation_evidence
 from maru.workforce.availability_inputs import (
     MAX_AVAILABILITY_WINDOWS,
     AvailabilityWindowInput,
@@ -1709,9 +1709,9 @@ class PositionAssignment(UUIDTimeStampedModel):
             raise ValidationError(
                 {"approved_by": "A different controller must approve assignment."}
             )
-        participation_adopted = profile_adopts_module(
+        participation_adopted = assignment_uses_participation_evidence(
             self.edition.adoption_profile_code,
-            "participation",
+            self.edition.adoption_profile_version,
         )
         capacity_matches_profile = (
             participation_adopted and bool(self.participation_capacity_id)

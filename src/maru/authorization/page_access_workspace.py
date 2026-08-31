@@ -298,13 +298,7 @@ def _roles_for_target(
             or not definition.persistable
             or _SCOPE_DEPTH[target.scope_level] < _SCOPE_DEPTH[definition.maximum_scope]
             for definition in definitions
-        ) or (
-            target.adoption_profile_code is not None
-            and not profile_allows_capabilities(
-                target.adoption_profile_code,
-                role.capability_codes,
-            )
-        ):
+        ) or not _role_matches_target(role=role, target=target):
             continue
         values.append(
             PageAccessRole(
@@ -316,6 +310,24 @@ def _roles_for_target(
             )
         )
     return tuple(sorted(values, key=lambda value: (value.name.casefold(), value.code)))
+
+
+def _role_matches_target(
+    *,
+    role: RoleBundle,
+    target: ResolvedAuthorizationTarget,
+) -> bool:
+    if target.edition_id is None:
+        return True
+    return bool(
+        target.adoption_profile_code is not None
+        and target.adoption_profile_version is not None
+        and profile_allows_capabilities(
+            target.adoption_profile_code,
+            target.adoption_profile_version,
+            role.capability_codes,
+        )
+    )
 
 
 def _authority_scope_filter(target: ResolvedAuthorizationTarget) -> Q:
@@ -411,11 +423,7 @@ def _assignments_for_target(
             expires_at=row.expires_at,
         )
         for row in rows
-        if target.adoption_profile_code is None
-        or profile_allows_capabilities(
-            target.adoption_profile_code,
-            row.role_bundle.capability_codes,
-        )
+        if _role_matches_target(role=row.role_bundle, target=target)
     )
 
 
@@ -542,13 +550,7 @@ def exact_role_version(
         .exclude(code__in=NON_SHAREABLE_ROLE_CODES)
         .first()
     )
-    if role is None or (
-        target.adoption_profile_code is not None
-        and not profile_allows_capabilities(
-            target.adoption_profile_code,
-            role.capability_codes,
-        )
-    ):
+    if role is None or not _role_matches_target(role=role, target=target):
         raise ValidationError(
             {"role_version_id": "Choose an available immutable group version."}
         )
@@ -624,12 +626,9 @@ def exact_assignment_for_target(
         .select_related("role_bundle")
         .first()
     )
-    if assignment is None or (
-        target.adoption_profile_code is not None
-        and not profile_allows_capabilities(
-            target.adoption_profile_code,
-            assignment.role_bundle.capability_codes,
-        )
+    if assignment is None or not _role_matches_target(
+        role=assignment.role_bundle,
+        target=target,
     ):
         raise PermissionDenied("The access assignment is unavailable.")
     return assignment

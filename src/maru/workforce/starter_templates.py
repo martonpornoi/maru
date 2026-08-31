@@ -19,7 +19,12 @@ from maru.authorization.policy import (
     resolve_edition_target,
     resolve_organization_target,
 )
-from maru.events.adoption import AdoptionProfileCode
+from maru.events.adoption import (
+    WORKFORCE_ONLY_PROFILE_VERSION,
+    AdoptionProfileCode,
+    adoption_profile,
+    profile_allows_catalog_entry,
+)
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import (
@@ -39,6 +44,7 @@ WORKFORCE_VOLUNTEER_ROLE_CAPABILITIES = (
     "workforce.view_structure",
 )
 WORKFORCE_VOLUNTEER_CAPACITY_CODES = ("volunteer",)
+WORKFORCE_VOLUNTEER_CATALOG_ENTRY = "workforce.position-template.workforce-volunteer@1"
 MAX_WORKFORCE_STARTER_REASON_LENGTH = 240
 
 
@@ -79,6 +85,38 @@ def _active_controller(
     ).exists()
 
 
+def workforce_starter_is_adopted(edition: EventEdition) -> bool:
+    """Return whether the exact Workforce-only manifest pins this starter.
+
+    Parameters
+    ----------
+    edition : EventEdition
+        Edition whose immutable profile selects the governed starter.
+
+    Returns
+    -------
+    bool
+        ``True`` only for the exact supported Workforce-only manifest.
+    """
+    profile = adoption_profile(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+    )
+    return bool(
+        profile is not None
+        and profile.key
+        == (
+            AdoptionProfileCode.WORKFORCE_ONLY.value,
+            WORKFORCE_ONLY_PROFILE_VERSION,
+        )
+        and profile_allows_catalog_entry(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            WORKFORCE_VOLUNTEER_CATALOG_ENTRY,
+        )
+    )
+
+
 def can_provision_workforce_starter_template(
     *,
     actor: Account,
@@ -102,7 +140,7 @@ def can_provision_workforce_starter_template(
     if (
         not actor.is_active
         or actor.is_platform_administrator
-        or edition.adoption_profile_code != AdoptionProfileCode.WORKFORCE_ONLY
+        or not workforce_starter_is_adopted(edition)
         or not _active_controller(
             organization_id=edition.organization_id,
             account_id=actor.id,
@@ -288,7 +326,7 @@ def provision_workforce_starter_template(
         edition_id=edition_id,
     )
     edition = EventEdition.objects.get(id=scope.edition_id)
-    if edition.adoption_profile_code != AdoptionProfileCode.WORKFORCE_ONLY:
+    if not workforce_starter_is_adopted(edition):
         raise ValidationError(
             "The safe starter is available only inside a Workforce-only edition.",
             code="workforce_starter_profile_required",

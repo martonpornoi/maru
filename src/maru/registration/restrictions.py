@@ -5,7 +5,12 @@ from uuid import uuid4
 from django.db import transaction
 from django.utils import timezone
 
+from maru.accreditation.adoption import (
+    IDENTITY_RESTRICTION_CREDENTIAL_CONSEQUENCE_ADAPTER,
+)
+from maru.events.queries import adoption_profile_filter_for_adapter
 from maru.identity.models import Account, AccountRestriction
+from maru.registration.adoption import IDENTITY_RESTRICTION_CONSEQUENCE_ADAPTER
 from maru.registration.finance import available_refund_minor
 from maru.registration.models import (
     AttendeeRegistrationProfile,
@@ -43,6 +48,10 @@ def apply_restriction_consequences(
     """
     changed_at = timezone.now()
     registrations = Registration.objects.select_for_update().filter(
+        adoption_profile_filter_for_adapter(
+            IDENTITY_RESTRICTION_CONSEQUENCE_ADAPTER,
+            field_prefix="edition",
+        ),
         organization_id=restriction.organization_id,
         account=restriction.account,
     )
@@ -165,6 +174,10 @@ def apply_restriction_consequences(
             )
 
             credentials = Credential.objects.filter(
+                adoption_profile_filter_for_adapter(
+                    IDENTITY_RESTRICTION_CREDENTIAL_CONSEQUENCE_ADAPTER,
+                    field_prefix="registration__edition",
+                ),
                 organization_id=restriction.organization_id,
                 registration__account=restriction.account,
                 status=Credential.Status.ISSUED,

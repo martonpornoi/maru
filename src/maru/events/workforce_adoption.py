@@ -13,7 +13,11 @@ from django.db import connection, transaction
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.events.adoption import AdoptionProfileCode
+from maru.events.adoption import (
+    WORKFORCE_ONLY_PROFILE_VERSION,
+    AdoptionProfileCode,
+    adoption_profile,
+)
 from maru.events.models import EventEdition, WorkforceAdoptionSetupReceipt
 from maru.events.services import EventEditionDetails, create_event_edition
 from maru.organizations.models import (
@@ -351,7 +355,14 @@ def set_up_workforce_adoption(
         adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
     )
     edition = edition_result.edition
-    if edition.adoption_profile_code != AdoptionProfileCode.WORKFORCE_ONLY:
+    profile = adoption_profile(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+    )
+    if profile is None or profile.key != (
+        AdoptionProfileCode.WORKFORCE_ONLY.value,
+        WORKFORCE_ONLY_PROFILE_VERSION,
+    ):
         raise ValidationError(
             "The retained edition does not match Workforce-only setup.",
             code="workforce_setup_profile_conflict",

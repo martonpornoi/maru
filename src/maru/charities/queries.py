@@ -18,6 +18,7 @@ from maru.authorization.policy import (
     resolve_edition_target,
     resolve_organization_target,
 )
+from maru.events.queries import adoption_profile_filter_for_module
 
 from .authorization import resolve_charity_selection_target
 from .inputs import normalized_reason, normalized_source_channel
@@ -320,6 +321,7 @@ def public_charities_for_edition(
     evaluated_at = at or timezone.now()
     selections = tuple(
         CharitySelection.objects.filter(
+            adoption_profile_filter_for_module("charities", field_prefix="edition"),
             organization_id=organization_id,
             edition_id=edition_id,
             status=CharitySelection.Status.CONFIRMED,

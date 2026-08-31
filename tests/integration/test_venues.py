@@ -33,7 +33,11 @@ from maru.venues.models import (
     VenueSpace,
     VenueSpaceConfiguration,
 )
-from maru.venues.queries import public_schedule_for_edition
+from maru.venues.queries import (
+    authorize_my_maru_schedule_scope,
+    my_maru_schedule_editions,
+    public_schedule_for_edition,
+)
 from maru.venues.services import (
     VenueAuthorizationDeniedError,
     VenueAvailabilityConflictError,
@@ -438,6 +442,58 @@ def test_published_schedule_projects_only_effective_public_fields() -> None:
     assert "expected_attendance" not in payload
 
 
+def test_attendee_schedule_requires_the_exact_module_and_purpose_adapter() -> None:
+    """Ignore retained venue and participation rows after an incompatible profile."""
+    scope = _scope()
+    _publish_schedule(scope)
+    attendee = AccountFactory()
+    ParticipationFactory(
+        account=attendee,
+        organization=scope.edition.organization,
+        edition=scope.edition,
+    )
+
+    assert (
+        len(
+            public_schedule_for_edition(
+                organization_id=scope.edition.organization_id,
+                edition_id=scope.edition.id,
+            )
+        )
+        == 1
+    )
+    assert [item.id for item in my_maru_schedule_editions(actor=attendee)] == [
+        scope.edition.id
+    ]
+
+    workforce_edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    ParticipationFactory(
+        account=attendee,
+        organization=workforce_edition.organization,
+        edition=workforce_edition,
+    )
+
+    assert (
+        public_schedule_for_edition(
+            organization_id=workforce_edition.organization_id,
+            edition_id=workforce_edition.id,
+        )
+        == ()
+    )
+    assert [item.id for item in my_maru_schedule_editions(actor=attendee)] == [
+        scope.edition.id
+    ]
+    with pytest.raises(VenueAuthorizationDeniedError):
+        authorize_my_maru_schedule_scope(
+            actor=attendee,
+            organization_id=workforce_edition.organization_id,
+            edition_id=workforce_edition.id,
+        )
+
+
 def test_hard_availability_capacity_and_physical_overlap_fail_closed() -> None:
     scope = _scope()
     space = _selected_space(scope)
@@ -650,6 +706,116 @@ def test_venue_html_authorizes_before_constructing_or_parsing_forms(
 
     assert malformed.status_code == 403
     assert plausible.status_code == 403
+
+
+def test_venue_html_requires_exact_profile_before_catalog_or_form_access(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject retained Venue routes before private reads or organization writes."""
+    scope = _scope()
+    created = create_venue_property(
+        actor=scope.manager,
+        organization_id=scope.edition.organization_id,
+        slug="retained-profile-boundary",
+        profile=VenuePropertyProfile(
+            kind=VenueProperty.Kind.VENUE,
+            legal_name="Retained provider legal name",
+            public_name="Retained Venue Label",
+            location_name="Budapest",
+            postal_address="Restricted retained address",
+            country_code="HU",
+        ),
+        reason="Create the full-profile positive-control property.",
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    workforce_edition = EventEditionFactory(
+        organization=scope.edition.organization,
+        series=scope.edition.series,
+        name="Workforce-only Venue Boundary",
+        slug="workforce-only-venue-boundary",
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    client = Client()
+    client.force_login(scope.manager)
+
+    full_detail = client.get(
+        reverse(
+            "venue-property-detail-page",
+            args=(
+                scope.edition.organization.slug,
+                scope.edition.series.slug,
+                scope.edition.slug,
+                created.object_id,
+            ),
+        )
+    )
+    full_create_page = client.get(
+        reverse(
+            "venue-property-create-page",
+            args=(
+                scope.edition.organization.slug,
+                scope.edition.series.slug,
+                scope.edition.slug,
+            ),
+        )
+    )
+    assert full_detail.status_code == 200
+    assert "Retained Venue Label" in full_detail.content.decode()
+    assert full_create_page.status_code == 200
+
+    def fail_if_private_catalog_is_loaded(
+        *_args: object,
+        **_kwargs: object,
+    ) -> None:
+        raise AssertionError("exact profile must precede retained Venue reads")
+
+    def fail_if_form_is_constructed(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("exact profile must precede form construction")
+
+    monkeypatch.setattr(
+        "maru.venues.views.list_venue_properties",
+        fail_if_private_catalog_is_loaded,
+    )
+    monkeypatch.setattr(
+        "maru.venues.views.VenuePropertyCreateForm",
+        fail_if_form_is_constructed,
+    )
+    workforce_route = (
+        workforce_edition.organization.slug,
+        workforce_edition.series.slug,
+        workforce_edition.slug,
+    )
+    property_count = VenueProperty.objects.filter(
+        organization=scope.edition.organization
+    ).count()
+
+    workspace = client.get(reverse("venue-workspace", args=workforce_route))
+    retained_detail = client.get(
+        reverse(
+            "venue-property-detail-page",
+            args=(*workforce_route, created.object_id),
+        )
+    )
+    create_page = client.get(
+        reverse("venue-property-create-page", args=workforce_route)
+    )
+    create_attempt = client.post(
+        reverse("venue-property-create", args=workforce_route),
+        {"unexpected": "must not be parsed"},
+    )
+
+    assert workspace.status_code == 404
+    assert retained_detail.status_code == 404
+    assert "Retained Venue Label" not in retained_detail.content.decode()
+    assert create_page.status_code == 404
+    assert create_attempt.status_code == 404
+    assert (
+        VenueProperty.objects.filter(organization=scope.edition.organization).count()
+        == property_count
+    )
 
 
 def test_same_shell_booking_enforces_capacity_conflict_and_dual_control() -> None:

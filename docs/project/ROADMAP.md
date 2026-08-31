@@ -46,11 +46,20 @@ the complete Workforce journey. Existing editions become
 `full_convention@1`; existing Executive Board organizations and evidence are
 unchanged.
 
-Exact-edition authorization rejects an unadopted module before platform policy
-or stored grants. Context, Django navigation, Convention work, generic access
-management, Registration discovery, and Position-assignment evidence consume
-the same profile contract. A Workforce-only assignment retains responsibility
-and exact authority but creates no Participation or attendance capacity.
+The current `full_convention@1` and `workforce_only@1` manifests now pin literal
+capabilities, destinations, shell kinds, effect routes, catalog entries,
+adapters, conflict sources, and reserved roots as exact code/version pairs.
+Independent typed owner catalogs declare adapter result and fail-closed
+semantics, while deployment checks require every literal, selectable pair, and
+database-supported pair to agree without widening either v1 manifest.
+Exact-edition authorization rejects an unpinned capability before self,
+platform, grant, or role policy. Context, Django navigation, Convention work,
+generic access management, Registration discovery, Applications starters and
+providers, Effects delivery, and Position-assignment evidence consume that same
+exact pair and fail closed for an unknown version. A Workforce-only assignment
+retains responsibility and exact authority but creates no Participation or
+attendance capacity. This enforcement foundation does not declare or activate
+`programme_operations@1`.
 
 Profile v1 declares incumbent-system coexistence and the current manual,
 copy-on-write structure setup. General partner import, complete continuity

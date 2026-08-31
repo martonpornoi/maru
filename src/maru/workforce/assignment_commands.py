@@ -27,11 +27,11 @@ from maru.authorization.policy import (
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
-from maru.events.adoption import profile_adopts_module
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.participation.models import ParticipationCapacity
+from maru.workforce.adoption import assignment_uses_participation_evidence
 from maru.workforce.assignment_inputs import (
     assignment_command_digest,
     normalize_assignment_reason,
@@ -1250,9 +1250,9 @@ def _complete_assignment_capacities(
 ) -> None:
     capacity = assignment.participation_capacity
     if capacity is None:
-        if not profile_adopts_module(
+        if not assignment_uses_participation_evidence(
             assignment.edition.adoption_profile_code,
-            "participation",
+            assignment.edition.adoption_profile_version,
         ):
             return
         raise AssignmentStateConflictError

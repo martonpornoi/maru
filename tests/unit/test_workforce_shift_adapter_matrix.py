@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -49,6 +50,31 @@ def test_account_boundary_rejects_missing_or_inactive_maru_identity() -> None:
     for user in (SimpleNamespace(is_active=True), Account(is_active=False)):
         with pytest.raises(PermissionDenied, match="authority is unavailable"):
             shift_api._account(SimpleNamespace(user=user))
+
+
+def test_personal_shift_scope_rejects_unknown_profile_before_policy_queries() -> None:
+    """Fail closed on an unsupported exact pair before relationship discovery."""
+    account = Account(is_active=True)
+    edition = SimpleNamespace(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=2,
+    )
+    with (
+        patch.object(shift_api, "_account", return_value=account),
+        patch.object(shift_api, "_edition", return_value=edition),
+        patch.object(shift_api, "resolve_self_target") as resolve_target,
+        patch.object(shift_api, "decide") as decide,
+        pytest.raises(PermissionDenied, match="personal Shift access"),
+    ):
+        shift_api._personal_scope(
+            request=SimpleNamespace(),
+            organization_id=uuid4(),
+            edition_id=uuid4(),
+            manage=False,
+        )
+
+    resolve_target.assert_not_called()
+    decide.assert_not_called()
 
 
 @pytest.mark.parametrize(

@@ -16,7 +16,9 @@ from maru.events.admin_context import (
     admin_edition_options,
     admin_organization_navigation,
     admin_shell_access,
+    selected_admin_profile_allows_app,
 )
+from maru.events.adoption import profile_allows_shell_destination
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.identity.navigation_preferences import navigation_pin_codes
@@ -31,6 +33,7 @@ _SUPPORTED_PIN_NAMESPACES = frozenset(
     {"my", "work", "platform", "organization", "series", "edition", "record"}
 )
 _DESTINATION_CODE_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,159}$")
+_PROFILE_PAIR_LENGTH = 2
 _SECTION_ORDER = (
     "Pinned",
     "Convention work",
@@ -67,6 +70,8 @@ class NavigationItem:
         Additional task language accepted by navigation search.
     kind
         The closed destination kind, such as ``destination`` or ``action``.
+    profile_destination_kind
+        The optional manifest kind required when an edition scopes this item.
     current
         Whether this destination represents the current request path.
     pinnable
@@ -83,6 +88,7 @@ class NavigationItem:
     description: str = ""
     keywords: tuple[str, ...] = ()
     kind: str = "destination"
+    profile_destination_kind: str = ""
     current: bool = False
     pinnable: bool = True
     pinned: bool = False
@@ -188,11 +194,94 @@ def _workspace_item(
         section=section,
         description=description,
         keywords=keywords,
+        profile_destination_kind=code,
         current=_route_is(request, "management-console") and requested_view == view,
     )
 
 
-def _personal_items(request: HttpRequest) -> list[NavigationItem]:
+def _profile_filtered_items(
+    *,
+    items: Iterable[NavigationItem],
+    edition: EventEdition,
+) -> list[NavigationItem]:
+    """Remove edition destinations absent from the exact profile manifest.
+
+    Parameters
+    ----------
+    items : Iterable[NavigationItem]
+        Already-authorized navigation candidates.
+    edition : EventEdition
+        Edition whose immutable profile code and version govern discovery.
+
+    Returns
+    -------
+    list[NavigationItem]
+        Non-edition items plus explicitly pinned edition destinations. Unknown
+        exact profiles disclose no profile-scoped destination.
+    """
+    return [
+        item
+        for item in items
+        if not item.profile_destination_kind
+        or profile_allows_shell_destination(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            item.profile_destination_kind,
+        )
+    ]
+
+
+def _personal_profile_pairs(
+    page_context: Mapping[str, Any],
+) -> tuple[tuple[str, int], ...]:
+    """Return exact profiles from editions already disclosed by a personal page.
+
+    Parameters
+    ----------
+    page_context : Mapping[str, Any]
+        Flattened trusted template context for the current personal surface.
+
+    Returns
+    -------
+    tuple[tuple[str, int], ...]
+        Distinct exact profile pairs. Invalid or unsupported context values do
+        not create a permissive fallback.
+    """
+    pairs: set[tuple[str, int]] = set()
+
+    def add_edition(value: object) -> None:
+        if not isinstance(value, EventEdition):
+            return
+        pairs.add(
+            (
+                value.adoption_profile_code,
+                value.adoption_profile_version,
+            )
+        )
+
+    add_edition(page_context.get("edition"))
+    personal_editions = page_context.get("maru_personal_editions", ())
+    if isinstance(personal_editions, (list, tuple)):
+        for edition in personal_editions:
+            add_edition(edition)
+    explicit_pairs = page_context.get("maru_personal_profile_pairs", ())
+    if isinstance(explicit_pairs, (list, tuple)):
+        for pair in explicit_pairs:
+            if (
+                isinstance(pair, (list, tuple))
+                and len(pair) == _PROFILE_PAIR_LENGTH
+                and isinstance(pair[0], str)
+                and isinstance(pair[1], int)
+            ):
+                pairs.add((pair[0], pair[1]))
+    return tuple(sorted(pairs))
+
+
+def _personal_items(
+    request: HttpRequest,
+    *,
+    profile_pairs: tuple[tuple[str, int], ...],
+) -> list[NavigationItem]:
     items = [
         NavigationItem(
             code="my.home",
@@ -210,6 +299,7 @@ def _personal_items(request: HttpRequest) -> list[NavigationItem]:
             section="Personal",
             description="Register for a convention and manage admission tickets.",
             keywords=("attendee", "admission", "payment", "booking"),
+            profile_destination_kind="my.registrations",
             current=_route_is(
                 request,
                 "public-registration-index",
@@ -227,6 +317,7 @@ def _personal_items(request: HttpRequest) -> list[NavigationItem]:
             section="Personal",
             description="Browse convention products and review your orders.",
             keywords=("store", "merchandise", "merch", "purchase"),
+            profile_destination_kind="my.catalog",
             current=_route_is(
                 request,
                 "my-catalog-index",
@@ -245,6 +336,7 @@ def _personal_items(request: HttpRequest) -> list[NavigationItem]:
             section="Personal",
             description="Complete and review your submitted convention forms.",
             keywords=("volunteer", "staff", "helper", "programme", "forms"),
+            profile_destination_kind="my.applications",
             current=_route_is(
                 request,
                 "my-application-index",
@@ -262,6 +354,7 @@ def _personal_items(request: HttpRequest) -> list[NavigationItem]:
             section="Work",
             description="Review your Positions, Availability, and Shifts.",
             keywords=("staff", "volunteer", "assignments", "rota", "crew"),
+            profile_destination_kind="my.workforce",
             current=_route_is(
                 request,
                 "my-workforce-assignments",
@@ -280,6 +373,7 @@ def _personal_items(request: HttpRequest) -> list[NavigationItem]:
             section="Personal",
             description="See your published convention timetable and locations.",
             keywords=("programme", "calendar", "events", "agenda"),
+            profile_destination_kind="my.schedule",
             current=_route_is(
                 request,
                 "my-maru-schedule-index",
@@ -293,6 +387,7 @@ def _personal_items(request: HttpRequest) -> list[NavigationItem]:
             section="Personal",
             description="Offer equipment for convention logistics use.",
             keywords=("assets", "inventory", "loan", "gear"),
+            profile_destination_kind="my.equipment-offers",
             current=_route_is(
                 request,
                 "my-logistics-offer-index",
@@ -308,6 +403,19 @@ def _personal_items(request: HttpRequest) -> list[NavigationItem]:
             keywords=("board", "controller", "leadership", "authority"),
             current=_route_is(request, "my-representation-invitations"),
         ),
+    ]
+    items = [
+        item
+        for item in items
+        if not item.profile_destination_kind
+        or any(
+            profile_allows_shell_destination(
+                profile_code,
+                profile_version,
+                item.profile_destination_kind,
+            )
+            for profile_code, profile_version in profile_pairs
+        )
     ]
     if _route_is(
         request,
@@ -429,16 +537,8 @@ def _management_items(
         if isinstance(routed_edition, EventEdition)
         else admin_edition_options(request).get("selected")
     )
-    if isinstance(selected, EventEdition) and selected.adoption_profile_code == (
-        "workforce_only"
-    ):
-        allowed_codes = {
-            "work.today",
-            "work.workforce",
-            "work.setup",
-            "work.security",
-        }
-        return [item for item in items if item.code in allowed_codes]
+    if isinstance(selected, EventEdition):
+        return _profile_filtered_items(items=items, edition=selected)
     return items
 
 
@@ -467,6 +567,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                 ),
                 section="Convention",
                 context_label=context_label,
+                profile_destination_kind="edition.structure",
                 current=_scoped_route_is(
                     request,
                     "organization-structure",
@@ -491,6 +592,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                 ),
                 section="Convention",
                 context_label=context_label,
+                profile_destination_kind="edition.registration",
                 current=_scoped_route_is(
                     request,
                     "registration-setup",
@@ -521,6 +623,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                     ),
                     section="Convention",
                     context_label=context_label,
+                    profile_destination_kind="edition.application-studio",
                     current=_scoped_route_is(
                         request,
                         "application-definition-workspace",
@@ -544,6 +647,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                     ),
                     section="Convention",
                     context_label=context_label,
+                    profile_destination_kind="edition.application-review",
                     current=_scoped_route_is(
                         request,
                         "application-review-workspace",
@@ -571,6 +675,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                     ),
                     section="Convention",
                     context_label=context_label,
+                    profile_destination_kind="edition.registration-commerce",
                     current=_route_is(
                         request,
                         "registration-commerce-workspace",
@@ -600,6 +705,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                     url=catalog_url,
                     section="Convention",
                     context_label=context_label,
+                    profile_destination_kind="edition.catalog",
                     current=(
                         _scoped_route_is(
                             request,
@@ -634,6 +740,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                     ),
                     section="Convention",
                     context_label=context_label,
+                    profile_destination_kind="edition.venues",
                     current=_route_is(
                         request,
                         "venue-workspace",
@@ -660,6 +767,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                     ),
                     section="Convention",
                     context_label=context_label,
+                    profile_destination_kind="edition.logistics",
                     current=_route_is(
                         request,
                         "logistics-workspace",
@@ -698,6 +806,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                 ),
                 section="Convention",
                 context_label=context_label,
+                profile_destination_kind="edition.charities",
                 current=_route_is(
                     request,
                     "charity-workspace",
@@ -705,7 +814,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                 ),
             )
         )
-    return items
+    return _profile_filtered_items(items=items, edition=edition)
 
 
 def _scoped_organization_items(request: HttpRequest) -> list[NavigationItem]:
@@ -961,6 +1070,7 @@ def _page_context_items(
                 ),
                 section="Convention",
                 context_label=edition_label,
+                profile_destination_kind="edition.overview",
                 current=_scoped_route_is(
                     request,
                     "baseline-event-edition-record",
@@ -981,6 +1091,7 @@ def _page_context_items(
                 ),
                 section="Convention",
                 context_label=edition_label,
+                profile_destination_kind="edition.structure",
                 current=bool(
                     page_context.get("baseline_structure_navigation_current")
                     or _route_is(request, "organization-structure")
@@ -998,12 +1109,15 @@ def _page_context_items(
                 ),
                 section="Convention",
                 context_label=edition_label,
+                profile_destination_kind="edition.registration",
                 current=bool(
                     page_context.get("baseline_registration_navigation_current")
                     or _route_is(request, "registration-setup")
                 ),
             )
         )
+    if isinstance(edition, EventEdition):
+        return _profile_filtered_items(items=items, edition=edition)
     return items
 
 
@@ -1067,6 +1181,11 @@ def _specialist_items(
     items: list[NavigationItem] = []
     for app in available_apps:
         app_label = str(app.get("app_label", ""))
+        if not selected_admin_profile_allows_app(
+            request,
+            app_label=app_label,
+        ):
+            continue
         app_name = str(app.get("name", ""))
         for model in app.get("models", ()):
             url = model.get("admin_url")
@@ -1296,7 +1415,10 @@ def project_shell_navigation(
     ):
         return {"groups": (), "count": 0}
 
-    personal_items = _personal_items(request)
+    personal_items = _personal_items(
+        request,
+        profile_pairs=_personal_profile_pairs(page_context),
+    )
     management_items = _management_items(request, page_context=page_context)
     items = _deduplicate(
         (

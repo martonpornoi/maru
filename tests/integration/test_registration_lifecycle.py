@@ -5,26 +5,34 @@ from uuid import uuid4
 import pytest
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
-from maru.effects.models import DomainEvent
+from maru.effects.models import DomainEvent, OutboxMessage
+from maru.identity.models import AccountRestriction
 from maru.participation.models import ParticipationCapacity
 from maru.registration.availability import assess_product_availability
+from maru.registration.commerce import expire_admission_tier_replacements
 from maru.registration.models import (
     AdmissionProduct,
+    AdmissionTierReplacement,
     ConfigurationStatus,
     Entitlement,
     PaymentAttempt,
     Registration,
     RegistrationAdjustment,
+    RegistrationLifecycleRun,
     RegistrationQuestion,
+    RegistrationTimelineEntry,
 )
+from maru.registration.restrictions import apply_restriction_consequences
 from maru.registration.services import (
     confirm_demo_payment,
     extend_payment_deadline,
+    inspect_registration_lifecycle,
     process_registration_lifecycle,
     submit_registration,
     waive_registration_payment,
@@ -329,6 +337,193 @@ def test_inactive_account_open_registration_is_cancelled() -> None:
     assert result.inactive_cancelled == 1
     assert registration.state == Registration.State.CANCELLED
     assert registration.cancelled_at == now
+
+
+def test_lifecycle_workloads_ignore_retained_unadopted_registration() -> None:
+    """Keep global and explicit lifecycle runs inert for an incompatible profile."""
+    now = timezone.now()
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    configuration = RegistrationConfigurationFactory(
+        edition=edition,
+        opens_at=now - timedelta(days=30),
+        closes_at=now + timedelta(days=30),
+    )
+    source_product = AdmissionProduct.objects.create(
+        configuration=configuration,
+        code="retained-source",
+        name="Retained source admission",
+        price_minor=10_000,
+        capacity=100,
+        position=10,
+        entitlement_code="retained-source",
+        entitlement_name="Retained source admission",
+    )
+    target_product = AdmissionProduct.objects.create(
+        configuration=configuration,
+        code="retained-target",
+        name="Retained target admission",
+        price_minor=15_000,
+        capacity=100,
+        position=20,
+        entitlement_code="retained-target",
+        entitlement_name="Retained target admission",
+    )
+    configuration.status = ConfigurationStatus.ACTIVE
+    configuration.review_required = False
+    configuration.review_note = "Retained lifecycle fixture reviewed."
+    configuration.activated_at = now
+    configuration.save(
+        update_fields=(
+            "status",
+            "review_required",
+            "review_note",
+            "activated_at",
+            "updated_at",
+        )
+    )
+    overdue_account = AccountFactory()
+    overdue = Registration.objects.create(
+        organization=edition.organization,
+        edition=edition,
+        participation=ParticipationFactory(
+            account=overdue_account,
+            edition=edition,
+        ),
+        account=overdue_account,
+        configuration=configuration,
+        product=source_product,
+        reference="RETAINED-OVERDUE",
+        state=Registration.State.PAYMENT_PENDING,
+        product_name_snapshot=source_product.name,
+        price_minor_snapshot=source_product.price_minor,
+        currency_snapshot=configuration.currency,
+        submitted_at=now - timedelta(days=2),
+        payment_due_at=now - timedelta(days=1),
+    )
+    confirmed_account = AccountFactory()
+    confirmed = Registration.objects.create(
+        organization=edition.organization,
+        edition=edition,
+        participation=ParticipationFactory(
+            account=confirmed_account,
+            edition=edition,
+        ),
+        account=confirmed_account,
+        configuration=configuration,
+        product=source_product,
+        reference="RETAINED-CONFIRMED",
+        state=Registration.State.CONFIRMED,
+        product_name_snapshot=source_product.name,
+        price_minor_snapshot=source_product.price_minor,
+        currency_snapshot=configuration.currency,
+        submitted_at=now - timedelta(days=3),
+        confirmed_at=now - timedelta(days=3),
+        confirmation_basis=Registration.ConfirmationBasis.PROVIDER,
+    )
+    replacement = AdmissionTierReplacement.objects.create(
+        registration=confirmed,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        source_product=source_product,
+        target_product=target_product,
+        source_product_name_snapshot=source_product.name,
+        target_product_name_snapshot=target_product.name,
+        source_price_minor_snapshot=source_product.price_minor,
+        target_price_minor_snapshot=target_product.price_minor,
+        amount_due_minor=target_product.price_minor - source_product.price_minor,
+        currency=configuration.currency,
+        source_entitlement_code=source_product.entitlement_code,
+        target_entitlement_code=target_product.entitlement_code,
+        target_entitlement_name_snapshot=target_product.entitlement_name,
+        expected_registration_version=confirmed.aggregate_version,
+        reserved_at=now - timedelta(days=2),
+        payment_due_at=now - timedelta(days=1),
+        actor=confirmed_account,
+    )
+    restriction = AccountRestriction.objects.create(
+        organization=edition.organization,
+        edition=edition,
+        account=overdue_account,
+        kind=AccountRestriction.Kind.ATTENDANCE,
+        reason_code="retained-registration-scope",
+        attendee_message="This retained registration must remain unchanged.",
+        internal_reference="RETAINED-RESTRICTION",
+        effective_at=now - timedelta(hours=1),
+        issued_by=confirmed_account,
+        notify_account=False,
+    )
+    before = {
+        "adjustments": RegistrationAdjustment.objects.filter(
+            edition_id=edition.id
+        ).count(),
+        "timeline": RegistrationTimelineEntry.objects.filter(
+            edition_id=edition.id
+        ).count(),
+        "audits": AuditEvent.objects.filter(event_edition_id=edition.id).count(),
+        "events": DomainEvent.objects.filter(event_edition_id=edition.id).count(),
+        "outbox": OutboxMessage.objects.filter(
+            event__event_edition_id=edition.id
+        ).count(),
+        "runs": RegistrationLifecycleRun.objects.count(),
+    }
+
+    for scope in (None, edition.id):
+        candidates = inspect_registration_lifecycle(edition_id=scope, now=now)
+        assert candidates.total == 0
+        result = process_registration_lifecycle(edition_id=scope, now=now)
+        assert result.expired == 0
+        assert result.inactive_cancelled == 0
+        assert result.closed_waitlist_cancelled == 0
+        assert result.promoted == 0
+        assert result.tier_replacements_expired == 0
+        assert (
+            expire_admission_tier_replacements(
+                edition_id=scope,
+                now=now,
+            )
+            == 0
+        )
+
+    assert apply_restriction_consequences(
+        restriction=restriction,
+        actor=confirmed_account,
+    ) == (0, 0)
+
+    output = StringIO()
+    with pytest.raises(CommandError, match="unavailable for Registration"):
+        call_command(
+            "registration_lifecycle",
+            "--edition",
+            str(edition.id),
+            stdout=output,
+        )
+
+    overdue.refresh_from_db()
+    confirmed.refresh_from_db()
+    replacement.refresh_from_db()
+    assert overdue.state == Registration.State.PAYMENT_PENDING
+    assert overdue.aggregate_version == 1
+    assert confirmed.state == Registration.State.CONFIRMED
+    assert confirmed.aggregate_version == 1
+    assert replacement.status == AdmissionTierReplacement.Status.PAYMENT_PENDING
+    assert replacement.aggregate_version == 1
+    assert {
+        "adjustments": RegistrationAdjustment.objects.filter(
+            edition_id=edition.id
+        ).count(),
+        "timeline": RegistrationTimelineEntry.objects.filter(
+            edition_id=edition.id
+        ).count(),
+        "audits": AuditEvent.objects.filter(event_edition_id=edition.id).count(),
+        "events": DomainEvent.objects.filter(event_edition_id=edition.id).count(),
+        "outbox": OutboxMessage.objects.filter(
+            event__event_edition_id=edition.id
+        ).count(),
+        "runs": RegistrationLifecycleRun.objects.count(),
+    } == before
 
 
 def test_waitlist_closes_without_requesting_payment_after_registration_ends() -> None:

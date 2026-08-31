@@ -39,3 +39,22 @@ def test_registration_metrics_are_scoped_and_machine_readable() -> None:
             organization=other_organization.id,
             edition=edition.id,
         )
+
+
+def test_registration_metrics_reject_an_incompatible_exact_profile() -> None:
+    """Do not project retained Registration metrics for an unadopted edition."""
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    output = StringIO()
+
+    with pytest.raises(CommandError, match="unavailable"):
+        call_command(
+            "registration_metrics",
+            organization=edition.organization_id,
+            edition=edition.id,
+            stdout=output,
+        )
+
+    assert output.getvalue() == ""

@@ -1,6 +1,6 @@
 """Authorized edition API projections."""
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 from uuid import UUID
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -11,7 +11,11 @@ from maru.core.validators import (
     validate_language_codes,
     validate_time_zone,
 )
-from maru.events.adoption import ADOPTION_PROFILE_CHOICES, AdoptionProfileCode
+from maru.events.adoption import (
+    PERSISTED_ADOPTION_PROFILE_CHOICES,
+    SELECTABLE_ADOPTION_PROFILE_CHOICES,
+    AdoptionProfileCode,
+)
 from maru.events.models import (
     MAX_EDITION_SPAN_DAYS,
     EditionClosureManifest,
@@ -24,6 +28,34 @@ if TYPE_CHECKING:
 
 MAX_AUTOCOMPLETE_RESULTS = 20
 MAX_BULK_EDITION_TRANSITIONS = 25
+
+
+class RetainedAdoptionProfileChoiceField(serializers.ChoiceField):
+    """Expose current setup choices while accepting retained retry codes."""
+
+    _retained_choice_strings_to_values: ClassVar[dict[str, str]] = {
+        str(code): code for code, _label in PERSISTED_ADOPTION_PROFILE_CHOICES
+    }
+
+    def to_internal_value(self, data: object) -> str:
+        """Resolve input through the persisted code set, not today's selector.
+
+        Parameters
+        ----------
+        data : object
+            Untrusted request value.
+
+        Returns
+        -------
+        str
+            The exact retained profile code.
+        """
+        if data == "" and self.allow_blank:
+            return ""
+        try:
+            return self._retained_choice_strings_to_values[str(data)]
+        except (KeyError, TypeError):
+            self.fail("invalid_choice", input=data)
 
 
 def _django_validation_code(
@@ -228,8 +260,8 @@ class EditionCreateRequestSerializer(EditionDetailsRequestSerializer):
     """Serialize and validate edition create request data."""
 
     series_id = serializers.UUIDField()
-    adoption_profile_code = serializers.ChoiceField(
-        choices=ADOPTION_PROFILE_CHOICES,
+    adoption_profile_code = RetainedAdoptionProfileChoiceField(
+        choices=SELECTABLE_ADOPTION_PROFILE_CHOICES,
         default=AdoptionProfileCode.FULL_CONVENTION,
     )
 

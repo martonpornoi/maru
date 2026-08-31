@@ -184,9 +184,48 @@ def test_attendee_report_summary_counts_minimized_categories() -> None:
 def _consent_query(consent: object) -> SimpleNamespace:
     return SimpleNamespace(
         select_related=lambda *_args: SimpleNamespace(
-            filter=lambda **_kwargs: SimpleNamespace(first=lambda: consent)
+            filter=lambda *_args, **_kwargs: SimpleNamespace(first=lambda: consent)
         )
     )
+
+
+def test_guardian_acceptance_filters_exact_profile_before_related_rows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    exact_profile_filter = object()
+    locked = MagicMock()
+    locked.select_related.return_value = locked
+    locked.filter.return_value = locked
+    locked.first.return_value = None
+    monkeypatch.setattr(django_transaction, "atomic", nullcontext)
+    monkeypatch.setattr(
+        GuardianConsent.objects,
+        "select_for_update",
+        lambda: locked,
+    )
+    profile_filter = MagicMock(return_value=exact_profile_filter)
+    monkeypatch.setattr(
+        guardians,
+        "adoption_profile_filter_for_module",
+        profile_filter,
+    )
+
+    with pytest.raises(ValidationError) as raised:
+        guardians.accept_guardian_consent(
+            raw_token="retained-consent-token",
+            guardian_name="Guardian Person",
+        )
+
+    assert raised.value.code == "guardian_consent_invalid"
+    profile_filter.assert_called_once_with(
+        "registration",
+        field_prefix="registration__edition",
+    )
+    locked.filter.assert_called_once_with(
+        exact_profile_filter,
+        token_digest=locked.filter.call_args.kwargs["token_digest"],
+    )
+    assert len(locked.filter.call_args.kwargs["token_digest"]) == 64
 
 
 def _prepare_guardian_acceptance(
@@ -353,7 +392,11 @@ def _prepare_empty_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     credentials = MagicMock()
     credentials.filter.return_value = credentials
     credentials.select_for_update.return_value = []
-    monkeypatch.setattr(Credential.objects, "filter", lambda **_kwargs: credentials)
+    monkeypatch.setattr(
+        Credential.objects,
+        "filter",
+        lambda *_args, **_kwargs: credentials,
+    )
 
 
 def test_public_profile_restriction_hides_directory_evidence(
@@ -471,7 +514,11 @@ def test_credential_restriction_revokes_issued_credential_evidence(
     credentials = MagicMock()
     credentials.filter.return_value = credentials
     credentials.select_for_update.return_value = [credential]
-    monkeypatch.setattr(Credential.objects, "filter", lambda **_kwargs: credentials)
+    monkeypatch.setattr(
+        Credential.objects,
+        "filter",
+        lambda *_args, **_kwargs: credentials,
+    )
     event_create = MagicMock()
     monkeypatch.setattr(CredentialEvent.objects, "create", event_create)
 

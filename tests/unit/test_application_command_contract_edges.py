@@ -18,7 +18,12 @@ from maru.applications.commands import (
 )
 from maru.applications.models import (
     ApplicationClassification,
+    ApplicationTargetKind,
     ReviewerBasis,
+)
+from maru.events.adoption import (
+    FULL_CONVENTION_PROFILE_VERSION,
+    AdoptionProfileCode,
 )
 from maru.identity.models import Account
 
@@ -164,6 +169,7 @@ def _question(
         required=required,
         applicant_visible=applicant_visible,
         retention_policy_code=retention_policy_code,
+        source_binding="",
         condition=condition or {},
     )
 
@@ -178,8 +184,15 @@ def _definition(
     sensitive: bool = False,
     retention_policy_code: str = "retention.v1",
     audience_policy_code: str = "audience.v1",
+    target_adapter_kind: str = ApplicationTargetKind.DJ_SET,
 ) -> SimpleNamespace:
     return SimpleNamespace(
+        edition=SimpleNamespace(
+            adoption_profile_code=AdoptionProfileCode.FULL_CONVENTION,
+            adoption_profile_version=FULL_CONVENTION_PROFILE_VERSION,
+        ),
+        eligibility_kind="authenticated_person",
+        target_adapter_kind=target_adapter_kind,
         questions=_relation(values=questions),
         owner_department_links=_relation(exists=owner),
         reviewer_roles=_relation(exists=reviewer),
@@ -245,6 +258,44 @@ def test_activation_accepts_acyclic_conditions() -> None:
     commands._validate_definition_activation(definition)
 
 
+def test_activation_rechecks_complete_reviewer_role_compatibility() -> None:
+    """Reject a stale configured role before activating its reviewer queue."""
+    role_bundle = SimpleNamespace(
+        capability_codes=(
+            "applications.review",
+            "registration.manage_configuration",
+        )
+    )
+    definition = _definition((_question(),))
+    definition.reviewer_roles.select_related.return_value.order_by.return_value = (
+        SimpleNamespace(role_bundle=role_bundle),
+    )
+
+    with (
+        patch.object(
+            commands,
+            "profile_allows_application_reviewer_role",
+            return_value=False,
+        ),
+        pytest.raises(ValidationError) as captured,
+    ):
+        commands._validate_definition_activation(definition)
+
+    assert captured.value.code == "application_reviewer_role_unavailable"
+
+
+def test_activation_rejects_an_unpinned_target_adapter() -> None:
+    definition = _definition(
+        (_question(),),
+        target_adapter_kind="future_target",
+    )
+
+    with pytest.raises(ValidationError) as captured:
+        commands._validate_definition_activation(definition)
+
+    assert captured.value.code == "application_target_adapter_unavailable"
+
+
 def test_latest_answers_keeps_only_the_newest_revision() -> None:
     submission = SimpleNamespace(answer_revisions=MagicMock())
     submission.answer_revisions.order_by.return_value = (
@@ -276,7 +327,12 @@ def test_reviewer_basis_supports_named_and_current_role_assignments_only() -> No
     ) == (ReviewerBasis.NAMED_PERSON, None)
 
     definition.reviewer_people.filter.return_value.exists.return_value = False
-    definition.reviewer_roles.values_list.return_value = ()
+    definition.edition = SimpleNamespace(
+        adoption_profile_code=AdoptionProfileCode.FULL_CONVENTION,
+        adoption_profile_version=FULL_CONVENTION_PROFILE_VERSION,
+    )
+    definition.is_sensitive = False
+    definition.reviewer_roles.select_related.return_value.order_by.return_value = ()
     with pytest.raises(ApplicationAuthorizationDenied):
         commands._reviewer_basis(
             actor=actor,
@@ -284,11 +340,21 @@ def test_reviewer_basis_supports_named_and_current_role_assignments_only() -> No
             evaluated_at=evaluated_at,
         )
 
-    role = SimpleNamespace(id=uuid4(), role_bundle=SimpleNamespace(id=uuid4()))
-    definition.reviewer_roles.values_list.return_value = (role.role_bundle.id,)
+    role_bundle = SimpleNamespace(
+        id=uuid4(),
+        capability_codes=("applications.review",),
+    )
+    role = SimpleNamespace(id=uuid4(), role_bundle=role_bundle)
+    definition.reviewer_roles.select_related.return_value.order_by.return_value = (
+        SimpleNamespace(
+            role_bundle_id=role_bundle.id,
+            role_bundle=role_bundle,
+        ),
+    )
     definition.owner_department_links.values_list.return_value = (uuid4(),)
     assignments = MagicMock()
-    assignments.filter.return_value.order_by.return_value = (role,)
+    assignment_rows = assignments.filter.return_value.select_related.return_value
+    assignment_rows.order_by.return_value = (role,)
     with (
         patch.object(commands.RoleAssignment, "objects", assignments),
         patch.object(commands, "current_role_assignment_ids", return_value={role.id}),
@@ -300,6 +366,43 @@ def test_reviewer_basis_supports_named_and_current_role_assignments_only() -> No
         )
     assert basis == ReviewerBasis.IMMUTABLE_ROLE
     assert bundle is role.role_bundle
+
+    mixed_bundle = SimpleNamespace(
+        id=uuid4(),
+        capability_codes=(
+            "applications.review",
+            "registration.manage_configuration",
+        ),
+    )
+    definition.reviewer_roles.select_related.return_value.order_by.return_value = (
+        SimpleNamespace(
+            role_bundle_id=mixed_bundle.id,
+            role_bundle=mixed_bundle,
+        ),
+    )
+    with (
+        patch.object(
+            commands,
+            "profile_allows_application_reviewer_role",
+            return_value=False,
+        ),
+        patch.object(commands.RoleAssignment, "objects", assignments),
+        patch.object(commands, "current_role_assignment_ids") as current_ids,
+        pytest.raises(ApplicationAuthorizationDenied),
+    ):
+        commands._reviewer_basis(
+            actor=actor,
+            definition=definition,
+            evaluated_at=evaluated_at,
+        )
+    current_ids.assert_not_called()
+
+    definition.reviewer_roles.select_related.return_value.order_by.return_value = (
+        SimpleNamespace(
+            role_bundle_id=role_bundle.id,
+            role_bundle=role_bundle,
+        ),
+    )
 
     with (
         patch.object(commands.RoleAssignment, "objects", assignments),

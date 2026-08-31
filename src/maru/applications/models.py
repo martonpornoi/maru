@@ -11,6 +11,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator, RegexVa
 from django.db import models
 from django.db.models import Q
 
+from maru.applications.adoption import profile_allows_application_reviewer_role
 from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug
 from maru.identity.policies import validate_convention_subject
@@ -527,13 +528,23 @@ class ApplicationReviewerRole(UUIDTimeStampedModel):
                 raise ValidationError(
                     {"role_bundle": "The role belongs to another organizer."}
                 )
-            required = {"applications.review"}
-            if self.definition.is_sensitive:
-                required.add("applications.review_sensitive")
-            if not required <= set(self.role_bundle.capability_codes):
+            edition = self.definition.edition
+            if not profile_allows_application_reviewer_role(
+                edition.adoption_profile_code,
+                edition.adoption_profile_version,
+                self.role_bundle.capability_codes,
+                sensitive=self.definition.is_sensitive,
+            ):
                 raise ValidationError(
                     {
-                        "role_bundle": "The immutable role version lacks required review capabilities."
+                        "role_bundle": ValidationError(
+                            (
+                                "The immutable reviewer role must contain the required "
+                                "review capabilities and remain wholly compatible with "
+                                "this edition."
+                            ),
+                            code="application_reviewer_role_unavailable",
+                        )
                     }
                 )
 

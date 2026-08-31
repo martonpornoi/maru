@@ -38,6 +38,7 @@ from maru.applications.models import (
     ApplicationQuestionType,
     ApplicationTargetKind,
 )
+from maru.applications.starters import starter_catalog
 from maru.identity.models import Account
 
 _FACTORY = APIRequestFactory()
@@ -314,7 +315,7 @@ def test_starter_and_definition_get_adapters_project_bounded_rows() -> None:
     actor = _actor()
     organization_id, edition_id, _submission_id, _definition_id = _ids()
     starter_request = _request("get", actor=actor)
-    with patch.object(api, "definition_workspace", return_value=()):
+    with patch.object(api, "application_starters", return_value=starter_catalog()):
         response = ApplicationStarterCatalogView.as_view()(
             starter_request,
             organization_id=organization_id,

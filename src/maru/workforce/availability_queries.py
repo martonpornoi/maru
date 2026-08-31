@@ -9,8 +9,10 @@ from zoneinfo import ZoneInfo
 
 from django.db import models
 
+from maru.events.queries import adoption_profile_filter_for_adapter
 from maru.identity.models import Account
 from maru.identity.queries import account_display_labels
+from maru.workforce.adoption import WORKFORCE_SELF_ADAPTER
 from maru.workforce.availability_inputs import MAX_AVAILABILITY_WINDOWS
 from maru.workforce.models import (
     PersonAvailabilityPlan,
@@ -228,11 +230,19 @@ def person_has_availability_relationship(
         return False
     return (
         PositionAssignment.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
             organization_id=organization_id,
             edition_id=edition_id,
             account_id=account.id,
         ).exists()
         or PersonAvailabilityPlan.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
             organization_id=organization_id,
             edition_id=edition_id,
             account_id=account.id,
@@ -260,6 +270,10 @@ def person_can_edit_availability(
         ``True`` when at least one exact-edition assignment remains open.
     """
     return PositionAssignment.objects.filter(
+        adoption_profile_filter_for_adapter(
+            WORKFORCE_SELF_ADAPTER,
+            field_prefix="edition",
+        ),
         organization_id=organization_id,
         edition_id=edition_id,
         account_id=account.id,
@@ -402,7 +416,14 @@ def my_availability_scope_items(
     if condition is None:
         return ()
     assignments = tuple(
-        PositionAssignment.objects.filter(condition, account=account)
+        PositionAssignment.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
+            condition,
+            account=account,
+        )
         .select_related(
             "organization",
             "edition",
@@ -418,6 +439,10 @@ def my_availability_scope_items(
     plans = {
         plan.edition_id: plan
         for plan in PersonAvailabilityPlan.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
             condition,
             account=account,
         ).order_by("edition_id")

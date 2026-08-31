@@ -3,7 +3,7 @@
 {% block assignment_action_title %}Propose assignment · {{ position.title }}{% endblock %}
 {% block assignment_action_breadcrumb %}Propose for {{ position.title }}{% endblock %}
 {% block assignment_action_heading %}Propose a person for {{ position.title }}{% endblock %}
-{% block assignment_action_intro %}Reserve approved headcount for a known person and record the intended dates. This proposal grants no role or access and creates no active {% if edition.adoption_profile_code == "workforce_only" %}Workforce assignment{% else %}Participation{% endif %}.{% endblock %}
+{% block assignment_action_intro %}Reserve approved headcount for a known person and record the intended dates. This proposal grants no role or access and creates no active {% if assignment_evidence_mode == "workforce" %}Workforce assignment{% elif assignment_evidence_mode == "participation" %}Participation{% else %}assignment authority{% endif %}.{% endblock %}
 {% block assignment_action_meta %}<span>Open records: <strong>{{ open_assignment_count }} of {{ position.headcount }}</strong></span>{% endblock %}
 {% block assignment_reload_link %}<a href="{% url 'organization-workforce-assignment-proposal' organization.slug convention_series.slug edition.slug position.id %}">Reload candidates and readiness</a>{% endblock %}
 
@@ -14,7 +14,7 @@
       <div><dt>Department</dt><dd>{{ position.department.name }}</dd></div>
       <div><dt>Approved headcount</dt><dd>{{ projected_position.holders|length }} active; {{ open_assignment_count }} active or proposed</dd></div>
       <div><dt>Role meaning</dt><dd>{{ position.role_bundle.name }} v{{ position.role_bundle.version }}</dd></div>
-      <div><dt>{% if edition.adoption_profile_code == "workforce_only" %}Workforce labels{% else %}Participation labels{% endif %}</dt><dd>{{ position.capacity_codes|join:", " }}</dd></div>
+      <div><dt>{% if assignment_evidence_mode == "workforce" %}Workforce labels{% elif assignment_evidence_mode == "participation" %}Participation labels{% else %}Position labels{% endif %}</dt><dd>{{ position.capacity_codes|join:", " }}</dd></div>
     </dl>
   </section>
 
@@ -37,7 +37,8 @@
     </form>
   {% else %}
     <div class="baseline-state baseline-state--warning" role="status">
-      {% if position.status == "closed" %}<h2>This Position is closed</h2><p>Closed Positions cannot receive assignment proposals.</p>
+      {% if assignment_evidence_mode == "unsupported" %}<h2>Assignment activation unavailable</h2><p>This release does not recognize an exact assignment-evidence adapter for the edition profile. No proposal can be recorded.</p>
+      {% elif position.status == "closed" %}<h2>This Position is closed</h2><p>Closed Positions cannot receive assignment proposals.</p>
       {% elif open_assignment_count >= position.headcount %}<h2>Approved headcount is reserved</h2><p>End or reject an open assignment, or govern a headcount change from Position management.</p>
       {% elif not candidates %}<h2>No known person is available</h2><p>A person must first have an active organization relationship, Position application, onboarding request, retained Workforce history, or—where that module is adopted—edition Participation. Maru does not expose a global account search here.</p>
       {% else %}<h2>Proposals are read-only</h2><p>New assignments are available from Draft through Live.</p>{% endif %}

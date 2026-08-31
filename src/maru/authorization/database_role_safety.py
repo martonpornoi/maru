@@ -83,14 +83,15 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.identity_platforminvitationretentionpolicycontrol",
 )
 
-# Workforce adoption and Organization structure evidence is append-only at
-# runtime. The separately credentialed migration/cutover owner retains recovery
-# authority. Registration setup and account onboarding's
+# Effects replay, Workforce adoption, and Organization structure evidence is
+# append-only at runtime. The separately credentialed migration/cutover owner
+# retains recovery authority. Registration setup and account onboarding's
 # transitions, command receipts, and reconciliation receipts use the same
 # profile. Delivery attempt/late-outcome provider references and current
 # retention assessments have narrowly trigger-guarded v9 updates and become
 # terminal when the safe result is disposed.
 RUNTIME_DATABASE_SELECT_INSERT_RELATIONS: Final[tuple[str, ...]] = (
+    "public.effects_effectreplayreceipt",
     "public.events_workforceadoptionsetupreceipt",
     "public.workforce_editionstructurecommandreceipt",
     "public.workforce_positionassignmentcommandreceipt",

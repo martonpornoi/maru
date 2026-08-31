@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 from django import forms
 from django.core.exceptions import ValidationError
 
+from maru.applications.adoption import profile_allows_application_eligibility
 from maru.applications.models import (
     ApplicationClassification,
     ApplicationDefinition,
@@ -279,6 +280,8 @@ class DefinitionConfigureForm(RetryForm):
         departments: Iterable[Department],
         roles: Iterable[RoleBundle],
         edition_time_zone: str,
+        adoption_profile_code: str,
+        adoption_profile_version: int,
         **kwargs: Any,
     ) -> None:
         """Initialize the DefinitionConfigureForm instance.
@@ -293,10 +296,23 @@ class DefinitionConfigureForm(RetryForm):
             The roles used to configure and validate this form.
         edition_time_zone : str
             The IANA time-zone name used for localization and validation.
+        adoption_profile_code : str
+            The persisted adoption-profile code.
+        adoption_profile_version : int
+            The persisted adoption-profile version.
         **kwargs : Any
             Keyword arguments forwarded to the framework implementation.
         """
         super().__init__(*args, **kwargs)
+        cast("forms.ChoiceField", self.fields["eligibility_kind"]).choices = tuple(
+            choice
+            for choice in ApplicationEligibilityKind.choices
+            if profile_allows_application_eligibility(
+                adoption_profile_code,
+                adoption_profile_version,
+                choice[0],
+            )
+        )
         owner_department_field = cast(
             "forms.MultipleChoiceField",
             self.fields["owner_department_ids"],

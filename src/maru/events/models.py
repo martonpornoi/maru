@@ -17,15 +17,38 @@ from maru.core.validators import (
     validate_time_zone,
 )
 from maru.events.adoption import (
-    ADOPTION_PROFILE_CHOICES,
-    ADOPTION_PROFILE_VERSION,
+    DEFAULT_ADOPTION_PROFILE_VERSION,
+    PERSISTED_ADOPTION_PROFILE_CHOICES,
+    WORKFORCE_ONLY_PROFILE_VERSION,
     AdoptionProfileCode,
     adoption_profile,
 )
+from maru.events.adoption_persistence import PERSISTED_ADOPTION_PROFILE_KEYS
 
 ARCHIVE_AMENDMENT_LABEL_LENGTH = 60
 ARCHIVE_AMENDMENT_CONTENT_LENGTH = ARCHIVE_AMENDMENT_LABEL_LENGTH - 3
 MAX_EDITION_SPAN_DAYS = 31
+
+
+def _supported_adoption_profile_condition() -> models.Q:
+    """Build the database guard from its independent exact-pair catalog.
+
+    Returns
+    -------
+    models.Q
+        Disjunction admitting each independently declared exact pair.
+    """
+    conditions = tuple(
+        models.Q(
+            adoption_profile_code=profile_code,
+            adoption_profile_version=profile_version,
+        )
+        for profile_code, profile_version in PERSISTED_ADOPTION_PROFILE_KEYS
+    )
+    condition = conditions[0]
+    for alternative in conditions[1:]:
+        condition |= alternative
+    return condition
 
 
 class EventEdition(UUIDTimeStampedModel):
@@ -63,14 +86,14 @@ class EventEdition(UUIDTimeStampedModel):
     aggregate_version = models.PositiveIntegerField(default=1, editable=False)
     adoption_profile_code = models.CharField(
         max_length=40,
-        choices=ADOPTION_PROFILE_CHOICES,
+        choices=PERSISTED_ADOPTION_PROFILE_CHOICES,
         default=AdoptionProfileCode.FULL_CONVENTION,
         db_default=AdoptionProfileCode.FULL_CONVENTION,
         editable=False,
     )
     adoption_profile_version = models.PositiveIntegerField(
-        default=ADOPTION_PROFILE_VERSION,
-        db_default=ADOPTION_PROFILE_VERSION,
+        default=DEFAULT_ADOPTION_PROFILE_VERSION,
+        db_default=DEFAULT_ADOPTION_PROFILE_VERSION,
         editable=False,
     )
     time_zone = models.CharField(max_length=63, validators=[validate_time_zone])
@@ -108,16 +131,7 @@ class EventEdition(UUIDTimeStampedModel):
                 name="edition_span_no_more_than_31_days",
             ),
             models.CheckConstraint(
-                condition=(
-                    models.Q(
-                        adoption_profile_code=AdoptionProfileCode.FULL_CONVENTION,
-                        adoption_profile_version=ADOPTION_PROFILE_VERSION,
-                    )
-                    | models.Q(
-                        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
-                        adoption_profile_version=ADOPTION_PROFILE_VERSION,
-                    )
-                ),
+                condition=_supported_adoption_profile_condition(),
                 name="edition_adoption_profile_supported",
             ),
         ]
@@ -131,8 +145,11 @@ class EventEdition(UUIDTimeStampedModel):
             If the submitted state or input violates a domain invariant.
         """
         super().clean()
-        profile = adoption_profile(self.adoption_profile_code)
-        if profile is None or self.adoption_profile_version != profile.version:
+        profile = adoption_profile(
+            self.adoption_profile_code,
+            self.adoption_profile_version,
+        )
+        if profile is None:
             raise ValidationError(
                 {
                     "adoption_profile_code": (
@@ -378,7 +395,14 @@ class WorkforceAdoptionSetupReceipt(UUIDTimeStampedModel):
                 "Workforce setup receipt series does not match.",
                 code="workforce_setup_receipt_series_mismatch",
             )
-        if self.edition.adoption_profile_code != AdoptionProfileCode.WORKFORCE_ONLY:
+        profile = adoption_profile(
+            self.edition.adoption_profile_code,
+            self.edition.adoption_profile_version,
+        )
+        if profile is None or profile.key != (
+            AdoptionProfileCode.WORKFORCE_ONLY.value,
+            WORKFORCE_ONLY_PROFILE_VERSION,
+        ):
             raise ValidationError(
                 "Guided Workforce setup must resolve to a Workforce-only edition.",
                 code="workforce_setup_receipt_profile_mismatch",

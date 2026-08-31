@@ -3966,6 +3966,9 @@ export interface paths {
          *     ------
          *     ApiValidationError
          *         If the request payload violates the endpoint contract.
+         *     PermissionDenied
+         *         If the exact organization-and-edition scope does not allow the
+         *         account to manage its attendee profile.
          */
         put: operations["registration_update_self_attendee_profile"];
         post?: never;
@@ -4007,6 +4010,9 @@ export interface paths {
          *     ------
          *     ApiValidationError
          *         If the request payload violates the endpoint contract.
+         *     PermissionDenied
+         *         If the exact organization-and-edition scope does not allow the
+         *         account to manage its attendee profile.
          */
         post: operations["registration_upload_self_fursuit_photo"];
         delete?: never;
@@ -4045,6 +4051,9 @@ export interface paths {
          *     ------
          *     ApiValidationError
          *         If the request payload violates the endpoint contract.
+         *     PermissionDenied
+         *         If the exact organization-and-edition scope does not allow the
+         *         account to manage its attendee profile.
          */
         post: operations["registration_upload_self_profile_photo"];
         delete?: never;
@@ -4933,7 +4942,10 @@ export interface paths {
          *     Raises
          *     ------
          *     DependencyUnavailable
-         *         If the scoped target does not exist or cannot be disclosed.
+         *         If the database-backed profile projection cannot be read.
+         *     NotFound
+         *         If the registration profile cannot be disclosed in the exact
+         *         organization-and-edition scope.
          */
         get: operations["registration_retrieve_my_profile_extensions"];
         put?: never;
@@ -4961,7 +4973,11 @@ export interface paths {
          *     ApiValidationError
          *         If the request payload violates the endpoint contract.
          *     DependencyUnavailable
-         *         If the scoped target does not exist or cannot be disclosed.
+         *         If database-backed authorization, writing, or projection cannot
+         *         complete.
+         *     NotFound
+         *         If the registration profile cannot be disclosed or changed in the
+         *         exact organization-and-edition scope.
          */
         post: operations["registration_write_my_profile_extension"];
         delete?: never;
@@ -9729,6 +9745,7 @@ export interface components {
             readonly adoption_profile_label: string;
             readonly adopted_modules: string[];
             readonly available_destinations: string[];
+            readonly assignment_uses_participation_evidence: boolean;
             time_zone: string;
             language_codes: string[];
             currency_codes: string[];

@@ -36,6 +36,7 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.identity_platforminvitationretentionpolicycontrol",
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
+        "public.effects_effectreplayreceipt",
         "public.events_workforceadoptionsetupreceipt",
         "public.workforce_editionstructurecommandreceipt",
         "public.workforce_positionassignmentcommandreceipt",

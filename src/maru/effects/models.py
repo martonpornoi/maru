@@ -3,9 +3,14 @@
 from typing import Any
 
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from maru.core.models import UUIDTimeStampedModel
+
+MAX_EFFECT_REPLAY_REASON_LENGTH = 240
+MAX_EFFECT_REPLAY_ADDITIONAL_ATTEMPTS = 20
+MAX_EFFECT_TOTAL_ATTEMPTS = 100
 
 
 class DomainEvent(UUIDTimeStampedModel):
@@ -146,6 +151,10 @@ class OutboxMessage(UUIDTimeStampedModel):
                 name="outbox_max_attempts_positive",
             ),
             models.CheckConstraint(
+                condition=models.Q(max_attempts__lte=MAX_EFFECT_TOTAL_ATTEMPTS),
+                name="outbox_max_attempts_bounded",
+            ),
+            models.CheckConstraint(
                 condition=models.Q(attempt_count__lte=models.F("max_attempts")),
                 name="outbox_attempts_within_maximum",
             ),
@@ -257,6 +266,167 @@ class OutboxMessage(UUIDTimeStampedModel):
         raise ValidationError(
             "Outbox messages require a controlled retention workflow.",
             code="protected_outbox_message",
+        )
+
+
+class EffectReplayReceipt(UUIDTimeStampedModel):
+    """Retain one immutable, tenant-bound operator replay decision."""
+
+    outbox_message = models.ForeignKey(
+        OutboxMessage,
+        on_delete=models.PROTECT,
+        related_name="replay_receipts",
+    )
+    organization_id = models.UUIDField()
+    actor_id = models.UUIDField()
+    reason = models.CharField(max_length=MAX_EFFECT_REPLAY_REASON_LENGTH)
+    additional_attempts = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(MAX_EFFECT_REPLAY_ADDITIONAL_ATTEMPTS),
+        ]
+    )
+    previous_max_attempts = models.PositiveIntegerField()
+    new_max_attempts = models.PositiveIntegerField()
+    replay_count = models.PositiveIntegerField()
+    correlation_id = models.UUIDField(db_index=True)
+    retention_class = models.CharField(
+        max_length=80,
+        default="operations-extended",
+        editable=False,
+    )
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        ordering = ("outbox_message_id", "replay_count", "created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("outbox_message", "replay_count"),
+                name="effect_replay_count_unique",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(additional_attempts__gte=1)
+                    & models.Q(
+                        additional_attempts__lte=(MAX_EFFECT_REPLAY_ADDITIONAL_ATTEMPTS)
+                    )
+                ),
+                name="effect_replay_additional_attempts_bounded",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    new_max_attempts=(
+                        models.F("previous_max_attempts")
+                        + models.F("additional_attempts")
+                    )
+                ),
+                name="effect_replay_attempt_limit_arithmetic",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(new_max_attempts__lte=MAX_EFFECT_TOTAL_ATTEMPTS),
+                name="effect_replay_total_attempts_bounded",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization_id", "outbox_message", "-replay_count"),
+                name="effect_replay_org_message_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Require evidence to describe the locked pre-replay message state.
+
+        Raises
+        ------
+        ValidationError
+            If the receipt is not tenant-bound or does not describe the next
+            valid bounded replay transition.
+        """
+        super().clean()
+        if not self.outbox_message_id:
+            return
+        message = self.outbox_message
+        errors: dict[str, str] = {}
+        if message.organization_id != self.organization_id:
+            errors["organization_id"] = (
+                "Replay receipt tenant must match its outbox message."
+            )
+        if message.status != OutboxMessage.Status.QUARANTINED:
+            errors["outbox_message"] = (
+                "Replay evidence can be appended only for quarantined work."
+            )
+        if message.max_attempts != self.previous_max_attempts:
+            errors["previous_max_attempts"] = (
+                "Replay evidence must retain the locked prior attempt limit."
+            )
+        if self.new_max_attempts != (
+            self.previous_max_attempts + self.additional_attempts
+        ):
+            errors["new_max_attempts"] = (
+                "Replay evidence attempt limits must match the requested increase."
+            )
+        if self.new_max_attempts > MAX_EFFECT_TOTAL_ATTEMPTS:
+            errors["new_max_attempts"] = (
+                "Replay evidence cannot exceed the total attempt safety limit."
+            )
+        if self.replay_count != message.replay_count + 1:
+            errors["replay_count"] = (
+                "Replay evidence must describe the next replay transition."
+            )
+        if not isinstance(self.reason, str) or not self.reason.strip():
+            errors["reason"] = "A replay reason is required."
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and append the replay receipt.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If an existing receipt would be mutated.
+        """
+        if not self._state.adding:
+            raise ValidationError(
+                "Effect replay receipts are append-only.",
+                code="immutable_effect_replay_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse deletion of retained replay rationale.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            This method never returns because replay evidence is immutable.
+
+        Raises
+        ------
+        ValidationError
+            Always, because replay evidence is append-only.
+        """
+        _ = args, kwargs
+        raise ValidationError(
+            "Effect replay receipts are append-only.",
+            code="immutable_effect_replay_receipt",
         )
 
 

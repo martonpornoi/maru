@@ -30,9 +30,15 @@ from maru.authorization.provenance import (
     authority_issuance_is_current,
     authority_issuances_are_current,
 )
-from maru.events.adoption import AdoptionProfileCode, profile_allows_capability
+from maru.events.adoption import (
+    profile_allows_capabilities,
+    profile_allows_capability,
+    profile_allows_role,
+)
 from maru.identity.models import Account
-from maru.organizations.representation_catalog import MARU_OPERATORS
+from maru.organizations.representation_catalog import (
+    representation_definition_for_role,
+)
 
 _TARGET_SEAL = object()
 EXACT_LINEAGE_POLICY_CONTRACT_VERSION = AUTHORITY_PROVENANCE_CONTRACT_VERSION
@@ -63,7 +69,9 @@ class ResolvedAuthorizationTarget:
     owner_account_id
         The owner account identifier within the requested scope.
     adoption_profile_code
-        The immutable adoption profile for an exact-edition target.
+        The immutable adoption-profile code for an exact-edition target.
+    adoption_profile_version
+        The immutable adoption-profile version for an exact-edition target.
     """
 
     organization_id: UUID
@@ -72,6 +80,7 @@ class ResolvedAuthorizationTarget:
     resource_binding_id: UUID | None
     owner_account_id: UUID | None = field(repr=False)
     adoption_profile_code: str | None = field(repr=False)
+    adoption_profile_version: int | None = field(repr=False)
     _seal: object = field(repr=False, compare=False)
 
     def __init__(self) -> None:
@@ -151,6 +160,15 @@ class AuthorizedScopeProjection:
         The resource binding identifier within the requested scope.
     capability_codes
         The capability codes retained in this immutable projection.
+    direct_capability_codes
+        Capabilities contributed by direct grants.
+    ordinary_role_capability_sets
+        Complete capability sets contributed by ordinary organizer roles. The
+        sets remain separate so profile checks cannot validate a role only in
+        part or combine unrelated role sources.
+    purpose_bound_role_capabilities
+        Reserved root-role codes paired with the capabilities contributed by
+        that exact authority source.
     """
 
     organization_id: UUID
@@ -158,6 +176,9 @@ class AuthorizedScopeProjection:
     department_id: UUID | None
     resource_binding_id: UUID | None
     capability_codes: frozenset[str]
+    direct_capability_codes: frozenset[str]
+    ordinary_role_capability_sets: tuple[frozenset[str], ...]
+    purpose_bound_role_capabilities: tuple[tuple[str, frozenset[str]], ...]
 
 
 def _seal_target(
@@ -168,14 +189,19 @@ def _seal_target(
     resource_binding_id: UUID | None = None,
     owner_account_id: UUID | None = None,
     adoption_profile_code: str | None = None,
+    adoption_profile_version: int | None = None,
 ) -> ResolvedAuthorizationTarget:
     if department_id is not None and edition_id is None:
         raise ValueError("A resolved department target requires an edition.")
     if resource_binding_id is not None and department_id is None:
         raise ValueError("A resolved resource target requires a department.")
-    if edition_id is None and adoption_profile_code is not None:
+    if edition_id is None and (
+        adoption_profile_code is not None or adoption_profile_version is not None
+    ):
         raise ValueError("An adoption profile requires an exact edition.")
-    if edition_id is not None and adoption_profile_code is None:
+    if edition_id is not None and (
+        adoption_profile_code is None or adoption_profile_version is None
+    ):
         raise ValueError("An exact edition target requires an adoption profile.")
     target = object.__new__(ResolvedAuthorizationTarget)
     object.__setattr__(target, "organization_id", organization_id)
@@ -184,6 +210,7 @@ def _seal_target(
     object.__setattr__(target, "resource_binding_id", resource_binding_id)
     object.__setattr__(target, "owner_account_id", owner_account_id)
     object.__setattr__(target, "adoption_profile_code", adoption_profile_code)
+    object.__setattr__(target, "adoption_profile_version", adoption_profile_version)
     object.__setattr__(target, "_seal", _TARGET_SEAL)
     return target
 
@@ -248,7 +275,12 @@ def resolve_edition_target(
         EventEdition.objects.filter(
             pk=edition_id,
             organization_id=organization_id,
-        ).values("id", "organization_id", "adoption_profile_code")
+        ).values(
+            "id",
+            "organization_id",
+            "adoption_profile_code",
+            "adoption_profile_version",
+        )
     )
     if row is None:
         return None
@@ -256,6 +288,7 @@ def resolve_edition_target(
         organization_id=row["organization_id"],
         edition_id=row["id"],
         adoption_profile_code=row["adoption_profile_code"],
+        adoption_profile_version=row["adoption_profile_version"],
     )
 
 
@@ -294,6 +327,7 @@ def resolve_department_target(
             "organization_id",
             "edition_id",
             adoption_profile_code=F("edition__adoption_profile_code"),
+            adoption_profile_version=F("edition__adoption_profile_version"),
         )
     )
     if row is None:
@@ -303,6 +337,7 @@ def resolve_department_target(
         edition_id=row["edition_id"],
         department_id=row["id"],
         adoption_profile_code=row["adoption_profile_code"],
+        adoption_profile_version=row["adoption_profile_version"],
     )
 
 
@@ -348,6 +383,7 @@ def resolve_resource_target(
             "resource_kind",
             "resource_id",
             adoption_profile_code=F("edition__adoption_profile_code"),
+            adoption_profile_version=F("edition__adoption_profile_version"),
         )
     )
     if row is None:
@@ -360,6 +396,7 @@ def resolve_resource_target(
         department_id=row["department_id"],
         resource_binding_id=row["id"],
         adoption_profile_code=row["adoption_profile_code"],
+        adoption_profile_version=row["adoption_profile_version"],
     )
 
 
@@ -411,6 +448,7 @@ def resolve_owned_target(  # noqa: PLR0911
             edition_id=base.edition_id,
             owner_account_id=row["account_id"],
             adoption_profile_code=base.adoption_profile_code,
+            adoption_profile_version=base.adoption_profile_version,
         )
     concrete_attnames = {field.attname for field in resource._meta.concrete_fields}  # noqa: SLF001
     if not {"organization_id", "account_id"} <= concrete_attnames:
@@ -442,6 +480,7 @@ def resolve_owned_target(  # noqa: PLR0911
         edition_id=base.edition_id,
         owner_account_id=row["account_id"],
         adoption_profile_code=base.adoption_profile_code,
+        adoption_profile_version=base.adoption_profile_version,
     )
 
 
@@ -491,6 +530,7 @@ def resolve_self_target(
         edition_id=base.edition_id,
         owner_account_id=principal.id,
         adoption_profile_code=base.adoption_profile_code,
+        adoption_profile_version=base.adoption_profile_version,
     )
 
 
@@ -684,12 +724,11 @@ def _purpose_bounded_role_matches_target(
     assignment: RoleAssignment,
     resource: ResolvedAuthorizationTarget,
 ) -> bool:
-    """Keep the Maru-operator root inside Workforce-only editions.
+    """Keep role authority inside the exact edition profile manifest.
 
-    The accountable root is stored at organization scope so the same two
-    operators can recover and govern successive Workforce-only editions. Its
-    edition authority is nevertheless purpose-bounded: creating a broader
-    profile never silently turns those operators into full-convention owners.
+    Organization-scoped decisions retain their current behavior because they
+    do not select an edition profile. Once a target selects an exact edition,
+    the persisted profile code and version must explicitly admit the role.
 
     Parameters
     ----------
@@ -703,10 +742,23 @@ def _purpose_bounded_role_matches_target(
     bool
         ``True`` when the role may apply to the requested target.
     """
-    return not (
-        assignment.role_bundle.code == MARU_OPERATORS.role_code
-        and resource.edition_id is not None
-        and resource.adoption_profile_code != AdoptionProfileCode.WORKFORCE_ONLY
+    if resource.edition_id is None:
+        return True
+    if (
+        resource.adoption_profile_code is None
+        or resource.adoption_profile_version is None
+    ):
+        return False
+    if representation_definition_for_role(assignment.role_bundle.code) is not None:
+        return profile_allows_role(
+            resource.adoption_profile_code,
+            resource.adoption_profile_version,
+            assignment.role_bundle.code,
+        )
+    return profile_allows_capabilities(
+        resource.adoption_profile_code,
+        resource.adoption_profile_version,
+        assignment.role_bundle.capability_codes,
     )
 
 
@@ -739,7 +791,7 @@ def _logistics_manifest_projection_targets(
 
 def _edition_projection_targets(
     edition_ids: Collection[UUID],
-) -> dict[UUID, tuple[UUID, str]]:
+) -> dict[UUID, tuple[UUID, str, int]]:
     """Resolve edition ownership and immutable adoption profiles in one query.
 
     Parameters
@@ -749,16 +801,25 @@ def _edition_projection_targets(
 
     Returns
     -------
-    dict[UUID, tuple[UUID, str]]
-        Each existing edition mapped to its organization and profile code.
+    dict[UUID, tuple[UUID, str, int]]
+        Each existing edition mapped to its organization and exact profile.
     """
     from maru.events.models import EventEdition  # noqa: PLC0415
 
     return {
-        row["id"]: (row["organization_id"], row["adoption_profile_code"])
+        row["id"]: (
+            row["organization_id"],
+            row["adoption_profile_code"],
+            row["adoption_profile_version"],
+        )
         for row in EventEdition.objects.filter(id__in=edition_ids)
         .order_by()
-        .values("id", "organization_id", "adoption_profile_code")
+        .values(
+            "id",
+            "organization_id",
+            "adoption_profile_code",
+            "adoption_profile_version",
+        )
     }
 
 
@@ -919,7 +980,7 @@ def _bulk_authority_projection_targets(
         edition_scope = editions.get(edition_id)
         if edition_scope is None or edition_scope[0] != organization_id:
             continue
-        adoption_profile_code = edition_scope[1]
+        _, adoption_profile_code, adoption_profile_version = edition_scope
         if department_id is None:
             if binding_id is not None:
                 continue
@@ -927,6 +988,7 @@ def _bulk_authority_projection_targets(
                 organization_id=organization_id,
                 edition_id=edition_id,
                 adoption_profile_code=adoption_profile_code,
+                adoption_profile_version=adoption_profile_version,
             )
             continue
         if departments.get(department_id) != (organization_id, edition_id):
@@ -937,6 +999,7 @@ def _bulk_authority_projection_targets(
                 edition_id=edition_id,
                 department_id=department_id,
                 adoption_profile_code=adoption_profile_code,
+                adoption_profile_version=adoption_profile_version,
             )
             continue
         binding = bindings.get(binding_id)
@@ -985,6 +1048,7 @@ def _bulk_authority_projection_targets(
             department_id=department_id,
             resource_binding_id=binding_id,
             adoption_profile_code=adoption_profile_code,
+            adoption_profile_version=adoption_profile_version,
         )
     return resolved
 
@@ -1003,6 +1067,110 @@ def _persistable_authority_capability_codes(
             for code in raw_codes
             if (definition := capability(code)) is not None and definition.persistable
         )
+    )
+
+
+def _profile_compatible_authority_capabilities(
+    authority: CapabilityGrant | RoleAssignment,
+    target: ResolvedAuthorizationTarget,
+    capability_codes: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Narrow one authority row to its exact edition manifest.
+
+    Parameters
+    ----------
+    authority : CapabilityGrant | RoleAssignment
+        Persisted authority row being projected.
+    target : ResolvedAuthorizationTarget
+        Tenant-bound sealed scope resolved for that row.
+    capability_codes : tuple[str, ...]
+        Persistable capabilities contributed by the row.
+
+    Returns
+    -------
+    tuple[str, ...]
+        Profile-compatible capabilities, or an empty tuple when the exact
+        authority must not apply to the edition.
+    """
+    if target.edition_id is None:
+        return capability_codes
+    if target.adoption_profile_code is None or target.adoption_profile_version is None:
+        return ()
+    if isinstance(authority, RoleAssignment):
+        representation = representation_definition_for_role(authority.role_bundle.code)
+        if representation is not None:
+            if not profile_allows_role(
+                target.adoption_profile_code,
+                target.adoption_profile_version,
+                authority.role_bundle.code,
+            ):
+                return ()
+        elif not profile_allows_capabilities(
+            target.adoption_profile_code,
+            target.adoption_profile_version,
+            capability_codes,
+        ):
+            return ()
+    return tuple(
+        code
+        for code in capability_codes
+        if profile_allows_capability(
+            target.adoption_profile_code,
+            target.adoption_profile_version,
+            code,
+        )
+    )
+
+
+def projected_scope_allows_profile(
+    scope: AuthorizedScopeProjection,
+    *,
+    profile_code: str,
+    profile_version: int,
+    capability_codes: Collection[str],
+) -> bool:
+    """Return whether a projected scope can disclose one profile edition.
+
+    Parameters
+    ----------
+    scope : AuthorizedScopeProjection
+        Current name-free authority projection.
+    profile_code : str
+        Persisted adoption-profile code of the candidate edition.
+    profile_version : int
+        Persisted adoption-profile version of the candidate edition.
+    capability_codes : Collection[str]
+        Destination capabilities accepted by the caller.
+
+    Returns
+    -------
+    bool
+        ``True`` only when a compatible direct source, complete ordinary role,
+        or profile-admitted purpose root contributes a requested capability.
+    """
+    requested = frozenset(capability_codes)
+    if any(
+        profile_allows_capability(profile_code, profile_version, code)
+        for code in scope.direct_capability_codes & requested
+    ):
+        return True
+    if any(
+        role_capabilities & requested
+        and profile_allows_capabilities(
+            profile_code,
+            profile_version,
+            role_capabilities,
+        )
+        for role_capabilities in scope.ordinary_role_capability_sets
+    ):
+        return True
+    return any(
+        profile_allows_role(profile_code, profile_version, role_code)
+        and any(
+            profile_allows_capability(profile_code, profile_version, code)
+            for code in role_capabilities & requested
+        )
+        for role_code, role_capabilities in scope.purpose_bound_role_capabilities
     )
 
 
@@ -1060,9 +1228,6 @@ def current_role_assignment_ids(
         .select_related("authority_issuance", "role_bundle")
         .order_by("id")
     )
-    if not exact_lineage_active:
-        return frozenset(assignment.id for assignment in assignments)
-
     target_cache = _bulk_authority_projection_targets(
         {
             (
@@ -1074,6 +1239,28 @@ def current_role_assignment_ids(
             for assignment in assignments
         }
     )
+    if not exact_lineage_active:
+        return frozenset(
+            assignment.id
+            for assignment in assignments
+            if (
+                target := target_cache.get(
+                    (
+                        assignment.organization_id,
+                        assignment.edition_id,
+                        assignment.department_id,
+                        assignment.resource_binding_id,
+                    )
+                )
+            )
+            is not None
+            and _profile_compatible_authority_capabilities(
+                assignment,
+                target,
+                _persistable_authority_capability_codes(assignment),
+            )
+        )
+
     pending: list[tuple[UUID, AuthorityIssuanceCurrentCheck]] = []
     for assignment in assignments:
         scope_key = (
@@ -1084,7 +1271,14 @@ def current_role_assignment_ids(
         )
         target = target_cache.get(scope_key)
         capability_codes = _persistable_authority_capability_codes(assignment)
-        if target is None or not capability_codes:
+        if target is None:
+            continue
+        capability_codes = _profile_compatible_authority_capabilities(
+            assignment,
+            target,
+            capability_codes,
+        )
+        if not capability_codes:
             continue
         try:
             issuance_ordinal = assignment.authority_issuance.ordinal
@@ -1198,13 +1392,44 @@ def project_active_authority_scopes(  # noqa: PLR0912
         _AuthorityScopeKey,
         set[str],
     ] = {}
+    direct_projected: dict[_AuthorityScopeKey, set[str]] = {}
+    ordinary_role_projected: dict[
+        _AuthorityScopeKey,
+        set[tuple[str, ...]],
+    ] = {}
+    purpose_bound_projected: dict[
+        _AuthorityScopeKey,
+        dict[str, set[str]],
+    ] = {}
     pending_exact: list[
         tuple[
             _AuthorityScopeKey,
             tuple[str, ...],
+            bool,
+            str | None,
             AuthorityIssuanceCurrentCheck,
         ]
     ] = []
+
+    def record_projection(
+        scope_key: _AuthorityScopeKey,
+        capability_codes: tuple[str, ...],
+        *,
+        direct_authority: bool,
+        purpose_role_code: str | None,
+    ) -> None:
+        projected.setdefault(scope_key, set()).update(capability_codes)
+        if direct_authority:
+            direct_projected.setdefault(scope_key, set()).update(capability_codes)
+            return
+        if purpose_role_code is None:
+            ordinary_role_projected.setdefault(scope_key, set()).add(capability_codes)
+            return
+        purpose_bound_projected.setdefault(scope_key, {}).setdefault(
+            purpose_role_code,
+            set(),
+        ).update(capability_codes)
+
     for authority in authorities:
         scope_key = (
             authority.organization_id,
@@ -1215,9 +1440,21 @@ def project_active_authority_scopes(  # noqa: PLR0912
         target = target_cache.get(scope_key)
         if target is None:
             continue
-        capability_codes = _persistable_authority_capability_codes(authority)
+        capability_codes = _profile_compatible_authority_capabilities(
+            authority,
+            target,
+            _persistable_authority_capability_codes(authority),
+        )
         if not capability_codes:
             continue
+        purpose_role_code = (
+            authority.role_bundle.code
+            if isinstance(authority, RoleAssignment)
+            and representation_definition_for_role(authority.role_bundle.code)
+            is not None
+            else None
+        )
+        direct_authority = isinstance(authority, CapabilityGrant)
         if exact_lineage_active:
             try:
                 issuance_ordinal = authority.authority_issuance.ordinal
@@ -1227,6 +1464,8 @@ def project_active_authority_scopes(  # noqa: PLR0912
                 (
                     scope_key,
                     capability_codes,
+                    direct_authority,
+                    purpose_role_code,
                     AuthorityIssuanceCurrentCheck(
                         issuance_ordinal=issuance_ordinal,
                         principal_id=principal.id,
@@ -1244,20 +1483,36 @@ def project_active_authority_scopes(  # noqa: PLR0912
         else:
             authority_is_current = True
         if authority_is_current:
-            projected.setdefault(scope_key, set()).update(capability_codes)
+            record_projection(
+                scope_key,
+                capability_codes,
+                direct_authority=direct_authority,
+                purpose_role_code=purpose_role_code,
+            )
 
     if pending_exact:
         exact_results = authority_issuances_are_current(
-            checks=tuple(item[2] for item in pending_exact),
+            checks=tuple(item[4] for item in pending_exact),
             evaluated_at=evaluation_time,
         )
-        for (scope_key, capability_codes, _check), is_current in zip(
+        for (
+            scope_key,
+            capability_codes,
+            direct_authority,
+            purpose_role_code,
+            _check,
+        ), is_current in zip(
             pending_exact,
             exact_results,
             strict=True,
         ):
             if is_current:
-                projected.setdefault(scope_key, set()).update(capability_codes)
+                record_projection(
+                    scope_key,
+                    capability_codes,
+                    direct_authority=direct_authority,
+                    purpose_role_code=purpose_role_code,
+                )
 
     return tuple(
         AuthorizedScopeProjection(
@@ -1266,6 +1521,19 @@ def project_active_authority_scopes(  # noqa: PLR0912
             department_id=department_id,
             resource_binding_id=resource_binding_id,
             capability_codes=frozenset(projected[scope_key]),
+            direct_capability_codes=frozenset(direct_projected.get(scope_key, ())),
+            ordinary_role_capability_sets=tuple(
+                frozenset(capabilities)
+                for capabilities in sorted(
+                    ordinary_role_projected.get(scope_key, ()),
+                )
+            ),
+            purpose_bound_role_capabilities=tuple(
+                (role_code, frozenset(capabilities))
+                for role_code, capabilities in sorted(
+                    purpose_bound_projected.get(scope_key, {}).items()
+                )
+            ),
         )
         for scope_key in sorted(
             projected,
@@ -1344,8 +1612,10 @@ def decide(  # noqa: PLR0911
         )
     if resource.edition_id is not None and (
         resource.adoption_profile_code is None
+        or resource.adoption_profile_version is None
         or not profile_allows_capability(
             resource.adoption_profile_code,
+            resource.adoption_profile_version,
             capability_code,
         )
     ):

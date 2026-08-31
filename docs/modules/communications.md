@@ -1,7 +1,7 @@
 # Communications module
 
-Status: Registration service inbox and email delivery implemented  
-Last updated: 2026-07-28
+Status: Exact-profile Registration inbox and email delivery implemented
+Last updated: 2026-08-31
 
 ## Purpose and requirements
 
@@ -28,6 +28,14 @@ cancellation, and restriction consequence. Operational notifications remain
 eligible when marketing is disabled; an account can separately disable
 operational email while retaining the canonical inbox.
 
+Edition-scoped delivery is part of an immutable adoption manifest, not a
+consequence of a retained message or a handler registration. The complete
+`full_convention@1` profile pins Registration and account-restriction
+notification routes. `workforce_only@1` pins only the internal Identity
+restriction fact and creates no Communications message or delivery. The
+separate non-edition catalog continues to permit an explicitly organization-
+scoped account-restriction notice.
+
 ## Contracts and operation
 
 Attendee APIs:
@@ -44,15 +52,20 @@ Staff failure queue:
 GET /api/v1/organizations/{organization_id}/editions/{edition_id}/communication-delivery-failures
 ```
 
-The transactional outbox invokes idempotent delivery services. Production must
-run the effects workers, configure SMTP, monitor delivery age and permanent
-failure, and assign the edition failure queue. Replaying an outbox message does
-not create a second canonical message.
+The transactional outbox invokes idempotent delivery services. Enqueue, worker,
+replay, and the handler itself recheck the exact event/destination route before
+rendered Communications state is loaded or written. Production must run the
+effects workers, configure SMTP, monitor delivery age and permanent failure,
+and assign the edition failure queue. Replaying an outbox message does not
+create a second canonical message.
 
 ## Permissions, privacy, and archive
 
-An attendee sees and marks read only their own messages. Failure-queue access is
-edition scoped and omits body and protected profile fields. Sensitive
+An attendee sees and marks read only their own messages whose originating
+domain event still resolves the explicit organization-wide route or the
+edition's exact profile route. A retained incompatible message is neither
+listed nor mutable through the direct read URL. Failure-queue access is edition
+scoped and omits body and protected profile fields. Sensitive
 registration state changes remain in their owning modules; this module is a
 projection, never the authority for payment or admission.
 

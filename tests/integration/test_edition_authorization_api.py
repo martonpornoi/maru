@@ -49,6 +49,32 @@ def test_edition_list_search_count_and_pagination_are_tenant_first() -> None:
     assert str(other.id) not in str(search.json())
 
 
+def test_edition_list_hides_rows_when_their_exact_manifest_is_unresolvable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Do not disclose retained edition identity through organization discovery."""
+    edition = EventEditionFactory(name="Retained Unsupported Edition")
+    account = AccountFactory()
+    CapabilityGrantFactory(
+        principal=account,
+        organization=edition.organization,
+    )
+    monkeypatch.setattr("maru.events.queries.ADOPTION_PROFILES", {})
+    client = APIClient()
+    client.force_authenticate(account)
+
+    response = client.get(_list_url(edition))
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "count": 0,
+        "next": None,
+        "previous": None,
+        "results": [],
+    }
+    assert edition.name.encode() not in response.content
+
+
 def test_edition_scoped_grant_allows_detail_but_not_organization_list() -> None:
     edition = EventEditionFactory()
     account = AccountFactory()

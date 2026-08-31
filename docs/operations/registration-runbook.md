@@ -263,6 +263,13 @@ Run lifecycle at least once per minute. Run identity delivery frequently enough
 for the verification/recovery objective. Effects workers are long-running
 supervised processes; configure the pools required by the deployment.
 
+Lifecycle discovery and mutation, tier-replacement expiry, and scoped metrics
+select only editions whose exact adoption profile admits Registration. An
+explicit incompatible edition is unavailable; a global run silently skips its
+retained Registration rows. Scheduled restriction evidence can still be
+applied by Identity, but Registration and Accreditation consequences are
+filtered through each module's own exact profile before any owned row changes.
+
 Inspect registration metrics for one tenant/edition:
 
 ```powershell
@@ -307,6 +314,15 @@ a second registration or hold.
    intent/reference, amount, currency, state, and event identity.
 6. A valid success confirms the registration, appends payment ledger/receipt,
    activates entitlement, and creates inbox/email notification.
+
+Before loading an owned intent or Registration label, the self intent APIs and
+direct intent service verify the exact Registration profile. When a webhook
+identifies an existing local intent, reconciliation repeats that gate before
+writing a receipt, exception, Registration transition, ledger, entitlement,
+timeline, audit, event, or outbox row. An incompatible identified intent fails
+closed with no mutation. A genuinely unknown provider reference has no trusted
+edition; preserve it as an organization-scoped payment exception for review
+and never treat it as payment proof.
 
 ### 6.2 Exceptions
 

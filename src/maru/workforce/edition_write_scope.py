@@ -11,6 +11,7 @@ from maru.authorization.retired_targets import (
     lock_retired_department_authority_boundaries,
 )
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.organizations.models import ConventionSeries, Organization
 from maru.workforce.models import Department
 from maru.workforce.writer_boundary import lock_edition_structure_mutex
@@ -98,7 +99,10 @@ def lock_workforce_edition_write_scope(
 
     edition_row = (
         EventEdition.objects.select_for_update()
-        .filter(id=edition_id)
+        .filter(
+            adoption_profile_filter_for_module("workforce"),
+            id=edition_id,
+        )
         .order_by()
         .values_list("id", "organization_id", "series_id")
         .first()

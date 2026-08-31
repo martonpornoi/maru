@@ -127,7 +127,7 @@ _ACTIVATION_MIGRATIONS = (
     ("workforce", "0011_owner_assignment_commands"),
     ("workforce", "0012_person_owned_availability"),
     ("workforce", "0013_shift_journey"),
-    ("workforce", "0014_workforce_only_assignment_evidence"),
+    ("workforce", "0015_exact_assignment_adoption_profile"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -1224,7 +1224,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1dda9acafc97a1c2e682d5cd75127cde2064022bfbfc686677140ac1ec6baad6"
     ),
     "maru_guard_workforce_assignment()": (
-        "9e50a77b6939a1bc441af8407738f4c898b2e9431b0d168ce9b30f751b1e9f81"
+        "4bea17fcf22ae5509e37b353365b0ddd9a0ceeedd5c29e8668c5c52d26a0935a"
     ),
     "maru_guard_assignment_command_receipt()": (
         "a95e7fd1e33287b9265ec3c166e887fd4b149f834a311e32c751b4a8f98bc95f"

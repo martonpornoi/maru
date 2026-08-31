@@ -13,11 +13,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
+from maru.events import adoption as event_adoption
 from maru.events.admin_context import (
     ADMIN_EDITION_SESSION_KEY,
     EditionContextAdmin,
     admin_edition_options,
 )
+from maru.events.adoption import AdoptionProfileCode
 from maru.events.models import (
     ArchiveAmendment,
     EditionLifecycleTransition,
@@ -109,6 +111,240 @@ def test_platform_admin_lists_and_selects_all_editions_without_participation() -
 
     _select_edition(client, second)
     assert client.session[ADMIN_EDITION_SESSION_KEY] == str(second.id)
+
+
+def test_platform_selector_omits_runtime_unsupported_exact_profile_before_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    client = Client()
+    client.force_login(administrator)
+    supported = EventEditionFactory(name="Supported Platform Edition")
+    unsupported = EventEditionFactory(
+        name="Hidden Unsupported Edition",
+        series__name="Hidden Unsupported Series",
+        series__organization__name="Hidden Unsupported Organization",
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+        adoption_profile_version=1,
+        currency_codes=["XXX"],
+    )
+    session = client.session
+    session[ADMIN_EDITION_SESSION_KEY] = str(unsupported.id)
+    session.save()
+    unsupported_key = (
+        unsupported.adoption_profile_code,
+        unsupported.adoption_profile_version,
+    )
+    monkeypatch.setattr(
+        "maru.events.queries.ADOPTION_PROFILES",
+        {
+            key: profile
+            for key, profile in event_adoption.ADOPTION_PROFILES.items()
+            if key != unsupported_key
+        },
+    )
+
+    response = client.get(reverse("admin:index"))
+
+    assert response.status_code == 200
+    assert _selector_edition_ids(response) == {supported.id}
+    assert ADMIN_EDITION_SESSION_KEY not in client.session
+    content = response.content.decode()
+    for hidden_name in (
+        unsupported.organization.name,
+        unsupported.series.name,
+        unsupported.name,
+    ):
+        assert hidden_name not in content
+
+
+def test_platform_direct_route_omits_runtime_unsupported_profile_before_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    client = Client()
+    client.force_login(administrator)
+    unsupported = EventEditionFactory(
+        name="Hidden Direct-route Edition",
+        series__name="Hidden Direct-route Series",
+        series__organization__name="Hidden Direct-route Organization",
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+        adoption_profile_version=1,
+        currency_codes=["XXX"],
+    )
+    unsupported_key = (
+        unsupported.adoption_profile_code,
+        unsupported.adoption_profile_version,
+    )
+    monkeypatch.setattr(
+        "maru.events.queries.ADOPTION_PROFILES",
+        {
+            key: profile
+            for key, profile in event_adoption.ADOPTION_PROFILES.items()
+            if key != unsupported_key
+        },
+    )
+
+    response = client.get(
+        reverse(
+            "baseline-event-edition-record",
+            args=[
+                unsupported.organization.slug,
+                unsupported.series.slug,
+                unsupported.slug,
+            ],
+        )
+    )
+
+    assert response.status_code == 404
+    content = response.content.decode()
+    for hidden_name in (
+        unsupported.organization.name,
+        unsupported.series.name,
+        unsupported.name,
+    ):
+        assert hidden_name not in content
+
+
+def test_admin_home_uses_exact_manifest_destinations() -> None:
+    client = _admin_client()
+    edition = EventEditionFactory(
+        name="Purpose-scoped Workforce Edition",
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+        adoption_profile_version=1,
+        currency_codes=["XXX"],
+    )
+    _select_edition(client, edition)
+
+    response = client.get(reverse("admin:index"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    workspace_grid = content.split(
+        '<div class="maru-admin-workspace-grid">',
+        maxsplit=1,
+    )[1].split("</div>", maxsplit=1)[0]
+    assert f"{reverse('management-console')}?view=setup" in workspace_grid
+    assert f"{reverse('management-console')}?view=workforce" in workspace_grid
+    assert f"{reverse('management-console')}?view=security" in workspace_grid
+    assert f"{reverse('management-console')}?view=people" not in workspace_grid
+    assert f"{reverse('management-console')}?view=commerce" not in workspace_grid
+    assert f"{reverse('management-console')}?view=reports" not in workspace_grid
+    assert "Use Maru for volunteer structure" in content
+
+
+def test_selected_profile_gates_specialist_registration_admin_routes() -> None:
+    client = _admin_client()
+    workforce_edition = EventEditionFactory(
+        name="Workforce-only specialist boundary",
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+        adoption_profile_version=1,
+        currency_codes=["XXX"],
+    )
+    retained_configuration = RegistrationConfigurationFactory(
+        edition=workforce_edition,
+        name="Hidden retained registration configuration",
+    )
+    full_edition = EventEditionFactory(name="Full specialist boundary")
+    full_configuration = RegistrationConfigurationFactory(
+        edition=full_edition,
+        name="Visible full registration configuration",
+    )
+    registration_list_url = reverse(
+        "admin:registration_registrationconfiguration_changelist"
+    )
+    registration_add_url = reverse("admin:registration_registrationconfiguration_add")
+    retained_change_url = reverse(
+        "admin:registration_registrationconfiguration_change",
+        args=(retained_configuration.id,),
+    )
+    full_change_url = reverse(
+        "admin:registration_registrationconfiguration_change",
+        args=(full_configuration.id,),
+    )
+    security_event_url = reverse("admin:identity_accountsecurityevent_changelist")
+    disposal_receipt_url = reverse("admin:privacyops_disposalreceipt_changelist")
+
+    _select_edition(client, workforce_edition)
+    index_response = client.get(reverse("admin:index"))
+    index_content = index_response.content.decode()
+
+    assert index_response.status_code == 200
+    assert registration_list_url not in index_content
+    assert registration_add_url not in index_content
+    assert security_event_url in index_content
+    assert disposal_receipt_url in index_content
+    assert retained_configuration.name not in index_content
+
+    with CaptureQueriesContext(connection) as denied_queries:
+        denied_list = client.get(registration_list_url)
+        denied_add = client.get(registration_add_url)
+        denied_change = client.get(retained_change_url)
+
+    assert denied_list.status_code == 403
+    assert denied_add.status_code == 403
+    assert denied_change.status_code == 403
+    denied_content = "".join(
+        response.content.decode()
+        for response in (denied_list, denied_add, denied_change)
+    )
+    assert retained_configuration.name not in denied_content
+    registration_table = RegistrationConfiguration._meta.db_table
+    assert not any(
+        registration_table in query["sql"] for query in denied_queries.captured_queries
+    )
+
+    _select_edition(client, full_edition)
+    full_index_response = client.get(reverse("admin:index"))
+    full_index_content = full_index_response.content.decode()
+
+    assert full_index_response.status_code == 200
+    assert registration_list_url in full_index_content
+    assert security_event_url in full_index_content
+    assert disposal_receipt_url in full_index_content
+
+    full_list_response = client.get(registration_list_url)
+    assert full_list_response.status_code == 200
+    assert _result_ids(full_list_response) == {full_configuration.id}
+    assert client.get(registration_add_url).status_code == 200
+    assert client.get(full_change_url).status_code == 200
+
+
+def test_admin_home_fails_closed_for_unresolved_profile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = _admin_client()
+    edition = EventEditionFactory(name="Unsupported Exact Profile")
+    _select_edition(client, edition)
+    monkeypatch.setattr(
+        "maru.events.admin_context.adoption_profile",
+        lambda *_args: None,
+    )
+
+    response = client.get(reverse("admin:index"), {"records": "open"})
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    workspace_grid = content.split(
+        '<div class="maru-admin-workspace-grid">',
+        maxsplit=1,
+    )[1].split("</div>", maxsplit=1)[0]
+    assert "does not recognize the edition's exact adoption" in content
+    for destination in (
+        "setup",
+        "workforce",
+        "security",
+        "people",
+        "commerce",
+        "reports",
+    ):
+        assert f"?view={destination}" not in workspace_grid
+    assert "Need a technical record?" not in content
+    registration_list_url = reverse(
+        "admin:registration_registrationconfiguration_changelist"
+    )
+    assert registration_list_url not in content
+    assert client.get(registration_list_url).status_code == 403
 
 
 def test_active_staff_selector_scopes_grants_and_role_assignments_in_one_query() -> (

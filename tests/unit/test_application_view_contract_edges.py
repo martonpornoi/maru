@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
@@ -24,6 +25,11 @@ from maru.applications.models import (
     ApplicationClassification,
     ApplicationState,
     ReviewDecisionKind,
+)
+from maru.events import adoption as event_adoption
+from maru.events.adoption import (
+    FULL_CONVENTION_PROFILE_VERSION,
+    AdoptionProfileCode,
 )
 from maru.identity.models import Account
 
@@ -52,6 +58,8 @@ def _edition() -> SimpleNamespace:
         organization=SimpleNamespace(slug="organizer"),
         series=SimpleNamespace(slug="series"),
         time_zone="Europe/Budapest",
+        adoption_profile_code=AdoptionProfileCode.FULL_CONVENTION,
+        adoption_profile_version=FULL_CONVENTION_PROFILE_VERSION,
     )
 
 
@@ -176,7 +184,9 @@ def test_command_errors_preserve_closed_http_meanings() -> None:
         views._add_command_error(form, RuntimeError("unexpected"))
 
 
-def test_department_and_reviewer_queries_are_scope_and_sensitivity_aware() -> None:
+def test_department_and_reviewer_queries_are_scope_and_sensitivity_aware(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     definition = _definition()
     departments = MagicMock()
     departments.filter.return_value.order_by.return_value = ()
@@ -187,8 +197,33 @@ def test_department_and_reviewer_queries_are_scope_and_sensitivity_aware() -> No
     sensitive = SimpleNamespace(
         capability_codes=("applications.review", "applications.review_sensitive")
     )
+    mixed = SimpleNamespace(
+        capability_codes=(
+            "applications.review",
+            "registration.manage_configuration",
+        )
+    )
+    profile_key = (
+        AdoptionProfileCode.FULL_CONVENTION.value,
+        FULL_CONVENTION_PROFILE_VERSION,
+    )
+    full_profile = event_adoption.ADOPTION_PROFILES[profile_key]
+    monkeypatch.setattr(
+        event_adoption,
+        "ADOPTION_PROFILES",
+        {
+            **event_adoption.ADOPTION_PROFILES,
+            profile_key: replace(
+                full_profile,
+                capability_codes=(
+                    full_profile.capability_codes
+                    - {"registration.manage_configuration"}
+                ),
+            ),
+        },
+    )
     roles = MagicMock()
-    roles.filter.return_value.order_by.return_value = (ordinary, sensitive)
+    roles.filter.return_value.order_by.return_value = (ordinary, sensitive, mixed)
     with patch.object(views.RoleBundle, "objects", roles):
         assert views._reviewer_roles(definition) == (ordinary, sensitive)
         definition.is_sensitive = True
@@ -266,7 +301,10 @@ def test_unknown_or_external_starters_are_not_copyable() -> None:
     for starter in (None, SimpleNamespace(is_external=True)):
         with (
             patch.object(views, "definition_workspace", return_value=()),
-            patch.object(views, "application_starter", return_value=starter),
+            patch.object(views, "_edition", return_value=_edition()),
+            patch.object(
+                views, "application_starter_for_profile", return_value=starter
+            ),
             pytest.raises(Http404),
         ):
             views.application_starter_copy_page(
@@ -274,7 +312,10 @@ def test_unknown_or_external_starters_are_not_copyable() -> None:
             )
         with (
             patch.object(views, "definition_workspace", return_value=()),
-            patch.object(views, "application_starter", return_value=starter),
+            patch.object(views, "_edition", return_value=_edition()),
+            patch.object(
+                views, "application_starter_for_profile", return_value=starter
+            ),
             pytest.raises(Http404),
         ):
             views.application_starter_copy(

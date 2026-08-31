@@ -17,6 +17,11 @@ from maru.communications.models import (
     NotificationMessage,
     NotificationPreference,
 )
+from maru.communications.queries import notification_messages_for_account
+from maru.effects.adoption import (
+    EFFECT_PROFILE_NOT_ALLOWED,
+    effect_delivery_is_allowed,
+)
 from maru.effects.worker import (
     EffectContext,
     PermanentEffectError,
@@ -101,6 +106,31 @@ EVENT_LABELS = {
         "Guardian consent was accepted and registration can continue.",
     ),
 }
+
+
+def _require_notification_route(event: DomainEvent) -> None:
+    """Reject direct handler invocation outside the exact route contract.
+
+    Parameters
+    ----------
+    event : DomainEvent
+        Persisted domain event whose exact edition route must allow
+        notification delivery.
+
+    Raises
+    ------
+    PermanentEffectError
+        If the selected edition profile does not allow the event's
+        notification effect route.
+    """
+    if not effect_delivery_is_allowed(
+        organization_id=event.organization_id,
+        event_edition_id=event.event_edition_id,
+        event_name=event.event_name,
+        destination="notifications",
+        payload=event.payload,
+    ):
+        raise PermanentEffectError(EFFECT_PROFILE_NOT_ALLOWED)
 
 
 def _localized_deadline(
@@ -287,6 +317,7 @@ def deliver_registration_notification(
     TransientEffectError
         If the operation encounters a transient effect condition.
     """
+    _require_notification_route(event)
     if timezone.now() >= effect_context.deadline:
         raise TransientEffectError("notification_delivery_timeout")
     if event.event_edition_id is None:
@@ -335,6 +366,7 @@ def deliver_restriction_notification(
     TransientEffectError
         If the operation encounters a transient effect condition.
     """
+    _require_notification_route(event)
     if timezone.now() >= effect_context.deadline:
         raise TransientEffectError("notification_delivery_timeout")
     restriction = (
@@ -392,9 +424,12 @@ def mark_message_read(*, account: Account, message_id: UUID) -> NotificationMess
         The updated NotificationMessage after the transition commits.
     """
     with transaction.atomic():
-        message = NotificationMessage.objects.select_for_update().get(
-            id=message_id,
-            account=account,
+        message = (
+            notification_messages_for_account(account=account)
+            .select_for_update()
+            .get(
+                id=message_id,
+            )
         )
         if message.read_at is None:
             message.read_at = timezone.now()

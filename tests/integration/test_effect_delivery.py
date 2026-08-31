@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from dataclasses import asdict
 from datetime import timedelta
 from uuid import UUID, uuid4
 
@@ -7,12 +8,18 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
 from django.utils import timezone
 
-from maru.effects.models import DomainEvent, EffectAttempt, OutboxMessage
+from maru.effects.models import (
+    MAX_EFFECT_TOTAL_ATTEMPTS,
+    DomainEvent,
+    EffectAttempt,
+    OutboxMessage,
+)
 from maru.effects.services import (
     CancellationBoundaryPassedError,
     DomainEventRecord,
     cancel_pending_effect,
     claim_next_effect,
+    enqueue_event_delivery,
     publish_domain_event,
     replay_quarantined_effect,
 )
@@ -27,7 +34,8 @@ from maru.effects.worker import (
     run_claimed_effect,
 )
 from maru.events.models import EventEdition
-from tests.factories import EventEditionFactory, OrganizationFactory
+from maru.events.queries import EditionAdoptionProfileReference
+from tests.factories import AccountFactory, EventEditionFactory, OrganizationFactory
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -41,17 +49,19 @@ def _record(
     aggregate_version: int = 1,
     probe: str = "ready",
     edition: EventEdition | None = None,
+    event_name: str = "system.effect.probe_requested.v1",
+    payload: dict[str, object] | None = None,
 ) -> DomainEventRecord:
     edition = edition or EventEditionFactory()
     return DomainEventRecord(
-        event_name="system.effect.probe_requested.v1",
+        event_name=event_name,
         schema_version=1,
         organization_id=edition.organization_id,
         event_edition_id=edition.id,
         aggregate_type="system.effect_probe",
         aggregate_id=aggregate_id or uuid4(),
         aggregate_version=aggregate_version,
-        payload={"probe": probe},
+        payload=payload if payload is not None else {"probe": probe},
         correlation_id=uuid4(),
         causation_id=None,
         actor_kind="system",
@@ -93,6 +103,451 @@ def _claim(message: OutboxMessage):
     )
     assert claim is not None
     return claim
+
+
+def _force_pending(
+    record: DomainEventRecord,
+    *,
+    destination: str = "internal",
+) -> OutboxMessage:
+    """Persist a delivery without the publishing service for defensive tests."""
+    event = DomainEvent.objects.create(
+        occurred_at=timezone.now(),
+        **asdict(record),
+    )
+    return OutboxMessage.objects.create(
+        event=event,
+        organization_id=event.organization_id,
+        destination=destination,
+        workload_pool="default",
+        available_at=timezone.now(),
+    )
+
+
+def test_profile_forbidden_publish_persists_no_event_or_delivery() -> None:
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+        currency_codes=["XXX"],
+    )
+    record = _record(
+        edition=edition,
+        event_name="registration.submitted.v1",
+        payload={
+            "from_state": "draft",
+            "to_state": "submitted",
+            "reference": "synthetic-registration",
+        },
+    )
+
+    with pytest.raises(ValidationError) as denied, transaction.atomic():
+        publish_domain_event(record)
+
+    assert denied.value.code == "effect_profile_not_allowed"
+    assert not DomainEvent.objects.filter(correlation_id=record.correlation_id).exists()
+    assert not OutboxMessage.objects.exists()
+
+
+def test_initial_attempt_budget_is_service_and_database_bounded() -> None:
+    record = _record()
+
+    with pytest.raises(ValidationError) as publish_error, transaction.atomic():
+        publish_domain_event(
+            record,
+            max_attempts=MAX_EFFECT_TOTAL_ATTEMPTS + 1,
+        )
+    assert publish_error.value.code == "invalid_max_attempts"
+    assert not DomainEvent.objects.filter(correlation_id=record.correlation_id).exists()
+
+    event, message = _publish()
+    with pytest.raises(ValidationError) as enqueue_error, transaction.atomic():
+        enqueue_event_delivery(
+            event=event,
+            destination="notifications",
+            workload_pool="default",
+            max_attempts=MAX_EFFECT_TOTAL_ATTEMPTS + 1,
+        )
+    assert enqueue_error.value.code == "invalid_max_attempts"
+    assert event.outbox_messages.count() == 1
+
+    now = timezone.now()
+    with (
+        pytest.raises(IntegrityError),
+        transaction.atomic(),
+        connection.cursor() as cursor,
+    ):
+        cursor.execute(
+            """
+            INSERT INTO effects_outboxmessage (
+                id,
+                created_at,
+                updated_at,
+                event_id,
+                organization_id,
+                destination,
+                workload_pool,
+                status,
+                available_at,
+                attempt_count,
+                max_attempts,
+                last_error_code,
+                replay_count
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            [
+                uuid4(),
+                now,
+                now,
+                event.id,
+                event.organization_id,
+                "raw-safety-probe",
+                "default",
+                OutboxMessage.Status.PENDING,
+                now,
+                0,
+                MAX_EFFECT_TOTAL_ATTEMPTS + 1,
+                "",
+                0,
+            ],
+        )
+    message.refresh_from_db()
+    assert message.max_attempts == 8
+
+
+def test_profile_forbidden_secondary_enqueue_persists_no_delivery() -> None:
+    event, original = _publish()
+
+    with pytest.raises(ValidationError) as denied, transaction.atomic():
+        enqueue_event_delivery(
+            event=event,
+            destination="notifications",
+            workload_pool="default",
+        )
+
+    assert denied.value.code == "effect_profile_not_allowed"
+    assert list(event.outbox_messages.values_list("id", flat=True)) == [original.id]
+
+
+def test_workforce_profile_preserves_restriction_notification_route() -> None:
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+        currency_codes=["XXX"],
+    )
+    record = _record(
+        edition=edition,
+        event_name="identity.account_restriction.applied.v1",
+        payload={"restriction_kind": "communication", "status": "active"},
+    )
+
+    with transaction.atomic():
+        event, internal = publish_domain_event(record)
+        notification = enqueue_event_delivery(
+            event=event,
+            destination="notifications",
+            workload_pool="default",
+        )
+
+    assert internal.destination == "internal"
+    assert notification.destination == "notifications"
+    assert event.outbox_messages.count() == 2
+
+
+def test_secondary_enqueue_checks_the_persisted_event_envelope() -> None:
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+        currency_codes=["XXX"],
+    )
+    record = _record(
+        edition=edition,
+        event_name="registration.submitted.v1",
+        payload={
+            "from_state": "draft",
+            "to_state": "submitted",
+            "reference": "synthetic-registration",
+        },
+    )
+    message = _force_pending(record)
+    event = message.event
+    event.event_name = "system.effect.probe_requested.v1"
+    event.payload = {"probe": "in-memory-only"}
+
+    with pytest.raises(ValidationError) as denied, transaction.atomic():
+        enqueue_event_delivery(
+            event=event,
+            destination="internal",
+            workload_pool="default",
+        )
+
+    assert denied.value.code == "effect_profile_not_allowed"
+    assert event.outbox_messages.count() == 1
+
+
+def test_worker_quarantines_profile_incompatible_work_without_invocation() -> None:
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+        currency_codes=["XXX"],
+    )
+    record = _record(
+        edition=edition,
+        event_name="registration.submitted.v1",
+        payload={
+            "from_state": "draft",
+            "to_state": "submitted",
+            "reference": "synthetic-registration",
+        },
+    )
+    message = _force_pending(record)
+    calls: list[UUID] = []
+    handlers = HandlerRegistry()
+    handlers.register(
+        HandlerRegistration(
+            event_name=record.event_name,
+            destination="internal",
+            handler=lambda event, _context: calls.append(event.id),
+        )
+    )
+
+    result = run_claimed_effect(
+        _claim(message),
+        handlers=handlers,
+        execution_timeout=timedelta(seconds=30),
+    )
+
+    message.refresh_from_db()
+    assert result.outcome is RunOutcome.QUARANTINED
+    assert result.error_code == "effect_profile_not_allowed"
+    assert message.status == OutboxMessage.Status.QUARANTINED
+    assert message.last_error_code == "effect_profile_not_allowed"
+    assert message.attempts.get().error_code == "effect_profile_not_allowed"
+    assert calls == []
+
+    with pytest.raises(ValidationError) as replay_denied:
+        replay_quarantined_effect(
+            message_id=message.id,
+            additional_attempts=1,
+            actor_id=AccountFactory().id,
+            reason="Retry after confirming the manifest incident persists.",
+            correlation_id=uuid4(),
+        )
+    assert replay_denied.value.code == "effect_profile_not_allowed"
+
+    message.refresh_from_db()
+    assert message.status == OutboxMessage.Status.QUARANTINED
+    assert message.max_attempts == 8
+    assert message.replay_count == 0
+    assert message.attempts.count() == 1
+    assert not message.replay_receipts.exists()
+    assert calls == []
+
+
+def test_worker_quarantines_work_when_the_exact_manifest_is_unresolvable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Retain pending evidence without invoking a handler on version drift."""
+    message = _force_pending(_record())
+    calls: list[UUID] = []
+    monkeypatch.setattr(
+        "maru.events.queries.edition_adoption_profile_reference",
+        lambda **_kwargs: EditionAdoptionProfileReference(
+            code="full_convention",
+            version=2,
+        ),
+    )
+
+    result = run_claimed_effect(
+        _claim(message),
+        handlers=_registry(lambda event, _context: calls.append(event.id)),
+        execution_timeout=timedelta(seconds=30),
+    )
+
+    message.refresh_from_db()
+    assert result.outcome is RunOutcome.QUARANTINED
+    assert result.error_code == "effect_profile_not_allowed"
+    assert message.status == OutboxMessage.Status.QUARANTINED
+    assert message.last_error_code == "effect_profile_not_allowed"
+    assert message.attempts.get().error_code == "effect_profile_not_allowed"
+    assert calls == []
+
+    with pytest.raises(ValidationError) as replay_denied:
+        replay_quarantined_effect(
+            message_id=message.id,
+            additional_attempts=1,
+            actor_id=AccountFactory().id,
+            reason="An unresolvable manifest must remain quarantined.",
+            correlation_id=uuid4(),
+        )
+    assert replay_denied.value.code == "effect_profile_not_allowed"
+    message.refresh_from_db()
+    assert message.status == OutboxMessage.Status.QUARANTINED
+    assert message.max_attempts == 8
+    assert message.replay_count == 0
+    assert not message.replay_receipts.exists()
+
+
+def test_worker_tenant_binds_edition_profile_before_invocation() -> None:
+    owning_organization = OrganizationFactory()
+    foreign_edition = EventEditionFactory()
+    record = DomainEventRecord(
+        event_name="system.effect.probe_requested.v1",
+        schema_version=1,
+        organization_id=owning_organization.id,
+        event_edition_id=foreign_edition.id,
+        aggregate_type="system.effect_probe",
+        aggregate_id=uuid4(),
+        aggregate_version=1,
+        payload={"probe": "tenant-bound"},
+        correlation_id=uuid4(),
+        causation_id=None,
+        actor_kind="system",
+        actor_id=None,
+    )
+    message = _force_pending(record)
+    calls: list[UUID] = []
+
+    result = run_claimed_effect(
+        _claim(message),
+        handlers=_registry(lambda event, _context: calls.append(event.id)),
+        execution_timeout=timedelta(seconds=30),
+    )
+
+    message.refresh_from_db()
+    assert result.outcome is RunOutcome.QUARANTINED
+    assert result.error_code == "effect_profile_not_allowed"
+    assert message.last_error_code == "effect_profile_not_allowed"
+    assert calls == []
+
+    with pytest.raises(ValidationError) as replay_denied:
+        replay_quarantined_effect(
+            message_id=message.id,
+            additional_attempts=1,
+            actor_id=AccountFactory().id,
+            reason="A foreign edition must remain quarantined.",
+            correlation_id=uuid4(),
+        )
+    assert replay_denied.value.code == "effect_profile_not_allowed"
+    message.refresh_from_db()
+    assert message.status == OutboxMessage.Status.QUARANTINED
+    assert message.max_attempts == 8
+    assert message.replay_count == 0
+    assert not message.replay_receipts.exists()
+
+
+def test_explicit_non_edition_effect_retains_delivery_behavior() -> None:
+    organization = OrganizationFactory()
+    record = DomainEventRecord(
+        event_name="system.effect.probe_requested.v1",
+        schema_version=1,
+        organization_id=organization.id,
+        event_edition_id=None,
+        aggregate_type="system.effect_probe",
+        aggregate_id=uuid4(),
+        aggregate_version=1,
+        payload={"probe": "organization-scope"},
+        correlation_id=uuid4(),
+        causation_id=None,
+        actor_kind="system",
+        actor_id=None,
+    )
+    event, message = _publish(record)
+    calls: list[UUID] = []
+
+    result = run_claimed_effect(
+        _claim(message),
+        handlers=_registry(lambda delivered, _context: calls.append(delivered.id)),
+        execution_timeout=timedelta(seconds=30),
+    )
+
+    assert result.outcome is RunOutcome.SUCCEEDED
+    assert calls == [event.id]
+
+
+@pytest.mark.parametrize("scope_level", ["edition", "department", "resource"])
+def test_hybrid_authorization_effect_cannot_omit_edition_scope(
+    scope_level: str,
+) -> None:
+    organization = OrganizationFactory()
+    record = DomainEventRecord(
+        event_name="authorization.capability.direct_granted.v1",
+        schema_version=1,
+        organization_id=organization.id,
+        event_edition_id=None,
+        aggregate_type="authorization.capability_grant",
+        aggregate_id=uuid4(),
+        aggregate_version=1,
+        payload={
+            "capability_code": "workforce.manage_structure",
+            "scope_level": scope_level,
+        },
+        correlation_id=uuid4(),
+        causation_id=None,
+        actor_kind="system",
+        actor_id=None,
+    )
+
+    with pytest.raises(ValidationError) as denied, transaction.atomic():
+        publish_domain_event(record)
+
+    assert denied.value.code == "effect_profile_not_allowed"
+    assert not DomainEvent.objects.filter(correlation_id=record.correlation_id).exists()
+    assert not OutboxMessage.objects.exists()
+
+
+def test_hybrid_authorization_effect_retains_organization_scope() -> None:
+    organization = OrganizationFactory()
+    record = DomainEventRecord(
+        event_name="authorization.capability.direct_granted.v1",
+        schema_version=1,
+        organization_id=organization.id,
+        event_edition_id=None,
+        aggregate_type="authorization.capability_grant",
+        aggregate_id=uuid4(),
+        aggregate_version=1,
+        payload={
+            "capability_code": "authorization.grant_direct",
+            "scope_level": "organization",
+        },
+        correlation_id=uuid4(),
+        causation_id=None,
+        actor_kind="system",
+        actor_id=None,
+    )
+
+    event, message = _publish(record)
+
+    assert event.event_edition_id is None
+    assert message.status == OutboxMessage.Status.PENDING
+
+
+def test_edition_owned_effect_cannot_use_missing_edition_scope() -> None:
+    organization = OrganizationFactory()
+    record = DomainEventRecord(
+        event_name="registration.submitted.v1",
+        schema_version=1,
+        organization_id=organization.id,
+        event_edition_id=None,
+        aggregate_type="registration.registration",
+        aggregate_id=uuid4(),
+        aggregate_version=1,
+        payload={
+            "from_state": "draft",
+            "to_state": "submitted",
+            "reference": "synthetic-registration",
+        },
+        correlation_id=uuid4(),
+        causation_id=None,
+        actor_kind="system",
+        actor_id=None,
+    )
+
+    with pytest.raises(ValidationError) as denied, transaction.atomic():
+        publish_domain_event(record)
+
+    assert denied.value.code == "effect_profile_not_allowed"
+    assert not DomainEvent.objects.filter(correlation_id=record.correlation_id).exists()
+    assert not OutboxMessage.objects.exists()
 
 
 def test_publish_requires_atomic_state_transaction_and_rolls_back_together() -> None:
@@ -480,6 +935,9 @@ def test_cancellation_boundary_and_operator_replay_are_explicit() -> None:
     replayed = replay_quarantined_effect(
         message_id=quarantined.id,
         additional_attempts=1,
+        actor_id=AccountFactory().id,
+        reason="Retry after synthetic delivery recovery.",
+        correlation_id=uuid4(),
     )
     assert replayed.status == OutboxMessage.Status.PENDING
     assert replayed.replay_count == 1

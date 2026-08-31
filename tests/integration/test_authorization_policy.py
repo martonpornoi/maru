@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+import maru.authorization.policy as authorization_policy
 from maru.audit.models import AuditEvent
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.commands import grant_capability_direct
@@ -26,6 +27,10 @@ from maru.authorization.policy import (
 )
 from maru.authorization.services import AuthorizationDenied, delegate_capability
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events.adoption import (
+    WORKFORCE_ONLY_PROFILE_VERSION,
+    AdoptionProfileCode,
+)
 from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.workforce.models import Department, Position, PositionTemplate
@@ -380,6 +385,50 @@ def test_inactive_platform_administrator_is_denied_by_policy() -> None:
     assert decision.reason_code == "account_inactive"
 
 
+def test_exact_profile_pair_denies_before_platform_policy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    edition = EventEditionFactory()
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    target = _target(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+    )
+    calls: list[tuple[str, int, str]] = []
+
+    def reject_capability(
+        profile_code: str,
+        profile_version: int,
+        capability_code: str,
+    ) -> bool:
+        calls.append((profile_code, profile_version, capability_code))
+        return False
+
+    monkeypatch.setattr(
+        authorization_policy,
+        "profile_allows_capability",
+        reject_capability,
+    )
+
+    decision = decide(
+        principal=administrator,
+        capability_code="events.view_basic",
+        resource=target,
+    )
+
+    assert not decision.allowed
+    assert decision.fields == frozenset()
+    assert decision.obligations == frozenset()
+    assert decision.reason_code == "module_not_adopted"
+    assert calls == [
+        (
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            "events.view_basic",
+        )
+    ]
+
+
 def test_unknown_capability_is_deny_by_default() -> None:
     decision = decide(
         principal=AccountFactory(),
@@ -709,6 +758,51 @@ def test_delegation_must_be_narrower_and_not_outlive_parent() -> None:
             correlation_id=uuid4(),
         )
     assert too_long.value.reason_code == "delegation_expiry_too_late"
+
+
+def test_delegation_rejects_a_capability_absent_from_the_exact_profile() -> None:
+    edition = EventEditionFactory(
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+        adoption_profile_version=WORKFORCE_ONLY_PROFILE_VERSION,
+    )
+    organization_target = _target(organization_id=edition.organization_id)
+    edition_target = _target(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+    )
+    actor, _, parent, now = _provenance_parent(
+        organization=edition.organization,
+        target=organization_target,
+        capability_code="charities.view_partners",
+    )
+    recipient = AccountFactory()
+    correlation_id = uuid4()
+
+    with pytest.raises(AuthorizationDenied) as captured:
+        delegate_capability(
+            actor=actor,
+            recipient=recipient,
+            parent_grant_id=parent.id,
+            target=edition_target,
+            effective_from=now,
+            expires_at=now + timedelta(days=1),
+            reason="Attempt to narrow unadopted Charity access to Workforce.",
+            correlation_id=correlation_id,
+            source_channel="test",
+        )
+
+    assert captured.value.reason_code == "module_not_adopted"
+    assert not CapabilityGrant.objects.filter(
+        delegated_from=parent,
+        principal=recipient,
+    ).exists()
+    denial = AuditEvent.objects.get(correlation_id=correlation_id)
+    assert denial.outcome == AuditEvent.Outcome.DENY
+    assert denial.reason_code == "module_not_adopted"
+    assert not DomainEvent.objects.filter(correlation_id=correlation_id).exists()
+    assert not OutboxMessage.objects.filter(
+        event__correlation_id=correlation_id
+    ).exists()
 
 
 def test_delegation_preserves_exact_department_and_resource_containment() -> None:

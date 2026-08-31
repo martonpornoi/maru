@@ -49,7 +49,18 @@ relationships and currently authorized edition targets. Authority may expose a
 purpose-bounded Workforce-only workspace with `not_participating` status,
 immutable adoption profile, adopted modules, and available destinations without
 creating a Participation or capacity row. Platform administrators remain
-separately classified and receive the same profile boundary.
+separately classified and receive the same profile boundary. The projection
+resolves the persisted profile code and version together. Attendee-derived
+discovery additionally requires the exact `participation.attendee@1` adapter.
+It also carries Workforce's exact, read-only assignment-evidence semantic for
+shared-shell presentation, without treating adopted-module membership as that
+semantic or adding a Participation command surface.
+Authority-derived organization candidates pass through Authorization's
+profile-aware scope helper, so an accountable purpose root cannot fan out into
+an incompatible edition while a compatible direct grant still works. An
+unsupported exact pair is omitted before organization, series, or edition names
+are projected, including for platform context; the endpoint never falls back to
+the newest profile sharing that code and does not fail the complete response.
 
 The staff list and detail require `participation.view_staff_summary`, establish
 organization and edition from trusted route scope, constrain the queryset

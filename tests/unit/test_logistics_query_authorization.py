@@ -402,10 +402,8 @@ def test_generic_scope_resolution_and_policy_decision_fail_closed() -> None:
             )
 
 
-def test_owned_offer_history_is_a_narrow_fallback_not_a_general_grant() -> None:
+def test_owned_offer_history_cannot_override_exact_self_policy() -> None:
     actor = _actor()
-    existing = _existing_queryset(exists=True)
-    missing = _existing_queryset(exists=False)
     with (
         patch(
             "maru.logistics.queries.authorize_logistics_api_scope",
@@ -413,23 +411,16 @@ def test_owned_offer_history_is_a_narrow_fallback_not_a_general_grant() -> None:
         ),
         patch(
             "maru.logistics.queries.EquipmentOffer.objects.filter",
-            return_value=existing,
-        ),
-    ):
-        queries.authorize_self_offer_history_api_scope(
-            actor=actor, organization_id=uuid4(), edition_id=uuid4()
-        )
-
-    with (
-        patch(
-            "maru.logistics.queries.authorize_logistics_api_scope",
-            side_effect=LogisticsAuthorizationDeniedError,
-        ),
-        patch(
-            "maru.logistics.queries.EquipmentOffer.objects.filter", return_value=missing
-        ),
+        ) as offers,
         pytest.raises(LogisticsAuthorizationDeniedError),
     ):
         queries.authorize_self_offer_history_api_scope(
             actor=actor, organization_id=uuid4(), edition_id=uuid4()
         )
+    offers.assert_not_called()
+
+    with patch("maru.logistics.queries.authorize_logistics_api_scope") as authorize:
+        queries.authorize_self_offer_history_api_scope(
+            actor=actor, organization_id=uuid4(), edition_id=uuid4()
+        )
+    authorize.assert_called_once()

@@ -1,19 +1,19 @@
 # Authorization module
 
 Status: Implemented exact organization/edition/department/resource authority,
-sealed target and immutable adoption-profile resolution, protected Executive
-Board and Maru-operator roots, provenance writing, profile-compatible access
-management, and guarded exact-lineage policy/runtime activation; production
-legacy reconciliation and cutover remain gates
-Last updated: 2026-08-30
+sealed exact-version adoption-profile targets, protected Executive Board and
+Maru-operator roots, provenance writing, profile-compatible access management,
+and guarded exact-lineage policy/runtime activation; production legacy
+reconciliation and cutover remain gates
+Last updated: 2026-08-31
 
 ## Purpose and requirements
 
 `maru.authorization` is the deny-by-default authority boundary for IDN-002,
 IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, IDN-014, EVT-006, QRY-003,
 UX-020, UX-024, UX-028, UX-030, NFR-013, ADR 0003, ADR 0023, ADR 0040,
-ADR 0041, ADR 0044, and ADR 0080. A membership, account, familiar role name,
-or visible destination never grants broad access by itself.
+ADR 0041, ADR 0044, ADR 0080, and ADR 0081. A membership, account, familiar
+role name, or visible destination never grants broad access by itself.
 
 Platform administration is a separate principal purpose under ADR 0031.
 Capability grants and role assignments reject a platform administrator as
@@ -29,12 +29,22 @@ An inactive account is denied before self-relationship, platform, direct-grant,
 or role-assignment evaluation. This platform-wide login-disable invariant does
 not replace the explainable organizer-scoped restrictions required by ADR 0013.
 
-For an exact edition target, policy resolves the immutable adoption profile in
-the same tenant-scoped query. A capability whose top-level module is not
-adopted returns `module_not_adopted` before platform policy, direct grants, or
-role assignments are considered. Platform oversight is therefore not a hidden
-modularity bypass. Organization-scoped setup remains available where required;
-the bounded denial begins once an exact edition is resolved.
+For an exact edition target, the same tenant-scoped resolver seals both the
+persisted adoption-profile code and version. Policy requires that exact pair
+to resolve and that its immutable manifest explicitly pin the requested
+capability; module-prefix membership is not permission. An unknown pair or an
+unpinned capability returns `module_not_adopted` before self-service, platform
+policy, direct grants, or role assignments are considered. Platform oversight
+is therefore not a hidden modularity bypass, and later same-namespace catalog
+growth cannot widen an existing profile version. Organization-scoped setup
+remains available under its explicit non-edition policy.
+
+Authority writers repeat that manifest check after locking and re-resolving the
+exact edition. Direct grants, role assignments, and delegated children cannot
+persist a capability that the locked `(profile_code, profile_version)` does not
+pin, even when the caller supplied a formerly valid sealed target. Failure is
+classified as `module_not_adopted`, records only denial or error audit evidence,
+and creates no authority, domain event, or outbox message.
 
 ## Owned data and invariants
 
@@ -105,14 +115,17 @@ module capabilities are absent. Its canonical assignment is the sole
 organization-scoped storage exception for edition-bounded capabilities, so the
 same accountable operators can govern successive Workforce-only editions.
 Ordinary direct grants and roles retain their exact-edition minimum scope;
-database triggers reject broader persistence. Policy also refuses to apply the
-reserved root to a full-convention edition, including one later created by a
-platform administrator in the same organization.
+database triggers reject broader persistence. Policy also admits any reserved
+representation root only when the target's exact manifest pins that root-role
+code. It therefore refuses to apply the Maru-operator root to a full-convention
+edition, including one later created by a platform administrator in the same
+organization.
 
 Delegation is dual-authority: the actor must hold an active delegable parent
 grant and a separate `authorization.delegate` capability. A child cannot
-broaden scope, start before, or outlive its parent. Success writes the child
-grant, security audit, domain event, and outbox message atomically.
+broaden scope, start before, outlive its parent, or enter an exact edition whose
+manifest does not pin the parent's capability. Success writes the child grant,
+security audit, domain event, and outbox message atomically.
 
 Root grants, immutable role-bundle versions, and role assignments use
 independent human control. The actor and approver must be distinct, the
@@ -364,6 +377,17 @@ capability from its immutable, provenance-validated bundle, then projects only
 known persistable capabilities from that same bundle. A 257-scope regression
 guards both query amplification boundaries without loading tenant names.
 
+Every exact-edition authority row is also narrowed against that edition's
+immutable manifest before it enters the projection. When organization-scoped
+authority expands into candidate editions, the name-free projection preserves
+the kind of each source: direct capabilities are checked individually,
+ordinary organizer roles must remain compatible as a complete capability set,
+and reserved purpose roots must be pinned by role code. Admin selection and
+self-context then repeat this exact-pair check before querying or returning an
+edition name. A Maru-operator assignment can therefore disclose Workforce-only
+editions in its organization without fanning out into a full-convention
+edition.
+
 `current_role_assignment_ids(...)` accepts at most 4,096 already bounded
 RoleAssignment identifiers. In compatibility mode it applies current term and
 revocation checks. In exact mode it additionally resolves the stored scope and
@@ -439,11 +463,14 @@ remain complete scoped roles, not Django Groups or page-local allowlists.
 People are shown by display name and exact email; assignment UUIDs are
 transport identities and are not rendered as primary labels.
 
-For an adopted-profile edition, every listed group and assignment must have a
-non-empty capability set wholly inside that profile. The query projection
-filters incompatible historical groups before disclosure; exact role lookup,
-create, replace, and assignment commands reject a crafted incompatible role at
-edition, Department, or resource scope with `module_not_adopted`.
+For an adopted-profile edition, every listed organizer-created group and
+assignment must have a non-empty capability set wholly pinned by the exact
+profile manifest. Arbitrary organizer role codes are not manifest entries;
+reserved accountable roots instead require their exact root-role pin. Query
+projections filter incompatible historical groups before disclosure, while
+exact role lookup, create, replace, and assignment commands reject a crafted
+incompatible role at edition, Department, or resource scope with
+`module_not_adopted`.
 
 Access sharing is not a workforce appointment. It does not fill a position,
 check an NDA, add hierarchy/reporting relationships, create staff or volunteer

@@ -916,6 +916,23 @@ def grant_capability_direct(  # noqa: DOC503 - bare re-raise preserves original 
             lock_retired_department_authority_boundaries()
             locked = _lock_target(target)
             locked_target = locked.target
+            if locked_target.edition_id is not None and (
+                locked_target.adoption_profile_code is None
+                or locked_target.adoption_profile_version is None
+                or not profile_allows_capabilities(
+                    locked_target.adoption_profile_code,
+                    locked_target.adoption_profile_version,
+                    (capability_code,),
+                )
+            ):
+                _raise_validation(
+                    {
+                        "capability_code": (
+                            "This edition has not adopted the requested capability."
+                        )
+                    },
+                    reason_code="module_not_adopted",
+                )
             decision = _require_dual_control(
                 actor=actor,
                 approver=approver,
@@ -1521,10 +1538,12 @@ def assign_role(  # noqa: DOC503 - bare re-raise preserves original error
                     "The role bundle is unavailable.",
                     reason_code="role_bundle_unavailable",
                 )
-            if (
-                locked_target.adoption_profile_code is not None
-                and not profile_allows_capabilities(
+            if locked_target.edition_id is not None and (
+                locked_target.adoption_profile_code is None
+                or locked_target.adoption_profile_version is None
+                or not profile_allows_capabilities(
                     locked_target.adoption_profile_code,
+                    locked_target.adoption_profile_version,
                     role.capability_codes,
                 )
             ):

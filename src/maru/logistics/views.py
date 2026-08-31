@@ -1293,6 +1293,17 @@ def my_logistics_offers_index(request: HttpRequest) -> HttpResponse:
             "has_permission": True,
             "maru_page_access_spec": _personal_access_spec(),
             "offer_editions": tuple(asdict(edition) for edition in editions),
+            "maru_personal_profile_pairs": tuple(
+                sorted(
+                    {
+                        (
+                            edition.adoption_profile_code,
+                            edition.adoption_profile_version,
+                        )
+                        for edition in editions
+                    }
+                )
+            ),
         }
     )
     return TemplateResponse(request, "logistics/my_offer_index.html", context)

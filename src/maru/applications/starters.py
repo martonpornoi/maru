@@ -10,6 +10,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from maru.applications.adoption import (
+    profile_allows_application_eligibility,
+    profile_allows_application_source,
+    profile_allows_application_starter,
+    profile_allows_application_target,
+)
 from maru.applications.models import (
     ApplicationClassification,
     ApplicationEligibilityKind,
@@ -551,3 +557,90 @@ def starter_catalog() -> tuple[ApplicationStarter, ...]:
         The authorized starter catalog records in deterministic order.
     """
     return STARTERS
+
+
+def application_starter_for_profile(
+    *,
+    profile_code: str,
+    profile_version: int,
+    starter_code: str,
+) -> ApplicationStarter | None:
+    """Return one starter only when its exact profile dependencies are pinned.
+
+    Parameters
+    ----------
+    profile_code : str
+        The persisted adoption-profile code.
+    profile_version : int
+        The persisted adoption-profile version.
+    starter_code : str
+        The stable Applications starter code.
+
+    Returns
+    -------
+    ApplicationStarter | None
+        The exact admitted starter, or ``None`` when any manifest dependency
+        is absent or the exact profile pair is unsupported.
+    """
+    starter = application_starter(starter_code)
+    if starter is None or not profile_allows_application_starter(
+        profile_code,
+        profile_version,
+        starter.code,
+    ):
+        return None
+    target_adapter_kind = starter.target_adapter_kind
+    if target_adapter_kind is not None and not profile_allows_application_target(
+        profile_code,
+        profile_version,
+        target_adapter_kind,
+    ):
+        return None
+    if not profile_allows_application_eligibility(
+        profile_code,
+        profile_version,
+        starter.eligibility_kind,
+    ):
+        return None
+    if any(
+        not profile_allows_application_source(
+            profile_code,
+            profile_version,
+            question.source_binding,
+        )
+        for question in starter.questions
+    ):
+        return None
+    return starter
+
+
+def starter_catalog_for_profile(
+    *,
+    profile_code: str,
+    profile_version: int,
+) -> tuple[ApplicationStarter, ...]:
+    """Return the starter catalog admitted by one exact edition profile.
+
+    Parameters
+    ----------
+    profile_code : str
+        The persisted adoption-profile code.
+    profile_version : int
+        The persisted adoption-profile version.
+
+    Returns
+    -------
+    tuple[ApplicationStarter, ...]
+        Admitted starters in the code-owned catalog's deterministic order.
+        An unsupported exact profile pair returns an empty catalog.
+    """
+    return tuple(
+        starter
+        for starter in STARTERS
+        if application_starter_for_profile(
+            profile_code=profile_code,
+            profile_version=profile_version,
+            starter_code=starter.code,
+        )
+        is not None
+    )

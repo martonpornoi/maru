@@ -1,7 +1,7 @@
 # Accreditation module
 
-Status: Revocable credentials and bounded offline check-in implemented  
-Last updated: 2026-07-28
+Status: Revocable credentials and exact-profile-bounded offline check-in implemented
+Last updated: 2026-08-31
 
 ## Purpose and requirements
 
@@ -39,6 +39,17 @@ GET  /api/v1/organizations/{organization_id}/editions/{edition_id}/offline/confl
 Issuance and revocation require edition-scoped accreditation authority and a
 recent privileged step-up in production. Offline ingest authenticates the
 device and validates its manifest instead of using a staff browser session.
+Because that public relay does not carry a staff principal, it separately
+resolves the exact tenant-bound edition profile before device lookup and
+requires the pinned `accreditation.offline-check-in-relay@1` adapter. An
+unknown profile or one that excludes Accreditation fails closed before any
+operation, check-in, timeline, credential event, or outbox evidence is written.
+
+Credential revocation triggered by an Identity restriction is a separate
+cross-module boundary. Accreditation exposes
+`accreditation.identity-restriction-consequence@1`, and the consequence query
+requires that exact adapter before loading or changing an issued credential.
+Adopting Identity alone does not authorize credential revocation.
 
 ## Operations, recovery, and limits
 

@@ -56,8 +56,8 @@ from maru.authorization.services import AuthorizationDenied
 from maru.communications.models import NotificationDelivery
 from maru.core.pagination import StandardPageNumberPagination
 from maru.core.problems import DependencyUnavailable
-from maru.events.adoption import profile_codes_for_module
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.models import Account
 from maru.identity.services import require_recent_step_up
 from maru.participation.models import Participation
@@ -222,6 +222,7 @@ if TYPE_CHECKING:
     from datetime import date, datetime
 
 MANAGE_CONFIGURATION = "registration.manage_configuration"
+MANAGE_SELF_PROFILE = "registration.manage_self_profile"
 VIEW_SERVICE = "registration.view_service_summary"
 VIEW_SELF = "registration.view_self"
 VIEW_PAYMENT_SUMMARY = "registration.view_payment_summary"
@@ -235,10 +236,13 @@ def _open_public_configurations() -> QuerySet[RegistrationConfiguration]:
     now = timezone.now()
     return (
         RegistrationConfiguration.objects.filter(
+            adoption_profile_filter_for_module(
+                "registration",
+                field_prefix="edition",
+            ),
             status=ConfigurationStatus.ACTIVE,
             opens_at__lte=now,
             closes_at__gt=now,
-            edition__adoption_profile_code__in=profile_codes_for_module("registration"),
         )
         .exclude(edition__lifecycle__in=("archived", "cancelled"))
         .select_related("organization", "edition", "edition__series")
@@ -720,7 +724,10 @@ class PublicAttendeeListView(APIView):
         """
         del request
         if (
-            not EventEdition.objects.filter(id=edition_id)
+            not EventEdition.objects.filter(
+                adoption_profile_filter_for_module("registration"),
+                id=edition_id,
+            )
             .exclude(
                 lifecycle__in=(
                     EventEdition.Lifecycle.ARCHIVED,
@@ -1302,23 +1309,23 @@ class MyAttendeeProfileView(APIView):
             If the caller lacks permission for the requested scope.
         """
         account = _account(request)
-        profile = _self_profile(
-            organization_id=organization_id,
-            edition_id=edition_id,
-            account=account,
-        )
         decision = _scope_decision(
             account=account,
             capability_code=VIEW_SELF_PROFILE,
             organization_id=organization_id,
             edition_id=edition_id,
-            owned_resource=profile,
+            self_intent=True,
         )
         if not decision.allowed:
             raise PermissionDenied(
                 "Your attendee profile is unavailable.",
                 code=decision.reason_code,
             )
+        profile = _self_profile(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            account=account,
+        )
         _read_audit(
             account=account,
             organization_id=organization_id,
@@ -1368,14 +1375,30 @@ class MyAttendeeProfileView(APIView):
         ------
         ApiValidationError
             If the request payload violates the endpoint contract.
+        PermissionDenied
+            If the exact organization-and-edition scope does not allow the
+            account to manage its attendee profile.
         """
+        account = _account(request)
+        decision = _scope_decision(
+            account=account,
+            capability_code=MANAGE_SELF_PROFILE,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            self_intent=True,
+        )
+        if not decision.allowed:
+            raise PermissionDenied(
+                "Your attendee profile is unavailable.",
+                code=decision.reason_code,
+            )
         serializer = UpdateSelfAttendeeProfileSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
             profile = update_attendee_profile(
                 organization_id=organization_id,
                 edition_id=edition_id,
-                actor=_account(request),
+                actor=account,
                 profile_input=_update_input(serializer.validated_data),
                 correlation_id=_correlation_id(request),
                 source_channel="api",
@@ -1428,10 +1451,25 @@ class MyProfilePhotoUploadView(APIView):
         ------
         ApiValidationError
             If the request payload violates the endpoint contract.
+        PermissionDenied
+            If the exact organization-and-edition scope does not allow the
+            account to manage its attendee profile.
         """
+        account = _account(request)
+        decision = _scope_decision(
+            account=account,
+            capability_code=MANAGE_SELF_PROFILE,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            self_intent=True,
+        )
+        if not decision.allowed:
+            raise PermissionDenied(
+                "Your attendee profile is unavailable.",
+                code=decision.reason_code,
+            )
         serializer = SelfProfileImageUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        account = _account(request)
         profile = _self_profile(
             organization_id=organization_id,
             edition_id=edition_id,
@@ -1503,10 +1541,25 @@ class MyFursuitPhotoUploadView(APIView):
         ------
         ApiValidationError
             If the request payload violates the endpoint contract.
+        PermissionDenied
+            If the exact organization-and-edition scope does not allow the
+            account to manage its attendee profile.
         """
+        account = _account(request)
+        decision = _scope_decision(
+            account=account,
+            capability_code=MANAGE_SELF_PROFILE,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            self_intent=True,
+        )
+        if not decision.allowed:
+            raise PermissionDenied(
+                "Your attendee profile is unavailable.",
+                code=decision.reason_code,
+            )
         serializer = SelfProfileImageUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        account = _account(request)
         profile = _self_profile(
             organization_id=organization_id,
             edition_id=edition_id,
@@ -2155,9 +2208,24 @@ class MyRegistrationProfileExtensionsView(APIView):
         Raises
         ------
         DependencyUnavailable
-            If the scoped target does not exist or cannot be disclosed.
+            If the database-backed profile projection cannot be read.
+        NotFound
+            If the registration profile cannot be disclosed in the exact
+            organization-and-edition scope.
         """
         account = _account(request)
+        decision = _scope_decision(
+            account=account,
+            capability_code=VIEW_SELF_PROFILE,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            self_intent=True,
+        )
+        if not decision.allowed:
+            raise NotFound(
+                "The registration profile is unavailable.",
+                code="registration_profile_unavailable",
+            )
         try:
             registration = _profile_extension_registration(
                 organization_id=organization_id,
@@ -2240,9 +2308,25 @@ class MyRegistrationProfileExtensionsView(APIView):
         ApiValidationError
             If the request payload violates the endpoint contract.
         DependencyUnavailable
-            If the scoped target does not exist or cannot be disclosed.
+            If database-backed authorization, writing, or projection cannot
+            complete.
+        NotFound
+            If the registration profile cannot be disclosed or changed in the
+            exact organization-and-edition scope.
         """
         account = _account(request)
+        decision = _scope_decision(
+            account=account,
+            capability_code=MANAGE_SELF_PROFILE,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            self_intent=True,
+        )
+        if not decision.allowed:
+            raise NotFound(
+                "The registration profile is unavailable.",
+                code="registration_profile_unavailable",
+            )
         correlation_id = _correlation_id(request)
         try:
             registration = _profile_extension_registration(
@@ -2907,6 +2991,18 @@ class MyRegistrationPaymentIntentView(APIView):
             If the scoped resource is unavailable to the caller.
         """
         account = _account(request)
+        try:
+            authorize_owned_registration_api_scope(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+            )
+        except AuthorizationDenied as error:
+            raise NotFound(
+                "The registration is unavailable.",
+                code="registration_unavailable",
+            ) from error
         serializer = CreatePaymentIntentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
@@ -2999,9 +3095,25 @@ class MyRegistrationPaymentIntentStatusView(APIView):
             If the scoped resource is unavailable to the caller.
         """
         account = _account(request)
+        try:
+            authorize_owned_registration_api_scope(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+            )
+        except AuthorizationDenied as error:
+            raise NotFound(
+                "The payment attempt is unavailable.",
+                code="payment_intent_unavailable",
+            ) from error
         intent = (
             PaymentIntent.objects.select_related("provider_account")
             .filter(
+                adoption_profile_filter_for_module(
+                    "registration",
+                    field_prefix="registration__edition",
+                ),
                 id=intent_id,
                 registration_id=registration_id,
                 registration__account=account,
@@ -3262,13 +3374,18 @@ class MyRegistrationReceiptListView(APIView):
             If the scoped resource is unavailable to the caller.
         """
         account = _account(request)
-        if not Registration.objects.filter(
-            id=registration_id,
-            organization_id=organization_id,
-            edition_id=edition_id,
-            account=account,
-        ).exists():
-            raise NotFound("The registration is unavailable.")
+        try:
+            authorize_owned_registration_api_scope(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+            )
+        except AuthorizationDenied as error:
+            raise NotFound(
+                "The registration is unavailable.",
+                code="registration_unavailable",
+            ) from error
         items = ReceiptRecord.objects.filter(
             registration_id=registration_id,
             organization_id=organization_id,

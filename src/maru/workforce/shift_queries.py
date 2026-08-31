@@ -10,8 +10,10 @@ from django.db import models
 from django.utils import timezone
 
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_adapter
 from maru.identity.models import Account
 from maru.identity.queries import account_display_labels
+from maru.workforce.adoption import WORKFORCE_SELF_ADAPTER
 from maru.workforce.availability_inputs import MAX_AVAILABILITY_WINDOWS
 from maru.workforce.models import (
     PersonAvailabilityPlan,
@@ -262,11 +264,19 @@ def person_has_shift_relationship(
         return False
     return (
         PositionAssignment.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
             organization_id=organization_id,
             edition_id=edition_id,
             account_id=account.id,
         ).exists()
         or ShiftCommitment.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
             organization_id=organization_id,
             edition_id=edition_id,
             account_id=account.id,
@@ -677,6 +687,7 @@ def my_shift_scope_items(
         edition = (
             EventEdition.objects.select_related("organization", "series")
             .filter(
+                adoption_profile_filter_for_adapter(WORKFORCE_SELF_ADAPTER),
                 id=edition_id,
                 organization_id=organization_id,
             )

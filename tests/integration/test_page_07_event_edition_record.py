@@ -10,6 +10,7 @@ from maru.audit.models import AuditEvent
 from maru.authorization.models import CapabilityGrant, RoleAssignment
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.admin_context import ADMIN_EDITION_SESSION_KEY
+from maru.events.adoption import AdoptionProfileCode
 from maru.events.models import EventEdition
 from maru.events.serializers import EditionBasicSerializer
 from maru.events.services import (
@@ -193,6 +194,8 @@ def test_edition_record_is_scoped_detailed_and_does_not_select_on_get() -> None:
     assert "Europe/Vienna" in content
     assert "de, en" in content
     assert "EUR" in content
+    assert response.context_data["edition_adopts_registration"] is True
+    assert 'name="currency_codes"' in content
     assert 'class="baseline-count">Record version 1' in content
     assert response.context_data["edition"].aggregate_version == 1
     assert 'name="expected_aggregate_version"' in content
@@ -203,6 +206,47 @@ def test_edition_record_is_scoped_detailed_and_does_not_select_on_get() -> None:
     assert ADMIN_EDITION_SESSION_KEY not in client.session
     assert "Created event edition" in content
     assert "by Synthetic Edition Steward" in content
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_edition_record_uses_exact_manifest_for_payment_fields() -> None:
+    _administrator, client = _administrator_client()
+    edition = EventEditionFactory(
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+        adoption_profile_version=1,
+        currency_codes=["XXX"],
+    )
+
+    response = client.get(_record_url(edition))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert response.context_data["edition_adopts_registration"] is False
+    assert "Payments and attendee registration" in content
+    assert "Not adopted" in content
+    assert "Languages and currencies" not in content
+    assert 'name="currency_codes"' not in content
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_edition_record_payment_presentation_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _administrator, client = _administrator_client()
+    edition = EventEditionFactory(currency_codes=["EUR"])
+    monkeypatch.setattr(
+        "maru.core.views.adoption_profile",
+        lambda *_args: None,
+    )
+
+    response = client.get(_record_url(edition))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Payment settings" in content
+    assert "Unavailable for this exact profile" in content
+    assert "Not adopted" not in content
+    assert 'name="currency_codes"' not in content
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")

@@ -7007,6 +7007,9 @@ paths:
         ------
         ApiValidationError
             If the request payload violates the endpoint contract.
+        PermissionDenied
+            If the exact organization-and-edition scope does not allow the
+            account to manage its attendee profile.
       parameters:
       - in: path
         name: edition_id
@@ -7066,6 +7069,9 @@ paths:
         ------
         ApiValidationError
             If the request payload violates the endpoint contract.
+        PermissionDenied
+            If the exact organization-and-edition scope does not allow the
+            account to manage its attendee profile.
       parameters:
       - in: path
         name: edition_id
@@ -7133,6 +7139,9 @@ paths:
         ------
         ApiValidationError
             If the request payload violates the endpoint contract.
+        PermissionDenied
+            If the exact organization-and-edition scope does not allow the
+            account to manage its attendee profile.
       parameters:
       - in: path
         name: edition_id
@@ -9096,7 +9105,10 @@ paths:
         Raises
         ------
         DependencyUnavailable
-            If the scoped target does not exist or cannot be disclosed.
+            If the database-backed profile projection cannot be read.
+        NotFound
+            If the registration profile cannot be disclosed in the exact
+            organization-and-edition scope.
       parameters:
       - in: path
         name: edition_id
@@ -9168,7 +9180,11 @@ paths:
         ApiValidationError
             If the request payload violates the endpoint contract.
         DependencyUnavailable
-            If the scoped target does not exist or cannot be disclosed.
+            If database-backed authorization, writing, or projection cannot
+            complete.
+        NotFound
+            If the registration profile cannot be disclosed or changed in the
+            exact organization-and-edition scope.
       parameters:
       - in: header
         name: Idempotency-Key
@@ -19313,6 +19329,9 @@ components:
           items:
             type: string
           readOnly: true
+        assignment_uses_participation_evidence:
+          type: boolean
+          readOnly: true
         time_zone:
           type: string
         language_codes:
@@ -19343,6 +19362,7 @@ components:
       - adoption_profile_code
       - adoption_profile_label
       - adoption_profile_version
+      - assignment_uses_participation_evidence
       - available_destinations
       - can_transition
       - capacities

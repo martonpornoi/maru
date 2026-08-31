@@ -2,7 +2,9 @@
 
 from django.db.models import QuerySet
 
+from maru.events.queries import adoption_profile_filter_for_adapter
 from maru.identity.models import Account
+from maru.participation.adoption import PARTICIPATION_ATTENDEE_ADAPTER_CODE
 from maru.participation.models import Participation
 
 
@@ -20,7 +22,13 @@ def participations_for_account(account: Account) -> QuerySet[Participation]:
         The authorized participations for account records in deterministic order.
     """
     return (
-        Participation.objects.filter(account=account)
+        Participation.objects.filter(
+            adoption_profile_filter_for_adapter(
+                PARTICIPATION_ATTENDEE_ADAPTER_CODE,
+                field_prefix="edition",
+            ),
+            account=account,
+        )
         .select_related("organization", "edition__series")
         .prefetch_related("capacities")
         .order_by("-edition__starts_on", "edition_id")

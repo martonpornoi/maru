@@ -11,6 +11,8 @@ def test_admin_page_help_covers_utility_and_fallback_pages() -> None:
     home_help = admin_page_help("/admin/")
     assert "Registration desk to help an attendee" in home_help
     assert "Registration configurations" not in home_help
+    workforce_help = admin_page_help("/admin/", "", "", "workforce")
+    assert "Departments, Positions, assignments" in workforce_help
 
 
 def test_account_help_explains_inspection_and_invitation_boundaries() -> None:

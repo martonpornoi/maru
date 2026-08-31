@@ -46,7 +46,7 @@ from maru.workforce.structure_inputs import (
     normalize_structure_reason,
     validate_exact_confirmation,
 )
-from maru.workforce.structure_templates import BUILTIN_STRUCTURE_TEMPLATES
+from maru.workforce.structure_templates import builtin_structure_templates_for_profile
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -253,10 +253,7 @@ class StructureTemplateApplicationForm(_StructureReasonForm):
 
     template = forms.ChoiceField(
         label="Built-in reference",
-        choices=tuple(
-            (identifier, "MaruCon fictional starter, version 1")
-            for identifier in BUILTIN_STRUCTURE_TEMPLATES
-        ),
+        choices=(),
         help_text=(
             "Copies 22 independent Departments into this edition. It creates "
             "no people, roles, authority, registration, or participation."
@@ -281,6 +278,8 @@ class StructureTemplateApplicationForm(_StructureReasonForm):
         *args: Any,
         edition_name: str,
         expected_version: int,
+        profile_code: str,
+        profile_version: int,
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
@@ -294,19 +293,53 @@ class StructureTemplateApplicationForm(_StructureReasonForm):
             The human-readable edition name shown to authorized readers.
         expected_version : int
             The aggregate version required for optimistic concurrency control.
+        profile_code : str
+            Persisted adoption-profile code governing catalog disclosure.
+        profile_version : int
+            Persisted adoption-profile version governing catalog disclosure.
         retry_key : UUID | None, default=None
             The stable key that makes an exact command retry idempotent.
         **kwargs : Any
             Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        TypeError
+            If the declared template field no longer has the scoped choice type.
         """
         kwargs.setdefault("auto_id", "id_structure_template_%s")
         initial = dict(kwargs.pop("initial", {}) or {})
-        initial.setdefault("template", next(iter(BUILTIN_STRUCTURE_TEMPLATES)))
+        templates = builtin_structure_templates_for_profile(
+            profile_code,
+            profile_version,
+        )
+        if templates:
+            initial.setdefault("template", templates[0].identifier)
         initial.setdefault("expected_version", expected_version)
         initial.setdefault("retry_key", retry_key or uuid4())
         kwargs["initial"] = initial
         super().__init__(*args, **kwargs)
+        template_field = self.fields["template"]
+        if not isinstance(template_field, forms.ChoiceField):
+            raise TypeError("The structure template selector contract changed.")
+        template_field.choices = tuple(
+            (template.identifier, "MaruCon fictional starter, version 1")
+            for template in templates
+        )
+        self._template_application_available = bool(templates)
         self.edition_name = edition_name
+
+    @property
+    def template_application_available(self) -> bool:
+        """Return whether the exact edition profile exposes a template.
+
+        Returns
+        -------
+        bool
+            ``True`` only when the profile-filtered selector has a choice.
+
+        """
+        return self._template_application_available
 
     def clean_confirmation_name(self) -> str:
         """Validate and normalize the confirmation name field.

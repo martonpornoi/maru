@@ -27,11 +27,13 @@ from maru.authorization.policy import (
     resolve_organization_target,
 )
 from maru.authorization.services import AuthorizationDenied
+from maru.effects.adoption import effect_delivery_is_allowed
 from maru.effects.services import (
     DomainEventRecord,
     enqueue_event_delivery,
     publish_domain_event,
 )
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.managers import AccountManager
 from maru.identity.models import (
     Account,
@@ -1263,7 +1265,13 @@ def _publish_restriction_applied(
         ),
         workload_pool="security",
     )
-    if restriction.notify_account:
+    if restriction.notify_account and effect_delivery_is_allowed(
+        organization_id=event.organization_id,
+        event_edition_id=event.event_edition_id,
+        event_name=event.event_name,
+        destination="notifications",
+        payload=event.payload,
+    ):
         enqueue_event_delivery(
             event=event,
             destination="notifications",
@@ -1296,7 +1304,11 @@ def apply_due_account_restrictions(
         status=AccountRestriction.Status.ACTIVE,
         consequences_applied_at__isnull=True,
         effective_at__lte=effective_at,
-    ).filter(models.Q(expires_at__isnull=True) | models.Q(expires_at__gt=effective_at))
+    ).filter(
+        models.Q(expires_at__isnull=True) | models.Q(expires_at__gt=effective_at),
+        models.Q(edition__isnull=True)
+        | adoption_profile_filter_for_module("identity", field_prefix="edition"),
+    )
     if edition_id is not None:
         scope = scope.filter(edition_id=edition_id)
     with transaction.atomic():

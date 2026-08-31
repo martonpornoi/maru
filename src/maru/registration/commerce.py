@@ -19,6 +19,7 @@ from maru.authorization.policy import (
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.models import DomainEvent
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.queries import account_display_labels
 from maru.registration.availability import (
     OCCUPIED_REGISTRATION_STATES,
@@ -180,6 +181,10 @@ def authorize_owned_registration_api_scope(
         If the actor lacks the required scoped capability.
     """
     owned = Registration.objects.filter(
+        adoption_profile_filter_for_module(
+            "registration",
+            field_prefix="edition",
+        ),
         id=registration_id,
         organization_id=organization_id,
         edition_id=edition_id,
@@ -1529,6 +1534,10 @@ def expire_admission_tier_replacements(
 
     expired_at = now or timezone.now()
     candidates = AdmissionTierReplacement.objects.filter(
+        adoption_profile_filter_for_module(
+            "registration",
+            field_prefix="registration__edition",
+        ),
         status=AdmissionTierReplacement.Status.PAYMENT_PENDING,
         payment_due_at__lte=expired_at,
     )
@@ -1544,6 +1553,10 @@ def expire_admission_tier_replacements(
                 AdmissionTierReplacement.objects.select_for_update()
                 .select_related("registration")
                 .filter(
+                    adoption_profile_filter_for_module(
+                        "registration",
+                        field_prefix="registration__edition",
+                    ),
                     id=replacement_id,
                     status=AdmissionTierReplacement.Status.PAYMENT_PENDING,
                     payment_due_at__lte=expired_at,

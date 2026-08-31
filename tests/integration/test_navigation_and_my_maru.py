@@ -1,4 +1,6 @@
+import re
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 from django.test import Client
@@ -36,32 +38,120 @@ def test_default_login_enters_the_focused_my_maru_surface() -> None:
     home = client.get(response["Location"])
     content = home.content.decode()
     assert home.status_code == 200
-    assert "Registration &amp; tickets" in content
-    assert "Shop &amp; orders" in content
-    assert "My schedule" in content
-    assert "Equipment offers" in content
     assert "Governance invitations" in content
     assert "Organizer tools appear only" in content
     assert 'aria-label="My Maru"' in content
     assert content.count('id="nav-sidebar"') == 1
     assert content.count('id="nav-filter"') == 1
     assert 'placeholder="Search tasks and records..."' in content
-    assert "Start here" in content
     assert "More from Maru" in content
-    assert content.count('value="my.registrations"') == 1
-    assert content.count('value="my.catalog"') == 1
-    assert content.count('value="my.schedule"') == 1
-    assert content.count('value="my.workforce"') == 1
-    assert content.count('value="my.equipment_offers"') == 1
+    assert "Start here" not in content
+    assert "data-personal-destination-kind" not in content
+    assert 'value="my.registrations"' not in content
+    assert 'value="my.catalog"' not in content
+    assert 'value="my.schedule"' not in content
+    assert 'value="my.workforce"' not in content
+    assert 'value="my.equipment_offers"' not in content
     assert "Administration</strong>" not in content
     assert "Catalog commerce" not in content
+
+
+@pytest.mark.parametrize(
+    ("profile_pairs", "expected_card_kinds", "expected_sidebar_codes"),
+    [
+        ((), set(), set()),
+        (
+            (("full_convention", 1),),
+            {
+                "my.registrations",
+                "my.catalog",
+                "my.applications",
+                "my.workforce",
+                "my.schedule",
+                "my.equipment-offers",
+            },
+            {
+                "my.registrations",
+                "my.catalog",
+                "my.applications",
+                "my.workforce",
+                "my.schedule",
+                "my.equipment_offers",
+            },
+        ),
+        (
+            (("workforce_only", 1),),
+            {"my.workforce"},
+            {"my.workforce"},
+        ),
+        (
+            (("full_convention", 1), ("workforce_only", 1)),
+            {
+                "my.registrations",
+                "my.catalog",
+                "my.applications",
+                "my.workforce",
+                "my.schedule",
+                "my.equipment-offers",
+            },
+            {
+                "my.registrations",
+                "my.catalog",
+                "my.applications",
+                "my.workforce",
+                "my.schedule",
+                "my.equipment_offers",
+            },
+        ),
+    ],
+)
+def test_my_maru_home_cards_and_sidebar_share_exact_profile_projection(
+    profile_pairs: tuple[tuple[str, int], ...],
+    expected_card_kinds: set[str],
+    expected_sidebar_codes: set[str],
+) -> None:
+    """Keep bare, full, Workforce-only, and mixed home disclosure aligned."""
+    account = AccountFactory()
+    client = _client(account)
+
+    with patch(
+        "maru.core.views.personal_shell_profile_pairs",
+        return_value=profile_pairs,
+    ):
+        response = client.get(reverse("my-maru-home"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert (
+        set(re.findall(r'data-personal-destination-kind="([a-z0-9._-]+)"', content))
+        == expected_card_kinds
+    )
+    sidebar_module_codes = {
+        code
+        for code in re.findall(r'data-navigation-code="([a-z0-9._-]+)"', content)
+        if code
+        in {
+            "my.registrations",
+            "my.catalog",
+            "my.applications",
+            "my.workforce",
+            "my.schedule",
+            "my.equipment_offers",
+        }
+    }
+    assert sidebar_module_codes == expected_sidebar_codes
+    assert response.context["maru_personal_profile_pairs"] == profile_pairs
 
 
 def test_my_workforce_is_searchable_pinnable_and_current_across_its_journey() -> None:
     account = AccountFactory()
     client = _client(account)
 
-    index = client.get(reverse("my-workforce-assignments"))
+    with patch(
+        "maru.core.navigation._personal_profile_pairs",
+        return_value=(("workforce_only", 1),),
+    ):
+        index = client.get(reverse("my-workforce-assignments"))
 
     assert index.status_code == 200
     content = index.content.decode()
@@ -85,7 +175,13 @@ def test_my_workforce_is_searchable_pinnable_and_current_across_its_journey() ->
         account=account,
         destination_code="my.workforce",
     ).exists()
-    pinned_content = client.get(reverse("my-workforce-assignments")).content.decode()
+    with patch(
+        "maru.core.navigation._personal_profile_pairs",
+        return_value=(("workforce_only", 1),),
+    ):
+        pinned_content = client.get(
+            reverse("my-workforce-assignments")
+        ).content.decode()
     assert pinned_content.count('value="my.workforce"') == 1
     assert 'aria-label="Unpin My Workforce"' in pinned_content
 
@@ -140,7 +236,11 @@ def test_navigation_pins_move_one_live_destination_without_duplicating_it() -> N
         account=account,
         destination_code="my.registrations",
     ).exists()
-    content = client.get(reverse("my-maru-home")).content.decode()
+    with patch(
+        "maru.core.views.personal_shell_profile_pairs",
+        return_value=(("full_convention", 1),),
+    ):
+        content = client.get(reverse("my-maru-home")).content.decode()
     assert "Pinned" in content
     assert content.count('value="my.registrations"') == 1
     assert 'aria-label="Unpin Registration &amp; tickets"' in content
@@ -158,11 +258,17 @@ def test_navigation_pins_move_one_live_destination_without_duplicating_it() -> N
     assert not NavigationPin.objects.filter(account=account).exists()
 
 
-def test_my_schedule_is_always_resolved_searchable_and_pinnable() -> None:
+def test_my_schedule_is_resolved_searchable_and_pinnable_when_profile_admits_it() -> (
+    None
+):
     account = AccountFactory()
     client = _client(account)
 
-    index = client.get(reverse("my-maru-schedule-index"))
+    with patch(
+        "maru.core.navigation._personal_profile_pairs",
+        return_value=(("full_convention", 1),),
+    ):
+        index = client.get(reverse("my-maru-schedule-index"))
 
     assert index.status_code == 200
     content = index.content.decode()
@@ -187,16 +293,24 @@ def test_my_schedule_is_always_resolved_searchable_and_pinnable() -> None:
         account=account,
         destination_code="my.schedule",
     ).exists()
-    pinned_content = client.get(reverse("my-maru-schedule-index")).content.decode()
+    with patch(
+        "maru.core.navigation._personal_profile_pairs",
+        return_value=(("full_convention", 1),),
+    ):
+        pinned_content = client.get(reverse("my-maru-schedule-index")).content.decode()
     assert pinned_content.count('value="my.schedule"') == 1
     assert 'aria-label="Unpin My schedule"' in pinned_content
 
 
-def test_equipment_offers_is_always_resolved_searchable_and_pinnable() -> None:
+def test_equipment_offers_is_pinnable_when_profile_admits_it() -> None:
     account = AccountFactory()
     client = _client(account)
 
-    index = client.get(reverse("my-logistics-offer-index"))
+    with patch(
+        "maru.core.navigation._personal_profile_pairs",
+        return_value=(("full_convention", 1),),
+    ):
+        index = client.get(reverse("my-logistics-offer-index"))
 
     assert index.status_code == 200
     content = index.content.decode()
@@ -219,7 +333,13 @@ def test_equipment_offers_is_always_resolved_searchable_and_pinnable() -> None:
         account=account,
         destination_code="my.equipment_offers",
     ).exists()
-    pinned_content = client.get(reverse("my-logistics-offer-index")).content.decode()
+    with patch(
+        "maru.core.navigation._personal_profile_pairs",
+        return_value=(("full_convention", 1),),
+    ):
+        pinned_content = client.get(
+            reverse("my-logistics-offer-index")
+        ).content.decode()
     assert pinned_content.count('value="my.equipment_offers"') == 1
     assert 'aria-label="Unpin Equipment offers"' in pinned_content
 

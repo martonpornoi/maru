@@ -717,6 +717,8 @@ def test_personal_offer_index_and_edition_page_project_only_own_records() -> Non
         series_name="Test Series",
         edition_slug="edition",
         edition_name="Test Edition",
+        adoption_profile_code="full_convention",
+        adoption_profile_version=1,
         edition_starts_on=date(2027, 1, 1),
         offer_count=1,
         pending_offer_count=1,
@@ -736,6 +738,9 @@ def test_personal_offer_index_and_edition_page_project_only_own_records() -> Non
         response = views.my_logistics_offers_index(request)
     assert response.status_code == 200
     assert response.context_data["offer_editions"][0]["offer_count"] == 1
+    assert response.context_data["maru_personal_profile_pairs"] == (
+        ("full_convention", 1),
+    )
     authorize.assert_called_once_with(actor=request.user)
 
     scope = _scope()

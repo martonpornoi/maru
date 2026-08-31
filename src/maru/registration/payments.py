@@ -23,6 +23,7 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import append_audit
 from maru.authorization.policy import resolve_edition_target
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.registration.commerce import complete_admission_tier_replacement
 from maru.registration.finance import record_provider_payment, record_provider_refund
 from maru.registration.models import (
@@ -303,7 +304,22 @@ def create_payment_intent(
     """
     created_at = now or timezone.now()
     with transaction.atomic():
-        locked = Registration.objects.select_for_update().get(id=registration.id)
+        locked = (
+            Registration.objects.select_for_update()
+            .filter(
+                adoption_profile_filter_for_module(
+                    "registration",
+                    field_prefix="edition",
+                ),
+                id=registration.id,
+            )
+            .first()
+        )
+        if locked is None:
+            raise ValidationError(
+                "Hosted checkout is unavailable.",
+                code="payment_intent_scope_unavailable",
+            )
         provider = PaymentProviderAccount.objects.select_for_update().get(
             id=provider_account_id,
             organization_id=locked.organization_id,
@@ -595,16 +611,27 @@ def reconcile_verified_payment_event(  # noqa: PLR0912, PLR0915
                     code="payment_webhook_event_conflict",
                 )
             return existing
+        intent_scope = PaymentIntent.objects.filter(
+            provider_account=provider,
+            provider_reference=event.provider_reference,
+        )
         intent = (
-            PaymentIntent.objects.select_for_update()
+            intent_scope.select_for_update()
             .select_related("registration", "provider_account")
             .filter(
-                provider_account=provider,
-                provider_reference=event.provider_reference,
+                adoption_profile_filter_for_module(
+                    "registration",
+                    field_prefix="registration__edition",
+                ),
             )
             .first()
         )
         if intent is None:
+            if intent_scope.only("id").exists():
+                raise ValidationError(
+                    "The payment message scope is unavailable.",
+                    code="payment_webhook_scope_unavailable",
+                )
             _open_payment_exception(
                 provider=provider,
                 intent=None,

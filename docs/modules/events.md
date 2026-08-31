@@ -51,6 +51,16 @@ series, and generates a series-scoped stable slug. Edition, append-only retry
 receipt, minimized audit, `events.edition.created.v1`, and outbox delivery
 commit together. A repeated actor/series/key with the same normalized payload
 returns the first edition; a changed payload conflicts.
+Replay derives that comparison from the receipt edition's retained exact
+profile code/version before consulting today's selectable mapping or Maru-
+operator expansion policy. Exact retries therefore survive profile retirement,
+version advancement, or later representation changes while that retained exact
+manifest remains supported; an unknown retained pair fails closed without
+consulting today's selector. Model and read projections use the complete
+persisted-code choice set, while setup controls display only current selectable
+codes and still accept a retired code when an HTTP/form retry reaches its
+existing receipt. A new key uses the current selectable version and current
+expansion policy.
 
 Creation also validates and persists the requested adoption profile. A Maru-
 operator organization may create only Workforce-only editions through ordinary
@@ -73,10 +83,83 @@ organization, writes actual changes only, and publishes
 `events.edition.details_updated.v1` atomically with audit/outbox. No-op updates
 advance nothing.
 
-The profile catalog is the code-owned source for adopted module namespaces,
-labels, and primary destination. Authorization uses it before platform policy
-or stored authority; navigation and API projections are explanatory consumers,
-not enforcement substitutes.
+The profile catalog is the immutable code-owned source for each exact
+`(profile code, profile version)` pair. `full_convention@1` and
+`workforce_only@1` now pin literal module namespaces, authorization
+capabilities, ordered context destinations, stable shell destination kinds,
+event/delivery routes, code-owned catalog entries, cross-module adapters,
+conflict sources, reserved accountable roots, and the primary module. The
+registry and selectable-profile mapping are read-only at runtime. A new
+same-namespace capability, starter, adapter, destination, or event does not
+enter either v1 manifest automatically.
+
+Shell destinations additionally resolve through one closed governed-kind
+catalog. Manifest validation rejects a typo, retired/nonexistent kind, or a
+future kind until that identifier is deliberately registered and assigned to
+a new or reviewed exact manifest. The item code used by search or pinning may
+differ from this product-purpose kind; for example, `my.equipment_offers` uses
+the governed profile kind `my.equipment-offers`.
+
+Every edition consumer carries both persisted values. Authorization denies an
+unknown pair before self, platform, grant, or role evaluation; ordinary role
+bundles require a non-empty capability set wholly pinned by the exact
+manifest. Registration discovery queries exact code/version pairs.
+Applications rechecks exact starter, self-purpose, eligibility, source, and
+accepted-target adapters at disclosure and command time. Workforce selects its
+assignment-evidence adapter and built-in catalog entries exactly. Context APIs
+omit an unknown exact-profile edition before its tenant or edition names are
+projected. Bootstrap administration applies the same exact profile/capability
+filter before platform selectors or direct routes load those names; an
+unsupported selector candidate is omitted and an unsupported direct route is
+not found. The unified shell removes every edition-scoped destination not
+pinned by the manifest. Effects rejects an unpinned enqueue and quarantines a
+queued delivery that no longer resolves.
+These projections complement, rather than replace, object authorization and
+database scope guards.
+
+An unsupported persisted pair is an integrity/deployment incident, not an
+instruction to infer the newest version. Stop edition-scoped writes and worker
+replay, retain the edition, outbox, audit, and command evidence, and restore the
+reviewed application release that declares that exact manifest. If the stored
+pair itself is invalid, use a reviewed fix-forward migration or mutually
+consistent whole-database recovery; never rewrite an edition to a newer profile
+or add a wildcard fallback. Effects quarantine remains inspectable until the
+compatible manifest and handler catalog are restored and explicitly replayed.
+
+Adding a catalog member and adding it to a profile are two separate reviewed
+changes. The owning module first declares one stable, versioned capability,
+destination, effect route, catalog entry, adapter, or conflict source together
+with its owner, result/failure semantics, and focused tests. Events' deployment
+compatibility check must then recognize that independently registered member;
+this registration alone does not change any existing manifest. To adopt it,
+copy the complete reviewed behavior into a new immutable profile version,
+extend the exact database guard and creation mapping with an additive
+migration, prove old web/worker compatibility or fence downgrade, and only then
+make the new version selectable. Never edit a v1 member set in place or map a
+persisted code to an implicit latest version.
+
+Typed adapter and conflict-source descriptors retain separate, non-empty
+`result_semantics` and `failure_semantics`. The first states what one
+trustworthy result means; the second states the fail-closed behavior when the
+exact provider is unavailable, unpinned, ambiguous, or cannot make its
+completeness claim. Empty prose is rejected while the owner catalog is built,
+so a future profile cannot cite an adapter whose failure boundary exists only
+in an unrelated runbook or implementation detail.
+
+The `events.E001` compatibility check composes those owner catalogs lazily and
+requires every manifest literal to resolve. It also rejects duplicate or
+malformed owner entries, cross-catalog identity overlap, members owned outside
+the adopted modules, selectable-pair drift, non-integer or boolean versions,
+and disagreement with the independent database-supported exact-pair catalog.
+Effects route resolution remains independently authoritative under
+`effects.E001`. The database pair catalog builds the `EventEdition` check
+constraint, so adding a manifest without its reviewed additive migration fails
+both compatibility and migration-drift validation before deployment.
+
+The empty Foundation adapter and conflict registries are sentinels, not a
+synthetic product owner. New foundation behavior must be declared by its real
+module owner and added explicitly to the compatibility union; it must not be
+placed under a `foundation.*` namespace.
 
 ADR 0081 accepts a successor `programme_operations@1` contract, but this
 module does not yet declare, create, activate, or route that profile. Its target
@@ -289,8 +372,8 @@ single/bulk rollback on validation or effect failure.
 
 Cancellation closeout, template/configuration cloning, archive-amendment API,
 computed effective-access management, date-format preference, richer edition-
-local policy, exact-version manifest enforcement, and Programme Operations
-setup are not implemented. Edition creation inherits only visible locale
+local policy, and Programme Operations setup are not implemented. Edition
+creation inherits only visible locale
 defaults; it does not create or publish registration or any operational
 configuration. The accepted ADR 0081 route, profile, capabilities,
 destinations, effects, and adapters remain unavailable until their runtime and

@@ -39,12 +39,17 @@ from maru.authorization.policy import (
 from maru.core.api_input import reject_unknown_fields
 from maru.core.problems import DependencyUnavailable
 from maru.events.models import EventEdition
+from maru.events.queries import (
+    adoption_profile_filter_for_adapter,
+    adoption_profile_filter_for_module,
+)
 from maru.identity.models import Account
 from maru.identity.services import require_recent_step_up
 from maru.organizations.queries import (
     OrganizationGovernanceAnchor,
     organization_governance_anchor,
 )
+from maru.workforce.adoption import WORKFORCE_SELF_ADAPTER
 from maru.workforce.assignment_commands import (
     AssignmentAuthorityIntervalConflictError,
     AssignmentAuthorizationDeniedError,
@@ -3018,7 +3023,9 @@ class PublicVolunteerOpportunityListView(APIView):
         """
         del request
         edition = get_object_or_404(
-            EventEdition.objects.exclude(lifecycle__in=("archived", "cancelled")),
+            EventEdition.objects.filter(
+                adoption_profile_filter_for_module("workforce"),
+            ).exclude(lifecycle__in=("archived", "cancelled")),
             id=edition_id,
         )
         candidates = (
@@ -3090,6 +3097,10 @@ class MyVolunteerApplicationCreateView(APIView):
         serializer = VolunteerApplicationSubmitSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         if not VolunteerOpportunity.objects.filter(
+            adoption_profile_filter_for_module(
+                "workforce",
+                field_prefix="position__edition",
+            ),
             id=opportunity_id,
             position__organization_id=organization_id,
             position__edition_id=edition_id,
@@ -3171,6 +3182,10 @@ class MyOnboardingDocumentListView(APIView):
             raise NotFound("Onboarding documents are unavailable.")
         items = (
             OnboardingDocumentRequest.objects.filter(
+                adoption_profile_filter_for_adapter(
+                    WORKFORCE_SELF_ADAPTER,
+                    field_prefix="edition",
+                ),
                 organization_id=organization_id,
                 edition_id=edition_id,
                 account=account,
@@ -3233,6 +3248,10 @@ class MyOnboardingDocumentUploadView(APIView):
         serializer = OnboardingDocumentUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         if not OnboardingDocumentRequest.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
             id=document_request_id,
             organization_id=organization_id,
             edition_id=edition_id,

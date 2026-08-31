@@ -6,10 +6,13 @@ from uuid import uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 from rest_framework.test import APIClient
 
+from maru.audit.models import AuditEvent
+from maru.effects.models import DomainEvent, OutboxMessage
 from maru.registration.finance import (
     approve_financial_operation,
     propose_financial_operation,
@@ -21,6 +24,7 @@ from maru.registration.models import (
     Entitlement,
     FinancialLedgerEntry,
     FinancialOperation,
+    PaymentAttempt,
     PaymentException,
     PaymentIntent,
     PaymentProviderAccount,
@@ -30,6 +34,7 @@ from maru.registration.models import (
     RegistrationAdjustment,
     RegistrationLifecycleRun,
     RegistrationQuestion,
+    RegistrationTimelineEntry,
     SettlementAllocation,
     SettlementBatch,
 )
@@ -388,6 +393,206 @@ def test_provider_webhook_verification_and_exception_paths(monkeypatch) -> None:
         )
         assert result.safe_result_code == expected
         assert other_edition.id != edition.id
+
+
+def test_identified_payment_intent_requires_exact_registration_profile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject an incompatible retained intent without writing webhook evidence."""
+    now = timezone.now()
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    configuration = RegistrationConfigurationFactory(
+        edition=edition,
+        opens_at=now - timedelta(days=1),
+        closes_at=now + timedelta(days=30),
+    )
+    product = AdmissionProduct.objects.create(
+        configuration=configuration,
+        code="retained-payment",
+        name="Retained payment admission",
+        price_minor=10_000,
+        capacity=100,
+        position=10,
+        entitlement_code="retained-payment",
+        entitlement_name="Retained payment admission",
+    )
+    configuration.status = ConfigurationStatus.ACTIVE
+    configuration.review_required = False
+    configuration.review_note = "Retained payment fixture reviewed."
+    configuration.activated_at = now
+    configuration.save(
+        update_fields=(
+            "status",
+            "review_required",
+            "review_note",
+            "activated_at",
+            "updated_at",
+        )
+    )
+    attendee = AccountFactory()
+    registration = Registration.objects.create(
+        organization=edition.organization,
+        edition=edition,
+        participation=ParticipationFactory(account=attendee, edition=edition),
+        account=attendee,
+        configuration=configuration,
+        product=product,
+        reference="RETAINED-PAYMENT",
+        state=Registration.State.PAYMENT_PENDING,
+        product_name_snapshot=product.name,
+        price_minor_snapshot=product.price_minor,
+        currency_snapshot=configuration.currency,
+        submitted_at=now,
+        payment_due_at=now + timedelta(hours=1),
+    )
+    provider = PaymentProviderAccount.objects.create(
+        organization=edition.organization,
+        code="retained-provider",
+        display_name="Retained hosted payments",
+        adapter="synthetic_test",
+        api_base_url="https://payments.example",
+        credential_env_var="RETAINED_PAYMENT_KEY",
+        webhook_secret_env_var="RETAINED_WEBHOOK_SECRET",
+        enabled=True,
+    )
+    intent = PaymentIntent.objects.create(
+        registration=registration,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        provider_account=provider,
+        idempotency_key=uuid4(),
+        amount_minor=product.price_minor,
+        currency=configuration.currency,
+        status=PaymentIntent.Status.CHECKOUT_READY,
+        provider_reference="retained-payment-intent",
+        checkout_url="https://payments.example/retained-checkout",
+        expires_at=now + timedelta(hours=1),
+    )
+    ledger_entry = FinancialLedgerEntry.objects.create(
+        registration=registration,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        provider_account=provider,
+        kind=FinancialLedgerEntry.Kind.PAYMENT,
+        direction=FinancialLedgerEntry.Direction.INFLOW,
+        amount_minor=product.price_minor,
+        currency=configuration.currency,
+        occurred_at=now,
+        provider_reference="retained-receipt-payment",
+        safe_description="Hidden retained payment evidence",
+    )
+    receipt_record = ReceiptRecord.objects.create(
+        registration=registration,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        ledger_entry=ledger_entry,
+        kind=ReceiptRecord.Kind.RECEIPT,
+        document_number="RETAINED-RECEIPT",
+        issued_at=now,
+        amount_minor=product.price_minor,
+        currency=configuration.currency,
+        description_snapshot="Hidden retained receipt description",
+    )
+    monkeypatch.setattr(
+        "maru.registration.api.settings.MARU_PAYMENT_RETURN_ORIGINS",
+        ["https://register.example"],
+    )
+    before = {
+        "receipts": PaymentWebhookReceipt.objects.count(),
+        "exceptions": PaymentException.objects.count(),
+        "attempts": PaymentAttempt.objects.count(),
+        "ledger": FinancialLedgerEntry.objects.count(),
+        "receipt_records": ReceiptRecord.objects.count(),
+        "entitlements": Entitlement.objects.filter(registration=registration).count(),
+        "timeline": RegistrationTimelineEntry.objects.filter(
+            registration=registration
+        ).count(),
+        "audits": AuditEvent.objects.filter(event_edition_id=edition.id).count(),
+        "events": DomainEvent.objects.filter(event_edition_id=edition.id).count(),
+        "outbox": OutboxMessage.objects.filter(
+            event__event_edition_id=edition.id
+        ).count(),
+    }
+    client = APIClient()
+    client.force_authenticate(attendee)
+    registration_base = (
+        f"/api/v1/organizations/{edition.organization_id}/editions/{edition.id}/"
+        f"registration/me/{registration.id}"
+    )
+
+    create_response = client.post(
+        f"{registration_base}/payment-intents",
+        {
+            "provider_account_id": provider.id,
+            "idempotency_key": uuid4(),
+            "return_url": "https://register.example/payment-return",
+        },
+        format="json",
+    )
+    status_response = client.get(f"{registration_base}/payment-intents/{intent.id}")
+    with CaptureQueriesContext(connection) as captured:
+        receipt_response = client.get(f"{registration_base}/receipts")
+    with pytest.raises(ValidationError) as create_error:
+        create_payment_intent(
+            registration=registration,
+            provider_account_id=provider.id,
+            idempotency_key=uuid4(),
+            return_url="https://register.example/payment-return",
+            now=now,
+        )
+
+    with pytest.raises(ValidationError) as raised:
+        reconcile_verified_payment_event(
+            provider=provider,
+            event=_event(
+                intent=intent,
+                event_type="payment.succeeded",
+                event_id="retained-payment-event",
+                occurred_at=now + timedelta(minutes=1),
+            ),
+            signed_at=now,
+            payload_digest="f" * 64,
+            correlation_id=uuid4(),
+            received_at=now + timedelta(minutes=1),
+        )
+
+    assert create_response.status_code == 404
+    assert status_response.status_code == 404
+    assert receipt_response.status_code == 404
+    assert receipt_record.document_number.encode() not in receipt_response.content
+    assert registration.reference.encode() not in receipt_response.content
+    assert not any(
+        "registration_receiptrecord" in query["sql"].lower()
+        for query in captured.captured_queries
+    )
+    assert create_error.value.code == "payment_intent_scope_unavailable"
+    assert raised.value.code == "payment_webhook_scope_unavailable"
+    registration.refresh_from_db()
+    intent.refresh_from_db()
+    assert registration.state == Registration.State.PAYMENT_PENDING
+    assert registration.aggregate_version == 1
+    assert intent.status == PaymentIntent.Status.CHECKOUT_READY
+    assert intent.safe_result_code == ""
+    assert intent.last_provider_event_at is None
+    assert {
+        "receipts": PaymentWebhookReceipt.objects.count(),
+        "exceptions": PaymentException.objects.count(),
+        "attempts": PaymentAttempt.objects.count(),
+        "ledger": FinancialLedgerEntry.objects.count(),
+        "receipt_records": ReceiptRecord.objects.count(),
+        "entitlements": Entitlement.objects.filter(registration=registration).count(),
+        "timeline": RegistrationTimelineEntry.objects.filter(
+            registration=registration
+        ).count(),
+        "audits": AuditEvent.objects.filter(event_edition_id=edition.id).count(),
+        "events": DomainEvent.objects.filter(event_edition_id=edition.id).count(),
+        "outbox": OutboxMessage.objects.filter(
+            event__event_edition_id=edition.id
+        ).count(),
+    } == before
 
 
 def test_unknown_late_unsupported_and_payment_exception_resolution(

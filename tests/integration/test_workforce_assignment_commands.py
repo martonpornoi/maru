@@ -11,7 +11,7 @@ from uuid import uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -30,6 +30,7 @@ from maru.events.adoption import AdoptionProfileCode
 from maru.identity.models import AccountSession
 from maru.identity.services import session_key_digest
 from maru.participation.models import Participation, ParticipationCapacity
+from maru.workforce.adoption import AssignmentAdoptionProfileError
 from maru.workforce.assignment_commands import (
     AssignmentAuthorityIntervalConflictError,
     AssignmentAuthorizationDeniedError,
@@ -735,7 +736,6 @@ def test_assignment_journey_preserves_dual_control_authority_and_history() -> No
         correlation_id=uuid4(),
         source_channel="test",
     )
-
     assignment.refresh_from_db()
     world.position.refresh_from_db()
     assignment.role_assignment.refresh_from_db()
@@ -809,6 +809,7 @@ def test_workforce_only_assignment_never_creates_participation_evidence() -> Non
     )
     proposal_content = proposal_page.content.decode()
     assert proposal_page.status_code == 200
+    assert proposal_page.context["assignment_evidence_mode"] == "workforce"
     assert "Workforce labels" in proposal_content
     assert "Participation labels" not in proposal_content
     assert "creates no active Workforce assignment" in proposal_content
@@ -861,7 +862,6 @@ def test_workforce_only_assignment_never_creates_participation_evidence() -> Non
         correlation_id=uuid4(),
         source_channel="test",
     )
-
     assignment.refresh_from_db()
     assignment.role_assignment.refresh_from_db()
     assert ended.status == PositionAssignment.Status.ENDED
@@ -871,6 +871,53 @@ def test_workforce_only_assignment_never_creates_participation_evidence() -> Non
         account=candidate,
         edition=world.edition,
     ).exists()
+
+
+def test_assignment_pages_fail_closed_for_unresolved_exact_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    world = _assignment_world()
+    candidate = _known_candidate(world)
+    proposed = _propose(world, candidate=candidate)
+
+    def unsupported_adapter(*_args: object) -> bool:
+        raise AssignmentAdoptionProfileError(
+            "Synthetic unsupported assignment adapter.",
+            code="unsupported_assignment_adoption_profile",
+        )
+
+    monkeypatch.setattr(
+        "maru.workforce.views.assignment_uses_participation_evidence",
+        unsupported_adapter,
+    )
+    browser = Client()
+    browser.force_login(world.approver)
+
+    proposal_page = browser.get(
+        _browser_url(
+            "organization-workforce-assignment-proposal",
+            world,
+            position_id=world.position.id,
+        )
+    )
+    detail_page = browser.get(
+        _browser_url(
+            "organization-workforce-assignment",
+            world,
+            assignment_id=proposed.assignment_id,
+        )
+    )
+
+    assert proposal_page.status_code == 200
+    assert proposal_page.context["assignment_evidence_mode"] == "unsupported"
+    assert proposal_page.context["proposal_available"] is False
+    assert "Assignment activation unavailable" in proposal_page.content.decode()
+    assert detail_page.status_code == 200
+    assert detail_page.context["assignment_evidence_mode"] == "unsupported"
+    assert detail_page.context["can_approve_assignment"] is False
+    detail_content = detail_page.content.decode()
+    assert "Approval is unavailable" in detail_content
+    assert "Participation capacity atomically" not in detail_content
 
 
 def test_readiness_candidate_and_headcount_conflicts_do_not_partially_write() -> None:
@@ -1147,6 +1194,8 @@ def test_browser_dual_control_and_self_privacy() -> None:  # noqa: PLR0915
 
     assert overview.status_code == 200
     assert proposal_page.status_code == 200
+    assert proposal_page.context["assignment_evidence_mode"] == "participation"
+    assert "Participation labels" in proposal_page.content.decode()
     _assert_private_no_store(overview)
     overview_text = strip_tags(overview.content.decode())
     assert "Workforce assignments" in overview_text
@@ -1466,3 +1515,112 @@ def test_database_requires_exact_receipt_and_keeps_receipts_immutable() -> None:
         PositionAssignmentCommandReceipt.objects.filter(pk=receipt.pk).update(
             reason="Bulk rewriting is also forbidden."
         )
+
+
+def test_database_guard_rejects_unknown_exact_profile_before_assignment_write() -> None:
+    """Do not let a future profile version inherit code-only evidence semantics."""
+    world = _assignment_world()
+    candidate = _known_candidate(world)
+    proposed = _propose(world, candidate=candidate)
+    assignment = PositionAssignment.objects.get(pk=proposed.assignment_id)
+    before = (
+        assignment.reason,
+        assignment.command_version,
+        PositionAssignmentCommandReceipt.objects.count(),
+        RoleAssignment.objects.count(),
+        Participation.objects.count(),
+        ParticipationCapacity.objects.count(),
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    )
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            ALTER TABLE public.events_eventedition
+            DROP CONSTRAINT edition_adoption_profile_supported
+            """
+        )
+        cursor.execute(
+            """
+            ALTER TABLE public.events_eventedition
+            DISABLE TRIGGER events_aggregate_version_guard
+            """
+        )
+        cursor.execute(
+            """
+            UPDATE public.events_eventedition
+               SET adoption_profile_version = 2
+             WHERE id = %s
+            """,
+            [world.edition.id],
+        )
+        cursor.execute(
+            """
+            ALTER TABLE public.events_eventedition
+            ENABLE TRIGGER events_aggregate_version_guard
+            """
+        )
+    try:
+        with (
+            pytest.raises(
+                IntegrityError,
+                match="exact adoption profile is unsupported",
+            ),
+            transaction.atomic(),
+        ):
+            PositionAssignment.objects.filter(pk=assignment.pk).update(
+                reason="A future exact profile must not inherit v1 behavior."
+            )
+    finally:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.events_eventedition
+                DISABLE TRIGGER events_aggregate_version_guard
+                """
+            )
+            cursor.execute(
+                """
+                UPDATE public.events_eventedition
+                   SET adoption_profile_version = 1
+                 WHERE id = %s
+                """,
+                [world.edition.id],
+            )
+            cursor.execute(
+                """
+                ALTER TABLE public.events_eventedition
+                ENABLE TRIGGER events_aggregate_version_guard
+                """
+            )
+            cursor.execute(
+                """
+                ALTER TABLE public.events_eventedition
+                ADD CONSTRAINT edition_adoption_profile_supported
+                CHECK (
+                    (
+                        adoption_profile_code = 'full_convention'
+                        AND adoption_profile_version = 1
+                    )
+                    OR (
+                        adoption_profile_code = 'workforce_only'
+                        AND adoption_profile_version = 1
+                    )
+                )
+                """
+            )
+
+    assignment.refresh_from_db()
+    assert (
+        assignment.reason,
+        assignment.command_version,
+        PositionAssignmentCommandReceipt.objects.count(),
+        RoleAssignment.objects.count(),
+        Participation.objects.count(),
+        ParticipationCapacity.objects.count(),
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    ) == before

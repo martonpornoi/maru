@@ -2,9 +2,11 @@
 
 from uuid import UUID
 
-from django.core.management.base import BaseCommand, CommandParser
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.utils import timezone
 
+from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.services import apply_due_account_restrictions
 from maru.registration.models import RegistrationLifecycleRun
 from maru.registration.services import (
@@ -49,9 +51,23 @@ class Command(BaseCommand):
             Positional arguments forwarded to the framework implementation.
         **options : object
             Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If a requested edition does not adopt Registration at its exact
+            selected manifest version.
         """
         del args
         edition_id = options.get("edition")
+        if (
+            isinstance(edition_id, UUID)
+            and not EventEdition.objects.filter(
+                adoption_profile_filter_for_module("registration"),
+                id=edition_id,
+            ).exists()
+        ):
+            raise CommandError("The edition is unavailable for Registration lifecycle.")
         if bool(options.get("dry_run")):
             candidates = inspect_registration_lifecycle(
                 edition_id=edition_id if isinstance(edition_id, UUID) else None

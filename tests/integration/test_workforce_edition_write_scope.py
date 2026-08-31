@@ -233,6 +233,25 @@ def test_edition_write_scope_rechecks_series_tenant_without_disclosing_labels() 
     assert foreign_edition.series.name not in message
 
 
+def test_edition_write_scope_rejects_an_unresolvable_exact_profile_before_write(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep the shared Workforce write boundary closed for retained unknown pairs."""
+    edition = EventEditionFactory(name="Retained Unsupported Workforce Edition")
+    monkeypatch.setattr("maru.events.adoption.ADOPTION_PROFILES", {})
+
+    with transaction.atomic(), pytest.raises(ValidationError) as error:
+        lock_workforce_edition_write_scope(
+            organization_id=edition.organization_id,
+            series_id=edition.series_id,
+            edition_id=edition.id,
+        )
+
+    assert error.value.code == "workforce_edition_scope_unavailable"
+    assert edition.name not in str(error.value)
+    assert not EditionStructureControl.objects.filter(edition=edition).exists()
+
+
 def test_retired_department_target_is_rejected_before_position_write() -> None:
     world = _world(retired=True)
 

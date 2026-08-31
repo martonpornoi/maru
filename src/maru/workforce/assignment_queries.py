@@ -8,12 +8,14 @@ from typing import TYPE_CHECKING, Any
 from django.db import models
 from django.utils import timezone
 
+from maru.events.queries import adoption_profile_filter_for_adapter
 from maru.identity.queries import (
     account_display_labels,
     active_person_account_display_labels,
 )
 from maru.organizations.queries import known_organization_person_account_ids
 from maru.participation.models import Participation
+from maru.workforce.adoption import WORKFORCE_SELF_ADAPTER
 from maru.workforce.models import (
     OnboardingDocumentRequest,
     Position,
@@ -641,7 +643,14 @@ def my_assignment_items(
             "position",
             "position__department",
         )
-        .filter(scope_filter, account=account)
+        .filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
+            scope_filter,
+            account=account,
+        )
         .order_by("-created_at", "id")[: MAX_ASSIGNMENT_RECORDS + 1]
     )
     if len(assignments) > MAX_ASSIGNMENT_RECORDS:

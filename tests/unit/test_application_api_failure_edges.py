@@ -52,7 +52,7 @@ def test_every_api_adapter_translates_dependency_failure() -> None:
     definition_id, submission_id = uuid4(), uuid4()
     actor = _actor()
     get_specs = (
-        (api.ApplicationStarterCatalogView, "definition_workspace", {}),
+        (api.ApplicationStarterCatalogView, "application_starters", {}),
         (api.ApplicationDefinitionCollectionView, "definition_workspace", {}),
         (api.MyApplicationWorkspaceView, "available_applications", {}),
         (api.ApplicationReviewQueueView, "review_queue", {}),

@@ -19,9 +19,15 @@ from django.views.decorators.http import require_POST
 from maru.authorization.policy import (
     AuthorizedScopeProjection,
     project_active_authority_scopes,
+    projected_scope_allows_profile,
 )
 from maru.core.admin import HttpsURLAdminMixin
+from maru.events.adoption import (
+    ADOPTION_MODULE_NAMESPACE_CATALOG,
+    adoption_profile,
+)
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_capabilities
 from maru.identity.models import Account
 from maru.organizations.models import ConventionSeries, Organization
 
@@ -144,42 +150,6 @@ def authorized_admin_organization_ids(
     )
 
 
-def _authorized_admin_edition_scope_ids(
-    request: HttpRequest,
-    *,
-    capability_codes: frozenset[str],
-) -> tuple[frozenset[UUID], frozenset[UUID]]:
-    """Return organization-wide and exact-edition authority separately.
-
-    Parameters
-    ----------
-    request : HttpRequest
-        The incoming HTTP request and authenticated principal context.
-    capability_codes : frozenset[str]
-        The closed set of capability codes accepted by the domain catalog.
-
-    Returns
-    -------
-    tuple[frozenset[UUID], frozenset[UUID]]
-        The matching authorized admin edition scope ids records in deterministic
-        order.
-    """
-    organization_ids: set[UUID] = set()
-    edition_ids: set[UUID] = set()
-    for scope in _authorized_admin_scopes(request):
-        if (
-            not scope.capability_codes.intersection(capability_codes)
-            or scope.department_id is not None
-            or scope.resource_binding_id is not None
-        ):
-            continue
-        if scope.edition_id is None:
-            organization_ids.add(scope.organization_id)
-        else:
-            edition_ids.add(scope.edition_id)
-    return frozenset(organization_ids), frozenset(edition_ids)
-
-
 def authorized_admin_edition_ids(
     request: HttpRequest,
     *,
@@ -200,16 +170,43 @@ def authorized_admin_edition_ids(
         The matching authorized admin edition ids records in deterministic
         order.
     """
-    organization_ids, edition_ids = _authorized_admin_edition_scope_ids(
-        request,
-        capability_codes=capability_codes,
+    scopes = tuple(
+        scope
+        for scope in _authorized_admin_scopes(request)
+        if scope.capability_codes.intersection(capability_codes)
+        and scope.department_id is None
+        and scope.resource_binding_id is None
     )
-    if not organization_ids and not edition_ids:
+    if not scopes:
         return frozenset()
+    organization_ids = frozenset(
+        scope.organization_id for scope in scopes if scope.edition_id is None
+    )
+    edition_ids = frozenset(
+        scope.edition_id for scope in scopes if scope.edition_id is not None
+    )
+    candidates = EventEdition.objects.filter(
+        Q(organization_id__in=organization_ids) | Q(id__in=edition_ids)
+    ).only(
+        "id",
+        "organization_id",
+        "adoption_profile_code",
+        "adoption_profile_version",
+    )
     return frozenset(
-        EventEdition.objects.filter(
-            Q(organization_id__in=organization_ids) | Q(id__in=edition_ids)
-        ).values_list("id", flat=True)
+        edition.id
+        for edition in candidates
+        if any(
+            scope.organization_id == edition.organization_id
+            and (scope.edition_id is None or scope.edition_id == edition.id)
+            and projected_scope_allows_profile(
+                scope,
+                profile_code=edition.adoption_profile_code,
+                profile_version=edition.adoption_profile_version,
+                capability_codes=capability_codes,
+            )
+            for scope in scopes
+        )
     )
 
 
@@ -224,11 +221,12 @@ def authorized_admin_edition_for_route(
 ) -> tuple[Organization, ConventionSeries, EventEdition]:
     """Resolve one complete route chain inside a name-free authority set.
 
-    Platform oversight has its own explicit branch. Ordinary accounts first
-    project exact current authority to edition identifiers, so a foreign
-    organization, series, or edition name cannot enter the response before
-    authorization. Every destination must still repeat its sealed-target
-    policy decision after this candidate-resolution gate.
+    Platform oversight first restricts candidates to exact manifests that pin
+    the requested capability. Ordinary accounts first project exact current
+    authority to edition identifiers. In both branches, a foreign or
+    unsupported organization, series, or edition name cannot enter the
+    response before authorization. Every destination must still repeat its
+    sealed-target policy decision after this candidate-resolution gate.
 
     Parameters
     ----------
@@ -258,18 +256,22 @@ def authorized_admin_edition_for_route(
     PermissionDenied
         If the caller lacks permission for the requested scope.
     """
-    editions = EventEdition.objects.select_related("organization", "series").filter(
+    editions = EventEdition.objects.filter(
         organization__slug__iexact=organization_slug,
         series__slug__iexact=series_slug,
         slug__iexact=edition_slug,
     )
-    if not actor.is_platform_administrator:
+    if actor.is_platform_administrator:
+        editions = editions.filter(
+            adoption_profile_filter_for_capabilities({capability_code})
+        )
+    else:
         candidate_ids = authorized_admin_edition_ids(
             request,
             capability_codes=frozenset({capability_code}),
         )
         editions = editions.filter(id__in=candidate_ids)
-    edition = editions.order_by("id").first()
+    edition = editions.select_related("organization", "series").order_by("id").first()
     if edition is None:
         if actor.is_platform_administrator:
             raise Http404
@@ -417,24 +419,31 @@ def _authorized_admin_editions(request: HttpRequest) -> QuerySet[EventEdition]:
     if cached is not _NOT_CACHED:
         return cast("QuerySet[EventEdition]", cached)
 
-    editions = EventEdition.objects.select_related("organization", "series")
+    editions = EventEdition.objects.all()
     account = _active_account(request)
     if account is None:
         authorized_editions = editions.none()
     elif account.is_platform_administrator:
-        authorized_editions = editions
+        authorized_editions = editions.filter(
+            adoption_profile_filter_for_capabilities(
+                _EDITION_WORKSPACE_NAVIGATION_CAPABILITIES
+            )
+        )
     else:
-        organization_ids, edition_ids = _authorized_admin_edition_scope_ids(
+        authorized_ids = authorized_admin_edition_ids(
             request,
             capability_codes=_EDITION_WORKSPACE_NAVIGATION_CAPABILITIES,
         )
-        if organization_ids or edition_ids:
-            authorized_editions = editions.filter(
-                Q(organization_id__in=organization_ids) | Q(id__in=edition_ids)
-            )
-        else:
-            authorized_editions = editions.none()
+        authorized_editions = (
+            editions.filter(id__in=authorized_ids)
+            if authorized_ids
+            else editions.none()
+        )
 
+    authorized_editions = authorized_editions.select_related(
+        "organization",
+        "series",
+    )
     setattr(request, _AUTHORIZED_EDITIONS_CACHE_ATTRIBUTE, authorized_editions)
     return authorized_editions
 
@@ -474,6 +483,41 @@ def selected_admin_edition(request: HttpRequest) -> EventEdition | None:
     return edition
 
 
+def selected_admin_profile_allows_app(
+    request: HttpRequest,
+    *,
+    app_label: str,
+) -> bool:
+    """Return whether the selected exact profile admits an admin app.
+
+    Only Django app labels governed by the adoption-module namespace are
+    profile-scoped. Foundation labels remain available because every valid
+    profile pins them explicitly, while unrelated platform apps retain their
+    existing Django permission boundary.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    app_label : str
+        The Django application label that owns the admin model.
+
+    Returns
+    -------
+    bool
+        ``True`` when no edition is selected, the app is outside the governed
+        namespace, or the selected exact profile pins the app label.
+    """
+    edition = selected_admin_edition(request)
+    if edition is None or app_label not in ADOPTION_MODULE_NAMESPACE_CATALOG:
+        return True
+    profile = adoption_profile(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+    )
+    return profile is not None and app_label in profile.modules
+
+
 def admin_edition_options(request: HttpRequest) -> dict[str, object]:
     """Return selector state only for accounts with active scoped authority.
 
@@ -489,8 +533,23 @@ def admin_edition_options(request: HttpRequest) -> dict[str, object]:
     """
     if not has_active_admin_scope(request):
         selected_admin_edition(request)
-        return {"available": False, "selected": None, "editions": ()}
+        account = _active_account(request)
+        return {
+            "available": False,
+            "selected": None,
+            "selected_profile": None,
+            "show_specialist_gateway": bool(account and account.is_staff),
+            "editions": (),
+        }
     selected = selected_admin_edition(request)
+    selected_profile = (
+        adoption_profile(
+            selected.adoption_profile_code,
+            selected.adoption_profile_version,
+        )
+        if selected is not None
+        else None
+    )
     account = _active_account(request)
     selected_can_view_structure = bool(
         selected
@@ -519,6 +578,20 @@ def admin_edition_options(request: HttpRequest) -> dict[str, object]:
     return {
         "available": True,
         "selected": selected,
+        "selected_profile": selected_profile,
+        "show_specialist_gateway": bool(
+            selected is None
+            or (
+                selected_profile is not None
+                and (
+                    "people" in selected_profile.destination_codes
+                    or (
+                        "setup" in selected_profile.destination_codes
+                        and request.GET.get("records") == "open"
+                    )
+                )
+            )
+        ),
         "selected_can_view_structure": selected_can_view_structure,
         "selected_can_manage_registration": selected_can_manage_registration,
         "editions": _authorized_admin_editions(request).order_by(
@@ -669,7 +742,125 @@ class EditionContextAdmin(
         edition = selected_admin_edition(request)
         if edition is None:
             return queryset
+        if not selected_admin_profile_allows_app(
+            request,
+            app_label=self.opts.app_label,
+        ):
+            return queryset.none()
         return self.scope_queryset_to_edition(request, queryset, edition)
+
+    def has_module_permission(self, request: HttpRequest) -> bool:
+        """Return whether the selected profile exposes this admin module.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        bool
+            ``True`` when exact-profile and superclass permissions both allow
+            module discovery.
+        """
+        return selected_admin_profile_allows_app(
+            request,
+            app_label=self.opts.app_label,
+        ) and super().has_module_permission(request)
+
+    def has_view_permission(
+        self,
+        request: HttpRequest,
+        obj: Any = None,
+    ) -> bool:
+        """Return whether the selected profile permits an admin read.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : Any, default=None
+            The optional model instance being considered.
+
+        Returns
+        -------
+        bool
+            ``True`` when exact-profile and superclass permissions both allow
+            the read.
+        """
+        return selected_admin_profile_allows_app(
+            request,
+            app_label=self.opts.app_label,
+        ) and super().has_view_permission(request, obj)
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        """Return whether the selected profile permits an admin create.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        bool
+            ``True`` when exact-profile and superclass permissions both allow
+            the create.
+        """
+        return selected_admin_profile_allows_app(
+            request,
+            app_label=self.opts.app_label,
+        ) and super().has_add_permission(request)
+
+    def has_change_permission(
+        self,
+        request: HttpRequest,
+        obj: Any = None,
+    ) -> bool:
+        """Return whether the selected profile permits an admin change.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : Any, default=None
+            The optional model instance being considered.
+
+        Returns
+        -------
+        bool
+            ``True`` when exact-profile and superclass permissions both allow
+            the change.
+        """
+        return selected_admin_profile_allows_app(
+            request,
+            app_label=self.opts.app_label,
+        ) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(
+        self,
+        request: HttpRequest,
+        obj: Any = None,
+    ) -> bool:
+        """Return whether the selected profile permits an admin deletion.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : Any, default=None
+            The optional model instance being considered.
+
+        Returns
+        -------
+        bool
+            ``True`` when exact-profile and superclass permissions both allow
+            the deletion.
+        """
+        return selected_admin_profile_allows_app(
+            request,
+            app_label=self.opts.app_label,
+        ) and super().has_delete_permission(request, obj)
 
     def get_list_filter(self, request: HttpRequest) -> Any:
         """Return list filter.

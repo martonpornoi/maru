@@ -9,3 +9,7 @@ class EventsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "maru.events"
     verbose_name = "Events"
+
+    def ready(self) -> None:
+        """Register Events-owned adoption compatibility checks."""
+        from maru.events import checks as events_checks  # noqa: F401, PLC0415

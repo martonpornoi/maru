@@ -55,7 +55,7 @@ from maru.registration.setup_content import (
 from maru.registration.starter_catalog import (
     StarterProduct,
     StarterSection,
-    platform_registration_starter,
+    platform_registration_starter_for_profile,
 )
 from maru.registration.template_lifecycle import (
     RegistrationTemplateStateConflictError,
@@ -688,7 +688,11 @@ def _source_content(
     if source_id is None:
         raise RegistrationSetupSourceUnavailableError
     if source_kind == RegistrationSetupOrigin.PLATFORM_STARTER:
-        starter = platform_registration_starter(source_id)
+        starter = platform_registration_starter_for_profile(
+            profile_code=scope.edition.adoption_profile_code,
+            profile_version=scope.edition.adoption_profile_version,
+            source_id=source_id,
+        )
         if starter is None:
             raise RegistrationSetupSourceUnavailableError
         return _SourceContent(

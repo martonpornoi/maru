@@ -105,7 +105,7 @@
 {% block content_title %}
   {{ block.super }}
   {% admin_edition_context request as maru_help_edition_context %}
-  {% admin_page_help request.path opts.app_label opts.model_name maru_help_edition_context.selected.adoption_profile_code as maru_page_help %}
+  {% admin_page_help request.path opts.app_label opts.model_name maru_help_edition_context.selected_profile.primary_module as maru_page_help %}
   {% if maru_page_help %}
     <p class="maru-page-help">{{ maru_page_help }}</p>
   {% endif %}

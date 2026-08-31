@@ -203,6 +203,28 @@ def test_autocomplete_is_bounded_minimized_and_literal() -> None:
     assert undeclared.json()["code"] == "unknown_input_field"
 
 
+def test_autocomplete_hides_rows_when_their_exact_manifest_is_unresolvable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep retained edition identity out of exact-profile discovery results."""
+    edition = EventEditionFactory(name="Retained Unsupported Suggestion")
+    account = AccountFactory()
+    CapabilityGrantFactory(
+        principal=account,
+        organization=edition.organization,
+    )
+    monkeypatch.setattr("maru.events.queries.ADOPTION_PROFILES", {})
+
+    response = _client(account).get(
+        _autocomplete_url(edition),
+        {"search": "Retained Unsupported"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"results": []}
+    assert edition.name.encode() not in response.content
+
+
 def test_autocomplete_projection_fails_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

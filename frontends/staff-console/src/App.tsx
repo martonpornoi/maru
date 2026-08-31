@@ -79,25 +79,20 @@ import {
   writeMyProfileExtension,
 } from "./api/client";
 import {
+  availableStaffConsoleDestinations,
   capacityCounts,
   chooseInitialEdition,
   daysUntil,
   formatDateRange,
   greetingFor,
+  isStaffConsoleDestinationAvailable,
   lifecycleLabel,
   primaryCapacity,
+  type StaffConsoleDestination,
   weekdayLabel,
 } from "./model";
 
-type Destination =
-  | "today"
-  | "my-registration"
-  | "people"
-  | "workforce"
-  | "commerce"
-  | "reports"
-  | "security"
-  | "setup";
+type Destination = StaffConsoleDestination;
 
 const upcomingDestinations = [
   "Programme & schedule",
@@ -115,6 +110,19 @@ const destinationLabels: Record<Destination, string> = {
   security: "Security history",
   setup: "Setup guide",
 };
+
+function isAvailableDestination(
+  edition: EditionContext,
+  destination: string,
+): destination is Destination {
+  return isStaffConsoleDestinationAvailable(edition, destination);
+}
+
+function availablePresentationDestinations(
+  edition: EditionContext,
+): Destination[] {
+  return availableStaffConsoleDestinations(edition);
+}
 
 const recommendedGroups: Record<Destination, string[]> = {
   today: ["convention-chair", "vice-chair", "board-member"],
@@ -535,6 +543,28 @@ function EmptyContext({ context }: { context: MyContext }) {
   );
 }
 
+function UnsupportedEditionContext({ edition }: { edition: EditionContext }) {
+  return (
+    <CenterState>
+      <img
+        className="brand-mark"
+        src="/static/core/brand/maru_square_logo_no_text.png"
+        alt="Maru"
+      />
+      <p className="eyebrow">{edition.edition_name}</p>
+      <h1>Workspace unavailable in this release</h1>
+      <p>
+        The {edition.adoption_profile_label} profile returned no destination this
+        Staff Console can present. No broader convention workflow was assumed.
+      </p>
+      <p className="muted-copy">
+        Choose another convention workspace or ask an administrator to confirm
+        the edition profile and application version.
+      </p>
+    </CenterState>
+  );
+}
+
 function Sidebar({
   destination,
   edition,
@@ -551,6 +581,15 @@ function Sidebar({
   onOpenAccess: () => void;
 }) {
   const available = new Set(edition.available_destinations);
+  const hasOverview = available.has("today") || available.has("my-registration");
+  const hasPeopleAndAccess =
+    available.has("people") || available.has("workforce") || canManageAccess;
+  const hasSetup = available.has("setup");
+  const hasAccount = available.has("security");
+  const hasConventionWideOperations =
+    available.has("people") &&
+    available.has("commerce") &&
+    available.has("reports");
   return (
     <aside className="sidebar">
       <a className="brand" href="/admin/" aria-label="Maru administration home">
@@ -566,125 +605,158 @@ function Sidebar({
       </a>
 
       <nav className="primary-nav" aria-label="Convention work">
-        <details className="nav-section" open>
-          <summary>Overview</summary>
-          <button
-            className={destination === "today" ? "nav-item active" : "nav-item"}
-            aria-current={destination === "today" ? "page" : undefined}
-            onClick={() => onNavigate("today")}
-          >
-            <Icon>◌</Icon> Today
-          </button>
-          {available.has("my-registration") && (
-            <button
-              className={
-                destination === "my-registration" ? "nav-item active" : "nav-item"
-              }
-              aria-current={destination === "my-registration" ? "page" : undefined}
-              onClick={() => onNavigate("my-registration")}
-            >
-              <Icon>◇</Icon> My registration
-            </button>
-          )}
-        </details>
-
-        <details className="nav-section" open>
-          <summary>People &amp; access</summary>
-          {available.has("people") && (
-            <button
-              className={destination === "people" ? "nav-item active" : "nav-item"}
-              aria-current={destination === "people" ? "page" : undefined}
-              onClick={() => onNavigate("people")}
-            >
-              <Icon>◎</Icon> People
-            </button>
-          )}
-          {available.has("workforce") && (
-            <button
-              className={
-                destination === "workforce" ? "nav-item active" : "nav-item"
-              }
-              aria-current={destination === "workforce" ? "page" : undefined}
-              onClick={() => onNavigate("workforce")}
-            >
-              <Icon>⌘</Icon> Workforce
-            </button>
-          )}
-          {canManageAccess && (
-            <button className="nav-item" onClick={onOpenAccess}>
-              <Icon>⌁</Icon> Access
-            </button>
-          )}
-        </details>
-
-        {(available.has("commerce") || available.has("reports")) && (
-        <details className="nav-section" open>
-          <summary>Registration &amp; attendees</summary>
-          {available.has("commerce") && (
-          <button
-            className={destination === "commerce" ? "nav-item active" : "nav-item"}
-            aria-current={destination === "commerce" ? "page" : undefined}
-            onClick={() => onNavigate("commerce")}
-          >
-            <Icon>▣</Icon> Registration desk
-          </button>
-          )}
-          {available.has("reports") && (
-          <button
-            className={destination === "reports" ? "nav-item active" : "nav-item"}
-            aria-current={destination === "reports" ? "page" : undefined}
-            onClick={() => onNavigate("reports")}
-          >
-            <Icon>▥</Icon> Reports &amp; badges
-          </button>
-          )}
-        </details>
+        {hasOverview && (
+          <details className="nav-section" open>
+            <summary>Overview</summary>
+            {available.has("today") && (
+              <button
+                className={
+                  destination === "today" ? "nav-item active" : "nav-item"
+                }
+                aria-current={destination === "today" ? "page" : undefined}
+                onClick={() => onNavigate("today")}
+              >
+                <Icon>◌</Icon> Today
+              </button>
+            )}
+            {available.has("my-registration") && (
+              <button
+                className={
+                  destination === "my-registration"
+                    ? "nav-item active"
+                    : "nav-item"
+                }
+                aria-current={
+                  destination === "my-registration" ? "page" : undefined
+                }
+                onClick={() => onNavigate("my-registration")}
+              >
+                <Icon>◇</Icon> My registration
+              </button>
+            )}
+          </details>
         )}
 
-        <details className="nav-section">
-          <summary>Convention setup</summary>
-          {available.has("setup") && (
-          <button
-            className={destination === "setup" ? "nav-item active" : "nav-item"}
-            aria-current={destination === "setup" ? "page" : undefined}
-            onClick={() => onNavigate("setup")}
-          >
-            <Icon>✓</Icon> Setup guide
-          </button>
-          )}
-          {canAccessAdvancedRecords && (
-            <a className="nav-item" href="/admin/?records=open#maru-specialist-heading">
-              <Icon>↗</Icon> Specialist records
-            </a>
-          )}
-        </details>
+        {hasPeopleAndAccess && (
+          <details className="nav-section" open>
+            <summary>People &amp; access</summary>
+            {available.has("people") && (
+              <button
+                className={
+                  destination === "people" ? "nav-item active" : "nav-item"
+                }
+                aria-current={destination === "people" ? "page" : undefined}
+                onClick={() => onNavigate("people")}
+              >
+                <Icon>◎</Icon> People
+              </button>
+            )}
+            {available.has("workforce") && (
+              <button
+                className={
+                  destination === "workforce" ? "nav-item active" : "nav-item"
+                }
+                aria-current={
+                  destination === "workforce" ? "page" : undefined
+                }
+                onClick={() => onNavigate("workforce")}
+              >
+                <Icon>⌘</Icon> Workforce
+              </button>
+            )}
+            {canManageAccess && (
+              <button className="nav-item" onClick={onOpenAccess}>
+                <Icon>⌁</Icon> Access
+              </button>
+            )}
+          </details>
+        )}
 
-        <details className="nav-section">
-          <summary>My account</summary>
-          <button
-            className={destination === "security" ? "nav-item active" : "nav-item"}
-            aria-current={destination === "security" ? "page" : undefined}
-            onClick={() => onNavigate("security")}
-          >
-            <Icon>◈</Icon> Security history
-          </button>
-        </details>
+        {(available.has("commerce") || available.has("reports")) && (
+          <details className="nav-section" open>
+            <summary>Registration &amp; attendees</summary>
+            {available.has("commerce") && (
+              <button
+                className={
+                  destination === "commerce" ? "nav-item active" : "nav-item"
+                }
+                aria-current={destination === "commerce" ? "page" : undefined}
+                onClick={() => onNavigate("commerce")}
+              >
+                <Icon>▣</Icon> Registration desk
+              </button>
+            )}
+            {available.has("reports") && (
+              <button
+                className={
+                  destination === "reports" ? "nav-item active" : "nav-item"
+                }
+                aria-current={destination === "reports" ? "page" : undefined}
+                onClick={() => onNavigate("reports")}
+              >
+                <Icon>▥</Icon> Reports &amp; badges
+              </button>
+            )}
+          </details>
+        )}
 
-        {edition.adoption_profile_code === "full_convention" && (
-        <details className="nav-section planned">
-          <summary>Planned modules</summary>
-          {upcomingDestinations.map((label) => (
-            <span
-              className="nav-item disabled"
-              aria-disabled="true"
-              title="Planned for a later Maru milestone"
-              key={label}
-            >
-              <Icon>·</Icon> {label}
-              <small>soon</small>
-            </span>
-          ))}
-        </details>
+        {hasSetup && (
+          <details className="nav-section">
+            <summary>Convention setup</summary>
+            {available.has("setup") && (
+              <button
+                className={
+                  destination === "setup" ? "nav-item active" : "nav-item"
+                }
+                aria-current={destination === "setup" ? "page" : undefined}
+                onClick={() => onNavigate("setup")}
+              >
+                <Icon>✓</Icon> Setup guide
+              </button>
+            )}
+            {available.has("setup") && canAccessAdvancedRecords && (
+              <a
+                className="nav-item"
+                href="/admin/?records=open#maru-specialist-heading"
+              >
+                <Icon>↗</Icon> Specialist records
+              </a>
+            )}
+          </details>
+        )}
+
+        {hasAccount && (
+          <details className="nav-section">
+            <summary>My account</summary>
+            {available.has("security") && (
+              <button
+                className={
+                  destination === "security" ? "nav-item active" : "nav-item"
+                }
+                aria-current={destination === "security" ? "page" : undefined}
+                onClick={() => onNavigate("security")}
+              >
+                <Icon>◈</Icon> Security history
+              </button>
+            )}
+          </details>
+        )}
+
+        {hasConventionWideOperations && (
+          <details className="nav-section planned">
+            <summary>Planned modules</summary>
+            {upcomingDestinations.map((label) => (
+              <span
+                className="nav-item disabled"
+                aria-disabled="true"
+                title="Planned for a later Maru milestone"
+                key={label}
+              >
+                <Icon>·</Icon> {label}
+                <small>soon</small>
+              </span>
+            ))}
+          </details>
         )}
       </nav>
 
@@ -852,7 +924,14 @@ function TodayView({
   const countdown = daysUntil(edition.starts_on);
   const roleCounts = capacityCounts(people?.results ?? []).slice(0, 6);
   const firstName = context.display_name.trim().split(" ")[0] || "there";
-  const workforceOnly = edition.adoption_profile_code === "workforce_only";
+  const available = new Set(edition.available_destinations);
+  const hasPeople = available.has("people");
+  const hasWorkforce = available.has("workforce");
+  const hasSelfRegistration = available.has("my-registration");
+  const hasCommerce = available.has("commerce");
+  const visibleActions = actions.filter((action) =>
+    isAvailableDestination(edition, action.destination),
+  );
 
   return (
     <div className="view">
@@ -895,25 +974,37 @@ function TodayView({
       <section className="metric-grid" aria-label="Edition summary">
         <article>
           <span className="metric-label">
-            {workforceOnly ? "Adoption profile" : "People in edition"}
+            {hasPeople ? "People in edition" : "Adoption profile"}
           </span>
           <strong>
-            {workforceOnly
-              ? edition.adoption_profile_label
-              : peopleDenied ? "—" : people?.count ?? "…"}
+            {hasPeople
+              ? peopleDenied
+                ? "—"
+                : people?.count ?? "…"
+              : edition.adoption_profile_label}
           </strong>
           <small>
-            {workforceOnly
-              ? "Volunteer operations only"
-              : peopleDenied ? "Restricted for your role" : "Current records"}
+            {hasPeople
+              ? peopleDenied
+                ? "Restricted for your role"
+                : "Current records"
+              : "Purpose-scoped workspace"}
           </small>
         </article>
         <article>
           <span className="metric-label">
-            {workforceOnly ? "Local time" : "Role types"}
+            {hasPeople ? "Role types" : "Local time"}
           </span>
-          <strong>{workforceOnly ? edition.time_zone : peopleDenied ? "—" : roleCounts.length}</strong>
-          <small>{workforceOnly ? "Used for Availability and Shifts" : "Across this result set"}</small>
+          <strong>
+            {hasPeople
+              ? peopleDenied
+                ? "—"
+                : roleCounts.length
+              : edition.time_zone}
+          </strong>
+          <small>
+            {hasPeople ? "Across this result set" : "Edition operating time"}
+          </small>
         </article>
         <article>
           <span className="metric-label">Languages</span>
@@ -922,15 +1013,17 @@ function TodayView({
         </article>
         <article>
           <span className="metric-label">
-            {workforceOnly ? "Workspace" : "Currency"}
+            {hasCommerce ? "Currency" : "Workspace"}
           </span>
           <strong>
-            {workforceOnly ? "Workforce" : edition.currency_codes.length}
+            {hasCommerce
+              ? edition.currency_codes.length
+              : edition.adoption_profile_label}
           </strong>
           <small>
-            {workforceOnly
-              ? "No attendee or payment setup"
-              : edition.currency_codes.join(" · ")}
+            {hasCommerce
+              ? edition.currency_codes.join(" · ")
+              : "No payment destination adopted"}
           </small>
         </article>
       </section>
@@ -941,26 +1034,30 @@ function TodayView({
             <div>
               <p className="section-kicker">Action center</p>
               <h2 id="attention-heading">
-                {workforceOnly ? "Workforce next steps" : "What needs attention"}
+                {hasCommerce ? "What needs attention" : "Workspace next steps"}
               </h2>
             </div>
             <span className="quiet-badge">
-              {workforceOnly ? "Focused" : actionsDenied ? "Restricted" : `${actions.length} open`}
+              {hasCommerce
+                ? actionsDenied
+                  ? "Restricted"
+                  : `${visibleActions.length} open`
+                : "Focused"}
             </span>
           </div>
-          {workforceOnly ? (
+          {!hasCommerce ? (
             <p className="muted-copy">
-              Continue in Workforce to build Structure and Positions, then add
-              assignments, Availability, and Shifts. Registration and payment
-              queues are intentionally absent from this workspace.
+              {hasWorkforce
+                ? "Continue in Workforce with the Structure, assignment, Availability, and Shift tools pinned by this edition profile. Registration and payment queues are absent."
+                : "Continue with the destinations pinned by this edition profile. Registration and payment queues are absent."}
             </p>
           ) : actionsDenied ? (
             <p className="muted-copy">
               No assigned-work projection is available for this role.
             </p>
-          ) : actions.length ? (
+          ) : visibleActions.length ? (
             <ol className="action-list">
-              {actions.map((action) => (
+              {visibleActions.map((action) => (
                 <li key={action.key} className={`attention-${action.level}`}>
                   <div>
                     <span className="attention-level">
@@ -995,52 +1092,60 @@ function TodayView({
           )}
         </section>
 
-        <section className="panel" aria-labelledby="shape-heading">
-          <div className="panel-heading">
-            <div>
-              <p className="section-kicker">People</p>
-              <h2 id="shape-heading">Edition shape</h2>
+        {hasPeople && (
+          <section className="panel" aria-labelledby="shape-heading">
+            <div className="panel-heading">
+              <div>
+                <p className="section-kicker">People</p>
+                <h2 id="shape-heading">Edition shape</h2>
+              </div>
             </div>
-          </div>
-          {peopleDenied ? (
-            <p className="muted-copy">
-              Role distribution is available only to authorized staff.
-            </p>
-          ) : roleCounts.length ? (
-            <ol className="role-counts">
-              {roleCounts.map(([label, count], index) => (
-                <li key={label}>
-                  <span className="rank">{String(index + 1).padStart(2, "0")}</span>
-                  <span>{label}</span>
-                  <strong>{count}</strong>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="muted-copy">No role labels have been recorded.</p>
-          )}
-        </section>
+            {peopleDenied ? (
+              <p className="muted-copy">
+                Role distribution is available only to authorized staff.
+              </p>
+            ) : roleCounts.length ? (
+              <ol className="role-counts">
+                {roleCounts.map(([label, count], index) => (
+                  <li key={label}>
+                    <span className="rank">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span>{label}</span>
+                    <strong>{count}</strong>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="muted-copy">No role labels have been recorded.</p>
+            )}
+          </section>
+        )}
       </div>
 
-      <section className="forms-section" aria-labelledby="forms-heading">
-        <div className="panel-heading">
-          <div>
-            <p className="section-kicker">
-              {workforceOnly ? "Workforce entry points" : "Published workflows"}
-            </p>
-            <h2 id="forms-heading">
-              {workforceOnly ? "Workforce forms" : "Forms"}
-            </h2>
-            <p className="muted-copy">
-              {workforceOnly
-                ? "Volunteer applications and onboarding documents stay together here without creating attendee registration or payment work."
-                : "Registration, applications, and document requests for this convention stay together here. Newly published forms will appear in this section."}
-            </p>
+      {(hasSelfRegistration || hasCommerce || hasWorkforce) && (
+        <section className="forms-section" aria-labelledby="forms-heading">
+          <div className="panel-heading">
+            <div>
+              <p className="section-kicker">
+                {hasSelfRegistration || hasCommerce
+                  ? "Published workflows"
+                  : "Workforce entry points"}
+              </p>
+              <h2 id="forms-heading">
+                {hasSelfRegistration || hasCommerce
+                  ? "Forms"
+                  : "Workforce forms"}
+              </h2>
+              <p className="muted-copy">
+                {hasSelfRegistration || hasCommerce
+                  ? "Registration and the other workflows pinned by this edition profile stay together here. Newly published forms will appear in this section."
+                  : "Volunteer applications and onboarding documents stay together here without creating attendee registration or payment work."}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="form-card-grid">
-          {!workforceOnly && (
-            <>
+          <div className="form-card-grid">
+            {hasSelfRegistration && (
               <button
                 className="form-link-card"
                 onClick={() => onNavigate("my-registration")}
@@ -1052,6 +1157,8 @@ function TodayView({
                 </span>
                 <span aria-hidden="true">→</span>
               </button>
+            )}
+            {hasCommerce && (
               <a
                 className="form-link-card"
                 href={`/admin/registration-assist/${edition.edition_id}/`}
@@ -1063,32 +1170,36 @@ function TodayView({
                 </span>
                 <span aria-hidden="true">↗</span>
               </a>
-            </>
-          )}
-          <a
-            className="form-link-card"
-            href={`/volunteer/${edition.edition_id}/`}
-          >
-            <span className="form-card-icon" aria-hidden="true">♡</span>
-            <span>
-              <strong>Volunteer applications</strong>
-              <small>Apply for published convention positions</small>
-            </span>
-            <span aria-hidden="true">↗</span>
-          </a>
-          <a
-            className="form-link-card"
-            href={`/volunteer/${edition.edition_id}/documents/`}
-          >
-            <span className="form-card-icon" aria-hidden="true">▤</span>
-            <span>
-              <strong>Onboarding documents</strong>
-              <small>Submit requested agreements and files</small>
-            </span>
-            <span aria-hidden="true">↗</span>
-          </a>
-        </div>
-      </section>
+            )}
+            {hasWorkforce && (
+              <a
+                className="form-link-card"
+                href={`/volunteer/${edition.edition_id}/`}
+              >
+                <span className="form-card-icon" aria-hidden="true">♡</span>
+                <span>
+                  <strong>Volunteer applications</strong>
+                  <small>Apply for published convention positions</small>
+                </span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+            {hasWorkforce && (
+              <a
+                className="form-link-card"
+                href={`/volunteer/${edition.edition_id}/documents/`}
+              >
+                <span className="form-card-icon" aria-hidden="true">▤</span>
+                <span>
+                  <strong>Onboarding documents</strong>
+                  <small>Submit requested agreements and files</small>
+                </span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -2496,6 +2607,8 @@ function positionOccupancy(position: WorkforceStructurePosition): string {
 }
 
 function WorkforceView({ edition }: { edition: EditionContext }) {
+  const assignmentUsesParticipation =
+    edition.assignment_uses_participation_evidence;
   const [workspace, setWorkspace] = useState<WorkforceStructureWorkspace>();
   const [denied, setDenied] = useState(false);
   const [error, setError] = useState<string>();
@@ -2960,9 +3073,9 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
               <p className="section-kicker">Authority boundary</p>
               <h2 id="workforce-boundary-title">Appointment is not ordinary access</h2>
               <p>
-                {edition.adoption_profile_code === "workforce_only"
-                  ? "A Workforce assignment can require documents, headcount, a distinct approver, and a scoped role. In this focused workspace it creates no attendee Registration, attendance, payment, or Participation record."
-                  : "A Workforce assignment can require documents, headcount, a distinct approver, a scoped role, and Participation capacity."}{" "}
+                {assignmentUsesParticipation
+                  ? "A Workforce assignment can require documents, headcount, a distinct approver, a scoped role, and Participation capacity."
+                  : "A Workforce assignment can require documents, headcount, a distinct approver, and a scoped role. This edition profile creates no attendee Registration, attendance, payment, or Participation record."}{" "}
                 Sharing a software-access group does not fill a Position.
               </p>
             </div>
@@ -4194,7 +4307,11 @@ function SetupView({
   canAccessAdvancedRecords: boolean;
   onTransitioned: (result: EditionTransitionResult) => void;
 }) {
-  const workforceOnly = edition.adoption_profile_code === "workforce_only";
+  const available = new Set(edition.available_destinations);
+  const hasWorkforce = available.has("workforce");
+  const hasRegistrationOperations = available.has("commerce");
+  const hasCloseoutReadiness =
+    hasRegistrationOperations && available.has("reports");
   const [readiness, setReadiness] = useState<ClosureReadiness>();
   const [readinessDenied, setReadinessDenied] = useState(false);
   const [readinessError, setReadinessError] = useState<string>();
@@ -4204,7 +4321,7 @@ function SetupView({
     setReadiness(undefined);
     setReadinessDenied(false);
     setReadinessError(undefined);
-    if (workforceOnly) return;
+    if (!hasCloseoutReadiness) return;
     loadClosureReadiness(edition)
       .then(setReadiness)
       .catch((error: unknown) => {
@@ -4218,7 +4335,7 @@ function SetupView({
             : "Readiness evidence could not be loaded.",
         );
       });
-  }, [edition, workforceOnly]);
+  }, [edition, hasCloseoutReadiness]);
 
   async function reviewGate(
     code: ReadinessGateCode,
@@ -4263,77 +4380,75 @@ function SetupView({
     },
     {
       title: "Event edition",
-      summary: workforceOnly
-        ? "Review the dated Workforce workspace and its local time. No payment currency is required."
-        : "Create the dated convention occurrence, venue, locale, and currency.",
+      summary: hasRegistrationOperations
+        ? "Review the dated convention occurrence, locale, and payment currency."
+        : "Review the dated purpose-scoped workspace and its local time. No payment currency is required.",
       href: `/admin/platform/organizations/${encodeURIComponent(edition.organization_slug)}/series/${encodeURIComponent(edition.series_slug)}/editions/${encodeURIComponent(edition.edition_slug)}/`,
     },
   ];
-  const steps = workforceOnly
-    ? [
-        ...foundationSteps,
-        {
-          title: "Accountable access",
-          summary:
-            "Keep at least two accountable Maru operators; this does not claim Executive Board office.",
-          href: `/admin/platform/organizations/${encodeURIComponent(edition.organization_slug)}/representation/`,
-        },
-        {
-          title: "Structure & Positions",
-          summary:
-            "Define Departments and Positions before assigning volunteers.",
-          href: workforceStructurePath(edition),
-        },
-        {
-          title: "Assignments",
-          summary:
-            "Place volunteers in approved Positions without creating attendee registration.",
-          href: workforceAssignmentsPath(edition),
-        },
-        {
-          title: "Availability",
-          summary: "Collect when assigned volunteers can work in local convention time.",
-          href: workforceAvailabilityPath(edition),
-        },
-        {
-          title: "Shifts",
-          summary: "Plan coverage and publish Shift commitments after Availability is known.",
-          href: workforceShiftsPath(edition),
-        },
-        {
-          title: "Teams & access",
-          summary:
-            "Share system capabilities without treating access as a workforce appointment.",
-          action: "access",
-        },
-      ]
-    : [
-        ...foundationSteps,
-        {
-          title: "Registration",
-          summary:
-            "Prepare products, form questions, opening windows, and payment rules.",
-          href: registrationSetupPath(edition),
-        },
-        {
-          title: "Workforce",
-          summary:
-            "Review Departments, Positions, active assignments, and the future shift-planning boundary.",
-          href: workforceWorkspacePath(),
-        },
-        {
-          title: "Teams & access",
-          summary:
-            "Share system capabilities without treating access as a workforce appointment.",
-          action: "access",
-        },
-        {
-          title: "Edition closeout readiness",
-          summary:
-            "Review privacy, finance, operations, security, and safeguarding evidence before archive.",
-          href: "#readiness-review",
-        },
-      ];
+  const steps: Array<{
+    title: string;
+    summary: string;
+    href?: string;
+    action?: "access";
+  }> = [
+    ...foundationSteps,
+    {
+      title: "Accountable access",
+      summary:
+        "Keep at least two accountable Maru operators; this does not claim Executive Board office.",
+      href: `/admin/platform/organizations/${encodeURIComponent(edition.organization_slug)}/representation/`,
+    },
+  ];
+  if (hasRegistrationOperations) {
+    steps.push({
+      title: "Registration",
+      summary:
+        "Prepare products, form questions, opening windows, and payment rules.",
+      href: registrationSetupPath(edition),
+    });
+  }
+  if (hasWorkforce) {
+    steps.push(
+      {
+        title: "Structure & Positions",
+        summary: "Define Departments and Positions before assigning volunteers.",
+        href: workforceStructurePath(edition),
+      },
+      {
+        title: "Assignments",
+        summary:
+          "Place volunteers in approved Positions under this profile's exact assignment boundary.",
+        href: workforceAssignmentsPath(edition),
+      },
+      {
+        title: "Availability",
+        summary:
+          "Collect when assigned volunteers can work in local convention time.",
+        href: workforceAvailabilityPath(edition),
+      },
+      {
+        title: "Shifts",
+        summary:
+          "Plan coverage and publish Shift commitments after Availability is known.",
+        href: workforceShiftsPath(edition),
+      },
+    );
+  }
+  steps.push({
+    title: "Teams & access",
+    summary:
+      "Share system capabilities without treating access as a workforce appointment.",
+    action: "access",
+  });
+  if (hasCloseoutReadiness) {
+    steps.push({
+      title: "Edition closeout readiness",
+      summary:
+        "Review privacy, finance, operations, security, and safeguarding evidence before archive.",
+      href: "#readiness-review",
+    });
+  }
 
   return (
     <div className="view">
@@ -4342,12 +4457,10 @@ function SetupView({
           <p className="eyebrow">Convention setup</p>
           <h1>Setup guide</h1>
           <PageHelp
-            purpose={workforceOnly
-              ? "Use this focused guide to finish a reliable volunteer-management workspace without adopting unrelated modules."
-              : "Use this ordered guide for the settings that normally change only while a convention is being prepared."}
-            examples={workforceOnly
+            purpose={`Use this ordered guide for the tools pinned by the ${edition.adoption_profile_label} profile.`}
+            examples={hasWorkforce
               ? "define Positions before assigning volunteers"
-              : "create the edition before building its registration form"}
+              : "review the edition before opening its adopted workflows"}
           />
         </div>
       </div>
@@ -4375,7 +4488,7 @@ function SetupView({
             </li>
           ))}
         </ol>
-        {!workforceOnly && (
+        {hasRegistrationOperations && (
           <section className="panel planned-capabilities" aria-labelledby="planned-capabilities-title">
             <div className="panel-heading">
               <div>
@@ -4423,7 +4536,7 @@ function SetupView({
           </section>
         )}
       </>
-      {!workforceOnly && (
+      {hasCloseoutReadiness && (
         <section
           className="panel readiness-review"
           id="readiness-review"
@@ -4741,6 +4854,8 @@ function AccessDrawer({
   onReplace: (assignmentId: string, input: ReplaceAccessInput) => Promise<void>;
   onRevoke: (assignmentId: string, reason: string) => Promise<void>;
 }) {
+  const assignmentUsesParticipation =
+    edition.assignment_uses_participation_evidence;
   const orderedGroups = [...workspace.groups].sort((left, right) => {
     const recommendation =
       Number(recommendedForPage(right, destination)) -
@@ -4852,9 +4967,9 @@ function AccessDrawer({
         <div className="access-safety-note access-purpose-note">
           <strong>Access is not a workforce appointment.</strong>
           <span>
-            {edition.adoption_profile_code === "workforce_only"
-              ? "Use a Position assignment when someone must fill a hierarchy role, satisfy an agreement, or appear with an official convention title. This focused edition does not create attendee Participation capacities."
-              : "Use a Position assignment when someone must fill a hierarchy role, satisfy an agreement, receive capacities, or appear with an official convention title."}{" "}
+            {assignmentUsesParticipation
+              ? "Use a Position assignment when someone must fill a hierarchy role, satisfy an agreement, receive capacities, or appear with an official convention title."
+              : "Use a Position assignment when someone must fill a hierarchy role, satisfy an agreement, or appear with an official convention title. This edition profile does not create attendee Participation capacities."}{" "}
             Sharing here grants only the selected system capabilities.
           </span>
         </div>
@@ -5206,8 +5321,9 @@ export default function App({
 
   useEffect(() => {
     if (!edition) return;
-    if (!edition.available_destinations.includes(destination)) {
-      setDestination("today");
+    if (!isAvailableDestination(edition, destination)) {
+      const fallback = availablePresentationDestinations(edition)[0];
+      if (fallback) setDestination(fallback);
     }
   }, [destination, edition]);
 
@@ -5259,6 +5375,7 @@ export default function App({
     setAccessWorkspace(undefined);
     setAccessOpen(false);
     setAccessError(undefined);
+    if (!availablePresentationDestinations(edition).length) return;
     void loadAccessWorkspace(edition)
       .then((workspace) => {
         setAccessWorkspace(workspace);
@@ -5300,6 +5417,10 @@ export default function App({
   if (!context) return <LoadingScreen />;
   if (!edition) return <EmptyContext context={context} />;
   const activeEdition = edition;
+  const presentationDestinations = availablePresentationDestinations(edition);
+  const activeDestination = isAvailableDestination(edition, destination)
+    ? destination
+    : presentationDestinations[0];
 
   function changeEdition(next: EditionContext) {
     window.localStorage.setItem("maru.staff.edition", next.edition_id);
@@ -5370,9 +5491,9 @@ export default function App({
     }
   }
 
-  const destinationContent = (
+  const destinationContent = activeDestination ? (
     <>
-      {destination === "today" && (
+      {activeDestination === "today" && (
         <TodayView
           context={context}
           edition={edition}
@@ -5383,10 +5504,10 @@ export default function App({
           onNavigate={setDestination}
         />
       )}
-      {destination === "my-registration" && (
+      {activeDestination === "my-registration" && (
         <MyRegistrationView edition={edition} />
       )}
-      {destination === "people" && (
+      {activeDestination === "people" && (
         <PeopleView
           page={people}
           denied={peopleDenied}
@@ -5396,15 +5517,15 @@ export default function App({
           onPage={(page) => setFilters((current) => ({ ...current, page }))}
         />
       )}
-      {destination === "workforce" && (
+      {activeDestination === "workforce" && (
         <WorkforceView edition={edition} />
       )}
-      {destination === "commerce" && (
+      {activeDestination === "commerce" && (
         <RegistrationOperationsView edition={edition} />
       )}
-      {destination === "reports" && <ReportsView edition={edition} />}
-      {destination === "security" && <SecurityView />}
-      {destination === "setup" && (
+      {activeDestination === "reports" && <ReportsView edition={edition} />}
+      {activeDestination === "security" && <SecurityView />}
+      {activeDestination === "setup" && (
         <SetupView
           edition={edition}
           canAccessAdvancedRecords={context.can_access_advanced_records}
@@ -5412,12 +5533,14 @@ export default function App({
         />
       )}
     </>
+  ) : (
+    <UnsupportedEditionContext edition={edition} />
   );
-  const accessDrawer = accessOpen && accessWorkspace && (
+  const accessDrawer = accessOpen && accessWorkspace && activeDestination && (
     <AccessDrawer
       workspace={accessWorkspace}
       edition={activeEdition}
-      destination={destination}
+      destination={activeDestination}
       busy={accessBusy}
       error={accessError}
       onClose={() => setAccessOpen(false)}
@@ -5453,7 +5576,7 @@ export default function App({
       <div className="shell">
         <a className="skip-link" href="#main-content">Skip to content</a>
         <Sidebar
-          destination={destination}
+          destination={activeDestination ?? destination}
           edition={edition}
           onNavigate={setDestination}
           canManageAccess={Boolean(accessWorkspace)}

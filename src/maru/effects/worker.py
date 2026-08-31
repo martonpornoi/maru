@@ -10,6 +10,10 @@ from uuid import UUID
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+from maru.effects.adoption import (
+    EFFECT_PROFILE_NOT_ALLOWED,
+    effect_delivery_is_allowed,
+)
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.effects.registry import event_definition, validate_event_payload
 from maru.effects.services import (
@@ -314,6 +318,18 @@ def run_claimed_effect(  # noqa: PLR0911 - terminal worker states stay explicit
         )
     except ValidationError:
         return _mark_permanent(claim, error_code="invalid_event_payload")
+
+    if not effect_delivery_is_allowed(
+        organization_id=message.organization_id,
+        event_edition_id=message.event.event_edition_id,
+        event_name=message.event.event_name,
+        destination=message.destination,
+        payload=message.event.payload,
+    ):
+        return _mark_permanent(
+            claim,
+            error_code=EFFECT_PROFILE_NOT_ALLOWED,
+        )
 
     handler = handlers.resolve(
         event_name=message.event.event_name,

@@ -10,6 +10,7 @@ from django.db.models import F
 from django.utils import timezone
 from rest_framework.test import APIClient
 
+import maru.accreditation.services as accreditation_services
 from maru.accreditation.models import (
     Credential,
     CredentialEvent,
@@ -409,6 +410,43 @@ def test_accreditation_api_denies_unscoped_and_invalid_operations() -> None:
         format="json",
     )
     assert missing_device.status_code == 404
+
+
+def test_offline_relay_rechecks_exact_profile_before_device_or_state_write(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject a public relay adapter removed from the exact manifest."""
+    edition = EventEditionFactory()
+    device = RelayDevice.objects.create(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        code="profile-denied",
+        label="Profile denied relay",
+        signing_secret_env_var="OFFLINE_PROFILE_DENIED_SECRET",
+    )
+    monkeypatch.setattr(
+        accreditation_services,
+        "profile_allows_offline_check_in_relay",
+        lambda *_args: False,
+    )
+
+    with pytest.raises(ValidationError) as raised:
+        reconcile_offline_check_in(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            device_code=device.code,
+            operation_id=uuid4(),
+            device_sequence=1,
+            manifest_sequence=1,
+            raw_credential_token="synthetic-token",
+            occurred_at=timezone.now(),
+            signature="not-evaluated",
+        )
+
+    assert raised.value.code == "offline_relay_profile_not_allowed"
+    device.refresh_from_db()
+    assert device.last_sequence == 0
+    assert not OfflineCheckInOperation.objects.filter(device=device).exists()
 
 
 def test_post_edition_correction_export_and_retention_minimization() -> None:

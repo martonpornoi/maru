@@ -16,7 +16,11 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
-from maru.authorization.policy import decide, resolve_edition_target
+from maru.authorization.policy import (
+    decide,
+    resolve_edition_target,
+    resolve_self_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.catalog.forms import (
     CatalogActivateForm,
@@ -37,7 +41,9 @@ from maru.catalog.models import (
 from maru.catalog.services import (
     MANAGE_CATALOG,
     MANAGE_STOCK,
+    ORDER_SELF,
     VIEW_ACTIVITY,
+    VIEW_SELF,
     OrderLineRequest,
     activate_catalog,
     add_product,
@@ -56,6 +62,7 @@ from maru.catalog.services import (
 )
 from maru.charities.models import CharitySelection
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.models import Account
 
 if TYPE_CHECKING:
@@ -88,7 +95,60 @@ def _page_context(
     return context
 
 
-def _owned_order(*, order_id: UUID, edition_id: UUID, actor: Account) -> CatalogOrder:
+def _authorize_self_catalog_scope(
+    *, edition_id: UUID, actor: Account, capability_code: str
+) -> None:
+    """Authorize one exact-profile Catalog self-service scope before labels.
+
+    Parameters
+    ----------
+    edition_id : UUID
+        The event edition whose exact profile governs the request.
+    actor : Account
+        The authenticated person requesting the self-service operation.
+    capability_code : str
+        The exact self-service capability required by the route.
+
+    Raises
+    ------
+    Http404
+        If the exact profile, scope, or self-service capability is unavailable.
+    """
+    organization_id = (
+        EventEdition.objects.filter(
+            adoption_profile_filter_for_module("catalog"),
+            id=edition_id,
+        )
+        .values_list("organization_id", flat=True)
+        .first()
+    )
+    if organization_id is None:
+        raise Http404
+    decision = decide(
+        principal=actor,
+        capability_code=capability_code,
+        resource=resolve_self_target(
+            principal=actor,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
+    )
+    if not decision.allowed:
+        raise Http404
+
+
+def _owned_order(
+    *,
+    order_id: UUID,
+    edition_id: UUID,
+    actor: Account,
+    capability_code: str,
+) -> CatalogOrder:
+    _authorize_self_catalog_scope(
+        edition_id=edition_id,
+        actor=actor,
+        capability_code=capability_code,
+    )
     return get_object_or_404(
         CatalogOrder.objects.prefetch_related(
             "lines", "payment_intents", "timeline_entries"
@@ -125,6 +185,7 @@ def my_catalog_index_page(request: HttpRequest) -> HttpResponse:
             personal=True,
             title="Shop & orders",
             catalogs=catalogs,
+            maru_personal_editions=tuple(catalog.edition for catalog in catalogs),
         ),
     )
 
@@ -153,6 +214,11 @@ def my_catalog_page(request: HttpRequest, edition_id: UUID) -> HttpResponse:
         If the scoped resource is unavailable to the caller.
     """
     actor = _actor(request)
+    _authorize_self_catalog_scope(
+        edition_id=edition_id,
+        actor=actor,
+        capability_code=VIEW_SELF,
+    )
     catalog = get_object_or_404(
         EditionCatalog.objects.select_related("edition"),
         edition_id=edition_id,
@@ -217,6 +283,11 @@ def place_catalog_order_page(request: HttpRequest, edition_id: UUID) -> HttpResp
         The HTTP response for this request.
     """
     actor = _actor(request)
+    _authorize_self_catalog_scope(
+        edition_id=edition_id,
+        actor=actor,
+        capability_code=ORDER_SELF,
+    )
     form = CatalogOrderForm(request.POST)
     if not form.is_valid():
         messages.error(request, "The order input was invalid; nothing was reserved.")
@@ -271,6 +342,11 @@ def my_catalog_orders_page(request: HttpRequest, edition_id: UUID) -> HttpRespon
         If the scoped resource is unavailable to the caller.
     """
     actor = _actor(request)
+    _authorize_self_catalog_scope(
+        edition_id=edition_id,
+        actor=actor,
+        capability_code=VIEW_SELF,
+    )
     catalog = get_object_or_404(
         EditionCatalog.objects.select_related("edition"), edition_id=edition_id
     )
@@ -318,7 +394,12 @@ def catalog_checkout_page(
         The HTTP response for this request.
     """
     actor = _actor(request)
-    order = _owned_order(order_id=order_id, edition_id=edition_id, actor=actor)
+    order = _owned_order(
+        order_id=order_id,
+        edition_id=edition_id,
+        actor=actor,
+        capability_code=VIEW_SELF,
+    )
     catalog = order.catalog
     return TemplateResponse(
         request,
@@ -362,7 +443,12 @@ def start_catalog_hosted_payment_page(
         The HTTP response for this request.
     """
     actor = _actor(request)
-    order = _owned_order(order_id=order_id, edition_id=edition_id, actor=actor)
+    order = _owned_order(
+        order_id=order_id,
+        edition_id=edition_id,
+        actor=actor,
+        capability_code=ORDER_SELF,
+    )
     form = CatalogPaymentForm(request.POST)
     if not form.is_valid():
         messages.error(request, "The checkout command was invalid.")
@@ -419,7 +505,12 @@ def complete_catalog_demo_payment_page(
         The HTTP response for this request.
     """
     actor = _actor(request)
-    order = _owned_order(order_id=order_id, edition_id=edition_id, actor=actor)
+    order = _owned_order(
+        order_id=order_id,
+        edition_id=edition_id,
+        actor=actor,
+        capability_code=ORDER_SELF,
+    )
     form = CatalogPaymentForm(request.POST)
     if not form.is_valid():
         messages.error(request, "The demo-payment command was invalid.")

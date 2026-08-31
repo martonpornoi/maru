@@ -49,6 +49,7 @@ from maru.catalog.readiness import catalog_database_integrity_is_ready
 from maru.charities.readiness import charities_database_integrity_is_ready
 from maru.core.forms import StrictInputForm
 from maru.core.navigation import destination_code_is_supported
+from maru.core.personal_discovery import personal_shell_profile_pairs
 from maru.events.admin_context import (
     ADMIN_EDITION_SESSION_KEY,
     admin_shell_access,
@@ -57,13 +58,19 @@ from maru.events.admin_context import (
     has_active_admin_scope,
     selected_admin_edition,
 )
-from maru.events.adoption import AdoptionProfileCode, adoption_profile
+from maru.events.adoption import (
+    WORKFORCE_ONLY_PROFILE_VERSION,
+    AdoptionProfileCode,
+    adoption_profile,
+    profile_allows_shell_destination,
+)
 from maru.events.forms import (
     EventEditionCreationForm,
     EventEditionUpdateForm,
     WorkforceAdoptionSetupForm,
 )
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_capabilities
 from maru.events.services import (
     EDITION_PROFILE_EDITABLE_LIFECYCLES,
     create_event_edition,
@@ -523,6 +530,7 @@ def workforce_adoption_setup(request: HttpRequest) -> HttpResponse:
     existing_editions = (
         EventEdition.objects.filter(
             adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+            adoption_profile_version=WORKFORCE_ONLY_PROFILE_VERSION,
         )
         .select_related("organization", "series")
         .order_by("organization__name", "series__name", "starts_on", "id")
@@ -717,6 +725,7 @@ def _series_for_record(
 def _editions_for_series(series: ConventionSeries) -> list[EventEdition]:
     return list(
         EventEdition.objects.filter(
+            adoption_profile_filter_for_capabilities({"events.view_basic"}),
             organization=series.organization,
             series=series,
         ).order_by("-starts_on", "name", "id")
@@ -1457,6 +1466,10 @@ def baseline_event_edition_record(
                     edition_slug=result.edition.slug,
                 )
 
+    edition_profile = adoption_profile(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+    )
     return _baseline_page_response(
         request,
         "core/baseline_event_edition_record.html",
@@ -1464,7 +1477,10 @@ def baseline_event_edition_record(
             "organization": organization,
             "convention_series": series,
             "edition": edition,
-            "edition_profile": adoption_profile(edition.adoption_profile_code),
+            "edition_profile": edition_profile,
+            "edition_adopts_registration": bool(
+                edition_profile and "registration" in edition_profile.modules
+            ),
             "activity": activity,
             "activity_time_zone": edition.time_zone,
             "form": form,
@@ -1709,12 +1725,39 @@ def my_maru_home(request: HttpRequest) -> TemplateResponse:
         The HTTP response for the requested operation.
     """
     actor = _active_account(request)
+    profile_pairs = personal_shell_profile_pairs(actor=actor)
+    personal_destination_kinds = frozenset(
+        kind
+        for kind in (
+            "my.registrations",
+            "my.catalog",
+            "my.applications",
+            "my.workforce",
+            "my.schedule",
+            "my.equipment-offers",
+        )
+        if any(
+            profile_allows_shell_destination(profile_code, profile_version, kind)
+            for profile_code, profile_version in profile_pairs
+        )
+    )
     context = admin.site.each_context(request)
     context.update(
         {
             "title": "My Maru",
             "has_permission": True,
             "maru_personal_surface": True,
+            "maru_personal_profile_pairs": profile_pairs,
+            "maru_personal_destination_kinds": personal_destination_kinds,
+            "has_personal_start_destination": bool(
+                personal_destination_kinds
+                & {
+                    "my.registrations",
+                    "my.applications",
+                    "my.workforce",
+                    "my.schedule",
+                }
+            ),
             "maru_shell_access": admin_shell_access(request),
             "has_management_access": bool(
                 has_active_admin_scope(request) or actor.is_staff

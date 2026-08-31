@@ -3,7 +3,7 @@
 Status: bounded storage, offers, manifests, and custody slice accepted in the
 canonical current tree; full LOG portfolio remains partial and production is
 gated
-Last updated: 2026-08-11
+Last updated: 2026-08-31
 
 ## Purpose and boundary
 
@@ -54,6 +54,14 @@ close that relationship under its documented supplier/evidence policy. A
 governed Party-retirement command is not implemented in this slice, so Party
 retirement and later relationship-retention closure remain explicit future
 work. Custody history remains minimized and append-only after contact disposal.
+
+An edition-scoped retention batch preflights the exact
+`logistics.record.changed.v1` internal effect before selecting private contact
+rows, then repeats the exact Logistics-profile filter in the locked disposal
+query. An unadopted edition therefore produces no redaction, audit, event, or
+outbox evidence; the effect and row-scope boundaries fail closed
+independently. Organization-global disposal remains limited to records with no
+edition.
 
 ## Physical graph, assets, keys, and agreements
 
@@ -113,8 +121,8 @@ convention authority.
 
 The shared shell provides:
 
-- `/my/equipment-offers/`, which discovers only currently open authorized
-  editions or editions in which the person already owns an offer;
+- `/my/equipment-offers/`, which discovers only exact-profile-authorized
+  editions, including compatible retained offer history;
 - exact-edition self offer pages with safe empty states;
 - an edition Logistics workspace whose currently accepted browser projection
   is read-only and exposes no mutation controls;
@@ -122,6 +130,11 @@ The shared shell provides:
 - a Stage Tech receiving projection; and
 - purpose-coded, audited restricted-contact reads through short-lived opaque
   results.
+
+An owned `EquipmentOffer` is a relationship, not an authorization fallback. If
+the edition's exact profile no longer admits `logistics.offer_self`, the index,
+direct browser route, and API deny before loading organization, series, edition,
+offer, or contact labels; the retained row cannot revive the Logistics surface.
 
 The stable HTTP command and query contracts are documented in the
 [Logistics API](logistics-api.md).

@@ -68,6 +68,7 @@ from maru.workforce.structure_inputs import (
 from maru.workforce.structure_templates import (
     UnknownBuiltinStructureTemplateError,
     get_builtin_structure_template,
+    profile_allows_structure_template,
 )
 from maru.workforce.writer_boundary import lock_edition_structure_mutex
 
@@ -885,6 +886,19 @@ def apply_builtin_structure_template(
             series_id=series_id,
             edition_id=edition_id,
         )
+        if not profile_allows_structure_template(
+            scope.edition.adoption_profile_code,
+            scope.edition.adoption_profile_version,
+            template.identifier,
+        ):
+            raise ValidationError(
+                {
+                    "template": ValidationError(
+                        "This structure template is not adopted by the edition.",
+                        code="structure_template_not_adopted",
+                    )
+                }
+            )
         replay = _receipt_for_retry(
             scope=scope,
             actor_id=actor.id,

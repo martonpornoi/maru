@@ -27,8 +27,8 @@ from maru.authorization.policy import (
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
-from maru.events.adoption import profile_adopts_module
 from maru.participation.models import Participation, ParticipationCapacity
+from maru.workforce.adoption import assignment_uses_participation_evidence
 from maru.workforce.edition_write_scope import (
     lock_active_department_write_target,
     lock_workforce_edition_write_scope,
@@ -598,9 +598,9 @@ def _activate_position_assignment_capacity(
         The position-specific capacity, or ``None`` when Participation is not
         part of the edition's adoption profile.
     """
-    if not profile_adopts_module(
+    if not assignment_uses_participation_evidence(
         position.edition.adoption_profile_code,
-        "participation",
+        position.edition.adoption_profile_version,
     ):
         return None
     participation, _ = Participation.objects.get_or_create(
