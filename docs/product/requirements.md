@@ -183,7 +183,21 @@ architecture documents, implementation issues, tests, and release notes.
   Maru-operator organization's bounded profile requires an explicit platform-
   administrator setup decision; it cannot follow from ordinary operator
   authority. Existing editions retain the full-convention profile during the
-  additive migration.
+  additive migration. Every policy, capability, destination, effect, catalog,
+  and conflict adapter must resolve the exact immutable profile code and
+  profile version. A later catalog entry or capability in an adopted module
+  must not silently enter an existing profile version.
+- **EVT-007 — Programme operations adoption profile:** An edition may adopt the
+  immutable, code-owned `programme_operations@1` composite profile to operate
+  Programme intake, review, accepted-item readiness, venue-aware scheduling,
+  Programme-linked Workforce Shifts, publication, role-specific on-site
+  timetables, export, degraded operation, and stop-use. The profile must
+  declare every enabled capability, destination, record, effect, and conflict
+  adapter. It must create no attendee Participation, Registration, payment,
+  attendance, accreditation, catalog, charity, or unrelated Communications or
+  Logistics state. Host, co-host, reviewer, planner, venue-operator, publisher,
+  and volunteer relationships remain purpose-bounded and imply no attendance
+  or broader participation.
 
 ### Archival history
 
@@ -397,9 +411,10 @@ architecture documents, implementation issues, tests, and release notes.
   only the evidence required by the edition's immutable adoption profile. For
   `full_convention@1`, approval must create or activate the configured
   Participation evidence and retain a non-null Participation-capacity pointer.
-  For `workforce_only@1`, approval must create no `Participation` or
-  `ParticipationCapacity`, and that pointer must remain null. If the recheck
-  fails, the dedicated conflict
+  Every bounded profile whose exact manifest excludes Participation, including
+  `workforce_only@1` and `programme_operations@1`, must create no
+  `Participation` or `ParticipationCapacity`, and that pointer must remain
+  null. If the recheck fails, the dedicated conflict
   must disclose no controller identity, source identifier, source timestamp,
   or raw provenance; it must retain the immutable proposal and truthful
   headcount reservation without granting access or creating participation.
@@ -408,11 +423,12 @@ architecture documents, implementation issues, tests, and release notes.
   Ending an active assignment requires fresh step-up authentication and
   revocation authority, retains its reason, and revokes the linked role. For
   `full_convention@1`, it completes only configured Participation capacities no
-  longer needed by another active assignment. For `workforce_only@1`, it must
-  create or touch no Participation evidence and must retain the null pointer. A
-  governed active or ended assignment whose pointer does not match its immutable
-  edition profile is an integrity conflict, not a reason to manufacture or
-  discard Participation evidence. HTML and API adapters must share strict,
+  longer needed by another active assignment. Every bounded profile whose
+  exact manifest excludes Participation must create or touch no Participation
+  evidence and must retain the null pointer. A governed active or ended
+  assignment whose pointer does not match its immutable edition profile is an
+  integrity conflict, not a reason to manufacture or discard Participation
+  evidence. HTML and API adapters must share strict,
   idempotent commands with authorization before input parsing, immutable
   receipts, audit and registered domain-event evidence, optimistic assignment
   versions, and stopped-writer database enforcement. The assigned person may
@@ -442,6 +458,16 @@ architecture documents, implementation issues, tests, and release notes.
   and database enforcement. Exact windows are C2 current operational data;
   their post-edition disposal period must come from an approved organization
   retention policy rather than a code constant.
+- **HR-015 — Programme-linked staffing demand:** A Programme occurrence may
+  request or link Workforce-owned Shift demand only through documented,
+  versioned commands. Workforce remains authoritative for Departments,
+  Positions, Assignments, Availability, claims, confirmations, and locked
+  coverage. Timetable planning may show minimized current coverage and change
+  impact. Moving or cancelling Programme work may update linked draft demand,
+  but it must never silently rewrite or relock open or locked `ShiftDemand`,
+  or reconfirm, remove, or discard a claimed or confirmed `ShiftCommitment`.
+  Later changes require an impact-previewed recovery or explicit successor
+  workflow.
 
 ### Programme, shifts, and timetable planning
 
@@ -488,6 +514,27 @@ architecture documents, implementation issues, tests, and release notes.
   timing but retain their own visibility, edit authority, ownership, history,
   and publication rules. A comment or shift layer must not silently alter the
   approved public schedule.
+- **SCH-011 — Accessible interactive timetable editing:** Timetable planning
+  must provide an unscheduled-item inventory, service-day and room views,
+  stable filters, access-controlled layers, conflict preview, and recoverable
+  draft state. Pointer placement may enhance the workflow, but every move,
+  resize, grouping, recurrence, and override must have an equivalent keyboard
+  and explicit-form command. Status and conflict severity must never depend on
+  color alone.
+- **SCH-012 — Atomic release and purpose-bounded projections:** An approved
+  immutable schedule candidate may become active only after every required
+  artifact and adapter result is validated. Publication changes one active-
+  release pointer and retains the prior release, source candidate, manifest,
+  checksums, supersession, and impact evidence. Public, host, volunteer,
+  department, room, operations, API, calendar, signage, and print projections
+  derive from that exact release. Personal host and volunteer projections
+  require an explicit Programme relationship or retained Shift commitment and
+  never require attendee Participation. If a required Venue approval or hard
+  physical constraint becomes invalid after release, the same governed
+  boundary must atomically activate an already approved safe successor or
+  append an invalidation that removes the unsafe placement from every normal
+  projection. A known-invalid placement must not remain approved in a cached,
+  printable, or last-published degraded artifact.
 
 ### Querying, reporting, and export
 
@@ -1060,6 +1107,15 @@ architecture documents, implementation issues, tests, and release notes.
 - **PRG-007 — Delivery record:** Authorized teams may retain planned versus
   actual time, attendance observations, show report, recording or asset state,
   and host contribution under explicit retention policy.
+- **PRG-008 — Canonical Programme item and host relationships:** One accepted
+  exact proposal revision may create exactly one edition-owned Programme item
+  through an idempotent typed Applications adapter. A reasoned organizer
+  command may create an equivalent core item without inventing a submitter or
+  review. Applications retains private proposal and review history; Programme
+  owns accepted-item readiness, approved public renditions, and delivery
+  history. Host and co-host access uses explicit item relationships and creates
+  no Participation, Registration, payment, membership, or volunteer
+  relationship.
 
 ### Governance, planning, and readiness
 
@@ -1372,6 +1428,14 @@ architecture documents, implementation issues, tests, and release notes.
 - **OPS-008 — Rehearsal:** Editions must support drills or simulations using
   production-like configuration without notifying real audiences or corrupting
   production history.
+- **OPS-009 — Published-timetable continuity:** Hosts, volunteers, Programme
+  staff, departments, and rooms must receive minimized now/next and run-sheet
+  projections from the exact active release, with source age and version
+  visible. Material changes identify affected commitments and required
+  acknowledgements. Intermittent or unavailable connectivity falls back to a
+  version-stamped last-published snapshot and printable pack. This first
+  boundary does not imply check-in, lateness, absence, Shift actual time, work
+  disputes, Shift handover, payroll, or general incident-command capability.
 
 ### Privacy, compliance, and participant control
 
@@ -1526,12 +1590,17 @@ architecture documents, implementation issues, tests, and release notes.
   required shared foundations, enabled destinations, purpose-specific roles
   and accounts, records and side effects, integration and coexistence
   boundaries, import/export/print/manual fallbacks, and upgrade or removal
-  behavior. Unadopted modules must not create records, navigation,
-  notifications, authority, or operational dependencies. A purpose-specific
-  account such as a bidder, event host, volunteer, or communications operator
-  must not imply attendance, purchase, payment, or broader participation and
-  data collection. Cross-module automation may begin only after deliberate
-  adoption of every participating capability.
+  behavior. A composite profile is valid only when every participating
+  capability, destination, effect, and adapter is deliberately pinned to its
+  exact code and version; later catalog growth cannot expand it implicitly.
+  Conflict reports must distinguish rules checked from unavailable or
+  unadopted sources instead of implying comprehensive validation. Unadopted
+  modules must not create records, navigation, notifications, authority, or
+  operational dependencies. A purpose-specific account such as a bidder,
+  event host, volunteer, or communications operator must not imply attendance,
+  purchase, payment, or broader participation and data collection. Cross-
+  module automation may begin only after deliberate adoption of every
+  participating capability.
 
 ## Explicit non-goals
 

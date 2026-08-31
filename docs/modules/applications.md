@@ -3,7 +3,7 @@
 Status: typed form studio, applicant workspace, review queues, and closed
 target-transition receipts accepted in the canonical current tree; production
 remains gated
-Last updated: 2026-08-11
+Last updated: 2026-08-31
 
 ## Purpose and boundary
 
@@ -16,6 +16,16 @@ never creates a second registration or grants a ticket, payment state,
 convention role, or access. Configurable staff answer-correction windows,
 public answer renditions, retention execution, and real downstream target
 adapters remain outside this slice.
+
+ADR 0081 preserves this ownership for the accepted but not yet executable
+`programme_operations@1` profile. Applications will own programme calls,
+proposal collaborators, private answers, immutable revisions, reviewer
+assignments and conflicts, review evidence, decisions, and the idempotent typed
+target receipt. A Programme adapter may consume only that explicit accepted
+transition to create or reconcile a private Programme item. It must not copy
+the answer sheet into Programme, make private review material public, grant a
+host broader convention access, or create attendee Participation. The host-
+panel starter and adapter remain successor runtime work.
 
 ADR 0047's governed-writer rules apply: route scope is untrusted, commands use
 closed inputs and expected versions, API retries use canonical UUID keys, and

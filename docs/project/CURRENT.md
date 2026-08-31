@@ -38,6 +38,50 @@ certification and protected pull-request acceptance are evaluated as separate
 delivery evidence; the form does not become part of the default-branch issue
 chooser until protected merge.
 
+## Programme Operations adoption contract
+
+Issue [#57](https://github.com/martonpornoi/maru/issues/57), the first native
+child of the accepted Programme Operations umbrella
+[#48](https://github.com/martonpornoi/maru/issues/48), contracts
+`programme_operations@1` without activating it. The exact target manifest
+adopts Applications, Programme, Scheduling, Venues, and Workforce over shared
+Identity, Organizations, Events, Authorization, Audit, Effects, and Privacy
+namespaces, with mandatory pinned recovery and export continuity contracts. It
+excludes attendee Participation,
+Registration, payments, attendance, accreditation, and unrelated modules.
+Host, reviewer, and volunteer accounts remain purpose-specific relationships.
+
+ADR 0081 pins canonical ownership and cross-module seams. Applications owns
+calls, private proposals, revisions, review evidence, decisions, and target
+receipts; Programme owns accepted items, hosts, readiness, operational layers,
+and approved public content; Scheduling owns service days, occurrences,
+placements, candidate/conflict evidence, releases, and projections; Venues
+owns physical-space facts, availability, occupancy, and approval; Workforce
+owns Departments, Positions, Assignments, Availability, Shift commitments, and
+work history. Programme-linked Venue bookings cannot publish a competing
+public schedule. Workforce adoption without attendee Participation requires a
+null assignment-capacity pointer and no manufactured Participation evidence.
+
+The profile version must pin adopted modules, capabilities, destinations,
+writers/effects, and adapter/conflict sources so catalog growth cannot silently
+widen an existing edition. A future setup route and operator role version are
+contracted but inactive. No Django model, migration, profile catalog entry,
+capability, destination, route, API, adapter, publication, or runtime behavior
+changes in this child. Exact-version enforcement and profile-safe authority
+projection are prerequisites before activation. Check-in, late/absent
+escalation, Shift actual time, disputes, and Shift handover remain exclusively within
+issue [#24](https://github.com/martonpornoi/maru/issues/24).
+
+Requirements, ADR catalogs, page and workflow contracts, architecture/module
+boundaries, roadmap/delivery/backlog ledgers, production status, changelog, and
+the append-only checkpoint now agree. All 19 documentation-policy tests, Ruff,
+repository documentation validation across 363 Markdown files and 212 unique
+requirement identifiers, `git diff --check`, and a fresh warning-fatal
+Sphinx/AutoAPI build pass. Independent contract re-review and a separate
+acceptance-criteria audit found no remaining issue. Exact-commit local
+certification and the protected pull-request gate remain the delivery evidence
+to record before this contract is complete.
+
 ## Profile-aware Position-assignment evidence contract
 
 Issue [#41](https://github.com/martonpornoi/maru/issues/41), a bounded finding
@@ -831,24 +875,33 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Publish the reproducible end-to-end Workforce-only operator-and-volunteer
+1. Enforce exact `(profile code, profile version)` manifests and profile-safe
+   capability, destination, writer/effect, adapter, and authority projections
+   before `programme_operations@1` can activate.
+2. Implement the atomic, idempotent Programme Operations setup, its separately
+   approved operator authority version, profile-scoped navigation, runtime-role
+   containment, readiness, migration, and recovery contracts.
+3. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48)
+   sequentially through Programme items, Applications intake/review, Scheduling
+   core and accessible editor, Workforce staffing, atomic release/projections,
+   on-site continuity, and integrated recovery acceptance.
+4. Publish the reproducible end-to-end Workforce-only operator-and-volunteer
    tutorial [#42](https://github.com/martonpornoi/maru/issues/42) as the next
-   bounded release-candidate finding.
-2. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
+   bounded release-candidate finding outside the Programme sequence.
+5. Complete [issue #22](https://github.com/martonpornoi/maru/issues/22)'s
    Workforce-only continuity package: preview-first
    import, scoped export, printable/manual fallback, reconciliation evidence,
    and explicit stop/expand procedures.
-3. Complete [issue #23](https://github.com/martonpornoi/maru/issues/23)'s
+6. Complete [issue #23](https://github.com/martonpornoi/maru/issues/23)'s
    Workforce-only and Shift mutation-role, responsive, keyboard, zoom,
    disclosure, and representative screen-reader matrix.
-4. Accept [issue #24](https://github.com/martonpornoi/maru/issues/24)'s
+7. Accept [issue #24](https://github.com/martonpornoi/maru/issues/24)'s
    scheduling contract before implementation: check-in, late/absent escalation,
    handover, actual-time boundaries, and the exact line between an internal
    commitment and a published personal schedule.
-5. Contract the next standalone profiles by partner need: Programme and event
-   submissions, Communications publishing, Charity art auction, and
-   Registration without payments.
-6. Define and rehearse the organization-approved Availability disposal policy,
+8. Contract later standalone profiles by partner need: Communications
+   publishing, Charity art auction, and Registration without payments.
+9. Define and rehearse the organization-approved Availability disposal policy,
    legal holds, worker observability, restore/PITR, and fix-forward behavior.
 
 ## Resume instructions
@@ -857,8 +910,10 @@ Read `AGENTS.md`, the
 [agent-assisted workflow guide](../development/agent-workflows.md), this file,
 `ROADMAP.md`, the production-consolidation ledger,
 the management-shell, Position, Assignment, Availability, and Shift page
-contracts, the Workforce-only adoption setup contract and runbook, and ADRs
-0019/0028/0039/0041/0049/0055/0075 through 0080. Use only synthetic data.
+contracts, the Workforce-only adoption setup contract and runbook, the
+[Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md),
+the Applications, Events, Venues, and Workforce module contracts, and ADRs
+0019/0028/0039/0041/0049/0051/0053/0055/0075 through 0081. Use only synthetic data.
 Preserve exact organization and edition scope, authorization
 before disclosure, My Maru/Administration separation, private Availability,
 independent confirmation, privacy-minimized self-withdrawal, canonical lock

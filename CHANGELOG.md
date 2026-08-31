@@ -38,6 +38,14 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Accepted the contract-only `programme_operations@1` boundary for a Programme
+  department to progress from calls and review through one approved timetable,
+  staffing projections, and on-site continuity without adopting attendee
+  Participation, Registration, payments, attendance, or unrelated modules.
+  ADR 0081 pins exact-version manifests, canonical module ownership, one
+  Scheduling-owned release, purpose-scoped host/volunteer relationships, and
+  the ordered implementation sequence without activating runtime behavior
+  ([#57](https://github.com/martonpornoi/maru/issues/57)).
 - Position-assignment requirements, operator guidance, and architecture
   metadata now match each edition's immutable adoption profile.
   `full_convention@1` retains its required Participation-capacity lifecycle;

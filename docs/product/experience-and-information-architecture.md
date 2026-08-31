@@ -3,10 +3,11 @@
 Status: Focused unified shell, truthful Representation & access handoff,
 guided Workforce-only adoption, profile-scoped navigation, owner-rehearsed
 Registration desk for full-convention editions, and governed Position,
-Assignment, Availability, and Shift management locally verified; complete
+Assignment, Availability, and Shift management locally verified; accepted
+Programme Operations contract surfaces remain inactive and non-routable; complete
 mutation-role, state-matrix, width/zoom, and release accessibility evidence
 pending
-Last updated: 2026-08-26
+Last updated: 2026-08-31
 
 ## Current executable experience
 
@@ -74,6 +75,20 @@ Public volunteer pages use a Volunteer-only shell that disclaims attendee
 Registration, attendance, and payment. Personal Workforce routes focus the
 Personal and Work groups on My Maru and My Workforce rather than advertising
 unadopted or unrelated personal workflows.
+
+`programme_operations@1` is an accepted contract, not part of the current
+executable experience. Its reserved setup route does not resolve, and no shell,
+search, setup choice, API, Staff Console, public page, or personal destination
+may advertise it. The immutable future manifest pins `audit`, `authorization`,
+`effects`, `events`, `identity`, `organizations`, and `privacy` as foundations
+and adopts `applications`, `programme`, `scheduling`, `venues`, and
+`workforce`. Programme and Scheduling namespaces, routes, capabilities,
+destinations, writers, effects, and adapters remain absent until successor
+runtime issues implement and validate the whole profile; no general
+`operations` namespace is implied.
+
+Recovery and export remain required, explicitly pinned continuity behaviors;
+they do not implicitly adopt a whole current or future namespace.
 
 The `platform` segment is reserved for purpose-built platform pages and avoids
 collisions with Django application-label routes. The administration home,
@@ -259,6 +274,13 @@ Equipment offers are absent. A non-staff organizer with administrative
 authority sees the explicit label **Convention workspace** for that surface;
 the link does not imply platform employment or Django staff status.
 
+The accepted future Programme Operations personal surface instead derives discovery
+from an exact Programme host relationship or the person's own retained Shift
+commitment. It never enumerates editions through attendee Participation. It
+may combine released host timing and the person's own Workforce commitment,
+but it keeps other people's identity, Availability, reviewer evidence, scores,
+internal rationale, and restricted operational layers structurally absent.
+
 ### Home
 
 - Next best action
@@ -281,6 +303,9 @@ the link does not imply platform employment or Django staff status.
 Programme interests, shifts, host appearances, rehearsals, setup, travel,
 breaks, and private calendar blocks appear together with clear visibility
 labels. Maru explains conflicts and never publishes a private calendar entry.
+Each source names its purpose and authority. A host appearance or volunteer
+commitment does not create or require attendee Participation, and an unadopted
+source is shown as unavailable rather than silently queried.
 
 ### Inbox
 
@@ -392,11 +417,13 @@ known-person proposal, visible onboarding readiness, and a genuinely different
 controller's stepped-up approval or rejection. Proposal reserves headcount but
 grants nothing; approval atomically activates the role and only the evidence
 required by the immutable edition profile. Full-convention editions retain
-their Participation projection, while Workforce-only approval and ending touch
-no Participation evidence and keep the assignment pointer null. Ending revokes
-linked authority and retains its reason. **My Workforce** gives the subject a
-separate reason-minimized state and dates view. Non-staff owners see
-purpose-built continuations rather than inaccessible specialist links.
+their Participation projection, while every bounded profile that excludes
+Participation keeps the assignment pointer null. This includes both
+`workforce_only@1` and the accepted, inactive `programme_operations@1`; approval and
+ending touch no Participation evidence. Ending revokes linked authority and
+retains its reason. **My Workforce** gives the subject a separate reason-
+minimized state and dates view. Non-staff owners see purpose-built
+continuations rather than inaccessible specialist links.
 
 Availability is now a person-owned continuation in **My Workforce** and a
 separately capability-scoped organizer projection. A person may keep a private
@@ -417,6 +444,50 @@ confirmation but no private explanation, and neither a Position nor an
 Availability period is presented as scheduled work. Broader qualifications,
 maximum-hours policy, publication, reminders, check-in, and timekeeping remain
 later extensions rather than implied behavior.
+
+### Programme Operations continuity
+
+The accepted future **Programme Operations** task is one composite workflow rather
+than a menu of disconnected records. Applications owns calls, collaborative
+proposals, private review, and decisions; Programme owns accepted items, host
+relationships, public renditions, and readiness; Scheduling owns occurrence
+identity, public timing, candidates, conflicts, approval, and releases; Venues
+owns physical facts, occupancy, and approval; and Workforce owns Departments,
+Positions, Assignments, Availability, Shift demand, and commitments. Events
+owns the edition profile and lifecycle, while Audit and Effects retain evidence
+and purpose-limited delivery state.
+
+The owner sequence is **Programme structure → Calls → Review → Items and
+readiness → Timetable → Volunteer coverage → Approve and release → Run
+sheets**. Every continuation reauthorizes. Private Applications evidence never
+becomes a Scheduling layer, a Programme-linked Venue occupancy cannot publish
+a second timetable, and Programme staffing uses only Workforce commands and
+minimized coverage queries.
+
+The timetable workspace uses an unscheduled tray, service-day/room board,
+filters, access-controlled layers, conflict explanation, candidate comparison,
+and a purpose-based item inspector. Drag and drop is an accelerator only. An
+equivalent keyboard and explicit-form journey selects the item, day, local
+time, space, preparation/effective/teardown envelope, and retained reason while
+preserving focus and context. Narrow layouts provide an equivalent ordered
+list or labelled cards; color, grid position, hover, motion, and pointer use
+never carry meaning alone.
+
+Released copy, host readiness, technical/accessibility delivery, Venue
+operations, staffing, and Department discussion keep separate owners, field
+ceilings, history, and publication rules. A move previews Venue, host,
+accessibility, staffing, output, and acknowledgement consequences. It may
+update linked draft Shift demand through Workforce, but never silently changes
+open or locked `ShiftDemand`, or claimed, confirmed, removed, or completed
+`ShiftCommitment`.
+
+The first on-site slice shows current/next approved Programme timing, exact
+place, host or volunteer briefing, current confirmed or locked commitment,
+released changes, source age, and version-stamped print fallback. It does not
+claim check-in, lateness, absence, Shift actual time, correction/dispute, or Shift
+handover; issue #24 owns those later facts. This accepted experience remains
+non-routable until the complete `programme_operations@1` runtime manifest is
+implemented and accepted.
 
 The implemented Reports destination starts with one purpose-built
 registration preset: attendance totals, country and attendee-level
@@ -496,6 +567,13 @@ field catalog or authorization policy.
 Now Mode is an edition-wide operational projection optimized for time pressure,
 touch use, unstable connectivity, and rapid handover.
 
+For the accepted, inactive `programme_operations@1` version 1, this broad target narrows
+to approved Programme timing, exact host relationships, confirmed or locked
+Shift commitments, released-change acknowledgement, source age, and printable
+continuity. Check-in, delayed/absent actions, Shift actual time, work disputes, and
+Shift handover remain unavailable pending issue #24; a run-sheet
+acknowledgement must not be stored or presented as one of those facts.
+
 ### Personal Now
 
 - current and next assignment;
@@ -565,6 +643,9 @@ authority can accelerate the flow while retaining the evidence trail.
 
 - WCAG 2.2 AA is a release criterion, including staff interfaces.
 - Complete keyboard operation is required for high-volume desk workflows.
+- A spatial timetable may offer drag and drop only when every placement,
+  envelope change, conflict review, and reasoned override has an equivalent
+  keyboard and explicit-form path with predictable focus restoration.
 - Touch targets and contrast support poor light and hurried on-site use.
 - Status is never communicated only by color.
 - Times always show edition time zone when ambiguity is possible.

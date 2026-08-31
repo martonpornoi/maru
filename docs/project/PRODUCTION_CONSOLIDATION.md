@@ -89,9 +89,9 @@ The state vocabulary is deliberately small:
 | Attendee registration and admission commerce | Mounted / deployment-gated | Public/self registration, My Maru, exact-difference upward replacement, hard-ceiling capacity adjustments, strict FIFO batches, and hosted/demo payment boundaries are executable. Real provider/webhook, printer/device, load, retention, recovery, accessibility, refund/transfer, and fulfilment gates remain. |
 | Registration extension fields | Mounted / cutover incomplete | Versioned definitions, closed self/staff/exact-Department/confirmed/public audiences, append-only values, audited API/directory projections, and self/staff browser editing are mounted. Compatibility-writer retirement, stopped-writer activation, and complete browser/accessibility evidence remain. |
 | Typed application portfolio | Mounted / bounded | Ten code-owned starters, edition-owned drafts, organizer/applicant/reviewer journeys, exact named/immutable-role review provenance, and typed acceptance receipts are implemented. Real programme/workforce/SecOps/merchandise target adapters, staff answer correction, richer review rubrics, retention execution, and accessibility rehearsal remain. |
-| Programme intake/review | Absent | PRG-001–007. |
+| Programme intake/review | Contract accepted / runtime absent | ADR 0081 and PRG-001–008 define the Applications-to-Programme boundary, host relationships, privacy, and progressive profile. No Programme model, route, adapter, or setup behavior is active. |
 | Venues and operational space bookings | Mounted / bounded | Reusable venue facts, edition selections, immutable physical-member expansion, hard availability, two-clique occupancy, independent approval/publication, and minimized public/My schedule projections are mounted. Guest allocation, programme ownership, full timetable layers/exports, and person/equipment conflicts remain. |
-| Timetable and shifts | Partial | Venue bookings implement safe three-phase physical occupancy and public schedule projection. Workforce implements the first Position-demand, suitable-work, personal-claim, independent-confirmation, overlap/rest, lock, recovery, cancellation, and completion journey. Shared programme releases, general qualifications, maximum-hours/lone-work/accommodation policy, check-in/timekeeping, wider people/equipment conflicts, operational layers, notifications, and exports remain absent. |
+| Timetable and shifts | Partial / shared release contract accepted | Venue bookings implement safe three-phase physical occupancy and an independent public schedule projection. Workforce implements the first Position-demand, suitable-work, personal-claim, independent-confirmation, overlap/rest, lock, recovery, cancellation, and completion journey. ADR 0081 assigns the future single Programme release, candidate/conflict evidence, projections, and Programme-linked Venue reconciliation to Scheduling without changing current runtime. General qualifications, maximum-hours/lone-work/accommodation policy, check-in/timekeeping, wider people/equipment conflicts, operational layers, notifications, and exports remain absent. |
 | Logistics/storage | Mounted / bounded / deployment-gated | Typed containment/custody/event/manifest/offline workflows, exact capability bindings, mounted routes, retention boundaries, runtime-role profiles, and fail-closed readiness are implemented. The serialized PostgreSQL matrix passes 26/26, the canonical repository gate passes, and scoped authenticated read-only browser rehearsal passes at 1,920 and 390 pixels. LOG-003 demand/reservation, LOG-004 driver/routes, LOG-006 invoice linkage, LOG-007 low-stock/wastage, broader mutation-role/visual/accessibility, restore/PITR, and production activation remain open. |
 | Governed charity partners | Mounted / bounded | Reusable non-tenant partners, private edition review, independent media/confirmation/publication, and minimized public snapshots satisfy FUR-011. Fundraising campaigns, settlement, costs, and public financial reporting remain open. |
 | Edition catalog and owned orders | Mounted / deployment-gated | Product/variant/beneficiary policy, finite stock, attendee orders, payment intents, activity, and same-shell attendee/staff pages are mounted. Real provider certification, order expiry/cancel/refund/exchange, fulfilment/shipping, and accounting export remain. |
@@ -803,6 +803,11 @@ multiple venues.
 
 ### M4 — Typed applications and downstream adapters
 
+ADR 0081 contracts the Applications-to-Programme seam: Applications retains
+calls, private proposals, revisions, review evidence, decisions, and the typed
+target receipt; Programme begins with an idempotent accepted-item adapter. The
+profile, host-panel starter, and adapter remain non-executable.
+
 - [x] Closed versioned field/form vocabulary in the bounded Applications
   context.
 - [x] Definition, submission revision, review/decision, deadline, successor,
@@ -827,6 +832,9 @@ programme adapter above.
 
 ### M5 — Three-phase timetable and layers
 
+- [x] Accept Programme/Scheduling/Venue/Workforce ownership, one-release
+  publication, exact-version adoption, purpose-account, and recovery contracts
+  in ADR 0081; no runtime behavior is implied.
 - [ ] Programme readiness and public-rendition separation.
 - [ ] Schedule WIP/version/release models.
 - [ ] Four-instant work envelope and complete conflict engine.

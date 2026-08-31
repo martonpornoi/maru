@@ -57,7 +57,7 @@ the system.
 | [0050](0050-governed-admission-upgrades-capacity-and-edition-commerce.md) | Accepted | Use held exact-delta admission replacements, append-only bounded capacity, strict FIFO offers, and a separate edition catalog |
 | [0051](0051-typed-applications-and-policy-governed-profile-extensions.md) | Accepted | Copy immutable starters into owned drafts, use closed profile audiences, and keep contribution forms in typed application workflows |
 | [0052](0052-governed-charity-partners-and-edition-publication.md) | Accepted | Keep reusable charity partners separate from tenants and govern each edition decision and public snapshot independently |
-| [0053](0053-reusable-venue-catalog-and-physical-space-occupancy.md) | Accepted | Reuse governed venue facts through edition selections and enforce physical occupancy with turnover-safe interval constraints |
+| [0053](0053-reusable-venue-catalog-and-physical-space-occupancy.md) | Partially superseded | Reusable venue facts, physical occupancy, and non-Programme publication remain; ADR 0081 makes a Scheduling release the sole public timing source for Programme-linked bookings |
 | [0054](0054-event-sourced-logistics-containment-and-custody.md) | Accepted | Track physical containment and custody through typed acyclic nodes, append-only movements, manifests, and bounded offline reconciliation |
 | [0055](0055-task-oriented-responsive-management-experience.md) | Accepted | Present task-oriented management navigation, an accessible intermediate-width drawer, and a coherent person-account to governance handoff without changing domain authority |
 | [0056](0056-private-schema-backed-api-reference.md) | Accepted | Render the canonical OpenAPI contract through private, locally served Swagger and ReDoc views without enabling per-endpoint browsable APIs |
@@ -85,6 +85,7 @@ the system.
 | [0078](0078-governed-workforce-shift-journey.md) | Accepted | Govern demand, personal claims, independent confirmation, transactional coverage, and retained completion as one Workforce Shift journey |
 | [0079](0079-repository-scoped-agent-workflow-support.md) | Accepted | Keep always-on repository policy separate from focused, repository-scoped contributor playbooks |
 | [0080](0080-progressive-workforce-only-adoption.md) | Accepted | Make Workforce-only an immutable edition profile with truthful Maru-operator accountability and no unadopted authority or side effects |
+| [0081](0081-composite-programme-operations-adoption.md) | Accepted | Make Programme Operations an exact-version composite profile with one Scheduling-owned Programme release and Workforce-owned staffing |
 
 New ADRs use the next four-digit number and contain:
 

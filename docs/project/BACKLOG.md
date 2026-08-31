@@ -304,9 +304,20 @@ These items retain useful behavior learned from the owned legacy prototype.
 ADR 0021 and the current module boundaries govern their implementation; the
 prototype is an acceptance reference, not a code dependency.
 
+Issue [#48](https://github.com/martonpornoi/maru/issues/48) is the accepted
+Programme Operations delivery umbrella. Its first child,
+[#57](https://github.com/martonpornoi/maru/issues/57), contracts
+`programme_operations@1`, canonical ownership, and the ordered dependency
+boundary without activating runtime behavior. Successor children must proceed
+sequentially through exact-version profile enforcement and setup, Programme
+items, intake/review, Scheduling core and editor, Workforce staffing,
+release/projections, on-site continuity, and integrated recovery acceptance.
+Each child remains independently tested, documented, reviewed, and protected-
+merged before the next dependent child starts.
+
 ### MARU-PRG-001 — Proposal-to-programme lifecycle (`P1`)
 
-**Requirements:** PRG-001 through PRG-007, AUD-003, SCH-001
+**Requirements:** PRG-001 through PRG-008, AUD-003, SCH-001
 **Deliver:** versioned proposal submissions, accountable review/revision
 requests, decisions, and an explicit accepted-item transition into separately
 authorized programme readiness work.
@@ -321,7 +332,7 @@ authorized programme readiness work.
 
 ### MARU-SCH-001 — Shared versioned timetable (`P1`)
 
-**Requirements:** SCH-001 through SCH-008, VEN-001, VEN-002
+**Requirements:** SCH-001 through SCH-012, VEN-001, VEN-002, OPS-009
 **Deliver:** edition-local service days, precision, ordered layers and groups,
 recurring occurrences, draft/publication versions, room assignment, conflict
 explanations, and attendee/person/department/venue/print projections.
@@ -336,7 +347,7 @@ explanations, and attendee/person/department/venue/print projections.
 
 ### MARU-HR-002 — Volunteer shift commitments (`P1`)
 
-**Requirements:** HR-009, SCH-003, SCH-005, AUD-003
+**Requirements:** HR-009, HR-015, SCH-003, SCH-005, AUD-003
 
 **Current slice:** governed Position-specific demand, suitable personal claims,
 organizer confirmation/removal, person-owned withdrawal, underfill-aware
