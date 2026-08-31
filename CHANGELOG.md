@@ -15,6 +15,10 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a dedicated umbrella-proposal Issue Form that captures one bounded
+  end-to-end outcome, ordered child decomposition, integrated acceptance,
+  adoption and side-effect boundaries, traceability, and recovery while using
+  native GitHub sub-issues for inspectable delivery progress.
 - Added one parameterized, fail-closed release-consumer verifier and runbook
   that independently proves the complete source, asset, checksum, manifest,
   image-digest, SPDX SBOM, and strict provenance relationship found missing

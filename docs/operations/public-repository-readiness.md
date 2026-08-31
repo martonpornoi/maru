@@ -72,6 +72,13 @@ both forms and the chooser, so that field did not demonstrate their absence.
 The score is a discovery/file-presence signal, not independent assurance that
 the policy content or repository is production-ready.
 
+The maintained desired state now adds a third, proposal-and-triage-only
+umbrella form without changing that dated readback. It distinguishes a bounded
+multi-issue outcome from one closable feature proposal, requires explicit child
+decomposition and integrated acceptance, and keeps security reports, support,
+and exploratory design in their existing routes. Child membership and progress
+use GitHub's native sub-issue relationship; no new label or Project is required.
+
 The live description is **Security-focused Django and PostgreSQL platform for
 operating multi-convention events, under active development.** ADR 0070 records
 the explicit authorization and exact post-change readback for that description-

@@ -1,0 +1,144 @@
+name: Umbrella proposal
+description: Plan one bounded outcome that must be delivered through linked child issues.
+title: "[Umbrella]: "
+labels: ["proposal", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Use this form only for one reviewed end-to-end outcome that is too large
+        for a single implementation issue. It records a planning contract and
+        does not authorize implementation or creation of child issues. Use a
+        Discussion for an early or unbounded idea. Do not report vulnerabilities
+        or include personal data; use Maru's private vulnerability form at
+        https://github.com/martonpornoi/maru/security/advisories/new.
+        Requirements and accepted ADRs remain authoritative when they differ
+        from issue conversation.
+  - type: checkboxes
+    id: preparation
+    attributes:
+      label: Preparation
+      options:
+        - label: I searched existing Issues and Discussions for overlapping work.
+          required: true
+        - label: I reviewed the current project state, roadmap, requirements, and relevant ADRs.
+          required: true
+        - label: This is one bounded outcome requiring multiple independently closable child issues, not an early idea.
+          required: true
+        - label: I understand this issue is a planning contract and does not authorize implementation or creation of child issues.
+          required: true
+        - label: I understand requirements and accepted ADRs remain authoritative when they differ from issue conversation.
+          required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: End-to-end outcome
+      description: State one observable outcome and why it cannot be delivered safely as one issue.
+    validations:
+      required: true
+  - type: textarea
+    id: current_boundary
+    attributes:
+      label: Current Maru boundary
+      description: Describe what Maru owns today, what is absent, and which existing workflows remain authoritative.
+    validations:
+      required: true
+  - type: textarea
+    id: roles_states
+    attributes:
+      label: Affected roles and states
+      description: >-
+        Identify role classes and purpose-specific actors, not real people's
+        names. Include scopes, lifecycle states, and denied or degraded cases.
+    validations:
+      required: true
+  - type: textarea
+    id: journey
+    attributes:
+      label: Complete human journey
+      description: Describe the beginning-to-end journey before splitting it into implementation work.
+    validations:
+      required: true
+  - type: textarea
+    id: adoption
+    attributes:
+      label: Adoption, coexistence, and side effects
+      description: >-
+        For product work, explain standalone adoption, incumbent-system
+        coexistence, expansion, stop-use, and effects excluded from unadopted
+        modules. For contributor work, state affected and unchanged workflows.
+    validations:
+      required: true
+  - type: textarea
+    id: decomposition
+    attributes:
+      label: Proposed child outcomes and dependency order
+      description: >-
+        Enter one unchecked - [ ] checklist item per independently closable
+        child outcome, in dependency order. Each child must later be a native
+        GitHub sub-issue, cite the exact item and acceptance criteria it owns,
+        and preserve inherited non-goals.
+      placeholder: |-
+        - [ ] Define the first independently closable child outcome and its acceptance boundary.
+        - [ ] Deliver the next child outcome, including its prerequisite and successor.
+        - [ ] Rehearse the complete integrated journey before closing the umbrella.
+    validations:
+      required: true
+  - type: textarea
+    id: integrated_acceptance
+    attributes:
+      label: Integrated acceptance boundary
+      description: State the evidence required before the umbrella may close after all children complete.
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Explicit non-goals
+      description: Identify related behavior that every child must keep outside this umbrella.
+    validations:
+      required: true
+  - type: textarea
+    id: traceability
+    attributes:
+      label: Requirements, decisions, ownership, and overlap
+      description: Link requirement IDs, ADRs, owning modules, related issues, prerequisites, and conflicts.
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Security, privacy, and operations
+      description: >-
+        Cover tenant and edition scope, authority, personal data, retention,
+        audit, degraded or manual operation, export, recovery, deployment, and
+        failure behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: risks_alternatives
+    attributes:
+      label: Risks and alternatives
+      description: Record material delivery risks and genuinely different alternatives or incumbent workflows.
+    validations:
+      required: true
+  - type: checkboxes
+    id: completion_rules
+    attributes:
+      label: Umbrella and child rules
+      options:
+        - label: Every child will use the native parent relationship and cite its exact umbrella checklist item.
+          required: true
+        - label: The umbrella will link each created child and remain open through final integrated acceptance.
+          required: true
+        - label: If discovery changes the split, the umbrella decomposition will be updated before detached work is created.
+          required: true
+  - type: checkboxes
+    id: safety_confirmation
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I removed secrets, tokens, database dumps, and personal data.
+          required: true
+        - label: This proposal does not disclose a security vulnerability.
+          required: true
