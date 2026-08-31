@@ -71,6 +71,31 @@ contact through explicit read adapters and collects an explicit availability
 interval. Source-bound questions are applicant-visible but not
 applicant-writable.
 
+Edition-scoped catalog and provider selection resolves the persisted adoption
+profile code and version before disclosure or execution. `full_convention@1`
+pins all eleven current catalog entries, all five eligibility providers, the
+account-display-name and Registration-Telegram source providers, and the
+Applications self-workspace purpose provider. It also pins an independent
+versioned adapter key for each of the ten accepted target kinds.
+`workforce_only@1` pins none of them, so it exposes no Applications starter,
+self workspace, or target transition even if an unrelated grant or durable
+Applications row exists. An unsupported exact profile pair, a later unpinned
+starter, an unknown provider discriminator, or an incompletely pinned starter
+dependency fails closed. Every non-external starter requires its accepted-target
+adapter before catalog disclosure or copy. Copying a starter and activating or
+evaluating a definition recheck the exact edition manifest; catalog growth
+therefore cannot silently widen an existing profile version.
+
+Reviewer queues apply the same exact-pair rule to each complete immutable role
+version. The configuration selector omits a role when any capability in its
+bundle is unpinned, the command rejects crafted role identifiers, activation
+rechecks retained draft relationships, and every queue read or review decision
+rechecks the configured role before accepting an organization-, edition-, or
+Department-scoped assignment. Independent `applications.review` authority does
+not make an incompatible role a valid queue relationship. Explicit named-person
+reviewers remain a separate purpose relationship and still require the normal
+edition capability decision before any submission is disclosed or changed.
+
 ## Shared field contract
 
 Sections contain ordered questions using a closed vocabulary: short and long
@@ -114,7 +139,11 @@ Acceptance creates one immutable `ApplicationTargetRecord` whose adapter kind
 must equal the definition's closed adapter discriminator. It is transition
 evidence for the target-domain adapter, not a generic answer sheet. Downstream
 typed modules consume that explicit adapter transition; they do not treat the
-application answer projection as their source of truth.
+application answer projection as their source of truth. Activation checks the
+definition's versioned target-adapter pin, and acceptance checks it again
+immediately before creating the typed target. A legacy definition or future
+same-namespace adapter absent from the exact manifest cannot cross that
+boundary.
 
 ## Sensitive policy fence
 

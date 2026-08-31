@@ -15,6 +15,7 @@ from django.template.response import TemplateResponse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from maru.applications.adoption import profile_allows_application_reviewer_role
 from maru.applications.commands import (
     ApplicationAuthorizationDenied,
     ApplicationCommandError,
@@ -53,6 +54,7 @@ from maru.applications.models import (
     ReviewDecisionKind,
 )
 from maru.applications.queries import (
+    application_starters,
     available_applications,
     definition_detail,
     definition_workspace,
@@ -64,7 +66,7 @@ from maru.applications.queries import (
 )
 from maru.applications.serializers import decision_history, latest_answers
 from maru.applications.source_adapters import source_bound_value
-from maru.applications.starters import application_starter, starter_catalog
+from maru.applications.starters import application_starter_for_profile
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.models import RoleBundle
 from maru.events.models import EventEdition
@@ -203,15 +205,18 @@ def _departments(definition: ApplicationDefinition) -> tuple[Department, ...]:
 
 
 def _reviewer_roles(definition: ApplicationDefinition) -> tuple[RoleBundle, ...]:
-    required = {"applications.review"}
-    if definition.is_sensitive:
-        required.add("applications.review_sensitive")
+    edition = definition.edition
     return tuple(
         role
         for role in RoleBundle.objects.filter(
             organization_id=definition.organization_id
         ).order_by("name", "-version", "id")
-        if required <= set(role.capability_codes)
+        if profile_allows_application_reviewer_role(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            role.capability_codes,
+            sensitive=definition.is_sensitive,
+        )
     )
 
 
@@ -264,6 +269,8 @@ def _definition_forms(
             departments=departments,
             roles=roles,
             edition_time_zone=definition.edition.time_zone,
+            adoption_profile_code=definition.edition.adoption_profile_code,
+            adoption_profile_version=definition.edition.adoption_profile_version,
         ),
         "section_form": SectionAddForm(
             initial={
@@ -375,7 +382,11 @@ def application_definition_workspace(
             personal=False,
             title="Applications",
             definitions=definitions,
-            starters=starter_catalog(),
+            starters=application_starters(
+                actor=_actor(request),
+                organization_id=organization_id,
+                edition_id=edition_id,
+            ),
         ),
     )
 
@@ -419,11 +430,15 @@ def application_starter_copy_page(
         organization_id=organization_id,
         edition_id=edition_id,
     )
-    starter = application_starter(starter_code)
+    edition = _edition(organization_id, edition_id)
+    starter = application_starter_for_profile(
+        profile_code=edition.adoption_profile_code,
+        profile_version=edition.adoption_profile_version,
+        starter_code=starter_code,
+    )
     if starter is None or starter.is_external:
         raise Http404
     now = timezone.now()
-    edition = _edition(organization_id, edition_id)
     form = StarterCopyForm(
         initial={
             "retry_key": str(uuid4()),
@@ -484,10 +499,14 @@ def application_starter_copy(
         organization_id=organization_id,
         edition_id=edition_id,
     )
-    starter = application_starter(starter_code)
+    edition = _edition(organization_id, edition_id)
+    starter = application_starter_for_profile(
+        profile_code=edition.adoption_profile_code,
+        profile_version=edition.adoption_profile_version,
+        starter_code=starter_code,
+    )
     if starter is None or starter.is_external:
         raise Http404
-    edition = _edition(organization_id, edition_id)
     form = StarterCopyForm(request.POST, edition_time_zone=edition.time_zone)
     status = 400
     if form.is_valid():
@@ -632,6 +651,8 @@ def application_definition_configure(
         departments=_departments(definition),
         roles=_reviewer_roles(definition),
         edition_time_zone=edition.time_zone,
+        adoption_profile_code=edition.adoption_profile_code,
+        adoption_profile_version=edition.adoption_profile_version,
     )
     status = 400
     if form.is_valid():
@@ -1086,6 +1107,7 @@ def my_application_index(request: HttpRequest) -> HttpResponse:
             personal=True,
             title="My applications",
             edition_rows=rows,
+            maru_personal_editions=editions,
         ),
     )
 

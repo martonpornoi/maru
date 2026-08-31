@@ -11,6 +11,7 @@ from django.core.management import call_command
 from django.utils import timezone
 from rest_framework.test import APIClient
 
+from maru.accreditation.models import Credential, CredentialEvent
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.identity.models import (
     AccountRestriction,
@@ -38,6 +39,8 @@ from maru.registration.models import (
     AdmissionProduct,
     ConfigurationStatus,
     Registration,
+    RegistrationAdjustment,
+    RegistrationTimelineEntry,
 )
 from tests.factories import (
     AccountFactory,
@@ -483,6 +486,19 @@ def test_scheduled_restriction_applies_registration_consequences_once() -> None:
         payment_due_at=now + timedelta(days=2),
     )
     operator = AccountFactory()
+    credential = Credential.objects.create(
+        registration=registration,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        account_id=attendee.id,
+        public_id="scheduled-credential",
+        token_digest="a" * 64,
+        status=Credential.Status.ISSUED,
+        issue_sequence=1,
+        label_snapshot="Scheduled credential",
+        issued_at=now - timedelta(days=1),
+        issued_by_id=operator.id,
+    )
     CapabilityGrantFactory(
         organization=edition.organization,
         edition=edition,
@@ -514,8 +530,15 @@ def test_scheduled_restriction_applies_registration_consequences_once() -> None:
         == 1
     )
     registration.refresh_from_db()
+    credential.refresh_from_db()
     restriction.refresh_from_db()
     assert registration.state == Registration.State.CANCELLED
+    assert credential.status == Credential.Status.REVOKED
+    assert CredentialEvent.objects.filter(
+        credential=credential,
+        kind=CredentialEvent.Kind.REVOKED,
+        reason_code="account_restriction",
+    ).exists()
     assert restriction.consequences_applied_at == now + timedelta(hours=2)
     event = DomainEvent.objects.get(
         aggregate_type="identity.account_restriction",
@@ -532,3 +555,125 @@ def test_scheduled_restriction_applies_registration_consequences_once() -> None:
         )
         == 0
     )
+
+
+def test_scheduled_restriction_retains_unadopted_domain_rows() -> None:
+    """Apply Identity evidence without unpinned Registration or Accreditation."""
+    now = timezone.now()
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    configuration = RegistrationConfigurationFactory(edition=edition)
+    product = AdmissionProduct.objects.create(
+        configuration=configuration,
+        code="retained-admission",
+        name="Retained admission",
+        price_minor=10_000,
+        capacity=20,
+        position=10,
+        entitlement_code="retained-admission",
+        entitlement_name="Retained admission",
+    )
+    configuration.status = ConfigurationStatus.ACTIVE
+    configuration.review_required = False
+    configuration.review_note = "Synthetic retained-row fixture."
+    configuration.activated_at = now
+    configuration.save()
+    attendee = AccountFactory()
+    registration = Registration.objects.create(
+        organization=edition.organization,
+        edition=edition,
+        participation=ParticipationFactory(account=attendee, edition=edition),
+        account=attendee,
+        configuration=configuration,
+        product=product,
+        reference="RETAINED-SCHEDULED-1",
+        state=Registration.State.PAYMENT_PENDING,
+        product_name_snapshot=product.name,
+        price_minor_snapshot=product.price_minor,
+        currency_snapshot=configuration.currency,
+        submitted_at=now,
+        payment_due_at=now + timedelta(days=2),
+    )
+    operator = AccountFactory()
+    credential = Credential.objects.create(
+        registration=registration,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        account_id=attendee.id,
+        public_id="retained-credential",
+        token_digest="b" * 64,
+        status=Credential.Status.ISSUED,
+        issue_sequence=1,
+        label_snapshot="Retained credential",
+        issued_at=now - timedelta(days=1),
+        issued_by_id=operator.id,
+    )
+    CapabilityGrantFactory(
+        organization=edition.organization,
+        edition=edition,
+        principal=operator,
+        capability_code="identity.manage_restrictions",
+    )
+    restriction = issue_account_restriction(
+        actor=operator,
+        account=attendee,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        kind=AccountRestriction.Kind.ATTENDANCE,
+        reason_code="retained-scheduled-policy",
+        attendee_message="This Identity restriction remains in force.",
+        internal_reference="SYNTHETIC-RETAINED-SCHEDULED",
+        effective_at=now + timedelta(hours=1),
+        expires_at=None,
+        notify_account=True,
+        correlation_id=uuid4(),
+    )
+    before = {
+        "adjustments": RegistrationAdjustment.objects.filter(
+            registration=registration
+        ).count(),
+        "timeline": RegistrationTimelineEntry.objects.filter(
+            registration=registration
+        ).count(),
+        "credential_events": CredentialEvent.objects.filter(
+            credential=credential
+        ).count(),
+    }
+
+    assert (
+        apply_due_account_restrictions(
+            edition_id=edition.id,
+            now=now + timedelta(hours=2),
+        )
+        == 1
+    )
+
+    restriction.refresh_from_db()
+    registration.refresh_from_db()
+    credential.refresh_from_db()
+    assert restriction.consequences_applied_at == now + timedelta(hours=2)
+    assert registration.state == Registration.State.PAYMENT_PENDING
+    assert registration.aggregate_version == 1
+    assert credential.status == Credential.Status.ISSUED
+    assert {
+        "adjustments": RegistrationAdjustment.objects.filter(
+            registration=registration
+        ).count(),
+        "timeline": RegistrationTimelineEntry.objects.filter(
+            registration=registration
+        ).count(),
+        "credential_events": CredentialEvent.objects.filter(
+            credential=credential
+        ).count(),
+    } == before
+    event = DomainEvent.objects.get(
+        aggregate_type="identity.account_restriction",
+        aggregate_id=restriction.id,
+    )
+    assert OutboxMessage.objects.filter(event=event, destination="internal").exists()
+    assert not OutboxMessage.objects.filter(
+        event=event,
+        destination="notifications",
+    ).exists()

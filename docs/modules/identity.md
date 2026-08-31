@@ -6,7 +6,7 @@ strict platform account-invitation HTML/API adapters, the repository-verified
 User accounts first experience slice, and an author-verified retention-v10
 corrective candidate; complete rendered owner acceptance, independent retention
 acceptance, production policy activation, and writer cutover remain gated
-Last updated: 2026-08-15
+Last updated: 2026-08-31
 
 ## Purpose and requirements
 
@@ -147,6 +147,17 @@ views; internal safety or conduct evidence remains behind its own boundary.
 Due consequences cancel open registration, suppress a public profile, revoke
 credentials where applicable, and retain paid/history evidence for human
 finance review.
+
+The due-restriction scheduler owns Identity evidence, so an edition-scoped
+candidate must first match an exact profile that adopts Identity; global
+organization restrictions remain explicitly edition-neutral. Registration and
+Accreditation then enforce their consequences independently through
+`registration.identity-restriction-consequence@1` and
+`accreditation.identity-restriction-consequence@1`. A profile such as
+`workforce_only@1` may therefore apply and publish the Identity restriction
+exactly once while leaving any retained Registration or credential rows
+unchanged. A requested account notification is also omitted unless that exact
+profile pins the notification effect route.
 
 ## User accounts management experience
 

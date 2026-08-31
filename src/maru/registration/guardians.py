@@ -13,6 +13,7 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.registration.availability import OCCUPIED_REGISTRATION_STATES
 from maru.registration.models import (
     GuardianConsent,
@@ -134,7 +135,13 @@ def accept_guardian_consent(
                 "registration__configuration",
                 "registration__product",
             )
-            .filter(token_digest=_token_digest(raw_token))
+            .filter(
+                adoption_profile_filter_for_module(
+                    "registration",
+                    field_prefix="registration__edition",
+                ),
+                token_digest=_token_digest(raw_token),
+            )
             .first()
         )
         if (

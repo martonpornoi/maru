@@ -50,6 +50,7 @@ from maru.events.models import (
     EditionReadinessGate,
     EventEdition,
 )
+from maru.events.queries import adoption_profile_filter_for_capabilities
 from maru.events.serializers import (
     EditionAutocompleteQuerySerializer,
     EditionAutocompleteResponseSerializer,
@@ -278,7 +279,10 @@ class EditionListView(GenericAPIView[EventEdition]):
         query.is_valid(raise_exception=True)
         values = query.validated_data
         try:
-            editions = EventEdition.objects.filter(organization_id=organization_id)
+            editions = EventEdition.objects.filter(
+                adoption_profile_filter_for_capabilities({"events.view_basic"}),
+                organization_id=organization_id,
+            )
             if lifecycle := values.get("lifecycle"):
                 editions = editions.filter(lifecycle=lifecycle)
             if search := values.get("search"):
@@ -533,7 +537,10 @@ class EditionAutocompleteView(APIView):
         limit = cast("int", query.validated_data["limit"])
         try:
             editions = (
-                EventEdition.objects.filter(organization_id=organization_id)
+                EventEdition.objects.filter(
+                    adoption_profile_filter_for_capabilities({"events.view_basic"}),
+                    organization_id=organization_id,
+                )
                 .filter(Q(name__icontains=search) | Q(slug__icontains=search))
                 .order_by("-starts_on", "name", "id")[:limit]
             )

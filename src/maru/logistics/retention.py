@@ -12,7 +12,9 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
+from maru.effects.adoption import require_effect_delivery_allowed
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.queries import adoption_profile_filter_for_module
 
 from .models import LogisticsNode, RestrictedLogisticsAddress
 from .writer_boundary import logistics_writer
@@ -72,16 +74,31 @@ def dispose_expired_restricted_addresses(
         raise ValidationError(
             f"Dispose between 1 and {MAX_RETENTION_DISPOSALS} addresses per run."
         )
+    require_effect_delivery_allowed(
+        organization_id=organization_id,
+        event_edition_id=edition_id,
+        event_name="logistics.record.changed.v1",
+        destination="internal",
+        payload={},
+    )
     evaluated_at = now or timezone.now()
-    addresses = tuple(
-        RestrictedLogisticsAddress.objects.select_for_update(skip_locked=True)
-        .filter(
-            organization_id=organization_id,
-            edition_id=edition_id,
-            lifecycle=RestrictedLogisticsAddress.Lifecycle.ACTIVE,
-            retention_until__lte=evaluated_at,
+    address_scope = RestrictedLogisticsAddress.objects.select_for_update(
+        skip_locked=True
+    ).filter(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        lifecycle=RestrictedLogisticsAddress.Lifecycle.ACTIVE,
+        retention_until__lte=evaluated_at,
+    )
+    if edition_id is not None:
+        address_scope = address_scope.filter(
+            adoption_profile_filter_for_module(
+                "logistics",
+                field_prefix="edition",
+            )
         )
-        .exclude(return_agreements__return_due_at__gte=evaluated_at)
+    addresses = tuple(
+        address_scope.exclude(return_agreements__return_due_at__gte=evaluated_at)
         .exclude(equipment_offers__available_until__gte=evaluated_at)
         .exclude(equipment_offers__requested_return_at__gte=evaluated_at)
         .exclude(logistics_nodes__lifecycle=LogisticsNode.Lifecycle.ACTIVE)

@@ -43,7 +43,9 @@ from maru.registration.setup_commands import (
     _lock_target,
     _locked_prior_configuration_source,
 )
-from maru.registration.starter_catalog import platform_registration_starters
+from maru.registration.starter_catalog import (
+    platform_registration_starters_for_profile,
+)
 from maru.registration.template_lifecycle import (
     RegistrationTemplateStateConflictError,
     require_published_template_evidence,
@@ -792,7 +794,10 @@ def _get_registration_setup_workspace_once(
     )
     if generation_after != generation_before:
         raise _RegistrationSetupProjectionMovedError
-    starters = platform_registration_starters()
+    starters = platform_registration_starters_for_profile(
+        profile_code=source_scope.edition.adoption_profile_code,
+        profile_version=source_scope.edition.adoption_profile_version,
+    )
     if len(starters) > MAX_SETUP_SOURCE_OPTIONS:
         raise RegistrationSetupLimitExceededError
     append_audit(

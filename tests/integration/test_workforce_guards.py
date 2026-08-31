@@ -725,6 +725,7 @@ def test_workforce_admin_inspection_and_onboarding_review(
 
     request = RequestFactory().post("/admin/workforce/")
     request.user = controller
+    request.session = {}  # type: ignore[attr-defined]
     request.correlation_id = str(uuid4())  # type: ignore[attr-defined]
     position_admin = PositionAdmin(Position, admin.site)
     assert not position_admin.has_add_permission(request)

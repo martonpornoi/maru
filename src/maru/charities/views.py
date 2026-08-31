@@ -26,6 +26,7 @@ from maru.authorization.policy import (
     resolve_organization_target,
 )
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.models import Account
 from maru.workforce.models import Department
 
@@ -94,6 +95,7 @@ def _edition_route(
     edition = (
         EventEdition.objects.select_related("organization", "series")
         .filter(
+            adoption_profile_filter_for_module("charities"),
             organization__slug=organization_slug,
             series__slug=series_slug,
             slug=edition_slug,

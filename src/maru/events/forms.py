@@ -8,12 +8,18 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 from django import forms
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 
 from maru.core.forms import StrictInputForm
 from maru.core.localization import grouped_language_choices, grouped_time_zone_choices
 from maru.core.validators import validate_currency_codes, validate_language_codes
-from maru.events.adoption import ADOPTION_PROFILE_CHOICES, AdoptionProfileCode
+from maru.events.adoption import (
+    PERSISTED_ADOPTION_PROFILE_CHOICES,
+    SELECTABLE_ADOPTION_PROFILE_CHOICES,
+    AdoptionProfileCode,
+    profile_adopts_module,
+)
 from maru.events.models import (
     MAX_EDITION_SPAN_DAYS,
     EventEdition,
@@ -27,6 +33,46 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
 _CURRENCY_SEPARATOR = re.compile(r"[\s,]+")
+
+
+class RetainedAdoptionProfileChoiceField(forms.ChoiceField):
+    """Display current setup choices while accepting exact retained retry codes."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Configure the selectable presentation and retained validation set.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's choice field.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's choice field.
+        """
+        self.retained_values = frozenset(
+            code for code, _label in PERSISTED_ADOPTION_PROFILE_CHOICES
+        )
+        super().__init__(*args, **kwargs)
+
+    def validate(self, value: object) -> None:
+        """Accept a persisted code even after it retires from new selection.
+
+        Parameters
+        ----------
+        value : object
+            Normalized submitted profile code.
+
+        Raises
+        ------
+        ValidationError
+            If the value is required or is not a retained profile code.
+        """
+        forms.Field.validate(self, value)
+        if value and value not in self.retained_values:
+            raise ValidationError(
+                self.error_messages["invalid_choice"],
+                code="invalid_choice",
+                params={"value": value},
+            )
 
 
 class EventEditionDetailsForm(StrictInputForm):
@@ -175,9 +221,9 @@ class EventEditionDetailsForm(StrictInputForm):
 class EventEditionCreationForm(EventEditionDetailsForm):
     """Collect and validate event edition creation input."""
 
-    adoption_profile_code = forms.ChoiceField(
+    adoption_profile_code = RetainedAdoptionProfileChoiceField(
         label="How will this edition use Maru?",
-        choices=ADOPTION_PROFILE_CHOICES,
+        choices=SELECTABLE_ADOPTION_PROFILE_CHOICES,
         help_text=(
             "Choose only the tools this convention is ready to adopt. This "
             "boundary cannot be changed casually after creation."
@@ -265,7 +311,11 @@ class EventEditionUpdateForm(EventEditionDetailsForm):
                 "expected_aggregate_version": edition.aggregate_version,
             },
         )
-        if edition.adoption_profile_code == AdoptionProfileCode.WORKFORCE_ONLY:
+        if not profile_adopts_module(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            "registration",
+        ):
             currency_field = form.fields["currency_codes"]
             currency_field.disabled = True
             currency_field.widget = forms.HiddenInput()

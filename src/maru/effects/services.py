@@ -1,6 +1,7 @@
 """Transactional publishing, tenant-bounded claims, and delivery outcomes."""
 
 import re
+import unicodedata
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -11,7 +12,16 @@ from django.db import transaction
 from django.db.models import F, Q
 from django.utils import timezone
 
-from maru.effects.models import DomainEvent, EffectAttempt, OutboxMessage
+from maru.effects.adoption import require_effect_delivery_allowed
+from maru.effects.models import (
+    MAX_EFFECT_REPLAY_ADDITIONAL_ATTEMPTS,
+    MAX_EFFECT_REPLAY_REASON_LENGTH,
+    MAX_EFFECT_TOTAL_ATTEMPTS,
+    DomainEvent,
+    EffectAttempt,
+    EffectReplayReceipt,
+    OutboxMessage,
+)
 from maru.effects.registry import validate_event_payload
 
 DEFAULT_MAX_ATTEMPTS = 8
@@ -19,6 +29,79 @@ MAX_LEASE_DURATION = timedelta(minutes=15)
 MAX_RETRY_DELAY = timedelta(days=1)
 MAX_EFFECT_ERROR_CODE_LENGTH = 120
 SAFE_EFFECT_CODE_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
+
+
+def _validate_effect_attempt_budget(value: object) -> int:
+    """Return one initial attempt budget inside the global safety bound.
+
+    Parameters
+    ----------
+    value : object
+        Untrusted initial attempt budget.
+
+    Returns
+    -------
+    int
+        Validated budget between one and the global cumulative limit.
+
+    Raises
+    ------
+    ValidationError
+        If the budget is not an integer inside the closed safety bound.
+    """
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or not 1 <= value <= MAX_EFFECT_TOTAL_ATTEMPTS
+    ):
+        raise ValidationError(
+            (
+                "Outbox maximum attempts must be between 1 and "
+                f"{MAX_EFFECT_TOTAL_ATTEMPTS}."
+            ),
+            code="invalid_max_attempts",
+        )
+    return value
+
+
+def normalize_effect_replay_reason(value: object) -> str:
+    """Return one bounded, canonical operator replay rationale.
+
+    Parameters
+    ----------
+    value : object
+        Untrusted operator input.
+
+    Returns
+    -------
+    str
+        NFC-normalized rationale with internal whitespace collapsed.
+
+    Raises
+    ------
+    ValidationError
+        If the rationale is absent, not text, or exceeds the retained bound.
+    """
+    if not isinstance(value, str):
+        raise ValidationError(
+            "A replay reason must be text.",
+            code="reason_invalid",
+        )
+    normalized = " ".join(unicodedata.normalize("NFC", value).split())
+    if not normalized:
+        raise ValidationError(
+            "A replay reason is required.",
+            code="reason_required",
+        )
+    if len(normalized) > MAX_EFFECT_REPLAY_REASON_LENGTH:
+        raise ValidationError(
+            (
+                "A replay reason cannot exceed "
+                f"{MAX_EFFECT_REPLAY_REASON_LENGTH} characters."
+            ),
+            code="reason_too_long",
+        )
+    return normalized
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,7 +219,7 @@ def validate_effect_error_code(value: str) -> None:
         )
 
 
-def publish_domain_event(
+def publish_domain_event(  # noqa: DOC503 - delegated validators raise ValidationError
     record: DomainEventRecord,
     *,
     destination: str = "internal",
@@ -176,14 +259,17 @@ def publish_domain_event(
         raise RuntimeError(
             "Domain events must be published inside the canonical state transaction."
         )
-    if max_attempts < 1:
-        raise ValidationError(
-            "Outbox maximum attempts must be positive.",
-            code="invalid_max_attempts",
-        )
+    max_attempts = _validate_effect_attempt_budget(max_attempts)
     validate_event_payload(
         event_name=record.event_name,
         schema_version=record.schema_version,
+        payload=record.payload,
+    )
+    require_effect_delivery_allowed(
+        organization_id=record.organization_id,
+        event_edition_id=record.event_edition_id,
+        event_name=record.event_name,
+        destination=destination,
         payload=record.payload,
     )
     event_values = asdict(record)
@@ -240,14 +326,32 @@ def enqueue_event_delivery(
             "Domain-event deliveries must be enqueued inside the canonical "
             "state transaction."
         )
-    if max_attempts < 1:
-        raise ValidationError(
-            "Outbox maximum attempts must be positive.",
-            code="invalid_max_attempts",
+    max_attempts = _validate_effect_attempt_budget(max_attempts)
+    persisted_event = (
+        DomainEvent.objects.filter(pk=event.pk)
+        .only(
+            "event_name",
+            "event_edition_id",
+            "organization_id",
+            "payload",
         )
+        .first()
+    )
+    if persisted_event is None:
+        raise ValidationError(
+            "The domain event is unavailable for delivery.",
+            code="domain_event_unavailable",
+        )
+    require_effect_delivery_allowed(
+        organization_id=persisted_event.organization_id,
+        event_edition_id=persisted_event.event_edition_id,
+        event_name=persisted_event.event_name,
+        destination=destination,
+        payload=persisted_event.payload,
+    )
     return OutboxMessage.objects.create(
-        event=event,
-        organization_id=event.organization_id,
+        event=persisted_event,
+        organization_id=persisted_event.organization_id,
         destination=destination,
         workload_pool=workload_pool,
         available_at=timezone.now(),
@@ -585,6 +689,9 @@ def replay_quarantined_effect(
     *,
     message_id: UUID,
     additional_attempts: int,
+    actor_id: UUID,
+    reason: str,
+    correlation_id: UUID,
     now: datetime | None = None,
 ) -> OutboxMessage:
     """Replay quarantined effect.
@@ -595,6 +702,12 @@ def replay_quarantined_effect(
         The identifier of the message.
     additional_attempts : int
         The additional attempts applied within the audited domain transition.
+    actor_id : UUID
+        The account identifier authorizing the replay.
+    reason : str
+        The bounded operator rationale retained with the transition.
+    correlation_id : UUID
+        The command correlation identifier retained with the transition.
     now : datetime | None, default=None
         The effective time for the operation.
 
@@ -608,22 +721,68 @@ def replay_quarantined_effect(
     ValidationError
         If the submitted state or input violates a domain invariant.
     """
-    if additional_attempts < 1:
+    if (
+        isinstance(additional_attempts, bool)
+        or not isinstance(additional_attempts, int)
+        or not 1 <= additional_attempts <= MAX_EFFECT_REPLAY_ADDITIONAL_ATTEMPTS
+    ):
         raise ValidationError(
-            "A replay must allow at least one additional attempt.",
+            (
+                "A replay must allow between 1 and "
+                f"{MAX_EFFECT_REPLAY_ADDITIONAL_ATTEMPTS} additional attempts."
+            ),
             code="invalid_replay_attempts",
         )
-    message = OutboxMessage.objects.select_for_update().get(id=message_id)
+    normalized_reason = normalize_effect_replay_reason(reason)
+    message = (
+        OutboxMessage.objects.select_for_update()
+        .select_related("event")
+        .get(id=message_id)
+    )
     if message.status != OutboxMessage.Status.QUARANTINED:
         raise ValidationError(
             "Only quarantined effects can be replayed.",
             code="effect_not_quarantined",
         )
-    message.max_attempts += additional_attempts
+    if message.event.organization_id != message.organization_id:
+        raise ValidationError(
+            "The effect route is unavailable for this scope or edition profile.",
+            code="effect_profile_not_allowed",
+        )
+    require_effect_delivery_allowed(
+        organization_id=message.organization_id,
+        event_edition_id=message.event.event_edition_id,
+        event_name=message.event.event_name,
+        destination=message.destination,
+        payload=message.event.payload,
+    )
+    previous_max_attempts = message.max_attempts
+    new_max_attempts = previous_max_attempts + additional_attempts
+    if new_max_attempts > MAX_EFFECT_TOTAL_ATTEMPTS:
+        raise ValidationError(
+            (
+                "Replay would exceed the total safety limit of "
+                f"{MAX_EFFECT_TOTAL_ATTEMPTS} attempts."
+            ),
+            code="effect_replay_attempt_limit",
+        )
+    replay_count = message.replay_count + 1
+    EffectReplayReceipt.objects.create(
+        outbox_message=message,
+        organization_id=message.organization_id,
+        actor_id=actor_id,
+        reason=normalized_reason,
+        additional_attempts=additional_attempts,
+        previous_max_attempts=previous_max_attempts,
+        new_max_attempts=new_max_attempts,
+        replay_count=replay_count,
+        correlation_id=correlation_id,
+    )
+    message.max_attempts = new_max_attempts
     message.status = OutboxMessage.Status.PENDING
     message.available_at = now or timezone.now()
     message.completed_at = None
     message.last_error_code = ""
-    message.replay_count += 1
+    message.replay_count = replay_count
     message.save()
     return message

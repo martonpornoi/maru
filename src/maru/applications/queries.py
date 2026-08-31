@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from django.db.models import Prefetch
 from django.utils import timezone
 
+from maru.applications.adoption import profile_allows_application_self
 from maru.applications.commands import ApplicationAuthorizationDenied, _reviewer_basis
 from maru.applications.models import (
     ApplicationAnswerRevision,
@@ -16,6 +17,7 @@ from maru.applications.models import (
     ApplicationSubmission,
 )
 from maru.applications.source_adapters import applicant_is_eligible
+from maru.applications.starters import ApplicationStarter, starter_catalog_for_profile
 from maru.authorization.policy import (
     decide,
     resolve_edition_target,
@@ -94,6 +96,10 @@ def _authorized_self(
         or edition is None
         or decision is None
         or not decision.allowed
+        or not profile_allows_application_self(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+        )
     ):
         raise ApplicationAuthorizationDenied
     return edition
@@ -283,6 +289,37 @@ def definition_workspace(
     )
 
 
+def application_starters(
+    *, actor: Account, organization_id: UUID, edition_id: UUID
+) -> tuple[ApplicationStarter, ...]:
+    """Return starters admitted by the exact authorized edition profile.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    tuple[ApplicationStarter, ...]
+        The exact profile-pinned starter catalog in deterministic order.
+    """
+    edition = _authorized_edition(
+        actor=actor,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        capability_code="applications.manage_definitions",
+    )
+    return starter_catalog_for_profile(
+        profile_code=edition.adoption_profile_code,
+        profile_version=edition.adoption_profile_version,
+    )
+
+
 def definition_detail(
     *,
     actor: Account,
@@ -362,13 +399,17 @@ def available_applications(
         actor=actor, organization_id=organization_id, edition_id=edition_id
     )
     now = timezone.now()
-    candidates = ApplicationDefinition.objects.filter(
-        organization_id=organization_id,
-        edition_id=edition_id,
-        status=ApplicationDefinitionStatus.ACTIVE,
-        opens_at__lte=now,
-        closes_at__gt=now,
-    ).prefetch_related("sections__questions")
+    candidates = (
+        ApplicationDefinition.objects.filter(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            status=ApplicationDefinitionStatus.ACTIVE,
+            opens_at__lte=now,
+            closes_at__gt=now,
+        )
+        .select_related("edition")
+        .prefetch_related("sections__questions")
+    )
     return tuple(
         definition
         for definition in candidates
@@ -519,7 +560,24 @@ def my_application_editions(*, actor: Account) -> tuple[EventEdition, ...]:
         .values_list("organization_id", "edition_id")
         .distinct("organization_id", "edition_id")[:MAX_PERSONAL_EDITION_CANDIDATES]
     )
+    profile_editions = {
+        (edition.organization_id, edition.id): edition
+        for edition in EventEdition.objects.filter(
+            id__in={edition_id for _, edition_id in own_scopes | set(candidate_scopes)}
+        ).only(
+            "id",
+            "organization_id",
+            "adoption_profile_code",
+            "adoption_profile_version",
+        )
+    }
     for organization_id, edition_id in candidate_scopes:
+        edition = profile_editions.get((organization_id, edition_id))
+        if edition is None or not profile_allows_application_self(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+        ):
+            continue
         target = resolve_self_target(
             principal=actor,
             organization_id=organization_id,
@@ -556,6 +614,12 @@ def my_application_editions(*, actor: Account) -> tuple[EventEdition, ...]:
                 break
     authorized_ids: set[UUID] = set()
     for organization_id, edition_id in own_scopes | available_scopes:
+        edition = profile_editions.get((organization_id, edition_id))
+        if edition is None or not profile_allows_application_self(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+        ):
+            continue
         target = resolve_self_target(
             principal=actor,
             organization_id=organization_id,
@@ -576,6 +640,37 @@ def my_application_editions(*, actor: Account) -> tuple[EventEdition, ...]:
         EventEdition.objects.filter(id__in=authorized_ids)
         .select_related("organization", "series")
         .order_by("-starts_on", "name", "id")
+    )
+
+
+def application_shell_profile_pairs(*, actor: Account) -> tuple[tuple[str, int], ...]:
+    """Return fail-closed exact profiles for the personal Applications shell.
+
+    Parameters
+    ----------
+    actor : Account
+        Active account whose purpose-scoped Applications editions are queried.
+
+    Returns
+    -------
+    tuple[tuple[str, int], ...]
+        Distinct exact profile pairs, or an empty tuple when personal
+        Applications discovery is unavailable.
+    """
+    try:
+        editions = my_application_editions(actor=actor)
+    except ApplicationAuthorizationDenied:
+        return ()
+    return tuple(
+        sorted(
+            {
+                (
+                    edition.adoption_profile_code,
+                    edition.adoption_profile_version,
+                )
+                for edition in editions
+            }
+        )
     )
 
 

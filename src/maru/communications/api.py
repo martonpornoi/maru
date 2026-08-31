@@ -22,6 +22,7 @@ from maru.communications.models import (
     NotificationMessage,
     NotificationPreference,
 )
+from maru.communications.queries import notification_messages_for_account
 from maru.communications.serializers import (
     DeliveryFailureSerializer,
     NotificationMessageSerializer,
@@ -62,7 +63,7 @@ class MyNotificationListView(APIView):
             The HTTP response for the requested operation.
         """
         items = (
-            NotificationMessage.objects.filter(account=_account(request))
+            notification_messages_for_account(account=_account(request))
             .prefetch_related("deliveries")
             .order_by("-rendered_at", "-id")[:200]
         )

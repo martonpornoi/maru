@@ -26,53 +26,65 @@
             Continue convention setup
           {% endif %}
         </h2>
-        {% if maru_home_edition_context.selected.adoption_profile_code == "workforce_only" %}
+        {% if maru_home_edition_context.selected_profile %}
           <p>
-            Follow the focused checklist for accountable access, Departments,
-            Positions, assignments, Availability, and Shifts. Unrelated
-            convention tools stay out of this workspace.
+            {{ maru_home_edition_context.selected_profile.description }}
+          </p>
+        {% elif maru_home_edition_context.selected %}
+          <p>
+            This release does not recognize the edition's exact adoption
+            profile. Choose another workspace or update Maru before continuing.
           </p>
         {% else %}
           <p>
-            Follow the guided checklist for governance, people, registration,
-            and operational readiness. Maru will show the next safe action.
+            Choose an exact edition workspace before opening edition-scoped
+            convention tools.
           </p>
         {% endif %}
       </div>
       <div class="maru-admin-workspace-grid">
-        {% if maru_home_edition_context.selected or not request.user.is_platform_administrator %}
+        {% if maru_home_edition_context.selected_profile and "setup" in maru_home_edition_context.selected_profile.destination_codes %}
         <a class="maru-admin-workspace-primary" href="{% url 'management-console' %}?view=setup">
           <strong>Continue setup</strong>
           <span>Open the checklist and pick up where the team left off.</span>
         </a>
-        {% else %}
+        {% elif not maru_home_edition_context.selected and request.user.is_platform_administrator %}
         <a class="maru-admin-workspace-primary" href="{% url 'baseline-admin-home' %}">
           <strong>Choose an organization</strong>
           <span>Create or open the organization that will run the convention.</span>
         </a>
         {% endif %}
+        {% if maru_home_edition_context.selected_profile and "today" in maru_home_edition_context.selected_profile.destination_codes %}
         <a href="{% url 'management-console' %}">
           <strong>Today</strong>
           <span>See current status, assigned work, warnings, and deadlines.</span>
         </a>
-        {% if maru_home_edition_context.selected.adoption_profile_code == "workforce_only" %}
+        {% endif %}
+        {% if maru_home_edition_context.selected_profile and "workforce" in maru_home_edition_context.selected_profile.destination_codes %}
         <a href="{% url 'management-console' %}?view=workforce">
           <strong>Workforce</strong>
           <span>Continue Departments, Positions, assignments, Availability, and Shifts.</span>
         </a>
+        {% endif %}
+        {% if maru_home_edition_context.selected_profile and "security" in maru_home_edition_context.selected_profile.destination_codes %}
         <a href="{% url 'management-console' %}?view=security">
           <strong>Security history</strong>
           <span>Review important security events for your own Maru account.</span>
         </a>
-        {% else %}
+        {% endif %}
+        {% if maru_home_edition_context.selected_profile and "people" in maru_home_edition_context.selected_profile.destination_codes %}
         <a href="{% url 'management-console' %}?view=people">
           <strong>People</strong>
           <span>Find attendees, staff, volunteers, and other team members.</span>
         </a>
+        {% endif %}
+        {% if maru_home_edition_context.selected_profile and "commerce" in maru_home_edition_context.selected_profile.destination_codes %}
         <a href="{% url 'management-console' %}?view=commerce">
           <strong>Registration desk</strong>
           <span>Find and help attendees from registration through arrival.</span>
         </a>
+        {% endif %}
+        {% if maru_home_edition_context.selected_profile and "reports" in maru_home_edition_context.selected_profile.destination_codes %}
         <a href="{% url 'management-console' %}?view=reports">
           <strong>Reports &amp; badges</strong>
           <span>Review attendance and export minimized badge data.</span>
@@ -103,7 +115,8 @@
         </div>
       </section>
     {% endif %}
-    {% if app_list and maru_home_edition_context.selected.adoption_profile_code != "workforce_only" or app_list and request.GET.records == "open" %}
+    {% if app_list %}
+    {% if maru_home_edition_context.show_specialist_gateway %}
     <section class="maru-admin-directory maru-specialist-gateway" aria-labelledby="maru-specialist-heading">
       <h2 id="maru-specialist-heading">Need a technical record?</h2>
       <p>
@@ -116,6 +129,7 @@
         data-navigation-specialist-gateway
       >Open specialist records</a>
     </section>
+    {% endif %}
     {% endif %}
   </div>
 {% endblock %}

@@ -94,6 +94,34 @@ def test_series_record_is_scoped_reachable_and_progressive() -> None:
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_series_record_hides_editions_with_an_unresolvable_exact_manifest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Do not disclose retained edition identity through the parent series page."""
+    _, client = _administrator_client()
+    series = ConventionSeriesFactory()
+    edition = EventEditionFactory(
+        organization=series.organization,
+        series=series,
+        name="Retained Unsupported Series Edition",
+        slug="retained-unsupported-series-edition",
+        time_zone="Pacific/Kiritimati",
+    )
+    monkeypatch.setattr("maru.events.queries.ADOPTION_PROFILES", {})
+
+    response = client.get(_record_url(series))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert '<span class="baseline-count">0 editions</span>' in content
+    assert "No convention editions yet" in content
+    assert edition.name not in content
+    assert edition.slug not in content
+    assert edition.time_zone not in content
+    assert str(edition.id) not in content
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
 def test_series_record_update_is_versioned_audited_and_value_minimized() -> None:
     administrator, client = _administrator_client(display_name="Synthetic Steward")
     series = ConventionSeriesFactory(

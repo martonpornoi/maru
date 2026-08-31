@@ -92,7 +92,11 @@ space names, attendee access information, and an optional currently approved
 public layout rendition. Setup/teardown times, internal titles, provider
 references, expected attendance, contacts, availability restrictions,
 internal layouts, security floor plans, and review actors are structurally
-absent.
+absent. Both projections require the exact edition manifest to adopt Venues and
+pin `venues.attendee-schedule@1`; My Maru also requires an attendee relation
+admitted through `participation.attendee@1`. Retained booking or Participation
+rows under another exact profile disclose neither the schedule nor its edition
+label.
 
 Staff property-directory reads expose restricted provider/contact facts only
 after organization-scoped authorization and append a purpose-attributed audit.
@@ -135,10 +139,16 @@ are interpreted only in the persisted edition IANA time zone and reject both
 nonexistent daylight-saving gaps and ambiguous folds. Every POST authorizes
 the exact organization, edition, or typed space before form construction,
 validation, or object-choice lookup; command services repeat the tenant and
-object authorization at the write boundary.
+object authorization at the write boundary. Every edition-keyed staff route
+also requires the exact adoption-profile code and version to include Venues
+before it reads reusable property labels, constructs forms, or invokes an
+organization-scoped property mutation. A retained URL for an edition that no
+longer adopts Venues therefore returns not found even when the actor still has
+an organization-wide Venue grant.
 
 The current My schedule index first derives the signed-in person's current
-confirmed, active, or completed Participation scopes. It intersects only those
+confirmed, active, or completed adapter-admitted Participation scopes. It
+intersects only those
 opaque edition IDs with published schedule scopes, bounds distinct eligible
 editions in most-recent-edition order, and loads labels only afterward. A
 foreign published convention cannot disclose its name or consume the bounded

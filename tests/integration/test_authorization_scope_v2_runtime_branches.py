@@ -323,6 +323,14 @@ def test_resolvers_fail_closed_for_invalid_or_stale_owned_records(
     assert participation_target is not None
     assert participation_target.edition_id == participation.edition_id
     assert participation_target.owner_account_id == participation.account_id
+    assert (
+        participation_target.adoption_profile_code
+        == participation.edition.adoption_profile_code
+    )
+    assert (
+        participation_target.adoption_profile_version
+        == participation.edition.adoption_profile_version
+    )
 
     type(participation).objects.filter(pk=participation.pk).delete()
     assert resolve_owned_target(resource=participation) is None
@@ -359,6 +367,41 @@ def test_resolvers_fail_closed_for_invalid_or_stale_owned_records(
     assert resolve_owned_target(resource=membership) is None
 
 
+def test_exact_resolvers_and_batched_targets_retain_persisted_profile_pair() -> None:
+    scope = _exact_scope()
+    principal = AccountFactory()
+    targets = (
+        _edition_target(scope.edition),
+        _department_target(scope),
+        _resource_target(scope),
+        resolve_self_target(
+            principal=principal,
+            organization_id=scope.edition.organization_id,
+            edition_id=scope.edition.id,
+        ),
+    )
+
+    for target in targets:
+        assert target is not None
+        assert target.adoption_profile_code == scope.edition.adoption_profile_code
+        assert target.adoption_profile_version == scope.edition.adoption_profile_version
+
+    scope_key = (
+        scope.edition.organization_id,
+        scope.edition.id,
+        scope.department.id,
+        scope.binding.id,
+    )
+    batched = authorization_policy._bulk_authority_projection_targets({scope_key})
+
+    assert batched[scope_key].adoption_profile_code == (
+        scope.edition.adoption_profile_code
+    )
+    assert batched[scope_key].adoption_profile_version == (
+        scope.edition.adoption_profile_version
+    )
+
+
 def test_resolvers_reject_invalid_query_results_and_resource_kinds(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -377,6 +420,24 @@ def test_resolvers_reject_invalid_query_results_and_resource_kinds(
             organization_id=uuid4(),
             edition_id=uuid4(),
             resource_binding_id=uuid4(),
+        )
+    with pytest.raises(ValueError, match="exact edition target requires"):
+        authorization_policy._seal_target(
+            organization_id=uuid4(),
+            edition_id=uuid4(),
+            adoption_profile_code="full_convention",
+        )
+    with pytest.raises(ValueError, match="exact edition target requires"):
+        authorization_policy._seal_target(
+            organization_id=uuid4(),
+            edition_id=uuid4(),
+            adoption_profile_version=1,
+        )
+    with pytest.raises(ValueError, match="profile requires an exact edition"):
+        authorization_policy._seal_target(
+            organization_id=uuid4(),
+            adoption_profile_code="full_convention",
+            adoption_profile_version=1,
         )
 
     monkeypatch.setattr(

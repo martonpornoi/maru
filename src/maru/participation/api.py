@@ -22,10 +22,11 @@ from maru.authorization.policy import (
     PolicyDecision,
     decide,
     project_active_authority_scopes,
+    projected_scope_allows_profile,
     resolve_edition_target,
 )
 from maru.core.pagination import StandardPageNumberPagination
-from maru.events.adoption import adoption_profile
+from maru.events.adoption import adoption_profile, profile_destination_codes
 from maru.events.models import EventEdition
 from maru.events.queries import platform_editions
 from maru.identity.models import Account
@@ -41,18 +42,7 @@ from maru.participation.serializers import (
     StaffParticipationListQuerySerializer,
     StaffParticipationSummarySerializer,
 )
-
-_FULL_DESTINATIONS = (
-    "today",
-    "my-registration",
-    "people",
-    "workforce",
-    "commerce",
-    "reports",
-    "setup",
-    "security",
-)
-_WORKFORCE_DESTINATIONS = ("today", "workforce", "setup", "security")
+from maru.workforce.adoption import assignment_uses_participation_evidence
 
 
 def _edition_context_payload(
@@ -82,7 +72,10 @@ def _edition_context_payload(
     RuntimeError
         If the edition references an unsupported adoption profile.
     """
-    profile = adoption_profile(edition.adoption_profile_code)
+    profile = adoption_profile(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+    )
     if profile is None:
         raise RuntimeError("The event edition has an unsupported adoption profile.")
     return {
@@ -99,10 +92,15 @@ def _edition_context_payload(
         "adoption_profile_version": edition.adoption_profile_version,
         "adoption_profile_label": profile.label,
         "adopted_modules": sorted(profile.modules),
-        "available_destinations": (
-            _WORKFORCE_DESTINATIONS
-            if edition.adoption_profile_code == "workforce_only"
-            else _FULL_DESTINATIONS
+        "available_destinations": profile_destination_codes(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+        ),
+        "assignment_uses_participation_evidence": (
+            assignment_uses_participation_evidence(
+                edition.adoption_profile_code,
+                edition.adoption_profile_version,
+            )
         ),
         "time_zone": edition.time_zone,
         "language_codes": edition.language_codes,
@@ -160,7 +158,15 @@ class MyContextView(APIView):
             for participation in participations_for_account(account)
         }
         if account.is_platform_administrator:
-            edition_records = list(platform_editions())
+            edition_records = [
+                edition
+                for edition in platform_editions()
+                if adoption_profile(
+                    edition.adoption_profile_code,
+                    edition.adoption_profile_version,
+                )
+                is not None
+            ]
             memberships: object = []
         else:
             authority_scopes = project_active_authority_scopes(principal=account)
@@ -170,20 +176,52 @@ class MyContextView(APIView):
                 if scope.edition_id is None
                 and scope.department_id is None
                 and scope.resource_binding_id is None
-                and "events.view_basic" in scope.capability_codes
             }
-            edition_ids = {
+            authority_edition_ids = {
                 scope.edition_id
                 for scope in authority_scopes
                 if scope.edition_id is not None
-                and "events.view_basic" in scope.capability_codes
+            }
+            candidate_rows = EventEdition.objects.filter(
+                Q(id__in=participation_by_edition)
+                | Q(id__in=authority_edition_ids)
+                | Q(organization_id__in=organization_ids)
+            ).values_list(
+                "id",
+                "organization_id",
+                "adoption_profile_code",
+                "adoption_profile_version",
+            )
+            disclosed_edition_ids = {
+                edition_id
+                for (
+                    edition_id,
+                    organization_id,
+                    profile_code,
+                    profile_version,
+                ) in candidate_rows
+                if edition_id in participation_by_edition
+                or any(
+                    scope.organization_id == organization_id
+                    and (
+                        scope.edition_id == edition_id
+                        or (
+                            scope.edition_id is None
+                            and scope.department_id is None
+                            and scope.resource_binding_id is None
+                        )
+                    )
+                    and projected_scope_allows_profile(
+                        scope,
+                        profile_code=profile_code,
+                        profile_version=profile_version,
+                        capability_codes=("events.view_basic",),
+                    )
+                    for scope in authority_scopes
+                )
             }
             edition_records = list(
-                EventEdition.objects.filter(
-                    Q(id__in=participation_by_edition)
-                    | Q(id__in=edition_ids)
-                    | Q(organization_id__in=organization_ids)
-                )
+                EventEdition.objects.filter(id__in=disclosed_edition_ids)
                 .select_related("organization", "series")
                 .order_by("-starts_on", "name", "id")
             )

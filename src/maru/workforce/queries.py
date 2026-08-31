@@ -10,13 +10,21 @@ from django.db.models import F, Q
 from django.utils import timezone
 
 from maru.authorization.policy import current_role_assignment_ids
+from maru.events.queries import (
+    adoption_profile_filter_for_adapter,
+    adoption_profile_filter_for_module,
+)
 from maru.identity.queries import active_person_account_display_labels
+from maru.workforce.adoption import WORKFORCE_SELF_ADAPTER
 from maru.workforce.models import (
     Department,
     EditionStructureCommandReceipt,
     EditionStructureControl,
+    PersonAvailabilityPlan,
     Position,
     PositionAssignment,
+    ShiftCommitment,
+    VolunteerOpportunity,
 )
 from maru.workforce.structure_templates import (
     UnknownBuiltinStructureTemplateError,
@@ -27,6 +35,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from datetime import datetime
     from uuid import UUID
+
+    from maru.identity.models import Account
 
 # These limits are deliberately code-owned. Every relation is fetched with a
 # limit+1 probe so a response is either complete or contains no partial tree.
@@ -55,6 +65,67 @@ class StructureProjectionIntegrityError(RuntimeError):
 
 class _StructureProjectionLimitExceededError(Exception):
     """Signal a valid projection that exceeds a code-owned output bound."""
+
+
+def workforce_shell_profile_pairs(*, account: Account) -> tuple[tuple[str, int], ...]:
+    """Return exact profiles from public or account-owned Workforce scopes.
+
+    Parameters
+    ----------
+    account : Account
+        Signed-in person whose retained self-service relationships are queried.
+
+    Returns
+    -------
+    tuple[tuple[str, int], ...]
+        Exact profile pairs admitted by the Workforce module/self adapters.
+    """
+    pairs = set(
+        VolunteerOpportunity.objects.filter(
+            adoption_profile_filter_for_module(
+                "workforce",
+                field_prefix="position__edition",
+            ),
+            position__edition__lifecycle__in=("draft", "preparing", "ready", "live"),
+            status=VolunteerOpportunity.Status.PUBLISHED,
+        )
+        .values_list(
+            "position__edition__adoption_profile_code",
+            "position__edition__adoption_profile_version",
+        )
+        .distinct()
+    )
+    relationship_queries = (
+        PositionAssignment.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
+            account=account,
+        ),
+        PersonAvailabilityPlan.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
+            account=account,
+        ),
+        ShiftCommitment.objects.filter(
+            adoption_profile_filter_for_adapter(
+                WORKFORCE_SELF_ADAPTER,
+                field_prefix="edition",
+            ),
+            account=account,
+        ),
+    )
+    for queryset in relationship_queries:
+        pairs.update(
+            queryset.values_list(
+                "edition__adoption_profile_code",
+                "edition__adoption_profile_version",
+            ).distinct()
+        )
+    return tuple(sorted(pairs))
 
 
 @dataclass(frozen=True, slots=True)

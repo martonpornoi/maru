@@ -26,9 +26,13 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import decide, resolve_edition_target
-from maru.events.adoption import profile_codes_for_module
+from maru.authorization.policy import (
+    decide,
+    resolve_edition_target,
+    resolve_self_target,
+)
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.models import Account, IdentityChallenge
 from maru.identity.services import (
     bootstrap_account,
@@ -100,7 +104,11 @@ PAID_REGISTRATION_STATES = (
     Registration.State.CONFIRMED,
     Registration.State.CHECKED_IN,
 )
+MANAGE_SELF_PROFILE = "registration.manage_self_profile"
 REGISTER_ON_BEHALF = "registration.register_on_behalf"
+REGISTER_SELF = "registration.register_self"
+VIEW_SELF = "registration.view_self"
+VIEW_SELF_PROFILE = "registration.view_self_profile"
 
 
 def guardian_consent(request: HttpRequest) -> HttpResponse:
@@ -140,10 +148,13 @@ def _open_configurations() -> QuerySet[RegistrationConfiguration]:
     now = timezone.now()
     return (
         RegistrationConfiguration.objects.filter(
+            adoption_profile_filter_for_module(
+                "registration",
+                field_prefix="edition",
+            ),
             status=ConfigurationStatus.ACTIVE,
             opens_at__lte=now,
             closes_at__gt=now,
-            edition__adoption_profile_code__in=profile_codes_for_module("registration"),
         )
         .exclude(edition__lifecycle__in=("archived", "cancelled"))
         .select_related("organization", "edition", "edition__series")
@@ -165,6 +176,54 @@ def _account(request: HttpRequest) -> Account | None:
     return request.user if isinstance(request.user, Account) else None
 
 
+def _authorize_self_registration_scope(
+    *,
+    account: Account,
+    edition_id: UUID,
+    capability_codes: tuple[str, ...],
+) -> None:
+    """Authorize an exact Registration self scope before loading owned records.
+
+    Parameters
+    ----------
+    account : Account
+        The authenticated person requesting the self-service surface.
+    edition_id : UUID
+        The event edition whose exact adoption profile governs the request.
+    capability_codes : tuple[str, ...]
+        Every self-service capability required before the route may disclose data.
+
+    Raises
+    ------
+    Http404
+        If the edition, exact profile, or any required capability is unavailable.
+    """
+    organization_id = (
+        EventEdition.objects.filter(
+            adoption_profile_filter_for_module("registration"),
+            id=edition_id,
+        )
+        .values_list("organization_id", flat=True)
+        .first()
+    )
+    if organization_id is None:
+        raise Http404
+    target = resolve_self_target(
+        principal=account,
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
+    if any(
+        not decide(
+            principal=account,
+            capability_code=capability_code,
+            resource=target,
+        ).allowed
+        for capability_code in capability_codes
+    ):
+        raise Http404
+
+
 def public_registration_index(request: HttpRequest) -> TemplateResponse:
     """Show open editions and returning-attendee registration history.
 
@@ -184,7 +243,13 @@ def public_registration_index(request: HttpRequest) -> TemplateResponse:
     registered_edition_ids: set[UUID] = set()
     if account is not None:
         registrations = list(
-            Registration.objects.filter(account=account)
+            Registration.objects.filter(
+                adoption_profile_filter_for_module(
+                    "registration",
+                    field_prefix="edition",
+                ),
+                account=account,
+            )
             .select_related("edition", "product")
             .order_by("-edition__starts_on", "edition__name")
         )
@@ -781,6 +846,11 @@ def confirm_local_demo_payment(
     account = _account(request)
     if account is None:
         raise Http404
+    _authorize_self_registration_scope(
+        account=account,
+        edition_id=edition_id,
+        capability_codes=(REGISTER_SELF,),
+    )
     registration = get_object_or_404(
         Registration,
         account=account,
@@ -839,6 +909,11 @@ def reserve_local_tier_replacement(
     account = _account(request)
     if account is None:
         raise Http404
+    _authorize_self_registration_scope(
+        account=account,
+        edition_id=edition_id,
+        capability_codes=(REGISTER_SELF,),
+    )
     registration = get_object_or_404(
         Registration,
         account=account,
@@ -906,6 +981,11 @@ def create_local_hosted_payment(
     account = _account(request)
     if account is None:
         raise Http404
+    _authorize_self_registration_scope(
+        account=account,
+        edition_id=edition_id,
+        capability_codes=(REGISTER_SELF,),
+    )
     registration = get_object_or_404(
         Registration,
         account=account,
@@ -1013,6 +1093,11 @@ def public_registration_profile(
     account = _account(request)
     if account is None:
         raise Http404
+    _authorize_self_registration_scope(
+        account=account,
+        edition_id=edition_id,
+        capability_codes=(VIEW_SELF, VIEW_SELF_PROFILE),
+    )
     registration = (
         Registration.objects.filter(account=account, edition_id=edition_id)
         .select_related(
@@ -1191,6 +1276,11 @@ def edit_attendee_profile(
     account = _account(request)
     if account is None:
         raise Http404
+    _authorize_self_registration_scope(
+        account=account,
+        edition_id=edition_id,
+        capability_codes=(MANAGE_SELF_PROFILE,),
+    )
     profile = (
         AttendeeRegistrationProfile.objects.filter(
             account=account,
@@ -1295,7 +1385,11 @@ def public_attendee_directory(
         The HTTP response for this request.
     """
     edition = get_object_or_404(
-        EventEdition.objects.select_related("organization", "series").exclude(
+        EventEdition.objects.filter(
+            adoption_profile_filter_for_module("registration"),
+        )
+        .select_related("organization", "series")
+        .exclude(
             lifecycle__in=(
                 EventEdition.Lifecycle.ARCHIVED,
                 EventEdition.Lifecycle.CANCELLED,
@@ -1451,7 +1545,13 @@ def protected_profile_photo(
     """
     account = _account(request)
     profile = (
-        AttendeeRegistrationProfile.objects.filter(id=profile_id)
+        AttendeeRegistrationProfile.objects.filter(
+            adoption_profile_filter_for_module(
+                "registration",
+                field_prefix="edition",
+            ),
+            id=profile_id,
+        )
         .select_related("account", "registration")
         .first()
     )
@@ -1510,7 +1610,13 @@ def protected_fursuit_photo(
     """
     account = _account(request)
     fursuit = (
-        AttendeeFursuit.objects.filter(id=fursuit_id)
+        AttendeeFursuit.objects.filter(
+            adoption_profile_filter_for_module(
+                "registration",
+                field_prefix="edition",
+            ),
+            id=fursuit_id,
+        )
         .select_related("profile", "account", "registration")
         .first()
     )

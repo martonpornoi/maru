@@ -260,6 +260,15 @@ or clears required full-convention evidence to make one row look consistent.
 Once active or ended Workforce-only evidence exists, the migration's downgrade
 fence requires compatible code and fix-forward or whole-database recovery.
 
+Additive migration `0015_exact_assignment_adoption_profile` hardens that
+installed guard from a profile-code branch to literal code/version pairs. It
+accepts only `full_convention@1` with Participation-required evidence and
+`workforce_only@1` with Participation-excluded evidence; every unknown version
+fails before the assignment row is written. Its source and complete PostgreSQL
+function definition are fingerprinted by deployment readiness. Once any
+governed assignment exists, downgrade must keep compatible code and fix
+forward or restore the mutually consistent database.
+
 This interval validation needs no migration or backfill. A retained proposal
 that predates the check remains immutable. If approval discovers that its
 interval is outside either controller's current source, the only supported

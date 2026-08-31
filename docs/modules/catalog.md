@@ -65,7 +65,12 @@ history, checkout, and hosted/demo payment controls. Catalog discovery streams
 only organization, edition, and catalog IDs through the exact self-service
 authorization decision before fetching any edition or series labels. A denied
 foreign prefix therefore cannot consume the visible result limit or disclose
-its labels. Every authenticated catalog GET surface is private and emits
+its labels. Direct catalog, order-placement, order-history, checkout,
+hosted-payment, and demo-payment routes repeat the exact profile and
+self-capability decision before loading a catalog or owned order. A retained
+catalog or order cannot revive Catalog or disclose its edition name or reference
+after the exact profile omits that surface. Every authenticated catalog GET
+surface is private and emits
 `Cache-Control: no-store` semantics, including checkout, history, and the staff
 workspace.
 

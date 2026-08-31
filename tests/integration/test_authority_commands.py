@@ -36,6 +36,10 @@ from maru.authorization.policy import (
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events.adoption import (
+    WORKFORCE_ONLY_PROFILE_VERSION,
+    AdoptionProfileCode,
+)
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
@@ -295,6 +299,48 @@ def test_direct_grant_requires_two_authorities_and_commits_complete_evidence() -
         "scope_level": "edition",
     }
     assert OutboxMessage.objects.get(event=event).workload_pool == "security"
+
+
+def test_direct_grant_rejects_a_capability_absent_from_the_exact_profile() -> None:
+    edition = EventEditionFactory(
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+        adoption_profile_version=WORKFORCE_ONLY_PROFILE_VERSION,
+    )
+    actor, approver = _dual_managers(
+        edition.organization,
+        "authorization.grant_direct",
+        edition=edition,
+    )
+    recipient = AccountFactory()
+    correlation_id = uuid4()
+
+    with pytest.raises(AuthorityCommandValidationError) as captured:
+        grant_capability_direct(
+            actor=actor,
+            approver=approver,
+            recipient=recipient,
+            capability_code="registration.manage_configuration",
+            target=_edition_target(edition),
+            effective_from=timezone.now(),
+            expires_at=None,
+            reason="Attempt to grant a capability absent from this profile.",
+            correlation_id=correlation_id,
+            source_channel="test",
+        )
+
+    assert captured.value.reason_code == "module_not_adopted"
+    assert not CapabilityGrant.objects.filter(
+        principal=recipient,
+        edition=edition,
+        capability_code="registration.manage_configuration",
+    ).exists()
+    error_audit = AuditEvent.objects.get(correlation_id=correlation_id)
+    assert error_audit.outcome == AuditEvent.Outcome.ERROR
+    assert error_audit.reason_code == "module_not_adopted"
+    assert not DomainEvent.objects.filter(correlation_id=correlation_id).exists()
+    assert not OutboxMessage.objects.filter(
+        event__correlation_id=correlation_id
+    ).exists()
 
 
 def test_unproven_legacy_controllers_fail_closed_without_target_or_ledger() -> None:

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { EditionContext } from "./api/client";
 import {
+  availableStaffConsoleDestinations,
   capacityCounts,
   chooseInitialEdition,
   daysUntil,
@@ -28,6 +29,7 @@ describe("Staff Console model helpers", () => {
         adoption_profile_version: 1,
         adoption_profile_label: "Full convention",
         adopted_modules: ["registration", "workforce"],
+        assignment_uses_participation_evidence: true,
         available_destinations: [
           "today",
           "my-registration",
@@ -61,6 +63,7 @@ describe("Staff Console model helpers", () => {
         adoption_profile_version: 1,
         adoption_profile_label: "Full convention",
         adopted_modules: ["registration", "workforce"],
+        assignment_uses_participation_evidence: true,
         available_destinations: [
           "today",
           "my-registration",
@@ -141,6 +144,7 @@ describe("Staff Console model helpers", () => {
         adoption_profile_version: 1,
         adoption_profile_label: "Full convention",
         adopted_modules: ["registration", "workforce"],
+        assignment_uses_participation_evidence: true,
         available_destinations: [
           "today",
           "my-registration",
@@ -176,5 +180,57 @@ describe("Staff Console model helpers", () => {
         ],
       }),
     ).toBe("Convention Chair");
+  });
+
+  it("uses exact profile presentation for non-participating workspaces", () => {
+    const edition = {
+      organization_id: "organization",
+      organization_slug: "organization",
+      series_id: "series",
+      series_slug: "series",
+      series_name: "Series",
+      edition_id: "edition",
+      edition_slug: "edition",
+      edition_name: "Edition",
+      lifecycle: "preparing",
+      adoption_profile_code:
+        "programme_operations" as EditionContext["adoption_profile_code"],
+      adoption_profile_version: 1,
+      adoption_profile_label: "Programme operations",
+      adopted_modules: ["workforce", "programme"],
+      assignment_uses_participation_evidence: false,
+      available_destinations: ["today", "workforce", "setup", "security"],
+      time_zone: "Europe/Budapest",
+      language_codes: ["en"],
+      currency_codes: ["XXX"],
+      starts_on: "2026-08-13",
+      ends_on: "2026-08-16",
+      participation_status: "not_participating",
+      can_transition: true,
+      capacities: [],
+    } satisfies EditionContext;
+
+    expect(primaryCapacity(edition)).toBe("Programme operations workspace");
+    expect(
+      availableStaffConsoleDestinations({
+        ...edition,
+        available_destinations: ["workforce", "future-destination", "today"],
+      }),
+    ).toEqual(["workforce", "today"]);
+    expect(
+      primaryCapacity({
+        ...edition,
+        adoption_profile_version: 2,
+        available_destinations: ["future-destination"],
+      }),
+    ).toBe("Workspace unavailable");
+    expect(
+      primaryCapacity({
+        ...edition,
+        adoption_profile_version: 2,
+        available_destinations: ["future-destination"],
+        participation_status: "active",
+      }),
+    ).toBe("Workspace unavailable");
   });
 });

@@ -16,6 +16,7 @@ from django.views.decorators.http import require_POST
 
 from maru.authorization.services import AuthorizationDenied
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.models import Account
 from maru.registration.commerce import (
     adjust_registration_capacity,
@@ -52,7 +53,9 @@ def _edition(
     edition_slug: str,
 ) -> EventEdition:
     return get_object_or_404(
-        EventEdition.objects.select_related("organization", "series"),
+        EventEdition.objects.filter(
+            adoption_profile_filter_for_module("registration")
+        ).select_related("organization", "series"),
         organization__slug=organization_slug,
         series__slug=series_slug,
         slug=edition_slug,

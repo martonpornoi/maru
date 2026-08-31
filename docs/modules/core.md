@@ -92,10 +92,28 @@ opens **Customize navigation**.
 My Maru and Administration resolve independent authorized item sets and pins.
 The personal home prioritizes registration, applications, schedule, and **My
 Workforce**, then groups lower-frequency self-service links under **More from
-Maru**. My Workforce remains searchable and pinnable from its Positions,
-Availability, and Shifts continuations. Accounts
+Maru**. Module-owned queries first disclose only exact adoption-profile
+code/version pairs from the account's authorized relationships or a genuinely
+public edition surface. The home cards, sidebar candidates, and stored-pin
+projection then apply the same closed manifest destination kinds to that union.
+A bare or unsupported profile set exposes only profile-independent personal
+destinations; `workforce_only@1` exposes My Workforce without attendee,
+commerce, Applications, Venue schedule, or equipment links. Stored preferences
+remain private and reappear only when a currently disclosed exact profile
+admits their destination again. My Workforce remains searchable and pinnable
+from its Positions, Availability, and Shifts continuations. Accounts
 with organizer or platform authority receive one explicit Administration/My
 Maru switch; the personal menu never reproduces Platform or Specialist records.
+
+Every profile-scoped `NavigationItem` declares a stable shell destination kind.
+That kind is a presentation contract, not the search/pin item code; the
+workspace helper deliberately propagates its literal `work.*` code as the
+kind. A repository contract test enumerates both direct literals and every
+workspace-helper call and requires them in Events'
+`SHELL_DESTINATION_KIND_CATALOG`. Adding a profile-scoped navigation item
+therefore updates Core's navigation declaration and the Events catalog
+together; assigning that kind to an edition remains a separate new or reviewed
+exact-profile-version change.
 
 The shared page frame mounts one compact **Access** disclosure after the page
 heading. Server-rendered workflows use the common template mount; the embedded
@@ -226,6 +244,14 @@ remain available in collapsed detail sections rather than leading list views.
 The header also hosts the ADR 0008 convention-workspace selector. Event-owned
 modules declare their scope explicitly; the shared shell does not infer tenant
 ownership or treat the selected edition as authorization.
+
+When an edition is selected, governed Django app labels appear in **Specialist
+records** only when that edition's exact adoption profile resolves and pins the
+label. `EditionContextAdmin` repeats the same check before list projection and
+before view, add, change, or delete permission: an unpinned or unresolved app
+loads no owned row or form. Foundation labels remain available because valid
+profiles pin them explicitly, while unregistered platform incident and
+recovery apps retain their existing global Django permission boundary.
 
 The administration home shows current setup and recent work rather than
 Django's alphabetical application/model list. Accounts with independent staff/

@@ -32,6 +32,7 @@ from maru.authorization.retired_targets import (
     lock_retired_department_authority_boundaries,
 )
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.adoption import profile_allows_capability
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
@@ -555,6 +556,19 @@ def delegate_capability(  # noqa: DOC503, PLR0915 - bare re-raise preserves orig
                 parent_id=parent.id,
                 actor=actor,
             )
+            if locked_target.edition_id is not None and (
+                locked_target.adoption_profile_code is None
+                or locked_target.adoption_profile_version is None
+                or not profile_allows_capability(
+                    locked_target.adoption_profile_code,
+                    locked_target.adoption_profile_version,
+                    locked_parent.capability_code,
+                )
+            ):
+                _raise_authorization(
+                    "This edition has not adopted the delegated capability.",
+                    reason_code="module_not_adopted",
+                )
             locked_bounds_error = _validate_delegation_bounds(
                 parent=locked_parent,
                 target=locked_target,

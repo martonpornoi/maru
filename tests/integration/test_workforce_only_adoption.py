@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 from django.apps import apps
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError, transaction
+from django.db import DatabaseError, connection, transaction
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -17,6 +17,10 @@ from maru.authorization.policy import (
     decide,
     resolve_edition_target,
     resolve_organization_target,
+)
+from maru.authorization.provenance_readiness import (
+    _FUNCTION_DEFINITION_SHA256,
+    _function_definition_fingerprint,
 )
 from maru.events.admin_context import ADMIN_EDITION_SESSION_KEY
 from maru.events.adoption import AdoptionProfileCode
@@ -292,6 +296,42 @@ def test_workforce_profile_and_setup_receipt_are_database_immutable() -> None:
     receipt.refresh_from_db()
     assert result.edition.adoption_profile_code == AdoptionProfileCode.WORKFORCE_ONLY
     assert receipt.mode == WorkforceAdoptionSetupReceipt.Mode.NEW_FOUNDATION
+
+
+def test_assignment_database_guard_pins_exact_profile_version_and_fingerprint() -> None:
+    """Keep the installed assignment trigger aligned with exact v1 manifests."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT procedure.prosrc,
+                   language.lanname::text,
+                   procedure.provolatile::text,
+                   procedure.proparallel::text,
+                   procedure.prosecdef,
+                   procedure.proleakproof,
+                   procedure.proisstrict,
+                   procedure.proretset,
+                   procedure.prokind::text,
+                   procedure.proconfig,
+                   pg_get_function_result(procedure.oid)
+              FROM pg_catalog.pg_proc AS procedure
+              JOIN pg_catalog.pg_language AS language
+                ON language.oid = procedure.prolang
+             WHERE procedure.oid = pg_catalog.to_regprocedure(
+                 'public.maru_guard_workforce_assignment()'
+             )
+            """
+        )
+        definition = tuple(cursor.fetchone())
+
+    source = str(definition[0])
+    assert "edition.adoption_profile_version" in source
+    assert source.count("assignment_profile_version = 1") == 2
+    assert "exact adoption profile is unsupported" in source
+    assert (
+        _function_definition_fingerprint(definition)
+        == (_FUNCTION_DEFINITION_SHA256["maru_guard_workforce_assignment()"])
+    )
 
 
 def test_workforce_profile_rejects_payment_currency_configuration() -> None:
@@ -707,6 +747,23 @@ def test_operator_context_and_menu_are_focused_without_participation_side_effect
     administrator, _key, result = _set_up_new_foundation()
     appointments = _activate_maru_operators(administrator, result.representation)
     operator = appointments[0].account
+    full_edition = create_event_edition(
+        actor=administrator,
+        organization_id=result.edition.organization_id,
+        series_id=result.edition.series_id,
+        details=EventEditionDetails(
+            name="Full Convention Boundary 2033",
+            time_zone="Europe/Budapest",
+            language_codes=("en",),
+            currency_codes=("EUR",),
+            starts_on=date(2033, 8, 12),
+            ends_on=date(2033, 8, 15),
+        ),
+        adoption_profile_code=AdoptionProfileCode.FULL_CONVENTION,
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    ).edition
     api_client = APIClient()
     api_client.force_authenticate(operator)
 
@@ -714,6 +771,9 @@ def test_operator_context_and_menu_are_focused_without_participation_side_effect
 
     assert response.status_code == 200
     payload = response.json()
+    assert {item["edition_id"] for item in payload["editions"]} == {
+        str(result.edition.id)
+    }
     edition = next(
         item
         for item in payload["editions"]
@@ -761,6 +821,7 @@ def test_operator_context_and_menu_are_focused_without_participation_side_effect
     assert "Setup guide" in content
     assert "Registration desk" not in content
     assert "Reports &amp; badges" not in content
+    assert full_edition.name not in content
     assert f'data-navigation-code="edition.{result.edition.id}.registration"' not in (
         content
     )

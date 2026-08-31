@@ -6,24 +6,29 @@ from uuid import uuid4
 import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.db.models import F
-from django.test import Client
+from django.test import Client, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
 from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
+from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.participation.models import Participation
 from maru.registration.models import (
     AdmissionProduct,
+    AdmissionTierReplacement,
     AttendeeFursuit,
     AttendeeRegistrationProfile,
     ConfigurationStatus,
     MediaReviewStatus,
+    PaymentAttempt,
+    PaymentIntent,
     Registration,
     RegistrationQuestion,
     RegistrationSection,
@@ -395,6 +400,210 @@ def test_anonymous_attendee_creates_account_profile_and_registration(
     assert photo_response.status_code == 200
     assert photo_response["Cache-Control"] == "private, no-store"
     assert photo_response["X-Content-Type-Options"] == "nosniff"
+
+
+def test_public_directory_and_api_require_exact_registration_profile() -> None:
+    """Hide retained public surfaces when the exact profile omits Registration."""
+    full_edition = EventEditionFactory()
+    workforce_edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    client = Client()
+
+    assert (
+        client.get(
+            reverse("paid-attendee-directory", args=(full_edition.id,))
+        ).status_code
+        == 200
+    )
+    assert (
+        client.get(
+            reverse("api-public-attendee-list", args=(full_edition.id,))
+        ).status_code
+        == 200
+    )
+    assert (
+        client.get(
+            reverse("paid-attendee-directory", args=(workforce_edition.id,))
+        ).status_code
+        == 404
+    )
+    assert (
+        client.get(
+            reverse("api-public-attendee-list", args=(workforce_edition.id,))
+        ).status_code
+        == 404
+    )
+
+
+@override_settings(DEMO_PAYMENT_ADAPTER_ENABLED=True)
+def test_retained_self_profile_routes_require_exact_registration_profile() -> None:
+    """Deny retained profile reads and writes before any private row is loaded."""
+    edition = EventEditionFactory(
+        name="Hidden Registration Edition",
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    _edition, configuration, product = _open_public_world(edition=edition)
+    owner = AccountFactory(display_name="Retained registration owner")
+    participation = ParticipationFactory(account=owner, edition=edition)
+    now = timezone.now()
+    registration = Registration.objects.create(
+        organization=edition.organization,
+        edition=edition,
+        participation=participation,
+        account=owner,
+        configuration=configuration,
+        product=product,
+        reference="HIDDEN-REGISTRATION",
+        state=Registration.State.CONFIRMED,
+        product_name_snapshot=product.name,
+        price_minor_snapshot=product.price_minor,
+        currency_snapshot=configuration.currency,
+        submitted_at=now,
+        confirmed_at=now,
+        confirmation_basis=Registration.ConfirmationBasis.FREE,
+    )
+    profile = AttendeeRegistrationProfile.objects.create(
+        registration=registration,
+        organization=edition.organization,
+        edition=edition,
+        account=owner,
+        real_name="Hidden Registration Person",
+        date_of_birth=date(1990, 1, 1),
+        address_line_1="1 Hidden Registration Street",
+        locality="Hidden City",
+        postal_code="1000",
+        region="Hidden Region",
+        country_code="HU",
+        emergency_contact_name="Hidden Contact",
+        emergency_contact_phone="+3610000000",
+        phone_number="+3610000001",
+        pronoun_code="they_them",
+        pronouns="They/them",
+        spoken_language_codes=["en"],
+        bio="Original retained profile",
+        collection_notice_version="retained-profile-v1",
+    )
+    client = Client()
+    client.force_login(owner)
+    api_client = APIClient()
+    api_client.force_authenticate(owner)
+    profile_url = reverse("public-registration-profile", args=(edition.id,))
+    edit_url = reverse("edit-attendee-profile", args=(edition.id,))
+    api_profile_url = (
+        f"/api/v1/organizations/{edition.organization_id}/editions/{edition.id}/"
+        "registration/me/profile"
+    )
+    api_profile_photo_url = f"{api_profile_url}/photo"
+    api_fursuit_photo_url = f"{api_profile_url}/fursuits/{uuid4()}/photo"
+    api_extension_url = (
+        f"/api/v1/organizations/{edition.organization_id}/editions/{edition.id}/"
+        "registrations/me/profile-extensions"
+    )
+    before = {
+        "attempts": PaymentAttempt.objects.count(),
+        "intents": PaymentIntent.objects.count(),
+        "replacements": AdmissionTierReplacement.objects.count(),
+        "audits": AuditEvent.objects.count(),
+        "events": DomainEvent.objects.count(),
+        "outbox": OutboxMessage.objects.count(),
+    }
+
+    responses = (
+        client.get(profile_url),
+        client.get(edit_url),
+        client.post(
+            edit_url,
+            _edit_payload(profile, bio="Forbidden retained-profile mutation"),
+        ),
+        client.post(
+            reverse("public-registration-demo-payment", args=(edition.id,)),
+            {},
+        ),
+        client.post(
+            reverse("public-registration-tier-replacement", args=(edition.id,)),
+            {},
+        ),
+        client.post(
+            reverse("public-registration-hosted-payment", args=(edition.id,)),
+            {},
+        ),
+    )
+    with CaptureQueriesContext(connection) as captured:
+        api_profile_response = api_client.get(api_profile_url)
+        api_profile_update_response = api_client.put(
+            api_profile_url,
+            {},
+            format="json",
+        )
+        api_profile_photo_response = api_client.post(
+            api_profile_photo_url,
+            {},
+            format="multipart",
+        )
+        api_fursuit_photo_response = api_client.post(
+            api_fursuit_photo_url,
+            {},
+            format="multipart",
+        )
+        api_extension_response = api_client.get(api_extension_url)
+        api_extension_write_response = api_client.post(
+            api_extension_url,
+            {},
+            format="json",
+        )
+
+    assert {response.status_code for response in responses} == {404}
+    assert {
+        api_profile_response.status_code,
+        api_profile_update_response.status_code,
+        api_profile_photo_response.status_code,
+        api_fursuit_photo_response.status_code,
+    } == {403}
+    assert {
+        api_extension_response.status_code,
+        api_extension_write_response.status_code,
+    } == {404}
+    assert not any(
+        private_table in query["sql"].lower()
+        for query in captured.captured_queries
+        for private_table in (
+            "registration_attendeeregistrationprofile",
+            "registration_attendeefursuit",
+            'registration_registration"',
+            "registration_profileextensionvaluerevision",
+        )
+    )
+    rendered = b"".join(response.content for response in responses) + b"".join(
+        response.content
+        for response in (
+            api_profile_response,
+            api_profile_update_response,
+            api_profile_photo_response,
+            api_fursuit_photo_response,
+            api_extension_response,
+            api_extension_write_response,
+        )
+    )
+    assert b"Hidden Registration Edition" not in rendered
+    assert b"Hidden Registration Person" not in rendered
+    assert b"HIDDEN-REGISTRATION" not in rendered
+    profile.refresh_from_db()
+    registration.refresh_from_db()
+    assert profile.bio == "Original retained profile"
+    assert profile.aggregate_version == 1
+    assert registration.state == Registration.State.CONFIRMED
+    assert registration.aggregate_version == 1
+    assert {
+        "attempts": PaymentAttempt.objects.count(),
+        "intents": PaymentIntent.objects.count(),
+        "replacements": AdmissionTierReplacement.objects.count(),
+        "audits": AuditEvent.objects.count(),
+        "events": DomainEvent.objects.count(),
+        "outbox": OutboxMessage.objects.count(),
+    } == before
 
 
 def test_returning_attendee_chooses_between_open_editions() -> None:

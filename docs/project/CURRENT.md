@@ -82,6 +82,106 @@ acceptance-criteria audit found no remaining issue. Exact-commit local
 certification and the protected pull-request gate remain the delivery evidence
 to record before this contract is complete.
 
+## Exact adoption-manifest enforcement
+
+Issue [#59](https://github.com/martonpornoi/maru/issues/59), the second native
+child of Programme Operations umbrella
+[#48](https://github.com/martonpornoi/maru/issues/48), turns the current
+`full_convention@1` and `workforce_only@1` profiles into immutable, literal
+manifests. Each exact code/version pair pins its capabilities, management and
+edition destinations, shell destination kinds, effect routes, built-in catalog
+entries, adapters, conflict sources, reserved roots, and primary adopted
+module. Manifest registries and their nested values are immutable, and
+duplicate declarations are rejected before immutable mappings or sets can
+hide them. Each adapter and future conflict source belongs to one typed owner
+catalog with explicit successful-result and fail-closed semantics. The
+`events.E001` deployment check independently resolves every literal, owner,
+selectable pair, and database-supported pair; `effects.E001` separately proves
+every governed event/handler route.
+
+Authorization now rejects an unpinned edition capability before applying
+self, platform, grant, or role policy. Navigation, page context, generic access
+management, Registration discovery, Applications starters and source/target
+adapters, Effects publication and delivery, Workforce structure starters, and
+Position-assignment evidence all consume the persisted profile code *and*
+version. An unknown pair therefore cannot inherit access or side effects from
+a module namespace or a newer catalog. My Context projects that exact
+assignment-evidence semantic, and both Staff Console guidance sites consume it
+instead of inferring from adopted modules. Organization- and platform-scoped
+Effects routes remain an explicit, separately bounded catalog rather than
+pretending to have an edition profile. Dormant authority currentness also
+filters incompatible role capabilities before returning provenance, and
+unsupported personal/public contexts are omitted before tenant names are
+projected. Retained Registration profile/payment, Catalog checkout/payment, and
+Logistics self-offer routes repeat the exact self policy before loading private
+rows, so ownership cannot revive an incompatible module or disclose names.
+Registration guardian-token continuation, lifecycle/tier-replacement
+workloads, metrics, personal payment-intent APIs, and identified-intent webhook
+reconciliation apply the same boundary before owned projection or mutation;
+truly unknown provider references remain organization-scoped review evidence.
+Selected-edition Specialist records now omit governed apps absent from the
+exact manifest, and their direct list/add/change/delete routes fail before an
+edition-owned queryset or form can disclose retained state. Exact-profile
+foundation apps and unregistered global incident/recovery administration keep
+their existing platform permission boundaries.
+Scheduled restriction consequences use explicit exact-profile adapters for
+their Registration and Accreditation consumers. An Applications starter that
+needs an accepted-target adapter is
+neither disclosed nor copied unless that exact adapter is pinned; a failed copy
+writes no definition, question, receipt, audit, event, or outbox evidence.
+Workforce-only account restrictions keep their adopted internal Identity fact
+but enqueue and write no edition-scoped Communications notification. Inbox
+listing and direct read mutation require the originating exact notification
+route before rendered content is loaded; the explicit organization-wide
+edition-null restriction notice remains available under its separate catalog.
+
+Existing current rows already satisfy the exact-pair database constraint. Its
+independent immutable key catalog builds the model constraint and must equal
+the retained manifest registry, so a future profile cannot deploy before its
+additive migration. Two additive hardening migrations are part of this issue:
+`effects.0003_effect_replay_receipts` makes replay rationale append-only and
+database-couples every bounded retry-budget increase to its active-account
+receipt, caps initial and replayed budgets at 100, and refuses activation rather
+than rewriting a legacy row above that ceiling; the runtime role has
+SELECT/INSERT only on that evidence relation.
+Meanwhile,
+`workforce.0015_exact_assignment_adoption_profile` makes the assignment guard
+branch on exact profile code/version. Neither rewrites existing rows, and both
+refuse evidence-destroying downgrade after activation. Migration-state and
+drift checks report no mismatch.
+
+Historical edition-creation replay resolves and validates the receipt's
+retained pair before today's selectable mapping or expansion policy; an unknown
+retained pair fails closed without consulting current selection. Persisted/read
+choices remain valid if a code retires from setup, while a new idempotency key
+uses current selection. Forbidden Effects routes create no new outbox work;
+incompatible queued work is quarantined with a bounded, tenant-safe operational
+reason before handler dispatch. Authorized replay retains its normalized reason,
+actor, correlation, sequence, and exact attempt-limit delta; one replay adds at
+most 20 attempts and no message may exceed 100, with tenant-bounded history
+available to operators. Replay rechecks the persisted exact route before any
+receipt or quarantine-state mutation. Recovery is fix-forward or a mutually
+consistent whole-database restore: do not mutate an edition's immutable
+profile, widen a v1 manifest, discard audit/outbox evidence, or replay
+quarantined work until the exact scope/profile route is again permitted.
+
+This foundation does **not** add a `programme_operations@1` enum value,
+manifest, capability, destination, role, adapter, setup route, Programme
+migration, or runtime behavior. Programme activation remains blocked until its ordered
+Programme, Applications, Scheduling, staffing, release, continuity, setup,
+authority, database-guard, and integrated-acceptance children are complete.
+All 2,358 unit tests pass. The complete 283-test PostgreSQL database-role
+safety suite and focused exact-profile consumer suites pass; the five
+creation/replay cases pass again after the database-catalog refactor.
+The Staff Console TypeScript check and 33 frontend tests pass, including exact
+Python/TypeScript destination parity, navigation-kind coverage, and deliberate
+module/assignment-adapter divergence. Ruff lint
+and formatting, MyPy across 388 source files, Django compatibility checks,
+migration-drift checks, PyDocLint, semantic docstrings, repository documentation
+policy, the warning-fatal Sphinx/AutoAPI build, and `git diff --check` pass.
+Full clean-tree certification and the protected exact-head pull-request gate
+remain the final delivery evidence.
+
 ## Profile-aware Position-assignment evidence contract
 
 Issue [#41](https://github.com/martonpornoi/maru/issues/41), a bounded finding
@@ -875,16 +975,18 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Enforce exact `(profile code, profile version)` manifests and profile-safe
-   capability, destination, writer/effect, adapter, and authority projections
-   before `programme_operations@1` can activate.
-2. Implement the atomic, idempotent Programme Operations setup, its separately
-   approved operator authority version, profile-scoped navigation, runtime-role
-   containment, readiness, migration, and recovery contracts.
-3. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48)
-   sequentially through Programme items, Applications intake/review, Scheduling
-   core and accessible editor, Workforce staffing, atomic release/projections,
-   on-site continuity, and integrated recovery acceptance.
+1. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48) with
+   the first private Programme item/readiness aggregate and organizer-created
+   core-item workflow, preserving the contract-only profile boundary.
+2. Continue sequentially through Applications calls, hosts, import, review,
+   decisions and the real Programme adapter; Scheduling core and accessible
+   editor; Workforce staffing projections; atomic release and outputs; and
+   on-site continuity/export.
+3. Only after those mandatory continuations exist, implement the atomic,
+   idempotent Programme Operations setup, its separately approved operator
+   authority version, exact manifest activation, profile-scoped navigation,
+   runtime-role containment, readiness, migration, database guards, recovery,
+   and integrated acceptance.
 4. Publish the reproducible end-to-end Workforce-only operator-and-volunteer
    tutorial [#42](https://github.com/martonpornoi/maru/issues/42) as the next
    bounded release-candidate finding outside the Programme sequence.

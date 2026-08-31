@@ -1,7 +1,7 @@
 # Effect worker runbook
 
 Status: Executable local baseline  
-Last updated: 2026-07-27
+Last updated: 2026-08-31
 
 ## Scope and safety boundary
 
@@ -13,6 +13,13 @@ event, attempt ledger, audit evidence, or outbox status directly.
 A failed external effect can be retried. A disputed canonical fact requires its
 own domain correction workflow. Urgent real-world safety action never waits for
 this queue.
+
+Edition-scoped work is additionally bound to the edition's exact immutable
+adoption-profile code and version. Publishers check the route before creating
+durable work, and workers check it again immediately before handler dispatch.
+Platform- and organization-scoped facts remain explicit through a null edition
+identifier and a closed non-edition route; never remove an edition identifier
+to bypass a profile decision.
 
 ## Process topology
 
@@ -75,6 +82,11 @@ age, oldest expired-lease age, and replay count. Organization UUID and workload
 pool are the only labels. Event payload, person, destination detail, and error
 text are deliberately absent.
 
+The status JSON includes a bounded `quarantine_error_codes` count map and a
+`quarantine_error_codes_truncated` flag for the selected tenant and optional
+pool. These stable safe codes support first classification without exposing an
+event payload or person field; they are deliberately excluded from metrics.
+
 ## Baseline alert definitions
 
 Thresholds are starting values and tighten for a declared live-edition window.
@@ -113,9 +125,67 @@ uv run python src/manage.py effects_replay `
 ```
 
 The command fails closed across tenant boundaries and emits a correlation ID.
-Verify the corresponding allow/error/deny audit and observe the new attempt.
+Reasons are normalized and retained at no more than 240 characters. A command
+may add 1 through 20 attempts, and no message may exceed 100 total attempts.
+The replay path rechecks the persisted exact scope/profile route before writing
+the receipt or changing quarantine state; a still-forbidden route is not queued
+for another worker cycle. Initial publishers and secondary enqueue paths use
+the same 100-attempt ceiling.
+Verify the corresponding allow/error/deny audit, immutable replay receipt, and
+new attempt. Inspect the bounded tenant-scoped receipt history with:
+
+```powershell
+uv run python src/manage.py effects_replay_history `
+  --organization ORGANIZATION_UUID `
+  --message OUTBOX_MESSAGE_UUID `
+  --actor operator@example.invalid `
+  --limit 20
+```
+
+The history read requires `effects.replay`, appends a minimized audit, and
+contains operator identifiers, reasons, budget deltas, correlations, and
+timestamps, but no domain-event payload. A foreign or unknown message returns
+an empty history under the requested tenant. Reasons use the
+`operations-extended` retention class; never enter credentials, secrets, or
+unnecessary personal data.
 Do not batch-replay until one representative message succeeds and provider
 reconciliation is current.
+
+For `effect_profile_not_allowed`, do not replay merely to exhaust the attempt
+budget. When the event has an edition, confirm its tenant-bound edition and
+exact stored profile, verify that the deployed manifest deliberately pins the
+event/destination route, and fix forward to one reviewed compatible web/worker
+release. When the event has no edition, verify the producer's intended scope:
+fix an edition-owned publisher that omitted its edition, or review the closed
+foundation-route policy for a genuinely platform- or organization-scoped
+fact. An unknown edition, unsupported profile version, incompatible hybrid
+authorization `scope_level`, or intentionally absent route is not repaired by
+editing the event, outbox row, or edition profile.
+
+## Profile-aware deployment and rollback
+
+Deploy an exact manifest change as one coordinated web/worker release:
+
+1. Stop workers before replacing code when mixed-version compatibility has not
+   been proven.
+2. Deploy the reviewed manifest and profile-aware publishers.
+3. Deploy the worker with the same exact manifest.
+4. Run checks and inspect tenant-bounded quarantine status.
+5. Restart workers only after the web and worker code agree.
+
+Existing profile-version entries must remain available while any edition or
+pending effect references them. For an emergency rollback, stop affected
+edition writers and workers first. Resume only after proving the older release
+interprets every pending route identically; otherwise fix forward or restore a
+mutually consistent database and release. Never use a rollback to reinstate a
+module-prefix or code-only permission decision.
+
+The replay-receipt migration is also downgrade-fenced after its first retained
+record. Older code can replay without appending rationale, so do not roll the
+schema or application back independently. Stop replay writers and fix forward;
+only an empty receipt table may be rolled back as one coordinated release. The
+migration refuses activation when legacy outbox rows exceed the new 100-attempt
+constraint; reconcile those exceptional rows before retrying deployment.
 
 ## Failure injection rehearsal
 
@@ -127,8 +197,8 @@ In a local/test environment:
 4. run `effects_status --fail-on-quarantine` and confirm non-zero exit;
 5. repair the handler;
 6. replay through the authorized command;
-7. drain once and confirm succeeded state, append-only attempts, and replay
-   audit.
+7. drain once and confirm succeeded state, append-only attempts, replay receipt,
+   and replay audit.
 
 The automated integration suite covers poison payload, transient/permanent
 failure, hard timeout, expired lease, replay, and tenant isolation. A release

@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from maru.events.adoption import profile_allows_catalog_entry
 from maru.organizations.representation_catalog import (
     ACCOUNTABLE_REPRESENTATION_NAMES,
 )
@@ -399,6 +400,79 @@ MARUCON_REFERENCE_V1 = BuiltinStructureTemplate(
 BUILTIN_STRUCTURE_TEMPLATES: Mapping[str, BuiltinStructureTemplate] = MappingProxyType(
     {MARUCON_REFERENCE_V1.identifier: MARUCON_REFERENCE_V1}
 )
+
+
+def structure_template_entry_code(identifier: str) -> str:
+    """Return the manifest entry for one versioned structure template.
+
+    Parameters
+    ----------
+    identifier : str
+        Exact template code/version identifier.
+
+    Returns
+    -------
+    str
+        Stable manifest catalog entry.
+    """
+    return f"workforce.structure-template.{identifier}"
+
+
+def builtin_structure_templates_for_profile(
+    profile_code: str,
+    profile_version: int,
+) -> tuple[BuiltinStructureTemplate, ...]:
+    """Return templates disclosed by one exact adoption manifest.
+
+    Parameters
+    ----------
+    profile_code : str
+        Persisted adoption-profile code.
+    profile_version : int
+        Persisted adoption-profile version.
+
+    Returns
+    -------
+    tuple[BuiltinStructureTemplate, ...]
+        Admitted templates in catalog order. Unknown pairs return no choices.
+    """
+    return tuple(
+        template
+        for template in BUILTIN_STRUCTURE_TEMPLATES.values()
+        if profile_allows_structure_template(
+            profile_code,
+            profile_version,
+            template.identifier,
+        )
+    )
+
+
+def profile_allows_structure_template(
+    profile_code: str,
+    profile_version: int,
+    identifier: str,
+) -> bool:
+    """Return whether an exact profile pins one structure template.
+
+    Parameters
+    ----------
+    profile_code : str
+        Persisted adoption-profile code.
+    profile_version : int
+        Persisted adoption-profile version.
+    identifier : str
+        Exact template code/version identifier.
+
+    Returns
+    -------
+    bool
+        ``True`` only when the exact manifest pins the catalog entry.
+    """
+    return profile_allows_catalog_entry(
+        profile_code,
+        profile_version,
+        structure_template_entry_code(identifier),
+    )
 
 
 def get_builtin_structure_template(identifier: str) -> BuiltinStructureTemplate:

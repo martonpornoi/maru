@@ -40,6 +40,7 @@ from maru.applications.commands import (
     submit_application,
 )
 from maru.applications.queries import (
+    application_starters,
     authorize_application_edition_api_scope,
     authorize_application_review_submission_api_scope,
     authorize_application_self_api_scope,
@@ -68,7 +69,6 @@ from maru.applications.serializers import (
     decision_history,
     latest_answers,
 )
-from maru.applications.starters import starter_catalog
 from maru.audit.services import AuditRecord, append_audit
 from maru.core.api_input import reject_unknown_fields
 from maru.identity.models import Account
@@ -539,7 +539,7 @@ class ApplicationStarterCatalogView(PrivateApplicationsAPIView):
             The HTTP response for the requested operation.
         """
         try:
-            definition_workspace(
+            starters = application_starters(
                 actor=_actor(request),
                 organization_id=organization_id,
                 edition_id=edition_id,
@@ -560,7 +560,7 @@ class ApplicationStarterCatalogView(PrivateApplicationsAPIView):
                         starter.audience_policy_code and starter.retention_policy_code
                     ),
                 }
-                for starter in starter_catalog()
+                for starter in starters
             ]
         )
 

@@ -228,6 +228,123 @@ def test_attendee_upgrade_controls_are_owned_closed_and_demo_idempotent(
     assert client.get(profile_url).status_code == 404
 
 
+def test_staff_commerce_requires_exact_profile_before_retained_rows_or_forms(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject retained commerce routes before private loads or mutations."""
+    edition, _configuration, source, _target, now = _world(source_price=0)
+    operator = AccountFactory(display_name="Exact-profile commerce operator")
+    CapabilityGrantFactory(
+        organization=edition.organization,
+        edition=edition,
+        principal=operator,
+        capability_code="registration.manage_exceptions",
+    )
+    workforce_edition = EventEditionFactory(
+        organization=edition.organization,
+        series=edition.series,
+        name="Workforce-only Commerce Boundary",
+        slug="workforce-only-commerce-boundary",
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    CapabilityGrantFactory(
+        organization=edition.organization,
+        edition=workforce_edition,
+        principal=operator,
+        capability_code="registration.manage_exceptions",
+    )
+    retained_configuration = RegistrationConfigurationFactory(
+        edition=workforce_edition,
+        capacity=1,
+        capacity_ceiling=4,
+        opens_at=now - timedelta(days=1),
+        closes_at=now + timedelta(days=30),
+        default_payment_window_minutes=60,
+    )
+    retained_product = AdmissionProduct.objects.create(
+        configuration=retained_configuration,
+        code="retained-workforce-admission",
+        name="Retained workforce admission",
+        price_minor=0,
+        capacity=1,
+        capacity_ceiling=4,
+        position=10,
+        entitlement_code="retained-workforce-admission",
+        entitlement_name="Retained workforce admission",
+    )
+    retained_configuration.status = ConfigurationStatus.ACTIVE
+    retained_configuration.review_required = False
+    retained_configuration.review_note = "Retained row for exact-profile regression."
+    retained_configuration.activated_at = now
+    retained_configuration.save(
+        update_fields=(
+            "status",
+            "review_required",
+            "review_note",
+            "activated_at",
+            "updated_at",
+        )
+    )
+    client = Client()
+    client.force_login(operator)
+
+    full_page = client.get(_staff_location(edition))
+    assert full_page.status_code == 200
+    assert source.name.encode() in full_page.content
+
+    def fail_if_product_is_loaded(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("exact profile must precede retained product lookup")
+
+    def fail_if_form_is_constructed(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("exact profile must precede commerce form construction")
+
+    monkeypatch.setattr(
+        "maru.registration.commerce_views._capacity_product",
+        fail_if_product_is_loaded,
+    )
+    monkeypatch.setattr(
+        "maru.registration.commerce_views.CapacityAdjustmentForm",
+        fail_if_form_is_constructed,
+    )
+    monkeypatch.setattr(
+        "maru.registration.commerce_views.WaitlistBatchOfferForm",
+        fail_if_form_is_constructed,
+    )
+    workforce_route = (
+        workforce_edition.organization.slug,
+        workforce_edition.series.slug,
+        workforce_edition.slug,
+    )
+    adjustment_count = RegistrationCapacityAdjustment.objects.count()
+    batch_count = WaitlistBatchOffer.objects.count()
+
+    workspace = client.get(
+        reverse("registration-commerce-workspace", args=workforce_route)
+    )
+    adjustment = client.post(
+        reverse(
+            "registration-commerce-adjust-product",
+            args=(*workforce_route, retained_product.id),
+        ),
+        {"unexpected": "must not be parsed"},
+    )
+    batch = client.post(
+        reverse(
+            "registration-commerce-offer-batch",
+            args=(*workforce_route, retained_product.id),
+        ),
+        {"unexpected": "must not be parsed"},
+    )
+
+    assert workspace.status_code == 404
+    assert b"Retained workforce admission" not in workspace.content
+    assert adjustment.status_code == 404
+    assert batch.status_code == 404
+    assert RegistrationCapacityAdjustment.objects.count() == adjustment_count
+    assert WaitlistBatchOffer.objects.count() == batch_count
+
+
 def test_staff_capacity_fifo_and_activity_html_are_scoped_and_closed() -> None:  # noqa: PLR0915
     edition, configuration, source, _target, now = _world(source_price=0)
     _account, occupied = _register(edition=edition, product=source, now=now)

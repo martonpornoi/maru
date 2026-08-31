@@ -128,11 +128,34 @@ def test_template_application_accepts_only_version_zero_and_exact_confirmation()
         },
         edition_name="Synthetic Edition",
         expected_version=0,
+        profile_code="full_convention",
+        profile_version=1,
     )
 
     assert not form.is_valid()
     assert "expected_version" in form.errors
     assert "confirmation_name" in form.errors
+
+
+def test_template_application_discloses_only_exact_profile_catalog() -> None:
+    """Hide every built-in template for an unsupported profile version."""
+    current = StructureTemplateApplicationForm(
+        edition_name="Synthetic Edition",
+        expected_version=0,
+        profile_code="full_convention",
+        profile_version=1,
+    )
+    form = StructureTemplateApplicationForm(
+        edition_name="Synthetic Edition",
+        expected_version=0,
+        profile_code="full_convention",
+        profile_version=2,
+    )
+
+    assert current.template_application_available
+    assert not form.template_application_available
+    assert tuple(form.fields["template"].choices) == ()
+    assert form["template"].value() in (None, "")
 
 
 def test_creation_form_rejects_unknown_scope_and_preserves_retry_value() -> None:

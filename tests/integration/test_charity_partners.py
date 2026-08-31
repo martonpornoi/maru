@@ -582,6 +582,40 @@ def _charity_workspace_url(edition: EventEdition) -> str:
     )
 
 
+def test_charity_workspace_rejects_an_edition_that_does_not_adopt_charities() -> None:
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    actor = AccountFactory()
+    CapabilityGrantFactory(
+        organization=edition.organization,
+        principal=actor,
+        capability_code="charities.manage_partners",
+    )
+    CapabilityGrantFactory(
+        organization=edition.organization,
+        principal=actor,
+        capability_code="charities.view_partners",
+    )
+    client = Client()
+    client.force_login(actor)
+
+    assert client.get(_charity_workspace_url(edition)).status_code == 404
+    create_url = reverse(
+        "charity-partner-create-page",
+        args=(
+            edition.organization.slug,
+            edition.series.slug,
+            edition.slug,
+        ),
+    )
+    assert client.post(create_url, {}).status_code == 404
+    assert not CharityPartner.objects.filter(
+        organization_id=edition.organization_id,
+    ).exists()
+
+
 def test_charity_partner_media_and_proposal_html_is_closed_and_tenant_safe() -> (  # noqa: PLR0915
     None
 ):

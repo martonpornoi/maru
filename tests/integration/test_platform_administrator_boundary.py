@@ -136,7 +136,10 @@ def test_platform_administrator_uses_platform_policy_without_a_convention_grant(
 def test_platform_context_lists_editions_without_participation() -> None:
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     edition = EventEditionFactory(name="Marucon 2031")
-    profile = adoption_profile(edition.adoption_profile_code)
+    profile = adoption_profile(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+    )
     assert profile is not None
     client = APIClient()
     client.force_authenticate(administrator)
@@ -171,6 +174,7 @@ def test_platform_context_lists_editions_without_participation() -> None:
                 "setup",
                 "security",
             ],
+            "assignment_uses_participation_evidence": True,
             "time_zone": edition.time_zone,
             "language_codes": edition.language_codes,
             "currency_codes": edition.currency_codes,

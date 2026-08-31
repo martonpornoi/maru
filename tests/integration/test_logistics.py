@@ -10,7 +10,10 @@ from uuid import uuid4
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
+from django.test import Client
+from django.urls import reverse
 from django.utils import timezone
+from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
 from maru.effects.models import DomainEvent, OutboxMessage
@@ -20,6 +23,8 @@ from maru.logistics.models import (
     Asset,
     AssetAgreement,
     EquipmentOffer,
+    EquipmentOfferHistory,
+    EquipmentOfferItem,
     KeyholderResponsibility,
     LogisticsCommandReceipt,
     LogisticsCurrentState,
@@ -56,6 +61,7 @@ from maru.logistics.services import (
     register_stock_lot,
     submit_equipment_offer,
 )
+from maru.logistics.writer_boundary import logistics_writer
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.workforce_helpers import create_department_for_test
 
@@ -208,6 +214,106 @@ def _attempt_forbidden_receipt_truncate() -> None:
     with transaction.atomic(), connection.cursor() as cursor:
         cursor.execute("SET LOCAL maru.authority_provenance_test_reset = 'off'")
         cursor.execute("TRUNCATE TABLE public.logistics_logisticscommandreceipt")
+
+
+def test_retained_offer_routes_require_the_exact_logistics_profile() -> None:
+    """Hide retained offers before names and reject every direct continuation."""
+    edition = EventEditionFactory(
+        name="Hidden Logistics Edition",
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    owner = AccountFactory(display_name="Retained offer owner")
+    now = timezone.now()
+    with transaction.atomic(), logistics_writer():
+        address = RestrictedLogisticsAddress.objects.create(
+            organization=edition.organization,
+            edition=edition,
+            subject_account=owner,
+            purpose=RestrictedLogisticsAddress.Purpose.PICKUP,
+            label="Hidden pickup contact",
+            postal_address="1 Hidden Logistics Street",
+            retention_until=now + timedelta(days=30),
+            created_by=owner,
+        )
+        offer = EquipmentOffer.objects.create(
+            organization=edition.organization,
+            edition=edition,
+            offered_by=owner,
+            pickup_address=address,
+            title="Hidden Lighting Rig",
+            available_from=now + timedelta(days=1),
+            available_until=now + timedelta(days=2),
+        )
+        EquipmentOfferItem.objects.create(
+            offer=offer,
+            kind=EquipmentOfferItem.Kind.SERIALIZED,
+            name="Hidden lighting desk",
+            quantity=1,
+            condition="Working",
+            ownership_statement="Owned by the retained-offer fixture account.",
+        )
+        EquipmentOfferHistory.objects.create(
+            offer=offer,
+            organization=edition.organization,
+            edition=edition,
+            status=EquipmentOffer.Status.PENDING,
+            offer_version=1,
+            actor=owner,
+            reason="Create retained offer evidence for exact-profile denial coverage.",
+            occurred_at=now,
+        )
+
+    web = Client()
+    web.force_login(owner)
+    direct_url = reverse(
+        "my-logistics-offers",
+        args=(edition.organization.slug, edition.series.slug, edition.slug),
+    )
+    before = {
+        "receipts": LogisticsCommandReceipt.objects.count(),
+        "events": DomainEvent.objects.filter(
+            event_name="logistics.record.changed.v1"
+        ).count(),
+        "outbox": OutboxMessage.objects.filter(
+            event__event_name="logistics.record.changed.v1"
+        ).count(),
+    }
+
+    index = web.get(reverse("my-logistics-offer-index"))
+    direct_get = web.get(direct_url)
+    direct_post = web.post(direct_url, {})
+    api = APIClient()
+    api.force_authenticate(owner)
+    api_get = api.get(
+        reverse(
+            "api-my-equipment-offer-list",
+            args=(edition.organization_id, edition.id),
+        )
+    )
+
+    assert index.status_code == 200
+    assert index.context["offer_editions"] == ()
+    assert direct_get.status_code == 403
+    assert direct_post.status_code == 403
+    assert api_get.status_code == 403
+    rendered = b"".join(
+        (index.content, direct_get.content, direct_post.content, api_get.content)
+    )
+    assert b"Hidden Logistics Edition" not in rendered
+    assert b"Hidden Lighting Rig" not in rendered
+    offer.refresh_from_db()
+    assert offer.status == EquipmentOffer.Status.PENDING
+    assert offer.aggregate_version == 1
+    assert {
+        "receipts": LogisticsCommandReceipt.objects.count(),
+        "events": DomainEvent.objects.filter(
+            event_name="logistics.record.changed.v1"
+        ).count(),
+        "outbox": OutboxMessage.objects.filter(
+            event__event_name="logistics.record.changed.v1"
+        ).count(),
+    } == before
 
 
 def test_catalog_commands_honor_exact_organization_or_edition_authority() -> None:
@@ -464,6 +570,96 @@ def test_expired_restricted_contact_disposal_redacts_and_is_idempotent() -> None
         )
         == ()
     )
+
+
+def test_edition_retention_requires_effect_and_exact_logistics_profile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject unadopted retention before selection and repeat the row filter."""
+    now = timezone.now()
+    edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    subject = AccountFactory()
+    with transaction.atomic(), logistics_writer():
+        address = RestrictedLogisticsAddress.objects.create(
+            organization=edition.organization,
+            edition=edition,
+            purpose=RestrictedLogisticsAddress.Purpose.PICKUP,
+            label="Retained private contact",
+            recipient_name="Synthetic Recipient",
+            contact_email="retained@example.invalid",
+            contact_phone="+3610000000",
+            postal_address="1 Synthetic Retention Street",
+            access_instructions="Synthetic private instructions",
+            retention_until=now - timedelta(days=1),
+            created_by=subject,
+        )
+    before = {
+        "audits": AuditEvent.objects.filter(
+            organization_id=edition.organization_id,
+            event_edition_id=edition.id,
+            operation="logistics.restricted_address.dispose",
+        ).count(),
+        "events": DomainEvent.objects.filter(
+            organization_id=edition.organization_id,
+            event_edition_id=edition.id,
+            event_name="logistics.record.changed.v1",
+        ).count(),
+        "outbox": OutboxMessage.objects.filter(
+            event__organization_id=edition.organization_id,
+            event__event_edition_id=edition.id,
+            event__event_name="logistics.record.changed.v1",
+        ).count(),
+    }
+
+    with pytest.raises(ValidationError) as raised:
+        dispose_expired_restricted_addresses(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            correlation_id=uuid4(),
+            now=now,
+        )
+    assert raised.value.code == "effect_profile_not_allowed"
+
+    monkeypatch.setattr(
+        "maru.logistics.retention.require_effect_delivery_allowed",
+        lambda **_kwargs: None,
+    )
+    assert (
+        dispose_expired_restricted_addresses(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            correlation_id=uuid4(),
+            now=now,
+        )
+        == ()
+    )
+
+    address.refresh_from_db()
+    assert address.lifecycle == RestrictedLogisticsAddress.Lifecycle.ACTIVE
+    assert address.aggregate_version == 1
+    assert address.recipient_name == "Synthetic Recipient"
+    assert address.contact_email == "retained@example.invalid"
+    assert address.postal_address == "1 Synthetic Retention Street"
+    assert {
+        "audits": AuditEvent.objects.filter(
+            organization_id=edition.organization_id,
+            event_edition_id=edition.id,
+            operation="logistics.restricted_address.dispose",
+        ).count(),
+        "events": DomainEvent.objects.filter(
+            organization_id=edition.organization_id,
+            event_edition_id=edition.id,
+            event_name="logistics.record.changed.v1",
+        ).count(),
+        "outbox": OutboxMessage.objects.filter(
+            event__organization_id=edition.organization_id,
+            event__event_edition_id=edition.id,
+            event__event_name="logistics.record.changed.v1",
+        ).count(),
+    } == before
 
 
 def test_disposal_waits_for_live_return_horizon() -> None:

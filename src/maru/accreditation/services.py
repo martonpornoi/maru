@@ -17,6 +17,7 @@ from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
 
+from maru.accreditation.adoption import profile_allows_offline_check_in_relay
 from maru.accreditation.models import (
     Credential,
     CredentialEvent,
@@ -29,6 +30,7 @@ from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import decide, resolve_edition_target
 from maru.authorization.services import AuthorizationDenied
+from maru.events.queries import edition_adoption_profile_reference
 from maru.registration.models import CheckInRecord, Registration
 from maru.registration.services import (
     _append_timeline,
@@ -486,7 +488,7 @@ def generate_offline_manifest(
         return manifest
 
 
-def reconcile_offline_check_in(
+def reconcile_offline_check_in(  # noqa: PLR0915 - reconciliation keeps one atomic audit boundary
     *,
     organization_id: UUID,
     edition_id: UUID,
@@ -533,6 +535,18 @@ def reconcile_offline_check_in(
     """
     received_at = timezone.now()
     with transaction.atomic():
+        profile = edition_adoption_profile_reference(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        if profile is None or not profile_allows_offline_check_in_relay(
+            profile.code,
+            profile.version,
+        ):
+            raise ValidationError(
+                "Offline check-in is unavailable for this edition profile.",
+                code="offline_relay_profile_not_allowed",
+            )
         device = RelayDevice.objects.select_for_update().get(
             organization_id=organization_id,
             edition_id=edition_id,

@@ -377,6 +377,7 @@ def test_assignment_evidence_contract_remains_profile_aware() -> None:
     assert "`participation_capacity_id` null" in runbook
     assert "Participation counts stay zero" in runbook
     assert "`workforce.0014_workforce_only_assignment_evidence`" in runbook
+    assert "`workforce.0015_exact_assignment_adoption_profile`" in runbook
     assert (
         runbook.index("Confirm that approval")
         < runbook.index("complete the bounded Availability")

@@ -27,9 +27,10 @@ from maru.authorization.policy import (
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.adoption import (
-    ADOPTION_PROFILE_VERSION,
     AdoptionProfileCode,
     adoption_profile,
+    profile_adopts_module,
+    selectable_adoption_profile,
 )
 from maru.events.models import (
     MAX_EDITION_SPAN_DAYS,
@@ -197,6 +198,7 @@ def _create_edition_with_generated_slug(
     series: ConventionSeries,
     details: EventEditionDetails,
     adoption_profile_code: str,
+    adoption_profile_version: int,
 ) -> EventEdition:
     base = slugify(details.name)[:MAX_EDITION_SLUG_LENGTH].strip("-") or "edition"
     for number in range(1, MAX_EDITION_SLUG_CANDIDATES + 1):
@@ -218,7 +220,7 @@ def _create_edition_with_generated_slug(
                     lifecycle_version=0,
                     aggregate_version=1,
                     adoption_profile_code=adoption_profile_code,
-                    adoption_profile_version=ADOPTION_PROFILE_VERSION,
+                    adoption_profile_version=adoption_profile_version,
                     time_zone=details.time_zone,
                     language_codes=list(details.language_codes),
                     currency_codes=list(details.currency_codes),
@@ -241,8 +243,9 @@ def _edition_creation_digest(
     series_id: UUID,
     details: EventEditionDetails,
     adoption_profile_code: str,
+    adoption_profile_version: int,
 ) -> str:
-    payload = {
+    payload: dict[str, object] = {
         "organization_id": str(organization_id),
         "series_id": str(series_id),
         "name": details.name,
@@ -256,6 +259,8 @@ def _edition_creation_digest(
     # continue to replay. Purpose-bounded profiles are explicit digest input.
     if adoption_profile_code != AdoptionProfileCode.FULL_CONVENTION:
         payload["adoption_profile_code"] = adoption_profile_code
+    if adoption_profile_version != 1:
+        payload["adoption_profile_version"] = adoption_profile_version
     canonical = json.dumps(
         payload,
         ensure_ascii=False,
@@ -347,28 +352,84 @@ def create_event_edition(
         organization_id=organization_id,
     )
     normalized = _normalize_edition_details(details)
-    profile = adoption_profile(adoption_profile_code)
-    if profile is None or profile.version != ADOPTION_PROFILE_VERSION:
-        raise ValidationError(
-            {
-                "adoption_profile_code": ValidationError(
-                    "Choose a supported event-edition adoption profile.",
-                    code="edition_adoption_profile_unsupported",
-                )
-            }
-        )
-    request_digest = _edition_creation_digest(
-        organization_id=organization_id,
-        series_id=series_id,
-        details=normalized,
-        adoption_profile_code=profile.code.value,
-    )
+    submitted_profile_code = str(adoption_profile_code)
 
     with transaction.atomic():
         organization = Organization.objects.select_for_update().get(id=organization_id)
         series = ConventionSeries.objects.select_for_update().get(
             id=series_id,
             organization=organization,
+        )
+        existing_receipt = (
+            EditionCreationReceipt.objects.select_related("edition")
+            .filter(
+                actor_id=actor.id,
+                series_id=series.id,
+                idempotency_key=idempotency_key,
+            )
+            .first()
+        )
+        if existing_receipt is not None:
+            retained_edition = existing_receipt.edition
+            retained_profile = adoption_profile(
+                retained_edition.adoption_profile_code,
+                retained_edition.adoption_profile_version,
+            )
+            if retained_profile is None:
+                raise ValidationError(
+                    {
+                        "adoption_profile_code": ValidationError(
+                            (
+                                "The retained event-edition adoption profile "
+                                "is unsupported by this deployment."
+                            ),
+                            code="edition_adoption_profile_unsupported",
+                        )
+                    }
+                )
+            replay_digest = _edition_creation_digest(
+                organization_id=organization.id,
+                series_id=series.id,
+                details=normalized,
+                adoption_profile_code=retained_profile.code.value,
+                adoption_profile_version=retained_profile.version,
+            )
+            if (
+                submitted_profile_code != retained_profile.code.value
+                or existing_receipt.request_digest != replay_digest
+            ):
+                raise ValidationError(
+                    {
+                        "idempotency_key": ValidationError(
+                            (
+                                "This creation key was already used with "
+                                "different edition details."
+                            ),
+                            code="edition_creation_idempotency_conflict",
+                        )
+                    }
+                )
+            return EventEditionCreationResult(
+                edition=existing_receipt.edition,
+                replayed=True,
+            )
+
+        profile = selectable_adoption_profile(adoption_profile_code)
+        if profile is None:
+            raise ValidationError(
+                {
+                    "adoption_profile_code": ValidationError(
+                        "Choose a supported event-edition adoption profile.",
+                        code="edition_adoption_profile_unsupported",
+                    )
+                }
+            )
+        request_digest = _edition_creation_digest(
+            organization_id=organization.id,
+            series_id=series.id,
+            details=normalized,
+            adoption_profile_code=profile.code.value,
+            adoption_profile_version=profile.version,
         )
         if (
             profile.code == AdoptionProfileCode.FULL_CONVENTION
@@ -390,32 +451,6 @@ def create_event_edition(
                     )
                 }
             )
-        existing_receipt = (
-            EditionCreationReceipt.objects.select_related("edition")
-            .filter(
-                actor_id=actor.id,
-                series_id=series.id,
-                idempotency_key=idempotency_key,
-            )
-            .first()
-        )
-        if existing_receipt is not None:
-            if existing_receipt.request_digest != request_digest:
-                raise ValidationError(
-                    {
-                        "idempotency_key": ValidationError(
-                            (
-                                "This creation key was already used with "
-                                "different edition details."
-                            ),
-                            code="edition_creation_idempotency_conflict",
-                        )
-                    }
-                )
-            return EventEditionCreationResult(
-                edition=existing_receipt.edition,
-                replayed=True,
-            )
 
         if organization.lifecycle == Organization.Lifecycle.CLOSED:
             raise ValidationError(
@@ -433,6 +468,7 @@ def create_event_edition(
             series=series,
             details=normalized,
             adoption_profile_code=profile.code.value,
+            adoption_profile_version=profile.version,
         )
         EditionCreationReceipt.objects.create(
             edition=edition,
@@ -584,7 +620,11 @@ def update_event_edition(
                 }
             )
         if (
-            edition.adoption_profile_code == AdoptionProfileCode.WORKFORCE_ONLY
+            not profile_adopts_module(
+                edition.adoption_profile_code,
+                edition.adoption_profile_version,
+                "registration",
+            )
             and tuple(edition.currency_codes) != normalized.currency_codes
         ):
             raise ValidationError(

@@ -38,6 +38,18 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Hardened the executable `full_convention@1` and `workforce_only@1`
+  boundaries into immutable exact-version manifests. Authorization, shell and
+  context destinations, Registration discovery, Applications starters and
+  providers, Effects delivery, Workforce assignment evidence, and built-in
+  catalogs now consume the persisted code/version pair and fail closed instead
+  of widening through a module namespace or later catalog growth. Typed owner
+  catalogs document successful and failed adapter results; deployment checks
+  cross-check every literal, presentation catalog, selectable pair, and
+  database-supported pair. Historical creation replays retain their original
+  exact pair even after later selection or expansion changes. This is the
+  enforcement prerequisite for Programme Operations and does not activate
+  `programme_operations@1` ([#59](https://github.com/martonpornoi/maru/issues/59)).
 - Accepted the contract-only `programme_operations@1` boundary for a Programme
   department to progress from calls and review through one approved timetable,
   staffing projections, and on-site continuity without adopting attendee

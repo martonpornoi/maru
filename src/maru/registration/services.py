@@ -31,6 +31,7 @@ from maru.effects.services import (
     publish_domain_event,
 )
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.models import Account, AccountRestriction
 from maru.identity.services import enforce_not_restricted
 from maru.participation.models import Participation
@@ -4094,10 +4095,14 @@ def inspect_registration_lifecycle(
     """
     processed_at = now or timezone.now()
     base = Registration.objects.filter(
+        adoption_profile_filter_for_module(
+            "registration",
+            field_prefix="edition",
+        ),
         state__in=(
             Registration.State.WAITLISTED,
             Registration.State.PAYMENT_PENDING,
-        )
+        ),
     )
     if edition_id is not None:
         base = base.filter(edition_id=edition_id)
@@ -4151,10 +4156,14 @@ def process_registration_lifecycle(
         now=processed_at,
     )
     base = Registration.objects.filter(
+        adoption_profile_filter_for_module(
+            "registration",
+            field_prefix="edition",
+        ),
         state__in=(
             Registration.State.WAITLISTED,
             Registration.State.PAYMENT_PENDING,
-        )
+        ),
     )
     if edition_id is not None:
         base = base.filter(edition_id=edition_id)
@@ -4189,6 +4198,10 @@ def process_registration_lifecycle(
                 Registration.objects.select_for_update()
                 .select_related("account", "product", "configuration")
                 .filter(
+                    adoption_profile_filter_for_module(
+                        "registration",
+                        field_prefix="edition",
+                    ),
                     id=registration_id,
                     state__in=(
                         Registration.State.WAITLISTED,

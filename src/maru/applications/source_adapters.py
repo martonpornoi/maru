@@ -8,6 +8,10 @@ from typing import TYPE_CHECKING
 from django.db import models
 from django.utils import timezone
 
+from maru.applications.adoption import (
+    profile_allows_application_eligibility,
+    profile_allows_application_source,
+)
 from maru.applications.models import (
     ApplicationDefinition,
     ApplicationEligibilityKind,
@@ -69,6 +73,13 @@ def applicant_is_eligible(
         `True` when Evaluate only registered, purpose-specific edition
         relationships; otherwise `False`.
     """
+    edition = definition.edition
+    if not profile_allows_application_eligibility(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+        definition.eligibility_kind,
+    ):
+        return False
     if not account.is_active or account.account_kind != Account.Kind.PERSON:
         return False
     evaluation_time = at or timezone.now()
@@ -157,6 +168,15 @@ def source_bound_value(
     ValueError
         If the supplied value cannot satisfy the documented contract.
     """
+    edition = question.definition.edition
+    if not profile_allows_application_source(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+        question.source_binding,
+    ):
+        raise ValueError(
+            "Question source binding is not admitted by the exact edition profile."
+        )
     if question.source_binding == ApplicationSourceBinding.ACCOUNT_DISPLAY_NAME:
         return account.display_name
     if question.source_binding == ApplicationSourceBinding.REGISTRATION_TELEGRAM:

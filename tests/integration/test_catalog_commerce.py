@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from uuid import uuid4
 
 import pytest
@@ -592,6 +593,81 @@ def test_attendee_and_staff_catalog_pages_are_owned_and_closed() -> None:  # noq
     )
     assert api_response.status_code == 400
     assert CatalogOrder.objects.filter(account=attendee).count() == 1
+
+
+@override_settings(ROOT_URLCONF=__name__)
+def test_retained_checkout_routes_require_exact_catalog_profile() -> None:
+    """Deny retained checkout reads and payments before loading the order."""
+    edition = EventEditionFactory(
+        name="Hidden Catalog Edition",
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    creator = AccountFactory(display_name="Retained catalog creator")
+    owner = AccountFactory(display_name="Retained catalog owner")
+    catalog = EditionCatalog.objects.create(
+        organization=edition.organization,
+        edition=edition,
+        status=EditionCatalog.Status.ACTIVE,
+        currency="EUR",
+        created_by=creator,
+    )
+    order = CatalogOrder.objects.create(
+        catalog=catalog,
+        organization=edition.organization,
+        edition=edition,
+        account=owner,
+        reference="HIDDEN-CATALOG-ORDER",
+        status=CatalogOrder.Status.PAYMENT_PENDING,
+        currency="EUR",
+        total_minor=3_000,
+        payment_due_at=timezone.now() + timedelta(days=1),
+    )
+    client = Client()
+    client.force_login(owner)
+    checkout_url = reverse("my-catalog-checkout", args=(edition.id, order.id))
+    before = {
+        "receipts": CatalogCommandReceipt.objects.count(),
+        "intents": CatalogPaymentIntent.objects.count(),
+        "events": CatalogPaymentEvent.objects.count(),
+        "audits": AuditEvent.objects.count(),
+        "domain_events": DomainEvent.objects.count(),
+        "outbox": OutboxMessage.objects.count(),
+    }
+
+    index = client.get(reverse("my-catalog-index"))
+    responses = (
+        client.get(reverse("my-catalog", args=(edition.id,))),
+        client.post(reverse("my-catalog-order", args=(edition.id,)), {}),
+        client.get(reverse("my-catalog-orders", args=(edition.id,))),
+        client.get(checkout_url),
+        client.post(
+            reverse("my-catalog-hosted-payment", args=(edition.id, order.id)),
+            {},
+        ),
+        client.post(
+            reverse("my-catalog-demo-payment", args=(edition.id, order.id)),
+            {},
+        ),
+    )
+
+    assert index.status_code == 200
+    assert index.context["catalogs"] == ()
+    assert {response.status_code for response in responses} == {404}
+    rendered = b"".join((index.content, *(response.content for response in responses)))
+    assert b"Hidden Catalog Edition" not in rendered
+    assert b"HIDDEN-CATALOG-ORDER" not in rendered
+    order.refresh_from_db()
+    assert order.status == CatalogOrder.Status.PAYMENT_PENDING
+    assert order.aggregate_version == 1
+    assert {
+        "receipts": CatalogCommandReceipt.objects.count(),
+        "intents": CatalogPaymentIntent.objects.count(),
+        "events": CatalogPaymentEvent.objects.count(),
+        "audits": AuditEvent.objects.count(),
+        "domain_events": DomainEvent.objects.count(),
+        "outbox": OutboxMessage.objects.count(),
+    } == before
 
 
 @override_settings(ROOT_URLCONF=__name__)

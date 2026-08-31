@@ -32,12 +32,13 @@ all-platform commitment:
 ## Pre-deployment review
 
 1. Back up the database under the deployment's accepted recovery procedure.
-2. Confirm the release contains all four migrations:
+2. Confirm the release contains all five migrations:
 
    - `events.0010_workforce_adoption_profile`;
    - `authorization.0019_progressive_adoption_authority`;
-   - `organizations.0014_purpose_bounded_representation`; and
-   - `workforce.0014_workforce_only_assignment_evidence`.
+   - `organizations.0014_purpose_bounded_representation`;
+   - `workforce.0014_workforce_only_assignment_evidence`; and
+   - `workforce.0015_exact_assignment_adoption_profile`.
 
 3. Run migration-plan and drift checks. The dependency graph applies Events
    first; Workforce and Authorization follow once their dependencies permit,
@@ -66,6 +67,10 @@ verify:
 - no pre-existing `OrganizationRepresentation.code` changed;
 - the runtime-role and authority-provenance readiness checks pass with exact
   function fingerprints and grants; and
+- `maru_guard_workforce_assignment()` names both
+  `adoption_profile_code` and `adoption_profile_version`, accepts only the two
+  reviewed v1 assignment-evidence pairs, and rejects an unknown pair before a
+  write; and
 - the application health/readiness projection remains value-minimized.
 
 Do not hand-edit the migration recorder or compensate for a failed data check
@@ -139,6 +144,9 @@ For the exact edition, verify all of the following:
 - platform administration receives the same modular denial at exact edition
   scope;
 - public Registration discovery does not return the edition;
+- an exact-edition account restriction retains its internal Identity event but
+  enqueues and writes no Communications notification, while the separately
+  declared organization-wide restriction-notification route remains available;
 - public volunteer pages expose only Volunteer navigation and explain that the
   account is not attendee Registration, attendance, or payment; personal
   Workforce routes focus on My Maru and My Workforce;

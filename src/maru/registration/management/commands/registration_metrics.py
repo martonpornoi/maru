@@ -11,6 +11,7 @@ from django.utils import timezone
 from maru.communications.models import NotificationDelivery
 from maru.effects.models import OutboxMessage
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_module
 from maru.identity.models import AccountRestriction
 from maru.registration.availability import OCCUPIED_REGISTRATION_STATES
 from maru.registration.models import (
@@ -61,6 +62,7 @@ class Command(BaseCommand):
         organization_id: UUID = options["organization"]
         edition_id: UUID = options["edition"]
         if not EventEdition.objects.filter(
+            adoption_profile_filter_for_module("registration"),
             id=edition_id,
             organization_id=organization_id,
         ).exists():

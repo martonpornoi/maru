@@ -1357,12 +1357,25 @@ def test_public_role_currentness_query_supports_dormant_and_malformed_fences() -
         role_bundle=RoleBundleFactory(organization=organization),
         effective_from=now + timedelta(minutes=5),
     )
+    workforce_edition = EventEditionFactory(
+        adoption_profile_code="workforce_only",
+        adoption_profile_version=1,
+    )
+    incompatible = RoleAssignmentFactory(
+        organization=workforce_edition.organization,
+        edition=workforce_edition,
+        role_bundle=RoleBundleFactory(
+            organization=workforce_edition.organization,
+            capability_codes=["registration.manage_configuration"],
+        ),
+        effective_from=now - timedelta(minutes=5),
+    )
     with patch(
         "maru.authorization.policy._exact_lineage_policy_state",
         return_value=(False, False),
     ):
         assert current_role_assignment_ids(
-            assignment_ids=(current.id, future.id),
+            assignment_ids=(current.id, future.id, incompatible.id),
             at=now,
         ) == frozenset({current.id})
     with patch(

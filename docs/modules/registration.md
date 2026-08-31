@@ -324,6 +324,22 @@ submit the edition's configured sections in one transaction. If the email
 already belongs to an account, the form does not modify it and sends the person
 through sign-in instead.
 
+Both public HTML and API discovery join an active configuration to an exact
+adoption-profile code/version pair that pins Registration. A code-only match is
+insufficient: a later profile version is invisible until its reviewed manifest
+deliberately adopts Registration, and an unknown pair returns no public entry.
+The same exact module gate precedes public attendee-directory and protected
+profile/fursuit-media lookup. Retained consent, payment, publication, or media
+rows cannot revive those anonymous projections for an edition whose manifest
+does not adopt Registration.
+
+Authenticated profile, edit, demo-payment, tier-replacement, hosted-payment,
+and payment-intent create/status routes also repeat the exact profile and
+required self-capability decision before loading a retained Registration or
+attendee profile. A copied direct URL therefore returns a name-free not-found
+response and performs no mutation when that exact edition profile does not
+admit Registration.
+
 Authenticated returning attendees use the same chooser. It separates their
 existing registrations from other open editions. For a later edition in the
 same organization, Maru may show the latest earlier profile as a clearly
@@ -512,6 +528,17 @@ reservations, closes waitlists after their sale period, cancels open records
 for inactive accounts, and offers released capacity to the oldest
 active-account entry under row locks.
 
+Lifecycle inspection, mutation, admission-tier replacement expiry, and
+edition-scoped metrics admit candidates only through the exact Registration
+profile. Both an explicit incompatible edition and a global run ignore retained
+Registration rows; the explicit management-command scope fails before writing
+a lifecycle receipt. Scheduled account restrictions retain their Identity
+evidence, while Registration and Accreditation consequences independently
+filter the exact `registration.identity-restriction-consequence@1` and
+`accreditation.identity-restriction-consequence@1` adapters before loading or
+changing rows. Module adoption or an Identity restriction alone is
+insufficient.
+
 A paid product uses a hosted payment adapter boundary. Maru records the
 provider account and local intent, validates the configured return origin and
 provider hosts, and returns a hosted checkout URL without accepting card data.
@@ -519,6 +546,15 @@ The browser return is status only. An HMAC-authenticated, timestamp-bounded
 webhook reconciles provider account, intent, registration, amount, currency,
 state, and idempotency identity. Duplicate events converge; late, conflicting,
 mismatched, or uncertain events create a staff-owned payment exception.
+
+Personal intent creation and status reads, direct intent creation, and a
+webhook event that identifies a retained local intent all require the intent's
+edition to match the exact Registration profile before receipt, exception,
+registration, ledger, entitlement, timeline, audit, event, or outbox mutation.
+An incompatible identified intent fails closed without disclosing its edition
+or registration. A genuinely unknown provider reference remains an
+organization-scoped reconciliation exception because it has no trustworthy
+edition to gate; it never confirms or changes a Registration.
 
 The generic JSON hosted adapter and webhook protocol are implemented.
 Production still has to supply a selected provider endpoint, credentials,
@@ -549,6 +585,12 @@ When an active minor policy requires guardian consent, submission enters
 exact version through an expiring challenge before normal reservation or free
 confirmation continues.
 
+Guardian token acceptance resolves the locked consent only through its
+Registration's exact adoption profile. A retained token for an incompatible
+edition produces the same generic invalid-token response as an unknown token,
+does not disclose attendee or edition labels, and changes no consent,
+Registration, timeline, entitlement, event, or outbox evidence.
+
 Images pass size/type/decode checks, malware scanning, metadata stripping, and
 safe-rendition encoding before entering moderation. Safety evidence follows
 approved exact-file reuse; disposal removes storage only when no protected
@@ -576,6 +618,13 @@ Finance-authorized staff see product-and-currency reconciliation separating
 provider-paid amount, waiver face value, free places, outstanding reservations,
 waitlisted, expired, and cancelled records. Exception-authorized staff can
 change a deadline or waive payment with a required reason.
+
+The Registration commerce browser workspace resolves its edition only through
+an exact adoption-profile code and version that includes Registration. This
+route gate runs before configuration or product lookup, activity projection,
+form construction, and capacity or waitlist commands. A retained direct URL
+for an incompatible edition therefore returns not found without exposing
+product labels or appending an adjustment or waitlist batch.
 
 The Front Desk projection excludes email, form answers, HR data, safety cases,
 and unrelated participation. Today shows typed configuration-review and

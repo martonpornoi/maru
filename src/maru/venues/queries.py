@@ -19,7 +19,12 @@ from maru.authorization.policy import (
     resolve_organization_target,
 )
 from maru.events.models import EventEdition
+from maru.events.queries import (
+    adoption_profile_filter_for_adapter,
+    adoption_profile_filter_for_module,
+)
 from maru.participation.queries import participations_for_account
+from maru.venues.adoption import VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE
 
 from .authorization import resolve_edition_space_target
 from .inputs import normalized_reason, normalized_source_channel
@@ -388,6 +393,11 @@ def public_schedule_for_edition(
     if ends_after is not None and not timezone.is_aware(ends_after):
         raise ValueError("ends_after must be timezone-aware")
     bookings = VenueBooking.objects.filter(
+        adoption_profile_filter_for_module("venues", field_prefix="edition"),
+        adoption_profile_filter_for_adapter(
+            VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE,
+            field_prefix="edition",
+        ),
         organization_id=organization_id,
         edition_id=edition_id,
         lifecycle=VenueBooking.Lifecycle.ACTIVE,
@@ -466,6 +476,10 @@ def authorize_my_maru_schedule_scope(
     if (
         not participations_for_account(actor)
         .filter(
+            adoption_profile_filter_for_adapter(
+                VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE,
+                field_prefix="edition",
+            ),
             organization_id=organization_id,
             edition_id=edition_id,
             status__in=_ATTENDEE_PARTICIPATION_STATUSES,
@@ -523,12 +537,21 @@ def my_maru_schedule_editions(*, actor: Account) -> tuple[EventEdition, ...]:
     attendee_edition_ids = (
         participations_for_account(actor)
         .filter(
+            adoption_profile_filter_for_adapter(
+                VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE,
+                field_prefix="edition",
+            ),
             status__in=_ATTENDEE_PARTICIPATION_STATUSES,
         )
         .values_list("edition_id", flat=True)
     )
     scopes = tuple(
         VenueBooking.objects.filter(
+            adoption_profile_filter_for_module("venues", field_prefix="edition"),
+            adoption_profile_filter_for_adapter(
+                VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE,
+                field_prefix="edition",
+            ),
             edition_id__in=attendee_edition_ids,
             lifecycle=VenueBooking.Lifecycle.ACTIVE,
             review_state=VenueBooking.ReviewState.APPROVED,

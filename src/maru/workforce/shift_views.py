@@ -32,7 +32,9 @@ from maru.authorization.policy import (
 )
 from maru.events.admin_context import authorized_admin_edition_for_route
 from maru.events.models import EventEdition
+from maru.events.queries import adoption_profile_filter_for_adapter
 from maru.identity.models import Account
+from maru.workforce.adoption import WORKFORCE_SELF_ADAPTER
 from maru.workforce.models import (
     Position,
     ShiftDemand,
@@ -1235,6 +1237,7 @@ def _personal_route(
     edition = (
         EventEdition.objects.select_related("organization", "series")
         .filter(
+            adoption_profile_filter_for_adapter(WORKFORCE_SELF_ADAPTER),
             slug=edition_slug,
             organization__slug=organization_slug,
             series__slug=series_slug,

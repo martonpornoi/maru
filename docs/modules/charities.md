@@ -61,7 +61,10 @@ event/outbox payloads.
 
 The same authenticated shell exposes the edition charity workspace and exact
 selection review page under the selected convention context. The navigation
-item is projected only after `charities.view_review_queue` is authorized.
+item is projected only after `charities.view_review_queue` is authorized. The
+route resolves only editions whose exact adoption-profile code/version pair
+pins Charities, before rendering edition labels, reading partner records, or
+accepting a command; an organization-level grant cannot bypass that boundary.
 
 Versioned APIs expose:
 
@@ -81,7 +84,10 @@ decision reasons are restricted operational data; private comments are
 purpose-scoped restricted data. Retention and deletion policy must account for
 the append-only audit/decision evidence and any legal reporting duty before a
 partner is retired. Retirement and publication withdrawal are the supported
-non-destructive controls.
+non-destructive controls. The anonymous snapshot query also requires the
+edition's exact profile code/version pair to adopt Charities before reading the
+published selection. Retained confirmed snapshots under an incompatible or
+unknown exact profile remain invisible.
 
 Migrations `charities.0001` and `charities.0002` create the schema and database
 write-integrity guards. `authorization.0013` adds the capability minimum-scope

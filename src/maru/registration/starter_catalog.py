@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import NAMESPACE_URL, UUID, uuid5
 
+from maru.registration.adoption import profile_allows_registration_starter
 from maru.registration.setup_content import (
     canonical_digest,
     product_payload,
@@ -195,6 +196,71 @@ def platform_registration_starter(
     return next((item for item in _STARTERS if item.source_id == source_id), None)
 
 
+def platform_registration_starters_for_profile(
+    *,
+    profile_code: str,
+    profile_version: int,
+) -> tuple[PlatformRegistrationStarter, ...]:
+    """Return only starters pinned by one exact edition profile.
+
+    Parameters
+    ----------
+    profile_code : str
+        Persisted adoption-profile code.
+    profile_version : int
+        Persisted adoption-profile version.
+
+    Returns
+    -------
+    tuple[PlatformRegistrationStarter, ...]
+        Admitted starters in stable display order. An unknown exact profile
+        pair returns an empty catalog.
+    """
+    return tuple(
+        starter
+        for starter in platform_registration_starters()
+        if profile_allows_registration_starter(
+            profile_code,
+            profile_version,
+            starter.code,
+            starter.version,
+        )
+    )
+
+
+def platform_registration_starter_for_profile(
+    *,
+    profile_code: str,
+    profile_version: int,
+    source_id: UUID,
+) -> PlatformRegistrationStarter | None:
+    """Resolve one starter only when the exact profile pins it.
+
+    Parameters
+    ----------
+    profile_code : str
+        Persisted adoption-profile code.
+    profile_version : int
+        Persisted adoption-profile version.
+    source_id : UUID
+        Immutable source identifier submitted by the organizer.
+
+    Returns
+    -------
+    PlatformRegistrationStarter | None
+        The admitted starter, or ``None`` for an unknown source/profile pair.
+    """
+    starter = platform_registration_starter(source_id)
+    if starter is None or not profile_allows_registration_starter(
+        profile_code,
+        profile_version,
+        starter.code,
+        starter.version,
+    ):
+        return None
+    return starter
+
+
 def platform_registration_starter_by_provenance(
     *, version: int, content_digest: str
 ) -> PlatformRegistrationStarter | None:
@@ -227,5 +293,7 @@ __all__ = [
     "PlatformRegistrationStarter",
     "platform_registration_starter",
     "platform_registration_starter_by_provenance",
+    "platform_registration_starter_for_profile",
     "platform_registration_starters",
+    "platform_registration_starters_for_profile",
 ]

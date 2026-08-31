@@ -32,6 +32,7 @@ from maru.authorization.policy import (
 from maru.core.api_input import reject_unknown_fields
 from maru.events.models import EventEdition
 from maru.identity.models import Account
+from maru.workforce.adoption import profile_allows_workforce_self
 from maru.workforce.shift_audit import append_shift_read_audit
 from maru.workforce.shift_commands import (
     ShiftAuthorizationDeniedError,
@@ -230,6 +231,11 @@ def _personal_scope(
 ) -> _PersonalAPIScope:
     account = _account(request)
     edition = _edition(organization_id=organization_id, edition_id=edition_id)
+    if not profile_allows_workforce_self(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+    ):
+        raise PermissionDenied("Current personal Shift access is unavailable.")
     target = resolve_self_target(
         principal=account,
         organization_id=organization_id,

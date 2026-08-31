@@ -13,6 +13,13 @@ from django.db import transaction
 from django.db.models import Max, Q
 from django.utils import timezone
 
+from maru.applications.adoption import (
+    profile_allows_application_eligibility,
+    profile_allows_application_reviewer_role,
+    profile_allows_application_self,
+    profile_allows_application_source,
+    profile_allows_application_target,
+)
 from maru.applications.answer_values import condition_matches, normalize_answer_value
 from maru.applications.models import (
     MAX_QUESTIONS,
@@ -36,7 +43,7 @@ from maru.applications.models import (
     ReviewerBasis,
 )
 from maru.applications.source_adapters import applicant_is_eligible, source_bound_value
-from maru.applications.starters import application_starter
+from maru.applications.starters import application_starter_for_profile
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.models import RoleAssignment, RoleBundle
 from maru.authorization.policy import (
@@ -227,6 +234,10 @@ def _self_target(
         or edition is None
         or decision is None
         or not decision.allowed
+        or not profile_allows_application_self(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+        )
     ):
         raise ApplicationAuthorizationDenied
     return current_actor, edition
@@ -401,7 +412,7 @@ def create_definition_from_starter(
     ValidationError
         If the submitted state or input violates a domain invariant.
     """
-    actor, _ = _edition_target(
+    actor, edition = _edition_target(
         actor=actor,
         organization_id=organization_id,
         edition_id=edition_id,
@@ -424,7 +435,11 @@ def create_definition_from_starter(
     )
     if replay is not None:
         return replay
-    starter = application_starter(starter_code)
+    starter = application_starter_for_profile(
+        profile_code=edition.adoption_profile_code,
+        profile_version=edition.adoption_profile_version,
+        starter_code=starter_code,
+    )
     if starter is None or starter.is_external:
         raise ValidationError(
             {"starter_code": "Choose an applications-owned starter."},
@@ -600,7 +615,7 @@ def configure_definition(
     ValidationError
         If the submitted state or input violates a domain invariant.
     """
-    actor, _ = _edition_target(
+    actor, edition = _edition_target(
         actor=actor,
         organization_id=organization_id,
         edition_id=edition_id,
@@ -638,6 +653,19 @@ def configure_definition(
     )
     if replay is not None:
         return replay
+    if not profile_allows_application_eligibility(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+        eligibility_kind,
+    ):
+        raise ValidationError(
+            {
+                "eligibility_kind": (
+                    "Choose an eligibility provider admitted by this edition."
+                )
+            },
+            code="application_eligibility_provider_unavailable",
+        )
     definition = _locked_definition(
         organization_id=organization_id,
         edition_id=edition_id,
@@ -646,6 +674,7 @@ def configure_definition(
     _check_version(definition.aggregate_version, expected_version)
     if definition.status != ApplicationDefinitionStatus.DRAFT:
         raise ApplicationStateConflict
+    definition.classification = classification
     if (
         not reason.strip()
         or len(owner_department_ids) > 32
@@ -671,6 +700,26 @@ def configure_definition(
             id__in=reviewer_role_bundle_ids, organization_id=organization_id
         ).order_by("id")
     )
+    if any(
+        not profile_allows_application_reviewer_role(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            role.capability_codes,
+            sensitive=definition.is_sensitive,
+        )
+        for role in roles
+    ):
+        raise ValidationError(
+            {
+                "reviewer_role_bundle_ids": ValidationError(
+                    (
+                        "Choose an immutable reviewer role whose complete capability "
+                        "set is admitted by this edition."
+                    ),
+                    code="application_reviewer_role_unavailable",
+                )
+            }
+        )
     people = tuple(
         Account.objects.filter(
             id__in=reviewer_account_ids,
@@ -687,7 +736,6 @@ def configure_definition(
     definition.name = name
     definition.description = description
     definition.purpose = purpose
-    definition.classification = classification
     definition.eligibility_kind = eligibility_kind
     definition.max_submissions_per_person = maximum_submissions
     definition.opens_at = opens_at
@@ -1085,6 +1133,56 @@ def _validate_definition_activation(definition: ApplicationDefinition) -> None:
             "section__position", "position", "id"
         )
     )
+    edition = definition.edition
+    if not profile_allows_application_target(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+        definition.target_adapter_kind,
+    ):
+        raise ValidationError(
+            "The accepted-target adapter is unavailable for this edition.",
+            code="application_target_adapter_unavailable",
+        )
+    if not profile_allows_application_eligibility(
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+        definition.eligibility_kind,
+    ):
+        raise ValidationError(
+            "The definition eligibility provider is unavailable for this edition.",
+            code="application_eligibility_provider_unavailable",
+        )
+    if any(
+        not profile_allows_application_source(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            question.source_binding,
+        )
+        for question in questions
+    ):
+        raise ValidationError(
+            "A definition question source is unavailable for this edition.",
+            code="application_source_provider_unavailable",
+        )
+    reviewer_role_links = tuple(
+        definition.reviewer_roles.select_related("role_bundle").order_by(
+            "role_bundle_id",
+            "id",
+        )
+    )
+    if any(
+        not profile_allows_application_reviewer_role(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            link.role_bundle.capability_codes,
+            sensitive=definition.is_sensitive,
+        )
+        for link in reviewer_role_links
+    ):
+        raise ValidationError(
+            "A reviewer role is unavailable for this edition's exact profile.",
+            code="application_reviewer_role_unavailable",
+        )
     if not definition.owner_department_links.exists():
         raise ValidationError(
             "Assign at least one owning Department.", code="application_owner_required"
@@ -1970,8 +2068,19 @@ def _reviewer_basis(
 ) -> tuple[str, RoleBundle | None]:
     if definition.reviewer_people.filter(account_id=actor.id).exists():
         return ReviewerBasis.NAMED_PERSON, None
-    role_bundle_ids = tuple(
-        definition.reviewer_roles.values_list("role_bundle_id", flat=True)
+    edition = definition.edition
+    role_bundle_ids = frozenset(
+        link.role_bundle_id
+        for link in definition.reviewer_roles.select_related("role_bundle").order_by(
+            "role_bundle_id",
+            "id",
+        )
+        if profile_allows_application_reviewer_role(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            link.role_bundle.capability_codes,
+            sensitive=definition.is_sensitive,
+        )
     )
     if not role_bundle_ids:
         raise ApplicationAuthorizationDenied
@@ -1997,7 +2106,9 @@ def _reviewer_basis(
             organization_id=definition.organization_id,
             principal_id=actor.id,
             role_bundle_id__in=role_bundle_ids,
-        ).order_by("role_bundle_id", "id")
+        )
+        .select_related("role_bundle")
+        .order_by("role_bundle_id", "id")
     )
     current_ids = current_role_assignment_ids(
         assignment_ids={assignment.id for assignment in candidates},
@@ -2065,7 +2176,7 @@ def record_review_decision(
     ValidationError
         If the submitted state or input violates a domain invariant.
     """
-    actor, _ = _edition_target(
+    actor, edition = _edition_target(
         actor=actor,
         organization_id=organization_id,
         edition_id=edition_id,
@@ -2143,6 +2254,17 @@ def record_review_decision(
         raise ApplicationStateConflict
     from_state = submission.state
     to_state = transition[1]
+    if to_state == ApplicationState.ACCEPTED and not (
+        profile_allows_application_target(
+            edition.adoption_profile_code,
+            edition.adoption_profile_version,
+            submission.definition.target_adapter_kind,
+        )
+    ):
+        raise ValidationError(
+            "The accepted-target adapter is unavailable for this edition.",
+            code="application_target_adapter_unavailable",
+        )
     submission.state = to_state
     if to_state in {ApplicationState.ACCEPTED, ApplicationState.REJECTED}:
         submission.decided_at = evaluated_at

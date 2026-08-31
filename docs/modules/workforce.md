@@ -45,16 +45,24 @@ in the [Set up Workforce contract](../product/page-contracts/workforce-only-adop
 and the [adoption and recovery runbook](../operations/workforce-only-adoption-and-recovery.md).
 
 Assignment remains responsibility plus exact authority evidence in every
-profile. In a full-convention edition, the established compatibility behavior
-also creates or activates Participation capacities and requires the assignment
-pointer to be non-null. In a Workforce-only edition, approval stores no
-`Participation` or `ParticipationCapacity` and the nullable pointer must remain
-empty. Model validation and the PostgreSQL assignment guard require evidence to
-match the immutable edition profile; a null full-convention pointer or non-null
+profile. The immutable manifest now selects exactly one versioned assignment-
+evidence adapter. `full_convention@1` pins
+`workforce.assignment.participation-required@1`, which creates or activates
+Participation capacities and requires the assignment pointer to be non-null.
+`workforce_only@1` pins
+`workforce.assignment.participation-excluded@1`, so approval stores no
+`Participation` or `ParticipationCapacity` and the nullable pointer remains
+empty. An unknown profile or a manifest that pins neither or both adapters
+fails closed. Model validation and the PostgreSQL assignment guard require the
+resulting evidence shape to match; a null full-convention pointer or non-null
 Workforce-only pointer is an integrity conflict. Ending a Workforce-only
 assignment revokes authority and retains assignment evidence without touching
-Participation. Migration `0014` refuses downgrade once such active or ended
-evidence exists.
+Participation. Migration `0014` introduced the profile-matched shape;
+additive migration `0015_exact_assignment_adoption_profile` replaces its
+code-only database branch with literal `full_convention@1` and
+`workforce_only@1` pairs. The installed trigger rejects every unknown pair
+before an assignment write. `0015` refuses downgrade after any governed
+assignment evidence exists.
 
 Candidate discovery already accepts a purpose-bounded relationship: an active
 organization membership, Position application, onboarding request, or prior
@@ -62,8 +70,13 @@ Workforce history can make an active person selectable without Participation.
 Account existence alone is not sufficient, and selection creates no attendee
 state.
 
-Current profile v1 supports the built-in versioned, copy-on-write structure
-template and manual purpose-built editors. General partner imports, a complete
+Both current exact manifests pin the versioned, copy-on-write
+`workforce.structure-template.marucon-reference@1` and
+`workforce.position-template.workforce-volunteer@1` catalog entries. The
+governed safe-starter provisioning route remains limited to the exact
+Workforce-only setup contract. Commands recheck those literal entries against
+the edition profile after locking its scope; catalog growth therefore cannot
+enter an existing edition implicitly. General partner imports, a complete
 continuity export, printable rota, offline/manual reconciliation, and automated
 profile removal remain declared production gates rather than hidden promises.
 
@@ -82,8 +95,13 @@ letting an unadopted capability enter through reusable configuration.
 Exact routed editions drive the management menu and workspace selector even
 without saved session context. Public Workforce pages use a Volunteer-only
 shell, and personal Workforce pages focus navigation on My Maru and My
-Workforce. These focused surfaces make the purpose boundary legible while
-policy and database controls remain authoritative.
+Workforce. Public opportunity discovery requires an exact profile that adopts
+Workforce. Assignment, Availability, Shift, onboarding-document, and personal
+route discovery additionally require the versioned `workforce.self@1` adapter;
+both current v1 profiles pin it, while an unknown future version fails before
+policy or relationship data is projected. These focused surfaces make the
+purpose boundary legible while policy and database controls remain
+authoritative.
 
 A platform administrator may initiate or review bootstrap work as an attributed
 actor, but cannot be the subject of a volunteer application, onboarding request,

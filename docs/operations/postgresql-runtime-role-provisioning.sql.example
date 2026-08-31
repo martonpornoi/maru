@@ -113,18 +113,22 @@ GRANT SELECT ON TABLE
 -- that may be inserted and advanced, but never deleted, by runtime. REFERENCES
 -- is unnecessary for these relations and remains denied at table and column
 -- level by the catalog proof.
--- Keep these explicit exceptions after blanket/default grants. Department is
--- intentionally absent: it retains ordinary runtime DML and its stopped-writer
--- retirement trigger remains the database integrity boundary.
+-- Keep these explicit exceptions after blanket/default grants. Effect replay
+-- rationale and Workforce setup receipts are append-only runtime evidence.
+-- Department is intentionally absent: it retains ordinary runtime DML and its
+-- stopped-writer retirement trigger remains the database integrity boundary.
 REVOKE UPDATE, DELETE, REFERENCES ON TABLE
+    public.effects_effectreplayreceipt,
     public.events_workforceadoptionsetupreceipt,
     public.workforce_editionstructurecommandreceipt
     FROM maru_runtime;
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.effects_effectreplayreceipt,
     public.events_workforceadoptionsetupreceipt,
     public.workforce_editionstructurecommandreceipt
     FROM PUBLIC;
 GRANT SELECT, INSERT ON TABLE
+    public.effects_effectreplayreceipt,
     public.events_workforceadoptionsetupreceipt,
     public.workforce_editionstructurecommandreceipt
     TO maru_runtime;

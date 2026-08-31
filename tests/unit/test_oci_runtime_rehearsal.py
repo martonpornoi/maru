@@ -179,7 +179,16 @@ def test_pins_reviewed_application_postgresql_and_source_identity() -> None:
     assert rehearsal.validate_source_revision(rehearsal.DEFAULT_SOURCE_REVISION)
 
 
-def test_provisioning_sql_matches_release_source_contract() -> None:
+def test_provisioning_sql_digest_stays_bound_to_pinned_release_source() -> None:
+    assert rehearsal.DEFAULT_SOURCE_REVISION == (
+        "be0b21db9ba2d2a956bd192a1d66c537d702c4c4"
+    )
+    assert rehearsal.EXPECTED_PROVISIONING_SQL_SHA256 == (
+        "709f644dbea546351e210fd58c6fe5ee6a502882b0b94058c049412533f7b49e"
+    )
+
+
+def test_current_provisioning_sql_narrows_effect_replay_receipts() -> None:
     path = (
         rehearsal.REPOSITORY_ROOT
         / "docs"
@@ -187,11 +196,23 @@ def test_provisioning_sql_matches_release_source_contract() -> None:
         / "postgresql-runtime-role-provisioning.sql.example"
     )
     sql_text = path.read_text(encoding="utf-8")
+    statements = [
+        statement
+        for statement in sql_text.split(";")
+        if "public.effects_effectreplayreceipt" in statement
+    ]
 
-    assert rehearsal.provisioning_sql_is_exact(sql_text)
-    assert hashlib.sha256(sql_text.encode()).hexdigest() == (
+    assert not rehearsal.provisioning_sql_is_exact(sql_text)
+    assert hashlib.sha256(sql_text.encode()).hexdigest() != (
         rehearsal.EXPECTED_PROVISIONING_SQL_SHA256
     )
+    assert len(statements) == 3
+    assert "REVOKE UPDATE, DELETE, REFERENCES ON TABLE" in statements[0]
+    assert "FROM maru_runtime" in statements[0]
+    assert "REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE" in statements[1]
+    assert "FROM PUBLIC" in statements[1]
+    assert "GRANT SELECT, INSERT ON TABLE" in statements[2]
+    assert "TO maru_runtime" in statements[2]
 
 
 def test_resource_names_are_isolated_and_cleanup_safe() -> None:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
@@ -23,10 +23,14 @@ from maru.applications.commands import (
 )
 from maru.applications.models import (
     ApplicationAnswerRevision,
+    ApplicationCommandReceipt,
     ApplicationDefinition,
     ApplicationDefinitionStatus,
+    ApplicationQuestion,
     ApplicationReviewDecision,
+    ApplicationSection,
     ApplicationState,
+    ApplicationSubmission,
     ApplicationTargetRecord,
     ReviewerBasis,
 )
@@ -39,6 +43,7 @@ from maru.applications.queries import (
 from maru.applications.serializers import latest_answers
 from maru.audit.models import AuditEvent
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events import adoption as event_adoption
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
@@ -193,6 +198,407 @@ def _activate(world: _DraftWorld) -> None:
         source_channel="test",
     )
     world.definition.refresh_from_db()
+
+
+def _configure_reviewer_roles(
+    world: _DraftWorld,
+    *,
+    role_bundle_ids: tuple[UUID, ...],
+    retry_key: UUID | None = None,
+) -> None:
+    configure_definition(
+        actor=world.manager,
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
+        definition_id=world.definition.id,
+        expected_version=world.definition.aggregate_version,
+        name=world.definition.name,
+        description=world.definition.description,
+        purpose=world.definition.purpose,
+        classification=world.definition.classification,
+        eligibility_kind=world.definition.eligibility_kind,
+        maximum_submissions=world.definition.max_submissions_per_person,
+        opens_at=world.opens_at,
+        closes_at=world.closes_at,
+        applicant_edit_until=world.applicant_edit_until,
+        minimum_age=world.definition.minimum_age,
+        audience_policy_code=world.definition.audience_policy_code,
+        retention_policy_code=world.definition.retention_policy_code,
+        age_policy_code=world.definition.age_policy_code,
+        owner_department_ids=(world.department.id,),
+        reviewer_role_bundle_ids=role_bundle_ids,
+        reviewer_account_ids=(),
+        reason="Retain an exact immutable reviewer queue.",
+        retry_key=retry_key or uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    world.definition.refresh_from_db()
+
+
+def _exclude_full_profile_capability(
+    monkeypatch: pytest.MonkeyPatch,
+    capability_code: str,
+) -> None:
+    profile_key = ("full_convention", 1)
+    full_profile = event_adoption.ADOPTION_PROFILES[profile_key]
+    monkeypatch.setattr(
+        event_adoption,
+        "ADOPTION_PROFILES",
+        {
+            **event_adoption.ADOPTION_PROFILES,
+            profile_key: replace(
+                full_profile,
+                capability_codes=full_profile.capability_codes - {capability_code},
+            ),
+        },
+    )
+
+
+def _submitted_dj_application(
+    world: _DraftWorld,
+) -> tuple[Account, UUID, int]:
+    _activate(world)
+    applicant = AccountFactory(display_name="Adapter Guard Applicant")
+    started = start_submission(
+        actor=applicant,
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
+        definition_id=world.definition.id,
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    assert started.submission_id is not None
+    version = started.resulting_version
+    answers: dict[str, object] = {
+        "artist-name": "Adapter Guard",
+        "genre": "House",
+        "set-length": 60,
+        "technical-needs": "Standard booth.",
+    }
+    for key, value in answers.items():
+        question = world.definition.questions.get(key=key)
+        result = append_answer_revision(
+            actor=applicant,
+            organization_id=world.edition.organization_id,
+            edition_id=world.edition.id,
+            submission_id=started.submission_id,
+            question_id=question.id,
+            expected_version=version,
+            value=value,
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+        version = result.resulting_version
+    submitted = submit_application(
+        actor=applicant,
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
+        submission_id=started.submission_id,
+        expected_version=version,
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    return applicant, started.submission_id, submitted.resulting_version
+
+
+def test_configuration_rejects_a_profile_incompatible_reviewer_role(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject crafted role IDs before replacing a valid reviewer queue."""
+    world = _configured_draft("dj-application")
+    assert world.reviewer_role is not None
+    mixed_role = RoleBundleFactory(
+        organization=world.edition.organization,
+        code="mixed-application-registration-reviewer",
+        name="Mixed application and registration reviewer",
+        capability_codes=(
+            "applications.review",
+            "registration.manage_configuration",
+        ),
+    )
+    original_version = world.definition.aggregate_version
+    _exclude_full_profile_capability(
+        monkeypatch,
+        "registration.manage_configuration",
+    )
+
+    with pytest.raises(ValidationError) as captured:
+        _configure_reviewer_roles(
+            world,
+            role_bundle_ids=(mixed_role.id,),
+        )
+
+    assert (
+        captured.value.error_dict["reviewer_role_bundle_ids"][0].code
+        == "application_reviewer_role_unavailable"
+    )
+    world.definition.refresh_from_db()
+    assert world.definition.aggregate_version == original_version
+    assert set(
+        world.definition.reviewer_roles.values_list("role_bundle_id", flat=True)
+    ) == {world.reviewer_role.id}
+
+
+def test_activation_rejects_a_stale_profile_incompatible_reviewer_role(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Recheck a retained draft queue against the exact profile at activation."""
+    world = _configured_draft("dj-application")
+    mixed_role = RoleBundleFactory(
+        organization=world.edition.organization,
+        code="stale-mixed-application-reviewer",
+        name="Stale mixed application reviewer",
+        capability_codes=(
+            "applications.review",
+            "registration.manage_configuration",
+        ),
+    )
+    _configure_reviewer_roles(world, role_bundle_ids=(mixed_role.id,))
+    _exclude_full_profile_capability(
+        monkeypatch,
+        "registration.manage_configuration",
+    )
+
+    with pytest.raises(ValidationError) as captured:
+        _activate(world)
+
+    assert captured.value.code == "application_reviewer_role_unavailable"
+    world.definition.refresh_from_db()
+    assert world.definition.status == ApplicationDefinitionStatus.DRAFT
+
+
+def test_runtime_reviewer_basis_rejects_a_mixed_role_despite_direct_authority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Do not combine direct review authority with an incompatible queue role."""
+    world = _configured_draft("dj-application")
+    pure_role = world.reviewer_role
+    assert pure_role is not None
+    mixed_role = RoleBundleFactory(
+        organization=world.edition.organization,
+        code="runtime-mixed-application-reviewer",
+        name="Runtime mixed application reviewer",
+        capability_codes=(
+            "applications.review",
+            "registration.manage_configuration",
+        ),
+    )
+    _configure_reviewer_roles(
+        world,
+        role_bundle_ids=(pure_role.id, mixed_role.id),
+    )
+    mixed_reviewer = AccountFactory(display_name="Mixed queue reviewer")
+    pure_reviewer = AccountFactory(display_name="Pure queue reviewer")
+    for reviewer, role in (
+        (mixed_reviewer, mixed_role),
+        (pure_reviewer, pure_role),
+    ):
+        CapabilityGrantFactory(
+            organization=world.edition.organization,
+            edition=world.edition,
+            principal=reviewer,
+            capability_code="applications.review",
+            effective_from=timezone.now() - timedelta(minutes=1),
+        )
+        RoleAssignmentFactory(
+            organization=world.edition.organization,
+            edition=world.edition,
+            principal=reviewer,
+            role_bundle=role,
+            effective_from=timezone.now() - timedelta(minutes=1),
+        )
+
+    _, submission_id, submitted_version = _submitted_dj_application(world)
+    _exclude_full_profile_capability(
+        monkeypatch,
+        "registration.manage_configuration",
+    )
+
+    assert (
+        review_queue(
+            actor=mixed_reviewer,
+            organization_id=world.edition.organization_id,
+            edition_id=world.edition.id,
+        )
+        == ()
+    )
+    pure_queue = review_queue(
+        actor=pure_reviewer,
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
+    )
+    assert tuple(submission.id for submission in pure_queue) == (submission_id,)
+    with pytest.raises(ApplicationAuthorizationDenied):
+        authorize_application_review_submission_api_scope(
+            actor=mixed_reviewer,
+            organization_id=world.edition.organization_id,
+            edition_id=world.edition.id,
+            submission_id=submission_id,
+        )
+    authorize_application_review_submission_api_scope(
+        actor=pure_reviewer,
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
+        submission_id=submission_id,
+    )
+
+    with pytest.raises(ApplicationAuthorizationDenied):
+        record_review_decision(
+            actor=mixed_reviewer,
+            organization_id=world.edition.organization_id,
+            edition_id=world.edition.id,
+            submission_id=submission_id,
+            expected_version=submitted_version,
+            decision="start_review",
+            reason="Attempt review through an incompatible queue role.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+    assert not ApplicationReviewDecision.objects.filter(
+        submission_id=submission_id
+    ).exists()
+
+    record_review_decision(
+        actor=pure_reviewer,
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
+        submission_id=submission_id,
+        expected_version=submitted_version,
+        decision="start_review",
+        reason="Begin review through the compatible Applications role.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    decision = ApplicationReviewDecision.objects.get(
+        submission_id=submission_id,
+        reviewer=pure_reviewer,
+    )
+    assert decision.reviewer_basis == ReviewerBasis.IMMUTABLE_ROLE
+    assert decision.reviewer_role_bundle_id == pure_role.id
+
+
+def test_starter_copy_persists_nothing_without_its_target_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject an incompletely pinned starter before copying owned records."""
+    edition = EventEditionFactory()
+    manager = AccountFactory(display_name="Incomplete Manifest Manager")
+    CapabilityGrantFactory(
+        organization=edition.organization,
+        edition=edition,
+        principal=manager,
+        capability_code="applications.manage_definitions",
+        effective_from=timezone.now() - timedelta(minutes=1),
+    )
+    correlation_id = uuid4()
+    retry_key = uuid4()
+    before_counts = {
+        "definitions": ApplicationDefinition.objects.count(),
+        "sections": ApplicationSection.objects.count(),
+        "questions": ApplicationQuestion.objects.count(),
+        "receipts": ApplicationCommandReceipt.objects.count(),
+        "audits": AuditEvent.objects.count(),
+        "events": DomainEvent.objects.count(),
+        "outbox": OutboxMessage.objects.count(),
+    }
+    monkeypatch.setattr(
+        "maru.applications.starters.profile_allows_application_target",
+        lambda _profile_code, _profile_version, target_kind: target_kind != "dj_set",
+    )
+
+    now = timezone.now()
+    with pytest.raises(ValidationError) as captured:
+        create_definition_from_starter(
+            actor=manager,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            starter_code="dj-application",
+            opens_at=now,
+            closes_at=now + timedelta(days=10),
+            applicant_edit_until=now + timedelta(days=9),
+            retry_key=retry_key,
+            correlation_id=correlation_id,
+            source_channel="test",
+        )
+
+    assert captured.value.message_dict == {
+        "starter_code": ["Choose an applications-owned starter."],
+    }
+    assert before_counts == {
+        "definitions": ApplicationDefinition.objects.count(),
+        "sections": ApplicationSection.objects.count(),
+        "questions": ApplicationQuestion.objects.count(),
+        "receipts": ApplicationCommandReceipt.objects.count(),
+        "audits": AuditEvent.objects.count(),
+        "events": DomainEvent.objects.count(),
+        "outbox": OutboxMessage.objects.count(),
+    }
+    assert not ApplicationCommandReceipt.objects.filter(
+        retry_key=retry_key,
+    ).exists()
+    assert not AuditEvent.objects.filter(correlation_id=correlation_id).exists()
+    assert not DomainEvent.objects.filter(correlation_id=correlation_id).exists()
+
+
+def test_activation_rechecks_target_adapter_before_state_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    world = _configured_draft("dj-application")
+    monkeypatch.setattr(
+        "maru.applications.commands.profile_allows_application_target",
+        lambda *_args: False,
+    )
+
+    with pytest.raises(ValidationError) as captured:
+        _activate(world)
+
+    assert captured.value.code == "application_target_adapter_unavailable"
+    world.definition.refresh_from_db()
+    assert world.definition.status == ApplicationDefinitionStatus.DRAFT
+
+
+def test_acceptance_rechecks_target_adapter_before_creating_transition(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    world = _configured_draft("dj-application")
+    _, submission_id, submitted_version = _submitted_dj_application(world)
+    correlation_id = uuid4()
+    monkeypatch.setattr(
+        "maru.applications.commands.profile_allows_application_target",
+        lambda *_args: False,
+    )
+
+    with pytest.raises(ValidationError) as captured:
+        record_review_decision(
+            actor=world.reviewer,
+            organization_id=world.edition.organization_id,
+            edition_id=world.edition.id,
+            submission_id=submission_id,
+            expected_version=submitted_version,
+            decision="accept",
+            reason="Attempt a legacy target transition.",
+            retry_key=uuid4(),
+            correlation_id=correlation_id,
+            source_channel="test",
+        )
+
+    assert captured.value.code == "application_target_adapter_unavailable"
+    submission = ApplicationSubmission.objects.get(pk=submission_id)
+    assert submission.state == ApplicationState.SUBMITTED
+    assert submission.aggregate_version == submitted_version
+    assert not ApplicationReviewDecision.objects.filter(
+        submission_id=submission_id
+    ).exists()
+    assert not ApplicationTargetRecord.objects.filter(
+        submission_id=submission_id
+    ).exists()
+    assert not DomainEvent.objects.filter(correlation_id=correlation_id).exists()
 
 
 def test_api_preflight_requires_exact_applicant_and_reviewer_assignment() -> None:

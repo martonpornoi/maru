@@ -69,8 +69,10 @@ class StubQuery:
     def __init__(self, *, first: object = None, rows: tuple[object, ...] = ()) -> None:
         self._first = first
         self._rows = rows
+        self.filter_calls: list[tuple[tuple[object, ...], dict[str, object]]] = []
 
-    def filter(self, *_args: object, **_kwargs: object) -> StubQuery:
+    def filter(self, *args: object, **kwargs: object) -> StubQuery:
+        self.filter_calls.append((args, kwargs))
         return self
 
     def exclude(self, *_args: object, **_kwargs: object) -> StubQuery:
@@ -83,6 +85,9 @@ class StubQuery:
         return self
 
     def order_by(self, *_args: object, **_kwargs: object) -> StubQuery:
+        return self
+
+    def values_list(self, *_args: object, **_kwargs: object) -> StubQuery:
         return self
 
     def first(self) -> object:
@@ -143,6 +148,100 @@ def _raise(error: Exception):  # type: ignore[no-untyped-def]
 
 def _message_texts(request: HttpRequest) -> list[str]:
     return [str(message) for message in get_messages(request)]
+
+
+def _allow_self_registration_scope(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        public_views,
+        "_authorize_self_registration_scope",
+        lambda **_kwargs: None,
+    )
+
+
+def test_self_registration_scope_requires_exact_profile_before_policy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    edition_id = UUID(int=12)
+    exact_profile_filter = object()
+    editions = StubQuery(first=None)
+    resolve = MagicMock()
+    decide = MagicMock()
+    monkeypatch.setattr(
+        public_views,
+        "adoption_profile_filter_for_module",
+        lambda module_code: (
+            exact_profile_filter
+            if module_code == "registration"
+            else pytest.fail("unexpected module")
+        ),
+    )
+    monkeypatch.setattr(
+        public_views,
+        "EventEdition",
+        SimpleNamespace(objects=editions),
+    )
+    monkeypatch.setattr(public_views, "resolve_self_target", resolve)
+    monkeypatch.setattr(public_views, "decide", decide)
+
+    with pytest.raises(Http404):
+        public_views._authorize_self_registration_scope(
+            account=_actor(),
+            edition_id=edition_id,
+            capability_codes=("registration.view_self",),
+        )
+
+    assert editions.filter_calls == [((exact_profile_filter,), {"id": edition_id})]
+    resolve.assert_not_called()
+    decide.assert_not_called()
+
+
+def test_self_registration_scope_requires_every_requested_capability(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    account = _actor()
+    organization_id = UUID(int=11)
+    edition_id = UUID(int=12)
+    target = object()
+    editions = StubQuery(first=organization_id)
+    resolve = MagicMock(return_value=target)
+    decide = MagicMock(
+        side_effect=(
+            SimpleNamespace(allowed=True),
+            SimpleNamespace(allowed=False),
+        )
+    )
+    monkeypatch.setattr(
+        public_views,
+        "adoption_profile_filter_for_module",
+        lambda _module_code: object(),
+    )
+    monkeypatch.setattr(
+        public_views,
+        "EventEdition",
+        SimpleNamespace(objects=editions),
+    )
+    monkeypatch.setattr(public_views, "resolve_self_target", resolve)
+    monkeypatch.setattr(public_views, "decide", decide)
+
+    with pytest.raises(Http404):
+        public_views._authorize_self_registration_scope(
+            account=account,
+            edition_id=edition_id,
+            capability_codes=(
+                "registration.view_self",
+                "registration.view_self_profile",
+            ),
+        )
+
+    resolve.assert_called_once_with(
+        principal=account,
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
+    assert [call.kwargs["capability_code"] for call in decide.call_args_list] == [
+        "registration.view_self",
+        "registration.view_self_profile",
+    ]
 
 
 def test_admin_answer_and_empty_projection_helpers_are_explicit(
@@ -654,6 +753,7 @@ def test_local_demo_payment_fails_closed_for_method_actor_and_form(
             _request(user=non_account), UUID(int=12)
         )
 
+    _allow_self_registration_scope(monkeypatch)
     monkeypatch.setattr(
         public_views, "get_object_or_404", lambda *_a, **_kw: _registration()
     )
@@ -673,6 +773,7 @@ def test_local_demo_payment_hides_service_validation(
     settings: Any,
 ) -> None:
     settings.DEMO_PAYMENT_ADAPTER_ENABLED = True
+    _allow_self_registration_scope(monkeypatch)
     monkeypatch.setattr(
         public_views, "get_object_or_404", lambda *_a, **_kw: _registration()
     )
@@ -704,6 +805,7 @@ def test_tier_replacement_fails_closed_and_reports_stale_offer(
             _request(user=SimpleNamespace(is_authenticated=True)), UUID(int=12)
         )
 
+    _allow_self_registration_scope(monkeypatch)
     monkeypatch.setattr(
         public_views, "get_object_or_404", lambda *_a, **_kw: _registration()
     )
@@ -729,6 +831,7 @@ def _patch_hosted_payment_form(
     monkeypatch: pytest.MonkeyPatch,
     form: StubForm,
 ) -> None:
+    _allow_self_registration_scope(monkeypatch)
     monkeypatch.setattr(
         public_views, "get_object_or_404", lambda *_a, **_kw: _registration()
     )
@@ -886,6 +989,7 @@ def test_submitted_groups_ignore_non_object_legacy_schema_entries() -> None:
 def test_profile_edit_hides_unknown_profile_and_maps_command_validation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _allow_self_registration_scope(monkeypatch)
     missing_query = StubQuery(first=None)
     monkeypatch.setattr(
         public_views,
@@ -1010,11 +1114,25 @@ def test_protected_media_hides_missing_records(
     model_name: str,
     identifier_name: str,
 ) -> None:
+    exact_profile_gate = object()
+    query = StubQuery(first=None)
     monkeypatch.setattr(
         public_views,
         model_name,
-        SimpleNamespace(objects=StubQuery(first=None)),
+        SimpleNamespace(objects=query),
+    )
+    monkeypatch.setattr(
+        public_views,
+        "adoption_profile_filter_for_module",
+        lambda module_code, *, field_prefix="": (
+            exact_profile_gate
+            if (module_code, field_prefix) == ("registration", "edition")
+            else None
+        ),
     )
 
+    identifier = uuid4()
     with pytest.raises(Http404):
-        view(_request("get"), **{identifier_name: uuid4()})  # type: ignore[operator]
+        view(_request("get"), **{identifier_name: identifier})  # type: ignore[operator]
+
+    assert query.filter_calls == [((exact_profile_gate,), {"id": identifier})]

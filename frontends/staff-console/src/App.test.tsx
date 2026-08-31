@@ -33,7 +33,8 @@ const context = {
       adoption_profile_code: "full_convention",
       adoption_profile_version: 1,
       adoption_profile_label: "Full convention",
-      adopted_modules: ["registration", "workforce"],
+      adopted_modules: ["participation", "registration", "workforce"],
+      assignment_uses_participation_evidence: true,
       available_destinations: [
         "today",
         "my-registration",
@@ -80,11 +81,59 @@ const workforceOnlyContext = {
       adoption_profile_code: "workforce_only",
       adoption_profile_label: "Workforce only",
       adopted_modules: ["workforce"],
+      assignment_uses_participation_evidence: false,
       available_destinations: ["today", "workforce", "setup", "security"],
       language_codes: ["en"],
       currency_codes: ["XXX"],
       participation_status: "not_participating",
       capacities: [],
+    },
+  ],
+} as const;
+
+const programmeOperationsContext = {
+  ...context,
+  display_name: "Maru Programme Operator (Demo)",
+  editions: [
+    {
+      ...context.editions[0],
+      adoption_profile_code: "programme_operations",
+      adoption_profile_label: "Programme operations",
+      adopted_modules: ["workforce", "programme"],
+      assignment_uses_participation_evidence: false,
+      available_destinations: ["today", "workforce", "setup", "security"],
+      language_codes: ["en"],
+      currency_codes: ["XXX"],
+      participation_status: "not_participating",
+      capacities: [],
+    },
+  ],
+} as const;
+
+const unsupportedProfileContext = {
+  ...context,
+  editions: [
+    {
+      ...context.editions[0],
+      adoption_profile_code: "future_profile",
+      adoption_profile_version: 9,
+      adoption_profile_label: "Future profile",
+      adopted_modules: [],
+      assignment_uses_participation_evidence: false,
+      available_destinations: ["future-destination"],
+      participation_status: "not_participating",
+      capacities: [],
+    },
+  ],
+} as const;
+
+const adapterDivergentContext = {
+  ...context,
+  editions: [
+    {
+      ...context.editions[0],
+      adopted_modules: ["participation", "registration", "workforce"],
+      assignment_uses_participation_evidence: false,
     },
   ],
 } as const;
@@ -677,7 +726,7 @@ describe("Management Console", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/it creates no attendee Registration, attendance, payment/),
+      screen.getByText(/creates no attendee Registration, attendance, payment/i),
     ).toBeInTheDocument();
     expect(screen.queryByText(/participation capacity/i)).not.toBeInTheDocument();
 
@@ -706,6 +755,100 @@ describe("Management Console", () => {
     await expectNoAccessibilityViolations(
       document.querySelector<HTMLElement>(".shell")!,
     );
+  });
+
+  it("uses exact assignment semantics when modules and the adapter diverge", async () => {
+    const originalFetch = vi.mocked(fetch).getMockImplementation();
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init) => {
+      if (String(input) === "/api/v1/me/context") {
+        return jsonResponse(adapterDivergentContext);
+      }
+      return originalFetch?.(input, init) ?? jsonResponse({}, 404);
+    });
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(await screen.findByRole("button", { name: "Workforce" }));
+    expect(
+      await screen.findByText(/This edition profile creates no attendee/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/and Participation capacity\./i))
+      .not.toBeInTheDocument();
+
+    await user.click(await screen.findByRole("button", { name: "Manage access" }));
+    const drawer = screen.getByRole("dialog", { name: "Access to Workforce" });
+    expect(
+      within(drawer).getByText(
+        /This edition profile does not create attendee Participation capacities/i,
+      ),
+    ).toBeInTheDocument();
+    expect(within(drawer).queryByText(/receive capacities/i))
+      .not.toBeInTheDocument();
+  });
+
+  it("uses exact destinations for a future purpose-scoped profile", async () => {
+    const originalFetch = vi.mocked(fetch).getMockImplementation();
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init) => {
+      if (String(input) === "/api/v1/me/context") {
+        return jsonResponse(programmeOperationsContext);
+      }
+      return originalFetch?.(input, init) ?? jsonResponse({}, 404);
+    });
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: "MaruCon 2026" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Programme operations")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Workforce" }))
+      .toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "People" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Registration desk" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByText("Registration staff intake"))
+      .not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Setup guide" }));
+
+    expect(screen.queryByText("Registration", { selector: "strong" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Planned capabilities" }))
+      .not.toBeInTheDocument();
+    expect(
+      vi.mocked(fetch).mock.calls.some(([url]) =>
+        String(url).endsWith("/closure-readiness"),
+      ),
+    ).toBe(false);
+  });
+
+  it("fails closed when this client recognizes no manifest destination", async () => {
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
+      if (String(input) === "/api/v1/me/context") {
+        return jsonResponse(unsupportedProfileContext);
+      }
+      return jsonResponse({ detail: "Unexpected request" }, 500);
+    });
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Workspace unavailable in this release",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/No broader convention workflow was assumed/))
+      .toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Today" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Workforce" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Specialist records" }))
+      .not.toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("embeds convention work without a second global navigation menu", async () => {

@@ -11,7 +11,7 @@ from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import OrganizationMembership
 from maru.participation.models import Participation
-from maru.registration import setup_queries
+from maru.registration import setup_queries, starter_catalog
 from maru.registration.configuration_lifecycle import (
     activate_registration_configuration,
     review_registration_configuration,
@@ -471,6 +471,41 @@ def test_platform_starter_is_explicit_copy_on_write_versioned_and_replay_safe() 
     assert foreign_copy.id != copied.id
     assert foreign_copy.products.get().id != copied.products.get().id
     assert foreign_copy.products.get().name == starter.products[0].name
+
+
+def test_platform_starter_disclosure_and_copy_recheck_the_exact_manifest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Deny a starter removed from the manifest before copying any rows."""
+    starter = platform_registration_starters()[0]
+    target = EventEditionFactory()
+    actor = AccountFactory()
+    _grant(actor, target)
+    monkeypatch.setattr(
+        starter_catalog,
+        "profile_allows_registration_starter",
+        lambda *_args: False,
+    )
+
+    workspace = get_registration_setup_workspace(
+        actor=actor,
+        organization_id=target.organization_id,
+        series_id=target.series_id,
+        edition_id=target.id,
+        correlation_id=uuid4(),
+    )
+    assert workspace.platform_starters == ()
+
+    values = _blank_command_values(actor=actor, edition=target)
+    values.update(
+        source_kind=RegistrationSetupOrigin.PLATFORM_STARTER,
+        source_id=starter.source_id,
+        capacity=1_000,
+    )
+    with pytest.raises(RegistrationSetupSourceUnavailableError):
+        start_registration_setup(**values)
+    assert not RegistrationConfiguration.objects.filter(edition=target).exists()
+    assert not RegistrationSetupCommandReceipt.objects.filter(edition=target).exists()
 
 
 def test_prior_source_requires_exact_active_authorized_earlier_configuration() -> None:

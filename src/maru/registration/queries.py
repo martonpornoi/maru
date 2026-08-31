@@ -1,10 +1,24 @@
 """Documented read contracts exposed by registration to other modules."""
 
-from dataclasses import dataclass
-from datetime import datetime
-from uuid import UUID
+from __future__ import annotations
 
-from maru.registration.models import Registration
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from django.utils import timezone
+
+from maru.events.queries import adoption_profile_filter_for_module
+from maru.registration.models import (
+    ConfigurationStatus,
+    Registration,
+    RegistrationConfiguration,
+)
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
+
+    from maru.identity.models import Account
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,6 +77,57 @@ class RegistrationNotificationContext:
     payment_due_at: datetime | None
     support_path: str
     registration_path: str
+
+
+def registration_shell_profile_pairs(
+    *, account: Account
+) -> tuple[tuple[str, int], ...]:
+    """Return exact profiles from public or account-owned Registration scopes.
+
+    Parameters
+    ----------
+    account : Account
+        Signed-in account whose retained registrations may disclose an edition.
+
+    Returns
+    -------
+    tuple[tuple[str, int], ...]
+        Exact known-profile candidates. The caller still applies each governed
+        shell-destination kind to these pairs.
+    """
+    evaluated_at = timezone.now()
+    pairs = set(
+        RegistrationConfiguration.objects.filter(
+            adoption_profile_filter_for_module(
+                "registration",
+                field_prefix="edition",
+            ),
+            status=ConfigurationStatus.ACTIVE,
+            opens_at__lte=evaluated_at,
+            closes_at__gt=evaluated_at,
+        )
+        .exclude(edition__lifecycle__in=("archived", "cancelled"))
+        .values_list(
+            "edition__adoption_profile_code",
+            "edition__adoption_profile_version",
+        )
+        .distinct()
+    )
+    pairs.update(
+        Registration.objects.filter(
+            adoption_profile_filter_for_module(
+                "registration",
+                field_prefix="edition",
+            ),
+            account=account,
+        )
+        .values_list(
+            "edition__adoption_profile_code",
+            "edition__adoption_profile_version",
+        )
+        .distinct()
+    )
+    return tuple(sorted(pairs))
 
 
 def notification_context(

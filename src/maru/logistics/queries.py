@@ -188,6 +188,10 @@ class PersonalOfferEditionProjection:
         The stable URL slug identifying the edition.
     edition_name
         The human-readable edition name shown to authorized readers.
+    adoption_profile_code
+        The exact adoption-profile code governing personal navigation.
+    adoption_profile_version
+        The exact adoption-profile version governing personal navigation.
     edition_starts_on
         The calendar date for edition starts.
     offer_count
@@ -204,6 +208,8 @@ class PersonalOfferEditionProjection:
     series_name: str
     edition_slug: str
     edition_name: str
+    adoption_profile_code: str
+    adoption_profile_version: int
     edition_starts_on: date
     offer_count: int
     pending_offer_count: int
@@ -943,10 +949,10 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
         raise LogisticsAuthorizationDeniedError
 
 
-def authorize_self_offer_history_api_scope(
+def authorize_self_offer_history_api_scope(  # noqa: DOC502 - delegated authorization
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> None:
-    """Allow self policy or an existing owned offer, without loading scope labels.
+    """Authorize retained self-offer history through the exact edition profile.
 
     Parameters
     ----------
@@ -963,24 +969,12 @@ def authorize_self_offer_history_api_scope(
         If the requested operation violates this domain contract.
     """
     _active_account(actor, person_only=True)
-    try:
-        authorize_logistics_api_scope(
-            actor=actor,
-            organization_id=organization_id,
-            edition_id=edition_id,
-            capability_code=SELF_OFFER_CAPABILITY,
-        )
-    except LogisticsAuthorizationDeniedError:
-        if (
-            not EquipmentOffer.objects.filter(
-                organization_id=organization_id,
-                edition_id=edition_id,
-                offered_by=actor,
-            )
-            .only("id")
-            .exists()
-        ):
-            raise
+    authorize_logistics_api_scope(
+        actor=actor,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        capability_code=SELF_OFFER_CAPABILITY,
+    )
 
 
 def authorize_personal_logistics_index_scope(*, actor: Account) -> None:
@@ -1226,6 +1220,15 @@ def my_equipment_offer_editions(
             ),
         )[:MAX_PERSONAL_EDITION_CANDIDATES]
     }
+    for organization_id, edition_id in tuple(own_counts):
+        try:
+            authorize_self_offer_history_api_scope(
+                actor=actor,
+                organization_id=organization_id,
+                edition_id=edition_id,
+            )
+        except LogisticsAuthorizationDeniedError:
+            del own_counts[(organization_id, edition_id)]
     available_scopes: set[tuple[UUID, UUID]] = set()
     candidate_scopes = (
         EventEdition.objects.filter(lifecycle__in=SELF_OFFER_EDITION_LIFECYCLES)
@@ -1265,6 +1268,8 @@ def my_equipment_offer_editions(
                 series_name=edition.series.name,
                 edition_slug=edition.slug,
                 edition_name=edition.name,
+                adoption_profile_code=edition.adoption_profile_code,
+                adoption_profile_version=edition.adoption_profile_version,
                 edition_starts_on=edition.starts_on,
                 offer_count=counts[0],
                 pending_offer_count=counts[1],
@@ -1280,6 +1285,39 @@ def my_equipment_offer_editions(
                 item.organization_name,
             ),
             reverse=True,
+        )
+    )
+
+
+def equipment_offer_shell_profile_pairs(
+    *, actor: Account
+) -> tuple[tuple[str, int], ...]:
+    """Return fail-closed exact profiles for personal equipment offers.
+
+    Parameters
+    ----------
+    actor : Account
+        Active person whose purpose-scoped offer editions are queried.
+
+    Returns
+    -------
+    tuple[tuple[str, int], ...]
+        Distinct exact profile pairs, or an empty tuple when this personal
+        query boundary denies discovery.
+    """
+    try:
+        editions = my_equipment_offer_editions(actor=actor)
+    except LogisticsAuthorizationDeniedError:
+        return ()
+    return tuple(
+        sorted(
+            {
+                (
+                    edition.adoption_profile_code,
+                    edition.adoption_profile_version,
+                )
+                for edition in editions
+            }
         )
     )
 

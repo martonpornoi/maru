@@ -9,10 +9,12 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, close_old_connections, connections
 
+import maru.events.services as event_services
 from maru.audit.models import AuditEvent
 from maru.authorization.models import CapabilityGrant, RoleAssignment
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events.adoption import AdoptionProfile, AdoptionProfileCode
 from maru.events.models import EditionCreationReceipt, EventEdition
 from maru.events.services import (
     EventEditionDetails,
@@ -24,6 +26,7 @@ from maru.organizations.models import (
     ConventionSeries,
     Organization,
     OrganizationMembership,
+    OrganizationRepresentation,
 )
 from maru.participation.models import Participation
 from maru.registration.models import Registration
@@ -34,6 +37,7 @@ from tests.factories import (
     ConventionSeriesFactory,
     EventEditionFactory,
     OrganizationFactory,
+    OrganizationRepresentationFactory,
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -62,6 +66,7 @@ def _create(
     details: EventEditionDetails | None = None,
     idempotency_key: object | None = None,
     correlation_id: object | None = None,
+    adoption_profile_code: str = AdoptionProfileCode.FULL_CONVENTION,
 ):
     return create_event_edition(
         actor=actor,
@@ -71,6 +76,7 @@ def _create(
         idempotency_key=idempotency_key or uuid4(),
         correlation_id=correlation_id or uuid4(),
         source_channel="test",
+        adoption_profile_code=adoption_profile_code,
     )
 
 
@@ -198,6 +204,210 @@ def test_creation_replay_is_normalized_and_emits_no_duplicate_evidence() -> None
     assert AuditEvent.objects.count() == 1
     assert DomainEvent.objects.count() == 1
     assert OutboxMessage.objects.count() == 1
+
+
+@pytest.mark.parametrize("selection_state", ["advanced", "retired"])
+def test_creation_replay_uses_retained_profile_before_current_selection(
+    monkeypatch: pytest.MonkeyPatch,
+    selection_state: str,
+) -> None:
+    administrator = _administrator()
+    series = ConventionSeriesFactory()
+    idempotency_key = uuid4()
+    first = _create(
+        actor=administrator,
+        series=series,
+        idempotency_key=idempotency_key,
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+    )
+    selected = event_services.selectable_adoption_profile(
+        AdoptionProfileCode.WORKFORCE_ONLY
+    )
+    assert selected is not None
+    selection_calls: list[str] = []
+
+    def changed_selection(code: str) -> AdoptionProfile | None:
+        selection_calls.append(code)
+        return replace(selected, version=2) if selection_state == "advanced" else None
+
+    monkeypatch.setattr(
+        event_services,
+        "selectable_adoption_profile",
+        changed_selection,
+    )
+
+    replay = _create(
+        actor=administrator,
+        series=series,
+        idempotency_key=idempotency_key,
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+    )
+
+    assert replay.replayed
+    assert replay.edition.id == first.edition.id
+    assert (
+        replay.edition.adoption_profile_code,
+        replay.edition.adoption_profile_version,
+    ) == selected.key
+    assert selection_calls == []
+
+
+def test_creation_replay_rejects_unknown_retained_manifest_without_selector(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    administrator = _administrator()
+    series = ConventionSeriesFactory()
+    idempotency_key = uuid4()
+    first = _create(
+        actor=administrator,
+        series=series,
+        idempotency_key=idempotency_key,
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+    )
+    retained_calls: list[tuple[str, int]] = []
+
+    def unknown_retained(code: str, version: int) -> None:
+        retained_calls.append((code, version))
+
+    def current_selector_must_not_run(_code: str) -> None:
+        raise AssertionError("Unknown retained replay must not consult selection.")
+
+    monkeypatch.setattr(event_services, "adoption_profile", unknown_retained)
+    monkeypatch.setattr(
+        event_services,
+        "selectable_adoption_profile",
+        current_selector_must_not_run,
+    )
+
+    with pytest.raises(ValidationError) as captured:
+        _create(
+            actor=administrator,
+            series=series,
+            idempotency_key=idempotency_key,
+            adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+        )
+
+    assert (
+        captured.value.error_dict["adoption_profile_code"][0].code
+        == "edition_adoption_profile_unsupported"
+    )
+    assert retained_calls == [
+        (
+            first.edition.adoption_profile_code,
+            first.edition.adoption_profile_version,
+        )
+    ]
+    assert EventEdition.objects.count() == 1
+    assert EditionCreationReceipt.objects.count() == 1
+    assert AuditEvent.objects.count() == 1
+    assert DomainEvent.objects.count() == 1
+    assert OutboxMessage.objects.count() == 1
+
+
+def test_creation_receipt_conflicts_before_current_profile_selection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    administrator = _administrator()
+    series = ConventionSeriesFactory()
+    idempotency_key = uuid4()
+    original = _create(
+        actor=administrator,
+        series=series,
+        idempotency_key=idempotency_key,
+    )
+
+    def unavailable_selection(_code: str) -> None:
+        raise AssertionError("A receipt replay must not resolve today's profile.")
+
+    monkeypatch.setattr(
+        event_services,
+        "selectable_adoption_profile",
+        unavailable_selection,
+    )
+
+    conflicting_inputs = (
+        (AdoptionProfileCode.WORKFORCE_ONLY, _details()),
+        (
+            AdoptionProfileCode.FULL_CONVENTION,
+            _details(name="Different Convention 2031"),
+        ),
+    )
+    for profile_code, details in conflicting_inputs:
+        with pytest.raises(ValidationError) as captured:
+            _create(
+                actor=administrator,
+                series=series,
+                details=details,
+                idempotency_key=idempotency_key,
+                adoption_profile_code=profile_code,
+            )
+        assert (
+            captured.value.error_dict["idempotency_key"][0].code
+            == "edition_creation_idempotency_conflict"
+        )
+
+    assert EventEdition.objects.get().id == original.edition.id
+    assert EditionCreationReceipt.objects.count() == 1
+    assert AuditEvent.objects.count() == 1
+    assert DomainEvent.objects.count() == 1
+    assert OutboxMessage.objects.count() == 1
+
+
+def test_creation_replay_precedes_changed_expansion_policy() -> None:
+    actor = AccountFactory()
+    organization = OrganizationFactory(lifecycle=Organization.Lifecycle.DRAFT)
+    series = ConventionSeriesFactory(organization=organization)
+    CapabilityGrantFactory(
+        organization=organization,
+        principal=actor,
+        capability_code="events.create",
+    )
+    idempotency_key = uuid4()
+    first = _create(
+        actor=actor,
+        series=series,
+        idempotency_key=idempotency_key,
+    )
+    OrganizationRepresentationFactory(
+        organization=organization,
+        code=OrganizationRepresentation.MARU_OPERATORS_CODE,
+        name=OrganizationRepresentation.MARU_OPERATORS_NAME,
+    )
+
+    replay = _create(
+        actor=actor,
+        series=series,
+        idempotency_key=idempotency_key,
+    )
+
+    assert replay.replayed
+    assert replay.edition.id == first.edition.id
+
+    with pytest.raises(ValidationError) as captured:
+        _create(
+            actor=actor,
+            series=series,
+            idempotency_key=uuid4(),
+        )
+    assert (
+        captured.value.error_dict["adoption_profile_code"][0].code
+        == "edition_adoption_expansion_requires_platform_oversight"
+    )
+
+    selected = event_services.selectable_adoption_profile(
+        AdoptionProfileCode.WORKFORCE_ONLY
+    )
+    assert selected is not None
+    workforce_result = _create(
+        actor=actor,
+        series=series,
+        idempotency_key=uuid4(),
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+    )
+    assert (
+        workforce_result.edition.adoption_profile_code,
+        workforce_result.edition.adoption_profile_version,
+    ) == selected.key
 
 
 @pytest.mark.django_db(transaction=True)

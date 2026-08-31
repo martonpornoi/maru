@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from maru.events.adoption import ADOPTION_PROFILE_CHOICES
+from maru.events.adoption import PERSISTED_ADOPTION_PROFILE_CHOICES
 from maru.events.models import EventEdition
 from maru.organizations.models import OrganizationMembership
 from maru.participation.models import Participation, ParticipationCapacity
@@ -61,7 +61,7 @@ class EditionContextSerializer(serializers.Serializer[dict[str, object]]):
         choices=EventEdition.Lifecycle.choices,
     )
     adoption_profile_code = serializers.ChoiceField(
-        choices=ADOPTION_PROFILE_CHOICES,
+        choices=PERSISTED_ADOPTION_PROFILE_CHOICES,
         read_only=True,
     )
     adoption_profile_version = serializers.IntegerField(min_value=1, read_only=True)
@@ -72,6 +72,9 @@ class EditionContextSerializer(serializers.Serializer[dict[str, object]]):
     )
     available_destinations = serializers.ListField(
         child=serializers.CharField(),
+        read_only=True,
+    )
+    assignment_uses_participation_evidence = serializers.BooleanField(
         read_only=True,
     )
     time_zone = serializers.CharField()

@@ -117,8 +117,10 @@ public clients may use independent seasonal themes.
   rendered without a dead link. Availability and Shifts instead have
   independently authorized implemented continuations inside Workforce.
 
-For `workforce_only@1`, the same shell deliberately narrows rather than
-pretending the convention adopted everything:
+The shell derives presentation from the exact ordered destinations and typed
+semantics returned for the selected profile. `workforce_only@1` demonstrates
+that narrowing rather than pretending every non-Workforce profile is a full
+convention:
 
 - Today replaces attendee, payment, and currency summaries with the selected
   Workforce workspace and an explicit **No attendee or payment setup** boundary;
@@ -132,9 +134,30 @@ pretending the convention adopted everything:
 - specialist records are hidden by default but remain available through one
   explicit **Browse specialist records** disclosure when separately authorized.
 
-These projections consume the backend profile and available-destination
-contract. Client-side filtering never substitutes for exact-edition policy,
-API scope, or access-group compatibility checks.
+These projections consume the edition's persisted profile code and version.
+Management destinations and edition records carry stable, identifier-free
+manifest kinds; the server removes a kind that the exact manifest does not pin.
+An unknown pair yields no edition-scoped destination instead of falling back to
+the profile code or a module namespace. Context APIs likewise return only the
+exact ordered destination tokens. If an older client recognizes none of those
+tokens, it renders a workspace-unavailable state and opens no broader
+destination or profile-specific data request. Client-side filtering never
+substitutes for exact-edition policy, API scope, or access-group compatibility
+checks.
+
+My Context also projects `assignment_uses_participation_evidence`, a read-only
+semantic resolved by Workforce's exact assignment-evidence adapter. Both the
+Workforce view and access drawer consume that value for assignment guidance;
+they never infer Participation evidence from adopted-module membership.
+
+The TypeScript `staffConsoleDestinations` tuple is the client's closed
+recognition catalog; Events owns the corresponding Python
+`STAFF_CONSOLE_DESTINATION_CATALOG`. A repository contract test compares their
+complete member sets and rejects duplicates, so adding or retiring a Staff
+Console destination requires one reviewed change to both owners. Registering a
+client-recognized token does not add it to an existing immutable adoption
+profile: the server still returns only the exact profile version's ordered
+destinations.
 
 The initial host uses the built-in local email/password verifier. It is a
 bootstrap identity path, not the production identity-provider or recovery
