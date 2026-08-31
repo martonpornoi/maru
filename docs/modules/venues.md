@@ -1,7 +1,9 @@
 # Venues module
 
-Status: venue catalog, edition selection, operational space booking, and public schedule projection implemented
-Last updated: 2026-08-09
+Status: venue catalog, edition selection, operational space booking, and
+independent public schedule projection implemented; Programme-linked
+publication reconciliation is contract-only
+Last updated: 2026-08-31
 
 ## Purpose and boundary
 
@@ -15,6 +17,15 @@ SCH-009, SCH-010, and SAF-008 slice. It is not a programme-authoring system,
 guest-room assignment service, hospitality CRM, logistics ledger, or statutory
 property/contract system. Programme records can later reference venue booking
 IDs through a documented adapter without importing venue-private writers.
+
+ADR 0081 partially supersedes ADR 0053 only for a future Programme-linked
+booking. Venue approval remains the authoritative prerequisite for safe use of
+physical space, capacity, availability, and occupancy, but such a booking must
+not independently publish a second public Programme schedule. Scheduling will
+own the one approved Programme release and its public, personal, department,
+venue, calendar, signage, and print projections. Unrelated operational Venue
+bookings retain the existing independent approval/publication lifecycle. This
+reconciliation is accepted architecture, not current runtime behavior.
 
 ## Reusable catalog and edition selection
 
@@ -126,13 +137,16 @@ the exact organization, edition, or typed space before form construction,
 validation, or object-choice lookup; command services repeat the tenant and
 object authorization at the write boundary.
 
-The My schedule index first derives the signed-in person's current confirmed,
-active, or completed Participation scopes. It intersects only those opaque
-edition IDs with published schedule scopes, bounds distinct eligible editions
-in most-recent-edition order, and loads labels only afterward. A foreign
-published convention cannot disclose its name or consume the bounded result
-prefix. Withdrawal immediately removes a booking from the public and My Maru
-projections.
+The current My schedule index first derives the signed-in person's current
+confirmed, active, or completed Participation scopes. It intersects only those
+opaque edition IDs with published schedule scopes, bounds distinct eligible
+editions in most-recent-edition order, and loads labels only afterward. A
+foreign published convention cannot disclose its name or consume the bounded
+result prefix. Withdrawal immediately removes a booking from the public and My
+Maru projections. ADR 0081 requires a successor purpose-scoped host and
+volunteer eligibility query so Programme Operations can project a personal
+timetable without manufacturing Participation; that query is not implemented
+here.
 
 Navigation shows the venue workspace only after `venues.view_workspace` is
 reauthorized for the selected edition. Strict versioned APIs cover public and
@@ -165,4 +179,6 @@ exclusion constraint, append-only triggers, and typed binding functions.
 Remaining work includes programme ownership/adapters, schedule-version
 comparison, person/equipment/qualification conflicts, service-day layers,
 calendar/signage/print exports, accommodation blocks/assignment/allocation,
-travel, and hospitality fulfilment.
+travel, and hospitality fulfilment. Until the ADR 0081 adapter and release
+owner exist, Venue publication remains independent and must not be presented as
+the accepted Programme timetable.

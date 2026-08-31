@@ -447,3 +447,149 @@ def test_assignment_evidence_contract_remains_profile_aware() -> None:
         "An accepted offer creates an edition participation and role assignment"
         not in collapsed["key_workflows"]
     )
+
+
+def test_programme_operations_contract_remains_purpose_bounded() -> None:
+    requirements = (ROOT / "docs" / "product" / "requirements.md").read_text(
+        encoding="utf-8"
+    )
+    adr = (
+        ROOT
+        / "docs"
+        / "architecture"
+        / "decisions"
+        / "0081-composite-programme-operations-adoption.md"
+    ).read_text(encoding="utf-8")
+    adr_index = (ROOT / "docs" / "architecture" / "decisions" / "index.md").read_text(
+        encoding="utf-8"
+    )
+    adr_status_index = (
+        ROOT / "docs" / "architecture" / "decisions" / "README.md"
+    ).read_text(encoding="utf-8")
+    page_contract = (
+        ROOT
+        / "docs"
+        / "product"
+        / "page-contracts"
+        / "programme-operations-adoption-setup.md"
+    ).read_text(encoding="utf-8")
+
+    collapsed_requirements = " ".join(requirements.split())
+    collapsed_adr = " ".join(adr.split())
+    collapsed_page_contract = " ".join(page_contract.split())
+
+    for requirement_code in (
+        "EVT-007",
+        "HR-015",
+        "PRG-008",
+        "SCH-011",
+        "SCH-012",
+        "OPS-009",
+    ):
+        assert f"**{requirement_code} —" in requirements
+
+    assert "`programme_operations@1`" in requirements
+    assert "`programme_operations@1`" in adr
+    assert "exact `(profile code, profile version)` manifest" in collapsed_adr
+    assert (
+        "every participating capability, destination, effect, and adapter"
+        in collapsed_requirements
+    )
+    assert "complete current Workforce journey" in collapsed_adr
+    assert "not a hidden partial Workforce module" in collapsed_adr
+
+    def manifest_namespaces(kind: str) -> set[str]:
+        row = next(
+            line
+            for line in page_contract.splitlines()
+            if line.startswith(f"| {kind} |")
+        )
+        return {value.strip("`") for value in row.split("|")[2].strip().split(", ")}
+
+    expected_manifest = {
+        "Shared foundations": {
+            "audit",
+            "authorization",
+            "effects",
+            "events",
+            "identity",
+            "organizations",
+            "privacy",
+        },
+        "Adopted products": {
+            "applications",
+            "programme",
+            "scheduling",
+            "venues",
+            "workforce",
+        },
+        "Excluded products": {
+            "accreditation",
+            "catalog",
+            "charities",
+            "communications",
+            "logistics",
+            "participation",
+            "registration",
+        },
+    }
+    actual_manifest = {kind: manifest_namespaces(kind) for kind in expected_manifest}
+    assert actual_manifest == expected_manifest
+    assert actual_manifest["Shared foundations"].isdisjoint(
+        actual_manifest["Adopted products"]
+    )
+    assert actual_manifest["Shared foundations"].isdisjoint(
+        actual_manifest["Excluded products"]
+    )
+    assert actual_manifest["Adopted products"].isdisjoint(
+        actual_manifest["Excluded products"]
+    )
+    assert "operations" not in set().union(*actual_manifest.values())
+
+    assert "Status: Accepted contract, runtime absent" in page_contract
+    assert (
+        "non-routable until the complete integrated profile is implemented and accepted"
+        in collapsed_page_contract
+    )
+    assert (
+        "reserved route must return the ordinary safe not-found response"
+        in collapsed_page_contract
+    )
+    assert "purpose-specific Effects delivery remains permitted" in page_contract
+    assert "Programme collaboration invitation" in collapsed_adr
+
+    for owner in (
+        "**Events** owns",
+        "**Applications** owns",
+        "**Programme** owns",
+        "**Scheduling** owns",
+        "**Venues** owns",
+        "**Workforce** owns",
+    ):
+        assert owner in adr
+
+    assert "Partially supersedes: ADR 0053" in adr
+    assert "sole public Programme timing source" in adr_index
+    assert (
+        "[0053](0053-reusable-venue-catalog-and-physical-space-occupancy.md) | "
+        "Partially superseded"
+    ) in adr_status_index
+    assert "[0081](0081-composite-programme-operations-adoption.md)" in adr_index
+    assert "[0081](0081-composite-programme-operations-adoption.md)" in adr_status_index
+
+    assert "exclude Participation" in collapsed_adr
+    assert "assignment Participation-capacity pointer to remain null" in collapsed_adr
+    assert "without a Participation row" in collapsed_adr
+    assert "may never silently rewrite" in collapsed_adr
+    assert "immediately removes the unsafe room assignment" in collapsed_adr
+    assert "revokes the ordinary last-published degraded snapshot" in collapsed_adr
+    assert "issue #24" in collapsed_adr
+    for deferred_boundary in (
+        "check-in",
+        "lateness",
+        "absence",
+        "actual time",
+        "correction and dispute",
+        "Shift handover",
+    ):
+        assert deferred_boundary in collapsed_adr

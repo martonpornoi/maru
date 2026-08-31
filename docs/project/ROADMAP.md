@@ -23,14 +23,18 @@ adopted.
 
 The first executable profile is **Workforce-only**, building on the current
 Structure through Shifts journey without attendee Participation, Registration,
-payment, or attendance state. Follow-up profiles are **Programme and event
-submissions**, **Communications publishing**, **Charity art auction**, and
-**Registration without payments**, ordered by partner need and the completeness
-of their import, export, print, degraded-operation, and recovery contracts.
-Those follow-up profiles remain roadmap outcomes. Workforce-only now provides
-guided activation and enforced coexistence, but safe production cutover still
-requires the open portability, offline/manual fallback, retention, recovery,
-deployment, and partner-acceptance gates.
+payment, or attendance state. ADR 0081 now contracts the next composite
+profile, **Programme Operations**, from calls and review through an approved
+timetable, staffing projections, and on-site continuity. It remains
+non-executable until the exact-version manifest, bounded authority, real
+Programme and Scheduling modules, adapters, and acceptance gates are
+implemented. Later profiles are **Communications publishing**, **Charity art
+auction**, and **Registration without payments**, ordered by partner need and
+the completeness of their import, export, print, degraded-operation, and
+recovery contracts. Workforce-only now provides guided activation and enforced
+coexistence, but safe production cutover still requires the open portability,
+offline/manual fallback, retention, recovery, deployment, and partner-
+acceptance gates.
 
 ## Current progressive-adoption outcome
 
@@ -53,6 +57,18 @@ copy-on-write structure setup. General partner import, complete continuity
 export, print/offline packs, automated decommissioning, profile expansion,
 post-edition retention execution, and production recovery remain the next
 trust-building outcomes rather than implied capabilities.
+
+ADR 0081 accepts `programme_operations@1` as an exact target contract. Its
+adopted product modules are Applications, Programme, Scheduling, Venues, and
+Workforce over shared Identity, Organizations, Events, Authorization, Audit,
+Effects, and Privacy namespaces, with mandatory pinned recovery and export
+continuity contracts. It excludes attendee
+Participation, Registration, payments, attendance, accreditation, and
+unrelated modules. The exact profile version must pin its capability,
+destination, writer/effect, and adapter/conflict catalogs so later catalog
+growth cannot silently expand an existing edition. No setup route, navigation,
+authority, runtime module, adapter, or publication behavior is activated by the
+contract-only milestone.
 
 ## Current contributor-documentation outcome
 
@@ -607,6 +623,8 @@ layout/printing, and broader fulfilment remain explicit product gaps.
 
 Outcomes:
 
+- a progressively adoptable Programme Operations profile from setup through
+  on-site continuity;
 - programme submission and review;
 - HR application and onboarding pipeline;
 - qualifications, availability, shifts, and work records;
@@ -614,8 +632,11 @@ Outcomes:
 - attendee, personal, department, venue, and print projections;
 - internal messaging and team inboxes.
 
-Exit criterion: A programme item and volunteer can move from application through
-published schedule and completed assignment with complete history.
+Exit criterion: A Programme department can start without attendee systems,
+move a proposal through reviewed accepted content into one approved timetable,
+staff it with purpose-scoped volunteers, use accessible public/personal/
+department/venue/print projections on site, and recover or stop safely with
+complete history.
 
 Repository status: the first workforce onboarding slice is implemented:
 one-shot empty-organization chair bootstrap, reusable furry-convention
@@ -662,6 +683,18 @@ minimized public and participant-scoped My schedule. It is not yet the shared
 programme timetable: programme ownership, release comparison, person/
 equipment/qualification conflicts, operational layers, and calendar/signage/
 print exports remain open.
+
+ADR 0081 now fixes the Programme Operations ownership and adoption contract
+before implementation. Applications retains proposals and review evidence;
+Programme owns accepted items, hosts, readiness, operational layers, and
+approved public copy; Scheduling owns service days, occurrences, placements,
+candidate/conflict evidence, immutable releases, and projections; Venues owns
+physical-space approval and occupancy; Workforce owns staffing relationships,
+Availability, Shifts, and work history. Programme-linked Venue bookings cannot
+publish a competing public schedule, and Workforce profiles without attendee
+Participation must retain null assignment-capacity evidence. The first
+contract child is issue #57 under umbrella #48; all runtime behavior remains
+open and must be delivered through the ordered child sequence.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme

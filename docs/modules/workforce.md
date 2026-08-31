@@ -9,7 +9,7 @@ are implemented in the canonical current tree; Workforce-only assignment no
 longer manufactures attendee Participation evidence; complete rendered
 accessibility, portability, post-edition Availability disposal, recovery,
 deployment, and production acceptance remain gated
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 
 ## Purpose and requirements
 
@@ -552,6 +552,17 @@ Workforce-only edition creates no Participation or capacity row. Failure rolls
 everything back. Rejection instead creates a final retained decision, frees
 reserved headcount, and grants nothing.
 
+ADR 0081 generalizes this boundary: every exact adoption profile that includes
+Workforce but excludes attendee Participation must keep the assignment's
+Participation-capacity pointer null and create no Participation evidence.
+`programme_operations@1` is the first accepted successor, but it is not yet an
+executable profile. Programme staffing demand must enter Workforce through an
+explicit idempotent adapter tied to a Programme occurrence and Position; it
+may create or reconcile owned draft demand but must never silently rewrite an
+open, locked, cancelled, or completed `ShiftDemand`, or a claimed, confirmed,
+removed, or completed `ShiftCommitment`. Scheduling consumes minimized
+commitment envelopes and conflict facts rather than Workforce-private writers.
+
 An interval recheck failure is a dedicated non-disclosing conflict. Browser
 recovery stays beside the approval action; the strict API returns stable `409`
 machine-readable recovery. Neither surface reveals which controller failed,
@@ -1018,3 +1029,8 @@ production-authority reconciliation, real cutover, or representative
 restore/PITR evidence. An assignment is responsibility and authority evidence;
 Availability is person-owned planning input; neither implies a scheduled
 Shift.
+
+The Programme Operations contract also leaves check-in, lateness/absence,
+Shift actual-time recording, dispute handling, and Shift handover exclusively with
+issue #24. A published Programme/personal timetable may show an assigned Shift
+commitment, but publication is not check-in or proof of work.

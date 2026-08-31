@@ -117,6 +117,13 @@ Includes availability, schedule versions, placements, hard/soft constraints,
 travel/setup/rest, shifts, selection/assignment, personal and department views,
 publication skeleton, iCalendar, and override reasons.
 
+ADR 0081 makes this the Scheduling-owned half of
+`programme_operations@1`. The exact release version must drive every public,
+host, volunteer, department, venue, calendar, signage, and print projection.
+Workforce remains authoritative for Availability and Shift commitments; the
+adapter may report conflicts or owned demand but may not silently rewrite a
+person's commitment state.
+
 **Exit:** a volunteer can choose a suitable shift and a planner can explain and
 resolve every conflict through published and personal projections.
 
@@ -128,6 +135,13 @@ publishes content without re-entering host or room data.
 Includes calls, collaborative proposals, review rubrics/conflicts,
 decisions/revisions, public rendition, host commitments, access/technical
 advance, schedule releases, attendee programme, and print/signage feeds.
+
+The accepted ADR 0081 boundary starts this vertical without attendee
+Participation, Registration, payments, or unrelated modules. Applications
+owns proposals and review evidence; Programme begins at the accepted target
+receipt and owns readiness/public content; Scheduling owns placement and
+release. The profile, setup, modules, adapters, and user journeys remain
+successor implementation work.
 
 **Exit:** proposal to revised live release passes all workflow, permission,
 localization, impact, and history scenarios.
@@ -176,6 +190,12 @@ actionable current view and can coordinate a major room change.
 Includes run-of-show, dispatch, duty roles, handover, live issues, data
 freshness, impact graph, atomic release, acknowledgements, queue/capacity
 observations, load shedding, and incident operations log.
+
+Programme Operations v1 contributes bounded run sheets, change-impact
+explanations, printable/degraded packs, and restart/reconciliation evidence.
+Shift check-in, late/absent escalation, Shift actual-time disputes, and handover stay
+with the separately accepted Workforce scheduling contract rather than being
+inferred from timetable publication.
 
 **Exit:** room loss, absent staff member, and provider outage drills meet
 decision, communication, continuity, and reconciliation criteria.

@@ -2,8 +2,9 @@
 
 Status: Target architecture with a locally verified unified `/admin/` shell,
 scoped authorization, governed structure, Position, Assignment, and
-person-owned Availability workflows, and database subject and writer boundaries
-Last updated: 2026-08-25
+person-owned Availability workflows, database subject and writer boundaries,
+and an accepted but not yet executable Programme Operations adoption contract
+Last updated: 2026-08-31
 
 ## System shape
 
@@ -56,6 +57,30 @@ containment across all of one controller's organizations. Database guards in
 organizations `0009`–`0012`, participation `0004`, registration `0031`, and
 workforce `0003` protect governance provenance and the IDN-011
 non-participating-platform invariant below the ORM.
+
+ADR 0081 accepts `programme_operations@1` as the next composite progressive-
+adoption boundary. Its exact target manifest adopts Applications, Programme,
+Scheduling, Venues, and Workforce over the shared Identity, Organizations,
+Events, Authorization, Audit, Effects, and Privacy namespaces, with mandatory
+pinned recovery and export continuity contracts.
+The contract does not yet activate that profile or expose Programme/Scheduling
+routes. Successor changes must pin its capabilities, destinations,
+writers/effects, and adapter/conflict sources to the exact profile version
+rather than treating a module namespace as permission for all present or
+future operations.
+
+The composite boundary preserves canonical ownership: Applications retains
+proposals, private answers, revisions, review evidence, decisions, and typed
+target receipts; Programme owns accepted items, hosts, readiness, operational
+layers, and approved public-content versions; Scheduling owns service days,
+occurrences, placements, conflict/candidate evidence, immutable releases, and
+projections; Venues owns physical space facts, availability, occupancy, and
+venue approval; Workforce owns Departments, Positions, Assignments,
+Availability, Shift commitments, and work history. Cross-module behavior uses
+documented commands, queries, events, and explicit adapters. It must not create
+attendee Participation, Registration, payment, attendance, accreditation, or
+unrelated module state merely because a host, reviewer, or volunteer needs a
+purpose-specific relationship.
 
 ```text
 Attendee web ─┐
@@ -110,9 +135,10 @@ configuration; they do not point at mutable records from an older edition.
 | `commerce` | Products, orders, payments, refunds, invoices, inventory |
 | `finance` | Budgets, approvals, procurement, expenses, contracts, sponsorship |
 | `content` | Pages, structured content, media, translations, public metadata |
-| `programme` | Submissions, reviews, sessions, hosts, publication |
-| `scheduling` | Timetable versions, constraints, conflicts, views, calendars |
-| `workforce` | Applications, onboarding, qualifications, shifts, time records |
+| `applications` | Typed proposals and service applications, private answers, revisions, review evidence, decisions, target-transition receipts |
+| `programme` | Accepted programme items, hosts, readiness, operational layers, approved public-content versions |
+| `scheduling` | Service days, occurrences, placements, constraints, candidate/conflict evidence, releases, projections, calendars |
+| `workforce` | Departments, Positions, assignments, onboarding, qualifications, Availability, shifts, work history |
 | `venues` | Sites, spaces, bookings, lodging, travel, hospitality |
 | `accreditation` | Credentials, access zones, issuance, verification, revocation |
 | `logistics` | Assets, stock, custody, movements, vehicles, supplier delivery |

@@ -1,7 +1,7 @@
 # Conceptual domain model
 
-Status: Baseline  
-Last updated: 2026-07-26
+Status: Baseline plus accepted Programme Operations ownership contract; runtime absent
+Last updated: 2026-08-31
 
 This model names stable concepts and ownership boundaries. It is not a promise
 that every concept becomes one Django model or database table.
@@ -39,21 +39,30 @@ flowchart TD
     Account --> Participation["Edition participation"]
     Edition --> Participation
     Participation --> Capacity["Capacity and role records"]
+    Account --> Purpose["Purpose-bounded relationship"]
+    Edition --> Purpose
     Edition --> Department["Edition department"]
     Department --> Assignment["Role and work assignment"]
     Account --> Assignment
-    Participation -. "profile-matched evidence" .-> Assignment
+    Participation -. "optional profile-matched evidence" .-> Assignment
 
     Edition --> Plan["Plan and readiness graph"]
     Edition --> Registration["Registration and order"]
-    Edition --> Programme["Programme and schedule"]
+    Edition --> Applications["Applications intake and review"]
+    Edition --> Programme["Programme items and readiness"]
+    Edition --> Scheduling["Scheduling candidates and releases"]
     Edition --> Workforce["Workforce and shifts"]
     Edition --> Venue["Venue, lodging, and logistics"]
     Edition --> Operations["Live operation and services"]
     Edition --> Communications["Messages and publications"]
 
     Registration --> Credential["Entitlement and credential"]
+    Applications -. "typed accepted-item receipt" .-> Programme
+    Programme -. "occurrence demand" .-> Scheduling
+    Venue -. "approved physical occupancy" .-> Scheduling
+    Workforce -. "minimized staffing coverage" .-> Scheduling
     Programme --> Commitment["Person and resource commitments"]
+    Scheduling --> Commitment
     Workforce --> Commitment
     Venue --> Commitment
     Plan --> Commitment
@@ -106,9 +115,17 @@ deletion.
 
 ### Participation
 
-The relationship between one platform account and one edition. It is the
-anchor for attendee, host, volunteer, staff, dealer, guest, press, supplier, or
-other capacities, but does not collapse those domain records into one status.
+An optional relationship between one platform account and one edition when the
+immutable adoption profile deliberately adopts the Participation module. It is
+not the universal anchor for every convention purpose. Applications,
+Programme, and Workforce may own exact applicant, host, reviewer, Assignment,
+Availability, and Shift relationships for a purpose-bounded account without
+creating attendee Participation.
+
+When present, Participation can anchor attendee, dealer, guest, press,
+supplier, or other configured capacity evidence, but it does not collapse
+those domain records into one status. Account existence, sign-in, hosting,
+reviewing, volunteering, or receiving work never infers Participation.
 
 Participation owns:
 
@@ -130,9 +147,12 @@ handover expectations.
 An assignment joins a person to a position for an effective period and scope.
 When the immutable edition profile adopts Participation, approval also projects
 the configured Participation evidence and retains its non-null capacity
-pointer. A Workforce-only assignment keeps that pointer null and creates or
-touches no Participation evidence. It never grants permissions merely by
-matching a display label.
+pointer. Every bounded profile that excludes Participation keeps that pointer
+null and creates or touches no Participation evidence. This includes both
+`workforce_only@1` and the accepted, inactive `programme_operations@1`; database and
+runtime policy derive the rule from the manifest rather than a hard-coded list
+of profile names. An assignment never grants permissions merely by matching a
+display label.
 
 ### Work graph
 
@@ -146,11 +166,18 @@ projection, never primary evidence.
 
 ## People and workforce
 
-### Application and review
+### Application, proposal, and review
 
-An application owns a pipeline state, schema-versioned answers, conversation,
-review assignments, rubric results, conflicts, decisions, and appeals. Review
-visibility is explicit per field and stage.
+Applications owns the call or definition, private proposal or application,
+pipeline state, schema-versioned answers, collaborative revisions,
+conversation, review assignments, rubric results, conflicts, moderation,
+decisions, and appeals. Review visibility is explicit per field and stage.
+
+Acceptance produces one immutable typed target receipt. It does not directly
+create or mutate a Programme item, Shift, role, Participation row, Venue
+booking, schedule occurrence, or public page. The target module consumes that
+receipt idempotently through its public adapter and keeps the private
+Applications evidence behind its original boundary.
 
 ### Onboarding plan
 
@@ -167,8 +194,10 @@ the person is qualified.
 ### Shift and attendance
 
 A shift is scheduled demand for a position, place, time, capacity,
-qualification, supervisor, and briefing. `ShiftCommitment` connects a
-participation to demand. Check-in, actual work, exception, completion, and
+qualification, supervisor, and briefing. `ShiftCommitment` connects an exact
+account and qualifying Workforce Assignment to demand. A Participation link is
+optional profile-matched evidence, not a precondition. Check-in, lateness,
+absence, actual work, correction or dispute, handover, completion, and
 recognition are separate facts.
 
 ## Registration and commerce
@@ -207,26 +236,63 @@ not booleans edited on the registration.
 
 ## Programme and temporal planning
 
-### Proposal and programme item
+### Programme item and readiness
 
-A proposal owns submission and review history. Acceptance creates or links a
-programme item, keeping private review data outside the published projection.
+A private proposal and its review remain Applications-owned. An accepted typed
+receipt may create exactly one Programme item; organizer-created ceremonies,
+breaks, announcements, and core events use a separate reasoned Programme
+command and never invent a proposal or submitter.
 
-A programme item owns approved title, description, classifications, people,
-content boundaries, access information, capacity intent, and production
-requirements. Public renditions are explicit versions.
+A Programme item owns approved title, description, classifications, exact host
+and co-host purpose relationships, content boundaries, access information,
+capacity intent, production requirements, readiness criteria, and approved
+public renditions. Host readiness, technical/accessibility delivery, Venue
+operations, staffing, and Department discussion retain separate field
+ceilings, owners, history, and visibility. Private Applications review evidence
+is not one of these layers.
 
-### Commitment graph
+### Scheduling candidates and commitment graph
 
-`ScheduleItem` is a time demand; `Commitment` connects it to people, rooms,
-spaces, equipment, vehicles, dependencies, setup, and teardown.
+Scheduling owns occurrence identity and public timing. `ScheduleItem` is a time
+demand; `Commitment` connects it through documented adapters to people, rooms,
+spaces, equipment, vehicles, dependencies, preparation, effective delivery,
+and teardown.
 
-A schedule working version owns placements and constraint evaluations. A
-`ScheduleRelease` is an immutable published snapshot with supersession and
-change impact.
+A `ScheduleCandidate` owns explicit placements, source versions, constraint
+evaluations, warning overrides, and comparison evidence. Venues owns physical
+availability, capacity, occupancy, and approval; Workforce owns staffing
+demand and commitments. Scheduling reads those minimized results and does not
+write either module's tables. A Programme-linked Venue record cannot publish a
+second public timetable.
+
+A `ScheduleRelease` is an immutable approved snapshot with artifact manifest,
+supersession, and change impact. Personal discovery may use an exact Programme
+host relationship or the person's retained Shift commitment and never requires
+Participation. On-site version 1 projects released timing plus confirmed or
+locked work; check-in, lateness, absence, Shift actual time, correction or dispute,
+and Shift handover remain outside it under issue #24.
 
 Wall-clock recurrence is avoided in operational records. Each occurrence has
 explicit instants so daylight-saving changes cannot reinterpret history.
+
+### Programme Operations adoption profile
+
+The accepted, inactive `programme_operations@1` manifest pins shared
+foundations `audit`, `authorization`, `effects`, `events`, `identity`,
+`organizations`, and `privacy`, and adopted products `applications`,
+`programme`, `scheduling`, `venues`, and `workforce`. It deliberately adopts
+the complete current Workforce journey and excludes `accreditation`,
+`catalog`, `charities`, `communications`, `logistics`, `participation`, and
+`registration`. It does not adopt a general `operations` namespace.
+
+Recovery and export are required, pinned continuity behaviors rather than
+permission to enable an entire present or future module namespace.
+
+Programme and Scheduling are contract namespaces only. The profile code,
+route, capabilities, destinations, writers, effects, and adapters remain
+unavailable until successor runtime work implements and validates every
+manifest member. A later capability cannot silently change the meaning of
+version 1.
 
 ## Venue, lodging, logistics, and production
 

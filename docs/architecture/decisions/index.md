@@ -31,6 +31,7 @@ For present implementation status, use the
 | [0078](0078-governed-workforce-shift-journey.md) | Accepted | Connect Position demand, personal claims, organizer decisions, and locked coverage without collapsing their meanings. |
 | [0079](0079-repository-scoped-agent-workflow-support.md) | Accepted | Keep always-on repository policy separate from four focused, validated contributor playbooks. |
 | [0080](0080-progressive-workforce-only-adoption.md) | Accepted | Make Workforce-only an immutable edition profile with truthful Maru-operator accountability and no unadopted authority or side effects. |
+| [0081](0081-composite-programme-operations-adoption.md) | Accepted | Make Programme Operations an exact-version composite profile with one Scheduling-owned Programme release and Workforce-owned staffing. |
 
 ADR 0073 partially supersedes the example-data and source-derived-template
 parts of [ADR 0042](0042-synthetic-only-educational-fixtures.md) and
@@ -43,7 +44,14 @@ where ADR 0076 requires Participation evidence regardless of profile:
 `workforce_only@1` keeps a null assignment pointer and creates or touches no
 Participation evidence. ADR 0076's proposal, dual-control, authority,
 headcount, onboarding, revocation, audit, and retained-history boundaries
-remain accepted. Use the
+remain accepted. ADR 0081 partially supersedes
+[ADR 0053](0053-reusable-venue-catalog-and-physical-space-occupancy.md) only
+for Programme-linked publication: Venues retains physical availability,
+capacity, occupancy, and independent approval, while the Scheduling release is
+the sole public Programme timing source. Unrelated Venue bookings retain ADR
+0053's accepted publication lifecycle. ADR 0081 also extends ADR 0080's
+profile-matched Assignment evidence rule to every bounded exact-version
+manifest that excludes Participation. Use the
 [complete status index](README.md) for every decision.
 
 ```{toctree}

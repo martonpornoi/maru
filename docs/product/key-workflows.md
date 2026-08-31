@@ -1,7 +1,8 @@
 # Key end-to-end workflows
 
-Status: Baseline plus executable Workforce-only adoption
-Last updated: 2026-08-26
+Status: Baseline plus executable Workforce-only adoption and the accepted,
+runtime-absent Programme Operations contract
+Last updated: 2026-08-31
 
 These narratives test whether modules form a convention operating system rather
 than a collection of forms. Detailed acceptance scenarios will refine them.
@@ -33,6 +34,55 @@ than a collection of forms. Detailed acceptance scenarios will refine them.
 can complete the full Workforce journey, while the same edition remains absent
 from Registration discovery and contains no attendee Participation or payment
 state.
+
+## Start with Programme Operations
+
+This is an accepted target journey, not current executable behavior. The reserved
+`/admin/platform/setup/programme-operations/` route does not resolve, and Maru
+must not advertise `programme_operations@1` until its complete runtime contract
+passes integrated acceptance.
+
+1. A platform administrator reuses the highest trustworthy Organization →
+   Convention series foundation, preserves an existing truthful representation
+   or provisions two accountable Maru operators, and creates the edition plus
+   its first Workforce-owned Programme Department atomically.
+2. The immutable `programme_operations@1` manifest pins shared foundations
+   `audit`, `authorization`, `effects`, `events`, `identity`, `organizations`,
+   and `privacy`, and deliberately adopts `applications`, `programme`,
+   `scheduling`, `venues`, and the complete current `workforce` journey.
+   Recovery and export are mandatory pinned continuity behaviors, not broad
+   permission to adopt every capability in a namesake module.
+3. Applications owns calls, collaborative proposals, private review, and
+   accountable decisions. Acceptance emits a typed receipt; Programme consumes
+   it idempotently into an operational item and evidence-backed readiness.
+4. Scheduling owns occurrences, public timing, candidate versions, conflicts,
+   approval, and releases. Venues supplies approved capacity, availability,
+   configuration, and physical occupancy without publishing a second Programme
+   timetable.
+5. Programme staffing requirements enter Workforce through a documented
+   adapter. Workforce alone owns Positions, Assignments, person-owned
+   Availability, Shift demand, claims, confirmations, and locked coverage.
+6. The planner uses one conflict-aware candidate editor with equivalent
+   pointer, keyboard, and explicit-form operations. Rich public, host,
+   technical/accessibility, venue, staffing, and Department layers keep
+   separate owners and field ceilings.
+7. Independent approval and publication activate one immutable release. Public,
+   host, volunteer, Department, room, API, iCalendar, and print views derive
+   from that release plus currently authorized Workforce commitments.
+8. On site, people use now/next and run-sheet projections, inspect the source
+   age, acknowledge released changes, and retain a version-stamped printable
+   fallback. Check-in, lateness, absence, Shift actual time, disputes, and Shift
+   handover remain outside version 1 under issue #24.
+9. A host relationship or a person's own retained Shift commitment authorizes
+   their personal timetable. Setup, assignment, scheduling, publication, and
+   sign-in create no attendee Participation, Registration, payment, attendance,
+   accreditation, catalog, charity, Logistics, or general Communications state.
+
+**Proof of success:** one synthetic Programme department can start from an
+empty foundation, accept and review a proposal, make it ready, resolve venue,
+host, and staffing conflicts, lock volunteer coverage, publish one release,
+operate from role-specific and printable timetables, recover, and stop use
+without creating records or authority in an excluded module.
 
 ## 1. Create and authorize a new edition
 
@@ -67,8 +117,10 @@ promise that something copied from last year remains true.
    genuinely different current controller completes stepped-up approval. Only
    that approval activates the scoped RoleAssignment and, when the immutable
    edition profile adopts Participation, its configured evidence.
-   Workforce-only creates no attendee Participation; neither profile grants
-   permanent blanket access.
+   Workforce-only creates no attendee Participation. The accepted, inactive
+   `programme_operations@1` profile likewise excludes Participation, keeps
+   that evidence pointer null, and creates no attendee Participation. No
+   profile grants permanent blanket access.
 6. The role template generates training, agreement, profile, equipment,
    meeting, and access tasks with owners and deadlines.
 7. Provisioning adapters create approved external access and report actual
@@ -123,27 +175,52 @@ access what, or what remains after a person leaves.
 finance can distinguish provider payment, free admission, and waiver, and every
 physical or financial exception is explainable.
 
-## 4. Take a programme item from proposal to publication
+## 4. Take a programme item from proposal to on-site timetable
 
-1. A call for participation defines tracks, formats, questions, review rubric,
-   content boundaries, consent, accessibility, and decision dates.
-2. A submitter creates a proposal, adds co-hosts, availability, public content,
-   and technical or access needs with field-level visibility.
-3. Curators perform staged, optionally anonymized review, manage conflicts of
-   interest, communicate revisions, and make an accountable decision.
-4. Acceptance creates a programme item, host commitments, advance tasks, and
-   unpublished scheduling demand.
-5. The planner places it using room capability, capacity, host availability,
-   audience flow, setup/teardown, recording consent, staffing, and equipment.
-6. The host reviews public copy, call time, location, and material needs.
-7. A schedule release is approved and atomically updates public programme,
-   personal schedules, calendars, signage source, staff views, and APIs.
-8. Later changes preview impacts and target affected people for acknowledgement.
-9. After delivery, show reports, attendance observations, files, and host
-   contribution feed the archive under retention policy.
+This workflow is the detailed target for the accepted, inactive
+`programme_operations@1` profile; it is not yet mounted.
 
-**Proof of success:** acceptance never strands programme data in a separate
-tool, and published truth remains versioned.
+1. Applications activates a reviewed call defining tracks, formats, questions,
+   review policy, content boundaries, consent, accessibility, collaboration,
+   retention, and decision dates.
+2. A host creates a private proposal, invites a co-host through an exact
+   purpose relationship, supplies proposed public copy, availability, and
+   technical or access needs, and retains every submitted revision.
+3. Applications runs staged review, recusal, optional identity minimization,
+   moderation, revision requests, and a human accountable decision without
+   exposing private review evidence to Programme or Scheduling.
+4. Acceptance emits one typed transition receipt. Programme idempotently owns
+   the accepted item, host relationships, reviewed public rendition, readiness
+   evidence, and organizer-created core events.
+5. Scheduling creates explicit preparation, effective, and teardown occurrences
+   in a candidate. The planner sees service-day, Venue occupancy and capacity,
+   host availability and overlap, accessibility, stale-source, and current
+   staffing consequences before a move is retained.
+6. Programme staffing requirements call Workforce-owned commands. Linked draft
+   demand may follow a candidate change, but open or locked `ShiftDemand` and
+   claimed or confirmed `ShiftCommitment` are never silently rewritten.
+7. The host reviews approved copy, call time, location, and host-visible
+   readiness. Venue operators independently approve physical occupancy; the
+   Venue record cannot publish a second Programme timetable.
+8. A person other than the last modifier approves the exact candidate, and a
+   separate publisher atomically activates one release only after every
+   required artifact validates.
+9. Public pages, host and volunteer run sheets, room and Department views,
+   versioned APIs, iCalendar, signage source, and print layouts derive from the
+   same release. Personal discovery uses an exact host relationship or retained
+   Shift commitment, never attendee Participation.
+10. A later move or cancellation creates a successor candidate, previews
+    affected people, commitments, rooms, and outputs, and requests exact-version
+    acknowledgement. Failure leaves the previous release wholly active.
+11. On site, current/next and run-sheet views expose approved timing, location,
+    briefing, source age, confirmed commitments, and locked coverage. They do
+    not claim check-in, absence, Shift actual time, dispute, or Shift handover
+    before issue #24.
+
+**Proof of success:** private review remains private, accepted work is not
+stranded in Applications, one version controls every timetable output, a
+volunteer can work from their own minimized schedule, and neither host nor
+volunteer purpose manufactures attendee Participation.
 
 ## 5. Choose, work, and complete a volunteer shift
 

@@ -3,8 +3,8 @@
 Status: Implemented edition aggregate, immutable full-convention and
 Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
-and profile-scoped unified-shell context
-Last updated: 2026-08-26
+and profile-scoped unified-shell context; Programme Operations is contract-only
+Last updated: 2026-08-31
 
 ## Purpose and requirements
 
@@ -77,6 +77,30 @@ The profile catalog is the code-owned source for adopted module namespaces,
 labels, and primary destination. Authorization uses it before platform policy
 or stored authority; navigation and API projections are explanatory consumers,
 not enforcement substitutes.
+
+ADR 0081 accepts a successor `programme_operations@1` contract, but this
+module does not yet declare, create, activate, or route that profile. Its target
+manifest is keyed by the exact pair `(profile code, profile version)` and must
+pin adopted product modules, capabilities, destinations, writers/effects, and
+adapter/conflict sources. Adding a capability to a module catalog must not
+silently widen an existing edition. The accepted product modules are
+Applications, Programme, Scheduling, Venues, and Workforce; shared foundations
+remain Audit, Authorization, Effects, Events, Identity, Organizations, and
+Privacy. Programme and Scheduling are not executable namespaces until
+successor runtime changes introduce and validate them.
+
+Recovery and export are mandatory profile contracts rather than implied module
+adoption: version 1 must pin its continuity artifacts, regeneration, restore,
+stop-use, and expansion behavior before activation. It does not gain every
+present or future `exports` capability merely because continuity is required.
+
+The accepted future setup location is
+`/admin/platform/setup/programme-operations/`, but that route is deliberately
+inactive in this contract-only change. It must provision an independently
+approved, version-pinned Programme operator authority set rather than widening
+the immutable Workforce operator role. Purpose-specific host, reviewer, and
+volunteer relationships must not create attendee Participation, Registration,
+payment, attendance, accreditation, or unrelated module records.
 
 `platform_editions()` is the explicit C1 identity query used only after a
 platform-administrator boundary has been established. The preserved context
@@ -264,7 +288,10 @@ single/bulk rollback on validation or effect failure.
 ## Limitations
 
 Cancellation closeout, template/configuration cloning, archive-amendment API,
-computed effective-access management, date-format preference, venues, and
-richer edition-local policy are not implemented. Edition creation inherits
-only visible locale defaults; it does not create or publish registration or
-any operational configuration.
+computed effective-access management, date-format preference, richer edition-
+local policy, exact-version manifest enforcement, and Programme Operations
+setup are not implemented. Edition creation inherits only visible locale
+defaults; it does not create or publish registration or any operational
+configuration. The accepted ADR 0081 route, profile, capabilities,
+destinations, effects, and adapters remain unavailable until their runtime and
+security acceptance issues merge.
