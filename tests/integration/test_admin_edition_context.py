@@ -7,7 +7,7 @@ import pytest
 from django.contrib import admin
 from django.db import connection
 from django.http import HttpResponse
-from django.test import Client
+from django.test import Client, RequestFactory
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
@@ -18,6 +18,8 @@ from maru.events.admin_context import (
     ADMIN_EDITION_SESSION_KEY,
     EditionContextAdmin,
     admin_edition_options,
+    selected_admin_edition,
+    selected_admin_profile_allows_app,
 )
 from maru.events.adoption import AdoptionProfileCode
 from maru.events.models import (
@@ -94,6 +96,20 @@ def _select_edition(client: Client, edition: EventEdition) -> None:
         },
     )
     assert response.status_code == 302
+
+
+def test_governed_admin_fails_closed_without_session_middleware() -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    EventEditionFactory()
+    request = RequestFactory().get("/admin/events/eventedition/")
+    request.user = administrator
+    model_admin = EditionContextAdmin(EventEdition, admin.site)
+
+    assert selected_admin_edition(request) is None
+    assert not selected_admin_profile_allows_app(request, app_label="events")
+    assert not model_admin.has_module_permission(request)
+    assert not model_admin.has_view_permission(request)
+    assert not model_admin.get_queryset(request).exists()
 
 
 def test_platform_admin_lists_and_selects_all_editions_without_participation() -> None:

@@ -228,7 +228,7 @@ def test_profile_forbidden_secondary_enqueue_persists_no_delivery() -> None:
     assert list(event.outbox_messages.values_list("id", flat=True)) == [original.id]
 
 
-def test_workforce_profile_preserves_restriction_notification_route() -> None:
+def test_workforce_profile_preserves_identity_fact_but_denies_notification() -> None:
     edition = EventEditionFactory(
         adoption_profile_code="workforce_only",
         adoption_profile_version=1,
@@ -242,15 +242,17 @@ def test_workforce_profile_preserves_restriction_notification_route() -> None:
 
     with transaction.atomic():
         event, internal = publish_domain_event(record)
-        notification = enqueue_event_delivery(
+
+    with pytest.raises(ValidationError) as denied, transaction.atomic():
+        enqueue_event_delivery(
             event=event,
             destination="notifications",
             workload_pool="default",
         )
 
+    assert denied.value.code == "effect_profile_not_allowed"
     assert internal.destination == "internal"
-    assert notification.destination == "notifications"
-    assert event.outbox_messages.count() == 2
+    assert event.outbox_messages.count() == 1
 
 
 def test_secondary_enqueue_checks_the_persisted_event_envelope() -> None:

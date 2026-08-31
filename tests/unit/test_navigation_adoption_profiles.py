@@ -84,7 +84,7 @@ def test_specialist_items_filter_only_governed_unpinned_apps(
     )
     request = cast(
         "HttpRequest",
-        SimpleNamespace(path="/admin/"),
+        SimpleNamespace(path="/admin/", session={}),
     )
     monkeypatch.setattr(
         "maru.events.admin_context.selected_admin_edition",

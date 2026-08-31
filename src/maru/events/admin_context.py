@@ -465,19 +465,24 @@ def selected_admin_edition(request: HttpRequest) -> EventEdition | None:
     if cached is not _NOT_CACHED:
         return cached if isinstance(cached, EventEdition) else None
 
-    raw_edition_id = request.session.get(ADMIN_EDITION_SESSION_KEY)
+    session = getattr(request, "session", None)
+    if session is None:
+        setattr(request, _REQUEST_CACHE_ATTRIBUTE, None)
+        return None
+
+    raw_edition_id = session.get(ADMIN_EDITION_SESSION_KEY)
     edition: EventEdition | None = None
     if raw_edition_id is not None and not isinstance(raw_edition_id, str):
-        request.session.pop(ADMIN_EDITION_SESSION_KEY, None)
+        session.pop(ADMIN_EDITION_SESSION_KEY, None)
     elif isinstance(raw_edition_id, str):
         try:
             edition_id = UUID(raw_edition_id)
         except ValueError:
-            request.session.pop(ADMIN_EDITION_SESSION_KEY, None)
+            session.pop(ADMIN_EDITION_SESSION_KEY, None)
         else:
             edition = _authorized_admin_editions(request).filter(id=edition_id).first()
             if edition is None:
-                request.session.pop(ADMIN_EDITION_SESSION_KEY, None)
+                session.pop(ADMIN_EDITION_SESSION_KEY, None)
 
     setattr(request, _REQUEST_CACHE_ATTRIBUTE, edition)
     return edition
@@ -505,9 +510,13 @@ def selected_admin_profile_allows_app(
     Returns
     -------
     bool
-        ``True`` when no edition is selected, the app is outside the governed
-        namespace, or the selected exact profile pins the app label.
+        ``True`` when the app is outside the governed namespace, or when a
+        session-backed request has no selected edition or its selected exact
+        profile pins the app label. A governed app fails closed when session
+        middleware is unavailable.
     """
+    if getattr(request, "session", None) is None:
+        return app_label not in ADOPTION_MODULE_NAMESPACE_CATALOG
     edition = selected_admin_edition(request)
     if edition is None or app_label not in ADOPTION_MODULE_NAMESPACE_CATALOG:
         return True
@@ -739,14 +748,14 @@ class EditionContextAdmin(
             The matching get queryset records in deterministic order.
         """
         queryset = super().get_queryset(request)
-        edition = selected_admin_edition(request)
-        if edition is None:
-            return queryset
         if not selected_admin_profile_allows_app(
             request,
             app_label=self.opts.app_label,
         ):
             return queryset.none()
+        edition = selected_admin_edition(request)
+        if edition is None:
+            return queryset
         return self.scope_queryset_to_edition(request, queryset, edition)
 
     def has_module_permission(self, request: HttpRequest) -> bool:

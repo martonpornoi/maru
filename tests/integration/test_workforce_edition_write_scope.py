@@ -291,6 +291,7 @@ def test_assignment_admin_is_inspection_only() -> None:
     _create_position(world)
     request = RequestFactory().get("/admin/workforce/positionassignment/")
     request.user = world.actor
+    request.session = {}  # type: ignore[attr-defined]
     assignment_admin = PositionAssignmentAdmin(PositionAssignment, admin.site)
 
     assert assignment_admin.has_view_permission(request)
