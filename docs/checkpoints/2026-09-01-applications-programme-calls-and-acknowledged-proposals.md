@@ -76,6 +76,8 @@ current literal adoption-profile fingerprints remain unchanged.
   `0016` exact recognition of the Programme-call owner-Department foreign key.
 - Static migration-dependency coverage and PostgreSQL successor coverage for
   install, fail-closed reverse, reapply, and Department deletion protection.
+- Full-acceptance timing inventory refreshed from exact clean-tree certification;
+  the eight isolated shards and complete test-selection boundary are unchanged.
 - Product requirements, ADR 0082, domain/module/API/event/security/privacy/
   audit/operations documentation, page/workflow/adoption contracts, roadmap,
   backlog, production ledger, delivery plan, changelog, and current handoff.
@@ -104,13 +106,32 @@ The repaired working tree passed the following local evidence:
   issue, and `git diff --check` passed.
 - The only local Django diagnostic was the expected fail-closed `identity.W001`
   missing-invitation-key warning.
+- Exact clean-tree certification of the final candidate passes all 2,575 unit
+  tests, all 2,767 integration tests across eight isolated PostgreSQL 17
+  instances, the complete repository gate, and combined 90-percent branch
+  coverage.
 
 An initial complete certification run exposed the migration-history coupling,
 stale Authorization readiness fingerprints, the Workforce Department-reference
 inventory omission, and stale policy-version literals. The dependency boundary,
 Workforce `0016` successor, readiness pins, and assertions were repaired before
-the green evidence above. Exact-commit local certification must still pass on
-the clean commit proposed for delivery.
+the green evidence above.
+
+The first hosted run of that exact repaired feature head passed every non-
+database job and integration shards 1, 2, and 4 through 8. The shard 3 log showed
+progress into `test_workforce_assignment_commands` without a reported assertion
+failure before GitHub cancelled the step at the existing 120-minute job limit,
+so no JUnit or coverage artifact could be finalized. The checked-in 2026-08-21
+timing map had become stale: it omitted 19 current integration files, retained
+one deleted path, and assigned 5,680.7 locally measured seconds to shard 3
+despite projecting only 2,533.5. The exact successful eight-shard local JUnit
+evidence refreshes all 175 current file weights and balances the deterministic
+schedule between 4,525.6 and 4,525.9 seconds. The 120-minute timeout, eight-shard
+topology, selected files, serialization, database isolation, no-retry behavior,
+and combined coverage requirement remain unchanged. A repository contract now
+requires the checked-in timing paths to match the current integration-file
+inventory exactly while retaining the median fallback for an initial diagnostic
+run that introduces a new file.
 
 The protected pull-request result is authoritative only for the exact pushed
 head. Do not replace local evidence with a hosted status from another revision.

@@ -286,10 +286,12 @@ the unit suite, and every integration file. Static analysis, documentation,
 contracts/frontend, and security run concurrently so one late category does
 not delay the others or obscure its failure. It distributes integration files
 across eight isolated PostgreSQL jobs; files remain whole and serialized within
-a job. The checked-in timing map sums file-level JUnit durations from an
-accepted run and gives new files a deterministic median fallback. The selector
-validates non-empty unique assignment and uses deterministic path/index
-tie-breaks. Static checks, including the focused distribution-license
+a job. The checked-in timing map sums file-level JUnit durations from a
+successful exact local certification run. A new file receives a deterministic
+median fallback for its first diagnostic run, while a committed clean candidate
+must refresh the inventory so its paths exactly match every current integration
+file. The selector validates non-empty unique assignment and uses deterministic
+path/index tie-breaks. Static checks, including the focused distribution-license
 contracts, and dependency security must pass before unit or integration work
 starts, so an early policy or advisory failure does not spend database runner-
 minutes.
@@ -307,10 +309,17 @@ pull-request comments remain disabled.
 The unit suite is explicitly non-database; its only former PostgreSQL receipt
 test now belongs to integration. Unit and integration jobs publish hidden
 coverage parts and JUnit diagnostics for seven days. One job combines them and
-enforces branch-aware 90-percent coverage. Accepted main-run timings balance
-seven shards near 2,505 weighted seconds and the indivisible longest shard near
-2,760 seconds. Matrix fail-fast is disabled, blanket retries are forbidden, and
-external actions plus PostgreSQL and container bases are pinned to reviewed
+enforces branch-aware 90-percent coverage. Exact clean-tree Issue #63
+certification timings cover all 175 current integration files and replace the
+stale 2026-08-21 inventory, which omitted 19 current files and retained one
+deleted path. The refreshed deterministic schedule balances all eight shards
+between 4,525.6 and 4,525.9 measured seconds. The first hosted Issue #63 run
+demonstrated why the refresh was required: seven shards passed, while the stale
+schedule assigned 5,680.7 locally measured seconds to shard 3 and GitHub
+cancelled it at the existing 120-minute fail-stop. The refreshed balance keeps
+the timeout, complete file selection, database isolation, and combined coverage
+boundary unchanged. Matrix fail-fast is disabled, blanket retries are forbidden,
+and external actions plus PostgreSQL and container bases are pinned to reviewed
 immutable digests. `Full CI gate` certifies high-risk pull requests, manual
 runs, and releases. Merge-queue support remains disabled until that event emits
 the same required `PR gate`.

@@ -256,9 +256,26 @@ Independent implementation and post-repair review found no actionable issue.
 
 An initial complete certification run exposed the now-repaired migration-graph,
 Authorization readiness, Workforce Department-reference, and policy-version
-integration gaps. Exact-commit local certification must pass on the clean
-commit proposed for delivery, and protected pull-request acceptance is
-authoritative only for that exact pushed head.
+integration gaps. Exact clean-tree certification of the final candidate passes
+all 2,575 unit tests, all 2,767 integration tests across eight isolated
+PostgreSQL 17 instances, the complete repository gate, and combined 90-percent
+branch coverage.
+
+The first hosted run passed every non-database job and seven integration shards.
+The shard 3 log showed progress into `test_workforce_assignment_commands`
+without a reported assertion failure before GitHub cancelled the step at the
+existing 120-minute job limit, before JUnit and coverage finalization. The
+2026-08-21 timing inventory omitted 19 current files, retained one deleted path,
+and assigned 5,680.7 locally measured seconds to shard 3 despite projecting only
+2,533.5. Exact successful local JUnit
+evidence now covers all 175 current files and balances the deterministic eight-
+way schedule between 4,525.6 and 4,525.9 seconds. The existing 120-minute
+fail-stop, complete file selection, serial execution within each shard, no-retry
+policy, and combined coverage gate are unchanged. Protected pull-request
+acceptance remains authoritative only for the exact pushed head. A repository
+contract now prevents a clean candidate from retaining missing or stale timing
+paths while preserving the deterministic fallback for an initial diagnostic
+run that introduces a new integration file.
 
 ## Exact adoption-manifest enforcement
 

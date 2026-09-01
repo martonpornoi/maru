@@ -58,6 +58,13 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Refreshed the full-integration timing inventory from the exact Issue #63
+  certification after Programme migration coverage materially changed the test
+  suite. All 175 current integration files now have measured weights, the stale
+  deleted path is gone, and the deterministic eight-way schedule is balanced
+  between 4,525.6 and 4,525.9 seconds. The 120-minute fail-stop, complete file
+  selection, no-retry policy, and combined 90-percent coverage gate are
+  unchanged.
 - Hardened the executable `full_convention@1` and `workforce_only@1`
   boundaries into immutable exact-version manifests. Authorization, shell and
   context destinations, Registration discovery, Applications starters and

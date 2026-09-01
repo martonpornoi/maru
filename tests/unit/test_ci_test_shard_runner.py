@@ -100,6 +100,15 @@ def test_discovery_matches_and_partitions_the_current_repository_inventory() -> 
     assert all(count == 1 for count in Counter(assigned).values())
 
 
+def test_checked_in_timings_exactly_match_the_current_repository_inventory() -> None:
+    discovered = discover_integration_tests(INTEGRATION_TEST_DIRECTORY)
+    expected_paths = {
+        path.relative_to(REPOSITORY_ROOT).as_posix() for path in discovered
+    }
+
+    assert set(load_timing_weights(run_ci_test_shard.TIMING_FILE)) == expected_paths
+
+
 def test_timing_weights_use_milliseconds_and_reject_invalid_maps(
     tmp_path: Path,
 ) -> None:
