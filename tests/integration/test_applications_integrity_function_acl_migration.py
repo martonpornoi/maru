@@ -187,7 +187,7 @@ def test_programme_integrity_reverse_restores_legacy_and_reapplies_exactly() -> 
         [
             (
                 "applications",
-                "0006_programme_populated_downgrade_fence",
+                "0009_programme_import_populated_downgrade_fence",
             )
         ]
     )

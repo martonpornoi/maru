@@ -27,22 +27,19 @@ if TYPE_CHECKING:
     from django.db.models import Model
 
 _INTEGRITY_MIGRATION = import_module(
-    "maru.applications.migrations.0005_programme_integrity_guards"
+    "maru.applications.migrations.0008_programme_import_integrity_guards"
 )
 _DOWNGRADE_MIGRATION = import_module(
-    "maru.applications.migrations.0006_programme_populated_downgrade_fence"
+    "maru.applications.migrations.0009_programme_import_populated_downgrade_fence"
 )
-_LEGACY_INTEGRITY_MIGRATION = import_module(
-    "maru.applications.migrations.0002_integrity_guards"
-)
-_LEGACY_ACL_MIGRATION = import_module(
-    "maru.applications.migrations.0003_integrity_function_execute_boundary"
+_PROGRAMME_INTEGRITY_MIGRATION = import_module(
+    "maru.applications.migrations.0005_programme_integrity_guards"
 )
 _IDENTITY_PROGRAMME_MIGRATION = import_module(
     "maru.identity.migrations.0020_programme_proposal_person_guard"
 )
 _DOWNGRADE_FENCE_SOURCE_SHA256: Final = (
-    "98d8a829966e0430e480a55f99d8b463f4ed2966fae8a0ce04e701e910ce43e2"
+    "94893c64e95366aac41ddc2e6eb3491f9bfcd6484b6d3d952cebd1da46327476"
 )
 _SHA256_HEX_LENGTH: Final = 64
 
@@ -50,26 +47,22 @@ _SHA256_HEX_LENGTH: Final = 64
 def _applications_programme_migration_contract_is_current() -> bool:
     source_operations = tuple(_INTEGRITY_MIGRATION.Migration.operations)
     downgrade_operations = tuple(_DOWNGRADE_MIGRATION.Migration.operations)
-    expected_reverse_suffix = (
-        f"{_LEGACY_INTEGRITY_MIGRATION.FORWARD_SQL.strip()}\n\n"
-        f"{_LEGACY_ACL_MIGRATION.FORWARD_SQL.strip()}"
-    )
+    expected_reverse_suffix = _PROGRAMME_INTEGRITY_MIGRATION.FORWARD_SQL.strip()
     downgrade_operation = (
         downgrade_operations[0] if len(downgrade_operations) == 1 else None
     )
     if not isinstance(downgrade_operation, migrations.RunPython):
         return False
     downgrade_source = inspect.getsource(
-        _DOWNGRADE_MIGRATION.refuse_used_applications_programme_downgrade
+        _DOWNGRADE_MIGRATION.refuse_used_programme_import_downgrade
     ).replace("\r\n", "\n")
     identity_operations = tuple(_IDENTITY_PROGRAMME_MIGRATION.Migration.operations)
     return all(
         (
             tuple(_INTEGRITY_MIGRATION.Migration.dependencies)
             == (
-                ("applications", "0004_programme_calls_and_proposals"),
-                ("identity", "0020_programme_proposal_person_guard"),
-                ("authorization", "0021_applications_programme_capabilities"),
+                ("applications", "0007_programme_import_persistence"),
+                ("authorization", "0022_programme_import_capabilities"),
             ),
             len(source_operations) == 1,
             isinstance(source_operations[0], migrations.RunSQL),
@@ -77,10 +70,10 @@ def _applications_programme_migration_contract_is_current() -> bool:
             source_operations[0].reverse_sql == _INTEGRITY_MIGRATION.REVERSE_SQL,
             _INTEGRITY_MIGRATION.REVERSE_SQL.endswith(expected_reverse_suffix),
             tuple(_DOWNGRADE_MIGRATION.Migration.dependencies)
-            == (("applications", "0005_programme_integrity_guards"),),
+            == (("applications", "0008_programme_import_integrity_guards"),),
             downgrade_operation.code is migrations.RunPython.noop,
             downgrade_operation.reverse_code
-            is _DOWNGRADE_MIGRATION.refuse_used_applications_programme_downgrade,
+            is _DOWNGRADE_MIGRATION.refuse_used_programme_import_downgrade,
             hashlib.sha256(downgrade_source.encode("utf-8")).hexdigest()
             == _DOWNGRADE_FENCE_SOURCE_SHA256,
             tuple(_IDENTITY_PROGRAMME_MIGRATION.Migration.dependencies)
@@ -100,13 +93,13 @@ def _applications_programme_migration_contract_is_current() -> bool:
 _DERIVED_APPLICATIONS_INTEGRITY_CONTRACT = build_database_integrity_contract(
     status_key="applications_integrity",
     app_label="applications",
-    source_migration=("applications", "0005_programme_integrity_guards"),
+    source_migration=("applications", "0008_programme_import_integrity_guards"),
     terminal_migration=(
         "applications",
-        "0006_programme_populated_downgrade_fence",
+        "0009_programme_import_populated_downgrade_fence",
     ),
     source_migration_module=(
-        "maru.applications.migrations.0005_programme_integrity_guards"
+        "maru.applications.migrations.0008_programme_import_integrity_guards"
     ),
 )
 _IDENTITY_SQL_TRIGGER_CONTRACTS, _IDENTITY_SQL_FUNCTION_CONTRACTS = (
@@ -253,6 +246,48 @@ APPLICATIONS_RELATION_SEMANTICS: Final[
         False,
         "d",
     ),
+    "applications_programmeimportappliedcommand": (
+        "r",
+        "p",
+        False,
+        False,
+        False,
+        "d",
+    ),
+    "applications_programmeimportbatch": ("r", "p", False, False, False, "d"),
+    "applications_programmeimportcommandreceipt": (
+        "r",
+        "p",
+        False,
+        False,
+        False,
+        "d",
+    ),
+    "applications_programmeimportitem": ("r", "p", False, False, False, "d"),
+    "applications_programmeimportpreviewitemresult": (
+        "r",
+        "p",
+        False,
+        False,
+        False,
+        "d",
+    ),
+    "applications_programmeimportpreviewrevision": (
+        "r",
+        "p",
+        False,
+        False,
+        False,
+        "d",
+    ),
+    "applications_programmeimportsourcebinding": (
+        "r",
+        "p",
+        False,
+        False,
+        False,
+        "d",
+    ),
     "applications_programmeproposal": ("r", "p", False, False, False, "d"),
     "applications_programmeproposalcollaborator": (
         "r",
@@ -341,12 +376,12 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # deliberately keeps Applications readiness blocked.
 APPLICATIONS_SCHEMA_CATALOG_SHA256: Final[Mapping[str, tuple[int, str]]] = {
     "constraint:": (
-        279,
-        "2ebb8eae792caab787719b70f5c3abddae90f0507c36b5eac98ae3b681503a36",
+        367,
+        "c20c6cd829ddc9045d6e07bfcfb39cda7e75a21a7070f4f0ad3b3b2e96aa3ecb",
     ),
     "index:": (
-        203,
-        "3a7ae99aaef53b5252f22334bae1dde5f57e993502484d908fbebe4395022d7d",
+        263,
+        "501634da18934c04c6234533fac4f01987fb5ddcc3db3a14f76d5c837097425f",
     ),
 }
 

@@ -15,6 +15,17 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a dormant, preview-first Programme import boundary in Applications.
+  Strict bounded JSON packages can be staged without creating call or proposal
+  state, inspected through a non-disclosing organizer preview, and applied only
+  through the protected Draft-call and exact-lead proposal commands. Permanent
+  source binding, one shared retry namespace, immediate per-item payload
+  clearing, explicit continuity disposal, PostgreSQL guards, and `SELECT`-only
+  runtime ACLs retain a safe migration path. The adapter, capabilities, and
+  event are declared but unpinned: no current profile, route, API, UI, worker,
+  connector, schedule, Programme item, host, review, or publication is
+  activated ([#66](https://github.com/martonpornoi/maru/issues/66), ADR 0083,
+  PRG-010).
 - Added the dormant Applications-owned Programme-call and collaborative-
   proposal kernel. It reuses typed definitions, submissions, and append-only
   answer revisions; serializes every proposal mutation on one aggregate

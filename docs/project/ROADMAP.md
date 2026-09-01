@@ -79,6 +79,19 @@ new relations are runtime `SELECT`-only, and both current profile fingerprints
 remain unchanged. No route, API, UI, review, decision, target, Programme item,
 host relationship, publication, Scheduling, or staffing behavior is active.
 
+Issue #66 adds the dormant preview-first import boundary around that intake
+foundation. One strict bounded JSON package can be staged for an exact current
+Department without creating call or proposal state; organizer preview remains
+non-disclosing, while call commit and exact-lead proposal claim reuse only the
+protected Issue #63 commands. Applying or explicitly disposing an item clears
+its private payload, and permanent source binding makes replay deterministic.
+The adapter, two delegable capabilities, and minimized event are declared but
+absent from both current manifests; every import relation remains runtime
+`SELECT`-only and no route, API, UI, worker, connector, schedule, review,
+Programme item, host, or publication is active. Issue #64's Department-
+retirement coordination remains mandatory before any import/profile
+activation.
+
 Profile v1 declares incumbent-system coexistence and the current manual,
 copy-on-write structure setup. General partner import, complete continuity
 export, print/offline packs, automated decommissioning, profile expansion,
@@ -727,10 +740,14 @@ item/readiness foundation, including organizer-created core-item semantics and
 public-copy approval, while both current profiles deny its commands and its
 runtime database role remains read-only. Issue #63 adds dormant Applications-
 owned calls, purpose-scoped proposal collaboration, exact sealed revisions, and
-included-collaborator acknowledgements without creating hosts. Preview-first import is
-the immediate successor; staged review/decisions and the accepted Applications
-adapter follow, then Programme-owned host relationships, Scheduling, staffing,
-release, continuity, setup, and integrated acceptance in dependency order.
+included-collaborator acknowledgements without creating hosts. Issue #66 adds
+dormant preview-first call/proposal staging, non-disclosing preview, protected
+apply, exact-self claim, permanent source binding, and continuity disposal
+without mounting an import surface. Issue #64's Department-retirement
+coordination is the immediate continuation; staged review/decisions and the
+accepted Applications adapter follow, then Programme-owned host relationships,
+Scheduling, staffing, release, continuity, setup, and integrated acceptance in
+dependency order.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme

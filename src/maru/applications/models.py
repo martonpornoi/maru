@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import TYPE_CHECKING, Any, override
 
 from django.conf import settings
@@ -16,6 +17,7 @@ from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug
 from maru.identity.policies import validate_convention_subject
 
+from .programme_import_writer_boundary import require_programme_import_writer
 from .programme_writer_boundary import require_programme_application_writer
 
 if TYPE_CHECKING:
@@ -46,6 +48,31 @@ PROGRAMME_SOURCE_CHANNEL_VALIDATOR = RegexValidator(
     regex=r"^[a-z][a-z0-9_-]*\Z",
     message="Use a registered lower-case source channel.",
     code="invalid_programme_application_source_channel",
+)
+PROGRAMME_IMPORT_SOURCE_SYSTEM_VALIDATOR = RegexValidator(
+    regex=r"^[a-z][a-z0-9_.:-]{0,79}\Z",
+    message="Use a registered lower-case import source system.",
+    code="invalid_programme_import_source_system",
+)
+PROGRAMME_IMPORT_SOURCE_KEY_VALIDATOR = RegexValidator(
+    regex=r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}\Z",
+    message="Use a bounded ASCII Programme-import source key.",
+    code="invalid_programme_import_source_key",
+)
+PROGRAMME_IMPORT_SAFE_FIELD_KEYS = (
+    "configuration",
+    "definition",
+    "answers",
+    "lead_action_required",
+    "selection",
+)
+PROGRAMME_IMPORT_REASON_CODES = (
+    "source_already_applied",
+    "source_digest_conflict",
+    "definition_code_conflict",
+    "call_dependency_unavailable",
+    "call_dependency_not_active",
+    "proposal_mapping_invalid",
 )
 
 
@@ -179,6 +206,83 @@ class ProgrammeCommandResultKind(models.TextChoices):
     REVISION_RESPONSE = "revision_response", "Revision response"
 
 
+class ProgrammeImportBatchState(models.TextChoices):
+    """Enumerate the closed Programme-import batch lifecycle."""
+
+    STAGED = "staged", "Staged"
+    DISCARDED = "discarded", "Discarded"
+
+
+class ProgrammeImportItemKind(models.TextChoices):
+    """Enumerate supported Programme-import item discriminators."""
+
+    CALL = "call", "Call"
+    PROPOSAL = "proposal", "Proposal"
+
+
+class ProgrammeImportItemState(models.TextChoices):
+    """Enumerate the closed Programme-import item lifecycle."""
+
+    STAGED = "staged", "Staged"
+    APPLIED = "applied", "Applied"
+    DISCARDED = "discarded", "Discarded"
+
+
+class ProgrammeImportPreviewStatus(models.TextChoices):
+    """Enumerate sanitized outcomes for an exact preview item."""
+
+    READY = "ready", "Ready"
+    BLOCKED = "blocked", "Blocked"
+    NO_OP = "no_op", "No operation"
+    CONFLICT = "conflict", "Conflict"
+
+
+class ProgrammeImportPreviewAction(models.TextChoices):
+    """Enumerate the only actions a preview can authorize."""
+
+    COMMIT_CALL = "commit_call", "Commit call"
+    CLAIM_PROPOSAL = "claim_proposal", "Claim proposal"
+    NONE = "none", "None"
+
+
+class ProgrammeImportDependencyState(models.TextChoices):
+    """Enumerate imported-proposal dependency observations."""
+
+    NONE = "none", "None"
+    MISSING = "missing", "Missing"
+    DRAFT = "draft", "Draft"
+    ACTIVE = "active", "Active"
+    RETIRED = "retired", "Retired"
+
+
+class ProgrammeImportAggregateKind(models.TextChoices):
+    """Enumerate Programme-import command aggregate roots."""
+
+    BATCH = "batch", "Batch"
+    PREVIEW = "preview", "Preview"
+    ITEM = "item", "Item"
+
+
+class ProgrammeImportCommandAction(models.TextChoices):
+    """Enumerate the closed Programme-import command surface."""
+
+    BATCH_STAGED = "batch_staged", "Batch staged"
+    BATCH_PREVIEWED = "batch_previewed", "Batch previewed"
+    CALL_COMMITTED = "call_committed", "Call committed"
+    PROPOSAL_CLAIMED = "proposal_claimed", "Proposal claimed"
+    BATCH_DISCARDED = "batch_discarded", "Batch discarded"
+
+
+class ProgrammeImportCommandResultKind(models.TextChoices):
+    """Enumerate targets returned by Programme-import commands."""
+
+    BATCH = "batch", "Batch"
+    PREVIEW = "preview", "Preview"
+    CALL_BINDING = "call_binding", "Call binding"
+    PROPOSAL_BINDING = "proposal_binding", "Proposal binding"
+    DISCARD = "discard", "Discard"
+
+
 class _ClosedProgrammeApplicationModel(UUIDTimeStampedModel):
     """Reject Programme-call ORM writes outside registered commands."""
 
@@ -309,6 +413,140 @@ class _AppendOnlyProgrammeApplicationModel(_ClosedProgrammeApplicationModel):
         raise ValidationError(
             "Programme application evidence is retained.",
             code="protected_programme_application_evidence",
+        )
+
+
+class _ClosedProgrammeImportModel(UUIDTimeStampedModel):
+    """Reject Programme-import ORM writes outside its dedicated writer."""
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        abstract = True
+
+    @override
+    def full_clean(
+        self,
+        exclude: Iterable[str] | None = None,
+        validate_unique: bool = True,
+        validate_constraints: bool = True,
+    ) -> None:
+        """Validate import-owned fields without querying owner modules.
+
+        Parameters
+        ----------
+        exclude : Iterable[str] | None, default=None
+            Field names Django should omit from validation.
+        validate_unique : bool, default=True
+            Whether Django should evaluate uniqueness constraints.
+        validate_constraints : bool, default=True
+            Whether Django should evaluate model constraints.
+        """
+        excluded_fields = set(exclude or ())
+        excluded_fields.update(
+            {
+                "actor",
+                "created_by",
+                "discarded_by",
+                "edition",
+                "organization",
+                "owner_department",
+                "staged_by",
+            }
+        )
+        super().full_clean(
+            exclude=excluded_fields,
+            validate_unique=validate_unique,
+            validate_constraints=validate_constraints,
+        )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist through the closed import writer.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's model save operation.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's model save operation.
+        """
+        require_programme_import_writer()
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Permit current-record deletion only inside the import writer.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's model delete operation.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's model delete operation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Django's deleted-object count and per-model count mapping.
+        """
+        require_programme_import_writer()
+        return super().delete(*args, **kwargs)
+
+
+class _AppendOnlyProgrammeImportModel(_ClosedProgrammeImportModel):
+    """Reject updates and deletes of retained Programme-import evidence."""
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        abstract = True
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Insert immutable import evidence and reject subsequent updates.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded for an allowed initial insert.
+        **kwargs : Any
+            Keyword arguments forwarded for an allowed initial insert.
+
+        Raises
+        ------
+        ValidationError
+            If an existing immutable evidence row would be updated.
+        """
+        if not self._state.adding:
+            raise ValidationError(
+                "Programme import evidence is append-only.",
+                code="immutable_programme_import_evidence",
+            )
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Reject deletion of retained Programme-import evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional deletion arguments rejected with the operation.
+        **kwargs : Any
+            Keyword deletion arguments rejected with the operation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            This method never returns because retained evidence cannot be deleted.
+
+        Raises
+        ------
+        ValidationError
+            Always, because Programme-import evidence is append-only.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Programme import evidence is retained.",
+            code="protected_programme_import_evidence",
         )
 
 
@@ -2949,3 +3187,714 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeApplicationModel):
                 "Programme command aggregate references do not match its kind.",
                 code="invalid_programme_command_aggregate_shape",
             )
+
+
+class ProgrammeImportBatch(_ClosedProgrammeImportModel):
+    """Current, privacy-bounded staging root for one Programme import."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_import_batches",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_import_batches",
+    )
+    owner_department = models.ForeignKey(
+        "workforce.Department",
+        on_delete=models.PROTECT,
+        related_name="programme_import_batches_owned",
+    )
+    source_system = models.CharField(
+        max_length=80,
+        validators=(PROGRAMME_IMPORT_SOURCE_SYSTEM_VALIDATOR,),
+    )
+    schema_version = models.PositiveSmallIntegerField(default=1, editable=False)
+    source_digest = models.CharField(
+        max_length=64,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    item_count = models.PositiveIntegerField(
+        validators=(MinValueValidator(1), MaxValueValidator(1_000)),
+    )
+    retention_policy_code = models.CharField(
+        max_length=120,
+        validators=(POLICY_CODE_VALIDATOR,),
+    )
+    expires_at = models.DateTimeField()
+    state = models.CharField(
+        max_length=16,
+        choices=ProgrammeImportBatchState,
+        default=ProgrammeImportBatchState.STAGED,
+    )
+    aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
+    staged_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_import_batches_staged",
+    )
+    discarded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="programme_import_batches_discarded",
+    )
+    discarded_at = models.DateTimeField(null=True, blank=True, editable=False)
+    discard_reason = models.CharField(max_length=500, blank=True, editable=False)
+
+    class Meta:
+        """Configure exact scope, lifecycle shape, expiry, and queries."""
+
+        ordering = ("edition_id", "created_at", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(schema_version=1)
+                & Q(item_count__gte=1, item_count__lte=1_000)
+                & Q(aggregate_version__gt=0)
+                & ~Q(source_system="")
+                & ~Q(retention_policy_code="")
+                & Q(expires_at__gt=models.F("created_at")),
+                name="applications_prg_imp_batch_bounds",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    state=ProgrammeImportBatchState.STAGED,
+                    aggregate_version=1,
+                    discarded_by__isnull=True,
+                    discarded_at__isnull=True,
+                    discard_reason="",
+                )
+                | (
+                    Q(
+                        state=ProgrammeImportBatchState.DISCARDED,
+                        aggregate_version=2,
+                        discarded_by__isnull=False,
+                        discarded_at__isnull=False,
+                    )
+                    & ~Q(discard_reason="")
+                ),
+                name="applications_prg_imp_batch_state",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "owner_department", "state"),
+                name="app_prg_imp_batch_scope_idx",
+            ),
+            models.Index(
+                fields=("state", "expires_at"),
+                name="app_prg_imp_batch_expiry_idx",
+            ),
+        ]
+
+
+class ProgrammeImportItem(_ClosedProgrammeImportModel):
+    """Current staged import item whose private payload is later cleared."""
+
+    batch = models.ForeignKey(
+        ProgrammeImportBatch,
+        on_delete=models.PROTECT,
+        related_name="items",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_import_items",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_import_items",
+    )
+    sequence = models.PositiveIntegerField()
+    kind = models.CharField(max_length=8, choices=ProgrammeImportItemKind)
+    source_key = models.CharField(
+        max_length=200,
+        validators=(PROGRAMME_IMPORT_SOURCE_KEY_VALIDATOR,),
+    )
+    source_digest = models.CharField(
+        max_length=64,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    canonical_payload = models.BinaryField(null=True, blank=True, editable=False)
+    payload_size_bytes = models.PositiveIntegerField()
+    dependency_source_system = models.CharField(
+        max_length=80,
+        blank=True,
+        validators=(PROGRAMME_IMPORT_SOURCE_SYSTEM_VALIDATOR,),
+    )
+    dependency_source_key = models.CharField(
+        max_length=200,
+        blank=True,
+        validators=(PROGRAMME_IMPORT_SOURCE_KEY_VALIDATOR,),
+    )
+    state = models.CharField(
+        max_length=16,
+        choices=ProgrammeImportItemState,
+        default=ProgrammeImportItemState.STAGED,
+    )
+    aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
+
+    class Meta:
+        """Configure item order, source identity, dependency, and scrub shape."""
+
+        ordering = ("batch_id", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("batch", "sequence"),
+                name="applications_prg_imp_item_sequence_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("batch", "kind", "source_key"),
+                name="applications_prg_imp_item_source_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(sequence__gt=0)
+                & Q(payload_size_bytes__gt=0)
+                & ~Q(source_key=""),
+                name="applications_prg_imp_item_bounds",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    kind=ProgrammeImportItemKind.CALL,
+                    dependency_source_system="",
+                    dependency_source_key="",
+                )
+                | (
+                    Q(kind=ProgrammeImportItemKind.PROPOSAL)
+                    & ~Q(dependency_source_system="")
+                    & ~Q(dependency_source_key="")
+                ),
+                name="applications_prg_imp_item_dependency",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    state=ProgrammeImportItemState.STAGED,
+                    aggregate_version=1,
+                    canonical_payload__isnull=False,
+                )
+                | Q(
+                    state__in=(
+                        ProgrammeImportItemState.APPLIED,
+                        ProgrammeImportItemState.DISCARDED,
+                    ),
+                    aggregate_version=2,
+                    canonical_payload__isnull=True,
+                ),
+                name="applications_prg_imp_item_state",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "batch", "state", "sequence"),
+                name="app_prg_imp_item_scope_idx",
+            ),
+            models.Index(
+                fields=("organization", "edition", "kind", "source_key"),
+                name="app_prg_imp_item_source_idx",
+            ),
+        ]
+
+    def clean(self) -> None:
+        """Verify the staged canonical bytes against retained size and digest.
+
+        Raises
+        ------
+        ValidationError
+            If staged canonical bytes disagree with retained size or digest evidence.
+        """
+        super().clean()
+        if self.state != ProgrammeImportItemState.STAGED:
+            return
+        payload = self.canonical_payload
+        if payload is None:
+            return
+        canonical_bytes = bytes(payload)
+        if len(canonical_bytes) != self.payload_size_bytes:
+            raise ValidationError(
+                "Programme import payload size does not match its evidence.",
+                code="invalid_programme_import_payload_size",
+            )
+        if hashlib.sha256(canonical_bytes).hexdigest() != self.source_digest:
+            raise ValidationError(
+                "Programme import payload digest does not match its evidence.",
+                code="invalid_programme_import_payload_digest",
+            )
+
+
+class ProgrammeImportPreviewRevision(_AppendOnlyProgrammeImportModel):
+    """Immutable preview of an exact version-one staged import batch."""
+
+    batch = models.ForeignKey(
+        ProgrammeImportBatch,
+        on_delete=models.PROTECT,
+        related_name="preview_revisions",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_import_preview_revisions",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_import_preview_revisions",
+    )
+    revision_number = models.PositiveBigIntegerField()
+    source_batch_version = models.PositiveBigIntegerField(default=1, editable=False)
+    preview_digest = models.CharField(
+        max_length=64,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    item_count = models.PositiveIntegerField(
+        validators=(MinValueValidator(1), MaxValueValidator(1_000)),
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_import_preview_revisions",
+    )
+
+    class Meta:
+        """Configure immutable contiguous preview history."""
+
+        ordering = ("batch_id", "revision_number", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("batch", "revision_number"),
+                name="applications_prg_imp_preview_revision_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(revision_number__gt=0)
+                & Q(source_batch_version=1)
+                & Q(item_count__gte=1, item_count__lte=1_000),
+                name="applications_prg_imp_preview_bounds",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "batch", "revision_number"),
+                name="app_prg_imp_preview_scope_idx",
+            )
+        ]
+
+
+class ProgrammeImportPreviewItemResult(_AppendOnlyProgrammeImportModel):
+    """Sanitized immutable result for one item in an exact preview."""
+
+    preview = models.ForeignKey(
+        ProgrammeImportPreviewRevision,
+        on_delete=models.PROTECT,
+        related_name="item_results",
+    )
+    item = models.ForeignKey(
+        ProgrammeImportItem,
+        on_delete=models.PROTECT,
+        related_name="preview_results",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_import_preview_item_results",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_import_preview_item_results",
+    )
+    item_version = models.PositiveBigIntegerField()
+    status = models.CharField(max_length=16, choices=ProgrammeImportPreviewStatus)
+    action = models.CharField(max_length=16, choices=ProgrammeImportPreviewAction)
+    dependency_state = models.CharField(
+        max_length=8,
+        choices=ProgrammeImportDependencyState,
+    )
+    dependency_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    dependency_version = models.PositiveBigIntegerField(null=True, blank=True)
+    safe_field_keys = models.JSONField(blank=True)
+    reason_codes = models.JSONField(blank=True)
+    result_digest = models.CharField(
+        max_length=64,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+
+    class Meta:
+        """Configure one result per item and closed preview-result shapes."""
+
+        ordering = ("preview_id", "item_id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("preview", "item"),
+                name="applications_prg_imp_preview_item_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(item_version__gt=0),
+                name="applications_prg_imp_preview_item_version",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    dependency_state__in=(
+                        ProgrammeImportDependencyState.NONE,
+                        ProgrammeImportDependencyState.MISSING,
+                    ),
+                    dependency_digest="",
+                    dependency_version__isnull=True,
+                )
+                | (
+                    Q(
+                        dependency_state__in=(
+                            ProgrammeImportDependencyState.DRAFT,
+                            ProgrammeImportDependencyState.ACTIVE,
+                            ProgrammeImportDependencyState.RETIRED,
+                        ),
+                        dependency_version__isnull=False,
+                    )
+                    & ~Q(dependency_digest="")
+                ),
+                name="applications_prg_imp_preview_dependency",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "preview", "status"),
+                name="app_prg_imp_result_scope_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Require minimized preview arrays to be closed, unique, and ordered.
+
+        Raises
+        ------
+        ValidationError
+            If retained preview metadata is not a canonical public value list.
+        """
+        super().clean()
+        for field_name, value, allowed in (
+            ("safe_field_keys", self.safe_field_keys, PROGRAMME_IMPORT_SAFE_FIELD_KEYS),
+            ("reason_codes", self.reason_codes, PROGRAMME_IMPORT_REASON_CODES),
+        ):
+            allowed_position = {entry: index for index, entry in enumerate(allowed)}
+            if (
+                not isinstance(value, list)
+                or any(
+                    not isinstance(entry, str) or entry not in allowed_position
+                    for entry in value
+                )
+                or len(value) != len(set(value))
+                or value != sorted(value, key=allowed_position.__getitem__)
+            ):
+                raise ValidationError(
+                    {
+                        field_name: ValidationError(
+                            "Programme import preview metadata is not a closed "
+                            "ordered value list.",
+                            code="invalid_programme_import_preview_metadata",
+                        )
+                    }
+                )
+
+
+class ProgrammeImportSourceBinding(_AppendOnlyProgrammeImportModel):
+    """Permanent source identity binding to exactly one applied target."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_import_source_bindings",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_import_source_bindings",
+    )
+    source_system = models.CharField(
+        max_length=80,
+        validators=(PROGRAMME_IMPORT_SOURCE_SYSTEM_VALIDATOR,),
+    )
+    kind = models.CharField(max_length=8, choices=ProgrammeImportItemKind)
+    source_key = models.CharField(
+        max_length=200,
+        validators=(PROGRAMME_IMPORT_SOURCE_KEY_VALIDATOR,),
+    )
+    source_digest = models.CharField(
+        max_length=64,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    item = models.OneToOneField(
+        ProgrammeImportItem,
+        on_delete=models.PROTECT,
+        related_name="source_binding",
+    )
+    call = models.OneToOneField(
+        ProgrammeCall,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="import_source_binding",
+    )
+    proposal = models.OneToOneField(
+        ProgrammeProposal,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="import_source_binding",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_import_source_bindings_created",
+    )
+
+    class Meta:
+        """Configure permanent source uniqueness and exact target shape."""
+
+        ordering = ("edition_id", "source_system", "kind", "source_key")
+        constraints = [
+            models.UniqueConstraint(
+                fields=(
+                    "organization",
+                    "edition",
+                    "source_system",
+                    "kind",
+                    "source_key",
+                ),
+                name="applications_prg_imp_binding_source_uq",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        kind=ProgrammeImportItemKind.CALL,
+                        call__isnull=False,
+                        proposal__isnull=True,
+                    )
+                    | Q(
+                        kind=ProgrammeImportItemKind.PROPOSAL,
+                        call__isnull=True,
+                        proposal__isnull=False,
+                    )
+                )
+                & ~Q(source_system="")
+                & ~Q(source_key=""),
+                name="applications_prg_imp_binding_target",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "kind", "created_at"),
+                name="app_prg_imp_binding_scope_idx",
+            )
+        ]
+
+
+class ProgrammeImportAppliedCommand(_AppendOnlyProgrammeImportModel):
+    """Ordered link from an import receipt to one nested Programme command."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_import_applied_commands",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_import_applied_commands",
+    )
+    binding = models.ForeignKey(
+        ProgrammeImportSourceBinding,
+        on_delete=models.PROTECT,
+        related_name="applied_commands",
+    )
+    import_receipt = models.ForeignKey(
+        "ProgrammeImportCommandReceipt",
+        on_delete=models.PROTECT,
+        related_name="applied_commands",
+    )
+    sequence = models.PositiveIntegerField()
+    programme_receipt = models.OneToOneField(
+        ProgrammeCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="import_applied_command",
+    )
+
+    class Meta:
+        """Configure exact nested-command order and one-time adoption."""
+
+        ordering = ("import_receipt_id", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("import_receipt", "sequence"),
+                name="applications_prg_imp_applied_sequence_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(sequence__gt=0),
+                name="applications_prg_imp_applied_sequence",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "binding", "sequence"),
+                name="app_prg_imp_applied_scope_idx",
+            )
+        ]
+
+
+class ProgrammeImportCommandReceipt(_AppendOnlyProgrammeImportModel):
+    """Retained idempotency, preview-adoption, and version evidence."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_import_command_receipts",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_import_command_receipts",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_import_command_receipts",
+    )
+    aggregate_kind = models.CharField(
+        max_length=8,
+        choices=ProgrammeImportAggregateKind,
+    )
+    action = models.CharField(max_length=20, choices=ProgrammeImportCommandAction)
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(
+        max_length=64,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    reason = models.CharField(max_length=500, blank=True)
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(
+        max_length=32,
+        validators=(PROGRAMME_SOURCE_CHANNEL_VALIDATOR,),
+    )
+    batch = models.ForeignKey(
+        ProgrammeImportBatch,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    item = models.ForeignKey(
+        ProgrammeImportItem,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    preview_revision = models.ForeignKey(
+        ProgrammeImportPreviewRevision,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    preview_item_result = models.ForeignKey(
+        ProgrammeImportPreviewItemResult,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    source_binding = models.ForeignKey(
+        ProgrammeImportSourceBinding,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    adopted_preview_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    result_kind = models.CharField(
+        max_length=20,
+        choices=ProgrammeImportCommandResultKind,
+    )
+    expected_version = models.PositiveBigIntegerField()
+    resulting_version = models.PositiveBigIntegerField()
+    applied_command_count = models.PositiveSmallIntegerField(
+        default=0,
+        editable=False,
+    )
+
+    class Meta:
+        """Configure shared retry identity and aggregate version uniqueness."""
+
+        ordering = ("edition_id", "created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"),
+                name="applications_prg_imp_command_retry_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("batch", "aggregate_kind", "resulting_version"),
+                condition=Q(item__isnull=True),
+                name="applications_prg_imp_batch_result_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("item", "aggregate_kind", "resulting_version"),
+                condition=Q(item__isnull=False),
+                name="applications_prg_imp_item_result_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(expected_version__gte=0)
+                & Q(resulting_version=models.F("expected_version") + 1)
+                & ~Q(source_channel=""),
+                name="applications_prg_imp_command_version",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        action__in=(
+                            ProgrammeImportCommandAction.CALL_COMMITTED,
+                            ProgrammeImportCommandAction.PROPOSAL_CLAIMED,
+                        ),
+                        applied_command_count__gte=1,
+                        applied_command_count__lte=1_001,
+                    )
+                    | Q(
+                        action__in=(
+                            ProgrammeImportCommandAction.BATCH_STAGED,
+                            ProgrammeImportCommandAction.BATCH_PREVIEWED,
+                            ProgrammeImportCommandAction.BATCH_DISCARDED,
+                        ),
+                        applied_command_count=0,
+                    )
+                ),
+                name="applications_prg_imp_command_applied_count",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    aggregate_kind=ProgrammeImportAggregateKind.BATCH,
+                    item__isnull=True,
+                )
+                | Q(
+                    aggregate_kind=ProgrammeImportAggregateKind.PREVIEW,
+                    item__isnull=True,
+                )
+                | Q(
+                    aggregate_kind=ProgrammeImportAggregateKind.ITEM,
+                    item__isnull=False,
+                ),
+                name="applications_prg_imp_command_aggregate",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "action", "created_at"),
+                name="app_prg_imp_command_scope_idx",
+            )
+        ]

@@ -315,22 +315,25 @@ release/projections, on-site continuity, and integrated recovery acceptance.
 Each child remains independently tested, documented, reviewed, and protected-
 merged before the next dependent child starts.
 
-Issues #59, #61, and #63 complete the first three implementation prerequisites:
-exact v1 manifest enforcement, a dormant private Programme item/readiness
-domain, then dormant Applications-owned calls and acknowledged proposal
-revisions. The active queue now continues with preview-first call/proposal
-import. Review/decisions and the accepted Programme adapter follow; Programme
-host/co-host relationships begin only after that accepted transition. Profile
-activation remains last, after every mandatory continuation passes.
+Issues #59, #61, #63, and #66 complete the first four implementation
+prerequisites: exact v1 manifest enforcement, a dormant private Programme
+item/readiness domain, dormant Applications-owned calls and acknowledged
+proposal revisions, then dormant preview-first call/proposal import staging.
+Issue #64's Department-retirement preflight and recovery coordination is the
+active continuation. Review/decisions and the accepted Programme adapter
+follow; Programme host/co-host relationships begin only after that accepted
+transition. Profile activation remains last, after every mandatory
+continuation passes.
 
 ### MARU-PRG-001 — Proposal-to-programme lifecycle (`P1`)
 
-**Requirements:** PRG-001 through PRG-009, AUD-003, SCH-001
+**Requirements:** PRG-001 through PRG-010, AUD-003, SCH-001
 **Deliver:** Applications-owned calls, exact acknowledged proposal revisions,
-accountable review/revision requests and decisions, then an explicit accepted-
-item transition into separately authorized Programme readiness work. Issue #63
-completes the dormant call/proposal kernel only; import, review, decisions, and
-the accepted adapter remain successor work.
+preview-first import staging and claim, accountable review/revision requests
+and decisions, then an explicit accepted-item transition into separately
+authorized Programme readiness work. Issues #63 and #66 complete the dormant
+call/proposal and import kernels only; Department-retirement coordination,
+review, decisions, and the accepted adapter remain successor work.
 
 **Accept:**
 

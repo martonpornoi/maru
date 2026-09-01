@@ -44,6 +44,7 @@ from maru.applications.models import (
     ApplicationSubmission,
     ApplicationTargetRecord,
     ProgrammeCommandReceipt,
+    ProgrammeImportCommandReceipt,
     ReviewDecisionKind,
     ReviewerBasis,
 )
@@ -178,6 +179,13 @@ def _replay(
     if receipt is None:
         if (
             ProgrammeCommandReceipt.objects.select_for_update()
+            .filter(
+                edition_id=edition_id,
+                actor_id=actor.id,
+                retry_key=retry_key,
+            )
+            .exists()
+            or ProgrammeImportCommandReceipt.objects.select_for_update()
             .filter(
                 edition_id=edition_id,
                 actor_id=actor.id,

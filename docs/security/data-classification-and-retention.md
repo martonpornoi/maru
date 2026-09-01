@@ -64,6 +64,7 @@ Data supplied for one purpose is not a platform-wide profile:
 | Registration and order | registration/finance | admission, service, settlement, support |
 | Workforce and HR | HR and accountable leads | staffing relationship; ordinary leads get consequences only |
 | Programme calls and proposals | Applications owner for one edition | keep call schema, shared answers, invitations, contributor-owned proposed-public profiles, exact seals, included-collaborator responses, and later review as separate purpose-bounded records; no value crosses into Programme without an accepted adapter |
+| Programme import staging | Applications owner for one exact edition and source system | keep temporary canonical call/proposal input behind minimized organizer preview and exact-self lead claim; persist no identity match and clear private payload on application or separately authorized disposal |
 | Programme private operations | Programme Department for one edition | separate working, delivery, discussion, readiness, and approved-public-copy layers; release only the purpose-bounded projection |
 | Accessibility | access team | coordinate requested accommodation with minimum disclosure |
 | Safety case | assigned qualified team | case purpose only; no engagement analytics |
@@ -73,6 +74,94 @@ Data supplied for one purpose is not a platform-wide profile:
 
 Cross-partition reuse requires documented compatibility, notice, and policy.
 Convenience alone is not sufficient.
+
+### Applications-owned Programme import staging
+
+- The source package is temporary Applications input, not a platform profile or
+  external source of truth. Exact scope, source system, policy, actor, rationale,
+  retry, and correlation metadata come from trusted Maru command context and
+  are never accepted from source JSON.
+- A staged call payload inherits the highest classification of its definition,
+  question, policy, and configuration content, normally C1 through C3. A staged
+  proposal payload contains an exact login email and private answers and is at
+  least C2; each answer keeps the question's C1 through C3 classification.
+  Free text may raise the classification and is never copied into an organizer
+  preview, receipt metadata, event, log, or metric.
+- Source-system codes, case-sensitive source keys, document/item digests,
+  dependency digests, result digests, and permanent source bindings are
+  restricted operational/linkage evidence. They may be necessary for replay
+  and integrity, but are not user-facing identifiers and never appear in
+  organizer/lead projections, Audit metadata, event/outbox payloads, logs,
+  metrics, health, or errors.
+- A permanent binding is valid only when its source system equals the parent
+  batch source system. A call target must be owned by the batch's exact
+  Department. A proposal target must use the exact call named by the item's
+  same-source-system dependency, and its submission and call must share one
+  exact definition. These integrity checks do not authorize disclosing the
+  Department, call, definition, or source identity through a preview or error.
+- Organizer preview contains only opaque result/item identifiers, item version,
+  item kind, deterministic collection order, safe registered field keys, fixed
+  reason codes, readiness/action, and dependency state. It projects no separate
+  ordinal or count fields and omits source keys, lead email, identity-match state,
+  Account/Person IDs, answers, contributor profile, consent, payload, and every
+  digest.
+- Lead-self preview re-resolves the active verified account from the exact
+  staged email for every fresh preview and fresh claim, uses trusted request
+  correlation and source-channel facts, audits allow or denied outcomes, and
+  returns only the
+  caller-supplied opaque item identifier, current item version, that actor's
+  selection, typed `question_key`/`field_type`/`value` answers, and a fresh
+  `adoption_digest` as private claim
+  material. Claim submits it as
+  `adopted_preview_digest`; the receipt retains the adopted value as freshness
+  evidence. No matched Account/Person foreign key, boolean, or reusable lookup
+  result is persisted. No Identity migration is justified by this workflow.
+  Exact retained-receipt replay rechecks current adoption-scoped retry
+  authority and returns only the minimized historical result.
+- The lead's contributor profile, proposed-public choice, and consent are
+  current self-supplied Applications data. They are never imported on the
+  lead's behalf and do not become C0 until a later reviewed Programme public
+  rendition exists.
+- The dedicated import receipt retains the normalized caller-supplied
+  administrative rationale and a private request digest only for inspectable
+  governance and replay/collision equality. Nested ADR 0082 receipts retain the
+  same rationale for apply. Neither rationale nor request digest is copied to
+  organizer/lead preview, Audit metadata, event/outbox payload, logs, metrics,
+  health, or errors. The adopted-preview digest is likewise excluded from
+  every channel except exact-self lead claim input/output and its restricted
+  receipt field.
+- An apply receipt also retains immutable `applied_command_count`: exactly one
+  for call application and start-plus-answer count for proposal application.
+  It is restricted integrity metadata, not a user-facing count. Deferred guards
+  require the linked chain's terminal sequence and row count to equal it, and
+  require proposal answers to follow the target definition's strict order, so
+  later legitimate answer history cannot be relinked into the older import.
+- Failed protected attempts retain one best-effort minimized outer audit only
+  after the atomic operation rolls back. It contains no target identifier,
+  source value, identity match, answer, digest, rationale, or database detail;
+  nested failure evidence inside the rolled-back transaction is not duplicated.
+- Staging expiry is derived once from an exact reviewed versioned server-side
+  policy. The source cannot choose it and the default provider fails closed
+  when unconfigured. Expiry blocks preview/application; it is not disposal and
+  does not clear payload automatically. The timezone-aware server clock is
+  authoritative. An explicit command time is admitted only by the separately
+  configured test-clock guard while connected to a `test_` database; the
+  retention-provider and clock substitutions are independently two-factor
+  guarded.
+- Successful application nulls that item's canonical private payload in the
+  same transaction. A same-digest duplicate is only a permanent preview no-op,
+  not a successful application; its payload remains private and staged until
+  explicit disposal. Separately authorized, delegable exact-Edition disposal
+  works after expiry, planning closure, or owner-Department retirement, grants
+  no staged-content read authority, nulls every remaining staged payload, and
+  retains only justified policy, digest/size, minimized preview/binding,
+  receipt, discard, audit, and event evidence. It never deletes an applied
+  call, proposal, or answer history.
+- No automatic cleanup job exists in PRG-010. Before production activation an
+  organization must approve the retention duration, active-use and disposal
+  triggers, continuity owner, legal holds, subject access/correction/restriction
+  handling, backup aging, alert thresholds, and recovery behavior. Until then
+  the adapter remains dormant and no production import payload is approved.
 
 ### Applications-owned Programme proposal layers
 
@@ -319,6 +408,7 @@ part of product design.
 | Category | Typical trigger | Intended outcome |
 | --- | --- | --- |
 | Abandoned form draft | inactivity | delete promptly |
+| Staged Programme import payload | successful item application, explicit batch disposal, or reviewed expiry follow-up | clear each applied item immediately; after expiry allow only separately authorized disposal, clear every remaining private payload, and retain minimized source/replay/integrity evidence under the exact approved policy |
 | Unsuccessful application | decision and appeal closure | remove answers and reviews when no longer justified; retain minimal decision only if required |
 | Unsubmitted Programme proposal or expired invitation | call closure, withdrawal, or documented inactivity | remove proposed-public values, answers, and invitation contact when no longer justified; retain only minimized integrity evidence under an approved Applications policy |
 | Submitted Programme proposal | decision, appeal, accepted transition, and support closure | retain the exact sealed revision and responses only for the approved review/transition purpose; dispose unneeded private values by field policy without fabricating or rewriting the historical seal |

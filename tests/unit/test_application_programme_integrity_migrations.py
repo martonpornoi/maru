@@ -28,8 +28,8 @@ def test_0005_is_one_atomic_cross_domain_integrity_step() -> None:
     assert operation.sql == migration.FORWARD_SQL
     assert operation.reverse_sql == migration.REVERSE_SQL
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 66
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 17
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 87
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 22
 
 
 def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None:
@@ -54,6 +54,13 @@ def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None
         "applications_programmecallformat",
         "applications_programmecalltrack",
         "applications_programmecommandreceipt",
+        "applications_programmeimportappliedcommand",
+        "applications_programmeimportbatch",
+        "applications_programmeimportcommandreceipt",
+        "applications_programmeimportitem",
+        "applications_programmeimportpreviewitemresult",
+        "applications_programmeimportpreviewrevision",
+        "applications_programmeimportsourcebinding",
         "applications_programmeproposal",
         "applications_programmeproposalcollaborator",
         "applications_programmeproposalcollaboratortransition",
@@ -128,12 +135,12 @@ def test_schema_fingerprint_pins_complete_constraint_and_index_catalogs() -> Non
     """Keep code-owned PostgreSQL 17 object catalogs complete and immutable."""
     assert applications_readiness.APPLICATIONS_SCHEMA_CATALOG_SHA256 == {
         "constraint:": (
-            279,
-            "2ebb8eae792caab787719b70f5c3abddae90f0507c36b5eac98ae3b681503a36",
+            367,
+            "c20c6cd829ddc9045d6e07bfcfb39cda7e75a21a7070f4f0ad3b3b2e96aa3ecb",
         ),
         "index:": (
-            203,
-            "3a7ae99aaef53b5252f22334bae1dde5f57e993502484d908fbebe4395022d7d",
+            263,
+            "501634da18934c04c6234533fac4f01987fb5ddcc3db3a14f76d5c837097425f",
         ),
     }
     source = inspect.getsource(applications_readiness._schema_definition_rows)
@@ -269,7 +276,7 @@ def test_0005_reverse_restores_the_exact_legacy_definition_and_acl_contract() ->
     )
 
 
-def test_0006_is_the_populated_downgrade_fence_terminal_node() -> None:
+def test_0006_fence_remains_while_0009_is_the_terminal_node() -> None:
     migration = import_module(
         "maru.applications.migrations.0006_programme_populated_downgrade_fence"
     )
@@ -286,7 +293,7 @@ def test_0006_is_the_populated_downgrade_fence_terminal_node() -> None:
     )
     assert APPLICATIONS_INTEGRITY_CONTRACT.terminal_migration == (
         "applications",
-        "0006_programme_populated_downgrade_fence",
+        "0009_programme_import_populated_downgrade_fence",
     )
 
 

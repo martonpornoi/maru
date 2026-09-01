@@ -71,6 +71,7 @@ def test_replay_absence_conflict_and_exact_result() -> None:
         patch.object(commands, "lock_applications_retry_namespace") as retry_lock,
         patch.object(commands.ApplicationCommandReceipt, "objects", _first(None)),
         patch.object(commands.ProgrammeCommandReceipt, "objects", _first(None)),
+        patch.object(commands.ProgrammeImportCommandReceipt, "objects", _first(None)),
     ):
         assert commands._replay(**values) is None
         retry_lock.assert_called_once_with(
@@ -86,6 +87,7 @@ def test_replay_absence_conflict_and_exact_result() -> None:
             _first(_receipt(digest="different")),
         ),
         patch.object(commands.ProgrammeCommandReceipt, "objects", _first(None)),
+        patch.object(commands.ProgrammeImportCommandReceipt, "objects", _first(None)),
         pytest.raises(ApplicationIdempotencyConflict),
     ):
         commands._replay(**values)
@@ -93,6 +95,7 @@ def test_replay_absence_conflict_and_exact_result() -> None:
         patch.object(commands, "lock_applications_retry_namespace"),
         patch.object(commands.ApplicationCommandReceipt, "objects", _first(_receipt())),
         patch.object(commands.ProgrammeCommandReceipt, "objects", _first(None)),
+        patch.object(commands.ProgrammeImportCommandReceipt, "objects", _first(None)),
     ):
         assert commands._replay(**values).replayed is True
     programme_objects = _first(None)
@@ -102,6 +105,7 @@ def test_replay_absence_conflict_and_exact_result() -> None:
         patch.object(commands, "lock_applications_retry_namespace"),
         patch.object(commands.ApplicationCommandReceipt, "objects", _first(None)),
         patch.object(commands.ProgrammeCommandReceipt, "objects", programme_objects),
+        patch.object(commands.ProgrammeImportCommandReceipt, "objects", _first(None)),
         pytest.raises(ApplicationIdempotencyConflict),
     ):
         commands._replay(**values)

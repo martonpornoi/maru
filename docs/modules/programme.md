@@ -29,6 +29,14 @@ relationship until a later accepted transition imports one exact reviewed
 revision. Scheduling will later own occurrences and placements. Workforce will
 later own staffing demand and Shift commitments.
 
+Applications also owns the dormant preview-first staging evidence for imported
+Programme calls and proposals. Staging and organizer preview create no call,
+proposal, Programme item, or host; successful apply can invoke only the
+protected Applications call/proposal commands and clears that item's private
+payload. Source binding, exact-self claim, expiry, and continuity disposal
+remain Applications concerns and grant Programme no access to source keys,
+emails, answers, payloads, match state, or digests.
+
 ## Dormant adoption boundary
 
 The module is installed so migrations, integrity checks, and typed contracts
@@ -260,10 +268,12 @@ record.
 
 This module is a deployable, testable private-domain foundation, not a usable
 Programme workspace. Applications-owned calls and collaborative proposals now
-have a separate dormant kernel, but they create no Programme record or host
-relationship. The immediate successor is preview-first import. Staged review
-and decisions and the accepted Applications adapter follow; only that later
-accepted Programme transition may create host and co-host relationships.
+have separate dormant call/proposal and preview-first import kernels, but they
+create no Programme record or host relationship. Issue #64's owner-Department
+retirement coordination remains mandatory before import/profile activation.
+Staged review and decisions and the accepted Applications adapter follow; only
+that later accepted Programme transition may create host and co-host
+relationships.
 Interactive timetable editing, Scheduling, Venue placement, staffing, release,
 public and personal timetables, on-site continuity, profile activation, and
 integrated browser rehearsal remain later children of the Programme Operations

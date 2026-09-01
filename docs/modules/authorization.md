@@ -13,8 +13,9 @@ Last updated: 2026-09-01
 `maru.authorization` is the deny-by-default authority boundary for IDN-002,
 IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, IDN-014, EVT-006, QRY-003,
 UX-020, UX-024, UX-028, UX-030, NFR-013, ADR 0003, ADR 0023, ADR 0040,
-ADR 0041, ADR 0044, ADR 0080, ADR 0081, and ADR 0082. A membership, account, familiar
-role name, or visible destination never grants broad access by itself.
+ADR 0041, ADR 0044, ADR 0080, ADR 0081, ADR 0082, and ADR 0083. A membership,
+account, familiar role name, or visible destination never grants broad access
+by itself.
 
 Platform administration is a separate principal purpose under ADR 0031.
 Capability grants and role assignments reject a platform administrator as
@@ -68,6 +69,21 @@ This closed capability-vocabulary change advances the Authorization decision
 policy version to `2026-09-01.1`. The version records the exact catalog and
 minimum-scope policy used to make decisions; it does not admit the capability
 into an edition profile.
+
+Authorization migration `0022_programme_import_capabilities` adds two dormant,
+delegable declarations:
+
+- `applications.import_programme`, bounded to one exact Department, for
+  staging, organizer preview, and protected apply; and
+- `applications.dispose_programme_import`, bounded to one exact Edition, for
+  continuity disposal without staged-content read authority.
+
+The import declaration carries reason, audit, and sensitive-read obligations;
+disposal carries reason and audit but cannot reveal or apply staged content.
+The closed minimum-scope catalog and decision policy advance to
+`2026-09-01.2`, and populated grants or role-bundle evidence fence downgrade.
+Neither declaration is pinned by a current profile, and the migration creates
+no grant, role, root, adapter admission, route, or writer.
 
 The self capabilities are non-persistable and non-role-assignable. They resolve
 from the authenticated active, verified person and the exact current lead or

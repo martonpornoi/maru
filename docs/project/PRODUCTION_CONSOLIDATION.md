@@ -89,7 +89,7 @@ The state vocabulary is deliberately small:
 | Attendee registration and admission commerce | Mounted / deployment-gated | Public/self registration, My Maru, exact-difference upward replacement, hard-ceiling capacity adjustments, strict FIFO batches, and hosted/demo payment boundaries are executable. Real provider/webhook, printer/device, load, retention, recovery, accessibility, refund/transfer, and fulfilment gates remain. |
 | Registration extension fields | Mounted / cutover incomplete | Versioned definitions, closed self/staff/exact-Department/confirmed/public audiences, append-only values, audited API/directory projections, and self/staff browser editing are mounted. Compatibility-writer retirement, stopped-writer activation, and complete browser/accessibility evidence remain. |
 | Typed application portfolio | Mounted / bounded | Ten code-owned starters, edition-owned drafts, organizer/applicant/reviewer journeys, exact named/immutable-role review provenance, and typed acceptance receipts are implemented. Real programme/workforce/SecOps/merchandise target adapters, staff answer correction, richer review rubrics, retention execution, and accessibility rehearsal remain. |
-| Programme intake/review | Dormant Applications and Programme foundations / runtime inactive | ADRs 0081–0082 and PRG-001–009 define the Applications-to-Programme boundary, proposal collaboration, later host relationships, privacy, and progressive profile. Applications now owns dormant definition/submission facets for calls, one-version collaborative proposals, contributor-owned profiles, exact seals, and included-collaborator responses; Programme owns guarded item/readiness layers and reviewed public copy. Both current profile fingerprints are unchanged, every new relation is runtime SELECT-only, and no route/API/UI, import, review/decision, target, accepted-item adapter, host relationship, Scheduling continuation, or setup behavior is active. |
+| Programme intake/review | Dormant Applications import/intake and Programme foundations / runtime inactive | ADRs 0081–0083 and PRG-001–010 define the Applications-to-Programme boundary, proposal collaboration, preview-first migration, later host relationships, privacy, and progressive profile. Applications owns dormant definition/submission facets for calls, one-version collaborative proposals, contributor-owned profiles, exact seals and responses, plus strict staged import, non-disclosing preview, protected apply/exact-self claim, permanent source binding, and explicit disposal; Programme owns guarded item/readiness layers and reviewed public copy. Both current profile fingerprints are unchanged, every new relation is runtime `SELECT`-only, and no route, API, UI, upload, connector, worker, review/decision, target, accepted-item adapter, host relationship, Scheduling continuation, or setup behavior is active. Issue #64 remains mandatory before activation. |
 | Venues and operational space bookings | Mounted / bounded | Reusable venue facts, edition selections, immutable physical-member expansion, hard availability, two-clique occupancy, independent approval/publication, and minimized public/My schedule projections are mounted. Guest allocation, programme ownership, full timetable layers/exports, and person/equipment conflicts remain. |
 | Timetable and shifts | Partial / shared release contract accepted | Venue bookings implement safe three-phase physical occupancy and an independent public schedule projection. Workforce implements the first Position-demand, suitable-work, personal-claim, independent-confirmation, overlap/rest, lock, recovery, cancellation, and completion journey. ADR 0081 assigns the future single Programme release, candidate/conflict evidence, projections, and Programme-linked Venue reconciliation to Scheduling without changing current runtime. General qualifications, maximum-hours/lone-work/accommodation policy, check-in/timekeeping, wider people/equipment conflicts, operational layers, notifications, and exports remain absent. |
 | Logistics/storage | Mounted / bounded / deployment-gated | Typed containment/custody/event/manifest/offline workflows, exact capability bindings, mounted routes, retention boundaries, runtime-role profiles, and fail-closed readiness are implemented. The serialized PostgreSQL matrix passes 26/26, the canonical repository gate passes, and scoped authenticated read-only browser rehearsal passes at 1,920 and 390 pixels. LOG-003 demand/reservation, LOG-004 driver/routes, LOG-006 invoice linkage, LOG-007 low-stock/wastage, broader mutation-role/visual/accessibility, restore/PITR, and production activation remain open. |
@@ -803,11 +803,13 @@ multiple venues.
 
 ### M4 — Typed applications and downstream adapters
 
-ADRs 0081 and 0082 contract the Applications-to-Programme seam: Applications
+ADRs 0081 through 0083 contract the Applications-to-Programme seam: Applications
 owns calls, private proposals, shared answer history, contributor-owned profile
 revisions, exact sealed revisions and acknowledgements, then review evidence,
-decisions, and the typed target receipt; Programme begins only with a later
-idempotent accepted-item adapter. The profile, import, review/decision path, and
+decisions, and the typed target receipt. Applications also owns dormant staged
+import evidence whose apply paths reuse only those protected commands;
+Programme begins only with a later idempotent accepted-item adapter. The
+profile, Department-retirement continuation, review/decision path, and accepted
 adapter remain non-executable.
 
 - [x] Closed versioned field/form vocabulary in the bounded Applications
@@ -824,7 +826,8 @@ adapter remain non-executable.
 - [x] Add dormant Programme-call definition facets and one-version
   collaborative proposal revisions with exact sealing and included-
   collaborator acknowledgement; no mounted starter or host relationship is implied.
-- [ ] Add preview-first import for calls and proposals through public commands.
+- [x] Add preview-first import for calls and proposals through dormant typed
+  services, without a public route, API, upload, UI, connector, or profile pin.
 - [ ] Add staged Programme review/decisions and the real Programme target
   adapter; create hosts only after the accepted transition.
 - [ ] Acceptance creates a private programme item idempotently.
@@ -835,9 +838,10 @@ adapter remain non-executable.
 Current bounded exit: a synthetic generic applicant can submit, revise, and
 receive an assigned-reviewer decision without gaining unrelated access. The
 dormant Programme proposal kernel separately retains exact collaborative
-authorship but has no mounted journey. The full milestone exit still requires
-import, Programme-specific review/decisions, and the idempotent private
-Programme adapter above.
+authorship, and the import kernel retains staged migration evidence, but neither
+has a mounted journey. The full milestone exit still requires Department-
+retirement coordination, Programme-specific review/decisions, and the
+idempotent private Programme adapter above.
 
 ### M5 — Three-phase timetable and layers
 

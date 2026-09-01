@@ -1,13 +1,17 @@
 # Applications module
 
-Status: mounted generic application portfolio plus dormant Programme-call and
-acknowledged-proposal kernel; production remains gated
+Status: mounted generic application portfolio plus implemented dormant
+Programme-call, acknowledged-proposal, and Programme-import kernels; production
+remains gated
 Last updated: 2026-09-01
 
 ## Purpose and boundary
 
 `maru.applications` implements REG-023, PRG-001, PRG-002, PRG-009, IDN-014,
-and a bounded intake/review slice of KNO-009. It owns edition-scoped, versioned contribution and service
+and a bounded intake/review slice of KNO-009. PRG-010 and ADR 0083 define the
+implemented dormant preview-first Programme-import boundary; protected-PR and
+deployment acceptance remain separate. Applications owns edition-scoped,
+versioned contribution and service
 applications built from one typed field vocabulary. Attendee registration
 remains owned by `maru.registration`; the Registration starter is a
 navigation/catalog entry and cannot be copied into this module. An application
@@ -27,10 +31,11 @@ Programme, make private review material public, grant a proposal collaborator
 host access, or create attendee Participation.
 
 Issue #63 deliberately stops before import, review, decision, target creation,
-or Programme ingestion. The immediate successor is preview-first call and
-proposal import. Structured review and decisions, then the accepted Programme
-adapter, follow as separate children. Host and co-host relationships begin only
-after that accepted transition and remain Programme-owned.
+or Programme ingestion. Issue #66 now contracts preview-first call and proposal
+import as the immediate dormant successor without mounting it. Structured
+review and decisions, then the accepted Programme adapter, follow as separate
+children. Host and co-host relationships begin only after that accepted
+transition and remain Programme-owned.
 
 The dormant Programme foundation now reserves a structural
 `applications_accepted` source binding and declares
@@ -200,6 +205,123 @@ retaining all history. None of these transitions creates a review, decision,
 target record, Programme item, host relationship, public rendition, occurrence,
 Shift, schedule, or publication.
 
+## Dormant Programme import staging contract
+
+PRG-010 and ADR 0083 define one implemented Applications-owned adapter,
+`applications.import.programme_call_proposal@1`. It stages only strict JSON
+schema version 1 and invokes the protected
+Programme commands above; it never writes a call, proposal, answer, or ADR 0082
+Programme receipt directly. It does own the seven import evidence models,
+including `ProgrammeImportCommandReceipt`. The service catalog is closed to:
+
+- `stage_programme_import`;
+- `preview_programme_import`;
+- `preview_programme_import_proposal_claim`;
+- `commit_programme_import_call`;
+- `claim_programme_import_proposal`; and
+- `discard_programme_import`.
+
+Pinning this import adapter is sufficient only for staging, organizer preview,
+retry, and continuity disposal. Protected call/proposal application and
+lead-self access independently require their purpose-specific Programme target
+or self adapter gates; importing never widens those relationships.
+
+The parser starts from raw bytes and caps the package at 8 MiB, 1,000 items,
+depth 16, and 250,000 parsed values. One object has at most 32 members, one
+generic array at most 1,000 elements, and one generic string at most 65,536
+Unicode scalar values before narrower ADR 0082 limits apply. It rejects
+alternate encodings, invalid Unicode, duplicate or NFC-colliding keys, unknown
+shape, ambiguous numeric/time values, and lossy coercion. Canonicalization
+creates separate private lowercase SHA-256 document and item digests.
+
+A call item supplies a complete definition/configuration without Department
+identity; the trusted batch Department becomes owner. Its apply path requires
+both exact-Department `applications.import_programme` and an independently
+successful `applications.manage_programme_calls` decision under locks, and may
+create only a complete Draft through `create_programme_call`.
+
+A proposal item supplies one exact lead login email, call source dependency,
+track/format/duration, and applicant-writable answers whose exact
+`question_key`/`field_type`/`value` shape is bound into canonical evidence and
+must match the resolved call schema. Organizer preview may
+persist and release only source-independent operational facts. It never reveals
+the email, identity-match state, source key, answer, profile, consent, payload,
+or digest. Lead-self preview re-resolves the active verified account from that
+email for every disclosure, accepts trusted request correlation/source facts,
+audits allow and denied outcomes, stores no Account/Person match, repeats the
+authority/identity checks under locks immediately before release, and returns
+only that actor's normalized typed answers and a fresh adopted digest. That
+read remains available after planning writes close while staging is unexpired.
+Claim
+requires the active referenced call and invokes `start_programme_proposal`
+followed by definition-order answer commands in one outer transaction. The lead
+supplies their own contributor profile, proposed-public choice, and consent.
+
+The accepted persistence contract contains exactly seven Applications-owned
+models: `ProgrammeImportBatch`, `ProgrammeImportItem`,
+`ProgrammeImportPreviewRevision`, `ProgrammeImportPreviewItemResult`,
+`ProgrammeImportSourceBinding`, `ProgrammeImportAppliedCommand`, and
+`ProgrammeImportCommandReceipt`. Batch state is only `staged` or `discarded`;
+application and expiry are derived. Each item independently moves from staged
+version 1 to applied or discarded version 2. Successful application or
+disposal nulls its private canonical payload in the same transaction.
+
+Source binding permanently keys exact organization, edition, source system,
+item kind, and case-sensitive source key. The same identity and applied digest
+is a no-op forever; a changed digest is a conflict forever, regardless of later
+legitimate domain edits. A same-digest duplicate has no apply action and remains
+staged/private until explicit disposal. One outer import receipt links the exact
+ordered ADR 0082 receipt chain and freezes its immutable
+`applied_command_count`. Call apply stores and links exactly one command;
+proposal apply stores and links its start plus every answer. Deferred integrity
+requires the linked-row count and terminal sequence to equal that frozen count,
+so later legitimate proposal revisions cannot extend an older import chain.
+Answer links belong to the target call's exact definition and increase in
+strict `(section.position, question.position, question.id)` order. Generic,
+Programme, and import receipts share one advisory-serialized
+edition/actor/retry namespace. Apply pre-locks every deterministic nested retry
+key in sequence before any batch/edition row lock, so direct Programme commands
+cannot form a retry/edition deadlock. A nested or evidence failure rolls back
+the whole outer mutation.
+
+A source binding must match its applied item's parent batch source system. A
+call target must be owned by the batch's exact Department. A proposal target
+must use the exact call resolved through the proposal item's same-source-system
+call dependency, and the proposal submission and call must share the exact
+definition. Service checks and deferred database guards enforce each link;
+matching shape or tenant scope alone is insufficient.
+
+Each protected service wraps its atomic work with a minimized failure-audit
+boundary. A failed validation, authorization, freshness, dependency, or nested
+command leaves no success receipt/event/outbox/domain mutation, then records one
+best-effort outer `deny` or `error` outcome without a target identifier or any
+source, identity, answer, digest, rationale, or database detail.
+Unexpected dependency/evidence exceptions become the stable
+`applications_programme_import_operation_failed` boundary with only the safe
+request correlation available to the caller. Corrupt or incompatible retained
+canonical bytes use the same boundary and never re-expose parser diagnostics.
+
+Staging expiry comes only from a reviewed, versioned server-side policy
+provider; the default provider fails closed and no source document may select a
+policy. A substitute provider is rejected outside the explicit two-factor
+isolated-test guard. The timezone-aware server clock is authoritative for
+expiry, freshness, and retained command times. An explicit `now` is accepted
+only when `MARU_ALLOW_APPLICATIONS_PROGRAMME_IMPORT_TEST_CLOCK` is enabled and
+the connected database name begins with `test_`; either condition alone fails
+closed. Expiry blocks preview/application and does not dispose data. Exact-
+Edition `applications.dispose_programme_import` remains available after expiry,
+planning closure, or owner-Department retirement without current Department
+authority. It clears remaining payload and never compensating-deletes an
+applied call or proposal. There is no automatic cleanup job or service/system
+actor in this outcome.
+
+The adapter, its two capabilities, and
+`applications.programme_import.changed.v1` remain dormant and absent from both
+current profiles. There is no HTTP/admin/browser/worker surface. Issue #64 must
+make unresolved staging a disclosure-safe Department-retirement dependency and
+provide governed reassignment/disposal/recovery before any import/profile
+activation.
+
 ## Shared field contract
 
 Sections contain ordered questions using a closed vocabulary: short and long
@@ -279,6 +401,13 @@ proposal. The purpose and target descriptors are
 `applications.target.programme_item@1`. They are declarations, not current
 authority: neither current v1 manifest pins them, and an unrelated grant or
 role cannot bypass the manifest denial.
+
+The dormant import vocabulary declares delegable exact-Department
+`applications.import_programme` and delegable exact-Edition
+`applications.dispose_programme_import`. Disposal grants continuity mutation
+without staged-content read authority and deliberately does not require a
+current Department or open planning writes. Neither capability is pinned by a
+current profile.
 
 Self capabilities resolve against the authenticated account and exact edition,
 not a client-supplied subject. Organizer, applicant, and reviewer queries scope
@@ -415,10 +544,38 @@ Workforce, Audit, Effects event/outbox, and migration history from one point;
 it never fabricates a collaborator response, sealed snapshot, review,
 decision, target, Programme item, or host relationship.
 
+ADR 0083's implementation continues from Applications `0006` with
+`0007_programme_import_persistence`, pairs Workforce `0017` with the new batch
+owner-Department foreign key, and pairs Authorization `0022` with the two
+dormant capabilities. Applications `0008` installs the consolidated
+import integrity catalog from Applications `0007` plus Authorization `0022`;
+it deliberately does not depend on Workforce `0017`. Applications `0009`
+provides the populated downgrade fence. Reversing import integrity restores
+the exact `0005` guard catalog, while any row in any of the seven import
+relations refuses schema reversal and requires fix-forward or one mutually
+consistent whole-database restore.
+
+All seven import relations remain runtime `SELECT`-only and every import
+function owner-only. Applications readiness covers the complete generated
+catalog for all 33 managed `applications_*` relations, including exact columns
+and collations, constraints, indexes, triggers, owner-only functions, relation
+flags, owners, and ACLs. Fresh PostgreSQL 17 generated 442 columns and
+collations, 367 constraints, 263 indexes, 87 triggers, and 22 owner-only
+functions. The constraint SHA-256 is
+`c20c6cd829ddc9045d6e07bfcfb39cda7e75a21a7070f4f0ad3b3b2e96aa3ecb`; the
+index SHA-256 is
+`501634da18934c04c6234533fac4f01987fb5ddcc3db3a14f76d5c837097425f`.
+These values belong to the exact release head; an earlier schema snapshot is
+not acceptance evidence.
+
 Focused verification covers the closed starter/event/capability catalogs and
 PostgreSQL workflows for policy activation, idempotency, applicant/reviewer
 visibility, exact role attribution, acceptance transition, audit/outbox
 evidence, append-only enforcement, and tenant isolation.
+
+Issue #66 adds focused parser, service, persistence, disposal, readiness, and
+migration-contract checks; exact execution results belong in the current
+checkpoint and protected pull request rather than this durable module contract.
 
 The final canonical current-tree repository gate passed all 4,067 tests in
 15,558.23 seconds (4:19:18) at 90.78 percent coverage. This accepts the bounded

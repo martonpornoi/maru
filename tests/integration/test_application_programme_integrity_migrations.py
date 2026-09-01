@@ -870,7 +870,7 @@ def _truncate_programme_receipts_without_test_escape() -> None:
             "SELECT pg_catalog.set_config("
             "'maru.authority_provenance_test_reset', 'off', true)"
         )
-        cursor.execute("TRUNCATE public.applications_programmecommandreceipt")
+        cursor.execute("TRUNCATE public.applications_programmecommandreceipt CASCADE")
 
 
 def test_complete_draft_call_and_catalog_readiness_are_accepted() -> None:
@@ -949,7 +949,7 @@ def test_retry_key_collision_is_rejected_in_programme_after_generic_direction() 
     _insert_generic_receipt(world, definition=generic, retry_key=retry_key)
 
     with (
-        pytest.raises(DatabaseError, match="generic Applications"),
+        pytest.raises(DatabaseError, match="another Applications command family"),
         transaction.atomic(),
         _raw_programme_writer(),
     ):

@@ -107,6 +107,17 @@ foreign or malformed targets collapse to the same non-disclosing shape. An
 acknowledgement audit attributes the responding contributor and exact sealed
 revision without copying what that revision contains.
 
+Dormant Programme-import mutations use one minimized outer command outcome and
+retain the protected nested call/proposal outcomes without copying source keys,
+emails, answers, contributor profile or consent values, identity-match state,
+payloads, request/content digests, source bindings, command reasons, or database
+messages. Organizer preview records only closed operational facts. Lead-self
+preview re-resolves the exact staged email and appends the required sensitive-
+read audit before returning that actor's bounded claim projection; audit
+failure releases no private projection and persists no reusable identity match.
+Disposal remains attributable at exact Edition scope without granting staged-
+content read authority.
+
 ## Tests
 
 Tests cover safe payload rejection, direct and bulk mutation/deletion,
