@@ -101,6 +101,7 @@ from maru.organizations.services import (
     update_convention_series,
     update_organization_profile,
 )
+from maru.programme.readiness import programme_database_integrity_is_ready
 from maru.venues.readiness import venues_database_integrity_is_ready
 
 logger = logging.getLogger(__name__)
@@ -2002,7 +2003,7 @@ def _append_logistics_runtime_readiness(dependencies: dict[str, str]) -> bool:
 def _append_bounded_domain_integrity_readiness(
     dependencies: dict[str, str],
 ) -> bool:
-    """Append value-safe integrity gates for the four mounted bounded contexts.
+    """Append value-safe integrity gates for the mounted bounded contexts.
 
     Parameters
     ----------
@@ -2012,13 +2013,14 @@ def _append_bounded_domain_integrity_readiness(
     Returns
     -------
     bool
-        `True` when Append value-safe integrity gates for the four mounted
-        bounded contexts; otherwise `False`.
+        `True` when every mounted bounded-context integrity contract is ready;
+        otherwise `False`.
     """
     probes = (
         ("applications_integrity", applications_database_integrity_is_ready),
         ("charities_integrity", charities_database_integrity_is_ready),
         ("catalog_integrity", catalog_database_integrity_is_ready),
+        ("programme_integrity", programme_database_integrity_is_ready),
         ("venues_integrity", venues_database_integrity_is_ready),
     )
     results: list[bool] = []

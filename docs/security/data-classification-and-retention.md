@@ -1,7 +1,7 @@
 # Data classification and retention
 
 Status: Baseline requiring jurisdiction-specific review  
-Last updated: 2026-08-09
+Last updated: 2026-08-31
 
 This is a product and engineering control model, not legal advice. Each
 deploying organization must document its roles, purposes, lawful bases,
@@ -63,6 +63,7 @@ Data supplied for one purpose is not a platform-wide profile:
 | Edition participation | organization/edition | deliver the selected edition |
 | Registration and order | registration/finance | admission, service, settlement, support |
 | Workforce and HR | HR and accountable leads | staffing relationship; ordinary leads get consequences only |
+| Programme private operations | Programme Department for one edition | separate working, delivery, discussion, readiness, and approved-public-copy layers; release only the purpose-bounded projection |
 | Accessibility | access team | coordinate requested accommodation with minimum disclosure |
 | Safety case | assigned qualified team | case purpose only; no engagement analytics |
 | Public content | subject plus publisher | only exact approved rendition and term |
@@ -71,6 +72,37 @@ Data supplied for one purpose is not a platform-wide profile:
 
 Cross-partition reuse requires documented compatibility, notice, and policy.
 Convenience alone is not sufficient.
+
+### Programme private information layers
+
+- The canonical Programme item identity and closed operational codes are C1.
+  Private working title/summary and ordinary readiness state are C1 unless
+  their entered content raises the classification.
+- Technical requirements, accessibility-delivery instructions, media-consent
+  notes, Department discussion, readiness rationale, source identifiers, and
+  reviewer evidence are C3 by default. The Programme delivery table must not
+  store a diagnosis, medical narrative, or unrelated case detail.
+- The bounded public fields in an approved rendition, and the projection made
+  only from those fields, are C0. The stored rendition row is mixed-sensitivity
+  because its source link, predecessor, reviewer, review time, and rationale
+  remain C3 evidence. Approval never reclassifies or exposes the private source
+  revision, rationale, actor, prior rendition, or readiness history.
+  C0 classification does not imply publication or discoverability: the current
+  query remains dormant and capability-gated, and returns the same absent shape
+  for an unpublished private item, an absent item, and a foreign-scope item.
+- Layer-specific capabilities, exact edition scope, final reauthorization, and
+  sensitive-read audit protect private projections. A generic item projection,
+  event, audit record, log, exception, or future public endpoint must not join
+  these layers together.
+- Command receipts, readiness/review evidence, and discussion are retained
+  operational evidence. Production activation requires locally approved
+  active-use and retention triggers, subject/export handling, legal-hold rules,
+  backup aging, and an audited disposition path. Until then they remain
+  retained and the module remains dormant.
+- Tests and documentation use synthetic organizations, editions, actors, and
+  items only. Recovery restores Programme, Audit, Effects, and migration
+  evidence from one consistent point and never fabricates a proposal, host,
+  readiness fact, rendition, occurrence, Shift, or release.
 
 ### Logistics custody and restricted contact
 

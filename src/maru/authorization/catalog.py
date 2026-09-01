@@ -1053,6 +1053,94 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"audit"}),
     ),
     Capability(
+        code="programme.view_private",
+        description=(
+            "View private working information for Programme items in one edition."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {
+                "item_summaries",
+                "working_information",
+                "working_history",
+                "public_copy_review_history",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="programme.manage_items",
+        description=(
+            "Create and revise private Programme items and Department discussion."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="programme.view_readiness",
+        description="View evidence-backed Programme readiness for one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"readiness_summary", "readiness_history"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="programme.manage_readiness",
+        description="Configure and evidence Programme readiness for one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="programme.view_delivery",
+        description=(
+            "View technical, accessibility-delivery, and media-consent Programme facts."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"delivery_information", "delivery_history"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="programme.manage_delivery",
+        description="Revise bounded Programme delivery information for one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="programme.view_discussion",
+        description="View retained Programme Department discussion for one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"discussion_entries"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="programme.view_public_copy",
+        description="View approved Programme public-copy renditions for one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        field_ceiling=frozenset({"latest_public_rendition"}),
+    ),
+    Capability(
+        code="programme.approve_public_copy",
+        description="Approve an immutable Programme public-copy rendition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=False,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
         code="workforce.view_structure",
         description=(
             "View edition departments, positions, reporting lines, minimized "
@@ -1215,7 +1303,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-08-26.1"
+POLICY_VERSION = "2026-08-31.1"
 
 
 def capability(code: str) -> Capability | None:

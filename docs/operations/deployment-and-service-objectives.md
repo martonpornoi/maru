@@ -1,7 +1,7 @@
 # Deployment and service objectives
 
 Status: Registration safety services defined; target deployment certification required  
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 
 Maru must be operable by a small professional team and approachable to
 community contributors. It should not require a distributed-systems department
@@ -297,6 +297,17 @@ retention receipts, `SELECT`/`UPDATE` on its seeded inventory control,
 retention holds, sequence `USAGE`/`SELECT`, SELECT-only materialized-view and
 activation-control reads with no table- or column-level `REFERENCES`,
 and the exact versioned 21-function v3 policy/trigger-helper execute closure.
+The installed but unactivated Programme relations are a stricter dormant
+class: the runtime role has `SELECT` only on every `programme_*` table and no
+Programme function execution. This permits integrity/readiness inspection but
+cannot run the command core. A future profile-activation migration must review
+and widen only the exact DML/function set required by its mounted writers.
+Programme downgrade is exact only while its schema is empty. Migration `0003`
+performs the early populated fence; the reverse paths of `0002` and `0001`
+repeat same-transaction `ACCESS EXCLUSIVE` preflights immediately before guard
+and table removal. A refusal preserves Programme tables, guards, and migration
+evidence. Recover by fixing forward or by restoring Programme, Audit, Effects,
+and migration history from one mutually consistent whole-database point.
 The Workforce adoption and Organization structure receipts deny `UPDATE`,
 `DELETE`, and `REFERENCES`; the structure control denies `DELETE` and
 `REFERENCES`. Department remains on the ordinary DML

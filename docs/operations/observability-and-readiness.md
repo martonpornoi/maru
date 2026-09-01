@@ -177,6 +177,17 @@ remain outside the 21-function runtime execute allowlist: they are callable
 only through their pinned PostgreSQL triggers, with direct execution revoked
 from both `PUBLIC` and the runtime login.
 
+The mandatory `programme_integrity` dependency separately proves the dormant
+Programme foundation. It requires the exact Programme migration range,
+relation set and owner; exact column definitions and collation; complete
+constraint, foreign-key, and index definitions; relation durability and row-
+security metadata; exact trigger attachments and function bodies/configuration;
+and the closed runtime/PUBLIC ACL boundary. Missing, weakened, extra, or
+unreadable evidence returns the same minimized `503` dependency response. A
+green Programme integrity dependency proves only that the dormant schema is
+the reviewed code-owned shape; it does not activate a profile, caller, route,
+writer, or public timetable.
+
 ## Alert design
 
 An alert has owner, severity, edition impact, symptom, threshold, evaluation

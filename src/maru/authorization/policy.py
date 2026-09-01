@@ -275,6 +275,7 @@ def resolve_edition_target(
         EventEdition.objects.filter(
             pk=edition_id,
             organization_id=organization_id,
+            series__organization_id=organization_id,
         ).values(
             "id",
             "organization_id",
@@ -289,6 +290,72 @@ def resolve_edition_target(
         edition_id=row["id"],
         adoption_profile_code=row["adoption_profile_code"],
         adoption_profile_version=row["adoption_profile_version"],
+    )
+
+
+def decide_verified_principal_exact_edition(
+    *,
+    principal_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    capability_code: str,
+    requested_fields: frozenset[str] | None = None,
+    at: datetime | None = None,
+) -> PolicyDecision:
+    """Evaluate current verified identity against one trusted edition target.
+
+    This adapter is the identifier-only cross-module entry point for callers
+    that must not import Identity account models or construct authorization
+    targets.  Authorization reloads the principal with current active and
+    email-verification state, resolves the edition through its exact tenant,
+    and then returns the complete ordinary policy decision.  Missing,
+    inactive, and unverified principals share one minimized denial.
+
+    Parameters
+    ----------
+    principal_id : UUID
+        The exact opaque account identifier to evaluate.
+    organization_id : UUID
+        The organization expected to own the edition and its series.
+    edition_id : UUID
+        The exact event edition identifier that scopes the capability.
+    capability_code : str
+        The stable capability code required by the operation.
+    requested_fields : frozenset[str] | None, default=None
+        Optional code-owned fields requested by the caller.
+    at : datetime | None, default=None
+        Optional evaluation instant forwarded to the policy engine.
+
+    Returns
+    -------
+    PolicyDecision
+        A complete fail-closed policy decision with no identity or target
+        model crossing the public boundary.
+    """
+    try:
+        principal = Account.objects.filter(
+            id=principal_id,
+            is_active=True,
+            email_verified_at__isnull=False,
+        ).first()
+    except (TypeError, ValueError, ValidationError):
+        principal = None
+    if principal is None:
+        return PolicyDecision(
+            allowed=False,
+            fields=frozenset(),
+            obligations=frozenset(),
+            reason_code="account_inactive",
+        )
+    return decide(
+        principal=principal,
+        capability_code=capability_code,
+        resource=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
+        requested_fields=requested_fields,
+        at=at,
     )
 
 

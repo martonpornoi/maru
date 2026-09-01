@@ -64,7 +64,9 @@ Scheduling, Venues, and Workforce over the shared Identity, Organizations,
 Events, Authorization, Audit, Effects, and Privacy namespaces, with mandatory
 pinned recovery and export continuity contracts.
 The contract does not yet activate that profile or expose Programme/Scheduling
-routes. Successor changes must pin its capabilities, destinations,
+routes. A dormant Programme private-item/readiness module is now installed,
+but both existing v1 manifests omit its capabilities, adapter, and event route;
+Scheduling remains absent. Successor changes must pin capabilities, destinations,
 writers/effects, and adapter/conflict sources to the exact profile version
 rather than treating a module namespace as permission for all present or
 future operations.
@@ -81,6 +83,12 @@ documented commands, queries, events, and explicit adapters. It must not create
 attendee Participation, Registration, payment, attendance, accreditation, or
 unrelated module state merely because a host, reviewer, or volunteer needs a
 purpose-specific relationship.
+
+The dormant Programme foundation already enforces the private item, separated
+information-layer, evidence-backed readiness, and immutable approved-copy
+ownership described above. Its runtime role is read-only and its commands are
+unreachable under current profiles. This establishes schema and integration
+contracts without treating installation as adoption.
 
 ```text
 Attendee web ─┐

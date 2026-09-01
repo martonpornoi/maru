@@ -63,8 +63,15 @@ registrants, volunteers, onboarding subjects, or workforce assignees.
   returning display name or the generic `Maru account` fallback without email,
   login handle, authentication state, or contact data;
 - `active_person_account_display_labels(account_ids)`, the narrower bounded
-  Organization structure adapter that returns a minimized display label only while the
-  already-authorized relationship points to an active `person` account;
+  Organization structure adapter that returns a minimized display label only
+  while the already-authorized relationship points to an active `person`
+  account;
+- `resolve_active_verified_account_reference(account_id, lock=False)`, the
+  identifier-only principal seam for cross-module commands and sensitive
+  queries; it returns an immutable UUID reference only while the exact account
+  is currently active and email-verified, and can lock that identity row inside
+  a caller-owned transaction without releasing an account model or contact
+  data;
 - `create_platform_account_invitation(...)`,
   `reissue_platform_account_invitation(...)`,
   `revoke_platform_account_invitation(...)`, and

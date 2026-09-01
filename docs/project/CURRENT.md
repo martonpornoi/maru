@@ -82,6 +82,75 @@ acceptance-criteria audit found no remaining issue. Exact-commit local
 certification and the protected pull-request gate remain the delivery evidence
 to record before this contract is complete.
 
+## Dormant Programme item and readiness foundation
+
+Issue [#61](https://github.com/martonpornoi/maru/issues/61), the third native
+child of Programme Operations umbrella
+[#48](https://github.com/martonpornoi/maru/issues/48), installs the first
+`maru.programme` bounded context without activating
+`programme_operations@1`. It owns an edition-wide optimistic creation control,
+canonical private items, structural organizer/accepted-Applications provenance,
+separate working/delivery/Department-discussion histories, versioned readiness
+requirements and evidence, immutable reviewed public-copy renditions, and
+idempotent command receipts. Organizer core kinds are ceremony, break,
+announcement, and bounded organizer-defined items; no proposal, submitter,
+Applications/proposal reviewer, host, occurrence, room, Shift, Participation,
+release, or public route is fabricated. Programme public-copy approval retains
+its own accountable reviewer evidence.
+
+The dormant command core covers organizer-item creation, private working and
+delivery revisions, Department discussion, readiness configuration/evidence,
+and public-copy approval. It normalizes bounded inputs, checks exact edition or
+item versions, reauthorizes before and after locks, and couples every successful
+intent to receipt, minimized audit, registered domain event, and transactional
+outbox evidence. Public-copy approval appends a separately versioned rendition
+without changing the private item or readiness cursors. Queries return distinct
+frozen layer projections with exact field ceilings, bounded deterministic
+results, final reauthorization, and sensitive-read audit where required.
+Private working, delivery, discussion, readiness, and public-review histories
+retain rationale in newest-first bounded projections without widening the
+attendee-safe public copy. New readiness concerns bind the latest applicable
+working or delivery source cursor, or zero only when that source layer is absent.
+
+The global catalog now declares the `programme` namespace, nine exact-edition
+capabilities, one reserved accepted-Applications source descriptor, and
+`programme.item.changed.v1`; the additive authorization vocabulary is attributed
+to policy version `2026-08-31.1`. Neither `full_convention@1` nor
+`workforce_only@1` adopts any Programme declaration; their literal
+fingerprints remain unchanged. Real current-profile commands and protected
+queries therefore fail closed. Successful atomicity is tested only through a
+sealed future-profile harness that substitutes the not-yet-activated admission
+decision while retaining the real database, Audit, Effects event, and outbox
+writers. A non-default authorizer is accepted only when both the automated-test
+setting is enabled and the live database name starts with `test_`; no
+production runtime bypass or allow-by-default path exists.
+
+Programme `0001` creates additive empty schema, `0002` installs exact-scope,
+closed-shape, append-only, contiguous-version, immutable-chain, and
+receipt-backed PostgreSQL guards, and `0003` refuses populated downgrade before
+any evidence can be dropped. The bounded health probe fingerprints exact
+relations, columns and collations, complete constraint/index definitions,
+relation metadata, function bodies/configuration, trigger attachments,
+ownership, and ACLs. Because the module has no production caller, the runtime
+login receives SELECT only on every Programme relation and no Programme
+function execution. Installation changes no existing edition/profile row and
+creates no Programme or cross-module data.
+
+Documentation now defines ownership, layer classifications, retention and
+recovery, capability/query ceilings, the future Applications seam, and the
+difference between readiness evidence, content approval, Scheduling release,
+and publication. Calls, accepted-item ingestion, hosts, interactive Scheduling,
+staffing, release, on-site continuity, setup/profile activation, and browser
+acceptance remain later children.
+
+Focused local verification is recorded in the
+[Programme item/readiness checkpoint](../checkpoints/2026-08-31-programme-item-readiness-foundation.md).
+Clean-tree exact-commit certification and protected exact-head pull-request
+acceptance remain separate authoritative delivery evidence and must pass before
+merge. The smallest next Programme child is calls, purpose-scoped host/co-host
+collaboration, and preview-first import while the composite profile remains
+inactive.
+
 ## Exact adoption-manifest enforcement
 
 Issue [#59](https://github.com/martonpornoi/maru/issues/59), the second native
@@ -165,11 +234,12 @@ consistent whole-database restore: do not mutate an edition's immutable
 profile, widen a v1 manifest, discard audit/outbox evidence, or replay
 quarantined work until the exact scope/profile route is again permitted.
 
-This foundation does **not** add a `programme_operations@1` enum value,
+Issue #59 by itself did **not** add a `programme_operations@1` enum value,
 manifest, capability, destination, role, adapter, setup route, Programme
-migration, or runtime behavior. Programme activation remains blocked until its ordered
-Programme, Applications, Scheduling, staffing, release, continuity, setup,
-authority, database-guard, and integrated-acceptance children are complete.
+migration, or runtime behavior. Programme activation remains blocked until its
+ordered Programme, Applications, Scheduling, staffing, release, continuity,
+setup, authority, database-guard, and integrated-acceptance children are
+complete.
 All 2,358 unit tests pass. The complete 283-test PostgreSQL database-role
 safety suite and focused exact-profile consumer suites pass; the five
 creation/replay cases pass again after the database-catalog refactor.
@@ -976,9 +1046,9 @@ support branch, a deployment, or production readiness.
 ## Smallest sensible next actions
 
 1. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48) with
-   the first private Programme item/readiness aggregate and organizer-created
-   core-item workflow, preserving the contract-only profile boundary.
-2. Continue sequentially through Applications calls, hosts, import, review,
+   Programme calls, purpose-scoped host/co-host collaboration, and preview-
+   first import while preserving the inactive exact-profile boundary.
+2. Continue sequentially through Applications review,
    decisions and the real Programme adapter; Scheduling core and accessible
    editor; Workforce staffing projections; atomic release and outputs; and
    on-site continuity/export.

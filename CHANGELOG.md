@@ -15,6 +15,14 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added the dormant Programme private-domain foundation: edition-scoped
+  canonical items, structurally separated working/delivery/discussion layers,
+  evidence-backed readiness, immutable reviewed public copy, idempotent
+  receipt-backed commands, minimized event/outbox contracts, and fail-closed
+  PostgreSQL guards. Both current adoption profiles still deny Programme and
+  the runtime role remains read-only; no route, profile activation, timetable,
+  staffing, or publication surface is introduced
+  ([#61](https://github.com/martonpornoi/maru/issues/61)).
 - Added a dedicated umbrella-proposal Issue Form that captures one bounded
   end-to-end outcome, ordered child decomposition, integrated acceptance,
   adoption and side-effect boundaries, traceability, and recovery while using

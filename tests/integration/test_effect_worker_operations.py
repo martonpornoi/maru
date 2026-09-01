@@ -16,6 +16,7 @@ from maru.authorization.services import AuthorizationDenied
 from maru.effects.adoption import NON_EDITION_EFFECT_ROUTES
 from maru.effects.commands import inspect_effect_replay_history, replay_effect
 from maru.effects.handlers import (
+    ACKNOWLEDGED_DORMANT_EVENTS,
     ACKNOWLEDGED_INTERNAL_EVENTS,
     built_in_handler_registry,
 )
@@ -103,11 +104,18 @@ def _truncate_replay_receipts_with_production_guards() -> None:
 
 
 def test_builtin_handlers_explicitly_cover_the_closed_event_registry() -> None:
-    assert frozenset(DEFINITIONS_BY_NAME) == ACKNOWLEDGED_INTERNAL_EVENTS
+    assert frozenset(DEFINITIONS_BY_NAME) == (
+        ACKNOWLEDGED_INTERNAL_EVENTS | ACKNOWLEDGED_DORMANT_EVENTS
+    )
     handlers = built_in_handler_registry()
     assert all(
         handlers.resolve(event_name=event_name, destination="internal") is not None
         for event_name in ACKNOWLEDGED_INTERNAL_EVENTS
+    )
+    assert all(
+        handlers.resolve(event_name=event_name, destination="internal") is None
+        and handlers.resolve(event_name=event_name, destination="notifications") is None
+        for event_name in ACKNOWLEDGED_DORMANT_EVENTS
     )
 
 

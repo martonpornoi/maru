@@ -53,6 +53,13 @@ exact adoption manifests and the closed non-edition catalog against the
 versioned event registry and built-in handler registry. A missing event or
 destination is therefore a deployment error rather than durable poison work.
 
+The registry includes the dormant `programme.item.changed.v1` schema with an
+exact minimized code-only payload. It has no current-profile route and no
+built-in handler. A real current-profile Programme command therefore fails at
+the delivery-adoption check before event or outbox persistence. Future
+activation must add the exact route and matching handler together; registering
+the event name alone is not execution permission.
+
 Handlers receive the domain-event UUID as their idempotency key. Delivery is
 at least once: a provider timeout or worker crash can cause a repeat, so every
 handler or adapter must make that key an idempotency boundary or reconcile the

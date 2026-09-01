@@ -309,11 +309,18 @@ Programme Operations delivery umbrella. Its first child,
 [#57](https://github.com/martonpornoi/maru/issues/57), contracts
 `programme_operations@1`, canonical ownership, and the ordered dependency
 boundary without activating runtime behavior. Successor children must proceed
-sequentially through exact-version profile enforcement and setup, Programme
-items, intake/review, Scheduling core and editor, Workforce staffing,
+sequentially through exact-version profile enforcement, dormant Programme
+items/readiness, intake/review, Scheduling core and editor, Workforce staffing,
 release/projections, on-site continuity, and integrated recovery acceptance.
 Each child remains independently tested, documented, reviewed, and protected-
 merged before the next dependent child starts.
+
+Issues #59 and #61 complete the first two implementation prerequisites: exact
+v1 manifest enforcement, then a dormant private Programme item/readiness
+domain with organizer-core semantics. The active queue now continues with
+Programme calls, purpose-scoped host/co-host collaboration, and preview-first
+import;
+profile activation remains last, after every mandatory continuation passes.
 
 ### MARU-PRG-001 — Proposal-to-programme lifecycle (`P1`)
 

@@ -1,6 +1,6 @@
 # Conceptual domain model
 
-Status: Baseline plus accepted Programme Operations ownership contract; runtime absent
+Status: Baseline plus dormant Programme foundation; composite runtime absent
 Last updated: 2026-08-31
 
 This model names stable concepts and ownership boundaries. It is not a promise
@@ -288,8 +288,12 @@ the complete current Workforce journey and excludes `accreditation`,
 Recovery and export are required, pinned continuity behaviors rather than
 permission to enable an entire present or future module namespace.
 
-Programme and Scheduling are contract namespaces only. The profile code,
-route, capabilities, destinations, writers, effects, and adapters remain
+Programme now has a dormant installed namespace, nine exact-edition capability
+declarations, private item/readiness records, protected commands and queries,
+and database integrity checks. Issue #61 does not add hosts, accepted-item
+ingestion, a caller, route, destination, writer grant, effect route, or current
+profile membership. Scheduling remains a contract namespace only, and the
+`programme_operations@1` profile code and all composite surfaces remain
 unavailable until successor runtime work implements and validates every
 manifest member. A later capability cannot silently change the meaning of
 version 1.

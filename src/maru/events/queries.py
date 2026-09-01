@@ -2,12 +2,97 @@
 
 from collections.abc import Collection
 from dataclasses import dataclass
+from typing import Final
 from uuid import UUID
 
+from django.core.exceptions import ValidationError
 from django.db.models import Q, QuerySet
 
 from maru.events.adoption import ADOPTION_PROFILES, profile_keys_for_module
 from maru.events.models import EventEdition
+
+_PRIVATE_PLANNING_WRITE_LIFECYCLES: Final = frozenset(
+    {
+        EventEdition.Lifecycle.DRAFT,
+        EventEdition.Lifecycle.PREPARING,
+    }
+)
+
+
+@dataclass(frozen=True, slots=True)
+class PrivatePlanningEditionReference:
+    """Project the exact edition scope used by private planning writers.
+
+    Attributes
+    ----------
+    edition_id
+        The exact event edition identifier.
+    organization_id
+        The organization that owns both the edition and its series.
+    accepts_private_planning_writes
+        Whether the current edition lifecycle admits private planning writes.
+    """
+
+    edition_id: UUID
+    organization_id: UUID
+    accepts_private_planning_writes: bool
+
+
+def resolve_private_planning_edition_reference(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    lock: bool = False,
+) -> PrivatePlanningEditionReference | None:
+    """Resolve exact tenant coherence and private-planning lifecycle state.
+
+    This purpose-limited cross-module boundary returns no event model, series
+    identifier, label, date, profile, or lifecycle value.  The boolean is
+    derived by Events from the current lifecycle catalog, so consuming domain
+    modules do not import private event models or duplicate that rule.  A
+    command may request a row lock when it already owns the surrounding
+    transaction.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization expected to own both the edition and its series.
+    edition_id : UUID
+        The exact event edition identifier to resolve.
+    lock : bool, default=False
+        Whether to acquire a PostgreSQL row lock on the selected edition.
+
+    Returns
+    -------
+    PrivatePlanningEditionReference | None
+        The minimized immutable scope, or ``None`` when the exact coherent
+        tenant-owned edition is unavailable.
+    """
+    query = EventEdition.objects.all()
+    if lock:
+        query = query.select_for_update(of=("self",))
+    try:
+        row = (
+            query.filter(
+                id=edition_id,
+                organization_id=organization_id,
+                series__organization_id=organization_id,
+            )
+            .values_list("id", "organization_id", "lifecycle")
+            .first()
+        )
+    except (TypeError, ValueError, ValidationError):
+        return None
+    if row is None:
+        return None
+    resolved_edition_id, resolved_organization_id, lifecycle = row
+    return PrivatePlanningEditionReference(
+        edition_id=resolved_edition_id,
+        organization_id=resolved_organization_id,
+        accepts_private_planning_writes=(
+            lifecycle in _PRIVATE_PLANNING_WRITE_LIFECYCLES
+        ),
+    )
 
 
 @dataclass(frozen=True, slots=True)

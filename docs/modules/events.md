@@ -3,7 +3,8 @@
 Status: Implemented edition aggregate, immutable full-convention and
 Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
-and profile-scoped unified-shell context; Programme Operations is contract-only
+profile-scoped unified-shell context, and dormant Programme reference seams;
+Programme Operations remains inactive
 Last updated: 2026-08-31
 
 ## Purpose and requirements
@@ -169,8 +170,11 @@ adapter/conflict sources. Adding a capability to a module catalog must not
 silently widen an existing edition. The accepted product modules are
 Applications, Programme, Scheduling, Venues, and Workforce; shared foundations
 remain Audit, Authorization, Effects, Events, Identity, Organizations, and
-Privacy. Programme and Scheduling are not executable namespaces until
-successor runtime changes introduce and validate them.
+Privacy. Programme now has a dormant installed namespace, private schema,
+capability catalog, reserved adapter descriptor, and event definition;
+Scheduling remains absent. Neither is executable under a current profile, and
+the Programme declarations are deliberately absent from both existing v1
+manifests.
 
 Recovery and export are mandatory profile contracts rather than implied module
 adoption: version 1 must pin its continuity artifacts, regeneration, restore,
@@ -184,6 +188,15 @@ approved, version-pinned Programme operator authority set rather than widening
 the immutable Workforce operator role. Purpose-specific host, reviewer, and
 volunteer relationships must not create attendee Participation, Registration,
 payment, attendance, accreditation, or unrelated module records.
+
+`resolve_private_planning_edition_reference(...)` is Events' minimized
+cross-module lifecycle seam. It proves the exact organization, edition, and
+series tenant chain, optionally locks the edition inside a caller-owned
+transaction, and returns only the edition UUID, organization UUID, and a
+boolean derived from Events' lifecycle catalog. Draft and Preparing accept
+private planning writes; Ready, Live, Closing, Archived, and Cancelled do not.
+Consumers therefore neither import the private `EventEdition` model nor copy
+its lifecycle rule.
 
 `platform_editions()` is the explicit C1 identity query used only after a
 platform-administrator boundary has been established. The preserved context
@@ -375,6 +388,8 @@ computed effective-access management, date-format preference, richer edition-
 local policy, and Programme Operations setup are not implemented. Edition
 creation inherits only visible locale
 defaults; it does not create or publish registration or any operational
-configuration. The accepted ADR 0081 route, profile, capabilities,
-destinations, effects, and adapters remain unavailable until their runtime and
-security acceptance issues merge.
+configuration. Nine dormant Programme capability declarations and minimized
+Identity/Events/Authorization reference seams now exist, but the accepted ADR
+0081 profile, setup route, destinations, current-profile effects, accepted-item
+adapter implementation, and user surfaces remain unavailable until their
+runtime and security acceptance issues merge.
