@@ -11,6 +11,7 @@ from django.test.utils import CaptureQueriesContext
 
 import maru.effects.services as effect_services
 from maru.audit.models import AuditEvent
+from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import PolicyDecision
 from maru.events.models import EventEdition
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
@@ -365,7 +366,7 @@ def test_current_profile_query_denies_before_programme_disclosure() -> None:
     audit = AuditEvent.objects.get(capability_code="programme.view_private")
     assert audit.outcome == AuditEvent.Outcome.DENY
     assert audit.target_id is None
-    assert audit.safe_metadata == {"policy_version": "2026-08-31.1"}
+    assert audit.safe_metadata == {"policy_version": POLICY_VERSION}
 
 
 def test_layer_queries_are_separate_reauthorized_audited_and_content_safe(  # noqa: PLR0915

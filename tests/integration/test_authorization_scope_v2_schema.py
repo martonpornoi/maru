@@ -23,6 +23,7 @@ from tests.factories import (
     RoleBundleFactory,
     ScopedResourceBindingFactory,
 )
+from tests.support.migrations import workforce_migration_targets
 from tests.workforce_helpers import (
     create_department_for_test,
     save_position_for_test,
@@ -273,7 +274,13 @@ def test_database_rejects_partial_persistent_scope_when_model_is_bypassed() -> N
 @pytest.mark.usefixtures("restores_current_migration_graph")
 def test_scope_v2_migration_preserves_existing_authority_without_inference() -> None:
     executor = MigrationExecutor(connection)
-    executor.migrate([AUTHORIZATION_BEFORE_SCOPE_V2, *SCHEMA_DEPENDENCIES])
+    executor.migrate(
+        workforce_migration_targets(
+            executor,
+            AUTHORIZATION_BEFORE_SCOPE_V2,
+            *SCHEMA_DEPENDENCIES,
+        )
+    )
     legacy_apps = executor.loader.project_state(
         [AUTHORIZATION_BEFORE_SCOPE_V2, *SCHEMA_DEPENDENCIES]
     ).apps
@@ -346,7 +353,13 @@ def test_scope_v2_migration_preserves_existing_authority_without_inference() -> 
     )
 
     executor = MigrationExecutor(connection)
-    executor.migrate([AUTHORIZATION_SCOPE_V2_SCHEMA, *SCHEMA_DEPENDENCIES])
+    executor.migrate(
+        workforce_migration_targets(
+            executor,
+            AUTHORIZATION_SCOPE_V2_SCHEMA,
+            *SCHEMA_DEPENDENCIES,
+        )
+    )
     scope_v2_apps = executor.loader.project_state(
         [AUTHORIZATION_SCOPE_V2_SCHEMA, *SCHEMA_DEPENDENCIES]
     ).apps

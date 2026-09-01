@@ -69,6 +69,16 @@ runtime ACLs are implemented without a route or current-profile permission.
 This moves Programme's owned-data contract forward while preserving the same
 non-executable composite profile boundary.
 
+Issue #63 adds the matching dormant Applications intake foundation. Programme
+calls facet existing typed definitions, and collaborative proposals facet
+submissions while reusing append-only answer revisions and one aggregate
+version. Exact sealed revisions bind call schema, selection, answer revisions
+or absences, roster, contributor-owned profile revisions, policies, and exact
+included-collaborator acknowledgements. Every generic review/target seam remains closed, all
+new relations are runtime `SELECT`-only, and both current profile fingerprints
+remain unchanged. No route, API, UI, review, decision, target, Programme item,
+host relationship, publication, Scheduling, or staffing behavior is active.
+
 Profile v1 declares incumbent-system coexistence and the current manual,
 copy-on-write structure setup. General partner import, complete continuity
 export, print/offline packs, automated decommissioning, profile expansion,
@@ -715,11 +725,12 @@ contract child is issue #57 under umbrella #48. Issue #59 completed the exact-
 manifest prerequisite. Issue #61 implements the dormant private Programme
 item/readiness foundation, including organizer-created core-item semantics and
 public-copy approval, while both current profiles deny its commands and its
-runtime database role remains read-only. Calls, accepted Applications
-ingestion, hosts, Scheduling, staffing, release, continuity, setup, and
-integrated acceptance remain open in dependency order. The immediate successor
-is calls, purpose-scoped host/co-host collaboration, and preview-first import;
-staged review/decisions and the accepted Applications adapter follow later.
+runtime database role remains read-only. Issue #63 adds dormant Applications-
+owned calls, purpose-scoped proposal collaboration, exact sealed revisions, and
+included-collaborator acknowledgements without creating hosts. Preview-first import is
+the immediate successor; staged review/decisions and the accepted Applications
+adapter follow, then Programme-owned host relationships, Scheduling, staffing,
+release, continuity, setup, and integrated acceptance in dependency order.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme

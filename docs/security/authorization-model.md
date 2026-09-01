@@ -2,7 +2,7 @@
 
 Status: Implemented foundation with exact scope and lineage; broader domain
 coverage remains incremental
-Last updated: 2026-08-02
+Last updated: 2026-09-01
 
 Maru uses deny-by-default policy decisions over capabilities, scopes,
 relationships, resource state, and fields. Django's built-in model permissions
@@ -53,6 +53,12 @@ registration.view_self_profile
 registration.manage_self_profile
 registration.moderate_public_profile
 programme.approve_public_copy
+applications.manage_programme_calls
+applications.view_programme_proposal_self
+applications.edit_programme_proposal_self
+applications.respond_programme_invitation_self
+applications.manage_programme_proposal_self
+applications.submit_programme_proposal_self
 schedule.publish
 workforce.assign_shift
 people.view_legal_name
@@ -126,6 +132,17 @@ Capabilities are necessary but not always sufficient. Policies can check:
 Client-supplied claims never establish these relationships without server
 verification.
 
+A Programme proposal collaborator is one such purpose relationship. An active,
+verified person may receive or accept an invitation without Participation,
+Registration, payment, Workforce, or host status. Accepted collaborators may
+edit shared applicant-writable answers; the lead alone manages selection and
+roster; each contributor alone revises their proposed-public profile and
+consent; and each included collaborator alone acknowledges or declines the
+exact seal. Every decision reloads the exact organization, edition,
+submission, current relationship, lifecycle, and aggregate version. A proposal
+relationship never authorizes Programme items, review, decisions, scheduling,
+staffing, publication, or another proposal.
+
 ## Field-level views
 
 Every API serializer or query projection declares its field catalog and policy.
@@ -136,6 +153,7 @@ Example person projections:
 | View | May include | Excludes by default |
 | --- | --- | --- |
 | Public host | approved display name, pronouns, biography, avatar | contact, legal identity, private needs |
+| Programme proposal collaborator | shared applicant-writable answers and their own proposed-public profile/consent; current exact seal response for self | other private profiles, invitation addresses, review evidence, decisions, accepted Programme data |
 | Volunteer lead | edition name, contact route, qualifications relevant to role, availability consequence | medical details, payment, unrelated applications |
 | Front Desk | lookup identifiers, registration and entitlement state, approved fulfilment instruction | HR reviews, case detail, full audit |
 | Accessibility task assignee | operational instruction and contact route if needed | diagnosis and original request narrative |

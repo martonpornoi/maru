@@ -1,7 +1,7 @@
 # Data classification and retention
 
 Status: Baseline requiring jurisdiction-specific review  
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 
 This is a product and engineering control model, not legal advice. Each
 deploying organization must document its roles, purposes, lawful bases,
@@ -63,6 +63,7 @@ Data supplied for one purpose is not a platform-wide profile:
 | Edition participation | organization/edition | deliver the selected edition |
 | Registration and order | registration/finance | admission, service, settlement, support |
 | Workforce and HR | HR and accountable leads | staffing relationship; ordinary leads get consequences only |
+| Programme calls and proposals | Applications owner for one edition | keep call schema, shared answers, invitations, contributor-owned proposed-public profiles, exact seals, included-collaborator responses, and later review as separate purpose-bounded records; no value crosses into Programme without an accepted adapter |
 | Programme private operations | Programme Department for one edition | separate working, delivery, discussion, readiness, and approved-public-copy layers; release only the purpose-bounded projection |
 | Accessibility | access team | coordinate requested accommodation with minimum disclosure |
 | Safety case | assigned qualified team | case purpose only; no engagement analytics |
@@ -72,6 +73,39 @@ Data supplied for one purpose is not a platform-wide profile:
 
 Cross-partition reuse requires documented compatibility, notice, and policy.
 Convenience alone is not sufficient.
+
+### Applications-owned Programme proposal layers
+
+- A dormant call's operational code, lifecycle, track/format definitions, and
+  contributor-field policy are C1 until a later deliberate publication
+  workflow creates a C0 rendition. Domain activation is not publication.
+- Proposal answers retain each question's classification and may be C1 through
+  C3. Shared editing does not lower that ceiling: only the lead and accepted
+  collaborators with the exact current relationship may receive applicant-
+  writable answers. Conditional absence is snapshot evidence, not permission
+  to reveal the hidden question or a prior value.
+- Invitations, collaborator identity, roster membership, transition reasons,
+  and acknowledgement state are C2. Invitation delivery secrets or bearer
+  material must never enter the proposal, event, audit, log, or command receipt.
+- Proposed-public display name, biography, pronouns, website, and consent are
+  contributor-owned C2 input. Calling them proposed-public does not make them
+  C0. Only the exact contributor may revise their values. Each included
+  collaborator may acknowledge or decline only the exact seal and own profile
+  revision included for them; the lead's attributable seal is the lead action.
+  A later Programme public-copy review is required before any public projection.
+- A sealed revision is immutable mixed-classification evidence. Its identifiers,
+  exact answer/profile/selection links, policies, roster, digest, predecessor,
+  and per-person responses reveal no values by themselves, but their disclosure
+  remains at least C2 and never authorizes dereferencing a higher-class source.
+- Events, outbox payloads, receipts, audit metadata, errors, metrics, and health
+  checks contain only closed action, lifecycle, version, count, and opaque
+  identifier facts. They never copy answer, biography, consent, invitation,
+  reason, reviewer, or roster values.
+- Issue #63 mounts no read or write surface and approves no active-use retention
+  schedule. Until a deploying organization accepts purpose, lawful basis,
+  subject access, correction, withdrawal, legal hold, disposal, backup aging,
+  and recovery behavior, the kernel remains dormant and its evidence is not
+  production personal data.
 
 ### Programme private information layers
 
@@ -286,6 +320,8 @@ part of product design.
 | --- | --- | --- |
 | Abandoned form draft | inactivity | delete promptly |
 | Unsuccessful application | decision and appeal closure | remove answers and reviews when no longer justified; retain minimal decision only if required |
+| Unsubmitted Programme proposal or expired invitation | call closure, withdrawal, or documented inactivity | remove proposed-public values, answers, and invitation contact when no longer justified; retain only minimized integrity evidence under an approved Applications policy |
+| Submitted Programme proposal | decision, appeal, accepted transition, and support closure | retain the exact sealed revision and responses only for the approved review/transition purpose; dispose unneeded private values by field policy without fabricating or rewriting the historical seal |
 | Successful staffing record | offboarding or edition close | retain useful contribution separately; remove sensitive evidence and expired provisioning data |
 | Registration service data | edition and support close | retain minimized participation; handle financial evidence under its own rule |
 | Attendee profile/contact snapshot | edition and support close | retain or dispose by field purpose; preserve only minimized justified participation |

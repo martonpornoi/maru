@@ -15,6 +15,18 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added the dormant Applications-owned Programme-call and collaborative-
+  proposal kernel. It reuses typed definitions, submissions, and append-only
+  answer revisions; serializes every proposal mutation on one aggregate
+  version; preserves contributor-owned proposed-public profile/consent
+  revisions; retains exact sealed answer, profile, selection, roster, and
+  policy evidence; and records each collaborator's later exact response.
+  Dedicated receipts, dormant events, legacy-target
+  denial, database guards, populated downgrade fencing, and `SELECT`-only
+  runtime ACLs keep it contained. Neither current profile fingerprint changes,
+  and no route, API, UI, review, decision, target, Programme item, host,
+  publication, Scheduling, or staffing behavior is activated
+  ([#63](https://github.com/martonpornoi/maru/issues/63), ADR 0082, PRG-009).
 - Added the dormant Programme private-domain foundation: edition-scoped
   canonical items, structurally separated working/delivery/discussion layers,
   evidence-backed readiness, immutable reviewed public copy, idempotent
@@ -46,6 +58,13 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Refreshed the full-integration timing inventory from the exact Issue #63
+  certification after Programme migration coverage materially changed the test
+  suite. All 175 current integration files now have measured weights, the stale
+  deleted path is gone, and the deterministic eight-way schedule is balanced
+  between 4,525.6 and 4,525.9 seconds. The 120-minute fail-stop, complete file
+  selection, no-retry policy, and combined 90-percent coverage gate are
+  unchanged.
 - Hardened the executable `full_convention@1` and `workforce_only@1`
   boundaries into immutable exact-version manifests. Authorization, shell and
   context destinations, Registration discovery, Applications starters and

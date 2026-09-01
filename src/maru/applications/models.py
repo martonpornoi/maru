@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -15,6 +15,11 @@ from maru.applications.adoption import profile_allows_application_reviewer_role
 from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug
 from maru.identity.policies import validate_convention_subject
+
+from .programme_writer_boundary import require_programme_application_writer
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 MAX_DEFINITION_CARDINALITY = 100
 MAX_QUESTION_OPTIONS = 100
@@ -31,6 +36,16 @@ REFERENCE_KIND_VALIDATOR = RegexValidator(
     regex=r"^[a-z][a-z0-9_.:-]{0,79}$",
     message="Use a registered reference kind.",
     code="invalid_application_reference_kind",
+)
+PROGRAMME_DIGEST_VALIDATOR = RegexValidator(
+    regex=r"^[0-9a-f]{64}\Z",
+    message="Use a lower-case SHA-256 digest.",
+    code="invalid_programme_application_digest",
+)
+PROGRAMME_SOURCE_CHANNEL_VALIDATOR = RegexValidator(
+    regex=r"^[a-z][a-z0-9_-]*\Z",
+    message="Use a registered lower-case source channel.",
+    code="invalid_programme_application_source_channel",
 )
 
 
@@ -55,6 +70,246 @@ class ApplicationTargetKind(models.TextChoices):
     IDEA = "idea", "Idea"
     DAMAGE_REPORT = "damage_report", "SecOps damage report"
     HELPER = "helper", "Time-bounded helper"
+    PROGRAMME_ITEM = "programme_item", "Programme item"
+
+
+class ProgrammeProposalState(models.TextChoices):
+    """Enumerate the closed Programme proposal projection states."""
+
+    DRAFT = "draft", "Draft"
+    SEALED = "sealed", "Sealed"
+    SUBMITTED = "submitted", "Submitted"
+    WITHDRAWN = "withdrawn", "Withdrawn"
+
+
+class ProgrammeCollaboratorState(models.TextChoices):
+    """Enumerate persisted collaborator states; expiry remains derived."""
+
+    INVITED = "invited", "Invited"
+    ACCEPTED = "accepted", "Accepted"
+    DECLINED = "declined", "Declined"
+    LEFT = "left", "Left"
+    REMOVED = "removed", "Removed"
+
+
+class ProgrammeContributorRole(models.TextChoices):
+    """Enumerate immutable proposal-revision contributor roles."""
+
+    LEAD = "lead", "Lead"
+    COLLABORATOR = "collaborator", "Collaborator"
+
+
+class ProgrammeContributorRequirement(models.TextChoices):
+    """Enumerate per-role contributor profile requirements."""
+
+    HIDDEN = "hidden", "Hidden"
+    OPTIONAL = "optional", "Optional"
+    REQUIRED = "required", "Required"
+
+
+class ProgrammeContributorFieldCode(models.TextChoices):
+    """Enumerate the fixed public contributor-profile fields."""
+
+    PUBLIC_NAME = "public_name", "Public name"
+    BIOGRAPHY = "biography", "Biography"
+    PRONOUNS = "pronouns", "Pronouns"
+    WEBSITE = "website", "Website"
+
+
+class ProgrammeRevisionResponseKind(models.TextChoices):
+    """Enumerate collaborator responses to an exact sealed revision."""
+
+    ACKNOWLEDGED = "acknowledged", "Acknowledged"
+    DECLINED = "declined", "Declined"
+
+
+class ProgrammeCommandAggregateKind(models.TextChoices):
+    """Enumerate Programme command aggregate roots."""
+
+    CALL = "call", "Call"
+    PROPOSAL = "proposal", "Proposal"
+
+
+class ProgrammeCommandAction(models.TextChoices):
+    """Enumerate the closed Applications-owned Programme command surface."""
+
+    CALL_CREATED = "call_created", "Call created"
+    CALL_CONFIGURED = "call_configured", "Call configured"
+    CALL_ACTIVATED = "call_activated", "Call activated"
+    CALL_RETIRED = "call_retired", "Call retired"
+    CALL_SUCCESSOR_CREATED = "call_successor_created", "Call successor created"
+    PROPOSAL_STARTED = "proposal_started", "Proposal started"
+    PROPOSAL_SELECTION_REVISED = (
+        "proposal_selection_revised",
+        "Proposal selection revised",
+    )
+    PROPOSAL_ANSWER_REVISED = "proposal_answer_revised", "Proposal answer revised"
+    COLLABORATOR_INVITED = "collaborator_invited", "Collaborator invited"
+    COLLABORATOR_ACCEPTED = "collaborator_accepted", "Collaborator accepted"
+    COLLABORATOR_DECLINED = "collaborator_declined", "Collaborator declined"
+    COLLABORATOR_LEFT = "collaborator_left", "Collaborator left"
+    COLLABORATOR_REMOVED = "collaborator_removed", "Collaborator removed"
+    COLLABORATOR_REINVITED = "collaborator_reinvited", "Collaborator reinvited"
+    CONTRIBUTOR_PROFILE_REVISED = (
+        "contributor_profile_revised",
+        "Contributor profile revised",
+    )
+    PROPOSAL_SEALED = "proposal_sealed", "Proposal sealed"
+    PROPOSAL_REOPENED = "proposal_reopened", "Proposal reopened"
+    REVISION_ACKNOWLEDGED = "revision_acknowledged", "Revision acknowledged"
+    REVISION_DECLINED = "revision_declined", "Revision declined"
+    PROPOSAL_SUBMITTED = "proposal_submitted", "Proposal submitted"
+    PROPOSAL_WITHDRAWN = "proposal_withdrawn", "Proposal withdrawn"
+
+
+class ProgrammeCommandResultKind(models.TextChoices):
+    """Enumerate target kinds returned by Programme commands."""
+
+    CALL = "call", "Call"
+    TRACK = "track", "Track"
+    FORMAT = "format", "Format"
+    CONTRIBUTOR_FIELD = "contributor_field", "Contributor field"
+    PROPOSAL = "proposal", "Proposal"
+    SELECTION_REVISION = "selection_revision", "Selection revision"
+    ANSWER_REVISION = "answer_revision", "Answer revision"
+    COLLABORATOR = "collaborator", "Collaborator"
+    COLLABORATOR_TRANSITION = "collaborator_transition", "Collaborator transition"
+    PROFILE_REVISION = "profile_revision", "Profile revision"
+    PROPOSAL_REVISION = "proposal_revision", "Proposal revision"
+    REVISION_RESPONSE = "revision_response", "Revision response"
+
+
+class _ClosedProgrammeApplicationModel(UUIDTimeStampedModel):
+    """Reject Programme-call ORM writes outside registered commands."""
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        abstract = True
+
+    @override
+    def full_clean(
+        self,
+        exclude: Iterable[str] | None = None,
+        validate_unique: bool = True,
+        validate_constraints: bool = True,
+    ) -> None:
+        """Validate owned fields without querying external owner models.
+
+        Parameters
+        ----------
+        exclude : Iterable[str] | None, default=None
+            Field names Django should omit from validation.
+        validate_unique : bool, default=True
+            Whether Django should evaluate uniqueness constraints.
+        validate_constraints : bool, default=True
+            Whether Django should evaluate model constraints.
+        """
+        excluded_fields = set(exclude or ())
+        excluded_fields.update(
+            {
+                "account",
+                "actor",
+                "created_by",
+                "edition",
+                "organization",
+                "owner_department",
+            }
+        )
+        super().full_clean(
+            exclude=excluded_fields,
+            validate_unique=validate_unique,
+            validate_constraints=validate_constraints,
+        )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist through the closed Programme writer.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's model save operation.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's model save operation.
+        """
+        require_programme_application_writer()
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Permit current-record replacement only through the closed writer.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's model delete operation.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's model delete operation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Django's deleted-object count and per-model count mapping.
+        """
+        require_programme_application_writer()
+        return super().delete(*args, **kwargs)
+
+
+class _AppendOnlyProgrammeApplicationModel(_ClosedProgrammeApplicationModel):
+    """Reject updates to retained Programme-call history and receipts."""
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        abstract = True
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Insert one immutable evidence row and reject later updates.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded for an allowed initial insert.
+        **kwargs : Any
+            Keyword arguments forwarded for an allowed initial insert.
+
+        Raises
+        ------
+        ValidationError
+            If an existing immutable evidence row would be updated.
+        """
+        if not self._state.adding:
+            raise ValidationError(
+                "Programme application evidence is append-only.",
+                code="immutable_programme_application_evidence",
+            )
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Reject deletion of immutable Programme-call evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional deletion arguments rejected with the operation.
+        **kwargs : Any
+            Keyword deletion arguments rejected with the operation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            This method never returns because retained evidence cannot be deleted.
+
+        Raises
+        ------
+        ValidationError
+            Always, because Programme evidence is append-only.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Programme application evidence is retained.",
+            code="protected_programme_application_evidence",
+        )
 
 
 class ApplicationClassification(models.TextChoices):
@@ -1146,6 +1401,8 @@ class ApplicationAnswerRevision(UUIDTimeStampedModel):
         related_name="application_answer_revisions",
     )
     reason = models.CharField(max_length=240, blank=True)
+    source_version = models.PositiveBigIntegerField(null=True, blank=True)
+    resulting_version = models.PositiveBigIntegerField(null=True, blank=True)
 
     class Meta:
         """Configure Django's declarative class metadata."""
@@ -1167,6 +1424,22 @@ class ApplicationAnswerRevision(UUIDTimeStampedModel):
                 )
                 | (Q(source=AnswerSource.STAFF_CORRECTION) & ~Q(reason="")),
                 name="applications_answer_staff_reason_required",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    source_version__isnull=True,
+                    resulting_version__isnull=True,
+                )
+                | Q(
+                    source_version__gt=0,
+                    resulting_version=models.F("source_version") + 1,
+                ),
+                name="applications_answer_version_step",
+            ),
+            models.UniqueConstraint(
+                fields=("submission", "resulting_version"),
+                condition=Q(resulting_version__isnull=False),
+                name="applications_answer_result_version_uq",
             ),
         ]
 
@@ -1193,6 +1466,18 @@ class ApplicationAnswerRevision(UUIDTimeStampedModel):
             or self.classification != self.question.classification
         ):
             raise ValidationError("Answer question snapshots must be authoritative.")
+        if (self.source_version is None) != (self.resulting_version is None):
+            raise ValidationError(
+                "Answer versions must be both absent or both present.",
+                code="invalid_application_answer_version_pair",
+            )
+        if self.source_version is not None and (
+            self.source_version < 1 or self.resulting_version != self.source_version + 1
+        ):
+            raise ValidationError(
+                "Answer versions must advance by exactly one.",
+                code="invalid_application_answer_version_step",
+            )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Validate and persist the record.
@@ -1363,6 +1648,12 @@ class ApplicationTargetRecord(UUIDTimeStampedModel):
             If the submitted state or input violates a domain invariant.
         """
         super().clean()
+        if self.adapter_kind == ApplicationTargetKind.PROGRAMME_ITEM:
+            raise ValidationError(
+                "Programme proposal acceptance targets require the future typed "
+                "adapter.",
+                code="application_target_adapter_unavailable",
+            )
         if self.submission_id and (
             self.submission.state != ApplicationState.ACCEPTED
             or self.adapter_kind != self.submission.definition.target_adapter_kind
@@ -1527,3 +1818,1134 @@ class ApplicationCommandReceipt(UUIDTimeStampedModel):
         """
         del args, kwargs
         raise ValidationError("Application command receipts are retained.")
+
+
+class ProgrammeCall(_ClosedProgrammeApplicationModel):
+    """Applications-owned configuration root for one versioned Programme call."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_calls",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_calls",
+    )
+    definition = models.OneToOneField(
+        "applications.ApplicationDefinition",
+        on_delete=models.PROTECT,
+        related_name="programme_call",
+    )
+    owner_department = models.ForeignKey(
+        "workforce.Department",
+        on_delete=models.PROTECT,
+        related_name="programme_calls_owned",
+    )
+    max_collaborators = models.PositiveSmallIntegerField(
+        validators=(MinValueValidator(0), MaxValueValidator(16)),
+    )
+    content_policy_code = models.CharField(
+        max_length=120,
+        validators=(POLICY_CODE_VALIDATOR,),
+    )
+    contributor_consent_policy_code = models.CharField(
+        max_length=120,
+        validators=(POLICY_CODE_VALIDATOR,),
+    )
+    collaboration_retention_policy_code = models.CharField(
+        max_length=120,
+        validators=(POLICY_CODE_VALIDATOR,),
+    )
+
+    class Meta:
+        """Configure deterministic scope ordering and call bounds."""
+
+        ordering = ("edition_id", "definition_id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(max_collaborators__gte=0, max_collaborators__lte=16),
+                name="applications_programme_call_collaborators_valid",
+            ),
+            models.CheckConstraint(
+                condition=~Q(content_policy_code="")
+                & ~Q(contributor_consent_policy_code="")
+                & ~Q(collaboration_retention_policy_code=""),
+                name="applications_programme_call_policies_required",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition"),
+                name="app_prg_call_scope_idx",
+            )
+        ]
+
+
+class ProgrammeCallTrack(_ClosedProgrammeApplicationModel):
+    """Closed selectable track configured for one Programme call."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_call_tracks",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_call_tracks",
+    )
+    call = models.ForeignKey(
+        ProgrammeCall,
+        on_delete=models.PROTECT,
+        related_name="tracks",
+    )
+    code = models.SlugField(max_length=80, validators=(validate_lowercase_slug,))
+    label = models.CharField(max_length=160)
+    description = models.TextField(max_length=4_000, blank=True)
+    position = models.PositiveSmallIntegerField()
+
+    class Meta:
+        """Configure deterministic track ordering and uniqueness."""
+
+        ordering = ("call_id", "position", "code")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("call", "code"),
+                name="applications_prg_track_code_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("call", "position"),
+                name="applications_prg_track_position_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(position__gt=0) & ~Q(label=""),
+                name="applications_prg_track_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "call", "position"),
+                name="app_prg_track_scope_idx",
+            )
+        ]
+
+
+class ProgrammeCallFormat(_ClosedProgrammeApplicationModel):
+    """Closed selectable delivery format configured for one Programme call."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_call_formats",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_call_formats",
+    )
+    call = models.ForeignKey(
+        ProgrammeCall,
+        on_delete=models.PROTECT,
+        related_name="formats",
+    )
+    code = models.SlugField(max_length=80, validators=(validate_lowercase_slug,))
+    label = models.CharField(max_length=160)
+    description = models.TextField(max_length=4_000, blank=True)
+    position = models.PositiveSmallIntegerField()
+    min_duration_minutes = models.PositiveSmallIntegerField()
+    default_duration_minutes = models.PositiveSmallIntegerField()
+    max_duration_minutes = models.PositiveSmallIntegerField()
+
+    class Meta:
+        """Configure deterministic format ordering and duration bounds."""
+
+        ordering = ("call_id", "position", "code")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("call", "code"),
+                name="applications_prg_format_code_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("call", "position"),
+                name="applications_prg_format_position_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(position__gt=0)
+                & ~Q(label="")
+                & Q(min_duration_minutes__gt=0)
+                & Q(default_duration_minutes__gte=models.F("min_duration_minutes"))
+                & Q(default_duration_minutes__lte=models.F("max_duration_minutes")),
+                name="applications_prg_format_duration_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "call", "position"),
+                name="app_prg_format_scope_idx",
+            )
+        ]
+
+
+class ProgrammeCallContributorField(_ClosedProgrammeApplicationModel):
+    """Per-role visibility and requirement for one fixed contributor field."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_call_contributor_fields",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_call_contributor_fields",
+    )
+    call = models.ForeignKey(
+        ProgrammeCall,
+        on_delete=models.PROTECT,
+        related_name="contributor_fields",
+    )
+    field_code = models.CharField(
+        max_length=24,
+        choices=ProgrammeContributorFieldCode,
+    )
+    lead_requirement = models.CharField(
+        max_length=16,
+        choices=ProgrammeContributorRequirement,
+    )
+    collaborator_requirement = models.CharField(
+        max_length=16,
+        choices=ProgrammeContributorRequirement,
+    )
+    position = models.PositiveSmallIntegerField()
+
+    class Meta:
+        """Configure deterministic contributor-field ordering and visibility."""
+
+        ordering = ("call_id", "position", "field_code")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("call", "field_code"),
+                name="applications_prg_contributor_field_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("call", "position"),
+                name="applications_prg_contributor_position_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(position__gt=0)
+                & ~Q(
+                    lead_requirement=ProgrammeContributorRequirement.HIDDEN,
+                    collaborator_requirement=ProgrammeContributorRequirement.HIDDEN,
+                ),
+                name="applications_prg_contributor_field_visible",
+            ),
+            models.CheckConstraint(
+                condition=Q(field_code__in=ProgrammeContributorFieldCode.values)
+                & Q(lead_requirement__in=ProgrammeContributorRequirement.values)
+                & Q(
+                    collaborator_requirement__in=(
+                        ProgrammeContributorRequirement.values
+                    )
+                ),
+                name="applications_prg_contributor_field_closed",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "call", "position"),
+                name="app_prg_field_scope_idx",
+            )
+        ]
+
+
+class ProgrammeProposal(_ClosedProgrammeApplicationModel):
+    """Current Applications-owned projection for a collaborative proposal."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_proposals",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_proposals",
+    )
+    submission = models.OneToOneField(
+        "applications.ApplicationSubmission",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal",
+    )
+    call = models.ForeignKey(
+        ProgrammeCall,
+        on_delete=models.PROTECT,
+        related_name="proposals",
+    )
+    state = models.CharField(
+        max_length=16,
+        choices=ProgrammeProposalState,
+        default=ProgrammeProposalState.DRAFT,
+    )
+    sealed_revision = models.ForeignKey(
+        "ProgrammeProposalRevision",
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="sealed_proposal_projections",
+    )
+    submitted_revision = models.ForeignKey(
+        "ProgrammeProposalRevision",
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="submitted_proposal_projections",
+    )
+
+    class Meta:
+        """Configure proposal ordering and lifecycle pointer shape."""
+
+        ordering = ("edition_id", "created_at", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(
+                    state=ProgrammeProposalState.DRAFT,
+                    sealed_revision__isnull=True,
+                    submitted_revision__isnull=True,
+                )
+                | Q(
+                    state=ProgrammeProposalState.SEALED,
+                    sealed_revision__isnull=False,
+                    submitted_revision__isnull=True,
+                )
+                | Q(
+                    state=ProgrammeProposalState.SUBMITTED,
+                    sealed_revision__isnull=False,
+                    submitted_revision__isnull=False,
+                    submitted_revision=models.F("sealed_revision"),
+                )
+                | Q(state=ProgrammeProposalState.WITHDRAWN),
+                name="applications_prg_proposal_pointer_shape",
+            ),
+            models.CheckConstraint(
+                condition=Q(state__in=ProgrammeProposalState.values),
+                name="applications_prg_proposal_state_closed",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "state"),
+                name="app_prg_proposal_scope_idx",
+            )
+        ]
+
+
+class ProgrammeProposalSelectionRevision(_AppendOnlyProgrammeApplicationModel):
+    """Append-only track and format selection for one proposal version."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_selection_revisions",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_selection_revisions",
+    )
+    proposal = models.ForeignKey(
+        ProgrammeProposal,
+        on_delete=models.PROTECT,
+        related_name="selection_revisions",
+    )
+    sequence = models.PositiveIntegerField()
+    track = models.ForeignKey(
+        ProgrammeCallTrack,
+        on_delete=models.PROTECT,
+        related_name="proposal_selection_revisions",
+    )
+    format = models.ForeignKey(
+        ProgrammeCallFormat,
+        on_delete=models.PROTECT,
+        related_name="proposal_selection_revisions",
+    )
+    requested_duration_minutes = models.PositiveSmallIntegerField()
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_selection_revisions",
+    )
+    source_version = models.PositiveBigIntegerField()
+    resulting_version = models.PositiveBigIntegerField()
+
+    class Meta:
+        """Configure deterministic selection history and version steps."""
+
+        ordering = ("proposal_id", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("proposal", "sequence"),
+                name="applications_prg_selection_sequence_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("proposal", "resulting_version"),
+                name="applications_prg_selection_result_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(sequence__gt=0)
+                & Q(requested_duration_minutes__gt=0)
+                & Q(source_version__gte=0)
+                & Q(resulting_version=models.F("source_version") + 1),
+                name="applications_prg_selection_version_step",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "proposal", "sequence"),
+                name="app_prg_select_scope_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Require the requested duration to fit the selected format.
+
+        Raises
+        ------
+        ValidationError
+            If the requested duration falls outside the format bounds.
+        """
+        super().clean()
+        if (
+            self.format_id
+            and self.requested_duration_minutes is not None
+            and not (
+                self.format.min_duration_minutes
+                <= self.requested_duration_minutes
+                <= self.format.max_duration_minutes
+            )
+        ):
+            raise ValidationError(
+                {
+                    "requested_duration_minutes": ValidationError(
+                        "Requested duration must fit the selected format bounds.",
+                        code="invalid_programme_requested_duration",
+                    )
+                },
+            )
+
+
+class ProgrammeProposalCollaborator(_ClosedProgrammeApplicationModel):
+    """Command-owned current collaborator projection; expiry is derived."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_collaborators",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_collaborators",
+    )
+    proposal = models.ForeignKey(
+        ProgrammeProposal,
+        on_delete=models.PROTECT,
+        related_name="collaborators",
+    )
+    account = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_collaborations",
+    )
+    state = models.CharField(max_length=16, choices=ProgrammeCollaboratorState)
+    generation = models.PositiveIntegerField()
+    invite_expires_at = models.DateTimeField()
+
+    class Meta:
+        """Configure one current collaborator projection per account."""
+
+        ordering = ("proposal_id", "created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("proposal", "account"),
+                name="applications_prg_collaborator_account_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(generation__gt=0),
+                name="applications_prg_collaborator_generation_pos",
+            ),
+            models.CheckConstraint(
+                condition=Q(state__in=ProgrammeCollaboratorState.values),
+                name="applications_prg_collaborator_state_closed",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "proposal", "state"),
+                name="app_prg_collab_scope_idx",
+            )
+        ]
+
+
+class ProgrammeProposalCollaboratorTransition(
+    _AppendOnlyProgrammeApplicationModel,
+):
+    """Append-only collaborator invitation and membership transition."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_collaborator_transitions",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_collaborator_transitions",
+    )
+    proposal = models.ForeignKey(
+        ProgrammeProposal,
+        on_delete=models.PROTECT,
+        related_name="collaborator_transitions",
+    )
+    collaborator = models.ForeignKey(
+        ProgrammeProposalCollaborator,
+        on_delete=models.PROTECT,
+        related_name="transitions",
+    )
+    sequence = models.PositiveIntegerField()
+    generation = models.PositiveIntegerField()
+    from_state = models.CharField(  # noqa: DJ001
+        max_length=16,
+        choices=ProgrammeCollaboratorState,
+        null=True,
+        blank=True,
+    )
+    to_state = models.CharField(max_length=16, choices=ProgrammeCollaboratorState)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_collaborator_transitions",
+    )
+    reason = models.CharField(max_length=500, blank=True)
+    invite_expires_at = models.DateTimeField(null=True, blank=True)
+    source_version = models.PositiveBigIntegerField()
+    resulting_version = models.PositiveBigIntegerField()
+
+    class Meta:
+        """Configure deterministic collaborator history and invite shape."""
+
+        ordering = ("collaborator_id", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("collaborator", "sequence"),
+                name="applications_prg_collab_transition_sequence_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("proposal", "resulting_version"),
+                name="applications_prg_collab_transition_result_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(sequence__gt=0)
+                & Q(generation__gt=0)
+                & Q(source_version__gt=0)
+                & Q(resulting_version=models.F("source_version") + 1),
+                name="applications_prg_collab_transition_version_step",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    to_state=ProgrammeCollaboratorState.INVITED,
+                    invite_expires_at__isnull=False,
+                )
+                | (
+                    ~Q(to_state=ProgrammeCollaboratorState.INVITED)
+                    & Q(invite_expires_at__isnull=True)
+                ),
+                name="applications_prg_collab_transition_expiry_shape",
+            ),
+            models.CheckConstraint(
+                condition=Q(to_state__in=ProgrammeCollaboratorState.values)
+                & (
+                    Q(from_state__isnull=True)
+                    | Q(from_state__in=ProgrammeCollaboratorState.values)
+                ),
+                name="applications_prg_collab_transition_states_closed",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "proposal", "collaborator"),
+                name="app_prg_collab_hist_idx",
+            )
+        ]
+
+
+class ProgrammeProposalContributorProfileRevision(
+    _AppendOnlyProgrammeApplicationModel,
+):
+    """Append-only proposal-local contributor profile and consent evidence."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_contributor_profile_revisions",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_contributor_profile_revisions",
+    )
+    proposal = models.ForeignKey(
+        ProgrammeProposal,
+        on_delete=models.PROTECT,
+        related_name="contributor_profile_revisions",
+    )
+    account = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_contributor_profile_revisions",
+    )
+    sequence = models.PositiveIntegerField()
+    predecessor = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="successors",
+    )
+    public_name = models.CharField(max_length=160, blank=True)
+    biography = models.TextField(max_length=4_000, blank=True)
+    pronouns = models.CharField(max_length=160, blank=True)
+    website = models.URLField(max_length=500, blank=True)
+    proposed_for_publication = models.BooleanField(default=False)
+    consent_policy_code = models.CharField(
+        max_length=120,
+        validators=(POLICY_CODE_VALIDATOR,),
+    )
+    consent_acknowledged = models.BooleanField(default=False)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_contributor_profile_revisions_authored",
+    )
+    digest = models.CharField(
+        max_length=64,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    source_version = models.PositiveBigIntegerField()
+    resulting_version = models.PositiveBigIntegerField()
+
+    class Meta:
+        """Configure deterministic, non-branching profile history."""
+
+        ordering = ("proposal_id", "account_id", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("proposal", "account", "sequence"),
+                name="applications_prg_profile_sequence_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("proposal", "account", "digest"),
+                name="applications_prg_profile_digest_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("proposal", "resulting_version"),
+                name="applications_prg_profile_result_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("proposal", "account", "predecessor"),
+                condition=Q(predecessor__isnull=False),
+                name="applications_prg_profile_predecessor_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(sequence__gt=0)
+                & Q(source_version__gte=0)
+                & Q(resulting_version=models.F("source_version") + 1)
+                & ~Q(consent_policy_code=""),
+                name="applications_prg_profile_version_step",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    proposed_for_publication=True,
+                    consent_acknowledged=True,
+                )
+                | Q(
+                    proposed_for_publication=False,
+                    public_name="",
+                    biography="",
+                    pronouns="",
+                    website="",
+                ),
+                name="applications_prg_profile_public_consent",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "proposal", "account"),
+                name="app_prg_profile_scope_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Reject public-copy values without explicit publication intent.
+
+        Raises
+        ------
+        ValidationError
+            If public profile copy is present without publication consent.
+        """
+        super().clean()
+        if not self.proposed_for_publication and any(
+            (self.public_name, self.biography, self.pronouns, self.website)
+        ):
+            raise ValidationError(
+                "Contributor public fields require explicit publication intent.",
+                code="programme_profile_publication_intent_required",
+            )
+
+
+class ProgrammeProposalRevision(_AppendOnlyProgrammeApplicationModel):
+    """Contiguous immutable snapshot sealed for collaborator review or submit."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revisions",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revisions",
+    )
+    proposal = models.ForeignKey(
+        ProgrammeProposal,
+        on_delete=models.PROTECT,
+        related_name="revisions",
+    )
+    sequence = models.PositiveIntegerField()
+    predecessor = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="successors",
+    )
+    definition_version = models.PositiveIntegerField()
+    selection_revision = models.ForeignKey(
+        ProgrammeProposalSelectionRevision,
+        on_delete=models.PROTECT,
+        related_name="sealed_proposal_revisions",
+    )
+    source_version = models.PositiveBigIntegerField()
+    resulting_version = models.PositiveBigIntegerField()
+    digest = models.CharField(
+        max_length=64,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revisions_created",
+    )
+    sealed_at = models.DateTimeField()
+
+    class Meta:
+        """Configure deterministic, non-branching proposal revision history."""
+
+        ordering = ("proposal_id", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("proposal", "sequence"),
+                name="applications_prg_revision_sequence_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("proposal", "digest"),
+                name="applications_prg_revision_digest_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("proposal", "resulting_version"),
+                name="applications_prg_revision_result_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("proposal", "predecessor"),
+                condition=Q(predecessor__isnull=False),
+                name="applications_prg_revision_predecessor_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(sequence__gt=0)
+                & Q(definition_version__gt=0)
+                & Q(source_version__gt=0)
+                & Q(resulting_version=models.F("source_version") + 1),
+                name="applications_prg_revision_version_step",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "proposal", "sequence"),
+                name="app_prg_revision_scope_idx",
+            )
+        ]
+
+
+class ProgrammeProposalRevisionAnswer(_AppendOnlyProgrammeApplicationModel):
+    """One explicit applicable-question row in an immutable proposal revision."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_answers",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_answers",
+    )
+    revision = models.ForeignKey(
+        ProgrammeProposalRevision,
+        on_delete=models.PROTECT,
+        related_name="answers",
+    )
+    question = models.ForeignKey(
+        "applications.ApplicationQuestion",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_answers",
+    )
+    answer_revision = models.ForeignKey(
+        ApplicationAnswerRevision,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_answers",
+    )
+    question_key = models.SlugField(max_length=80, editable=False)
+    question_type = models.CharField(
+        max_length=32,
+        choices=ApplicationQuestionType,
+        editable=False,
+    )
+    classification = models.CharField(
+        max_length=2,
+        choices=ApplicationClassification,
+        editable=False,
+    )
+
+    class Meta:
+        """Configure one answer snapshot per applicable question."""
+
+        ordering = ("revision_id", "question_key", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("revision", "question"),
+                name="applications_prg_revision_answer_question_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("revision", "question_key"),
+                name="applications_prg_revision_answer_key_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(question_type__in=ApplicationQuestionType.values)
+                & Q(classification__in=ApplicationClassification.values),
+                name="applications_prg_revision_answer_catalogs_closed",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "revision"),
+                name="app_prg_answer_scope_idx",
+            )
+        ]
+
+
+class ProgrammeProposalRevisionContributor(_AppendOnlyProgrammeApplicationModel):
+    """Immutable lead or accepted collaborator snapshot for one revision."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_contributors",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_contributors",
+    )
+    revision = models.ForeignKey(
+        ProgrammeProposalRevision,
+        on_delete=models.PROTECT,
+        related_name="contributors",
+    )
+    account = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_contributions",
+    )
+    role = models.CharField(max_length=16, choices=ProgrammeContributorRole)
+    accepted_transition = models.ForeignKey(
+        ProgrammeProposalCollaboratorTransition,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="revision_contributors",
+    )
+    profile_revision = models.ForeignKey(
+        ProgrammeProposalContributorProfileRevision,
+        on_delete=models.PROTECT,
+        related_name="revision_contributors",
+    )
+
+    class Meta:
+        """Configure one contributor per revision and exactly one lead slot."""
+
+        ordering = ("revision_id", "role", "account_id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("revision", "account"),
+                name="applications_prg_revision_contributor_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("revision",),
+                condition=Q(role=ProgrammeContributorRole.LEAD),
+                name="applications_prg_revision_one_lead_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    role=ProgrammeContributorRole.LEAD,
+                    accepted_transition__isnull=True,
+                )
+                | Q(
+                    role=ProgrammeContributorRole.COLLABORATOR,
+                    accepted_transition__isnull=False,
+                ),
+                name="applications_prg_revision_contributor_role_shape",
+            ),
+            models.CheckConstraint(
+                condition=Q(role__in=ProgrammeContributorRole.values),
+                name="applications_prg_revision_contributor_role_closed",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "revision", "role"),
+                name="app_prg_rev_contrib_idx",
+            )
+        ]
+
+
+class ProgrammeProposalRevisionResponse(_AppendOnlyProgrammeApplicationModel):
+    """Append-only collaborator response to one exact proposal revision."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_responses",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_responses",
+    )
+    revision = models.ForeignKey(
+        ProgrammeProposalRevision,
+        on_delete=models.PROTECT,
+        related_name="responses",
+    )
+    contributor = models.ForeignKey(
+        ProgrammeProposalRevisionContributor,
+        on_delete=models.PROTECT,
+        related_name="responses",
+    )
+    account = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_responses",
+    )
+    response = models.CharField(max_length=16, choices=ProgrammeRevisionResponseKind)
+    profile_revision = models.ForeignKey(
+        ProgrammeProposalContributorProfileRevision,
+        on_delete=models.PROTECT,
+        related_name="revision_responses",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_proposal_revision_responses_authored",
+    )
+    source_version = models.PositiveBigIntegerField()
+    resulting_version = models.PositiveBigIntegerField()
+    responded_at = models.DateTimeField()
+
+    class Meta:
+        """Configure one immutable response per collaborator and revision."""
+
+        ordering = ("revision_id", "responded_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("revision", "contributor"),
+                name="applications_prg_revision_response_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("revision", "resulting_version"),
+                name="applications_prg_response_result_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(source_version__gt=0)
+                & Q(resulting_version=models.F("source_version") + 1),
+                name="applications_prg_response_version_step",
+            ),
+            models.CheckConstraint(
+                condition=Q(response__in=ProgrammeRevisionResponseKind.values),
+                name="applications_prg_response_closed",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "revision", "response"),
+                name="app_prg_response_scope_idx",
+            )
+        ]
+
+
+class ProgrammeCommandReceipt(_AppendOnlyProgrammeApplicationModel):
+    """Retained Applications-owned idempotency and Programme command evidence."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_application_command_receipts",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_application_command_receipts",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_application_command_receipts",
+    )
+    aggregate_kind = models.CharField(
+        max_length=16,
+        choices=ProgrammeCommandAggregateKind,
+    )
+    action = models.CharField(max_length=32, choices=ProgrammeCommandAction)
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(
+        max_length=64,
+        validators=(PROGRAMME_DIGEST_VALIDATOR,),
+    )
+    reason = models.CharField(max_length=500, blank=True)
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(
+        max_length=32,
+        validators=(PROGRAMME_SOURCE_CHANNEL_VALIDATOR,),
+    )
+    definition = models.ForeignKey(
+        "applications.ApplicationDefinition",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="programme_command_receipts",
+    )
+    submission = models.ForeignKey(
+        "applications.ApplicationSubmission",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="programme_command_receipts",
+    )
+    target_id = models.UUIDField()
+    result_kind = models.CharField(
+        max_length=32,
+        choices=ProgrammeCommandResultKind,
+    )
+    expected_version = models.PositiveBigIntegerField()
+    resulting_version = models.PositiveBigIntegerField()
+
+    class Meta:
+        """Configure scope-bound idempotency and aggregate evidence shape."""
+
+        ordering = ("edition_id", "created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"),
+                name="applications_prg_command_retry_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("definition", "resulting_version"),
+                condition=Q(definition__isnull=False, submission__isnull=True),
+                name="applications_prg_call_command_result_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("submission", "resulting_version"),
+                condition=Q(submission__isnull=False),
+                name="applications_prg_proposal_command_result_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(expected_version__gte=0)
+                & Q(resulting_version=models.F("expected_version") + 1)
+                & ~Q(source_channel=""),
+                name="applications_prg_command_version_step",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    aggregate_kind=ProgrammeCommandAggregateKind.CALL,
+                    definition__isnull=False,
+                    submission__isnull=True,
+                )
+                | Q(
+                    aggregate_kind=ProgrammeCommandAggregateKind.PROPOSAL,
+                    definition__isnull=False,
+                    submission__isnull=False,
+                ),
+                name="applications_prg_command_aggregate_shape",
+            ),
+            models.CheckConstraint(
+                condition=Q(aggregate_kind__in=ProgrammeCommandAggregateKind.values)
+                & Q(action__in=ProgrammeCommandAction.values)
+                & Q(result_kind__in=ProgrammeCommandResultKind.values),
+                name="applications_prg_command_catalogs_closed",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "action", "created_at"),
+                name="app_prg_command_scope_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Validate the local aggregate shape and exact version step.
+
+        Raises
+        ------
+        ValidationError
+            If aggregate references or optimistic versions are inconsistent.
+        """
+        super().clean()
+        if (
+            self.expected_version is not None
+            and self.resulting_version is not None
+            and (
+                self.expected_version < 0
+                or self.resulting_version != self.expected_version + 1
+            )
+        ):
+            raise ValidationError(
+                "Programme command versions must advance by exactly one.",
+                code="invalid_programme_command_version_step",
+            )
+        if self.aggregate_kind == ProgrammeCommandAggregateKind.CALL:
+            valid_shape = self.definition_id is not None and self.submission_id is None
+        elif self.aggregate_kind == ProgrammeCommandAggregateKind.PROPOSAL:
+            valid_shape = (
+                self.definition_id is not None and self.submission_id is not None
+            )
+        else:
+            valid_shape = False
+        if not valid_shape:
+            raise ValidationError(
+                "Programme command aggregate references do not match its kind.",
+                code="invalid_programme_command_aggregate_shape",
+            )

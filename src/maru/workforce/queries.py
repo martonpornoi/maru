@@ -6,6 +6,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, TypeVar, cast
 
+from django.core.exceptions import ValidationError
 from django.db.models import F, Q
 from django.utils import timezone
 
@@ -65,6 +66,144 @@ class StructureProjectionIntegrityError(RuntimeError):
 
 class _StructureProjectionLimitExceededError(Exception):
     """Signal a valid projection that exceeds a code-owned output bound."""
+
+
+@dataclass(frozen=True, slots=True)
+class CurrentDepartmentReference:
+    """Retain only the exact scope identifiers of one current Department.
+
+    Attributes
+    ----------
+    organization_id
+        The organization that owns the resolved Department.
+    edition_id
+        The exact edition that owns the resolved Department.
+    department_id
+        The opaque identifier of the non-retired Department.
+    """
+
+    organization_id: UUID
+    edition_id: UUID
+    department_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class CurrentDepartmentSetReference:
+    """Retain the complete bounded current-Department ID set for an edition.
+
+    Attributes
+    ----------
+    organization_id : UUID
+        Organization that owns every returned Department.
+    edition_id : UUID
+        Exact edition whose current Department set was resolved.
+    department_ids : tuple[UUID, ...]
+        Complete bounded tuple of non-retired Department identifiers.
+    """
+
+    organization_id: UUID
+    edition_id: UUID
+    department_ids: tuple[UUID, ...]
+
+
+def resolve_current_department_reference(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_id: UUID,
+    lock: bool = False,
+) -> CurrentDepartmentReference | None:
+    """Resolve one exact non-retired Department without releasing its label.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization expected to own the Department.
+    edition_id : UUID
+        The edition expected to own the Department.
+    department_id : UUID
+        The exact Department identifier to resolve.
+    lock : bool, default=False
+        Whether to acquire a PostgreSQL row lock in the caller's transaction.
+
+    Returns
+    -------
+    CurrentDepartmentReference | None
+        The minimized exact-scope reference, or ``None`` for every malformed,
+        foreign, retired, or missing Department.
+    """
+    query = Department.objects.all()
+    if lock:
+        query = query.select_for_update(of=("self",))
+    try:
+        row = (
+            query.filter(
+                id=department_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                retired_at__isnull=True,
+            )
+            .values("id", "organization_id", "edition_id")
+            .first()
+        )
+    except (TypeError, ValueError, ValidationError):
+        return None
+    if row is None:
+        return None
+    return CurrentDepartmentReference(
+        organization_id=row["organization_id"],
+        edition_id=row["edition_id"],
+        department_id=row["id"],
+    )
+
+
+def resolve_current_department_set_reference(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    lock: bool = False,
+) -> CurrentDepartmentSetReference | None:
+    """Resolve the complete bounded set of current Departments without labels.
+
+    ``None`` is deliberately shared by malformed scope and overflow so callers
+    cannot turn this reference seam into a Department-count oracle.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Organization expected to own every returned Department.
+    edition_id : UUID
+        Exact event edition whose current Departments are resolved.
+    lock : bool, default=False
+        Whether matching Department rows are locked for a mutation.
+
+    Returns
+    -------
+    CurrentDepartmentSetReference | None
+        Bounded identifier-only set, or ``None`` for invalid or oversized scope.
+    """
+    query = Department.objects.filter(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        retired_at__isnull=True,
+    )
+    if lock:
+        query = query.select_for_update(of=("self",))
+    try:
+        rows = tuple(
+            query.order_by("id").values_list("id", flat=True)[
+                : MAX_STRUCTURE_DEPARTMENTS + 1
+            ]
+        )
+    except (TypeError, ValueError, ValidationError):
+        return None
+    if len(rows) > MAX_STRUCTURE_DEPARTMENTS:
+        return None
+    return CurrentDepartmentSetReference(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=rows,
+    )
 
 
 def workforce_shell_profile_pairs(*, account: Account) -> tuple[tuple[str, int], ...]:

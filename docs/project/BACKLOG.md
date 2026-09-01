@@ -1,7 +1,7 @@
 # Implementation backlog
 
 Status: Historical V00–V02 acceptance backlog; foundation is implemented
-Last updated: 2026-08-01
+Last updated: 2026-09-01
 
 This file preserves the original foundation acceptance contracts and is not
 the current work queue. Use `PRODUCTION_CONSOLIDATION.md` for mounted,
@@ -315,24 +315,28 @@ release/projections, on-site continuity, and integrated recovery acceptance.
 Each child remains independently tested, documented, reviewed, and protected-
 merged before the next dependent child starts.
 
-Issues #59 and #61 complete the first two implementation prerequisites: exact
-v1 manifest enforcement, then a dormant private Programme item/readiness
-domain with organizer-core semantics. The active queue now continues with
-Programme calls, purpose-scoped host/co-host collaboration, and preview-first
-import;
-profile activation remains last, after every mandatory continuation passes.
+Issues #59, #61, and #63 complete the first three implementation prerequisites:
+exact v1 manifest enforcement, a dormant private Programme item/readiness
+domain, then dormant Applications-owned calls and acknowledged proposal
+revisions. The active queue now continues with preview-first call/proposal
+import. Review/decisions and the accepted Programme adapter follow; Programme
+host/co-host relationships begin only after that accepted transition. Profile
+activation remains last, after every mandatory continuation passes.
 
 ### MARU-PRG-001 — Proposal-to-programme lifecycle (`P1`)
 
-**Requirements:** PRG-001 through PRG-008, AUD-003, SCH-001
-**Deliver:** versioned proposal submissions, accountable review/revision
-requests, decisions, and an explicit accepted-item transition into separately
-authorized programme readiness work.
+**Requirements:** PRG-001 through PRG-009, AUD-003, SCH-001
+**Deliver:** Applications-owned calls, exact acknowledged proposal revisions,
+accountable review/revision requests and decisions, then an explicit accepted-
+item transition into separately authorized Programme readiness work. Issue #63
+completes the dormant call/proposal kernel only; import, review, decisions, and
+the accepted adapter remain successor work.
 
 **Accept:**
 
 - every submitted revision and decision remains attributable and immutable;
-- co-host access cannot reveal other proposals or private review data;
+- a proposal collaborator cannot reveal another proposal, private contributor
+  profile, or review data and does not become a host;
 - advancement is idempotent and cannot occur as a model/admin save side
   effect; and
 - public projections contain approved programme fields only.

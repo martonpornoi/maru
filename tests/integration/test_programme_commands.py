@@ -21,6 +21,7 @@ from django.utils import timezone
 import maru.effects.services as effect_services
 import maru.programme.commands as programme_commands
 from maru.audit.models import AuditEvent
+from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.adoption import (
@@ -247,7 +248,7 @@ def test_current_profile_denies_with_only_minimized_denial_audit() -> None:
     assert audit.outcome == AuditEvent.Outcome.DENY
     assert audit.target_id is None
     assert audit.changed_fields == []
-    assert audit.safe_metadata == {"policy_version": "2026-08-31.1"}
+    assert audit.safe_metadata == {"policy_version": POLICY_VERSION}
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -139,7 +139,8 @@ creates no Programme or cross-module data.
 Documentation now defines ownership, layer classifications, retention and
 recovery, capability/query ceilings, the future Applications seam, and the
 difference between readiness evidence, content approval, Scheduling release,
-and publication. Calls, accepted-item ingestion, hosts, interactive Scheduling,
+and publication. Applications-owned calls/proposals now have their own dormant
+successor kernel, but accepted-item ingestion, hosts, interactive Scheduling,
 staffing, release, on-site continuity, setup/profile activation, and browser
 acceptance remain later children.
 
@@ -147,9 +148,136 @@ Focused local verification is recorded in the
 [Programme item/readiness checkpoint](../checkpoints/2026-08-31-programme-item-readiness-foundation.md).
 Clean-tree exact-commit certification and protected exact-head pull-request
 acceptance remain separate authoritative delivery evidence and must pass before
-merge. The smallest next Programme child is calls, purpose-scoped host/co-host
-collaboration, and preview-first import while the composite profile remains
-inactive.
+merge. Issue #63 completes the dormant calls/proposal child without creating
+hosts. The smallest next Programme child is preview-first call/proposal import
+while the composite profile remains inactive.
+
+## Dormant Applications Programme calls and acknowledged proposals
+
+Issue [#63](https://github.com/martonpornoi/maru/issues/63), the fourth native
+child of Programme Operations umbrella
+[#48](https://github.com/martonpornoi/maru/issues/48), adds the dormant
+Applications-owned intake kernel contracted by ADR 0082 and PRG-009. A
+`ProgrammeCall` facets one typed `ApplicationDefinition`; a
+`ProgrammeProposal` facets one `ApplicationSubmission` and reuses existing
+append-only `ApplicationAnswerRevision` history. Typed tracks, formats, and
+contributor fields extend the definition rather than creating a second form
+engine.
+
+One accountable lead owns selection, roster, seal, reopen, submit, and
+withdrawal. Accepted proposal collaborators may edit shared applicant-writable
+answers, while each contributor alone appends their proposed-public profile and
+consent and each included collaborator alone acknowledges or declines the exact
+seal. The lead's attributable seal is the lead action. Invitation transitions
+are append-only; expiry is derived, cannot follow the applicant edit deadline,
+and reinvitation retains the old evidence. Proposal collaboration creates no
+Programme host or co-host relationship.
+
+Every proposal mutation advances the submission's sole aggregate version. One
+immutable seal links the exact definition/call schema, selection revision,
+answer revision or explicit absence for each applicable question, included
+roster, exact contributor-profile revisions, policy versions, predecessor, and
+digest. Each included collaborator acknowledges or declines that exact revision
+only for themselves. Responses advance the aggregate version without changing
+the seal. Reopening retains old seals/responses and requires a new seal.
+
+The `programme_item` target kind and purpose/target descriptors are reserved,
+but every generic Applications review, decision, acceptance, target-record,
+query, discovery, and adapter seam denies or omits them. Submission creates no
+review, decision, target, Programme item, host, public copy, occurrence, Shift,
+schedule, or publication. Preview-first call/proposal import is the immediate
+successor; structured review/decisions and the accepted Programme adapter
+follow. Only that later accepted transition may create Programme-owned host or
+co-host relationships.
+
+Successful dormant commands couple state to a dedicated Applications Programme
+receipt/version proof, minimized audit, registered dormant event, and
+transactional outbox record. The dedicated receipt does not widen the existing
+generic receipt's runtime writer. Applications migrations add the empty schema,
+install one consolidated old-plus-new function/trigger catalog, and fence
+populated downgrade. Workforce's additive `0016` successor recognizes the exact
+Programme-call owner reference for protected Department deletion while leaving
+issue #64's retirement preflight and recovery inactive. Applications `0004`
+depends on Workforce only at `0006_edition_structure_schema`; Workforce `0016`
+separately depends on Applications `0004` and Workforce `0015`, avoiding a
+dependency from the Applications schema into the later Workforce and
+Registration tail. Every new relation is runtime `SELECT`-only and integrity
+functions are owner-only. Applications readiness composes that migration,
+function, trigger, owner, and ACL contract with a data-free PostgreSQL 17
+schema catalog over all 26 managed `applications_*` relations, 336 columns,
+279 constraints, and 203 indexes. Missing, extra, or changed relation flags,
+column type/nullability/default/generation/identity/collation semantics, or
+constraint/index metadata and canonical definitions fail closed. The cheap
+integrity contract short-circuits the catalog scan when it is already red.
+
+The closed Applications Programme capability
+vocabulary advances the Authorization decision policy version to
+`2026-09-01.1`; it records the exact catalog and minimum-scope rules without
+admitting that vocabulary into a profile. Both current literal profile
+fingerprints remain unchanged (`full_convention@1`:
+`e0081b116f8af045fd5a9195c1f4f3295b20d3c57163e8ef0a3547f86861df81`;
+`workforce_only@1`:
+`66ad0e96a641d99e163d735d612dd2138c96ef0af619cfac57839695d09c2ad0`),
+so no route, API/OpenAPI operation, UI, navigation, writer, handler, delivery,
+or profile activation exists.
+
+The durable contract, migration/recovery procedure, page non-surface, and exact
+non-goals are documented across requirements, ADR 0082, module/security/
+operations docs, and the
+[Issue #63 checkpoint](../checkpoints/2026-09-01-applications-programme-calls-and-acknowledged-proposals.md).
+
+Workforce Department retirement must reassign a draft call or retire an active
+call while its owner is still current. If the owner is retired first, new
+starts and organizer management fail closed while existing proposal subjects
+retain only their lifecycle-permitted self access. The required retirement
+preflight and governed recovery are bounded by
+[#64](https://github.com/martonpornoi/maru/issues/64) and remain required before
+Programme Operations activation. Workforce `0016` is only the exact foreign-key
+catalog successor; it does not implement that preflight or recovery workflow.
+
+Identity `0020_programme_proposal_person_guard` and Workforce
+`0016_programme_call_department_fk_contract` are dependent reversals that must
+be removed before Applications `0004`. Reversing or omitting Workforce `0016`
+while the Programme-call owner foreign key remains makes the exact catalog
+mismatch and Department deletion fail closed. Static dependency checks and
+PostgreSQL install, reverse/reapply, and deletion-protection coverage preserve
+that ordering and safety contract.
+
+The superseded pre-schema-catalog head passed the complete non-test repository
+gate and an exact clean-tree certification of 2,575 unit tests, 2,767
+integration tests across eight isolated PostgreSQL 17 instances, and combined
+90-percent branch coverage. A later independent contract audit correctly found
+that its Applications health dependency did not yet prove the documented
+column, collation, constraint, and index shape, so that head was deliberately
+not merged and its in-progress hosted run was cancelled.
+
+The schema-catalog repair passes Ruff format/lint, MyPy, PyDocLint, 25 focused
+unit tests, all 2,581 DB-free unit tests, 49 fresh-PostgreSQL readiness and
+health tests, and the existing complete-draft-call readiness acceptance.
+Transactional attacks cover missing, extra, and same-name-weakened relations,
+columns, constraints, and indexes; every rollback restores green readiness.
+Independent review found no blocking issue and its optional short-circuit
+improvement was implemented with a regression test. `git diff --check` passes.
+
+The exact post-repair commit certification and protected hosted gate recorded
+on PR #65 remain the authoritative merge evidence; the branch may merge only
+when both are green for that same head and its base remains current.
+
+The first hosted run passed every non-database job and seven integration shards.
+The shard 3 log showed progress into `test_workforce_assignment_commands`
+without a reported assertion failure before GitHub cancelled the step at the
+existing 120-minute job limit, before JUnit and coverage finalization. The
+2026-08-21 timing inventory omitted 19 current files, retained one deleted path,
+and assigned 5,680.7 locally measured seconds to shard 3 despite projecting only
+2,533.5. Exact successful local JUnit
+evidence now covers all 175 current files and balances the deterministic eight-
+way schedule between 4,525.6 and 4,525.9 seconds. The existing 120-minute
+fail-stop, complete file selection, serial execution within each shard, no-retry
+policy, and combined coverage gate are unchanged. Protected pull-request
+acceptance remains authoritative only for the exact pushed head. A repository
+contract now prevents a clean candidate from retaining missing or stale timing
+paths while preserving the deterministic fallback for an initial diagnostic
+run that introduces a new integration file.
 
 ## Exact adoption-manifest enforcement
 
@@ -1046,10 +1174,11 @@ support branch, a deployment, or production readiness.
 ## Smallest sensible next actions
 
 1. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48) with
-   Programme calls, purpose-scoped host/co-host collaboration, and preview-
-   first import while preserving the inactive exact-profile boundary.
-2. Continue sequentially through Applications review,
-   decisions and the real Programme adapter; Scheduling core and accessible
+   preview-first Programme call/proposal import while preserving the inactive
+   exact-profile boundary and exact sealed evidence.
+2. Continue sequentially through Applications review and decisions, then the
+   real Programme adapter and post-acceptance host/co-host relationships;
+   Scheduling core and accessible
    editor; Workforce staffing projections; atomic release and outputs; and
    on-site continuity/export.
 3. Only after those mandatory continuations exist, implement the atomic,
@@ -1085,7 +1214,7 @@ the management-shell, Position, Assignment, Availability, and Shift page
 contracts, the Workforce-only adoption setup contract and runbook, the
 [Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md),
 the Applications, Events, Venues, and Workforce module contracts, and ADRs
-0019/0028/0039/0041/0049/0051/0053/0055/0075 through 0081. Use only synthetic data.
+0019/0028/0039/0041/0049/0051/0053/0055/0075 through 0082. Use only synthetic data.
 Preserve exact organization and edition scope, authorization
 before disclosure, My Maru/Administration separation, private Availability,
 independent confirmation, privacy-minimized self-withdrawal, canonical lock

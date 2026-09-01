@@ -5,6 +5,11 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from maru.applications.programme_adoption import (
+    APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER,
+    APPLICATION_PROGRAMME_ITEM_TARGET_KIND,
+    APPLICATION_PROGRAMME_SELF_ADAPTER,
+)
 from maru.events.adoption import (
     profile_allows_adapter,
     profile_allows_capabilities,
@@ -53,6 +58,9 @@ TARGET_ADAPTER_CODES = MappingProxyType(
         "idea": "applications.target.idea@1",
         "damage_report": "applications.target.damage_report@1",
         "helper": "applications.target.helper@1",
+        APPLICATION_PROGRAMME_ITEM_TARGET_KIND: (
+            APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER
+        ),
     }
 )
 
@@ -69,6 +77,19 @@ APPLICATIONS_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
             failure_semantics=(
                 "Returns no Applications self-service surface when the exact adapter "
                 "is unavailable or unpinned."
+            ),
+        ),
+        AdoptionAdapterDescriptor(
+            code=APPLICATION_PROGRAMME_SELF_ADAPTER,
+            owner_module="applications",
+            kind="self-discovery",
+            result_semantics=(
+                "Discovers relationship-owned Programme proposal surfaces for one "
+                "exact edition without exposing proposal content."
+            ),
+            failure_semantics=(
+                "Returns no Programme proposal self-service surface when the exact "
+                "adapter is unavailable or unpinned."
             ),
         ),
         *(
@@ -118,6 +139,20 @@ APPLICATIONS_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
                 ),
             )
             for target_kind, adapter_code in TARGET_ADAPTER_CODES.items()
+            if target_kind != APPLICATION_PROGRAMME_ITEM_TARGET_KIND
+        ),
+        AdoptionAdapterDescriptor(
+            code=APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER,
+            owner_module="applications",
+            kind="programme-proposal-target",
+            result_semantics=(
+                "Classifies one Applications-owned Programme proposal submission "
+                "without enabling generic acceptance or Programme item creation."
+            ),
+            failure_semantics=(
+                "Creates no proposal, acceptance target, or Programme item when the "
+                "exact adapter is unavailable or unpinned."
+            ),
         ),
     ),
 )
@@ -332,6 +367,9 @@ def profile_allows_application_reviewer_role(
 __all__ = [
     "APPLICATIONS_ADOPTION_ADAPTERS",
     "APPLICATIONS_ADOPTION_CONFLICT_SOURCES",
+    "APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER",
+    "APPLICATION_PROGRAMME_ITEM_TARGET_KIND",
+    "APPLICATION_PROGRAMME_SELF_ADAPTER",
     "APPLICATION_SELF_ADAPTER",
     "APPLICATION_STARTER_CATALOG_VERSION",
     "ELIGIBILITY_ADAPTER_CODES",

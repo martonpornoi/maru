@@ -3,8 +3,9 @@
 Status: Target architecture with a locally verified unified `/admin/` shell,
 scoped authorization, governed structure, Position, Assignment, and
 person-owned Availability workflows, database subject and writer boundaries,
-and an accepted but not yet executable Programme Operations adoption contract
-Last updated: 2026-08-31
+and an accepted but not executable Programme Operations adoption contract with
+dormant Applications and Programme foundations
+Last updated: 2026-09-01
 
 ## System shape
 
@@ -90,6 +91,22 @@ ownership described above. Its runtime role is read-only and its commands are
 unreachable under current profiles. This establishes schema and integration
 contracts without treating installation as adoption.
 
+ADR 0082 adds the corresponding dormant Applications intake boundary without a
+parallel form engine. A Programme call facets one Application definition, and
+a Programme proposal facets one submission while reusing append-only answer
+revisions and that submission's sole aggregate version. The exact sealed
+revision links its call schema, selection, answer revisions or absences,
+contributor roster, contributor-owned profile revisions, policies, and digest;
+each included collaborator responds only for themselves. Proposal collaborators
+are not Programme hosts. Every generic review and target seam denies Programme
+until later review, decision, and accepted-adapter children land.
+
+The new Applications declarations remain absent from both current literal
+profile manifests. Their relations are runtime `SELECT`-only, their integrity
+functions are owner-only, and there is no current route, API, navigation,
+worker, handler, target record, Programme item, or side effect. Preview-first
+import is the next boundary; database installation alone is not adoption.
+
 ```text
 Attendee web ─┐
 Administration / Convention work ├── Versioned REST API ── Django modular monolith
@@ -143,7 +160,7 @@ configuration; they do not point at mutable records from an older edition.
 | `commerce` | Products, orders, payments, refunds, invoices, inventory |
 | `finance` | Budgets, approvals, procurement, expenses, contracts, sponsorship |
 | `content` | Pages, structured content, media, translations, public metadata |
-| `applications` | Typed proposals and service applications, private answers, revisions, review evidence, decisions, target-transition receipts |
+| `applications` | Typed proposals and service applications; dormant Programme calls, purpose collaborators, exact sealed revisions and acknowledgements; private answers, review evidence, decisions, and target-transition receipts |
 | `programme` | Accepted programme items, hosts, readiness, operational layers, approved public-content versions |
 | `scheduling` | Service days, occurrences, placements, constraints, candidate/conflict evidence, releases, projections, calendars |
 | `workforce` | Departments, Positions, assignments, onboarding, qualifications, Availability, shifts, work history |

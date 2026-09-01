@@ -308,6 +308,15 @@ repeat same-transaction `ACCESS EXCLUSIVE` preflights immediately before guard
 and table removal. A refusal preserves Programme tables, guards, and migration
 evidence. Recover by fixing forward or by restoring Programme, Audit, Effects,
 and migration history from one mutually consistent whole-database point.
+The Applications-owned Programme-call/proposal relations use the same dormant
+containment but remain distinct from ordinary mounted Applications tables. The
+runtime role has `SELECT` only on every `applications_programme*` relation,
+including the dedicated receipt, and no direct execution of their integrity
+functions. Applications `0004` adds the schema, `0005` is the terminal
+old-plus-new trigger/function catalog used by readiness, and `0006` refuses
+populated downgrade. A later import or mounted workflow must review and widen
+only its exact canonical writer; do not copy the generic Applications receipt
+grants onto the dedicated Programme receipt.
 The Workforce adoption and Organization structure receipts deny `UPDATE`,
 `DELETE`, and `REFERENCES`; the structure control denies `DELETE` and
 `REFERENCES`. Department remains on the ordinary DML

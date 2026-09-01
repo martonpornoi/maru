@@ -21,6 +21,10 @@ from maru.applications.adoption import (
     profile_allows_application_target,
 )
 from maru.applications.answer_values import condition_matches, normalize_answer_value
+from maru.applications.legacy_targets import (
+    LEGACY_APPLICATION_TARGET_KINDS,
+    is_legacy_application_target,
+)
 from maru.applications.models import (
     MAX_QUESTIONS,
     MAX_SECTIONS,
@@ -39,9 +43,11 @@ from maru.applications.models import (
     ApplicationState,
     ApplicationSubmission,
     ApplicationTargetRecord,
+    ProgrammeCommandReceipt,
     ReviewDecisionKind,
     ReviewerBasis,
 )
+from maru.applications.retry_namespace import lock_applications_retry_namespace
 from maru.applications.source_adapters import applicant_is_eligible, source_bound_value
 from maru.applications.starters import application_starter_for_profile
 from maru.audit.services import AuditRecord, append_audit
@@ -159,12 +165,27 @@ def _replay(
     retry_key: UUID,
     request_digest: str,
 ) -> ApplicationCommandResult | None:
+    lock_applications_retry_namespace(
+        edition_id=edition_id,
+        actor_id=actor.id,
+        retry_key=retry_key,
+    )
     receipt = (
         ApplicationCommandReceipt.objects.select_for_update()
         .filter(edition_id=edition_id, actor_id=actor.id, retry_key=retry_key)
         .first()
     )
     if receipt is None:
+        if (
+            ProgrammeCommandReceipt.objects.select_for_update()
+            .filter(
+                edition_id=edition_id,
+                actor_id=actor.id,
+                retry_key=retry_key,
+            )
+            .exists()
+        ):
+            raise ApplicationIdempotencyConflict
         return None
     if receipt.request_digest != request_digest:
         raise ApplicationIdempotencyConflict
@@ -347,7 +368,10 @@ def _locked_definition(
         ApplicationDefinition.objects.select_for_update()
         .select_related("edition")
         .filter(
-            id=definition_id, organization_id=organization_id, edition_id=edition_id
+            id=definition_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .first()
     )
@@ -440,7 +464,11 @@ def create_definition_from_starter(
         profile_version=edition.adoption_profile_version,
         starter_code=starter_code,
     )
-    if starter is None or starter.is_external:
+    if (
+        starter is None
+        or starter.is_external
+        or not is_legacy_application_target(cast("str", starter.target_adapter_kind))
+    ):
         raise ValidationError(
             {"starter_code": "Choose an applications-owned starter."},
             code="application_starter_unavailable",
@@ -1748,6 +1776,7 @@ def _locked_owned_submission(
             organization_id=organization_id,
             edition_id=edition_id,
             account_id=actor.id,
+            definition__target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .first()
     )
@@ -2203,7 +2232,10 @@ def record_review_decision(
         ApplicationSubmission.objects.select_for_update()
         .select_related("definition")
         .filter(
-            id=submission_id, organization_id=organization_id, edition_id=edition_id
+            id=submission_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            definition__target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .first()
     )

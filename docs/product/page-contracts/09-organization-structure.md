@@ -501,7 +501,13 @@ version zero.
 Workforce `0008` changes no table or retained data. It replaces the closed
 Department-FK contract helper only after every current reference creator is
 installed, preserves its owner and ACL, and adds its recorder row and exact
-13-reference catalog to fail-closed readiness.
+13-reference catalog to fail-closed readiness. Additive Workforce `0016`
+depends on Applications `0004` and Workforce `0015` and extends that inventory
+to 14 references with
+`applications_programmecall.owner_department_id`. Omitting or reversing `0016`
+while the Programme-call foreign key remains makes Department deletion fail
+closed. This exact recognition does not implement issue #64's required call
+reassignment, retirement preflight, or governed recovery workflow.
 
 Preflight reports count-only malformed scope, cycle, duplicate-control,
 unsupported-reference, and version blockers, with at most bounded safe edition

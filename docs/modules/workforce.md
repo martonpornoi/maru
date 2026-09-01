@@ -267,9 +267,13 @@ numeric rank; the strict API retains bounded explicit ordering for deliberate
 integration clients. Workforce `0006` adds the aggregate and append-only
 command receipts;
 the stopped-writer `0007` migration reconciles legacy trees and installs the
-complete writer/evidence boundary. Additive Workforce `0008` follows every
-current cross-module Department-FK creator and extends the closed deletion
-contract to Applications, Charities, Logistics, Registration, and Venues. The
+complete writer/evidence boundary. Additive Workforce `0008` follows the
+original cross-module Department-FK creators and extends the closed deletion
+contract to Applications, Charities, Logistics, Registration, and Venues.
+Additive `0016_programme_call_department_fk_contract` recognizes the later
+Applications-owned Programme-call owner reference while retaining fail-closed
+behavior for every unknown relation. It does not implement the Programme-call
+retirement sequencing and recovery reserved for issue #64. The
 overview, three child GET page shapes, five POST actions, strict GET plus five
 API mutations, and exact navigation now mount those shared services without
 reopening specialist Department writes.
@@ -841,13 +845,19 @@ and retry receipts, non-cascading retirement/deletion rules, and fix-forward
 downgrade behavior. Production readiness fingerprints all Organization
 structure, Assignment, Availability, and Shift guard, evidence, and truncate
 functions and their exact attachments, requires the current Workforce migration
-recorder chain through `0014`, including the profile-matched nullable
-assignment-capacity guard and downgrade fence, and verifies the
-exact 13-reference Department FK inventory;
+recorder chain through `0016`, including the profile-matched nullable
+assignment-capacity guard and downgrade fence, and verifies the exact
+14-reference Department FK inventory. The fourteenth reference is
+`applications_programmecall.owner_department_id`; `0016` depends on
+Applications `0004` and Workforce `0015` rather than making Applications `0004`
+depend on the later Workforce tail;
 the runtime login cannot invoke those helpers directly, disable them, or
-bypass their stopped-writer protocol. Reversing `0008` restores the exact
-`0007` helper, which safely refuses deletion while any successor reference is
-still installed.
+bypass their stopped-writer protocol. Reversing `0016` restores the exact
+13-reference helper, which safely refuses Department deletion while the
+Programme-call reference is still installed. Identity `0020` and Workforce
+`0016` are dependent reversals before Applications `0004` can be removed.
+Migration `0016` does not implement issue #64's Programme-call reassignment,
+retirement preflight, or governed recovery.
 
 Workforce `0010_position_structure_commands` extends that aggregate protocol to
 Position and VolunteerOpportunity rows. Its preflight refuses a pre-existing

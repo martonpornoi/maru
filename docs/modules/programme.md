@@ -3,7 +3,7 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, worker, or production writer
 
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 
 ## Purpose and ownership
 
@@ -18,12 +18,16 @@ Operations is active or usable. The boundary follows ADRs 0001, 0003, 0005,
 0041, 0051, and 0081.
 
 Programme does not own calls or proposal review, accepted Applications truth,
-hosts, service days, occurrences, rooms, timetable release, volunteer Shifts,
+service days, occurrences, rooms, timetable release, volunteer Shifts,
 personal schedules, attendance, Registration, or public pages. Applications
-will remain authoritative for proposal answers, revisions, review evidence,
-decisions, and the accepted-transition receipt. Scheduling will later own
-occurrences and placements. Workforce will later own staffing demand and Shift
-commitments.
+now owns a dormant Programme-call and collaborative-proposal kernel, including
+shared answer history, contributor-owned profile revisions, exact sealed
+proposal revisions, and included-collaborator acknowledgements. Applications will remain
+authoritative for later review evidence, decisions, and the accepted-transition
+receipt. Programme owns no proposal collaborator and creates no host or co-host
+relationship until a later accepted transition imports one exact reviewed
+revision. Scheduling will later own occurrences and placements. Workforce will
+later own staffing demand and Shift commitments.
 
 ## Dormant adoption boundary
 
@@ -219,7 +223,10 @@ pins an `(event, destination)` route and no built-in handler is installed.
 `programme.accepted-application-source@1` declares the future inbound adapter
 contract. A successful result will bind one exact immutable accepted
 Applications transition without copying answers or review content. The
-descriptor is not an implementation and no current profile pins it.
+descriptor is not an implementation and no current profile pins it. The
+Applications-owned `programme_item` target kind, call activation, proposal
+seal, collaborator acknowledgement, proposal submission, or withdrawal cannot
+create a `ProgrammeItemSourceBinding` and is not accepted-item evidence.
 
 ## Database integrity and recovery
 
@@ -251,10 +258,13 @@ record.
 
 ## Current limitations
 
-This child is a deployable, testable private-domain foundation, not a usable
-Programme workspace. The immediate successor is calls, purpose-scoped host and
-co-host collaboration, and preview-first import. Accepted-item ingestion,
-staged review/decisions and its Applications adapter, interactive timetable
-editing, Scheduling, Venue placement, staffing, release, public and personal
-timetables, on-site continuity, profile activation, and integrated browser
-rehearsal remain later children of the Programme Operations umbrella.
+This module is a deployable, testable private-domain foundation, not a usable
+Programme workspace. Applications-owned calls and collaborative proposals now
+have a separate dormant kernel, but they create no Programme record or host
+relationship. The immediate successor is preview-first import. Staged review
+and decisions and the accepted Applications adapter follow; only that later
+accepted Programme transition may create host and co-host relationships.
+Interactive timetable editing, Scheduling, Venue placement, staffing, release,
+public and personal timetables, on-site continuity, profile activation, and
+integrated browser rehearsal remain later children of the Programme Operations
+umbrella.

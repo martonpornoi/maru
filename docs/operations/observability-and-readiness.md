@@ -1,7 +1,8 @@
 # Observability and operational readiness
 
-Status: Executable registration, delivery, finance, privacy, and closure signals defined  
-Last updated: 2026-08-30
+Status: Executable registration, delivery, finance, privacy, and closure signals
+defined; dormant Programme-domain integrity dependencies installed
+Last updated: 2026-09-01
 
 Observability must answer “what is affected, for whom, since when, why, and what
 can we safely do?” without turning logs into a second ungoverned database of
@@ -187,6 +188,31 @@ unreadable evidence returns the same minimized `503` dependency response. A
 green Programme integrity dependency proves only that the dormant schema is
 the reviewed code-owned shape; it does not activate a profile, caller, route,
 writer, or public timetable.
+
+The mandatory `applications_integrity` dependency separately proves
+the dormant Applications-owned call/proposal extension. It requires additive
+schema migration `0004`, terminal consolidated integrity migration `0005`, and
+populated downgrade fence `0006`; the exact new relations, columns and
+collations, constraints, indexes, function bodies/configuration, trigger
+attachments, owners, and ACLs must match. It also proves that the production
+runtime role has only `SELECT`, `PUBLIC` has no write/execute path, and the
+owner-only functions cover the complete old-plus-new Applications trigger
+catalog. Missing, extra, weakened, or unreadable evidence returns the same
+minimized `503` dependency response.
+
+The same release must include Workforce
+`0016_programme_call_department_fk_contract`. That successor makes Workforce's
+exact Department-reference inventory recognize
+`applications_programmecall.owner_department_id`; omitting or reversing it
+while Applications `0004` remains installed makes Department deletion fail
+closed. This is an integrity prerequisite, not issue #64's retirement preflight
+or recovery workflow.
+
+A green result proves neither usability nor adoption. It does not show that a
+route, API, navigation destination, profile member, writer, delivery handler,
+review, decision, target record, Programme item, host relationship, schedule,
+or publication exists. Readiness and logs expose no call, proposal,
+collaborator, answer, profile, invitation, seal, or acknowledgement value.
 
 ## Alert design
 

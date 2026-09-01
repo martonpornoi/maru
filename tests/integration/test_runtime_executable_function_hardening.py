@@ -28,6 +28,7 @@ from tests.factories import (
     RoleBundleFactory,
 )
 from tests.support.authority import activate_synthetic_board
+from tests.support.migrations import workforce_migration_targets
 from tests.workforce_helpers import (
     create_department_for_test,
     save_position_assignment_for_test,
@@ -155,7 +156,7 @@ CALLER_RELATIONS = {
 
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
-    executor.migrate(list(targets))
+    executor.migrate(workforce_migration_targets(executor, *targets))
     return executor
 
 

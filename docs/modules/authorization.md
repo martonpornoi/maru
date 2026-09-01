@@ -3,16 +3,17 @@
 Status: Implemented exact organization/edition/department/resource authority,
 sealed exact-version adoption-profile targets, protected Executive Board and
 Maru-operator roots, provenance writing, profile-compatible access management,
-and guarded exact-lineage policy/runtime activation; production legacy
-reconciliation and cutover remain gates
-Last updated: 2026-08-31
+and guarded exact-lineage policy/runtime activation; dormant Applications
+Programme capabilities remain unadopted and production legacy reconciliation
+and cutover remain gates
+Last updated: 2026-09-01
 
 ## Purpose and requirements
 
 `maru.authorization` is the deny-by-default authority boundary for IDN-002,
 IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, IDN-014, EVT-006, QRY-003,
 UX-020, UX-024, UX-028, UX-030, NFR-013, ADR 0003, ADR 0023, ADR 0040,
-ADR 0041, ADR 0044, ADR 0080, and ADR 0081. A membership, account, familiar
+ADR 0041, ADR 0044, ADR 0080, ADR 0081, and ADR 0082. A membership, account, familiar
 role name, or visible destination never grants broad access by itself.
 
 Platform administration is a separate principal purpose under ADR 0031.
@@ -54,6 +55,33 @@ authority evidence uses them. This is schema readiness, not admission: neither
 current v1 manifest pins any Programme capability, so policy and authority
 writers still return `module_not_adopted` before evaluating platform or stored
 authority.
+
+Authorization migration `0021_applications_programme_capabilities` adds the
+dormant Applications-owned Programme vocabulary:
+
+- `applications.manage_programme_calls` at exact current Department scope
+  within the edition, with no hierarchy inheritance; and
+- relationship-derived self capabilities to view, edit, respond to an
+  invitation, manage, and submit one's own Programme proposal.
+
+This closed capability-vocabulary change advances the Authorization decision
+policy version to `2026-09-01.1`. The version records the exact catalog and
+minimum-scope policy used to make decisions; it does not admit the capability
+into an edition profile.
+
+The self capabilities are non-persistable and non-role-assignable. They resolve
+from the authenticated active, verified person and the exact current lead or
+accepted-collaborator relationship; a caller-supplied person identifier never
+establishes self. Lead-only selection, roster, seal, reopen, submit, withdraw,
+and collaborator-only profile/consent and response obligations remain command-
+level relationship checks in Applications.
+
+Neither current literal v1 manifest pins these capabilities. Their manifest
+fingerprints remain unchanged, so platform policy, a direct grant, a role, a
+same-prefix capability, or durable dormant data still fails with
+`module_not_adopted`. The migration extends the closed minimum-scope vocabulary
+and its populated downgrade fence; it does not create a grant, role, root,
+profile, route, or Applications writer.
 
 ## Owned data and invariants
 

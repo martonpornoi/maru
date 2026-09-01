@@ -6,6 +6,8 @@ import pytest
 from django.db import connection, migrations
 from django.db.migrations.executor import MigrationExecutor
 
+from tests.support.migrations import workforce_migration_targets
+
 pytestmark = [
     pytest.mark.django_db(transaction=True),
     pytest.mark.integration,
@@ -35,7 +37,8 @@ EXPECTED_SUCCESSOR_RELATIONS = (
 
 
 def _migrate(target: tuple[str, str]) -> None:
-    MigrationExecutor(connection).migrate([target])
+    executor = MigrationExecutor(connection)
+    executor.migrate(workforce_migration_targets(executor, target))
 
 
 def _contract_state() -> tuple[str, bool]:

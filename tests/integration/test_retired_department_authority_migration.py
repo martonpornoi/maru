@@ -7,6 +7,7 @@ from django.utils import timezone
 from maru.authorization.models import CapabilityGrant
 from maru.workforce.models import Department
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
+from tests.support.migrations import workforce_migration_targets
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -27,7 +28,13 @@ WORKFORCE_TARGET = ("workforce", "0006_edition_structure_schema")
 
 def _migrate(authorization_target: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
-    executor.migrate([authorization_target, WORKFORCE_TARGET])
+    executor.migrate(
+        workforce_migration_targets(
+            executor,
+            authorization_target,
+            WORKFORCE_TARGET,
+        )
+    )
     return executor
 
 
