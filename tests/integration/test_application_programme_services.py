@@ -84,6 +84,11 @@ from maru.applications.programme_queries import (
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.workforce.models import Department, EditionStructureControl
+from maru.workforce.structure_commands import (
+    StructureDependencyConflictError,
+    delete_unused_department,
+)
 from tests.factories import AccountFactory, EventEditionFactory
 from tests.workforce_helpers import create_department_for_test
 
@@ -404,6 +409,39 @@ def _start_proposal(
         lead=actor,
         proposal_id=started.target_id,
         version=started.resulting_version,
+    )
+
+
+def test_programme_call_protects_its_owner_department_from_hard_delete() -> None:
+    """Leave #64 retirement work open while honoring the installed FK."""
+    world = _active_call(code="programme-department-protect")
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+
+    with pytest.raises(StructureDependencyConflictError):
+        delete_unused_department(
+            actor=administrator,
+            organization_id=world.edition.organization_id,
+            series_id=world.edition.series_id,
+            edition_id=world.edition.id,
+            department_id=world.department_id,
+            expected_version=1,
+            confirmation_name="Programme",
+            reason="Prove a Programme-call owner is retained.",
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+
+    assert Department.objects.filter(id=world.department_id).exists()
+    assert ProgrammeCall.objects.filter(
+        id=world.call_id,
+        owner_department_id=world.department_id,
+    ).exists()
+    assert (
+        EditionStructureControl.objects.get(
+            organization_id=world.edition.organization_id,
+            edition_id=world.edition.id,
+        ).aggregate_version
+        == 1
     )
 
 

@@ -1,3 +1,5 @@
+"""PostgreSQL coverage for the Programme-call Department FK successor."""
+
 from __future__ import annotations
 
 from importlib import import_module
@@ -6,39 +8,23 @@ import pytest
 from django.db import connection, migrations
 from django.db.migrations.executor import MigrationExecutor
 
-from tests.support.migrations import workforce_migration_targets
-
 pytestmark = [
     pytest.mark.django_db(transaction=True),
     pytest.mark.integration,
     pytest.mark.usefixtures("restores_current_migration_graph"),
 ]
 
-WORKFORCE_BEFORE = ("workforce", "0007_structure_write_integrity")
-WORKFORCE_AFTER = ("workforce", "0008_department_fk_contract_successor")
-EXPECTED_DEPENDENCIES = [
-    ("applications", "0001_initial"),
-    ("charities", "0001_initial"),
-    ("logistics", "0001_initial"),
-    ("registration", "0039_profile_audiences_and_platform_starter"),
-    ("venues", "0001_initial"),
-    WORKFORCE_BEFORE,
-]
-EXPECTED_SUCCESSOR_RELATIONS = (
-    "applications_applicationownerdepartment",
-    "charities_charityselection",
-    "logistics_equipmentoffer",
-    "logistics_logisticsmanifest",
-    "registration_registrationprofileextensionfield",
-    "venues_editionspaceselection",
-    "venues_editionvenueselection",
-    "venues_venuebooking",
+APPLICATIONS_SCHEMA = ("applications", "0004_programme_calls_and_proposals")
+WORKFORCE_BEFORE = ("workforce", "0015_exact_assignment_adoption_profile")
+WORKFORCE_AFTER = (
+    "workforce",
+    "0016_programme_call_department_fk_contract",
 )
+EXPECTED_DEPENDENCIES = [APPLICATIONS_SCHEMA, WORKFORCE_BEFORE]
 
 
-def _migrate(target: tuple[str, str]) -> None:
-    executor = MigrationExecutor(connection)
-    executor.migrate(workforce_migration_targets(executor, target))
+def _migrate(targets: list[tuple[str, str]]) -> None:
+    MigrationExecutor(connection).migrate(targets)
 
 
 def _contract_state() -> tuple[str, bool]:
@@ -60,9 +46,9 @@ def _contract_state() -> tuple[str, bool]:
     return str(source), bool(is_current)
 
 
-def test_successor_migration_has_exact_creator_dependencies_and_reversal() -> None:
+def test_programme_successor_has_exact_dependencies_and_reversal() -> None:
     migration_module = import_module(
-        "maru.workforce.migrations.0008_department_fk_contract_successor"
+        "maru.workforce.migrations.0016_programme_call_department_fk_contract"
     )
 
     assert migration_module.Migration.dependencies == EXPECTED_DEPENDENCIES
@@ -71,26 +57,24 @@ def test_successor_migration_has_exact_creator_dependencies_and_reversal() -> No
     assert isinstance(operation, migrations.RunSQL)
     assert operation.sql == migration_module.FORWARD_SQL
     assert operation.reverse_sql == migration_module.REVERSE_SQL
-    assert all(
-        relation in migration_module.FORWARD_SQL
-        for relation in EXPECTED_SUCCESSOR_RELATIONS
-    )
+    assert "applications_programmecall" in migration_module.FORWARD_SQL
+    assert "owner_department_id" in migration_module.FORWARD_SQL
+    assert "applications_programmecall" not in migration_module.REVERSE_SQL
 
 
-def test_successor_reverses_fail_closed_and_reapplies_current_contract() -> None:
-    _migrate(WORKFORCE_AFTER)
+def test_programme_successor_reverses_fail_closed_and_reapplies() -> None:
+    _migrate([WORKFORCE_AFTER])
     forward_source, forward_is_current = _contract_state()
     assert forward_is_current
-    assert all(relation in forward_source for relation in EXPECTED_SUCCESSOR_RELATIONS)
+    assert "applications_programmecall" in forward_source
+    assert "owner_department_id" in forward_source
 
-    _migrate(WORKFORCE_BEFORE)
+    _migrate([APPLICATIONS_SCHEMA, WORKFORCE_BEFORE])
     reverse_source, reverse_is_current = _contract_state()
     assert not reverse_is_current
-    assert all(
-        relation not in reverse_source for relation in EXPECTED_SUCCESSOR_RELATIONS
-    )
+    assert "applications_programmecall" not in reverse_source
 
-    _migrate(WORKFORCE_AFTER)
+    _migrate([WORKFORCE_AFTER])
     restored_source, restored_is_current = _contract_state()
     assert restored_is_current
     assert restored_source == forward_source

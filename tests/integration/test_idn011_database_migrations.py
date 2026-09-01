@@ -22,6 +22,7 @@ from tests.factories import (
     OrganizationFactory,
     RoleBundleFactory,
 )
+from tests.support.migrations import workforce_migration_targets
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -59,7 +60,7 @@ WORKFORCE_AFTER = ("workforce", "0003_idn011_convention_subject_guards")
 
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
-    executor.migrate(list(targets))
+    executor.migrate(workforce_migration_targets(executor, *targets))
     return executor
 
 

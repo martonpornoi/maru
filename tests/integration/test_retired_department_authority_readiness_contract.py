@@ -8,6 +8,7 @@ from django.db.migrations.executor import MigrationExecutor
 from psycopg import sql
 
 from maru.authorization import provenance_readiness
+from tests.support.migrations import workforce_migration_targets
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -117,7 +118,13 @@ def test_missing_retired_authority_migration_record_blocks_both_catalog_gates() 
 @pytest.mark.django_db(transaction=True)
 def test_clean_full_reverse_blocks_both_catalog_gates() -> None:
     executor = MigrationExecutor(connection)
-    executor.migrate([_AUTHORIZATION_BEFORE, _WORKFORCE_BEFORE_PAGE9_INTEGRITY])
+    executor.migrate(
+        workforce_migration_targets(
+            executor,
+            _AUTHORIZATION_BEFORE,
+            _WORKFORCE_BEFORE_PAGE9_INTEGRITY,
+        )
+    )
 
     catalog = provenance_readiness._inspect_cutover_catalog()
     assert not catalog.migration_applied

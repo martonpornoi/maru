@@ -17,12 +17,22 @@ The change is additive:
 - `applications.0004_programme_calls_and_proposals` adds empty call, proposal,
   collaborator, selection, profile, sealed-snapshot, response, and dedicated
   receipt relations;
+- `workforce.0016_programme_call_department_fk_contract` recognizes the exact
+  protected Programme-call owner reference in Workforce's Department-deletion
+  catalog without adding the issue #64 retirement workflow;
 - `applications.0005_programme_integrity_guards` is the terminal consolidated
   old-plus-new Applications function/trigger catalog required by readiness;
   and
 - `applications.0006_programme_populated_downgrade_fence` refuses an unsafe
   downgrade before protected Programme-call or proposal evidence can be
   removed.
+
+Applications `0004` depends on Workforce only at
+`0006_edition_structure_schema`, the earliest complete Department shape it
+uses. It does not depend on the later Workforce or Registration tail. The
+separate Workforce `0016` successor depends on Applications `0004` and
+Workforce `0015`, so it can recognize the new owner-Department foreign key
+without coupling the Applications schema to that later graph.
 
 Do not infer a compatible range by migration number alone. Authorization's
 paired additive migration adds the closed Programme-call/proposal capability
@@ -38,11 +48,11 @@ fingerprints must remain unchanged.
 1. Stop all web and worker writers that use the Applications schema.
 2. Back up the complete PostgreSQL database and retain the exact application
    revision, migration plan, and role-provisioning artifact.
-3. Run `python src/manage.py showmigrations applications authorization` and
-   verify the expected source state. Do not fake migration-recorder rows.
-4. Run `python src/manage.py migrate --plan`, review the exact Applications and
-   Authorization steps, then apply the normal migration command with the
-   migration-owner credential.
+3. Run `python src/manage.py showmigrations applications authorization identity workforce`
+   and verify the expected source state. Do not fake migration-recorder rows.
+4. Run `python src/manage.py migrate --plan`, review the exact Applications,
+   Authorization, Identity, and Workforce steps, then apply the normal migration
+   command with the migration-owner credential.
 5. Reconcile the least-privilege runtime role from
    `postgresql-runtime-role-provisioning.sql.example`. Every new
    `applications_programme*` relation must be `SELECT`-only for runtime and all
@@ -50,6 +60,8 @@ fingerprints must remain unchanged.
 6. Run Django deployment checks and the public readiness probe. The
    Applications Programme dependency must validate the exact relation,
    constraint, index, function, trigger, owner, and ACL fingerprint.
+   Workforce readiness must also recognize the new Programme-call owner
+   reference exactly.
 7. Verify that `full_convention@1` and `workforce_only@1` still have their
    previously accepted literal fingerprints and that no Programme member is
    pinned by either manifest.
@@ -79,6 +91,16 @@ records from the consistent backup even when the Applications-owned set is
 empty; a minimized failure audit may legitimately exist without a successful
 Programme aggregate or receipt.
 
+Before targeting Applications `0004` for reversal, reverse its dependent
+Identity `0020_programme_proposal_person_guard` and Workforce
+`0016_programme_call_department_fk_contract` migrations, as well as the normal
+Applications descendants shown by the migration plan. Do not fake those
+dependent migrations as unapplied. Reversing Workforce `0016` while the
+Programme-call table still exists deliberately restores the prior exact
+Department-reference function. Its catalog no longer matches the live foreign
+key, so Department deletion fails closed until Applications `0004` is removed
+or Workforce `0016` is reapplied.
+
 After an empty reversal, reconcile runtime ACLs and verify that the Applications
 Programme readiness dependency fails in the expected old-release shape. Do not
 run a new application binary against the old schema or an old binary against a
@@ -106,9 +128,10 @@ When reversal refuses:
 - capture the exact release, migration state, minimized readiness result, and
   sanitized failure category;
 - fix forward with a reviewed additive migration whenever possible; or
-- restore the complete Applications, Authorization, Audit, Effects event/outbox,
-  and migration history from one mutually consistent backup point, together
-  with the matching application release.
+- perform a mutually consistent whole-database restore, explicitly including
+  Applications, Authorization, Identity, Workforce, Audit, Effects event/outbox,
+  and migration history from one backup point, together with the matching
+  application release.
 
 Never delete rows, disable triggers, grant runtime DML/function execution,
 truncate evidence, rewrite a seal or response, fabricate an acknowledgement,
@@ -151,9 +174,18 @@ adoption contract. [#64](https://github.com/martonpornoi/maru/issues/64) must
 enforce the sequencing preflight and provide a governed recovery workflow
 before activation.
 
+Workforce `0016` is an integrity-catalog successor, not the retirement
+preflight or recovery workflow required by #64. It prevents an unrecognized
+Department reference from being ignored; it does not reassign calls, retire an
+active call, authorize recovery, or make Programme Operations safe to activate.
+
 ## Verification checklist
 
 - fresh upgrade and empty reverse/reapply;
+- exact Applications `0004` dependency shape and dependent Identity `0020` /
+  Workforce `0016` reversal planning;
+- Workforce Department-reference successor install, fail-closed reverse, and
+  reapply behavior;
 - populated reversal refusal at each protected evidence class;
 - exact old-plus-new trigger/function fingerprint and drift rejection;
 - runtime and `PUBLIC` ACL matrix, including dedicated-receipt containment;

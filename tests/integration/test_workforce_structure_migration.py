@@ -4,6 +4,8 @@ import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
+from tests.support.migrations import workforce_migration_targets
+
 pytestmark = [
     pytest.mark.django_db(transaction=True),
     pytest.mark.integration,
@@ -20,7 +22,7 @@ WORKFORCE_AFTER = ("workforce", "0006_edition_structure_schema")
 
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
-    executor.migrate(list(targets))
+    executor.migrate(workforce_migration_targets(executor, *targets))
     return executor
 
 

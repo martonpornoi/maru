@@ -169,8 +169,10 @@ runtime role and their integrity functions remain owner-only. Migration
 readiness fingerprints the exact relation, constraint, index, function,
 trigger, owner, and ACL contract. Empty reversal is exact; durable Programme-
 call or proposal evidence trips a populated downgrade fence before protected
-objects can be removed. Recovery fixes forward or restores Applications,
-Audit, Effects event/outbox, and migration evidence from one consistent point.
+objects can be removed. Recovery fixes forward or performs a mutually
+consistent whole-database restore, explicitly including Applications,
+Authorization, Identity, Workforce, Audit, Effects event/outbox, and migration
+history from one consistent point.
 
 ## Consequences
 

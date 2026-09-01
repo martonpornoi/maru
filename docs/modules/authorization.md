@@ -64,6 +64,11 @@ dormant Applications-owned Programme vocabulary:
 - relationship-derived self capabilities to view, edit, respond to an
   invitation, manage, and submit one's own Programme proposal.
 
+This closed capability-vocabulary change advances the Authorization decision
+policy version to `2026-09-01.1`. The version records the exact catalog and
+minimum-scope policy used to make decisions; it does not admit the capability
+into an edition profile.
+
 The self capabilities are non-persistable and non-role-assignable. They resolve
 from the authenticated active, verified person and the exact current lead or
 accepted-collaborator relationship; a caller-supplied person identifier never

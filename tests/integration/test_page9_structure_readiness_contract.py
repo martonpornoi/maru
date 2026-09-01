@@ -281,7 +281,7 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
         "0856108aaf1bf9fd11092d908fd289542e36faeb815a47e7d5de5680f2abd5a4"
     ),
     "maru_workforce_department_fk_contract_is_current()": (
-        "83e5707405156ec49bd70059a1cdcdf78c7d6472a198ea0151bc63efd84fa935"
+        "789dee83be83009521d10eb1db382c0eac4e549f20e2105a7941f4d8f35f105b"
     ),
     "maru_workforce_page9_scope_mutex()": (
         "75e5f8a98fd059d1e5d2de0db420e77beec79f3c6eb12b051388ab66c85790c6"
@@ -296,6 +296,7 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
 
 PAGE9_DEPARTMENT_FK_CONTRACT = (
     ("applications_applicationownerdepartment", ("department_id",)),
+    ("applications_programmecall", ("owner_department_id",)),
     ("authorization_capabilitygrant", ("department_id",)),
     ("authorization_roleassignment", ("department_id",)),
     ("authorization_scopedresourcebinding", ("department_id",)),
@@ -536,6 +537,7 @@ def test_page9_constraint_timing_tamper_blocks_readiness() -> None:
         "0008_department_fk_contract_successor",
         "0009_reconcile_fictional_structure_template",
         "0010_position_structure_commands",
+        "0016_programme_call_department_fk_contract",
     ],
 )
 def test_missing_page9_migration_recorder_row_blocks_readiness(

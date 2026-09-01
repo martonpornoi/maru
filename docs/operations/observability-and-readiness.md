@@ -200,6 +200,14 @@ owner-only functions cover the complete old-plus-new Applications trigger
 catalog. Missing, extra, weakened, or unreadable evidence returns the same
 minimized `503` dependency response.
 
+The same release must include Workforce
+`0016_programme_call_department_fk_contract`. That successor makes Workforce's
+exact Department-reference inventory recognize
+`applications_programmecall.owner_department_id`; omitting or reversing it
+while Applications `0004` remains installed makes Department deletion fail
+closed. This is an integrity prerequisite, not issue #64's retirement preflight
+or recovery workflow.
+
 A green result proves neither usability nor adoption. It does not show that a
 route, API, navigation destination, profile member, writer, delivery handler,
 review, decision, target record, Programme item, host relationship, schedule,

@@ -409,10 +409,11 @@ new integrity functions are owner-only. Readiness fingerprints the complete
 Applications relation, constraint, index, function, trigger, owner, and ACL
 contract. Installation leaves the literal `full_convention@1` and
 `workforce_only@1` manifest fingerprints unchanged and creates no domain row.
-Recovery fixes forward or restores Applications, Audit, Effects event/outbox,
-and migration evidence from one mutually consistent point; it never fabricates
-a collaborator response, sealed snapshot, review, decision, target, Programme
-item, or host relationship.
+Recovery fixes forward or performs a mutually consistent whole-database
+restore, explicitly including Applications, Authorization, Identity,
+Workforce, Audit, Effects event/outbox, and migration history from one point;
+it never fabricates a collaborator response, sealed snapshot, review,
+decision, target, Programme item, or host relationship.
 
 Focused verification covers the closed starter/event/capability catalogs and
 PostgreSQL workflows for policy activation, idempotency, applicant/reviewer

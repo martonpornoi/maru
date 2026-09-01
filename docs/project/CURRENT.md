@@ -195,9 +195,18 @@ receipt/version proof, minimized audit, registered dormant event, and
 transactional outbox record. The dedicated receipt does not widen the existing
 generic receipt's runtime writer. Applications migrations add the empty schema,
 install one consolidated old-plus-new function/trigger catalog, and fence
-populated downgrade. Every new relation is runtime `SELECT`-only and integrity
-functions are owner-only. Both current literal profile fingerprints remain
-unchanged (`full_convention@1`:
+populated downgrade. Workforce's additive `0016` successor recognizes the exact
+Programme-call owner reference for protected Department deletion while leaving
+issue #64's retirement preflight and recovery inactive. Applications `0004`
+depends on Workforce only at `0006_edition_structure_schema`; Workforce `0016`
+separately depends on Applications `0004` and Workforce `0015`, avoiding a
+dependency from the Applications schema into the later Workforce and
+Registration tail. Every new relation is runtime `SELECT`-only and integrity
+functions are owner-only. The closed Applications Programme capability
+vocabulary advances the Authorization decision policy version to
+`2026-09-01.1`; it records the exact catalog and minimum-scope rules without
+admitting that vocabulary into a profile. Both current literal profile
+fingerprints remain unchanged (`full_convention@1`:
 `e0081b116f8af045fd5a9195c1f4f3295b20d3c57163e8ef0a3547f86861df81`;
 `workforce_only@1`:
 `66ad0e96a641d99e163d735d612dd2138c96ef0af619cfac57839695d09c2ad0`),
@@ -215,28 +224,41 @@ starts and organizer management fail closed while existing proposal subjects
 retain only their lifecycle-permitted self access. The required retirement
 preflight and governed recovery are bounded by
 [#64](https://github.com/martonpornoi/maru/issues/64) and remain required before
-Programme Operations activation.
+Programme Operations activation. Workforce `0016` is only the exact foreign-key
+catalog successor; it does not implement that preflight or recovery workflow.
 
-Local pre-delivery verification is green. The complete non-test repository
-gate passed, including package and dependency checks, OpenAPI and generated
-TypeScript verification, 33 frontend tests, and the production frontend build.
-Documentation-policy validation covered 370 Markdown files, four repository
-skills, and 213 requirement IDs. Ruff format verification covered all 767
-files and Ruff lint passed; MyPy passed across 411 source files; PyDocLint
-passed across `src` and `scripts`; and the custom docstring validator passed
-across 425 source files. Warning-fatal Sphinx/AutoAPI completed without
-warnings.
+Identity `0020_programme_proposal_person_guard` and Workforce
+`0016_programme_call_department_fk_contract` are dependent reversals that must
+be removed before Applications `0004`. Reversing or omitting Workforce `0016`
+while the Programme-call owner foreign key remains makes the exact catalog
+mismatch and Department deletion fail closed. Static dependency checks and
+PostgreSQL install, reverse/reapply, and deletion-protection coverage preserve
+that ordering and safety contract.
 
-The DB-free unit suite passed all 2,568 tests. The affected PostgreSQL
-selection passed all 72 tests; a fresh PostgreSQL invitation-expiry boundary
-selection passed all three tests; and the selected fresh runtime-role/readiness
-scope passed all 62 tests. Django migration drift checking reported no model
-changes; the only diagnostic was the expected local `identity.W001`
-missing-invitation-key warning.
+The repaired tree passes the complete non-test repository gate: locked package
+build and verification, Python and JavaScript dependency audits, Ruff format
+verification across 768 files, Ruff lint, MyPy across 411 source files,
+documentation validation across 370 Markdown files, four repository skills,
+and 213 requirement IDs, PyDocLint, semantic docstrings across 425 source files,
+warning-fatal Sphinx/AutoAPI, migration drift, Django and production-settings
+checks, OpenAPI/generated TypeScript parity, 33 frontend tests, and the
+production frontend build. All 19 documentation-policy tests and
+`git diff --check` pass. The only local Django diagnostic is the expected
+fail-closed `identity.W001` missing-invitation-key warning.
 
-Clean-tree exact-commit certification remains pending for the final committed
-tree. Protected pull-request acceptance remains authoritative only for the
-exact pushed head and is not claimed here.
+The DB-free unit suite passes all 2,574 tests. PostgreSQL repair evidence passes
+102 Authorization activation/readiness/catalog/runtime-fence tests; 65
+Organization structure, Workforce-successor, and Department-protection tests;
+33 Registration
+historical-migration tests; two Identity reverse/reapply tests; 22 Workforce
+historical-migration tests; and 15 residual readiness/profile-fingerprint tests.
+Independent implementation and post-repair review found no actionable issue.
+
+An initial complete certification run exposed the now-repaired migration-graph,
+Authorization readiness, Workforce Department-reference, and policy-version
+integration gaps. Exact-commit local certification must pass on the clean
+commit proposed for delivery, and protected pull-request acceptance is
+authoritative only for that exact pushed head.
 
 ## Exact adoption-manifest enforcement
 

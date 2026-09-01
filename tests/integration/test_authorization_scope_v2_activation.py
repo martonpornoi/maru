@@ -28,6 +28,7 @@ from tests.factories import (
     RoleBundleFactory,
     ScopedResourceBindingFactory,
 )
+from tests.support.migrations import workforce_migration_targets
 from tests.workforce_helpers import (
     create_department_for_test,
     save_position_for_test,
@@ -50,7 +51,7 @@ activation_migration = import_module(
 
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
-    executor.migrate(list(targets))
+    executor.migrate(workforce_migration_targets(executor, *targets))
     return executor
 
 

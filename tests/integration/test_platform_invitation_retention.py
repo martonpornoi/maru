@@ -64,6 +64,7 @@ from maru.identity.models import (
 )
 from maru.privacyops.models import SubjectRightsRequest
 from tests.factories import AccountFactory
+from tests.support.migrations import identity_migration_targets as _identity_targets
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -1471,25 +1472,15 @@ def test_live_invitation_provenance_refuses_retention_schema_reversal(
         )
 
 
-def _identity_migration_targets(
-    executor: MigrationExecutor,
-    target: tuple[str, str],
-) -> list[tuple[str, str]]:
-    return [
-        target if leaf[0] == "identity" else leaf
-        for leaf in executor.loader.graph.leaf_nodes()
-    ]
-
-
 @pytest.mark.usefixtures("restores_current_migration_graph")
 def test_empty_v8_reverses_reapplies_and_restores_exact_catalog() -> None:
     before = ("identity", "0017_invitation_retention_workflow")
     after = ("identity", "0018_invitation_retention_v8")
     executor = MigrationExecutor(connection)
 
-    executor.migrate(_identity_migration_targets(executor, before))
+    executor.migrate(_identity_targets(executor, before))
     reapplied = MigrationExecutor(connection)
-    reapplied.migrate(_identity_migration_targets(reapplied, after))
+    reapplied.migrate(_identity_targets(reapplied, after))
 
     catalog = inspect_platform_invitation_additive_catalog()
     assert catalog.additive_contract_ready
@@ -1506,7 +1497,7 @@ def test_populated_v7_v1_receipt_after_v2_activation_upgrades_to_v8(
     before = ("identity", "0017_invitation_retention_workflow")
     after = ("identity", "0018_invitation_retention_v8")
     executor = MigrationExecutor(connection)
-    executor.migrate(_identity_migration_targets(executor, before))
+    executor.migrate(_identity_targets(executor, before))
 
     receipt_policy = _configure_policy(settings, version=1)
     invitation = _create_invitation(
@@ -1586,7 +1577,7 @@ def test_populated_v7_v1_receipt_after_v2_activation_upgrades_to_v8(
     assert active_control.policy_digest != receipt_policy.digest
 
     upgraded = MigrationExecutor(connection)
-    upgraded.migrate(_identity_migration_targets(upgraded, after))
+    upgraded.migrate(_identity_targets(upgraded, after))
     delivery.refresh_from_db()
     attempt = PlatformIdentityDeliveryAttempt.objects.get(delivery=delivery)
     with connection.cursor() as cursor:
@@ -1612,6 +1603,4 @@ def test_populated_v7_v1_receipt_after_v2_activation_upgrades_to_v8(
 
     reversed_executor = MigrationExecutor(connection)
     with pytest.raises(RuntimeError, match="Cannot remove retention v8"):
-        reversed_executor.migrate(
-            _identity_migration_targets(reversed_executor, before)
-        )
+        reversed_executor.migrate(_identity_targets(reversed_executor, before))

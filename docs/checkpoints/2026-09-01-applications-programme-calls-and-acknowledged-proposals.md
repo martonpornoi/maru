@@ -53,6 +53,9 @@ current literal adoption-profile fingerprints remain unchanged.
   dedicated receipt does not inherit the generic Applications runtime writer.
 - New relations are production-runtime `SELECT`-only and integrity functions
   owner-only. Installation is schema readiness, not adoption.
+- The closed Applications Programme capability vocabulary advances the
+  Authorization policy version to `2026-09-01.1`; this records the exact
+  decision catalog and minimum-scope rules without changing profile adoption.
 - The current manifest fingerprints remain literal and unchanged:
   `full_convention@1` is
   `e0081b116f8af045fd5a9195c1f4f3295b20d3c57163e8ef0a3547f86861df81`;
@@ -69,39 +72,45 @@ current literal adoption-profile fingerprints remain unchanged.
   migrations, database guards, dedicated receipts, and writer boundary.
 - Authorization capability vocabulary and exact-profile admission checks;
   Events adoption catalogs; Identity/Workforce/Events public reference seams;
-  Effects event registry; runtime-role and readiness contracts.
+  Effects event registry; runtime-role and readiness contracts; and Workforce
+  `0016` exact recognition of the Programme-call owner-Department foreign key.
+- Static migration-dependency coverage and PostgreSQL successor coverage for
+  install, fail-closed reverse, reapply, and Department deletion protection.
 - Product requirements, ADR 0082, domain/module/API/event/security/privacy/
   audit/operations documentation, page/workflow/adoption contracts, roadmap,
   backlog, production ledger, delivery plan, changelog, and current handoff.
 
 ## Verification
 
-Local pre-delivery verification on the working tree passed:
+The repaired working tree passed the following local evidence:
 
-- The complete non-test repository gate passed, including package and
-  dependency checks, OpenAPI and generated TypeScript verification, 33
-  frontend tests, and the production frontend build.
-- Documentation-policy validation covered 370 Markdown files, four repository
-  skills, and 213 requirement IDs.
-- Ruff format verification covered all 767 files and Ruff lint passed. MyPy
-  passed across 411 source files.
-- PyDocLint passed across `src` and `scripts`; the custom docstring validator
-  passed across 425 source files; and warning-fatal Sphinx/AutoAPI completed
-  without warnings.
-- The DB-free unit suite passed all 2,568 tests.
-- The affected PostgreSQL selection passed all 72 tests, including Applications
-  Programme integrity, service, legacy-seam, populated-downgrade, and function-
-  ACL reverse/reapply coverage.
-- A fresh PostgreSQL invitation-expiry boundary selection passed all three
-  tests, and the selected fresh runtime-role/readiness scope passed all 62
-  tests.
-- Django migration drift checking reported no model changes; the only
-  diagnostic was the expected local `identity.W001` missing-invitation-key
-  warning.
-- Clean-tree exact-commit certification remains pending for the final committed
-  tree and is not claimed by this pre-commit checkpoint.
-- Protected pull-request acceptance remains pending and is authoritative only
-  for the exact pushed head.
+- The complete non-test repository gate passed, including locked package
+  build and verification, Python and JavaScript dependency audits, migration
+  drift, Django and production-settings checks, OpenAPI and generated
+  TypeScript parity, 33 frontend tests, and the production frontend build.
+- Documentation validation covered 370 Markdown files, four repository skills,
+  and 213 requirement IDs. All 19 documentation-policy tests passed.
+- Ruff format verification covered all 768 files and Ruff lint passed. MyPy
+  passed across 411 source files. PyDocLint passed across `src` and `scripts`;
+  the custom docstring validator passed across 425 source files; and warning-
+  fatal Sphinx/AutoAPI completed without warnings.
+- The DB-free unit suite passed all 2,574 tests.
+- PostgreSQL repair evidence passed: 102 Authorization activation, readiness,
+  catalog, and runtime-fence tests; 65 Page 9, Workforce-successor, and
+  Department-protection tests; 33 Registration historical-migration tests; two
+  Identity reverse/reapply tests; 22 Workforce historical-migration tests; and
+  15 residual readiness and profile-fingerprint tests.
+- Independent implementation and post-repair review found no actionable
+  issue, and `git diff --check` passed.
+- The only local Django diagnostic was the expected fail-closed `identity.W001`
+  missing-invitation-key warning.
+
+An initial complete certification run exposed the migration-history coupling,
+stale Authorization readiness fingerprints, the Workforce Department-reference
+inventory omission, and stale policy-version literals. The dependency boundary,
+Workforce `0016` successor, readiness pins, and assertions were repaired before
+the green evidence above. Exact-commit local certification must still pass on
+the clean commit proposed for delivery.
 
 The protected pull-request result is authoritative only for the exact pushed
 head. Do not replace local evidence with a hosted status from another revision.
@@ -111,6 +120,17 @@ head. Do not replace local evidence with a hosted status from another revision.
 - Applications `0004` is additive and creates no row. `0005` is the terminal
   consolidated old-plus-new function/trigger catalog required by readiness.
   `0006` refuses populated downgrade before protected evidence can be removed.
+- Applications `0004` depends on Workforce only at
+  `0006_edition_structure_schema`; it does not pull the later Workforce and
+  Registration migration tail into older migration-history tests.
+- Workforce `0016_programme_call_department_fk_contract` depends on
+  Applications `0004` and Workforce `0015`, then recognizes the exact protected
+  `applications_programmecall.owner_department_id` reference. If `0016` is
+  absent or reversed while that foreign key exists, Department deletion fails
+  closed.
+- Identity `0020` and Workforce `0016` are dependent reversals that must be
+  removed before Applications `0004`. Coverage preserves the exact dependency
+  shape, successor install/reverse/reapply behavior, and deletion protection.
 - Authorization's paired additive migration adds only closed capability scope
   vocabulary and its populated downgrade fence. It creates no grant or role.
 - Empty reversal is exact. Populated reversal refuses while preserving schema,
@@ -118,10 +138,11 @@ head. Do not replace local evidence with a hosted status from another revision.
 - Every new `applications_programme*` relation is `SELECT`-only for the
   production runtime role; the dedicated receipt does not receive the generic
   Applications receipt's `INSERT` grant.
-- Recovery fixes forward or restores Applications, Authorization, Audit,
-  Effects event/outbox, and migration history from one mutually consistent
-  point. It never fabricates a response, seal, review, decision, target,
-  Programme item, host, schedule, staffing record, or publication.
+- Recovery fixes forward or performs a mutually consistent whole-database
+  restore, explicitly including Applications, Authorization, Identity,
+  Workforce, Audit, Effects event/outbox, and migration history from one point.
+  It never fabricates a response, seal, review, decision, target, Programme
+  item, host, schedule, staffing record, or publication.
 
 ## Known risks and incomplete work
 
@@ -139,7 +160,9 @@ head. Do not replace local evidence with a hosted status from another revision.
   active call first. Retiring the owner first blocks organizer management and
   new starts while intentionally preserving existing proposal self history;
   [#64](https://github.com/martonpornoi/maru/issues/64) owns the required
-  preflight and governed recovery.
+  preflight and governed recovery. Workforce `0016` recognizes the foreign key
+  exactly but does not implement that preflight, reassignment, retirement, or
+  recovery workflow.
 
 ## Recommended next actions
 

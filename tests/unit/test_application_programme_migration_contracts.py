@@ -7,6 +7,34 @@ from django.db import migrations
 from maru.authorization.catalog import CAPABILITIES
 
 
+def test_programme_schema_depends_on_earliest_complete_workforce_shape() -> None:
+    """Keep Registration history independent of the later Workforce tail."""
+    migration_module = import_module(
+        "maru.applications.migrations.0004_programme_calls_and_proposals"
+    )
+    workforce_shape = import_module(
+        "maru.workforce.migrations.0006_edition_structure_schema"
+    )
+    integrity = import_module(
+        "maru.applications.migrations.0005_programme_integrity_guards"
+    )
+
+    assert tuple(migration_module.Migration.dependencies) == (
+        ("applications", "0003_integrity_function_execute_boundary"),
+        ("events", "0010_workforce_adoption_profile"),
+        ("organizations", "0014_purpose_bounded_representation"),
+        ("workforce", "0006_edition_structure_schema"),
+        ("identity", "__first__"),
+    )
+    assert any(
+        isinstance(operation, migrations.AddField)
+        and operation.model_name == "department"
+        and operation.name == "retired_at"
+        for operation in workforce_shape.Migration.operations
+    )
+    assert "department.retired_at" in integrity.FORWARD_SQL
+
+
 def test_authorization_min_scope_is_prior_catalog_plus_exact_department_code() -> None:
     """Prevent the replacement SQL function from dropping an existing code."""
     previous = import_module(

@@ -117,7 +117,7 @@ class Migration(migrations.Migration):
         ("applications", "0003_integrity_function_execute_boundary"),
         ("events", "0010_workforce_adoption_profile"),
         ("organizations", "0014_purpose_bounded_representation"),
-        ("workforce", "0015_exact_assignment_adoption_profile"),
+        ("workforce", "0006_edition_structure_schema"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

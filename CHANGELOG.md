@@ -19,8 +19,9 @@ rather than replace the curated summary.
   proposal kernel. It reuses typed definitions, submissions, and append-only
   answer revisions; serializes every proposal mutation on one aggregate
   version; preserves contributor-owned proposed-public profile/consent
-  revisions; and seals exact answer, profile, selection, roster, policy, and
-  acknowledgement evidence. Dedicated receipts, dormant events, legacy-target
+  revisions; retains exact sealed answer, profile, selection, roster, and
+  policy evidence; and records each collaborator's later exact response.
+  Dedicated receipts, dormant events, legacy-target
   denial, database guards, populated downgrade fencing, and `SELECT`-only
   runtime ACLs keep it contained. Neither current profile fingerprint changes,
   and no route, API, UI, review, decision, target, Programme item, host,
