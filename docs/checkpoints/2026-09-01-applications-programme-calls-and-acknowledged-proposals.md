@@ -84,32 +84,43 @@ current literal adoption-profile fingerprints remain unchanged.
 
 ## Verification
 
-The repaired working tree passed the following local evidence:
+The protected-PR candidate accumulated the following local evidence:
 
-- The complete non-test repository gate passed, including locked package
-  build and verification, Python and JavaScript dependency audits, migration
-  drift, Django and production-settings checks, OpenAPI and generated
-  TypeScript parity, 33 frontend tests, and the production frontend build.
-- Documentation validation covered 370 Markdown files, four repository skills,
-  and 213 requirement IDs. All 19 documentation-policy tests passed.
-- Ruff format verification covered all 768 files and Ruff lint passed. MyPy
-  passed across 411 source files. PyDocLint passed across `src` and `scripts`;
-  the custom docstring validator passed across 425 source files; and warning-
-  fatal Sphinx/AutoAPI completed without warnings.
-- The DB-free unit suite passed all 2,574 tests.
+- The superseded pre-schema-catalog head passed the complete non-test
+  repository gate, including locked package build and verification, Python and
+  JavaScript dependency audits, migration drift, Django and production-
+  settings checks, OpenAPI and generated TypeScript parity, 33 frontend tests,
+  and the production frontend build.
+- Its documentation validation covered 370 Markdown files, four repository
+  skills, and 213 requirement IDs. All 19 documentation-policy tests passed.
+- Its Ruff format verification covered all 768 files and Ruff lint passed.
+  MyPy passed across 411 source files. PyDocLint passed across `src` and
+  `scripts`; the custom docstring validator passed across 425 source files; and
+  warning-fatal Sphinx/AutoAPI completed without warnings.
 - PostgreSQL repair evidence passed: 102 Authorization activation, readiness,
   catalog, and runtime-fence tests; 65 Page 9, Workforce-successor, and
   Department-protection tests; 33 Registration historical-migration tests; two
   Identity reverse/reapply tests; 22 Workforce historical-migration tests; and
   15 residual readiness and profile-fingerprint tests.
-- Independent implementation and post-repair review found no actionable
-  issue, and `git diff --check` passed.
+- A later independent contract audit found that Applications readiness did not
+  yet prove the documented exact relation, column, collation, constraint, and
+  index shape. That head was not merged and its in-progress hosted run was
+  cancelled.
+- The resulting data-free PostgreSQL 17 catalog covers all 26 managed
+  `applications_*` relations, 336 columns, 279 constraints, and 203 indexes.
+  Focused evidence passes Ruff format/lint, MyPy, PyDocLint, 25 unit tests, all
+  2,581 DB-free unit tests, 49 fresh-PostgreSQL readiness/health tests, and the
+  existing complete-draft-call readiness acceptance. Independent review found
+  no blocking issue; its optional readiness short-circuit was implemented and
+  tested. `git diff --check` passes.
 - The only local Django diagnostic was the expected fail-closed `identity.W001`
   missing-invitation-key warning.
-- Exact clean-tree certification of the final candidate passes all 2,575 unit
-  tests, all 2,767 integration tests across eight isolated PostgreSQL 17
-  instances, the complete repository gate, and combined 90-percent branch
-  coverage.
+- Exact clean-tree certification of the superseded head
+  `9fe32e19a4a102eed90d7501f2f918ac9aaf3766` passed all 2,575 unit tests,
+  all 2,767 integration tests across eight isolated PostgreSQL 17 instances,
+  the complete repository gate, and combined 90-percent branch coverage. The
+  exact post-repair commit certification and protected PR #65 gate remain the
+  authoritative merge evidence and must both be green for the same head.
 
 An initial complete certification run exposed the migration-history coupling,
 stale Authorization readiness fingerprints, the Workforce Department-reference

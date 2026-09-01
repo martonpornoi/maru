@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import inspect
 from importlib import import_module
 
-from django.db import migrations
+from django.db import DatabaseError, migrations
 
+import maru.applications.readiness as applications_readiness
 from maru.applications.readiness import APPLICATIONS_INTEGRITY_CONTRACT
 
 
@@ -28,6 +30,212 @@ def test_0005_is_one_atomic_cross_domain_integrity_step() -> None:
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
     assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 66
     assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 17
+
+
+def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None:
+    """Keep every generic and Programme Applications table fail closed."""
+    relations = applications_readiness.APPLICATIONS_RELATION_SEMANTICS
+
+    assert set(relations) == {
+        "applications_applicationanswerrevision",
+        "applications_applicationcommandreceipt",
+        "applications_applicationdefinition",
+        "applications_applicationfilereceipt",
+        "applications_applicationownerdepartment",
+        "applications_applicationquestion",
+        "applications_applicationreviewdecision",
+        "applications_applicationreviewerperson",
+        "applications_applicationreviewerrole",
+        "applications_applicationsection",
+        "applications_applicationsubmission",
+        "applications_applicationtargetrecord",
+        "applications_programmecall",
+        "applications_programmecallcontributorfield",
+        "applications_programmecallformat",
+        "applications_programmecalltrack",
+        "applications_programmecommandreceipt",
+        "applications_programmeproposal",
+        "applications_programmeproposalcollaborator",
+        "applications_programmeproposalcollaboratortransition",
+        "applications_programmeproposalcontributorprofilerevision",
+        "applications_programmeproposalrevision",
+        "applications_programmeproposalrevisionanswer",
+        "applications_programmeproposalrevisioncontributor",
+        "applications_programmeproposalrevisionresponse",
+        "applications_programmeproposalselectionrevision",
+    }
+    assert set(relations.values()) == {("r", "p", False, False, False, "d")}
+    assert applications_readiness._applications_relation_names() == tuple(
+        sorted(relations)
+    )
+
+
+def test_schema_fingerprint_covers_exact_column_and_collation_semantics() -> None:
+    """Keep generic and Programme column metadata inside readiness."""
+    columns = applications_readiness._expected_applications_columns()
+
+    assert all(not column[4] for column in columns)
+    assert {(column[5], column[6]) for column in columns} == {("", "")}
+    assert any(
+        column[:7]
+        == (
+            "applications_applicationanswerrevision",
+            "resulting_version",
+            "bigint",
+            False,
+            False,
+            "",
+            "",
+        )
+        and column[7:] == applications_readiness._NO_COLLATION_IDENTITY
+        for column in columns
+    )
+    assert any(
+        column[:7]
+        == (
+            "applications_programmecall",
+            "content_policy_code",
+            "varchar(120)",
+            True,
+            False,
+            "",
+            "",
+        )
+        and column[7:] == applications_readiness._DEFAULT_COLLATION_IDENTITY
+        for column in columns
+    )
+    source = inspect.getsource(applications_readiness._installed_column_rows)
+    for catalog_field in (
+        "atttypid",
+        "atttypmod",
+        "attnotnull",
+        "atthasdef",
+        "attidentity",
+        "attgenerated",
+        "collprovider",
+        "collisdeterministic",
+        "collencoding",
+        "collcollate",
+        "collctype",
+        "colllocale",
+        "collicurules",
+        "collversion",
+    ):
+        assert catalog_field in source
+
+
+def test_schema_fingerprint_pins_complete_constraint_and_index_catalogs() -> None:
+    """Keep code-owned PostgreSQL 17 object catalogs complete and immutable."""
+    assert applications_readiness.APPLICATIONS_SCHEMA_CATALOG_SHA256 == {
+        "constraint:": (
+            279,
+            "2ebb8eae792caab787719b70f5c3abddae90f0507c36b5eac98ae3b681503a36",
+        ),
+        "index:": (
+            203,
+            "3a7ae99aaef53b5252f22334bae1dde5f57e993502484d908fbebe4395022d7d",
+        ),
+    }
+    source = inspect.getsource(applications_readiness._schema_definition_rows)
+    for catalog_field in (
+        "pg_get_constraintdef",
+        "convalidated",
+        "confupdtype",
+        "confdeltype",
+        "confmatchtype",
+        "pg_get_indexdef",
+        "indisvalid",
+        "indisready",
+        "indislive",
+        "indnkeyatts",
+        "indnatts",
+    ):
+        assert catalog_field in source
+
+
+def test_complete_schema_object_digest_rejects_missing_extra_and_changed_rows() -> None:
+    """Reject any difference anywhere in one complete object kind."""
+    rows = {
+        "constraint:applications_one:one_check": ("a" * 64, "b" * 64),
+        "constraint:applications_two:two_check": ("c" * 64, "d" * 64),
+    }
+    expected = {
+        "constraint:": applications_readiness._schema_object_catalog_sha256(
+            rows,
+            prefix="constraint:",
+        )
+    }
+
+    assert applications_readiness._schema_object_rows_are_current(
+        rows,
+        expected,
+        prefix="constraint:",
+    )
+    assert not applications_readiness._schema_object_rows_are_current(
+        {key: value for key, value in rows.items() if key.endswith("one_check")},
+        expected,
+        prefix="constraint:",
+    )
+    assert not applications_readiness._schema_object_rows_are_current(
+        {
+            **rows,
+            "constraint:applications_three:unexpected": ("e" * 64, "f" * 64),
+        },
+        expected,
+        prefix="constraint:",
+    )
+    assert not applications_readiness._schema_object_rows_are_current(
+        {
+            **rows,
+            "constraint:applications_one:one_check": ("a" * 64, "f" * 64),
+        },
+        expected,
+        prefix="constraint:",
+    )
+
+
+def test_applications_readiness_skips_schema_scan_after_generic_failure(
+    monkeypatch,
+) -> None:
+    """Avoid the expensive schema scan when the cheap integrity gate is red."""
+    monkeypatch.setattr(
+        applications_readiness,
+        "database_integrity_contract_is_ready",
+        lambda _contract: False,
+    )
+
+    def unexpected_catalog_scan() -> None:
+        raise AssertionError("schema catalog should not be inspected")
+
+    monkeypatch.setattr(
+        applications_readiness,
+        "inspect_applications_schema_catalog",
+        unexpected_catalog_scan,
+    )
+
+    assert not applications_readiness.applications_database_integrity_is_ready()
+
+
+def test_applications_schema_catalog_error_fails_public_readiness_closed(
+    monkeypatch,
+) -> None:
+    """Keep identifier-free public health unavailable on catalog failure."""
+    monkeypatch.setattr(
+        applications_readiness,
+        "database_integrity_contract_is_ready",
+        lambda _contract: True,
+    )
+
+    def fail_catalog() -> None:
+        raise DatabaseError("private catalog detail")
+
+    monkeypatch.setattr(
+        applications_readiness,
+        "inspect_applications_schema_catalog",
+        fail_catalog,
+    )
+
+    assert not applications_readiness.applications_database_integrity_is_ready()
 
 
 def test_shared_retry_lock_and_writer_latch_names_are_exact() -> None:

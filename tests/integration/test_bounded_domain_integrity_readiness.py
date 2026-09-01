@@ -8,7 +8,11 @@ import pytest
 from django.db import DatabaseError, connection, transaction
 from psycopg import sql
 
-from maru.applications.readiness import APPLICATIONS_INTEGRITY_CONTRACT
+from maru.applications.readiness import (
+    APPLICATIONS_INTEGRITY_CONTRACT,
+    applications_database_integrity_is_ready,
+    inspect_applications_schema_catalog,
+)
 from maru.catalog.readiness import CATALOG_INTEGRITY_CONTRACT
 from maru.charities.readiness import CHARITIES_INTEGRITY_CONTRACT
 from maru.core.database_integrity_readiness import (
@@ -53,8 +57,365 @@ def test_current_bounded_domain_integrity_catalogs_are_ready() -> None:
     catalogs = [inspect_database_integrity_catalog(contract) for contract in CONTRACTS]
 
     assert all(catalog.ready for catalog in catalogs)
+    assert inspect_applications_schema_catalog().ready
+    assert applications_database_integrity_is_ready()
     assert inspect_programme_schema_catalog().ready
     assert programme_database_integrity_is_ready()
+
+
+def test_missing_applications_relation_blocks_readiness_transactionally() -> None:
+    """Detect a missing expected relation without reading domain rows."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                RENAME TO applications_readiness_missing_relation
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.relations_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_extra_applications_relation_blocks_readiness_transactionally() -> None:
+    """Detect an unexpected relation in the owned namespace."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE public.applications_readiness_extra_relation (
+                    id uuid PRIMARY KEY
+                )
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.relations_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_extra_applications_sequence_blocks_readiness_transactionally() -> None:
+    """Detect an unexpected non-table relation in the owned namespace."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "CREATE SEQUENCE public.applications_readiness_extra_sequence"
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.relations_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_changed_applications_relation_semantics_block_readiness_transactionally() -> (
+    None
+):
+    """Detect security metadata drift on an otherwise intact table."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationdefinition
+                ENABLE ROW LEVEL SECURITY
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.relations_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_missing_applications_column_blocks_readiness_transactionally() -> None:
+    """Detect one removed generic Applications column."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                DROP COLUMN media_type
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.columns_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_extra_applications_column_blocks_readiness_transactionally() -> None:
+    """Detect one unmodeled Applications column."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                ADD COLUMN readiness_extra text
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.columns_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_changed_applications_column_type_blocks_readiness_transactionally() -> None:
+    """Detect same-name column type drift."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                ALTER COLUMN media_type TYPE varchar(121)
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.columns_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_changed_applications_column_nullability_blocks_readiness() -> None:
+    """Detect same-name column nullability drift."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                ALTER COLUMN media_type DROP NOT NULL
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.columns_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_changed_applications_column_default_blocks_readiness() -> None:
+    """Detect an unexpected database-owned column default."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                ALTER COLUMN media_type SET DEFAULT ''
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.columns_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_changed_applications_column_identity_blocks_readiness() -> None:
+    """Detect an unexpected identity generator on an integer column."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                ALTER COLUMN size_bytes ADD GENERATED ALWAYS AS IDENTITY
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.columns_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_changed_applications_column_generation_blocks_readiness() -> None:
+    """Detect an unexpected stored-generation expression."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                DROP COLUMN media_type
+                """
+            )
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                ADD COLUMN media_type varchar(120)
+                GENERATED ALWAYS AS ('generated'::varchar(120)) STORED
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.columns_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_changed_applications_column_collation_blocks_readiness_transactionally() -> (
+    None
+):
+    """Detect a same-type text column switched away from database default."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationfilereceipt
+                ALTER COLUMN media_type
+                TYPE varchar(120) COLLATE "C"
+                USING media_type::varchar(120)
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.columns_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_missing_applications_constraint_blocks_readiness_transactionally() -> None:
+    """Detect removal from the complete constraint catalog."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationdefinition
+                DROP CONSTRAINT applications_definition_versions_positive
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.constraints_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_extra_applications_constraint_blocks_readiness_transactionally() -> None:
+    """Detect an unexpected constraint even when every expected one remains."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationdefinition
+                ADD CONSTRAINT applications_readiness_extra_check CHECK (TRUE)
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.constraints_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_changed_same_name_applications_constraint_blocks_readiness() -> None:
+    """Detect a same-named check whose definition was weakened."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationdefinition
+                DROP CONSTRAINT applications_definition_versions_positive
+                """
+            )
+            cursor.execute(
+                """
+                ALTER TABLE public.applications_applicationdefinition
+                ADD CONSTRAINT applications_definition_versions_positive CHECK (TRUE)
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.constraints_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_missing_applications_index_blocks_readiness_transactionally() -> None:
+    """Detect removal from the complete index catalog."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute("DROP INDEX public.app_definition_scope_idx")
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.indexes_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_extra_applications_index_blocks_readiness_transactionally() -> None:
+    """Detect an unexpected index even when every expected one remains."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE INDEX applications_readiness_extra_idx
+                ON public.applications_applicationdefinition (name)
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.indexes_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
+
+
+def test_changed_same_name_applications_index_blocks_readiness() -> None:
+    """Detect a same-named index whose definition was changed."""
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute("DROP INDEX public.app_definition_scope_idx")
+            cursor.execute(
+                """
+                CREATE INDEX app_definition_scope_idx
+                ON public.applications_applicationdefinition (name)
+                """
+            )
+        catalog = inspect_applications_schema_catalog()
+        assert not catalog.indexes_current
+        assert not catalog.ready
+        assert not applications_database_integrity_is_ready()
+        transaction.set_rollback(True)
+
+    assert inspect_applications_schema_catalog().ready
 
 
 @pytest.mark.parametrize(

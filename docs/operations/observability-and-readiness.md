@@ -189,7 +189,7 @@ green Programme integrity dependency proves only that the dormant schema is
 the reviewed code-owned shape; it does not activate a profile, caller, route,
 writer, or public timetable.
 
-The mandatory `applications_programme_integrity` dependency separately proves
+The mandatory `applications_integrity` dependency separately proves
 the dormant Applications-owned call/proposal extension. It requires additive
 schema migration `0004`, terminal consolidated integrity migration `0005`, and
 populated downgrade fence `0006`; the exact new relations, columns and

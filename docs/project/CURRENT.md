@@ -202,7 +202,15 @@ depends on Workforce only at `0006_edition_structure_schema`; Workforce `0016`
 separately depends on Applications `0004` and Workforce `0015`, avoiding a
 dependency from the Applications schema into the later Workforce and
 Registration tail. Every new relation is runtime `SELECT`-only and integrity
-functions are owner-only. The closed Applications Programme capability
+functions are owner-only. Applications readiness composes that migration,
+function, trigger, owner, and ACL contract with a data-free PostgreSQL 17
+schema catalog over all 26 managed `applications_*` relations, 336 columns,
+279 constraints, and 203 indexes. Missing, extra, or changed relation flags,
+column type/nullability/default/generation/identity/collation semantics, or
+constraint/index metadata and canonical definitions fail closed. The cheap
+integrity contract short-circuits the catalog scan when it is already red.
+
+The closed Applications Programme capability
 vocabulary advances the Authorization decision policy version to
 `2026-09-01.1`; it records the exact catalog and minimum-scope rules without
 admitting that vocabulary into a profile. Both current literal profile
@@ -235,31 +243,25 @@ mismatch and Department deletion fail closed. Static dependency checks and
 PostgreSQL install, reverse/reapply, and deletion-protection coverage preserve
 that ordering and safety contract.
 
-The repaired tree passes the complete non-test repository gate: locked package
-build and verification, Python and JavaScript dependency audits, Ruff format
-verification across 768 files, Ruff lint, MyPy across 411 source files,
-documentation validation across 370 Markdown files, four repository skills,
-and 213 requirement IDs, PyDocLint, semantic docstrings across 425 source files,
-warning-fatal Sphinx/AutoAPI, migration drift, Django and production-settings
-checks, OpenAPI/generated TypeScript parity, 33 frontend tests, and the
-production frontend build. All 19 documentation-policy tests and
-`git diff --check` pass. The only local Django diagnostic is the expected
-fail-closed `identity.W001` missing-invitation-key warning.
+The superseded pre-schema-catalog head passed the complete non-test repository
+gate and an exact clean-tree certification of 2,575 unit tests, 2,767
+integration tests across eight isolated PostgreSQL 17 instances, and combined
+90-percent branch coverage. A later independent contract audit correctly found
+that its Applications health dependency did not yet prove the documented
+column, collation, constraint, and index shape, so that head was deliberately
+not merged and its in-progress hosted run was cancelled.
 
-The DB-free unit suite passes all 2,574 tests. PostgreSQL repair evidence passes
-102 Authorization activation/readiness/catalog/runtime-fence tests; 65
-Organization structure, Workforce-successor, and Department-protection tests;
-33 Registration
-historical-migration tests; two Identity reverse/reapply tests; 22 Workforce
-historical-migration tests; and 15 residual readiness/profile-fingerprint tests.
-Independent implementation and post-repair review found no actionable issue.
+The schema-catalog repair passes Ruff format/lint, MyPy, PyDocLint, 25 focused
+unit tests, all 2,581 DB-free unit tests, 49 fresh-PostgreSQL readiness and
+health tests, and the existing complete-draft-call readiness acceptance.
+Transactional attacks cover missing, extra, and same-name-weakened relations,
+columns, constraints, and indexes; every rollback restores green readiness.
+Independent review found no blocking issue and its optional short-circuit
+improvement was implemented with a regression test. `git diff --check` passes.
 
-An initial complete certification run exposed the now-repaired migration-graph,
-Authorization readiness, Workforce Department-reference, and policy-version
-integration gaps. Exact clean-tree certification of the final candidate passes
-all 2,575 unit tests, all 2,767 integration tests across eight isolated
-PostgreSQL 17 instances, the complete repository gate, and combined 90-percent
-branch coverage.
+The exact post-repair commit certification and protected hosted gate recorded
+on PR #65 remain the authoritative merge evidence; the branch may merge only
+when both are green for that same head and its base remains current.
 
 The first hosted run passed every non-database job and seven integration shards.
 The shard 3 log showed progress into `test_workforce_assignment_commands`
