@@ -9,6 +9,27 @@ production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
 
+## Django REST Framework security patch
+
+Issue [#67](https://github.com/martonpornoi/maru/issues/67) updates only the
+locked Django REST Framework artifact from 3.17.1 to 3.17.2 inside the existing
+`>=3.17.1,<3.18` constraint. The patch fixes CVE-2026-73228, in which DRF JSON
+and URL-encoded parsing could bypass Django's configured in-memory request-size
+limit, and CVE-2026-73229, in which `AdminRenderer` could disclose data guarded
+from GET while rendering an invalid write request. Maru already exposes only
+`JSONRenderer` by default, but every vulnerable installed path remains a
+dependency-security failure until removed.
+
+The refresh changes no declared compatibility range, application source,
+migration, API/OpenAPI contract, Staff Console artifact, settings, or runtime
+authority. Locked-input checks, current-tree dependency audit, full repository
+verification, and all 2,581 unit tests pass; both dependency audits report no
+known vulnerabilities. Exact-commit certification and the protected pull-
+request gate remain the final acceptance evidence. This bounded repair was
+discovered while certifying Programme import issue #66; that candidate remains
+isolated and must be rebased onto the repaired `main` before its own
+certification.
+
 ## Umbrella issue intake contract
 
 Maru's checked-in issue intake now distinguishes one closable feature proposal
