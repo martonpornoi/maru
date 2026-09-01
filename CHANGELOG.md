@@ -58,6 +58,12 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Updated the locked Django REST Framework patch release from 3.17.1 to
+  3.17.2. The upstream fixes restore Django request-body size enforcement for
+  DRF JSON and form parsing and prevent `AdminRenderer` from disclosing
+  GET-protected data while rendering invalid writes. Maru's declared
+  compatibility range and API surface are unchanged
+  ([#67](https://github.com/martonpornoi/maru/issues/67)).
 - Refreshed the full-integration timing inventory from the exact Issue #63
   certification after Programme migration coverage materially changed the test
   suite. All 175 current integration files now have measured weights, the stale
