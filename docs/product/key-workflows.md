@@ -1,8 +1,9 @@
 # Key end-to-end workflows
 
-Status: Baseline plus executable Workforce-only adoption, dormant Programme
-item/readiness foundation, and inactive Programme Operations contract
-Last updated: 2026-08-31
+Status: Baseline plus executable Workforce-only adoption, dormant Applications
+Programme-intake and Programme item/readiness foundations, and inactive
+Programme Operations contract
+Last updated: 2026-09-01
 
 These narratives test whether modules form a convention operating system rather
 than a collection of forms. Detailed acceptance scenarios will refine them.
@@ -52,9 +53,13 @@ passes integrated acceptance.
    `scheduling`, `venues`, and the complete current `workforce` journey.
    Recovery and export are mandatory pinned continuity behaviors, not broad
    permission to adopt every capability in a namesake module.
-3. Applications owns calls, collaborative proposals, private review, and
-   accountable decisions. Acceptance emits a typed receipt; Programme consumes
-   it idempotently into an operational item and evidence-backed readiness.
+3. Applications owns calls and collaborative proposals. A lead prepares shared
+   answers, each contributor owns their proposed-public profile and consent,
+   and every included collaborator acknowledges the same exact sealed revision
+   before the lead submits it. Applications later owns private review and
+   accountable decisions. Only an accepted transition emits a typed receipt;
+   Programme consumes it idempotently into an operational item, host
+   relationships, and evidence-backed readiness.
 4. Scheduling owns occurrences, public timing, candidate versions, conflicts,
    approval, and releases. Venues supplies approved capacity, availability,
    configuration, and physical occupancy without publishing a second Programme
@@ -180,39 +185,47 @@ physical or financial exception is explainable.
 This workflow is the detailed target for the accepted, inactive
 `programme_operations@1` profile; it is not yet mounted.
 
-1. Applications activates a reviewed call defining tracks, formats, questions,
-   review policy, content boundaries, consent, accessibility, collaboration,
-   retention, and decision dates.
-2. A host creates a private proposal, invites a co-host through an exact
-   purpose relationship, supplies proposed public copy, availability, and
-   technical or access needs, and retains every submitted revision.
-3. Applications runs staged review, recusal, optional identity minimization,
+1. Applications activates a call-domain definition with typed tracks, formats,
+   questions, contributor fields, review policy, content boundaries, consent,
+   collaboration, retention, and dates. Domain activation alone does not mount,
+   publish, or make the call discoverable.
+2. One accountable proposal lead selects the track, format, and contributor
+   roster. Accepted purpose-scoped collaborators may edit shared answers, but
+   each contributor alone revises their proposed-public profile and consent.
+   They are proposal collaborators, not Programme hosts or co-hosts.
+3. The lead seals one immutable revision linking the exact call schema,
+   selection, answer revisions or explicit absences, contributor roster,
+   contributor profile revisions, policies, and digest. Each included
+   collaborator acknowledges or declines that exact revision for themselves.
+   Reopening retains all prior evidence and requires a new seal. The lead may
+   submit only the current fully acknowledged revision.
+4. Applications runs staged review, recusal, optional identity minimization,
    moderation, revision requests, and a human accountable decision without
    exposing private review evidence to Programme or Scheduling.
-4. Acceptance emits one typed transition receipt. Programme idempotently owns
+5. Acceptance emits one typed transition receipt. Programme idempotently owns
    the accepted item, host relationships, reviewed public rendition, readiness
    evidence, and organizer-created core events.
-5. Scheduling creates explicit preparation, effective, and teardown occurrences
+6. Scheduling creates explicit preparation, effective, and teardown occurrences
    in a candidate. The planner sees service-day, Venue occupancy and capacity,
    host availability and overlap, accessibility, stale-source, and current
    staffing consequences before a move is retained.
-6. Programme staffing requirements call Workforce-owned commands. Linked draft
+7. Programme staffing requirements call Workforce-owned commands. Linked draft
    demand may follow a candidate change, but open or locked `ShiftDemand` and
    claimed or confirmed `ShiftCommitment` are never silently rewritten.
-7. The host reviews approved copy, call time, location, and host-visible
+8. The host reviews approved copy, call time, location, and host-visible
    readiness. Venue operators independently approve physical occupancy; the
    Venue record cannot publish a second Programme timetable.
-8. A person other than the last modifier approves the exact candidate, and a
+9. A person other than the last modifier approves the exact candidate, and a
    separate publisher atomically activates one release only after every
    required artifact validates.
-9. Public pages, host and volunteer run sheets, room and Department views,
+10. Public pages, host and volunteer run sheets, room and Department views,
    versioned APIs, iCalendar, signage source, and print layouts derive from the
    same release. Personal discovery uses an exact host relationship or retained
    Shift commitment, never attendee Participation.
-10. A later move or cancellation creates a successor candidate, previews
+11. A later move or cancellation creates a successor candidate, previews
     affected people, commitments, rooms, and outputs, and requests exact-version
     acknowledgement. Failure leaves the previous release wholly active.
-11. On site, current/next and run-sheet views expose approved timing, location,
+12. On site, current/next and run-sheet views expose approved timing, location,
     briefing, source age, confirmed commitments, and locked coverage. They do
     not claim check-in, absence, Shift actual time, dispute, or Shift handover
     before issue #24.

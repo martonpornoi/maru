@@ -12,6 +12,7 @@ from maru.accreditation.adoption import (
     OFFLINE_CHECK_IN_RELAY_ADAPTER,
 )
 from maru.applications.adoption import (
+    APPLICATION_PROGRAMME_SELF_ADAPTER,
     APPLICATION_SELF_ADAPTER,
     APPLICATIONS_ADOPTION_ADAPTERS,
     APPLICATIONS_ADOPTION_CONFLICT_SOURCES,
@@ -96,6 +97,7 @@ def _adapter(
 def test_owner_adapter_registries_are_complete_and_nonduplicating() -> None:
     """Expose every currently declared owner adapter exactly once."""
     expected_applications = {
+        APPLICATION_PROGRAMME_SELF_ADAPTER,
         APPLICATION_SELF_ADAPTER,
         *ELIGIBILITY_ADAPTER_CODES.values(),
         *SOURCE_ADAPTER_CODES.values(),
@@ -118,7 +120,7 @@ def test_owner_adapter_registries_are_complete_and_nonduplicating() -> None:
     }
 
     all_codes = [code for registry in _OWNER_ADAPTER_REGISTRIES for code in registry]
-    assert len(all_codes) == 26
+    assert len(all_codes) == 28
     assert len(set(all_codes)) == len(all_codes)
     assert all(
         code == descriptor.code

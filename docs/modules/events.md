@@ -3,9 +3,9 @@
 Status: Implemented edition aggregate, immutable full-convention and
 Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
-profile-scoped unified-shell context, and dormant Programme reference seams;
-Programme Operations remains inactive
-Last updated: 2026-08-31
+profile-scoped unified-shell context, and dormant Programme and Applications
+reference seams; Programme Operations remains inactive
+Last updated: 2026-09-01
 
 ## Purpose and requirements
 
@@ -175,6 +175,14 @@ capability catalog, reserved adapter descriptor, and event definition;
 Scheduling remains absent. Neither is executable under a current profile, and
 the Programme declarations are deliberately absent from both existing v1
 manifests.
+
+ADR 0082 adds dormant Applications-owned Programme capabilities, the
+`applications.self.programme_proposal@1` purpose descriptor,
+`applications.target.programme_item@1`, and two registered event names. Those
+declarations are also absent from both existing literal manifests, whose
+fingerprints remain unchanged. Call domain activation or proposal submission
+does not change an edition's profile, make `programme_operations@1` selectable,
+or authorize any current destination, effect, target adapter, or writer.
 
 Recovery and export are mandatory profile contracts rather than implied module
 adoption: version 1 must pin its continuity artifacts, regeneration, restore,
@@ -388,7 +396,8 @@ computed effective-access management, date-format preference, richer edition-
 local policy, and Programme Operations setup are not implemented. Edition
 creation inherits only visible locale
 defaults; it does not create or publish registration or any operational
-configuration. Nine dormant Programme capability declarations and minimized
+configuration. Nine dormant Programme capability declarations, dormant
+Applications-owned Programme call/proposal declarations, and minimized
 Identity/Events/Authorization reference seams now exist, but the accepted ADR
 0081 profile, setup route, destinations, current-profile effects, accepted-item
 adapter implementation, and user surfaces remain unavailable until their

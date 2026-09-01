@@ -1053,6 +1053,90 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"audit"}),
     ),
     Capability(
+        code="applications.manage_programme_calls",
+        description=(
+            "Configure, activate, retire, and succeed Applications-owned Programme "
+            "calls for one exact Department."
+        ),
+        maximum_scope=ScopeLevel.DEPARTMENT,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="applications.view_programme_proposal_self",
+        description=(
+            "View a Programme proposal through one's current lead, invitation, or "
+            "collaborator relationship."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {
+                "proposal_summary",
+                "selection",
+                "answers",
+                "contributors",
+                "contributor_profiles",
+                "revision_history",
+                "revision_responses",
+                "own_invitation",
+                "available_calls",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.edit_programme_proposal_self",
+        description=(
+            "Start a Programme proposal, revise shared draft answers and one's own "
+            "proposal-scoped contributor profile; lead-only commands govern "
+            "selection."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="applications.respond_programme_invitation_self",
+        description=(
+            "Accept or decline one's own current Programme proposal invitation."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="applications.manage_programme_proposal_self",
+        description=(
+            "Manage collaborators and immutable proposal revisions as a Programme "
+            "proposal lead."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="applications.submit_programme_proposal_self",
+        description=(
+            "Submit or withdraw one's own Programme proposal at an exact immutable "
+            "revision."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
         code="programme.view_private",
         description=(
             "View private working information for Programme items in one edition."
@@ -1303,7 +1387,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-08-31.1"
+POLICY_VERSION = "2026-09-01.1"
 
 
 def capability(code: str) -> Capability | None:

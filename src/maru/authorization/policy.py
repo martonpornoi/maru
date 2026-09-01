@@ -229,6 +229,18 @@ def _person_account_exists(account_id: UUID) -> bool:
     ).exists()
 
 
+def _active_verified_person_principal(account_id: UUID) -> Account | None:
+    try:
+        return Account.objects.filter(
+            id=account_id,
+            is_active=True,
+            email_verified_at__isnull=False,
+            account_kind=Account.Kind.PERSON,
+        ).first()
+    except (TypeError, ValueError, ValidationError):
+        return None
+
+
 def resolve_organization_target(
     *, organization_id: UUID
 ) -> ResolvedAuthorizationTarget | None:
@@ -598,6 +610,130 @@ def resolve_self_target(
         owner_account_id=principal.id,
         adoption_profile_code=base.adoption_profile_code,
         adoption_profile_version=base.adoption_profile_version,
+    )
+
+
+def decide_verified_principal_exact_department(
+    *,
+    principal_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_id: UUID,
+    capability_code: str,
+    requested_fields: frozenset[str] | None = None,
+    at: datetime | None = None,
+) -> PolicyDecision:
+    """Evaluate a verified person against one exact current Department.
+
+    Unlike the edition adapter, this seam intentionally preserves the
+    Department target. Ordinary policy therefore considers only a grant or
+    immutable role source whose exact scoped authority covers that Department;
+    reporting-tree descendants do not become implicit authority.
+
+    Parameters
+    ----------
+    principal_id : UUID
+        The exact opaque person-account identifier to evaluate.
+    organization_id : UUID
+        The organization expected to own the Department and edition.
+    edition_id : UUID
+        The exact event edition identifier that scopes the capability.
+    department_id : UUID
+        The exact non-retired Department identifier to authorize.
+    capability_code : str
+        The stable capability code required by the operation.
+    requested_fields : frozenset[str] | None, default=None
+        Optional code-owned fields requested by the caller.
+    at : datetime | None, default=None
+        Optional evaluation instant forwarded to the policy engine.
+
+    Returns
+    -------
+    PolicyDecision
+        The complete fail-closed Department-scoped policy decision.
+    """
+    principal = _active_verified_person_principal(principal_id)
+    if principal is None:
+        return PolicyDecision(
+            allowed=False,
+            fields=frozenset(),
+            obligations=frozenset(),
+            reason_code="account_inactive",
+        )
+    return decide(
+        principal=principal,
+        capability_code=capability_code,
+        resource=resolve_department_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+        ),
+        requested_fields=requested_fields,
+        at=at,
+    )
+
+
+def decide_verified_principal_exact_self(
+    *,
+    principal_id: UUID,
+    owner_account_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    capability_code: str,
+    requested_fields: frozenset[str] | None = None,
+    at: datetime | None = None,
+) -> PolicyDecision:
+    """Evaluate a verified person against an exact owner-equals-self target.
+
+    Applications must first prove the proposal lead or collaborator
+    relationship from its own current rows. This domain-neutral seam then
+    independently reloads Identity, requires the claimed owner to be the same
+    principal, resolves the exact edition, and evaluates the non-persistable
+    self capability.
+
+    Parameters
+    ----------
+    principal_id : UUID
+        The exact opaque person-account identifier to evaluate.
+    owner_account_id : UUID
+        The relationship owner proven by the calling bounded context.
+    organization_id : UUID
+        The organization expected to own the edition.
+    edition_id : UUID
+        The exact event edition identifier that scopes the capability.
+    capability_code : str
+        The stable relationship-derived self capability.
+    requested_fields : frozenset[str] | None, default=None
+        Optional code-owned fields requested by the caller.
+    at : datetime | None, default=None
+        Optional evaluation instant forwarded to the policy engine.
+
+    Returns
+    -------
+    PolicyDecision
+        The complete fail-closed self-scoped policy decision.
+    """
+    principal = _active_verified_person_principal(principal_id)
+    if principal is None:
+        return PolicyDecision(
+            allowed=False,
+            fields=frozenset(),
+            obligations=frozenset(),
+            reason_code="account_inactive",
+        )
+    resource = None
+    if owner_account_id == principal.id:
+        resource = resolve_self_target(
+            principal=principal,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+    return decide(
+        principal=principal,
+        capability_code=capability_code,
+        resource=resource,
+        requested_fields=requested_fields,
+        at=at,
     )
 
 

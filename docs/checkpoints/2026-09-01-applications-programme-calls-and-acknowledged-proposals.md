@@ -1,0 +1,156 @@
+# Checkpoint: Applications Programme calls and acknowledged proposals
+
+- Date: 2026-09-01
+- Issue: [#63](https://github.com/martonpornoi/maru/issues/63)
+- Parent umbrella: [#48](https://github.com/martonpornoi/maru/issues/48)
+- Phase: Progressive adoption and pre-production release evaluation
+- Related requirements: IDN-014, PRG-001, PRG-002, PRG-006, PRG-008,
+  PRG-009, AUD-001, AUD-003, AUD-005, PRI-001, NFR-002, NFR-003, NFR-008
+  through NFR-010, and NFR-013
+- Related decision: ADR 0082
+
+## Outcome
+
+Maru now has a dormant Applications-owned Programme-call and collaborative-
+proposal kernel. Programme calls facet the existing typed definition aggregate;
+proposals facet the existing submission and reuse append-only answer revisions.
+One submission aggregate version serializes every proposal mutation.
+
+One accountable lead manages selection, roster, sealing, reopening, submission,
+and withdrawal. Accepted collaborators may edit shared applicant-writable
+answers, while each contributor alone owns proposed-public profile and consent
+revisions. The exact immutable seal links call schema, selection, answer
+revisions or deliberate absences, included roster, contributor profile
+revisions, policies, predecessor, and digest. Each included collaborator
+acknowledges or declines that exact seal only for themselves.
+
+This is not a usable Programme workflow. No route, API, OpenAPI operation,
+template, navigation destination, Django admin writer, worker, handler, delivery,
+review, decision, target record, Programme item, host relationship, public copy,
+schedule, staffing, publication, setup, or profile activation is added. Both
+current literal adoption-profile fingerprints remain unchanged.
+
+## Decisions
+
+- Applications extends its existing form and submission aggregates instead of
+  building a parallel Programme form engine.
+- Proposal collaboration is a purpose-scoped Applications relationship, not a
+  Programme host or co-host relationship. Hosting begins only after a later
+  reviewed and accepted Programme transition.
+- The submission aggregate version is the sole cursor for answers, selection,
+  roster, profiles, invitation transitions, seals, responses, reopening,
+  submission, and withdrawal.
+- Collaborator states are invited, accepted, declined, left, and removed.
+  Expiry is derived; reinvitation appends a reasoned new invitation.
+- Sealing freezes exact source revisions. Responses advance the aggregate
+  version but do not rewrite the seal, and the lead cannot respond for another
+  contributor.
+- Every generic review/decision/acceptance/target seam denies or omits the
+  reserved `programme_item` kind until its later child. PostgreSQL rejects a
+  legacy Programme `ApplicationTargetRecord`.
+- Successful commands couple state, a dedicated Programme receipt and version
+  proof, minimized audit, dormant event, and outbox evidence atomically. The
+  dedicated receipt does not inherit the generic Applications runtime writer.
+- New relations are production-runtime `SELECT`-only and integrity functions
+  owner-only. Installation is schema readiness, not adoption.
+- The current manifest fingerprints remain literal and unchanged:
+  `full_convention@1` is
+  `e0081b116f8af045fd5a9195c1f4f3295b20d3c57163e8ef0a3547f86861df81`;
+  `workforce_only@1` is
+  `66ad0e96a641d99e163d735d612dd2138c96ef0af619cfac57839695d09c2ad0`.
+- Preview-first call/proposal import is the immediate successor. Structured
+  review/decisions and the accepted Programme adapter follow; Programme hosts
+  begin only after that accepted transition.
+
+## Changed areas
+
+- Applications call/proposal models, lifecycle, commands, queries, inputs,
+  authorization/adoption descriptors, event schemas, legacy-target denial,
+  migrations, database guards, dedicated receipts, and writer boundary.
+- Authorization capability vocabulary and exact-profile admission checks;
+  Events adoption catalogs; Identity/Workforce/Events public reference seams;
+  Effects event registry; runtime-role and readiness contracts.
+- Product requirements, ADR 0082, domain/module/API/event/security/privacy/
+  audit/operations documentation, page/workflow/adoption contracts, roadmap,
+  backlog, production ledger, delivery plan, changelog, and current handoff.
+
+## Verification
+
+Local pre-delivery verification on the working tree passed:
+
+- The complete non-test repository gate passed, including package and
+  dependency checks, OpenAPI and generated TypeScript verification, 33
+  frontend tests, and the production frontend build.
+- Documentation-policy validation covered 370 Markdown files, four repository
+  skills, and 213 requirement IDs.
+- Ruff format verification covered all 767 files and Ruff lint passed. MyPy
+  passed across 411 source files.
+- PyDocLint passed across `src` and `scripts`; the custom docstring validator
+  passed across 425 source files; and warning-fatal Sphinx/AutoAPI completed
+  without warnings.
+- The DB-free unit suite passed all 2,568 tests.
+- The affected PostgreSQL selection passed all 72 tests, including Applications
+  Programme integrity, service, legacy-seam, populated-downgrade, and function-
+  ACL reverse/reapply coverage.
+- A fresh PostgreSQL invitation-expiry boundary selection passed all three
+  tests, and the selected fresh runtime-role/readiness scope passed all 62
+  tests.
+- Django migration drift checking reported no model changes; the only
+  diagnostic was the expected local `identity.W001` missing-invitation-key
+  warning.
+- Clean-tree exact-commit certification remains pending for the final committed
+  tree and is not claimed by this pre-commit checkpoint.
+- Protected pull-request acceptance remains pending and is authoritative only
+  for the exact pushed head.
+
+The protected pull-request result is authoritative only for the exact pushed
+head. Do not replace local evidence with a hosted status from another revision.
+
+## Data, migration, and deployment notes
+
+- Applications `0004` is additive and creates no row. `0005` is the terminal
+  consolidated old-plus-new function/trigger catalog required by readiness.
+  `0006` refuses populated downgrade before protected evidence can be removed.
+- Authorization's paired additive migration adds only closed capability scope
+  vocabulary and its populated downgrade fence. It creates no grant or role.
+- Empty reversal is exact. Populated reversal refuses while preserving schema,
+  ACL, trigger, receipt, audit, event/outbox, and migration evidence.
+- Every new `applications_programme*` relation is `SELECT`-only for the
+  production runtime role; the dedicated receipt does not receive the generic
+  Applications receipt's `INSERT` grant.
+- Recovery fixes forward or restores Applications, Authorization, Audit,
+  Effects event/outbox, and migration history from one mutually consistent
+  point. It never fabricates a response, seal, review, decision, target,
+  Programme item, host, schedule, staffing record, or publication.
+
+## Known risks and incomplete work
+
+- The schema is intentionally unusable under current profiles. No browser or
+  API acceptance exists and no production personal-data use is approved.
+- Active-use purpose/lawful-basis decisions, field retention and disposal,
+  subject rights, legal holds, backup aging, deployment, recovery rehearsal,
+  accessibility, load, and owner acceptance remain gates.
+- Import must preserve exact mappings and provenance without fabricating seals,
+  acknowledgements, review, decisions, or accepted Programme evidence.
+- The reserved target kind remains dangerous if any future generic seam omits
+  the explicit denial. Static and behavior-level allowlist tests remain
+  mandatory as the existing Applications surface evolves.
+- Workforce Department retirement must reassign a draft call or retire an
+  active call first. Retiring the owner first blocks organizer management and
+  new starts while intentionally preserving existing proposal self history;
+  [#64](https://github.com/martonpornoi/maru/issues/64) owns the required
+  preflight and governed recovery.
+
+## Recommended next actions
+
+1. Add preview-first import for calls and proposals through the public
+   Applications commands, with mapping, validation, duplicate policy,
+   provenance, dry run, and explicit commit.
+2. Add Programme-specific staged review, recusal/conflict, revision requests,
+   accountable decisions, and the exact accepted revision contract.
+3. Implement the idempotent Applications-to-Programme adapter; only its
+   accepted transition may create a Programme item and host/co-host purpose
+   relationships.
+4. Continue through Scheduling, Venue integration, Workforce staffing,
+   release/outputs, on-site continuity, profile activation, and integrated
+   browser/recovery acceptance in umbrella order.

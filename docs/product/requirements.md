@@ -1,7 +1,7 @@
 # Product requirements
 
 Status: Baseline  
-Last updated: 2026-08-30
+Last updated: 2026-09-01
 
 This document defines stable product requirements. Identifiers are used by
 architecture documents, implementation issues, tests, and release notes.
@@ -1089,9 +1089,12 @@ architecture documents, implementation issues, tests, and release notes.
 
 - **PRG-001 — Calls for participation:** Editions must define calls, tracks,
   formats, questions, deadlines, public fields, consent, and content policy.
-- **PRG-002 — Collaborative proposals:** Submitters may invite co-hosts,
-  retain drafts, receive requests, submit revisions, and control which profile
-  information is proposed for publication.
+- **PRG-002 — Collaborative proposals:** One accountable proposal lead may
+  invite purpose-scoped proposal collaborators, retain drafts, receive
+  requests, seal and submit exact revisions, and control which profile
+  information is proposed for publication. Proposal collaboration does not
+  create a Programme host or co-host relationship; those relationships begin
+  only after an accepted transition into Programme.
 - **PRG-003 — Structured review:** Review stages must support configurable
   rubrics, conflicts of interest, optional anonymization, independent scoring,
   discussion, moderation, and accountable decisions.
@@ -1116,6 +1119,20 @@ architecture documents, implementation issues, tests, and release notes.
   history. Host and co-host access uses explicit item relationships and creates
   no Participation, Registration, payment, membership, or volunteer
   relationship.
+- **PRG-009 — Exact proposal authorship and acknowledgement:** Programme calls
+  and proposals remain Applications-owned facets of one versioned definition
+  and submission. Accepted, active-person collaborators may edit shared
+  applicant-writable answers, while the lead alone owns selection and roster
+  changes and each contributor alone owns their proposed-public profile and
+  consent. The lead seals one immutable revision that identifies the exact
+  call schema, selections, answer revisions or deliberate absences, contributor
+  roster, profile revisions, policies, and digest. Every included collaborator
+  must acknowledge or decline that exact revision for themselves before the
+  lead may submit it. All proposal mutations use one optimistic aggregate
+  version; reopening retains prior sealed revisions and responses and requires
+  a new seal. Invitation, proposal, acknowledgement, withdrawal, or submission
+  creates no Participation, Registration, payment, attendance, volunteer,
+  Programme item, review decision, publication, schedule, or host relationship.
 
 ### Governance, planning, and readiness
 

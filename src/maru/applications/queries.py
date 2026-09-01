@@ -9,6 +9,10 @@ from django.utils import timezone
 
 from maru.applications.adoption import profile_allows_application_self
 from maru.applications.commands import ApplicationAuthorizationDenied, _reviewer_basis
+from maru.applications.legacy_targets import (
+    LEGACY_APPLICATION_TARGET_KINDS,
+    is_legacy_application_target,
+)
 from maru.applications.models import (
     ApplicationAnswerRevision,
     ApplicationDefinition,
@@ -189,6 +193,7 @@ def authorize_application_self_submission_api_scope(
         organization_id=organization_id,
         edition_id=edition_id,
         account_id=actor.id,
+        definition__target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
     ).exists():
         raise ApplicationAuthorizationDenied
 
@@ -230,6 +235,7 @@ def authorize_application_review_submission_api_scope(
             id=submission_id,
             organization_id=organization_id,
             edition_id=edition_id,
+            definition__target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .first()
     )
@@ -278,6 +284,7 @@ def definition_workspace(
         ApplicationDefinition.objects.filter(
             organization_id=organization_id,
             edition_id=edition_id,
+            target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .prefetch_related(
             "sections__questions",
@@ -314,9 +321,14 @@ def application_starters(
         edition_id=edition_id,
         capability_code="applications.manage_definitions",
     )
-    return starter_catalog_for_profile(
-        profile_code=edition.adoption_profile_code,
-        profile_version=edition.adoption_profile_version,
+    return tuple(
+        starter
+        for starter in starter_catalog_for_profile(
+            profile_code=edition.adoption_profile_code,
+            profile_version=edition.adoption_profile_version,
+        )
+        if starter.is_external
+        or is_legacy_application_target(str(starter.target_adapter_kind))
     )
 
 
@@ -361,6 +373,7 @@ def definition_detail(
             id=definition_id,
             organization_id=organization_id,
             edition_id=edition_id,
+            target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .select_related("created_by", "activated_by", "retired_by")
         .prefetch_related(
@@ -404,6 +417,7 @@ def available_applications(
             organization_id=organization_id,
             edition_id=edition_id,
             status=ApplicationDefinitionStatus.ACTIVE,
+            target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
             opens_at__lte=now,
             closes_at__gt=now,
         )
@@ -451,6 +465,7 @@ def my_submissions(
             organization_id=organization_id,
             edition_id=edition_id,
             account_id=actor.id,
+            definition__target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .select_related("definition")
         .prefetch_related(
@@ -505,6 +520,7 @@ def my_submission_detail(
             organization_id=organization_id,
             edition_id=edition_id,
             account_id=actor.id,
+            definition__target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .select_related("definition")
         .prefetch_related(
@@ -545,7 +561,10 @@ def my_application_editions(*, actor: Account) -> tuple[EventEdition, ...]:
         raise ApplicationAuthorizationDenied
     now = timezone.now()
     own_scopes = set(
-        ApplicationSubmission.objects.filter(account_id=actor.id)
+        ApplicationSubmission.objects.filter(
+            account_id=actor.id,
+            definition__target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
+        )
         .values_list("organization_id", "edition_id")
         .distinct()[:MAX_PERSONAL_EDITION_CANDIDATES]
     )
@@ -555,6 +574,7 @@ def my_application_editions(*, actor: Account) -> tuple[EventEdition, ...]:
             status=ApplicationDefinitionStatus.ACTIVE,
             opens_at__lte=now,
             closes_at__gt=now,
+            target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .order_by("organization_id", "edition_id")
         .values_list("organization_id", "edition_id")
@@ -600,6 +620,7 @@ def my_application_editions(*, actor: Account) -> tuple[EventEdition, ...]:
             status=ApplicationDefinitionStatus.ACTIVE,
             opens_at__lte=now,
             closes_at__gt=now,
+            target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         ).select_related("edition")
         for definition in definitions:
             if (
@@ -707,6 +728,7 @@ def review_queue(
         ApplicationSubmission.objects.filter(
             organization_id=organization_id,
             edition_id=edition_id,
+            definition__target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
             state__in=(
                 ApplicationState.SUBMITTED,
                 ApplicationState.UNDER_REVIEW,
@@ -790,6 +812,7 @@ def review_submission_detail(
             id=submission_id,
             organization_id=organization_id,
             edition_id=edition_id,
+            definition__target_adapter_kind__in=LEGACY_APPLICATION_TARGET_KINDS,
         )
         .select_related("definition", "account")
         .prefetch_related(

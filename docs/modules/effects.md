@@ -1,8 +1,8 @@
 # Effects module
 
 Status: Implemented V02 worker boundary, exact-profile delivery guards, and
-value-minimized aggregate facts
-Last updated: 2026-08-31
+value-minimized aggregate facts, including dormant Applications Programme facts
+Last updated: 2026-09-01
 
 ## Purpose and requirements
 
@@ -59,6 +59,17 @@ built-in handler. A real current-profile Programme command therefore fails at
 the delivery-adoption check before event or outbox persistence. Future
 activation must add the exact route and matching handler together; registering
 the event name alone is not execution permission.
+
+It also includes dormant `applications.programme_call.changed.v1` and
+`applications.programme_proposal.changed.v1` schemas. Their payloads contain
+only the opaque call/proposal aggregate identifier, closed action,
+lifecycle/state and layer, and exact aggregate-version facts. They never carry
+call prose, answers, profile values, consent, invitation addresses or reasons,
+contributor rosters, sealed snapshot content, acknowledgement comments, review
+evidence, or downstream target identifiers.
+Neither current manifest pins a delivery route and no built-in handler is
+installed. A current-profile command therefore fails before domain-event or
+outbox persistence; registration alone creates no notification or delivery.
 
 Handlers receive the domain-event UUID as their idempotency key. Delivery is
 at least once: a provider timeout or worker crash can cause a repeat, so every

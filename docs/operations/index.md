@@ -33,6 +33,7 @@ or permission to use production personal data.
   evidence without selecting production infrastructure.
 - [Deployment and service objectives](deployment-and-service-objectives.md)
 - [Observability and readiness](observability-and-readiness.md)
+- [Applications Programme calls/proposals migration and recovery](applications-programme-calls-and-proposals-migration-and-recovery.md)
 - [Effects worker](effects-worker-runbook.md)
 - [GitHub Pages publication](github-pages-publication.md)
 - [Public repository readiness](public-repository-readiness.md)
@@ -69,6 +70,7 @@ synthetic-oci-runtime-rehearsal
 synthetic-oci-static-delivery-rehearsal
 deployment-and-service-objectives
 observability-and-readiness
+applications-programme-calls-and-proposals-migration-and-recovery
 effects-worker-runbook
 github-pages-publication
 public-repository-readiness

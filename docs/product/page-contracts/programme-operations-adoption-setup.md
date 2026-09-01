@@ -1,18 +1,19 @@
 # Set up Programme Operations contract
 
-- Status: Accepted contract, runtime inactive; a dormant Programme private
-  item/readiness foundation and its unpinned catalogs are installed, while the
-  profile, route, destinations, current-profile writers/effects, adapter
-  implementation, and Scheduling namespace remain absent
+- Status: Accepted contract, runtime inactive; dormant Applications-owned
+  Programme call/proposal and Programme-owned item/readiness foundations are
+  installed, while the profile, route, destinations, current-profile
+  writers/effects, adapter implementation, and Scheduling namespace remain
+  absent
 - Reserved route: `/admin/platform/setup/programme-operations/` (deliberately
   non-routable until the complete integrated profile is implemented and
   accepted)
 - Requirements: IDN-011, IDN-012, IDN-014, EVT-001, EVT-002, EVT-005 through
-  EVT-007, HR-009, HR-013 through HR-015, PRG-001 through PRG-008, SCH-001
+  EVT-007, HR-009, HR-013 through HR-015, PRG-001 through PRG-009, SCH-001
   through SCH-012, OPS-001, OPS-002, OPS-005, OPS-008, OPS-009, INT-005,
   INT-007, INT-008, UX-005 through UX-008, UX-019, UX-020, UX-027, UX-029,
   UX-030, NFR-003, NFR-005, NFR-008, NFR-009, and NFR-013
-- Decisions: ADRs 0051, 0053, 0078, 0080, and 0081
+- Decisions: ADRs 0051, 0053, 0078, 0080, 0081, and 0082
 
 ## Purpose and primary user
 
@@ -28,11 +29,16 @@ then use purpose-bounded workspaces. None of those relationships makes a person
 an attendee or creates edition Participation.
 
 This page describes a future composite capability. The installed dormant
-Programme schema and catalogs are not adoption. No current page, API, navigation
-entry, setup command, profile choice, or edition database value may imply that
+Applications Programme-call/proposal and Programme item/readiness schemas and
+catalogs are not adoption. No current page, API, navigation entry, setup
+command, profile choice, or edition database value may imply that
 `programme_operations@1` is executable. The reserved route must return the
 ordinary safe not-found response until the complete manifest and its runtime
 guards are implemented and validated.
+
+The dormant Programme private item/readiness foundation retains the exact
+Issue #61 containment contract; Issue #63 adds a separately dormant
+Applications intake foundation without weakening it.
 
 ## Immutable profile manifest
 
@@ -65,9 +71,12 @@ Each module keeps one source of truth:
 
 - **Events** owns edition identity, dates, time zone, lifecycle, and the
   immutable adoption-profile code and version.
-- **Applications** owns call definitions, private proposals, collaborative
-  revisions, review plans, reviewer conflicts, moderation, decisions,
-  applicant-visible conversations, and the typed accepted-target receipt.
+- **Applications** owns call definitions, typed tracks/formats/contributor
+  fields, private collaborative proposals, shared answer revisions,
+  contributor-owned proposed-public profiles and consent, exact sealed
+  revisions and included-collaborator acknowledgements. It later owns review plans,
+  reviewer conflicts, moderation, decisions, applicant-visible conversations,
+  and the typed accepted-target receipt. Proposal collaborators are not hosts.
 - **Programme** owns the accepted Programme item, host and co-host purpose
   relationships, readiness evidence, approved public renditions, and
   organizer-created core events. It never imports private review answers as
@@ -130,8 +139,10 @@ On successful activation, the accepted owner sequence is:
 
 ```text
 Programme structure
-  -> calls and organizer-created items
+  -> calls and acknowledged proposal revisions
+  -> preview-first import
   -> review and decisions
+  -> accepted Programme items and host relationships
   -> accepted-item readiness
   -> timetable candidates and conflicts
   -> volunteer coverage
@@ -144,8 +155,17 @@ The profile must never advertise a dead end to a Programme or Scheduling route.
 
 ## Purpose accounts and personal discovery
 
+A Programme proposal lead or collaborator is an Applications-owned purpose.
+Accepted collaborators may edit shared applicant-writable answers, while the
+lead alone manages selection/roster/seal/submission and each contributor alone
+manages their proposed-public profile and consent. Each included collaborator
+alone acknowledges or declines the exact seal and own included profile
+revision; the lead's attributable seal is the lead action. Invitation,
+acknowledgement, submission, or withdrawal creates no Programme host or co-host relationship.
+
 A host or co-host receives one exact Programme-item relationship after their
-own invitation and acceptance. A reviewer receives one named or immutable-role
+own invitation and acceptance following the later accepted Programme
+transition. A reviewer receives one named or immutable-role
 review assignment. A volunteer uses Workforce Assignment, Availability, and
 ShiftCommitment evidence. These are separate purposes even when the same
 platform account holds more than one.
@@ -313,10 +333,12 @@ or relocation-pending overlay before degraded display.
 
 ## States and safe failure
 
-- **Dormant foundation:** private Programme tables, exact-edition capability
-  declarations, one event schema, and one reserved adapter descriptor exist,
-  but no route, link, profile option, current-profile writer/effect route,
-  destination, or Scheduling continuation exists.
+- **Dormant foundations:** Applications call/proposal and private Programme
+  item/readiness tables, exact-edition capability declarations, dormant event
+  schemas, purpose/target descriptors, and one reserved inbound adapter
+  descriptor exist, but no route, link, profile option, current-profile
+  writer/effect route, destination, review/target transition, or Scheduling
+  continuation exists.
 - **Empty setup:** explain the composite boundary, excluded modules, and
   existing-authority requirements before collecting foundation facts.
 - **Existing foundation:** show only authorized reusable organizations,
@@ -361,7 +383,7 @@ protected pull-request gate remain authoritative for this documentation slice.
 
 Runtime successors require focused unit, PostgreSQL, API, frontend, browser,
 accessibility, concurrency, migration, recovery, and complete synthetic
-setup-to-on-site acceptance. Passing this contract or its dormant Programme
+setup-to-on-site acceptance. Passing this contract or either dormant domain
 child does not activate the profile, expose a usable Programme workflow,
 approve production data, or certify
 deployment, owner acceptance, recovery, or production readiness.

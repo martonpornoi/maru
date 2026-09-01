@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -139,7 +139,8 @@ creates no Programme or cross-module data.
 Documentation now defines ownership, layer classifications, retention and
 recovery, capability/query ceilings, the future Applications seam, and the
 difference between readiness evidence, content approval, Scheduling release,
-and publication. Calls, accepted-item ingestion, hosts, interactive Scheduling,
+and publication. Applications-owned calls/proposals now have their own dormant
+successor kernel, but accepted-item ingestion, hosts, interactive Scheduling,
 staffing, release, on-site continuity, setup/profile activation, and browser
 acceptance remain later children.
 
@@ -147,9 +148,95 @@ Focused local verification is recorded in the
 [Programme item/readiness checkpoint](../checkpoints/2026-08-31-programme-item-readiness-foundation.md).
 Clean-tree exact-commit certification and protected exact-head pull-request
 acceptance remain separate authoritative delivery evidence and must pass before
-merge. The smallest next Programme child is calls, purpose-scoped host/co-host
-collaboration, and preview-first import while the composite profile remains
-inactive.
+merge. Issue #63 completes the dormant calls/proposal child without creating
+hosts. The smallest next Programme child is preview-first call/proposal import
+while the composite profile remains inactive.
+
+## Dormant Applications Programme calls and acknowledged proposals
+
+Issue [#63](https://github.com/martonpornoi/maru/issues/63), the fourth native
+child of Programme Operations umbrella
+[#48](https://github.com/martonpornoi/maru/issues/48), adds the dormant
+Applications-owned intake kernel contracted by ADR 0082 and PRG-009. A
+`ProgrammeCall` facets one typed `ApplicationDefinition`; a
+`ProgrammeProposal` facets one `ApplicationSubmission` and reuses existing
+append-only `ApplicationAnswerRevision` history. Typed tracks, formats, and
+contributor fields extend the definition rather than creating a second form
+engine.
+
+One accountable lead owns selection, roster, seal, reopen, submit, and
+withdrawal. Accepted proposal collaborators may edit shared applicant-writable
+answers, while each contributor alone appends their proposed-public profile and
+consent and each included collaborator alone acknowledges or declines the exact
+seal. The lead's attributable seal is the lead action. Invitation transitions
+are append-only; expiry is derived, cannot follow the applicant edit deadline,
+and reinvitation retains the old evidence. Proposal collaboration creates no
+Programme host or co-host relationship.
+
+Every proposal mutation advances the submission's sole aggregate version. One
+immutable seal links the exact definition/call schema, selection revision,
+answer revision or explicit absence for each applicable question, included
+roster, exact contributor-profile revisions, policy versions, predecessor, and
+digest. Each included collaborator acknowledges or declines that exact revision
+only for themselves. Responses advance the aggregate version without changing
+the seal. Reopening retains old seals/responses and requires a new seal.
+
+The `programme_item` target kind and purpose/target descriptors are reserved,
+but every generic Applications review, decision, acceptance, target-record,
+query, discovery, and adapter seam denies or omits them. Submission creates no
+review, decision, target, Programme item, host, public copy, occurrence, Shift,
+schedule, or publication. Preview-first call/proposal import is the immediate
+successor; structured review/decisions and the accepted Programme adapter
+follow. Only that later accepted transition may create Programme-owned host or
+co-host relationships.
+
+Successful dormant commands couple state to a dedicated Applications Programme
+receipt/version proof, minimized audit, registered dormant event, and
+transactional outbox record. The dedicated receipt does not widen the existing
+generic receipt's runtime writer. Applications migrations add the empty schema,
+install one consolidated old-plus-new function/trigger catalog, and fence
+populated downgrade. Every new relation is runtime `SELECT`-only and integrity
+functions are owner-only. Both current literal profile fingerprints remain
+unchanged (`full_convention@1`:
+`e0081b116f8af045fd5a9195c1f4f3295b20d3c57163e8ef0a3547f86861df81`;
+`workforce_only@1`:
+`66ad0e96a641d99e163d735d612dd2138c96ef0af619cfac57839695d09c2ad0`),
+so no route, API/OpenAPI operation, UI, navigation, writer, handler, delivery,
+or profile activation exists.
+
+The durable contract, migration/recovery procedure, page non-surface, and exact
+non-goals are documented across requirements, ADR 0082, module/security/
+operations docs, and the
+[Issue #63 checkpoint](../checkpoints/2026-09-01-applications-programme-calls-and-acknowledged-proposals.md).
+
+Workforce Department retirement must reassign a draft call or retire an active
+call while its owner is still current. If the owner is retired first, new
+starts and organizer management fail closed while existing proposal subjects
+retain only their lifecycle-permitted self access. The required retirement
+preflight and governed recovery are bounded by
+[#64](https://github.com/martonpornoi/maru/issues/64) and remain required before
+Programme Operations activation.
+
+Local pre-delivery verification is green. The complete non-test repository
+gate passed, including package and dependency checks, OpenAPI and generated
+TypeScript verification, 33 frontend tests, and the production frontend build.
+Documentation-policy validation covered 370 Markdown files, four repository
+skills, and 213 requirement IDs. Ruff format verification covered all 767
+files and Ruff lint passed; MyPy passed across 411 source files; PyDocLint
+passed across `src` and `scripts`; and the custom docstring validator passed
+across 425 source files. Warning-fatal Sphinx/AutoAPI completed without
+warnings.
+
+The DB-free unit suite passed all 2,568 tests. The affected PostgreSQL
+selection passed all 72 tests; a fresh PostgreSQL invitation-expiry boundary
+selection passed all three tests; and the selected fresh runtime-role/readiness
+scope passed all 62 tests. Django migration drift checking reported no model
+changes; the only diagnostic was the expected local `identity.W001`
+missing-invitation-key warning.
+
+Clean-tree exact-commit certification remains pending for the final committed
+tree. Protected pull-request acceptance remains authoritative only for the
+exact pushed head and is not claimed here.
 
 ## Exact adoption-manifest enforcement
 
@@ -1046,10 +1133,11 @@ support branch, a deployment, or production readiness.
 ## Smallest sensible next actions
 
 1. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48) with
-   Programme calls, purpose-scoped host/co-host collaboration, and preview-
-   first import while preserving the inactive exact-profile boundary.
-2. Continue sequentially through Applications review,
-   decisions and the real Programme adapter; Scheduling core and accessible
+   preview-first Programme call/proposal import while preserving the inactive
+   exact-profile boundary and exact sealed evidence.
+2. Continue sequentially through Applications review and decisions, then the
+   real Programme adapter and post-acceptance host/co-host relationships;
+   Scheduling core and accessible
    editor; Workforce staffing projections; atomic release and outputs; and
    on-site continuity/export.
 3. Only after those mandatory continuations exist, implement the atomic,
@@ -1085,7 +1173,7 @@ the management-shell, Position, Assignment, Availability, and Shift page
 contracts, the Workforce-only adoption setup contract and runbook, the
 [Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md),
 the Applications, Events, Venues, and Workforce module contracts, and ADRs
-0019/0028/0039/0041/0049/0051/0053/0055/0075 through 0081. Use only synthetic data.
+0019/0028/0039/0041/0049/0051/0053/0055/0075 through 0082. Use only synthetic data.
 Preserve exact organization and edition scope, authorization
 before disclosure, My Maru/Administration separation, private Availability,
 independent confirmation, privacy-minimized self-withdrawal, canonical lock

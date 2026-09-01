@@ -153,6 +153,61 @@ GRANT SELECT ON TABLE
     public.programme_programmecommandreceipt
     TO maru_runtime;
 
+-- Applications issue #63 adds a dormant Programme-call and collaborative-
+-- proposal kernel without mounting a caller or widening either current
+-- profile. These relations are stricter than the existing mounted Applications
+-- schema: the runtime login may inspect them for readiness only. Integrity
+-- functions remain owner-only and the dedicated command receipt does not gain
+-- the generic Applications receipt's runtime INSERT path.
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.applications_programmecall,
+    public.applications_programmecalltrack,
+    public.applications_programmecallformat,
+    public.applications_programmecallcontributorfield,
+    public.applications_programmeproposal,
+    public.applications_programmeproposalselectionrevision,
+    public.applications_programmeproposalcollaborator,
+    public.applications_programmeproposalcollaboratortransition,
+    public.applications_programmeproposalcontributorprofilerevision,
+    public.applications_programmeproposalrevision,
+    public.applications_programmeproposalrevisionanswer,
+    public.applications_programmeproposalrevisioncontributor,
+    public.applications_programmeproposalrevisionresponse,
+    public.applications_programmecommandreceipt
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.applications_programmecall,
+    public.applications_programmecalltrack,
+    public.applications_programmecallformat,
+    public.applications_programmecallcontributorfield,
+    public.applications_programmeproposal,
+    public.applications_programmeproposalselectionrevision,
+    public.applications_programmeproposalcollaborator,
+    public.applications_programmeproposalcollaboratortransition,
+    public.applications_programmeproposalcontributorprofilerevision,
+    public.applications_programmeproposalrevision,
+    public.applications_programmeproposalrevisionanswer,
+    public.applications_programmeproposalrevisioncontributor,
+    public.applications_programmeproposalrevisionresponse,
+    public.applications_programmecommandreceipt
+    FROM PUBLIC;
+GRANT SELECT ON TABLE
+    public.applications_programmecall,
+    public.applications_programmecalltrack,
+    public.applications_programmecallformat,
+    public.applications_programmecallcontributorfield,
+    public.applications_programmeproposal,
+    public.applications_programmeproposalselectionrevision,
+    public.applications_programmeproposalcollaborator,
+    public.applications_programmeproposalcollaboratortransition,
+    public.applications_programmeproposalcontributorprofilerevision,
+    public.applications_programmeproposalrevision,
+    public.applications_programmeproposalrevisionanswer,
+    public.applications_programmeproposalrevisioncontributor,
+    public.applications_programmeproposalrevisionresponse,
+    public.applications_programmecommandreceipt
+    TO maru_runtime;
+
 -- Workforce adoption setup and Organization structure receipts are append-only
 -- runtime evidence. Structure controls are optimistic-concurrency aggregates
 -- that may be inserted and advanced, but never deleted, by runtime. REFERENCES

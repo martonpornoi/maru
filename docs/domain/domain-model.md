@@ -1,7 +1,8 @@
 # Conceptual domain model
 
-Status: Baseline plus dormant Programme foundation; composite runtime absent
-Last updated: 2026-08-31
+Status: Baseline plus dormant Programme and Applications intake foundations;
+composite runtime absent
+Last updated: 2026-09-01
 
 This model names stable concepts and ownership boundaries. It is not a promise
 that every concept becomes one Django model or database table.
@@ -173,11 +174,28 @@ pipeline state, schema-versioned answers, collaborative revisions,
 conversation, review assignments, rubric results, conflicts, moderation,
 decisions, and appeals. Review visibility is explicit per field and stage.
 
-Acceptance produces one immutable typed target receipt. It does not directly
-create or mutate a Programme item, Shift, role, Participation row, Venue
-booking, schedule occurrence, or public page. The target module consumes that
-receipt idempotently through its public adapter and keeps the private
-Applications evidence behind its original boundary.
+A Programme call is a one-to-one facet of an Application definition. Its
+tracks, formats, and contributor fields extend the existing typed form contract
+rather than creating a second engine. A Programme proposal is a one-to-one
+facet of an Application submission and reuses `ApplicationAnswerRevision`.
+One submission aggregate version serializes shared answers, lead-owned
+selection and roster, contributor-owned profile revisions and consent,
+append-only invitation transitions, sealing, collaborator responses,
+reopening, submission, and withdrawal.
+
+The lead seals one immutable revision that links the exact call schema,
+selection, answer revision or explicit absence per applicable question,
+contributor roster, contributor profile revisions, policies, and digest. Each
+included collaborator acknowledges or declines only for themselves and that
+exact revision. Proposal collaboration remains an Applications purpose
+relationship and is not Programme hosting.
+
+The dormant Programme proposal state produces no review, decision, or target.
+A later accepted review transition may produce one immutable typed target
+receipt. It does not directly create or mutate a Programme item, Shift, role,
+Participation row, Venue booking, schedule occurrence, or public page. The
+target module consumes that receipt idempotently through its public adapter and
+keeps the private Applications evidence behind its original boundary.
 
 ### Onboarding plan
 
@@ -238,10 +256,12 @@ not booleans edited on the registration.
 
 ### Programme item and readiness
 
-A private proposal and its review remain Applications-owned. An accepted typed
-receipt may create exactly one Programme item; organizer-created ceremonies,
-breaks, announcements, and core events use a separate reasoned Programme
-command and never invent a proposal or submitter.
+A private proposal and its review remain Applications-owned. A call activation,
+proposal seal, collaborator acknowledgement, proposal submission, or
+withdrawal is not accepted evidence. A later accepted typed receipt may create
+exactly one Programme item; organizer-created ceremonies, breaks,
+announcements, and core events use a separate reasoned Programme command and
+never invent a proposal or submitter.
 
 A Programme item owns approved title, description, classifications, exact host
 and co-host purpose relationships, content boundaries, access information,
@@ -297,6 +317,13 @@ profile membership. Scheduling remains a contract namespace only, and the
 unavailable until successor runtime work implements and validates every
 manifest member. A later capability cannot silently change the meaning of
 version 1.
+
+Applications now also has a dormant Programme-call and acknowledged-proposal
+kernel. Its global capability, purpose, target, and event declarations are
+absent from both current literal manifests; its new relations are runtime
+`SELECT`-only and expose no route, API, navigation, review, decision, target,
+Programme record, handler, or delivery. Preview-first import is next; review
+and the accepted adapter remain later boundaries.
 
 ## Venue, lodging, logistics, and production
 

@@ -1,7 +1,7 @@
 # Applications API contract
 
 Status: mounted versioned adapter contract
-Last updated: 2026-08-09
+Last updated: 2026-09-01
 
 All routes are organization- and edition-explicit. They require an active Maru
 person session, reject query parameters and unknown JSON fields, and authorize
@@ -14,6 +14,27 @@ Every mutation requires one canonical lower-case UUID in the
 `expected_version`. A same-key, same-intent retry returns the original receipt
 with `Idempotent-Replay: true`; a changed intent or stale aggregate version
 returns a conflict without applying a partial write.
+
+## Dormant Programme boundary
+
+Issue #63 adds no route or API operation. Applications-owned Programme calls,
+proposal collaborators, shared answers, contributor profiles, exact sealed
+revisions, acknowledgements, reopening, submission, and withdrawal remain a
+dormant command/query kernel. They have no serializer, OpenAPI component,
+schema operation, mounted browser view, template, navigation destination, or
+Django admin writer.
+
+The routes below omit Programme definitions from starter and definition
+discovery and deny Programme submissions in generic applicant, answer, submit,
+review, decision, acceptance, target-record, and target-result paths. The
+reserved `programme_item` target kind is not a usable generic adapter. A later
+surface must expose the exact lead/collaborator/profile/seal authorization
+contract deliberately; it cannot inherit these mounted endpoints by changing
+only a discriminator.
+
+Preview-first import is the immediate successor. Structured review, decisions,
+the typed accepted Programme adapter, Programme items and host relationships,
+publication, scheduling, and staffing remain outside this API contract.
 
 ```text
 GET      /api/v1/organizations/{organization_id}/editions/{edition_id}/applications/starters

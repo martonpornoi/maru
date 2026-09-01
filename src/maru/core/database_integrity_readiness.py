@@ -393,6 +393,29 @@ def _parse_function_contracts(sql: str) -> dict[str, FunctionContract]:
     return contracts
 
 
+def parse_database_integrity_sql_contracts(
+    sql: str,
+) -> tuple[dict[str, TriggerContract], dict[str, FunctionContract]]:
+    """Parse supported trigger and function contracts from migration-owned SQL.
+
+    This public seam lets a bounded context compose integrity guards installed
+    by a supporting module without depending on Core's parser implementation.
+    It does not inspect the database or business rows.
+
+    Parameters
+    ----------
+    sql : str
+        The PostgreSQL migration SQL containing the integrity declarations.
+
+    Returns
+    -------
+    tuple[dict[str, TriggerContract], dict[str, FunctionContract]]
+        Parsed trigger contracts followed by parsed function contracts.
+
+    """
+    return _parse_trigger_contracts(sql), _parse_function_contracts(sql)
+
+
 def _dropped_trigger_keys(sql: str) -> set[tuple[str, str]]:
     return {
         (match.group("name").lower(), match.group("table").lower())
@@ -463,8 +486,7 @@ def build_database_integrity_contract(
     forward_sql = migration.FORWARD_SQL
     reverse_sql = migration.REVERSE_SQL
     try:
-        triggers = _parse_trigger_contracts(forward_sql)
-        functions = _parse_function_contracts(forward_sql)
+        triggers, functions = parse_database_integrity_sql_contracts(forward_sql)
     except (KeyError, TypeError, ValueError):
         triggers = {}
         functions = {}
@@ -776,4 +798,5 @@ __all__ = [
     "build_database_integrity_contract",
     "database_integrity_contract_is_ready",
     "inspect_database_integrity_catalog",
+    "parse_database_integrity_sql_contracts",
 ]

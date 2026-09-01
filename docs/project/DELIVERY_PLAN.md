@@ -1,7 +1,7 @@
 # Delivery plan
 
 Status: Long-range product sequence; active execution is tracked separately
-Last updated: 2026-08-01
+Last updated: 2026-09-01
 
 Use `PRODUCTION_CONSOLIDATION.md` for current mounted state, the fictional-example
 vertical milestone order, and the crash-safe implementation checklist. This
@@ -138,13 +138,14 @@ advance, schedule releases, attendee programme, and print/signage feeds.
 
 The accepted ADR 0081 boundary starts this vertical without attendee
 Participation, Registration, payments, or unrelated modules. Applications
-owns proposals and review evidence; Programme begins at the accepted target
-receipt and owns readiness/public content; Scheduling owns placement and
-release. The dormant Programme module now provides canonical private items,
-separated operational layers, readiness evidence, approved public renditions,
-and guarded command/query contracts. It remains unreachable under both current
-profiles. Calls, the accepted-item adapter, Scheduling, the composite profile,
-setup, and user journeys remain successor implementation work.
+owns calls, proposal collaboration, exact sealed revisions and
+acknowledgements, then review evidence; Programme begins at the accepted target
+receipt and owns hosts, readiness/public content; Scheduling owns placement and
+release. Dormant Applications and Programme foundations now provide the intake
+snapshot and private item/readiness contracts. Both remain unreachable under
+current profiles. Preview-first import, Programme-specific review/decisions,
+the accepted-item adapter, Scheduling, the composite profile, setup, and user
+journeys remain successor implementation work.
 
 **Exit:** proposal to revised live release passes all workflow, permission,
 localization, impact, and history scenarios.

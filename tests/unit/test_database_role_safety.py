@@ -34,6 +34,20 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.authorization_authorityprovenanceactivation",
         "public.authorization_provenanceactivationlatch",
         "public.identity_platforminvitationretentionpolicycontrol",
+        "public.applications_programmecall",
+        "public.applications_programmecalltrack",
+        "public.applications_programmecallformat",
+        "public.applications_programmecallcontributorfield",
+        "public.applications_programmeproposal",
+        "public.applications_programmeproposalselectionrevision",
+        "public.applications_programmeproposalcollaborator",
+        "public.applications_programmeproposalcollaboratortransition",
+        "public.applications_programmeproposalcontributorprofilerevision",
+        "public.applications_programmeproposalrevision",
+        "public.applications_programmeproposalrevisionanswer",
+        "public.applications_programmeproposalrevisioncontributor",
+        "public.applications_programmeproposalrevisionresponse",
+        "public.applications_programmecommandreceipt",
         "public.programme_programmeeditioncontrol",
         "public.programme_programmeitem",
         "public.programme_programmeitemsourcebinding",
@@ -186,6 +200,25 @@ def test_dormant_programme_relations_are_completely_select_only() -> None:
     assert not programme_relations & runtime_dml_relations
 
 
+def test_applications_programme_relations_are_completely_select_only() -> None:
+    programme_relations = {
+        f"public.{model._meta.db_table}"
+        for model in apps.get_app_config("applications").get_models()
+        if model.__name__.startswith("Programme")
+    }
+    select_only_relations = set(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS)
+    runtime_dml_relations = set().union(
+        RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
+        RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS,
+        RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
+        RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
+    )
+
+    assert len(programme_relations) == 14
+    assert programme_relations <= select_only_relations
+    assert not programme_relations & runtime_dml_relations
+
+
 def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
     bounded_relations = {
         f"public.{model._meta.db_table}"
@@ -202,6 +235,11 @@ def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
         for identity in RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS
         if identity.split(".", 1)[1].startswith(_BOUNDED_DOMAIN_APP_LABELS)
     }
+    select_only_bounded_relations = {
+        identity
+        for identity in RUNTIME_DATABASE_SELECT_ONLY_RELATIONS
+        if identity.split(".", 1)[1].startswith(_BOUNDED_DOMAIN_APP_LABELS)
+    }
 
     assert len(append_only_relations) == 18
     assert len(retained_aggregate_relations) == 24
@@ -210,10 +248,17 @@ def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
         append_only_relations
         | retained_aggregate_relations
         | _APPLICATION_DRAFT_CHILD_RELATIONS
+        | select_only_bounded_relations
     )
     assert (
         not (append_only_relations | retained_aggregate_relations)
         & _APPLICATION_DRAFT_CHILD_RELATIONS
+    )
+    assert len(select_only_bounded_relations) == 14
+    assert not select_only_bounded_relations & (
+        append_only_relations
+        | retained_aggregate_relations
+        | _APPLICATION_DRAFT_CHILD_RELATIONS
     )
 
 

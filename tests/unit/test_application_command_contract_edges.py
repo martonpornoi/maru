@@ -10,7 +10,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from maru.applications import commands
+from maru.applications import commands, retry_namespace
 from maru.applications.commands import (
     ApplicationAuthorizationDenied,
     ApplicationIdempotencyConflict,
@@ -46,8 +46,12 @@ def _receipt(*, digest: str = "digest") -> SimpleNamespace:
 def _first(value: object | None) -> MagicMock:
     queryset = MagicMock()
     queryset.filter.return_value.first.return_value = value
+    queryset.filter.return_value.exists.return_value = False
     queryset.select_for_update.return_value.filter.return_value.first.return_value = (
         value
+    )
+    queryset.select_for_update.return_value.filter.return_value.exists.return_value = (
+        False
     )
     queryset.select_related.return_value.filter.return_value.first.return_value = value
     locked = queryset.select_for_update.return_value.select_related.return_value
@@ -63,21 +67,89 @@ def test_replay_absence_conflict_and_exact_result() -> None:
         "retry_key": uuid4(),
         "request_digest": "digest",
     }
-    with patch.object(commands.ApplicationCommandReceipt, "objects", _first(None)):
-        assert commands._replay(**values) is None
     with (
+        patch.object(commands, "lock_applications_retry_namespace") as retry_lock,
+        patch.object(commands.ApplicationCommandReceipt, "objects", _first(None)),
+        patch.object(commands.ProgrammeCommandReceipt, "objects", _first(None)),
+    ):
+        assert commands._replay(**values) is None
+        retry_lock.assert_called_once_with(
+            edition_id=values["edition_id"],
+            actor_id=actor.id,
+            retry_key=values["retry_key"],
+        )
+    with (
+        patch.object(commands, "lock_applications_retry_namespace"),
         patch.object(
             commands.ApplicationCommandReceipt,
             "objects",
             _first(_receipt(digest="different")),
         ),
+        patch.object(commands.ProgrammeCommandReceipt, "objects", _first(None)),
         pytest.raises(ApplicationIdempotencyConflict),
     ):
         commands._replay(**values)
-    with patch.object(
-        commands.ApplicationCommandReceipt, "objects", _first(_receipt())
+    with (
+        patch.object(commands, "lock_applications_retry_namespace"),
+        patch.object(commands.ApplicationCommandReceipt, "objects", _first(_receipt())),
+        patch.object(commands.ProgrammeCommandReceipt, "objects", _first(None)),
     ):
         assert commands._replay(**values).replayed is True
+    programme_objects = _first(None)
+    locked_programme = programme_objects.select_for_update.return_value
+    locked_programme.filter.return_value.exists.return_value = True
+    with (
+        patch.object(commands, "lock_applications_retry_namespace"),
+        patch.object(commands.ApplicationCommandReceipt, "objects", _first(None)),
+        patch.object(commands.ProgrammeCommandReceipt, "objects", programme_objects),
+        pytest.raises(ApplicationIdempotencyConflict),
+    ):
+        commands._replay(**values)
+
+
+def test_retry_namespace_requires_atomic_scope_and_uses_one_exact_key() -> None:
+    edition_id = uuid4()
+    actor_id = uuid4()
+    retry_key = uuid4()
+    values = {
+        "edition_id": edition_id,
+        "actor_id": actor_id,
+        "retry_key": retry_key,
+    }
+    with (
+        patch.object(
+            retry_namespace,
+            "connection",
+            SimpleNamespace(in_atomic_block=False),
+        ),
+        pytest.raises(RuntimeError, match="atomic transaction"),
+    ):
+        retry_namespace.lock_applications_retry_namespace(**values)
+
+    cursor = MagicMock()
+    cursor_context = MagicMock()
+    cursor_context.__enter__.return_value = cursor
+    connection = SimpleNamespace(
+        in_atomic_block=True,
+        cursor=MagicMock(return_value=cursor_context),
+    )
+    with patch.object(retry_namespace, "connection", connection):
+        retry_namespace.lock_applications_retry_namespace(**values)
+    cursor.execute.assert_called_once_with(
+        "SELECT pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(%s, 0))",
+        [
+            ":".join(
+                (
+                    "maru",
+                    "applications",
+                    "retry",
+                    str(edition_id),
+                    str(actor_id),
+                    str(retry_key),
+                )
+            )
+        ],
+    )
 
 
 def test_authorization_targets_deny_missing_actor_edition_target_or_grant() -> None:

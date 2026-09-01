@@ -34,6 +34,7 @@ contract for the surface being changed, and compare its status with the
 - [Shift planning and My shifts](shift-planning-and-my-shifts.md)
 - [Set up Workforce](workforce-only-adoption-setup.md)
 - [Set up Programme Operations](programme-operations-adoption-setup.md)
+- [Programme calls and acknowledged proposals](programme-calls-and-acknowledged-proposals.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -49,4 +50,5 @@ availability-management
 shift-planning-and-my-shifts
 workforce-only-adoption-setup
 programme-operations-adoption-setup
+programme-calls-and-acknowledged-proposals
 ```

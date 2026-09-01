@@ -119,7 +119,10 @@ def test_exact_profile_pins_purpose_eligibility_and_source_providers() -> None:
 def test_exact_profile_pins_every_accepted_target_adapter() -> None:
     """Reject legacy or future target kinds unless the exact manifest pins them."""
     assert set(TARGET_ADAPTER_CODES) == set(ApplicationTargetKind.values)
-    for target_kind in ApplicationTargetKind.values:
+    legacy_target_kinds = set(ApplicationTargetKind.values) - {
+        ApplicationTargetKind.PROGRAMME_ITEM
+    }
+    for target_kind in legacy_target_kinds:
         assert profile_allows_application_target(
             AdoptionProfileCode.FULL_CONVENTION,
             FULL_CONVENTION_PROFILE_VERSION,
@@ -130,6 +133,16 @@ def test_exact_profile_pins_every_accepted_target_adapter() -> None:
             WORKFORCE_ONLY_PROFILE_VERSION,
             target_kind,
         )
+    assert not profile_allows_application_target(
+        AdoptionProfileCode.FULL_CONVENTION,
+        FULL_CONVENTION_PROFILE_VERSION,
+        ApplicationTargetKind.PROGRAMME_ITEM,
+    )
+    assert not profile_allows_application_target(
+        AdoptionProfileCode.WORKFORCE_ONLY,
+        WORKFORCE_ONLY_PROFILE_VERSION,
+        ApplicationTargetKind.PROGRAMME_ITEM,
+    )
     assert not profile_allows_application_target(
         AdoptionProfileCode.FULL_CONVENTION,
         FULL_CONVENTION_PROFILE_VERSION,

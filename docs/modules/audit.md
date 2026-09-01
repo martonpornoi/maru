@@ -1,7 +1,7 @@
 # Audit module
 
 Status: Implemented V02 kernel with edition-spine mutation evidence
-Last updated: 2026-08-02
+Last updated: 2026-09-01
 
 ## Purpose and requirements
 
@@ -96,6 +96,16 @@ Convention series record and Event edition record do not present `AuditEvent` ro
 Record activity uses allowlisted domain facts and safe identity labels; audit
 remains security/control evidence with separate authorization, purpose, and
 retention. A later cross-domain Activity workspace must preserve that boundary.
+
+Dormant Applications Programme-call and proposal commands use the same safe
+audit envelope but never place an answer, profile value, consent, invitation
+address, collaborator roster, sealed snapshot, or review fact in metadata.
+Successful mutations commit one minimized allow event with the aggregate,
+dedicated receipt, version proof, domain event, and outbox row. Denials and
+validation errors retain only caller-safe scope and a stable closed reason;
+foreign or malformed targets collapse to the same non-disclosing shape. An
+acknowledgement audit attributes the responding contributor and exact sealed
+revision without copying what that revision contains.
 
 ## Tests
 

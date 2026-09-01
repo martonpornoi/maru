@@ -4,10 +4,11 @@ Status: Focused unified shell, truthful Representation & access handoff,
 guided Workforce-only adoption, profile-scoped navigation, owner-rehearsed
 Registration desk for full-convention editions, and governed Position,
 Assignment, Availability, and Shift management locally verified; accepted
-Programme Operations contract surfaces remain inactive and non-routable; complete
+Programme Operations contract surfaces remain inactive and non-routable despite
+dormant Applications and Programme domain foundations; complete
 mutation-role, state-matrix, width/zoom, and release accessibility evidence
 pending
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 
 ## Current executable experience
 
@@ -77,19 +78,20 @@ Personal and Work groups on My Maru and My Workforce rather than advertising
 unadopted or unrelated personal workflows.
 
 `programme_operations@1` is an accepted contract, not part of the current
-executable experience. A dormant private Programme item/readiness foundation
-is installed for schema and contract validation, but its current-profile policy
-and effect routes deny all use. Its reserved setup route does not resolve, and no shell,
-search, setup choice, API, Staff Console, public page, or personal destination
-may advertise it. The immutable future manifest pins `audit`, `authorization`,
-`effects`, `events`, `identity`, `organizations`, and `privacy` as foundations
-and adopts `applications`, `programme`, `scheduling`, `venues`, and
-`workforce`. Programme's unpinned namespace, capabilities, event, and reserved
-adapter descriptor do not widen either v1 manifest. Programme routes,
-destinations, production writers/effects, the adapter implementation, and the
-Scheduling namespace remain absent until successor runtime issues implement and
-validate the whole profile; no general
-`operations` namespace is implied.
+executable experience. Dormant Applications-owned Programme call/proposal and
+Programme-owned item/readiness foundations are installed for schema and
+contract validation, but current-profile policy and effect routes deny all use.
+The setup route does not resolve, and no shell, search, setup choice, API,
+Staff Console, public page, or personal destination may advertise them. The
+immutable future manifest pins `audit`, `authorization`, `effects`, `events`,
+`identity`, `organizations`, and `privacy` as foundations and adopts
+`applications`, `programme`, `scheduling`, `venues`, and `workforce`.
+Applications' Programme purpose/target/capability/events and Programme's
+namespace, capabilities, event, and reserved adapter descriptor do not widen
+either v1 manifest. Routes, destinations, production writers/effects,
+review/target paths, the adapter implementation, and the Scheduling namespace
+remain absent until successor runtime issues implement and validate the whole
+profile; no general `operations` namespace is implied.
 
 Recovery and export remain required, explicitly pinned continuity behaviors;
 they do not implicitly adopt a whole current or future namespace.
@@ -452,18 +454,20 @@ later extensions rather than implied behavior.
 ### Programme Operations continuity
 
 The accepted future **Programme Operations** task is one composite workflow rather
-than a menu of disconnected records. Applications owns calls, collaborative
-proposals, private review, and decisions; Programme owns accepted items, host
-relationships, public renditions, and readiness; Scheduling owns occurrence
+than a menu of disconnected records. Applications owns calls, proposal leads
+and collaborators, shared answers, contributor-owned proposed-public profiles,
+exact sealed revisions and acknowledgements, then private review and decisions;
+Programme owns accepted items, host relationships, public renditions, and readiness; Scheduling owns occurrence
 identity, public timing, candidates, conflicts, approval, and releases; Venues
 owns physical facts, occupancy, and approval; and Workforce owns Departments,
 Positions, Assignments, Availability, Shift demand, and commitments. Events
 owns the edition profile and lifecycle, while Audit and Effects retain evidence
 and purpose-limited delivery state.
 
-The owner sequence is **Programme structure → Calls → Review → Items and
-readiness → Timetable → Volunteer coverage → Approve and release → Run
-sheets**. Every continuation reauthorizes. Private Applications evidence never
+The owner sequence is **Programme structure → Calls → Acknowledged proposals →
+Preview-first import → Review → Accepted items/hosts and readiness → Timetable
+→ Volunteer coverage → Approve and release → Run sheets**. Every continuation
+reauthorizes. Private Applications evidence never
 becomes a Scheduling layer, a Programme-linked Venue occupancy cannot publish
 a second timetable, and Programme staffing uses only Workforce commands and
 minimized coverage queries.
@@ -474,6 +478,13 @@ layers. It deliberately provides no visible journey, occurrence, placement,
 staffing, or release. The current-profile denial and read-only runtime database
 role are part of that experience contract: an installed backend must not create
 a dead navigation destination or imply that operators can use it.
+
+The dormant call/proposal child likewise establishes no visible journey. Its
+future surface must distinguish an Applications proposal collaborator from a
+post-acceptance Programme host, serialize every mutation on one submission
+version, and show that sealing freezes exact answer/profile/selection evidence
+while each included person responds only for themselves. No generic mounted
+Applications route may expose or accept the reserved Programme target kind.
 
 The timetable workspace uses an unscheduled tray, service-day/room board,
 filters, access-controlled layers, conflict explanation, candidate comparison,

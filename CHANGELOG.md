@@ -15,6 +15,17 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added the dormant Applications-owned Programme-call and collaborative-
+  proposal kernel. It reuses typed definitions, submissions, and append-only
+  answer revisions; serializes every proposal mutation on one aggregate
+  version; preserves contributor-owned proposed-public profile/consent
+  revisions; and seals exact answer, profile, selection, roster, policy, and
+  acknowledgement evidence. Dedicated receipts, dormant events, legacy-target
+  denial, database guards, populated downgrade fencing, and `SELECT`-only
+  runtime ACLs keep it contained. Neither current profile fingerprint changes,
+  and no route, API, UI, review, decision, target, Programme item, host,
+  publication, Scheduling, or staffing behavior is activated
+  ([#63](https://github.com/martonpornoi/maru/issues/63), ADR 0082, PRG-009).
 - Added the dormant Programme private-domain foundation: edition-scoped
   canonical items, structurally separated working/delivery/discussion layers,
   evidence-backed readiness, immutable reviewed public copy, idempotent

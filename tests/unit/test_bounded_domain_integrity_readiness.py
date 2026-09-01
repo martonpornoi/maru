@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import ast
 from dataclasses import replace
 from importlib import import_module
+from pathlib import Path
 from typing import TYPE_CHECKING, Never
 
 from django.db import migrations
@@ -36,7 +38,7 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         )
         for contract in CONTRACTS
     ] == [
-        ("applications_integrity", True, 12, 7, 2),
+        ("applications_integrity", True, 66, 17, 2),
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
         ("venues_integrity", True, 13, 9, 1),
@@ -102,6 +104,78 @@ def test_function_contracts_pin_body_invoker_search_path_and_behavior() -> None:
     function = next(iter(APPLICATIONS_INTEGRITY_CONTRACT.functions.values()))
     weakened = replace(function, source=function.source + "\n-- weakened")
     assert weakened.source_sha256 != function.source_sha256
+
+
+def test_public_sql_parser_composes_supporting_module_contracts() -> None:
+    migration = import_module(
+        "maru.identity.migrations.0020_programme_proposal_person_guard"
+    )
+
+    triggers, functions = integrity.parse_database_integrity_sql_contracts(
+        migration.FORWARD_SQL
+    )
+
+    assert set(triggers) == {
+        "identity_programme_collaborator_person_guard",
+        "identity_programme_profile_person_guard",
+        "identity_programme_proposal_lead_person_guard",
+        "identity_programme_response_person_guard",
+    }
+    assert set(functions) == {
+        "maru_identity_validate_programme_account_kind()",
+        "maru_identity_validate_programme_collaborator_person()",
+        "maru_identity_validate_programme_profile_persons()",
+        "maru_identity_validate_programme_proposal_lead()",
+        "maru_identity_validate_programme_response_persons()",
+    }
+    assert triggers["identity_programme_proposal_lead_person_guard"].table == (
+        "applications_programmeproposal"
+    )
+    assert "identity_programme_account_kind_guard" not in triggers
+    assert "maru_identity_validate_programme_account_kind()" not in (
+        APPLICATIONS_INTEGRITY_CONTRACT.functions
+    )
+    assert {
+        "identity_programme_collaborator_person_guard",
+        "identity_programme_profile_person_guard",
+        "identity_programme_proposal_lead_person_guard",
+        "identity_programme_response_person_guard",
+    } <= set(APPLICATIONS_INTEGRITY_CONTRACT.triggers)
+    assert "parse_database_integrity_sql_contracts" in integrity.__all__
+
+
+def test_applications_readiness_imports_only_public_core_integrity_seams() -> None:
+    source_path = (
+        Path(__file__).resolve().parents[2]
+        / "src"
+        / "maru"
+        / "applications"
+        / "readiness.py"
+    )
+    tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=source_path)
+    direct_imports = {
+        alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+        and node.module == "maru.core.database_integrity_readiness"
+        for alias in node.names
+    }
+    module_imports = {
+        (node.module, alias.name)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+        for alias in node.names
+        if node.module == "maru.core" and alias.name == "database_integrity_readiness"
+    }
+
+    assert direct_imports == {
+        "DatabaseIntegrityContract",
+        "build_database_integrity_contract",
+        "database_integrity_contract_is_ready",
+        "parse_database_integrity_sql_contracts",
+    }
+    assert all(not name.startswith("_") for name in direct_imports)
+    assert module_imports == set()
 
 
 def test_trigger_catalog_comparison_rejects_catalog_drift() -> None:
@@ -211,6 +285,15 @@ def test_applications_acl_migration_is_additive_exact_and_reversible() -> None:
     assert operation.reverse_sql == migration.REVERSE_SQL
     assert migration.FORWARD_SQL.count("REVOKE ALL ON FUNCTION") == 7
     assert migration.REVERSE_SQL.count("GRANT EXECUTE ON FUNCTION") == 7
-    for identity in APPLICATIONS_INTEGRITY_CONTRACT.functions:
+    legacy_identities = (
+        "maru_applications_guard_definition()",
+        "maru_applications_guard_definition_child()",
+        "maru_applications_guard_submission()",
+        "maru_applications_guard_answer()",
+        "maru_applications_guard_review()",
+        "maru_applications_guard_target()",
+        "maru_applications_append_only()",
+    )
+    for identity in legacy_identities:
         assert f"public.{identity} FROM PUBLIC" in migration.FORWARD_SQL
         assert f"public.{identity} TO PUBLIC" in migration.REVERSE_SQL

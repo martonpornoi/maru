@@ -1,7 +1,8 @@
 # Activity, audit, and history
 
-Status: Initial registration and record-history projections implemented
-Last updated: 2026-08-01
+Status: Initial registration and record-history projections implemented;
+dormant Applications Programme facts have no mounted timeline
+Last updated: 2026-09-01
 
 “Track user activity” has three legitimate meanings in Maru. Combining them
 would create a surveillance system, an unusable audit log, and poor historical
@@ -116,6 +117,15 @@ Modules publish timeline projectors for:
 
 There is no universal timeline that makes every fact visible to every staff
 member.
+
+Programme-call activation, proposal invitation, sealing, acknowledgement,
+reopening, submission, and withdrawal are registered dormant domain facts but
+do not create a mounted operational timeline in issue #63. Future renditions
+must remain audience-specific: a contributor may see their own invitation,
+included snapshot, and response; the lead may see aggregate acknowledgement
+state; neither may infer another proposal, private profile, review, decision,
+Programme item, or host relationship. Audit remains separate control evidence
+and contains no proposal values.
 
 The first executable projection is the registration timeline. Submission,
 confirmation/payment reconciliation, entitlement consequence, and check-in
