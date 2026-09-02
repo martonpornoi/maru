@@ -1133,6 +1133,56 @@ architecture documents, implementation issues, tests, and release notes.
   a new seal. Invitation, proposal, acknowledgement, withdrawal, or submission
   creates no Participation, Registration, payment, attendance, volunteer,
   Programme item, review decision, publication, schedule, or host relationship.
+- **PRG-010 — Preview-first Programme import staging:** An organization may
+  deliberately pin one Applications-owned
+  `applications.import.programme_call_proposal@1` adapter to stage a bounded
+  strict-UTF-8 JSON version-one package for an exact edition and current
+  Programme Department without creating domain state. Organizer preview must
+  bind every exact item version and digest while disclosing only bounded
+  source-independent operational facts; it must not disclose proposal content,
+  lead email, identity-match state, person identifiers, source keys, or
+  digests. The import pin alone admits staging, organizer preview, and
+  continuity disposal; it does not satisfy the independently pinned Programme
+  target or self-service purposes required by protected apply or lead paths.
+  Import authority is delegable only to exact Department scope; disposal is a
+  separately delegable exact-Edition continuity capability that grants no
+  staged-content read authority.
+  Committing a call requires independent exact-Department import and
+  call-management authority and creates one complete Draft only through the
+  protected call command. A proposal lead may privately preview and explicitly
+  claim only the staged proposal whose exact login email currently resolves to
+  their active verified account; identity is re-resolved for every fresh
+  preview and fresh claim, no match is persisted, and claim uses only the
+  protected proposal and answer commands after the referenced call is
+  independently active. Exact retained-receipt replay rechecks current
+  adoption-scoped retry authority and returns only the minimized historical
+  result. The lead
+  supplies their own contributor profile, proposed-public choice, and consent.
+  Lead preview returns `adoption_digest` over the exact actor, source/item,
+  dependency, selection, and answer state; claim supplies it as
+  `adopted_preview_digest` and must constant-time compare a locked fresh
+  recomputation.
+  Each item owns an independent optimistic cursor; permanent exact source
+  binding makes the same applied digest a no-op forever and a changed digest a
+  conflict forever. The binding must preserve the parent batch source system,
+  exact call-owner Department, exact proposal call dependency, and shared
+  call/submission definition; a merely compatible target is invalid. A no-op
+  duplicate has no apply action and remains staged with private payload until
+  explicit disposal. Applying an item clears its private payload atomically.
+  Its receipt freezes immutable nested-command count and terminal sequence;
+  proposal answer receipts must belong to the target definition and follow
+  strict definition order, so later answer history cannot extend the completed
+  import. Expiry comes from reviewed versioned server configuration and the
+  authoritative timezone-aware server clock, blocks further preview/
+  application, and never blocks separately authorized exact-Edition disposal
+  after planning closure or owner-Department retirement. Any explicit command
+  time or substitute retention provider is admitted only through its own
+  independent two-factor isolated-test guard and a `test_` database. Disposal
+  clears every remaining private staging payload without deleting an applied
+  call or proposal. The adapter creates no account, collaborator, invitation,
+  review, decision, Programme item, host, occurrence, Shift, publication,
+  route, API, UI, worker, schedule, or unrelated-module state, and admits no
+  service or system actor.
 
 ### Governance, planning, and readiness
 

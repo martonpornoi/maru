@@ -34,6 +34,10 @@ or permission to use production personal data.
 - [Deployment and service objectives](deployment-and-service-objectives.md)
 - [Observability and readiness](observability-and-readiness.md)
 - [Applications Programme calls/proposals migration and recovery](applications-programme-calls-and-proposals-migration-and-recovery.md)
+- [Applications Programme import migration and recovery](applications-programme-import-migration-and-recovery.md)
+  covers the server-clock/test-seam boundary, exact source and nested-command
+  integrity, delegable continuity disposal, downgrade refusal, and fix-forward
+  recovery for the dormant import schema.
 - [Effects worker](effects-worker-runbook.md)
 - [GitHub Pages publication](github-pages-publication.md)
 - [Public repository readiness](public-repository-readiness.md)
@@ -71,6 +75,7 @@ synthetic-oci-static-delivery-rehearsal
 deployment-and-service-objectives
 observability-and-readiness
 applications-programme-calls-and-proposals-migration-and-recovery
+applications-programme-import-migration-and-recovery
 effects-worker-runbook
 github-pages-publication
 public-repository-readiness

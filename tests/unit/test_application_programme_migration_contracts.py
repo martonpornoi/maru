@@ -58,6 +58,9 @@ def test_authorization_min_scope_is_prior_catalog_plus_exact_department_code() -
     }
     assert listed == {
         code for code, definition in CAPABILITIES.items() if definition.persistable
+    } - {
+        "applications.import_programme",
+        "applications.dispose_programme_import",
     }
 
 

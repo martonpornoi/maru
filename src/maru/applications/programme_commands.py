@@ -47,6 +47,7 @@ from maru.applications.models import (
     ProgrammeContributorFieldCode,
     ProgrammeContributorRequirement,
     ProgrammeContributorRole,
+    ProgrammeImportCommandReceipt,
     ProgrammeProposal,
     ProgrammeProposalCollaborator,
     ProgrammeProposalCollaboratorTransition,
@@ -540,6 +541,13 @@ def _replay(
         return _result(receipt, replayed=True)
     if (
         ApplicationCommandReceipt.objects.select_for_update()
+        .filter(
+            edition_id=edition_id,
+            actor_id=actor_id,
+            retry_key=retry_key,
+        )
+        .exists()
+        or ProgrammeImportCommandReceipt.objects.select_for_update()
         .filter(
             edition_id=edition_id,
             actor_id=actor_id,

@@ -6,6 +6,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from maru.applications.programme_adoption import (
+    APPLICATION_PROGRAMME_IMPORT_ADAPTER,
     APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER,
     APPLICATION_PROGRAMME_ITEM_TARGET_KIND,
     APPLICATION_PROGRAMME_SELF_ADAPTER,
@@ -90,6 +91,19 @@ APPLICATIONS_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
             failure_semantics=(
                 "Returns no Programme proposal self-service surface when the exact "
                 "adapter is unavailable or unpinned."
+            ),
+        ),
+        AdoptionAdapterDescriptor(
+            code=APPLICATION_PROGRAMME_IMPORT_ADAPTER,
+            owner_module="applications",
+            kind="preview-first-import",
+            result_semantics=(
+                "Stages, previews, and explicitly applies closed Programme call and "
+                "proposal source documents without bypassing domain commands."
+            ),
+            failure_semantics=(
+                "Creates no staging or domain record when the exact import adapter "
+                "is unavailable or unpinned."
             ),
         ),
         *(

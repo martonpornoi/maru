@@ -81,6 +81,7 @@ ACKNOWLEDGED_DORMANT_EVENTS = frozenset(
     {
         "applications.programme_call.changed.v1",
         "applications.programme_proposal.changed.v1",
+        "applications.programme_import.changed.v1",
         "programme.item.changed.v1",
     }
 )

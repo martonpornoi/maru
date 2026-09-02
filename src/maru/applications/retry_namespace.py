@@ -20,10 +20,10 @@ def lock_applications_retry_namespace(
 ) -> None:
     """Lock one cross-workflow Applications retry key for this transaction.
 
-    Generic Applications commands and collaborative Programme commands retain
-    receipts in separate tables. This shared PostgreSQL advisory lock closes the
-    race between their replay checks; database receipt guards use the same key
-    before accepting either insert.
+    Generic Applications, collaborative Programme, and Programme-import
+    commands retain receipts in separate tables. This shared PostgreSQL
+    advisory lock closes the race between their replay checks; database receipt
+    guards use the same key before accepting any insert.
 
     Parameters
     ----------

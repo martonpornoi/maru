@@ -38,7 +38,7 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         )
         for contract in CONTRACTS
     ] == [
-        ("applications_integrity", True, 66, 17, 2),
+        ("applications_integrity", True, 87, 22, 2),
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
         ("venues_integrity", True, 13, 9, 1),

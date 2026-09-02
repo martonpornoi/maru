@@ -153,12 +153,12 @@ GRANT SELECT ON TABLE
     public.programme_programmecommandreceipt
     TO maru_runtime;
 
--- Applications issue #63 adds a dormant Programme-call and collaborative-
--- proposal kernel without mounting a caller or widening either current
--- profile. These relations are stricter than the existing mounted Applications
--- schema: the runtime login may inspect them for readiness only. Integrity
--- functions remain owner-only and the dedicated command receipt does not gain
--- the generic Applications receipt's runtime INSERT path.
+-- Applications issues #63 and #66 add dormant Programme-call/proposal and
+-- preview-first import kernels without mounting a caller or widening either
+-- current profile. These relations are stricter than the existing mounted
+-- Applications schema: the runtime login may inspect them for readiness only.
+-- Integrity functions remain owner-only and the dedicated command receipts do
+-- not gain the generic Applications receipt's runtime INSERT path.
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.applications_programmecall,
     public.applications_programmecalltrack,
@@ -173,7 +173,14 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.applications_programmeproposalrevisionanswer,
     public.applications_programmeproposalrevisioncontributor,
     public.applications_programmeproposalrevisionresponse,
-    public.applications_programmecommandreceipt
+    public.applications_programmecommandreceipt,
+    public.applications_programmeimportbatch,
+    public.applications_programmeimportitem,
+    public.applications_programmeimportpreviewrevision,
+    public.applications_programmeimportpreviewitemresult,
+    public.applications_programmeimportsourcebinding,
+    public.applications_programmeimportappliedcommand,
+    public.applications_programmeimportcommandreceipt
     FROM maru_runtime;
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.applications_programmecall,
@@ -189,7 +196,14 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.applications_programmeproposalrevisionanswer,
     public.applications_programmeproposalrevisioncontributor,
     public.applications_programmeproposalrevisionresponse,
-    public.applications_programmecommandreceipt
+    public.applications_programmecommandreceipt,
+    public.applications_programmeimportbatch,
+    public.applications_programmeimportitem,
+    public.applications_programmeimportpreviewrevision,
+    public.applications_programmeimportpreviewitemresult,
+    public.applications_programmeimportsourcebinding,
+    public.applications_programmeimportappliedcommand,
+    public.applications_programmeimportcommandreceipt
     FROM PUBLIC;
 GRANT SELECT ON TABLE
     public.applications_programmecall,
@@ -205,7 +219,14 @@ GRANT SELECT ON TABLE
     public.applications_programmeproposalrevisionanswer,
     public.applications_programmeproposalrevisioncontributor,
     public.applications_programmeproposalrevisionresponse,
-    public.applications_programmecommandreceipt
+    public.applications_programmecommandreceipt,
+    public.applications_programmeimportbatch,
+    public.applications_programmeimportitem,
+    public.applications_programmeimportpreviewrevision,
+    public.applications_programmeimportpreviewitemresult,
+    public.applications_programmeimportsourcebinding,
+    public.applications_programmeimportappliedcommand,
+    public.applications_programmeimportcommandreceipt
     TO maru_runtime;
 
 -- Workforce adoption setup and Organization structure receipts are append-only

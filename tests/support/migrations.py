@@ -24,9 +24,17 @@ _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT = (
     "workforce",
     "0016_programme_call_department_fk_contract",
 )
+_WORKFORCE_PROGRAMME_IMPORT_FK_CONTRACT = (
+    "workforce",
+    "0017_programme_import_department_fk_contract",
+)
 _WORKFORCE_CROSS_MODULE_DEPARTMENT_FK_CONTRACT = (
     "workforce",
     "0008_department_fk_contract_successor",
+)
+_APPLICATIONS_BEFORE_PROGRAMME_IMPORT = (
+    "applications",
+    "0006_programme_populated_downgrade_fence",
 )
 _APPLICATIONS_BEFORE_PROGRAMME_CALLS = (
     "applications",
@@ -64,7 +72,7 @@ def identity_migration_targets(
     executor: MigrationExecutor,
     target: tuple[str, str],
 ) -> tuple[tuple[str, str], ...]:
-    """Select an Applications leaf compatible with Identity history."""
+    """Select Applications and Workforce leaves compatible with Identity history."""
 
     targets_by_app = {
         migration_key[0]: migration_key
@@ -75,6 +83,7 @@ def identity_migration_targets(
         executor.loader.graph.forwards_plan(target)
     ):
         targets_by_app["applications"] = _APPLICATIONS_BEFORE_IDENTITY_PROGRAMME_GUARD
+        targets_by_app["workforce"] = _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT
     return tuple(sorted(targets_by_app.values()))
 
 
@@ -91,10 +100,12 @@ def workforce_migration_targets(
     if workforce_target is None or workforce_target[1] is None:
         return targets
     forward_plan = executor.loader.graph.forwards_plan(workforce_target)
-    if _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT in forward_plan:
+    if _WORKFORCE_PROGRAMME_IMPORT_FK_CONTRACT in forward_plan:
         return targets
     applications_target: tuple[str, str | None] = _APPLICATIONS_ZERO
-    if _WORKFORCE_CROSS_MODULE_DEPARTMENT_FK_CONTRACT in forward_plan:
+    if _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT in forward_plan:
+        applications_target = _APPLICATIONS_BEFORE_PROGRAMME_IMPORT
+    elif _WORKFORCE_CROSS_MODULE_DEPARTMENT_FK_CONTRACT in forward_plan:
         applications_target = _APPLICATIONS_BEFORE_PROGRAMME_CALLS
     compatible = [target for target in targets if target[0] != "applications"]
     compatible.append(applications_target)

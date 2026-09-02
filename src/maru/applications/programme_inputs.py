@@ -43,11 +43,20 @@ MAX_PROGRAMME_SUBMISSIONS_PER_PERSON = 100
 MIN_PROGRAMME_CHOICE_OPTIONS = 2
 MAX_PROGRAMME_DECIMAL_DIGITS = 18
 MAX_PROGRAMME_DECIMAL_PLACES = 4
+MAX_PROGRAMME_OFFSET_HOURS = 14
+MAX_PROGRAMME_OFFSET_MINUTES = 59
 MIN_PROGRAMME_PHONE_LENGTH = 3
 MAX_PROGRAMME_PHONE_LENGTH = 40
 
 _LOWERCASE_SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _POLICY_CODE_PATTERN = re.compile(r"^[a-z][a-z0-9_.:-]{2,119}$")
+_INSTANT_PATTERN = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T"
+    r"(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d"
+    r"(?:\.\d{1,6})?"
+    r"(?P<offset>Z|(?P<offset_sign>[+-])(?P<offset_hour>\d{2}):"
+    r"(?P<offset_minute>\d{2}))$",
+)
 _REFERENCE_KIND_PATTERN = re.compile(r"^[a-z][a-z0-9_.:-]{0,79}$")
 
 
@@ -271,6 +280,69 @@ def normalized_programme_email(value: str, *, field: str = "invitee_email") -> s
             field,
             "Enter a valid email address.",
             "applications_programme_email_invalid",
+        )
+    return normalized
+
+
+def normalized_programme_instant(  # noqa: DOC502 - helper owns validation
+    value: str,
+    *,
+    field: str,
+) -> datetime:
+    """Return one strict explicit-offset instant normalized to UTC.
+
+    Parameters
+    ----------
+    value : str
+        Candidate ``YYYY-MM-DDTHH:MM:SS[.ffffff](Z|+/-HH:MM)`` instant.
+    field : str
+        Stable field name used in validation errors.
+
+    Returns
+    -------
+    datetime
+        Timezone-aware instant normalized to UTC.
+
+    Raises
+    ------
+    ValidationError
+        If the spelling, calendar value, or civil offset is invalid. Numeric
+        offsets are bounded to ``-14:00`` through ``+14:00`` and the ambiguous
+        RFC 3339 unknown-local-offset spelling ``-00:00`` is rejected.
+    """
+    match = _INSTANT_PATTERN.fullmatch(value) if isinstance(value, str) else None
+    if match is None:
+        _field_error(
+            field,
+            "Use an exact date-time with an explicit valid offset.",
+            "applications_programme_instant_invalid",
+        )
+    if match.group("offset") != "Z":
+        offset_hour = int(match.group("offset_hour"))
+        offset_minute = int(match.group("offset_minute"))
+        if (
+            offset_minute > MAX_PROGRAMME_OFFSET_MINUTES
+            or offset_hour > MAX_PROGRAMME_OFFSET_HOURS
+            or (offset_hour == MAX_PROGRAMME_OFFSET_HOURS and offset_minute != 0)
+            or (
+                match.group("offset_sign") == "-"
+                and offset_hour == 0
+                and offset_minute == 0
+            )
+        ):
+            _field_error(
+                field,
+                "Use an exact date-time with an explicit valid offset.",
+                "applications_programme_instant_invalid",
+            )
+    try:
+        parsed = datetime.fromisoformat(value)
+        normalized = parsed.astimezone(UTC)
+    except (OverflowError, ValueError):
+        _field_error(
+            field,
+            "Use an exact date-time with an explicit valid offset.",
+            "applications_programme_instant_invalid",
         )
     return normalized
 
@@ -1830,6 +1902,7 @@ __all__ = [
     "canonical_programme_digest",
     "canonical_programme_json",
     "normalized_programme_email",
+    "normalized_programme_instant",
     "normalized_programme_policy_code",
     "normalized_programme_slug",
     "normalized_programme_text",

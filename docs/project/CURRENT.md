@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -11,13 +11,13 @@ concise handoff.
 
 ## Django REST Framework security patch
 
-Issue [#67](https://github.com/martonpornoi/maru/issues/67) updates only the
+Issue [#67](https://github.com/martonpornoi/maru/issues/67) updated only the
 locked Django REST Framework artifact from 3.17.1 to 3.17.2 inside the existing
 `>=3.17.1,<3.18` constraint. The patch fixes CVE-2026-73228, in which DRF JSON
 and URL-encoded parsing could bypass Django's configured in-memory request-size
 limit, and CVE-2026-73229, in which `AdminRenderer` could disclose data guarded
 from GET while rendering an invalid write request. Maru already exposes only
-`JSONRenderer` by default, but every vulnerable installed path remains a
+`JSONRenderer` by default, but every vulnerable installed path was still a
 dependency-security failure until removed.
 
 The refresh changes no declared compatibility range, application source,
@@ -25,10 +25,13 @@ migration, API/OpenAPI contract, Staff Console artifact, settings, or runtime
 authority. Locked-input checks, current-tree dependency audit, full repository
 verification, and all 2,581 unit tests pass; both dependency audits report no
 known vulnerabilities. Exact-commit certification and the protected pull-
-request gate remain the final acceptance evidence. This bounded repair was
-discovered while certifying Programme import issue #66; that candidate remains
-isolated and must be rebased onto the repaired `main` before its own
-certification.
+request gate passed for commit `885822b107fd4ac7c921e3ef725d24554f31e335`,
+including all eight PostgreSQL shards, and PR
+[#68](https://github.com/martonpornoi/maru/pull/68) merged the repair to `main`
+as `1aadc7050d49b0d20e8c4aa6922d7c2406aafc49`. This bounded repair was
+discovered while certifying Programme import issue #66; that candidate is now
+rebased onto the repaired mainline and requires its own independent
+certification and protected acceptance.
 
 ## Umbrella issue intake contract
 
@@ -299,6 +302,105 @@ acceptance remains authoritative only for the exact pushed head. A repository
 contract now prevents a clean candidate from retaining missing or stale timing
 paths while preserving the deterministic fallback for an initial diagnostic
 run that introduces a new integration file.
+
+## Dormant preview-first Programme import staging
+
+Issue [#66](https://github.com/martonpornoi/maru/issues/66), the fifth native
+child of Programme Operations umbrella
+[#48](https://github.com/martonpornoi/maru/issues/48), implements the dormant
+Applications-owned import kernel contracted by ADR 0083 and PRG-010. One
+strict, bounded JSON version-one package can stage Programme calls and
+proposals for an exact current Department without creating call/proposal domain
+state. Organizer preview exposes only opaque item/result identifiers and closed
+operational readiness facts. A call can be committed only through the protected
+Draft-call command; a proposal can be privately previewed and claimed only by
+the active verified account freshly resolved from its exact staged lead email.
+
+The imported proposal answer shape is exactly
+`question_key`/`field_type`/`value`; declared types must match the resolved call
+schema and values use the same strict Programme normalization contract. Lead
+preview returns only the caller-supplied opaque item identifier, current item
+version, selection, normalized typed answers, and a fresh adoption digest. It
+remains available after planning writes close while the staged payload is
+unexpired and exact-self authority remains; claim still requires open planning
+writes and an independently active referenced call.
+
+Seven Applications-owned evidence models retain bounded staging, immutable
+preview, permanent source binding, nested-command lineage, and idempotency
+receipts. Successful apply or explicit disposal atomically clears private
+canonical payload. Expiry blocks preview/apply but not separately authorized
+exact-Edition disposal. Stored private evidence corruption, nested-command
+failure, and database evidence failure collapse to one correlation-only
+operation error after rollback; permanent source-binding identifiers never
+enter organizer or lead command projections.
+
+The import adapter pin independently admits staging, organizer preview, retry,
+and continuity disposal. Protected Programme call/proposal commands still
+require their separately pinned target/self purposes, so modular import cannot
+widen Programme authority. Neither current profile pins the import adapter,
+capabilities, event, destination, writer, target, or self-service path. There is
+no route, upload, API/OpenAPI operation, template, navigation, worker, handler,
+cleanup job, service actor, profile activation, or permission to use production
+personal data.
+
+Applications `0007` adds only empty import schema, `0008` installs the exact
+writer, attribution, lineage, scope, append-only, state, retry, and truncate
+guards, and `0009` refuses populated downgrade. Authorization `0022` adds the
+closed capability vocabulary without a grant; Workforce `0017` recognizes the
+exact staging owner reference for Department deletion safety without yet
+implementing retirement coordination. Runtime access is SELECT-only on the
+seven relations and owner-only on their integrity functions. Retention comes
+only from a reviewed versioned deployment setting; a substitute provider is
+accepted only behind an explicit setting and an auto-created `test_` database.
+
+The durable parser, authority, lifecycle, projection, retention, error,
+migration/recovery, and deployment boundaries are documented in ADR 0083, the
+Applications module and security inventories, the non-surface page contract,
+and the
+[Issue #66 checkpoint](../checkpoints/2026-09-01-preview-first-programme-import-staging.md).
+Focused unit verification, migration-drift checking, PostgreSQL service and
+raw-integrity acceptance, full repository certification, and the protected
+exact-head gate are recorded separately as they complete; none activates the
+dormant workflow.
+
+The Issue #66 candidate currently passes the complete 2,735-test unit suite,
+26 focused PostgreSQL service/integrity cases, the seven-case fresh migration
+executor, the historical integrity-function ACL reapply case, all 48 focused
+Applications readiness cases, documentation validation, warning-fatal Sphinx,
+targeted Ruff/mypy, and migration-drift checking. The PostgreSQL service cases
+explicitly cover lead identity changing after a private preview, concurrent
+same-source adoption, disposal of a partially applied batch without deleting
+its applied call, and disposal after the owning Department retires. The first
+complete repository gate then discovered two newly published vulnerabilities
+in the unchanged locked `djangorestframework==3.17.1`. Bounded security issue
+[#67](https://github.com/martonpornoi/maru/issues/67) and PR
+[#68](https://github.com/martonpornoi/maru/pull/68) delivered 3.17.2 to `main`;
+this candidate is now rebased onto that repaired mainline. Its complete current-
+tree non-database gate passes, including both dependency audits with no known
+vulnerabilities. At that point it still required its own exact-commit
+certification and protected acceptance.
+
+The rebased candidate's first exact clean-tree certification passed all 2,735
+unit tests, all 2,861 PostgreSQL integration tests across eight isolated
+instances, every repository gate, and combined 90-percent branch coverage.
+PR #69's first hosted run passed every non-database job and seven integration
+shards. Shard 5 reached 98 percent and continued issuing PostgreSQL work without
+an assertion failure until GitHub cancelled it at the 120-minute job
+limit; the slowest completed peer needed 112 minutes. Exact-head JUnit evidence
+showed that the path-complete timing map was stale: shard 5 actually needed
+5,690.7 local seconds despite a 4,551.6-second projection. Refreshing all 178
+file weights balances the deterministic schedule between 5,217.370 and 5,217.442
+seconds while preserving the 120-minute fail-stop, eight whole-file shards,
+no-retry policy, and complete combined-coverage boundary. Final exact-head local
+and protected evidence belongs to PR #69.
+
+The next Programme-critical child is Department retirement coordination in
+[#64](https://github.com/martonpornoi/maru/issues/64): unresolved private
+staging must block retirement until governed reassignment or disposal, without
+disclosing source, identity, proposal, count, or digest data to Workforce.
+Structured Programme review/decisions, the accepted Applications-to-Programme
+adapter, Scheduling, accessible timetable editing, Workforce staffing, atomic
+release, projections, and on-site continuity remain subsequent children.
 
 ## Exact adoption-manifest enforcement
 
@@ -1195,8 +1297,10 @@ support branch, a deployment, or production readiness.
 ## Smallest sensible next actions
 
 1. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48) with
-   preview-first Programme call/proposal import while preserving the inactive
-   exact-profile boundary and exact sealed evidence.
+   Department retirement coordination
+   [#64](https://github.com/martonpornoi/maru/issues/64), including
+   disclosure-safe unresolved-import staging preflight and governed
+   reassignment/disposal recovery.
 2. Continue sequentially through Applications review and decisions, then the
    real Programme adapter and post-acceptance host/co-host relationships;
    Scheduling core and accessible
@@ -1235,7 +1339,7 @@ the management-shell, Position, Assignment, Availability, and Shift page
 contracts, the Workforce-only adoption setup contract and runbook, the
 [Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md),
 the Applications, Events, Venues, and Workforce module contracts, and ADRs
-0019/0028/0039/0041/0049/0051/0053/0055/0075 through 0082. Use only synthetic data.
+0019/0028/0039/0041/0049/0051/0053/0055/0075 through 0083. Use only synthetic data.
 Preserve exact organization and edition scope, authorization
 before disclosure, My Maru/Administration separation, private Availability,
 independent confirmation, privacy-minimized self-withdrawal, canonical lock

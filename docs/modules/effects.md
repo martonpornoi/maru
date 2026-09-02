@@ -71,6 +71,15 @@ Neither current manifest pins a delivery route and no built-in handler is
 installed. A current-profile command therefore fails before domain-event or
 outbox persistence; registration alone creates no notification or delivery.
 
+`applications.programme_import.changed.v1` is the corresponding dormant import
+fact. Its closed payload contains only the batch identifier/state/version, an
+optional affected item identifier/state/version, and the command action. It
+cannot carry a source system or key, email, answer, contributor profile,
+consent, identity-match state, reason, payload, digest, binding, or nested
+command detail. The registry acknowledges it explicitly as dormant, but no
+current manifest pins a route and no built-in handler is installed; declaring
+the event cannot activate import execution or delivery.
+
 Handlers receive the domain-event UUID as their idempotency key. Delivery is
 at least once: a provider timeout or worker crash can cause a repeat, so every
 handler or adapter must make that key an idempotency boundary or reconcile the

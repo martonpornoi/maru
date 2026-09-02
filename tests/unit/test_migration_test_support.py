@@ -57,30 +57,39 @@ def test_registration_history_selects_a_compatible_workforce_leaf(
 
 
 @pytest.mark.parametrize(
-    ("target", "forward_plan", "expected_applications"),
+    (
+        "target",
+        "forward_plan",
+        "expected_applications",
+        "expected_workforce",
+    ),
     [
         (
             ("identity", "0018_invitation_retention_v8"),
             (("identity", "0018_invitation_retention_v8"),),
             ("applications", "0004_programme_calls_and_proposals"),
+            ("workforce", "0016_programme_call_department_fk_contract"),
         ),
         (
             ("identity", "0020_programme_proposal_person_guard"),
             (("identity", "0020_programme_proposal_person_guard"),),
-            ("applications", "0006_programme_populated_downgrade_fence"),
+            ("applications", "0009_programme_import_populated_downgrade_fence"),
+            ("workforce", "0017_programme_import_department_fk_contract"),
         ),
     ],
 )
-def test_identity_history_selects_a_compatible_applications_leaf(
+def test_identity_history_selects_compatible_cross_module_leaves(
     target: tuple[str, str],
     forward_plan: tuple[tuple[str, str], ...],
     expected_applications: tuple[str, str],
+    expected_workforce: tuple[str, str],
 ) -> None:
     executor = Mock()
     executor.loader.graph.leaf_nodes.return_value = (
-        ("applications", "0006_programme_populated_downgrade_fence"),
+        ("applications", "0009_programme_import_populated_downgrade_fence"),
         ("identity", "0020_programme_proposal_person_guard"),
         ("other", "0002_current"),
+        ("workforce", "0017_programme_import_department_fk_contract"),
     )
     executor.loader.graph.forwards_plan.return_value = forward_plan
 
@@ -88,6 +97,7 @@ def test_identity_history_selects_a_compatible_applications_leaf(
         expected_applications,
         target,
         ("other", "0002_current"),
+        expected_workforce,
     )
     executor.loader.graph.forwards_plan.assert_called_once_with(target)
 
@@ -107,6 +117,14 @@ def test_identity_history_selects_a_compatible_applications_leaf(
                 ("workforce", "0008_department_fk_contract_successor"),
             ),
             ("applications", "0003_integrity_function_execute_boundary"),
+        ),
+        (
+            ("workforce", "0016_programme_call_department_fk_contract"),
+            (
+                ("workforce", "0008_department_fk_contract_successor"),
+                ("workforce", "0016_programme_call_department_fk_contract"),
+            ),
+            ("applications", "0006_programme_populated_downgrade_fence"),
         ),
     ],
 )
@@ -132,8 +150,11 @@ def test_workforce_history_removes_later_programme_call_schema(
 
 def test_current_workforce_and_non_workforce_targets_are_unchanged() -> None:
     executor = Mock()
-    current = ("workforce", "0016_programme_call_department_fk_contract")
-    executor.loader.graph.forwards_plan.return_value = (current,)
+    current = ("workforce", "0017_programme_import_department_fk_contract")
+    executor.loader.graph.forwards_plan.return_value = (
+        ("workforce", "0016_programme_call_department_fk_contract"),
+        current,
+    )
 
     assert workforce_migration_targets(executor, current) == (current,)
     executor.loader.graph.forwards_plan.assert_called_once_with(current)

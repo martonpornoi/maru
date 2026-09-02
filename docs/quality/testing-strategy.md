@@ -324,6 +324,17 @@ immutable digests. `Full CI gate` certifies high-risk pull requests, manual
 runs, and releases. Merge-queue support remains disabled until that event emits
 the same required `PR gate`.
 
+The later preview-first Programme import candidate demonstrated that path-
+complete timing evidence can still become stale after a migration tail changes.
+Its first hosted run passed seven shards; shard 5 reached 98 percent and
+continued issuing PostgreSQL work without an assertion failure until the 120-
+minute job limit cancelled it. Exact-head local JUnit evidence showed that this
+shard actually needed 5,690.7 seconds despite a 4,551.6-second projection. A
+complete 178-file refresh now balances the deterministic schedule between
+5,217.370 and 5,217.442 seconds. The 120-minute fail-stop, eight-shard selection,
+serial whole-file isolation, fail-fast policy, no-retry boundary, and combined
+branch-coverage requirement remain unchanged.
+
 Since the 2026-08-20 public transition, every repository workflow uses standard
 GitHub-hosted runners and the repository has no registered self-hosted runner.
 Actions are limited to the exact immutable revisions in

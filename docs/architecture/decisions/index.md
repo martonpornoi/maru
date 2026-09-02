@@ -33,6 +33,7 @@ For present implementation status, use the
 | [0080](0080-progressive-workforce-only-adoption.md) | Accepted | Make Workforce-only an immutable edition profile with truthful Maru-operator accountability and no unadopted authority or side effects. |
 | [0081](0081-composite-programme-operations-adoption.md) | Accepted | Make Programme Operations an exact-version composite profile with one Scheduling-owned Programme release and Workforce-owned staffing. |
 | [0082](0082-applications-owned-programme-calls-and-acknowledged-proposal-revisions.md) | Accepted | Keep Programme calls and one-version acknowledged collaborative proposal revisions in Applications without activating review, targeting, or Programme. |
+| [0083](0083-preview-first-programme-import-staging.md) | Accepted | Stage deterministic Programme call/proposal imports behind minimized preview, exact-self claim, coherent permanent source binding, a sealed nested-command chain, and delegable continuity disposal. |
 
 ADR 0073 partially supersedes the example-data and source-derived-template
 parts of [ADR 0042](0042-synthetic-only-educational-fixtures.md) and
@@ -56,7 +57,12 @@ manifest that excludes Participation. ADR 0082 refines the pre-acceptance
 Applications boundary: proposal collaborators are not Programme hosts, one
 submission aggregate version serializes every mutation, exact sealed revisions
 require included-collaborator acknowledgement, and every legacy target/review seam stays
-closed until its later adapter child. Use the
+closed until its later adapter child. ADR 0083 adds a dormant preview-first
+coexistence boundary over those protected commands: organizer preview omits
+private proposal and identity-match data, an exact lead adopts only their own
+fresh digest, source replay is permanent and target-coherent, an immutable
+command count seals definition-order apply lineage, and explicit delegable
+continuity disposal clears temporary payload. Use the
 [complete status index](README.md) for every decision.
 
 ```{toctree}

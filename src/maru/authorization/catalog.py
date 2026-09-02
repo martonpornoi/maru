@@ -1039,7 +1039,13 @@ CAPABILITY_DEFINITIONS = (
         allow_self=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
         field_ceiling=frozenset(
-            {"available", "submissions", "answers", "decisions", "typed_target"}
+            {
+                "available",
+                "submissions",
+                "answers",
+                "decisions",
+                "typed_target",
+            }
         ),
         obligations=frozenset({"audit_sensitive_read"}),
     ),
@@ -1059,6 +1065,27 @@ CAPABILITY_DEFINITIONS = (
             "calls for one exact Department."
         ),
         maximum_scope=ScopeLevel.DEPARTMENT,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="applications.import_programme",
+        description=(
+            "Stage, preview, and apply Programme imports owned by one exact Department."
+        ),
+        maximum_scope=ScopeLevel.DEPARTMENT,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.dispose_programme_import",
+        description=(
+            "Dispose expired or explicitly abandoned Programme-import payloads "
+            "for one edition without granting read authority."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
         delegable=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
         obligations=frozenset({"reason", "audit"}),
@@ -1084,6 +1111,7 @@ CAPABILITY_DEFINITIONS = (
                 "revision_responses",
                 "own_invitation",
                 "available_calls",
+                "programme_import_claim",
             }
         ),
         obligations=frozenset({"audit_sensitive_read"}),
@@ -1387,7 +1415,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-09-01.1"
+POLICY_VERSION = "2026-09-01.2"
 
 
 def capability(code: str) -> Capability | None:

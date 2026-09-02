@@ -15,6 +15,10 @@ pytestmark = [
 ]
 
 APPLICATIONS_SCHEMA = ("applications", "0004_programme_calls_and_proposals")
+APPLICATIONS_BEFORE_IMPORT = (
+    "applications",
+    "0006_programme_populated_downgrade_fence",
+)
 WORKFORCE_BEFORE = ("workforce", "0015_exact_assignment_adoption_profile")
 WORKFORCE_AFTER = (
     "workforce",
@@ -63,7 +67,7 @@ def test_programme_successor_has_exact_dependencies_and_reversal() -> None:
 
 
 def test_programme_successor_reverses_fail_closed_and_reapplies() -> None:
-    _migrate([WORKFORCE_AFTER])
+    _migrate([APPLICATIONS_BEFORE_IMPORT, WORKFORCE_AFTER])
     forward_source, forward_is_current = _contract_state()
     assert forward_is_current
     assert "applications_programmecall" in forward_source

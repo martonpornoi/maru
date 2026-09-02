@@ -6,13 +6,13 @@ strict platform account-invitation HTML/API adapters, the repository-verified
 User accounts first experience slice, and an author-verified retention-v10
 corrective candidate; complete rendered owner acceptance, independent retention
 acceptance, production policy activation, and writer cutover remain gated
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 
 ## Purpose and requirements
 
 `maru.identity` owns the authentication-facing platform account and assurance
 boundary for IDN-001, IDN-006 through IDN-008, IDN-010, IDN-011, IDN-013,
-AUD-002, PRI-001, and UX-029. It does
+IDN-014, AUD-002, PRI-001, and UX-029. It does
 not own organizer profiles, participation, applications, HR, orders, finance,
 or conduct cases. ADR 0013 defines verified identity and scoped restrictions.
 
@@ -72,6 +72,12 @@ registrants, volunteers, onboarding subjects, or workforce assignees.
   is currently active and email-verified, and can lock that identity row inside
   a caller-owned transaction without releasing an account model or contact
   data;
+- `normalized_exact_login_email(value)`, the normalization-only boundary for
+  an exact login-email lookup; and
+- `resolve_active_verified_person_reference_by_email(email, lock=False)`, the
+  purpose-limited exact-email resolver that returns only an identifier reference
+  for an active, verified person and collapses invalid input, unknown addresses,
+  and unusable account states to the same empty result;
 - `create_platform_account_invitation(...)`,
   `reissue_platform_account_invitation(...)`,
   `revoke_platform_account_invitation(...)`, and
@@ -88,6 +94,14 @@ registrants, volunteers, onboarding subjects, or workforce assignees.
 - `run_platform_invitation_retention(...)`, the bounded, policy-bound cleanup
   worker for exact abandoned invitation identities;
 - `GET /api/v1/me/security-history`
+
+Applications' dormant Programme import stores its private staged lead email in
+Applications, not Identity. Lead preview and claim resolve it afresh through
+the exact-email seam, optionally under the caller-owned transaction lock, and
+persist no Identity match, Account/Person foreign key, reusable match state, or
+identity event. The seam creates no account, invitation, collaborator,
+Participation, or profile, and Issue #66 requires no Identity migration or
+mounted Identity surface.
 
 Successful sign-in and sign-out signals append safe event type, outcome, source
 channel, and trusted timestamp. The self API returns only the authenticated

@@ -87,6 +87,7 @@ the system.
 | [0080](0080-progressive-workforce-only-adoption.md) | Accepted | Make Workforce-only an immutable edition profile with truthful Maru-operator accountability and no unadopted authority or side effects |
 | [0081](0081-composite-programme-operations-adoption.md) | Accepted | Make Programme Operations an exact-version composite profile with one Scheduling-owned Programme release and Workforce-owned staffing |
 | [0082](0082-applications-owned-programme-calls-and-acknowledged-proposal-revisions.md) | Accepted | Keep Programme calls and exact acknowledged collaborative proposal revisions in Applications while review, targeting, Programme, and every mounted surface remain closed |
+| [0083](0083-preview-first-programme-import-staging.md) | Accepted | Stage Programme call/proposal imports behind minimized preview, exact-self claim, coherent permanent source binding, a sealed nested-command chain, and delegable continuity disposal |
 
 New ADRs use the next four-digit number and contain:
 
