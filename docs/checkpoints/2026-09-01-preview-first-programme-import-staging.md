@@ -127,10 +127,23 @@ Candidate verification completed so far:
   locked-input verification, static analysis, documentation policy, warning-
   fatal Sphinx/AutoAPI, migration drift, Django/contracts, and 33 frontend
   tests.
+- Exact clean-tree certification of rebased head
+  `88dbb770dd4b2d1b371c668af126e79c4898aaf9` passed all 2,735 unit tests,
+  all 2,861 PostgreSQL integration tests across eight isolated PostgreSQL 17
+  instances, every repository gate, and combined 90-percent branch coverage.
+- PR #69's first hosted run passed every non-database job and seven PostgreSQL
+  shards. Shard 5 reached 98 percent and continued issuing database work with
+  no assertion failure until the 120-minute job fail-stop cancelled it;
+  the slowest completed peer took 112 minutes. Exact-head JUnit evidence showed
+  that shard 5 actually needed 5,690.7 local seconds despite its 4,551.6-second
+  projection. Refreshing all 178 file weights balances the deterministic
+  schedule between 5,217.370 and 5,217.442 seconds while preserving the 120-minute
+  fail-stop, all eight serialized whole-file shards, no retries, and combined
+  coverage.
 
-Clean-tree repository certification and protected exact-head evidence remain
-to be appended to this candidate's pull-request record before merge. A focused
-or hosted check never activates the dormant adapter.
+Final clean-tree certification and protected exact-head evidence are recorded on
+the candidate's pull-request record before merge. A focused or hosted check
+never activates the dormant adapter.
 
 ## Data, migration, and deployment notes
 
@@ -156,9 +169,9 @@ or hosted check never activates the dormant adapter.
 - The adapter and services are intentionally dormant and have no user-facing
   acceptance, production retention approval, cleanup worker, restore rehearsal,
   representative accessibility evidence, load evidence, or owner acceptance.
-- The dependency-security blocker is resolved by issue #67 and PR #68. This
-  rebased candidate still requires its own exact-commit certification and
-  protected pull-request evidence before merge.
+- The dependency-security blocker is resolved by issue #67 and PR #68. The
+  candidate still requires authoritative protected evidence for its final exact
+  head before merge.
 - Department retirement still needs disclosure-safe preflight plus governed
   reassignment/disposal. Issue #64 owns that prerequisite.
 - The staged package is not an Applications review or decision and cannot

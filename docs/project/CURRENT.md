@@ -363,7 +363,7 @@ raw-integrity acceptance, full repository certification, and the protected
 exact-head gate are recorded separately as they complete; none activates the
 dormant workflow.
 
-The Issue #66 candidate currently passes the complete 2,734-test unit suite,
+The Issue #66 candidate currently passes the complete 2,735-test unit suite,
 26 focused PostgreSQL service/integrity cases, the seven-case fresh migration
 executor, the historical integrity-function ACL reapply case, all 48 focused
 Applications readiness cases, documentation validation, warning-fatal Sphinx,
@@ -377,8 +377,22 @@ in the unchanged locked `djangorestframework==3.17.1`. Bounded security issue
 [#68](https://github.com/martonpornoi/maru/pull/68) delivered 3.17.2 to `main`;
 this candidate is now rebased onto that repaired mainline. Its complete current-
 tree non-database gate passes, including both dependency audits with no known
-vulnerabilities, and it still requires its own exact-commit certification and
-protected acceptance.
+vulnerabilities. At that point it still required its own exact-commit
+certification and protected acceptance.
+
+The rebased candidate's first exact clean-tree certification passed all 2,735
+unit tests, all 2,861 PostgreSQL integration tests across eight isolated
+instances, every repository gate, and combined 90-percent branch coverage.
+PR #69's first hosted run passed every non-database job and seven integration
+shards. Shard 5 reached 98 percent and continued issuing PostgreSQL work without
+an assertion failure until GitHub cancelled it at the 120-minute job
+limit; the slowest completed peer needed 112 minutes. Exact-head JUnit evidence
+showed that the path-complete timing map was stale: shard 5 actually needed
+5,690.7 local seconds despite a 4,551.6-second projection. Refreshing all 178
+file weights balances the deterministic schedule between 5,217.370 and 5,217.442
+seconds while preserving the 120-minute fail-stop, eight whole-file shards,
+no-retry policy, and complete combined-coverage boundary. Final exact-head local
+and protected evidence belongs to PR #69.
 
 The next Programme-critical child is Department retirement coordination in
 [#64](https://github.com/martonpornoi/maru/issues/64): unresolved private
