@@ -1,8 +1,10 @@
 """Unit contracts for historical-migration test cleanup."""
 
+from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
 import pytest
+from django.db.migrations.loader import MigrationLoader
 
 from tests.support.migrations import (
     flush_then_restore_current_migration_graph,
@@ -172,6 +174,20 @@ def test_current_workforce_and_non_workforce_targets_are_unchanged() -> None:
     authorization = ("authorization", "0010_retired_department_authority_guards")
     assert workforce_migration_targets(executor, authorization) == (authorization,)
     executor.loader.graph.forwards_plan.assert_not_called()
+
+
+def test_registration_history_does_not_reintroduce_later_workforce_dependencies() -> (
+    None
+):
+    loader = MigrationLoader(None)
+    target = ("registration", "0035_configuration_source_binding_guards")
+    targets = registration_migration_targets(SimpleNamespace(loader=loader), target)
+    allowed_registration = set(loader.graph.forwards_plan(target))
+    for selected in targets:
+        assert all(
+            node[0] != "registration" or node in allowed_registration
+            for node in loader.graph.forwards_plan(selected)
+        )
 
 
 def test_historical_data_is_flushed_before_current_leaves_are_restored() -> None:

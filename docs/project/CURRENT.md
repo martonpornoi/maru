@@ -28,6 +28,11 @@ Authorization `0023`, Applications `0010` through `0012`, and Workforce `0018`
 install the vocabulary, evidence, integrity, and downgrade fences. Runtime
 access remains SELECT-only for dormant relations.
 
+Certification follow-up aligned historical Registration migration targets and
+Applications ACL restoration with the new dependency graph. Retained Department
+locking uses a minimized Workforce query instead of a cross-module model import.
+The repaired migration, concurrency, and recovery focus passes all 12 cases.
+
 The [ownership checkpoint](../checkpoints/2026-09-04-programme-department-ownership-continuity.md)
 records review and verification; exact-commit certification and the protected
 PR gate must pass before merge. The next Programme child is staged review and

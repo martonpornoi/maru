@@ -1,5 +1,10 @@
 # Workforce module
 
+Programme ownership continuity resolves current or historical Departments
+through `resolve_retained_department_reference`, a public internal query that
+returns only the exact ID and retired flag. It grants no authority or discovery;
+mutation callers acquire the edition mutex before its optional row lock.
+
 Status: Position, hierarchy, opportunity, agreement, authority onboarding,
 ADR 0041 containment, version-fenced Department and Position management, and
 the owner-safe Position assignment lifecycle with shared strict HTML/API

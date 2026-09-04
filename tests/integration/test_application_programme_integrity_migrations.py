@@ -63,6 +63,8 @@ from maru.applications.models import (
     ReviewDecisionKind,
     ReviewerBasis,
 )
+from maru.applications.programme_commands import retire_programme_call
+from maru.applications.programme_queries import get_self_programme_proposal_detail
 from maru.applications.programme_writer_boundary import (
     programme_application_database_writer,
     programme_application_writer,
@@ -72,7 +74,9 @@ from maru.applications.readiness import (
     applications_database_integrity_is_ready,
 )
 from maru.core.database_integrity_readiness import inspect_database_integrity_catalog
+from maru.workforce.structure_commands import StructureDependencyConflictError
 from tests.factories import AccountFactory, EventEditionFactory
+from tests.integration.test_application_programme_services import _AUTHORIZER
 from tests.workforce_helpers import (
     create_department_for_test,
     retire_department_for_test,
@@ -1586,16 +1590,47 @@ def test_raw_call_owner_rejects_cross_edition_department() -> None:
         )
 
 
-def test_department_retirement_blocks_new_starts_but_not_existing_self_history() -> (
-    None
-):
+def test_department_retirement_blocks_new_starts_but_not_existing_self_history(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     active = _activate_call(_create_draft_call())
     existing = _start_proposal(active)
-    retire_department_for_test(department=active.draft.department)
-
     _revise_selection(existing)
+    with pytest.raises(StructureDependencyConflictError):
+        retire_department_for_test(department=active.draft.department)
+    monkeypatch.setattr(
+        "maru.effects.services.require_effect_delivery_allowed",
+        lambda **_kwargs: None,
+    )
+    world = active.draft
+    retire_programme_call(
+        actor_id=world.actor.id,
+        organization_id=world.definition.organization_id,
+        edition_id=world.definition.edition_id,
+        call_id=world.call.id,
+        owner_department_id=world.department.id,
+        expected_version=2,
+        reason="Retire the call before retiring its accountable Department.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+        authorizer=_AUTHORIZER,
+    )
+    retire_department_for_test(department=world.department)
+    detail = get_self_programme_proposal_detail(
+        actor_id=existing.submission.account_id,
+        organization_id=world.definition.organization_id,
+        edition_id=world.definition.edition_id,
+        proposal_id=existing.proposal.id,
+        requested_fields=frozenset({"proposal_summary", "selection"}),
+        correlation_id=uuid4(),
+        source_channel="test",
+        authorizer=_AUTHORIZER,
+    )
+    assert detail.summary is not None
+    assert detail.selection.requested_duration_minutes == 90
 
-    with pytest.raises(DatabaseError, match="proposal start"):
+    with pytest.raises(DatabaseError, match="active definition"):
         _start_proposal(active, actor=AccountFactory())
     assert existing.submission.aggregate_version == 2
 

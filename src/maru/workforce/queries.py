@@ -106,6 +106,73 @@ class CurrentDepartmentSetReference:
     department_ids: tuple[UUID, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class RetainedDepartmentReference:
+    """Identify an exact retained Department without granting content authority.
+
+    Attributes
+    ----------
+    department_id : UUID
+        Exact Department identifier within the requested organization and edition.
+    is_retired : bool
+        Whether ordinary current-Department authority is closed.
+    """
+
+    department_id: UUID
+    is_retired: bool
+
+
+def resolve_retained_department_reference(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_id: UUID,
+    lock: bool = False,
+) -> RetainedDepartmentReference | None:
+    """Resolve one current or retired Department for governed ownership continuity.
+
+    This internal reference seam conveys no labels, content, or authorization.
+    Callers authorize their exact purpose independently and, for mutations,
+    acquire the shared edition mutex before requesting the row lock.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Organization expected to own the retained Department.
+    edition_id : UUID
+        Exact edition expected to own the Department.
+    department_id : UUID
+        Caller-supplied opaque Department identifier; no discovery is performed.
+    lock : bool, default=False
+        Whether to lock the row in the caller's existing transaction.
+
+    Returns
+    -------
+    RetainedDepartmentReference | None
+        Identifier and lifecycle only, or ``None`` for invalid or foreign scope.
+    """
+    query = Department.objects.all()
+    if lock:
+        query = query.select_for_update(of=("self",))
+    try:
+        row = (
+            query.filter(
+                id=department_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+            )
+            .values("id", "retired_at")
+            .first()
+        )
+    except (TypeError, ValueError, ValidationError):
+        return None
+    if row is None:
+        return None
+    return RetainedDepartmentReference(
+        department_id=row["id"], is_retired=row["retired_at"] is not None
+    )
+
+
 def resolve_current_department_reference(
     *,
     organization_id: UUID,

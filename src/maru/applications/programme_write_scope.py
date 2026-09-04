@@ -16,7 +16,7 @@ from maru.authorization.retired_targets import (
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import ConventionSeries, Organization
-from maru.workforce.models import Department
+from maru.workforce.queries import resolve_retained_department_reference
 from maru.workforce.writer_boundary import lock_edition_structure_mutex
 
 if TYPE_CHECKING:
@@ -145,19 +145,17 @@ def lock_programme_edition_write_scope(
         edition_id=locked_edition_id,
     )
 
-    locked_department_rows = tuple(
-        Department.objects.select_for_update()
-        .filter(id__in=normalized_department_ids)
-        .order_by("id")
-        .values_list("id", "organization_id", "edition_id")
-    )
-    if tuple(
-        row[0] for row in locked_department_rows
-    ) != normalized_department_ids or any(
-        row[1] != locked_organization_id or row[2] != locked_edition_id
-        for row in locked_department_rows
-    ):
-        raise ApplicationsProgrammeWriteScopeUnavailableError
+    for department_id in normalized_department_ids:
+        if (
+            resolve_retained_department_reference(
+                organization_id=locked_organization_id,
+                edition_id=locked_edition_id,
+                department_id=department_id,
+                lock=True,
+            )
+            is None
+        ):
+            raise ApplicationsProgrammeWriteScopeUnavailableError
 
     locked_actor_id = (
         Account.objects.select_for_update()

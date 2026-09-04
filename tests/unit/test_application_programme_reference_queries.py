@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 from uuid import uuid4
 
+import pytest
 from django.utils import timezone
 
 from maru.applications import programme_queries
@@ -17,6 +18,7 @@ from maru.identity.queries import (
 from maru.workforce.queries import (
     CurrentDepartmentReference,
     resolve_current_department_reference,
+    resolve_retained_department_reference,
 )
 
 
@@ -300,6 +302,37 @@ def test_collaborator_projection_hides_every_other_invitation(
     )
     assert [row.account_id for row in contributors] == [lead_id, collaborator_id]
     assert all(not row.invitation_expired for row in contributors)
+
+
+@pytest.mark.parametrize("retired", [False, True])
+def test_retained_department_reference_locks_exact_scope_without_labels(
+    monkeypatch,
+    retired: bool,
+) -> None:
+    organization_id, edition_id, department_id = uuid4(), uuid4(), uuid4()
+    manager = MagicMock()
+    query = manager.all.return_value.select_for_update.return_value
+    query.filter.return_value.values.return_value.first.return_value = {
+        "id": department_id,
+        "retired_at": timezone.now() if retired else None,
+    }
+    monkeypatch.setattr(
+        "maru.workforce.queries.Department", SimpleNamespace(objects=manager)
+    )
+    reference = resolve_retained_department_reference(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_id=department_id,
+        lock=True,
+    )
+    assert reference.department_id == department_id
+    assert reference.is_retired is retired
+    assert tuple(reference.__dataclass_fields__) == ("department_id", "is_retired")
+    manager.all.return_value.select_for_update.assert_called_once_with(of=("self",))
+    query.filter.assert_called_once_with(
+        id=department_id, organization_id=organization_id, edition_id=edition_id
+    )
+    query.filter.return_value.values.assert_called_once_with("id", "retired_at")
 
 
 def test_workforce_department_reference_is_exact_current_and_label_free(

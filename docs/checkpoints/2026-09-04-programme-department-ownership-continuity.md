@@ -51,3 +51,22 @@ Finish this issue through protected squash merge and exact-main synchronization,
 then stop as requested. The next separately scoped Programme child is staged
 review and accountable decisions. Accepted-item conversion and hosts follow;
 Scheduling, staffing, release, continuity, and profile activation remain later.
+
+## Certification follow-up
+
+The first full certification exposed obsolete historical-test assumptions:
+Registration rollback targets also selected new Applications migrations that
+depended on later Registration state; the Applications ACL restoration test
+stopped before the current endpoint; and an older proposal-history test tried
+to retire a Department while its call was still Active. The helper now chooses
+compatible leaves, with a regression against the real migration graph. ACL
+restoration reaches the current endpoint, and the history test explicitly
+retires the call before its Department. That history regression passes.
+
+Retained Department resolution and row locking now use a documented, exact-scope,
+label-free Workforce query rather than an Applications import of its model.
+Both current and retired reference contracts are unit-tested. The combined
+repair focus passes all 12 migration, concurrency, and recovery cases. The
+obsolete certification run was stopped, its logs retained locally, and its
+disposable test databases removed; a fresh clean-commit certification remains
+mandatory before protected acceptance.

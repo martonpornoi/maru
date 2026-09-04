@@ -62,7 +62,7 @@ def registration_migration_targets(
     executor: MigrationExecutor,
     target: tuple[str, str],
 ) -> tuple[tuple[str, str], ...]:
-    """Select a graph-consistent Workforce leaf for Registration history."""
+    """Select compatible Workforce and Applications leaves for Registration history."""
 
     targets_by_app = {
         migration_key[0]: migration_key
@@ -73,6 +73,8 @@ def registration_migration_targets(
         executor.loader.graph.forwards_plan(target)
     ):
         targets_by_app["workforce"] = _WORKFORCE_BEFORE_DEPARTMENT_FK_SUCCESSOR
+        if "applications" in targets_by_app:
+            targets_by_app["applications"] = _APPLICATIONS_BEFORE_PROGRAMME_OWNERSHIP
     return tuple(sorted(targets_by_app.values()))
 
 
