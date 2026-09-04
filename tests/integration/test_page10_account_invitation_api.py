@@ -5,6 +5,8 @@ from __future__ import annotations
 import base64
 import json
 import logging
+from datetime import UTC, datetime
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import patch
 from uuid import UUID, uuid4
@@ -1007,9 +1009,14 @@ def test_public_acceptance_is_non_enumerating_for_random_and_revoked_codes(
     assert random_token not in random.content.decode()
 
 
-def test_public_acceptance_throttles_without_changing_non_enumerating_failures() -> (
-    None
-):
+def test_public_acceptance_throttles_without_changing_non_enumerating_failures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Keep all attempts in one rate-limit window, even across a real boundary.
+    monkeypatch.setattr(
+        "maru.identity.services.timezone",
+        SimpleNamespace(now=lambda: datetime(2026, 9, 4, 12, 0, tzinfo=UTC)),
+    )
     client = _client()
     responses = [
         client.post(

@@ -70,3 +70,9 @@ repair focus passes all 12 migration, concurrency, and recovery cases. The
 obsolete certification run was stopped, its logs retained locally, and its
 disposable test databases removed; a fresh clean-commit certification remains
 mandatory before protected acceptance.
+
+The next run also exposed a wall-clock-dependent invitation acceptance test at
+a 15-minute rate-limit boundary. A controlled boundary crossing reproduces its
+unexpected ninth HTTP 400, while a same-window run correctly returns HTTP 429.
+The test now fixes its abuse-control clock within one window. No production
+rate-limit behavior or assertion was relaxed.

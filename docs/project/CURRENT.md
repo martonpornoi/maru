@@ -32,6 +32,8 @@ Certification follow-up aligned historical Registration migration targets and
 Applications ACL restoration with the new dependency graph. Retained Department
 locking uses a minimized Workforce query instead of a cross-module model import.
 The repaired migration, concurrency, and recovery focus passes all 12 cases.
+An unrelated certification test now fixes its invitation rate-limit clock
+within one window; production behavior and assertions remain unchanged.
 
 The [ownership checkpoint](../checkpoints/2026-09-04-programme-department-ownership-continuity.md)
 records review and verification; exact-commit certification and the protected
