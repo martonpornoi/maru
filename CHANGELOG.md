@@ -15,6 +15,14 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added Programme Department ownership continuity: Draft calls and pristine
+  import batches have explicit reassignment commands, while Department
+  retirement refuses unresolved calls or staged payload without exposing their
+  contents. Shared transaction locks and PostgreSQL guards close ownership
+  races. Exact-ID historical call recovery preserves proposal and import
+  evidence under a dormant break-glass capability. Programme Operations remains
+  inactive ([#64](https://github.com/martonpornoi/maru/issues/64), ADR 0084,
+  PRG-011).
 - Added a dormant, preview-first Programme import boundary in Applications.
   Strict bounded JSON packages can be staged without creating call or proposal
   state, inspected through a non-disclosing organizer preview, and applied only

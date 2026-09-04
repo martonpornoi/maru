@@ -126,6 +126,14 @@ def test_identity_history_selects_compatible_cross_module_leaves(
             ),
             ("applications", "0006_programme_populated_downgrade_fence"),
         ),
+        (
+            ("workforce", "0017_programme_import_department_fk_contract"),
+            (
+                ("workforce", "0016_programme_call_department_fk_contract"),
+                ("workforce", "0017_programme_import_department_fk_contract"),
+            ),
+            ("applications", "0009_programme_import_populated_downgrade_fence"),
+        ),
     ],
 )
 def test_workforce_history_removes_later_programme_call_schema(
@@ -150,9 +158,10 @@ def test_workforce_history_removes_later_programme_call_schema(
 
 def test_current_workforce_and_non_workforce_targets_are_unchanged() -> None:
     executor = Mock()
-    current = ("workforce", "0017_programme_import_department_fk_contract")
+    current = ("workforce", "0018_programme_department_ownership_contract")
     executor.loader.graph.forwards_plan.return_value = (
         ("workforce", "0016_programme_call_department_fk_contract"),
+        ("workforce", "0017_programme_import_department_fk_contract"),
         current,
     )
 

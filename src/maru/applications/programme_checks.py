@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from django.core.checks import CheckMessage, Error, Tags, register
 
 from maru.applications.programme_adoption import (
+    APPLICATION_PROGRAMME_IMPORT_ADAPTER,
     APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER,
     APPLICATION_PROGRAMME_ITEM_TARGET_KIND,
     APPLICATION_PROGRAMME_SELF_ADAPTER,
@@ -19,6 +20,14 @@ from maru.applications.programme_events import (
     APPLICATIONS_PROGRAMME_EVENT_SCHEMA_VERSION,
     APPLICATIONS_PROGRAMME_PROPOSAL_CHANGED_EVENT,
 )
+from maru.applications.programme_import_authorization import (
+    APPLICATIONS_DISPOSE_PROGRAMME_IMPORT,
+    APPLICATIONS_IMPORT_PROGRAMME,
+)
+from maru.applications.programme_import_events import (
+    APPLICATIONS_PROGRAMME_IMPORT_CHANGED_EVENT,
+    APPLICATIONS_PROGRAMME_IMPORT_EVENT_SCHEMA_VERSION,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -29,14 +38,20 @@ _PROGRAMME_APPLICATION_EVENTS = frozenset(
     {
         APPLICATIONS_PROGRAMME_CALL_CHANGED_EVENT,
         APPLICATIONS_PROGRAMME_PROPOSAL_CHANGED_EVENT,
+        APPLICATIONS_PROGRAMME_IMPORT_CHANGED_EVENT,
     }
 )
 _PROGRAMME_APPLICATION_ADAPTERS = frozenset(
     {
         APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER,
         APPLICATION_PROGRAMME_SELF_ADAPTER,
+        APPLICATION_PROGRAMME_IMPORT_ADAPTER,
     }
 )
+_ALL_PROGRAMME_APPLICATION_CAPABILITIES = APPLICATIONS_PROGRAMME_CAPABILITY_CODES | {
+    APPLICATIONS_IMPORT_PROGRAMME,
+    APPLICATIONS_DISPOSE_PROGRAMME_IMPORT,
+}
 
 
 def applications_programme_dormancy_problem_codes() -> tuple[str, ...]:
@@ -61,7 +76,7 @@ def applications_programme_dormancy_problem_codes() -> tuple[str, ...]:
     from maru.events.adoption import ADOPTION_PROFILES  # noqa: PLC0415
 
     problems: set[str] = set()
-    if not APPLICATIONS_PROGRAMME_CAPABILITY_CODES.issubset(CAPABILITIES):
+    if not _ALL_PROGRAMME_APPLICATION_CAPABILITIES.issubset(CAPABILITIES):
         problems.add("catalog.capability-missing")
     if not _PROGRAMME_APPLICATION_ADAPTERS.issubset(APPLICATIONS_ADOPTION_ADAPTERS):
         problems.add("catalog.adapter-missing")
@@ -75,7 +90,11 @@ def applications_programme_dormancy_problem_codes() -> tuple[str, ...]:
         definition = event_definition(event_name)
         if definition is None:
             problems.add("catalog.event-missing")
-        elif definition.schema_version != (APPLICATIONS_PROGRAMME_EVENT_SCHEMA_VERSION):
+        elif definition.schema_version != (
+            APPLICATIONS_PROGRAMME_IMPORT_EVENT_SCHEMA_VERSION
+            if event_name == APPLICATIONS_PROGRAMME_IMPORT_CHANGED_EVENT
+            else APPLICATIONS_PROGRAMME_EVENT_SCHEMA_VERSION
+        ):
             problems.add("catalog.event-version-mismatch")
         if event_name not in ACKNOWLEDGED_DORMANT_EVENTS:
             problems.add("dormancy.event-not-acknowledged")
@@ -87,7 +106,7 @@ def applications_programme_dormancy_problem_codes() -> tuple[str, ...]:
         problems.add("dormancy.non-edition-effect-route")
 
     for profile in ADOPTION_PROFILES.values():
-        if profile.capability_codes & APPLICATIONS_PROGRAMME_CAPABILITY_CODES:
+        if profile.capability_codes & _ALL_PROGRAMME_APPLICATION_CAPABILITIES:
             problems.add("dormancy.capability-adopted")
         if profile.adapter_codes & _PROGRAMME_APPLICATION_ADAPTERS:
             problems.add("dormancy.adapter-adopted")

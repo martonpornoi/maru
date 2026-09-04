@@ -14,11 +14,11 @@
   `/api/v1/organizations/<organization-id>/editions/<edition-id>/workforce/structure`
   GET projection plus five strict template/Department mutation operations
 - Requirements: IDN-002, IDN-004, IDN-009, IDN-011, IDN-012, IDN-014,
-  EVT-002, EVT-003, EVT-006, HR-007, HR-010, HR-011, UX-019, UX-020,
+  EVT-002, EVT-003, EVT-006, HR-007, HR-010, HR-011, PRG-011, UX-019, UX-020,
   UX-025, UX-030, AUD-001, AUD-005, INT-001, NFR-001 through NFR-004,
   NFR-008, NFR-009, and NFR-013
 - Decisions: ADRs 0007, 0028, 0036, 0039 through 0042, 0044, 0045, 0048,
-  and 0080
+  0080, and 0084
 
 ## Purpose and primary users
 
@@ -340,7 +340,11 @@ Retirement is a separate one-way POST action in Organization structure. It accep
 current expected structure version and reason. It is refused while the
 Department has a current child, open Position, an active assignment whose term
 has not ended, unclosed authority that is effective now or scheduled for later,
-or another dependency whose meaning would be obscured. Successful retirement
+an Applications-owned Programme call that is still Draft or Active, an import
+batch with any unresolved staged item, or another dependency whose meaning
+would be obscured. Expired staging remains unresolved until explicit disposal;
+fully applied or discarded import evidence and retired calls do not block
+retirement. Successful retirement
 preserves the Department, stable code, parent history, and every closed
 relationship, including immutable Position bindings, and prevents new
 children, Positions, or access targets.
@@ -348,6 +352,14 @@ An immutable typed-resource binding is retained historical evidence and does
 not by itself block retirement, even though it still prevents hard deletion
 and a new binding cannot be created beneath a retired Department. Reactivation
 needs a future explicit contract.
+
+Workforce acquires the shared exact-edition mutex before it asks the public
+Applications dependency seam. The call and import probes both run and expose
+only `clear`, `blocked`, or `unavailable`: any known block wins, otherwise any
+unavailable result fails closed. The page never receives or renders a
+dependency category, count, name, identifier, source key, email, payload, or
+digest. Refusal leaves the structure cursor and every success receipt, audit,
+event, and outbox relation unchanged.
 
 Hard deletion is limited to an unused leaf Department. In addition to expected
 version and reason, the form requires `confirmation_name` exactly equal to the
@@ -357,9 +369,10 @@ cross-module reference, or operational history beyond initial creation. It
 never cascades. Failure returns a protected conflict and identifies retirement
 as an alternative only when retirement itself is safe.
 
-The database deletion contract recognizes all 13 current Department foreign
+The database deletion contract recognizes all 19 current Department foreign
 keys, including the Applications, Charities, Logistics, Registration, and
-Venues references added after the original Organization structure cutover. Workforce `0008`
+Venues references added after the original Organization structure cutover and
+the call/import ownership plus four transition-receipt references. Workforce `0008`
 depends on those exact FK-creator migrations. Its reverse restores the `0007`
 allowlist and therefore fails deletion closed until the successor references
 are removed by a graph-consistent downgrade.
@@ -415,6 +428,13 @@ ineligible Department/parent target return the name-free `404` code
 media type and stable codes for validation, stale, protected, lifecycle,
 limit, denied, not-found, idempotency-conflict, and dependency failures.
 
+A known retirement dependency returns `409
+structure_department_has_dependencies` with the generic detail “The structure
+change conflicts with current state.” and field message “Retained dependencies
+protect this record.” Dependency-service unavailability returns `503
+service_unavailable` with “A required Maru service is temporarily unavailable.”
+Neither response varies with call/import kind or cardinality.
+
 The GET response is the exact organization and edition labels, minimized
 governance discriminator, and either one complete nested structure or the
 explicit empty overflow state. Its declared problem statuses are `400`, `403`,
@@ -445,7 +465,8 @@ fall back to direct model save.
   tree or evidence.
 - **Stale/idempotency conflict:** winning version retained with reload guidance.
 - **Protected:** dependency-safe explanation without leaking hidden people or
-  records.
+  records; the same presentation covers Programme calls, imports, and every
+  other retained dependency.
 - **Denied/not found:** no foreign tenant name, structure, count, or principal.
 - **Limit exceeded:** explicit complete-tree-unavailable state; no misleading
   partial editor.
@@ -506,8 +527,20 @@ depends on Applications `0004` and Workforce `0015` and extends that inventory
 to 14 references with
 `applications_programmecall.owner_department_id`. Omitting or reversing `0016`
 while the Programme-call foreign key remains makes Department deletion fail
-closed. This exact recognition does not implement issue #64's required call
-reassignment, retirement preflight, or governed recovery workflow.
+closed. Workforce `0017` adds the import-batch owner and
+`0018_programme_department_ownership_contract`, after Applications `0012`,
+adds the four call/import transition-receipt source/destination references for
+an exact 19-reference inventory. `0018` also installs the reciprocal raw-write
+retirement backstop. Reversing it restores the exact 15-reference predecessor
+and must precede removing Applications `0010`.
+
+Applications `0010` through `0012` and Authorization `0023` add the transition
+evidence, integrity guards, downgrade fence, and dormant exact-ID recovery
+declaration. Forward migration does not fabricate evidence for an old orphan.
+Recovery fixes the named call forward through the guarded Applications command
+or restores one mutually consistent whole-database point; it never disables a
+trigger, rewrites a source binding, edits migration history, or grants runtime
+write authority.
 
 Preflight reports count-only malformed scope, cycle, duplicate-control,
 unsupported-reference, and version blockers, with at most bounded safe edition
@@ -541,6 +574,9 @@ invents template provenance for legacy rows.
   repair, API reorder version behavior, and minimized correlated audit/event/
   outbox evidence;
 - retirement dependency matrix and exact-confirmation non-cascading deletion;
+- Programme call/import clear, blocked, unavailable, known-block-wins, expired-
+  staging, and concurrent reassignment/retirement cases with no identifier or
+  dependency-category disclosure and no failed-command evidence;
 - deterministic bounded complete projection, explicit overflow, no email,
   account state, private evidence, hidden count, or rendered technical ID;
 - fresh final authorization plus minimized HTML/API sensitive-read audit before
@@ -553,7 +589,8 @@ invents template provenance for legacy rows.
   PRG, one current navigation item, strict browser input, retained
   retry/version controls, and actual method/route read-audit provenance;
 - fresh and populated migration, raw/bulk SQL guards, concurrency, downgrade
-  fence, restore/fix-forward rehearsal, and no inferred legacy provenance; and
+  fence, exact 19-reference inventory, restore/fix-forward rehearsal, and no
+  inferred legacy provenance; and
 - empty/populated/diverged/read-only/validation/stale/protected/denied/limit/
   dependency states at desktop and 390 pixels with accessibility evidence.
 

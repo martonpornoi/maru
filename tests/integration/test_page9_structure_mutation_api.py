@@ -22,6 +22,7 @@ from maru.workforce.models import (
 )
 from maru.workforce.structure_commands import (
     StructureCommandError,
+    StructureDependencyUnavailableError,
     StructureLimitConflictError,
     StructureStateConflictError,
 )
@@ -798,6 +799,7 @@ def test_remaining_domain_conflicts_have_stable_409_codes(
     [
         DatabaseError("private database label"),
         StructureCommandError("private command label"),
+        StructureDependencyUnavailableError("private Programme dependency label"),
     ],
 )
 def test_infrastructure_and_base_command_failures_are_name_free_503(
@@ -817,7 +819,41 @@ def test_infrastructure_and_base_command_failures_are_name_free_503(
     assert response.json()["code"] == "service_unavailable"
     assert "private database" not in response.content.decode()
     assert "private command" not in response.content.decode()
+    assert "private Programme" not in response.content.decode()
     assert not Department.objects.exists()
+
+
+def test_retirement_dependency_unavailability_is_name_free_503() -> None:
+    """The retirement API must keep Programme dependency failure details private."""
+    edition = EventEditionFactory()
+    client = _client(_administrator())
+    created = _post_create(client=client, edition=edition, name="Programme")
+    department_id = UUID(created.json()["department_id"])
+
+    with patch(
+        "maru.workforce.api.retire_department",
+        side_effect=StructureDependencyUnavailableError(
+            "private Programme dependency detail"
+        ),
+    ):
+        response = client.post(
+            _retire_url(edition, department_id),
+            {
+                "expected_version": 1,
+                "reason": "Keep the dependency failure non-disclosing.",
+            },
+            format="json",
+        )
+
+    assert response.status_code == 503
+    assert response.headers["Content-Type"].startswith("application/problem+json")
+    assert response.json()["code"] == "service_unavailable"
+    assert response.json()["detail"] == (
+        "A required Maru service is temporarily unavailable."
+    )
+    assert "private Programme" not in response.content.decode()
+    assert Department.objects.get(pk=department_id).retired_at is None
+    assert EditionStructureControl.objects.get(edition=edition).aggregate_version == 1
 
 
 def test_server_owned_command_validation_is_a_name_free_503() -> None:

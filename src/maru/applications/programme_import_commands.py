@@ -15,7 +15,7 @@ from uuid import UUID, uuid4
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.utils import timezone
 
 from maru.applications.answer_values import condition_matches, normalize_answer_value
@@ -71,6 +71,7 @@ from maru.applications.programme_import_authorization import (
     authorize_programme_import_disposal_scope,
     authorize_programme_import_retry_scope,
     authorize_programme_import_self_scope,
+    require_current_programme_import_owner,
 )
 from maru.applications.programme_import_events import (
     APPLICATIONS_PROGRAMME_IMPORT_CHANGED_EVENT,
@@ -100,6 +101,10 @@ from maru.applications.programme_inputs import (
     normalized_programme_text,
     require_programme_expected_version,
     require_programme_uuid,
+)
+from maru.applications.programme_write_scope import (
+    ApplicationsProgrammeWriteScopeUnavailableError,
+    lock_programme_edition_write_scope,
 )
 from maru.applications.retry_namespace import lock_applications_retry_namespace
 from maru.audit.services import AuditRecord, append_audit
@@ -807,6 +812,84 @@ def _lock_batch(
     return batch
 
 
+def _batch_owner_department_id(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    batch_id: UUID,
+) -> UUID:
+    """Resolve only the candidate owner needed by the canonical lock boundary.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Organization expected to own the batch.
+    edition_id : UUID
+        Edition expected to own the batch.
+    batch_id : UUID
+        Exact candidate batch identifier.
+
+    Returns
+    -------
+    UUID
+        Retained owner Department identifier for lock discovery.
+
+    Raises
+    ------
+    ApplicationsProgrammeImportUnavailableError
+        If the exact retained batch cannot be found.
+    """
+    owner_department_id = (
+        ProgrammeImportBatch.objects.filter(
+            id=batch_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        .order_by()
+        .values_list("owner_department_id", flat=True)
+        .first()
+    )
+    if owner_department_id is None:
+        raise ApplicationsProgrammeImportUnavailableError
+    return owner_department_id
+
+
+def _lock_programme_write_scope(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_ids: tuple[UUID, ...],
+) -> None:
+    """Acquire the retirement-safe Programme lock chain or fail opaquely.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Exact actor to lock after Departments.
+    organization_id : UUID
+        Exact organization owning the scope.
+    edition_id : UUID
+        Exact edition whose Programme state is protected.
+    department_ids : tuple[UUID, ...]
+        Complete Department set needed by the operation.
+
+    Raises
+    ------
+    ApplicationsProgrammeImportUnavailableError
+        If any exact scope component is absent or incoherent.
+    """
+    try:
+        lock_programme_edition_write_scope(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_ids=department_ids,
+            actor_id=actor_id,
+        )
+    except ApplicationsProgrammeWriteScopeUnavailableError as error:
+        raise ApplicationsProgrammeImportUnavailableError from error
+
+
 def _require_staged_batch(
     batch: ProgrammeImportBatch,
     *,
@@ -865,6 +948,8 @@ def _record_success(
     source_binding: ProgrammeImportSourceBinding | None = None,
     adopted_preview_digest: str = "",
     applied_command_count: int = 0,
+    source_department_id: UUID | None = None,
+    destination_department_id: UUID | None = None,
 ) -> tuple[ProgrammeImportCommandResult, ProgrammeImportCommandReceipt]:
     receipt = ProgrammeImportCommandReceipt.objects.create(
         organization_id=scope.organization_id,
@@ -882,6 +967,8 @@ def _record_success(
         preview_revision=preview_revision,
         preview_item_result=preview_item_result,
         source_binding=source_binding,
+        source_department_id=source_department_id,
+        destination_department_id=destination_department_id,
         adopted_preview_digest=adopted_preview_digest,
         result_kind=result_kind,
         expected_version=expected_version,
@@ -1122,6 +1209,7 @@ def _preview_digest_payload(
             "item_id": item.id,
             "item_version": item.aggregate_version,
             "item_digest": item.source_digest,
+            "batch_version": item.batch.aggregate_version,
             "status": status,
             "action": action,
             "dependency_state": dependency_state,
@@ -1413,6 +1501,12 @@ def stage_programme_import(
     )
     if replay is not None:
         return replay
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(owner_department_id,),
+    )
     scope = authorize_programme_import_department_scope(
         actor_id=actor_id,
         organization_id=organization_id,
@@ -1482,10 +1576,243 @@ def stage_programme_import(
 
 @_audit_import_errors(
     capability_code=APPLICATIONS_IMPORT_PROGRAMME,
+    operation="command.batch_reassigned",
+)
+@transaction.atomic
+def reassign_programme_import_batch(  # noqa: DOC503
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    batch_id: UUID,
+    source_department_id: UUID,
+    destination_department_id: UUID,
+    expected_version: int,
+    reason: str,
+    retry_key: UUID,
+    correlation_id: UUID,
+    source_channel: str,
+    now: datetime | None = None,
+    authorizer: ApplicationsProgrammeImportAuthorizer = _IMPORT_AUTHZ,
+) -> ProgrammeImportCommandResult:
+    """Move one pristine staged batch between two current Departments.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Account requesting the ownership transfer.
+    organization_id : UUID
+        Organization that owns the batch and both Departments.
+    edition_id : UUID
+        Exact private-planning edition containing the batch.
+    batch_id : UUID
+        Opaque staged-batch identifier.
+    source_department_id : UUID
+        Exact current Department expected to own the batch.
+    destination_department_id : UUID
+        Exact current Department that will receive the batch.
+    expected_version : int
+        Optimistic batch cursor to advance by one.
+    reason : str
+        Inspectable administrative rationale for the transfer.
+    retry_key : UUID
+        Edition-scoped idempotency key for this normalized intent.
+    correlation_id : UUID
+        Correlation identifier shared by audit and event evidence.
+    source_channel : str
+        Registered channel through which the command arrived.
+    now : datetime | None, default=None
+        Optional timezone-aware command time.
+    authorizer : ApplicationsProgrammeImportAuthorizer, default=_IMPORT_AUTHZ
+        Exact-Department authorization adapter.
+
+    Returns
+    -------
+    ProgrammeImportCommandResult
+        Opaque receipt and batch identifiers with the advanced cursor.
+
+    Raises
+    ------
+    ApplicationsProgrammeImportStateConflictError
+        If the batch is not pristine staging or planning is closed.
+    ApplicationsProgrammeImportUnavailableError
+        If the exact batch, owner, Department, or retained scope is unavailable.
+    ApplicationsProgrammeImportVersionConflictError
+        If the supplied batch cursor is stale.
+    """
+    actor_id = require_programme_uuid(actor_id, field="actor_id")
+    organization_id = require_programme_uuid(
+        organization_id,
+        field="organization_id",
+    )
+    edition_id = require_programme_uuid(edition_id, field="edition_id")
+    batch_id = require_programme_uuid(batch_id, field="batch_id")
+    source_department_id = require_programme_uuid(
+        source_department_id,
+        field="source_department_id",
+    )
+    destination_department_id = require_programme_uuid(
+        destination_department_id,
+        field="destination_department_id",
+    )
+    retry_key = require_programme_uuid(retry_key, field="retry_key")
+    correlation_id = require_programme_uuid(correlation_id, field="correlation_id")
+    expected_version = require_programme_expected_version(expected_version)
+    if source_department_id == destination_department_id:
+        raise ApplicationsProgrammeImportStateConflictError
+    reason = _normalize_reason(reason)
+    source_channel = _normalize_source_channel(source_channel)
+    effective_now = _effective_now(now)
+    digest = _request_digest(
+        action=ProgrammeImportCommandAction.BATCH_REASSIGNED,
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        expected_version=expected_version,
+        reason=reason,
+        source_channel=source_channel,
+        values={
+            "batch_id": batch_id,
+            "source_department_id": source_department_id,
+            "destination_department_id": destination_department_id,
+        },
+    )
+    replay = _replay(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        retry_key=retry_key,
+        request_digest=digest,
+        authorizer=authorizer,
+    )
+    if replay is not None:
+        return replay
+
+    department_ids = tuple(sorted((source_department_id, destination_department_id)))
+    try:
+        for department_id in department_ids:
+            authorize_programme_import_department_scope(
+                actor_id=actor_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                department_id=department_id,
+                authorizer=authorizer,
+            )
+    except ApplicationsProgrammeImportAuthorizationDeniedError as error:
+        raise ApplicationsProgrammeImportUnavailableError from error
+
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=department_ids,
+    )
+    locked_scopes: dict[UUID, AuthorizedProgrammeImportScope] = {}
+    try:
+        for department_id in department_ids:
+            locked_scopes[department_id] = authorize_programme_import_department_scope(
+                actor_id=actor_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                department_id=department_id,
+                authorizer=authorizer,
+                lock=True,
+            )
+    except ApplicationsProgrammeImportAuthorizationDeniedError as error:
+        raise ApplicationsProgrammeImportUnavailableError from error
+    if any(
+        not scope.accepts_private_planning_writes for scope in locked_scopes.values()
+    ):
+        raise ApplicationsProgrammeImportStateConflictError
+
+    batch = _lock_batch(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        batch_id=batch_id,
+    )
+    if batch.owner_department_id != source_department_id:
+        raise ApplicationsProgrammeImportUnavailableError
+    _require_staged_batch(
+        batch,
+        expected_version=expected_version,
+        effective_now=effective_now,
+    )
+    items = list(
+        ProgrammeImportItem.objects.select_for_update()
+        .filter(batch=batch)
+        .select_related("batch")
+        .order_by("sequence", "id")
+    )
+    if len(items) != batch.item_count or any(
+        item.state != ProgrammeImportItemState.STAGED
+        or item.aggregate_version != 1
+        or item.canonical_payload is None
+        for item in items
+    ):
+        raise ApplicationsProgrammeImportStateConflictError
+    for item in items:
+        _parsed_item(item)
+    if (
+        ProgrammeImportSourceBinding.objects.select_for_update()
+        .filter(item__batch=batch)
+        .exists()
+        or ProgrammeImportAppliedCommand.objects.select_for_update()
+        .filter(binding__item__batch=batch)
+        .exists()
+        or ProgrammeImportCommandReceipt.objects.select_for_update()
+        .filter(batch=batch)
+        .filter(
+            Q(
+                action__in=(
+                    ProgrammeImportCommandAction.CALL_COMMITTED,
+                    ProgrammeImportCommandAction.PROPOSAL_CLAIMED,
+                )
+            )
+            | Q(source_binding__isnull=False)
+            | Q(applied_command_count__gt=0)
+        )
+        .exists()
+    ):
+        raise ApplicationsProgrammeImportStateConflictError
+
+    resulting_version = expected_version + 1
+    with programme_import_database_writer():
+        batch.owner_department_id = destination_department_id
+        batch.aggregate_version = resulting_version
+        batch.save(
+            update_fields=(
+                "owner_department",
+                "aggregate_version",
+                "updated_at",
+            )
+        )
+        result, _receipt = _record_success(
+            scope=locked_scopes[source_department_id],
+            action=ProgrammeImportCommandAction.BATCH_REASSIGNED,
+            aggregate_kind=ProgrammeImportAggregateKind.BATCH,
+            result_kind=ProgrammeImportCommandResultKind.BATCH,
+            batch=batch,
+            expected_version=expected_version,
+            resulting_version=resulting_version,
+            request_digest=digest,
+            reason=reason,
+            retry_key=retry_key,
+            correlation_id=correlation_id,
+            source_channel=source_channel,
+            changed_fields=("owner_department", "aggregate_version"),
+            occurred_at=effective_now,
+            source_department_id=source_department_id,
+            destination_department_id=destination_department_id,
+        )
+    return result
+
+
+@_audit_import_errors(
+    capability_code=APPLICATIONS_IMPORT_PROGRAMME,
     operation="command.batch_previewed",
 )
 @transaction.atomic
-def preview_programme_import(
+def preview_programme_import(  # noqa: PLR0915
     *,
     actor_id: UUID,
     organization_id: UUID,
@@ -1572,11 +1899,13 @@ def preview_programme_import(
     if replay is not None:
         if replay.preview_revision_id is None:
             raise ApplicationsProgrammeImportUnavailableError
-        replay_batch = _lock_batch(
+        replay_batch = ProgrammeImportBatch.objects.filter(
+            id=batch_id,
             organization_id=organization_id,
             edition_id=edition_id,
-            batch_id=batch_id,
-        )
+        ).first()
+        if replay_batch is None:
+            raise ApplicationsProgrammeImportUnavailableError
         try:
             replay_scope = authorize_programme_import_department_scope(
                 actor_id=actor_id,
@@ -1584,7 +1913,6 @@ def preview_programme_import(
                 edition_id=edition_id,
                 department_id=replay_batch.owner_department_id,
                 authorizer=authorizer,
-                lock=True,
             )
         except ApplicationsProgrammeImportAuthorizationDeniedError as error:
             raise ApplicationsProgrammeImportUnavailableError from error
@@ -1606,17 +1934,23 @@ def preview_programme_import(
             revision=revision,
             replayed=True,
         )
-    batch = _lock_batch(
+    owner_department_id = _batch_owner_department_id(
         organization_id=organization_id,
         edition_id=edition_id,
         batch_id=batch_id,
+    )
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(owner_department_id,),
     )
     try:
         scope = authorize_programme_import_department_scope(
             actor_id=actor_id,
             organization_id=organization_id,
             edition_id=edition_id,
-            department_id=batch.owner_department_id,
+            department_id=owner_department_id,
             authorizer=authorizer,
             lock=True,
         )
@@ -1624,6 +1958,13 @@ def preview_programme_import(
         raise ApplicationsProgrammeImportUnavailableError from error
     if not scope.accepts_private_planning_writes:
         raise ApplicationsProgrammeImportStateConflictError
+    batch = _lock_batch(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        batch_id=batch_id,
+    )
+    if batch.owner_department_id != owner_department_id:
+        raise ApplicationsProgrammeImportUnavailableError
     _require_staged_batch(
         batch,
         expected_version=expected_batch_version,
@@ -1737,6 +2078,7 @@ def _claim_preview_digest(
             "item_id": item.id,
             "item_version": item.aggregate_version,
             "item_digest": item.source_digest,
+            "batch_version": item.batch.aggregate_version,
             "schema_version": item.batch.schema_version,
             "source_system": item.batch.source_system,
             "kind": item.kind,
@@ -1846,7 +2188,7 @@ def preview_programme_import_proposal_claim(
         )
     except ApplicationsProgrammeImportAuthorizationDeniedError as error:
         raise ApplicationsProgrammeImportClaimUnavailableError from error
-    locked_batch_id = (
+    preflight_item = (
         ProgrammeImportItem.objects.filter(
             id=item_id,
             organization_id=organization_id,
@@ -1854,19 +2196,37 @@ def preview_programme_import_proposal_claim(
             kind=ProgrammeImportItemKind.PROPOSAL,
             state=ProgrammeImportItemState.STAGED,
         )
-        .values_list("batch_id", flat=True)
+        .select_related("batch")
         .first()
     )
-    if locked_batch_id is None:
+    if preflight_item is None:
         raise ApplicationsProgrammeImportClaimUnavailableError
+    owner_department_id = preflight_item.batch.owner_department_id
     try:
+        _lock_programme_write_scope(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_ids=(owner_department_id,),
+        )
+        require_current_programme_import_owner(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=owner_department_id,
+            lock=True,
+        )
         batch = _lock_batch(
             organization_id=organization_id,
             edition_id=edition_id,
-            batch_id=locked_batch_id,
+            batch_id=preflight_item.batch_id,
         )
-    except ApplicationsProgrammeImportCommandError as error:
+    except (
+        ApplicationsProgrammeImportAuthorizationDeniedError,
+        ApplicationsProgrammeImportCommandError,
+    ) as error:
         raise ApplicationsProgrammeImportClaimUnavailableError from error
+    if batch.owner_department_id != owner_department_id:
+        raise ApplicationsProgrammeImportClaimUnavailableError
     item = (
         ProgrammeImportItem.objects.select_for_update()
         .filter(
@@ -1885,7 +2245,7 @@ def preview_programme_import_proposal_claim(
     try:
         _require_staged_batch(
             batch,
-            expected_version=1,
+            expected_version=batch.aggregate_version,
             effective_now=effective_now,
         )
         parsed = _parsed_item(item)
@@ -1978,7 +2338,7 @@ def preview_programme_import_proposal_claim(
     operation="command.call_committed",
 )
 @transaction.atomic
-def commit_programme_import_call(
+def commit_programme_import_call(  # noqa: PLR0915
     *,
     actor_id: UUID,
     organization_id: UUID,
@@ -2089,23 +2449,32 @@ def commit_programme_import_call(
         sequence=1,
         action=ProgrammeCommandAction.CALL_CREATED,
     )
-    locked_batch_id = (
+    locked_batch_scope = (
         ProgrammeImportItem.objects.filter(
             id=item_id,
             organization_id=organization_id,
             edition_id=edition_id,
             kind=ProgrammeImportItemKind.CALL,
         )
-        .values_list("batch_id", flat=True)
+        .values_list("batch_id", "batch__owner_department_id")
         .first()
     )
-    if locked_batch_id is None:
+    if locked_batch_scope is None:
         raise ApplicationsProgrammeImportUnavailableError
+    locked_batch_id, owner_department_id = locked_batch_scope
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(owner_department_id,),
+    )
     batch = _lock_batch(
         organization_id=organization_id,
         edition_id=edition_id,
         batch_id=locked_batch_id,
     )
+    if batch.owner_department_id != owner_department_id:
+        raise ApplicationsProgrammeImportUnavailableError
     item = (
         ProgrammeImportItem.objects.select_for_update()
         .filter(
@@ -2135,7 +2504,7 @@ def commit_programme_import_call(
         raise ApplicationsProgrammeImportStateConflictError
     _require_staged_batch(
         batch,
-        expected_version=1,
+        expected_version=batch.aggregate_version,
         effective_now=effective_now,
     )
     if (
@@ -2408,13 +2777,21 @@ def claim_programme_import_proposal(  # noqa: DOC503, PLR0912, PLR0915
     if preflight_item is None:
         raise ApplicationsProgrammeImportClaimUnavailableError
     try:
+        require_current_programme_import_owner(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=preflight_item.batch.owner_department_id,
+        )
         _require_staged_batch(
             preflight_item.batch,
-            expected_version=1,
+            expected_version=preflight_item.batch.aggregate_version,
             effective_now=effective_now,
         )
         preflight_parsed = _parsed_item(preflight_item)
-    except ApplicationsProgrammeImportCommandError as error:
+    except (
+        ApplicationsProgrammeImportAuthorizationDeniedError,
+        ApplicationsProgrammeImportCommandError,
+    ) as error:
         raise ApplicationsProgrammeImportClaimUnavailableError from error
     if not isinstance(preflight_parsed, ProgrammeImportProposalItemInput):
         raise ApplicationsProgrammeImportClaimUnavailableError
@@ -2448,13 +2825,35 @@ def claim_programme_import_proposal(  # noqa: DOC503, PLR0912, PLR0915
         )
     locked_batch_id = preflight_item.batch_id
     try:
+        owner_department_id = _batch_owner_department_id(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            batch_id=locked_batch_id,
+        )
+        _lock_programme_write_scope(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_ids=(owner_department_id,),
+        )
+        require_current_programme_import_owner(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=owner_department_id,
+            lock=True,
+        )
         batch = _lock_batch(
             organization_id=organization_id,
             edition_id=edition_id,
             batch_id=locked_batch_id,
         )
-    except ApplicationsProgrammeImportCommandError as error:
+    except (
+        ApplicationsProgrammeImportAuthorizationDeniedError,
+        ApplicationsProgrammeImportCommandError,
+    ) as error:
         raise ApplicationsProgrammeImportClaimUnavailableError from error
+    if batch.owner_department_id != owner_department_id:
+        raise ApplicationsProgrammeImportClaimUnavailableError
     item = (
         ProgrammeImportItem.objects.select_for_update()
         .filter(
@@ -2472,7 +2871,7 @@ def claim_programme_import_proposal(  # noqa: DOC503, PLR0912, PLR0915
     try:
         _require_staged_batch(
             batch,
-            expected_version=1,
+            expected_version=batch.aggregate_version,
             effective_now=effective_now,
         )
     except ApplicationsProgrammeImportCommandError as error:
@@ -2737,10 +3136,16 @@ def discard_programme_import(
         )
     except ApplicationsProgrammeImportAuthorizationDeniedError as error:
         raise ApplicationsProgrammeImportUnavailableError from error
-    batch = _lock_batch(
+    owner_department_id = _batch_owner_department_id(
         organization_id=organization_id,
         edition_id=edition_id,
         batch_id=batch_id,
+    )
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(owner_department_id,),
     )
     try:
         scope = authorize_programme_import_disposal_scope(
@@ -2752,6 +3157,13 @@ def discard_programme_import(
         )
     except ApplicationsProgrammeImportAuthorizationDeniedError as error:
         raise ApplicationsProgrammeImportUnavailableError from error
+    batch = _lock_batch(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        batch_id=batch_id,
+    )
+    if batch.owner_department_id != owner_department_id:
+        raise ApplicationsProgrammeImportUnavailableError
     _require_staged_batch(
         batch,
         expected_version=expected_version,
@@ -2782,7 +3194,8 @@ def discard_programme_import(
             elif item.state != ProgrammeImportItemState.APPLIED:
                 raise ApplicationsProgrammeImportStateConflictError
         batch.state = ProgrammeImportBatchState.DISCARDED
-        batch.aggregate_version = 2
+        resulting_version = expected_version + 1
+        batch.aggregate_version = resulting_version
         batch.discarded_by_id = actor_id
         batch.discarded_at = effective_now
         batch.discard_reason = reason
@@ -2803,7 +3216,7 @@ def discard_programme_import(
             result_kind=ProgrammeImportCommandResultKind.DISCARD,
             batch=batch,
             expected_version=expected_version,
-            resulting_version=2,
+            resulting_version=resulting_version,
             request_digest=digest,
             reason=reason,
             retry_key=retry_key,
@@ -2834,5 +3247,6 @@ __all__ = [
     "discard_programme_import",
     "preview_programme_import",
     "preview_programme_import_proposal_claim",
+    "reassign_programme_import_batch",
     "stage_programme_import",
 ]

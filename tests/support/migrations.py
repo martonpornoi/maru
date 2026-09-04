@@ -28,6 +28,10 @@ _WORKFORCE_PROGRAMME_IMPORT_FK_CONTRACT = (
     "workforce",
     "0017_programme_import_department_fk_contract",
 )
+_WORKFORCE_PROGRAMME_OWNERSHIP_FK_CONTRACT = (
+    "workforce",
+    "0018_programme_department_ownership_contract",
+)
 _WORKFORCE_CROSS_MODULE_DEPARTMENT_FK_CONTRACT = (
     "workforce",
     "0008_department_fk_contract_successor",
@@ -35,6 +39,10 @@ _WORKFORCE_CROSS_MODULE_DEPARTMENT_FK_CONTRACT = (
 _APPLICATIONS_BEFORE_PROGRAMME_IMPORT = (
     "applications",
     "0006_programme_populated_downgrade_fence",
+)
+_APPLICATIONS_BEFORE_PROGRAMME_OWNERSHIP = (
+    "applications",
+    "0009_programme_import_populated_downgrade_fence",
 )
 _APPLICATIONS_BEFORE_PROGRAMME_CALLS = (
     "applications",
@@ -100,10 +108,12 @@ def workforce_migration_targets(
     if workforce_target is None or workforce_target[1] is None:
         return targets
     forward_plan = executor.loader.graph.forwards_plan(workforce_target)
-    if _WORKFORCE_PROGRAMME_IMPORT_FK_CONTRACT in forward_plan:
+    if _WORKFORCE_PROGRAMME_OWNERSHIP_FK_CONTRACT in forward_plan:
         return targets
     applications_target: tuple[str, str | None] = _APPLICATIONS_ZERO
-    if _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT in forward_plan:
+    if _WORKFORCE_PROGRAMME_IMPORT_FK_CONTRACT in forward_plan:
+        applications_target = _APPLICATIONS_BEFORE_PROGRAMME_OWNERSHIP
+    elif _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT in forward_plan:
         applications_target = _APPLICATIONS_BEFORE_PROGRAMME_IMPORT
     elif _WORKFORCE_CROSS_MODULE_DEPARTMENT_FK_CONTRACT in forward_plan:
         applications_target = _APPLICATIONS_BEFORE_PROGRAMME_CALLS

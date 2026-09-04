@@ -43,18 +43,21 @@ from maru.applications.programme_commands import (
     activate_programme_call,
     append_programme_proposal_answer,
     create_programme_call,
+    reassign_programme_call,
 )
 from maru.applications.programme_import_commands import (
     ApplicationsProgrammeImportClaimUnavailableError,
     ApplicationsProgrammeImportIdempotencyConflictError,
     ApplicationsProgrammeImportOperationFailedError,
     ApplicationsProgrammeImportPreviewStaleError,
+    ApplicationsProgrammeImportStateConflictError,
     ApplicationsProgrammeImportUnavailableError,
     claim_programme_import_proposal,
     commit_programme_import_call,
     discard_programme_import,
     preview_programme_import,
     preview_programme_import_proposal_claim,
+    reassign_programme_import_batch,
     stage_programme_import,
 )
 from maru.applications.programme_import_inputs import (
@@ -79,7 +82,6 @@ from maru.events.models import EventEdition
 from tests.factories import AccountFactory, EventEditionFactory
 from tests.workforce_helpers import (
     create_department_for_test,
-    retire_department_for_test,
 )
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -230,6 +232,8 @@ class _AllowProgrammeAuthorizer:
 class _DenyImportTargetAuthorizer:
     """Allow retry preflight while denying target-scoped import authority."""
 
+    denied_department_id: UUID | None = None
+
     def authorize_department(
         self,
         *,
@@ -240,15 +244,19 @@ class _DenyImportTargetAuthorizer:
         capability_code: str,
         requested_fields: frozenset[str] | None,
     ) -> PolicyDecision:
-        del (
-            principal_id,
-            organization_id,
-            edition_id,
-            department_id,
-            capability_code,
-            requested_fields,
+        if (
+            self.denied_department_id is None
+            or department_id == self.denied_department_id
+        ):
+            return self._denial()
+        return _IMPORT_AUTHORIZER.authorize_department(
+            principal_id=principal_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            capability_code=capability_code,
+            requested_fields=requested_fields,
         )
-        return self._denial()
 
     def authorize_edition(
         self,
@@ -2400,6 +2408,299 @@ def test_expired_payload_can_only_be_disposed() -> None:
     )
 
 
+def test_pristine_batch_reassignment_preserves_evidence_and_stales_previews(  # noqa: PLR0915
+) -> None:
+    """Transfer only pristine staging and advance every later batch cursor."""
+
+    edition = EventEditionFactory()
+    manager = AccountFactory(display_name="Programme continuity manager")
+    source = create_department_for_test(
+        edition=edition,
+        name="Programme intake",
+        expected_code="programme-intake",
+    )
+    destination = create_department_for_test(
+        edition=edition,
+        name="Programme review",
+        expected_code="programme-review",
+    )
+    later_destination = create_department_for_test(
+        edition=edition,
+        name="Programme scheduling",
+        expected_code="programme-scheduling",
+    )
+    now = timezone.now()
+    batch_id = _stage(
+        actor=manager,
+        edition=edition,
+        department_id=source.id,
+        payload=_document([_call_item(now)]),
+        now=now,
+    )
+    first_preview = preview_programme_import(
+        actor_id=manager.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        batch_id=batch_id,
+        expected_batch_version=1,
+        reason="Review the staged call before transferring intake ownership.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+        now=now,
+        authorizer=_IMPORT_AUTHORIZER,
+    )
+    original_item = ProgrammeImportItem.objects.get(batch_id=batch_id)
+    original_payload = bytes(original_item.canonical_payload or b"")
+    retry_key = uuid4()
+    reason = "Transfer untouched staging to the Programme review Department."
+
+    with pytest.raises(ApplicationsProgrammeImportUnavailableError):
+        reassign_programme_import_batch(
+            actor_id=manager.id,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            batch_id=batch_id,
+            source_department_id=source.id,
+            destination_department_id=destination.id,
+            expected_version=1,
+            reason=reason,
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+            now=now,
+            authorizer=_DenyImportTargetAuthorizer(denied_department_id=destination.id),
+        )
+    denied_batch = ProgrammeImportBatch.objects.get(id=batch_id)
+    assert denied_batch.owner_department_id == source.id
+    assert denied_batch.aggregate_version == 1
+
+    reassigned = reassign_programme_import_batch(
+        actor_id=manager.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        batch_id=batch_id,
+        source_department_id=source.id,
+        destination_department_id=destination.id,
+        expected_version=1,
+        reason=reason,
+        retry_key=retry_key,
+        correlation_id=uuid4(),
+        source_channel="test",
+        now=now,
+        authorizer=_IMPORT_AUTHORIZER,
+    )
+
+    assert reassigned.action == ProgrammeImportCommandAction.BATCH_REASSIGNED
+    assert reassigned.resulting_version == 2
+    batch = ProgrammeImportBatch.objects.get(id=batch_id)
+    item = ProgrammeImportItem.objects.get(id=original_item.id)
+    assert batch.owner_department_id == destination.id
+    assert batch.aggregate_version == 2
+    assert item.state == ProgrammeImportItemState.STAGED
+    assert item.aggregate_version == 1
+    assert bytes(item.canonical_payload or b"") == original_payload
+    receipt = ProgrammeImportCommandReceipt.objects.get(id=reassigned.receipt_id)
+    assert receipt.source_department_id == source.id
+    assert receipt.destination_department_id == destination.id
+    assert receipt.expected_version == 1
+    assert receipt.resulting_version == 2
+    event = DomainEvent.objects.get(
+        aggregate_id=batch_id,
+        payload__action=ProgrammeImportCommandAction.BATCH_REASSIGNED,
+    )
+    assert event.payload["batch_version"] == 2
+
+    with patch.object(
+        programme_import_commands,
+        "lock_programme_edition_write_scope",
+        side_effect=AssertionError("a successful replay must not lock the edition"),
+    ):
+        replayed = reassign_programme_import_batch(
+            actor_id=manager.id,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            batch_id=batch_id,
+            source_department_id=source.id,
+            destination_department_id=destination.id,
+            expected_version=1,
+            reason=reason,
+            retry_key=retry_key,
+            correlation_id=uuid4(),
+            source_channel="test",
+            now=now,
+            authorizer=_IMPORT_AUTHORIZER,
+        )
+    assert replayed.replayed is True
+    assert replayed.receipt_id == reassigned.receipt_id
+
+    first_call_preview = first_preview.items[0]
+    with pytest.raises(ApplicationsProgrammeImportPreviewStaleError):
+        commit_programme_import_call(
+            actor_id=manager.id,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            item_id=first_call_preview.item_id,
+            preview_item_result_id=first_call_preview.result_id,
+            expected_version=1,
+            reason="Do not accept an organizer preview from the former owner.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+            now=now,
+            authorizer=_IMPORT_AUTHORIZER,
+            programme_authorizer=_PROGRAMME_AUTHORIZER,
+        )
+
+    fresh_preview = preview_programme_import(
+        actor_id=manager.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        batch_id=batch_id,
+        expected_batch_version=2,
+        reason="Review the transferred staging under its current owner.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+        now=now,
+        authorizer=_IMPORT_AUTHORIZER,
+    )
+    committed = commit_programme_import_call(
+        actor_id=manager.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        item_id=fresh_preview.items[0].item_id,
+        preview_item_result_id=fresh_preview.items[0].result_id,
+        expected_version=1,
+        reason="Apply the freshly reviewed call for the current owner.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+        now=now,
+        authorizer=_IMPORT_AUTHORIZER,
+        programme_authorizer=_PROGRAMME_AUTHORIZER,
+    )
+    binding = ProgrammeImportSourceBinding.objects.get(item_id=committed.item_id)
+    assert binding.call is not None
+    assert binding.call.owner_department_id == destination.id
+
+    moved_call = reassign_programme_call(
+        actor_id=manager.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        call_id=binding.call_id,
+        source_department_id=destination.id,
+        destination_department_id=later_destination.id,
+        expected_version=1,
+        reason="Move the imported call while retaining its original source evidence.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+        now=now,
+        authorizer=_PROGRAMME_AUTHORIZER,
+    )
+    assert moved_call.resulting_version == 2
+    binding.refresh_from_db()
+    assert binding.call.owner_department_id == later_destination.id
+    assert (
+        ProgrammeImportBatch.objects.get(id=batch_id).owner_department_id
+        == destination.id
+    )
+
+    with pytest.raises(ApplicationsProgrammeImportStateConflictError):
+        reassign_programme_import_batch(
+            actor_id=manager.id,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            batch_id=batch_id,
+            source_department_id=destination.id,
+            destination_department_id=later_destination.id,
+            expected_version=2,
+            reason="Applied source evidence must make transfer disposal-only.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+            now=now,
+            authorizer=_IMPORT_AUTHORIZER,
+        )
+
+    discarded = discard_programme_import(
+        actor_id=manager.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        batch_id=batch_id,
+        expected_version=2,
+        reason="Close retained staging after applying the reviewed call.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+        now=now,
+        authorizer=_IMPORT_AUTHORIZER,
+    )
+    assert discarded.resulting_version == 3
+
+
+def test_batch_reassignment_rejects_receipt_with_a_different_valid_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A valid same-edition Department cannot stand in for the actual old owner."""
+    edition = EventEditionFactory()
+    manager = AccountFactory()
+    source, destination, unrelated = (
+        create_department_for_test(edition=edition, name=name, expected_code=name)
+        for name in ("source", "destination", "unrelated")
+    )
+    now = timezone.now()
+    batch_id = _stage(
+        actor=manager,
+        edition=edition,
+        department_id=source.id,
+        payload=_document([_call_item(now)]),
+        now=now,
+    )
+    original_record = programme_import_commands._record_success
+
+    def record_wrong_source(**kwargs):
+        kwargs["source_department_id"] = unrelated.id
+        return original_record(**kwargs)
+
+    monkeypatch.setattr(
+        programme_import_commands, "_record_success", record_wrong_source
+    )
+    with (
+        patch.object(
+            programme_import_commands,
+            "_append_failure_audit_best_effort",
+            wraps=programme_import_commands._append_failure_audit_best_effort,
+        ) as failure_audit,
+        pytest.raises(ApplicationsProgrammeImportOperationFailedError),
+    ):
+        reassign_programme_import_batch(
+            actor_id=manager.id,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            batch_id=batch_id,
+            source_department_id=source.id,
+            destination_department_id=destination.id,
+            expected_version=1,
+            reason="Require the receipt to identify the real previous owner.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+            now=now,
+            authorizer=_IMPORT_AUTHORIZER,
+        )
+    database_error = failure_audit.call_args.kwargs["error"]
+    assert isinstance(database_error, DatabaseError)
+    assert "exact transition evidence" in str(database_error)
+    batch = ProgrammeImportBatch.objects.get(id=batch_id)
+    assert batch.owner_department_id == source.id
+    assert batch.aggregate_version == 1
+    assert not ProgrammeImportCommandReceipt.objects.filter(
+        batch_id=batch_id, action=ProgrammeImportCommandAction.BATCH_REASSIGNED
+    ).exists()
+
+
 def test_proposal_claim_rejects_identity_change_after_preview() -> None:
     """Re-resolve the staged login email when its account owner changes."""
 
@@ -2671,50 +2972,6 @@ def test_partial_batch_disposal_preserves_applied_call() -> None:
     assert staged_item.canonical_payload is None
     assert ProgrammeCall.objects.filter(id=binding.call_id).exists()
     assert ProgrammeImportSourceBinding.objects.filter(id=binding.id).exists()
-
-
-def test_disposal_succeeds_after_owner_department_retirement() -> None:
-    """Keep exact-Edition payload disposal available after owner retirement."""
-
-    edition = EventEditionFactory()
-    manager = AccountFactory(display_name="Programme continuity manager")
-    department = create_department_for_test(
-        edition=edition,
-        name="Programme",
-        expected_code="programme",
-    )
-    now = timezone.now()
-    batch_id = _stage(
-        actor=manager,
-        edition=edition,
-        department_id=department.id,
-        payload=_document([_call_item(now)]),
-        now=now,
-    )
-
-    retired = retire_department_for_test(department=department)
-    assert retired.retired_at is not None
-    discarded = discard_programme_import(
-        actor_id=manager.id,
-        organization_id=edition.organization_id,
-        edition_id=edition.id,
-        batch_id=batch_id,
-        expected_version=1,
-        reason="Dispose retained staging after its owner Department retires.",
-        retry_key=uuid4(),
-        correlation_id=uuid4(),
-        source_channel="test",
-        now=now,
-        authorizer=_IMPORT_AUTHORIZER,
-    )
-
-    assert discarded.resulting_version == 2
-    batch = ProgrammeImportBatch.objects.get(id=batch_id)
-    item = ProgrammeImportItem.objects.get(batch_id=batch_id)
-    assert batch.owner_department_id == retired.id
-    assert batch.state == ProgrammeImportBatchState.DISCARDED
-    assert item.state == ProgrammeImportItemState.DISCARDED
-    assert item.canonical_payload is None
 
 
 def test_preview_replay_requires_current_department_authority() -> None:

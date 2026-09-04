@@ -9,13 +9,13 @@ are implemented in the canonical current tree; Workforce-only assignment no
 longer manufactures attendee Participation evidence; complete rendered
 accessibility, portability, post-edition Availability disposal, recovery,
 deployment, and production acceptance remain gated
-Last updated: 2026-08-31
+Last updated: 2026-09-02
 
 ## Purpose and requirements
 
 `maru.workforce` owns the executable HR-007 through HR-014 slices defined by
-ADRs 0019, 0028, 0075, 0076, 0077, 0078, and 0080, plus IDN-011,
-IDN-014, EVT-006, UX-030, and NFR-013. It turns an edition responsibility into
+ADRs 0019, 0028, 0075, 0076, 0077, 0078, 0080, and 0084, plus IDN-011,
+IDN-014, EVT-006, PRG-011, UX-030, and NFR-013. It turns an edition responsibility into
 explicit structure and person-controlled planning input:
 
 ```text
@@ -272,13 +272,15 @@ original cross-module Department-FK creators and extends the closed deletion
 contract to Applications, Charities, Logistics, Registration, and Venues.
 Additive `0016_programme_call_department_fk_contract` recognizes the later
 Applications-owned Programme-call owner reference while retaining fail-closed
-behavior for every unknown relation. It does not implement the Programme-call
-retirement sequencing and recovery reserved for issue #64. Additive
+behavior for every unknown relation. Additive
 `0017_programme_import_department_fk_contract` likewise recognizes only the
 Applications-owned import batch's exact `owner_department_id` reference. It
-protects hard-delete/reference integrity but does not make retirement inspect,
-reassign, or dispose a staged batch; that disclosure-safe preflight and
-governed recovery remain Issue #64. The
+protects hard-delete/reference integrity. Additive
+`0018_programme_department_ownership_contract` recognizes the four protected
+source/destination Department references on Applications transition receipts
+and installs the reciprocal retirement backstop. The Applications-owned
+tri-state seam and shared edition mutex now coordinate retirement without
+making Workforce inspect Programme records. The
 overview, three child GET page shapes, five POST actions, strict GET plus five
 API mutations, and exact navigation now mount those shared services without
 reopening specialist Department writes.
@@ -383,6 +385,18 @@ not a live retirement dependency: it survives retirement and continues to
 block hard deletion, while the binding service rejects every new binding below
 a retired Department. Ready, Live, Closing, Archived, and Cancelled editions
 remain read-only until a separate structure change-control design is accepted.
+
+Programme calls and import staging are checked through one public Applications
+boundary after Workforce has acquired the exact shared edition mutex. The call
+and import probes both run and expose only `clear`, `blocked`, or `unavailable`.
+Any known block wins over an unavailable sibling; otherwise any unavailable
+probe returns the generic dependency-unavailable failure. A blocked result
+uses the ordinary protected dependency conflict. Workforce receives no call or
+batch identifier, kind, count, name, source fact, email, payload, or digest and
+writes no structure receipt, audit, event, or cursor change on refusal.
+Draft/Active calls and batches with unresolved staged items block retirement;
+retired calls and fully applied or explicitly discarded staging do not. Expiry
+is not disposal and therefore does not clear an unresolved import blocker.
 
 Position management is now the separate HR-012 workflow described below. The
 built-in Department template still creates no Lead, Deputy, or Volunteer
@@ -850,23 +864,31 @@ and retry receipts, non-cascading retirement/deletion rules, and fix-forward
 downgrade behavior. Production readiness fingerprints all Organization
 structure, Assignment, Availability, and Shift guard, evidence, and truncate
 functions and their exact attachments, requires the current Workforce migration
-recorder chain through `0017`, including the profile-matched nullable
+recorder chain through `0018`, including the profile-matched nullable
 assignment-capacity guard and downgrade fence, and verifies the exact
-15-reference Department FK inventory. The fourteenth reference is
+19-reference Department FK inventory. The fourteenth reference is
 `applications_programmecall.owner_department_id`; the fifteenth is
-`applications_programmeimportbatch.owner_department_id`. Migration `0016`
+`applications_programmeimportbatch.owner_department_id`; the remaining four
+are `source_department_id` and `destination_department_id` on
+`applications_programmecommandreceipt` and
+`applications_programmeimportcommandreceipt`. Migration `0016`
 depends on Applications `0004` and Workforce `0015` rather than making
 Applications `0004` depend on the later Workforce tail; `0017` then depends on
-Applications `0007` and Workforce `0016`;
+Applications `0007` and Workforce `0016`; `0018` depends on Applications
+`0012` and Workforce `0017`;
 the runtime login cannot invoke those helpers directly, disable them, or
 bypass their stopped-writer protocol. Reversing `0016` restores the exact
 13-reference helper, which safely refuses Department deletion while the
 Programme-call reference is still installed. Identity `0020` and Workforce
 `0016` are dependent reversals before Applications `0004` can be removed.
 Reversing `0017` first restores the exact 14-reference helper and must precede
-removing Applications `0007`. Neither Workforce successor implements issue
-#64's Programme-call/import reassignment, retirement preflight, disposal, or
-governed recovery.
+removing Applications `0007`. Reversing `0018` first restores the exact
+15-reference helper and must precede removal of Applications `0010`. Its
+cross-module trigger serializes raw Department retirement against Applications
+call/import ownership changes through the same transaction-scoped edition
+advisory mutex and raises SQLSTATE `40001` when a conflicting writer already
+holds that scope. Recovery retries the whole transaction; it never disables
+the trigger or fabricates a transition receipt.
 
 Workforce `0010_position_structure_commands` extends that aggregate protocol to
 Position and VolunteerOpportunity rows. Its preflight refuses a pre-existing
@@ -927,6 +949,15 @@ the downgrade fence refuses removal once durable demand, commitment, or receipt
 evidence exists.
 
 ## Workforce verification
+
+Programme ownership-continuity verification covers call/import
+`clear`/`blocked`/`unavailable` aggregation, known-block precedence,
+unconditional probes, expired staging, draft-call and clean-batch
+reassignment, active-call retirement, disposal-only partial batches, exact-ID
+orphan recovery, tenant and edition isolation, generic HTML/API refusal,
+idempotent replay, shared-mutex races, raw database bypass, the exact
+19-reference catalog, and atomic absence of structure/evidence changes on
+failure.
 
 The 2026-08-25 Shift focus covers draft creation and immutability, open/lock/
 reopen/complete/cancel transitions, personal suitability and minimization,
@@ -1071,3 +1102,7 @@ The Programme Operations contract also leaves check-in, lateness/absence,
 Shift actual-time recording, dispute handling, and Shift handover exclusively with
 issue #24. A published Programme/personal timetable may show an assigned Shift
 commitment, but publication is not check-in or proof of work.
+Programme Department ownership continuity is installed only as a protected
+cross-module retirement contract; it does not activate Programme Operations,
+grant recovery through a current profile or root role, or mount any call,
+import, recovery, review, or timetable surface.

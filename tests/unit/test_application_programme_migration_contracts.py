@@ -61,6 +61,7 @@ def test_authorization_min_scope_is_prior_catalog_plus_exact_department_code() -
     } - {
         "applications.import_programme",
         "applications.dispose_programme_import",
+        "applications.recover_programme_department_ownership",
     }
 
 

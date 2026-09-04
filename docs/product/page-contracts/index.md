@@ -37,8 +37,10 @@ contract for the surface being changed, and compare its status with the
 - [Programme calls and acknowledged proposals](programme-calls-and-acknowledged-proposals.md)
 - [Programme call and proposal import staging](programme-call-and-proposal-import.md)
   defines the dormant minimized preview, exact-self claim, sealed command
-  lineage, coherent source binding, and delegable disposal contract; no route
-  is mounted.
+  lineage, coherent source binding, explicit clean-batch reassignment, and
+  delegable disposal contract. Its companion call contract defines
+  receipt-backed Department ownership continuity and exact-ID orphan recovery;
+  no route is mounted.
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}

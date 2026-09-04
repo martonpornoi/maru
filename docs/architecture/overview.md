@@ -5,7 +5,7 @@ scoped authorization, governed structure, Position, Assignment, and
 person-owned Availability workflows, database subject and writer boundaries,
 and an accepted but not executable Programme Operations adoption contract with
 dormant Applications and Programme foundations
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 ## System shape
 
@@ -104,8 +104,17 @@ until later review, decision, and accepted-adapter children land.
 The new Applications declarations remain absent from both current literal
 profile manifests. Their relations are runtime `SELECT`-only, their integrity
 functions are owner-only, and there is no current route, API, navigation,
-worker, handler, target record, Programme item, or side effect. Preview-first
-import is the next boundary; database installation alone is not adoption.
+worker, handler, target record, Programme item, or side effect. ADR 0083 adds
+preview-first import without mounting a surface. ADR 0084 completes the
+Department-retirement prerequisite through a shared exact-edition mutex, a
+non-disclosing `clear`/`blocked`/`unavailable` Applications seam, explicit
+Draft-call and clean-batch reassignment, Active-call retirement, and exact-ID
+orphan recovery. A known dependency block wins over an unavailable sibling
+probe; expiry is not import disposal. Imported call ownership changes preserve
+the original binding and are proven by an immutable contiguous receipt chain.
+The recovery capability remains unpinned, nondelegable, break-glass-required,
+and absent from roots, routes, jobs, and UI. Structured review and decisions
+are the next boundary; database installation alone is not adoption.
 
 ```text
 Attendee web ─┐
@@ -160,7 +169,7 @@ configuration; they do not point at mutable records from an older edition.
 | `commerce` | Products, orders, payments, refunds, invoices, inventory |
 | `finance` | Budgets, approvals, procurement, expenses, contracts, sponsorship |
 | `content` | Pages, structured content, media, translations, public metadata |
-| `applications` | Typed proposals and service applications; dormant Programme calls, purpose collaborators, exact sealed revisions and acknowledgements; private answers, review evidence, decisions, and target-transition receipts |
+| `applications` | Typed proposals and service applications; dormant Programme calls, purpose collaborators, exact sealed revisions and acknowledgements; preview-first import, Department-owner transition receipts, private answers, review evidence, decisions, and target-transition receipts |
 | `programme` | Accepted programme items, hosts, readiness, operational layers, approved public-content versions |
 | `scheduling` | Service days, occurrences, placements, constraints, candidate/conflict evidence, releases, projections, calendars |
 | `workforce` | Departments, Positions, assignments, onboarding, qualifications, Availability, shifts, work history |

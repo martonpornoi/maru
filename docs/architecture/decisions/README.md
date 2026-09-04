@@ -87,7 +87,8 @@ the system.
 | [0080](0080-progressive-workforce-only-adoption.md) | Accepted | Make Workforce-only an immutable edition profile with truthful Maru-operator accountability and no unadopted authority or side effects |
 | [0081](0081-composite-programme-operations-adoption.md) | Accepted | Make Programme Operations an exact-version composite profile with one Scheduling-owned Programme release and Workforce-owned staffing |
 | [0082](0082-applications-owned-programme-calls-and-acknowledged-proposal-revisions.md) | Accepted | Keep Programme calls and exact acknowledged collaborative proposal revisions in Applications while review, targeting, Programme, and every mounted surface remain closed |
-| [0083](0083-preview-first-programme-import-staging.md) | Accepted | Stage Programme call/proposal imports behind minimized preview, exact-self claim, coherent permanent source binding, a sealed nested-command chain, and delegable continuity disposal |
+| [0083](0083-preview-first-programme-import-staging.md) | Partially superseded | Stage Programme imports behind minimized preview, exact-self claim, permanent source binding, and delegable disposal; ADR 0084 extends batch versions and imported-call ownership continuity |
+| [0084](0084-programme-department-ownership-continuity.md) | Accepted | Serialize Programme ownership with Department retirement, preserve imported ownership through receipt chains, and keep exact orphan recovery dormant |
 
 New ADRs use the next four-digit number and contain:
 
@@ -100,3 +101,7 @@ New ADRs use the next four-digit number and contain:
 
 An accepted ADR is not edited to make a later decision appear original.
 Supersede it with a new ADR and update this index.
+
+ADR 0084 partially supersedes ADR 0083 only for timeless imported-call owner
+equality and fixed batch versions. ADR 0083's permanent source identity,
+binding, private-data, and nested-command evidence remains accepted.

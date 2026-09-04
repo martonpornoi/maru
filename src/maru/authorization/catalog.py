@@ -1091,6 +1091,18 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"reason", "audit"}),
     ),
     Capability(
+        code="applications.recover_programme_department_ownership",
+        description=(
+            "Recover one exact orphaned Programme call after its owning "
+            "Department was historically retired."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=False,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
         code="applications.view_programme_proposal_self",
         description=(
             "View a Programme proposal through one's current lead, invitation, or "
@@ -1415,7 +1427,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-09-01.2"
+POLICY_VERSION = "2026-09-02.1"
 
 
 def capability(code: str) -> Capability | None:

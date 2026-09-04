@@ -64,6 +64,7 @@ from maru.applications.programme_authorization import (
     APPLICATIONS_EDIT_PROGRAMME_PROPOSAL_SELF,
     APPLICATIONS_MANAGE_PROGRAMME_CALLS,
     APPLICATIONS_MANAGE_PROGRAMME_PROPOSAL_SELF,
+    APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP,
     APPLICATIONS_RESPOND_PROGRAMME_INVITATION_SELF,
     APPLICATIONS_SUBMIT_PROGRAMME_PROPOSAL_SELF,
     DEFAULT_APPLICATIONS_PROGRAMME_AUTHORIZER,
@@ -71,9 +72,12 @@ from maru.applications.programme_authorization import (
     ApplicationsProgrammeAuthorizer,
     AuthorizedProgrammeCallScope,
     AuthorizedProgrammeProposalScope,
+    AuthorizedProgrammeRecoveryScope,
     AuthorizedProgrammeSelfEntryScope,
     authorize_programme_call_scope,
     authorize_programme_proposal_scope,
+    authorize_programme_recovery_retry_scope,
+    authorize_programme_recovery_scope,
     authorize_programme_retry_scope,
     authorize_programme_self_entry_scope,
 )
@@ -96,6 +100,10 @@ from maru.applications.programme_inputs import (
     normalized_programme_text,
     require_programme_expected_version,
     require_programme_uuid,
+)
+from maru.applications.programme_write_scope import (
+    ApplicationsProgrammeWriteScopeUnavailableError,
+    lock_programme_edition_write_scope,
 )
 from maru.applications.programme_writer_boundary import (
     programme_application_database_writer,
@@ -121,8 +129,11 @@ _MAX_SOURCE_CHANNEL_LENGTH: Final = 32
 _CALL_RESULT_KINDS: Final = {
     ProgrammeCommandAction.CALL_CREATED: ProgrammeCommandResultKind.CALL,
     ProgrammeCommandAction.CALL_CONFIGURED: ProgrammeCommandResultKind.CALL,
+    ProgrammeCommandAction.CALL_REASSIGNED: ProgrammeCommandResultKind.CALL,
     ProgrammeCommandAction.CALL_ACTIVATED: ProgrammeCommandResultKind.CALL,
     ProgrammeCommandAction.CALL_RETIRED: ProgrammeCommandResultKind.CALL,
+    ProgrammeCommandAction.RECOVERY_CALL_REASSIGNED: ProgrammeCommandResultKind.CALL,
+    ProgrammeCommandAction.RECOVERY_CALL_RETIRED: ProgrammeCommandResultKind.CALL,
     ProgrammeCommandAction.CALL_SUCCESSOR_CREATED: ProgrammeCommandResultKind.CALL,
 }
 _APPLICATIONS_PROGRAMME_INPUT_VALIDATION_CODES: Final = frozenset(
@@ -320,6 +331,7 @@ def _append_failure_audit_best_effort(
     operation: str,
     correlation_id: object,
     source_channel: object,
+    break_glass: bool = False,
 ) -> None:
     denial = isinstance(error, ApplicationsProgrammeAuthorizationDeniedError)
     safe_correlation_id = _safe_audit_uuid(correlation_id) or uuid4()
@@ -345,6 +357,7 @@ def _append_failure_audit_best_effort(
                 request_id=safe_correlation_id,
                 source_channel=_safe_audit_source_channel(source_channel),
                 obligations=("audit",),
+                break_glass=break_glass,
                 safe_metadata={"policy_version": POLICY_VERSION},
                 retention_class="applications-programme-restricted",
             )
@@ -355,6 +368,7 @@ def _audit_command_errors(
     *,
     capability_code: str,
     operation: str,
+    break_glass: bool = False,
 ) -> _ProgrammeCommandDecorator:
     """Audit minimized command failures after the atomic mutation rolls back.
 
@@ -364,6 +378,8 @@ def _audit_command_errors(
         Capability attempted by the command.
     operation : str
         Stable operation suffix recorded in minimized audit evidence.
+    break_glass : bool, default=False
+        Whether the attempted command belongs to the closed recovery surface.
 
     Returns
     -------
@@ -391,6 +407,7 @@ def _audit_command_errors(
                     operation=operation,
                     correlation_id=kwargs.get("correlation_id"),
                     source_channel=kwargs.get("source_channel"),
+                    break_glass=break_glass,
                 )
                 raise
 
@@ -514,13 +531,22 @@ def _replay(
     retry_key: UUID,
     request_digest: str,
     authorizer: ApplicationsProgrammeAuthorizer,
+    recovery: bool = False,
 ) -> ProgrammeCommandResult | None:
-    authorize_programme_retry_scope(
-        actor_id=actor_id,
-        organization_id=organization_id,
-        edition_id=edition_id,
-        authorizer=authorizer,
-    )
+    if recovery:
+        authorize_programme_recovery_retry_scope(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            authorizer=authorizer,
+        )
+    else:
+        authorize_programme_retry_scope(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            authorizer=authorizer,
+        )
     lock_applications_retry_namespace(
         edition_id=edition_id,
         actor_id=actor_id,
@@ -559,6 +585,42 @@ def _replay(
     return None
 
 
+def _lock_programme_write_scope(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_ids: tuple[UUID, ...],
+) -> None:
+    """Acquire the retirement-safe edition scope without exposing misses.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Exact command actor locked after the Department set.
+    organization_id : UUID
+        Organization expected to own the entire scope.
+    edition_id : UUID
+        Exact edition serialized with Workforce retirement.
+    department_ids : tuple[UUID, ...]
+        Complete source and destination Department identifier set.
+
+    Raises
+    ------
+    ApplicationsProgrammeUnavailableError
+        If any scope component is absent or incoherent.
+    """
+    try:
+        lock_programme_edition_write_scope(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_ids=department_ids,
+            actor_id=actor_id,
+        )
+    except ApplicationsProgrammeWriteScopeUnavailableError as error:
+        raise ApplicationsProgrammeUnavailableError from error
+
+
 def _require_version(*, actual: int, expected: int) -> None:
     if actual != expected:
         raise ApplicationsProgrammeVersionConflictError
@@ -581,6 +643,7 @@ def _record_success(
     *,
     scope: AuthorizedProgrammeCallScope
     | AuthorizedProgrammeProposalScope
+    | AuthorizedProgrammeRecoveryScope
     | AuthorizedProgrammeSelfEntryScope,
     action: ProgrammeCommandAction,
     definition: ApplicationDefinition,
@@ -597,6 +660,10 @@ def _record_success(
     call: ProgrammeCall | None = None,
     proposal: ProgrammeProposal | None = None,
     submission: ApplicationSubmission | None = None,
+    source_department_id: UUID | None = None,
+    destination_department_id: UUID | None = None,
+    capability_code: str | None = None,
+    break_glass: bool = False,
     occurred_at: datetime,
 ) -> ProgrammeCommandResult:
     aggregate_kind = (
@@ -617,6 +684,8 @@ def _record_success(
         source_channel=source_channel,
         definition=definition,
         submission=submission,
+        source_department_id=source_department_id,
+        destination_department_id=destination_department_id,
         target_id=target_id,
         result_kind=result_kind,
         expected_version=expected_version,
@@ -629,7 +698,8 @@ def _record_success(
             principal_context_id=None,
             organization_id=scope.organization_id,
             event_edition_id=scope.edition_id,
-            capability_code=(
+            capability_code=capability_code
+            or (
                 APPLICATIONS_MANAGE_PROGRAMME_CALLS
                 if submission is None
                 else _capability_for_action(action)
@@ -651,6 +721,7 @@ def _record_success(
             obligations=tuple(sorted(scope.decision.obligations)),
             changed_fields=changed_fields,
             idempotency_key_hash=_idempotency_hash(retry_key),
+            break_glass=break_glass,
             retention_class="applications-programme-restricted",
         ),
         occurred_at=occurred_at,
@@ -809,6 +880,10 @@ def _create_definition_graph(
             configuration.collaboration_retention_policy_code
         ),
     )
+    ApplicationOwnerDepartment.objects.create(
+        definition=definition,
+        department_id=configuration.owner_department_id,
+    )
     _replace_definition_children(
         definition=definition,
         call=call,
@@ -827,14 +902,9 @@ def _replace_definition_children(
 ) -> None:
     definition.questions.all().delete()
     definition.sections.all().delete()
-    definition.owner_department_links.all().delete()
     call.tracks.all().delete()
     call.formats.all().delete()
     call.contributor_fields.all().delete()
-    ApplicationOwnerDepartment.objects.create(
-        definition=definition,
-        department_id=configuration.owner_department_id,
-    )
     for section_input in definition_input.sections:
         section = ApplicationSection.objects.create(
             definition=definition,
@@ -939,7 +1009,6 @@ def _update_definition_values(
     definition.age_policy_code = ""
     definition.aggregate_version = resulting_version
     definition.save()
-    call.owner_department_id = configuration.owner_department_id
     call.max_collaborators = configuration.maximum_collaborators
     call.content_policy_code = configuration.content_policy_code
     call.contributor_consent_policy_code = configuration.contributor_consent_policy_code
@@ -1079,6 +1148,12 @@ def create_programme_call(
         authorizer=authorizer,
     )
     _require_private_writes(scope)
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(configuration.owner_department_id,),
+    )
     scope = authorize_programme_call_scope(
         actor_id=actor_id,
         organization_id=organization_id,
@@ -1255,6 +1330,8 @@ def configure_programme_call(
     )
     if replay is not None:
         return replay
+    if configuration.owner_department_id != owner_department_id:
+        raise ApplicationsProgrammeStateConflictError
     old_scope = authorize_programme_call_scope(
         actor_id=actor_id,
         organization_id=organization_id,
@@ -1263,15 +1340,12 @@ def configure_programme_call(
         authorizer=authorizer,
     )
     _require_private_writes(old_scope)
-    if configuration.owner_department_id != owner_department_id:
-        new_scope = authorize_programme_call_scope(
-            actor_id=actor_id,
-            organization_id=organization_id,
-            edition_id=edition_id,
-            department_id=configuration.owner_department_id,
-            authorizer=authorizer,
-        )
-        _require_private_writes(new_scope)
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(owner_department_id,),
+    )
     old_scope = authorize_programme_call_scope(
         actor_id=actor_id,
         organization_id=organization_id,
@@ -1281,17 +1355,6 @@ def configure_programme_call(
         lock=True,
     )
     _require_private_writes(old_scope)
-    evidence_scope = old_scope
-    if configuration.owner_department_id != owner_department_id:
-        evidence_scope = authorize_programme_call_scope(
-            actor_id=actor_id,
-            organization_id=organization_id,
-            edition_id=edition_id,
-            department_id=configuration.owner_department_id,
-            authorizer=authorizer,
-            lock=True,
-        )
-        _require_private_writes(evidence_scope)
     call = _locked_call(
         organization_id=organization_id,
         edition_id=edition_id,
@@ -1312,7 +1375,7 @@ def configure_programme_call(
             resulting_version=resulting_version,
         )
         return _record_success(
-            scope=evidence_scope,
+            scope=old_scope,
             action=ProgrammeCommandAction.CALL_CONFIGURED,
             definition=definition,
             call=call,
@@ -1327,13 +1390,623 @@ def configure_programme_call(
             source_channel=source_channel,
             changed_fields=(
                 "definition",
-                "owner",
                 "sections",
                 "questions",
                 "tracks",
                 "formats",
                 "contributor_fields",
             ),
+            occurred_at=effective_now,
+        )
+
+
+def _locked_call_owner_link(
+    *,
+    definition_id: UUID,
+    source_department_id: UUID,
+) -> ApplicationOwnerDepartment:
+    owner_link = (
+        ApplicationOwnerDepartment.objects.select_for_update()
+        .filter(
+            definition_id=definition_id,
+            department_id=source_department_id,
+        )
+        .first()
+    )
+    if owner_link is None:
+        raise ApplicationsProgrammeUnavailableError
+    return owner_link
+
+
+def _apply_call_reassignment(
+    *,
+    call: ProgrammeCall,
+    owner_link: ApplicationOwnerDepartment,
+    destination_department_id: UUID,
+    resulting_version: int,
+) -> None:
+    definition = call.definition
+    call.owner_department_id = destination_department_id
+    call.save(update_fields=("owner_department", "updated_at"))
+    owner_link.department_id = destination_department_id
+    owner_link.save(update_fields=("department", "updated_at"))
+    definition.aggregate_version = resulting_version
+    definition.save(update_fields=("aggregate_version", "updated_at"))
+
+
+def _require_orphaned_source_department(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    source_department_id: UUID,
+) -> None:
+    if (
+        resolve_current_department_reference(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=source_department_id,
+        )
+        is not None
+    ):
+        raise ApplicationsProgrammeStateConflictError
+
+
+@_audit_command_errors(
+    capability_code=APPLICATIONS_MANAGE_PROGRAMME_CALLS,
+    operation=ProgrammeCommandAction.CALL_REASSIGNED,
+)
+@transaction.atomic
+def reassign_programme_call(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    call_id: UUID,
+    source_department_id: UUID,
+    destination_department_id: UUID,
+    expected_version: int,
+    reason: str,
+    retry_key: UUID,
+    correlation_id: UUID,
+    source_channel: str,
+    now: datetime | None = None,
+    authorizer: ApplicationsProgrammeAuthorizer = (_DEFAULT_AUTHORIZER),
+) -> ProgrammeCommandResult:
+    """Move one draft call between two exact current Departments.
+
+    The dedicated command is the only ordinary ownership-transition path.
+    Both Departments require current exact-scope call-management authority,
+    and the shared edition mutex serializes the transition with Workforce
+    retirement before any Applications aggregate row is locked.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Exact current call-manager account identifier.
+    organization_id : UUID
+        Organization expected to own the call and both Departments.
+    edition_id : UUID
+        Exact private-planning edition containing the call.
+    call_id : UUID
+        Opaque draft-call identifier supplied by the caller.
+    source_department_id : UUID
+        Exact current Department expected to own the call.
+    destination_department_id : UUID
+        Exact current Department that will receive the call.
+    expected_version : int
+        Optimistic call aggregate version.
+    reason : str
+        Inspectable administrative rationale.
+    retry_key : UUID
+        Idempotency key in the shared Applications namespace.
+    correlation_id : UUID
+        Correlation identifier for receipt, audit, and event evidence.
+    source_channel : str
+        Registered channel that initiated the command.
+    now : datetime | None, default=None
+        Optional aware execution instant for deterministic tests.
+    authorizer : ApplicationsProgrammeAuthorizer, default=_DEFAULT_AUTHORIZER
+        Sealed complete-decision adapter.
+
+    Returns
+    -------
+    ProgrammeCommandResult
+        Retained transition receipt and resulting call cursor.
+
+    Raises
+    ------
+    ApplicationsProgrammeStateConflictError
+        If the Departments match or the call is not an editable draft.
+    """
+    common = _common_identifiers(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        retry_key=retry_key,
+        correlation_id=correlation_id,
+        source_channel=source_channel,
+        reason=reason,
+    )
+    actor_id, organization_id, edition_id = common[:3]
+    retry_key, correlation_id, source_channel, reason = common[3:]
+    call_id = require_programme_uuid(call_id, field="call_id")
+    source_department_id = require_programme_uuid(
+        source_department_id,
+        field="source_department_id",
+    )
+    destination_department_id = require_programme_uuid(
+        destination_department_id,
+        field="destination_department_id",
+    )
+    expected_version = require_programme_expected_version(expected_version)
+    if source_department_id == destination_department_id:
+        raise ApplicationsProgrammeStateConflictError
+    effective_now = _effective_now(now)
+    digest = _request_digest(
+        action=ProgrammeCommandAction.CALL_REASSIGNED,
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        target_id=call_id,
+        expected_version=expected_version,
+        reason=reason,
+        source_channel=source_channel,
+        values={
+            "source_department_id": source_department_id,
+            "destination_department_id": destination_department_id,
+        },
+    )
+    replay = _replay(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        retry_key=retry_key,
+        request_digest=digest,
+        authorizer=authorizer,
+    )
+    if replay is not None:
+        return replay
+
+    department_ids = tuple(sorted((source_department_id, destination_department_id)))
+    scopes: dict[UUID, AuthorizedProgrammeCallScope] = {}
+    for department_id in department_ids:
+        scopes[department_id] = authorize_programme_call_scope(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            authorizer=authorizer,
+        )
+        _require_private_writes(scopes[department_id])
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=department_ids,
+    )
+    for department_id in department_ids:
+        scopes[department_id] = authorize_programme_call_scope(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            authorizer=authorizer,
+            lock=True,
+        )
+        _require_private_writes(scopes[department_id])
+
+    call = _locked_call(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        call_id=call_id,
+        owner_department_id=source_department_id,
+    )
+    definition = call.definition
+    _require_version(actual=definition.aggregate_version, expected=expected_version)
+    if definition.status != ApplicationDefinitionStatus.DRAFT:
+        raise ApplicationsProgrammeStateConflictError
+    owner_link = _locked_call_owner_link(
+        definition_id=definition.id,
+        source_department_id=source_department_id,
+    )
+    resulting_version = expected_version + 1
+    with programme_application_database_writer():
+        _apply_call_reassignment(
+            call=call,
+            owner_link=owner_link,
+            destination_department_id=destination_department_id,
+            resulting_version=resulting_version,
+        )
+        return _record_success(
+            scope=scopes[source_department_id],
+            action=ProgrammeCommandAction.CALL_REASSIGNED,
+            definition=definition,
+            call=call,
+            target_id=call.id,
+            result_kind=ProgrammeCommandResultKind.CALL,
+            expected_version=expected_version,
+            resulting_version=resulting_version,
+            request_digest=digest,
+            reason=reason,
+            retry_key=retry_key,
+            correlation_id=correlation_id,
+            source_channel=source_channel,
+            changed_fields=("owner_department", "aggregate_version"),
+            source_department_id=source_department_id,
+            destination_department_id=destination_department_id,
+            occurred_at=effective_now,
+        )
+
+
+@_audit_command_errors(
+    capability_code=APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP,
+    operation=ProgrammeCommandAction.RECOVERY_CALL_REASSIGNED,
+    break_glass=True,
+)
+@transaction.atomic
+def recover_orphaned_programme_call_reassignment(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    call_id: UUID,
+    source_department_id: UUID,
+    destination_department_id: UUID,
+    expected_version: int,
+    reason: str,
+    retry_key: UUID,
+    correlation_id: UUID,
+    source_channel: str,
+    now: datetime | None = None,
+    authorizer: ApplicationsProgrammeAuthorizer = (_DEFAULT_AUTHORIZER),
+) -> ProgrammeCommandResult:
+    """Recover one exact orphaned draft by assigning a current Department.
+
+    Recovery is lifecycle-neutral and exact-ID-only. The caller must prove the
+    dormant Edition-scoped break-glass capability as well as ordinary current
+    call-management authority for the destination. No list, search, preview,
+    or Programme-content authority is introduced by this command.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Exact recovery-operator account identifier.
+    organization_id : UUID
+        Organization expected to own the call and both Departments.
+    edition_id : UUID
+        Exact edition containing the caller-supplied orphan target.
+    call_id : UUID
+        Opaque draft-call identifier supplied by the caller.
+    source_department_id : UUID
+        Exact retired Department expected to own the orphaned call.
+    destination_department_id : UUID
+        Exact current Department that will receive the call.
+    expected_version : int
+        Optimistic call aggregate version.
+    reason : str
+        Inspectable break-glass rationale.
+    retry_key : UUID
+        Idempotency key in the shared Applications namespace.
+    correlation_id : UUID
+        Correlation identifier for receipt, audit, and event evidence.
+    source_channel : str
+        Registered channel that initiated the command.
+    now : datetime | None, default=None
+        Optional aware execution instant for deterministic tests.
+    authorizer : ApplicationsProgrammeAuthorizer, default=_DEFAULT_AUTHORIZER
+        Sealed recovery and destination-authority adapter.
+
+    Returns
+    -------
+    ProgrammeCommandResult
+        Retained break-glass transition receipt and resulting call cursor.
+
+    Raises
+    ------
+    ApplicationsProgrammeStateConflictError
+        If the source is current, the Departments match, or the call is not a
+        draft.
+    """
+    common = _common_identifiers(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        retry_key=retry_key,
+        correlation_id=correlation_id,
+        source_channel=source_channel,
+        reason=reason,
+    )
+    actor_id, organization_id, edition_id = common[:3]
+    retry_key, correlation_id, source_channel, reason = common[3:]
+    call_id = require_programme_uuid(call_id, field="call_id")
+    source_department_id = require_programme_uuid(
+        source_department_id,
+        field="source_department_id",
+    )
+    destination_department_id = require_programme_uuid(
+        destination_department_id,
+        field="destination_department_id",
+    )
+    expected_version = require_programme_expected_version(expected_version)
+    if source_department_id == destination_department_id:
+        raise ApplicationsProgrammeStateConflictError
+    effective_now = _effective_now(now)
+    digest = _request_digest(
+        action=ProgrammeCommandAction.RECOVERY_CALL_REASSIGNED,
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        target_id=call_id,
+        expected_version=expected_version,
+        reason=reason,
+        source_channel=source_channel,
+        values={
+            "source_department_id": source_department_id,
+            "destination_department_id": destination_department_id,
+        },
+    )
+    replay = _replay(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        retry_key=retry_key,
+        request_digest=digest,
+        authorizer=authorizer,
+        recovery=True,
+    )
+    if replay is not None:
+        return replay
+
+    recovery_scope = authorize_programme_recovery_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        authorizer=authorizer,
+    )
+    authorize_programme_call_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_id=destination_department_id,
+        authorizer=authorizer,
+    )
+    department_ids = tuple(sorted((source_department_id, destination_department_id)))
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=department_ids,
+    )
+    recovery_scope = authorize_programme_recovery_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        authorizer=authorizer,
+        lock=True,
+    )
+    authorize_programme_call_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_id=destination_department_id,
+        authorizer=authorizer,
+        lock=True,
+    )
+    _require_orphaned_source_department(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        source_department_id=source_department_id,
+    )
+    call = _locked_call(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        call_id=call_id,
+        owner_department_id=source_department_id,
+    )
+    definition = call.definition
+    _require_version(actual=definition.aggregate_version, expected=expected_version)
+    if definition.status != ApplicationDefinitionStatus.DRAFT:
+        raise ApplicationsProgrammeStateConflictError
+    owner_link = _locked_call_owner_link(
+        definition_id=definition.id,
+        source_department_id=source_department_id,
+    )
+    resulting_version = expected_version + 1
+    with programme_application_database_writer():
+        _apply_call_reassignment(
+            call=call,
+            owner_link=owner_link,
+            destination_department_id=destination_department_id,
+            resulting_version=resulting_version,
+        )
+        return _record_success(
+            scope=recovery_scope,
+            action=ProgrammeCommandAction.RECOVERY_CALL_REASSIGNED,
+            definition=definition,
+            call=call,
+            target_id=call.id,
+            result_kind=ProgrammeCommandResultKind.CALL,
+            expected_version=expected_version,
+            resulting_version=resulting_version,
+            request_digest=digest,
+            reason=reason,
+            retry_key=retry_key,
+            correlation_id=correlation_id,
+            source_channel=source_channel,
+            changed_fields=("owner_department", "aggregate_version"),
+            source_department_id=source_department_id,
+            destination_department_id=destination_department_id,
+            capability_code=APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP,
+            break_glass=True,
+            occurred_at=effective_now,
+        )
+
+
+@_audit_command_errors(
+    capability_code=APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP,
+    operation=ProgrammeCommandAction.RECOVERY_CALL_RETIRED,
+    break_glass=True,
+)
+@transaction.atomic
+def recover_orphaned_programme_call_retirement(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    call_id: UUID,
+    source_department_id: UUID,
+    expected_version: int,
+    reason: str,
+    retry_key: UUID,
+    correlation_id: UUID,
+    source_channel: str,
+    now: datetime | None = None,
+    authorizer: ApplicationsProgrammeAuthorizer = (_DEFAULT_AUTHORIZER),
+) -> ProgrammeCommandResult:
+    """Retire one exact active call orphaned by historical Department state.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Exact recovery-operator account identifier.
+    organization_id : UUID
+        Organization expected to own the call and Department.
+    edition_id : UUID
+        Exact edition containing the caller-supplied orphan target.
+    call_id : UUID
+        Opaque active-call identifier supplied by the caller.
+    source_department_id : UUID
+        Exact retired Department expected to own the orphaned call.
+    expected_version : int
+        Optimistic call aggregate version.
+    reason : str
+        Inspectable break-glass rationale.
+    retry_key : UUID
+        Idempotency key in the shared Applications namespace.
+    correlation_id : UUID
+        Correlation identifier for receipt, audit, and event evidence.
+    source_channel : str
+        Registered channel that initiated the command.
+    now : datetime | None, default=None
+        Optional aware execution instant for deterministic tests.
+    authorizer : ApplicationsProgrammeAuthorizer, default=_DEFAULT_AUTHORIZER
+        Sealed recovery-capability adapter.
+
+    Returns
+    -------
+    ProgrammeCommandResult
+        Retained break-glass retirement receipt and resulting call cursor.
+
+    Raises
+    ------
+    ApplicationsProgrammeStateConflictError
+        If the source is current or the call is not active.
+    """
+    common = _common_identifiers(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        retry_key=retry_key,
+        correlation_id=correlation_id,
+        source_channel=source_channel,
+        reason=reason,
+    )
+    actor_id, organization_id, edition_id = common[:3]
+    retry_key, correlation_id, source_channel, reason = common[3:]
+    call_id = require_programme_uuid(call_id, field="call_id")
+    source_department_id = require_programme_uuid(
+        source_department_id,
+        field="source_department_id",
+    )
+    expected_version = require_programme_expected_version(expected_version)
+    effective_now = _effective_now(now)
+    digest = _request_digest(
+        action=ProgrammeCommandAction.RECOVERY_CALL_RETIRED,
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        target_id=call_id,
+        expected_version=expected_version,
+        reason=reason,
+        source_channel=source_channel,
+        values={"source_department_id": source_department_id},
+    )
+    replay = _replay(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        retry_key=retry_key,
+        request_digest=digest,
+        authorizer=authorizer,
+        recovery=True,
+    )
+    if replay is not None:
+        return replay
+
+    recovery_scope = authorize_programme_recovery_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        authorizer=authorizer,
+    )
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(source_department_id,),
+    )
+    recovery_scope = authorize_programme_recovery_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        authorizer=authorizer,
+        lock=True,
+    )
+    _require_orphaned_source_department(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        source_department_id=source_department_id,
+    )
+    call = _locked_call(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        call_id=call_id,
+        owner_department_id=source_department_id,
+    )
+    definition = call.definition
+    _require_version(actual=definition.aggregate_version, expected=expected_version)
+    if definition.status != ApplicationDefinitionStatus.ACTIVE:
+        raise ApplicationsProgrammeStateConflictError
+    definition.status = ApplicationDefinitionStatus.RETIRED
+    definition.retired_at = effective_now
+    definition.retired_by_id = actor_id
+    resulting_version = expected_version + 1
+    definition.aggregate_version = resulting_version
+    with programme_application_database_writer():
+        definition.save()
+        return _record_success(
+            scope=recovery_scope,
+            action=ProgrammeCommandAction.RECOVERY_CALL_RETIRED,
+            definition=definition,
+            call=call,
+            target_id=call.id,
+            result_kind=ProgrammeCommandResultKind.CALL,
+            expected_version=expected_version,
+            resulting_version=resulting_version,
+            request_digest=digest,
+            reason=reason,
+            retry_key=retry_key,
+            correlation_id=correlation_id,
+            source_channel=source_channel,
+            changed_fields=(
+                "status",
+                "retired_at",
+                "retired_by",
+                "aggregate_version",
+            ),
+            source_department_id=source_department_id,
+            capability_code=APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP,
+            break_glass=True,
             occurred_at=effective_now,
         )
 
@@ -1382,6 +2055,12 @@ def _call_lifecycle_command(
         authorizer=authorizer,
     )
     _require_private_writes(scope)
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(owner_department_id,),
+    )
     scope = authorize_programme_call_scope(
         actor_id=actor_id,
         organization_id=organization_id,
@@ -1834,6 +2513,12 @@ def create_programme_call_successor(
         authorizer=authorizer,
     )
     _require_private_writes(scope)
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(owner_department_id,),
+    )
     scope = authorize_programme_call_scope(
         actor_id=actor_id,
         organization_id=organization_id,
@@ -2276,6 +2961,12 @@ def start_programme_proposal(
         lock=False,
     )
     _require_current_call_owner(call=initial_call, lock=False)
+    _lock_programme_write_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_ids=(initial_call.owner_department_id,),
+    )
     scope = authorize_programme_self_entry_scope(
         actor_id=actor_id,
         organization_id=organization_id,
@@ -5557,6 +6248,9 @@ __all__ = [
     "decline_programme_proposal_invitation",
     "invite_programme_proposal_collaborator",
     "leave_programme_proposal",
+    "reassign_programme_call",
+    "recover_orphaned_programme_call_reassignment",
+    "recover_orphaned_programme_call_retirement",
     "reinvite_programme_proposal_collaborator",
     "remove_programme_proposal_collaborator",
     "reopen_programme_proposal",

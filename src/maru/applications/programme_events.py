@@ -28,8 +28,11 @@ _CALL_ACTION_LIFECYCLES: Final = MappingProxyType(
     {
         "call_created": "draft",
         "call_configured": "draft",
+        "call_reassigned": "draft",
         "call_activated": "active",
         "call_retired": "retired",
+        "recovery_call_reassigned": "draft",
+        "recovery_call_retired": "retired",
         "call_successor_created": "draft",
     }
 )

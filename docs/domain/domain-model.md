@@ -2,7 +2,7 @@
 
 Status: Baseline plus dormant Programme and Applications intake foundations;
 composite runtime absent
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 This model names stable concepts and ownership boundaries. It is not a promise
 that every concept becomes one Django model or database table.
@@ -155,6 +155,15 @@ runtime policy derive the rule from the manifest rather than a hard-coded list
 of profile names. An assignment never grants permissions merely by matching a
 display label.
 
+A Department may also be the current owner of an Applications-owned Programme
+call or staging batch. Draft-call and clean-batch ownership can move only by a
+reasoned, receipt-backed Applications command; Active calls must retire and
+unresolved staging must be reassigned or explicitly disposed before the owner
+Department retires. Historical call/import references remain attached and may
+still prevent hard deletion even when they no longer block retirement.
+Workforce consumes only Applications' non-disclosing dependency state and does
+not own or inspect those aggregates.
+
 ### Work graph
 
 `Objective`, `Project`, `Milestone`, `WorkItem`, `Dependency`, `Risk`,
@@ -189,6 +198,15 @@ contributor roster, contributor profile revisions, policies, and digest. Each
 included collaborator acknowledges or declines only for themselves and that
 exact revision. Proposal collaboration remains an Applications purpose
 relationship and is not Programme hosting.
+
+An imported call's permanent source binding records owner equality when the
+binding is created. Later valid Draft-call ownership is proved by a contiguous
+immutable source-to-destination Programme command-receipt chain; neither the
+binding nor its batch is rewritten. Proposal lead, invitee, collaborator, and
+retained-history self access survives a Department owner's retirement, while
+new discovery, organizer management, and proposal starts require a current
+owner. Historical orphans are recoverable only by caller-supplied exact ID
+under a dormant, nondelegable, break-glass exact-Edition capability.
 
 The dormant Programme proposal state produces no review, decision, or target.
 A later accepted review transition may produce one immutable typed target
@@ -322,8 +340,9 @@ Applications now also has a dormant Programme-call and acknowledged-proposal
 kernel. Its global capability, purpose, target, and event declarations are
 absent from both current literal manifests; its new relations are runtime
 `SELECT`-only and expose no route, API, navigation, review, decision, target,
-Programme record, handler, or delivery. Preview-first import is next; review
-and the accepted adapter remain later boundaries.
+Programme record, handler, or delivery. Preview-first import and race-safe
+Department ownership continuity are installed but remain equally dormant;
+review and the accepted adapter are later boundaries.
 
 ## Venue, lodging, logistics, and production
 
@@ -411,6 +430,9 @@ ground:
 - `FileObject`, malware-scan result, and typed attachment;
 - `IdempotencyRecord`;
 - `ImportRun`, staged row, and provenance;
+- Applications-owned Programme owner-transition receipts, retained beside
+  their owning call/import aggregates rather than promoted to a generic write
+  service;
 - `ExportJob` and expiring artifact;
 - `AutomationDefinition` and `AutomationRun`;
 - `ConnectorInstallation`, credential reference, and delivery attempt; and

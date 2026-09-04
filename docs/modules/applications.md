@@ -1,16 +1,17 @@
 # Applications module
 
 Status: mounted generic application portfolio plus implemented dormant
-Programme-call, acknowledged-proposal, and Programme-import kernels; production
-remains gated
-Last updated: 2026-09-01
+Programme-call, acknowledged-proposal, Programme-import, and Department-
+ownership-continuity kernels; production remains gated
+Last updated: 2026-09-02
 
 ## Purpose and boundary
 
 `maru.applications` implements REG-023, PRG-001, PRG-002, PRG-009, IDN-014,
 and a bounded intake/review slice of KNO-009. PRG-010 and ADR 0083 define the
-implemented dormant preview-first Programme-import boundary; protected-PR and
-deployment acceptance remain separate. Applications owns edition-scoped,
+implemented dormant preview-first Programme-import boundary; PRG-011 and ADR
+0084 add its race-safe Department ownership and retirement continuation.
+Protected-PR and deployment acceptance remain separate. Applications owns edition-scoped,
 versioned contribution and service
 applications built from one typed field vocabulary. Attendee registration
 remains owned by `maru.registration`; the Registration starter is a
@@ -30,12 +31,12 @@ reconcile a private Programme item. It must not copy the answer sheet into
 Programme, make private review material public, grant a proposal collaborator
 host access, or create attendee Participation.
 
-Issue #63 deliberately stops before import, review, decision, target creation,
-or Programme ingestion. Issue #66 now contracts preview-first call and proposal
-import as the immediate dormant successor without mounting it. Structured
-review and decisions, then the accepted Programme adapter, follow as separate
-children. Host and co-host relationships begin only after that accepted
-transition and remain Programme-owned.
+The accepted dormant foundation now covers calls, acknowledged proposals,
+preview-first import, and Programme Department ownership continuity. It still
+stops before review, decision, target creation, or Programme ingestion.
+Structured review and decisions, then the accepted Programme adapter, follow
+as separate children. Host and co-host relationships begin only after that
+accepted transition and remain Programme-owned.
 
 The dormant Programme foundation now reserves a structural
 `applications_accepted` source binding and declares
@@ -146,6 +147,17 @@ profile, or mount a route. Exact caps bound a call to 64 tracks, 32 formats,
 four contributor fields, 16 collaborators per proposal, and 1,440 minutes per
 format.
 
+Ownership is not ordinary call configuration. `reassign_programme_call`
+requires the exact current source and destination Departments, current call-
+management authority at both scopes, an expected call version, retry key, and
+reason. It may move only a Draft call and writes an immutable source-to-
+destination transition in the Programme command receipt. An Active call must
+instead use the ordinary retirement command. Historical calls whose owners
+were retired before this boundary landed are reachable only by the exact-ID
+`recover_orphaned_programme_call_reassignment` and
+`recover_orphaned_programme_call_retirement` commands described below; no
+recovery command discovers or lists an orphan.
+
 ## Dormant collaborative Programme proposals
 
 A `ProgrammeProposal` is a one-to-one facet over one
@@ -218,7 +230,8 @@ including `ProgrammeImportCommandReceipt`. The service catalog is closed to:
 - `preview_programme_import`;
 - `preview_programme_import_proposal_claim`;
 - `commit_programme_import_call`;
-- `claim_programme_import_proposal`; and
+- `claim_programme_import_proposal`;
+- `reassign_programme_import_batch`; and
 - `discard_programme_import`.
 
 Pinning this import adapter is sufficient only for staging, organizer preview,
@@ -262,9 +275,13 @@ models: `ProgrammeImportBatch`, `ProgrammeImportItem`,
 `ProgrammeImportPreviewRevision`, `ProgrammeImportPreviewItemResult`,
 `ProgrammeImportSourceBinding`, `ProgrammeImportAppliedCommand`, and
 `ProgrammeImportCommandReceipt`. Batch state is only `staged` or `discarded`;
-application and expiry are derived. Each item independently moves from staged
-version 1 to applied or discarded version 2. Successful application or
-disposal nulls its private canonical payload in the same transaction.
+application and expiry are derived. A batch starts at positive version 1 and
+advances monotonically for each ownership transition and final disposal.
+Organizer preview binds the current batch version, so reassignment makes every
+older preview stale without changing item versions or payloads. Each item
+independently moves from staged version 1 to applied or discarded version 2.
+Successful application or disposal nulls its private canonical payload in the
+same transaction.
 
 Source binding permanently keys exact organization, edition, source system,
 item kind, and case-sensitive source key. The same identity and applied digest
@@ -284,8 +301,11 @@ key in sequence before any batch/edition row lock, so direct Programme commands
 cannot form a retry/edition deadlock. A nested or evidence failure rolls back
 the whole outer mutation.
 
-A source binding must match its applied item's parent batch source system. A
-call target must be owned by the batch's exact Department. A proposal target
+A source binding must match its applied item's parent batch source system. At
+binding creation, a call target must be owned by the batch's exact Department.
+A later draft-call reassignment never rewrites the batch or binding; a
+contiguous immutable Programme command-receipt chain from that original owner
+to the current owner proves the transition. A proposal target
 must use the exact call resolved through the proposal item's same-source-system
 call dependency, and the proposal submission and call must share the exact
 definition. Service checks and deferred database guards enforce each link;
@@ -315,12 +335,25 @@ authority. It clears remaining payload and never compensating-deletes an
 applied call or proposal. There is no automatic cleanup job or service/system
 actor in this outcome.
 
-The adapter, its two capabilities, and
+`reassign_programme_import_batch` is narrower than disposal. It requires open
+planning, an unexpired wholly staged batch whose payload is intact, no applied
+item or source binding, exact current import authority at both the source and
+destination Departments, and the current batch version. It acquires the shared
+edition write scope, locks both Departments in UUID order, advances only the
+batch version and owner, and writes one minimized source-to-destination
+receipt. A partial, applied, source-bound, expired, or closed-planning batch is
+disposal-only. Expiry never disposes content and an unresolved expired batch
+continues to block Department retirement until disposal succeeds.
+
+The adapter, its import/disposal capabilities, and
 `applications.programme_import.changed.v1` remain dormant and absent from both
-current profiles. There is no HTTP/admin/browser/worker surface. Issue #64 must
-make unresolved staging a disclosure-safe Department-retirement dependency and
-provide governed reassignment/disposal/recovery before any import/profile
-activation.
+current profiles. There is no HTTP/admin/browser/worker surface. The public
+Applications retirement seam probes calls and imports independently and
+returns only `clear`, `blocked`, or `unavailable`; a known block wins over an
+unavailable sibling probe, otherwise unavailability fails closed. It never
+returns a dependency kind, count, name, identifier, source fact, payload, or
+digest. Workforce consumes only that closed result under the shared edition
+mutex.
 
 ## Shared field contract
 
@@ -408,6 +441,15 @@ The dormant import vocabulary declares delegable exact-Department
 without staged-content read authority and deliberately does not require a
 current Department or open planning writes. Neither capability is pinned by a
 current profile.
+
+The separately dormant
+`applications.recover_programme_department_ownership` capability is exact-
+Edition, nondelegable, and break-glass-required. It accepts one caller-supplied
+call identifier and the expected retired source Department; it grants no list,
+search, content read, import preview, or general Programme authority. No
+current profile, root role, route, job, or UI pins it. Normal batch cleanup
+continues through the independently authorized exact-Edition disposal command;
+the recovery capability does not widen import reads.
 
 Self capabilities resolve against the authenticated account and exact edition,
 not a client-supplied subject. Organizer, applicant, and reviewer queries scope
@@ -567,6 +609,29 @@ index SHA-256 is
 `501634da18934c04c6234533fac4f01987fb5ddcc3db3a14f76d5c837097425f`.
 These values belong to the exact release head; an earlier schema snapshot is
 not acceptance evidence.
+
+PRG-011 and ADR 0084 continue the graph with Authorization
+`0023_programme_department_ownership_recovery`, Applications
+`0010_programme_department_ownership_persistence`,
+`0011_programme_department_ownership_integrity`, and
+`0012_programme_department_ownership_downgrade_fence`, followed by Workforce
+`0018_programme_department_ownership_contract`. Applications `0010` adds the
+nullable protected source/destination Department references used only by call
+and import ownership-transition receipts. `0011` installs the exact-scope,
+contiguous-owner-chain, monotonic-version, shared-edition-mutex, receipt-backed
+writer, and raw-DML retirement guards. `0012` refuses reversal once a post-
+cutover ownership transition exists. Forward migration does not invent
+receipts for a historical orphan; recovery fixes that record forward through
+one exact-ID command.
+
+All Programme call, proposal, import, and ownership-continuity relations remain
+runtime `SELECT`-only and every integrity function remains owner-only. The
+generated readiness catalog for the exact release head—not the earlier ADR
+0083 counts or digests—is authoritative. Workforce recognizes exactly 19
+protected Department foreign-key references after `0018`, including the four
+source/destination receipt references. Reversal and whole-database restore must
+keep Applications, Authorization, Workforce, Audit, Effects event/outbox, and
+migration history mutually consistent.
 
 Focused verification covers the closed starter/event/capability catalogs and
 PostgreSQL workflows for policy activation, idempotency, applicant/reviewer

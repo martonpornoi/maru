@@ -2,10 +2,10 @@
 
 Status: Dormant schema procedure; no production activation or personal-data
 approval
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
-This runbook covers issue #63's Applications-owned Programme-call and
-collaborative-proposal schema. It does not activate
+This runbook covers the Applications-owned Programme-call and collaborative-
+proposal schema plus ADR 0084's ownership-continuity successors. It does not activate
 `programme_operations@1`, mount a writer, approve production personal data, or
 authorize manual proposal creation. Use synthetic data only until the separate
 retention, deployment, recovery, and owner-acceptance gates are complete.
@@ -25,7 +25,17 @@ The change is additive:
   and
 - `applications.0006_programme_populated_downgrade_fence` refuses an unsafe
   downgrade before protected Programme-call or proposal evidence can be
-  removed.
+  removed;
+- `authorization.0023_programme_department_ownership_recovery` declares one
+  unpinned, nondelegable, break-glass exact-Edition recovery capability;
+- `applications.0010_programme_department_ownership_persistence`,
+  `0011_programme_department_ownership_integrity`, and
+  `0012_programme_department_ownership_downgrade_fence` add receipt-backed
+  source/destination ownership transitions, exact chain/database guards, and
+  the post-cutover reversal fence; and
+- `workforce.0018_programme_department_ownership_contract` recognizes all four
+  transition-receipt Department references and installs the reciprocal
+  retirement backstop, bringing the exact catalog to 19 references.
 
 Applications `0004` depends on Workforce only at
 `0006_edition_structure_schema`, the earliest complete Department shape it
@@ -33,6 +43,11 @@ uses. It does not depend on the later Workforce or Registration tail. The
 separate Workforce `0016` successor depends on Applications `0004` and
 Workforce `0015`, so it can recognize the new owner-Department foreign key
 without coupling the Applications schema to that later graph.
+
+Applications `0010` depends on the import terminal `0009`; `0011` also depends
+on Authorization `0023`; `0012` fences the resulting evidence. Workforce
+`0018` follows Applications `0012` and Workforce `0017`. Follow the migration
+plan rather than manually reordering these nodes.
 
 Do not infer a compatible range by migration number alone. Authorization's
 paired additive migration adds the closed Programme-call/proposal capability
@@ -60,8 +75,9 @@ fingerprints must remain unchanged.
 6. Run Django deployment checks and the public readiness probe. The
    Applications Programme dependency must validate the exact relation,
    constraint, index, function, trigger, owner, and ACL fingerprint.
-   Workforce readiness must also recognize the new Programme-call owner
-   reference exactly.
+   Workforce readiness must recognize the exact 19-reference Department
+   catalog, including call/import owners and both receipt families' source and
+   destination references.
 7. Verify that `full_convention@1` and `workforce_only@1` still have their
    previously accepted literal fingerprints and that no Programme member is
    pinned by either manifest.
@@ -100,6 +116,13 @@ Programme-call table still exists deliberately restores the prior exact
 Department-reference function. Its catalog no longer matches the live foreign
 key, so Department deletion fails closed until Applications `0004` is removed
 or Workforce `0016` is reapplied.
+
+On a current ownership-continuity schema, reverse Workforce `0018` before
+Applications `0012` through `0010`; reverse Authorization `0023` only after its
+own populated grant/role-bundle fence is clear. Applications `0012` refuses
+reversal when any post-cutover source/destination ownership evidence exists.
+An empty reverse restores the exact prior integrity catalog and Workforce's
+15-reference Department helper; it never deletes or rewrites an orphan.
 
 After an empty reversal, reconcile runtime ACLs and verify that the Applications
 Programme readiness dependency fails in the expected old-release shape. Do not
@@ -141,11 +164,10 @@ schedule, staffing record, or publication.
 
 ## Later activation
 
-Preview-first import is the immediate successor and must use the public
-Applications command boundary with a dry-run mapping, validation, duplicate
-policy, provenance, and explicit commit. It does not authorize generic review
-or target creation. Structured review and decisions, the accepted Programme
-adapter, Programme hosts, Scheduling, staffing, and publication remain separate
+Preview-first import and Department ownership continuity are now installed as
+dormant command boundaries. They do not authorize generic review or target
+creation. Structured review and decisions, the accepted Programme adapter,
+Programme hosts, Scheduling, staffing, and publication remain separate
 children.
 
 A later mounted writer must introduce a reviewed profile member, capability and
@@ -156,42 +178,62 @@ copy the generic Applications receipt privileges.
 
 ## Department retirement sequencing
 
-Before a Workforce Department that owns any Programme call is retired, an
-authorized operator must reassign each draft call or retire each active call
-while the Department is still current. A retired owner is deliberately not a
-valid call-management target, so retirement in the opposite order leaves no
-ordinary organizer command able to reassign or retire the call. Do not repair
-that state with raw DML, a temporary grant, a disabled trigger, or a fabricated
-receipt; keep the profile dormant and use a reviewed fix-forward migration or
-restore the mutually consistent backup.
+Before a Workforce Department retires, the structure command acquires the
+shared exact-edition mutex and calls Applications' public dependency seam.
+Call and import probes run independently and return only `clear`, `blocked`, or
+`unavailable`; any known block wins, otherwise unavailability fails closed.
+No category, count, name, identifier, source key, email, payload, or digest
+crosses into Workforce. A refused command changes no structure cursor or
+success evidence.
+
+While the source Department is current, reassign each Draft call through
+`reassign_programme_call` with exact current call-management authority at both
+source and destination, current call version, retry key, and reason. Retire
+each Active call through `retire_programme_call`; Active calls cannot move.
+Reassignment preserves every imported source binding and appends the exact
+source-to-destination receipt needed by the contiguous owner chain. A replay
+returns the original receipt without reacquiring the edition mutex or writing
+duplicate evidence.
 
 Department retirement blocks discovery and new proposal starts for the owned
 call. It does not erase a retained proposal relationship or its immutable
 history. Existing leads, live invitees, and accepted collaborators keep only
 their lifecycle-permitted self projections and commands, subject to the call
 window, call lifecycle, edition write state, current identity, and exact
-adoption contract. [#64](https://github.com/martonpornoi/maru/issues/64) must
-enforce the sequencing preflight and provide a governed recovery workflow
-before activation.
+adoption contract.
 
-Workforce `0016` is an integrity-catalog successor, not the retirement
-preflight or recovery workflow required by #64. It prevents an unrecognized
-Department reference from being ignored; it does not reassign calls, retire an
-active call, authorize recovery, or make Programme Operations safe to activate.
+For a call orphaned by historical pre-continuity state, use only
+`recover_orphaned_programme_call_reassignment` for one exact Draft or
+`recover_orphaned_programme_call_retirement` for one exact Active call. Both
+require the dormant exact-Edition, nondelegable, break-glass recovery
+capability, caller-supplied call and retired-source identifiers, expected
+version, retry key, and reason. There is no orphan list or content-read query.
+Because no current profile or root activates that capability, a production
+operator must use only a separately accepted future recovery ceremony or a
+reviewed fix-forward/whole-database restore. Never use raw DML, a temporary
+grant, a disabled trigger, a fabricated receipt, or migration-recorder edits.
+
+Use the exact operational decision tables in
+[`applications-programme-department-ownership-recovery.md`](applications-programme-department-ownership-recovery.md).
 
 ## Verification checklist
 
 - fresh upgrade and empty reverse/reapply;
 - exact Applications `0004` dependency shape and dependent Identity `0020` /
-  Workforce `0016` reversal planning;
+  Workforce `0016`, Applications `0010` through `0012`, Authorization `0023`,
+  and Workforce `0018` reversal planning;
 - Workforce Department-reference successor install, fail-closed reverse, and
   reapply behavior;
 - populated reversal refusal at each protected evidence class;
-- exact old-plus-new trigger/function fingerprint and drift rejection;
+- exact old-plus-new trigger/function fingerprint, 19-reference Department
+  catalog, and drift rejection;
 - runtime and `PUBLIC` ACL matrix, including dedicated-receipt containment;
 - unchanged current-profile fingerprints and no selectable Programme profile;
 - legacy review/acceptance/target denial in Python and PostgreSQL;
 - atomic state/receipt/audit/event/outbox rollback and retry conflict;
 - cross-tenant, cross-edition, stale-version, actor-attribution, and immutable-
-  snapshot rejection; and
+  snapshot rejection;
+- Draft reassignment, Active retirement, exact-ID orphan recovery, shared-
+  mutex races, idempotent replay, owner-chain integrity, and generic
+  dependency refusal; and
 - consistent backup/restore with no fabricated cross-module record.

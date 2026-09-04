@@ -28,8 +28,8 @@ def test_0005_is_one_atomic_cross_domain_integrity_step() -> None:
     assert operation.sql == migration.FORWARD_SQL
     assert operation.reverse_sql == migration.REVERSE_SQL
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 87
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 22
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 102
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 23
 
 
 def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None:
@@ -135,12 +135,12 @@ def test_schema_fingerprint_pins_complete_constraint_and_index_catalogs() -> Non
     """Keep code-owned PostgreSQL 17 object catalogs complete and immutable."""
     assert applications_readiness.APPLICATIONS_SCHEMA_CATALOG_SHA256 == {
         "constraint:": (
-            367,
-            "c20c6cd829ddc9045d6e07bfcfb39cda7e75a21a7070f4f0ad3b3b2e96aa3ecb",
+            376,
+            "efb42922ba1527c27bcd07dcf1ade76315887335448c5171862a27eeb0fa033a",
         ),
         "index:": (
-            263,
-            "501634da18934c04c6234533fac4f01987fb5ddcc3db3a14f76d5c837097425f",
+            267,
+            "9efc324778c1feb2252c6398f93c7ca75895f0e260568af3059d3321882f009f",
         ),
     }
     source = inspect.getsource(applications_readiness._schema_definition_rows)
@@ -276,7 +276,7 @@ def test_0005_reverse_restores_the_exact_legacy_definition_and_acl_contract() ->
     )
 
 
-def test_0006_fence_remains_while_0009_is_the_terminal_node() -> None:
+def test_legacy_fence_remains_while_0012_is_the_terminal_node() -> None:
     migration = import_module(
         "maru.applications.migrations.0006_programme_populated_downgrade_fence"
     )
@@ -293,7 +293,7 @@ def test_0006_fence_remains_while_0009_is_the_terminal_node() -> None:
     )
     assert APPLICATIONS_INTEGRITY_CONTRACT.terminal_migration == (
         "applications",
-        "0009_programme_import_populated_downgrade_fence",
+        "0012_programme_department_ownership_downgrade_fence",
     )
 
 

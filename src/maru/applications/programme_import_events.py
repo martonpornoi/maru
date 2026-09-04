@@ -14,6 +14,7 @@ APPLICATIONS_PROGRAMME_IMPORT_EVENT_SCHEMA_VERSION: Final = 1
 _ACTIONS: Final = frozenset(
     {
         "batch_staged",
+        "batch_reassigned",
         "batch_previewed",
         "call_committed",
         "proposal_claimed",
@@ -70,7 +71,7 @@ def validate_programme_import_changed_payload(payload: dict[str, object]) -> Non
         or not _uuid_text(payload["batch_id"])
         or payload["batch_state"] not in _BATCH_STATES
         or type(payload["batch_version"]) is not int
-        or payload["batch_version"] not in {1, 2}
+        or payload["batch_version"] < 1
         or not _uuid_text(payload["item_id"], optional=True)
         or payload["item_state"] not in _ITEM_STATES
         or type(payload["item_version"]) is not int

@@ -272,7 +272,7 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
         "f5f6dc38198cf2978e3c7613152b869375f1d26232ebcd4560986104e00f11fa"
     ),
     "maru_validate_department_structure_write()": (
-        "e4a44adc84bce76b97a4e6d0f8fef19825b891d94bf41dc17f92225d1808f22a"
+        "56afcfbad51ee3bc96fca35817b2def75ed321efd88c5a53c2732721f649814b"
     ),
     "maru_validate_edition_structure_control()": (
         "52daa0c470438ca34cdd2a00e1b0aa5e61b9bed98a9cfc320b21a92fc6911686"
@@ -281,7 +281,7 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
         "0856108aaf1bf9fd11092d908fd289542e36faeb815a47e7d5de5680f2abd5a4"
     ),
     "maru_workforce_department_fk_contract_is_current()": (
-        "651cd7c2cde5f1b4147255c3cadae247b8a28e64ffdedc22ad1a6f41ed2f4096"
+        "363ced06d53c708b0b36a0a170be1f82cb8e51492c649f59860294aec8a44e0d"
     ),
     "maru_workforce_page9_scope_mutex()": (
         "75e5f8a98fd059d1e5d2de0db420e77beec79f3c6eb12b051388ab66c85790c6"
@@ -297,7 +297,14 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
 PAGE9_DEPARTMENT_FK_CONTRACT = (
     ("applications_applicationownerdepartment", ("department_id",)),
     ("applications_programmecall", ("owner_department_id",)),
+    ("applications_programmecommandreceipt", ("destination_department_id",)),
+    ("applications_programmecommandreceipt", ("source_department_id",)),
     ("applications_programmeimportbatch", ("owner_department_id",)),
+    (
+        "applications_programmeimportcommandreceipt",
+        ("destination_department_id",),
+    ),
+    ("applications_programmeimportcommandreceipt", ("source_department_id",)),
     ("authorization_capabilitygrant", ("department_id",)),
     ("authorization_roleassignment", ("department_id",)),
     ("authorization_scopedresourcebinding", ("department_id",)),
@@ -540,6 +547,7 @@ def test_page9_constraint_timing_tamper_blocks_readiness() -> None:
         "0010_position_structure_commands",
         "0016_programme_call_department_fk_contract",
         "0017_programme_import_department_fk_contract",
+        "0018_programme_department_ownership_contract",
     ],
 )
 def test_missing_page9_migration_recorder_row_blocks_readiness(

@@ -598,6 +598,48 @@ def authorize_programme_import_self_scope(
     )
 
 
+def require_current_programme_import_owner(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_id: UUID,
+    lock: bool = False,
+) -> None:
+    """Require a current exact owner before disclosing or claiming staging data.
+
+    This relationship-only check deliberately grants no import capability.  It
+    lets an already authorized exact-self proposal lead consume staged private
+    data only while the retaining Department remains current.  Historical
+    orphan batches therefore stay disposal-only.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Exact organization that owns the batch.
+    edition_id : UUID
+        Exact edition that owns the batch.
+    department_id : UUID
+        Retained owner Department identifier.
+    lock : bool, default=False
+        Whether the current Department reference should be locked.
+
+    Raises
+    ------
+    ApplicationsProgrammeImportAuthorizationDeniedError
+        If the retained owner is absent, foreign, or retired.
+    """
+    if (
+        resolve_current_department_reference(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            lock=lock,
+        )
+        is None
+    ):
+        raise ApplicationsProgrammeImportAuthorizationDeniedError
+
+
 def authorize_programme_import_disposal_scope(
     *,
     actor_id: UUID,
@@ -730,4 +772,5 @@ __all__ = [
     "authorize_programme_import_disposal_scope",
     "authorize_programme_import_retry_scope",
     "authorize_programme_import_self_scope",
+    "require_current_programme_import_owner",
 ]
