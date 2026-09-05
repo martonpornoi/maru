@@ -48,6 +48,28 @@ _DOWNGRADE_FENCE_SOURCE_SHA256: Final = (
     "8e2f365fae30521ad40a4bb590bb01b1ab580e72811b721e3d7da38fe4599e21"
 )
 _SHA256_HEX_LENGTH: Final = 64
+_REVIEW_DOWNGRADE_MIGRATION = import_module(
+    "maru.applications.migrations.0015_programme_review_downgrade_fence"
+)
+_REVIEW_DOWNGRADE_FENCE_SOURCE_SHA256: Final = (
+    "78b3cc885aa5b72106ced0ec0f244b6523ea88f9686a0028169f77d2dd3be151"
+)
+
+
+def _review_downgrade_contract_is_current() -> bool:
+    operations = tuple(_REVIEW_DOWNGRADE_MIGRATION.Migration.operations)
+    if len(operations) != 1 or not isinstance(operations[0], migrations.RunPython):
+        return False
+    reverse = _REVIEW_DOWNGRADE_MIGRATION.refuse_populated_programme_review_downgrade
+    source = inspect.getsource(reverse).replace("\r\n", "\n")
+    return (
+        operations[0].code is migrations.RunPython.noop
+        and operations[0].reverse_code is reverse
+        and tuple(_REVIEW_DOWNGRADE_MIGRATION.Migration.dependencies)
+        == (("applications", "0014_programme_review_integrity"),)
+        and hashlib.sha256(source.encode("utf-8")).hexdigest()
+        == _REVIEW_DOWNGRADE_FENCE_SOURCE_SHA256
+    )
 
 
 def _applications_programme_migration_contract_is_current() -> bool:
@@ -129,6 +151,13 @@ _DERIVED_APPLICATIONS_INTEGRITY_CONTRACT = build_database_integrity_contract(
 _IDENTITY_SQL_TRIGGER_CONTRACTS, _IDENTITY_SQL_FUNCTION_CONTRACTS = (
     parse_database_integrity_sql_contracts(_IDENTITY_PROGRAMME_MIGRATION.FORWARD_SQL)
 )
+_REVIEW_INTEGRITY_CONTRACT = build_database_integrity_contract(
+    status_key="applications_integrity",
+    app_label="applications",
+    source_migration=("applications", "0014_programme_review_integrity"),
+    terminal_migration=("applications", "0015_programme_review_downgrade_fence"),
+    source_migration_module="maru.applications.migrations.0014_programme_review_integrity",
+)
 _IDENTITY_TRIGGER_CONTRACTS = {
     name: trigger
     for name, trigger in _IDENTITY_SQL_TRIGGER_CONTRACTS.items()
@@ -144,18 +173,22 @@ _IDENTITY_FUNCTION_CONTRACTS = {
     if identity in _IDENTITY_FUNCTION_IDENTITIES
 }
 APPLICATIONS_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
-    _DERIVED_APPLICATIONS_INTEGRITY_CONTRACT,
+    _REVIEW_INTEGRITY_CONTRACT,
     triggers={
         **_DERIVED_APPLICATIONS_INTEGRITY_CONTRACT.triggers,
         **_IDENTITY_TRIGGER_CONTRACTS,
+        **_REVIEW_INTEGRITY_CONTRACT.triggers,
     },
     functions={
         **_DERIVED_APPLICATIONS_INTEGRITY_CONTRACT.functions,
         **_IDENTITY_FUNCTION_CONTRACTS,
+        **_REVIEW_INTEGRITY_CONTRACT.functions,
     },
     source_contract_current=(
         _DERIVED_APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
         and _applications_programme_migration_contract_is_current()
+        and _REVIEW_INTEGRITY_CONTRACT.source_contract_current
+        and _review_downgrade_contract_is_current()
     ),
 )
 
@@ -251,6 +284,20 @@ APPLICATIONS_RELATION_SEMANTICS: Final[
         False,
         "d",
     ),
+    "applications_programmereviewpolicy": ("r", "p", False, False, False, "d"),
+    "applications_programmereviewcase": ("r", "p", False, False, False, "d"),
+    "applications_programmereviewassignment": ("r", "p", False, False, False, "d"),
+    "applications_programmereviewentry": ("r", "p", False, False, False, "d"),
+    "applications_programmereviewdecision": ("r", "p", False, False, False, "d"),
+    "applications_programmedecisionacknowledgement": (
+        "r",
+        "p",
+        False,
+        False,
+        False,
+        "d",
+    ),
+    "applications_programmereviewreceipt": ("r", "p", False, False, False, "d"),
     "applications_programmecall": ("r", "p", False, False, False, "d"),
     "applications_programmecallcontributorfield": (
         "r",
@@ -400,12 +447,12 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # deliberately keeps Applications readiness blocked.
 APPLICATIONS_SCHEMA_CATALOG_SHA256: Final[Mapping[str, tuple[int, str]]] = {
     "constraint:": (
-        376,
-        "efb42922ba1527c27bcd07dcf1ade76315887335448c5171862a27eeb0fa033a",
+        437,
+        "d6ad577b25b7ac87592a27fb40169adf32453c96d69010526449f0022dd1b2de",
     ),
     "index:": (
-        267,
-        "9efc324778c1feb2252c6398f93c7ca75895f0e260568af3059d3321882f009f",
+        303,
+        "abeb82036b95c051d009bb05a4809e7e868078e0afa0b6f60a014b8e5638fb4d",
     ),
 }
 
@@ -802,6 +849,17 @@ def applications_database_integrity_is_ready() -> bool:
         Whether the requested condition is satisfied.
     """
     try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT count(*) = 2 FROM public.django_migrations "
+                "WHERE app = 'applications' AND name IN (%s, %s)",
+                (
+                    "0011_programme_department_ownership_integrity",
+                    "0012_programme_department_ownership_downgrade_fence",
+                ),
+            )
+            if cursor.fetchone() != (True,):
+                return False
         return (
             database_integrity_contract_is_ready(APPLICATIONS_INTEGRITY_CONTRACT)
             and inspect_applications_schema_catalog().ready

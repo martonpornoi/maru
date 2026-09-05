@@ -38,7 +38,7 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         )
         for contract in CONTRACTS
     ] == [
-        ("applications_integrity", True, 102, 23, 2),
+        ("applications_integrity", True, 134, 27, 2),
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
         ("venues_integrity", True, 13, 9, 1),
@@ -96,7 +96,13 @@ def test_function_contracts_pin_body_invoker_search_path_and_behavior() -> None:
             function.language == "plpgsql"
             and not function.security_definer
             and function.configuration == ("search_path=pg_catalog, public, pg_temp",)
-            and function.result == "trigger"
+            and function.result
+            == (
+                "boolean"
+                if function.identity
+                == "maru_applications_review_stage_ready(uuid, integer, bigint)"
+                else "trigger"
+            )
             and len(function.source_sha256) == 64
             for function in contract.functions.values()
         )

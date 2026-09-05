@@ -229,6 +229,27 @@ GRANT SELECT ON TABLE
     public.applications_programmeimportcommandreceipt
     TO maru_runtime;
 
+-- ADR 0085 review remains dormant. These seven new relations are SELECT-only;
+-- this is not permission to activate a profile, route, writer, or event handler.
+REVOKE ALL ON TABLE
+    public.applications_programmereviewpolicy,
+    public.applications_programmereviewcase,
+    public.applications_programmereviewassignment,
+    public.applications_programmereviewentry,
+    public.applications_programmereviewdecision,
+    public.applications_programmedecisionacknowledgement,
+    public.applications_programmereviewreceipt
+    FROM PUBLIC, maru_runtime;
+GRANT SELECT ON TABLE
+    public.applications_programmereviewpolicy,
+    public.applications_programmereviewcase,
+    public.applications_programmereviewassignment,
+    public.applications_programmereviewentry,
+    public.applications_programmereviewdecision,
+    public.applications_programmedecisionacknowledgement,
+    public.applications_programmereviewreceipt
+    TO maru_runtime;
+
 -- Workforce adoption setup and Organization structure receipts are append-only
 -- runtime evidence. Structure controls are optimistic-concurrency aggregates
 -- that may be inserted and advanced, but never deleted, by runtime. REFERENCES

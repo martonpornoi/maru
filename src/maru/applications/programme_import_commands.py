@@ -46,6 +46,7 @@ from maru.applications.models import (
     ProgrammeImportPreviewStatus,
     ProgrammeImportSourceBinding,
     ProgrammeProposal,
+    ProgrammeReviewReceipt,
 )
 from maru.applications.programme_authorization import (
     APPLICATIONS_EDIT_PROGRAMME_PROPOSAL_SELF,
@@ -785,6 +786,9 @@ def _replay(
         .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
         .exists()
         or ProgrammeCommandReceipt.objects.select_for_update()
+        .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
+        .exists()
+        or ProgrammeReviewReceipt.objects.select_for_update()
         .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
         .exists()
     ):

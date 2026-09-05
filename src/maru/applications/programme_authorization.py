@@ -21,6 +21,10 @@ from maru.applications.programme_adoption import (
     APPLICATION_PROGRAMME_ITEM_TARGET_KIND,
     profile_allows_application_programme_self,
 )
+from maru.applications.programme_write_scope import (
+    ApplicationsProgrammeWriteScopeUnavailableError,
+    lock_programme_edition_write_scope,
+)
 from maru.authorization.policy import (
     PolicyDecision,
     decide_verified_principal_exact_department,
@@ -1183,7 +1187,8 @@ def authorize_programme_proposal_scope(
     authorizer : ApplicationsProgrammeAuthorizer, default=_DEFAULT_AUTHORIZER
         The sealed complete-decision adapter.
     lock : bool, default=False
-        Whether current owner and relationship rows are locked.
+        Whether the canonical edition boundary is acquired before actor and
+        relationship locks. Self access does not require a current Department.
     now : datetime | None, default=None
         Optional aware instant used for deterministic invitation expiry.
 
@@ -1203,6 +1208,16 @@ def authorize_programme_proposal_scope(
     effective_now = now or timezone.now()
     if not timezone.is_aware(effective_now):
         raise ApplicationsProgrammeAuthorizationDeniedError
+    if lock:
+        try:
+            lock_programme_edition_write_scope(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                department_ids=(),
+                actor_id=actor_id,
+            )
+        except ApplicationsProgrammeWriteScopeUnavailableError as error:
+            raise ApplicationsProgrammeAuthorizationDeniedError from error
     actor = resolve_active_verified_person_reference(
         account_id=actor_id,
         lock=lock,

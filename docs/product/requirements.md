@@ -1104,9 +1104,29 @@ architecture documents, implementation issues, tests, and release notes.
 - **PRG-003 — Structured review:** Review stages must support configurable
   rubrics, conflicts of interest, optional anonymization, independent scoring,
   discussion, moderation, and accountable decisions.
+  Programme review must bind one exact submitted, contributor-acknowledged seal
+  and immutable policy version. Policies explicitly configure ordered stages,
+  rubric bounds, explicit call-question allowlists, required independent review
+  counts, discussion, and structured
+  identity withholding; no default score, quorum, ranking, or acceptance
+  threshold may be inferred. Assigned reviewers must declare their own conflict
+  status before protected content access. Recused, removed, stale, foreign-scope,
+  or unassigned reviewers contribute no effective score or authority. Scoring,
+  moderation, and final decisions retain separate capabilities, actor
+  independence, optimistic versions, directly inspectable rationale, and
+  append-only history. Proposal reopening, withdrawal, a newer seal, or owner
+  retirement invalidates fresh review work without rewriting its evidence.
 - **PRG-004 — Decision communication:** Accept, reject, wait-list, and revision
   decisions must use templates while preserving a canonical conversation and
   any required acknowledgement.
+  Each Programme decision must bind the exact reviewed seal and pinned template,
+  separate recipient-visible text from private rationale, and address only the
+  lead and included contributors of that seal. Acknowledgement is attributable
+  to the exact recipient, means receipt rather than consent, and remains
+  available with retained message history after withdrawal or owner retirement.
+  Review data and other recipients' responses must not leak through that history.
+  An accept decision does not itself create a Programme item or host: the later
+  typed adapter must independently verify the still-effective exact decision.
 - **PRG-005 — Accepted-item advance:** Acceptance must create tracked work for
   public copy, host confirmation, technical needs, accessibility, media
   consent, schedule availability, files, and other configured readiness.

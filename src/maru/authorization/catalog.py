@@ -1070,6 +1070,82 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"reason", "audit"}),
     ),
     Capability(
+        code="applications.manage_programme_review",
+        description=(
+            "Configure policies, open exact-revision cases, and manage named "
+            "Programme reviewers."
+        ),
+        maximum_scope=ScopeLevel.DEPARTMENT,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"review_context"}),
+        obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.review_programme",
+        description=(
+            "Review exact assigned Programme revisions after a personal "
+            "conflict declaration."
+        ),
+        maximum_scope=ScopeLevel.DEPARTMENT,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {"review_context", "review_answers", "review_evidence"}
+        ),
+        obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.moderate_programme_review",
+        description=(
+            "Moderate and explicitly advance or reopen Programme review stages "
+            "independently."
+        ),
+        maximum_scope=ScopeLevel.DEPARTMENT,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {"review_context", "review_answers", "review_evidence"}
+        ),
+        obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.decide_programme",
+        description=(
+            "Record accountable Programme decisions independently of "
+            "contributors and reviewers."
+        ),
+        maximum_scope=ScopeLevel.DEPARTMENT,
+        delegable=False,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {"review_context", "review_answers", "review_evidence"}
+        ),
+        obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.view_programme_decision_self",
+        description=(
+            "Read only decisions addressed to one's exact reviewed "
+            "contributor snapshot."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"decision_message", "own_acknowledgement"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.acknowledge_programme_decision_self",
+        description="Acknowledge receipt only of a decision addressed to oneself.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
         code="applications.import_programme",
         description=(
             "Stage, preview, and apply Programme imports owned by one exact Department."
@@ -1427,7 +1503,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-09-02.1"
+POLICY_VERSION = "2026-09-05.1"
 
 
 def capability(code: str) -> Capability | None:

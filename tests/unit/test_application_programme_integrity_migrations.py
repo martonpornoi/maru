@@ -28,8 +28,8 @@ def test_0005_is_one_atomic_cross_domain_integrity_step() -> None:
     assert operation.sql == migration.FORWARD_SQL
     assert operation.reverse_sql == migration.REVERSE_SQL
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 102
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 23
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 134
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 27
 
 
 def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None:
@@ -70,6 +70,13 @@ def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None
         "applications_programmeproposalrevisioncontributor",
         "applications_programmeproposalrevisionresponse",
         "applications_programmeproposalselectionrevision",
+        "applications_programmereviewpolicy",
+        "applications_programmereviewcase",
+        "applications_programmereviewassignment",
+        "applications_programmereviewentry",
+        "applications_programmereviewdecision",
+        "applications_programmedecisionacknowledgement",
+        "applications_programmereviewreceipt",
     }
     assert set(relations.values()) == {("r", "p", False, False, False, "d")}
     assert applications_readiness._applications_relation_names() == tuple(
@@ -135,12 +142,12 @@ def test_schema_fingerprint_pins_complete_constraint_and_index_catalogs() -> Non
     """Keep code-owned PostgreSQL 17 object catalogs complete and immutable."""
     assert applications_readiness.APPLICATIONS_SCHEMA_CATALOG_SHA256 == {
         "constraint:": (
-            376,
-            "efb42922ba1527c27bcd07dcf1ade76315887335448c5171862a27eeb0fa033a",
+            437,
+            "d6ad577b25b7ac87592a27fb40169adf32453c96d69010526449f0022dd1b2de",
         ),
         "index:": (
-            267,
-            "9efc324778c1feb2252c6398f93c7ca75895f0e260568af3059d3321882f009f",
+            303,
+            "abeb82036b95c051d009bb05a4809e7e868078e0afa0b6f60a014b8e5638fb4d",
         ),
     }
     source = inspect.getsource(applications_readiness._schema_definition_rows)
@@ -293,7 +300,7 @@ def test_legacy_fence_remains_while_0012_is_the_terminal_node() -> None:
     )
     assert APPLICATIONS_INTEGRITY_CONTRACT.terminal_migration == (
         "applications",
-        "0012_programme_department_ownership_downgrade_fence",
+        "0015_programme_review_downgrade_fence",
     )
 
 

@@ -45,6 +45,7 @@ from maru.applications.models import (
     ApplicationTargetRecord,
     ProgrammeCommandReceipt,
     ProgrammeImportCommandReceipt,
+    ProgrammeReviewReceipt,
     ReviewDecisionKind,
     ReviewerBasis,
 )
@@ -191,6 +192,9 @@ def _replay(
                 actor_id=actor.id,
                 retry_key=retry_key,
             )
+            .exists()
+            or ProgrammeReviewReceipt.objects.select_for_update()
+            .filter(edition_id=edition_id, actor_id=actor.id, retry_key=retry_key)
             .exists()
         ):
             raise ApplicationIdempotencyConflict
