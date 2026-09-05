@@ -684,7 +684,32 @@ def test_fresh_cleanup_discovers_and_removes_retained_job(tmp_path: Path) -> Non
     workflow.cleanup()
 
     assert job_name not in runner.resources["container"]
-    assert ("docker", "rm", "--force", job_name) in runner.calls
+    assert ("docker", "rm", "--force", "--volumes", job_name) in runner.calls
+
+
+def test_cleanup_keeps_unrelated_volumes_and_scopes_anonymous_removal(
+    tmp_path: Path,
+) -> None:
+    runner = DockerStateRunner()
+    workflow = rehearsal.OciRuntimeRehearsal(
+        _configuration(tmp_path),
+        runner=runner,  # type: ignore[arg-type]
+    )
+    job_name = f"{workflow.resources.prefix}-job-42"
+    runner.add("container", job_name, labels=_owned_labels())
+    runner.add("volume", "unrelated-database", labels={})
+    runner.add("volume", "orphaned-anonymous-volume", labels={})
+    runner.add("volume", workflow.resources.data_volume, labels=_owned_labels())
+
+    workflow.cleanup()
+
+    assert set(runner.resources["volume"]) == {
+        "unrelated-database",
+        "orphaned-anonymous-volume",
+    }
+    assert ("docker", "rm", "--force", "--volumes", job_name) in runner.calls
+    assert ("docker", "volume", "rm", workflow.resources.data_volume) in runner.calls
+    assert not any("prune" in command for command in runner.calls)
 
 
 def test_cleanup_inventory_failure_never_means_absent(tmp_path: Path) -> None:

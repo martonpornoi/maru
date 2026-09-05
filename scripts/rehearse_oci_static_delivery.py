@@ -3723,7 +3723,7 @@ class OciStaticDeliveryRehearsal:
         return containers, networks, volumes
 
     def _remove_container(self, name: str, *, stage: str) -> None:
-        """Remove one exact container after rechecking both ownership labels.
+        """Remove one verified container and its associated anonymous volumes.
 
         Parameters
         ----------
@@ -3733,7 +3733,9 @@ class OciStaticDeliveryRehearsal:
             Public cleanup stage.
         """
         if self._require_owned_resource("container", name, stage=stage):
-            self._docker("rm", "--force", name, stage=stage)
+            # Image-declared volumes also exist on short-lived PostgreSQL jobs.
+            # Docker leaves named volumes for our separate label-verified cleanup.
+            self._docker("rm", "--force", "--volumes", name, stage=stage)
 
     def cleanup(self, *, require_present: bool = False) -> int:
         """Delete only this exact label-verified synthetic resource namespace.

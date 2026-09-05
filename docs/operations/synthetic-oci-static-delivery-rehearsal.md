@@ -1,7 +1,7 @@
 # Synthetic OCI static delivery rehearsal
 
 - Status: bounded exact-candidate evaluator procedure; synthetic evidence only
-- Last updated: 2026-08-30
+- Last updated: 2026-09-05
 - Scope: issue [#38](https://github.com/martonpornoi/maru/issues/38), parent
   evaluation [#29](https://github.com/martonpornoi/maru/issues/29), runtime repair
   [#37](https://github.com/martonpornoi/maru/issues/37), UX-029, NFR-001 through
@@ -370,6 +370,13 @@ data and remain stopped outside the explicit browser window. Before interactive
 rotation they expose no recoverable administrator credential. After rotation,
 a failed cleanup leaves a stopped synthetic database with the known temporary
 credential until exact-run remediation proves an empty inventory.
+
+Container removal also removes its associated anonymous volumes, including
+image-declared PostgreSQL data volumes created by one-shot helpers. Named
+volumes still follow the separate exact-name and label-verified cleanup above;
+retention deletes neither kind. Previously orphaned, unassociated volumes are
+not swept. Follow [local Docker housekeeping](../development/docker-housekeeping.md)
+for inventory and separate approval of pre-existing resources.
 
 ## Separate evidence boundaries
 

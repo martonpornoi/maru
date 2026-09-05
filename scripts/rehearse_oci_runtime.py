@@ -2253,7 +2253,7 @@ SELECT json_build_object(
         return present_containers, network_present, present_volumes
 
     def _remove_container(self, name: str, *, stage: str) -> None:
-        """Remove one exact labeled container after ownership verification.
+        """Remove one verified container and its associated anonymous volumes.
 
         Parameters
         ----------
@@ -2264,7 +2264,9 @@ SELECT json_build_object(
         """
         if not self._require_owned_resource("container", name, stage=stage):
             return
-        self._docker("rm", "--force", name, stage=stage)
+        # Image-declared volumes also exist on short-lived PostgreSQL jobs.
+        # Docker leaves named volumes for our separate label-verified cleanup.
+        self._docker("rm", "--force", "--volumes", name, stage=stage)
 
     def cleanup(self, *, require_present: bool = False) -> int:
         """Delete only this run's exact label-verified synthetic resources.

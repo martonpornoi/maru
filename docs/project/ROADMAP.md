@@ -3,6 +3,11 @@
 The roadmap is outcome-based. Dates are intentionally omitted until a team and
 first convention partner are known.
 
+Use [CURRENT](CURRENT.md) for the active handoff and delivery evidence, the
+[checkpoint archive](../checkpoints/index.md) for historical verification, and
+the owning requirements, module contracts, and ADRs for durable behavior. This
+roadmap records outcomes and dependencies, not a second branch-status log.
+
 ## Progressive adoption strategy
 
 Maru earns trust through useful, bounded adoption rather than an all-or-nothing
@@ -92,8 +97,9 @@ Programme item, host, or publication is active. Issue #64 adds dormant
 Department ownership continuity, shared retirement locking, explicit call/batch
 reassignment, and exact-ID historical recovery under ADR 0084 and PRG-011.
 
-Issue #71 adds the next dormant Applications boundary: exact-seal review cases,
-explicit versioned stage/rubric/template policies, independent review and
+Issue #71, delivered through PR #72, adds the dormant Applications boundary:
+exact-seal review cases, explicit versioned stage/rubric/template policies,
+independent review and
 moderation, accountable decisions, and exact-recipient acknowledgement under
 ADR 0085. Review-side acceptance does not create a target receipt or Programme
 item. Accepted-item conversion is the next bounded successor, before host
@@ -753,10 +759,10 @@ included-collaborator acknowledgements without creating hosts. Issue #66 adds
 dormant preview-first call/proposal staging, non-disclosing preview, protected
 apply, exact-self claim, permanent source binding, and continuity disposal
 without mounting an import surface. Issue #64 implements Department-retirement
-coordination and governed ownership recovery; staged review/decisions and the
-accepted Applications adapter are next, then Programme-owned host relationships,
-Scheduling, staffing, release, continuity, setup, and integrated acceptance in
-dependency order.
+coordination and governed ownership recovery. Issue #71 implements dormant
+staged review and accountable decisions. The accepted Applications adapter is
+next, then Programme-owned host relationships, Scheduling, staffing, release,
+continuity, setup, and integrated acceptance in dependency order.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme

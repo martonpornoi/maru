@@ -22,6 +22,8 @@ collaboration contracts\
   isolation, coverage, authorization, and failure evidence.
 - [Local certification](local-certification.md) produces the complete
   pre-review exact-commit evidence.
+- [Local Docker housekeeping](docker-housekeeping.md) distinguishes disposable
+  test resources from persistent and unrelated data before approved cleanup.
 - [Documentation standards](../quality/documentation-standards.md) define
   maintained prose, NumPy docstrings, generated reference, and review duties.
 
@@ -37,6 +39,7 @@ setup
 agent-workflows
 repository-governance
 local-certification
+docker-housekeeping
 ../quality/testing-strategy
 ../quality/documentation-standards
 ```

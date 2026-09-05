@@ -1,7 +1,7 @@
 # Synthetic OCI runtime rehearsal
 
 Status: executable exact-image evaluator path; synthetic evidence only
-Last updated: 2026-08-30
+Last updated: 2026-09-05
 Scope: issue [#37](https://github.com/martonpornoi/maru/issues/37), parent
 evaluation [#29](https://github.com/martonpornoi/maru/issues/29), OPS-008,
 NFR-001 through NFR-004, NFR-008, NFR-010 through NFR-013, and ADRs 0044,
@@ -242,6 +242,13 @@ A valid-looking but absent or mistyped run ID fails with
 
 Do not use `docker system prune`, broad name filters, `down -v` against another
 project, or marker/ledger deletion as a substitute.
+
+Container removal also removes its associated anonymous volumes, including
+image-declared PostgreSQL data volumes created by one-shot helpers. Named
+volumes still follow the separate exact-name and label-verified cleanup above;
+retention deletes neither kind. Previously orphaned, unassociated volumes are
+not swept. Follow [local Docker housekeeping](../development/docker-housekeeping.md)
+for inventory and separate approval of pre-existing resources.
 
 ## Separate development and production paths
 
