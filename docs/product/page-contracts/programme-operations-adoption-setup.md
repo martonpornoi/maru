@@ -42,7 +42,11 @@ Issue #61 containment contract. Applications now has separately dormant call,
 acknowledged-proposal, preview-first import, and race-safe Department ownership
 continuity foundations without weakening it. Ownership continuity resolves the
 retirement prerequisite but does not activate the profile, its exact-ID
-recovery capability, or any surface.
+recovery capability, or any surface. Issue #71 additionally provides dormant
+Applications-owned [exact-seal staged review and decisions](../../modules/programme-review.md)
+under ADR 0085; its policy, role, disclosure, and recipient-acknowledgement
+contracts must be honored by future surfaces. Review-side acceptance is not
+accepted-item conversion or activation of this composite page/profile.
 
 ## Immutable profile manifest
 
@@ -78,9 +82,11 @@ Each module keeps one source of truth:
 - **Applications** owns call definitions, typed tracks/formats/contributor
   fields, private collaborative proposals, shared answer revisions,
   contributor-owned proposed-public profiles and consent, exact sealed
-  revisions and included-collaborator acknowledgements. It later owns review plans,
-  reviewer conflicts, moderation, decisions, applicant-visible conversations,
-  and the typed accepted-target receipt. Proposal collaborators are not hosts.
+  revisions and included-collaborator acknowledgements. Its dormant review kernel
+  also owns explicit staged policies, reviewer conflicts, moderation, decisions,
+  deliberate recipient messages, and individual acknowledgements. General
+  applicant-visible conversations and the typed accepted-target receipt remain
+  later contracts. Proposal collaborators are not hosts.
 - **Programme** owns the accepted Programme item, host and co-host purpose
   relationships, readiness evidence, approved public renditions, and
   organizer-created core events. It never imports private review answers as

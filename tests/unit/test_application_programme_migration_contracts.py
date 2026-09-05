@@ -5,6 +5,66 @@ from importlib import import_module
 from django.db import migrations
 
 from maru.authorization.catalog import CAPABILITIES
+from maru.authorization.provenance_readiness import (
+    _FUNCTION_DEFINITION_SHA256,
+    _function_definition_fingerprint,
+)
+
+
+def test_review_scope_catalog_preserves_every_existing_capability() -> None:
+    """Keep the new review vocabulary additive and equal to the code catalog."""
+    previous = import_module(
+        "maru.authorization.migrations.0023_programme_department_ownership_recovery"
+    )
+    current = import_module(
+        "maru.authorization.migrations.0024_programme_review_capabilities"
+    )
+    assert current.ORGANIZATION_CAPABILITIES == previous.ORGANIZATION_CAPABILITIES
+    assert current.EDITION_CAPABILITIES == previous.EDITION_CAPABILITIES
+    assert current.RESOURCE_CAPABILITIES == previous.RESOURCE_CAPABILITIES
+    assert (
+        *previous.DEPARTMENT_CAPABILITIES,
+        *current.REVIEW_CAPABILITIES,
+    ) == current.DEPARTMENT_CAPABILITIES
+    listed = {
+        *current.ORGANIZATION_CAPABILITIES,
+        *current.EDITION_CAPABILITIES,
+        *current.DEPARTMENT_CAPABILITIES,
+        *current.RESOURCE_CAPABILITIES,
+    }
+    assert listed == {
+        code for code, definition in CAPABILITIES.items() if definition.persistable
+    }
+
+
+def test_review_scope_declaration_matches_the_runtime_readiness_fingerprint() -> None:
+    """Catch stale capability-function pins without a PostgreSQL matrix run."""
+    current = import_module(
+        "maru.authorization.migrations.0024_programme_review_capabilities"
+    )
+    declaration = current.FORWARD_SQL
+    assert "$$ LANGUAGE plpgsql IMMUTABLE STRICT" in declaration
+    assert "SET search_path = pg_catalog, public, pg_temp;" in declaration
+    body = declaration.split("RETURNS smallint AS $$", 1)[1].split("$$ LANGUAGE", 1)[0]
+    fingerprint = _function_definition_fingerprint(
+        (
+            body,
+            "plpgsql",
+            "i",
+            "u",
+            False,
+            False,
+            True,
+            False,
+            "f",
+            ["search_path=pg_catalog, public, pg_temp"],
+            "smallint",
+        )
+    )
+    assert (
+        fingerprint
+        == _FUNCTION_DEFINITION_SHA256["maru_authorization_capability_min_scope(text)"]
+    )
 
 
 def test_programme_schema_depends_on_earliest_complete_workforce_shape() -> None:

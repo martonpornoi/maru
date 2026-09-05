@@ -17,7 +17,7 @@
   "tests/integration/test_application_programme_integrity_migrations.py": 78.802,
   "tests/integration/test_application_programme_legacy_seams.py": 45.696,
   "tests/integration/test_application_programme_review_integrity.py": 46.899,
-  "tests/integration/test_application_programme_review_migrations.py": 20.947,
+  "tests/integration/test_application_programme_review_migrations.py": 79.398,
   "tests/integration/test_application_programme_review_queries.py": 31.204,
   "tests/integration/test_application_programme_review_races.py": 19.005,
   "tests/integration/test_application_programme_review_services.py": 5.61,

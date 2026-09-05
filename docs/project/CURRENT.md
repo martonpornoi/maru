@@ -11,8 +11,8 @@ concise handoff.
 
 ## Programme review and decisions
 
-Issue [#71](https://github.com/martonpornoi/maru/issues/71) is the only active
-Programme child for this delivery. The authorized boundary is single-agent
+Issue [#71](https://github.com/martonpornoi/maru/issues/71) is the only Programme
+child in scope for this delivery. The authorized boundary is single-agent
 implementation, focused tests and documentation, exact-head certification,
 protected PR merge, main synchronization, then stop. Umbrella
 [#48](https://github.com/martonpornoi/maru/issues/48) remains open.
@@ -47,9 +47,18 @@ adapter, or Programme adoption has been activated.
 Focused verification covers real review and recipient commands, role/field
 isolation, rollback, exact-seal history, independent transaction races, fresh
 migration installation, populated downgrade refusal, and readiness drift.
-All 2,824 unit tests and strict mypy across 425 source files pass. The delivery
+All 2,826 unit tests and strict mypy across 425 source files pass. The delivery
 PR's exact-head local certification and protected `PR gate` remain the required
 completion evidence; focused checks alone do not certify a merge.
+
+Certification follow-up corrects the shared authorization readiness pin for
+the scope function installed by `0024`; its body and behavior metadata were
+verified against PostgreSQL. Fast unit contracts now check the declared
+fingerprint and complete additive capability catalog. Eleven focused real
+activation, runtime-role, tamper, and migration checks pass, including a retained
+review-role downgrade fence. The append-only
+[follow-up checkpoint](../checkpoints/2026-09-05-programme-review-readiness-follow-up.md)
+distinguishes the failed first candidate from final protected acceptance.
 
 After #71's protected merge and clean main synchronization, stop. The next
 separately authorized child should implement exact accepted-item conversion,

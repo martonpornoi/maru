@@ -15,6 +15,7 @@ from maru.core.database_integrity_readiness import (
     inspect_database_integrity_catalog,
     parse_database_integrity_sql_contracts,
 )
+from tests.factories import RoleBundleFactory
 from tests.integration.test_application_programme_services import (
     _admit_future_programme_effects,
 )
@@ -78,6 +79,30 @@ def test_retained_review_fences_downgrade_before_any_guard_or_table_is_removed()
             "'public.maru_applications_validate_programme_review()') IS NOT NULL"
         )
         assert cursor.fetchone() == (True,)
+
+
+def test_retained_review_role_fences_authorization_vocabulary_downgrade():
+    RoleBundleFactory(
+        capability_codes=[
+            "applications.manage_programme_review",
+            "applications.review_programme",
+            "applications.moderate_programme_review",
+            "applications.decide_programme",
+        ]
+    )
+    with pytest.raises(RuntimeError, match="durable authority evidence"):
+        MigrationExecutor(connection).migrate(
+            [("authorization", "0023_programme_department_ownership_recovery")]
+        )
+    assert ("authorization", "0024_programme_review_capabilities") in (
+        MigrationExecutor(connection).loader.applied_migrations
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT public.maru_authorization_capability_min_scope(%s)",
+            ["applications.decide_programme"],
+        )
+        assert cursor.fetchone() == (2,)
 
 
 @pytest.mark.parametrize("mutation", ["volatility", "public_execute"])

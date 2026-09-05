@@ -8,7 +8,7 @@
   AUD-001, AUD-003, AUD-005, PRI-001, UX-005 through UX-008, UX-019,
   UX-020, UX-027, UX-029, NFR-002, NFR-003, NFR-008 through NFR-010, and
   NFR-013
-- Decisions: ADRs 0041, 0051, 0081, 0082, and 0084
+- Decisions: ADRs 0041, 0051, 0081, 0082, 0084, and 0085
 
 ## Purpose and current boundary
 
@@ -16,6 +16,15 @@ Let a Programme Department define a call and let one proposal lead collaborate
 with invited contributors on one exact, attributable proposal revision. The
 human outcome is a fully acknowledged submission that a later Applications
 review workflow can assess without reconstructing mutable current answers.
+
+Issue #71 now supplies that separate dormant
+[exact-seal review and decisions kernel](../../modules/programme-review.md)
+under PRG-003/PRG-004 and ADR 0085. Its explicit policies, role/field ceilings,
+conflict and recusal evidence, moderation, deliberate recipient messages, and
+individual acknowledgements do not mount a page or expand this intake surface.
+Generic review/target seams remain closed. Any future UI must expose those
+dedicated projections and versioned commands through an accepted page contract,
+not infer authority from proposal collaboration or acceptance.
 
 Issue #63 installs only the Applications command/query and database kernel.
 This contract does not name a canonical URL because no route is mounted or
