@@ -1,7 +1,7 @@
 # Documentation standards
 
 Status: Baseline  
-Last updated: 2026-08-26
+Last updated: 2026-09-05
 
 Documentation is maintained with the implementation.
 
@@ -21,6 +21,31 @@ Documentation is maintained with the implementation.
 - **Checkpoints:** Concise current handoff and append-only milestone records.
 - **Agent workflow support:** Always-on repository instructions plus focused,
   progressively disclosed playbooks for repeatable contributor work.
+
+## Current handoff and historical detail
+
+Keep `docs/project/CURRENT.md` a short restart guide, normally no more than
+about 150 lines: current phase, latest completed product outcome, active scope,
+verification provenance, open risks, and the smallest next actions. Replace
+superseded status rather than stacking a new delivery diary above it. Remove
+completed work from every next-action list, including `ROADMAP.md`.
+
+Link detailed milestone evidence from the existing append-only checkpoints;
+keep durable behavior in its owning requirement, module, ADR, or runbook.
+Retain historical documents and their stable paths. Do not copy an entire old
+handoff into a new archive when its evidence already has a checkpoint; Git
+preserves the exact older handoff. For a new milestone, add only the new facts
+and point to the existing evidence.
+
+Distinguish implementation from local certification, hosted acceptance, and
+production approval. Record exact tested revisions and link delivery evidence
+without predicting a future merge. A historical test count is not the current
+suite size. Do not put machine-specific Docker inventories or temporary branch
+logs into the maintained product handoff.
+
+Read the required current-state documents, then select requirements, module
+contracts, and ADRs for the task. Search historical catalogs only when needed;
+do not make every restart read every previously delivered module and runbook.
 
 ## Module README template
 

@@ -1403,6 +1403,28 @@ def test_cleanup_removes_only_complete_exact_label_verified_namespace(
 
     assert removed == 12
     assert not any(runner.resources.values())
+    removals = [command for command in runner.calls if command[1] == "rm"]
+    assert len(removals) == 4
+    assert all(command[2:4] == ("--force", "--volumes") for command in removals)
+
+
+def test_cleanup_preserves_unrelated_named_and_orphaned_volumes(tmp_path: Path) -> None:
+    runner = DockerStateRunner()
+    workflow = rehearsal.OciStaticDeliveryRehearsal(
+        _configuration(tmp_path),
+        runner=runner,  # type: ignore[arg-type]
+    )
+    _seed_complete_run(runner, workflow)
+    runner.add("volume", "unrelated-database", labels={})
+    runner.add("volume", "orphaned-anonymous-volume", labels={})
+
+    workflow.cleanup()
+
+    assert set(runner.resources["volume"]) == {
+        "unrelated-database",
+        "orphaned-anonymous-volume",
+    }
+    assert not any("prune" in command for command in runner.calls)
 
 
 def test_cleanup_refuses_foreign_labels_before_any_removal(tmp_path: Path) -> None:

@@ -62,6 +62,13 @@ request. A skill should not be invoked merely because it exists.
 
 ## Authority and privacy boundaries
 
+For handoff maintenance, follow the
+[current-state and history boundary](../quality/documentation-standards.md#current-handoff-and-historical-detail).
+Keep one current priority list, reconcile completed work against delivery
+evidence, and link existing checkpoints instead of accumulating delivery logs
+in `CURRENT.md`. The required reading order still applies; it does not require
+loading every historical module, runbook, or checkpoint for an unrelated task.
+
 A skill never grants permission to edit when the request asks only for an
 answer or diagnosis. It also cannot authorize a push, merge, repository-setting
 change, release, deployment, external message, destructive operation, or

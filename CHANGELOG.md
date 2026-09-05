@@ -84,6 +84,11 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Made the current project handoff concise and reconciled completed Programme
+  work with the roadmap. Synthetic OCI rehearsal cleanup now removes anonymous
+  volumes with their verified containers while preserving named-volume and
+  retention safeguards. Added guidance for separately approved local Docker
+  housekeeping ([#73](https://github.com/martonpornoi/maru/issues/73)).
 - Updated the locked Django REST Framework patch release from 3.17.1 to
   3.17.2. The upstream fixes restore Django request-body size enforcement for
   DRF JSON and form parsing and prevent `AdminRenderer` from disclosing
