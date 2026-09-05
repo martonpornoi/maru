@@ -346,6 +346,14 @@ def _validate_application_programme_import_changed(
     validate_programme_import_changed_payload(payload)
 
 
+def _validate_application_programme_review_changed(payload: dict[str, object]) -> None:
+    from maru.applications.programme_review_events import (  # noqa: PLC0415
+        validate_programme_review_event,
+    )
+
+    validate_programme_review_event(payload)
+
+
 def _validate_programme_item_changed(payload: dict[str, object]) -> None:
     from maru.programme.events import (  # noqa: PLC0415
         validate_programme_item_changed_payload,
@@ -1068,6 +1076,12 @@ EVENT_DEFINITIONS = (
         schema_version=1,
         description="A dormant Programme import staging aggregate changed.",
         validator=_validate_application_programme_import_changed,
+    ),
+    EventDefinition(
+        name="applications.programme_review.changed.v1",
+        schema_version=1,
+        description="A dormant exact-revision Programme review changed.",
+        validator=_validate_application_programme_review_changed,
     ),
     EventDefinition(
         name="programme.item.changed.v1",

@@ -275,20 +275,20 @@ def test_import_migration_topology_and_reversal_are_exact() -> None:
 
 
 def test_import_database_contract_is_complete_and_owner_only() -> None:
-    """Readiness derives all 102 triggers and 23 owner-only functions."""
+    """Readiness retains old guards and every new review guard and helper."""
 
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 102
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 23
-    assert len(APPLICATIONS_RELATION_SEMANTICS) == 33
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 134
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 27
+    assert len(APPLICATIONS_RELATION_SEMANTICS) == 40
     assert APPLICATIONS_SCHEMA_CATALOG_SHA256 == {
         "constraint:": (
-            376,
-            "efb42922ba1527c27bcd07dcf1ade76315887335448c5171862a27eeb0fa033a",
+            437,
+            "d6ad577b25b7ac87592a27fb40169adf32453c96d69010526449f0022dd1b2de",
         ),
         "index:": (
-            267,
-            "9efc324778c1feb2252c6398f93c7ca75895f0e260568af3059d3321882f009f",
+            303,
+            "abeb82036b95c051d009bb05a4809e7e868078e0afa0b6f60a014b8e5638fb4d",
         ),
     }
     assert all(
@@ -385,7 +385,7 @@ def test_import_relations_are_runtime_select_only_without_function_execute() -> 
 def test_import_capability_scopes_and_self_field_ceiling_are_exact() -> None:
     """Import authority is Department-bound while disposal is Edition-bound."""
 
-    assert POLICY_VERSION == "2026-09-02.1"
+    assert POLICY_VERSION == "2026-09-05.1"
     assert capability("applications.import_programme").maximum_scope is (
         ScopeLevel.DEPARTMENT
     )

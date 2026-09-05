@@ -9,6 +9,54 @@ production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
 
+## Programme review and decisions
+
+Issue [#71](https://github.com/martonpornoi/maru/issues/71) is the only active
+Programme child for this delivery. The authorized boundary is single-agent
+implementation, focused tests and documentation, exact-head certification,
+protected PR merge, main synchronization, then stop. Umbrella
+[#48](https://github.com/martonpornoi/maru/issues/48) remains open.
+
+The branch starts from protected merge `ed1ea859ea23cd75796690e0e1baf600a95d0668`.
+Issues #66 and #64 are closed through PRs #69 and #70 respectively. The latter
+passed local certification and every required hosted check before merge; its
+test repair reduced the measured local integration critical path from 108m34s
+to 76m51s without removing tests or weakening acceptance.
+
+ADR 0085 and the PRG-003/PRG-004 refinements govern the implemented dormant
+kernel: immutable stage/rubric/template policies, exact-seal review cases,
+independent scoring, conflict/recusal, explicit moderation and stage reopening,
+accountable decisions, and exact-recipient message acknowledgement. Dedicated
+audited projections separate assignment management, sealed answers, reviewer
+evidence, and recipient messages. Immutable stage question allowlists do not
+open generic reviewer flags or target seams. Late recusal, withdrawal, reopening,
+and superseding seals cannot silently keep review-side acceptance effective.
+Proposal self-writes now acquire the same canonical organization/edition lock
+chain before actor and relationship locks. Forced withdrawal/reopening versus
+decision races exposed and now prevent the former inverted-order deadlock;
+retained self access still requires no current Department.
+
+Authorization `0024` and Applications `0013` through `0015` install the dormant
+vocabulary, seven SELECT-only relations, SQL evidence/transition guards, shared
+retry namespace, and a populated downgrade fence. Readiness pins the actual
+40-relation, 134-trigger, 27-function catalog and its constraint/index
+fingerprints. Recovery is fix-forward or a consistent reviewed restore, not
+deletion of review history. No profile, route, UI, API, handler, host, target
+adapter, or Programme adoption has been activated.
+
+Focused verification covers real review and recipient commands, role/field
+isolation, rollback, exact-seal history, independent transaction races, fresh
+migration installation, populated downgrade refusal, and readiness drift.
+All 2,824 unit tests and strict mypy across 425 source files pass. The delivery
+PR's exact-head local certification and protected `PR gate` remain the required
+completion evidence; focused checks alone do not certify a merge.
+
+After #71's protected merge and clean main synchronization, stop. The next
+separately authorized child should implement exact accepted-item conversion,
+then hosts and Scheduling. The later successors and final Programme-only
+browser/on-site rehearsal remain open in #48. This kernel is not yet a usable
+Programme departmental workspace.
+
 ## Migration-test feedback time
 
 The #64 delivery exposed a test-harness bottleneck: repeatedly traversing the
@@ -27,10 +75,10 @@ the four isolation cases; the repaired authorization group took 262.26 seconds.
 An independent read confirmed all 239 managed-model tables/columns and current
 migration leaves after fixture teardown, without running repair migrations. The
 [performance checkpoint](../checkpoints/2026-09-05-historical-migration-test-isolation.md)
-distinguishes focused measurements from whole-suite acceptance. All 185 current
-integration files have measured scheduling weights. Fresh exact-commit local
-and protected hosted acceptance remain required before merging #64.
-No other Programme issue is in scope for this delivery.
+distinguishes focused measurements from whole-suite acceptance. All 185
+integration files at the #64 milestone had measured scheduling weights; #71
+extends that inventory with measured review-file weights. PR #70 passed
+exact-head local certification and the protected hosted gate before merging #64.
 
 ## Programme Department ownership continuity
 
@@ -59,10 +107,9 @@ An unrelated certification test now fixes its invitation rate-limit clock
 within one window; production behavior and assertions remain unchanged.
 
 The [ownership checkpoint](../checkpoints/2026-09-04-programme-department-ownership-continuity.md)
-records review and verification; exact-commit certification and the protected
-PR gate must pass before merge. The next Programme child is staged review and
-accountable decisions, followed by accepted-item conversion and hosts. Work
-stops after #64's protected merge and main synchronization for this delivery.
+records review and verification. PR #70 merged #64 after exact-commit
+certification and the protected PR gate; `ed1ea859` is the resulting main
+foundation for #71. Accepted-item conversion and hosts remain later children.
 
 ## Django REST Framework security patch
 

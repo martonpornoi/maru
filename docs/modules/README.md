@@ -44,7 +44,8 @@ pre-reset implementation unless the paragraph explicitly identifies the ADR
 - [`catalog`](catalog.md) - edition merchandise, charity-support products,
   attendee orders, governed stock, and payment reconciliation
 - [`applications`](applications.md) - versioned typed form definitions,
-  append-only applications, assigned review queues, and target adapters
+  append-only applications, assigned review queues, target adapters, and dormant
+  [exact-seal Programme review and decisions](programme-review.md)
 - [`programme`](programme.md) - dormant private items, structurally separated
   information layers, evidence-backed readiness, and reviewed public copy
 - [`charities`](charities.md) - reusable partners, governed edition selection,

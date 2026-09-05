@@ -119,6 +119,7 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0021_applications_programme_capabilities"),
     ("authorization", "0022_programme_import_capabilities"),
     ("authorization", "0023_programme_department_ownership_recovery"),
+    ("authorization", "0024_programme_review_capabilities"),
     ("events", "0010_workforce_adoption_profile"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("organizations", "0014_purpose_bounded_representation"),

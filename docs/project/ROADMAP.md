@@ -92,6 +92,15 @@ Programme item, host, or publication is active. Issue #64 adds dormant
 Department ownership continuity, shared retirement locking, explicit call/batch
 reassignment, and exact-ID historical recovery under ADR 0084 and PRG-011.
 
+Issue #71 adds the next dormant Applications boundary: exact-seal review cases,
+explicit versioned stage/rubric/template policies, independent review and
+moderation, accountable decisions, and exact-recipient acknowledgement under
+ADR 0085. Review-side acceptance does not create a target receipt or Programme
+item. Accepted-item conversion is the next bounded successor, before host
+relationships and availability, Scheduling, interactive timetable editing,
+staffing, releases, continuity, and integrated Programme-only rehearsal. Umbrella
+#48 remains open; no current profile or surface is activated by this kernel.
+
 Profile v1 declares incumbent-system coexistence and the current manual,
 copy-on-write structure setup. General partner import, complete continuity
 export, print/offline packs, automated decommissioning, profile expansion,

@@ -68,7 +68,10 @@ retirement continuation with a shared edition mutex,
 non-disclosing dependency seam, explicit call and batch transitions, and
 exact-ID recovery. It partially supersedes ADR 0083 only where timeless
 imported-call owner equality and fixed batch versions prevented truthful later
-ownership changes. Use the
+ownership changes. ADR 0085 adds Applications-owned exact-revision staged review
+and accountable decisions, partially superseding only ADR 0082's dedicated
+review/decision deferral. It keeps generic review/target seams and every current
+profile closed. Use the
 [complete status index](README.md) for every decision.
 
 ```{toctree}

@@ -321,6 +321,8 @@ class _ClosedProgrammeApplicationModel(UUIDTimeStampedModel):
             {
                 "account",
                 "actor",
+                "audit_event",
+                "domain_event",
                 "created_by",
                 "edition",
                 "organization",
@@ -3983,4 +3985,256 @@ class ProgrammeImportCommandReceipt(_AppendOnlyProgrammeImportModel):
                 fields=("organization", "edition", "action", "created_at"),
                 name="app_prg_imp_command_scope_idx",
             )
+        ]
+
+
+class ProgrammeReviewState(models.TextChoices):
+    """Enumerate review outcomes without changing proposal or target state."""
+
+    OPEN = "open", "Open"
+    WAITLISTED = "waitlisted", "Wait-listed"
+    ACCEPTED = "accepted", "Accepted"
+    REJECTED = "rejected", "Rejected"
+    REVISION_REQUESTED = "revision_requested", "Revision requested"
+
+
+class ProgrammeReviewAssignmentState(models.TextChoices):
+    """Require a personal conflict declaration before content disclosure."""
+
+    PENDING = "pending", "Awaiting conflict declaration"
+    ACTIVE = "active", "No conflict declared"
+    RECUSED = "recused", "Recused"
+    REMOVED = "removed", "Removed"
+
+
+class ProgrammeReviewAction(models.TextChoices):
+    """Close the dedicated review command and evidence vocabulary."""
+
+    POLICY_CREATED = "policy_created", "Create review policy"
+    CASE_OPENED = "case_opened", "Open exact-revision review"
+    REVIEWER_ASSIGNED = "reviewer_assigned", "Assign reviewer"
+    CONFLICT_CLEARED = "conflict_cleared", "Declare no conflict"
+    REVIEWER_RECUSED = "reviewer_recused", "Recuse self"
+    REVIEWER_REMOVED = "reviewer_removed", "Remove reviewer"
+    SCORED = "scored", "Submit independent scores"
+    DISCUSSED = "discussed", "Append peer discussion"
+    MODERATED = "moderated", "Moderate stage"
+    STAGE_ADVANCED = "stage_advanced", "Advance stage"
+    STAGE_REOPENED = "stage_reopened", "Reopen an earlier review stage"
+    DECIDED = "decided", "Record accountable decision"
+    ACKNOWLEDGED = "acknowledged", "Acknowledge own decision"
+
+
+class ProgrammeReviewPolicy(_AppendOnlyProgrammeApplicationModel):
+    """Pin explicit stage, rubric, and message policy for later review cases."""
+
+    call = models.ForeignKey(ProgrammeCall, on_delete=models.PROTECT)
+    version = models.PositiveBigIntegerField()
+    stages = models.JSONField()
+    templates = models.JSONField()
+    digest = models.CharField(max_length=64, validators=(PROGRAMME_DIGEST_VALIDATOR,))
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    reason = models.TextField(max_length=2_000)
+
+    class Meta:
+        """Order and uniquely identify immutable call policy versions."""
+
+        ordering = ("call_id", "version")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("call", "version"), name="app_prg_review_policy_version_uq"
+            ),
+            models.CheckConstraint(
+                condition=Q(version__gte=1) & ~Q(reason=""),
+                name="app_prg_review_policy_shape",
+            ),
+        ]
+
+
+class ProgrammeReviewCase(_ClosedProgrammeApplicationModel):
+    """Serialize review evidence for one submitted seal under one pinned policy."""
+
+    proposal = models.ForeignKey(ProgrammeProposal, on_delete=models.PROTECT)
+    revision = models.OneToOneField(ProgrammeProposalRevision, on_delete=models.PROTECT)
+    policy = models.ForeignKey(ProgrammeReviewPolicy, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    version = models.PositiveBigIntegerField(default=1)
+    stage = models.PositiveSmallIntegerField(default=0)
+    state = models.CharField(
+        max_length=20, choices=ProgrammeReviewState, default=ProgrammeReviewState.OPEN
+    )
+
+    class Meta:
+        """Bound the mutable cursor and closed outcome vocabulary."""
+
+        ordering = ("created_at", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(
+                    version__gte=1, stage__lt=8, state__in=ProgrammeReviewState.values
+                ),
+                name="app_prg_review_case_shape",
+            )
+        ]
+
+
+class ProgrammeReviewAssignment(_ClosedProgrammeApplicationModel):
+    """Track one named stage reviewer without deriving broader authority."""
+
+    case = models.ForeignKey(ProgrammeReviewCase, on_delete=models.PROTECT)
+    stage = models.PositiveSmallIntegerField()
+    account = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    state = models.CharField(
+        max_length=12,
+        choices=ProgrammeReviewAssignmentState,
+        default=ProgrammeReviewAssignmentState.PENDING,
+    )
+    version = models.PositiveBigIntegerField()
+
+    class Meta:
+        """Prevent silent reappointment and constrain the case evidence cursor."""
+
+        ordering = ("case_id", "stage", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("case", "stage", "account"),
+                name="app_prg_review_assignment_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    stage__lt=8,
+                    version__gte=2,
+                    state__in=ProgrammeReviewAssignmentState.values,
+                ),
+                name="app_prg_review_assignment_shape",
+            ),
+        ]
+
+
+class ProgrammeReviewEntry(_AppendOnlyProgrammeApplicationModel):
+    """Retain one bounded, attributable evidence entry per case transition."""
+
+    case = models.ForeignKey(ProgrammeReviewCase, on_delete=models.PROTECT)
+    version = models.PositiveBigIntegerField()
+    stage = models.PositiveSmallIntegerField()
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    action = models.CharField(max_length=24, choices=ProgrammeReviewAction)
+    assignment = models.ForeignKey(
+        ProgrammeReviewAssignment, null=True, blank=True, on_delete=models.PROTECT
+    )
+    payload = models.JSONField(default=dict, blank=True)
+    reason = models.TextField(max_length=2_000, blank=True)
+
+    class Meta:
+        """Keep one immutable entry for every contiguous case version."""
+
+        ordering = ("case_id", "version")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("case", "version"), name="app_prg_review_entry_version_uq"
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    version__gte=1, stage__lt=8, action__in=ProgrammeReviewAction.values
+                )
+                & ~Q(action=ProgrammeReviewAction.POLICY_CREATED),
+                name="app_prg_review_entry_shape",
+            ),
+        ]
+
+
+class ProgrammeReviewDecision(_AppendOnlyProgrammeApplicationModel):
+    """Separate exact-revision outcomes and recipient messages from private rationale."""
+
+    entry = models.OneToOneField(ProgrammeReviewEntry, on_delete=models.PROTECT)
+    revision = models.ForeignKey(ProgrammeProposalRevision, on_delete=models.PROTECT)
+    outcome = models.CharField(max_length=20, choices=ProgrammeReviewState)
+    message = models.TextField(max_length=6_002)
+    acknowledgement_required = models.BooleanField()
+
+    class Meta:
+        """Exclude open cases and require deliberate recipient-facing content."""
+
+        ordering = ("created_at", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(outcome__in=ProgrammeReviewState.values)
+                & ~Q(outcome=ProgrammeReviewState.OPEN)
+                & ~Q(message=""),
+                name="app_prg_review_decision_shape",
+            )
+        ]
+
+
+class ProgrammeDecisionAcknowledgement(_AppendOnlyProgrammeApplicationModel):
+    """Record receipt by the addressed contributor, never consent for another."""
+
+    decision = models.ForeignKey(ProgrammeReviewDecision, on_delete=models.PROTECT)
+    entry = models.OneToOneField(ProgrammeReviewEntry, on_delete=models.PROTECT)
+    account = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+
+    class Meta:
+        """Retain one acknowledgement for each exact decision recipient."""
+
+        ordering = ("created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("decision", "account"), name="app_prg_decision_ack_person_uq"
+            )
+        ]
+
+
+class ProgrammeReviewReceipt(_AppendOnlyProgrammeApplicationModel):
+    """Bind one review intent, state transition, and atomic audit/event result."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization", on_delete=models.PROTECT
+    )
+    edition = models.ForeignKey("events.EventEdition", on_delete=models.PROTECT)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(
+        max_length=64, validators=(PROGRAMME_DIGEST_VALIDATOR,)
+    )
+    action = models.CharField(max_length=24, choices=ProgrammeReviewAction)
+    aggregate_id = models.UUIDField()
+    target_id = models.UUIDField()
+    policy = models.ForeignKey(ProgrammeReviewPolicy, on_delete=models.PROTECT)
+    case = models.ForeignKey(
+        ProgrammeReviewCase, null=True, blank=True, on_delete=models.PROTECT
+    )
+    expected_version = models.PositiveBigIntegerField()
+    resulting_version = models.PositiveBigIntegerField()
+    audit_event = models.ForeignKey("audit.AuditEvent", on_delete=models.PROTECT)
+    domain_event = models.ForeignKey("effects.DomainEvent", on_delete=models.PROTECT)
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(
+        max_length=32, validators=(PROGRAMME_SOURCE_CHANNEL_VALIDATOR,)
+    )
+
+    class Meta:
+        """Fence retry identity and one receipt per aggregate transition."""
+
+        ordering = ("edition_id", "created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"), name="app_prg_review_retry_uq"
+            ),
+            models.UniqueConstraint(
+                fields=("aggregate_id", "resulting_version"),
+                name="app_prg_review_result_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(resulting_version=models.F("expected_version") + 1)
+                & Q(action__in=ProgrammeReviewAction.values)
+                & ~Q(source_channel="")
+                & (
+                    Q(action=ProgrammeReviewAction.POLICY_CREATED, case__isnull=True)
+                    | (
+                        ~Q(action=ProgrammeReviewAction.POLICY_CREATED)
+                        & Q(case__isnull=False)
+                    )
+                ),
+                name="app_prg_review_receipt_shape",
+            ),
         ]

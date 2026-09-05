@@ -217,6 +217,18 @@ retaining all history. None of these transitions creates a review, decision,
 target record, Programme item, host relationship, public rendition, occurrence,
 Shift, schedule, or publication.
 
+## Dormant Programme review and decisions
+
+The separate [Programme review and decisions contract](programme-review.md)
+implements PRG-003/PRG-004 and ADR 0085. Explicit policies pin stage question
+allowlists, rubrics, quorum, anonymity, discussion, and decision templates to an
+exact submitted, contributor-acknowledged seal. Dedicated commands and audited
+queries separate manager, reviewer, moderator, decider, and recipient authority.
+They create neither a target receipt nor a Programme item. Generic review and
+target seams remain closed, and no current profile or HTTP surface admits this
+workflow. See its [migration and recovery runbook](../operations/applications-programme-review-migration-and-recovery.md)
+for Authorization `0024` and Applications `0013` through `0015`.
+
 ## Dormant Programme import staging contract
 
 PRG-010 and ADR 0083 define one implemented Applications-owned adapter,

@@ -15,6 +15,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a dormant Applications-owned Programme review and decisions kernel.
+  Exact submitted revisions use explicit staged policies, independent scoring,
+  conflict and recusal evidence, moderation, reasoned decisions, and private
+  recipient messages with individual acknowledgement. PostgreSQL guards and
+  audited projections protect the same boundaries. This adds no Programme item,
+  host, schedule, UI, API, or active adoption profile
+  ([#71](https://github.com/martonpornoi/maru/issues/71), ADR 0085, PRG-003/004).
 - Added Programme Department ownership continuity: Draft calls and pristine
   import batches have explicit reassignment commands, while Department
   retirement refuses unresolved calls or staged payload without exposing their

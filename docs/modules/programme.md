@@ -3,7 +3,7 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, worker, or production writer
 
-Last updated: 2026-09-02
+Last updated: 2026-09-05
 
 ## Purpose and ownership
 
@@ -15,16 +15,19 @@ private item/readiness foundation of PRG-005, PRG-006, PRG-008, PLN-004,
 EVT-006, EVT-007, AUD-001, AUD-003, AUD-005, PRI-001, NFR-002, NFR-003,
 PRG-011, NFR-008 through NFR-010, and NFR-013 without claiming that Programme
 Operations is active or usable. The boundary follows ADRs 0001, 0003, 0005,
-0041, 0051, 0081, and 0084.
+0041, 0051, 0081, 0084, and 0085.
 
 Programme does not own calls or proposal review, accepted Applications truth,
 service days, occurrences, rooms, timetable release, volunteer Shifts,
 personal schedules, attendance, Registration, or public pages. Applications
 now owns a dormant Programme-call and collaborative-proposal kernel, including
 shared answer history, contributor-owned profile revisions, exact sealed
-proposal revisions, and included-collaborator acknowledgements. Applications will remain
-authoritative for later review evidence, decisions, and the accepted-transition
-receipt. Programme owns no proposal collaborator and creates no host or co-host
+proposal revisions, and included-collaborator acknowledgements. Its dedicated
+[staged review and decisions kernel](programme-review.md) now also owns immutable
+review policies, exact-seal evidence, independent decisions, and recipient-only
+messages and acknowledgements. It remains dormant. Applications will own the
+later accepted-transition receipt; review-side acceptance alone is not that
+transition. Programme owns no proposal collaborator and creates no host or co-host
 relationship until a later accepted transition imports one exact reviewed
 revision. Scheduling will later own occurrences and placements. Workforce will
 later own staffing demand and Shift commitments.

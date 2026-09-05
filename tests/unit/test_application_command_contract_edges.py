@@ -72,6 +72,7 @@ def test_replay_absence_conflict_and_exact_result() -> None:
         patch.object(commands.ApplicationCommandReceipt, "objects", _first(None)),
         patch.object(commands.ProgrammeCommandReceipt, "objects", _first(None)),
         patch.object(commands.ProgrammeImportCommandReceipt, "objects", _first(None)),
+        patch.object(commands.ProgrammeReviewReceipt, "objects", _first(None)),
     ):
         assert commands._replay(**values) is None
         retry_lock.assert_called_once_with(

@@ -214,6 +214,29 @@ Convenience alone is not sufficient.
   and recovery behavior, the kernel remains dormant and its evidence is not
   production personal data.
 
+### Applications-owned Programme review and decision layers
+
+- Exact-seal policies, case identifiers, named assignments, conflict declarations,
+  and recipient acknowledgements are at least C2. Private scores, discussion,
+  moderation, and decision rationale are C3 by default. Stage question allowlists
+  never lower an answer's classification; restricted content additionally
+  requires sensitive-review authority. Manager assignment access carries no
+  answer, score, or private-rationale access.
+- Anonymous stages omit contributor identities and source-bound/contact/reference
+  answer types. Free text can still identify its author; anonymity is a bounded
+  projection, not a promise that submitted prose has been anonymized.
+- Recipient messages contain only a pinned outcome template and the decider's
+  deliberate message. They never copy internal rationale or peer evidence. Each
+  immutable addressed contributor may read their own message and acknowledge
+  only for themselves, including after withdrawal or Department retirement.
+- The dormant kernel introduces no activity analytics or production retention
+  schedule. Review and appeal evidence requires a deploying organization's
+  documented purpose, lawful basis, visibility, retention, legal-hold, and
+  recovery policy before activation. It adds no erasure executor: historical
+  evidence cannot be rewritten or removed through rollback. See the
+  [review contract](../modules/programme-review.md) and
+  [recovery runbook](../operations/applications-programme-review-migration-and-recovery.md).
+
 ### Programme private information layers
 
 - The canonical Programme item identity and closed operational codes are C1.
@@ -430,6 +453,7 @@ part of product design.
 | Unsuccessful application | decision and appeal closure | remove answers and reviews when no longer justified; retain minimal decision only if required |
 | Unsubmitted Programme proposal or expired invitation | call closure, withdrawal, or documented inactivity | remove proposed-public values, answers, and invitation contact when no longer justified; retain only minimized integrity evidence under an approved Applications policy |
 | Submitted Programme proposal | decision, appeal, accepted transition, and support closure | retain the exact sealed revision and responses only for the approved review/transition purpose; dispose unneeded private values by field policy without fabricating or rewriting the historical seal |
+| Programme review and decision evidence | decision, revision request, appeal, and transition closure | retain exact policy/seal, independently attributable review, deliberate recipient messages, and individual acknowledgements only under an approved Applications policy; apply field-level minimization and consistent recovery without rewriting historical decisions; no production disposal executor is activated |
 | Successful staffing record | offboarding or edition close | retain useful contribution separately; remove sensitive evidence and expired provisioning data |
 | Registration service data | edition and support close | retain minimized participation; handle financial evidence under its own rule |
 | Attendee profile/contact snapshot | edition and support close | retain or dispose by field purpose; preserve only minimized justified participation |
