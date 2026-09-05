@@ -1,18 +1,25 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import TYPE_CHECKING
 
 import pytest
 from django.db import IntegrityError, connection
 from django.db.migrations.executor import MigrationExecutor
 
-from tests.support.migrations import workforce_migration_targets
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    migrate_test_targets,
+    rollback_migration_case,
+    workforce_migration_targets,
+)
 
-pytestmark = [
-    pytest.mark.django_db(transaction=True),
-    pytest.mark.integration,
-    pytest.mark.usefixtures("restores_current_migration_graph"),
-]
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from pytest_django.fixtures import DjangoDbBlocker
+
+pytestmark = pytest.mark.integration
 
 AUTHORIZATION_TARGET = (
     "authorization",
@@ -22,9 +29,39 @@ WORKFORCE_BEFORE = ("workforce", "0006_edition_structure_schema")
 WORKFORCE_AFTER = ("workforce", "0007_structure_write_integrity")
 
 
+@pytest.fixture(scope="module")
+def historical_baseline(
+    django_db_setup: None,
+    django_db_blocker: DjangoDbBlocker,
+) -> Iterator[None]:
+    """Traverse the full graph once, retaining real before/after migrations."""
+
+    del django_db_setup
+    with django_db_blocker.unblock():
+        try:
+            _migrate(AUTHORIZATION_TARGET, WORKFORCE_BEFORE)
+            yield
+        finally:
+            flush_then_restore_current_migration_graph()
+
+
+@pytest.fixture(autouse=True)
+def isolated_historical_case(
+    historical_baseline: None,
+    django_db_blocker: DjangoDbBlocker,
+) -> Iterator[None]:
+    """Give each case independent data, schema, and migration-recorder state."""
+
+    del historical_baseline
+    with django_db_blocker.unblock(), rollback_migration_case():
+        yield
+
+
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
-    executor.migrate(workforce_migration_targets(executor, *targets))
+    migrate_test_targets(
+        executor, list(workforce_migration_targets(executor, *targets))
+    )
     return executor
 
 

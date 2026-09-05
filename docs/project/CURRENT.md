@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-04
+Last updated: 2026-09-05
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -8,6 +8,29 @@ supported hosted service, a production-ready release, or approved for
 production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
+
+## Migration-test feedback time
+
+The #64 delivery exposed a test-harness bottleneck: repeatedly traversing the
+same historical graph dominated full acceptance. Three serial historical groups
+now share real, committed historical setup with per-case PostgreSQL rollback;
+all original cases remain. Current-state, concurrency, commit-boundary, and
+non-atomic tests retain ordinary committed execution. New regressions verify
+schema, row, recorder, callback, and deferred-constraint isolation; no runtime
+code, coverage floor, test-selection policy, or CI timeout changes.
+Two scope-v2 downgrade cases also now prove their intended authorization guard,
+with a clean control, instead of accepting an unrelated Workforce failure.
+
+Focused verification passes all 32 retained cases, four new PostgreSQL isolation
+cases, and 2,770 unit tests. The Workforce pilot took 238.92 seconds including
+the four isolation cases; the repaired authorization group took 262.26 seconds.
+An independent read confirmed all 239 managed-model tables/columns and current
+migration leaves after fixture teardown, without running repair migrations. The
+[performance checkpoint](../checkpoints/2026-09-05-historical-migration-test-isolation.md)
+distinguishes focused measurements from whole-suite acceptance. All 185 current
+integration files have measured scheduling weights. Fresh exact-commit local
+and protected hosted acceptance remain required before merging #64.
+No other Programme issue is in scope for this delivery.
 
 ## Programme Department ownership continuity
 

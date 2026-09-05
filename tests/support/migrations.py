@@ -1,7 +1,10 @@
 """Helpers that keep migration integration tests from contaminating the suite."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+
 from django.core.management import call_command
-from django.db import connection
+from django.db import connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 
 _REGISTRATION_DEPARTMENT_FK_MIGRATION = (
@@ -49,6 +52,49 @@ _APPLICATIONS_BEFORE_PROGRAMME_CALLS = (
     "0003_integrity_function_execute_boundary",
 )
 _APPLICATIONS_ZERO: tuple[str, None] = ("applications", None)
+
+
+@contextmanager
+def rollback_migration_case() -> Iterator[None]:
+    """Isolate a serial historical case using real PostgreSQL DDL rollback.
+
+    The caller owns a committed historical baseline and restores current leaves
+    after its last case. Only single-connection, transactional migrations belong
+    here: commit visibility, concurrent connections, and non-atomic migrations
+    must retain the ordinary full-graph fixtures. Deferred constraints are checked
+    before discarding a successful case; failed cases also roll back completely.
+    """
+
+    if (
+        connection.vendor != "postgresql"
+        or not str(connection.settings_dict["NAME"]).startswith("test_")
+        or not connection.features.can_rollback_ddl
+        or not connection.get_autocommit()
+    ):
+        msg = "Historical case isolation requires an idle PostgreSQL test database."
+        raise RuntimeError(msg)
+    with transaction.atomic():
+        try:
+            yield
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        finally:
+            transaction.set_rollback(True)
+
+
+def migrate_test_targets(
+    executor: MigrationExecutor,
+    targets: list[tuple[str, str | None]],
+) -> None:
+    """Run Django's unchanged plan, rejecting non-atomic sandbox transitions."""
+
+    plan = executor.migration_plan(targets)
+    if connection.in_atomic_block and any(
+        not migration.atomic for migration, _ in plan
+    ):
+        msg = "Non-atomic migrations require ordinary committed migration tests."
+        raise RuntimeError(msg)
+    executor.migrate(targets, plan=plan)
 
 
 def current_migration_leaves() -> tuple[tuple[str, str], ...]:

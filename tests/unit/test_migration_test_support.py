@@ -9,9 +9,70 @@ from django.db.migrations.loader import MigrationLoader
 from tests.support.migrations import (
     flush_then_restore_current_migration_graph,
     identity_migration_targets,
+    migrate_test_targets,
     registration_migration_targets,
+    rollback_migration_case,
     workforce_migration_targets,
 )
+
+
+@pytest.mark.parametrize("backwards", [False, True])
+def test_non_atomic_migration_never_runs_inside_case_rollback(backwards: bool) -> None:
+    executor = Mock()
+    executor.migration_plan.return_value = [(SimpleNamespace(atomic=False), backwards)]
+    with patch("tests.support.migrations.connection") as database:
+        database.in_atomic_block = True
+        with pytest.raises(RuntimeError, match="Non-atomic migrations"):
+            migrate_test_targets(executor, [("synthetic", "0001")])
+    executor.migrate.assert_not_called()
+
+
+@pytest.mark.parametrize("in_atomic_block", [False, True])
+def test_native_atomic_plan_is_preserved(in_atomic_block: bool) -> None:
+    executor = Mock()
+    plan = [(SimpleNamespace(atomic=True), False)]
+    executor.migration_plan.return_value = plan
+    targets = [("synthetic", "0001")]
+    with patch("tests.support.migrations.connection") as database:
+        database.in_atomic_block = in_atomic_block
+        migrate_test_targets(executor, targets)
+    executor.migrate.assert_called_once_with(targets, plan=plan)
+
+
+def test_non_atomic_baseline_setup_keeps_native_execution() -> None:
+    executor = Mock()
+    plan = [(SimpleNamespace(atomic=False), False)]
+    executor.migration_plan.return_value = plan
+    targets = [("synthetic", "0001")]
+    with patch("tests.support.migrations.connection") as database:
+        database.in_atomic_block = False
+        migrate_test_targets(executor, targets)
+    executor.migrate.assert_called_once_with(targets, plan=plan)
+
+
+@pytest.mark.parametrize(
+    ("vendor", "name", "rollback_ddl"),
+    [
+        ("sqlite", "test_synthetic", True),
+        ("postgresql", "maru", True),
+        ("postgresql", "test_synthetic", False),
+    ],
+)
+def test_historical_case_refuses_unsafe_database_boundaries(
+    vendor: str,
+    name: str,
+    rollback_ddl: bool,
+) -> None:
+    with patch("tests.support.migrations.connection") as database:
+        database.vendor = vendor
+        database.settings_dict = {"NAME": name}
+        database.features.can_rollback_ddl = rollback_ddl
+        database.get_autocommit.return_value = True
+        with (
+            pytest.raises(RuntimeError, match="idle PostgreSQL"),
+            rollback_migration_case(),
+        ):
+            pytest.fail("Unsafe historical baseline was accepted.")
 
 
 @pytest.mark.parametrize(

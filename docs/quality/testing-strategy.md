@@ -1,7 +1,7 @@
 # Testing strategy
 
 Status: Active
-Last updated: 2026-08-30
+Last updated: 2026-09-05
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
@@ -29,6 +29,47 @@ Run against PostgreSQL for:
 - migrations and representative historical data.
 
 SQLite is not a substitute for PostgreSQL behavior.
+
+#### Reusing historical setup without reusing test effects
+
+Serial cases that exercise one transactional historical boundary may share a
+module-scoped, committed historical baseline. Setup uses Django's real migration
+executor to reach that baseline; teardown restores every current leaf through
+the real executor. Each case still executes the migrations, preflights, forward
+and reverse SQL, and assertions it owns. `rollback_migration_case()` discards
+each case's rows, DDL, migration-recorder changes, and commit callbacks before
+the next case. It checks deferred constraints before rolling back a successful
+case so an invalid write cannot pass merely because cleanup discards it.
+
+This is an explicit opt-in, not a global replacement for migration execution.
+The helper requires PostgreSQL, a `test_` database, transactional DDL, and an
+idle connection. `migrate_test_targets()` passes Django's native plan unchanged
+and rejects non-atomic transitions inside a case. Do not use this pattern for
+concurrency, other connections, commit visibility or callbacks, non-atomic
+migrations, or recovery behavior. Those tests retain committed execution and
+the ordinary full-graph restoration fixture. Never fake migrations, cache a
+rendered Django model graph, disable guards, or skip historical cases for speed.
+
+The initial adopters are the Workforce structure-write historical boundary,
+historical organization governance, and historical authorization scope-v2
+activation. Their current-state tests remain separate, all original cases are
+retained, and PostgreSQL regressions prove schema/data/recorder isolation after
+both success and failure, discarded callbacks, deferred-constraint enforcement,
+and rejection of nested baselines. Unit tests reject unsafe database boundaries
+and non-atomic plans in either direction.
+
+When later migrations fence a full reverse plan before it reaches an older
+guard, retain full-graph coverage elsewhere and exercise that older migration's
+actual wired reverse operation separately. Scope-v2's retained-authority fence
+tests include a clean control and expect its own `ADR 0041` refusal, not an
+unrelated earlier Workforce error. This distinguishes the intended protection
+from merely observing that some migration prevented downgrade.
+
+Benchmark whole groups including shared setup and final restoration. A fast
+case body alone is not a suite-speed claim. Refresh whole-file scheduling weights
+from JUnit evidence after moving cases; compare full certification with the same
+coverage and eight-worker topology before claiming an overall speedup. Keep the
+120-minute fail-stop, complete selection, and branch-aware coverage gate intact.
 
 The ADR 0044 no-truncate provenance and audit fences also apply in development.
 Django's `TransactionTestCase`/pytest database flush is the sole exception: the
