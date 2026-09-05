@@ -34,6 +34,7 @@ For present implementation status, use the
 | [0081](0081-composite-programme-operations-adoption.md) | Accepted | Make Programme Operations an exact-version composite profile with one Scheduling-owned Programme release and Workforce-owned staffing. |
 | [0082](0082-applications-owned-programme-calls-and-acknowledged-proposal-revisions.md) | Accepted | Keep Programme calls and one-version acknowledged collaborative proposal revisions in Applications without activating review, targeting, or Programme. |
 | [0083](0083-preview-first-programme-import-staging.md) | Accepted | Stage deterministic Programme call/proposal imports behind minimized preview, exact-self claim, coherent permanent source binding, a sealed nested-command chain, and delegable continuity disposal. |
+| [0084](0084-programme-department-ownership-continuity.md) | Accepted | Serialize Programme ownership with Department retirement, retain explicit transition chains, and keep exact orphan recovery dormant. |
 
 ADR 0073 partially supersedes the example-data and source-derived-template
 parts of [ADR 0042](0042-synthetic-only-educational-fixtures.md) and
@@ -62,7 +63,12 @@ coexistence boundary over those protected commands: organizer preview omits
 private proposal and identity-match data, an exact lead adopts only their own
 fresh digest, source replay is permanent and target-coherent, an immutable
 command count seals definition-order apply lineage, and explicit delegable
-continuity disposal clears temporary payload. Use the
+continuity disposal clears temporary payload. ADR 0084 completes that
+retirement continuation with a shared edition mutex,
+non-disclosing dependency seam, explicit call and batch transitions, and
+exact-ID recovery. It partially supersedes ADR 0083 only where timeless
+imported-call owner equality and fixed batch versions prevented truthful later
+ownership changes. Use the
 [complete status index](README.md) for every decision.
 
 ```{toctree}

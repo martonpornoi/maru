@@ -2,7 +2,7 @@
 
 Status: Initial registration and record-history projections implemented;
 dormant Applications Programme facts have no mounted timeline
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 “Track user activity” has three legitimate meanings in Maru. Combining them
 would create a surveillance system, an unusable audit log, and poor historical
@@ -126,6 +126,17 @@ included snapshot, and response; the lead may see aggregate acknowledgement
 state; neither may infer another proposal, private profile, review, decision,
 Programme item, or host relationship. Audit remains separate control evidence
 and contains no proposal values.
+
+Call-owner reassignment, Active-call retirement, import-batch reassignment,
+explicit disposal, and exact-ID orphan recovery are also registered dormant
+facts. Their operational rendition may name the action, exact aggregate,
+source/destination ownership references, resulting version, actor, time, and
+directly inspectable reason only to a future authorized audience. The audit and
+event envelopes stay minimized and never copy a Department name, dependency
+kind/count, source key, email, answer, payload, identity-match state, or digest.
+No current timeline, route, or profile exposes these facts. A refused
+Department retirement creates neither a successful Applications fact nor a
+Workforce structure-history entry.
 
 The first executable projection is the registration timeline. Submission,
 confirmation/payment reconciliation, entitlement consequence, and check-in

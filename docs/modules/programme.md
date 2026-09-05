@@ -3,7 +3,7 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, worker, or production writer
 
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 ## Purpose and ownership
 
@@ -13,9 +13,9 @@ discussion, readiness evidence, and approved public copy so a future Programme
 workspace can expose only the layer required for one task. It implements the
 private item/readiness foundation of PRG-005, PRG-006, PRG-008, PLN-004,
 EVT-006, EVT-007, AUD-001, AUD-003, AUD-005, PRI-001, NFR-002, NFR-003,
-NFR-008 through NFR-010, and NFR-013 without claiming that Programme
+PRG-011, NFR-008 through NFR-010, and NFR-013 without claiming that Programme
 Operations is active or usable. The boundary follows ADRs 0001, 0003, 0005,
-0041, 0051, and 0081.
+0041, 0051, 0081, and 0084.
 
 Programme does not own calls or proposal review, accepted Applications truth,
 service days, occurrences, rooms, timetable release, volunteer Shifts,
@@ -36,6 +36,15 @@ protected Applications call/proposal commands and clears that item's private
 payload. Source binding, exact-self claim, expiry, and continuity disposal
 remain Applications concerns and grant Programme no access to source keys,
 emails, answers, payloads, match state, or digests.
+
+Applications also owns call and import-batch Department reassignment,
+retirement dependency projection, and exact-ID historical-orphan recovery.
+Programme neither reads that dependency state nor writes either owner.
+Workforce receives only the closed `clear`, `blocked`, or `unavailable`
+projection and no Programme/import identifier or content. Reassigning an
+imported Draft call retains the original source binding and proves current
+ownership through an immutable Applications receipt chain; no Programme item
+or host relationship is created.
 
 ## Dormant adoption boundary
 
@@ -268,9 +277,10 @@ record.
 
 This module is a deployable, testable private-domain foundation, not a usable
 Programme workspace. Applications-owned calls and collaborative proposals now
-have separate dormant call/proposal and preview-first import kernels, but they
-create no Programme record or host relationship. Issue #64's owner-Department
-retirement coordination remains mandatory before import/profile activation.
+have separate dormant call/proposal, preview-first import, and owner-Department
+continuity kernels, but they create no Programme record or host relationship.
+That continuity prerequisite is implemented without activating its recovery
+capability, profile, route, or UI.
 Staged review and decisions and the accepted Applications adapter follow; only
 that later accepted Programme transition may create host and co-host
 relationships.

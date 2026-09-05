@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from datetime import timedelta
 from typing import Never
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import connection
+from django.db import IntegrityError, connection
 from django.utils import timezone
 
+from maru.applications.programme_department_dependencies import (
+    ProgrammeDepartmentDependencyState,
+)
 from maru.audit.models import AuditEvent
 from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.authorization.catalog import POLICY_VERSION
@@ -35,6 +39,7 @@ from maru.workforce.structure_commands import (
     StructureAuthorizationDeniedError,
     StructureDepartmentUnavailableError,
     StructureDependencyConflictError,
+    StructureDependencyUnavailableError,
     StructureLifecycleConflictError,
     StructureRetryConflictError,
     StructureVersionConflictError,
@@ -83,6 +88,13 @@ def _create(
         correlation_id=uuid4(),
         source_channel="test",
     )
+
+
+def _fail_dependency_query_inside_database(*_args: object) -> Never:
+    """Raise a real database error so savepoint recovery is exercised."""
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT 1 / 0")
+    raise AssertionError("PostgreSQL division by zero unexpectedly succeeded.")
 
 
 def test_template_application_is_exact_atomic_minimized_and_nonparticipating() -> None:
@@ -380,6 +392,220 @@ def test_retirement_rejects_child_and_current_or_future_authority() -> None:
             source_channel="test",
         )
     assert caught.value.reason_code == "structure_department_has_dependencies"
+
+
+@pytest.mark.parametrize(
+    ("dependency_state", "error_type"),
+    [
+        (
+            ProgrammeDepartmentDependencyState.BLOCKED,
+            StructureDependencyConflictError,
+        ),
+        (
+            ProgrammeDepartmentDependencyState.UNAVAILABLE,
+            StructureDependencyUnavailableError,
+        ),
+    ],
+)
+def test_programme_retirement_dependency_failure_preserves_structure_evidence(
+    dependency_state: ProgrammeDepartmentDependencyState,
+    error_type: type[Exception],
+) -> None:
+    """A blocked or unavailable Programme probe must leave no partial retirement."""
+    actor = _administrator()
+    edition = EventEditionFactory()
+    created = _create(actor=actor, edition=edition, name="Programme")
+    department = Department.objects.get(pk=created.department_id)
+    before = {
+        "controls": EditionStructureControl.objects.count(),
+        "receipts": EditionStructureCommandReceipt.objects.count(),
+        "audits": AuditEvent.objects.count(),
+        "events": DomainEvent.objects.count(),
+        "outbox": OutboxMessage.objects.count(),
+    }
+
+    with (
+        patch(
+            "maru.workforce.structure_commands."
+            "programme_department_retirement_dependency_state",
+            return_value=dependency_state,
+        ) as dependency_probe,
+        pytest.raises(error_type),
+    ):
+        retire_department(
+            actor=actor,
+            organization_id=edition.organization_id,
+            series_id=edition.series_id,
+            edition_id=edition.id,
+            department_id=department.id,
+            expected_version=1,
+            reason="Resolve retained Programme ownership first.",
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+
+    dependency_probe.assert_called_once_with(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        department_id=department.id,
+    )
+    department.refresh_from_db()
+    assert department.retired_at is None
+    assert EditionStructureControl.objects.get(edition=edition).aggregate_version == 1
+    assert {
+        "controls": EditionStructureControl.objects.count(),
+        "receipts": EditionStructureCommandReceipt.objects.count(),
+        "audits": AuditEvent.objects.count(),
+        "events": DomainEvent.objects.count(),
+        "outbox": OutboxMessage.objects.count(),
+    } == before
+
+
+def test_known_local_retirement_blocker_wins_over_programme_unavailability() -> None:
+    """A known blocker remains a stable conflict even if Programme is unavailable."""
+    actor = _administrator()
+    edition = EventEditionFactory()
+    parent = _create(actor=actor, edition=edition, name="Programme")
+    _create(
+        actor=actor,
+        edition=edition,
+        name="Programme reviews",
+        parent_department_id=parent.department_id,
+        expected_version=1,
+    )
+
+    with (
+        patch(
+            "maru.workforce.structure_commands."
+            "programme_department_retirement_dependency_state",
+            return_value=ProgrammeDepartmentDependencyState.UNAVAILABLE,
+        ) as dependency_probe,
+        pytest.raises(StructureDependencyConflictError),
+    ):
+        retire_department(
+            actor=actor,
+            organization_id=edition.organization_id,
+            series_id=edition.series_id,
+            edition_id=edition.id,
+            department_id=parent.department_id,
+            expected_version=2,
+            reason="The known child must keep this as a conflict.",
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+
+    dependency_probe.assert_called_once_with(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        department_id=parent.department_id,
+    )
+
+
+@pytest.mark.parametrize(
+    ("programme_state", "error_type"),
+    [
+        (
+            ProgrammeDepartmentDependencyState.CLEAR,
+            StructureDependencyUnavailableError,
+        ),
+        (
+            ProgrammeDepartmentDependencyState.BLOCKED,
+            StructureDependencyConflictError,
+        ),
+        (
+            ProgrammeDepartmentDependencyState.UNAVAILABLE,
+            StructureDependencyUnavailableError,
+        ),
+    ],
+)
+def test_programme_blocker_wins_over_local_dependency_probe_unavailability(
+    programme_state: ProgrammeDepartmentDependencyState,
+    error_type: type[Exception],
+) -> None:
+    """All dependency families are considered before fail-closed precedence."""
+    actor = _administrator()
+    edition = EventEditionFactory()
+    created = _create(actor=actor, edition=edition, name="Programme")
+
+    with (
+        patch(
+            "maru.workforce.structure_commands._retirement_dependencies",
+            side_effect=_fail_dependency_query_inside_database,
+        ),
+        patch(
+            "maru.workforce.structure_commands."
+            "programme_department_retirement_dependency_state",
+            return_value=programme_state,
+        ) as programme_probe,
+        pytest.raises(error_type),
+    ):
+        retire_department(
+            actor=actor,
+            organization_id=edition.organization_id,
+            series_id=edition.series_id,
+            edition_id=edition.id,
+            department_id=created.department_id,
+            expected_version=1,
+            reason="Preserve fail-closed dependency precedence.",
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+
+    programme_probe.assert_called_once_with(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        department_id=created.department_id,
+    )
+
+
+@pytest.mark.parametrize(
+    "database_message",
+    [
+        "current or future operations block Department retirement",
+        "current authority blocks Department retirement",
+        "current Programme dependencies block Department retirement",
+    ],
+)
+def test_retirement_dependency_integrity_errors_share_the_opaque_conflict(
+    database_message: str,
+) -> None:
+    """Every retained-dependency trigger must collapse to the same public error."""
+    actor = _administrator()
+    edition = EventEditionFactory()
+    created = _create(actor=actor, edition=edition, name="Programme")
+    department = Department.objects.get(pk=created.department_id)
+    receipt_count = EditionStructureCommandReceipt.objects.count()
+
+    with (
+        patch(
+            "maru.workforce.structure_commands."
+            "programme_department_retirement_dependency_state",
+            return_value=ProgrammeDepartmentDependencyState.CLEAR,
+        ),
+        patch.object(
+            Department,
+            "save",
+            side_effect=IntegrityError(database_message),
+        ),
+        pytest.raises(StructureDependencyConflictError) as caught,
+    ):
+        retire_department(
+            actor=actor,
+            organization_id=edition.organization_id,
+            series_id=edition.series_id,
+            edition_id=edition.id,
+            department_id=department.id,
+            expected_version=1,
+            reason="Translate the database backstop without disclosure.",
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+
+    assert caught.value.reason_code == "structure_department_has_dependencies"
+    department.refresh_from_db()
+    assert department.retired_at is None
+    assert EditionStructureControl.objects.get(edition=edition).aggregate_version == 1
+    assert EditionStructureCommandReceipt.objects.count() == receipt_count
 
 
 def test_retirement_preserves_a_retained_binding_for_a_closed_position() -> None:

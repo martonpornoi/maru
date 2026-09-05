@@ -13,9 +13,11 @@ from django.core.exceptions import ValidationError
 from django.db import connection
 from django.utils import timezone
 
+from maru.applications import programme_commands as programme_command_services
 from maru.applications import programme_queries as programme_query_services
 from maru.applications.models import (
     ApplicationDefinition,
+    ApplicationOwnerDepartment,
     ApplicationQuestion,
     ProgrammeCall,
     ProgrammeCallFormat,
@@ -44,6 +46,7 @@ from maru.applications.programme_commands import (
     decline_programme_proposal_invitation,
     invite_programme_proposal_collaborator,
     leave_programme_proposal,
+    reassign_programme_call,
     reinvite_programme_proposal_collaborator,
     remove_programme_proposal_collaborator,
     reopen_programme_proposal,
@@ -142,6 +145,18 @@ class _AllowExactProgrammeAuthorizer:
         )
         return self._decision(requested_fields)
 
+    def authorize_recovery(
+        self,
+        *,
+        principal_id: UUID,
+        organization_id: UUID,
+        edition_id: UUID,
+        requested_fields: frozenset[str] | None,
+    ) -> PolicyDecision:
+        """Allow an isolated exact-Edition recovery test scope."""
+        del principal_id, organization_id, edition_id
+        return self._decision(requested_fields)
+
     def authorize_retry(
         self,
         *,
@@ -156,6 +171,22 @@ class _AllowExactProgrammeAuthorizer:
             fields=frozenset(),
             obligations=frozenset(),
             reason_code="sealed_programme_retry_test",
+        )
+
+    def authorize_recovery_retry(
+        self,
+        *,
+        principal_id: UUID,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> PolicyDecision:
+        """Allow recovery receipt replay only in this isolated test seam."""
+        del principal_id, organization_id, edition_id
+        return PolicyDecision(
+            allowed=True,
+            fields=frozenset(),
+            obligations=frozenset({"audit"}),
+            reason_code="sealed_programme_recovery_retry_test",
         )
 
     @staticmethod
@@ -413,7 +444,7 @@ def _start_proposal(
 
 
 def test_programme_call_protects_its_owner_department_from_hard_delete() -> None:
-    """Leave #64 retirement work open while honoring the installed FK."""
+    """Preserve retained Programme ownership against hard deletion."""
     world = _active_call(code="programme-department-protect")
     administrator = AccountFactory(is_staff=True, is_superuser=True)
 
@@ -441,6 +472,144 @@ def test_programme_call_protects_its_owner_department_from_hard_delete() -> None
             organization_id=world.edition.organization_id,
             edition_id=world.edition.id,
         ).aggregate_version
+        == 1
+    )
+
+
+def test_draft_call_reassignment_has_dedicated_evidence_and_replays_before_scope_lock(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Move only a draft through the explicit two-Department command."""
+    edition = EventEditionFactory()
+    manager = AccountFactory(display_name="Programme manager")
+    source = create_department_for_test(
+        edition=edition,
+        name="Programme",
+        expected_code="programme",
+    )
+    destination = create_department_for_test(
+        edition=edition,
+        name="Events",
+        expected_code="events",
+    )
+    now = timezone.now()
+    definition_input = _definition(now, code="programme-owner-transition")
+    created = create_programme_call(
+        actor_id=manager.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        definition_input=definition_input,
+        configuration=_configuration(source.id),
+        expected_version=0,
+        reason="Create a draft before exercising ownership continuity.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+        now=now,
+        authorizer=_AUTHORIZER,
+    )
+
+    with pytest.raises(ApplicationsProgrammeStateConflictError):
+        configure_programme_call(
+            actor_id=manager.id,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            call_id=created.target_id,
+            owner_department_id=source.id,
+            definition_input=definition_input,
+            configuration=_configuration(destination.id),
+            expected_version=created.resulting_version,
+            reason="Prove generic configuration cannot move call ownership.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+            now=now,
+            authorizer=_AUTHORIZER,
+        )
+    unchanged = ProgrammeCall.objects.select_related("definition").get(
+        id=created.target_id
+    )
+    assert unchanged.owner_department_id == source.id
+    assert unchanged.definition.aggregate_version == created.resulting_version
+
+    retry_key = uuid4()
+    correlation_id = uuid4()
+    reason = "Move the draft to the current Events Department."
+    reassigned = reassign_programme_call(
+        actor_id=manager.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        call_id=created.target_id,
+        source_department_id=source.id,
+        destination_department_id=destination.id,
+        expected_version=created.resulting_version,
+        reason=reason,
+        retry_key=retry_key,
+        correlation_id=correlation_id,
+        source_channel="test",
+        now=now,
+        authorizer=_AUTHORIZER,
+    )
+
+    moved = ProgrammeCall.objects.select_related("definition").get(id=created.target_id)
+    receipt = ProgrammeCommandReceipt.objects.get(id=reassigned.receipt_id)
+    assert reassigned.action == "call_reassigned"
+    assert moved.owner_department_id == destination.id
+    assert moved.definition.aggregate_version == created.resulting_version + 1
+    assert (
+        ApplicationOwnerDepartment.objects.get(
+            definition_id=created.definition_id
+        ).department_id
+        == destination.id
+    )
+    assert receipt.source_department_id == source.id
+    assert receipt.destination_department_id == destination.id
+    audit = AuditEvent.objects.get(
+        operation="applications.programme.command.call_reassigned",
+        correlation_id=correlation_id,
+    )
+    assert audit.capability_code == "applications.manage_programme_calls"
+    assert audit.break_glass is False
+    event = DomainEvent.objects.get(
+        event_name="applications.programme_call.changed.v1",
+        correlation_id=correlation_id,
+    )
+    assert event.payload == {
+        "action": "call_reassigned",
+        "call_id": str(created.target_id),
+        "lifecycle": "draft",
+        "resulting_version": str(reassigned.resulting_version),
+    }
+
+    def unexpected_scope_lock(**_kwargs: object) -> None:
+        raise AssertionError("successful replay reacquired the edition mutex")
+
+    monkeypatch.setattr(
+        programme_command_services,
+        "_lock_programme_write_scope",
+        unexpected_scope_lock,
+    )
+    replay = reassign_programme_call(
+        actor_id=manager.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        call_id=created.target_id,
+        source_department_id=source.id,
+        destination_department_id=destination.id,
+        expected_version=created.resulting_version,
+        reason=reason,
+        retry_key=retry_key,
+        correlation_id=correlation_id,
+        source_channel="test",
+        now=now,
+        authorizer=_AUTHORIZER,
+    )
+    assert replay == replace(reassigned, replayed=True)
+    assert (
+        ProgrammeCommandReceipt.objects.filter(
+            definition_id=created.definition_id,
+            action="call_reassigned",
+        ).count()
         == 1
     )
 

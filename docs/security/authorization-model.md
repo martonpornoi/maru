@@ -2,7 +2,7 @@
 
 Status: Implemented foundation with exact scope and lineage; broader domain
 coverage remains incremental
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 Maru uses deny-by-default policy decisions over capabilities, scopes,
 relationships, resource state, and fields. Django's built-in model permissions
@@ -59,6 +59,9 @@ applications.edit_programme_proposal_self
 applications.respond_programme_invitation_self
 applications.manage_programme_proposal_self
 applications.submit_programme_proposal_self
+applications.import_programme
+applications.dispose_programme_import
+applications.recover_programme_department_ownership
 schedule.publish
 workforce.assign_shift
 people.view_legal_name
@@ -143,6 +146,16 @@ submission, current relationship, lifecycle, and aggregate version. A proposal
 relationship never authorizes Programme items, review, decisions, scheduling,
 staffing, publication, or another proposal.
 
+Programme Department ownership adds two deliberately separate paths. Normal
+Draft-call or clean-batch reassignment requires current exact authority at both
+the source and destination Departments. Historical orphan call recovery uses
+`applications.recover_programme_department_ownership` at exact Edition scope,
+is nondelegable and break-glass-required, and accepts one caller-supplied target
+identifier only. It grants no list, search, content, proposal, import-preview,
+or general Programme read. Existing proposal self/history relationships survive
+an owner Department's retirement; organizer management, discovery, and new
+starts still require a current owner.
+
 ## Field-level views
 
 Every API serializer or query projection declares its field catalog and policy.
@@ -195,6 +208,13 @@ snapshot, one complete retry, and generic failure after a second movement.
 Mutations independently require exact manage authority and an expected current
 aggregate version inside the command transaction.
 
+Department retirement asks Applications for a closed tri-state dependency
+projection under the shared exact-edition mutex. Call and import probes both
+run; any known `blocked` wins, otherwise any `unavailable` fails closed, and
+only two clear results permit retirement. Workforce receives no category,
+count, name, identifier, source, identity, payload, or digest. The seam is not
+a list API and cannot be used to infer which Programme object exists.
+
 The V02 reference implementation provides a reusable field-projection guard
 and transactional bulk-target freezer. A bulk command supplies an already
 tenant-scoped trusted queryset; the freezer rejects missing/cross-scope IDs,
@@ -214,6 +234,7 @@ identifier from an existing but unauthorized one.
 | Financial override | reason, authority threshold, separation where configured |
 | Archive correction | amendment record, reason, approval, affected projections |
 | Account merge | strong verification, impact preview, dual-account trail |
+| Programme ownership orphan recovery | exact Edition, one caller-supplied ID, nondelegable break-glass authority, reason, immutable evidence, no discovery |
 
 ## Delegation and elevation
 
@@ -229,6 +250,11 @@ unwanted access can be removed immediately; the revoker and reason are audited.
 Elevation uses a separate short-lived session and step-up authentication. The
 interface must display active elevated scope. Elevation never turns into a
 permanent role automatically.
+
+The Programme ownership recovery capability is declared but dormant: neither
+current profile, ordinary platform root, route, job, nor UI can exercise it.
+Activation requires a later accepted recovery ceremony; database access or
+platform-administrator status is not a substitute.
 
 ## Restricted case boundary
 
@@ -292,6 +318,9 @@ Automated tests must include:
 - bulk operations with mixed-authority targets;
 - offline manifest expiry and replay; and
 - property-based assertions that narrowing a grant cannot increase access.
+- exact-ID orphan recovery with no list/read oracle, current-profile/root-role
+  denial, nondelegability, break-glass obligation, and cross-tenant/edition
+  indistinguishability.
 
 Production policy decisions expose metrics by reason code, never subject data.
 An authorized diagnostic tool can replay a recorded input snapshot against a

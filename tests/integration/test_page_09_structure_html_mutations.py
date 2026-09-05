@@ -32,6 +32,7 @@ from maru.workforce.structure_commands import (
     StructureAuthorizationDeniedError,
     StructureDepartmentUnavailableError,
     StructureDependencyConflictError,
+    StructureDependencyUnavailableError,
     StructureLifecycleConflictError,
     StructureLimitConflictError,
     StructureRetryConflictError,
@@ -1483,6 +1484,28 @@ def test_command_dependency_failures_return_name_free_503(action: str) -> None:
     if department is not None:
         assert department.name not in content
     assert "private command dependency detail" not in content
+
+
+def test_retirement_dependency_unavailability_returns_name_free_503() -> None:
+    """The HTML adapter must not disclose the failed Programme dependency probe."""
+    client, edition, department, target, data, service_name, _field = (
+        _valid_action_case("retire")
+    )
+
+    with patch(
+        f"maru.workforce.views.{service_name}",
+        side_effect=StructureDependencyUnavailableError(
+            "private Programme dependency detail"
+        ),
+    ):
+        response = client.post(target, data)
+
+    content = response.content.decode()
+    assert response.status_code == 503
+    assert edition.name not in content
+    assert department is not None
+    assert department.name not in content
+    assert "private Programme dependency detail" not in content
 
 
 def test_update_noop_uses_informational_success_without_new_structure_version() -> None:

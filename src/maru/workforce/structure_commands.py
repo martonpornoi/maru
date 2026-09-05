@@ -8,11 +8,15 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Q
 from django.db.models.deletion import ProtectedError, RestrictedError
 from django.utils import timezone
 
+from maru.applications.programme_department_dependencies import (
+    ProgrammeDepartmentDependencyState,
+    programme_department_retirement_dependency_state,
+)
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.bindings import ensure_workforce_position_binding
@@ -219,6 +223,12 @@ class StructureDependencyConflictError(StructureCommandError):
     """Signal structure dependency conflict."""
 
     reason_code = "structure_department_has_dependencies"
+
+
+class StructureDependencyUnavailableError(StructureCommandError):
+    """Signal that a required dependency check could not complete safely."""
+
+    reason_code = "structure_dependency_unavailable"
 
 
 class StructureLimitConflictError(StructureCommandError):
@@ -1458,6 +1468,9 @@ def retire_department(
         If a concurrent write violates a durable database invariant.
     StructureDependencyConflictError
         If the operation encounters a structure dependency conflict condition.
+    StructureDependencyUnavailableError
+        If a required dependency probe cannot complete and no known dependency
+        can produce the ordinary conflict response.
     """
     department_id = _validate_uuid(department_id, field_name="department_id")
     expected_version = _validate_expected_version(expected_version)
@@ -1482,8 +1495,30 @@ def retire_department(
             _require_editable_lifecycle(scope)
             current_version = _require_expected_version(scope, expected_version)
             department = _department_by_id(scope, department_id)
-            if _retirement_dependencies(scope, department):
+            try:
+                with transaction.atomic():
+                    local_dependencies: bool | None = _retirement_dependencies(
+                        scope,
+                        department,
+                    )
+            except DatabaseError:
+                local_dependencies = None
+            programme_dependencies = programme_department_retirement_dependency_state(
+                organization_id=scope.organization.id,
+                edition_id=scope.edition.id,
+                department_id=department.id,
+            )
+            if (
+                local_dependencies is True
+                or programme_dependencies == ProgrammeDepartmentDependencyState.BLOCKED
+            ):
                 raise StructureDependencyConflictError
+            if (
+                local_dependencies is None
+                or programme_dependencies
+                == ProgrammeDepartmentDependencyState.UNAVAILABLE
+            ):
+                raise StructureDependencyUnavailableError
             resulting_version = current_version + 1
             control = _new_or_advanced_control(
                 scope=scope,
@@ -1526,7 +1561,12 @@ def retire_department(
                 replayed=False,
             )
     except IntegrityError as error:
-        if "current authority blocks Department retirement" in str(error):
+        dependency_messages = (
+            "current or future operations block Department retirement",
+            "current authority blocks Department retirement",
+            "current Programme dependencies block Department retirement",
+        )
+        if any(message in str(error) for message in dependency_messages):
             raise StructureDependencyConflictError from error
         raise
 

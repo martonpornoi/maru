@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-02
+Last updated: 2026-09-05
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -8,6 +8,61 @@ supported hosted service, a production-ready release, or approved for
 production personal data. The detailed capability inventory remains in the
 [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md); this file is the
 concise handoff.
+
+## Migration-test feedback time
+
+The #64 delivery exposed a test-harness bottleneck: repeatedly traversing the
+same historical graph dominated full acceptance. Three serial historical groups
+now share real, committed historical setup with per-case PostgreSQL rollback;
+all original cases remain. Current-state, concurrency, commit-boundary, and
+non-atomic tests retain ordinary committed execution. New regressions verify
+schema, row, recorder, callback, and deferred-constraint isolation; no runtime
+code, coverage floor, test-selection policy, or CI timeout changes.
+Two scope-v2 downgrade cases also now prove their intended authorization guard,
+with a clean control, instead of accepting an unrelated Workforce failure.
+
+Focused verification passes all 32 retained cases, four new PostgreSQL isolation
+cases, and 2,770 unit tests. The Workforce pilot took 238.92 seconds including
+the four isolation cases; the repaired authorization group took 262.26 seconds.
+An independent read confirmed all 239 managed-model tables/columns and current
+migration leaves after fixture teardown, without running repair migrations. The
+[performance checkpoint](../checkpoints/2026-09-05-historical-migration-test-isolation.md)
+distinguishes focused measurements from whole-suite acceptance. All 185 current
+integration files have measured scheduling weights. Fresh exact-commit local
+and protected hosted acceptance remain required before merging #64.
+No other Programme issue is in scope for this delivery.
+
+## Programme Department ownership continuity
+
+Issue [#64](https://github.com/martonpornoi/maru/issues/64) implements PRG-011
+and ADR 0084. Applications exposes an opaque `clear`/`blocked`/`unavailable`
+retirement dependency query. Draft calls and pristine staged imports have
+reasoned, versioned reassignment commands; expired or partially applied imports
+require explicit disposal. Workforce retirement and Programme writers share
+the edition mutex, with PostgreSQL barriers and an independent retirement
+backstop. Imported calls preserve their original source binding and explain
+later ownership through immutable transition receipts.
+
+Exact-ID orphan recovery can reassign historical Draft calls or retire Active
+calls under a nondelegable, break-glass-required capability. It remains absent
+from current profiles, root roles, routes, and UI. Proposal self-access and
+history survive ownership retirement; no Programme profile is activated.
+Authorization `0023`, Applications `0010` through `0012`, and Workforce `0018`
+install the vocabulary, evidence, integrity, and downgrade fences. Runtime
+access remains SELECT-only for dormant relations.
+
+Certification follow-up aligned historical Registration migration targets and
+Applications ACL restoration with the new dependency graph. Retained Department
+locking uses a minimized Workforce query instead of a cross-module model import.
+The repaired migration, concurrency, and recovery focus passes all 12 cases.
+An unrelated certification test now fixes its invitation rate-limit clock
+within one window; production behavior and assertions remain unchanged.
+
+The [ownership checkpoint](../checkpoints/2026-09-04-programme-department-ownership-continuity.md)
+records review and verification; exact-commit certification and the protected
+PR gate must pass before merge. The next Programme child is staged review and
+accountable decisions, followed by accepted-item conversion and hosts. Work
+stops after #64's protected merge and main synchronization for this delivery.
 
 ## Django REST Framework security patch
 
@@ -394,10 +449,10 @@ seconds while preserving the 120-minute fail-stop, eight whole-file shards,
 no-retry policy, and complete combined-coverage boundary. Final exact-head local
 and protected evidence belongs to PR #69.
 
-The next Programme-critical child is Department retirement coordination in
-[#64](https://github.com/martonpornoi/maru/issues/64): unresolved private
-staging must block retirement until governed reassignment or disposal, without
-disclosing source, identity, proposal, count, or digest data to Workforce.
+Issue [#64](https://github.com/martonpornoi/maru/issues/64) now implements the
+Department retirement continuation described above: unresolved private staging
+blocks retirement until governed reassignment or disposal without disclosing
+source, identity, proposal, count, or digest data to Workforce.
 Structured Programme review/decisions, the accepted Applications-to-Programme
 adapter, Scheduling, accessible timetable editing, Workforce staffing, atomic
 release, projections, and on-site continuity remain subsequent children.
@@ -1296,11 +1351,10 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48) with
-   Department retirement coordination
-   [#64](https://github.com/martonpornoi/maru/issues/64), including
-   disclosure-safe unresolved-import staging preflight and governed
-   reassignment/disposal recovery.
+1. Complete protected delivery of
+   [#64](https://github.com/martonpornoi/maru/issues/64), synchronize `main`,
+   and stop. Resume umbrella [#48](https://github.com/martonpornoi/maru/issues/48)
+   with a bounded staged-review and accountable-decision child when requested.
 2. Continue sequentially through Applications review and decisions, then the
    real Programme adapter and post-acceptance host/co-host relationships;
    Scheduling core and accessible

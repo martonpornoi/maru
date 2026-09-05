@@ -27,10 +27,16 @@ if TYPE_CHECKING:
     from django.db.models import Model
 
 _INTEGRITY_MIGRATION = import_module(
-    "maru.applications.migrations.0008_programme_import_integrity_guards"
+    "maru.applications.migrations.0011_programme_department_ownership_integrity"
 )
 _DOWNGRADE_MIGRATION = import_module(
-    "maru.applications.migrations.0009_programme_import_populated_downgrade_fence"
+    "maru.applications.migrations.0012_programme_department_ownership_downgrade_fence"
+)
+_PERSISTENCE_MIGRATION = import_module(
+    "maru.applications.migrations.0010_programme_department_ownership_persistence"
+)
+_IMPORT_INTEGRITY_MIGRATION = import_module(
+    "maru.applications.migrations.0008_programme_import_integrity_guards"
 )
 _PROGRAMME_INTEGRITY_MIGRATION = import_module(
     "maru.applications.migrations.0005_programme_integrity_guards"
@@ -39,7 +45,7 @@ _IDENTITY_PROGRAMME_MIGRATION = import_module(
     "maru.identity.migrations.0020_programme_proposal_person_guard"
 )
 _DOWNGRADE_FENCE_SOURCE_SHA256: Final = (
-    "94893c64e95366aac41ddc2e6eb3491f9bfcd6484b6d3d952cebd1da46327476"
+    "8e2f365fae30521ad40a4bb590bb01b1ab580e72811b721e3d7da38fe4599e21"
 )
 _SHA256_HEX_LENGTH: Final = 64
 
@@ -47,22 +53,32 @@ _SHA256_HEX_LENGTH: Final = 64
 def _applications_programme_migration_contract_is_current() -> bool:
     source_operations = tuple(_INTEGRITY_MIGRATION.Migration.operations)
     downgrade_operations = tuple(_DOWNGRADE_MIGRATION.Migration.operations)
-    expected_reverse_suffix = _PROGRAMME_INTEGRITY_MIGRATION.FORWARD_SQL.strip()
+    expected_reverse_suffix = _IMPORT_INTEGRITY_MIGRATION.FORWARD_SQL.strip()
     downgrade_operation = (
         downgrade_operations[0] if len(downgrade_operations) == 1 else None
     )
     if not isinstance(downgrade_operation, migrations.RunPython):
         return False
     downgrade_source = inspect.getsource(
-        _DOWNGRADE_MIGRATION.refuse_used_programme_import_downgrade
+        _DOWNGRADE_MIGRATION.refuse_populated_ownership_continuity_downgrade
     ).replace("\r\n", "\n")
     identity_operations = tuple(_IDENTITY_PROGRAMME_MIGRATION.Migration.operations)
     return all(
         (
+            ("applications", "0009_programme_import_populated_downgrade_fence")
+            in tuple(_PERSISTENCE_MIGRATION.Migration.dependencies),
+            ("workforce", "0017_programme_import_department_fk_contract")
+            in tuple(_PERSISTENCE_MIGRATION.Migration.dependencies),
             tuple(_INTEGRITY_MIGRATION.Migration.dependencies)
             == (
-                ("applications", "0007_programme_import_persistence"),
-                ("authorization", "0022_programme_import_capabilities"),
+                (
+                    "applications",
+                    "0010_programme_department_ownership_persistence",
+                ),
+                (
+                    "authorization",
+                    "0023_programme_department_ownership_recovery",
+                ),
             ),
             len(source_operations) == 1,
             isinstance(source_operations[0], migrations.RunSQL),
@@ -70,10 +86,15 @@ def _applications_programme_migration_contract_is_current() -> bool:
             source_operations[0].reverse_sql == _INTEGRITY_MIGRATION.REVERSE_SQL,
             _INTEGRITY_MIGRATION.REVERSE_SQL.endswith(expected_reverse_suffix),
             tuple(_DOWNGRADE_MIGRATION.Migration.dependencies)
-            == (("applications", "0008_programme_import_integrity_guards"),),
+            == (
+                (
+                    "applications",
+                    "0011_programme_department_ownership_integrity",
+                ),
+            ),
             downgrade_operation.code is migrations.RunPython.noop,
             downgrade_operation.reverse_code
-            is _DOWNGRADE_MIGRATION.refuse_used_programme_import_downgrade,
+            is _DOWNGRADE_MIGRATION.refuse_populated_ownership_continuity_downgrade,
             hashlib.sha256(downgrade_source.encode("utf-8")).hexdigest()
             == _DOWNGRADE_FENCE_SOURCE_SHA256,
             tuple(_IDENTITY_PROGRAMME_MIGRATION.Migration.dependencies)
@@ -93,13 +114,16 @@ def _applications_programme_migration_contract_is_current() -> bool:
 _DERIVED_APPLICATIONS_INTEGRITY_CONTRACT = build_database_integrity_contract(
     status_key="applications_integrity",
     app_label="applications",
-    source_migration=("applications", "0008_programme_import_integrity_guards"),
+    source_migration=(
+        "applications",
+        "0011_programme_department_ownership_integrity",
+    ),
     terminal_migration=(
         "applications",
-        "0009_programme_import_populated_downgrade_fence",
+        "0012_programme_department_ownership_downgrade_fence",
     ),
     source_migration_module=(
-        "maru.applications.migrations.0008_programme_import_integrity_guards"
+        "maru.applications.migrations.0011_programme_department_ownership_integrity"
     ),
 )
 _IDENTITY_SQL_TRIGGER_CONTRACTS, _IDENTITY_SQL_FUNCTION_CONTRACTS = (
@@ -376,12 +400,12 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # deliberately keeps Applications readiness blocked.
 APPLICATIONS_SCHEMA_CATALOG_SHA256: Final[Mapping[str, tuple[int, str]]] = {
     "constraint:": (
-        367,
-        "c20c6cd829ddc9045d6e07bfcfb39cda7e75a21a7070f4f0ad3b3b2e96aa3ecb",
+        376,
+        "efb42922ba1527c27bcd07dcf1ade76315887335448c5171862a27eeb0fa033a",
     ),
     "index:": (
-        263,
-        "501634da18934c04c6234533fac4f01987fb5ddcc3db3a14f76d5c837097425f",
+        267,
+        "9efc324778c1feb2252c6398f93c7ca75895f0e260568af3059d3321882f009f",
     ),
 }
 

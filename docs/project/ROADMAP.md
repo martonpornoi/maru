@@ -88,9 +88,9 @@ its private payload, and permanent source binding makes replay deterministic.
 The adapter, two delegable capabilities, and minimized event are declared but
 absent from both current manifests; every import relation remains runtime
 `SELECT`-only and no route, API, UI, worker, connector, schedule, review,
-Programme item, host, or publication is active. Issue #64's Department-
-retirement coordination remains mandatory before any import/profile
-activation.
+Programme item, host, or publication is active. Issue #64 adds dormant
+Department ownership continuity, shared retirement locking, explicit call/batch
+reassignment, and exact-ID historical recovery under ADR 0084 and PRG-011.
 
 Profile v1 declares incumbent-system coexistence and the current manual,
 copy-on-write structure setup. General partner import, complete continuity
@@ -743,9 +743,9 @@ owned calls, purpose-scoped proposal collaboration, exact sealed revisions, and
 included-collaborator acknowledgements without creating hosts. Issue #66 adds
 dormant preview-first call/proposal staging, non-disclosing preview, protected
 apply, exact-self claim, permanent source binding, and continuity disposal
-without mounting an import surface. Issue #64's Department-retirement
-coordination is the immediate continuation; staged review/decisions and the
-accepted Applications adapter follow, then Programme-owned host relationships,
+without mounting an import surface. Issue #64 implements Department-retirement
+coordination and governed ownership recovery; staged review/decisions and the
+accepted Applications adapter are next, then Programme-owned host relationships,
 Scheduling, staffing, release, continuity, setup, and integrated acceptance in
 dependency order.
 

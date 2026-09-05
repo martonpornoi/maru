@@ -113,6 +113,7 @@ def test_import_model_and_enum_surface_is_closed() -> None:
     assert ProgrammeImportAggregateKind.values == ["batch", "preview", "item"]
     assert ProgrammeImportCommandAction.values == [
         "batch_staged",
+        "batch_reassigned",
         "batch_previewed",
         "call_committed",
         "proposal_claimed",
@@ -274,20 +275,20 @@ def test_import_migration_topology_and_reversal_are_exact() -> None:
 
 
 def test_import_database_contract_is_complete_and_owner_only() -> None:
-    """Readiness derives all 87 triggers and 22 owner-only functions."""
+    """Readiness derives all 102 triggers and 23 owner-only functions."""
 
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 87
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 22
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 102
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 23
     assert len(APPLICATIONS_RELATION_SEMANTICS) == 33
     assert APPLICATIONS_SCHEMA_CATALOG_SHA256 == {
         "constraint:": (
-            367,
-            "c20c6cd829ddc9045d6e07bfcfb39cda7e75a21a7070f4f0ad3b3b2e96aa3ecb",
+            376,
+            "efb42922ba1527c27bcd07dcf1ade76315887335448c5171862a27eeb0fa033a",
         ),
         "index:": (
-            263,
-            "501634da18934c04c6234533fac4f01987fb5ddcc3db3a14f76d5c837097425f",
+            267,
+            "9efc324778c1feb2252c6398f93c7ca75895f0e260568af3059d3321882f009f",
         ),
     }
     assert all(
@@ -384,7 +385,7 @@ def test_import_relations_are_runtime_select_only_without_function_execute() -> 
 def test_import_capability_scopes_and_self_field_ceiling_are_exact() -> None:
     """Import authority is Department-bound while disposal is Edition-bound."""
 
-    assert POLICY_VERSION == "2026-09-01.2"
+    assert POLICY_VERSION == "2026-09-02.1"
     assert capability("applications.import_programme").maximum_scope is (
         ScopeLevel.DEPARTMENT
     )
@@ -392,6 +393,11 @@ def test_import_capability_scopes_and_self_field_ceiling_are_exact() -> None:
         ScopeLevel.EDITION
     )
     assert capability("applications.dispose_programme_import").delegable is True
+    recovery = capability("applications.recover_programme_department_ownership")
+    assert recovery is not None
+    assert recovery.maximum_scope is ScopeLevel.EDITION
+    assert recovery.delegable is False
+    assert recovery.requires_break_glass is True
     assert (
         "programme_import_claim"
         not in capability("applications.view_self").field_ceiling

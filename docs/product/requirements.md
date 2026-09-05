@@ -358,7 +358,13 @@ architecture documents, implementation issues, tests, and release notes.
   retirement, but they continue to block hard deletion, and no new binding or
   current authority may target a retired Department. Retirement must first end
   every active assignment whose term has not ended and every unclosed authority
-  term that is effective now or scheduled for later. Position management is
+  term that is effective now or scheduled for later. It must also resolve every
+  Applications-owned Programme call that is still Draft or Active and every
+  staged Programme-import batch that still retains an unapplied item for that
+  Department. Applied, discarded, or otherwise terminal Programme evidence does
+  not block retirement, although its protected Department references continue
+  to block hard deletion. A dependency service failure must fail closed without
+  exposing dependency kinds, counts, names, or identifiers. Position management is
   governed separately by HR-012; assignment activation remains subject to its
   immutable role-bundle, typed-resource, dual-control, lifecycle, and recovery
   requirements.
@@ -1183,6 +1189,41 @@ architecture documents, implementation issues, tests, and release notes.
   review, decision, Programme item, host, occurrence, Shift, publication,
   route, API, UI, worker, schedule, or unrelated-module state, and admits no
   service or system actor.
+- **PRG-011 — Race-safe Programme Department ownership continuity:** Before a
+  Department retires, Applications and Workforce must serialize the decision
+  under one exact-edition mutex and a database backstop. Applications exposes
+  only a closed `clear`, `blocked`, or `unavailable` dependency result: the call
+  and import probes always run independently, any known block wins, otherwise
+  any unavailable probe fails closed, and no result reveals a category, count,
+  name, identifier, source key, email, payload, or digest. Draft calls may move
+  only through a dedicated reasoned command with exact current source- and
+  destination-Department call authority; generic configuration cannot move
+  ownership. Active calls must retire before their current Department. A
+  Programme-import batch may move only while planning is open and it is
+  unexpired, wholly staged, payload-intact, source-unbound, and unapplied;
+  partial, applied, source-bound, expired, or closed-planning batches are
+  disposal-only. Expiry never equals disposal, while applied and discarded
+  history does not block retirement.
+  Every transition uses exact tenant and edition scope, optimistic versions,
+  idempotency, directly inspectable rationale, and atomic receipt, audit, event,
+  and outbox evidence. Batch versions are positive and monotonic; reassignment
+  advances the batch and makes older previews stale without changing item
+  versions, payloads, source identity, or any permanent binding. An imported
+  call binding records owner equality when it is created; later ownership is
+  proven by an immutable contiguous reassignment-receipt chain rather than by
+  rewriting its historical batch or binding. Existing proposal lead,
+  invitee, collaborator, and retained-history self access survives owner
+  retirement, but organizer management, discovery, and new proposal starts do
+  not.
+  Historical orphan recovery accepts only one caller-supplied call identifier:
+  an orphaned Draft may be reassigned to a current authorized destination and
+  an orphaned Active call may be retired. It requires
+  `applications.recover_programme_department_ownership` at exact Edition scope,
+  is nondelegable and break-glass-required, and remains absent from every
+  current profile, root, route, job, and UI. It grants no listing, search,
+  content read, import preview, or general Programme authority and creates no
+  account, Participation, Registration, review, decision, accepted Programme
+  item, host, Shift, timetable, publication, or unrelated-module state.
 
 ### Governance, planning, and readiness
 

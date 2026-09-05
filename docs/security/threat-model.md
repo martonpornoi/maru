@@ -2,7 +2,7 @@
 
 Status: Living baseline with implemented tenant, authority, bounded-read, and
 public-contribution controls
-Last updated: 2026-08-21
+Last updated: 2026-09-02
 
 This living threat model covers the proposed architecture before code exists.
 Every vertical slice must refine its assets, data flows, abuse cases, controls,
@@ -99,6 +99,7 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 | Search/index leak | unauthorized result title or count appears | policy-scoped indexes or filters, projection testing, no shared cache without authorization dimension |
 | Hierarchy projection leak or exhaustion | a foreign edition name, hidden holder, or partial oversized tree is disclosed | name-free capability prefilter, fresh final authorization, exact-role and active-person checks, code-owned row/depth/expanded-edge ceilings, explicit no-partial overflow, generic dependency response |
 | Cross-version structure read | concurrent Department/Position/assignment writes produce a coherent but mixed-version tree | short repeatable-read snapshot, exact edition aggregate version, fresh post-snapshot probe, one complete retry, name-free failure after a second movement, and one canonical boundary for every repository-owned writer |
+| Programme ownership retirement race or dependency oracle | a Department retires while a call/import owner moves, or a generic refusal reveals staged private work | shared exact-edition mutex, database try-lock backstop, unconditional Applications call/import probes, `blocked`-before-`unavailable` tri-state aggregation, no category/count/identifier disclosure, exact-source/destination authorization, and exact-ID nondelegable break-glass orphan recovery |
 | Unsafe automation | rule mass-mails or grants access repeatedly | permission ceiling, dry run, action limits, idempotency, approval, versioned rollout, kill switch |
 | Connector compromise | social token publishes abuse; provider payload injects data | secret vault, narrow scopes, verified endpoints, input validation, egress allowlist, disable/reconcile, no implicit trust |
 | SSRF through webhooks/imports | attacker reaches internal metadata or control plane | destination verification, DNS/IP policy, egress proxy, redirect limits, network segmentation |
@@ -134,6 +135,10 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 - Domain change and outbox publication commit atomically.
 - Money, bids, custody, audit, and releases are append-oriented.
 - Imports stage and preview before applying.
+- Programme Department retirement and Applications owner transitions share one
+  exact-edition mutex and receipt-backed database boundary. Expiry never acts
+  as disposal; imported-call bindings remain immutable and later ownership is
+  accepted only through a contiguous transition-receipt chain.
 
 ### Authentication
 

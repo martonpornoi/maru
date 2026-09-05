@@ -24,6 +24,7 @@ from maru.applications.programme_adoption import (
 from maru.authorization.policy import (
     PolicyDecision,
     decide_verified_principal_exact_department,
+    decide_verified_principal_exact_edition,
     decide_verified_principal_exact_self,
 )
 from maru.events.queries import (
@@ -53,10 +54,14 @@ APPLICATIONS_MANAGE_PROGRAMME_PROPOSAL_SELF: Final = (
 APPLICATIONS_SUBMIT_PROGRAMME_PROPOSAL_SELF: Final = (
     "applications.submit_programme_proposal_self"
 )
+APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP: Final = (
+    "applications.recover_programme_department_ownership"
+)
 
 APPLICATIONS_PROGRAMME_CAPABILITY_CODES: Final = frozenset(
     {
         APPLICATIONS_MANAGE_PROGRAMME_CALLS,
+        APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP,
         APPLICATIONS_VIEW_PROGRAMME_PROPOSAL_SELF,
         APPLICATIONS_EDIT_PROGRAMME_PROPOSAL_SELF,
         APPLICATIONS_RESPOND_PROGRAMME_INVITATION_SELF,
@@ -64,8 +69,14 @@ APPLICATIONS_PROGRAMME_CAPABILITY_CODES: Final = frozenset(
         APPLICATIONS_SUBMIT_PROGRAMME_PROPOSAL_SELF,
     }
 )
-APPLICATIONS_PROGRAMME_PROPOSAL_CAPABILITY_CODES: Final = (
-    APPLICATIONS_PROGRAMME_CAPABILITY_CODES - {APPLICATIONS_MANAGE_PROGRAMME_CALLS}
+APPLICATIONS_PROGRAMME_PROPOSAL_CAPABILITY_CODES: Final = frozenset(
+    {
+        APPLICATIONS_VIEW_PROGRAMME_PROPOSAL_SELF,
+        APPLICATIONS_EDIT_PROGRAMME_PROPOSAL_SELF,
+        APPLICATIONS_RESPOND_PROGRAMME_INVITATION_SELF,
+        APPLICATIONS_MANAGE_PROGRAMME_PROPOSAL_SELF,
+        APPLICATIONS_SUBMIT_PROGRAMME_PROPOSAL_SELF,
+    }
 )
 
 _FULL_PROPOSAL_VIEW_FIELDS: Final = frozenset(
@@ -162,6 +173,35 @@ class ApplicationsProgrammeAuthorizer(Protocol):
         """
         ...
 
+    def authorize_recovery(
+        self,
+        *,
+        principal_id: UUID,
+        organization_id: UUID,
+        edition_id: UUID,
+        requested_fields: frozenset[str] | None,
+    ) -> PolicyDecision:
+        """Return one exact-Edition ownership-recovery decision.
+
+        Parameters
+        ----------
+        principal_id : UUID
+            Exact authenticated principal identifier.
+        organization_id : UUID
+            Organization expected to own the edition.
+        edition_id : UUID
+            Exact event edition containing the caller-supplied target.
+        requested_fields : frozenset[str] | None
+            Optional code-owned field ceiling. Recovery requests no content
+            fields and grants no discovery or listing authority.
+
+        Returns
+        -------
+        PolicyDecision
+            Complete exact-Edition break-glass policy decision.
+        """
+        ...
+
     def authorize_retry(
         self,
         *,
@@ -184,6 +224,31 @@ class ApplicationsProgrammeAuthorizer(Protocol):
         -------
         PolicyDecision
             Complete adoption-scoped replay decision.
+        """
+        ...
+
+    def authorize_recovery_retry(
+        self,
+        *,
+        principal_id: UUID,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> PolicyDecision:
+        """Re-prove exact-Edition recovery authority before receipt lookup.
+
+        Parameters
+        ----------
+        principal_id : UUID
+            Exact authenticated principal identifier.
+        organization_id : UUID
+            Organization expected to own the retained receipt.
+        edition_id : UUID
+            Exact edition containing the retained recovery receipt.
+
+        Returns
+        -------
+        PolicyDecision
+            Complete recovery-capability decision with no resource fields.
         """
         ...
 
@@ -310,6 +375,57 @@ class ExactPolicyApplicationsProgrammeAuthorizer:
             requested_fields=requested_fields,
         )
 
+    def authorize_recovery(
+        self,
+        *,
+        principal_id: UUID,
+        organization_id: UUID,
+        edition_id: UUID,
+        requested_fields: frozenset[str] | None,
+    ) -> PolicyDecision:
+        """Evaluate the dormant exact-Edition break-glass capability.
+
+        The capability is globally declared but intentionally absent from all
+        current profiles and grant paths. Keeping the ordinary policy call
+        behind the adopted Programme target check makes this boundary ready
+        for a future governed operator without activating it today.
+
+        Parameters
+        ----------
+        principal_id : UUID
+            Exact authenticated principal identifier.
+        organization_id : UUID
+            Organization expected to own the edition.
+        edition_id : UUID
+            Exact adopted edition containing the recovery target.
+        requested_fields : frozenset[str] | None
+            Optional code-owned field ceiling; recovery supplies no content
+            fields.
+
+        Returns
+        -------
+        PolicyDecision
+            Exact-Edition recovery decision, denied while the capability is
+            dormant or the Programme target is not adopted.
+        """
+        profile = edition_adoption_profile_reference(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        if profile is None or not profile_allows_application_target(
+            profile.code,
+            profile.version,
+            APPLICATION_PROGRAMME_ITEM_TARGET_KIND,
+        ):
+            return _profile_denial()
+        return decide_verified_principal_exact_edition(
+            principal_id=principal_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            capability_code=APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP,
+            requested_fields=requested_fields,
+        )
+
     def authorize_retry(
         self,
         *,
@@ -349,6 +465,36 @@ class ExactPolicyApplicationsProgrammeAuthorizer:
             fields=frozenset(),
             obligations=frozenset(),
             reason_code="applications_programme_retry_receipt_scope",
+        )
+
+    def authorize_recovery_retry(
+        self,
+        *,
+        principal_id: UUID,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> PolicyDecision:
+        """Re-prove dormant recovery capability for an exact receipt scope.
+
+        Parameters
+        ----------
+        principal_id : UUID
+            Exact authenticated principal identifier.
+        organization_id : UUID
+            Organization expected to own the retained receipt.
+        edition_id : UUID
+            Exact edition containing the retained recovery receipt.
+
+        Returns
+        -------
+        PolicyDecision
+            Complete exact-Edition recovery decision with no requested fields.
+        """
+        return self.authorize_recovery(
+            principal_id=principal_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            requested_fields=None,
         )
 
 
@@ -433,6 +579,28 @@ class AuthorizedProgrammeRetryScope:
     organization_id: UUID
     edition_id: UUID
     accepts_private_planning_writes: bool
+    decision: PolicyDecision
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorizedProgrammeRecoveryScope:
+    """Retain lifecycle-neutral exact-Edition recovery authority.
+
+    Attributes
+    ----------
+    actor_id : UUID
+        Exact active verified account authorized for recovery.
+    organization_id : UUID
+        Organization that owns the recovered aggregate.
+    edition_id : UUID
+        Exact edition containing the caller-supplied aggregate identifier.
+    decision : PolicyDecision
+        Complete break-glass policy decision and audit obligations.
+    """
+
+    actor_id: UUID
+    organization_id: UUID
+    edition_id: UUID
     decision: PolicyDecision
 
 
@@ -749,6 +917,131 @@ def authorize_programme_retry_scope(
     )
 
 
+def authorize_programme_recovery_scope(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    authorizer: ApplicationsProgrammeAuthorizer = (_DEFAULT_AUTHORIZER),
+    lock: bool = False,
+) -> AuthorizedProgrammeRecoveryScope:
+    """Authorize exact-ID orphan recovery at lifecycle-neutral Edition scope.
+
+    This seam deliberately resolves no Department and accepts no target
+    content. The command must already have a caller-supplied opaque aggregate
+    identifier, and it receives no list, search, preview, or general Programme
+    read authority from this proof.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Exact current person-account identifier.
+    organization_id : UUID
+        Organization expected to own the edition.
+    edition_id : UUID
+        Exact edition containing the opaque recovery target.
+    authorizer : ApplicationsProgrammeAuthorizer, default=_DEFAULT_AUTHORIZER
+        Sealed complete-decision adapter.
+    lock : bool, default=False
+        Whether identity and edition references acquire row locks.
+
+    Returns
+    -------
+    AuthorizedProgrammeRecoveryScope
+        Minimized lifecycle-neutral break-glass authority.
+
+    Raises
+    ------
+    ApplicationsProgrammeAuthorizationDeniedError
+        If identity, tenant, adoption, capability, or test seams fail.
+    """
+    _require_test_authorizer(authorizer)
+    actor = resolve_active_verified_person_reference(
+        account_id=actor_id,
+        lock=lock,
+    )
+    edition = resolve_private_planning_edition_reference(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        lock=lock,
+    )
+    if actor is None or edition is None:
+        raise ApplicationsProgrammeAuthorizationDeniedError
+    decision = _require_complete_decision(
+        authorizer.authorize_recovery(
+            principal_id=actor.account_id,
+            organization_id=edition.organization_id,
+            edition_id=edition.edition_id,
+            requested_fields=None,
+        ),
+        requested_fields=None,
+    )
+    return AuthorizedProgrammeRecoveryScope(
+        actor_id=actor.account_id,
+        organization_id=edition.organization_id,
+        edition_id=edition.edition_id,
+        decision=decision,
+    )
+
+
+def authorize_programme_recovery_retry_scope(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    authorizer: ApplicationsProgrammeAuthorizer = (_DEFAULT_AUTHORIZER),
+) -> AuthorizedProgrammeRecoveryScope:
+    """Re-prove break-glass authority before recovery-receipt lookup.
+
+    Successful recovery can change the current Department relationship, so a
+    replay cannot depend on that relationship. It must nevertheless prove the
+    recovery capability again, unlike ordinary Programme receipt replay.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Exact current person-account identifier.
+    organization_id : UUID
+        Organization expected to own the retained receipt.
+    edition_id : UUID
+        Exact edition containing the retained recovery receipt.
+    authorizer : ApplicationsProgrammeAuthorizer, default=_DEFAULT_AUTHORIZER
+        Sealed complete-decision adapter.
+
+    Returns
+    -------
+    AuthorizedProgrammeRecoveryScope
+        Minimized exact-Edition recovery replay authority.
+
+    Raises
+    ------
+    ApplicationsProgrammeAuthorizationDeniedError
+        If identity, tenant, adoption, capability, or test seams fail.
+    """
+    _require_test_authorizer(authorizer)
+    actor = resolve_active_verified_person_reference(account_id=actor_id)
+    edition = resolve_private_planning_edition_reference(
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
+    if actor is None or edition is None:
+        raise ApplicationsProgrammeAuthorizationDeniedError
+    decision = _require_complete_decision(
+        authorizer.authorize_recovery_retry(
+            principal_id=actor.account_id,
+            organization_id=edition.organization_id,
+            edition_id=edition.edition_id,
+        ),
+        requested_fields=None,
+    )
+    return AuthorizedProgrammeRecoveryScope(
+        actor_id=actor.account_id,
+        organization_id=edition.organization_id,
+        edition_id=edition.edition_id,
+        decision=decision,
+    )
+
+
 def _proposal_row(
     *,
     organization_id: UUID,
@@ -990,6 +1283,7 @@ __all__ = [
     "APPLICATIONS_MANAGE_PROGRAMME_PROPOSAL_SELF",
     "APPLICATIONS_PROGRAMME_CAPABILITY_CODES",
     "APPLICATIONS_PROGRAMME_PROPOSAL_CAPABILITY_CODES",
+    "APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP",
     "APPLICATIONS_RESPOND_PROGRAMME_INVITATION_SELF",
     "APPLICATIONS_SUBMIT_PROGRAMME_PROPOSAL_SELF",
     "APPLICATIONS_VIEW_PROGRAMME_PROPOSAL_SELF",
@@ -998,12 +1292,15 @@ __all__ = [
     "ApplicationsProgrammeAuthorizer",
     "AuthorizedProgrammeCallScope",
     "AuthorizedProgrammeProposalScope",
+    "AuthorizedProgrammeRecoveryScope",
     "AuthorizedProgrammeRetryScope",
     "AuthorizedProgrammeSelfEntryScope",
     "ExactPolicyApplicationsProgrammeAuthorizer",
     "ProgrammeProposalRelationship",
     "authorize_programme_call_scope",
     "authorize_programme_proposal_scope",
+    "authorize_programme_recovery_retry_scope",
+    "authorize_programme_recovery_scope",
     "authorize_programme_retry_scope",
     "authorize_programme_self_entry_scope",
 ]

@@ -10,12 +10,16 @@ import pytest
 from maru.applications import programme_authorization
 from maru.applications.programme_authorization import (
     APPLICATIONS_EDIT_PROGRAMME_PROPOSAL_SELF,
+    APPLICATIONS_PROGRAMME_PROPOSAL_CAPABILITY_CODES,
+    APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP,
     APPLICATIONS_RESPOND_PROGRAMME_INVITATION_SELF,
     APPLICATIONS_VIEW_PROGRAMME_PROPOSAL_SELF,
     ApplicationsProgrammeAuthorizationDeniedError,
     ExactPolicyApplicationsProgrammeAuthorizer,
     authorize_programme_call_scope,
     authorize_programme_proposal_scope,
+    authorize_programme_recovery_retry_scope,
+    authorize_programme_recovery_scope,
     authorize_programme_retry_scope,
     authorize_programme_self_entry_scope,
 )
@@ -44,6 +48,17 @@ class _TrustedAuthorizer:
     def authorize_self(self, **kwargs: object) -> PolicyDecision:
         return self.authorize_department(**kwargs)
 
+    def authorize_recovery(self, **kwargs: object) -> PolicyDecision:
+        requested_fields = kwargs["requested_fields"]
+        assert requested_fields is None
+        self.calls.append((APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP, None))
+        return PolicyDecision(
+            allowed=True,
+            fields=frozenset(),
+            obligations=frozenset({"audit"}),
+            reason_code="sealed_unit_recovery_authorizer",
+        )
+
     def authorize_retry(self, **_kwargs: object) -> PolicyDecision:
         self.calls.append(("programme_retry", frozenset()))
         return PolicyDecision(
@@ -51,6 +66,15 @@ class _TrustedAuthorizer:
             fields=frozenset(),
             obligations=frozenset(),
             reason_code="sealed_unit_retry_authorizer",
+        )
+
+    def authorize_recovery_retry(self, **_kwargs: object) -> PolicyDecision:
+        self.calls.append(("programme_recovery_retry", frozenset()))
+        return PolicyDecision(
+            allowed=True,
+            fields=frozenset(),
+            obligations=frozenset({"audit"}),
+            reason_code="sealed_unit_recovery_retry_authorizer",
         )
 
 
@@ -151,6 +175,14 @@ def test_self_entry_scope_rejects_non_entry_capability(monkeypatch) -> None:
     assert authorizer.calls == []
 
 
+def test_recovery_capability_never_enters_proposal_self_authority() -> None:
+    """Keep exact-ID break-glass recovery out of retained proposal relationships."""
+    assert (
+        APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP
+        not in APPLICATIONS_PROGRAMME_PROPOSAL_CAPABILITY_CODES
+    )
+
+
 def test_retry_scope_proves_no_resource_fields_or_relationship(monkeypatch) -> None:
     """Keep receipt lookup bounded to current identity and exact edition."""
     actor_id, organization_id, edition_id, _department_id = _mount_references(
@@ -169,6 +201,55 @@ def test_retry_scope_proves_no_resource_fields_or_relationship(monkeypatch) -> N
     assert scope.edition_id == edition_id
     assert scope.decision.reason_code == "sealed_unit_retry_authorizer"
     assert authorizer.calls == [("programme_retry", frozenset())]
+
+
+def test_recovery_scope_is_lifecycle_neutral_and_content_free(monkeypatch) -> None:
+    """Prove exact-Edition recovery without requiring open planning or a target read."""
+    actor_id, organization_id, edition_id, _department_id = _mount_references(
+        monkeypatch
+    )
+    monkeypatch.setattr(
+        programme_authorization,
+        "resolve_private_planning_edition_reference",
+        lambda **_kwargs: PrivatePlanningEditionReference(
+            edition_id=edition_id,
+            organization_id=organization_id,
+            accepts_private_planning_writes=False,
+        ),
+    )
+    authorizer = _TrustedAuthorizer()
+
+    scope = authorize_programme_recovery_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        authorizer=authorizer,
+    )
+
+    assert scope.actor_id == actor_id
+    assert scope.edition_id == edition_id
+    assert scope.decision.reason_code == "sealed_unit_recovery_authorizer"
+    assert authorizer.calls == [
+        (APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP, None)
+    ]
+
+
+def test_recovery_retry_reproves_recovery_capability(monkeypatch) -> None:
+    """Keep recovery replay separate from adoption-only ordinary replay."""
+    actor_id, organization_id, edition_id, _department_id = _mount_references(
+        monkeypatch
+    )
+    authorizer = _TrustedAuthorizer()
+
+    scope = authorize_programme_recovery_retry_scope(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        authorizer=authorizer,
+    )
+
+    assert scope.decision.reason_code == "sealed_unit_recovery_retry_authorizer"
+    assert authorizer.calls == [("programme_recovery_retry", frozenset())]
 
 
 def test_default_retry_requires_target_adoption_not_proposal_self(
@@ -227,6 +308,55 @@ def test_default_retry_denies_self_purpose_without_programme_target(
     )
 
     assert decision.allowed is False
+
+
+def test_default_recovery_is_exact_edition_and_profile_gated(monkeypatch) -> None:
+    """Route recovery only through the fixed Edition capability after adoption."""
+    principal_id = uuid4()
+    organization_id = uuid4()
+    edition_id = uuid4()
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(
+        programme_authorization,
+        "edition_adoption_profile_reference",
+        lambda **_kwargs: SimpleNamespace(code="future", version=1),
+    )
+    monkeypatch.setattr(
+        programme_authorization,
+        "profile_allows_application_target",
+        lambda *_args: True,
+    )
+
+    def decide(**kwargs: object) -> PolicyDecision:
+        captured.update(kwargs)
+        return PolicyDecision(
+            allowed=True,
+            fields=frozenset(),
+            obligations=frozenset({"audit"}),
+            reason_code="sealed_exact_edition_recovery",
+        )
+
+    monkeypatch.setattr(
+        programme_authorization,
+        "decide_verified_principal_exact_edition",
+        decide,
+    )
+
+    decision = ExactPolicyApplicationsProgrammeAuthorizer().authorize_recovery(
+        principal_id=principal_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        requested_fields=None,
+    )
+
+    assert decision.allowed is True
+    assert captured == {
+        "principal_id": principal_id,
+        "organization_id": organization_id,
+        "edition_id": edition_id,
+        "capability_code": (APPLICATIONS_RECOVER_PROGRAMME_DEPARTMENT_OWNERSHIP),
+        "requested_fields": None,
+    }
 
 
 def test_default_department_authority_needs_target_not_self_purpose(

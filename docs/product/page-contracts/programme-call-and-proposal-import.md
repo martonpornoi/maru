@@ -4,10 +4,11 @@
   acceptance remains separate
 - Route: none reserved by issue #66
 - Requirements: IDN-014, PRG-001, PRG-002, PRG-006, PRG-009, PRG-010,
+  PRG-011,
   AUD-001, AUD-003, AUD-005, PRI-001, UX-005 through UX-008, UX-019,
   UX-020, UX-027, UX-029, NFR-002, NFR-003, NFR-008 through NFR-010, and
   NFR-013
-- Decisions: ADRs 0041, 0051, 0081 through 0083
+- Decisions: ADRs 0041, 0051, 0081 through 0084
 
 ## Purpose and current boundary
 
@@ -49,6 +50,10 @@ production retention approval, or permission to use production personal data.
   delegable `applications.dispose_programme_import` authority and the adapter
   pin. Delegation grants disposal, not staged-content read authority. A current
   Department and open planning writes are deliberately not required.
+- **Batch reassigners:** the same active verified person must hold exact
+  current-Department `applications.import_programme` authority at both the
+  source and destination. This is a normal clean-staging operation, not orphan
+  recovery, and grants no additional preview/content visibility.
 
 Account existence, a staged email, import authority, call-management authority,
 or disposal authority creates no attendee, member, applicant, collaborator,
@@ -84,13 +89,19 @@ The only service sequence is:
    `(section.position, question.position, question.id)` definition order in one
    transaction. Every linked answer question belongs to that call's exact
    definition.
-8. `discard_programme_import` clears every remaining staged payload and records
+8. `reassign_programme_import_batch` may move one unexpired, wholly staged,
+   payload-intact, source-unbound batch while planning is open. It advances the
+   batch version and invalidates older organizer previews without changing any
+   item version, payload, source identity, or permanent binding.
+9. `discard_programme_import` clears every remaining staged payload and records
    attributable disposal. It does not delete or compensate an applied call or
    proposal.
 
 An importer may apply items independently. Applying one sibling never advances
-or stales another. A batch remains persisted as only `staged` or `discarded`;
-partial application, full application, and expiry are derived states.
+or stales another item. A batch remains persisted as only `staged` or
+`discarded`; partial application, full application, and expiry are derived
+states. Its own positive version advances for reassignment and disposal, and
+every organizer preview binds that current batch version.
 
 The timezone-aware server clock is authoritative for expiry, freshness, and
 retained command times. A caller cannot choose command time. The explicit
@@ -239,10 +250,16 @@ item kind, and case-sensitive source key.
 
 The permanent binding must also preserve target lineage. Its source system
 equals the parent batch source system; a call target is owned by the batch's
-exact Department; and a proposal target uses the exact call named by its
+exact Department when the binding is created; and a proposal target uses the exact call named by its
 same-source-system dependency, with one exact definition shared by that call
 and proposal submission. An apparently compatible call or proposal in the same
 tenant is not interchangeable.
+
+A later valid Draft-call reassignment does not rewrite the source binding or
+batch owner. A contiguous immutable Programme-command receipt chain links the
+binding-time Department through every source-to-destination transition to the
+call's current owner. A missing, branched, reversed, cross-scope, or
+noncontiguous chain is invalid below the ORM as well as in the service.
 
 - same identity plus the permanently applied digest is a no-op forever;
 - same identity plus a different digest is a conflict forever;
@@ -273,11 +290,13 @@ discarded, clears those payloads atomically, and retains only the policy,
 digests/sizes, minimized preview and source evidence, command evidence, and
 attributable discard fact. There is no automatic cleanup job in this outcome.
 
-Issue #64 must treat unresolved staged ownership as a Department-retirement
-dependency. Expiry alone does not unblock retirement; explicit disposal or a
-separately governed reassignment must. Applied or discarded evidence does not
-block retirement, and Workforce receives no source, proposal, identity, count,
-or digest data from the preflight.
+A batch may be reassigned only while planning is open and it is unexpired,
+wholly staged, payload-intact, source-unbound, and unapplied. Partial, applied,
+source-bound, expired, or closed-planning staging is disposal-only. Applications
+treats every remaining staged item as a Department-retirement dependency;
+expiry alone does not unblock retirement. Applied or discarded evidence does
+not block retirement, and Workforce receives only `clear`, `blocked`, or
+`unavailable`, never a source, proposal, identity, kind, count, or digest.
 
 ## Safe failure and disclosure
 
@@ -288,6 +307,9 @@ or digest data from the preflight.
 - **No retention configuration:** stage nothing and expose no policy/provider
   internals.
 - **Expired:** block preview/apply; continue to offer authorized disposal.
+- **Reassignment ineligible:** disclose no item/binding detail; direct the
+  authorized operator to exact-Edition disposal without weakening its separate
+  authority.
 - **Dependency missing/draft/retired:** return only the proposal item's safe
   dependency state; reveal no call title or owner.
 - **No-op:** preview returns only the permanent `no_op` classification; it
@@ -307,6 +329,9 @@ or digest data from the preflight.
   canonical bytes use this boundary rather than exposing parser diagnostics.
 - **Denied, absent, or foreign scope:** use one non-disclosing shape; never
   reveal tenant, Department, batch, item, person, or count existence.
+- **Retirement dependency:** both call and import probes execute; any known
+  `blocked` wins, otherwise an `unavailable` result fails closed. No staged
+  fact is returned to Workforce.
 
 Administrative rationale and private replay/content digests are retained only
 in their dedicated restricted database evidence where required. They are never
@@ -342,6 +367,13 @@ immutable value, preventing later proposal revisions from being attached to a
 completed import. The shared Applications retry namespace must reject
 collisions across generic, Programme, and import receipts.
 
+Batch reassignment adds one reasoned receipt with exact source/destination
+Department references and the resulting batch version. It does not rewrite an
+item, preview, applied-command chain, source binding, or payload. Those
+Department references are restricted control evidence, remain protected after
+retirement, and continue to block hard deletion without becoming live
+retirement dependencies themselves.
+
 Every failed protected command or lead-self read must leave one best-effort
 minimized outer `deny` or `error` audit after its atomic work rolls back. That
 record carries only safe scope, capability, operation, policy, correlation, and
@@ -349,7 +381,9 @@ source-channel facts; target identifiers, source data, identities, answers,
 digests, rationale, and database details remain absent.
 
 This outcome adds no CSV/XLSX guessing, background import, account creation,
-collaborator or invitation import, call activation/retirement/succession,
+collaborator or invitation import, import-driven call activation/retirement/succession,
 proposal seal/submission/review/decision, accepted Programme adapter, Programme
 item, host, occurrence, Venue placement, Shift, timetable, release,
-publication, export, automatic cleanup, or compensating domain deletion.
+publication, export, automatic cleanup, or compensating domain deletion. It
+mounts no batch-reassignment or recovery route, API, UI, job, or worker and
+pins no current profile or platform root.

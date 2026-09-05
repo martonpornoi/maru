@@ -29,6 +29,7 @@ from maru.applications.programme_import_authorization import (
     authorize_programme_import_disposal_scope,
     authorize_programme_import_retry_scope,
     authorize_programme_import_self_scope,
+    require_current_programme_import_owner,
 )
 from maru.applications.programme_import_events import (
     programme_import_changed_payload,
@@ -308,6 +309,36 @@ def test_department_scope_rejects_incomplete_field_decision(
             requested_fields=frozenset({"preview"}),
             authorizer=authorizer,
         )
+
+
+def test_current_owner_guard_denies_a_retired_staging_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep exact-self staging reads closed after owner retirement."""
+    resolver = MagicMock(return_value=None)
+    monkeypatch.setattr(
+        import_authorization,
+        "resolve_current_department_reference",
+        resolver,
+    )
+    organization_id = uuid4()
+    edition_id = uuid4()
+    department_id = uuid4()
+
+    with pytest.raises(ApplicationsProgrammeImportAuthorizationDeniedError):
+        require_current_programme_import_owner(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            lock=True,
+        )
+
+    resolver.assert_called_once_with(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        department_id=department_id,
+        lock=True,
+    )
 
 
 @pytest.mark.parametrize(
@@ -682,6 +713,19 @@ def test_batch_only_event_uses_exact_absence_markers() -> None:
     assert payload["item_state"] == ""
     assert payload["item_version"] == 0
     assert not ({"source_key", "source_digest", "lead_email"} & set(payload))
+
+
+def test_reassignment_event_accepts_a_monotonic_batch_version() -> None:
+    """Allow ownership transfers to advance beyond the old v1/v2 shape."""
+    payload = programme_import_changed_payload(
+        action="batch_reassigned",
+        batch_id=uuid4(),
+        batch_state="staged",
+        batch_version=7,
+    )
+
+    assert payload["action"] == "batch_reassigned"
+    assert payload["batch_version"] == 7
 
 
 @pytest.mark.parametrize(

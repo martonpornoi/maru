@@ -162,8 +162,14 @@ class ProgrammeCommandAction(models.TextChoices):
 
     CALL_CREATED = "call_created", "Call created"
     CALL_CONFIGURED = "call_configured", "Call configured"
+    CALL_REASSIGNED = "call_reassigned", "Call reassigned"
     CALL_ACTIVATED = "call_activated", "Call activated"
     CALL_RETIRED = "call_retired", "Call retired"
+    RECOVERY_CALL_REASSIGNED = (
+        "recovery_call_reassigned",
+        "Recovery call reassigned",
+    )
+    RECOVERY_CALL_RETIRED = "recovery_call_retired", "Recovery call retired"
     CALL_SUCCESSOR_CREATED = "call_successor_created", "Call successor created"
     PROPOSAL_STARTED = "proposal_started", "Proposal started"
     PROPOSAL_SELECTION_REVISED = (
@@ -267,6 +273,7 @@ class ProgrammeImportCommandAction(models.TextChoices):
     """Enumerate the closed Programme-import command surface."""
 
     BATCH_STAGED = "batch_staged", "Batch staged"
+    BATCH_REASSIGNED = "batch_reassigned", "Batch reassigned"
     BATCH_PREVIEWED = "batch_previewed", "Batch previewed"
     CALL_COMMITTED = "call_committed", "Call committed"
     PROPOSAL_CLAIMED = "proposal_claimed", "Proposal claimed"
@@ -3093,6 +3100,20 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeApplicationModel):
         on_delete=models.PROTECT,
         related_name="programme_command_receipts",
     )
+    source_department = models.ForeignKey(
+        "workforce.Department",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="programme_command_receipts_as_source",
+    )
+    destination_department = models.ForeignKey(
+        "workforce.Department",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="programme_command_receipts_as_destination",
+    )
     target_id = models.UUIDField()
     result_kind = models.CharField(
         max_length=32,
@@ -3144,6 +3165,38 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeApplicationModel):
                 & Q(action__in=ProgrammeCommandAction.values)
                 & Q(result_kind__in=ProgrammeCommandResultKind.values),
                 name="applications_prg_command_catalogs_closed",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        action__in=(
+                            ProgrammeCommandAction.CALL_REASSIGNED,
+                            ProgrammeCommandAction.RECOVERY_CALL_REASSIGNED,
+                        ),
+                        source_department__isnull=False,
+                        destination_department__isnull=False,
+                    )
+                    & ~Q(source_department=models.F("destination_department"))
+                )
+                | Q(
+                    action=ProgrammeCommandAction.RECOVERY_CALL_RETIRED,
+                    source_department__isnull=False,
+                    destination_department__isnull=True,
+                )
+                | (
+                    ~Q(
+                        action__in=(
+                            ProgrammeCommandAction.CALL_REASSIGNED,
+                            ProgrammeCommandAction.RECOVERY_CALL_REASSIGNED,
+                            ProgrammeCommandAction.RECOVERY_CALL_RETIRED,
+                        )
+                    )
+                    & Q(
+                        source_department__isnull=True,
+                        destination_department__isnull=True,
+                    )
+                ),
+                name="applications_prg_command_department_transition",
             ),
         ]
         indexes = [
@@ -3263,7 +3316,7 @@ class ProgrammeImportBatch(_ClosedProgrammeImportModel):
             models.CheckConstraint(
                 condition=Q(
                     state=ProgrammeImportBatchState.STAGED,
-                    aggregate_version=1,
+                    aggregate_version__gt=0,
                     discarded_by__isnull=True,
                     discarded_at__isnull=True,
                     discard_reason="",
@@ -3271,7 +3324,7 @@ class ProgrammeImportBatch(_ClosedProgrammeImportModel):
                 | (
                     Q(
                         state=ProgrammeImportBatchState.DISCARDED,
-                        aggregate_version=2,
+                        aggregate_version__gt=1,
                         discarded_by__isnull=False,
                         discarded_at__isnull=False,
                     )
@@ -3427,7 +3480,7 @@ class ProgrammeImportItem(_ClosedProgrammeImportModel):
 
 
 class ProgrammeImportPreviewRevision(_AppendOnlyProgrammeImportModel):
-    """Immutable preview of an exact version-one staged import batch."""
+    """Immutable preview of one exact positive-version staged import batch."""
 
     batch = models.ForeignKey(
         ProgrammeImportBatch,
@@ -3470,7 +3523,7 @@ class ProgrammeImportPreviewRevision(_AppendOnlyProgrammeImportModel):
             ),
             models.CheckConstraint(
                 condition=Q(revision_number__gt=0)
-                & Q(source_batch_version=1)
+                & Q(source_batch_version__gt=0)
                 & Q(item_count__gte=1, item_count__lte=1_000),
                 name="applications_prg_imp_preview_bounds",
             ),
@@ -3814,6 +3867,20 @@ class ProgrammeImportCommandReceipt(_AppendOnlyProgrammeImportModel):
         on_delete=models.PROTECT,
         related_name="command_receipts",
     )
+    source_department = models.ForeignKey(
+        "workforce.Department",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="programme_import_command_receipts_as_source",
+    )
+    destination_department = models.ForeignKey(
+        "workforce.Department",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="programme_import_command_receipts_as_destination",
+    )
     adopted_preview_digest = models.CharField(
         max_length=64,
         blank=True,
@@ -3868,6 +3935,7 @@ class ProgrammeImportCommandReceipt(_AppendOnlyProgrammeImportModel):
                     | Q(
                         action__in=(
                             ProgrammeImportCommandAction.BATCH_STAGED,
+                            ProgrammeImportCommandAction.BATCH_REASSIGNED,
                             ProgrammeImportCommandAction.BATCH_PREVIEWED,
                             ProgrammeImportCommandAction.BATCH_DISCARDED,
                         ),
@@ -3890,6 +3958,24 @@ class ProgrammeImportCommandReceipt(_AppendOnlyProgrammeImportModel):
                     item__isnull=False,
                 ),
                 name="applications_prg_imp_command_aggregate",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        action=ProgrammeImportCommandAction.BATCH_REASSIGNED,
+                        source_department__isnull=False,
+                        destination_department__isnull=False,
+                    )
+                    & ~Q(source_department=models.F("destination_department"))
+                )
+                | (
+                    ~Q(action=ProgrammeImportCommandAction.BATCH_REASSIGNED)
+                    & Q(
+                        source_department__isnull=True,
+                        destination_department__isnull=True,
+                    )
+                ),
+                name="applications_prg_imp_command_department_transition",
             ),
         ]
         indexes = [

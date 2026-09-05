@@ -47,6 +47,8 @@ def test_every_public_command_audits_outside_its_atomic_transaction() -> None:
         and name.endswith(
             (
                 "call",
+                "reassignment",
+                "retirement",
                 "successor",
                 "proposal",
                 "selection",
@@ -59,7 +61,7 @@ def test_every_public_command_audits_outside_its_atomic_transaction() -> None:
         )
     }
 
-    assert len(public_commands) == 20
+    assert len(public_commands) == 23
     for name in public_commands:
         decorators = functions[name].decorator_list
         assert isinstance(decorators[0], ast.Call), name
@@ -148,6 +150,35 @@ def test_failure_audit_is_minimized_and_classified(
     assert record.safe_metadata == {
         "policy_version": programme_commands.POLICY_VERSION,
     }
+
+
+def test_recovery_failure_audit_is_marked_break_glass(monkeypatch) -> None:
+    """Keep denied recovery attempts visibly distinct without target details."""
+    records = []
+    monkeypatch.setattr(programme_commands, "append_audit", records.append)
+
+    def fail(**_kwargs: object) -> programme_commands.ProgrammeCommandResult:
+        raise ApplicationsProgrammeAuthorizationDeniedError
+
+    wrapped = programme_commands._audit_command_errors(
+        capability_code="applications.recover_programme_department_ownership",
+        operation=ProgrammeCommandAction.RECOVERY_CALL_RETIRED,
+        break_glass=True,
+    )(fail)
+
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        wrapped(
+            actor_id=uuid4(),
+            organization_id=uuid4(),
+            edition_id=uuid4(),
+            call_id=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="service",
+        )
+
+    assert len(records) == 1
+    assert records[0].break_glass is True
+    assert records[0].target_id is None
 
 
 def test_failure_audit_normalizes_unsafe_identifiers_and_channel(monkeypatch) -> None:

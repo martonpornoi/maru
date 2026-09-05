@@ -1,7 +1,7 @@
 # Data classification and retention
 
 Status: Baseline requiring jurisdiction-specific review  
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 This is a product and engineering control model, not legal advice. Each
 deploying organization must document its roles, purposes, lawful bases,
@@ -64,7 +64,7 @@ Data supplied for one purpose is not a platform-wide profile:
 | Registration and order | registration/finance | admission, service, settlement, support |
 | Workforce and HR | HR and accountable leads | staffing relationship; ordinary leads get consequences only |
 | Programme calls and proposals | Applications owner for one edition | keep call schema, shared answers, invitations, contributor-owned proposed-public profiles, exact seals, included-collaborator responses, and later review as separate purpose-bounded records; no value crosses into Programme without an accepted adapter |
-| Programme import staging | Applications owner for one exact edition and source system | keep temporary canonical call/proposal input behind minimized organizer preview and exact-self lead claim; persist no identity match and clear private payload on application or separately authorized disposal |
+| Programme import staging | Applications owner for one exact edition and source system | keep temporary canonical call/proposal input behind minimized organizer preview and exact-self lead claim; record reasoned Department-owner transitions without copying content; persist no identity match and clear private payload on application or separately authorized disposal |
 | Programme private operations | Programme Department for one edition | separate working, delivery, discussion, readiness, and approved-public-copy layers; release only the purpose-bounded projection |
 | Accessibility | access team | coordinate requested accommodation with minimum disclosure |
 | Safety case | assigned qualified team | case purpose only; no engagement analytics |
@@ -95,7 +95,9 @@ Convenience alone is not sufficient.
   metrics, health, or errors.
 - A permanent binding is valid only when its source system equals the parent
   batch source system. A call target must be owned by the batch's exact
-  Department. A proposal target must use the exact call named by the item's
+  Department when the binding is created. A later valid Draft-call
+  reassignment leaves the binding and batch unchanged and proves current owner
+  lineage through a contiguous immutable transition-receipt chain. A proposal target must use the exact call named by the item's
   same-source-system dependency, and its submission and call must share one
   exact definition. These integrity checks do not authorize disclosing the
   Department, call, definition, or source identity through a preview or error.
@@ -157,6 +159,18 @@ Convenience alone is not sufficient.
   retains only justified policy, digest/size, minimized preview/binding,
   receipt, discard, audit, and event evidence. It never deletes an applied
   call, proposal, or answer history.
+- A batch reassignment is permitted only while planning is open and the batch
+  is unexpired, wholly staged, payload-intact, source-unbound, and unapplied.
+  It advances the positive batch version and invalidates prior organizer
+  previews without changing items, payloads, source identity, or bindings.
+  Partial, applied, source-bound, expired, or closed-planning staging is
+  disposal-only. Expiry remains a retention signal, not a disposal event or
+  Department-retirement release.
+- Source and destination Department references on call/import transition
+  receipts are restricted administrative control evidence. They support
+  lineage, recovery, and hard-delete protection but must not enter previews,
+  public errors, audit/event metadata, logs, metrics, or health output as names,
+  counts, or identifiers.
 - No automatic cleanup job exists in PRG-010. Before production activation an
   organization must approve the retention duration, active-use and disposal
   triggers, continuity owner, legal holds, subject access/correction/restriction
@@ -176,6 +190,10 @@ Convenience alone is not sufficient.
 - Invitations, collaborator identity, roster membership, transition reasons,
   and acknowledgement state are C2. Invitation delivery secrets or bearer
   material must never enter the proposal, event, audit, log, or command receipt.
+- Existing lead, invitee, collaborator, acknowledgement, and retained-history
+  self access is not deleted merely because the call owner Department retires.
+  New discovery, organizer management, and proposal starts require a current
+  owner; recovery does not expose proposal content.
 - Proposed-public display name, biography, pronouns, website, and consent are
   contributor-owned C2 input. Calling them proposed-public does not make them
   C0. Only the exact contributor may revise their values. Each included

@@ -1,7 +1,10 @@
 """Helpers that keep migration integration tests from contaminating the suite."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+
 from django.core.management import call_command
-from django.db import connection
+from django.db import connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 
 _REGISTRATION_DEPARTMENT_FK_MIGRATION = (
@@ -28,6 +31,10 @@ _WORKFORCE_PROGRAMME_IMPORT_FK_CONTRACT = (
     "workforce",
     "0017_programme_import_department_fk_contract",
 )
+_WORKFORCE_PROGRAMME_OWNERSHIP_FK_CONTRACT = (
+    "workforce",
+    "0018_programme_department_ownership_contract",
+)
 _WORKFORCE_CROSS_MODULE_DEPARTMENT_FK_CONTRACT = (
     "workforce",
     "0008_department_fk_contract_successor",
@@ -36,11 +43,58 @@ _APPLICATIONS_BEFORE_PROGRAMME_IMPORT = (
     "applications",
     "0006_programme_populated_downgrade_fence",
 )
+_APPLICATIONS_BEFORE_PROGRAMME_OWNERSHIP = (
+    "applications",
+    "0009_programme_import_populated_downgrade_fence",
+)
 _APPLICATIONS_BEFORE_PROGRAMME_CALLS = (
     "applications",
     "0003_integrity_function_execute_boundary",
 )
 _APPLICATIONS_ZERO: tuple[str, None] = ("applications", None)
+
+
+@contextmanager
+def rollback_migration_case() -> Iterator[None]:
+    """Isolate a serial historical case using real PostgreSQL DDL rollback.
+
+    The caller owns a committed historical baseline and restores current leaves
+    after its last case. Only single-connection, transactional migrations belong
+    here: commit visibility, concurrent connections, and non-atomic migrations
+    must retain the ordinary full-graph fixtures. Deferred constraints are checked
+    before discarding a successful case; failed cases also roll back completely.
+    """
+
+    if (
+        connection.vendor != "postgresql"
+        or not str(connection.settings_dict["NAME"]).startswith("test_")
+        or not connection.features.can_rollback_ddl
+        or not connection.get_autocommit()
+    ):
+        msg = "Historical case isolation requires an idle PostgreSQL test database."
+        raise RuntimeError(msg)
+    with transaction.atomic():
+        try:
+            yield
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        finally:
+            transaction.set_rollback(True)
+
+
+def migrate_test_targets(
+    executor: MigrationExecutor,
+    targets: list[tuple[str, str | None]],
+) -> None:
+    """Run Django's unchanged plan, rejecting non-atomic sandbox transitions."""
+
+    plan = executor.migration_plan(targets)
+    if connection.in_atomic_block and any(
+        not migration.atomic for migration, _ in plan
+    ):
+        msg = "Non-atomic migrations require ordinary committed migration tests."
+        raise RuntimeError(msg)
+    executor.migrate(targets, plan=plan)
 
 
 def current_migration_leaves() -> tuple[tuple[str, str], ...]:
@@ -54,7 +108,7 @@ def registration_migration_targets(
     executor: MigrationExecutor,
     target: tuple[str, str],
 ) -> tuple[tuple[str, str], ...]:
-    """Select a graph-consistent Workforce leaf for Registration history."""
+    """Select compatible Workforce and Applications leaves for Registration history."""
 
     targets_by_app = {
         migration_key[0]: migration_key
@@ -65,6 +119,8 @@ def registration_migration_targets(
         executor.loader.graph.forwards_plan(target)
     ):
         targets_by_app["workforce"] = _WORKFORCE_BEFORE_DEPARTMENT_FK_SUCCESSOR
+        if "applications" in targets_by_app:
+            targets_by_app["applications"] = _APPLICATIONS_BEFORE_PROGRAMME_OWNERSHIP
     return tuple(sorted(targets_by_app.values()))
 
 
@@ -100,10 +156,12 @@ def workforce_migration_targets(
     if workforce_target is None or workforce_target[1] is None:
         return targets
     forward_plan = executor.loader.graph.forwards_plan(workforce_target)
-    if _WORKFORCE_PROGRAMME_IMPORT_FK_CONTRACT in forward_plan:
+    if _WORKFORCE_PROGRAMME_OWNERSHIP_FK_CONTRACT in forward_plan:
         return targets
     applications_target: tuple[str, str | None] = _APPLICATIONS_ZERO
-    if _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT in forward_plan:
+    if _WORKFORCE_PROGRAMME_IMPORT_FK_CONTRACT in forward_plan:
+        applications_target = _APPLICATIONS_BEFORE_PROGRAMME_OWNERSHIP
+    elif _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT in forward_plan:
         applications_target = _APPLICATIONS_BEFORE_PROGRAMME_IMPORT
     elif _WORKFORCE_CROSS_MODULE_DEPARTMENT_FK_CONTRACT in forward_plan:
         applications_target = _APPLICATIONS_BEFORE_PROGRAMME_CALLS

@@ -1,7 +1,8 @@
 # Set up Programme Operations contract
 
 - Status: Accepted contract, runtime inactive; dormant Applications-owned
-  Programme call/proposal and Programme-owned item/readiness foundations are
+  Programme call/proposal, import, and Department-continuity plus Programme-
+  owned item/readiness foundations are
   installed, while the profile, route, destinations, current-profile
   writers/effects, adapter implementation, and Scheduling namespace remain
   absent
@@ -9,11 +10,11 @@
   non-routable until the complete integrated profile is implemented and
   accepted)
 - Requirements: IDN-011, IDN-012, IDN-014, EVT-001, EVT-002, EVT-005 through
-  EVT-007, HR-009, HR-013 through HR-015, PRG-001 through PRG-009, SCH-001
+  EVT-007, HR-009, HR-013 through HR-015, PRG-001 through PRG-011, SCH-001
   through SCH-012, OPS-001, OPS-002, OPS-005, OPS-008, OPS-009, INT-005,
   INT-007, INT-008, UX-005 through UX-008, UX-019, UX-020, UX-027, UX-029,
   UX-030, NFR-003, NFR-005, NFR-008, NFR-009, and NFR-013
-- Decisions: ADRs 0051, 0053, 0078, 0080, 0081, and 0082
+- Decisions: ADRs 0051, 0053, 0078, 0080, and 0081 through 0084
 
 ## Purpose and primary user
 
@@ -37,8 +38,11 @@ ordinary safe not-found response until the complete manifest and its runtime
 guards are implemented and validated.
 
 The dormant Programme private item/readiness foundation retains the exact
-Issue #61 containment contract; Issue #63 adds a separately dormant
-Applications intake foundation without weakening it.
+Issue #61 containment contract. Applications now has separately dormant call,
+acknowledged-proposal, preview-first import, and race-safe Department ownership
+continuity foundations without weakening it. Ownership continuity resolves the
+retirement prerequisite but does not activate the profile, its exact-ID
+recovery capability, or any surface.
 
 ## Immutable profile manifest
 

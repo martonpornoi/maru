@@ -319,9 +319,9 @@ Issues #59, #61, #63, and #66 complete the first four implementation
 prerequisites: exact v1 manifest enforcement, a dormant private Programme
 item/readiness domain, dormant Applications-owned calls and acknowledged
 proposal revisions, then dormant preview-first call/proposal import staging.
-Issue #64's Department-retirement preflight and recovery coordination is the
-active continuation. Review/decisions and the accepted Programme adapter
-follow; Programme host/co-host relationships begin only after that accepted
+Issue #64 implements Department-retirement preflight and recovery coordination.
+Review/decisions and the accepted Programme adapter follow;
+Programme host/co-host relationships begin only after that accepted
 transition. Profile activation remains last, after every mandatory
 continuation passes.
 
@@ -332,8 +332,8 @@ continuation passes.
 preview-first import staging and claim, accountable review/revision requests
 and decisions, then an explicit accepted-item transition into separately
 authorized Programme readiness work. Issues #63 and #66 complete the dormant
-call/proposal and import kernels only; Department-retirement coordination,
-review, decisions, and the accepted adapter remain successor work.
+call/proposal and import kernels only; #64 adds ownership continuity.
+Review, decisions, and the accepted adapter remain successor work.
 
 **Accept:**
 

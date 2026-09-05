@@ -6,14 +6,14 @@ Maru-operator roots, provenance writing, profile-compatible access management,
 and guarded exact-lineage policy/runtime activation; dormant Applications
 Programme capabilities remain unadopted and production legacy reconciliation
 and cutover remain gates
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 ## Purpose and requirements
 
 `maru.authorization` is the deny-by-default authority boundary for IDN-002,
 IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, IDN-014, EVT-006, QRY-003,
 UX-020, UX-024, UX-028, UX-030, NFR-013, ADR 0003, ADR 0023, ADR 0040,
-ADR 0041, ADR 0044, ADR 0080, ADR 0081, ADR 0082, and ADR 0083. A membership,
+ADR 0041, ADR 0044, ADR 0080, ADR 0081, ADR 0082, ADR 0083, and ADR 0084. A membership,
 account, familiar role name, or visible destination never grants broad access
 by itself.
 
@@ -84,6 +84,24 @@ The closed minimum-scope catalog and decision policy advance to
 `2026-09-01.2`, and populated grants or role-bundle evidence fence downgrade.
 Neither declaration is pinned by a current profile, and the migration creates
 no grant, role, root, adapter admission, route, or writer.
+
+Authorization migration
+`0023_programme_department_ownership_recovery` adds exactly one dormant
+declaration:
+
+- `applications.recover_programme_department_ownership`, bounded to one exact
+  Edition, nondelegable, and `requires_break_glass`, for a caller-supplied
+  orphaned Programme-call identifier only.
+
+The capability grants no listing, search, content read, import preview,
+Department hierarchy inheritance, or general Applications/Programme authority.
+It is deliberately absent from both current manifests, every root-role policy,
+and every route, job, and UI. Ordinary platform-administrator policy therefore
+denies it before a target is loaded; a future recovery ceremony must explicitly
+activate its separate break-glass policy. The closed minimum-scope catalog and
+decision policy advance to `2026-09-02.1`, and populated grant or role-bundle
+evidence fences downgrade. The migration itself creates no grant, role, root,
+profile pin, recovery record, or domain mutation.
 
 The self capabilities are non-persistable and non-role-assignable. They resolve
 from the authenticated active, verified person and the exact current lead or
@@ -408,6 +426,14 @@ a tenant/edition-filtered trusted base query, non-empty unique IDs, an exact
 resolved set, row locks, and a positive policy decision for every target before
 returning anything to a command.
 
+Programme Department orphan recovery is not a projection or bulk target
+freezer. Applications accepts one opaque caller-supplied call identifier,
+authorizes the exact Edition and break-glass obligation before returning any
+target fact, and collapses missing, foreign, non-orphan, or lifecycle-
+incompatible targets into the same safe boundary. The recovery decision cannot
+be reused to enumerate calls, inspect proposal/import content, or treat a
+retired Department as a current authorization target.
+
 `events.create` and `events.change_profile` carry the same minimized C1
 response ceiling as `events.view_basic`; successful mutation responses are
 checked against that ceiling rather than treating write permission as an
@@ -603,6 +629,14 @@ They also prove that Board controllers and platform administrators cannot use
 generic authority commands or the workspace to list, version, share, replace,
 or revoke reserved Executive Board authority.
 
+Programme ownership-continuity coverage additionally proves the recovery
+capability's exact-Edition minimum scope, nondelegability, break-glass
+obligation, current-profile/root-role absence, populated downgrade fence, and
+denial before any orphan target disclosure. Normal call and import
+reassignment tests continue to require exact current authority at both the
+source and destination Departments; the recovery declaration never weakens
+that path.
+
 Representation & access policy, command, and browser-adapter tests cover exact organization
 scope, bounded platform bootstrap, non-platform subjects, two distinct cross-
 approvers, reserved role conflicts, stale/replayed activation and invitations,
@@ -636,3 +670,8 @@ Additional future typed-resource kinds must register their deterministic
 binding resolver before receiving a mutation link. Appointment
 expiry/replacement/end and explicit legacy authority reconciliation remain
 open.
+The Programme ownership-recovery declaration remains intentionally unusable
+through current product profiles and platform roots. A future operator-facing
+ceremony requires its own accepted activation, independent approval, step-up,
+time bound, notification/review, and exact-ID UI contract; this dormant schema
+declaration is not that ceremony.

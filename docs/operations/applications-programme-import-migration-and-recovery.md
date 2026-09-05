@@ -3,10 +3,10 @@
 Status: Implemented dormant-schema procedure; protected-PR and deployment
 acceptance remain separate, with no production activation or personal-data
 approval
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
-This runbook covers PRG-010 and ADR 0083's preview-first Programme call and
-proposal import staging. It does not activate
+This runbook covers PRG-010/PRG-011 and ADR 0083/ADR 0084's preview-first
+Programme call/proposal import staging and Department-owner continuation. It does not activate
 `applications.import.programme_call_proposal@1` or
 `programme_operations@1`, mount an import surface, configure a production
 retention period, or authorize production personal data. Use synthetic data
@@ -30,6 +30,19 @@ authorization.0021
 applications.0007 + authorization.0022
   -> applications.0008_programme_import_integrity_guards
   -> applications.0009_programme_import_populated_downgrade_fence
+
+authorization.0022
+  -> authorization.0023_programme_department_ownership_recovery
+
+applications.0009
+  -> applications.0010_programme_department_ownership_persistence
+
+applications.0010 + authorization.0023
+  -> applications.0011_programme_department_ownership_integrity
+  -> applications.0012_programme_department_ownership_downgrade_fence
+
+applications.0012 + workforce.0017
+  -> workforce.0018_programme_department_ownership_contract
 ```
 
 Applications integrity deliberately does not depend on Workforce `0017`;
@@ -52,6 +65,15 @@ Department-reference catalog. Authorization `0022` declares the dormant
 delegable Department-scoped import and delegable Edition-scoped disposal
 capabilities and retains its separate populated grant/bundle downgrade fence.
 Disposal authority does not grant staged-content read authority.
+
+Applications `0010` adds source/destination Department evidence to call and
+import receipts; `0011` protects exact scope, batch versions, binding-owner
+chains, the shared edition mutex, and receipt-backed writes; `0012` fences
+post-cutover evidence. Authorization `0023` declares the unpinned,
+nondelegable, break-glass exact-Edition orphan-call recovery capability.
+Workforce `0018` recognizes all four new receipt references and brings its
+exact Department foreign-key catalog to 19. None widens the runtime role or a
+current profile.
 
 No migration creates an import batch, item, preview, source binding, call,
 proposal, answer, identity match, grant, role, profile selection, event, outbox
@@ -126,8 +148,8 @@ provider guard, and enabling one does not enable the other.
 2. Confirm the seven relations are empty and have their exact UUID, scope,
    foreign-key, state, version, payload, digest, evidence, constraint, and index
    definitions from ADR 0083.
-3. Confirm Applications `0008` installs the consolidated old-plus-new guard
-   catalog. Required protections include exact tenant/edition coherence, closed
+3. Confirm Applications `0011` installs the consolidated old-plus-new guard
+   catalog over the `0010` ownership fields. Required protections include exact tenant/edition coherence, closed
    state/action catalogs, one-step versions, contiguous preview and nested
    receipt sequences, immutable terminal nested-command counts, strict
    definition-order answer lineage, source-system/call/Department binding
@@ -146,22 +168,20 @@ provider guard, and enabling one does not enable the other.
    only on all seven relations and no insert, update, delete, truncate,
    sequence, ownership, trigger-control, or function-execute authority.
 7. Run Django deployment checks and the public readiness probe. Applications
-   must require integrity source `0008`, terminal fence `0009`, and the exact
-   33-relation all-schema catalog. Authorization must recognize the two dormant
-   capabilities, and Workforce must recognize the one batch owner-Department
-   foreign key.
+   must require integrity source `0011`, terminal fence `0012`, and the exact
+   generated all-schema catalog. Authorization must recognize the two import
+   capabilities plus the dormant recovery declaration, and Workforce must
+   recognize all 19 Department foreign keys.
 8. Verify the exact current-profile fingerprints remain their accepted values
    and no current profile pins the adapter, import/disposal capability, event,
    destination, handler, or writer.
 9. Resume ordinary services only after the complete release's normal checks
    pass. Do not enable import through a feature flag or temporary grant.
 
-The frozen readiness catalog generated from fresh PostgreSQL 17 contains 33
-relations, 442 columns/collations, 367 constraints, 263 indexes, 87 triggers,
-and 22 owner-only functions. Its constraint SHA-256 is
-`c20c6cd829ddc9045d6e07bfcfb39cda7e75a21a7070f4f0ad3b3b2e96aa3ecb`;
-its index SHA-256 is
-`501634da18934c04c6234533fac4f01987fb5ddcc3db3a14f76d5c837097425f`.
+Generate the current readiness relation, column/collation, constraint, index,
+trigger, and owner-only-function counts and digests from a fresh PostgreSQL 17
+schema at the exact release head. ADR 0083's earlier 33-relation counts and
+digests are historical evidence, not acceptance values for the `0012` schema.
 A public health response returns only the stable Applications dependency
 category and never a relation, function, source system, source key, email,
 payload, digest, rationale, or database definition.
@@ -212,9 +232,15 @@ answer must never extend an already completed import chain.
 
 The permanent source binding is equally exact. Its source system matches the
 parent batch source system; a call target belongs to the batch's owner
-Department; and a proposal target uses the exact call resolved from its
+Department when the binding is created; and a proposal target uses the exact call resolved from its
 same-source-system dependency, with the proposal submission and call sharing
 one definition. Never recover a mismatch by repointing the immutable binding.
+
+A later valid Draft-call reassignment leaves the binding and original batch
+owner unchanged. The current owner is valid only when the ordered immutable
+Programme-command receipt history forms one contiguous source-to-destination
+chain from the binding-time owner. Never repair a broken, missing, branched, or
+cross-scope chain with raw SQL or a fabricated receipt.
 
 The import receipt retains a private request digest only for replay/collision
 equality. Source, item, preview, dependency, result, and adopted-preview digests
@@ -238,10 +264,20 @@ Expiry is a derived check against the exact configured `expires_at`; it is not
 a database transition and does not clear data. It blocks preview and apply.
 Authorized `discard_programme_import` remains available after expiry,
 private-planning closure, or owner-Department retirement. In one transaction it
-changes the batch from staged version 1 to discarded version 2, records the
-actor/time/reason, moves every remaining staged item to discarded version 2,
-and nulls every remaining payload. Applied items and their created domain
-records remain untouched.
+changes the batch from its current positive staged version to the next
+discarded version, records the actor/time/reason, moves every remaining staged
+item to discarded version 2, and nulls every remaining payload. Applied items
+and their created domain records remain untouched.
+
+`reassign_programme_import_batch` is permitted only while private planning is
+open and the batch is unexpired, wholly staged, payload-intact, source-unbound,
+and unapplied. The actor needs exact current import authority at both source
+and destination Departments. The command locks the two Departments in UUID
+order, advances the batch owner and version, and records one reasoned source-
+to-destination receipt. It changes no item or payload. Existing organizer
+previews bind the prior batch version and are stale after reassignment. Any
+partial, applied, source-bound, expired, or closed-planning batch is disposal-
+only; expiry never performs that disposal.
 
 There is no automatic cleanup job in ADR 0083. Operators must monitor the
 bounded count and oldest age of undisposed expired batches without logging
@@ -257,17 +293,20 @@ Discarded, payload-cleared, receipt-only, preview-only, or otherwise minimized
 rows still count as populated evidence.
 
 1. Stop all writers and workers and take a new complete backup.
-2. Review `migrate --plan`. Reverse Applications `0009` before `0008`.
-   `0009` takes `ACCESS EXCLUSIVE` locks across all seven relations and repeats
-   the emptiness decision transactionally.
-3. Reverse `0008`; its reverse must remove the import functions/triggers and
-   restore the exact Applications `0005` consolidated guard catalog, including
-   owners and ACLs.
+2. Review `migrate --plan`. Reverse Workforce `0018`, then Applications `0012`
+   through `0010`, before the older import tail. `0012` refuses while any post-
+   cutover ownership transition evidence exists; its reverse restores the
+   prior generated guard catalog rather than deleting history.
+3. Reverse Applications `0009` before `0008`. `0009` takes `ACCESS EXCLUSIVE`
+   locks across all seven relations and repeats the emptiness decision
+   transactionally. Reverse `0008` only after that fence clears; it restores
+   the exact Applications `0005` catalog, including owners and ACLs.
 4. Reverse dependent Workforce `0017` before removing Applications `0007`.
    Its reverse restores the exact Workforce `0016` Department-reference
    function. Do not fake it as unapplied.
-5. Reverse Authorization `0022` only through its own empty grant/role fence.
-   It is not evidence that the Applications relations are empty.
+5. Reverse Authorization `0023` and `0022` only through their own empty
+   grant/role fences. They are not evidence that the Applications relations
+   are empty.
 6. Reverse Applications `0007` last. Its final schema operation takes
    `ACCESS EXCLUSIVE` locks over all seven relations and refuses if any row
    appeared after the earlier check.

@@ -5,7 +5,7 @@ Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
 profile-scoped unified-shell context, and dormant Programme and Applications
 reference seams; Programme Operations remains inactive
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 ## Purpose and requirements
 
@@ -194,6 +194,16 @@ claim consume the minimized private-planning reference; lead-self preview may
 remain available after planning closes, while separately authorized disposal
 deliberately does not require open planning writes. No lifecycle transition
 activates the adapter or creates an import route, worker, or delivery.
+
+ADR 0084 adds the dormant exact-Edition
+`applications.recover_programme_department_ownership` declaration and
+Applications/Workforce ownership-continuity commands. It does not alter either
+current profile manifest or fingerprint. Reassigning or retiring an
+Applications-owned call, reassigning or disposing an import batch, or probing
+a Department retirement dependency cannot select a profile, register a
+destination, activate an effect, create an Events row, or mount a handler. The
+recovery declaration is absent from current platform roots as well as profile
+manifests.
 
 Recovery and export are mandatory profile contracts rather than implied module
 adoption: version 1 must pin its continuity artifacts, regeneration, restore,
@@ -408,8 +418,9 @@ local policy, and Programme Operations setup are not implemented. Edition
 creation inherits only visible locale
 defaults; it does not create or publish registration or any operational
 configuration. Nine dormant Programme capability declarations, dormant
-Applications-owned Programme call/proposal and preview-first import
-declarations, and minimized Identity/Events/Authorization reference seams now
-exist, but the accepted ADR 0081 profile, setup route, destinations, current-
+Applications-owned Programme call/proposal, preview-first import, and
+Department-ownership-continuity declarations, and minimized
+Identity/Events/Authorization reference seams now exist, but the accepted ADR
+0081 profile, setup route, destinations, current-
 profile effects, accepted-item adapter implementation, and user surfaces remain
 unavailable until their runtime and security acceptance issues merge.

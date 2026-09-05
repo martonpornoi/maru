@@ -78,9 +78,10 @@ Personal and Work groups on My Maru and My Workforce rather than advertising
 unadopted or unrelated personal workflows.
 
 `programme_operations@1` is an accepted contract, not part of the current
-executable experience. Dormant Applications-owned Programme call/proposal and
-Programme-owned item/readiness foundations are installed for schema and
-contract validation, but current-profile policy and effect routes deny all use.
+executable experience. Dormant Applications-owned Programme call/proposal,
+preview-first import, and Department-ownership continuity plus Programme-owned
+item/readiness foundations are installed for schema and contract validation,
+but current-profile policy and effect routes deny all use.
 The setup route does not resolve, and no shell, search, setup choice, API,
 Staff Console, public page, or personal destination may advertise them. The
 immutable future manifest pins `audit`, `authorization`, `effects`, `events`,
@@ -92,6 +93,14 @@ either v1 manifest. Routes, destinations, production writers/effects,
 review/target paths, the adapter implementation, and the Scheduling namespace
 remain absent until successor runtime issues implement and validate the whole
 profile; no general `operations` namespace is implied.
+
+Department retirement may now consult a non-disclosing Applications dependency
+state through the existing Organization-structure command. That changes no
+navigation or information architecture: the organizer sees only the existing
+generic protected conflict or service-unavailable guidance, never a Programme
+call/import kind, count, name, or identifier. Call/batch reassignment and
+exact-ID orphan recovery have no current browser, API, search, or Staff Console
+surface.
 
 Recovery and export remain required, explicitly pinned continuity behaviors;
 they do not implicitly adopt a whole current or future namespace.

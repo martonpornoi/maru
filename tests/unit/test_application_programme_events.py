@@ -50,6 +50,37 @@ def test_programme_call_event_is_exact_content_free_and_registered() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("action", "lifecycle"),
+    [
+        ("call_reassigned", "draft"),
+        ("recovery_call_reassigned", "draft"),
+        ("recovery_call_retired", "retired"),
+    ],
+)
+def test_department_continuity_events_remain_content_free(
+    action: str,
+    lifecycle: str,
+) -> None:
+    """Declare ownership continuity without publishing either Department ID."""
+    call_id = uuid4()
+
+    payload = programme_call_changed_payload(
+        action=action,
+        call_id=call_id,
+        lifecycle=lifecycle,
+        resulting_version=5,
+    )
+
+    assert payload == {
+        "action": action,
+        "call_id": str(call_id),
+        "lifecycle": lifecycle,
+        "resulting_version": "5",
+    }
+    assert not {"source_department_id", "destination_department_id"} & set(payload)
+
+
 def test_proposal_event_derives_layer_and_rejects_semantic_drift() -> None:
     """Prevent producers from choosing a misleading state or information layer."""
     proposal_id = uuid4()

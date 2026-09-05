@@ -1,6 +1,7 @@
 # ADR 0083: Stage Programme imports behind an exact preview and claim boundary
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0084 for fixed batch versions and timeless
+  imported-call owner equality; all other decisions remain accepted.
 - Date: 2026-09-01
 - Extends: ADRs 0001, 0003, 0005, 0041, 0051, 0081, and 0082
 - Requirements: IDN-014, PRG-001, PRG-002, PRG-006, PRG-009, PRG-010,

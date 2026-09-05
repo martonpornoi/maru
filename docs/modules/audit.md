@@ -1,7 +1,7 @@
 # Audit module
 
 Status: Implemented V02 kernel with edition-spine mutation evidence
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 ## Purpose and requirements
 
@@ -118,6 +118,16 @@ failure releases no private projection and persists no reusable identity match.
 Disposal remains attributable at exact Edition scope without granting staged-
 content read authority.
 
+Programme Department ownership transitions use the same minimized envelopes.
+Call reassignment, active-call retirement, clean-batch reassignment, disposal,
+and exact-ID orphan recovery retain action, exact tenant/edition, actor,
+aggregate/version, correlation, and receipt references without copying either
+Department name, dependency kind/count, source key, email, proposal/import
+content, payload, or digest. A refused Workforce retirement records no
+Applications target identifier and no successful structure evidence. The
+public dependency seam itself is not an audit-backed listing oracle: it returns
+only `clear`, `blocked`, or `unavailable`, with a known block taking precedence.
+
 ## Tests
 
 Tests cover safe payload rejection, direct and bulk mutation/deletion,
@@ -128,6 +138,10 @@ pass-through, same-transaction marker/latch binding, fresh-correlation forgery,
 active upgrade, dormant reverse, and fail-closed catalog tampering. Organization structure read projection
 tests cover HTML/API source channels, exact minimized metadata, and audit-
 append failure before disclosure.
+Ownership-continuity tests cover exact source/destination attribution on
+successful receipts, generic denial/error metadata, atomic rollback on audit
+failure, replay without duplicate evidence, and the absence of call, batch,
+Department, source, and private-content facts from refusal surfaces.
 
 ## Limitations
 

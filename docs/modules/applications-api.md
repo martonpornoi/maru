@@ -1,7 +1,7 @@
 # Applications API contract
 
 Status: mounted versioned adapter contract
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 All routes are organization- and edition-explicit. They require an active Maru
 person session, reject query parameters and unknown JSON fields, and authorize
@@ -17,10 +17,12 @@ returns a conflict without applying a partial write.
 
 ## Dormant Programme boundary
 
-Issue #63 adds no route or API operation. Applications-owned Programme calls,
+The dormant Programme milestones add no route or API operation. Applications-owned Programme calls,
 proposal collaborators, shared answers, contributor profiles, exact sealed
 revisions, acknowledgements, reopening, submission, and withdrawal remain a
-dormant command/query kernel. They have no serializer, OpenAPI component,
+dormant command/query kernel. Preview-first import, Department ownership
+transitions, the retirement dependency seam, and exact-ID orphan recovery are
+also service-only. They have no serializer, OpenAPI component,
 schema operation, mounted browser view, template, navigation destination, or
 Django admin writer.
 
@@ -32,9 +34,13 @@ surface must expose the exact lead/collaborator/profile/seal authorization
 contract deliberately; it cannot inherit these mounted endpoints by changing
 only a discriminator.
 
-Preview-first import is the immediate successor. Structured review, decisions,
-the typed accepted Programme adapter, Programme items and host relationships,
-publication, scheduling, and staffing remain outside this API contract.
+Structured review and decisions are the immediate successors. The typed
+accepted Programme adapter, Programme items and host relationships,
+publication, scheduling, and staffing remain outside this API contract. The
+existing Organization-structure retirement API may return only its generic
+`409 structure_department_has_dependencies` or `503 service_unavailable`
+envelope; it does not expose whether a call, import batch, or another protected
+dependency caused the result.
 
 ```text
 GET      /api/v1/organizations/{organization_id}/editions/{edition_id}/applications/starters

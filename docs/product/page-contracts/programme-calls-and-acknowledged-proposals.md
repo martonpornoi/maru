@@ -4,10 +4,11 @@
   or Django admin writer
 - Route: none reserved by issue #63
 - Requirements: IDN-014, PRG-001, PRG-002, PRG-006, PRG-008, PRG-009,
+  PRG-011,
   AUD-001, AUD-003, AUD-005, PRI-001, UX-005 through UX-008, UX-019,
   UX-020, UX-027, UX-029, NFR-002, NFR-003, NFR-008 through NFR-010, and
   NFR-013
-- Decisions: ADRs 0041, 0051, 0081, and 0082
+- Decisions: ADRs 0041, 0051, 0081, 0082, and 0084
 
 ## Purpose and current boundary
 
@@ -35,6 +36,12 @@ exact adopted profile member.
 - **Call editor:** `applications.manage_programme_calls` through exact current
   Department authority within the edition, with no hierarchy inheritance; no
   proposal answer or contributor-profile authority follows.
+- **Source and destination call editors:** both exact current Departments must
+  authorize a normal Draft-call reassignment; neither hierarchy ancestry nor
+  edition-wide visibility substitutes for either decision.
+- **Recovery operator:** a future separately activated, nondelegable,
+  break-glass exact-Edition purpose may act on one caller-supplied orphan call
+  identifier only; it receives no list, search, proposal, or content read.
 - **Proposal lead:** accountable author of one proposal; owns selection,
   included roster, seal, reopen, submission, and withdrawal.
 - **Invited collaborator:** may inspect and respond to their own invitation;
@@ -64,6 +71,15 @@ content/consent policies, and retention policy. The interaction must:
   the only meaning;
 - provide equivalent keyboard and explicit-form reorder/edit operations; and
 - preview the complete immutable successor rather than editing an active call.
+
+Call ownership is a separate explicit action, not a configuration field. A
+Draft may be reassigned with exact source/destination authority, expected
+version, retry key, and reason. An Active call must retire before its owner
+Department; it cannot be reassigned. A valid imported-call reassignment keeps
+the permanent source binding unchanged and appends a contiguous owner-
+transition receipt. Proposal self/history access survives a later Department
+retirement, but organizer management, discovery, and new proposal starts
+require a current owner.
 
 Active and retired content is read-only. A stale expected definition or call
 version retains entered data locally, names no foreign object, and offers a
@@ -137,6 +153,9 @@ staffing, or publication.
   tenant, foreign-edition, unrelated, inactive-account, and unauthorized rows.
 - **Dependency or evidence failure:** commit no state, receipt, allow audit,
   event, or outbox artifact; show a retry-safe correlation reference only.
+- **Orphan recovery:** accept one exact opaque call ID only, disclose no other
+  call or Department facts, and collapse missing, foreign, non-orphan, and
+  lifecycle-incompatible targets into the same safe refusal.
 - **Overflow:** fail closed before partial roster, answer, snapshot, or
   acknowledgement projection.
 
@@ -164,7 +183,9 @@ event, and outbox record. The page never renders receipt internals, raw audit,
 answers/profile values in timeline metadata, or an idempotency key.
 
 This contract includes no mounted acceptance evidence yet. Preview-first import
-is the immediate successor. Structured review and decisions, the accepted
+and Programme Department ownership continuity are installed as dormant service
+contracts. Structured review and decisions, the accepted
 Programme adapter, Programme items, host/co-host relationships, reviewed public
 copy, readiness, Scheduling, Venues, staffing, timetable publication, and
-on-site use remain outside issue #63.
+on-site use remain outside this contract. No recovery route, job, UI, current-
+profile capability, or platform-root shortcut exists.

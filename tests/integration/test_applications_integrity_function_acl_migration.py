@@ -183,14 +183,7 @@ def test_programme_integrity_reverse_restores_legacy_and_reapplies_exactly() -> 
     )
 
     executor = MigrationExecutor(connection)
-    executor.migrate(
-        [
-            (
-                "applications",
-                "0009_programme_import_populated_downgrade_fence",
-            )
-        ]
-    )
+    executor.migrate([APPLICATIONS_INTEGRITY_CONTRACT.terminal_migration])
 
     after_functions = _function_acl_catalog(current_functions)
     after_triggers = _trigger_catalog(current_triggers)

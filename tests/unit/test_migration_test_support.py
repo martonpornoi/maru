@@ -1,15 +1,78 @@
 """Unit contracts for historical-migration test cleanup."""
 
+from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
 import pytest
+from django.db.migrations.loader import MigrationLoader
 
 from tests.support.migrations import (
     flush_then_restore_current_migration_graph,
     identity_migration_targets,
+    migrate_test_targets,
     registration_migration_targets,
+    rollback_migration_case,
     workforce_migration_targets,
 )
+
+
+@pytest.mark.parametrize("backwards", [False, True])
+def test_non_atomic_migration_never_runs_inside_case_rollback(backwards: bool) -> None:
+    executor = Mock()
+    executor.migration_plan.return_value = [(SimpleNamespace(atomic=False), backwards)]
+    with patch("tests.support.migrations.connection") as database:
+        database.in_atomic_block = True
+        with pytest.raises(RuntimeError, match="Non-atomic migrations"):
+            migrate_test_targets(executor, [("synthetic", "0001")])
+    executor.migrate.assert_not_called()
+
+
+@pytest.mark.parametrize("in_atomic_block", [False, True])
+def test_native_atomic_plan_is_preserved(in_atomic_block: bool) -> None:
+    executor = Mock()
+    plan = [(SimpleNamespace(atomic=True), False)]
+    executor.migration_plan.return_value = plan
+    targets = [("synthetic", "0001")]
+    with patch("tests.support.migrations.connection") as database:
+        database.in_atomic_block = in_atomic_block
+        migrate_test_targets(executor, targets)
+    executor.migrate.assert_called_once_with(targets, plan=plan)
+
+
+def test_non_atomic_baseline_setup_keeps_native_execution() -> None:
+    executor = Mock()
+    plan = [(SimpleNamespace(atomic=False), False)]
+    executor.migration_plan.return_value = plan
+    targets = [("synthetic", "0001")]
+    with patch("tests.support.migrations.connection") as database:
+        database.in_atomic_block = False
+        migrate_test_targets(executor, targets)
+    executor.migrate.assert_called_once_with(targets, plan=plan)
+
+
+@pytest.mark.parametrize(
+    ("vendor", "name", "rollback_ddl"),
+    [
+        ("sqlite", "test_synthetic", True),
+        ("postgresql", "maru", True),
+        ("postgresql", "test_synthetic", False),
+    ],
+)
+def test_historical_case_refuses_unsafe_database_boundaries(
+    vendor: str,
+    name: str,
+    rollback_ddl: bool,
+) -> None:
+    with patch("tests.support.migrations.connection") as database:
+        database.vendor = vendor
+        database.settings_dict = {"NAME": name}
+        database.features.can_rollback_ddl = rollback_ddl
+        database.get_autocommit.return_value = True
+        with (
+            pytest.raises(RuntimeError, match="idle PostgreSQL"),
+            rollback_migration_case(),
+        ):
+            pytest.fail("Unsafe historical baseline was accepted.")
 
 
 @pytest.mark.parametrize(
@@ -126,6 +189,14 @@ def test_identity_history_selects_compatible_cross_module_leaves(
             ),
             ("applications", "0006_programme_populated_downgrade_fence"),
         ),
+        (
+            ("workforce", "0017_programme_import_department_fk_contract"),
+            (
+                ("workforce", "0016_programme_call_department_fk_contract"),
+                ("workforce", "0017_programme_import_department_fk_contract"),
+            ),
+            ("applications", "0009_programme_import_populated_downgrade_fence"),
+        ),
     ],
 )
 def test_workforce_history_removes_later_programme_call_schema(
@@ -150,9 +221,10 @@ def test_workforce_history_removes_later_programme_call_schema(
 
 def test_current_workforce_and_non_workforce_targets_are_unchanged() -> None:
     executor = Mock()
-    current = ("workforce", "0017_programme_import_department_fk_contract")
+    current = ("workforce", "0018_programme_department_ownership_contract")
     executor.loader.graph.forwards_plan.return_value = (
         ("workforce", "0016_programme_call_department_fk_contract"),
+        ("workforce", "0017_programme_import_department_fk_contract"),
         current,
     )
 
@@ -163,6 +235,20 @@ def test_current_workforce_and_non_workforce_targets_are_unchanged() -> None:
     authorization = ("authorization", "0010_retired_department_authority_guards")
     assert workforce_migration_targets(executor, authorization) == (authorization,)
     executor.loader.graph.forwards_plan.assert_not_called()
+
+
+def test_registration_history_does_not_reintroduce_later_workforce_dependencies() -> (
+    None
+):
+    loader = MigrationLoader(None)
+    target = ("registration", "0035_configuration_source_binding_guards")
+    targets = registration_migration_targets(SimpleNamespace(loader=loader), target)
+    allowed_registration = set(loader.graph.forwards_plan(target))
+    for selected in targets:
+        assert all(
+            node[0] != "registration" or node in allowed_registration
+            for node in loader.graph.forwards_plan(selected)
+        )
 
 
 def test_historical_data_is_flushed_before_current_leaves_are_restored() -> None:
