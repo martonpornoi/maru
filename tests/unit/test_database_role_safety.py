@@ -1,3 +1,5 @@
+import re
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -26,6 +28,42 @@ _APPLICATION_DRAFT_CHILD_RELATIONS = {
     "public.applications_applicationsection",
     "public.applications_applicationquestion",
 }
+
+
+def test_provisioning_sql_covers_every_dormant_programme_read_only_relation() -> None:
+    """Catch inventory omissions cheaply; integration tests execute the SQL."""
+    artifact = (
+        Path(__file__).resolve().parents[2]
+        / "docs/operations/postgresql-runtime-role-provisioning.sql.example"
+    ).read_text(encoding="utf-8")
+    selected: set[str] = set()
+    revoked: dict[str, set[str]] = {"PUBLIC": set(), "maru_runtime": set()}
+    for operation, privileges, tables, roles in re.findall(
+        r"(GRANT|REVOKE)\s+([^;]*?)\s+ON TABLE\s+([^;]*?)\s+"
+        r"(?:TO|FROM)\s+([^;]*?);",
+        artifact,
+        flags=re.DOTALL,
+    ):
+        table_set = {table.strip() for table in tables.split(",")}
+        role_set = {role.strip() for role in roles.split(",")}
+        privilege_set = {privilege.strip() for privilege in privileges.split(",")}
+        if operation == "GRANT" and privilege_set == {"SELECT"}:
+            if "maru_runtime" in role_set:
+                selected.update(table_set)
+        elif operation == "REVOKE" and (
+            "ALL" in privilege_set
+            or {"INSERT", "UPDATE", "DELETE", "REFERENCES"} <= privilege_set
+        ):
+            for role in revoked.keys() & role_set:
+                revoked[role].update(table_set)
+    expected = {
+        relation
+        for relation in RUNTIME_DATABASE_SELECT_ONLY_RELATIONS
+        if relation.startswith(("public.applications_programme", "public.programme_"))
+    }
+    assert expected <= selected
+    assert expected <= revoked["PUBLIC"]
+    assert expected <= revoked["maru_runtime"]
 
 
 def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
@@ -62,6 +100,7 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.applications_programmereviewdecision",
         "public.applications_programmedecisionacknowledgement",
         "public.applications_programmereviewreceipt",
+        "public.applications_programmeacceptedtransition",
         "public.programme_programmeeditioncontrol",
         "public.programme_programmeitem",
         "public.programme_programmeitemsourcebinding",
@@ -228,7 +267,7 @@ def test_applications_programme_relations_are_completely_select_only() -> None:
         RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     )
 
-    assert len(programme_relations) == 28
+    assert len(programme_relations) == 29
     assert programme_relations <= select_only_relations
     assert not programme_relations & runtime_dml_relations
 
@@ -268,7 +307,7 @@ def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
         not (append_only_relations | retained_aggregate_relations)
         & _APPLICATION_DRAFT_CHILD_RELATIONS
     )
-    assert len(select_only_bounded_relations) == 28
+    assert len(select_only_bounded_relations) == 29
     assert not select_only_bounded_relations & (
         append_only_relations
         | retained_aggregate_relations

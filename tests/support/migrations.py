@@ -52,6 +52,7 @@ _APPLICATIONS_BEFORE_PROGRAMME_CALLS = (
     "0003_integrity_function_execute_boundary",
 )
 _APPLICATIONS_ZERO: tuple[str, None] = ("applications", None)
+_PROGRAMME_BEFORE_ACCEPTED_CONVERSION = ("programme", "0003_downgrade_fence")
 
 
 @contextmanager
@@ -108,7 +109,7 @@ def registration_migration_targets(
     executor: MigrationExecutor,
     target: tuple[str, str],
 ) -> tuple[tuple[str, str], ...]:
-    """Select compatible Workforce and Applications leaves for Registration history."""
+    """Select compatible Workforce, Applications and Programme historical leaves."""
 
     targets_by_app = {
         migration_key[0]: migration_key
@@ -121,6 +122,8 @@ def registration_migration_targets(
         targets_by_app["workforce"] = _WORKFORCE_BEFORE_DEPARTMENT_FK_SUCCESSOR
         if "applications" in targets_by_app:
             targets_by_app["applications"] = _APPLICATIONS_BEFORE_PROGRAMME_OWNERSHIP
+        if "programme" in targets_by_app:
+            targets_by_app["programme"] = _PROGRAMME_BEFORE_ACCEPTED_CONVERSION
     return tuple(sorted(targets_by_app.values()))
 
 
@@ -140,6 +143,8 @@ def identity_migration_targets(
     ):
         targets_by_app["applications"] = _APPLICATIONS_BEFORE_IDENTITY_PROGRAMME_GUARD
         targets_by_app["workforce"] = _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT
+        if "programme" in targets_by_app:
+            targets_by_app["programme"] = _PROGRAMME_BEFORE_ACCEPTED_CONVERSION
     return tuple(sorted(targets_by_app.values()))
 
 
@@ -166,6 +171,10 @@ def workforce_migration_targets(
     elif _WORKFORCE_CROSS_MODULE_DEPARTMENT_FK_CONTRACT in forward_plan:
         applications_target = _APPLICATIONS_BEFORE_PROGRAMME_CALLS
     compatible = [target for target in targets if target[0] != "applications"]
+    compatible = [
+        _PROGRAMME_BEFORE_ACCEPTED_CONVERSION if target[0] == "programme" else target
+        for target in compatible
+    ]
     compatible.append(applications_target)
     return tuple(sorted(compatible, key=lambda target: target[0]))
 

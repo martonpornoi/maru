@@ -1124,6 +1124,14 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
     ),
     Capability(
+        code="applications.convert_programme_acceptance",
+        description="Convert effective acceptance owned by one exact Department.",
+        maximum_scope=ScopeLevel.DEPARTMENT,
+        delegable=False,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
         code="applications.view_programme_decision_self",
         description=(
             "Read only decisions addressed to one's exact reviewed "

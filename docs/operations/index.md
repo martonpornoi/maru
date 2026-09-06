@@ -79,6 +79,7 @@ applications-programme-calls-and-proposals-migration-and-recovery
 applications-programme-department-ownership-recovery
 applications-programme-import-migration-and-recovery
 applications-programme-review-migration-and-recovery
+programme-conversion-migration-and-recovery
 effects-worker-runbook
 github-pages-publication
 public-repository-readiness

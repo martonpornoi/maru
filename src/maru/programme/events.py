@@ -21,6 +21,7 @@ PROGRAMME_ITEM_CHANGED_SCHEMA_VERSION: Final = 1
 PROGRAMME_EVENT_ACTIONS: Final = frozenset(
     {
         "create_core_item",
+        "accept_application_item",
         "revise_working",
         "revise_delivery",
         "append_discussion",
@@ -51,6 +52,7 @@ PROGRAMME_EVENT_FIELDS: Final = frozenset(
 _ACTION_LAYERS: Final = MappingProxyType(
     {
         "create_core_item": "item",
+        "accept_application_item": "item",
         "revise_working": "working",
         "revise_delivery": "delivery",
         "append_discussion": "discussion",

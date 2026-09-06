@@ -28,8 +28,8 @@ def test_0005_is_one_atomic_cross_domain_integrity_step() -> None:
     assert operation.sql == migration.FORWARD_SQL
     assert operation.reverse_sql == migration.REVERSE_SQL
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 134
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 27
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 139
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 29
 
 
 def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None:
@@ -77,6 +77,7 @@ def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None
         "applications_programmereviewdecision",
         "applications_programmedecisionacknowledgement",
         "applications_programmereviewreceipt",
+        "applications_programmeacceptedtransition",
     }
     assert set(relations.values()) == {("r", "p", False, False, False, "d")}
     assert applications_readiness._applications_relation_names() == tuple(
@@ -142,12 +143,12 @@ def test_schema_fingerprint_pins_complete_constraint_and_index_catalogs() -> Non
     """Keep code-owned PostgreSQL 17 object catalogs complete and immutable."""
     assert applications_readiness.APPLICATIONS_SCHEMA_CATALOG_SHA256 == {
         "constraint:": (
-            437,
-            "d6ad577b25b7ac87592a27fb40169adf32453c96d69010526449f0022dd1b2de",
+            455,
+            "c70983cffd80c85b5871ba6322c4494d2b9271401cfa6e073f9fdf18bfa30189",
         ),
         "index:": (
-            303,
-            "abeb82036b95c051d009bb05a4809e7e868078e0afa0b6f60a014b8e5638fb4d",
+            313,
+            "aab3b5d0d1ae0e79d1e583583032a1ebf1cff943870ad120303e9949d21977dc",
         ),
     }
     source = inspect.getsource(applications_readiness._schema_definition_rows)
@@ -300,7 +301,7 @@ def test_legacy_fence_remains_while_0012_is_the_terminal_node() -> None:
     )
     assert APPLICATIONS_INTEGRITY_CONTRACT.terminal_migration == (
         "applications",
-        "0015_programme_review_downgrade_fence",
+        "0018_programme_conversion_downgrade_fence",
     )
 
 

@@ -2,8 +2,9 @@
 
 Status: mounted generic application portfolio plus implemented dormant
 Programme-call, acknowledged-proposal, Programme-import, and Department-
-ownership-continuity kernels; production remains gated
-Last updated: 2026-09-02
+ownership-continuity, staged-review and accepted-conversion kernels;
+production remains gated
+Last updated: 2026-09-06
 
 ## Purpose and boundary
 
@@ -24,30 +25,27 @@ adapters remain outside this slice.
 ADRs 0081 and 0082 preserve this ownership for the accepted but not executable
 `programme_operations@1` profile. Applications owns the dormant Programme-call
 and collaborative-proposal kernel as facets of its existing definitions and
-submissions. It will also own later reviewer assignments and conflicts, review
-evidence, decisions, and the idempotent typed target receipt. A future
-Programme adapter may consume only one explicit accepted revision to create or
-reconcile a private Programme item. It must not copy the answer sheet into
+submissions. It also owns reviewer assignments and conflicts, review evidence,
+decisions, and the idempotent accepted-transition receipt under ADRs 0085 and
+0086. The dedicated [Programme conversion](programme-conversion.md) consumes
+one explicit, effectively accepted revision to create exactly one private item.
+It does not copy the answer sheet into
 Programme, make private review material public, grant a proposal collaborator
 host access, or create attendee Participation.
 
-The accepted dormant foundation now covers calls, acknowledged proposals,
-preview-first import, and Programme Department ownership continuity. It still
-stops before review, decision, target creation, or Programme ingestion.
-Structured review and decisions, then the accepted Programme adapter, follow
-as separate children. Host and co-host relationships begin only after that
-accepted transition and remain Programme-owned.
+The dormant foundation covers calls, acknowledged proposals, preview-first
+import, Department ownership continuity, staged review, accountable decisions,
+and explicit accepted conversion. Hosts and co-hosts remain a separate
+Programme-owned successor; collaborator inclusion or proposal acceptance
+never grants a host relationship.
 
-The dormant Programme foundation now reserves a structural
-`applications_accepted` source binding and declares
-`programme.accepted-application-source@1`. Neither is an adapter
-implementation: no current profile pins that descriptor and no Applications
-command invokes it. The `programme_item` target discriminator is reserved, but
-every generic review, decision, acceptance, target-record, query, discovery,
-and adapter seam denies or omits it. A future child must validate one exact
-immutable accepted proposal revision, preserve idempotency across both modules,
-and create only the typed Programme binding and receipt in one documented
-orchestration transaction.
+The dedicated adapter binds `applications_accepted` provenance through a real
+reciprocal foreign key and `programme.accepted-application-source@1`. Neither
+current profile pins it. The generic `programme_item` review, decision,
+acceptance, target-record, query, discovery and adapter seams still deny or
+omit Programme; only the dedicated conversion command understands this
+source contract. It atomically creates private working copy, seven required
+readiness concerns and both owners' receipts/audits/events/outboxes.
 
 ADR 0047's governed-writer rules apply: route scope is untrusted, commands use
 closed inputs and expected versions, API retries use canonical UUID keys, and

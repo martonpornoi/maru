@@ -43,6 +43,7 @@ from maru.applications.models import (
     ApplicationState,
     ApplicationSubmission,
     ApplicationTargetRecord,
+    ProgrammeAcceptedTransition,
     ProgrammeCommandReceipt,
     ProgrammeImportCommandReceipt,
     ProgrammeReviewReceipt,
@@ -194,6 +195,9 @@ def _replay(
             )
             .exists()
             or ProgrammeReviewReceipt.objects.select_for_update()
+            .filter(edition_id=edition_id, actor_id=actor.id, retry_key=retry_key)
+            .exists()
+            or ProgrammeAcceptedTransition.objects.select_for_update()
             .filter(edition_id=edition_id, actor_id=actor.id, retry_key=retry_key)
             .exists()
         ):

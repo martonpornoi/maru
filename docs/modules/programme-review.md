@@ -144,9 +144,11 @@ Unknown/foreign reviewer objects are denied without exposing their version.
 
 Fresh staff work requires open private planning and the same submitted seal.
 Reopening, withdrawal, newer seals, and Department retirement serialize with
-review through the existing edition lock chain. A future conversion command
-must independently revalidate exact source, effective review evidence, current
-owner/adoption authority, and its own adapter contract under that lock.
+review through the existing edition lock chain. The dedicated
+[accepted conversion](programme-conversion.md) independently revalidates the
+exact source, effective review evidence, current owner/adoption authority, and
+its own adapter contract under that lock. Conversion is explicit and preserves
+review history; the review decision command does not create a Programme item.
 
 Recipients are the exact included contributors from the reviewed seal, not
 the latest roster. Later removal, withdrawal, or owner retirement does not
@@ -162,6 +164,6 @@ gates remain; this child authorizes neither production data nor automated erasur
 
 See the [migration and recovery guide](../operations/applications-programme-review-migration-and-recovery.md)
 for guards, read-only runtime ACLs, exact readiness fingerprints, populated
-downgrade refusal, and consistent-point recovery. Programme conversion, hosts,
+downgrade refusal, and consistent-point recovery. Host relationships,
 Scheduling, staffing, timetable surfaces, and composite adoption remain
 separate successors under [#48](https://github.com/martonpornoi/maru/issues/48).

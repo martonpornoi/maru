@@ -229,7 +229,7 @@ GRANT SELECT ON TABLE
     public.applications_programmeimportcommandreceipt
     TO maru_runtime;
 
--- ADR 0085 review remains dormant. These seven new relations are SELECT-only;
+-- ADRs 0085/0086 review and conversion remain dormant and SELECT-only;
 -- this is not permission to activate a profile, route, writer, or event handler.
 REVOKE ALL ON TABLE
     public.applications_programmereviewpolicy,
@@ -238,7 +238,8 @@ REVOKE ALL ON TABLE
     public.applications_programmereviewentry,
     public.applications_programmereviewdecision,
     public.applications_programmedecisionacknowledgement,
-    public.applications_programmereviewreceipt
+    public.applications_programmereviewreceipt,
+    public.applications_programmeacceptedtransition
     FROM PUBLIC, maru_runtime;
 GRANT SELECT ON TABLE
     public.applications_programmereviewpolicy,
@@ -247,7 +248,8 @@ GRANT SELECT ON TABLE
     public.applications_programmereviewentry,
     public.applications_programmereviewdecision,
     public.applications_programmedecisionacknowledgement,
-    public.applications_programmereviewreceipt
+    public.applications_programmereviewreceipt,
+    public.applications_programmeacceptedtransition
     TO maru_runtime;
 
 -- Workforce adoption setup and Organization structure receipts are append-only

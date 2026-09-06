@@ -62,6 +62,12 @@ def test_empty_review_schema_reverses_and_installs_the_actual_final_guards():
             (name, contract.table) for name, contract in triggers.items()
         }
     # Prove execution, not only the presence of newly installed SQL text.
+    # Current services also enforce the later conversion retry namespace. Keep
+    # the historical SQL assertions above, then restore the compatible graph
+    # before exercising current Python commands and current readiness.
+    assert not applications_database_integrity_is_ready()
+    executor = MigrationExecutor(connection)
+    executor.migrate(executor.loader.graph.leaf_nodes())
     world = create_review_world()
     assert world.version == 1
     assert applications_database_integrity_is_ready()

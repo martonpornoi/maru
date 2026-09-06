@@ -31,6 +31,7 @@ def test_programme_catalogs_are_exact_and_closed() -> None:
         "break",
         "announcement",
         "organizer_core",
+        "accepted_proposal",
     )
     assert _values(ProgrammeProvenanceKind) == (
         "organizer_core",
@@ -56,6 +57,7 @@ def test_programme_catalogs_are_exact_and_closed() -> None:
     )
     assert _values(ProgrammeCommandOperation) == (
         "item_create",
+        "item_accept",
         "working_revise",
         "delivery_revise",
         "discussion_append",

@@ -14,6 +14,12 @@ from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
 
+from maru.applications.programme_authorization import (
+    DEFAULT_APPLICATIONS_PROGRAMME_AUTHORIZER as _SOURCE_POLICY,
+)
+from maru.applications.programme_conversion_sources import (
+    resolve_accepted_programme_source,
+)
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.effects.services import DomainEventRecord, publish_domain_event
@@ -40,6 +46,7 @@ from maru.programme.catalogs import (
     MAX_PROGRAMME_SOURCE_CHANNEL_LENGTH,
     MAX_PROGRAMME_SUMMARY_LENGTH,
     MAX_PROGRAMME_TITLE_LENGTH,
+    PROGRAMME_ACCEPTED_APPLICATION_SOURCE,
     PROGRAMME_EVIDENCE_SOURCE_ALLOWED_CONCERNS,
     PROGRAMME_EVIDENCE_SOURCE_DEFINITIONS,
     PROGRAMME_OPERATOR_ATTESTATION_SOURCE,
@@ -86,6 +93,10 @@ from maru.programme.writer_boundary import programme_writer
 if TYPE_CHECKING:
     from collections.abc import Callable
     from datetime import datetime
+
+    from maru.applications.programme_authorization import (
+        ApplicationsProgrammeAuthorizer,
+    )
 _DELIVERY_READINESS_CONCERNS: Final = frozenset(
     {
         ProgrammeReadinessConcern.TECHNICAL_NEEDS.value,
@@ -741,6 +752,12 @@ def create_organizer_core_item(
     -------
     ProgrammeCommandResult
         Immutable receipt and resulting aggregate identifiers.
+
+    Raises
+    ------
+    ValidationError
+        If an accepted-proposal kind is requested without its dedicated source
+        conversion boundary.
     """
     (
         organization_id,
@@ -771,6 +788,11 @@ def create_organizer_core_item(
         field="kind",
         enum_type=ProgrammeItemKind,
     )
+    if normalized_kind == ProgrammeItemKind.ACCEPTED_PROPOSAL:
+        raise ValidationError(
+            {"kind": "Accepted proposals require the governed Applications adapter."},
+            code="programme_accepted_source_required",
+        )
     normalized_title = normalized_text(
         internal_title,
         field="internal_title",
@@ -2318,6 +2340,242 @@ def approve_programme_public_rendition(
     )
 
 
+@_audit_command_errors(
+    capability_code=PROGRAMME_MANAGE_ITEMS,
+    operation=ProgrammeCommandOperation.ITEM_ACCEPT.value,
+)
+def create_accepted_programme_item(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_id: UUID,
+    transition_id: UUID,
+    internal_title: str,
+    working_summary: str,
+    reason: str,
+    correlation_id: UUID,
+    source_channel: str,
+    authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
+    applications_authorizer: ApplicationsProgrammeAuthorizer = _SOURCE_POLICY,
+) -> ProgrammeCommandResult:
+    """Create the exact accepted target with seven required readiness concerns.
+
+    Applications owns orchestration and must have inserted its source transition
+    inside the same transaction. Its public query independently validates that
+    source and acquires the canonical shared locks before Programme object locks.
+    Neither supplied private text nor successful conversion approves public copy.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Active verified actor with independent conversion and item authority.
+    organization_id : UUID
+        Exact common organization of source and target.
+    edition_id : UUID
+        Exact common edition with open private planning.
+    department_id : UUID
+        Exact current owner Department independently validated by Applications.
+    transition_id : UUID
+        Immutable Applications transition; also the nested Programme retry key.
+    internal_title : str
+        Deliberate private title, never an automatically copied proposal answer.
+    working_summary : str
+        Deliberate optional private summary; blank is permitted.
+    reason : str
+        Same bounded human conversion rationale retained by both owners.
+    correlation_id : UUID
+        Correlation shared by source and target success evidence.
+    source_channel : str
+        Closed-format caller channel shared by both owners.
+    authorizer : ProgrammeAuthorizer, default=DEFAULT_PROGRAMME_AUTHORIZER
+        Real Programme policy or its independently guarded isolated-test seam.
+    applications_authorizer : ApplicationsProgrammeAuthorizer, default=_SOURCE_POLICY
+        Real source policy or its independently guarded isolated-test seam.
+
+    Returns
+    -------
+    ProgrammeCommandResult
+        Exact item, receipt, and creation versions with no private values.
+
+    Raises
+    ------
+    ProgrammeLimitConflictError
+        If the edition already contains the maximum supported number of items.
+    """
+    organization_id, edition_id, transition_id, correlation_id, source_channel = (
+        _common_identifiers(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            idempotency_key=transition_id,
+            correlation_id=correlation_id,
+            source_channel=source_channel,
+        )
+    )
+    operation = ProgrammeCommandOperation.ITEM_ACCEPT
+    _preauthorize(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        capability_code=PROGRAMME_MANAGE_ITEMS,
+        operation=operation.value,
+        correlation_id=correlation_id,
+        source_channel=source_channel,
+        authorizer=authorizer,
+    )
+    title = normalized_text(
+        internal_title,
+        field="internal_title",
+        maximum=MAX_PROGRAMME_TITLE_LENGTH,
+        required=True,
+        collapse=True,
+    )
+    summary = normalized_text(
+        working_summary,
+        field="working_summary",
+        maximum=MAX_PROGRAMME_SUMMARY_LENGTH,
+    )
+    reason = normalized_reason(reason)
+    digest = canonical_digest(
+        {
+            "operation": operation.value,
+            "transition_id": transition_id,
+            "department_id": department_id,
+            "internal_title": title,
+            "working_summary": summary,
+            "reason": reason,
+            "source_channel": source_channel,
+        }
+    )
+    with transaction.atomic(), programme_writer():
+        source = resolve_accepted_programme_source(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            transition_id=transition_id,
+            authorizer=applications_authorizer,
+        )
+        scope = _postauthorize(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            capability_code=PROGRAMME_MANAGE_ITEMS,
+            authorizer=authorizer,
+        )
+        replay = _replay(
+            actor_id=scope.actor_id,
+            edition_id=scope.edition_id,
+            idempotency_key=transition_id,
+            request_digest=digest,
+        )
+        if replay is not None:
+            return replay
+        _ensure_editable(scope)
+        control = _locked_control(
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+            required=False,
+        )
+        _require_version(
+            actual=control.aggregate_version if control else 0,
+            expected=source.expected_programme_version,
+        )
+        if (
+            ProgrammeItem.objects.filter(
+                organization_id=scope.organization_id, edition_id=scope.edition_id
+            ).count()
+            >= MAX_PROGRAMME_ITEMS_PER_EDITION
+        ):
+            raise ProgrammeLimitConflictError
+        if control is None:
+            control = ProgrammeEditionControl.objects.create(
+                organization_id=scope.organization_id,
+                edition_id=scope.edition_id,
+                aggregate_version=source.resulting_programme_version,
+            )
+        else:
+            control.aggregate_version = source.resulting_programme_version
+            control.save(update_fields=("aggregate_version", "updated_at"))
+        item = ProgrammeItem.objects.create(
+            id=source.item_id,
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+            kind=ProgrammeItemKind.ACCEPTED_PROPOSAL.value,
+            provenance_kind=ProgrammeProvenanceKind.APPLICATIONS_ACCEPTED.value,
+            lifecycle=ProgrammeItemLifecycle.ACTIVE.value,
+            aggregate_version=1,
+            created_by_id=scope.actor_id,
+            last_modified_by_id=scope.actor_id,
+        )
+        ProgrammeItemSourceBinding.objects.create(
+            item=item,
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+            binding_code=PROGRAMME_ACCEPTED_APPLICATION_SOURCE,
+            source_object_id=source.transition_id,
+            source_version=1,
+        )
+        occurred_at = timezone.now()
+        ProgrammeWorkingRevision.objects.create(
+            item=item,
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+            sequence=1,
+            item_version=1,
+            internal_title=title,
+            working_summary=summary,
+            actor_id=scope.actor_id,
+            reason=reason,
+            occurred_at=occurred_at,
+        )
+        for concern in ProgrammeReadinessConcern:
+            requirement = ProgrammeReadinessRequirement.objects.create(
+                item=item,
+                organization_id=scope.organization_id,
+                edition_id=scope.edition_id,
+                concern=concern.value,
+                disposition=ProgrammeReadinessDisposition.REQUIRED.value,
+                requirement_version=1,
+                item_version=1,
+                dependency_version=1
+                if concern == ProgrammeReadinessConcern.PUBLIC_COPY
+                else 0,
+                last_modified_by_id=scope.actor_id,
+            )
+            ProgrammeReadinessRequirementRevision.objects.create(
+                requirement=requirement,
+                item=item,
+                organization_id=scope.organization_id,
+                edition_id=scope.edition_id,
+                sequence=1,
+                item_version=1,
+                disposition=ProgrammeReadinessDisposition.REQUIRED.value,
+                actor_id=scope.actor_id,
+                reason=reason,
+                occurred_at=occurred_at,
+            )
+        return _record_success(
+            scope=scope,
+            control=control,
+            item=item,
+            operation=operation,
+            event_action="accept_application_item",
+            capability_code=PROGRAMME_MANAGE_ITEMS,
+            reason=reason,
+            idempotency_key=transition_id,
+            request_digest=digest,
+            correlation_id=correlation_id,
+            source_channel=source_channel,
+            result_object_id=item.id,
+            expected_version=source.expected_programme_version,
+            resulting_item_version=1,
+            resulting_control_version=source.resulting_programme_version,
+            changed_fields=("item", "provenance", "working_information", "readiness"),
+            occurred_at=occurred_at,
+        )
+
+
 __all__ = [
     "ProgrammeCommandError",
     "ProgrammeCommandResult",
@@ -2329,6 +2587,7 @@ __all__ = [
     "append_programme_discussion",
     "approve_programme_public_rendition",
     "configure_programme_readiness",
+    "create_accepted_programme_item",
     "create_organizer_core_item",
     "record_programme_readiness_evidence",
     "revise_programme_delivery",

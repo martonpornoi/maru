@@ -327,6 +327,7 @@ class _ClosedProgrammeApplicationModel(UUIDTimeStampedModel):
                 "edition",
                 "organization",
                 "owner_department",
+                "programme_item",
             }
         )
         super().full_clean(
@@ -4236,5 +4237,63 @@ class ProgrammeReviewReceipt(_AppendOnlyProgrammeApplicationModel):
                     )
                 ),
                 name="app_prg_review_receipt_shape",
+            ),
+        ]
+
+
+class ProgrammeAcceptedTransition(_AppendOnlyProgrammeApplicationModel):
+    """Bind one exact accepted revision to its actual private Programme item.
+
+    The reciprocal item/source references are deferred until transaction end;
+    the owning commands and database guards reject a committed half-conversion.
+    This relation is also the immutable actor-owned conversion retry receipt.
+    """
+
+    organization = models.ForeignKey(
+        "organizations.Organization", on_delete=models.PROTECT
+    )
+    edition = models.ForeignKey("events.EventEdition", on_delete=models.PROTECT)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    revision = models.OneToOneField(ProgrammeProposalRevision, on_delete=models.PROTECT)
+    decision = models.OneToOneField(ProgrammeReviewDecision, on_delete=models.PROTECT)
+    programme_item = models.OneToOneField(
+        "programme.ProgrammeItem",
+        on_delete=models.PROTECT,
+        related_name="accepted_transition",
+    )
+    review_version = models.PositiveBigIntegerField()
+    expected_programme_version = models.PositiveBigIntegerField()
+    resulting_programme_version = models.PositiveBigIntegerField()
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(
+        max_length=64, validators=(PROGRAMME_DIGEST_VALIDATOR,)
+    )
+    reason = models.CharField(max_length=1_000)
+    audit_event = models.ForeignKey("audit.AuditEvent", on_delete=models.PROTECT)
+    domain_event = models.ForeignKey("effects.DomainEvent", on_delete=models.PROTECT)
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(
+        max_length=32, validators=(PROGRAMME_SOURCE_CHANNEL_VALIDATOR,)
+    )
+
+    class Meta:
+        """Fence exact source, target, retry identity, and positive evidence."""
+
+        ordering = ("edition_id", "created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"),
+                name="app_prg_conversion_retry_uq",
+            ),
+            models.CheckConstraint(
+                condition=Q(review_version__gte=1)
+                & Q(
+                    resulting_programme_version=(
+                        models.F("expected_programme_version") + 1
+                    )
+                )
+                & ~Q(reason="")
+                & ~Q(source_channel=""),
+                name="app_prg_conversion_shape",
             ),
         ]

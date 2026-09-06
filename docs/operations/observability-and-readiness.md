@@ -216,6 +216,13 @@ collaborator, answer, profile, invitation, seal, or acknowledgement value.
 
 ## Alert design
 
+The dormant [accepted conversion boundary](programme-conversion-migration-and-recovery.md)
+adds reciprocal Applications/Programme references, exact-source and paired
+success-evidence guards, and populated downgrade fences to these integrity
+checks. A partial upgrade, altered guard, extra execution grant, or mismatched
+schema fingerprint keeps readiness closed. These checks expose no accepted
+revision, item identity or working content, and activate no Programme workflow.
+
 An alert has owner, severity, edition impact, symptom, threshold, evaluation
 window, deduplication key, runbook, fallback, and clear condition.
 

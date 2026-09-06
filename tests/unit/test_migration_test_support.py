@@ -251,6 +251,27 @@ def test_registration_history_does_not_reintroduce_later_workforce_dependencies(
         )
 
 
+@pytest.mark.parametrize("app", ["identity", "workforce"])
+def test_conversion_does_not_reintroduce_rewound_owner_dependencies(app: str) -> None:
+    loader = MigrationLoader(None)
+    executor = SimpleNamespace(loader=loader)
+    if app == "identity":
+        target = (app, "0018_invitation_retention_v8")
+        targets = identity_migration_targets(executor, target)
+    else:
+        target = (app, "0016_programme_call_department_fk_contract")
+        targets = workforce_migration_targets(
+            executor, target, ("programme", "0006_accepted_item_downgrade_fence")
+        )
+    allowed = set(loader.graph.forwards_plan(target))
+    assert ("programme", "0003_downgrade_fence") in targets
+    for selected in targets:
+        assert all(
+            node[0] != app or node in allowed
+            for node in loader.graph.forwards_plan(selected)
+        )
+
+
 def test_historical_data_is_flushed_before_current_leaves_are_restored() -> None:
     events: list[str] = []
     executor = object()
