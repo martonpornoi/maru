@@ -17,6 +17,7 @@ from django.utils import timezone
 from maru.applications.models import (
     ApplicationCommandReceipt,
     ApplicationQuestion,
+    ProgrammeAcceptedTransition,
     ProgrammeCall,
     ProgrammeCommandReceipt,
     ProgrammeDecisionAcknowledgement,
@@ -198,6 +199,7 @@ def _replay(
             ApplicationCommandReceipt,
             ProgrammeCommandReceipt,
             ProgrammeImportCommandReceipt,
+            ProgrammeAcceptedTransition,
         )
     ):
         raise ApplicationsProgrammeIdempotencyConflictError

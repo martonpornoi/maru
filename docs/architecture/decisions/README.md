@@ -86,10 +86,11 @@ the system.
 | [0079](0079-repository-scoped-agent-workflow-support.md) | Accepted | Keep always-on repository policy separate from focused, repository-scoped contributor playbooks |
 | [0080](0080-progressive-workforce-only-adoption.md) | Accepted | Make Workforce-only an immutable edition profile with truthful Maru-operator accountability and no unadopted authority or side effects |
 | [0081](0081-composite-programme-operations-adoption.md) | Accepted | Make Programme Operations an exact-version composite profile with one Scheduling-owned Programme release and Workforce-owned staffing |
-| [0082](0082-applications-owned-programme-calls-and-acknowledged-proposal-revisions.md) | Partially superseded | Keep Programme calls and exact acknowledged collaborative proposal revisions in Applications; ADR 0085 adds dedicated dormant review and decisions without opening generic review, targeting, or surfaces |
+| [0082](0082-applications-owned-programme-calls-and-acknowledged-proposal-revisions.md) | Partially superseded | Keep Programme calls and exact acknowledged collaborative proposal revisions in Applications; ADRs 0085 and 0086 add dedicated dormant review, decisions and accepted conversion without opening generic review, targeting or surfaces |
 | [0083](0083-preview-first-programme-import-staging.md) | Partially superseded | Stage Programme imports behind minimized preview, exact-self claim, permanent source binding, and delegable disposal; ADR 0084 extends batch versions and imported-call ownership continuity |
 | [0084](0084-programme-department-ownership-continuity.md) | Accepted | Serialize Programme ownership with Department retirement, preserve imported ownership through receipt chains, and keep exact orphan recovery dormant |
 | [0085](0085-exact-revision-programme-review-and-decisions.md) | Accepted | Pin dedicated Programme review to exact submitted seals, immutable staged policies, independent actors, accountable decisions, and recipient-only acknowledgement without conversion or activation |
+| [0086](0086-source-bound-programme-accepted-item-conversion.md) | Accepted | Convert exact effective acceptance into a reciprocally source-bound private Programme item and unresolved readiness without hosting or activation |
 
 New ADRs use the next four-digit number and contain:
 

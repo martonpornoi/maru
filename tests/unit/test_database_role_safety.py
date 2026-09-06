@@ -62,6 +62,7 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.applications_programmereviewdecision",
         "public.applications_programmedecisionacknowledgement",
         "public.applications_programmereviewreceipt",
+        "public.applications_programmeacceptedtransition",
         "public.programme_programmeeditioncontrol",
         "public.programme_programmeitem",
         "public.programme_programmeitemsourcebinding",
@@ -228,7 +229,7 @@ def test_applications_programme_relations_are_completely_select_only() -> None:
         RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     )
 
-    assert len(programme_relations) == 28
+    assert len(programme_relations) == 29
     assert programme_relations <= select_only_relations
     assert not programme_relations & runtime_dml_relations
 
@@ -268,7 +269,7 @@ def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
         not (append_only_relations | retained_aggregate_relations)
         & _APPLICATION_DRAFT_CHILD_RELATIONS
     )
-    assert len(select_only_bounded_relations) == 28
+    assert len(select_only_bounded_relations) == 29
     assert not select_only_bounded_relations & (
         append_only_relations
         | retained_aggregate_relations

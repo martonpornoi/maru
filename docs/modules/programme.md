@@ -3,7 +3,7 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, worker, or production writer
 
-Last updated: 2026-09-05
+Last updated: 2026-09-06
 
 ## Purpose and ownership
 
@@ -15,7 +15,7 @@ private item/readiness foundation of PRG-005, PRG-006, PRG-008, PLN-004,
 EVT-006, EVT-007, AUD-001, AUD-003, AUD-005, PRI-001, NFR-002, NFR-003,
 PRG-011, NFR-008 through NFR-010, and NFR-013 without claiming that Programme
 Operations is active or usable. The boundary follows ADRs 0001, 0003, 0005,
-0041, 0051, 0081, 0084, and 0085.
+0041, 0051, 0081, 0084, 0085, and 0086.
 
 Programme does not own calls or proposal review, accepted Applications truth,
 service days, occurrences, rooms, timetable release, volunteer Shifts,
@@ -25,11 +25,12 @@ shared answer history, contributor-owned profile revisions, exact sealed
 proposal revisions, and included-collaborator acknowledgements. Its dedicated
 [staged review and decisions kernel](programme-review.md) now also owns immutable
 review policies, exact-seal evidence, independent decisions, and recipient-only
-messages and acknowledgements. It remains dormant. Applications will own the
-later accepted-transition receipt; review-side acceptance alone is not that
-transition. Programme owns no proposal collaborator and creates no host or co-host
-relationship until a later accepted transition imports one exact reviewed
-revision. Scheduling will later own occurrences and placements. Workforce will
+messages and acknowledgements. Its dedicated [accepted conversion](programme-conversion.md)
+now owns the immutable transition receipt and orchestrates exactly one private
+Programme item from a still-effective accepted revision. Review-side acceptance
+alone is not conversion. Programme owns no proposal collaborator, and this
+conversion creates no host or co-host; those relationships remain a separate
+successor. Scheduling will later own occurrences and placements. Workforce will
 later own staffing demand and Shift commitments.
 
 Applications also owns the dormant preview-first staging evidence for imported
@@ -86,7 +87,7 @@ contains an untyped foreign aggregate identity.
 | --- | --- |
 | `ProgrammeEditionControl` | Lazy edition-wide optimistic control; absence means version 0. |
 | `ProgrammeItem` | Stable UUID, closed kind and provenance, independent lifecycle, and optimistic item version. |
-| `ProgrammeItemSourceBinding` | One structural source receipt; organizer items have no foreign source and the reserved Applications form uses a typed UUID and version. |
+| `ProgrammeItemSourceBinding` | One immutable source binding; organizer items have no foreign source, while accepted items use a reciprocal foreign key to the exact Applications transition at version 1. |
 | `ProgrammeWorkingRevision` | Append-only private title and working summary. |
 | `ProgrammeDeliveryRevision` | Append-only technical, accessibility-delivery, and media-consent facts. It stores no diagnosis. |
 | `ProgrammeDepartmentDiscussionEntry` | Append-only decision-focused Department note and actor evidence. |
@@ -99,9 +100,9 @@ contains an untyped foreign aggregate identity.
 Organizer-created core kinds are `ceremony`, `break`, `announcement`, and
 `organizer_core`. A created item starts `active`; that word means only that the
 private aggregate is current. It does not mean accepted, ready, scheduled,
-published, staffed, or live. The reserved `applications_accepted` provenance
-cannot be used without exactly one typed source binding, and organizer-created
-items cannot fabricate one.
+published, staffed, or live. `accepted_proposal` is available only through the
+dedicated accepted adapter with `applications_accepted` provenance and one
+reciprocal source binding. Organizer-created items cannot fabricate one.
 
 ## Information layers and field ceilings
 
@@ -240,10 +241,10 @@ the exact organization, edition, actor, correlation, and time. The event is
 registered so the future writer contract is stable, but no current manifest
 pins an `(event, destination)` route and no built-in handler is installed.
 
-`programme.accepted-application-source@1` declares the future inbound adapter
-contract. A successful result will bind one exact immutable accepted
-Applications transition without copying answers or review content. The
-descriptor is not an implementation and no current profile pins it. The
+`programme.accepted-application-source@1` identifies the implemented dormant
+[accepted conversion](programme-conversion.md) boundary. A successful result
+binds one exact immutable Applications transition without copying answers or
+review content. No current profile pins it. The
 Applications-owned `programme_item` target kind, call activation, proposal
 seal, collaborator acknowledgement, proposal submission, or withdrawal cannot
 create a `ProgrammeItemSourceBinding` and is not accepted-item evidence.
@@ -272,7 +273,10 @@ exists, `0003` provides the early downgrade fence and the reverse paths of
 immediately before guard and table removal. A refusal preserves the schema,
 guards, and migration evidence. Recover by fixing forward or restoring
 Programme, Audit, Effects event/outbox, and migration history from one mutually
-consistent backup point. Recovery must not fabricate an Application, review,
+consistent backup point. The later accepted-source graph also includes
+Applications and Authorization; its unused reversal and populated fences follow
+the [conversion recovery runbook](../operations/programme-conversion-migration-and-recovery.md).
+Recovery must not fabricate an Application, review,
 host, readiness fact, rendition, occurrence, Shift, release, or other module
 record.
 
@@ -284,9 +288,9 @@ have separate dormant call/proposal, preview-first import, and owner-Department
 continuity kernels, but they create no Programme record or host relationship.
 That continuity prerequisite is implemented without activating its recovery
 capability, profile, route, or UI.
-Staged review and decisions and the accepted Applications adapter follow; only
-that later accepted Programme transition may create host and co-host
-relationships.
+Dedicated staged review, decisions and explicit accepted conversion are also
+implemented but dormant. Conversion creates private planning state only;
+Programme-owned host and co-host relationships remain a separate successor.
 Interactive timetable editing, Scheduling, Venue placement, staffing, release,
 public and personal timetables, on-site continuity, profile activation, and
 integrated browser rehearsal remain later children of the Programme Operations

@@ -15,6 +15,12 @@ from maru.applications.programme_adoption import (
 from maru.applications.programme_authorization import (
     APPLICATIONS_PROGRAMME_CAPABILITY_CODES,
 )
+from maru.applications.programme_conversion_authorization import (
+    CONVERT_PROGRAMME_ACCEPTANCE,
+)
+from maru.applications.programme_conversion_events import (
+    PROGRAMME_CONVERSION_COMPLETED_EVENT,
+)
 from maru.applications.programme_events import (
     APPLICATIONS_PROGRAMME_CALL_CHANGED_EVENT,
     APPLICATIONS_PROGRAMME_EVENT_SCHEMA_VERSION,
@@ -44,6 +50,7 @@ _PROGRAMME_APPLICATION_EVENTS = frozenset(
         APPLICATIONS_PROGRAMME_PROPOSAL_CHANGED_EVENT,
         APPLICATIONS_PROGRAMME_IMPORT_CHANGED_EVENT,
         PROGRAMME_REVIEW_CHANGED_EVENT,
+        PROGRAMME_CONVERSION_COMPLETED_EVENT,
     }
 )
 _PROGRAMME_APPLICATION_ADAPTERS = frozenset(
@@ -59,6 +66,7 @@ _ALL_PROGRAMME_APPLICATION_CAPABILITIES = (
     | {
         APPLICATIONS_IMPORT_PROGRAMME,
         APPLICATIONS_DISPOSE_PROGRAMME_IMPORT,
+        CONVERT_PROGRAMME_ACCEPTANCE,
     }
 )
 

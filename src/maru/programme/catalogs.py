@@ -24,12 +24,13 @@ MAX_PROGRAMME_READINESS_EVIDENCE: Final = 2_000
 
 
 class ProgrammeItemKind(StrEnum):
-    """Kinds supported by the organizer-core creation command."""
+    """Kinds whose structural provenance selects the permitted creator."""
 
     CEREMONY = "ceremony"
     BREAK = "break"
     ANNOUNCEMENT = "announcement"
     ORGANIZER_CORE = "organizer_core"
+    ACCEPTED_PROPOSAL = "accepted_proposal"
 
 
 class ProgrammeProvenanceKind(StrEnum):
@@ -99,6 +100,7 @@ class ProgrammeCommandOperation(StrEnum):
     """Successful mutations represented by immutable command receipts."""
 
     ITEM_CREATE = "item_create"
+    ITEM_ACCEPT = "item_accept"
     WORKING_REVISE = "working_revise"
     DELIVERY_REVISE = "delivery_revise"
     DISCUSSION_APPEND = "discussion_append"

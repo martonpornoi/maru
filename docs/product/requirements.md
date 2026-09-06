@@ -1145,6 +1145,22 @@ architecture documents, implementation issues, tests, and release notes.
   history. Host and co-host access uses explicit item relationships and creates
   no Participation, Registration, payment, membership, or volunteer
   relationship.
+  Conversion is a separate reasoned command with exact current owner-Department
+  conversion authority and Programme item authority. Under the shared edition
+  lock it must revalidate the exact submitted, acknowledged seal, the effective
+  accepted decision and review evidence, open planning, expected review and
+  Programme-control versions, and both independently pinned adapter contracts.
+  Applications retains one immutable transition per exact revision; Programme
+  retains its reciprocal typed source binding. The item, initial working copy,
+  seven required readiness concerns, receipts, audit, events, and outbox commit
+  together or not at all. No concern starts satisfied, and no private answers,
+  review material, contributor profiles, or consent are copied automatically.
+  Exact same-intent replay returns only retained identifiers after current
+  identity and adoption proof; another key cannot convert the same revision
+  again. Later source withdrawal or review invalidation preserves the historical
+  transition without deleting or silently rewriting the independent Programme
+  item. It grants no host access, public approval, schedule, or release; those
+  successors must separately establish their current evidence.
 - **PRG-009 — Exact proposal authorship and acknowledgement:** Programme calls
   and proposals remain Applications-owned facets of one versioned definition
   and submission. Accepted, active-person collaborators may edit shared

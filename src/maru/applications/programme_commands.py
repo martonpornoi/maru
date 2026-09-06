@@ -35,6 +35,7 @@ from maru.applications.models import (
     ApplicationState,
     ApplicationSubmission,
     ApplicationTargetKind,
+    ProgrammeAcceptedTransition,
     ProgrammeCall,
     ProgrammeCallContributorField,
     ProgrammeCallFormat,
@@ -582,6 +583,9 @@ def _replay(
         )
         .exists()
         or ProgrammeReviewReceipt.objects.select_for_update()
+        .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
+        .exists()
+        or ProgrammeAcceptedTransition.objects.select_for_update()
         .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
         .exists()
     ):

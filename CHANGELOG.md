@@ -15,6 +15,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a dormant accepted-proposal conversion boundary. An explicit, still-
+  effective Programme acceptance can produce one source-bound private item
+  with seven initially required readiness concerns and atomic evidence across
+  Applications and Programme. Exact permissions, adapter pins, retries,
+  PostgreSQL guards and populated recovery fences remain mandatory. No current
+  profile, UI, API, host relationship or timetable is activated
+  ([#77](https://github.com/martonpornoi/maru/issues/77), ADR 0086, PRG-008).
 - Added a dormant Applications-owned Programme review and decisions kernel.
   Exact submitted revisions use explicit staged policies, independent scoring,
   conflict and recusal evidence, moderation, reasoned decisions, and private

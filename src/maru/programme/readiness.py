@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from importlib import import_module
 from typing import TYPE_CHECKING, Final
 
 from django.apps import apps
-from django.db import DatabaseError, connection
+from django.db import DatabaseError, connection, migrations
 from django.db.models.fields import NOT_PROVIDED
 
 from maru.core.database_integrity_readiness import (
     DatabaseIntegrityContract,
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    parse_database_integrity_sql_contracts,
 )
 
 from .catalogs import (
@@ -29,14 +32,62 @@ if TYPE_CHECKING:
     from django.db.backends.utils import CursorWrapper
     from django.db.models import Model
 
-PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
-    build_database_integrity_contract(
-        status_key="programme_integrity",
-        app_label="programme",
-        source_migration=("programme", "0002_integrity_guards"),
-        terminal_migration=("programme", "0003_downgrade_fence"),
-        source_migration_module="maru.programme.migrations.0002_integrity_guards",
+_BASE_INTEGRITY_CONTRACT = build_database_integrity_contract(
+    status_key="programme_integrity",
+    app_label="programme",
+    source_migration=("programme", "0002_integrity_guards"),
+    terminal_migration=("programme", "0003_downgrade_fence"),
+    source_migration_module="maru.programme.migrations.0002_integrity_guards",
+)
+
+_ACCEPTED_MIGRATION = import_module(
+    "maru.programme.migrations.0005_accepted_item_integrity"
+)
+_ACCEPTED_FENCE = import_module(
+    "maru.programme.migrations.0006_accepted_item_downgrade_fence"
+)
+_ACCEPTED_FENCE_SOURCE_SHA256: Final = (
+    "980d2951c6a09c7e8ab7a6ebf926701782556eae0f68d874867b2c2022cec299"
+)
+
+
+def _accepted_migration_contract_is_current() -> bool:
+    operations = tuple(_ACCEPTED_MIGRATION.Migration.operations)
+    fences = tuple(_ACCEPTED_FENCE.Migration.operations)
+    reverse = _ACCEPTED_FENCE.refuse_populated_accepted_item_downgrade
+    source = inspect.getsource(reverse).replace("\r\n", "\n")
+    return (
+        len(operations) == len(fences) == 1
+        and isinstance(operations[0], migrations.RunSQL)
+        and operations[0].sql == _ACCEPTED_MIGRATION.FORWARD_SQL
+        and operations[0].reverse_sql == _ACCEPTED_MIGRATION.REVERSE_SQL
+        and tuple(_ACCEPTED_MIGRATION.Migration.dependencies)
+        == (("programme", "0004_accepted_item_source"),)
+        and isinstance(fences[0], migrations.RunPython)
+        and fences[0].code is migrations.RunPython.noop
+        and fences[0].reverse_code is reverse
+        and tuple(_ACCEPTED_FENCE.Migration.dependencies)
+        == (
+            ("programme", "0005_accepted_item_integrity"),
+            ("applications", "0018_programme_conversion_downgrade_fence"),
+        )
+        and hashlib.sha256(source.encode()).hexdigest() == _ACCEPTED_FENCE_SOURCE_SHA256
     )
+
+
+_ACCEPTED_TRIGGERS, _ACCEPTED_FUNCTIONS = parse_database_integrity_sql_contracts(
+    _ACCEPTED_MIGRATION.FORWARD_SQL
+)
+PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
+    _BASE_INTEGRITY_CONTRACT,
+    source_migration=("programme", "0005_accepted_item_integrity"),
+    source_migration_module="maru.programme.migrations.0005_accepted_item_integrity",
+    terminal_migration=("programme", "0006_accepted_item_downgrade_fence"),
+    functions={**_BASE_INTEGRITY_CONTRACT.functions, **_ACCEPTED_FUNCTIONS},
+    source_contract_current=(
+        _BASE_INTEGRITY_CONTRACT.source_contract_current
+        and _accepted_migration_contract_is_current()
+    ),
 )
 
 
@@ -152,9 +203,23 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # digest from pg_get_constraintdef(..., TRUE) or pg_get_indexdef(...).
 # An incomplete mapping deliberately keeps Programme readiness blocked.
 PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
+    (
+        "constraint:programme_programmeitemsourcebinding:"
+        "programme_programmei_source_object_id_919ad627_fk_applicati"
+    ): (
+        "1d99d998543b658a76114c747712ad9947af6cb05134fa10ca882284c9b1c4c7",
+        "33791eeb3cf79961f4634c48201a4bb4abb6a4f28199bdedb0b9e8cdfc163c9b",
+    ),
+    (
+        "index:programme_programmeitemsourcebinding:"
+        "programme_programmeitemsourcebinding_source_object_id_919ad627"
+    ): (
+        "c118375dbfd58692d1c7d38c1152ef682aae2bbdc25b4cb661e03cf482140221",
+        "8d05c175d02edfaac63a18c03866f6a8503ad1620d9ed305dc603400266d4df0",
+    ),
     "constraint:programme_programmecommandreceipt:programme_command_control_shape": (
         "69d64ca9ff30b925a62e5ceda594c1aba7aebf94d273e697efce3721c42b6513",
-        "56e21ed63b76c17417bc159e81e09104f41840447b0502aaea23f550c82a7ad9",
+        "9c040a483e76b5d0f519a40bbb578048cb8928370309d17f5ba000deff553235",
     ),
     "constraint:programme_programmecommandreceipt:programme_command_evidence_valid": (
         "69d64ca9ff30b925a62e5ceda594c1aba7aebf94d273e697efce3721c42b6513",
@@ -162,7 +227,7 @@ PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
     ),
     "constraint:programme_programmecommandreceipt:programme_command_operation_closed": (
         "69d64ca9ff30b925a62e5ceda594c1aba7aebf94d273e697efce3721c42b6513",
-        "d5c298fc780cd1fc8b6e8117f92bc7db1daf14b0db08dfa64a123fd2d39c816b",
+        "1b2c55dfc3bc52251a15b4529e4521dfec5ced2ef1d93399991b027d2c4e58e1",
     ),
     "constraint:programme_programmecommandreceipt:programme_command_retry_uq": (
         "6358fdf321257554281d71cf9659bff2557f29bff35c778c4126a1ec8b077945",
@@ -456,7 +521,7 @@ PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
     ),
     "constraint:programme_programmeitem:programme_item_kind_closed": (
         "f6ff47b87e06c3dd5ff0b267ccc8a85dd03a866af86155869acc95e8e0f29f0c",
-        "6fc6db1a5eb0d470651e11af02d0419005e0e1b77d33416f6358e8cc7f44760b",
+        "476823dda5bd4612e4bf0e1c0cad121e0c57e4b44b7e6df1ec37a8d3f8637c55",
     ),
     "constraint:programme_programmeitem:programme_item_lifecycle_closed": (
         "f6ff47b87e06c3dd5ff0b267ccc8a85dd03a866af86155869acc95e8e0f29f0c",

@@ -55,6 +55,7 @@ _OWNER_MANAGED_RELATION_FIELDS = frozenset(
         "last_modified_by",
         "organization",
         "reviewed_by",
+        "source_object",
     }
 )
 
@@ -316,7 +317,14 @@ class ProgrammeItemSourceBinding(_AppendOnlyProgrammeModel):
         max_length=MAX_PROGRAMME_SOURCE_CODE_LENGTH,
         choices=tuple((code, code) for code in PROGRAMME_ITEM_SOURCE_DEFINITIONS),
     )
-    source_object_id = models.UUIDField(null=True, blank=True)
+    source_object = models.ForeignKey(
+        "applications.ProgrammeAcceptedTransition",
+        db_column="source_object_id",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="programme_source_bindings",
+    )
     source_version = models.PositiveBigIntegerField(null=True, blank=True)
 
     class Meta:
@@ -325,7 +333,7 @@ class ProgrammeItemSourceBinding(_AppendOnlyProgrammeModel):
         ordering = ("edition_id", "item_id")
         constraints = [
             models.UniqueConstraint(
-                fields=("binding_code", "source_object_id"),
+                fields=("binding_code", "source_object"),
                 condition=models.Q(source_object_id__isnull=False),
                 name="programme_item_source_object_uq",
             ),
@@ -1150,11 +1158,19 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeModel):
             models.CheckConstraint(
                 condition=(
                     models.Q(
-                        operation=ProgrammeCommandOperation.ITEM_CREATE.value,
+                        operation__in=(
+                            ProgrammeCommandOperation.ITEM_CREATE.value,
+                            ProgrammeCommandOperation.ITEM_ACCEPT.value,
+                        ),
                         resulting_control_version__gt=0,
                     )
                     | (
-                        ~models.Q(operation=ProgrammeCommandOperation.ITEM_CREATE.value)
+                        ~models.Q(
+                            operation__in=(
+                                ProgrammeCommandOperation.ITEM_CREATE.value,
+                                ProgrammeCommandOperation.ITEM_ACCEPT.value,
+                            )
+                        )
                         & models.Q(resulting_control_version__isnull=True)
                     )
                 ),
@@ -1188,7 +1204,10 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeModel):
                 "Programme receipt item is outside its exact edition scope.",
                 code="programme_receipt_item_scope_mismatch",
             )
-        if self.operation == ProgrammeCommandOperation.ITEM_CREATE.value:
+        if self.operation in (
+            ProgrammeCommandOperation.ITEM_CREATE.value,
+            ProgrammeCommandOperation.ITEM_ACCEPT.value,
+        ):
             if (
                 self.resulting_control_version is None
                 or self.resulting_control_version != self.expected_version + 1

@@ -35,6 +35,8 @@ For present implementation status, use the
 | [0082](0082-applications-owned-programme-calls-and-acknowledged-proposal-revisions.md) | Accepted | Keep Programme calls and one-version acknowledged collaborative proposal revisions in Applications without activating review, targeting, or Programme. |
 | [0083](0083-preview-first-programme-import-staging.md) | Accepted | Stage deterministic Programme call/proposal imports behind minimized preview, exact-self claim, coherent permanent source binding, a sealed nested-command chain, and delegable continuity disposal. |
 | [0084](0084-programme-department-ownership-continuity.md) | Accepted | Serialize Programme ownership with Department retirement, retain explicit transition chains, and keep exact orphan recovery dormant. |
+| [0085](0085-exact-revision-programme-review-and-decisions.md) | Accepted | Review exact acknowledged proposal seals and retain independent decisions without conversion or activation. |
+| [0086](0086-source-bound-programme-accepted-item-conversion.md) | Accepted | Convert exact effective acceptance through reciprocal owner receipts and initially unresolved readiness. |
 
 ADR 0073 partially supersedes the example-data and source-derived-template
 parts of [ADR 0042](0042-synthetic-only-educational-fixtures.md) and

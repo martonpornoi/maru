@@ -278,17 +278,17 @@ def test_import_database_contract_is_complete_and_owner_only() -> None:
     """Readiness retains old guards and every new review guard and helper."""
 
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 134
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 27
-    assert len(APPLICATIONS_RELATION_SEMANTICS) == 40
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 139
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 29
+    assert len(APPLICATIONS_RELATION_SEMANTICS) == 41
     assert APPLICATIONS_SCHEMA_CATALOG_SHA256 == {
         "constraint:": (
-            437,
-            "d6ad577b25b7ac87592a27fb40169adf32453c96d69010526449f0022dd1b2de",
+            455,
+            "c70983cffd80c85b5871ba6322c4494d2b9271401cfa6e073f9fdf18bfa30189",
         ),
         "index:": (
-            303,
-            "abeb82036b95c051d009bb05a4809e7e868078e0afa0b6f60a014b8e5638fb4d",
+            313,
+            "aab3b5d0d1ae0e79d1e583583032a1ebf1cff943870ad120303e9949d21977dc",
         ),
     }
     assert all(

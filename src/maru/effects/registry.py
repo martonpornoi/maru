@@ -346,6 +346,14 @@ def _validate_application_programme_import_changed(
     validate_programme_import_changed_payload(payload)
 
 
+def _validate_application_programme_conversion(payload: dict[str, object]) -> None:
+    from maru.applications.programme_conversion_events import (  # noqa: PLC0415
+        validate_programme_conversion_event,
+    )
+
+    validate_programme_conversion_event(payload)
+
+
 def _validate_application_programme_review_changed(payload: dict[str, object]) -> None:
     from maru.applications.programme_review_events import (  # noqa: PLC0415
         validate_programme_review_event,
@@ -1082,6 +1090,12 @@ EVENT_DEFINITIONS = (
         schema_version=1,
         description="A dormant exact-revision Programme review changed.",
         validator=_validate_application_programme_review_changed,
+    ),
+    EventDefinition(
+        name="applications.programme_conversion.completed.v1",
+        schema_version=1,
+        description="An exact accepted proposal acquired its private Programme item.",
+        validator=_validate_application_programme_conversion,
     ),
     EventDefinition(
         name="programme.item.changed.v1",

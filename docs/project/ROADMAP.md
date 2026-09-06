@@ -760,9 +760,12 @@ dormant preview-first call/proposal staging, non-disclosing preview, protected
 apply, exact-self claim, permanent source binding, and continuity disposal
 without mounting an import surface. Issue #64 implements Department-retirement
 coordination and governed ownership recovery. Issue #71 implements dormant
-staged review and accountable decisions. The accepted Applications adapter is
-next, then Programme-owned host relationships, Scheduling, staffing, release,
-continuity, setup, and integrated acceptance in dependency order.
+staged review and accountable decisions. Issue #77 adds the dedicated accepted
+Applications adapter: one exact effective acceptance produces one private
+source-bound item with seven initially required readiness concerns, without
+activating a profile or creating hosts. Next are Programme-owned host
+relationships, Scheduling, staffing, release, continuity, setup, and integrated
+acceptance in dependency order. Each child is separately verified and delivered.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme
