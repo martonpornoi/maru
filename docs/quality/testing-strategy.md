@@ -58,6 +58,22 @@ both success and failure, discarded callbacks, deferred-constraint enforcement,
 and rejection of nested baselines. Unit tests reject unsafe database boundaries
 and non-atomic plans in either direction.
 
+The Registration profile-extension-value pilot applies the same opt-in boundary
+to twelve serial ACL-retirement, backfill, and invalid-history cases. Its
+module fixture creates synthetic Account, EventEdition, and Participation
+parents while the schema is current, commits those parents before downgrading,
+and gives each case their identifiers, not cached historical model classes.
+Case-local records use the executor's actual historical models. Before real DDL,
+Django's constraint checker validates deferred database constraints, matching
+the original committed-input boundary without committing the case or disabling
+checks. A regression rejects invalid deferred input at this boundary. Both schema
+round trips and the populated durable-receipt downgrade fence stay in the
+ordinary committed migration file. Real forward/backfill isolation regressions
+exercise successful and failed case exits, and final teardown inspects all
+current managed tables/columns and migration leaves without repair migrations.
+See the [pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md)
+for comparable measurements and the limits of the speed claim.
+
 When later migrations fence a full reverse plan before it reaches an older
 guard, retain full-graph coverage elsewhere and exercise that older migration's
 actual wired reverse operation separately. Scope-v2's retained-authority fence

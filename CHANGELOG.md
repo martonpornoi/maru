@@ -84,6 +84,14 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Reuse compatible committed setup for twelve serial Registration migration
+  tests while retaining both committed schema round trips, populated recovery
+  fencing, and all original assertions. New real-migration isolation checks
+  guard against schema/data leakage; application behavior and CI acceptance
+  policy remain unchanged. A comparable local group benchmark, including three
+  added regressions, fell from 44m03s to 14m07s; this is not a whole-suite timing
+  claim
+  ([#75](https://github.com/martonpornoi/maru/issues/75)).
 - Made the current project handoff concise and reconciled completed Programme
   work with the roadmap. Synthetic OCI rehearsal cleanup now removes anonymous
   volumes with their verified containers while preserving named-volume and

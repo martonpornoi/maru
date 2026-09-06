@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-05
+Last updated: 2026-09-06
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -38,10 +38,11 @@ Detailed implementation and recovery evidence is in the
 [Applications contract](../modules/applications.md), and
 [review recovery runbook](../operations/applications-programme-review-migration-and-recovery.md).
 
-## Maintenance scope
+## Maintenance and active test-performance pilot
 
-Issue [#73](https://github.com/martonpornoi/maru/issues/73) reconciles this handoff
-and the roadmap, and corrects both synthetic OCI rehearsal cleanup paths to
+Issue [#73](https://github.com/martonpornoi/maru/issues/73) was delivered through
+PR #74 as protected squash `08ae02ef12e21e2bf91990c9527ebd840d624c54`.
+It reconciles this handoff and the roadmap, and corrects both rehearsal paths to
 remove anonymous volumes associated with exact label-verified containers.
 Named-volume cleanup, complete namespace checks, and stopped retention remain
 separate and explicit. See the
@@ -52,6 +53,18 @@ Pre-existing Docker cleanup requires a separately approved exact inventory;
 unrelated projects, persistent Maru data, and uncertain orphaned volumes must
 not be pruned. Follow [local Docker housekeeping](../development/docker-housekeeping.md).
 This maintenance does not implement a Programme child or optimize migrations.
+
+Issue [#75](https://github.com/martonpornoi/maru/issues/75) is the separately
+authorized Registration migration-test pilot. Twelve serial historical cases
+reuse committed compatible setup; both schema round trips and the populated
+recovery fence retain ordinary committed execution. Every original assertion
+remains, with additional real-migration leakage and deferred-input checks.
+The comparable fresh-database group passed in 14m07s for 18 tests versus 44m03s
+for the original 15, about 68 percent less elapsed time. The focused 19-test
+PostgreSQL isolation run and independent current-schema/guard inspections also
+passed. This is a group result, not a whole-suite or protected-delivery claim.
+See the
+[pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
 
 ## What can be evaluated today
 
@@ -74,17 +87,18 @@ This maintenance does not implement a Programme child or optimize migrations.
 
 ## Smallest sensible next actions
 
-1. Check #73's linked PR for its protected result. If it is already merged,
-   do not repeat the maintenance delivery. This task stops at protected merge;
-   checked-in candidate documentation does not predict that later event.
+1. Complete #75's exact local certification and protected hosted acceptance;
+   its whole-group benchmark and isolation evidence have passed. Check its
+   linked PR first and do not repeat delivery if it is already merged. This
+   bounded task stops at that merge; later results belong in the linked PR.
 2. If separately authorized, approve and remove only identified disposable
    Docker resources. Resource cleanup and test-performance work are different
    outcomes.
-3. Before further Programme work, evaluate the bounded Registration historical
-   migration-test pilot. Reuse a committed baseline only for eligible serial
-   cases; preserve committed round trips, downgrade fences, concurrency, and
-   isolation. Measure whole-group setup, execution, and teardown. Do not weaken
-   case selection, coverage, timeouts, or protected acceptance. See
+3. Keep any further migration-test optimization separately bounded. Reuse
+   committed setup only for eligible serial cases; preserve committed round
+   trips, downgrade fences, concurrency, and isolation. Measure whole-group
+   setup, execution, and teardown without weakening case selection, coverage,
+   timeouts, or protected acceptance. See
    [testing strategy](../quality/testing-strategy.md) and the
    [existing isolation checkpoint](../checkpoints/2026-09-05-historical-migration-test-isolation.md).
 4. Resume umbrella [#48](https://github.com/martonpornoi/maru/issues/48) only when
