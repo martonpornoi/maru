@@ -74,36 +74,46 @@ No more optimization or Docker cleanup is in the current task. See the
 
 ## Current bounded Programme outcome
 
-The user resumed Programme work with
-[#77](https://github.com/martonpornoi/maru/issues/77), a native child of #48.
-[ADR 0086](../architecture/decisions/0086-source-bound-programme-accepted-item-conversion.md)
-contracts the exact accepted-item adapter: independent conversion/item
-authority, current source proof under canonical locks, reciprocal typed source
-and target evidence, atomic success, and seven initially unresolved readiness
-concerns. Implementation and focused verification are complete on
-`codex/programme-accepted-item-adapter`: the 37-test conversion, real concurrent
-source-change, schema round-trip, populated-fence and readiness-drift group
-passed in 217.68 seconds against PostgreSQL; all 2,850 unit tests passed.
-Both owners' live schema/readiness
-catalogs and the runtime-role probe passed. The related regression run's one
-historical/current-schema fixture mismatch was corrected and its focused rerun
-passed; historical owner-target selection now accounts for the new dependency.
-The CI timing map adds only the three measured new files; no test-performance
-policy or existing assertion was weakened. See the
-[implementation checkpoint](../checkpoints/2026-09-06-programme-accepted-conversion.md).
-Exact-commit certification, hosted acceptance and protected delivery evidence
-belong to #77 and its linked PR; this checkpoint is not a merge attestation.
-The first certification candidate exposed an omission in the operator-facing
-runtime-role provisioning SQL and was stopped after the reported failure. The
-conversion relation is now explicitly SELECT-only there as well as in the
-readiness probe. A fast inventory test reproduced the omission before the fix;
-all 2,851 unit tests and three real provisioning/rollback/runtime-role checks
-then passed. See the
-[provisioning correction](../checkpoints/2026-09-06-programme-conversion-runtime-provisioning.md).
-The corrected exact candidate still requires complete protected acceptance.
-Existing adoption manifests and generic Applications target fences stay closed.
-Host relationships, Scheduling, staffing, surfaces, and activation are excluded.
-This task is single-agent and stops after #77's protected merge and main sync.
+Issue [#77](https://github.com/martonpornoi/maru/issues/77) is delivered through
+[PR #78](https://github.com/martonpornoi/maru/pull/78), protected squash
+`6279cb50d287d70e33e2bebabda3e54564668475`. Exact candidate
+`d1ed054900e252b8c2706eb4f3c2977c4dcd3e4a` passed full local certification
+(5,912 Python tests and all unchanged quality/coverage gates),
+[hosted full acceptance and PR gate](https://github.com/martonpornoi/maru/actions/runs/34047039112)
+and [CodeQL](https://github.com/martonpornoi/maru/actions/runs/34041922616).
+Clean local main was synchronized to that protected result. ADR 0086's exact
+accepted conversion creates one private source-bound item and seven unresolved
+readiness concerns. The provisioning SQL omission found during its first
+certification attempt was corrected and retested before successful acceptance.
+Its [implementation](../checkpoints/2026-09-06-programme-accepted-conversion.md)
+and [provisioning](../checkpoints/2026-09-06-programme-conversion-runtime-provisioning.md)
+checkpoints retain the detailed evidence.
+
+On 2026-09-06 the user explicitly resumed **all remaining children of #48**,
+sequentially through documented tests and green protected merges. This
+supersedes the earlier stop-after-#77 boundary; routine continuation approval
+between children is no longer required. Keep the work single-agent and leave
+the completed temporary #77 check-in disabled. Unrelated Docker cleanup and
+test-performance optimization remain outside this task.
+
+Active child [#79](https://github.com/martonpornoi/maru/issues/79) is in progress
+on `codex/programme-host-relationships`, based on that current main.
+[ADR 0087](../architecture/decisions/0087-programme-host-confirmation-and-availability.md)
+and PRG-008 contract explicit host/co-host invitations, person-owned responses,
+deliberately shared per-item availability, field ceilings, dependency freshness
+and retained evidence. The candidate implements four host tables, explicit commands,
+independently ceilinged reads, current-person/dependency readiness, database
+guards, SELECT-only runtime inventory and additive recovery fences.
+All 2,915 unit tests passed in 10.81 seconds. The final 32-test host PostgreSQL
+group passed in 60.92 seconds and its additional approved-copy isolation case
+passed in 2.44 seconds. A 51-test host/conversion group and 33-test authorization,
+integrity and historical-migration group also passed; these overlapping groups
+are not a combined suite count. Strict typing, lint/format, docstring and
+documentation checks passed, with no migration drift. The
+[host checkpoint](../checkpoints/2026-09-06-programme-host-confirmation-and-availability.md)
+records the boundary and focused evidence. Exact clean-commit certification
+and protected delivery are still pending.
+Neither current adoption manifest nor any Programme route is activated.
 
 ## What can be evaluated today
 
@@ -127,9 +137,10 @@ This task is single-agent and stops after #77's protected merge and main sync.
 
 ## Smallest sensible next actions
 
-1. Check #77 and its linked PR before repeating work after a restart. Complete
-   exact local certification, protected hosted acceptance, issue reconciliation
-   and main synchronization only if still pending. Stop before the host successor.
+1. Finish #79's host lifecycle, purpose-authorized projections and availability
+   dependency contract, with real PostgreSQL race/rollback/recovery tests,
+   current documentation and complete exact-head protected delivery. Do not
+   repeat #77's completed implementation or certification.
 2. If separately authorized, approve and remove only identified disposable
    Docker resources. Resource cleanup and test-performance work are different
    outcomes.
@@ -140,9 +151,9 @@ This task is single-agent and stops after #77's protected merge and main sync.
    timeouts, or protected acceptance. See
    [testing strategy](../quality/testing-strategy.md) and the
    [existing isolation checkpoint](../checkpoints/2026-09-05-historical-migration-test-isolation.md).
-4. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48) only
-   when requested after #77: host/co-host relationships
-   and availability, Scheduling core and accessible editor, Workforce staffing,
+4. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48) after
+   each completed child without another routine approval: Scheduling core and
+   accessible editor, Workforce staffing,
    atomic release/outputs, on-site continuity, and integrated acceptance.
    Profile setup/activation comes after those mandatory continuations. Keep the
    umbrella open until the complete Programme-only journey is accepted.

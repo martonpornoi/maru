@@ -15,7 +15,7 @@ private item/readiness foundation of PRG-005, PRG-006, PRG-008, PLN-004,
 EVT-006, EVT-007, AUD-001, AUD-003, AUD-005, PRI-001, NFR-002, NFR-003,
 PRG-011, NFR-008 through NFR-010, and NFR-013 without claiming that Programme
 Operations is active or usable. The boundary follows ADRs 0001, 0003, 0005,
-0041, 0051, 0081, 0084, 0085, and 0086.
+0041, 0051, 0081, 0084, 0085, 0086, and 0087.
 
 Programme does not own calls or proposal review, accepted Applications truth,
 service days, occurrences, rooms, timetable release, volunteer Shifts,
@@ -29,8 +29,9 @@ messages and acknowledgements. Its dedicated [accepted conversion](programme-con
 now owns the immutable transition receipt and orchestrates exactly one private
 Programme item from a still-effective accepted revision. Review-side acceptance
 alone is not conversion. Programme owns no proposal collaborator, and this
-conversion creates no host or co-host; those relationships remain a separate
-successor. Scheduling will later own occurrences and placements. Workforce will
+conversion creates no host or co-host; the separate
+[host relationship boundary](programme-hosts.md) requires explicit invitation
+and person-owned confirmation. Scheduling will later own occurrences and placements. Workforce will
 later own staffing demand and Shift commitments.
 
 Applications also owns the dormant preview-first staging evidence for imported
@@ -232,6 +233,12 @@ bound always retains the most recent rationale and review evidence.
 
 ## Event and adapter seams
 
+The separate [hosting contract](programme-hosts.md) documents four host commands,
+independently ceilinged personal/organizer reads, versioned shared-availability
+dependencies and current-person readiness checks. Host commands use the same
+item version, receipt namespace and event stream; they do not rewrite private
+working, delivery or approved public-copy layers.
+
 `programme.item.changed.v1` validates an exact payload of action, layer, item
 kind, provenance, lifecycle, and concern codes. Item-changing commands use the
 item UUID and version as the event aggregate. Public-copy approval uses the item
@@ -276,6 +283,9 @@ Programme, Audit, Effects event/outbox, and migration history from one mutually
 consistent backup point. The later accepted-source graph also includes
 Applications and Authorization; its unused reversal and populated fences follow
 the [conversion recovery runbook](../operations/programme-conversion-migration-and-recovery.md).
+The host graph adds its own unused reversal and early retained-history fence;
+follow [host recovery](../operations/programme-host-migration-and-recovery.md)
+before attempting any contraction of those tables, guards or capabilities.
 Recovery must not fabricate an Application, review,
 host, readiness fact, rendition, occurrence, Shift, release, or other module
 record.
@@ -290,7 +300,8 @@ That continuity prerequisite is implemented without activating its recovery
 capability, profile, route, or UI.
 Dedicated staged review, decisions and explicit accepted conversion are also
 implemented but dormant. Conversion creates private planning state only;
-Programme-owned host and co-host relationships remain a separate successor.
+Programme-owned host/co-host invitation, confirmation and deliberately shared
+per-item availability now have a separate dormant owner boundary.
 Interactive timetable editing, Scheduling, Venue placement, staffing, release,
 public and personal timetables, on-site continuity, profile activation, and
 integrated browser rehearsal remain later children of the Programme Operations

@@ -5,7 +5,7 @@ Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
 profile-scoped unified-shell context, and dormant Programme and Applications
 reference seams; Programme Operations remains inactive
-Last updated: 2026-09-02
+Last updated: 2026-09-06
 
 ## Purpose and requirements
 
@@ -227,6 +227,14 @@ private planning writes; Ready, Live, Closing, Archived, and Cancelled do not.
 Consumers therefore neither import the private `EventEdition` model nor copy
 its lifecycle rule.
 
+`resolve_edition_time_envelope_reference(...)` exposes only the exact edition
+and organization UUIDs, current aggregate version and UTC instants spanning its
+inclusive local date range. It checks the series tenant chain, optionally locks
+the edition, and fails closed on invalid zones, unrepresentable bounds or
+ambiguous/nonexistent midnight boundaries. The caller independently authorizes
+its purpose before this owner query. Programme hosting uses it to bound current
+availability without importing an Events model or disclosing event labels.
+
 `platform_editions()` is the explicit C1 identity query used only after a
 platform-administrator boundary has been established. The preserved context
 API labels those rows `not_participating`, returns no capacities, and creates no
@@ -417,10 +425,10 @@ computed effective-access management, date-format preference, richer edition-
 local policy, and Programme Operations setup are not implemented. Edition
 creation inherits only visible locale
 defaults; it does not create or publish registration or any operational
-configuration. Nine dormant Programme capability declarations, dormant
+configuration. Dormant Programme capability declarations, dormant
 Applications-owned Programme call/proposal, preview-first import, and
 Department-ownership-continuity declarations, and minimized
 Identity/Events/Authorization reference seams now exist, but the accepted ADR
 0081 profile, setup route, destinations, current-
-profile effects, accepted-item adapter implementation, and user surfaces remain
+profile effects, accepted-item adapter activation, and user surfaces remain
 unavailable until their runtime and security acceptance issues merge.

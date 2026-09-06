@@ -146,6 +146,14 @@ submission, current relationship, lifecycle, and aggregate version. A proposal
 relationship never authorizes Programme items, review, decisions, scheduling,
 staffing, publication, or another proposal.
 
+Programme hosting is a separate exact item/person purpose, not a consequence of
+proposal authorship. Only the invited person confirms/declines their invitation
+or supplies their per-item availability. Manager invitation/removal and roster,
+history and shared-availability reads have independent authority and field
+ceilings. Ended self history grants no other host, organizer rationale, later
+item copy or general Programme access. These capabilities remain dormant under
+the current profiles; see the [host contract](../modules/programme-hosts.md).
+
 Programme Department ownership adds two deliberately separate paths. Normal
 Draft-call or clean-batch reassignment requires current exact authority at both
 the source and destination Departments. Historical orphan call recovery uses

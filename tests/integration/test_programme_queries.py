@@ -643,7 +643,14 @@ def test_readiness_summary_is_explainable_stale_and_constant_query_count(
         and '"programme_' in query["sql"]
     ]
     assert len(programme_selects) == 2
-    assert len(captured) <= 16
+    # Host readiness must share the command's edition-first snapshot fence.
+    edition_locks = [
+        query
+        for query in captured.captured_queries
+        if '"events_eventedition"' in query["sql"] and "FOR UPDATE" in query["sql"]
+    ]
+    assert len(edition_locks) == 1
+    assert len(captured) - len(edition_locks) <= 16
 
 
 def test_readiness_history_is_separate_bounded_audited_and_rationale_complete(

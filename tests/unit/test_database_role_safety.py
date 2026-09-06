@@ -112,6 +112,10 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.programme_programmereadinessevidence",
         "public.programme_programmepublicrendition",
         "public.programme_programmecommandreceipt",
+        "public.programme_programmehostrelationship",
+        "public.programme_programmehostinvitation",
+        "public.programme_programmehostrevision",
+        "public.programme_programmehostavailabilitywindow",
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
         "public.effects_effectreplayreceipt",

@@ -22,15 +22,19 @@ def test_integrity_migration_is_one_exact_reversible_sql_contract() -> None:
     assert operation.sql == migration.FORWARD_SQL
     assert operation.reverse_sql == migration.REVERSE_SQL
     assert PROGRAMME_INTEGRITY_CONTRACT.source_contract_current
-    assert len(PROGRAMME_INTEGRITY_CONTRACT.triggers) == 38
-    assert len(PROGRAMME_INTEGRITY_CONTRACT.functions) == 15
+    assert len(PROGRAMME_INTEGRITY_CONTRACT.triggers) == 50
+    assert len(PROGRAMME_INTEGRITY_CONTRACT.functions) == 19
     assert migration.FORWARD_SQL.count("REVOKE ALL ON FUNCTION") == 15
     no_truncate = {
         trigger.table
         for trigger in PROGRAMME_INTEGRITY_CONTRACT.triggers.values()
-        if trigger.name.endswith("_no_truncate")
+        if trigger.name.endswith(("_no_truncate", "_truncate"))
     }
     assert no_truncate == {
+        "programme_programmehostrelationship",
+        "programme_programmehostinvitation",
+        "programme_programmehostrevision",
+        "programme_programmehostavailabilitywindow",
         "programme_programmeeditioncontrol",
         "programme_programmeitem",
         "programme_programmeitemsourcebinding",
@@ -113,6 +117,10 @@ def test_relation_semantics_catalog_is_complete_and_fail_closed() -> None:
     relations = programme_readiness.PROGRAMME_RELATION_SEMANTICS
 
     assert set(relations) == {
+        "programme_programmehostrelationship",
+        "programme_programmehostinvitation",
+        "programme_programmehostrevision",
+        "programme_programmehostavailabilitywindow",
         "programme_programmecommandreceipt",
         "programme_programmedeliveryrevision",
         "programme_programmedepartmentdiscussionentry",

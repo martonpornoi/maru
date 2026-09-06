@@ -80,6 +80,7 @@ from maru.programme.models import (
     ProgrammeDeliveryRevision,
     ProgrammeDepartmentDiscussionEntry,
     ProgrammeEditionControl,
+    ProgrammeHostRevision,
     ProgrammeItem,
     ProgrammeItemSourceBinding,
     ProgrammePublicRendition,
@@ -320,22 +321,22 @@ def _append_error_audit_best_effort(
         )
 
 
-def _audit_command_errors[**ParametersT](
+def _audit_command_errors[ResultT, **ParametersT](
     *,
     capability_code: str,
     operation: str,
 ) -> Callable[
-    [Callable[ParametersT, ProgrammeCommandResult]],
-    Callable[ParametersT, ProgrammeCommandResult],
+    [Callable[ParametersT, ResultT]],
+    Callable[ParametersT, ResultT],
 ]:
     def decorate(
-        command: Callable[ParametersT, ProgrammeCommandResult],
-    ) -> Callable[ParametersT, ProgrammeCommandResult]:
+        command: Callable[ParametersT, ResultT],
+    ) -> Callable[ParametersT, ResultT]:
         @wraps(command)
         def wrapped(
             *args: ParametersT.args,
             **kwargs: ParametersT.kwargs,
-        ) -> ProgrammeCommandResult:
+        ) -> ResultT:
             try:
                 return command(*args, **kwargs)
             except ProgrammeAuthorizationDenied:
@@ -556,6 +557,21 @@ def _initial_readiness_dependency_version(
     item: ProgrammeItem,
     concern: ProgrammeReadinessConcern,
 ) -> int:
+    if concern in {
+        ProgrammeReadinessConcern.HOST_CONFIRMATION,
+        ProgrammeReadinessConcern.SCHEDULE_AVAILABILITY,
+    }:
+        host_sources = ProgrammeHostRevision.objects.filter(item=item)
+        if concern is ProgrammeReadinessConcern.HOST_CONFIRMATION:
+            host_sources = host_sources.exclude(
+                operation=ProgrammeCommandOperation.HOST_AVAILABILITY.value
+            )
+        return (
+            host_sources.order_by("-item_version")
+            .values_list("item_version", flat=True)
+            .first()
+            or 0
+        )
     if concern is ProgrammeReadinessConcern.PUBLIC_COPY:
         working_source = (
             ProgrammeWorkingRevision.objects.filter(item=item)

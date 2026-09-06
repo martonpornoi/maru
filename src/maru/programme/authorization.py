@@ -11,6 +11,7 @@ from django.db import connection
 from maru.authorization.policy import (
     PolicyDecision,
     decide_verified_principal_exact_edition,
+    decide_verified_principal_exact_self,
 )
 from maru.events.queries import (
     resolve_private_planning_edition_reference,
@@ -29,6 +30,21 @@ PROGRAMME_MANAGE_DELIVERY: Final = "programme.manage_delivery"
 PROGRAMME_VIEW_DISCUSSION: Final = "programme.view_discussion"
 PROGRAMME_VIEW_PUBLIC_COPY: Final = "programme.view_public_copy"
 PROGRAMME_APPROVE_PUBLIC_COPY: Final = "programme.approve_public_copy"
+PROGRAMME_MANAGE_HOSTS: Final = "programme.manage_hosts"
+PROGRAMME_VIEW_HOSTS: Final = "programme.view_hosts"
+PROGRAMME_VIEW_HOST_SELF: Final = "programme.view_host_self"
+PROGRAMME_RESPOND_HOST_SELF: Final = "programme.respond_host_self"
+PROGRAMME_MANAGE_HOST_AVAILABILITY_SELF: Final = (
+    "programme.manage_host_availability_self"
+)
+
+PROGRAMME_HOST_SELF_CAPABILITIES: Final = frozenset(
+    {
+        PROGRAMME_VIEW_HOST_SELF,
+        PROGRAMME_RESPOND_HOST_SELF,
+        PROGRAMME_MANAGE_HOST_AVAILABILITY_SELF,
+    }
+)
 
 PROGRAMME_CAPABILITY_CODES: Final = frozenset(
     {
@@ -41,6 +57,9 @@ PROGRAMME_CAPABILITY_CODES: Final = frozenset(
         PROGRAMME_VIEW_DISCUSSION,
         PROGRAMME_VIEW_PUBLIC_COPY,
         PROGRAMME_APPROVE_PUBLIC_COPY,
+        PROGRAMME_MANAGE_HOSTS,
+        PROGRAMME_VIEW_HOSTS,
+        *PROGRAMME_HOST_SELF_CAPABILITIES,
     }
 )
 
@@ -123,6 +142,15 @@ class ExactPolicyProgrammeAuthorizer:
         PolicyDecision
             The ordinary exact-edition policy decision.
         """
+        if capability_code in PROGRAMME_HOST_SELF_CAPABILITIES:
+            return decide_verified_principal_exact_self(
+                principal_id=principal_id,
+                owner_account_id=principal_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                capability_code=capability_code,
+                requested_fields=requested_fields,
+            )
         return decide_verified_principal_exact_edition(
             principal_id=principal_id,
             organization_id=organization_id,
@@ -217,13 +245,13 @@ def authorize_programme_scope(
             or not database_name.startswith("test_")
         ):
             raise ProgrammeAuthorizationDeniedError
-    actor_reference = resolve_active_verified_account_reference(
-        account_id=actor_id,
-        lock=lock,
-    )
     edition_reference = resolve_private_planning_edition_reference(
         organization_id=organization_id,
         edition_id=edition_id,
+        lock=lock,
+    )
+    actor_reference = resolve_active_verified_account_reference(
+        account_id=actor_id,
         lock=lock,
     )
     if actor_reference is None or edition_reference is None:
@@ -259,11 +287,17 @@ __all__ = [
     "DEFAULT_PROGRAMME_AUTHORIZER",
     "PROGRAMME_APPROVE_PUBLIC_COPY",
     "PROGRAMME_CAPABILITY_CODES",
+    "PROGRAMME_HOST_SELF_CAPABILITIES",
     "PROGRAMME_MANAGE_DELIVERY",
+    "PROGRAMME_MANAGE_HOSTS",
+    "PROGRAMME_MANAGE_HOST_AVAILABILITY_SELF",
     "PROGRAMME_MANAGE_ITEMS",
     "PROGRAMME_MANAGE_READINESS",
+    "PROGRAMME_RESPOND_HOST_SELF",
     "PROGRAMME_VIEW_DELIVERY",
     "PROGRAMME_VIEW_DISCUSSION",
+    "PROGRAMME_VIEW_HOSTS",
+    "PROGRAMME_VIEW_HOST_SELF",
     "PROGRAMME_VIEW_PRIVATE",
     "PROGRAMME_VIEW_PUBLIC_COPY",
     "PROGRAMME_VIEW_READINESS",

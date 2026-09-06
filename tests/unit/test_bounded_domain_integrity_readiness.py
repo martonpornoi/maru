@@ -42,7 +42,7 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
         ("venues_integrity", True, 13, 9, 1),
-        ("programme_integrity", True, 38, 15, 2),
+        ("programme_integrity", True, 50, 19, 2),
     ]
     for contract in CONTRACTS:
         relations = set(integrity.bounded_context_relation_names(contract.app_label))

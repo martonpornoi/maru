@@ -2,8 +2,10 @@
 
 from collections.abc import Collection
 from dataclasses import dataclass
+from datetime import UTC, datetime, time, timedelta
 from typing import Final
 from uuid import UUID
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.exceptions import ValidationError
 from django.db.models import Q, QuerySet
@@ -92,6 +94,100 @@ def resolve_private_planning_edition_reference(
         accepts_private_planning_writes=(
             lifecycle in _PRIVATE_PLANNING_WRITE_LIFECYCLES
         ),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class EditionTimeEnvelopeReference:
+    """Minimize the versioned edition-local date envelope to absolute instants.
+
+    Attributes
+    ----------
+    edition_id
+        Exact edition whose current dates were resolved.
+    organization_id
+        Organization owning the edition and its series.
+    version
+        Edition aggregate version that owns these date and time-zone facts.
+    starts_at
+        Inclusive start of the first local date, represented in UTC.
+    ends_at
+        Exclusive start of the day after the final local date, in UTC.
+    """
+
+    edition_id: UUID
+    organization_id: UUID
+    version: int
+    starts_at: datetime
+    ends_at: datetime
+
+
+def resolve_edition_time_envelope_reference(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    lock: bool = False,
+) -> EditionTimeEnvelopeReference | None:
+    """Resolve bounded time facts after the caller independently authorizes scope.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Organization expected to own both the edition and its series.
+    edition_id : UUID
+        Exact edition requested by an independently authorized domain caller.
+    lock : bool, default=False
+        Whether to lock the owning edition inside the surrounding transaction.
+
+    Returns
+    -------
+    EditionTimeEnvelopeReference | None
+        Versioned absolute bounds, or unavailable for absent, incoherent or
+        unrepresentable scope. No edition label or profile is disclosed.
+    """
+    query = EventEdition.objects.all()
+    if lock:
+        query = query.select_for_update(of=("self",))
+    try:
+        row = (
+            query.filter(
+                id=edition_id,
+                organization_id=organization_id,
+                series__organization_id=organization_id,
+            )
+            .values_list("aggregate_version", "starts_on", "ends_on", "time_zone")
+            .first()
+        )
+        if row is None:
+            return None
+        version, starts_on, ends_on, zone_name = row
+        zone = ZoneInfo(zone_name)
+        first_local = datetime.combine(starts_on, time.min, tzinfo=zone)
+        final_local = datetime.combine(
+            ends_on + timedelta(days=1), time.min, tzinfo=zone
+        )
+        start, end = first_local.astimezone(UTC), final_local.astimezone(UTC)
+        if (
+            version < 1
+            or end <= start
+            or start.astimezone(zone).replace(tzinfo=None)
+            != first_local.replace(tzinfo=None)
+            or end.astimezone(zone).replace(tzinfo=None)
+            != final_local.replace(tzinfo=None)
+            or first_local.utcoffset() != first_local.replace(fold=1).utcoffset()
+            or final_local.utcoffset() != final_local.replace(fold=1).utcoffset()
+        ):
+            return None
+    except (
+        TypeError,
+        ValueError,
+        OverflowError,
+        ValidationError,
+        ZoneInfoNotFoundError,
+    ):
+        return None
+    return EditionTimeEnvelopeReference(
+        edition_id, organization_id, version, start, end
     )
 
 

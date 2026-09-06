@@ -101,6 +101,10 @@ class ProgrammeCommandOperation(StrEnum):
 
     ITEM_CREATE = "item_create"
     ITEM_ACCEPT = "item_accept"
+    HOST_INVITE = "host_invite"
+    HOST_RESPOND = "host_respond"
+    HOST_REMOVE = "host_remove"
+    HOST_AVAILABILITY = "host_availability"
     WORKING_REVISE = "working_revise"
     DELIVERY_REVISE = "delivery_revise"
     DISCUSSION_APPEND = "discussion_append"

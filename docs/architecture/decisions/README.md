@@ -91,6 +91,7 @@ the system.
 | [0084](0084-programme-department-ownership-continuity.md) | Accepted | Serialize Programme ownership with Department retirement, preserve imported ownership through receipt chains, and keep exact orphan recovery dormant |
 | [0085](0085-exact-revision-programme-review-and-decisions.md) | Accepted | Pin dedicated Programme review to exact submitted seals, immutable staged policies, independent actors, accountable decisions, and recipient-only acknowledgement without conversion or activation |
 | [0086](0086-source-bound-programme-accepted-item-conversion.md) | Accepted | Convert exact effective acceptance into a reciprocally source-bound private Programme item and unresolved readiness without hosting or activation |
+| [0087](0087-programme-host-confirmation-and-availability.md) | Accepted | Keep Programme host invitations, person-owned confirmation and deliberately shared availability separate from proposal and attendee relationships |
 
 New ADRs use the next four-digit number and contain:
 

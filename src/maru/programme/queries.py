@@ -11,6 +11,7 @@ from django.db.models import OuterRef, QuerySet, Subquery
 
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
+from maru.events.queries import resolve_private_planning_edition_reference
 from maru.programme.authorization import (
     DEFAULT_PROGRAMME_AUTHORIZER,
     PROGRAMME_VIEW_DELIVERY,
@@ -32,6 +33,7 @@ from maru.programme.catalogs import (
     ProgrammeReadinessDisposition,
     ProgrammeReadinessEvidenceState,
 )
+from maru.programme.host_readiness import _current_host_readiness
 from maru.programme.inputs import (
     normalized_source_channel,
     normalized_text,
@@ -1149,6 +1151,15 @@ def load_programme_readiness(
     item_id = require_uuid(item_id, field="item_id")
 
     def load() -> tuple[ProgrammeReadinessConcernProjection, ...]:
+        if (
+            resolve_private_planning_edition_reference(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                lock=True,
+            )
+            is None
+        ):
+            raise ProgrammeQueryUnavailableError
         if not ProgrammeItem.objects.filter(
             id=item_id,
             organization_id=organization_id,
@@ -1185,6 +1196,7 @@ def load_programme_readiness(
             .order_by("concern", "id")
         )
         projections: list[ProgrammeReadinessConcernProjection] = []
+        current_host_facts: dict[str, bool] | None = None
         for requirement in requirements:
             evidence_state = requirement.latest_evidence_state
             evidence_requirement_version = (
@@ -1203,10 +1215,23 @@ def load_programme_readiness(
                 evidence_requirement_version=evidence_requirement_version,
                 evidence_dependency_version=evidence_dependency_version,
             )
+            state = projected.state.value
+            if state == "satisfied" and requirement.concern in {
+                "host_confirmation",
+                "schedule_availability",
+            }:
+                if current_host_facts is None:
+                    current_host_facts = _current_host_readiness(
+                        organization_id=organization_id,
+                        edition_id=edition_id,
+                        item_id=item_id,
+                    )
+                if not current_host_facts[requirement.concern]:
+                    state = "stale"
             projections.append(
                 ProgrammeReadinessConcernProjection(
                     concern=requirement.concern,
-                    state=projected.state.value,
+                    state=state,
                     requirement_version=requirement.requirement_version,
                     dependency_version=requirement.dependency_version,
                     evidence_requirement_version=evidence_requirement_version,

@@ -1261,6 +1261,64 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"audit"}),
     ),
     Capability(
+        code="programme.manage_hosts",
+        description=(
+            "Invite or remove exact Programme hosts with retained organizer rationale."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="programme.view_hosts",
+        description=(
+            "View the exact Programme roster and deliberately shared host availability."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {"host_roster", "host_history", "shared_host_availability"}
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="programme.view_host_self",
+        description=(
+            "View one's own exact Programme invitation, response and host availability."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {"own_host_relationship", "own_host_invitation", "own_host_availability"}
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="programme.respond_host_self",
+        description=(
+            "Confirm, decline or withdraw one's own exact Programme "
+            "hosting relationship."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="programme.manage_host_availability_self",
+        description="Save, share or withdraw one's own exact-item host availability.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
         code="programme.view_private",
         description=(
             "View private working information for Programme items in one edition."

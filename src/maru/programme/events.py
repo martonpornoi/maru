@@ -28,10 +28,14 @@ PROGRAMME_EVENT_ACTIONS: Final = frozenset(
         "configure_readiness",
         "record_readiness",
         "approve_public_copy",
+        "invite_host",
+        "respond_host",
+        "remove_host",
+        "change_host_availability",
     }
 )
 PROGRAMME_EVENT_LAYERS: Final = frozenset(
-    {"item", "working", "delivery", "discussion", "readiness", "public_copy"}
+    {"item", "working", "delivery", "discussion", "readiness", "public_copy", "hosts"}
 )
 PROGRAMME_EVENT_CONCERNS: Final = frozenset(
     {"none", *(member.value for member in ProgrammeReadinessConcern)}
@@ -59,6 +63,10 @@ _ACTION_LAYERS: Final = MappingProxyType(
         "configure_readiness": "readiness",
         "record_readiness": "readiness",
         "approve_public_copy": "public_copy",
+        "invite_host": "hosts",
+        "respond_host": "hosts",
+        "remove_host": "hosts",
+        "change_host_availability": "hosts",
     }
 )
 

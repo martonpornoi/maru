@@ -1161,6 +1161,24 @@ architecture documents, implementation issues, tests, and release notes.
   transition without deleting or silently rewriting the independent Programme
   item. It grants no host access, public approval, schedule, or release; those
   successors must separately establish their current evidence.
+  Programme hosting requires an explicit reasoned invitation to one exact
+  item/person as host or co-host, followed by that person's own confirmation.
+  Organizer-created items use the same relationship without invented proposal
+  evidence. Only the invitee responds; a confirmed host may withdraw without a
+  private explanation, and an authorized organizer may remove with a retained
+  reason. Reinvitation preserves history but requires a fresh exact-version
+  response. Hosting grants no general Programme or proposal/review authority.
+  Each confirmed relationship owns deliberately shared, edition-bounded
+  availability for that item. Unknown, private draft, shared-empty explicitly
+  unavailable, shared periods and withdrawn remain distinct; no unavailable
+  source is treated as free. Ending or reinviting clears current exact periods,
+  while immutable evidence retains only minimized state/version/count/digest.
+  Roster and availability changes invalidate only their dependent readiness;
+  no public-copy, consent or scheduling state is inferred. Self history is
+  restricted to the subject's retained invitation and response fields; roster
+  and shared-period reads require independently authorized, audited field
+  ceilings. Commands and database guards preserve exact scope, current-person
+  proof, optimistic versions, retry identity, atomic evidence and recovery.
 - **PRG-009 — Exact proposal authorship and acknowledgement:** Programme calls
   and proposals remain Applications-owned facets of one versioned definition
   and submission. Accepted, active-person collaborators may edit shared
