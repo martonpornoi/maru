@@ -55,7 +55,7 @@ or host relationship is created.
 
 The module is installed so migrations, integrity checks, and typed contracts
 can be deployed safely. The global catalogs declare the `programme` namespace,
-nine edition-scoped capabilities, one reserved accepted-application source
+core and host-purpose capabilities, one reserved accepted-application source
 descriptor, and `programme.item.changed.v1`. Neither `full_convention@1` nor
 `workforce_only@1` contains any of those declarations. Their literal manifest
 fingerprints remain unchanged.
@@ -206,7 +206,7 @@ those cases.
 
 ## Authorization and queries
 
-The dormant capability catalog is:
+The dormant core item capability catalog is:
 
 - `programme.view_private` and `programme.manage_items`;
 - `programme.view_readiness` and `programme.manage_readiness`;
@@ -215,7 +215,10 @@ The dormant capability catalog is:
 - `programme.view_public_copy`; and
 - `programme.approve_public_copy`.
 
-They are persistable only at exact edition scope. The PostgreSQL minimum-scope
+The separate [hosting catalog](programme-hosts.md) adds two exact-edition
+manager/read capabilities and three non-persistable relationship-derived self
+capabilities. Core item capabilities are persistable only at exact edition
+scope. The PostgreSQL minimum-scope
 function recognizes those exact-edition codes. Its downgrade fence refuses
 catalog contraction after durable Programme grant or role evidence exists, but
 current profile policy still denies every Programme capability because neither

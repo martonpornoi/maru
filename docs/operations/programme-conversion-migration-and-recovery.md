@@ -79,6 +79,11 @@ Keep compatible application code and investigate the precise failed guard.
 
 If a migration fails before completion, keep writers quiesced, inspect applied
 migration state, and fix forward or reverse only the unused supported graph.
+Later unused extensions can reverse before a populated conversion fence is
+reached; that does not remove the retained conversion protections. Current-code
+readiness remains unavailable until all required extensions are restored. The
+[host recovery guide](programme-host-migration-and-recovery.md) describes this
+boundary and its forward-recovery checks.
 Any restore must recover Applications, Programme, Authorization, Audit, Effects
 and the outbox from one consistent point; piecemeal restoration can fabricate
 or sever provenance. Re-run integrity and runtime-role checks before resuming

@@ -53,6 +53,16 @@ Ending hosting or withdrawing periods does not make retained history unused.
 Reversing Authorization also refuses retained host grants or role-bundle
 vocabulary, even when a grant is no longer active.
 
+Django commits a migration plan one migration at a time. A broader downgrade
+can therefore remove this unused host extension before an older populated
+accepted-conversion fence refuses further contraction. Conversion records and
+their exact guards remain protected, but current-code host-inclusive readiness
+correctly fails. Keep writers stopped, inspect the actual recorder state and
+reapply the complete current graph before expecting current readiness. With
+retained host history, the earlier host fence refuses before any host guard or
+migration recorder is removed. Never treat a refused multi-migration plan as
+proof that every unused successor migration is still installed.
+
 On refusal, retain compatible code and fix forward. Do not fake migration
 history, remove guards, delete retained evidence, or reset counters to force a
 downgrade. Restore Programme, Identity, Events, Organizations, Authorization,

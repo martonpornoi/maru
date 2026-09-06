@@ -97,7 +97,8 @@ the completed temporary #77 check-in disabled. Unrelated Docker cleanup and
 test-performance optimization remain outside this task.
 
 Active child [#79](https://github.com/martonpornoi/maru/issues/79) is in progress
-on `codex/programme-host-relationships`, based on that current main.
+through draft [PR #80](https://github.com/martonpornoi/maru/pull/80) on
+`codex/programme-host-relationships`, based on that current main.
 [ADR 0087](../architecture/decisions/0087-programme-host-confirmation-and-availability.md)
 and PRG-008 contract explicit host/co-host invitations, person-owned responses,
 deliberately shared per-item availability, field ceilings, dependency freshness
@@ -111,8 +112,15 @@ integrity and historical-migration group also passed; these overlapping groups
 are not a combined suite count. Strict typing, lint/format, docstring and
 documentation checks passed, with no migration drift. The
 [host checkpoint](../checkpoints/2026-09-06-programme-host-confirmation-and-availability.md)
-records the boundary and focused evidence. Exact clean-commit certification
-and protected delivery are still pending.
+records the boundary and focused evidence. The first full attempt found an old
+conversion-downgrade assertion that incorrectly expected an unused successor
+host schema to remain installed. That already-failed attempt was cancelled;
+tests now check exact retained conversion guards, fail-closed current readiness,
+forward recovery, and earlier refusal when host history exists. The recovery
+guides document Django's per-migration commit boundary. All six populated and
+unused-host downgrade combinations passed in focused runs (two in 42.55 seconds,
+four in 194.61 seconds); the five unchanged round-trip/guard-drift cases also
+passed. Complete clean-commit certification and protected delivery remain pending.
 Neither current adoption manifest nor any Programme route is activated.
 
 ## What can be evaluated today
