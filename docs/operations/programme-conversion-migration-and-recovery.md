@@ -38,6 +38,13 @@ migration. The new source relation and all Programme relations remain
 `SELECT`-only for the runtime role. New trigger functions have owner-only
 execution; no helper is added to the runtime execution allowlist.
 
+The maintained
+[runtime-role provisioning SQL](postgresql-runtime-role-provisioning.sql.example)
+explicitly revokes all privileges on the conversion source from PUBLIC and the
+runtime role, then grants runtime SELECT only. Apply that complete reviewed
+artifact rather than retaining its earlier blanket table grants. The Python
+readiness inventory does not itself provision or repair database privileges.
+
 ## Verification
 
 Before making any acceptance claim, verify:

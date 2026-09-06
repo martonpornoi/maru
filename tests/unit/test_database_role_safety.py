@@ -1,3 +1,5 @@
+import re
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -26,6 +28,42 @@ _APPLICATION_DRAFT_CHILD_RELATIONS = {
     "public.applications_applicationsection",
     "public.applications_applicationquestion",
 }
+
+
+def test_provisioning_sql_covers_every_dormant_programme_read_only_relation() -> None:
+    """Catch inventory omissions cheaply; integration tests execute the SQL."""
+    artifact = (
+        Path(__file__).resolve().parents[2]
+        / "docs/operations/postgresql-runtime-role-provisioning.sql.example"
+    ).read_text(encoding="utf-8")
+    selected: set[str] = set()
+    revoked: dict[str, set[str]] = {"PUBLIC": set(), "maru_runtime": set()}
+    for operation, privileges, tables, roles in re.findall(
+        r"(GRANT|REVOKE)\s+([^;]*?)\s+ON TABLE\s+([^;]*?)\s+"
+        r"(?:TO|FROM)\s+([^;]*?);",
+        artifact,
+        flags=re.DOTALL,
+    ):
+        table_set = {table.strip() for table in tables.split(",")}
+        role_set = {role.strip() for role in roles.split(",")}
+        privilege_set = {privilege.strip() for privilege in privileges.split(",")}
+        if operation == "GRANT" and privilege_set == {"SELECT"}:
+            if "maru_runtime" in role_set:
+                selected.update(table_set)
+        elif operation == "REVOKE" and (
+            "ALL" in privilege_set
+            or {"INSERT", "UPDATE", "DELETE", "REFERENCES"} <= privilege_set
+        ):
+            for role in revoked.keys() & role_set:
+                revoked[role].update(table_set)
+    expected = {
+        relation
+        for relation in RUNTIME_DATABASE_SELECT_ONLY_RELATIONS
+        if relation.startswith(("public.applications_programme", "public.programme_"))
+    }
+    assert expected <= selected
+    assert expected <= revoked["PUBLIC"]
+    assert expected <= revoked["maru_runtime"]
 
 
 def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:

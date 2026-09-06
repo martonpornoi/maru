@@ -93,6 +93,14 @@ policy or existing assertion was weakened. See the
 [implementation checkpoint](../checkpoints/2026-09-06-programme-accepted-conversion.md).
 Exact-commit certification, hosted acceptance and protected delivery evidence
 belong to #77 and its linked PR; this checkpoint is not a merge attestation.
+The first certification candidate exposed an omission in the operator-facing
+runtime-role provisioning SQL and was stopped after the reported failure. The
+conversion relation is now explicitly SELECT-only there as well as in the
+readiness probe. A fast inventory test reproduced the omission before the fix;
+all 2,851 unit tests and three real provisioning/rollback/runtime-role checks
+then passed. See the
+[provisioning correction](../checkpoints/2026-09-06-programme-conversion-runtime-provisioning.md).
+The corrected exact candidate still requires complete protected acceptance.
 Existing adoption manifests and generic Applications target fences stay closed.
 Host relationships, Scheduling, staffing, surfaces, and activation are excluded.
 This task is single-agent and stops after #77's protected merge and main sync.
