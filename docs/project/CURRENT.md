@@ -104,20 +104,28 @@ eight simultaneous databases and unchanged per-job timeouts.
 
 The implementation has a validated per-function inventory, actual-collection
 checks, risk/graph selection, local scope receipts and nightly deduplication.
-Initial focused policy/workflow checks and all 2,974 unit tests passed; lint
-and NumPy/semantic docstrings passed. The real complete collection contains
-3,126 integration cases on this main baseline. The 265 group-cost observations
-project 762.4–762.7 seconds per current-only local shard, versus 2,536.4–2,536.8
-seconds per exhaustive sixteen-group shard. These are cross-revision estimates
-from matching PR #82 local JUnit observations, not new benchmark or acceptance
-results. About 85 percent of those observations belong to historical execution.
-Current-only coverage/latency measurement, exhaustive certification, hosted
-acceptance and protected delivery remain outstanding.
+The current-only diagnostic for `2a0dda7f7307925135b7c2bfe401feb3f24829bb`
+completed in 899.281 seconds (14m59s): 2,981 unit and 3,002 PostgreSQL cases,
+zero failures/errors/skips across eight isolated databases. It deferred 124
+historical cases and did not run non-database quality gates. This is not full
+certification or hosted acceptance. The initial 20–35-minute hosted routine
+estimate remains an estimate; the exhaustive suite still has substantial cost.
+
+Final review found that the runner initialized Django before recording
+coverage; its 89.56-percent combined result passed only through the existing
+whole-number rounding. The candidate now starts coverage before the runner and
+uses two-decimal reporting at the same 90-percent threshold and exclusions.
+Regressions protect startup recording and rejection of the rounded shortfall.
+The corrected current path, final exhaustive local certification and hosted
+acceptance must pass before delivery. See the
+[benchmark checkpoint](../checkpoints/2026-09-07-postgresql-current-path-benchmark.md)
+for exact observations, limitations and the preserved original evidence.
 
 Neither #83 nor #81 is delivered. Preserve the separate Programme branch,
 existing stashes and other worktree. Do not merge PR #82 using a current-only
 diagnostic result: its migration-harness changes still require full evidence.
-The completed #77 app check-in remains disabled. Docker cleanup and unrelated
+The temporary #83 app reminder was deleted at the user's request; do not recreate
+it. The completed #77 app check-in remains disabled. Docker cleanup and unrelated
 product work remain outside this bounded task.
 
 ## What can be evaluated today
@@ -142,7 +150,7 @@ product work remain outside this bounded task.
 
 ## Smallest sensible next actions
 
-1. Finish #83's current-suite measurement, exhaustive local and hosted acceptance,
+1. Verify #83's corrected current coverage, then exhaustive local and hosted acceptance,
    protected delivery and exact-main synchronization. Do not bypass the red #82
    gate or repeat the already delivered #77/#79 work.
 2. If separately authorized, approve and remove only identified disposable

@@ -98,6 +98,13 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Routine code pull requests retain every current-schema PostgreSQL test while
+  historical migration checks follow the changed boundary. Global safety and
+  test-infrastructure changes, changed-revision nightly runs, and releases keep
+  exhaustive acceptance. Smaller historical groups retain at most eight
+  concurrent databases. Coverage starts before application initialization and
+  uses two-decimal reporting at the existing 90-percent threshold
+  ([#83](https://github.com/martonpornoi/maru/issues/83), ADR 0090).
 - Reuse compatible committed setup for twelve serial Registration migration
   tests while retaining both committed schema round trips, populated recovery
   fencing, and all original assertions. New real-migration isolation checks

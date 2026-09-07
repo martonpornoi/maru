@@ -304,11 +304,11 @@ jobs:
             git fetch --no-tags origin "$ACCEPTANCE_BASE"
           fi
           COVERAGE_FILE=coverage-parts/.coverage.integration-${{ matrix.shard }} \
-            uv run python -m scripts.run_postgres_acceptance \
+            uv run coverage run -m scripts.run_postgres_acceptance \
             --history "$HISTORY_SCOPE" --base "$ACCEPTANCE_BASE" \
             --shard-index ${{ matrix.shard }} --shard-count "$SHARD_COUNT" \
             --evidence reports/selection-${{ matrix.shard }}.json -- \
-            -q --cov=maru --cov-report= --cov-fail-under=0 \
+            -q \
             --junitxml=reports/integration-${{ matrix.shard }}.xml \
             --durations=25
       - name: Upload integration diagnostics

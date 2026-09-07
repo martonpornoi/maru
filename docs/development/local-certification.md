@@ -15,6 +15,11 @@ Last updated: 2026-09-07
 - every unit and current-schema PostgreSQL test, plus risk-selected history; and
 - combined branch-aware coverage at or above 90 percent.
 
+Coverage starts before the PostgreSQL runner initializes Django, using
+`coverage run -m scripts.run_postgres_acceptance`. Unit tests retain pytest-cov.
+The shared configuration uses two-decimal reporting at the same 90-percent
+threshold, so a whole-number rounded shortfall cannot certify a candidate.
+
 The test phase uses one database-free unit process and eight deterministic
 integration processes backed by eight isolated PostgreSQL containers. Current
 cases in a file stay together; independently restorable historical functions

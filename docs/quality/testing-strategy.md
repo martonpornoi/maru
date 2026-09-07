@@ -1,7 +1,7 @@
 # Testing strategy
 
 Status: Active
-Last updated: 2026-09-05
+Last updated: 2026-09-07
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
@@ -82,7 +82,7 @@ unrelated earlier Workforce error. This distinguishes the intended protection
 from merely observing that some migration prevented downgrade.
 
 Benchmark whole groups including shared setup and final restoration. A fast
-case body alone is not a suite-speed claim. Refresh whole-file scheduling weights
+case body alone is not a suite-speed claim. Refresh indivisible-group scheduling weights
 from JUnit evidence after moving cases; compare full certification with the same
 coverage and eight-worker topology before claiming an overall speedup. Keep the
 120-minute fail-stop, complete selection, and branch-aware coverage gate intact.
@@ -296,7 +296,12 @@ cancelled. Documentation-only changes avoid PostgreSQL.
 All code paths also run the unit suite, static analysis, NumPy and semantic
 docstrings, warning-fatal documentation, Django/OpenAPI/client contracts,
 frontend test/type/build validation and security audits. Combined branch-aware
-coverage remains at least 90 percent, with no new exclusions. SQLite never
+coverage retains the 90-percent threshold, with no new exclusions. Two-decimal
+reporting prevents a value such as 89.56 from passing as a rounded whole 90.
+PostgreSQL execution uses `coverage run -m scripts.run_postgres_acceptance`
+so recording includes Django initialization and graph planning before pytest;
+do not nest a second pytest-cov recorder around this already-recorded process.
+SQLite never
 substitutes for PostgreSQL.
 
 ### Explicit membership and grouping
@@ -348,6 +353,16 @@ cost until measured; stale or invalid entries fail. Do not infer completeness
 from timings: collection and executed-case evidence establish it independently.
 The old file-level runner/map remain diagnostic tooling, not the PR selection
 authority. Record comparable setup, execution and teardown, not only case bodies.
+
+For a reviewed timing refresh, retain the exact receipt and all successful JUnit
+reports before another local certification replaces them. Match each report's
+file/function (all parameter variants included) through `case_group()` and sum
+its JUnit case durations, including setup and teardown, per group. Reconcile
+every executed case with the shard selection JSON, rejecting duplicates,
+failures, errors, skips, missing or extra cases. Update only groups measured by
+that complete scope; current-only evidence cannot replace historical weights.
+Document the source revision and scope with the refresh. A timing edit changes
+scheduling only and itself requires exhaustive harness acceptance.
 
 ### Nightly, release and failure handling
 

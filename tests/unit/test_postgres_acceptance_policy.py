@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 from collections import Counter
 from dataclasses import replace
 from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 
 import pytest
+from coverage import Coverage
+from coverage.results import should_fail_under
 from scripts import run_postgres_acceptance as runner
 from scripts.ci_changes import ChangedFile, classify_changes
 from scripts.ci_test_policy import (
@@ -440,3 +445,49 @@ def test_acceptance_cli_refuses_filtered_or_shared_parallel_execution(
 ) -> None:
     with pytest.raises(SystemExit, match="2"):
         runner.main(["--", argument])
+
+
+def test_coverage_starts_before_runner_initializes_django(tmp_path: Path) -> None:
+    coverage_file = tmp_path / ".coverage.startup"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "coverage",
+            "run",
+            "-m",
+            "scripts.run_postgres_acceptance",
+            "--history",
+            "current",
+            "--plan-only",
+        ],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "COVERAGE_FILE": str(coverage_file),
+            "MARU_DATABASE_URL": "postgresql://maru:maru@127.0.0.1:1/no_database",
+        },
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )
+    assert "module-not-measured" not in result.stderr
+    assert json.loads(result.stdout)["history"] == "current"
+    measurement = Coverage(data_file=str(coverage_file))
+    measurement.load()
+    _file, statements, _excluded, missing, _formatted = measurement.analysis2(
+        str(ROOT / "src/maru/programme/apps.py")
+    )
+    assert statements
+    assert not missing
+
+
+def test_coverage_gate_does_not_round_a_shortfall_to_whole_percent() -> None:
+    measurement = Coverage(config_file=str(ROOT / "pyproject.toml"))
+    threshold = measurement.get_option("report:fail_under")
+    precision = measurement.get_option("report:precision")
+    assert threshold == 90
+    assert precision == 2
+    assert should_fail_under(89.56, threshold, precision)
+    assert not should_fail_under(90.01, threshold, precision)

@@ -25,6 +25,8 @@ tenant, authorization and transaction regressions until too late.
    unit tests and existing quality/security/frontend/documentation gates.
    Documentation-only changes retain their database-free path. Combined
    branch-aware coverage remains at least 90 percent with unchanged exclusions.
+   Record application initialization as well as test execution, and report to
+   two decimal places so whole-number rounding cannot conceal a shortfall.
 2. A reviewed test inventory names individual historical test functions and
    their migration owners. Unlisted tests are current behavior, never implicitly
    excluded by their filename or duration. Mixed files retain their current

@@ -442,7 +442,13 @@ def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> 
     assert '"$SHARD_COUNT"' in workflow
     assert "scripts.run_postgres_acceptance" in workflow
     assert "--evidence reports/selection-" in workflow
-    assert "scripts.run_postgres_acceptance" in workflow
+    integration_run = next(
+        step["run"]
+        for step in jobs["integration"]["steps"]
+        if step.get("name") == "Run validated risk-selected shard"
+    )
+    assert "coverage run -m scripts.run_postgres_acceptance" in integration_run
+    assert "--cov" not in integration_run
     assert "coverage combine .ci-artifacts/coverage-parts" in workflow
     assert "coverage report --fail-under=90" in workflow
     assert "name: Full CI gate" in workflow
@@ -705,7 +711,7 @@ def test_local_certification_preserves_database_isolation_and_total_coverage() -
         "postgres:17.11-alpine@sha256:",
         '"maru-cert-integration-$Shard-$RunToken"',
         "maru_unit_no_database",
-        '"-m", "scripts.run_postgres_acceptance"',
+        '"-m", "coverage", "run", "-m", "scripts.run_postgres_acceptance"',
         '"coverage", "combine"',
         '"coverage", "report", "--fail-under=90"',
         "Certification requires a clean working tree",

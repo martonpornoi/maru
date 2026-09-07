@@ -250,13 +250,12 @@ try {
             -Name "integration-$Shard" `
             -DatabasePort $Port `
             -Arguments @(
-                "-m", "scripts.run_postgres_acceptance",
+                "-m", "coverage", "run", "-m", "scripts.run_postgres_acceptance",
                 "--history", "$HistoryScope", "--base", "$BaseCommit",
                 "--shard-index", "$Shard",
                 "--shard-count", "$IntegrationShards",
                 "--evidence", "$ReportDirectory/selection-$Shard.json",
                 "--", "-q", "-p", "no:cacheprovider",
-                "--cov=maru", "--cov-report=", "--cov-fail-under=0",
                 "--junitxml=$ReportDirectory/integration-$Shard.xml",
                 "--durations=25"
             )))
