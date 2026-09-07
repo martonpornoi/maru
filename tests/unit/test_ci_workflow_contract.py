@@ -705,6 +705,7 @@ def test_pages_external_settings_have_exact_checked_in_desired_state() -> None:
 
 def test_local_certification_preserves_database_isolation_and_total_coverage() -> None:
     certification = LOCAL_CERTIFICATION_PATH.read_text(encoding="utf-8")
+    assert '$env:MYPY_CACHE_DIR = Join-Path $ArtifactRoot "mypy"' in certification
 
     for required in (
         "[int] $IntegrationShards = 8",

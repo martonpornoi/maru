@@ -116,8 +116,18 @@ coverage; its 89.56-percent combined result passed only through the existing
 whole-number rounding. The candidate now starts coverage before the runner and
 uses two-decimal reporting at the same 90-percent threshold and exclusions.
 Regressions protect startup recording and rejection of the rounded shortfall.
-The corrected current path, final exhaustive local certification and hosted
-acceptance must pass before delivery. See the
+The corrected diagnostic at `8fa540cf649937a56855d4098f7ec7647744e439`
+passed all 5,985 tests but correctly failed the precise coverage gate at 89.56%.
+Current-input, form, scope-token and dormant-profile regressions now exercise
+that behavior independently of historical migration fixtures. The candidate's
+3,224 unit tests pass; combining this development run with the earlier current
+PostgreSQL data estimates 90.02%, not fresh certification. The non-database
+quality gates passed on `8fa540c` with a fresh type-analysis cache; certification
+now isolates that cache per run to prevent cross-branch Django-plugin residue.
+Nightly deduplication also verifies the actual exact-revision Full CI gate,
+not a selector-only successful workflow with skipped acceptance.
+The final candidate's fresh current path, exhaustive local certification and
+hosted acceptance must pass before delivery. See the
 [benchmark checkpoint](../checkpoints/2026-09-07-postgresql-current-path-benchmark.md)
 for exact observations, limitations and the preserved original evidence.
 

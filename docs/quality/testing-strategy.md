@@ -368,7 +368,9 @@ scheduling only and itself requires exhaustive harness acceptance.
 
 The full-acceptance workflow runs nightly for changed default-branch revisions.
 Authenticated read-only run history deduplicates an already successful or active
-exact-main run. Earlier failed/cancelled runs cause an actionable red selection
+exact-main run. Successful deduplication requires that run's actual successful
+`Full CI gate`, bound to the exact revision and latest attempt; a selector-only
+successful workflow is not test evidence. Earlier failed/cancelled runs cause an actionable red selection
 job, not another expensive blind retry. Repair the failure or deliberately
 dispatch after inspecting its cause. Nightly failures block release and work
 depending on that boundary; they must not become ignored background noise.

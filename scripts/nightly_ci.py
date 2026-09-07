@@ -24,7 +24,8 @@ def nightly_decision(
     Parameters
     ----------
     runs : Sequence[dict[str, object]]
-        Runs returned for the default-branch full-acceptance workflow.
+        Runs returned for the default-branch full-acceptance workflow, with
+        successful full gates independently verified in ``full_gate_passed``.
     commit : str
         Exact default-branch revision being considered.
     current_run : int
@@ -63,7 +64,9 @@ def nightly_decision(
             continue
         previous.append(run)
     if any(
-        run["status"] == "completed" and run["conclusion"] == "success"
+        run["status"] == "completed"
+        and run["conclusion"] == "success"
+        and run.get("full_gate_passed") is True
         for run in previous
     ):
         return "passed"
@@ -73,6 +76,73 @@ def nightly_decision(
     ):
         return "active"
     return "blocked" if previous else "run"
+
+
+def completed_full_gate(
+    jobs: Sequence[dict[str, object]], commit: str, run_id: int
+) -> bool:
+    """Require the actual aggregate gate, not selector-only workflow success.
+
+    Parameters
+    ----------
+    jobs : Sequence[dict[str, object]]
+        Complete latest-attempt job metadata from the selected workflow run.
+    commit : str
+        Exact source revision whose exhaustive evidence is required.
+    run_id : int
+        Run identity whose jobs were requested through the authenticated API.
+
+    Returns
+    -------
+    bool
+        Whether exactly one matching full gate completed successfully.
+
+    Raises
+    ------
+    ValueError
+        If duplicate aggregate names make the evidence ambiguous.
+    """
+    gates = [
+        job
+        for job in jobs
+        if isinstance(job.get("name"), str)
+        and job["name"].rsplit(" / ", 1)[-1] == "Full CI gate"
+    ]
+    if len(gates) > 1:
+        raise ValueError("duplicate full acceptance gate metadata")
+    return bool(
+        gates
+        and gates[0].get("head_sha") == commit
+        and gates[0].get("run_id") == run_id
+        and gates[0].get("status") == "completed"
+        and gates[0].get("conclusion") == "success"
+    )
+
+
+def _read_page(
+    gh: str, endpoint: str, collection: str, filters: dict[str, str]
+) -> list[dict[str, object]]:
+    arguments = [gh, "api", "--method", "GET", endpoint]
+    for key, value in {**filters, "per_page": str(MAX_HISTORY)}.items():
+        arguments.extend(["-f", f"{key}={value}"])
+    response = subprocess.run(  # noqa: S603
+        arguments, check=True, capture_output=True, text=True
+    )
+    page = json.loads(response.stdout)
+    if (
+        not isinstance(page, dict)
+        or type(page.get("total_count")) is not int
+        or not 0 <= page["total_count"] < MAX_HISTORY
+    ):
+        raise ValueError("nightly history is incomplete; manual inspection is required")
+    items = page.get(collection)
+    if (
+        not isinstance(items, list)
+        or len(items) != page["total_count"]
+        or any(not isinstance(item, dict) for item in items)
+    ):
+        raise ValueError("nightly history count does not match its complete page")
+    return items
 
 
 def main() -> int:
@@ -98,34 +168,33 @@ def main() -> int:
     gh = shutil.which("gh")
     if gh is None:
         raise ValueError("GitHub CLI is required for authenticated read-only history")
-    # Fixed read-only API, validated repository and argument array; no shell.
-    response = subprocess.run(  # noqa: S603
-        [
-            gh,
-            "api",
-            "--method",
-            "GET",
-            f"repos/{repository}/actions/workflows/full-ci.yml/runs",
-            "-f",
-            f"head_sha={commit}",
-            "-f",
-            "branch=main",
-            "-f",
-            f"per_page={MAX_HISTORY}",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
+    runs = _read_page(
+        gh,
+        f"repos/{repository}/actions/workflows/full-ci.yml/runs",
+        "workflow_runs",
+        {"head_sha": commit, "branch": "main"},
     )
-    history = json.loads(response.stdout)
-    if (
-        type(history.get("total_count")) is not int
-        or history["total_count"] >= MAX_HISTORY
-    ):
-        raise ValueError("nightly history is incomplete; manual inspection is required")
-    runs = history.get("workflow_runs")
-    if not isinstance(runs, list) or len(runs) != history["total_count"]:
-        raise ValueError("nightly history count does not match its complete page")
+    for run in runs:
+        # Do not trust this derived field if it appears in the API response.
+        run["full_gate_passed"] = False
+        if (
+            run.get("id") != run_id
+            and run.get("head_sha") == commit
+            and run.get("head_branch") == "main"
+            and run.get("event") in {"schedule", "workflow_dispatch"}
+            and run.get("status") == "completed"
+            and run.get("conclusion") == "success"
+        ):
+            candidate_id = run["id"]
+            if type(candidate_id) is not int or candidate_id < 1:
+                raise ValueError("invalid full-acceptance run identity")
+            jobs = _read_page(
+                gh,
+                f"repos/{repository}/actions/runs/{candidate_id}/jobs",
+                "jobs",
+                {"filter": "latest"},
+            )
+            run["full_gate_passed"] = completed_full_gate(jobs, commit, candidate_id)
     decision = nightly_decision(runs, commit, run_id)
     with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
         output.write(f"run_full={str(decision == 'run').lower()}\n")

@@ -17,6 +17,7 @@ if ($IntegrationShards -ne 8 -and $Mode -ne "CurrentDiagnostic") {
 $RepositoryRoot = Split-Path -Parent $PSScriptRoot
 $env:UV_CACHE_DIR = Join-Path $RepositoryRoot ".uv-cache"
 $ArtifactRoot = [IO.Path]::GetFullPath((Join-Path $RepositoryRoot ".local-ci"))
+$env:MYPY_CACHE_DIR = Join-Path $ArtifactRoot "mypy"
 $RepositoryPrefix = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd(
     [IO.Path]::DirectorySeparatorChar
 ) + [IO.Path]::DirectorySeparatorChar

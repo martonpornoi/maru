@@ -19,6 +19,9 @@ Coverage starts before the PostgreSQL runner initializes Django, using
 `coverage run -m scripts.run_postgres_acceptance`. Unit tests retain pytest-cov.
 The shared configuration uses two-decimal reporting at the same 90-percent
 threshold, so a whole-number rounded shortfall cannot certify a candidate.
+The local type-analysis cache lives inside the fresh `.local-ci/` artifact
+directory, preventing stale Django model relationships from another branch
+from entering exact-commit certification.
 
 The test phase uses one database-free unit process and eight deterministic
 integration processes backed by eight isolated PostgreSQL containers. Current

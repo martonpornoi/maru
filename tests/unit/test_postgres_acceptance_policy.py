@@ -12,6 +12,7 @@ from types import SimpleNamespace
 import pytest
 from coverage import Coverage
 from coverage.results import should_fail_under
+from scripts import nightly_ci
 from scripts import run_postgres_acceptance as runner
 from scripts.ci_changes import ChangedFile, classify_changes
 from scripts.ci_test_policy import (
@@ -28,7 +29,7 @@ from scripts.ci_test_policy import (
     select_groups,
 )
 from scripts.ci_test_policy import TestGroup as WorkGroup
-from scripts.nightly_ci import nightly_decision
+from scripts.nightly_ci import completed_full_gate, nightly_decision
 from scripts.run_postgres_acceptance import CollectionBoundary, resolve_scope
 
 
@@ -351,6 +352,7 @@ def _run(**updates: object) -> dict[str, object]:
         "status": "completed",
         "conclusion": "success",
         "event": "schedule",
+        "full_gate_passed": True,
         **updates,
     }
 
@@ -381,6 +383,112 @@ def test_nightly_rejects_missing_metadata_and_invalid_revision() -> None:
         nightly_decision([{}], "a" * 40, 2)
     with pytest.raises(ValueError, match="exact commit"):
         nightly_decision([], "main", 2)
+
+
+def test_selector_success_cannot_hide_failed_or_active_full_acceptance() -> None:
+    skipped = _run(full_gate_passed=False)
+    assert nightly_decision([skipped], "a" * 40, 3) == "blocked"
+    assert (
+        nightly_decision([skipped, _run(id=2, conclusion="failure")], "a" * 40, 3)
+        == "blocked"
+    )
+    assert (
+        nightly_decision(
+            [skipped, _run(id=2, status="in_progress", conclusion=None)], "a" * 40, 3
+        )
+        == "active"
+    )
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"name": "Select changed-revision nightly acceptance"},
+        {"head_sha": "b" * 40},
+        {"run_id": 2},
+        {"status": "in_progress"},
+        {"conclusion": "skipped"},
+        {"conclusion": "failure"},
+    ],
+)
+def test_nightly_full_gate_requires_exact_success(changes: dict[str, object]) -> None:
+    gate = {
+        "name": "Full acceptance / Full CI gate",
+        "head_sha": "a" * 40,
+        "run_id": 1,
+        "status": "completed",
+        "conclusion": "success",
+    }
+    assert completed_full_gate([gate], "a" * 40, 1)
+    assert not completed_full_gate([{**gate, **changes}], "a" * 40, 1)
+    assert not completed_full_gate([], "a" * 40, 1)
+    with pytest.raises(ValueError, match="duplicate"):
+        completed_full_gate([gate, gate], "a" * 40, 1)
+
+
+@pytest.mark.parametrize("conclusion", ["success", "skipped", "failure"])
+def test_nightly_reads_actual_job_evidence_before_deduplicating(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, conclusion: str
+) -> None:
+    monkeypatch.setenv("GITHUB_REPOSITORY", "synthetic/maru")
+    monkeypatch.setenv("GITHUB_SHA", "a" * 40)
+    monkeypatch.setenv("GITHUB_RUN_ID", "2")
+    output = tmp_path / "outputs"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output))
+    monkeypatch.setattr(nightly_ci.shutil, "which", lambda _name: "gh")
+    calls = []
+
+    def read_api(arguments: list[str], **kwargs: object) -> SimpleNamespace:
+        calls.append(arguments)
+        assert arguments[:4] == ["gh", "api", "--method", "GET"]
+        assert kwargs == {"check": True, "capture_output": True, "text": True}
+        if arguments[4].endswith("full-ci.yml/runs"):
+            page = {"total_count": 1, "workflow_runs": [_run()]}
+        else:
+            assert arguments[4] == "repos/synthetic/maru/actions/runs/1/jobs"
+            assert "filter=latest" in arguments
+            page = {
+                "total_count": 1,
+                "jobs": [
+                    {
+                        "name": "Full acceptance / Full CI gate",
+                        "head_sha": "a" * 40,
+                        "run_id": 1,
+                        "status": "completed",
+                        "conclusion": conclusion,
+                    }
+                ],
+            }
+        return SimpleNamespace(stdout=json.dumps(page))
+
+    monkeypatch.setattr(nightly_ci.subprocess, "run", read_api)
+    assert nightly_ci.main() == (0 if conclusion == "success" else 1)
+    assert len(calls) == 2
+    assert output.read_text() == "run_full=false\n"
+
+
+@pytest.mark.parametrize(
+    "page",
+    [
+        [],
+        {"total_count": 100, "jobs": []},
+        {"total_count": -1, "jobs": []},
+        {"total_count": 1, "jobs": []},
+        {"total_count": 1, "jobs": [None]},
+    ],
+)
+def test_nightly_refuses_incomplete_or_malformed_job_pages(
+    monkeypatch: pytest.MonkeyPatch, page: object
+) -> None:
+    monkeypatch.setattr(
+        nightly_ci.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(stdout=json.dumps(page)),
+    )
+    with pytest.raises(ValueError, match=r"incomplete|count"):
+        nightly_ci._read_page(
+            "gh", "repos/synthetic/maru/actions/runs/1/jobs", "jobs", {}
+        )
 
 
 def test_same_named_class_case_is_current_and_parameter_colons_do_not_split() -> None:
