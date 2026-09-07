@@ -7,6 +7,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 
 from tests.factories import AccountFactory, EventEditionFactory
+from tests.support.migrations import migration_project_state
 from tests.support.migrations import registration_migration_targets as _targets
 
 pytestmark = [
@@ -68,8 +69,8 @@ def test_profile_audience_backfill_and_compatible_reverse_are_exact() -> None:
     before = _migrate(REGISTRATION_BEFORE)
     edition = EventEditionFactory()
     actor = AccountFactory()
-    legacy_field = before.loader.project_state(
-        _targets(before, REGISTRATION_BEFORE)
+    legacy_field = migration_project_state(
+        before, _targets(before, REGISTRATION_BEFORE)
     ).apps.get_model("registration", "RegistrationProfileExtensionField")
     visible = _legacy_field(
         legacy_field,
@@ -98,8 +99,8 @@ def test_profile_audience_backfill_and_compatible_reverse_are_exact() -> None:
     )
 
     after = _migrate(REGISTRATION_AFTER)
-    audience_field = after.loader.project_state(
-        _targets(after, REGISTRATION_AFTER)
+    audience_field = migration_project_state(
+        after, _targets(after, REGISTRATION_AFTER)
     ).apps.get_model("registration", "RegistrationProfileExtensionField")
     assert audience_field.objects.get(pk=visible.pk).audience_policy == "self"
     assert (

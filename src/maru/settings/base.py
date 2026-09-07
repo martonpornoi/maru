@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "maru.charities",
     "maru.applications",
     "maru.programme",
+    "maru.scheduling",
     "maru.venues",
     "maru.logistics",
     "maru.workforce",

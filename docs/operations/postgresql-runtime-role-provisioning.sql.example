@@ -165,6 +165,45 @@ GRANT SELECT ON TABLE
     public.programme_programmehostavailabilitywindow
     TO maru_runtime;
 
+-- Dormant Scheduling and its reciprocal Venue binding remain SELECT-only.
+-- No route, worker, profile pin or generic Venue command may write this graph.
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.scheduling_schedulingeditioncontrol,
+    public.scheduling_schedulingserviceday,
+    public.scheduling_schedulingservicedayrevision,
+    public.scheduling_schedulingoccurrence,
+    public.scheduling_schedulingoccurrencerevision,
+    public.scheduling_schedulingcandidate,
+    public.scheduling_schedulingcandidaterevision,
+    public.scheduling_schedulingplacementrevision,
+    public.scheduling_schedulingcandidatemember,
+    public.scheduling_schedulingplacementhostpresence,
+    public.scheduling_schedulingevaluation,
+    public.scheduling_schedulingconflict,
+    public.scheduling_schedulingwarningacknowledgement,
+    public.scheduling_schedulingreservationintent,
+    public.scheduling_schedulingcommandreceipt,
+    public.venues_venueschedulingbinding
+    FROM maru_runtime, PUBLIC;
+GRANT SELECT ON TABLE
+    public.scheduling_schedulingeditioncontrol,
+    public.scheduling_schedulingserviceday,
+    public.scheduling_schedulingservicedayrevision,
+    public.scheduling_schedulingoccurrence,
+    public.scheduling_schedulingoccurrencerevision,
+    public.scheduling_schedulingcandidate,
+    public.scheduling_schedulingcandidaterevision,
+    public.scheduling_schedulingplacementrevision,
+    public.scheduling_schedulingcandidatemember,
+    public.scheduling_schedulingplacementhostpresence,
+    public.scheduling_schedulingevaluation,
+    public.scheduling_schedulingconflict,
+    public.scheduling_schedulingwarningacknowledgement,
+    public.scheduling_schedulingreservationintent,
+    public.scheduling_schedulingcommandreceipt,
+    public.venues_venueschedulingbinding
+    TO maru_runtime;
+
 -- Applications issues #63 and #66 add dormant Programme-call/proposal and
 -- preview-first import kernels without mounting a caller or widening either
 -- current profile. These relations are stricter than the existing mounted

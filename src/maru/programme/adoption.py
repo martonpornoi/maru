@@ -2,6 +2,7 @@
 
 from maru.events.adoption_contracts import (
     AdoptionAdapterDescriptor,
+    AdoptionConflictSourceDescriptor,
     build_adoption_adapter_registry,
     build_adoption_conflict_source_registry,
 )
@@ -9,6 +10,7 @@ from maru.events.adoption_contracts import (
 PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER = (
     "programme.accepted-application-source@1"
 )
+PROGRAMME_SCHEDULING_CONFLICT_SOURCE = "programme.item-and-host-availability@1"
 
 PROGRAMME_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
     owner_module="programme",
@@ -31,11 +33,26 @@ PROGRAMME_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
 
 PROGRAMME_ADOPTION_CONFLICT_SOURCES = build_adoption_conflict_source_registry(
     owner_module="programme",
-    descriptors=(),
+    descriptors=(
+        AdoptionConflictSourceDescriptor(
+            code=PROGRAMME_SCHEDULING_CONFLICT_SOURCE,
+            owner_module="programme",
+            kind="item-and-explicit-host-consequences",
+            result_semantics=(
+                "Projects current item and selected host status, edition-bounded "
+                "person conflict keys and only deliberately shared current periods."
+            ),
+            failure_semantics=(
+                "Absent, unpinned, unauthorized or over-bound scope is unavailable; "
+                "private or withdrawn availability never means free."
+            ),
+        ),
+    ),
 )
 
 __all__ = [
     "PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER",
     "PROGRAMME_ADOPTION_ADAPTERS",
     "PROGRAMME_ADOPTION_CONFLICT_SOURCES",
+    "PROGRAMME_SCHEDULING_CONFLICT_SOURCE",
 ]

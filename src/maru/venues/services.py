@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass
 from datetime import date, datetime
 from itertools import pairwise
 from typing import TYPE_CHECKING
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -26,6 +26,7 @@ from maru.authorization.policy import (
 )
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
+from maru.identity.queries import resolve_active_verified_person_reference
 from maru.organizations.models import Organization
 from maru.workforce.models import Department
 
@@ -53,12 +54,14 @@ from .models import (
     VenueLayoutVersion,
     VenueProperty,
     VenuePropertyMedia,
+    VenueSchedulingBinding,
     VenueSite,
     VenueSpace,
     VenueSpaceCombination,
     VenueSpaceCombinationMember,
     VenueSpaceConfiguration,
 )
+from .physical_locks import _lock_physical_scope
 from .writer_boundary import venue_writer
 
 if TYPE_CHECKING:
@@ -341,6 +344,7 @@ class VenueBookingEnvelope:
 
 @dataclass(frozen=True, slots=True)
 class _AuthorizedSpace:
+    actor_id: UUID
     space_selection_id: UUID
     department_id: UUID
     target: ResolvedAuthorizationTarget
@@ -498,6 +502,7 @@ def _space_decision(
     if target is None:
         raise VenueAuthorizationDeniedError
     return _AuthorizedSpace(
+        actor_id=actor.id,
         space_selection_id=row["id"],
         department_id=row["responsible_department_id"],
         target=target,
@@ -573,12 +578,57 @@ def _append_evidence(
     action: str,
     occurred_at: datetime,
 ) -> VenueCommandReceipt:
+    return _append_evidence_ids(
+        actor_id=actor.id,
+        organization_id=organization.id,
+        edition_id=edition.id if edition else None,
+        operation=operation,
+        idempotency_key=idempotency_key,
+        request_digest=request_digest,
+        result_object_id=result_object_id,
+        resulting_version=resulting_version,
+        correlation_id=correlation_id,
+        request_id=request_id,
+        source_channel=source_channel,
+        capability_code=capability_code,
+        decision=decision,
+        changed_fields=changed_fields,
+        aggregate_type=aggregate_type,
+        aggregate_id=aggregate_id,
+        action=action,
+        occurred_at=occurred_at,
+    )
+
+
+def _append_evidence_ids(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID | None,
+    operation: str,
+    idempotency_key: UUID,
+    request_digest: str,
+    result_object_id: UUID,
+    resulting_version: int,
+    correlation_id: UUID,
+    request_id: UUID | None,
+    source_channel: str,
+    capability_code: str,
+    decision: PolicyDecision,
+    changed_fields: Sequence[str],
+    aggregate_type: str,
+    aggregate_id: UUID,
+    action: str,
+    occurred_at: datetime,
+    receipt_id: UUID | None = None,
+) -> VenueCommandReceipt:
     with venue_writer():
         receipt = VenueCommandReceipt.objects.create(
-            organization=organization,
-            edition=edition,
+            id=receipt_id or uuid4(),
+            organization_id=organization_id,
+            edition_id=edition_id,
             operation=operation,
-            actor=actor,
+            actor_id=actor_id,
             idempotency_key=idempotency_key,
             request_digest=request_digest,
             resulting_version=resulting_version,
@@ -589,10 +639,10 @@ def _append_evidence(
     audit = append_audit(
         AuditRecord(
             principal_kind="account",
-            principal_id=actor.id,
+            principal_id=actor_id,
             principal_context_id=None,
-            organization_id=organization.id,
-            event_edition_id=edition.id if edition else None,
+            organization_id=organization_id,
+            event_edition_id=edition_id,
             capability_code=capability_code,
             operation=f"venues.{operation}",
             target_type=aggregate_type,
@@ -614,8 +664,8 @@ def _append_evidence(
         DomainEventRecord(
             event_name="venues.record.changed.v1",
             schema_version=1,
-            organization_id=organization.id,
-            event_edition_id=edition.id if edition else None,
+            organization_id=organization_id,
+            event_edition_id=edition_id,
             aggregate_type=aggregate_type,
             aggregate_id=aggregate_id,
             aggregate_version=resulting_version,
@@ -627,7 +677,7 @@ def _append_evidence(
             correlation_id=correlation_id,
             causation_id=audit.id,
             actor_kind="account",
-            actor_id=actor.id,
+            actor_id=actor_id,
             retention_class="venue-operational",
         ),
         occurred_at=occurred_at,
@@ -2867,8 +2917,14 @@ def set_edition_space_availability(
         request_digest=digest,
     ):
         return _replayed_result(receipt)
+    _lock_physical_scope(
+        actor_id=authorized.actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        selection_ids=(authorized.space_selection_id,),
+    )
     space_selection = (
-        EditionSpaceSelection.objects.select_for_update()
+        EditionSpaceSelection.objects.select_for_update(of=("self",))
         .select_related("organization", "edition")
         .filter(
             id=authorized.space_selection_id,
@@ -3070,8 +3126,14 @@ def _locked_space_selection(
     organization_id: UUID,
     edition_id: UUID,
 ) -> EditionSpaceSelection:
+    _lock_physical_scope(
+        actor_id=authorized.actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        selection_ids=(authorized.space_selection_id,),
+    )
     space_selection = (
-        EditionSpaceSelection.objects.select_for_update()
+        EditionSpaceSelection.objects.select_for_update(of=("self",))
         .select_related("organization", "edition", "responsible_department")
         .filter(
             id=authorized.space_selection_id,
@@ -3129,15 +3191,40 @@ def _append_booking_history(
     old_publication_state: str = "",
     old_lifecycle: str = "",
 ) -> None:
+    _append_booking_history_ids(
+        booking=booking,
+        actor_id=actor.id,
+        action=action,
+        reason=reason,
+        occurred_at=occurred_at,
+        old_envelope=old_envelope,
+        old_review_state=old_review_state,
+        old_publication_state=old_publication_state,
+        old_lifecycle=old_lifecycle,
+    )
+
+
+def _append_booking_history_ids(
+    *,
+    booking: VenueBooking,
+    actor_id: UUID,
+    action: str,
+    reason: str,
+    occurred_at: datetime,
+    old_envelope: VenueBookingEnvelope | None = None,
+    old_review_state: str = "",
+    old_publication_state: str = "",
+    old_lifecycle: str = "",
+) -> None:
     with venue_writer():
         VenueBookingHistory.objects.create(
             booking=booking,
-            organization=booking.organization,
-            edition=booking.edition,
+            organization_id=booking.organization_id,
+            edition_id=booking.edition_id,
             sequence=booking.aggregate_version,
             booking_version=booking.aggregate_version,
             action=action,
-            actor=actor,
+            actor_id=actor_id,
             occurred_at=occurred_at,
             reason=reason,
             old_setup_starts_at=(
@@ -3168,9 +3255,9 @@ def _append_booking_history(
 def _write_booking_occupancy(*, booking: VenueBooking) -> None:
     member_ids = tuple(
         EditionSpaceMember.objects.filter(
-            space_selection=booking.space_selection,
-            organization=booking.organization,
-            edition=booking.edition,
+            space_selection_id=booking.space_selection_id,
+            organization_id=booking.organization_id,
+            edition_id=booking.edition_id,
         )
         .order_by("source_space_id")
         .values_list("source_space_id", flat=True)
@@ -3183,8 +3270,8 @@ def _write_booking_occupancy(*, booking: VenueBooking) -> None:
             (
                 VenueBookingOccupancy(
                     booking=booking,
-                    organization=booking.organization,
-                    edition=booking.edition,
+                    organization_id=booking.organization_id,
+                    edition_id=booking.edition_id,
                     source_space_id=source_space_id,
                     conflict_group=(
                         VenueBookingOccupancy.ConflictGroup.SETUP_EFFECTIVE
@@ -3198,8 +3285,8 @@ def _write_booking_occupancy(*, booking: VenueBooking) -> None:
                 ),
                 VenueBookingOccupancy(
                     booking=booking,
-                    organization=booking.organization,
-                    edition=booking.edition,
+                    organization_id=booking.organization_id,
+                    edition_id=booking.edition_id,
                     source_space_id=source_space_id,
                     conflict_group=(
                         VenueBookingOccupancy.ConflictGroup.EFFECTIVE_TEARDOWN
@@ -3562,7 +3649,10 @@ def reschedule_venue_booking(
         raise VenueResourceUnavailableError
     if booking.aggregate_version != expected_version:
         raise VenueVersionConflictError
-    if booking.lifecycle != VenueBooking.Lifecycle.ACTIVE:
+    if (
+        booking.lifecycle != VenueBooking.Lifecycle.ACTIVE
+        or VenueSchedulingBinding.objects.filter(booking=booking).exists()
+    ):
         raise VenueStateConflictError
     _require_available_capacity(
         space_selection=space_selection,
@@ -3652,8 +3742,14 @@ def _locked_booking(
     edition_id: UUID,
     booking_id: UUID,
 ) -> VenueBooking:
+    _lock_physical_scope(
+        actor_id=authorized.actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        selection_ids=(authorized.space_selection_id,),
+    )
     booking = (
-        VenueBooking.objects.select_for_update()
+        VenueBooking.objects.select_for_update(of=("self",))
         .select_related("organization", "edition")
         .filter(
             id=booking_id,
@@ -3776,6 +3872,8 @@ def approve_venue_booking(
 
     Raises
     ------
+    VenueAuthorizationDeniedError
+        If a Programme-linked booking approver is not a current verified person.
     VenueIndependentApprovalError
         If the actor is not independent from the proposal being approved.
     VenueStateConflictError
@@ -3832,6 +3930,13 @@ def approve_venue_booking(
         raise VenueStateConflictError
     if actor.id in {booking.created_by_id, booking.last_modified_by_id}:
         raise VenueIndependentApprovalError
+    if VenueSchedulingBinding.objects.filter(booking=booking).exists():
+        if resolve_active_verified_person_reference(account_id=actor.id) is None:
+            raise VenueAuthorizationDeniedError
+        if VenueSchedulingBinding.objects.filter(
+            booking=booking, source_actor_id=actor.id
+        ).exists():
+            raise VenueIndependentApprovalError
     old_review_state = booking.review_state
     old_publication_state = booking.publication_state
     old_lifecycle = booking.lifecycle
@@ -3966,6 +4071,7 @@ def publish_venue_booking(
         or booking.review_state != VenueBooking.ReviewState.APPROVED
         or booking.publication_state == VenueBooking.PublicationState.PUBLISHED
         or booking.kind == VenueBooking.Kind.PRIVATE
+        or VenueSchedulingBinding.objects.filter(booking=booking).exists()
         or not booking.public_title
     ):
         raise VenueStateConflictError

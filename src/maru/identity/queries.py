@@ -5,6 +5,7 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from uuid import UUID, uuid5
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -14,9 +15,9 @@ from maru.identity.models import Account
 
 if TYPE_CHECKING:
     from collections.abc import Collection
-    from uuid import UUID
 
 MAX_LOGIN_EMAIL_LENGTH = 254
+MAX_PERSON_REFERENCE_BATCH = 2_000
 
 
 def normalized_exact_login_email(value: object) -> str | None:
@@ -71,6 +72,41 @@ class ActiveVerifiedPersonReference:
     """
 
     account_id: UUID
+
+
+def lock_account_references_for_evidence(
+    *, account_ids: Collection[UUID]
+) -> tuple[UUID, ...] | None:
+    """Lock exact evidence principals without treating identity as authorization.
+
+    This compatibility seam deliberately does not impose person or verification
+    requirements on older owners. Callers still enforce their own current policy.
+    It returns identifiers only, in canonical order, inside an existing transaction.
+
+    Parameters
+    ----------
+    account_ids : Collection[UUID]
+        Bounded explicit principals whose retained evidence will reference identity.
+
+    Returns
+    -------
+    tuple[UUID, ...] | None
+        Canonically locked identifiers, or unavailable for malformed or missing input.
+    """
+    if (
+        not isinstance(account_ids, (tuple, list, set, frozenset))
+        or len(account_ids) > MAX_PERSON_REFERENCE_BATCH
+        or any(not isinstance(value, UUID) for value in account_ids)
+    ):
+        return None
+    identifiers = tuple(sorted(set(account_ids)))
+    locked = tuple(
+        Account.objects.select_for_update(of=("self",))
+        .filter(id__in=identifiers)
+        .order_by("id")
+        .values_list("id", flat=True)
+    )
+    return locked if locked == identifiers else None
 
 
 def resolve_active_verified_account_reference(
@@ -158,6 +194,81 @@ def resolve_active_verified_person_reference(
     if resolved_id is None:
         return None
     return ActiveVerifiedPersonReference(account_id=resolved_id)
+
+
+def edition_person_conflict_key(*, edition_id: UUID, account_id: UUID) -> UUID:
+    """Derive one edition-bounded person key for authorized conflict adapters.
+
+    The key is pseudonymous, not anonymous or an authorization credential.
+    Owner adapters must prove current person state and exact purpose before
+    releasing it. Sharing this derivation lets explicitly adopted Programme
+    and Workforce sources identify the same person without copying a directory.
+
+    Parameters
+    ----------
+    edition_id : UUID
+        Exact independently authorized edition namespace.
+    account_id : UUID
+        Explicit current person identifier already resolved by its owner.
+
+    Returns
+    -------
+    UUID
+        Stable purpose-versioned key within this edition only.
+
+    Raises
+    ------
+    ValidationError
+        If either identifier has not been parsed as a UUID.
+    """
+    if not isinstance(edition_id, UUID) or not isinstance(account_id, UUID):
+        raise ValidationError("Conflict keys require exact typed scope identifiers.")
+    return uuid5(edition_id, f"scheduling-person@1:{account_id}")
+
+
+def resolve_active_verified_person_references(
+    *, account_ids: Collection[UUID], lock: bool = False
+) -> tuple[ActiveVerifiedPersonReference, ...] | None:
+    """Resolve a bounded authorized ID set in canonical person-lock order.
+
+    This internal owner contract returns no names or contact information.
+    Callers must independently authorize their exact purpose before supplying
+    identifiers; it is not an account-directory or browser discovery endpoint.
+
+    Parameters
+    ----------
+    account_ids : Collection[UUID]
+        At most two thousand explicit, already authorized person identifiers.
+    lock : bool, default=False
+        Whether to lock the current people inside the caller's transaction.
+
+    Returns
+    -------
+    tuple[ActiveVerifiedPersonReference, ...] | None
+        Complete UUID-ordered current verified people among the requested IDs,
+        or unavailable for malformed or over-bound input. Missing, inactive,
+        unverified and non-person accounts are absent without further detail.
+    """
+    if (
+        not isinstance(account_ids, (tuple, list, set, frozenset))
+        or len(account_ids) > MAX_PERSON_REFERENCE_BATCH
+        or any(not isinstance(account_id, UUID) for account_id in account_ids)
+    ):
+        return None
+    if not account_ids:
+        return ()
+    query = Account.objects.filter(
+        id__in=set(account_ids),
+        is_active=True,
+        email_verified_at__isnull=False,
+        account_kind=Account.Kind.PERSON,
+    ).order_by("id")
+    if lock:
+        query = query.select_for_update(of=("self",))
+    return tuple(
+        ActiveVerifiedPersonReference(account_id=account_id)
+        for account_id in query.values_list("id", flat=True)
+    )
 
 
 def resolve_active_verified_person_reference_by_email(

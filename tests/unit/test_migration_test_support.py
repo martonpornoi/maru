@@ -10,10 +10,31 @@ from tests.support.migrations import (
     flush_then_restore_current_migration_graph,
     identity_migration_targets,
     migrate_test_targets,
+    migration_project_state,
     registration_migration_targets,
     rollback_migration_case,
     workforce_migration_targets,
 )
+
+
+def test_state_targets_filter_only_zero_nodes_without_changing_execution_targets():
+    executor = Mock()
+    state = SimpleNamespace(models={("kept", "record"): object()})
+    executor.loader.project_state.return_value = state
+    targets = (("absent", None), ("kept", "0002"))
+    assert migration_project_state(executor, targets) is state
+    executor.loader.project_state.assert_called_once_with([("kept", "0002")])
+    assert targets == (("absent", None), ("kept", "0002"))
+    executor.migrate.assert_not_called()
+
+
+def test_state_targets_refuse_dependencies_that_reintroduce_an_absent_owner():
+    executor = Mock()
+    executor.loader.project_state.return_value = SimpleNamespace(
+        models={("absent", "record"): object()}
+    )
+    with pytest.raises(ValueError, match="explicitly unmigrated owner"):
+        migration_project_state(executor, (("absent", None), ("kept", "0002")))
 
 
 @pytest.mark.parametrize("backwards", [False, True])
@@ -244,7 +265,14 @@ def test_registration_history_does_not_reintroduce_later_workforce_dependencies(
     target = ("registration", "0035_configuration_source_binding_guards")
     targets = registration_migration_targets(SimpleNamespace(loader=loader), target)
     allowed_registration = set(loader.graph.forwards_plan(target))
+    assert ("scheduling", None) in targets
+    assert ("venues", "0002_venue_write_integrity") in targets
+    state = migration_project_state(SimpleNamespace(loader=loader), targets)
+    assert not any(app == "scheduling" for app, _ in state.models)
+    assert ("registration", "registrationconfiguration") in state.models
     for selected in targets:
+        if selected[1] is None:
+            continue
         assert all(
             node[0] != "registration" or node in allowed_registration
             for node in loader.graph.forwards_plan(selected)
@@ -265,7 +293,12 @@ def test_conversion_does_not_reintroduce_rewound_owner_dependencies(app: str) ->
         )
     allowed = set(loader.graph.forwards_plan(target))
     assert ("programme", "0003_downgrade_fence") in targets
+    if app == "identity":
+        assert ("scheduling", None) in targets
+        assert ("venues", "0002_venue_write_integrity") in targets
     for selected in targets:
+        if selected[1] is None:
+            continue
         assert all(
             node[0] != app or node in allowed
             for node in loader.graph.forwards_plan(selected)

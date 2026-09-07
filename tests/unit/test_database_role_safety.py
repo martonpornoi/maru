@@ -20,7 +20,13 @@ from maru.authorization.database_role_safety import (
     probe_runtime_database_role_safety,
 )
 
-_BOUNDED_DOMAIN_APP_LABELS = ("applications", "charities", "catalog", "venues")
+_BOUNDED_DOMAIN_APP_LABELS = (
+    "applications",
+    "charities",
+    "catalog",
+    "venues",
+    "scheduling",
+)
 _APPLICATION_DRAFT_CHILD_RELATIONS = {
     "public.applications_applicationownerdepartment",
     "public.applications_applicationreviewerrole",
@@ -59,7 +65,14 @@ def test_provisioning_sql_covers_every_dormant_programme_read_only_relation() ->
     expected = {
         relation
         for relation in RUNTIME_DATABASE_SELECT_ONLY_RELATIONS
-        if relation.startswith(("public.applications_programme", "public.programme_"))
+        if relation.startswith(
+            (
+                "public.applications_programme",
+                "public.programme_",
+                "public.scheduling_",
+                "public.venues_venueschedulingbinding",
+            )
+        )
     }
     assert expected <= selected
     assert expected <= revoked["PUBLIC"]
@@ -116,6 +129,22 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.programme_programmehostinvitation",
         "public.programme_programmehostrevision",
         "public.programme_programmehostavailabilitywindow",
+        "public.scheduling_schedulingeditioncontrol",
+        "public.scheduling_schedulingserviceday",
+        "public.scheduling_schedulingservicedayrevision",
+        "public.scheduling_schedulingoccurrence",
+        "public.scheduling_schedulingoccurrencerevision",
+        "public.scheduling_schedulingcandidate",
+        "public.scheduling_schedulingcandidaterevision",
+        "public.scheduling_schedulingplacementrevision",
+        "public.scheduling_schedulingcandidatemember",
+        "public.scheduling_schedulingplacementhostpresence",
+        "public.scheduling_schedulingevaluation",
+        "public.scheduling_schedulingconflict",
+        "public.scheduling_schedulingwarningacknowledgement",
+        "public.scheduling_schedulingreservationintent",
+        "public.scheduling_schedulingcommandreceipt",
+        "public.venues_venueschedulingbinding",
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
         "public.effects_effectreplayreceipt",
@@ -311,7 +340,7 @@ def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
         not (append_only_relations | retained_aggregate_relations)
         & _APPLICATION_DRAFT_CHILD_RELATIONS
     )
-    assert len(select_only_bounded_relations) == 29
+    assert len(select_only_bounded_relations) == 45
     assert not select_only_bounded_relations & (
         append_only_relations
         | retained_aggregate_relations

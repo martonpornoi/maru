@@ -28,6 +28,8 @@ from maru.programme.readiness import (
     PROGRAMME_INTEGRITY_CONTRACT,
     programme_database_integrity_is_ready,
 )
+from maru.scheduling.readiness import scheduling_database_integrity_is_ready
+from maru.venues.readiness import venues_database_integrity_is_ready
 from tests.factories import AccountFactory, EventEditionFactory
 from tests.integration.test_application_programme_conversion import accepted
 from tests.integration.test_application_programme_services import (
@@ -45,6 +47,18 @@ pytestmark = [
         "restores_current_migration_graph", _admit_future_programme_effects.__name__
     ),
 ]
+
+UNUSED_SCHEDULING_SUCCESSORS = {
+    ("scheduling", "0001_initial"),
+    ("scheduling", "0002_service_day_retirement"),
+    ("scheduling", "0003_scheduling_reservation_sources"),
+    ("scheduling", "0004_conflict_vocabulary"),
+    ("scheduling", "0005_integrity_guards"),
+    ("scheduling", "0006_scheduling_downgrade_fence"),
+    ("venues", "0003_scheduling_reservation_sources"),
+    ("venues", "0004_scheduling_binding_integrity"),
+    ("venues", "0005_scheduling_downgrade_fence"),
+}
 
 
 def test_empty_conversion_reversal_preserves_the_old_source_column_and_reinstalls():
@@ -149,7 +163,16 @@ def test_completed_conversion_fences_contraction_before_any_guard_is_removed(
     assert applications_database_integrity_is_ready()
     if has_host:
         assert ProgrammeHostRelationship.objects.get(id=host_id).version == 1
-        assert MigrationRecorder(connection).applied_migrations() == applied_before
+        applied_after = MigrationRecorder(connection).applied_migrations()
+        removed_unused = set(applied_before) - set(applied_after)
+        # Only these exact unused successors may reverse before the populated
+        # host fence. Every remaining owner recorder row must be identical.
+        assert removed_unused <= UNUSED_SCHEDULING_SUCCESSORS
+        assert applied_after == {
+            key: value
+            for key, value in applied_before.items()
+            if key not in removed_unused
+        }
         assert programme_database_integrity_is_ready()
     else:
         # Django reverses unused successors before reaching the older populated
@@ -173,6 +196,8 @@ def test_completed_conversion_fences_contraction_before_any_guard_is_removed(
     )
     assert applications_database_integrity_is_ready()
     assert programme_database_integrity_is_ready()
+    assert scheduling_database_integrity_is_ready()
+    assert venues_database_integrity_is_ready()
 
 
 @pytest.mark.parametrize(

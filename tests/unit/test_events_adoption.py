@@ -338,7 +338,7 @@ def test_registered_catalog_growth_does_not_expand_v1_manifests(
         )
         for key, profile in ADOPTION_PROFILES.items()
     }
-    future_module = "scheduling"
+    future_module = "synthetic_future_module"
     future_capability = "workforce.future_registered_capability"
     future_destination = "future-workforce"
     future_shell_destination = "edition.workforce-roster"

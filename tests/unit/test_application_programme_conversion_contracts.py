@@ -12,6 +12,7 @@ from maru.applications.programme_conversion_events import (
 )
 from maru.applications.programme_conversion_inputs import ProgrammeConversionInput
 from maru.authorization.catalog import CAPABILITIES, ScopeLevel
+from maru.scheduling.authorization import SCHEDULING_CAPABILITIES
 
 
 def intent():
@@ -84,7 +85,13 @@ def test_conversion_capability_is_additive_exact_department_nondelegable():
     assert current.RESOURCE_CAPABILITIES == previous.RESOURCE_CAPABILITIES
     assert {
         code for code, capability in CAPABILITIES.items() if capability.persistable
-    } - {"programme.manage_hosts", "programme.view_hosts"} == {
+    } - {
+        "programme.manage_hosts",
+        "programme.view_hosts",
+        *SCHEDULING_CAPABILITIES,
+        "programme.view_scheduling_dependencies",
+        "venues.view_scheduling_dependencies",
+    } == {
         *current.ORGANIZATION_CAPABILITIES,
         *current.EDITION_CAPABILITIES,
         *current.DEPARTMENT_CAPABILITIES,

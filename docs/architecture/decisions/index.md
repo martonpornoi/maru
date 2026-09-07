@@ -38,6 +38,7 @@ For present implementation status, use the
 | [0085](0085-exact-revision-programme-review-and-decisions.md) | Accepted | Review exact acknowledged proposal seals and retain independent decisions without conversion or activation. |
 | [0086](0086-source-bound-programme-accepted-item-conversion.md) | Accepted | Convert exact effective acceptance through reciprocal owner receipts and initially unresolved readiness. |
 | [0087](0087-programme-host-confirmation-and-availability.md) | Accepted | Invite exact Programme hosts, retain person-owned confirmation and purpose-scoped availability, and invalidate only dependent readiness. |
+| [0088](0088-versioned-scheduling-candidates-and-venue-binding.md) | Accepted | Keep versioned timetable alternatives separate from governed physical reservations and the future single release. |
 
 ADR 0073 partially supersedes the example-data and source-derived-template
 parts of [ADR 0042](0042-synthetic-only-educational-fixtures.md) and

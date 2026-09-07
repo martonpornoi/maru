@@ -44,6 +44,7 @@ def _default_logistics_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
         "programme_database_integrity_is_ready",
         lambda: True,
     )
+    monkeypatch.setattr(views, "scheduling_database_integrity_is_ready", lambda: True)
 
 
 _READY_BOUNDED_DOMAIN_DEPENDENCIES = {
@@ -51,6 +52,7 @@ _READY_BOUNDED_DOMAIN_DEPENDENCIES = {
     "charities_integrity": "ok",
     "catalog_integrity": "ok",
     "programme_integrity": "ok",
+    "scheduling_integrity": "ok",
     "venues_integrity": "ok",
 }
 
@@ -588,6 +590,7 @@ def test_readiness_minimizes_logistics_helper_errors(
         ("charities_database_integrity_is_ready", "charities_integrity"),
         ("catalog_database_integrity_is_ready", "catalog_integrity"),
         ("programme_database_integrity_is_ready", "programme_integrity"),
+        ("scheduling_database_integrity_is_ready", "scheduling_integrity"),
         ("venues_database_integrity_is_ready", "venues_integrity"),
     ],
 )

@@ -18,6 +18,7 @@ from tests.factories import AccountFactory, EventEditionFactory, ParticipationFa
 from tests.support.migrations import (
     flush_then_restore_current_migration_graph,
     migrate_test_targets,
+    migration_project_state,
     rollback_migration_case,
 )
 from tests.support.migrations import (
@@ -115,7 +116,7 @@ def _migrate(target: tuple[str, str]) -> MigrationExecutor:
 
 
 def _historical_apps(executor: MigrationExecutor, target: tuple[str, str]) -> Any:
-    return executor.loader.project_state(_targets(executor, target)).apps
+    return migration_project_state(executor, _targets(executor, target)).apps
 
 
 def _historical_registration_world(

@@ -42,10 +42,18 @@ from maru.registration.adoption import (
     REGISTRATION_ADOPTION_ADAPTERS,
     REGISTRATION_ADOPTION_CONFLICT_SOURCES,
 )
+from maru.scheduling.adoption import (
+    SCHEDULING_ADOPTION_ADAPTERS,
+    SCHEDULING_ADOPTION_CONFLICT_SOURCES,
+    SCHEDULING_TIME_CONFLICT_SOURCE,
+    SCHEDULING_VENUE_RESERVATION_ADAPTER,
+)
 from maru.venues.adoption import (
     VENUES_ADOPTION_ADAPTERS,
     VENUES_ADOPTION_CONFLICT_SOURCES,
     VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE,
+    VENUES_SCHEDULING_CONFLICT_SOURCE,
+    VENUES_SCHEDULING_RESERVATION_ADAPTER,
 )
 from maru.venues.queries import (
     VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE as QUERY_VENUES_ADAPTER_CODE,
@@ -63,6 +71,7 @@ _OWNER_ADAPTER_REGISTRIES = (
     APPLICATIONS_ADOPTION_ADAPTERS,
     PARTICIPATION_ADOPTION_ADAPTERS,
     REGISTRATION_ADOPTION_ADAPTERS,
+    SCHEDULING_ADOPTION_ADAPTERS,
     VENUES_ADOPTION_ADAPTERS,
     WORKFORCE_ADOPTION_ADAPTERS,
 )
@@ -72,7 +81,6 @@ _EMPTY_CONFLICT_SOURCE_REGISTRIES = (
     APPLICATIONS_ADOPTION_CONFLICT_SOURCES,
     PARTICIPATION_ADOPTION_CONFLICT_SOURCES,
     REGISTRATION_ADOPTION_CONFLICT_SOURCES,
-    VENUES_ADOPTION_CONFLICT_SOURCES,
     WORKFORCE_ADOPTION_CONFLICT_SOURCES,
 )
 
@@ -114,7 +122,11 @@ def test_owner_adapter_registries_are_complete_and_nonduplicating() -> None:
     assert set(REGISTRATION_ADOPTION_ADAPTERS) == {
         IDENTITY_RESTRICTION_CONSEQUENCE_ADAPTER
     }
-    assert set(VENUES_ADOPTION_ADAPTERS) == {VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE}
+    assert set(VENUES_ADOPTION_ADAPTERS) == {
+        VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE,
+        VENUES_SCHEDULING_RESERVATION_ADAPTER,
+    }
+    assert set(SCHEDULING_ADOPTION_ADAPTERS) == {SCHEDULING_VENUE_RESERVATION_ADAPTER}
     assert set(WORKFORCE_ADOPTION_ADAPTERS) == {
         ASSIGNMENT_PARTICIPATION_REQUIRED_ADAPTER,
         ASSIGNMENT_PARTICIPATION_EXCLUDED_ADAPTER,
@@ -122,7 +134,7 @@ def test_owner_adapter_registries_are_complete_and_nonduplicating() -> None:
     }
 
     all_codes = [code for registry in _OWNER_ADAPTER_REGISTRIES for code in registry]
-    assert len(all_codes) == 29
+    assert len(all_codes) == 31
     assert len(set(all_codes)) == len(all_codes)
     assert all(
         code == descriptor.code
@@ -149,6 +161,16 @@ def test_foundation_and_owner_catalogs_are_explicitly_immutable() -> None:
         APPLICATIONS_ADOPTION_ADAPTERS["applications.future@1"] = descriptor  # type: ignore[index]
     with pytest.raises(FrozenInstanceError):
         descriptor.kind = "changed"  # type: ignore[misc]
+
+
+def test_new_scheduling_and_physical_conflict_sources_are_exact_and_immutable():
+    for registry, code in (
+        (SCHEDULING_ADOPTION_CONFLICT_SOURCES, SCHEDULING_TIME_CONFLICT_SOURCE),
+        (VENUES_ADOPTION_CONFLICT_SOURCES, VENUES_SCHEDULING_CONFLICT_SOURCE),
+    ):
+        assert isinstance(registry, MappingProxyType)
+        assert set(registry) == {code}
+        assert registry[code].version == 1
 
 
 @pytest.mark.parametrize(

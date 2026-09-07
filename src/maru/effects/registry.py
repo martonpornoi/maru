@@ -362,6 +362,14 @@ def _validate_application_programme_review_changed(payload: dict[str, object]) -
     validate_programme_review_event(payload)
 
 
+def _validate_scheduling_changed(payload: dict[str, object]) -> None:
+    from maru.scheduling.events import (  # noqa: PLC0415
+        validate_scheduling_changed_payload,
+    )
+
+    validate_scheduling_changed_payload(payload)
+
+
 def _validate_programme_item_changed(payload: dict[str, object]) -> None:
     from maru.programme.events import (  # noqa: PLC0415
         validate_programme_item_changed_payload,
@@ -1096,6 +1104,12 @@ EVENT_DEFINITIONS = (
         schema_version=1,
         description="An exact accepted proposal acquired its private Programme item.",
         validator=_validate_application_programme_conversion,
+    ),
+    EventDefinition(
+        name="scheduling.planning.changed.v1",
+        schema_version=1,
+        description="Private Scheduling control and retained evidence changed.",
+        validator=_validate_scheduling_changed,
     ),
     EventDefinition(
         name="programme.item.changed.v1",

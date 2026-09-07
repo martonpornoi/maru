@@ -31,8 +31,9 @@ Programme item from a still-effective accepted revision. Review-side acceptance
 alone is not conversion. Programme owns no proposal collaborator, and this
 conversion creates no host or co-host; the separate
 [host relationship boundary](programme-hosts.md) requires explicit invitation
-and person-owned confirmation. Scheduling will later own occurrences and placements. Workforce will
-later own staffing demand and Shift commitments.
+and person-owned confirmation. [Scheduling](scheduling.md) owns dormant
+occurrences and candidate placements. Workforce will later own Programme
+staffing demand and Shift commitments.
 
 Applications also owns the dormant preview-first staging evidence for imported
 Programme calls and proposals. Staging and organizer preview create no call,
@@ -236,6 +237,12 @@ bound always retains the most recent rationale and review evidence.
 
 ## Event and adapter seams
 
+The dormant [Scheduling contract](scheduling.md) consumes Programme's separately
+authorized `load_programme_scheduling_dependencies` query for current item and
+explicit host consequences. It sees only current deliberately shared per-item
+periods in memory, never private proposal/review content or copied calendars in
+candidate history. Physical reservation is not host consent or Programme release.
+
 The separate [hosting contract](programme-hosts.md) documents four host commands,
 independently ceilinged personal/organizer reads, versioned shared-availability
 dependencies and current-person readiness checks. Host commands use the same
@@ -305,7 +312,8 @@ Dedicated staged review, decisions and explicit accepted conversion are also
 implemented but dormant. Conversion creates private planning state only;
 Programme-owned host/co-host invitation, confirmation and deliberately shared
 per-item availability now have a separate dormant owner boundary.
-Interactive timetable editing, Scheduling, Venue placement, staffing, release,
+Scheduling candidates, conflicts and explicit Venue reservations now have a
+separate dormant owner kernel. Interactive timetable editing, staffing, release,
 public and personal timetables, on-site continuity, profile activation, and
 integrated browser rehearsal remain later children of the Programme Operations
 umbrella.

@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -96,32 +96,69 @@ between children is no longer required. Keep the work single-agent and leave
 the completed temporary #77 check-in disabled. Unrelated Docker cleanup and
 test-performance optimization remain outside this task.
 
-Active child [#79](https://github.com/martonpornoi/maru/issues/79) is in progress
-through draft [PR #80](https://github.com/martonpornoi/maru/pull/80) on
-`codex/programme-host-relationships`, based on that current main.
+Issue [#79](https://github.com/martonpornoi/maru/issues/79) is delivered through
+[PR #80](https://github.com/martonpornoi/maru/pull/80), protected squash
+`7ef234b20867c13674999f5cfc0e47fd65039716`.
 [ADR 0087](../architecture/decisions/0087-programme-host-confirmation-and-availability.md)
 and PRG-008 contract explicit host/co-host invitations, person-owned responses,
 deliberately shared per-item availability, field ceilings, dependency freshness
-and retained evidence. The candidate implements four host tables, explicit commands,
+and retained evidence. It implements four host tables, explicit commands,
 independently ceilinged reads, current-person/dependency readiness, database
 guards, SELECT-only runtime inventory and additive recovery fences.
-All 2,915 unit tests passed in 10.81 seconds. The final 32-test host PostgreSQL
-group passed in 60.92 seconds and its additional approved-copy isolation case
-passed in 2.44 seconds. A 51-test host/conversion group and 33-test authorization,
-integrity and historical-migration group also passed; these overlapping groups
-are not a combined suite count. Strict typing, lint/format, docstring and
-documentation checks passed, with no migration drift. The
-[host checkpoint](../checkpoints/2026-09-06-programme-host-confirmation-and-availability.md)
-records the boundary and focused evidence. The first full attempt found an old
-conversion-downgrade assertion that incorrectly expected an unused successor
-host schema to remain installed. That already-failed attempt was cancelled;
-tests now check exact retained conversion guards, fail-closed current readiness,
-forward recovery, and earlier refusal when host history exists. The recovery
-guides document Django's per-migration commit boundary. All six populated and
-unused-host downgrade combinations passed in focused runs (two in 42.55 seconds,
-four in 194.61 seconds); the five unchanged round-trip/guard-drift cases also
-passed. Complete clean-commit certification and protected delivery remain pending.
+Exact candidate `92dd4bb25c429736c7594d32d9bd5c2db29245b7` passed complete
+local certification: 6,041 Python tests, 33 frontend tests, all eight isolated
+PostgreSQL shards and unchanged quality/coverage gates. The current
+[hosted full acceptance and PR gate](https://github.com/martonpornoi/maru/actions/runs/34065746000)
+and [CodeQL](https://github.com/martonpornoi/maru/actions/runs/34061604993)
+passed before merge. Hosted PostgreSQL shards took 73m54s to 119m19s; this is
+not a test-performance improvement. Main was fast-forwarded to the verified
+squash, whose tree equals the certified tree; both worktrees and existing
+stashes were preserved. The
+[host implementation checkpoint](../checkpoints/2026-09-06-programme-host-confirmation-and-availability.md)
+and [protected delivery checkpoint](../checkpoints/2026-09-07-programme-host-protected-delivery.md)
+retain focused, recovery and final evidence. Historical conversion tests now
+prove retained guards and explicit full-graph forward recovery when Django
+has reversed unused successors before encountering a populated older fence.
 Neither current adoption manifest nor any Programme route is activated.
+
+Active child [#81](https://github.com/martonpornoi/maru/issues/81) is implemented
+locally on `codex/programme-scheduling-candidates`, based on that protected main.
+[ADR 0088](../architecture/decisions/0088-versioned-scheduling-candidates-and-venue-binding.md)
+contracts Scheduling-owned service days, stable occurrences, immutable candidate
+alternatives, explicit host-presence requirements, current conflict reports and
+deliberate Venue reservation/replacement/cancellation. Alternative drafts do not
+reserve rooms or imply host consent, Venue approval or Programme publication.
+
+The [Scheduling owner contract](../modules/scheduling.md) and
+[migration/recovery guide](../operations/scheduling-migration-and-recovery.md)
+describe source field ceilings, canonical locks, reciprocal two-owner evidence,
+database integrity, exact readiness, sixteen SELECT-only relations and joint
+populated downgrade fences. Both existing literal adoption profiles remain
+unchanged; no route, UI, API, worker or release has been activated.
+
+The combined new Scheduling/owner-seam group passed 377 tests in 326.99 seconds
+with 93.64% branch-aware targeted coverage. The complete database-free suite now
+passes 3,163 tests in 11.83 seconds. Runtime ACL/provisioning coverage passed 98
+cases in 45.44 seconds; eight affected conversion/host historical cases passed
+in 495.13 seconds. These overlapping groups are development feedback, not a full
+certification result. The twelve new integration weights come from complete
+file timings in the successful focused run; existing weights and gates remain
+unchanged. They do not establish a whole-suite speedup.
+
+Historical Registration/Identity helpers now explicitly remove unused
+Scheduling/Venue successors when rewinding their prerequisite owners. Historical
+model reconstruction separately filters unmigration targets and refuses
+dependencies that reintroduce an explicitly absent owner. Original historical
+assertions and real migration execution remain; both focused committed round-trip
+cases passed in 379.30 seconds. Source typing, lint, docstrings and a fresh warning-fatal
+Sphinx build passed. No model/migration drift was detected; the unconfigured
+invitation-delivery warning is expected in this synthetic environment.
+
+The [implementation checkpoint](../checkpoints/2026-09-07-scheduling-candidates-and-venue-binding.md)
+records final focused evidence. Clean exact-head full local certification,
+hosted acceptance and protected delivery are next; #81 is not yet delivered.
+After verified delivery and issue reconciliation, continue the accessible
+editor and remaining #48 children sequentially without another routine approval.
 
 ## What can be evaluated today
 
@@ -134,7 +171,8 @@ Neither current adoption manifest nor any Programme route is activated.
 - **Programme foundations:** owned items and information/readiness layers
   (#61); Applications calls and acknowledged collaborative proposals (#63);
   preview-first import (#66); Department continuity (#64); review and decisions
-  (#71); explicit source-bound accepted conversion (#77). These remain dormant
+  (#71); explicit source-bound accepted conversion (#77); host confirmation
+  and deliberately shared per-item availability (#79). These remain dormant
   foundations, not a departmental workspace.
   [Events](../modules/events.md), [Applications](../modules/applications.md),
   and the [Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md)
@@ -145,10 +183,10 @@ Neither current adoption manifest nor any Programme route is activated.
 
 ## Smallest sensible next actions
 
-1. Finish #79's host lifecycle, purpose-authorized projections and availability
-   dependency contract, with real PostgreSQL race/rollback/recovery tests,
-   current documentation and complete exact-head protected delivery. Do not
-   repeat #77's completed implementation or certification.
+1. Deliver #81's implemented Scheduling candidate/conflict and governed
+   Venue-binding contract: certify the clean exact head, obtain green hosted
+   acceptance, squash through the protected gate, reconcile issues and sync
+   main. Do not repeat #77 or #79's completed certification.
 2. If separately authorized, approve and remove only identified disposable
    Docker resources. Resource cleanup and test-performance work are different
    outcomes.

@@ -10,6 +10,7 @@ from maru.authorization.catalog import CAPABILITIES, ScopeLevel
 from maru.programme.authorization import PROGRAMME_HOST_SELF_CAPABILITIES
 from maru.programme.commands import ProgrammeLimitConflictError
 from maru.programme.host_commands import _require_host_history_room
+from maru.scheduling.authorization import SCHEDULING_CAPABILITIES
 
 
 def test_host_capabilities_add_only_exact_edition_manager_authority():
@@ -31,7 +32,13 @@ def test_host_capabilities_add_only_exact_edition_manager_authority():
         *current.EDITION_CAPABILITIES,
         *current.DEPARTMENT_CAPABILITIES,
         *current.RESOURCE_CAPABILITIES,
-    } == {code for code, capability in CAPABILITIES.items() if capability.persistable}
+    } == {
+        code for code, capability in CAPABILITIES.items() if capability.persistable
+    } - {
+        *SCHEDULING_CAPABILITIES,
+        "programme.view_scheduling_dependencies",
+        "venues.view_scheduling_dependencies",
+    }
     for code in current.HOST_CAPABILITIES:
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
         assert CAPABILITIES[code].persistable

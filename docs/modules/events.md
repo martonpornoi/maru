@@ -172,9 +172,10 @@ Applications, Programme, Scheduling, Venues, and Workforce; shared foundations
 remain Audit, Authorization, Effects, Events, Identity, Organizations, and
 Privacy. Programme now has a dormant installed namespace, private schema,
 capability catalog, reserved adapter descriptor, and event definition;
-Scheduling remains absent. Neither is executable under a current profile, and
-the Programme declarations are deliberately absent from both existing v1
-manifests.
+Scheduling now has a separate dormant owner kernel for service days,
+occurrences, candidate revisions, conflict reports and explicit Venue binding
+(ADR 0088). Neither owner is executable under a current profile, and their
+declarations remain deliberately absent from both existing v1 manifests.
 
 ADR 0082 adds dormant Applications-owned Programme capabilities, the
 `applications.self.programme_proposal@1` purpose descriptor,
