@@ -77,9 +77,10 @@ BEGIN
         RAISE EXCEPTION 'Venue reservation requires current candidate, occurrence and service-day intent' USING ERRCODE = '23514';
     END IF;
     PERFORM 1 FROM public.identity_account WHERE id IN (NEW.source_actor_id, intent.actor_id) ORDER BY id FOR UPDATE;
-    IF EXISTS (SELECT 1 FROM public.identity_account WHERE id IN (NEW.source_actor_id, intent.actor_id)
-        AND (NOT is_active OR email_verified_at IS NULL OR account_kind <> 'person')) THEN
-        RAISE EXCEPTION 'Venue binding requires current verified people' USING ERRCODE = '23514';
+    -- Source authorship is retained attribution, not the current reservation authority.
+    IF NOT EXISTS (SELECT 1 FROM public.identity_account WHERE id = intent.actor_id
+        AND is_active AND email_verified_at IS NOT NULL AND account_kind = 'person') THEN
+        RAISE EXCEPTION 'Venue binding requires a current verified reserver' USING ERRCODE = '23514';
     END IF;
     PERFORM 1 FROM public.venues_venuespace physical WHERE physical.id IN (
         SELECT source_space_id FROM public.venues_editionspacemember WHERE space_selection_id = booking.space_selection_id

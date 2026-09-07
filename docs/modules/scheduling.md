@@ -153,6 +153,10 @@ verified person and does not publish Programme timing. Generic Venue reschedule
 and publication are denied for linked bookings. Generic cancellation remains
 available and retains the binding; subsequent evaluations expose the missing
 active reservation. Public/My Maru Venue schedule queries exclude linked rows.
+Historical placement authorship survives account inactivity or loss of
+verification: another current authorized planner can reserve the retained
+placement. The original identity remains excluded from approval after account
+recovery; the current reserver and approver must still be verified active people.
 The future release child must coordinate activation or invalidation atomically;
 this kernel has no released timetable to invalidate.
 

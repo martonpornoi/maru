@@ -140,6 +140,13 @@ including its Scheduling source. A bound booking cannot independently publish
 Programme timing or be generically rescheduled around its source contract.
 Unrelated bookings retain ADR 0053's existing lifecycle.
 
+The source placement author's retained identity is attribution and an approval
+exclusion, not continuing authority over the draft. Another currently authorized,
+active verified planner can reserve that unchanged placement after its author
+becomes inactive or unverified. Recovery of the author's account does not erase
+their exclusion from independent approval. Current reservation and approval
+actors still require current verified-person eligibility.
+
 Replacing a reservation is explicit and retains the former booking/binding.
 The old cancellation and replacement occupancy/binding/evidence commit
 together; failure leaves the old reservation intact. An occurrence retains its

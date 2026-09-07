@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 from django.db import DatabaseError, connection, transaction
 
+from maru.identity.models import Account
 from maru.venues import scheduling_reservations as adapter
 from maru.venues import services
 from maru.venues.models import (
@@ -135,6 +136,35 @@ def test_cross_occurrence_binding_regression_fails_closed(world, admitted, monke
     with pytest.raises(DatabaseError, match="exact newly reserved placement"):
         reserve(world, placed=placed)
     assert not VenueBooking.objects.exists()
+
+
+@pytest.mark.parametrize("actor_state", ["inactive", "unverified"])
+def test_binding_requires_current_reserver_eligibility_even_after_python_checks(
+    world, admitted, monkeypatch, actor_state
+):
+    placed = place(world)
+    original = VenueSchedulingBinding.objects.create
+
+    def invalidate_reserver(**kwargs):
+        changes = (
+            {"is_active": False}
+            if actor_state == "inactive"
+            else {"email_verified_at": None}
+        )
+        Account.objects.filter(id=world.request.actor_id).update(**changes)
+        return original(**kwargs)
+
+    monkeypatch.setattr(
+        adapter.VenueSchedulingBinding.objects, "create", invalidate_reserver
+    )
+    with pytest.raises(DatabaseError, match="current verified reserver"):
+        reserve(world, placed=placed)
+    assert not VenueBooking.objects.exists()
+    assert not VenueBookingOccupancy.objects.exists()
+    assert not VenueSchedulingBinding.objects.exists()
+    actor = Account.objects.get(id=world.request.actor_id)
+    assert actor.is_active
+    assert actor.email_verified_at is not None
 
 
 def test_nested_parent_transaction_keeps_reciprocal_evidence_valid(world, admitted):

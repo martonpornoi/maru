@@ -63,17 +63,31 @@ def command(booking, actor):
     }
 
 
+@pytest.mark.parametrize("author_state", ["active", "inactive", "unverified"])
 def test_placement_author_cannot_approve_even_when_another_person_reserved(
-    world, admitted
+    world, admitted, author_state
 ):
     placed = place(world)
     reserver = AccountFactory()
     grant(reserver, world)
+    placement_author = Account.objects.get(id=world.request.actor_id)
+    verified_at = placement_author.email_verified_at
+    if author_state == "inactive":
+        Account.objects.filter(id=placement_author.id).update(is_active=False)
+    elif author_state == "unverified":
+        Account.objects.filter(id=placement_author.id).update(email_verified_at=None)
     reserve(
         world, placed=placed, request=replace(next_request(world), actor_id=reserver.id)
     )
     booking = VenueBooking.objects.get()
-    placement_author = Account.objects.get(id=world.request.actor_id)
+    assert VenueSchedulingBinding.objects.get(booking=booking).source_actor_id == (
+        placement_author.id
+    )
+    # Historical authorship remains an approval exclusion after account recovery.
+    Account.objects.filter(id=placement_author.id).update(
+        is_active=True, email_verified_at=verified_at
+    )
+    placement_author.refresh_from_db()
     with pytest.raises(VenueIndependentApprovalError):
         approve_venue_booking(**command(booking, placement_author))
     approver = AccountFactory()

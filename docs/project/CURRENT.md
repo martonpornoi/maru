@@ -155,8 +155,17 @@ Sphinx build passed. No model/migration drift was detected; the unconfigured
 invitation-delivery warning is expected in this synthetic environment.
 
 The [implementation checkpoint](../checkpoints/2026-09-07-scheduling-candidates-and-venue-binding.md)
-records final focused evidence. Clean exact-head full local certification,
-hosted acceptance and protected delivery are next; #81 is not yet delivered.
+records the initial focused evidence. First full certification of
+`3f04efd0f2f9100a4f235b5c74786abf42489ea8` passed 6,533 Python tests but failed
+two cross-cutting assertions; non-database gates and 33 frontend tests passed,
+but the combined coverage gate was not reached. The missing dormant-event
+classification and stale readiness-response assertion are corrected. A newly
+reproduced historical-planner handover defect is also corrected without
+weakening current-actor eligibility or independent Venue approval. The
+[certification follow-up](../checkpoints/2026-09-07-scheduling-certification-follow-up.md)
+records the 92-test targeted repair pass, 15-test final continuity/guard pass,
+and ordinary reverse/reapply evidence. Corrected clean-head full certification,
+hosted acceptance and protected delivery remain next; #81 is not yet delivered.
 After verified delivery and issue reconciliation, continue the accessible
 editor and remaining #48 children sequentially without another routine approval.
 

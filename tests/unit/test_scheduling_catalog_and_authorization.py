@@ -14,6 +14,10 @@ import maru.effects.registry as effect_registry
 import maru.scheduling.authorization as auth
 from maru.authorization.catalog import CAPABILITIES, ScopeLevel
 from maru.authorization.policy import PolicyDecision
+from maru.effects.handlers import (
+    ACKNOWLEDGED_DORMANT_EVENTS,
+    built_in_handler_registry,
+)
 from maru.effects.registry import event_definition
 from maru.events import adoption
 from maru.events.adoption import ADOPTION_PROFILES
@@ -38,6 +42,13 @@ def test_declared_capabilities_and_event_do_not_activate_current_profiles():
     assert scheduling_dormancy_problem_codes() == ()
     assert check_scheduling_dormancy() == []
     assert event_definition(SCHEDULING_CHANGED_EVENT) is not None
+    assert SCHEDULING_CHANGED_EVENT in ACKNOWLEDGED_DORMANT_EVENTS
+    handlers = built_in_handler_registry()
+    assert all(
+        handlers.resolve(event_name=SCHEDULING_CHANGED_EVENT, destination=destination)
+        is None
+        for destination in ("internal", "notifications")
+    )
     for code in auth.SCHEDULING_CAPABILITIES:
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
         assert not CAPABILITIES[code].allow_self
