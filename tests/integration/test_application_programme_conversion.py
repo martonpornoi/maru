@@ -44,9 +44,18 @@ from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
 from maru.programme.commands import ProgrammeVersionConflictError
+from maru.programme.host_commands import (
+    invite_programme_host,
+    respond_to_programme_host_invitation,
+)
+from maru.programme.host_inputs import (
+    ProgrammeHostInvitationInput,
+    ProgrammeHostResponseInput,
+)
 from maru.programme.models import (
     ProgrammeCommandReceipt,
     ProgrammeEditionControl,
+    ProgrammeHostRelationship,
     ProgrammeItem,
     ProgrammeItemSourceBinding,
     ProgrammePublicRendition,
@@ -176,6 +185,51 @@ def test_conversion_creates_one_private_source_bound_unready_item(accepted):
         "programme_item_id": str(item.id),
     }
     assert OutboxMessage.objects.filter(event=source.domain_event).exists()
+
+
+def test_accepted_item_hosts_require_a_separate_invitation_and_person_response(
+    accepted,
+):
+    world, _, kwargs = accepted
+    converted = convert_accepted_programme_proposal(**kwargs)
+    assert not ProgrammeHostRelationship.objects.exists()
+    source_receipts = ApplicationProgrammeReceipt.objects.count()
+    common = {
+        "organization_id": world.call.edition.organization_id,
+        "edition_id": world.call.edition.id,
+        "item_id": converted.programme_item_id,
+        "authorizer": kwargs["programme_authorizer"],
+    }
+    invited = invite_programme_host(
+        **common,
+        actor_id=world.call.manager.id,
+        invitation=ProgrammeHostInvitationInput(
+            world.lead.id, "host", "Explicit host title", "Approved hosting briefing", 1
+        ),
+        reason="Separate Programme invitation",
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    confirmed = respond_to_programme_host_invitation(
+        **common,
+        actor_id=world.lead.id,
+        response=ProgrammeHostResponseInput(invited.host_id, "confirm", 2, 1, 1),
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    assert confirmed.resulting_item_version == 3
+    assert (
+        ProgrammeHostRelationship.objects.get(id=invited.host_id).state == "confirmed"
+    )
+    assert ApplicationProgrammeReceipt.objects.count() == source_receipts
+    assert ProgrammeAcceptedTransition.objects.count() == 1
+    cursors = dict(
+        ProgrammeReadinessRequirement.objects.values_list(
+            "concern", "dependency_version"
+        )
+    )
+    assert cursors["host_confirmation"] == cursors["schedule_availability"] == 3
+    assert cursors["public_copy"] == 1
 
 
 def test_same_intent_retries_are_minimal_and_duplicate_source_is_rejected(accepted):

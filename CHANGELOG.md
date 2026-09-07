@@ -15,6 +15,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant Programme host/co-host invitations, independent personal
+  confirmation and purpose-bounded availability. Self, roster and history reads
+  have separate disclosure limits; withdrawal clears current exact periods,
+  including after planning closes. PostgreSQL evidence guards, current-person
+  readiness and populated recovery fences protect the same contracts. No
+  profile, UI, API, invitation delivery or timetable is activated
+  ([#79](https://github.com/martonpornoi/maru/issues/79), ADR 0087, PRG-008).
 - Added a dormant accepted-proposal conversion boundary. An explicit, still-
   effective Programme acceptance can produce one source-bound private item
   with seven initially required readiness concerns and atomic evidence across

@@ -78,7 +78,7 @@ def _accepted_migration_contract_is_current() -> bool:
 _ACCEPTED_TRIGGERS, _ACCEPTED_FUNCTIONS = parse_database_integrity_sql_contracts(
     _ACCEPTED_MIGRATION.FORWARD_SQL
 )
-PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
+_ACCEPTED_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
     _BASE_INTEGRITY_CONTRACT,
     source_migration=("programme", "0005_accepted_item_integrity"),
     source_migration_module="maru.programme.migrations.0005_accepted_item_integrity",
@@ -87,6 +87,54 @@ PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
     source_contract_current=(
         _BASE_INTEGRITY_CONTRACT.source_contract_current
         and _accepted_migration_contract_is_current()
+    ),
+)
+
+
+_HOST_MIGRATION = import_module("maru.programme.migrations.0008_host_integrity")
+_HOST_FENCE = import_module("maru.programme.migrations.0009_host_downgrade_fence")
+_HOST_FENCE_SOURCE_SHA256: Final = (
+    "aa1280fc75722119cdc55e9ee260edb119455f332a71d200629a58a0610c41ef"
+)
+
+
+def _host_migration_contract_is_current() -> bool:
+    operations = tuple(_HOST_MIGRATION.Migration.operations)
+    fences = tuple(_HOST_FENCE.Migration.operations)
+    reverse = _HOST_FENCE.refuse_used_host_downgrade
+    source = inspect.getsource(reverse).replace("\r\n", "\n")
+    return (
+        len(operations) == len(fences) == 1
+        and isinstance(operations[0], migrations.RunSQL)
+        and operations[0].sql == _HOST_MIGRATION.FORWARD_SQL
+        and operations[0].reverse_sql == _HOST_MIGRATION.REVERSE_SQL
+        and tuple(_HOST_MIGRATION.Migration.dependencies)
+        == (
+            ("programme", "0007_host_relationships"),
+            ("authorization", "0026_programme_host_capabilities"),
+        )
+        and isinstance(fences[0], migrations.RunPython)
+        and fences[0].code is migrations.RunPython.noop
+        and fences[0].reverse_code is reverse
+        and tuple(_HOST_FENCE.Migration.dependencies)
+        == (("programme", "0008_host_integrity"),)
+        and hashlib.sha256(source.encode()).hexdigest() == _HOST_FENCE_SOURCE_SHA256
+    )
+
+
+_HOST_TRIGGERS, _HOST_FUNCTIONS = parse_database_integrity_sql_contracts(
+    _HOST_MIGRATION.FORWARD_SQL
+)
+PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
+    _ACCEPTED_INTEGRITY_CONTRACT,
+    source_migration=("programme", "0008_host_integrity"),
+    source_migration_module="maru.programme.migrations.0008_host_integrity",
+    terminal_migration=("programme", "0009_host_downgrade_fence"),
+    triggers={**_ACCEPTED_INTEGRITY_CONTRACT.triggers, **_HOST_TRIGGERS},
+    functions={**_ACCEPTED_INTEGRITY_CONTRACT.functions, **_HOST_FUNCTIONS},
+    source_contract_current=(
+        _ACCEPTED_INTEGRITY_CONTRACT.source_contract_current
+        and _host_migration_contract_is_current()
     ),
 )
 
@@ -146,6 +194,10 @@ PROGRAMME_RELATION_SEMANTICS: Final[
         "d",
     ),
     "programme_programmeeditioncontrol": ("r", "p", False, False, False, "d"),
+    "programme_programmehostrelationship": ("r", "p", False, False, False, "d"),
+    "programme_programmehostinvitation": ("r", "p", False, False, False, "d"),
+    "programme_programmehostrevision": ("r", "p", False, False, False, "d"),
+    "programme_programmehostavailabilitywindow": ("r", "p", False, False, False, "d"),
     "programme_programmeitem": ("r", "p", False, False, False, "d"),
     "programme_programmeitemsourcebinding": (
         "r",
@@ -203,6 +255,522 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # digest from pg_get_constraintdef(..., TRUE) or pg_get_indexdef(...).
 # An incomplete mapping deliberately keeps Programme readiness blocked.
 PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
+    "constraint:programme_programmehostavailabilitywindow:programme_host_window_kind": (
+        "e188a63e47ce088fcd4f16a36e7dc94a59d959fe3dee823a8b199813514fb412",
+        "b8fecad9f486094b4b5139578c093b82bd8f09d558e7df1435ca62ff5a29a220",
+    ),
+    (
+        "constraint:programme_programmehostavailabilitywindow:"
+        "programme_host_window_positive"
+    ): (
+        "e188a63e47ce088fcd4f16a36e7dc94a59d959fe3dee823a8b199813514fb412",
+        "f7f53564896884f1edf5917820a7ba41f7cffde42c77a1d84f965bcfaa474baf",
+    ),
+    (
+        "constraint:programme_programmehostavailabilitywindow:"
+        "programme_host_window_start_uq"
+    ): (
+        "5cc97e7803bd8f7a51052493949639710f4595571a86488e62055a7a9ff4d19b",
+        "9d61f58c80175276cbd7e6608500201726e24857cc3dbbafab003228cc7e3d26",
+    ),
+    (
+        "constraint:programme_programmehostavailabilitywindow:"
+        "programme_hostavailabilitywindow_evidence"
+    ): (
+        "722a47fd5e87cb6a8cdcc524277ad118fee3b001eba1ec009c43a88850f5d302",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "constraint:programme_programmehostavailabilitywindow:"
+        "programme_programmeh_edition_id_d1ca6d27_fk_events_ev"
+    ): (
+        "e40047b7e7174304ca27815e66102608230dbc805728c56f778d799ceab9475f",
+        "03a7996ab8afb527585471eb2cbfd7058942319058cc05e3f26732b9ade4e0cc",
+    ),
+    (
+        "constraint:programme_programmehostavailabilitywindow:"
+        "programme_programmeh_host_id_217228db_fk_programme"
+    ): (
+        "e40047b7e7174304ca27815e66102608230dbc805728c56f778d799ceab9475f",
+        "9f62bfc4b71c3ece8230a5fb8e3d1c9a2c5c46d60b477cdf13f300f3b1d974e2",
+    ),
+    (
+        "constraint:programme_programmehostavailabilitywindow:"
+        "programme_programmeh_item_id_bbe28f80_fk_programme"
+    ): (
+        "e40047b7e7174304ca27815e66102608230dbc805728c56f778d799ceab9475f",
+        "29bc9e574fb186040bcedd470867b5969bfc9cfe526c4fac8fc4a66bc20d7c84",
+    ),
+    (
+        "constraint:programme_programmehostavailabilitywindow:"
+        "programme_programmeh_organization_id_3c97849a_fk_organizat"
+    ): (
+        "e40047b7e7174304ca27815e66102608230dbc805728c56f778d799ceab9475f",
+        "07f454abd16b9f770cd0320efd71f154b0187daf9dbe65e3e6e57121eacd062f",
+    ),
+    (
+        "constraint:programme_programmehostavailabilitywindow:"
+        "programme_programmehostavailabilitywindow_pkey"
+    ): (
+        "e7924b2f23e3a3e0973b1ff96dd980e79d9139aca66d61b85c1c5cafd60d9924",
+        "8c8464f42472e42ee190fc91ca8db79b5351d3a4609040516578d229c56f6fa5",
+    ),
+    "constraint:programme_programmehostinvitation:programme_host_invitation_role": (
+        "9b740b525b9f59fbe6efe8e0fa2c6a62a766aa2e713c9500d830752dfd54eecf",
+        "f3f644878f636187ca3191575e23614bf0ee0cf932d48c391c714074476f0e51",
+    ),
+    "constraint:programme_programmehostinvitation:programme_host_invitation_seq_uq": (
+        "754ea3a2c043b001ac540be205af7e38c760320c495e68e546394ee68b229a3e",
+        "1e063b5fc8d3a9cdbe93652145814bef999a0f40ecd608561d328881870c5c14",
+    ),
+    "constraint:programme_programmehostinvitation:programme_host_invitation_versions": (
+        "9b740b525b9f59fbe6efe8e0fa2c6a62a766aa2e713c9500d830752dfd54eecf",
+        "6c5c6d1e4e49750615138f2687d67ca0731ea2cb0bb38d9acc7be2a57ef9cab0",
+    ),
+    "constraint:programme_programmehostinvitation:programme_hostinvitation_evidence": (
+        "29c731d89afe62f62fd11b046afb026e7fca8998c6814da43617c4f0c7bb8d2e",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "constraint:programme_programmehostinvitation:"
+        "programme_programmeh_actor_id_5b3d0a05_fk_identity_"
+    ): (
+        "055332a35312ded8ee45b089512dcb89cbf05a93d95a6987ca49ec52f5885dda",
+        "4ed87fd0d94daa63ad880b35b54252ad3f58c69aabfdc3065c99dda56093b807",
+    ),
+    (
+        "constraint:programme_programmehostinvitation:"
+        "programme_programmeh_edition_id_d1349294_fk_events_ev"
+    ): (
+        "055332a35312ded8ee45b089512dcb89cbf05a93d95a6987ca49ec52f5885dda",
+        "03a7996ab8afb527585471eb2cbfd7058942319058cc05e3f26732b9ade4e0cc",
+    ),
+    (
+        "constraint:programme_programmehostinvitation:"
+        "programme_programmeh_host_id_0c121527_fk_programme"
+    ): (
+        "055332a35312ded8ee45b089512dcb89cbf05a93d95a6987ca49ec52f5885dda",
+        "9f62bfc4b71c3ece8230a5fb8e3d1c9a2c5c46d60b477cdf13f300f3b1d974e2",
+    ),
+    (
+        "constraint:programme_programmehostinvitation:"
+        "programme_programmeh_item_id_8aa18352_fk_programme"
+    ): (
+        "055332a35312ded8ee45b089512dcb89cbf05a93d95a6987ca49ec52f5885dda",
+        "29bc9e574fb186040bcedd470867b5969bfc9cfe526c4fac8fc4a66bc20d7c84",
+    ),
+    (
+        "constraint:programme_programmehostinvitation:"
+        "programme_programmeh_organization_id_034ebd09_fk_organizat"
+    ): (
+        "055332a35312ded8ee45b089512dcb89cbf05a93d95a6987ca49ec52f5885dda",
+        "07f454abd16b9f770cd0320efd71f154b0187daf9dbe65e3e6e57121eacd062f",
+    ),
+    (
+        "constraint:programme_programmehostinvitation:"
+        "programme_programmehostinvitation_host_version_check"
+    ): (
+        "9b740b525b9f59fbe6efe8e0fa2c6a62a766aa2e713c9500d830752dfd54eecf",
+        "de77166d351c9e6562464d29596e211fcf44606c7ed4c0e11777d2bac7e362a4",
+    ),
+    (
+        "constraint:programme_programmehostinvitation:"
+        "programme_programmehostinvitation_item_version_check"
+    ): (
+        "9b740b525b9f59fbe6efe8e0fa2c6a62a766aa2e713c9500d830752dfd54eecf",
+        "7b6d65d5670d3436adcbd8cae1a19da73177498534211163b7ab24ccb9fc8a50",
+    ),
+    (
+        "constraint:programme_programmehostinvitation:"
+        "programme_programmehostinvitation_pkey"
+    ): (
+        "d3bae9b27a5d14a0f7614e29648b688a2c40c7a4b70ddc7ffce6fa1d6059bc12",
+        "8c8464f42472e42ee190fc91ca8db79b5351d3a4609040516578d229c56f6fa5",
+    ),
+    (
+        "constraint:programme_programmehostinvitation:"
+        "programme_programmehostinvitation_sequence_check"
+    ): (
+        "9b740b525b9f59fbe6efe8e0fa2c6a62a766aa2e713c9500d830752dfd54eecf",
+        "8f426ab72466a993c9c30383cb064c0d9e1286aed4585cb08cb0ccdec86be0aa",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_host_availability_closed"
+    ): (
+        "554872b216bca24c17d1669c44310d9d96d7275ffd25512a8ad3c192881587b7",
+        "57f29d30c3fa0d864ba06d371719f810bda835e418962d63f164ceca4f68816b",
+    ),
+    "constraint:programme_programmehostrelationship:programme_host_item_person_uq": (
+        "515ced7c5b49cc460d750b7e50df9ff1b58e8169529adcd815a2b4eaf65a06c4",
+        "36db1a691011bf19f5ec7a1f324c621a64d77832a954fe35608dbca3d3fddba7",
+    ),
+    "constraint:programme_programmehostrelationship:programme_host_role_closed": (
+        "554872b216bca24c17d1669c44310d9d96d7275ffd25512a8ad3c192881587b7",
+        "f3f644878f636187ca3191575e23614bf0ee0cf932d48c391c714074476f0e51",
+    ),
+    "constraint:programme_programmehostrelationship:programme_host_state_closed": (
+        "554872b216bca24c17d1669c44310d9d96d7275ffd25512a8ad3c192881587b7",
+        "4eaf6d0e27af97b3eb4371fbaa0dae01c99ae473ff76b6c186ad0ed50ca46f9b",
+    ),
+    "constraint:programme_programmehostrelationship:programme_host_versions_valid": (
+        "554872b216bca24c17d1669c44310d9d96d7275ffd25512a8ad3c192881587b7",
+        "5ae08f8538cf8f1f12a30bdfae0552530b28d15eaf6e2ae378e388d40e3b5c2b",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_hostrelationship_evidence"
+    ): (
+        "12353d0a4126841d3e07646775e366388047d52fad93b5306499b5ac3dba214a",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmeh_account_id_999f5299_fk_identity_"
+    ): (
+        "b97b192bdd129171f1e0e6be3b1965bb82e693c295c30808d6a30632ffb2276d",
+        "107afbd4f60d403b5110ded573fffbb13319289421561848fbf7786843e11d9a",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmeh_edition_id_81577e8a_fk_events_ev"
+    ): (
+        "b97b192bdd129171f1e0e6be3b1965bb82e693c295c30808d6a30632ffb2276d",
+        "03a7996ab8afb527585471eb2cbfd7058942319058cc05e3f26732b9ade4e0cc",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmeh_item_id_ce341248_fk_programme"
+    ): (
+        "b97b192bdd129171f1e0e6be3b1965bb82e693c295c30808d6a30632ffb2276d",
+        "29bc9e574fb186040bcedd470867b5969bfc9cfe526c4fac8fc4a66bc20d7c84",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmeh_last_modified_by_id_abce55cb_fk_identity_"
+    ): (
+        "b97b192bdd129171f1e0e6be3b1965bb82e693c295c30808d6a30632ffb2276d",
+        "2c0aff8c19e72bf6f121c9bed55c36858f7a7d671ccee0e376cd614e2dbf22ac",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmeh_organization_id_34b8651d_fk_organizat"
+    ): (
+        "b97b192bdd129171f1e0e6be3b1965bb82e693c295c30808d6a30632ffb2276d",
+        "07f454abd16b9f770cd0320efd71f154b0187daf9dbe65e3e6e57121eacd062f",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_availability_version_check"
+    ): (
+        "554872b216bca24c17d1669c44310d9d96d7275ffd25512a8ad3c192881587b7",
+        "4d035e0519f09b467fa70b930c3c68fd7a97ec5e3d8aace4653322ec7147d630",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_invitation_sequence_check"
+    ): (
+        "554872b216bca24c17d1669c44310d9d96d7275ffd25512a8ad3c192881587b7",
+        "86835eaeba5f687d07332f8002f5aae8e4675a958303fe8d2e1104d9becd0922",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_item_version_check"
+    ): (
+        "554872b216bca24c17d1669c44310d9d96d7275ffd25512a8ad3c192881587b7",
+        "7b6d65d5670d3436adcbd8cae1a19da73177498534211163b7ab24ccb9fc8a50",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_pkey"
+    ): (
+        "6170c6f4b17f70275517230ad7bd08a6ef131848da02276e640dea8570f8d002",
+        "8c8464f42472e42ee190fc91ca8db79b5351d3a4609040516578d229c56f6fa5",
+    ),
+    (
+        "constraint:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_version_check"
+    ): (
+        "554872b216bca24c17d1669c44310d9d96d7275ffd25512a8ad3c192881587b7",
+        "ce468a9ec0ef7e34f6871d17c4cebc8cbb55944458fb50f5898e0a0cc9beb809",
+    ),
+    "constraint:programme_programmehostrevision:programme_host_revision_operation": (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "f5acaeba66ec031a2cbecd458128527dd13c58ce3690433b9145c612d7ceab79",
+    ),
+    "constraint:programme_programmehostrevision:programme_host_revision_role": (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "f3f644878f636187ca3191575e23614bf0ee0cf932d48c391c714074476f0e51",
+    ),
+    "constraint:programme_programmehostrevision:programme_host_revision_seq_uq": (
+        "39367d42e382ea1812b8def6258d0e95ca29645eb9eacefc4ba0b7750353fe71",
+        "1e063b5fc8d3a9cdbe93652145814bef999a0f40ecd608561d328881870c5c14",
+    ),
+    "constraint:programme_programmehostrevision:programme_host_revision_sharing": (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "57f29d30c3fa0d864ba06d371719f810bda835e418962d63f164ceca4f68816b",
+    ),
+    "constraint:programme_programmehostrevision:programme_host_revision_state": (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "4eaf6d0e27af97b3eb4371fbaa0dae01c99ae473ff76b6c186ad0ed50ca46f9b",
+    ),
+    "constraint:programme_programmehostrevision:programme_host_revision_versions": (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "1a76ae4f441b8580f649ebac1941b5a2ff7ba6ef8d60307df7cbc28d577dbc34",
+    ),
+    "constraint:programme_programmehostrevision:programme_hostrevision_evidence": (
+        "c2139125470af915e90ffc4cfe882a0f32c89e804ea8896ed022eb80404df4a6",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmeh_actor_id_eb53efe5_fk_identity_"
+    ): (
+        "ddd214dca615e024a0fe9d85754041ce79be09f65cfc4907cbca8dcb95645890",
+        "4ed87fd0d94daa63ad880b35b54252ad3f58c69aabfdc3065c99dda56093b807",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmeh_edition_id_13e8f248_fk_events_ev"
+    ): (
+        "ddd214dca615e024a0fe9d85754041ce79be09f65cfc4907cbca8dcb95645890",
+        "03a7996ab8afb527585471eb2cbfd7058942319058cc05e3f26732b9ade4e0cc",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmeh_host_id_3d675b51_fk_programme"
+    ): (
+        "ddd214dca615e024a0fe9d85754041ce79be09f65cfc4907cbca8dcb95645890",
+        "9f62bfc4b71c3ece8230a5fb8e3d1c9a2c5c46d60b477cdf13f300f3b1d974e2",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmeh_item_id_0adad59c_fk_programme"
+    ): (
+        "ddd214dca615e024a0fe9d85754041ce79be09f65cfc4907cbca8dcb95645890",
+        "29bc9e574fb186040bcedd470867b5969bfc9cfe526c4fac8fc4a66bc20d7c84",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmeh_organization_id_9034f51f_fk_organizat"
+    ): (
+        "ddd214dca615e024a0fe9d85754041ce79be09f65cfc4907cbca8dcb95645890",
+        "07f454abd16b9f770cd0320efd71f154b0187daf9dbe65e3e6e57121eacd062f",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmehostrevision_availability_version_check"
+    ): (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "4d035e0519f09b467fa70b930c3c68fd7a97ec5e3d8aace4653322ec7147d630",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmehostrevision_invitation_sequence_check"
+    ): (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "86835eaeba5f687d07332f8002f5aae8e4675a958303fe8d2e1104d9becd0922",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmehostrevision_item_version_check"
+    ): (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "7b6d65d5670d3436adcbd8cae1a19da73177498534211163b7ab24ccb9fc8a50",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmehostrevision_period_count_check"
+    ): (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "6d3005031b712d7d22721a8ab40e8f0e53f50a6c87551dd9913990b0e8ec0759",
+    ),
+    "constraint:programme_programmehostrevision:programme_programmehostrevision_pkey": (
+        "d888e5d8181ad0defa0d6e4e35017be7b51becab6037ed20e6b5fab3fc38bbcc",
+        "8c8464f42472e42ee190fc91ca8db79b5351d3a4609040516578d229c56f6fa5",
+    ),
+    (
+        "constraint:programme_programmehostrevision:"
+        "programme_programmehostrevision_sequence_check"
+    ): (
+        "14d8487a1a979b3bd0d5295909f2713101a72aa8bc57a8f5c9ca641ff4dd0943",
+        "8f426ab72466a993c9c30383cb064c0d9e1286aed4585cb08cb0ccdec86be0aa",
+    ),
+    "index:programme_programmehostavailabilitywindow:programme_host_window_start_uq": (
+        "94bfae1353d941d5956004c37bb1277d4c9a29ea39fd8d614af804d0d4b39cc0",
+        "cb429bec2071bcf187f9c648d205f483532cfa64f4033514381d1ea63320fd0f",
+    ),
+    (
+        "index:programme_programmehostavailabilitywindow:"
+        "programme_programmehostava_organization_id_3c97849a"
+    ): (
+        "89c3b282d41b162e3c94e87c9e8ead7652817b0448168124067230e1cad11bfb",
+        "57db84d9ab6c87303668de572d73a79ab8d3d6b58962ce7ed895775607354b4e",
+    ),
+    (
+        "index:programme_programmehostavailabilitywindow:"
+        "programme_programmehostavailabilitywindow_edition_id_d1ca6d27"
+    ): (
+        "89c3b282d41b162e3c94e87c9e8ead7652817b0448168124067230e1cad11bfb",
+        "52a5634ac2899247ac6733e84e23cc7a8f28c072bfc9ad482923913746365797",
+    ),
+    (
+        "index:programme_programmehostavailabilitywindow:"
+        "programme_programmehostavailabilitywindow_host_id_217228db"
+    ): (
+        "89c3b282d41b162e3c94e87c9e8ead7652817b0448168124067230e1cad11bfb",
+        "e2b52f3a243975e9659553250d9aea3efdbd02d1cd8c9a9191d5461458478da8",
+    ),
+    (
+        "index:programme_programmehostavailabilitywindow:"
+        "programme_programmehostavailabilitywindow_item_id_bbe28f80"
+    ): (
+        "89c3b282d41b162e3c94e87c9e8ead7652817b0448168124067230e1cad11bfb",
+        "7de56589652191e42cf7e8f874e21a233333c945a758b74fd8f364cc39c3b202",
+    ),
+    (
+        "index:programme_programmehostavailabilitywindow:"
+        "programme_programmehostavailabilitywindow_pkey"
+    ): (
+        "4c0a8b82440cc44d18f3a3692254cab9fe1e16cd2794dc8d6ab40fbc6204a0b8",
+        "a78eaed34e342b8fa377bb3ee6ec56f3fd4f592e7303d4dcad0c2d5fae572aef",
+    ),
+    "index:programme_programmehostinvitation:programme_host_invitation_seq_uq": (
+        "527d3419525af50529576bfaf0b79fe81efacd695f3028e67c09ee2ea636b94e",
+        "8c85eba9835a8e82b9e40bf8882b9fa7b1ccd55c6a759c1cd55136a13621f0a5",
+    ),
+    (
+        "index:programme_programmehostinvitation:"
+        "programme_programmehostinvitation_actor_id_5b3d0a05"
+    ): (
+        "7d12de2734782f1a7f916dc8fad47286e47a2fc57b4837cf7fa55194b1e129cf",
+        "d274bc19eb0155fc3d11bf836d33760f00092e22b3016b070e5d72e9780b2fbf",
+    ),
+    (
+        "index:programme_programmehostinvitation:"
+        "programme_programmehostinvitation_edition_id_d1349294"
+    ): (
+        "7d12de2734782f1a7f916dc8fad47286e47a2fc57b4837cf7fa55194b1e129cf",
+        "a8887ee763516c3b403d9d5680884478ab93873ae6febee584fbb3cc5ac038e1",
+    ),
+    (
+        "index:programme_programmehostinvitation:"
+        "programme_programmehostinvitation_host_id_0c121527"
+    ): (
+        "7d12de2734782f1a7f916dc8fad47286e47a2fc57b4837cf7fa55194b1e129cf",
+        "d859f78b4b8d9507491125a4c196c5dfcbbd6928b0d8fa640a3c4197a5ede803",
+    ),
+    (
+        "index:programme_programmehostinvitation:"
+        "programme_programmehostinvitation_item_id_8aa18352"
+    ): (
+        "7d12de2734782f1a7f916dc8fad47286e47a2fc57b4837cf7fa55194b1e129cf",
+        "9124596882541e1f6ad28d2f0c0540dd46efed4ca70957440c56e9fcb534d8c7",
+    ),
+    (
+        "index:programme_programmehostinvitation:"
+        "programme_programmehostinvitation_organization_id_034ebd09"
+    ): (
+        "7d12de2734782f1a7f916dc8fad47286e47a2fc57b4837cf7fa55194b1e129cf",
+        "7e61e6b9819b9feb4a0083595d983260392e985a35fcdc785c9b4ecaad59da04",
+    ),
+    "index:programme_programmehostinvitation:programme_programmehostinvitation_pkey": (
+        "280e112ee6677d85d464d369572de23c9fd9e13a08eb82455ca6af7bca0734c4",
+        "019f0758f7059eb37cc7a69b6a33d487067ed68a25b6425abd9a7eeaf2c5faf0",
+    ),
+    "index:programme_programmehostrelationship:programme_host_item_person_uq": (
+        "73e2ff8f32a0076cefbe2ccbb0c068626ed2a5630ff7454b92c10dbd0a27efd4",
+        "eb83bb1c9c36db29d4788d9ab11e694ac1e098648c8a21e6aedd54e62a942068",
+    ),
+    "index:programme_programmehostrelationship:programme_host_self_scope_idx": (
+        "73c33213cbcba18125bd59d608dad82aea7f7e66de2bde505e4b0c64c3c0c383",
+        "8d98293cb67402fc265cbc4d7a5284f2e3486119b550491c584479baef3efe99",
+    ),
+    (
+        "index:programme_programmehostrelationship:"
+        "programme_programmehostrel_last_modified_by_id_abce55cb"
+    ): (
+        "e55fc984e406161c771d81925deab234cd5022d323ec5f5e204ef47c8ecc9443",
+        "5a38e957787fdda45d79237adce99cfd12062e6e2430a7e7af30f08eb25c47d8",
+    ),
+    (
+        "index:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_account_id_999f5299"
+    ): (
+        "e55fc984e406161c771d81925deab234cd5022d323ec5f5e204ef47c8ecc9443",
+        "c2a78f1e0bde446ce79dacd1014776439e4ab5611bac8f63e27fcdf211ed776b",
+    ),
+    (
+        "index:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_edition_id_81577e8a"
+    ): (
+        "e55fc984e406161c771d81925deab234cd5022d323ec5f5e204ef47c8ecc9443",
+        "3d74a4971784bd02468051918e5ce0a5cf45a34f38f9deb55f771a2279b938aa",
+    ),
+    (
+        "index:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_item_id_ce341248"
+    ): (
+        "e55fc984e406161c771d81925deab234cd5022d323ec5f5e204ef47c8ecc9443",
+        "644067b1a4431f2cfbe0ff1c6731d726f9f504655e7a6d2ef94e8610174c404b",
+    ),
+    (
+        "index:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_organization_id_34b8651d"
+    ): (
+        "e55fc984e406161c771d81925deab234cd5022d323ec5f5e204ef47c8ecc9443",
+        "8eae4df197a026524562b6744fe5971d544dea709e36f7168ff054dc34f9ec25",
+    ),
+    (
+        "index:programme_programmehostrelationship:"
+        "programme_programmehostrelationship_pkey"
+    ): (
+        "dac2ec62fdd6bb5b551a019c01ffe52893578fb4c04cf2f85a173d8ef7d773e2",
+        "cbe9094c288a7789b7659f5937702649f670b77bf9ac5c4140c3ee3b570f9645",
+    ),
+    "index:programme_programmehostrevision:programme_host_revision_seq_uq": (
+        "0a823622b58b1f0e0753f059be92167da2b1d44a558ea723ed96dc039e2e24fc",
+        "24ec5f1b43039cf0b91f14d1b5b6096e96978d8f227dd5725af191a25bd26b19",
+    ),
+    (
+        "index:programme_programmehostrevision:"
+        "programme_programmehostrevision_actor_id_eb53efe5"
+    ): (
+        "0b5d75100105a3543a1f52a3d80a1b024c9616527e4bd3b5de2a684c196dcf31",
+        "75e673e7c459227e98fe5dac9f0ebc2a7162c4b32b77cb2345258fb03ac83497",
+    ),
+    (
+        "index:programme_programmehostrevision:"
+        "programme_programmehostrevision_edition_id_13e8f248"
+    ): (
+        "0b5d75100105a3543a1f52a3d80a1b024c9616527e4bd3b5de2a684c196dcf31",
+        "b6b2b11ec21b6d7cf0595835d75255da70675f26a8b0dc2869a29d75a9617a79",
+    ),
+    (
+        "index:programme_programmehostrevision:"
+        "programme_programmehostrevision_host_id_3d675b51"
+    ): (
+        "0b5d75100105a3543a1f52a3d80a1b024c9616527e4bd3b5de2a684c196dcf31",
+        "3f8d842d4fb5aec060c8fa5f66c03832582afa83a5d88dec872f1c5793b233ee",
+    ),
+    (
+        "index:programme_programmehostrevision:"
+        "programme_programmehostrevision_item_id_0adad59c"
+    ): (
+        "0b5d75100105a3543a1f52a3d80a1b024c9616527e4bd3b5de2a684c196dcf31",
+        "8b430c1b3fc296e9f5c1e4448ad00e9b71e66c37ea5ca50d2e24e9dfac90fc34",
+    ),
+    (
+        "index:programme_programmehostrevision:"
+        "programme_programmehostrevision_organization_id_9034f51f"
+    ): (
+        "0b5d75100105a3543a1f52a3d80a1b024c9616527e4bd3b5de2a684c196dcf31",
+        "46d528120bfc7a2d1570eba3829c90af73089367958f1faff34ffebb4b45a222",
+    ),
+    "index:programme_programmehostrevision:programme_programmehostrevision_pkey": (
+        "891bed9f88e884f5278e9b8abe6e595fd52b22bb5f7b0b870c82d79108b5d2a7",
+        "cdf93c2292e03752a0ff18551f061819ad89df25660049ad2d5e06ec9e15a8d8",
+    ),
     (
         "constraint:programme_programmeitemsourcebinding:"
         "programme_programmei_source_object_id_919ad627_fk_applicati"
@@ -227,7 +795,7 @@ PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
     ),
     "constraint:programme_programmecommandreceipt:programme_command_operation_closed": (
         "69d64ca9ff30b925a62e5ceda594c1aba7aebf94d273e697efce3721c42b6513",
-        "1b2c55dfc3bc52251a15b4529e4521dfec5ced2ef1d93399991b027d2c4e58e1",
+        "5dbe934b7945785f67beac8dbfda7acb6eadc263f5ae4165503ec34bfb5a8b38",
     ),
     "constraint:programme_programmecommandreceipt:programme_command_retry_uq": (
         "6358fdf321257554281d71cf9659bff2557f29bff35c778c4126a1ec8b077945",

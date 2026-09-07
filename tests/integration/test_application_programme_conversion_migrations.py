@@ -1,8 +1,11 @@
 """Real schema round trips, populated fences and conversion guard drift."""
 
+from uuid import uuid4
+
 import pytest
 from django.db import connection, transaction
 from django.db.migrations.executor import MigrationExecutor
+from django.db.migrations.recorder import MigrationRecorder
 
 from maru.applications.models import ProgrammeAcceptedTransition
 from maru.applications.programme_conversion_commands import (
@@ -13,8 +16,15 @@ from maru.applications.readiness import (
     applications_database_integrity_is_ready,
 )
 from maru.core.database_integrity_readiness import inspect_database_integrity_catalog
-from maru.programme.models import ProgrammeItemSourceBinding, ProgrammeWorkingRevision
+from maru.programme.host_commands import invite_programme_host
+from maru.programme.host_inputs import ProgrammeHostInvitationInput
+from maru.programme.models import (
+    ProgrammeHostRelationship,
+    ProgrammeItemSourceBinding,
+    ProgrammeWorkingRevision,
+)
 from maru.programme.readiness import (
+    _ACCEPTED_INTEGRITY_CONTRACT,
     PROGRAMME_INTEGRITY_CONTRACT,
     programme_database_integrity_is_ready,
 )
@@ -91,6 +101,7 @@ def test_organizer_item_survives_unused_conversion_downgrade_and_upgrade():
 
 
 @pytest.mark.usefixtures(accepted.__name__)
+@pytest.mark.parametrize("has_host", [False, True])
 @pytest.mark.parametrize(
     "target",
     [
@@ -100,13 +111,66 @@ def test_organizer_item_survives_unused_conversion_downgrade_and_upgrade():
     ],
 )
 def test_completed_conversion_fences_contraction_before_any_guard_is_removed(
-    accepted, target
+    accepted, target, has_host
 ):
-    _, _, kwargs = accepted
+    world, _, kwargs = accepted
     result = convert_accepted_programme_proposal(**kwargs)
+    host_id = None
+    if has_host:
+        host_id = invite_programme_host(
+            actor_id=kwargs["actor_id"],
+            organization_id=kwargs["organization_id"],
+            edition_id=kwargs["edition_id"],
+            item_id=result.programme_item_id,
+            invitation=ProgrammeHostInvitationInput(
+                world.lead.id, "host", "Explicit hosting invitation", "", 1
+            ),
+            reason="Separate retained hosting purpose",
+            idempotency_key=uuid4(),
+            correlation_id=uuid4(),
+            authorizer=kwargs["programme_authorizer"],
+        ).host_id
+    current = MigrationExecutor(connection).loader.graph.leaf_nodes()
+    applied_before = MigrationRecorder(connection).applied_migrations()
+    binding_before = (
+        ProgrammeItemSourceBinding.objects.filter(item_id=result.programme_item_id)
+        .values()
+        .get()
+    )
     with pytest.raises(RuntimeError, match="Cannot remove"):
         MigrationExecutor(connection).migrate([target])
     assert ProgrammeAcceptedTransition.objects.filter(id=result.transition_id).exists()
+    assert (
+        ProgrammeItemSourceBinding.objects.filter(item_id=result.programme_item_id)
+        .values()
+        .get()
+        == binding_before
+    )
+    assert applications_database_integrity_is_ready()
+    if has_host:
+        assert ProgrammeHostRelationship.objects.get(id=host_id).version == 1
+        assert MigrationRecorder(connection).applied_migrations() == applied_before
+        assert programme_database_integrity_is_ready()
+    else:
+        # Django reverses unused successors before reaching the older populated
+        # fence. Verify the retained conversion guards, not current host tables.
+        guards = inspect_database_integrity_catalog(_ACCEPTED_INTEGRITY_CONTRACT)
+        assert guards.source_contract_current
+        assert guards.required_migrations_applied
+        assert guards.relation_ownership_consistent
+        assert guards.trigger_contract_current
+        assert guards.function_contract_current
+        assert guards.function_execute_owner_only
+        assert guards.function_ownership_current
+        assert not programme_database_integrity_is_ready()
+    MigrationExecutor(connection).migrate(current)
+    assert ProgrammeAcceptedTransition.objects.filter(id=result.transition_id).exists()
+    assert (
+        ProgrammeItemSourceBinding.objects.filter(item_id=result.programme_item_id)
+        .values()
+        .get()
+        == binding_before
+    )
     assert applications_database_integrity_is_ready()
     assert programme_database_integrity_is_ready()
 

@@ -31,6 +31,15 @@ from .catalogs import (
     ProgrammeReadinessEvidenceState,
     text_choices,
 )
+from .host_catalogs import (
+    MAX_HOST_BRIEFING,
+    MAX_HOST_INVITATION_TITLE,
+    MAX_HOST_REVISIONS,
+    ProgrammeHostAvailabilityKind,
+    ProgrammeHostAvailabilityState,
+    ProgrammeHostRole,
+    ProgrammeHostState,
+)
 from .writer_boundary import require_programme_writer
 
 if TYPE_CHECKING:
@@ -50,6 +59,7 @@ _SOURCE_CHANNEL_VALIDATOR = RegexValidator(
 _OWNER_MANAGED_RELATION_FIELDS = frozenset(
     {
         "actor",
+        "account",
         "created_by",
         "edition",
         "last_modified_by",
@@ -1249,11 +1259,287 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeModel):
             )
 
 
+class _ScopedProgrammeHostModel(_ClosedProgrammeModel):
+    """Duplicate exact owner scope on host records without a foreign writer."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_%(class)s_records",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_%(class)s_records",
+    )
+    item = models.ForeignKey(
+        ProgrammeItem,
+        on_delete=models.PROTECT,
+        related_name="%(class)s_records",
+    )
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        abstract = True
+
+    def clean(self) -> None:
+        """Reject an item outside the duplicated organization and edition.
+
+        Raises
+        ------
+        ValidationError
+            If the canonical item does not own this exact host record.
+        """
+        super().clean()
+        if self.item_id and (
+            self.item.organization_id != self.organization_id
+            or self.item.edition_id != self.edition_id
+        ):
+            raise ValidationError(
+                "Host records must remain in the item's exact scope.",
+                code="programme_host_scope_mismatch",
+            )
+
+
+class ProgrammeHostRelationship(_ScopedProgrammeHostModel):
+    """One retained item/person purpose with explicit current confirmation."""
+
+    account = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_host_relationships",
+    )
+    role = models.CharField(max_length=16, choices=text_choices(ProgrammeHostRole))
+    state = models.CharField(max_length=16, choices=text_choices(ProgrammeHostState))
+    version = models.PositiveBigIntegerField(default=1)
+    invitation_sequence = models.PositiveIntegerField(default=1)
+    availability_state = models.CharField(
+        max_length=16,
+        choices=text_choices(ProgrammeHostAvailabilityState),
+        default=ProgrammeHostAvailabilityState.UNKNOWN.value,
+    )
+    availability_version = models.PositiveBigIntegerField(default=0)
+    item_version = models.PositiveBigIntegerField()
+    last_modified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_host_relationships_modified",
+    )
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        ordering = ("item_id", "account_id", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("item", "account"), name="programme_host_item_person_uq"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    role__in=tuple(member.value for member in ProgrammeHostRole)
+                ),
+                name="programme_host_role_closed",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    state__in=tuple(member.value for member in ProgrammeHostState)
+                ),
+                name="programme_host_state_closed",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    availability_state__in=tuple(
+                        member.value for member in ProgrammeHostAvailabilityState
+                    )
+                ),
+                name="programme_host_availability_closed",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    version__gt=0,
+                    version__lte=MAX_HOST_REVISIONS + 2,
+                    invitation_sequence__gt=0,
+                    item_version__gt=0,
+                ),
+                name="programme_host_versions_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "account"),
+                name="programme_host_self_scope_idx",
+            )
+        ]
+
+
+class ProgrammeHostInvitation(_ScopedProgrammeHostModel, _AppendOnlyProgrammeModel):
+    """Immutable deliberately host-visible copy for one invitation sequence."""
+
+    host = models.ForeignKey(
+        ProgrammeHostRelationship, on_delete=models.PROTECT, related_name="invitations"
+    )
+    sequence = models.PositiveIntegerField()
+    host_version = models.PositiveBigIntegerField()
+    item_version = models.PositiveBigIntegerField()
+    role = models.CharField(max_length=16, choices=text_choices(ProgrammeHostRole))
+    title = models.CharField(max_length=MAX_HOST_INVITATION_TITLE)
+    briefing = models.TextField(blank=True, max_length=MAX_HOST_BRIEFING)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_host_invitations_authored",
+    )
+    reason = models.CharField(max_length=MAX_PROGRAMME_REASON_LENGTH)
+    occurred_at = models.DateTimeField()
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        ordering = ("host_id", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("host", "sequence"), name="programme_host_invitation_seq_uq"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    sequence__gt=0, host_version__gt=0, item_version__gt=0
+                ),
+                name="programme_host_invitation_versions",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    role__in=tuple(member.value for member in ProgrammeHostRole)
+                ),
+                name="programme_host_invitation_role",
+            ),
+        ]
+
+
+class ProgrammeHostRevision(_ScopedProgrammeHostModel, _AppendOnlyProgrammeModel):
+    """Immutable lifecycle evidence without retained private availability periods."""
+
+    host = models.ForeignKey(
+        ProgrammeHostRelationship, on_delete=models.PROTECT, related_name="revisions"
+    )
+    sequence = models.PositiveBigIntegerField()
+    invitation_sequence = models.PositiveIntegerField()
+    item_version = models.PositiveBigIntegerField()
+    operation = models.CharField(max_length=32)
+    role = models.CharField(max_length=16, choices=text_choices(ProgrammeHostRole))
+    state = models.CharField(max_length=16, choices=text_choices(ProgrammeHostState))
+    availability_state = models.CharField(
+        max_length=16, choices=text_choices(ProgrammeHostAvailabilityState)
+    )
+    availability_version = models.PositiveBigIntegerField()
+    period_count = models.PositiveSmallIntegerField()
+    periods_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_host_revisions_authored",
+    )
+    reason = models.CharField(max_length=MAX_PROGRAMME_REASON_LENGTH)
+    occurred_at = models.DateTimeField()
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        ordering = ("host_id", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("host", "sequence"), name="programme_host_revision_seq_uq"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    sequence__gt=0,
+                    sequence__lte=MAX_HOST_REVISIONS + 2,
+                    invitation_sequence__gt=0,
+                    item_version__gt=0,
+                    period_count__lte=128,
+                ),
+                name="programme_host_revision_versions",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    operation__in=(
+                        "host_invite",
+                        "host_respond",
+                        "host_remove",
+                        "host_availability",
+                    )
+                ),
+                name="programme_host_revision_operation",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    role__in=tuple(member.value for member in ProgrammeHostRole)
+                ),
+                name="programme_host_revision_role",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    state__in=tuple(member.value for member in ProgrammeHostState)
+                ),
+                name="programme_host_revision_state",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    availability_state__in=tuple(
+                        member.value for member in ProgrammeHostAvailabilityState
+                    )
+                ),
+                name="programme_host_revision_sharing",
+            ),
+        ]
+
+
+class ProgrammeHostAvailabilityWindow(_ScopedProgrammeHostModel):
+    """Current exact periods, erased when this hosting purpose stops sharing."""
+
+    host = models.ForeignKey(
+        ProgrammeHostRelationship,
+        on_delete=models.PROTECT,
+        related_name="availability_windows",
+    )
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+    kind = models.CharField(
+        max_length=16, choices=text_choices(ProgrammeHostAvailabilityKind)
+    )
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        ordering = ("host_id", "starts_at", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(ends_at__gt=models.F("starts_at")),
+                name="programme_host_window_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    kind__in=tuple(
+                        member.value for member in ProgrammeHostAvailabilityKind
+                    )
+                ),
+                name="programme_host_window_kind",
+            ),
+            models.UniqueConstraint(
+                fields=("host", "starts_at"), name="programme_host_window_start_uq"
+            ),
+        ]
+
+
 __all__ = [
     "ProgrammeCommandReceipt",
     "ProgrammeDeliveryRevision",
     "ProgrammeDepartmentDiscussionEntry",
     "ProgrammeEditionControl",
+    "ProgrammeHostAvailabilityWindow",
+    "ProgrammeHostInvitation",
+    "ProgrammeHostRelationship",
+    "ProgrammeHostRevision",
     "ProgrammeItem",
     "ProgrammeItemSourceBinding",
     "ProgrammePublicRendition",

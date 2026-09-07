@@ -84,7 +84,7 @@ def test_conversion_capability_is_additive_exact_department_nondelegable():
     assert current.RESOURCE_CAPABILITIES == previous.RESOURCE_CAPABILITIES
     assert {
         code for code, capability in CAPABILITIES.items() if capability.persistable
-    } == {
+    } - {"programme.manage_hosts", "programme.view_hosts"} == {
         *current.ORGANIZATION_CAPABILITIES,
         *current.EDITION_CAPABILITIES,
         *current.DEPARTMENT_CAPABILITIES,

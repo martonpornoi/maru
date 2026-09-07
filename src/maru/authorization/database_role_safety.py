@@ -124,6 +124,10 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.programme_programmereadinessevidence",
     "public.programme_programmepublicrendition",
     "public.programme_programmecommandreceipt",
+    "public.programme_programmehostrelationship",
+    "public.programme_programmehostinvitation",
+    "public.programme_programmehostrevision",
+    "public.programme_programmehostavailabilitywindow",
 )
 
 # Effects replay, Workforce adoption, and Organization structure evidence is

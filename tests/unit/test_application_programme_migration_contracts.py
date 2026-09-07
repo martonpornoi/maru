@@ -34,13 +34,17 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
     }
     assert listed == {
         code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - {"applications.convert_programme_acceptance"}
+    } - {
+        "applications.convert_programme_acceptance",
+        "programme.manage_hosts",
+        "programme.view_hosts",
+    }
 
 
 def test_review_scope_declaration_matches_the_runtime_readiness_fingerprint() -> None:
     """Catch stale capability-function pins without a PostgreSQL matrix run."""
     current = import_module(
-        "maru.authorization.migrations.0025_programme_conversion_capability"
+        "maru.authorization.migrations.0026_programme_host_capabilities"
     )
     declaration = current.FORWARD_SQL
     assert "$$ LANGUAGE plpgsql IMMUTABLE STRICT" in declaration
@@ -127,6 +131,8 @@ def test_authorization_min_scope_is_prior_catalog_plus_exact_department_code() -
         "applications.moderate_programme_review",
         "applications.decide_programme",
         "applications.convert_programme_acceptance",
+        "programme.manage_hosts",
+        "programme.view_hosts",
     }
 
 

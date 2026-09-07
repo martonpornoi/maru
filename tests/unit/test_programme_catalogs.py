@@ -58,6 +58,10 @@ def test_programme_catalogs_are_exact_and_closed() -> None:
     assert _values(ProgrammeCommandOperation) == (
         "item_create",
         "item_accept",
+        "host_invite",
+        "host_respond",
+        "host_remove",
+        "host_availability",
         "working_revise",
         "delivery_revise",
         "discussion_append",

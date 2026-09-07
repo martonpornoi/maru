@@ -102,8 +102,9 @@ exact-seal review cases, explicit versioned stage/rubric/template policies,
 independent review and
 moderation, accountable decisions, and exact-recipient acknowledgement under
 ADR 0085. Review-side acceptance does not create a target receipt or Programme
-item. Accepted-item conversion is the next bounded successor, before host
-relationships and availability, Scheduling, interactive timetable editing,
+item. Issue #77, delivered through PR #78, adds explicit accepted-item
+conversion. Issue #79 now develops independent host relationships and
+availability, before Scheduling, interactive timetable editing,
 staffing, releases, continuity, and integrated Programme-only rehearsal. Umbrella
 #48 remains open; no current profile or surface is activated by this kernel.
 
@@ -763,8 +764,9 @@ coordination and governed ownership recovery. Issue #71 implements dormant
 staged review and accountable decisions. Issue #77 adds the dedicated accepted
 Applications adapter: one exact effective acceptance produces one private
 source-bound item with seven initially required readiness concerns, without
-activating a profile or creating hosts. Next are Programme-owned host
-relationships, Scheduling, staffing, release, continuity, setup, and integrated
+activating a profile or creating hosts. Issue #79 develops Programme-owned host
+relationships and deliberately shared availability under ADR 0087. Next are
+Scheduling, staffing, release, continuity, setup, and integrated
 acceptance in dependency order. Each child is separately verified and delivered.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for

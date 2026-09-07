@@ -127,6 +127,7 @@
   "tests/integration/test_programme_database_integrity.py": 26.212,
   "tests/integration/test_programme_department_ownership_races.py": 19.459,
   "tests/integration/test_programme_department_ownership_recovery.py": 5.762,
+  "tests/integration/test_programme_hosts.py": 62.727,
   "tests/integration/test_programme_integrity_migrations.py": 59.83,
   "tests/integration/test_programme_queries.py": 20.64,
   "tests/integration/test_provider_finance.py": 16.465,
