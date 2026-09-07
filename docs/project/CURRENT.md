@@ -120,16 +120,20 @@ The corrected diagnostic at `8fa540cf649937a56855d4098f7ec7647744e439`
 passed all 5,985 tests but correctly failed the precise coverage gate at 89.56%.
 Current-input, form, scope-token and dormant-profile regressions now exercise
 that behavior independently of historical migration fixtures. The candidate's
-3,224 unit tests pass; combining this development run with the earlier current
-PostgreSQL data estimates 90.02%, not fresh certification. The non-database
+fresh diagnostic at `80f36ad713a6c5d5e3589dee22d9b8fe344d2477` passed
+3,224 unit and 3,002 current PostgreSQL tests, zero failures/errors/skips, and
+90.02% combined coverage in 957.955 seconds (15m58s). This supersedes the mixed-run
+development estimate and is current-path evidence, not full certification. The non-database
 quality gates passed on `8fa540c` with a fresh type-analysis cache; certification
 now isolates that cache per run to prevent cross-branch Django-plugin residue.
 Nightly deduplication also verifies the actual exact-revision Full CI gate,
 not a selector-only successful workflow with skipped acceptance.
-The final candidate's fresh current path, exhaustive local certification and
-hosted acceptance must pass before delivery. See the
+Final exhaustive local certification and hosted acceptance must pass before
+delivery. See the
 [benchmark checkpoint](../checkpoints/2026-09-07-postgresql-current-path-benchmark.md)
 for exact observations, limitations and the preserved original evidence.
+The [verified current-path checkpoint](../checkpoints/2026-09-07-postgresql-current-path-verified.md)
+records the precise passing result and its acceptance boundary.
 
 Neither #83 nor #81 is delivered. Preserve the separate Programme branch,
 existing stashes and other worktree. Do not merge PR #82 using a current-only
@@ -160,7 +164,7 @@ product work remain outside this bounded task.
 
 ## Smallest sensible next actions
 
-1. Verify #83's corrected current coverage, then exhaustive local and hosted acceptance,
+1. Complete #83's exhaustive local and hosted acceptance after the passing current diagnostic,
    protected delivery and exact-main synchronization. Do not bypass the red #82
    gate or repeat the already delivered #77/#79 work.
 2. If separately authorized, approve and remove only identified disposable
