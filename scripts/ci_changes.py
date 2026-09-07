@@ -349,12 +349,12 @@ def enforce_targeted_time_budget(
     integration_directory : Path
         Directory containing integration test files.
     timing_file : Path
-        Accepted file-duration map used by full sharding.
+        Accepted file-cost map used by full sharding, including ADR 0089 calibration.
 
     Returns
     -------
     CIPlan
-        The original plan when its measured selection fits the targeted budget;
+        The original plan when its estimated selection fits the targeted budget;
         otherwise, an equivalent plan requiring full acceptance.
     """
     if plan.integration != "targeted":
@@ -381,7 +381,7 @@ def _load_integration_durations(timing_file: Path) -> dict[str, float]:
     Parameters
     ----------
     timing_file : Path
-        JSON map from repository integration path to measured seconds.
+        JSON map from repository integration path to estimated cost seconds.
 
     Returns
     -------

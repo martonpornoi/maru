@@ -164,8 +164,30 @@ reproduced historical-planner handover defect is also corrected without
 weakening current-actor eligibility or independent Venue approval. The
 [certification follow-up](../checkpoints/2026-09-07-scheduling-certification-follow-up.md)
 records the 92-test targeted repair pass, 15-test final continuity/guard pass,
-and ordinary reverse/reapply evidence. Corrected clean-head full certification,
-hosted acceptance and protected delivery remain next; #81 is not yet delivered.
+and ordinary reverse/reapply evidence. Corrected clean head
+`d22a267b8c5c7117208979e27fd02effd7190a57` passed complete local certification:
+6,539 Python tests, 33 frontend tests, all eight PostgreSQL shards and the
+unchanged combined branch-coverage and quality gates. All temporary
+certification containers were removed. [PR #82](https://github.com/martonpornoi/maru/pull/82)
+is open; that head's CodeQL and six hosted PostgreSQL shards passed, but
+[hosted acceptance](https://github.com/martonpornoi/maru/actions/runs/34108685975)
+cancelled shards 4 and 7 at the 120-minute limit. The aggregate gate is red;
+this is not an assertion-failure report or permission to merge.
+
+A bounded timing repair under
+[ADR 0089](../architecture/decisions/0089-conservative-hosted-test-cost-calibration.md)
+preserves all 208 integration files, eight whole-file serial shards, timeouts,
+and coverage. Complete successful local evidence plus exactly matched
+successful hosted jobs calibrates conservative cost estimates. Two explicitly
+excluded UUID-dependent hosted measurements retain their complete baseline
+files and all tests. The new projected shards are 6,703.344–6,703.508 seconds;
+this is not measured completion time. The focused updater/sharder suite passed
+49 tests; the complete unit suite passed 3,199 tests in 13.23 seconds. Lint,
+NumPy and semantic docstrings, and maintained-documentation validation passed. The
+[hosted timing repair checkpoint](../checkpoints/2026-09-07-scheduling-hosted-timing-repair.md)
+records provenance and exclusions. The repaired clean head still requires
+full local certification, hosted acceptance and protected delivery; #81 is not
+yet delivered. Do not blanket-retry the timed-out head.
 After verified delivery and issue reconciliation, continue the accessible
 editor and remaining #48 children sequentially without another routine approval.
 
@@ -192,8 +214,8 @@ editor and remaining #48 children sequentially without another routine approval.
 
 ## Smallest sensible next actions
 
-1. Deliver #81's implemented Scheduling candidate/conflict and governed
-   Venue-binding contract: certify the clean exact head, obtain green hosted
+1. Complete #81's bounded hosted timing repair and deliver its Scheduling
+   candidate/conflict and governed Venue-binding contract: certify the clean exact head, obtain green hosted
    acceptance, squash through the protected gate, reconcile issues and sync
    main. Do not repeat #77 or #79's completed certification.
 2. If separately authorized, approve and remove only identified disposable

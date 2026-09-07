@@ -392,7 +392,22 @@ complete 178-file refresh now balances the deterministic schedule between
 serial whole-file isolation, fail-fast policy, no-retry boundary, and combined
 branch-coverage requirement remain unchanged.
 
-Since the 2026-08-20 public transition, every repository workflow uses standard
+PR #82's first hosted attempt subsequently timed out shards 4 and 7, despite
+complete local acceptance of the same head. Its complete 208-file local timing
+refresh alone still proposed a shard with almost 7,000 seconds of already
+observed hosted work plus unobserved files. Under
+[ADR 0089](../architecture/decisions/0089-conservative-hosted-test-cost-calibration.md),
+the map now uses conservative exact-head native/hosted cost calibration.
+This changes only scheduling weights, never selected tests or acceptance.
+Successful complete hosted jobs contribute exactly matching whole-file
+observations; unobserved files retain complete local evidence multiplied by
+the largest matched job-group slowdown, bounded below by one. Explicit
+measurement exclusions preserve all baseline tests and require documented
+exact paths. See the
+[repair checkpoint](../checkpoints/2026-09-07-scheduling-hosted-timing-repair.md)
+for provenance, exclusions, and projected rather than claimed runtime.
+
+Every repository workflow continues to use standard
 GitHub-hosted runners and the repository has no registered self-hosted runner.
 Actions are limited to the exact immutable revisions in
 `.github/actions-allowlist.json`, workflow tokens default to read-only, and

@@ -46,6 +46,36 @@ same non-database gates and audits, followed by the complete Python suite unless
 `-SkipPythonTests` is supplied. It does not replace the isolated certification
 receipt.
 
+## Refreshing hosted scheduling costs
+
+Preserve complete reports and the exact-head local receipt outside `.local-ci/`
+before another certification deletes that artifact directory. Raw JUnit
+aggregation remains available with `scripts/update_ci_timings.py`. For a
+demonstrated native/hosted imbalance, ADR 0089 also permits conservative
+calibration from complete successful local evidence and successful hosted jobs
+at the same verified head and base. Independently inspect their provenance;
+supplying matching command-line strings does not authenticate an artifact.
+
+```powershell
+.venv/Scripts/python.exe scripts/update_ci_timings.py LOCAL_REPORTS TIMING_MAP --hosted-artifact-directory HOSTED_REPORTS --local-commit EXACT_HEAD --hosted-commit EXACT_HEAD
+```
+
+Use full lower-case commit identifiers. The calibrated baseline must cover
+every current integration file. Reports must be complete and passing without
+skips, files cannot be split or duplicated, and observed testcase identities
+must match exactly. Successful jobs from a partially timed-out hosted run are
+cost observations, not acceptance of that run. Missing observations receive
+the largest matched job-group hosted/local ratio, bounded below by one;
+observed weights never decrease below either measured duration.
+
+If collection IDs are unstable, explicitly exclude only the unusable hosted
+measurement with repeatable `--exclude-hosted-file tests/integration/EXACT_FILE.py`.
+Document the exact path and reason. The complete baseline file and every test
+remain selected, with conservative fallback cost. Whole reports are validated
+before exclusions, and unknown paths or excluding all observations fail.
+Neither a projection nor an unsigned receipt authorizes a merge: certify the
+new clean head and obtain its independent hosted `PR gate` and CodeQL results.
+
 ## Repository-managed push guard
 
 Activate the tracked hook once per clone:
