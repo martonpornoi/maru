@@ -418,7 +418,7 @@ def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> 
     assert "python scripts/validate_actions_allowlist.py" in workflow
     assert workflow.count("needs: preflight") == 4
     assert jobs["unit"]["needs"] == ["static", "security"]
-    assert jobs["integration"]["needs"] == ["static", "security"]
+    assert jobs["integration"]["needs"] == ["preflight", "static", "security"]
     license_step = next(
         step
         for step in jobs["static"]["steps"]
@@ -435,9 +435,14 @@ def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> 
     assert "uv build --out-dir .ci-distributions" in package_step["run"]
     assert "scripts/verify_package_artifacts.py" in package_step["run"]
     assert "if" not in package_step
-    assert "shard: [1, 2, 3, 4, 5, 6, 7, 8]" in workflow
-    assert "--shard-count 8" in workflow
-    assert "scripts/run_ci_test_shard.py" in workflow
+    assert jobs["integration"]["strategy"]["max-parallel"] == 8
+    assert "fromJSON(needs.preflight.outputs.matrix)" in workflow
+    assert "steps.database-plan.outputs.matrix" in workflow
+    assert "--plan-only --github-output" in workflow
+    assert '"$SHARD_COUNT"' in workflow
+    assert "scripts.run_postgres_acceptance" in workflow
+    assert "--evidence reports/selection-" in workflow
+    assert "scripts.run_postgres_acceptance" in workflow
     assert "coverage combine .ci-artifacts/coverage-parts" in workflow
     assert "coverage report --fail-under=90" in workflow
     assert "name: Full CI gate" in workflow
@@ -700,7 +705,7 @@ def test_local_certification_preserves_database_isolation_and_total_coverage() -
         "postgres:17.11-alpine@sha256:",
         '"maru-cert-integration-$Shard-$RunToken"',
         "maru_unit_no_database",
-        '"scripts/run_ci_test_shard.py"',
+        '"-m", "scripts.run_postgres_acceptance"',
         '"coverage", "combine"',
         '"coverage", "report", "--fail-under=90"',
         "Certification requires a clean working tree",

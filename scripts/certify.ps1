@@ -1,11 +1,18 @@
 [CmdletBinding()]
 param(
-    [ValidateRange(1, 12)]
-    [int] $IntegrationShards = 8
+    [ValidateRange(1, 8)]
+    [int] $IntegrationShards = 8,
+    [ValidateSet("Auto", "Full", "CurrentDiagnostic")]
+    [string] $Mode = "Auto",
+    [string] $Base = "origin/main"
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$CertificationClock = [Diagnostics.Stopwatch]::StartNew()
+if ($IntegrationShards -ne 8 -and $Mode -ne "CurrentDiagnostic") {
+    throw "Pre-review certification requires eight isolated databases. Use CurrentDiagnostic for a smaller benchmark."
+}
 
 $RepositoryRoot = Split-Path -Parent $PSScriptRoot
 $env:UV_CACHE_DIR = Join-Path $RepositoryRoot ".uv-cache"
@@ -129,7 +136,7 @@ function Start-TestProcess {
         -FilePath $Python `
         -ArgumentList $Arguments `
         -WorkingDirectory $RepositoryRoot `
-        -NoNewWindow `
+        -WindowStyle Hidden `
         -PassThru `
         -RedirectStandardOutput $StandardOutput `
         -RedirectStandardError $StandardError `
@@ -187,6 +194,12 @@ try {
     if ($LASTEXITCODE -ne 0 -or $Commit -notmatch "^[0-9a-f]{40}$") {
         throw "Could not resolve the exact Git commit under certification."
     }
+    $BaseCommit = (@(& $Git "rev-parse" "--verify" "$Base^{commit}") -join "").Trim()
+    if ($LASTEXITCODE -ne 0 -or $BaseCommit -notmatch "^[0-9a-f]{40}$") {
+        throw "Could not resolve the exact certification base."
+    }
+    $HistoryScope = if ($Mode -eq "Full" -or $BaseCommit -eq $Commit) { "all" } else { "auto" }
+    if ($Mode -eq "CurrentDiagnostic") { $HistoryScope = "current" }
 
     if (Test-Path -LiteralPath $ArtifactRoot) {
         Remove-Item -LiteralPath $ArtifactRoot -Recurse -Force
@@ -208,6 +221,15 @@ try {
     if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) {
         throw "The locked Windows virtual environment was not created."
     }
+    $PlanText = & $Python "-m" "scripts.run_postgres_acceptance" `
+        "--history" $HistoryScope "--base" $BaseCommit "--plan-only" `
+        "--shard-count" "$IntegrationShards"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not validate the complete PostgreSQL acceptance plan."
+    }
+    $AcceptancePlan = $PlanText | ConvertFrom-Json
+    $HistoryScope = $AcceptancePlan.history
+    Write-Host "Historical scope: $HistoryScope; base: $BaseCommit"
 
     $RunToken = "$($Commit.Substring(0, 10))-$PID".ToLowerInvariant()
     $Jobs = [Collections.Generic.List[object]]::new()
@@ -228,9 +250,11 @@ try {
             -Name "integration-$Shard" `
             -DatabasePort $Port `
             -Arguments @(
-                "scripts/run_ci_test_shard.py",
+                "-m", "scripts.run_postgres_acceptance",
+                "--history", "$HistoryScope", "--base", "$BaseCommit",
                 "--shard-index", "$Shard",
                 "--shard-count", "$IntegrationShards",
+                "--evidence", "$ReportDirectory/selection-$Shard.json",
                 "--", "-q", "-p", "no:cacheprovider",
                 "--cov=maru", "--cov-report=", "--cov-fail-under=0",
                 "--junitxml=$ReportDirectory/integration-$Shard.xml",
@@ -241,9 +265,14 @@ try {
     $RepositoryGateError = $null
     try {
         Write-Host "Running static, documentation, contract, frontend, and security gates..."
-        Invoke-Checked $PowerShell @(
-            "-NoProfile", "-File", "scripts/check.ps1", "-SkipPythonTests"
-        )
+        if ($Mode -ne "CurrentDiagnostic") {
+            Invoke-Checked $PowerShell @(
+                "-NoProfile", "-File", "scripts/check.ps1", "-SkipPythonTests"
+            )
+        }
+        else {
+            Write-Host "Diagnostic benchmark only: non-database quality gates are not run."
+        }
     }
     catch {
         $RepositoryGateError = $_
@@ -292,9 +321,12 @@ try {
     }
 
     $Evidence = [ordered]@{
-        schema_version = 1
+        schema_version = 2
         result = "success"
         commit = $Commit
+        base_commit = $BaseCommit
+        historical_scope = $HistoryScope
+        elapsed_seconds = [math]::Round($CertificationClock.Elapsed.TotalSeconds, 3)
         completed_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
         integration_shards = $IntegrationShards
         isolated_postgres_instances = $IntegrationShards
@@ -312,10 +344,14 @@ try {
             "combined_branch_coverage"
         )
     }
+    if ($Mode -eq "CurrentDiagnostic") {
+        $Evidence.result = "diagnostic_success"
+        $Evidence.gates = @("unit_tests", "postgresql_integration_tests", "combined_branch_coverage")
+    }
     $Evidence | ConvertTo-Json -Depth 4 | Set-Content `
         -LiteralPath (Join-Path $ArtifactRoot "certification.json") `
         -Encoding utf8
-    Write-Host "Maru certification passed for exact commit $Commit."
+    Write-Host "Maru $($Evidence.result) for exact commit $Commit ($HistoryScope history)."
 }
 finally {
     foreach ($Container in $Containers) {

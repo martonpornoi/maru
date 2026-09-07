@@ -34,6 +34,7 @@ jobs:
       security: ${{ steps.plan.outputs.security }}
       dependency-review: ${{ steps.plan.outputs.dependency_review }}
       integration: ${{ steps.plan.outputs.integration }}
+      history: ${{ steps.plan.outputs.history }}
       destructive: ${{ steps.plan.outputs.destructive }}
       destructive-approved: ${{ steps.plan.outputs.destructive_approved }}
       deleted-count: ${{ steps.plan.outputs.deleted_count }}
@@ -288,7 +289,7 @@ jobs:
           uv run pytest "${TEST_FILES[@]}" -q --durations=25
 
   full:
-    name: High-risk full acceptance
+    name: Risk-selected acceptance
     needs: [changes, repository-safety]
     if: >-
       ${{
@@ -296,6 +297,9 @@ jobs:
         needs.changes.outputs.integration == 'full'
       }}
     uses: ./.github/workflows/_full-ci.yml
+    with:
+      history: ${{ needs.changes.outputs.history }}
+      base: ${{ github.event.pull_request.base.sha }}
 
   pr-gate:
     name: PR gate

@@ -2,14 +2,43 @@ name: Full acceptance
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "17 2 * * *"
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: full-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
+  select:
+    name: Select changed-revision nightly acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run-full: ${{ steps.select.outputs.run_full }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Resolve exact-revision nightly history
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "run_full=true" >> "$GITHUB_OUTPUT"
+          else
+            python scripts/nightly_ci.py
+          fi
   full:
+    needs: select
+    if: ${{ needs.select.outputs.run-full == 'true' }}
     uses: ./.github/workflows/_full-ci.yml

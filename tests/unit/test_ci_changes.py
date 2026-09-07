@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path, PurePosixPath
 
 import pytest
@@ -25,18 +26,18 @@ def _change(path: str, status: str = "M") -> ChangedFile:
             (".agents/skills/maru-pr-delivery/agents/openai.yaml",),
             (True, False, False, "none"),
         ),
-        (("frontends/staff-console/src/main.tsx",), (False, True, False, "none")),
+        (("frontends/staff-console/src/main.tsx",), (False, True, False, "full")),
         (
             ("src/maru/core/static/staff-console/app.js",),
-            (False, True, False, "none"),
+            (False, True, False, "full"),
         ),
         (
             ("src/maru/core/templates/core/home.html",),
-            (True, False, True, "targeted"),
+            (True, False, True, "full"),
         ),
         (
             ("src/maru/workforce/static/workforce/organization_structure.css",),
-            (True, False, True, "targeted"),
+            (True, False, True, "full"),
         ),
         (
             ("src/maru/templates/admin/base_site.html",),
@@ -46,7 +47,7 @@ def _change(path: str, status: str = "M") -> ChangedFile:
             ("src/maru/static/global.css",),
             (True, False, True, "full"),
         ),
-        (("src/maru/catalog/api.py",), (True, False, True, "targeted")),
+        (("src/maru/catalog/api.py",), (True, False, True, "full")),
         (("src/maru/catalog/models.py",), (True, False, True, "full")),
         (("src/maru/catalog/migrations/0002_x.py",), (True, False, True, "full")),
         (("src/maru/authorization/policy.py",), (True, False, True, "full")),
@@ -275,7 +276,7 @@ def test_targeted_plan_fails_over_to_full_when_measured_selection_is_too_slow(
         encoding="utf-8",
     )
     changes = (_change("src/maru/catalog/api.py"),)
-    plan = classify_changes(changes)
+    plan = replace(classify_changes(changes), integration="targeted")
 
     routed = enforce_targeted_time_budget(plan, changes, integration, timing_file)
     timing_file.write_text(
@@ -347,7 +348,7 @@ def test_targeted_plan_fails_over_when_a_selected_file_has_no_timing(
         encoding="utf-8",
     )
     changes = (_change("src/maru/catalog/api.py"),)
-    plan = classify_changes(changes)
+    plan = replace(classify_changes(changes), integration="targeted")
 
     routed = enforce_targeted_time_budget(plan, changes, integration, timing_file)
 
