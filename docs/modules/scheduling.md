@@ -163,8 +163,13 @@ history copy/restore and terminal archive; occurrence creation/repetition,
 group revision and retirement; day retirement and unplacement; saved conflict
 evaluation and warning acknowledgement; and physical reservation replacement
 or cancellation. Only the server-selected operation's fields are accepted.
-Explicit group/sequence pairs use already-authorized choices, not recurrence
-inference. Creating the first candidate/occurrence may observe edition control
+An explicit group/sequence pair either uses an already-authorized group choice
+or deliberately starts a new group. The new form supplies one opaque group key;
+bound validation/retry retains it and requires an explicit sequence. This key
+is edition-local grouping, not a foreign-record reference or authority, and the
+existing owner command still enforces group/sequence uniqueness. Neither option
+infers recurrence or creates additional occurrences. Creating the first
+candidate/occurrence may observe edition control
 zero; copying retained history requires a positive current control version.
 Every successful Scheduling mutation advances that shared control, not merely
 creation. A new command uses a fresh observed snapshot; stale pending input is
@@ -230,8 +235,34 @@ shell, one H1/main, responsive labelled cards, explicit overnight dates/offsets,
 current physical-hold readout and native form rendering. Owner labels are
 escaped; generic forms retain input and link errors to controls. Submit buttons
 provide the action exactly once, with Preview first for placement forms.
+
+`planning_selection` separates transient `ui_` fields from exact command input
+without flattening repeated values or discarding unknown fields. The caller
+must authorize base scope before parsing. Candidate/day/room/item/occurrence
+selection is checked against complete authorized projections before filtering;
+selecting an item never implicitly selects its first repeated occurrence.
+Text/state/day/room filtering changes only visible cards and lanes, retaining
+complete form choices and the separately resolved selection. History/finding
+IDs and history cursors still require their own protected queries. Neither
+selection nor mutation input is persisted in a URL or browser storage.
+
+`planning_controls.build_planning_control` composes one ordinary form from those
+complete owner projections. It does not authorize, query or write. New forms
+use the observed edition control or exact target version and a fresh retry key;
+bound forms supply no new initial values and never rebase submitted versions.
+An exact occurrence and service day are selected before opening the placement
+form, so changing a target cannot silently reuse another target's version.
+The same four instants and explicitly required host intervals prefill the
+native fields. Missing context produces guidance, not an inferred selection;
+read-only lifecycle hides new forms without rewriting an already bound retry.
+Current-hold cancellation retains its original candidate/placement source,
+while explicit replacement uses the current draft and the observed booking
+version. Historical copy/restore never falls back from a missing selected
+historical revision to current timing. Every submitted form still requires the
+existing independently authorized owner command.
+
 This is not yet the complete browser editor: trusted HTTP selection/command
-orchestration, filters, inspector/history/review presentation, pointer-prefill
+orchestration, visible filter controls, inspector/history/review presentation, pointer-prefill
 and unsaved-input behavior, browser rehearsal and protected acceptance remain.
 No production URL or navigation entry is mounted.
 

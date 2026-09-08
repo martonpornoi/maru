@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import pytest
 from django.db import DatabaseError
+from django.http import QueryDict
 
 import maru.effects.services as effect_services
 from maru.audit.models import AuditEvent
@@ -62,6 +63,7 @@ from maru.scheduling.occurrence_commands import (
     revise_scheduling_occurrence,
 )
 from maru.scheduling.planning_board import build_scheduling_planning_board
+from maru.scheduling.planning_controls import build_planning_control
 from maru.scheduling.planning_hosts import load_scheduling_host_requirements
 from maru.scheduling.planning_inspector import (
     PlanningItemLayer,
@@ -75,6 +77,7 @@ from maru.scheduling.planning_queries import (
 )
 from maru.scheduling.planning_record_actions import submit_planning_record
 from maru.scheduling.planning_record_forms import PlanningRecordForm
+from maru.scheduling.planning_selection import PlanningSelection
 from maru.venues.models import VenueBooking
 from maru.venues.timetable_queries import list_venue_timetable_spaces
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
@@ -1296,3 +1299,104 @@ def test_inspector_default_scheduling_policy_denies_before_owner_lookup(
             item_id=uuid4(),
             layer=PlanningItemLayer.WORKING,
         )
+
+
+def native_control_data(form, *, reason):
+    data = QueryDict(mutable=True)
+    for field in form:
+        if field.name != "action":
+            value = field.value()
+            data[field.name] = "" if value is None else str(value)
+    data["action"] = SchedulingOperation.OCCURRENCE_CREATE
+    data["reason"] = reason
+    return data
+
+
+def test_native_factory_starts_then_extends_one_explicit_group_without_replay_writes(
+    planning_world,
+):
+    scope = read_request(planning_world)
+    items = programme_queries.list_programme_timetable_items(
+        actor_id=scope.actor_id,
+        organization_id=scope.organization_id,
+        edition_id=scope.edition_id,
+        correlation_id=scope.correlation_id,
+        authorizer=_TrustedProgrammeAuthorizer(),
+    )
+    edition = EventEdition.objects.get(id=scope.edition_id)
+    CapabilityGrantFactory(
+        principal=Account.objects.get(id=scope.actor_id),
+        organization=edition.organization,
+        edition=edition,
+        capability_code="venues.view_workspace",
+    )
+    spaces = list_venue_timetable_spaces(
+        actor_id=scope.actor_id,
+        organization_id=scope.organization_id,
+        edition_id=scope.edition_id,
+        correlation_id=scope.correlation_id,
+    )
+    snapshot = load_scheduling_planning(
+        scope,
+        candidate_id=planning_world.candidate.object_id,
+        authorizer=planning_world.policy,
+    )
+    selection = PlanningSelection(
+        candidate_id=snapshot.selected_candidate_id,
+        item_id=snapshot.occurrences[0].item_id,
+        mode=SchedulingOperation.OCCURRENCE_CREATE,
+    )
+    board = build_scheduling_planning_board(snapshot, items=items, spaces=spaces)
+    before_occurrences = SchedulingOccurrence.objects.count()
+    before_receipts = SchedulingCommandReceipt.objects.count()
+    fresh = build_planning_control(snapshot, board, selection).form
+    assert fresh is not None
+    data = native_control_data(
+        fresh, reason="Start an explicit two-part workshop group"
+    )
+    data["start_group"] = "new"
+    data["group_sequence"] = "1"
+    bound = build_planning_control(snapshot, board, selection, data=data).form
+    assert isinstance(bound, PlanningRecordForm)
+    first = submit_planning_record(scope, bound, authorizer=planning_world.policy)
+    assert first is not None
+    replay = submit_planning_record(scope, bound, authorizer=planning_world.policy)
+    assert replay.replayed
+    assert replay.receipt_id == first.receipt_id
+    assert SchedulingOccurrence.objects.count() == before_occurrences + 1
+    assert SchedulingCommandReceipt.objects.count() == before_receipts + 1
+    group_key = bound.occurrence_intent.group_key
+
+    latest = load_scheduling_planning(
+        scope,
+        candidate_id=selection.candidate_id,
+        authorizer=planning_world.policy,
+    )
+    latest_board = build_scheduling_planning_board(latest, items=items, spaces=spaces)
+    second_form = build_planning_control(latest, latest_board, selection).form
+    assert second_form.initial["expected_version"] == first.control_version
+    second_data = native_control_data(
+        second_form, reason="Add the explicit second part"
+    )
+    second_data["start_group"] = ""
+    second_data["group_key"] = str(group_key)
+    second_data["group_sequence"] = "2"
+    second_bound = build_planning_control(
+        latest, latest_board, selection, data=second_data
+    ).form
+    assert isinstance(second_bound, PlanningRecordForm)
+    second = submit_planning_record(
+        scope, second_bound, authorizer=planning_world.policy
+    )
+    assert second is not None
+    assert second.object_id != first.object_id
+    assert SchedulingOccurrence.objects.count() == before_occurrences + 2
+    assert SchedulingCommandReceipt.objects.count() == before_receipts + 2
+    revisions = SchedulingOccurrenceRevision.objects.filter(group_key=group_key)
+    assert set(revisions.values_list("group_sequence", flat=True)) == {1, 2}
+    assert revisions.count() == 2
+    assert (
+        SchedulingCandidate.objects.get(id=selection.candidate_id).aggregate_version
+        == 1
+    )
+    assert not VenueBooking.objects.exists()

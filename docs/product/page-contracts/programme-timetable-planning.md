@@ -76,7 +76,11 @@ room reservation** beside candidate identity and version, not only in help.
   occurrence, service day and room, requested capacity, the four ordered
   envelope times, and explicitly required host-presence intervals. Group and
   sequence fields create/revise ordinary occurrences; repetition creates an
-  explicit additional occurrence, never an implicit recurrence rule.
+  explicit additional occurrence, never an implicit recurrence rule. A planner
+  may deliberately start the first group with an explicit sequence; its opaque
+  pending group key survives validation and retry without creating extra work.
+  Select the exact occurrence and service day before opening a placement form;
+  a target change must never reuse another target's optimistic version.
 - Pointer placement/movement is a form-prefilling accelerator. Keyboard users
   select the same item and destination using ordinary controls. Resize edits
   the same four times. No pointer path saves, reserves, confirms a host,
@@ -87,6 +91,9 @@ room reservation** beside candidate identity and version, not only in help.
 - Native submit buttons supply the closed action exactly once. Do not render a
   second hidden action with the same name; repeated single-value fields fail
   validation. The placement form's default submit path is Preview, never Save.
+  Transient selection uses a separate closed POST namespace; neither unknown
+  fields nor repeated values are discarded, and selection cannot supply actor,
+  tenant, command versions or retry attribution.
 - Record forms accept only their selected existing command's fields. Retirement,
   restore, archive, unplacement and physical changes require explicit consequence
   confirmation. Reservation rationale is labelled as shared with Venues. A

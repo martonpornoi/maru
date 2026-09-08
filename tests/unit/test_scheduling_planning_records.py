@@ -99,6 +99,8 @@ def values(operation, names):
     data.update(
         action=operation.value, reason="Deliberate change", retry_key=str(uuid4())
     )
+    if operation in {Op.OCCURRENCE_CREATE, Op.OCCURRENCE_REVISE}:
+        data.update(start_group="", new_group_key=str(uuid4()))
     choices = {
         key: ((UUID(all_fields[key]), label),)
         for key, label in (
@@ -150,6 +152,8 @@ def test_every_record_action_calls_only_its_existing_command_with_exact_input(
     if operation in {Op.CANDIDATE_CREATE, Op.CANDIDATE_COPY, Op.OCCURRENCE_CREATE}:
         expected["expected_control_version"] = expected.pop("expected_version")
     if form.occurrence_intent is not None:
+        assert expected.pop("start_group") == ""
+        assert expected.pop("new_group_key") == UUID(data["new_group_key"])
         for key in ("item_id", "group_key", "group_sequence"):
             expected.pop(key)
         expected["occurrence"] = form.occurrence_intent

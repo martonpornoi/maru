@@ -265,3 +265,56 @@ filters and full inspector/history/conflict presentation, pointer-prefill and
 unsaved-input behavior, then complete synthetic browser and protected delivery
 acceptance. No production route is mounted and no partial-editor PR is open.
 #85 and #48 remain open; no schedule has been created or resumed.
+
+## Strict selection and native control composition follow-up
+
+The editor now has a strict transient POST selection namespace and one native
+control composer. Selection is not command attribution: actor, tenant, versions
+and retry keys remain outside `ui_` state. Unknown and repeated values survive
+splitting and are rejected by the appropriate strict form. Scoped selection
+resolves before filtering; item selection never guesses its first repeated
+occurrence. Text/state/day/room filters change visible cards and lanes only,
+retaining complete choices and independently resolved selection.
+
+Each native command control uses the existing form and owner command. Fresh
+intents receive the observed shared control or exact target version, explicit
+targets and a new retry key. Bound forms receive no fresh initial values and
+preserve stale/invalid input and retries. Placement prefill uses all four exact
+instants and required host windows, never availability inference. Missing
+context and read-only lifecycle withhold new controls; archived alternatives
+remain copyable. Current room-hold cancellation keeps its original source even
+after unplacement, while replacement refers to the current selected placement.
+Missing selected history cannot silently fall back to current timing.
+
+Connecting the first-group workflow exposed a missing native action: previous
+choices only permitted existing groups. A planner can now deliberately start a
+new group with an explicit sequence and a retained opaque pending key. This
+edition-local grouping key is not a foreign-record reference or authority; the
+same owner command checks group uniqueness. The action creates exactly one
+occurrence; a second occurrence remains a separate versioned command.
+
+Verification for this increment:
+
+- The complete database-free suite passes 3,789 cases in 26.63s, with only the
+  two existing Django URLField deprecation warnings.
+- The final 180 focused selection/control/record cases pass in 1.71s under
+  branch-aware coverage. The three selected source modules total 97.79%; the
+  control composer is 96.97%, selection 97.89%, and record forms 100%. This is
+  component coverage, not complete certification or whole-application coverage.
+- Eight native-command PostgreSQL cases pass in 14.15s. Real owner projections
+  compose the new form; initial group creation, exact replay and explicit
+  second occurrence retain two command receipts and two ordinary occurrences,
+  leaving candidate timing and physical bookings unchanged. Sixty-two other
+  candidate-file cases were deselected for this focused incremental run.
+- Existing record-dispatch assertions remain, with two additional checks that
+  native-only new-group controls never become owner-command keyword arguments.
+  No CI classifier, timing inventory, coverage threshold, historical scope,
+  migration, runtime write grant or current profile was changed.
+- Focused Ruff/formatting, strict mypy, NumPy docstrings, whitespace and
+  maintained-documentation checks pass. No production route is mounted, no
+  HTTP/browser acceptance is claimed, and no partial-editor PR is opened.
+
+The next work is to connect these typed components to trusted HTTP request and
+response handling, native filter/inspector/history/conflict presentation and
+pointer/unsaved-state behavior, then perform browser and protected acceptance.
+This is still one incomplete #85 editor, not a separately delivered child.

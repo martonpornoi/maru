@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
+from uuid import uuid4
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
 
     from .planning_forms import PlanningChoices
 
-_SUPPORTED = frozenset(
+PLANNING_RECORD_OPERATIONS: Final = frozenset(
     {
         SchedulingOperation.DAY_RETIRE,
         SchedulingOperation.OCCURRENCE_CREATE,
@@ -123,7 +124,7 @@ class PlanningRecordForm(PlanningCommandForm):
         """
         if (
             not isinstance(operation, SchedulingOperation)
-            or operation not in _SUPPORTED
+            or operation not in PLANNING_RECORD_OPERATIONS
         ):
             raise ValueError("Select a supported planning record operation.")
         super().__init__(*args, **kwargs)
@@ -163,6 +164,21 @@ class PlanningRecordForm(PlanningCommandForm):
                 max_value=MAX_OCCURRENCES,
                 required=False,
             )
+            self.fields["start_group"] = forms.ChoiceField(
+                label="Start a new occurrence group",
+                required=False,
+                choices=(
+                    ("", "Use the selected group, or remain ungrouped"),
+                    ("new", "Start a new group"),
+                ),
+                help_text="Choose a sequence explicitly. "
+                "This does not create more occurrences.",
+            )
+            self.fields["new_group_key"] = CanonicalUUIDField(
+                required=False, widget=forms.HiddenInput
+            )
+            if not self.is_bound:
+                self.initial.setdefault("new_group_key", uuid4())
         if operation in _RESERVATION:
             self.fields["candidate_version"] = _version_field()
             self.fields["previous_booking_id"] = CanonicalUUIDField(
@@ -192,6 +208,15 @@ class PlanningRecordForm(PlanningCommandForm):
         cleaned = super().clean()
         if self.errors:
             return cleaned
+        if self.operation in _OCCURRENCE_INPUT and cleaned["start_group"] == "new":
+            if cleaned["group_key"] or not cleaned["new_group_key"]:
+                self.add_error(
+                    None, "Choose an existing group or start a new one, not both."
+                )
+                return cleaned
+            # A group key is edition-local opaque grouping, not a foreign
+            # record reference or authority. The owner checks uniqueness.
+            cleaned["group_key"] = cleaned["new_group_key"]
         try:
             if "label" in cleaned:
                 cleaned["label"] = normalized_text(
