@@ -281,6 +281,16 @@ Convenience alone is not sufficient.
   Current planning permission does not imply history, conflict, Programme-layer
   or Venue-operation access. History pages and exact manifests are audited
   before release, and never join host calendars or private proposal/review data.
+- Programme working-title inventory and Venue room-label inventory each require
+  their owner's existing capability and complete field ceiling. They are bounded
+  complete inventories, not silently truncated search results. Base labels do
+  not release summaries, delivery/review notes, provider contacts or calendars.
+- Ephemeral conflict preview uses the saved evaluator but returns only closed
+  findings, observed candidate version, source availability and deferred checks.
+  It retains no proposed placement, report, warning acknowledgement or booking.
+  Host identifiers, availability periods, source digests and acknowledgement
+  fingerprints are not exposed by the preview projection. A preview can append
+  minimized sensitive-read audits only and never authorizes a later mutation.
 - Planning query audit retains exact scope/correlation, closed purpose and
   policy outcome, not labels, filter text, rationale, geometry or owner content.
   The editor collects no activity analytics and introduces no browser storage,

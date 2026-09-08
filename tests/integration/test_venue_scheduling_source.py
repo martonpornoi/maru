@@ -5,18 +5,21 @@ from datetime import UTC, date, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import connection
+from django.core.exceptions import ValidationError
+from django.db import DatabaseError, connection
 from django.test.utils import CaptureQueriesContext
 
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
 from maru.venues import scheduling_queries as source
+from maru.venues import timetable_queries as timetable
 from maru.venues.services import (
     VenueAvailabilityInterval,
     approve_venue_booking,
     cancel_venue_booking,
     set_edition_space_availability,
 )
+from tests.factories import EventEditionFactory
 from tests.integration import test_venues as scenarios
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
@@ -286,3 +289,147 @@ def test_busy_source_outside_requesting_edition_omits_foreign_ids_and_clips_time
     assert str(created.object_id) not in text
     assert str(world[0].edition.id) not in text
     assert "Private production title" not in text
+
+
+def timetable_query(world, **overrides):
+    scope, _ = world
+    values = {
+        "actor_id": scope.selector.id,
+        "organization_id": scope.edition.organization_id,
+        "edition_id": scope.edition.id,
+        "correlation_id": uuid4(),
+    }
+    values.update(overrides)
+    return timetable.list_venue_timetable_spaces(**values)
+
+
+def test_timetable_labels_use_real_workspace_policy_without_physical_admission(world):
+    with CaptureQueriesContext(connection) as captured:
+        result = timetable_query(world)
+    assert len(result) == 1
+    room = result[0]
+    world[1].refresh_from_db()
+    assert room.id == world[1].id
+    assert room.version == world[1].aggregate_version
+    assert room.label == "Main Stage"
+    assert room.venue_label == "Convention Hotel"
+    assert room.configuration_label == "Theatre"
+    assert room.lifecycle == room.venue_lifecycle == "active"
+    serialized = str(asdict(room))
+    sql = " ".join(row["sql"] for row in captured).lower()
+    for secret in (
+        "contact_email",
+        "opening_restrictions",
+        "public_access_info",
+        "booking",
+        "availabilitywindow",
+        "person_key",
+        "internal_notes",
+    ):
+        assert secret not in sql
+        assert secret not in serialized
+    assert (
+        AuditEvent.objects.filter(
+            operation="venues.query.timetable_spaces", outcome="allow"
+        ).count()
+        == 1
+    )
+    with pytest.raises(source.VenueSchedulingSourceUnavailableError):
+        query(world, actor_id=world[0].selector.id)
+
+
+def test_physical_admission_does_not_grant_timetable_label_authority(world, admitted):
+    assert query(world).spaces
+    with pytest.raises(timetable.VenueTimetableQueryDeniedError):
+        timetable_query(world, actor_id=world[0].scheduler.id)
+
+
+@pytest.mark.parametrize("removed", sorted(timetable.TIMETABLE_SPACE_FIELDS))
+def test_timetable_label_field_denial_happens_before_loading_rooms(
+    world, monkeypatch, removed
+):
+    monkeypatch.setattr(
+        timetable,
+        "decide_verified_principal_exact_edition",
+        lambda **kwargs: PolicyDecision(
+            allowed=True,
+            fields=kwargs["requested_fields"] - {removed},
+            obligations=frozenset(),
+            reason_code="synthetic_missing_labels",
+        ),
+    )
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Denied label read reached private room inventory")
+
+    monkeypatch.setattr(timetable, "_inventory", forbidden)
+    with pytest.raises(timetable.VenueTimetableQueryDeniedError):
+        timetable_query(world)
+
+
+def test_timetable_label_final_revocation_withholds_result(world, monkeypatch):
+    authorize = timetable.decide_verified_principal_exact_edition
+    calls = 0
+
+    def revoke(**kwargs):
+        nonlocal calls
+        calls += 1
+        decision = authorize(**kwargs)
+        return decision if calls == 1 else replace(decision, allowed=False)
+
+    monkeypatch.setattr(timetable, "decide_verified_principal_exact_edition", revoke)
+    with pytest.raises(timetable.VenueTimetableQueryDeniedError):
+        timetable_query(world)
+    assert not AuditEvent.objects.filter(
+        operation="venues.query.timetable_spaces", outcome="allow"
+    ).exists()
+    assert AuditEvent.objects.filter(
+        operation="venues.query.timetable_spaces", outcome="deny"
+    ).exists()
+
+
+def test_timetable_label_audit_failure_is_unavailable(world, monkeypatch):
+    def fail(*args, **kwargs):
+        raise DatabaseError("Synthetic room inventory audit failure")
+
+    monkeypatch.setattr(timetable, "append_audit", fail)
+    with pytest.raises(timetable.VenueTimetableQueryUnavailableError):
+        timetable_query(world)
+
+
+def test_timetable_label_overflow_never_returns_a_partial_room_list(world, monkeypatch):
+    monkeypatch.setattr(timetable, "MAX_TIMETABLE_SPACES", 0)
+    with pytest.raises(timetable.VenueTimetableInventoryLimitError):
+        timetable_query(world)
+
+
+@pytest.mark.parametrize("same_organization", [False, True])
+def test_timetable_labels_are_isolated_in_another_authorized_edition(
+    world, same_organization
+):
+    scope, _ = world
+    if same_organization:
+        other_edition = EventEditionFactory(series=scope.edition.series)
+        other_scope = replace(scope, edition=other_edition)
+        scenarios._grant_edition(
+            other_scope.selector, other_scope, "venues.view_workspace"
+        )
+        assert timetable_query((other_scope, None)) == ()
+    else:
+        other_scope = scenarios._scope()
+        other_space = scenarios._selected_space(other_scope)
+        assert [row.id for row in timetable_query((other_scope, other_space))] == [
+            other_space.id
+        ]
+    assert [row.id for row in timetable_query(world)] == [world[1].id]
+
+
+@pytest.mark.parametrize("field", ["actor_id", "organization_id", "edition_id"])
+def test_timetable_labels_deny_unknown_scope_without_releasing_names(world, field):
+    with pytest.raises(timetable.VenueTimetableQueryDeniedError):
+        timetable_query(world, **{field: uuid4()})
+
+
+def test_timetable_scope_does_not_coerce_strings_to_authority(world):
+    with pytest.raises(ValidationError):
+        timetable_query(world, edition_id=str(world[0].edition.id))

@@ -235,6 +235,17 @@ and append minimized sensitive-read audit evidence before returning values.
 Operational histories are newest-first with a stable tie-breaker so the default
 bound always retains the most recent rationale and review evidence.
 
+The dormant editor's `list_programme_timetable_items` is a separate complete
+inventory, not the general query's 200-row first page. It requires both
+`item_summaries` and `working_information` under `programme.view_private` and
+returns at most 2,000 current item identities, lifecycles, versions and private
+working titles. A sentinel overflow or missing current working revision is
+explicitly unavailable; neither becomes a partial unscheduled list. SQL selects
+only the latest title/version and item facts, never summaries, delivery notes,
+Department discussion, readiness evidence, public-copy review or host calendars.
+The title is current private copy, not an approved public or historical title.
+Final authorization and the required minimized audit precede disclosure.
+
 ## Event and adapter seams
 
 The dormant [Scheduling contract](scheduling.md) consumes Programme's separately

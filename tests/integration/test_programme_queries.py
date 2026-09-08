@@ -14,6 +14,7 @@ from maru.audit.models import AuditEvent
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import PolicyDecision
 from maru.events.models import EventEdition
+from maru.programme import queries as programme_queries
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
 from maru.programme.catalogs import (
     PROGRAMME_DELIVERY_HISTORY_FIELD_CEILING,
@@ -51,6 +52,7 @@ from maru.programme.queries import (
     ProgrammeQueryUnavailableError,
     ProgrammeReadinessConcernProjection,
     ProgrammeReadinessHistoryEntryProjection,
+    ProgrammeTimetableInventoryLimitError,
     ProgrammeWorkingHistoryEntryProjection,
     ProgrammeWorkingProjection,
     list_programme_delivery_history,
@@ -58,6 +60,7 @@ from maru.programme.queries import (
     list_programme_private_items,
     list_programme_public_copy_review_history,
     list_programme_readiness_history,
+    list_programme_timetable_items,
     list_programme_working_history,
     load_programme_delivery,
     load_programme_private_item,
@@ -888,3 +891,178 @@ def test_list_and_detail_isolate_two_organizations_and_same_org_editions(
                 authorizer=query_authorizer,
             )
         assert str(history_raised.value) == ""
+
+
+@pytest.fixture
+def timetable_inventory(admits_exact_effect):
+    actor, edition, policy = (
+        AccountFactory(),
+        EventEditionFactory(),
+        _TrustedAuthorizer(),
+    )
+    item = _create_layered_item(actor_id=actor.id, authorizer=policy, edition=edition)
+    return (
+        {
+            "actor_id": actor.id,
+            "organization_id": edition.organization_id,
+            "edition_id": edition.id,
+            "correlation_id": uuid4(),
+            "authorizer": policy,
+        },
+        item,
+        edition,
+    )
+
+
+def test_timetable_inventory_is_complete_but_omits_every_unrequested_layer(
+    timetable_inventory,
+):
+    common, item, _ = timetable_inventory
+    with CaptureQueriesContext(connection) as captured:
+        items = list_programme_timetable_items(**common)
+    assert len(items) == 1
+    assert items[0].item.id == item.id
+    assert items[0].internal_title == "PRIVATE unreleased announcement"
+    assert items[0].working_version == 1
+    assert items[0].item.aggregate_version == item.aggregate_version
+    output = repr(asdict(items[0]))
+    for excluded in (
+        "working_summary",
+        "radio channel",
+        "coordination note",
+        "discussion",
+        "Public Announcement",
+        "evidence note",
+    ):
+        assert excluded not in output
+    statements = " ".join(query["sql"] for query in captured.captured_queries)
+    assert "working_summary" not in statements
+    assert "programme_programmedeliveryrevision" not in statements
+    assert (
+        AuditEvent.objects.filter(
+            operation="programme.query.timetable_items", outcome="allow"
+        ).count()
+        == 1
+    )
+
+
+def test_timetable_inventory_denies_current_profile_without_a_test_admission(
+    timetable_inventory,
+):
+    common, _, _ = timetable_inventory
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        list_programme_timetable_items(
+            **{key: value for key, value in common.items() if key != "authorizer"}
+        )
+
+
+@pytest.mark.parametrize("removed", ["item_summaries", "working_information"])
+def test_timetable_inventory_requires_both_private_identity_and_label_fields(
+    timetable_inventory, monkeypatch, removed
+):
+    common, _, _ = timetable_inventory
+
+    class PartialFields:
+        def authorize(self, **kwargs):
+            return PolicyDecision(
+                allowed=True,
+                fields=kwargs["requested_fields"] - {removed},
+                obligations=frozenset(),
+                reason_code="synthetic_partial",
+            )
+
+    def forbidden(**kwargs):
+        pytest.fail("Denied timetable inventory reached its identifying query")
+
+    monkeypatch.setattr(ProgrammeItem.objects, "filter", forbidden)
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        list_programme_timetable_items(**{**common, "authorizer": PartialFields()})
+
+
+def test_timetable_inventory_final_revocation_releases_no_success_audit(
+    timetable_inventory,
+):
+    common, _, _ = timetable_inventory
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        list_programme_timetable_items(
+            **{**common, "authorizer": _AllowThenDenyAuthorizer()}
+        )
+    assert not AuditEvent.objects.filter(
+        operation="programme.query.timetable_items", outcome="allow"
+    ).exists()
+
+
+def test_timetable_inventory_never_truncates_the_unscheduled_tray(
+    timetable_inventory, monkeypatch
+):
+    common, _, _ = timetable_inventory
+    monkeypatch.setattr(programme_queries, "MAX_PROGRAMME_TIMETABLE_ITEMS", 0)
+    with pytest.raises(ProgrammeTimetableInventoryLimitError):
+        list_programme_timetable_items(**common)
+    assert not AuditEvent.objects.filter(
+        operation="programme.query.timetable_items", outcome="allow"
+    ).exists()
+
+
+def test_timetable_inventory_is_empty_without_fabricating_an_item():
+    actor, edition = AccountFactory(), EventEditionFactory()
+    assert (
+        list_programme_timetable_items(
+            actor_id=actor.id,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            correlation_id=uuid4(),
+            authorizer=_TrustedAuthorizer(),
+        )
+        == ()
+    )
+
+
+def test_timetable_inventory_isolates_real_foreign_edition_and_organization(
+    timetable_inventory,
+):
+    common, local, edition = timetable_inventory
+    for foreign_edition in (
+        EventEditionFactory(series=edition.series),
+        EventEditionFactory(),
+    ):
+        create_organizer_core_item(
+            actor_id=common["actor_id"],
+            organization_id=foreign_edition.organization_id,
+            edition_id=foreign_edition.id,
+            kind="break",
+            internal_title="Foreign private title",
+            expected_version=0,
+            reason="Synthetic foreign timetable item",
+            idempotency_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+            authorizer=common["authorizer"],
+        )
+    items = list_programme_timetable_items(**common)
+    assert [item.item.id for item in items] == [local.id]
+    assert "Foreign private title" not in repr(items)
+
+
+def test_timetable_inventory_uses_the_current_private_label_not_public_copy(
+    timetable_inventory,
+):
+    common, item, _ = timetable_inventory
+    revised = revise_programme_working(
+        actor_id=common["actor_id"],
+        organization_id=common["organization_id"],
+        edition_id=common["edition_id"],
+        item_id=item.id,
+        internal_title="Updated planning label",
+        working_summary="Still private summary",
+        expected_version=item.aggregate_version,
+        reason="Clarify private planning",
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+        authorizer=common["authorizer"],
+    )
+    projection = list_programme_timetable_items(**common)[0]
+    assert projection.internal_title == "Updated planning label"
+    assert projection.working_version == revised.resulting_item_version
+    assert "Still private summary" not in repr(projection)

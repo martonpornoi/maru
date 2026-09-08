@@ -10,6 +10,7 @@ from django.db.models import F
 
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
+from maru.events.scheduling_queries import resolve_scheduling_edition_reference
 
 from .authorization import (
     DEFAULT_SCHEDULING_AUTHORIZER,
@@ -362,6 +363,11 @@ def _audit(
     )
 
 
+def _lock_edition(request: SchedulingReadRequest) -> None:
+    if resolve_scheduling_edition_reference(**_ownership(request), lock=True) is None:
+        raise SchedulingAuthorizationDeniedError
+
+
 def _read[ResultT](
     request: SchedulingReadRequest,
     *,
@@ -380,11 +386,13 @@ def _read[ResultT](
         require_identifier(value)
     try:
         with transaction.atomic():
-            # Match owner commands: edition mutex before the canonical actor.
-            # This prevents a mixture of current metadata/manifest revisions.
-            scope = _authorize(request, capability, fields, authorizer, lock=True)
-            result = loader(scope)
+            # Match commands: edition mutex, then any complete owner-resolved
+            # person set, then the actor-only final recheck. Locking the actor
+            # first would invert Programme's multi-host canonical lock order.
+            _lock_edition(request)
             scope = _authorize(request, capability, fields, authorizer)
+            result = loader(scope)
+            scope = _authorize(request, capability, fields, authorizer, lock=True)
             _audit(request, capability, purpose, scope=scope)
             return result
     except SchedulingAuthorizationDeniedError:

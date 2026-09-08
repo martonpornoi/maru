@@ -195,6 +195,18 @@ exclusion constraint, append-only triggers, and typed binding functions.
 
 The dormant Scheduling owner now provides explicit service days, independent
 candidates, selected-host conflicts and the physical reservation adapter.
+The editor's `timetable_queries.list_venue_timetable_spaces` supplies a separate
+complete inventory of at most 256 edition space selections. It requires
+`venues.view_workspace` with the existing `venue_selections` and
+`space_selections` fields; physical-dependency authority does not imply this
+label authority. Only current local room, configuration and Venue labels,
+identifiers, versions and lifecycle states are returned, including retained
+selections. No contacts, layout/access notes, opening restrictions, booking
+summaries or availability periods are selected. Overflow or incoherent
+ownership is unavailable, not a partial room list. Exact scope, final
+authorization and required minimized audit precede disclosure. These labels
+are not proof of physical availability or permission to reserve a space.
+
 Remaining work includes the accessible editor and visible candidate comparison,
 Programme release reconciliation, staffing/equipment/qualification checks,
 calendar/signage/print exports, accommodation blocks/assignment/allocation,

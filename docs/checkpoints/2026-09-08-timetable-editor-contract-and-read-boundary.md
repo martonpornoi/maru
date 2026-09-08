@@ -47,3 +47,51 @@ without changing a timing map, classifier, historical scope or any assertion.
 Maintained documentation validation passed for 424 Markdown files, four
 repository skills and 215 stable requirement identifiers; the new page is
 included in both the human catalog and Sphinx toctree.
+
+## Owner inventories and shared non-mutating preview
+
+The next local slice adds a complete Programme working-title inventory (2,000
+items maximum), a separately authorized Venue-label inventory (256 selections
+maximum), and current/unsaved candidate conflict preview. Programme SQL excludes
+working summaries and other layers; Venue SQL excludes contacts, notes, booking
+content and availability. Both inventories use existing capability fields,
+final authorization and mandatory minimized audits. Missing data and sentinel
+overflow do not become partial unscheduled/room lists.
+
+Preview shares the saved candidate evaluator and placement revision resolver.
+It retains all other candidate occurrences, detects room/host overlap, checks
+current versions, distinguishes blockers from unavailable sources and explicitly
+lists deferred staffing/rest/accessibility/release checks. Unsaved placements
+do not inherit physical reservation identity. The edition mutex precedes
+Programme's complete canonical person set and the final actor-only recheck.
+Final denial/audit failure withholds the projection and rolls back success
+audits. Only read audits are written; all Scheduling relations and versions,
+Venue bookings, domain events and outbox counts remain unchanged by preview.
+
+A real Venue workspace-policy test exposed mismatched field names in the new
+inventory. The inventory and preview now request the existing catalog fields,
+without changing the catalog or admitting any profile. Four fast consistency
+cases ensure editor read ceilings remain subsets of their owning capabilities.
+
+Verification for this follow-up slice:
+
+- All 3,546 database-free cases passed in 18.86s, with the two existing Django
+  URLField deprecation warnings.
+- All 50 candidate/history/placement PostgreSQL cases passed in 95.96s.
+- All 33 evaluation/preview and 19 Programme-query cases passed together in
+  105.52s, including the unchanged persisted evaluator contract.
+- All 28 Venue physical-source/inventory cases passed in 46.00s. The new label
+  success/isolation cases use real workspace policy, not future-source admission.
+- The 130 focused PostgreSQL cases reused only the task-owned isolated schema;
+  their combined 247.48s excludes initial migration setup. This is focused
+  iteration evidence, not a whole-suite speedup or certification claim.
+- Focused Ruff, strict mypy, NumPy docstrings, maintained documentation
+  validation and whitespace checks passed. No CI, historical inventory, timing
+  map, coverage threshold or existing assertion was changed.
+
+The inspector's independently protected layers and selected host-presence
+composition, forms/server adapters, responsive board and browser acceptance
+remain to implement. Keep #85 open with no completed-editor/PR/runtime claim.
+The exact-head complete local and hosted protected gates remain mandatory before
+delivery. Existing literal profiles, production routing and runtime ACLs are
+unchanged; no scheduled check-in was created or resumed.

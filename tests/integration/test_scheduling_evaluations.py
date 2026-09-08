@@ -1,13 +1,18 @@
 """Real fresh conflict reports, calendar minimization and exact warning reasons."""
 
 import json
-from dataclasses import replace
+from dataclasses import asdict, replace
 from datetime import timedelta
 from functools import partial
 from uuid import uuid4
 
 import pytest
+from django.apps import apps
+from django.db import DatabaseError
 
+from maru.audit.models import AuditEvent
+from maru.authorization.policy import PolicyDecision
+from maru.effects.models import DomainEvent, OutboxMessage
 from maru.programme import scheduling_queries as programme_source
 from maru.programme.host_commands import replace_programme_host_availability
 from maru.programme.host_inputs import (
@@ -16,8 +21,18 @@ from maru.programme.host_inputs import (
 )
 from maru.programme.models import ProgrammeHostRelationship
 from maru.programme.queries import ProgrammeQueryUnavailableError
-from maru.scheduling import command_support, evaluation_sources
+from maru.scheduling import authorization as scheduling_authorization
+from maru.scheduling import (
+    command_support,
+    evaluation_sources,
+    planning_preview,
+    planning_queries,
+)
+from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
+from maru.scheduling.candidate_commands import archive_scheduling_candidate
 from maru.scheduling.command_support import (
+    SchedulingLifecycleConflictError,
+    SchedulingLimitError,
     SchedulingUnavailableError,
     SchedulingVersionConflictError,
 )
@@ -25,13 +40,22 @@ from maru.scheduling.evaluation_commands import (
     acknowledge_scheduling_warning,
     evaluate_scheduling_candidate,
 )
+from maru.scheduling.inputs import SchedulingOccurrenceInput
 from maru.scheduling.models import (
+    SchedulingCandidate,
     SchedulingConflict,
+    SchedulingEditionControl,
     SchedulingEvaluation,
+    SchedulingOccurrence,
     SchedulingWarningAcknowledgement,
 )
+from maru.scheduling.occurrence_commands import create_scheduling_occurrence
+from maru.scheduling.planning_preview import preview_scheduling_candidate
+from maru.scheduling.planning_queries import SchedulingReadRequest
 from maru.venues import scheduling_queries as venue_source
+from maru.venues.models import VenueBooking
 from tests.integration.test_programme_commands import _TrustedProgrammeAuthorizer
+from tests.integration.test_scheduling_days import TrustedSchedulingPolicy
 from tests.integration.test_scheduling_placements import (
     START,
     moved,
@@ -256,3 +280,308 @@ def test_late_parent_failure_leaves_no_partial_report_or_findings(
         evaluate(world, placed)
     assert not SchedulingEvaluation.objects.exists()
     assert not SchedulingConflict.objects.exists()
+
+
+def preview_request(world):
+    return SchedulingReadRequest(
+        world.request.actor_id,
+        world.request.organization_id,
+        world.request.edition_id,
+        uuid4(),
+    )
+
+
+def preview(world, *, version=1, intent=None, policy=None, request=None):
+    return preview_scheduling_candidate(
+        request or preview_request(world),
+        candidate_id=world.candidate.object_id,
+        expected_version=version,
+        placement=intent,
+        authorizer=policy or world.policy,
+    )
+
+
+def domain_state():
+    # Preview may append read audits only: inspect every owned Scheduling
+    # relation plus the cross-owner booking/event/outbox side effects.
+    return (
+        tuple(
+            (model._meta.label, model.objects.count())
+            for model in apps.get_app_config("scheduling").get_models()
+        ),
+        tuple(SchedulingCandidate.objects.values_list("id", "aggregate_version")),
+        tuple(SchedulingEditionControl.objects.values_list("id", "aggregate_version")),
+        VenueBooking.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    )
+
+
+def test_unsaved_preview_matches_saved_evaluator_without_domain_writes(world, admitted):
+    intent = replace(world.placement, expected_attendance=9_000)
+    before = domain_state()
+    request = preview_request(world)
+    result = preview(world, intent=intent, request=request)
+    assert domain_state() == before
+    assert result.complete
+    assert all(source.available for source in result.sources)
+    assert result.candidate_version == 1
+    assert result.proposed_occurrence_id == world.occurrence.object_id
+    assert result.not_evaluated == (
+        "staffing",
+        "rest",
+        "accessibility_fit",
+        "release_readiness",
+    )
+    assert {finding.code for finding in result.findings} == {"venue_capacity"}
+    assert all(finding.severity == "blocker" for finding in result.findings)
+    assert (
+        AuditEvent.objects.filter(
+            correlation_id=request.correlation_id,
+            operation="scheduling.query.candidate_preview",
+            outcome="allow",
+        ).count()
+        == 1
+    )
+    serialized = json.dumps(asdict(result), default=str)
+    for prohibited in (
+        "periods",
+        "starts_at",
+        "person_key",
+        "email",
+        "fingerprint",
+        "digest",
+        str(world.placement.host_presences[0].host_id),
+        "Synthetic restriction",
+    ):
+        assert prohibited not in serialized
+    placed = place(world, intent=intent)
+    _, saved = evaluate(world, placed)
+    assert set(saved.conflicts.values_list("code", "severity", "occurrence_id")) == {
+        (finding.code, finding.severity, finding.occurrence_id)
+        for finding in result.findings
+    }
+
+
+def test_current_preview_and_repeated_unsaved_move_do_not_self_overlap(world, admitted):
+    placed = place(world)
+    before = domain_state()
+    current = preview(world, version=placed.version)
+    assert current.proposed_occurrence_id is None
+    assert current.complete
+    assert not current.findings
+    for _ in range(2):
+        changed = preview(world, version=placed.version, intent=moved(world))
+        assert changed.complete
+        assert not changed.findings
+    assert domain_state() == before
+
+
+def test_unsaved_addition_is_compared_with_every_retained_occurrence(world, admitted):
+    placed = place(world)
+    original = SchedulingOccurrence.objects.get(id=world.occurrence.object_id)
+    second = create_scheduling_occurrence(
+        next_request(world),
+        occurrence=SchedulingOccurrenceInput(original.programme_item_id),
+        expected_control_version=4,
+        authorizer=world.policy,
+    )
+    before = domain_state()
+    result = preview(
+        world,
+        version=placed.version,
+        intent=replace(world.placement, occurrence_id=second.object_id),
+    )
+    assert result.complete
+    assert {finding.code for finding in result.findings} == {
+        "candidate_room_overlap",
+        "host_overlap",
+    }
+    assert all(
+        {finding.occurrence_id, finding.other_occurrence_id}
+        == {world.occurrence.object_id, second.object_id}
+        for finding in result.findings
+    )
+    assert domain_state() == before
+
+
+def test_archived_candidate_cannot_be_presented_as_an_editable_preview(world, admitted):
+    archived = archive_scheduling_candidate(
+        next_request(world),
+        candidate_id=world.candidate.object_id,
+        expected_version=1,
+        authorizer=world.policy,
+    )
+    with pytest.raises(SchedulingLifecycleConflictError):
+        preview(world, version=archived.version, intent=world.placement)
+
+
+def test_preview_never_treats_a_new_draft_as_the_existing_physical_hold(
+    world, admitted
+):
+    placed = place(world)
+    _, reserved = reserve(world, placed=placed)
+    before = domain_state()
+    current = preview(world, version=placed.version)
+    assert not current.findings
+    for intent in (world.placement, moved(world)):
+        changed = preview(world, version=placed.version, intent=intent)
+        assert "reserved_room_overlap" in {finding.code for finding in changed.findings}
+    assert VenueBooking.objects.filter(id=reserved.target_booking_id).exists()
+    assert domain_state() == before
+
+
+def test_current_profile_denies_preview_even_when_owners_are_admitted(world, admitted):
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        preview_scheduling_candidate(
+            preview_request(world),
+            candidate_id=world.candidate.object_id,
+            expected_version=1,
+            placement=world.placement,
+        )
+
+
+@pytest.mark.parametrize("removed", sorted(planning_preview.PREVIEW_FIELDS))
+def test_preview_fields_authorize_before_sources_or_input_normalization(
+    world, admitted, monkeypatch, removed
+):
+    class PartialPolicy:
+        def authorize(self, **kwargs):
+            return PolicyDecision(
+                allowed=True,
+                fields=kwargs["requested_fields"] - {removed},
+                obligations=frozenset(),
+                reason_code="synthetic_missing_preview_field",
+            )
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Denied conflict read reached dependency resolution")
+
+    monkeypatch.setattr(planning_preview, "_require_source_adoption", forbidden)
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        preview(world, intent=object(), policy=PartialPolicy())
+
+
+def test_preview_final_revocation_rolls_back_all_owner_success_audits(world, admitted):
+    request = preview_request(world)
+    before = domain_state()
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        preview(
+            world,
+            intent=world.placement,
+            request=request,
+            policy=TrustedSchedulingPolicy(deny_at=2),
+        )
+    assert not AuditEvent.objects.filter(
+        correlation_id=request.correlation_id, outcome="allow"
+    ).exists()
+    assert AuditEvent.objects.filter(
+        correlation_id=request.correlation_id, outcome="deny"
+    ).exists()
+    assert domain_state() == before
+
+
+def test_preview_required_audit_failure_withholds_result_and_rolls_back(
+    world, admitted, monkeypatch
+):
+    request = preview_request(world)
+    before = domain_state()
+
+    def fail(*args, **kwargs):
+        raise DatabaseError("Synthetic preview audit failure")
+
+    monkeypatch.setattr(planning_queries, "append_audit", fail)
+    with pytest.raises(SchedulingUnavailableError):
+        preview(world, intent=world.placement, request=request)
+    assert not AuditEvent.objects.filter(correlation_id=request.correlation_id).exists()
+    assert domain_state() == before
+
+
+@pytest.mark.parametrize("owner", ["programme", "venue"])
+def test_preview_source_failure_remains_unavailable_not_passing(
+    world, admitted, monkeypatch, owner
+):
+    def fail(**kwargs):
+        if owner == "programme":
+            raise ProgrammeQueryUnavailableError
+        raise venue_source.VenueSchedulingSourceDeniedError
+
+    monkeypatch.setattr(
+        evaluation_sources, f"load_{owner}_scheduling_dependencies", fail
+    )
+    result = preview(world, intent=world.placement)
+    assert not result.complete
+    assert any(not source.available for source in result.sources)
+    assert any(finding.severity == "unavailable" for finding in result.findings)
+    assert not SchedulingEvaluation.objects.exists()
+
+
+def test_preview_unpinned_scheduling_source_is_unavailable(world):
+    with pytest.raises(SchedulingUnavailableError):
+        preview(world, intent=world.placement)
+
+
+def test_preview_stale_form_is_not_rebased_or_written(world, admitted):
+    place(world)
+    before = domain_state()
+    with pytest.raises(SchedulingVersionConflictError):
+        preview(world, intent=world.placement)
+    assert domain_state() == before
+
+
+@pytest.mark.parametrize(
+    "field", ["day_id", "occurrence_id", "day_version", "occurrence_version"]
+)
+def test_preview_stale_or_foreign_structure_is_not_treated_as_current(
+    world, admitted, field
+):
+    intent = replace(
+        world.placement, **{field: 99 if field.endswith("version") else uuid4()}
+    )
+    with pytest.raises(SchedulingUnavailableError):
+        preview(world, intent=intent)
+    assert not SchedulingEvaluation.objects.exists()
+
+
+@pytest.mark.parametrize("field", ["organization_id", "edition_id", "actor_id"])
+def test_preview_foreign_scope_is_non_disclosing(world, admitted, field):
+    request = replace(preview_request(world), **{field: uuid4()})
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        preview(world, intent=world.placement, request=request)
+
+
+def test_preview_overflow_does_not_silently_truncate_placements(
+    world, admitted, monkeypatch
+):
+    monkeypatch.setattr(planning_preview, "MAX_OCCURRENCES", 0)
+    with pytest.raises(SchedulingLimitError):
+        preview(world, intent=world.placement)
+
+
+def test_preview_locks_complete_programme_people_before_final_actor(
+    world, admitted, monkeypatch
+):
+    events = []
+    resolve_people = programme_source.resolve_active_verified_person_references
+    resolve_actor = scheduling_authorization.resolve_active_verified_person_reference
+
+    def people(**kwargs):
+        if kwargs.get("lock"):
+            events.append(("people", kwargs["account_ids"]))
+        return resolve_people(**kwargs)
+
+    def actor(**kwargs):
+        if kwargs.get("lock"):
+            events.append(("actor", kwargs["account_id"]))
+        return resolve_actor(**kwargs)
+
+    monkeypatch.setattr(
+        programme_source, "resolve_active_verified_person_references", people
+    )
+    monkeypatch.setattr(
+        scheduling_authorization, "resolve_active_verified_person_reference", actor
+    )
+    preview(world, intent=world.placement)
+    assert [event[0] for event in events] == ["people", "actor"]
+    assert world.request.actor_id in events[0][1]
+    assert len(events[0][1]) == 2

@@ -135,24 +135,29 @@ define one dormant progressively enhanced editor. Equivalent pointer and
 keyboard forms reuse Scheduling commands; private owner layers retain their
 independent authority. Draft edits never silently reserve rooms or publish.
 
-Implementation is in progress: bounded audited planning/history projections
-and pure local-minute/comparison helpers pass 26 focused PostgreSQL cases and
-31 database-free cases. The complete database-free suite now passes 3,542 cases
-in 18.74s. The existing candidate suite plus all 26 new read cases passes 40
-PostgreSQL cases in 71.94s; existing test bodies remain unchanged. The new cases
-live beside the candidate contracts, so no timing map or CI policy is changed.
-The fresh database setup plus initial 21 cases took
-2m40s; the expanded 26-case rerun on the same isolated schema took 56.18s.
-The added lifecycle fixture initially violated the genuine draft-first guard;
-it now uses ordinary Events transition commands and passes without changing
-that guard. Focused lint, formatting, strict types and NumPy contracts pass.
-Maintained documentation validation passes (424 files, four skills and 215
-requirement identifiers). These are partial implementation checks, not complete
-editor, runtime-role or protected delivery acceptance.
+Implementation is in progress: bounded audited planning/history projections,
+exact local-minute/comparison helpers, independently authorized Programme-title
+and Venue-room inventories, and non-mutating conflict preview are implemented.
+Preview shares the saved evaluator and preserves canonical person locking;
+existing physical holds still block conflicting unsaved edits. It writes only
+read audits, never candidate/report/booking state, acknowledgements or events.
+The owner reads use existing capability field ceilings without catalog or
+profile expansion. A real-policy test caught mismatched new field names; those
+were corrected and a fast catalog-consistency regression now covers the reads.
+
+The complete database-free suite passes 3,546 cases in 18.86s. All 130 focused
+PostgreSQL cases pass: 50 candidate/history/placement cases in 95.96s, 33
+evaluation/preview plus 19 Programme-query cases in 105.52s, and 28 Venue-source
+and inventory cases in 46.00s. These runs reused the single task-owned isolated
+schema and exclude its initial setup. Focused lint, formatting, strict types,
+NumPy contracts and maintained documentation validation pass (424 files, four
+skills, 215 requirement identifiers). No timing map, CI policy, original
+assertion or acceptance threshold changed. These are partial implementation
+checks, not complete editor, runtime-role or protected delivery acceptance.
 See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
-The browser editor,
-owner layer composition, non-mutating conflict preview, command adapters,
-browser rehearsal and protected certification/delivery remain incomplete.
+Independent inspector/host-presence composition, command forms/adapters,
+responsive board, browser rehearsal and protected certification/delivery remain
+incomplete. No PR has been opened for this partial editor.
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain
 unchanged. This partial branch is not an editor-delivery or runtime claim.
@@ -186,8 +191,9 @@ deployment or production data is authorized.
 
 ## Smallest sensible next actions
 
-1. Complete #85's owner-backed queries, conflict preview and same-command
-   accessible forms/board, including explicit candidate history and recovery.
+1. Complete #85's independent inspector/host-presence composition and
+   same-command accessible forms/board, including candidate history and recovery.
+   Reuse the implemented bounded inventories and non-mutating preview.
 2. Run focused permission/failure/interaction tests and synthetic browser
    rehearsal, then certify the clean exact head with the policy-required scope.
    Obtain its own hosted PR gate and CodeQL before merge; reconcile #85 and #48

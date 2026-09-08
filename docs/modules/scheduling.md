@@ -93,6 +93,26 @@ omits historical actor/reason, host identity/presence and availability, Programm
 copy and room names. Owner links are opaque, not dereference authority. Owner
 content/layers and current conflicts remain separate protected queries.
 
+`planning_preview.preview_scheduling_candidate` uses `scheduling.view_conflicts`
+and its existing `conflicts` / `dependency_versions` ceiling. It evaluates an
+exact current draft, optionally replacing or adding one unsaved placement, with
+the same owned revision resolution and evaluator as saved commands. Stale
+candidate versions are not rebased; missing/stale structural sources fail
+closed. Programme and Venue authorize their complete dependency sets separately.
+The edition mutex precedes the complete Programme person set and the final
+actor recheck. Read-only labels are composed in separate owner transactions,
+not in an actor-first transaction surrounding a multi-person preview.
+
+Preview returns only closed findings, exact candidate version, source
+availability and explicit deferred concerns. It exposes neither calendars nor
+persisted evaluation identifiers, dependency digests or warning fingerprints.
+Only read audits are appended: no placement, history, receipt, evaluation,
+acknowledgement, reservation, domain event or outbox message is created. A new
+unsaved placement cannot claim an existing physical hold as its own; retained
+holds continue to participate in conflict detection until explicitly replaced
+or cancelled. Complete means implemented sources were available, not that
+blockers, warnings or deferred release concerns are satisfied.
+
 `planning_interactions` provides database-free exact local-minute conversion and
 comparison of already-authorized manifests. Offset-free daylight-saving gaps
 and folds fail explicitly; an offset identifies an exact instant. Comparisons

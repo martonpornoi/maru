@@ -52,6 +52,18 @@ _MAX_PRESENCES = MAX_OCCURRENCES * 100
 
 
 @dataclass(frozen=True, slots=True)
+class _SchedulingSourceRead:
+    actor_id: UUID
+    organization_id: UUID
+    edition_id: UUID
+    correlation_id: UUID
+    source_channel: str = "scheduling-planning"
+
+
+type _SourceRequest = SchedulingCommandRequest | _SchedulingSourceRead
+
+
+@dataclass(frozen=True, slots=True)
 class _CurrentEvaluation:
     revision: SchedulingCandidateRevision
     findings: tuple[SchedulingFinding, ...]
@@ -135,7 +147,7 @@ def _placement_facts(
 
 
 def _programme_source(
-    request: SchedulingCommandRequest, facts: tuple[SchedulingPlacementFacts, ...]
+    request: _SourceRequest, facts: tuple[SchedulingPlacementFacts, ...]
 ) -> ProgrammeSchedulingSnapshot | None:
     try:
         return load_programme_scheduling_dependencies(
@@ -158,7 +170,7 @@ def _programme_source(
 
 
 def _venue_source(
-    request: SchedulingCommandRequest, facts: tuple[SchedulingPlacementFacts, ...]
+    request: _SourceRequest, facts: tuple[SchedulingPlacementFacts, ...]
 ) -> VenueSchedulingSnapshot | None:
     try:
         return load_venue_scheduling_dependencies(
@@ -275,11 +287,7 @@ def _venue_evidence(
     }
 
 
-def _current_evaluation(
-    request: SchedulingCommandRequest, *, candidate_id: UUID, expected_version: int
-) -> _CurrentEvaluation:
-    # Caller owns edition mutex and current Scheduling authorization; the two
-    # dependency owners independently authorize and audit their minimized reads.
+def _require_source_adoption(request: _SourceRequest) -> None:
     profile = edition_adoption_profile_reference(
         organization_id=request.organization_id, edition_id=request.edition_id
     )
@@ -287,6 +295,12 @@ def _current_evaluation(
         profile.code, profile.version, SCHEDULING_TIME_CONFLICT_SOURCE
     ):
         raise SchedulingUnavailableError
+
+
+def _current_evaluation(
+    request: SchedulingCommandRequest, *, candidate_id: UUID, expected_version: int
+) -> _CurrentEvaluation:
+    _require_source_adoption(request)
     revision = SchedulingCandidateRevision.objects.filter(
         organization_id=request.organization_id,
         edition_id=request.edition_id,
@@ -298,6 +312,18 @@ def _current_evaluation(
     if revision is None:
         raise SchedulingUnavailableError
     facts = _placement_facts(revision)
+    return _evaluate_candidate_facts(request, revision, facts)
+
+
+def _evaluate_candidate_facts(
+    request: _SourceRequest,
+    revision: SchedulingCandidateRevision,
+    facts: tuple[SchedulingPlacementFacts, ...],
+) -> _CurrentEvaluation:
+    # Caller owns edition mutex and current Scheduling/source authorization;
+    # both dependency owners independently authorize and audit their reads.
+    # Unsaved previews use this same algorithm but never expose its digest as
+    # persisted evaluation evidence or warning-acknowledgement authority.
     programme = _programme_source(request, facts)
     venues = _venue_source(request, facts)
     bindings = (
