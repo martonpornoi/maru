@@ -208,6 +208,12 @@ request/cancellation/replacement. Extending draft teardown leaves the old hold
 unchanged until the distinct confirmed Venue action. Chrome's accessibility
 scan reports an Acrobat-extension nested-interactive finding outside Maru's
 editor and main landmark; this is not a clean whole-browser scan or a Maru fix.
+Exact warning acknowledgement also passes in Chrome. A fresh report requires
+its own reasoned acknowledgement; withdrawing synthetic host availability while
+that form is open rejects the old intent, retains its exact rationale, focuses
+recovery guidance and marks saved completeness unavailable. The fixture's new
+availability controls reuse the host-owned command, not planner authority.
+Four related owner-backed PostgreSQL regressions pass in 11.98s.
 
 The complete database-free suite passes 3,890 cases in 29.13s (two existing
 URLField warnings); all 64 frontend tests pass in 9.59s, including 31 new tests
@@ -226,12 +232,12 @@ No PR has been opened. The existing classifier selects full integration and all
 historical tests for the new `tests/rehearsals/` harness; retain that policy and
 defer the expensive run until the final clean candidate is ready.
 
-The opt-in fixture is documented in the page contract. At this handoff, a
-one-hour synthetic lease started around 20:15 UTC on 2026-09-08 is open at
-`http://127.0.0.1:62284/rehearsal/` (terminal session 43421); it may expire before
-resume. Verify its live state, preserve the pending Chrome prompt, and do not
-run another database suite against the same fixture database while it is live.
-Earlier browser leases were closed. No scheduled check is added.
+The opt-in fixture is documented in the page contract. Both subsequent Chrome
+leases (terminal sessions 43421 and 13211) were explicitly closed and their
+cleanup completed. The original Cancel prompt and stale-warning DOM are retained
+for inspection, but their loopback servers are no longer running. Reopen a fresh
+isolated fixture before further server actions; do not repeat completed cases.
+No scheduled check or full certification is running.
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain
 unchanged. This partial branch is not an editor-delivery or runtime claim.
@@ -266,7 +272,7 @@ deployment or production data is authorized.
 ## Smallest sensible next actions
 
 1. Finish #85's remaining browser acceptance, especially user-assisted native
-   discard/recovery, genuine zoom and reduced motion, and exact saved-warning UI.
+   discard/recovery, genuine zoom and reduced motion.
    Do not repeat completed native/HTTP implementation or count a fixture lease
    as automated browser acceptance.
 2. Certify the complete clean exact head with the policy-required scope.

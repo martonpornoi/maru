@@ -48,6 +48,9 @@ from tests.integration.test_scheduling_candidates import (
 from tests.integration.test_scheduling_candidates import (
     planning_world as planning_world,  # noqa: PLC0414
 )
+from tests.integration.test_scheduling_evaluations import (
+    availability as seed_host_availability,
+)
 from tests.integration.test_scheduling_placements import next_request, place
 from tests.integration.test_scheduling_reservations import admit_reservations
 
@@ -112,9 +115,15 @@ No account, grant or real identity is created by the browser button.</p>
 <button name="control" value="stale">Create concurrent private draft</button>
 <button name="control" value="source-off">Simulate unavailable title source</button>
 <button name="control" value="source-on">Restore title source</button>
+<button name="control" value="host-preference">
+Share synthetic host availability with a non-preferred slot</button>
+<button name="control" value="host-withdrawal">
+Withdraw synthetic host availability</button>
 <button name="control" value="finish">Finish and close synthetic fixture</button></form>
 <p>Fault controls are fixture setup, not application permissions or user actions.
-The stale control advances the shared edition control, not an existing draft.</p>
+The stale control advances the shared edition control, not an existing draft.
+Availability controls use the synthetic host's owner command; they are not a
+planner permission to share or withdraw another person's availability.</p>
 </main></body></html>"""
 
 
@@ -168,6 +177,20 @@ def seed_repeated_occurrence(world):
     )
 
 
+def create_rehearsal_accounts(edition, planner):
+    accounts = {"planner": planner}
+    for role in ("view_only", "manage_only", "restricted_layer"):
+        account = AccountFactory(display_name=f"Synthetic {role}")
+        accounts[role] = account
+        CapabilityGrantFactory(
+            principal=account,
+            organization=edition.organization,
+            edition=edition,
+            capability_code="venues.view_workspace",
+        )
+    return accounts
+
+
 def test_browser_fixture(
     native_http_world, host_inspection_admitted, monkeypatch, settings, live_server
 ):
@@ -179,16 +202,7 @@ def test_browser_fixture(
     world = native_http_world
     edition = EventEdition.objects.get(id=world.request.edition_id)
     planner = Account.objects.get(id=world.request.actor_id)
-    accounts = {"planner": planner}
-    for role in ("view_only", "manage_only", "restricted_layer"):
-        account = AccountFactory(display_name=f"Synthetic {role}")
-        accounts[role] = account
-        CapabilityGrantFactory(
-            principal=account,
-            organization=edition.organization,
-            edition=edition,
-            capability_code="venues.view_workspace",
-        )
+    accounts = create_rehearsal_accounts(edition, planner)
     policy = RehearsalSchedulingPolicy(accounts)
     owner_policy = RehearsalProgrammePolicy(accounts["restricted_layer"].id)
     admit_reservations(world, monkeypatch)
@@ -244,6 +258,11 @@ def test_browser_fixture(
                 )
             if control in {"source-on", "source-off"}:
                 source_state["available"] = control == "source-on"
+            elif control in {"host-preference", "host-withdrawal"}:
+                seed_host_availability(
+                    world,
+                    state="withdrawn" if control == "host-withdrawal" else "shared",
+                )
             elif control == "stale":
                 current = load_scheduling_planning(
                     read_request(world), authorizer=world.policy

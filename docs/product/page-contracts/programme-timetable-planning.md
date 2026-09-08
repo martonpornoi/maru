@@ -193,6 +193,10 @@ planner, view-only, manage-only, independently restricted-layer or anonymous
 sessions; they are fixture controls, not an application login or grant path.
 Current-profile denial remains independently available. Fault controls simulate
 an unavailable title owner or a real concurrent edition-control change.
+Additional fixture controls use the synthetic host's existing owner command to
+share availability with a non-preferred placement or withdraw that availability.
+Use them to rehearse exact warning acknowledgement and stale dependency recovery;
+they do not give a Programme planner authority over another person's availability.
 
 The fixture alone serves the already installed axe-core asset and a visible
 **Run automated accessibility check** button. Results inspect the actual rendered

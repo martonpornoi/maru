@@ -550,3 +550,43 @@ move files or weaken classification to avoid required history. Final exact-head
 local certification is deferred until remaining acceptance and documentation are
 ready, followed by that same head's hosted PR gate and CodeQL. No PR is opened,
 #85 remains incomplete, and #48 remains open.
+
+## Exact warning acknowledgement and withdrawal rehearsal
+
+The loopback-only fixture now offers explicit synthetic-host availability
+sharing and withdrawal controls. They reuse the existing real owner-command
+test helper and sealed authorizer; no planner capability, production route,
+model write shortcut, migration or profile admission is introduced. Synthetic
+account provisioning is extracted unchanged into a named fixture helper to
+keep the setup within the existing lint complexity limit.
+
+Chrome rehearsal verifies the complete saved-warning decision path:
+
+- Deliberately shared availability produces a real non-preferred-slot warning.
+  Recording current checks shows a complete, current saved report while naming
+  the unsupported staffing, rest, accessibility and release checks separately.
+- The exact finding opens a reasoned acknowledgement form. Explicit submission
+  records acknowledgement without removing the warning or claiming approval.
+  A separately recorded new report requires its own acknowledgement; the earlier
+  report's decision is not silently applied to it.
+- With a new acknowledgement form open, the fixture's synthetic host withdraws
+  availability through its owner command in another tab. Submitting the old
+  intent returns HTTP 409, retains the exact entered rationale, focuses the
+  `Action needs attention` alert and does not automatically rebase.
+- The reloaded review distinguishes unavailable current host checks from the
+  old report's historical completeness. Its retained finding has no recorded
+  acknowledgement and no fresh acknowledgement-selection control. Unavailable
+  host data is not interpreted as availability or an overridable warning.
+
+The existing exact-acknowledgement/replay, withdrawal invalidation and native
+fresh-dependency regression selection passes four PostgreSQL cases in 11.98s,
+with 58 unrelated cases deselected. Focused Ruff and formatting pass. No
+application implementation or existing test assertions changed.
+
+Both Chrome fixture leases (sessions 43421 and 13211) were explicitly finished
+and their cleanup completed before the focused database tests. Their durations
+are manual rehearsal leases, not PostgreSQL performance results. The original
+native Cancel prompt remains untouched for user assistance; its old server has
+closed. The later stale-warning page is retained as rendered evidence only.
+Native Cancel/discard, genuine 200% zoom and enabled reduced-motion preference
+remain unverified. No full certification, PR, merge or scheduled check is claimed.
