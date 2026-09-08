@@ -590,3 +590,14 @@ native Cancel prompt remains untouched for user assistance; its old server has
 closed. The later stale-warning page is retained as rendered evidence only.
 Native Cancel/discard, genuine 200% zoom and enabled reduced-motion preference
 remain unverified. No full certification, PR, merge or scheduled check is claimed.
+
+### Manual-browser blocker revalidation
+
+A subsequent read-only Chrome check reports no native dialog and confirms both
+original create-draft values remain exactly `Synthetic cancellation evidence`
+and `Keep this form`, with unsaved-input guidance still visible. The dismissal
+action itself was not observed, so this proves retained input, not a controlled
+Cancel/discard sequence. Genuine 200% zoom and enabled reduced-motion evidence
+also remain unavailable without manual assistance. The same manual-browser
+blocker has persisted across three goal turns; automatic continuation stops at
+that boundary rather than repeating completed tests or claiming acceptance.

@@ -223,8 +223,10 @@ includes fresh destination versions without writes. Focused lint, formatting,
 strict types and NumPy contracts pass. Earlier coverage/domain evidence remains
 in the checkpoint; these checks are not complete certification or runtime proof.
 See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
-The native discard prompt is visible in Chrome, but automated dismissal fails;
-user-assisted Cancel is pending. Do not infer input retention from unit tests.
+Chrome's native discard prompt has since cleared and read-only inspection
+confirms both exact pending form values remain. The action that dismissed the
+prompt was not observed; controlled Cancel/discard acceptance still needs manual
+assistance. Do not infer the missing interaction from retention or unit tests.
 Genuine 200% zoom and enabled reduced-motion preference remain unverified;
 the editor has no computed CSS animation or transition at the current preference.
 Remaining browser gaps and protected certification/delivery are not complete.
@@ -234,7 +236,7 @@ defer the expensive run until the final clean candidate is ready.
 
 The opt-in fixture is documented in the page contract. Both subsequent Chrome
 leases (terminal sessions 43421 and 13211) were explicitly closed and their
-cleanup completed. The original Cancel prompt and stale-warning DOM are retained
+cleanup completed. The original unsaved form and stale-warning DOM are retained
 for inspection, but their loopback servers are no longer running. Reopen a fresh
 isolated fixture before further server actions; do not repeat completed cases.
 No scheduled check or full certification is running.
