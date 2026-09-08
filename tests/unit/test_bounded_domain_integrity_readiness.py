@@ -13,6 +13,7 @@ from maru.catalog.readiness import CATALOG_INTEGRITY_CONTRACT
 from maru.charities.readiness import CHARITIES_INTEGRITY_CONTRACT
 from maru.core import database_integrity_readiness as integrity
 from maru.programme.readiness import PROGRAMME_INTEGRITY_CONTRACT
+from maru.scheduling.readiness import SCHEDULING_INTEGRITY_CONTRACT
 from maru.venues.readiness import VENUES_INTEGRITY_CONTRACT
 
 if TYPE_CHECKING:
@@ -24,6 +25,7 @@ CONTRACTS = (
     CATALOG_INTEGRITY_CONTRACT,
     VENUES_INTEGRITY_CONTRACT,
     PROGRAMME_INTEGRITY_CONTRACT,
+    SCHEDULING_INTEGRITY_CONTRACT,
 )
 
 
@@ -41,8 +43,9 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         ("applications_integrity", True, 139, 29, 2),
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
-        ("venues_integrity", True, 13, 9, 1),
+        ("venues_integrity", True, 20, 13, 2),
         ("programme_integrity", True, 50, 19, 2),
+        ("scheduling_integrity", True, 46, 11, 2),
     ]
     for contract in CONTRACTS:
         relations = set(integrity.bounded_context_relation_names(contract.app_label))
@@ -93,16 +96,25 @@ def test_trigger_contracts_pin_events_timing_attachment_and_constraint_shape() -
 def test_function_contracts_pin_body_invoker_search_path_and_behavior() -> None:
     for contract in CONTRACTS:
         assert all(
-            function.language == "plpgsql"
+            function.language
+            == (
+                "sql"
+                if function.identity == "maru_scheduling_exact_keys(jsonb, text[])"
+                else "plpgsql"
+            )
             and not function.security_definer
             and function.configuration == ("search_path=pg_catalog, public, pg_temp",)
             and function.result
-            == (
-                "boolean"
-                if function.identity
-                == "maru_applications_review_stage_ready(uuid, integer, bigint)"
-                else "trigger"
-            )
+            == {
+                "maru_applications_review_stage_ready(uuid, integer, bigint)": (
+                    "boolean"
+                ),
+                "maru_scheduling_exact_keys(jsonb, text[])": "boolean",
+                "maru_scheduling_evidence_shape(jsonb)": "boolean",
+                "maru_scheduling_evidence_is_current(jsonb, uuid, uuid)": "boolean",
+                "maru_scheduling_canonical_json(jsonb)": "text",
+                "maru_validate_scheduling_linked_booking(uuid)": "void",
+            }.get(function.identity, "trigger")
             and len(function.source_sha256) == 64
             for function in contract.functions.values()
         )

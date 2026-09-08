@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -73,74 +73,86 @@ That optimization pilot is closed; the later separately approved #83 CI task is
 described below. No Docker cleanup is authorized. See the
 [pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
 
-## Current bounded outcome: CI before Programme continuation
+## Current bounded outcome: Scheduling acceptance after delivered CI
 
 Issue #77 was delivered through PR #78, squash
 `6279cb50d287d70e33e2bebabda3e54564668475`. Issue #79 was delivered through
 [PR #80](https://github.com/martonpornoi/maru/pull/80), squash
-`7ef234b20867c13674999f5cfc0e47fd65039716`, after exact-head local and hosted
-acceptance. Programme host confirmation and deliberately shared availability
-are delivered dormant foundations, not pending implementation.
+`7ef234b20867c13674999f5cfc0e47fd65039716`. Programme host confirmation and
+deliberately shared availability are dormant delivered foundations, not pending
+implementation. The [host delivery checkpoint](../checkpoints/2026-09-07-programme-host-protected-delivery.md)
+retains its exact verification and recovery evidence.
 
-Issue [#81](https://github.com/martonpornoi/maru/issues/81) remains unmerged in
-[PR #82](https://github.com/martonpornoi/maru/pull/82), branch
-`codex/programme-scheduling-candidates`, preserved at
-`4e6eb1bde8a681b6d5cebb0cdbeaac2bbbc77f68`. That head passed complete local
-certification (6,575 Python and 33 frontend tests, eight PostgreSQL shards and
-90-percent branch-aware coverage), but hosted shards 5, 6 and 7 exceeded two
-hours in [run 34132347435](https://github.com/martonpornoi/maru/actions/runs/34132347435).
-Its gate is red. The prior timing-only repair did not resolve the bottleneck.
+### Delivered CI prerequisite
 
-On 2026-09-07 the user approved a separately bounded CI redesign, tracked in
-[#83](https://github.com/martonpornoi/maru/issues/83), before continuing #48.
-Work is single-agent on `codex/risk-based-postgresql-ci`, from protected main.
+Issue [#83](https://github.com/martonpornoi/maru/issues/83) is closed through
+[PR #84](https://github.com/martonpornoi/maru/pull/84), protected squash
+`c0cf5a24d7593744bbb52ad0f9293deaf21e393a` on 2026-09-08. The clean main
+worktree was fast-forwarded to that identical-tree result.
+
+Exact head `dfc775445d146ab86423544860e9a1726f0131f2` passed exhaustive local
+certification: 6,350 Python tests, 33 frontend tests, all quality gates and
+90.20% combined branch-aware coverage in 95m22s. Independent
+[hosted acceptance](https://github.com/martonpornoi/maru/actions/runs/34161506336),
+PR gate and CodeQL passed. All sixteen PostgreSQL jobs passed in 35m23s–63m08s
+each, with at most eight simultaneous databases; total PostgreSQL job time was
+846m30s and complete workflow latency was 122m20s. Smaller jobs avoided the
+per-job timeout; exhaustive history remains costly.
+
 [ADR 0090](../architecture/decisions/0090-risk-based-postgresql-acceptance.md)
-retains current-schema PostgreSQL behavior and unchanged coverage on every code
-PR, adds affected history for domain schema changes, and requires full history
-for global safety/harness changes, changed-revision nightly checks and releases.
-Independent historical functions form smaller isolated groups; shared committed
-baselines stay together. Exhaustive hosted runs use sixteen groups with at most
-eight simultaneous databases and unchanged per-job timeouts.
+keeps current PostgreSQL behavior on every code PR, affected history for domain
+schema changes, and full history for global safety/harness changes, changed-main
+nightly checks and releases. Two-decimal coverage and initialization recording
+retain the unchanged 90% threshold without rounded shortfalls. The separately
+[verified current-path diagnostic](../checkpoints/2026-09-07-postgresql-current-path-verified.md)
+passed 6,226 Python tests at 90.02% in 15m58s locally; it omitted history and
+non-database quality gates. The 20–35-minute hosted routine target remains
+unmeasured, not a promise for the high-risk Scheduling PR.
 
-The implementation has a validated per-function inventory, actual-collection
-checks, risk/graph selection, local scope receipts and nightly deduplication.
-The current-only diagnostic for `2a0dda7f7307925135b7c2bfe401feb3f24829bb`
-completed in 899.281 seconds (14m59s): 2,981 unit and 3,002 PostgreSQL cases,
-zero failures/errors/skips across eight isolated databases. It deferred 124
-historical cases and did not run non-database quality gates. This is not full
-certification or hosted acceptance. The initial 20–35-minute hosted routine
-estimate remains an estimate; the exhaustive suite still has substantial cost.
+### Active Scheduling child
 
-Final review found that the runner initialized Django before recording
-coverage; its 89.56-percent combined result passed only through the existing
-whole-number rounding. The candidate now starts coverage before the runner and
-uses two-decimal reporting at the same 90-percent threshold and exclusions.
-Regressions protect startup recording and rejection of the rounded shortfall.
-The corrected diagnostic at `8fa540cf649937a56855d4098f7ec7647744e439`
-passed all 5,985 tests but correctly failed the precise coverage gate at 89.56%.
-Current-input, form, scope-token and dormant-profile regressions now exercise
-that behavior independently of historical migration fixtures. The candidate's
-fresh diagnostic at `80f36ad713a6c5d5e3589dee22d9b8fe344d2477` passed
-3,224 unit and 3,002 current PostgreSQL tests, zero failures/errors/skips, and
-90.02% combined coverage in 957.955 seconds (15m58s). This supersedes the mixed-run
-development estimate and is current-path evidence, not full certification. The non-database
-quality gates passed on `8fa540c` with a fresh type-analysis cache; certification
-now isolates that cache per run to prevent cross-branch Django-plugin residue.
-Nightly deduplication also verifies the actual exact-revision Full CI gate,
-not a selector-only successful workflow with skipped acceptance.
-Final exhaustive local certification and hosted acceptance must pass before
-delivery. See the
-[benchmark checkpoint](../checkpoints/2026-09-07-postgresql-current-path-benchmark.md)
-for exact observations, limitations and the preserved original evidence.
-The [verified current-path checkpoint](../checkpoints/2026-09-07-postgresql-current-path-verified.md)
-records the precise passing result and its acceptance boundary.
+Issue [#81](https://github.com/martonpornoi/maru/issues/81) remains open in
+[PR #82](https://github.com/martonpornoi/maru/pull/82), branch
+`codex/programme-scheduling-candidates`. Its prior head
+`4e6eb1bde8a681b6d5cebb0cdbeaac2bbbc77f68` passed full local certification
+(6,575 Python and 33 frontend tests), but hosted shards 5, 6 and 7 timed out in
+[run 34132347435](https://github.com/martonpornoi/maru/actions/runs/34132347435).
+That old gate cannot certify the updated branch and must not be blindly rerun.
 
-Neither #83 nor #81 is delivered. Preserve the separate Programme branch,
-existing stashes and other worktree. Do not merge PR #82 using a current-only
-diagnostic result: its migration-harness changes still require full evidence.
-The temporary #83 app reminder was deleted at the user's request; do not recreate
-it. The completed #77 app check-in remains disabled. Docker cleanup and unrelated
-product work remain outside this bounded task.
+The delivered CI main is integrated without changing Scheduling behavior
+or removing existing assertions. [ADR 0088](../architecture/decisions/0088-versioned-scheduling-candidates-and-venue-binding.md),
+the [owner contract](../modules/scheduling.md) and
+[recovery guide](../operations/scheduling-migration-and-recovery.md) define
+service days, stable occurrences, immutable alternatives, explainable conflicts,
+explicit host presence and reciprocal Venue reservation evidence. A draft is
+not a reservation, host consent, approval or publication. All sixteen new
+relations remain runtime SELECT-only; neither literal profile nor a route,
+UI, API, worker or release is activated.
+
+[ADR 0091](../architecture/decisions/0091-scheduling-ci-policy-integration.md)
+reconciles the old whole-file calibration as diagnostic tooling, with ADR 0090
+authoritative for acceptance. The inventory explicitly owns Scheduling's
+independent empty reversal and two-owner fence functions; all current guards,
+readiness, reservations, concurrency and source/field denials remain mandatory.
+New group estimates use preserved complete successful JUnit evidence, not
+fabricated measurements. The [integration checkpoint](../checkpoints/2026-09-08-scheduling-ci-integration.md)
+records provenance and focused verification. The full database-free suite passed
+3,511 tests in 28.15 seconds. Actual collection selected all 3,376 PostgreSQL
+cases for full scope and 3,249 for current scope; all thirteen new cost estimates
+match retained complete evidence. Repository lint/format, maintained docs and
+script docstring checks pass. This is focused evidence, not database acceptance.
+
+Prior implementation and repair evidence remains in the
+[implementation](../checkpoints/2026-09-07-scheduling-candidates-and-venue-binding.md),
+[certification follow-up](../checkpoints/2026-09-07-scheduling-certification-follow-up.md)
+and [timing-repair](../checkpoints/2026-09-07-scheduling-hosted-timing-repair.md)
+checkpoints. Fresh exhaustive local certification, independent hosted acceptance,
+protected delivery and issue reconciliation are still required for this
+integration. Neither the old feature receipt nor PR #84 certifies it.
+
+Work stays single-agent. Preserve other worktrees and stashes. The temporary
+#83 app reminder remains deleted and #77's check-in disabled; do not recreate
+either. No Docker cleanup, deployment or production data is authorized.
 
 ## What can be evaluated today
 
@@ -153,7 +165,8 @@ product work remain outside this bounded task.
 - **Programme foundations:** owned items and information/readiness layers
   (#61); Applications calls and acknowledged collaborative proposals (#63);
   preview-first import (#66); Department continuity (#64); review and decisions
-  (#71); explicit source-bound accepted conversion (#77). These remain dormant
+  (#71); explicit source-bound accepted conversion (#77); host confirmation
+  and deliberately shared per-item availability (#79). These remain dormant
   foundations, not a departmental workspace.
   [Events](../modules/events.md), [Applications](../modules/applications.md),
   and the [Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md)
@@ -164,31 +177,24 @@ product work remain outside this bounded task.
 
 ## Smallest sensible next actions
 
-1. Complete #83's exhaustive local and hosted acceptance after the passing current diagnostic,
-   protected delivery and exact-main synchronization. Do not bypass the red #82
-   gate or repeat the already delivered #77/#79 work.
-2. If separately authorized, approve and remove only identified disposable
-   Docker resources. Resource cleanup and test-performance work are different
-   outcomes.
-3. Integrate the delivered CI policy into #81's preserved branch, resolve its
-   inventory/owner changes explicitly, and obtain its own exhaustive exact-head
-   acceptance before delivering PR #82. Preserve committed round trips,
-   downgrade fences, concurrency and isolation. Measure setup, execution and
-   teardown without lowering coverage or bypassing protected acceptance. See
-   [testing strategy](../quality/testing-strategy.md) and the
-   [existing isolation checkpoint](../checkpoints/2026-09-05-historical-migration-test-isolation.md).
-4. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48) after
-   each completed child without another routine approval: Scheduling core and
-   accessible editor, Workforce staffing,
-   atomic release/outputs, on-site continuity, and integrated acceptance.
-   Profile setup/activation comes after those mandatory continuations. Keep the
-   umbrella open until the complete Programme-only journey is accepted.
+1. Finish #82's integration of the delivered CI policy, including explicit
+   historical membership, real dependency selection, meaningful regressions,
+   timing provenance and current documentation.
+2. Certify the resulting clean exact head with exhaustive history, then push
+   once for fresh hosted acceptance. Merge only after its own PR gate and CodeQL
+   pass; reconcile #81 and #48 and synchronize main. Do not rerun #83 or treat
+   either older receipt as acceptance of the new head.
+3. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48)
+   sequentially: accessible editor, Workforce staffing, atomic release/outputs,
+   on-site continuity, guided setup/surfaces and integrated acceptance. No routine
+   approval is needed between delivered children. Activation comes only after
+   every mandatory continuation; keep the umbrella open until the complete
+   Programme-only journey is accepted.
 
-Outside the Programme sequence, #42 owns the reproducible Workforce tutorial,
-#22 continuity/reversible adoption, #23 the role-state accessibility matrix,
-and #24 the later attendance/handover/actual-time contract. The roadmap and
-live issue queue own further priorities; this maintenance does not reprioritize
-or close them.
+Outside the Programme sequence, #42 owns the Workforce tutorial, #22 continuity,
+#23 accessibility and #24 later attendance/handover/actual-time behavior. They
+are not absorbed or closed by this integration. Docker cleanup still requires
+a separately approved exact inventory.
 
 ## Known risks and production gates
 

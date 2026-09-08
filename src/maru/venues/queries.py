@@ -403,6 +403,7 @@ def public_schedule_for_edition(
         lifecycle=VenueBooking.Lifecycle.ACTIVE,
         review_state=VenueBooking.ReviewState.APPROVED,
         publication_state=VenueBooking.PublicationState.PUBLISHED,
+        scheduling_binding__isnull=True,
         space_selection__lifecycle=EditionSpaceSelection.Lifecycle.ACTIVE,
         space_selection__venue_selection__lifecycle="active",
         space_selection__venue_selection__property__lifecycle=(
@@ -556,6 +557,7 @@ def my_maru_schedule_editions(*, actor: Account) -> tuple[EventEdition, ...]:
             lifecycle=VenueBooking.Lifecycle.ACTIVE,
             review_state=VenueBooking.ReviewState.APPROVED,
             publication_state=VenueBooking.PublicationState.PUBLISHED,
+            scheduling_binding__isnull=True,
             space_selection__lifecycle=EditionSpaceSelection.Lifecycle.ACTIVE,
             space_selection__venue_selection__lifecycle="active",
             space_selection__venue_selection__property__lifecycle=(

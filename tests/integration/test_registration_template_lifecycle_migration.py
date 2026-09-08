@@ -18,6 +18,7 @@ from tests.integration import (
 from tests.integration import (
     test_registration_template_lifecycle_commands as command_tests,
 )
+from tests.support.migrations import migration_project_state
 from tests.support.migrations import registration_migration_targets as _targets
 
 pytestmark = [
@@ -117,8 +118,8 @@ def test_populated_unproven_template_fails_closed_on_forward() -> None:
     edition = EventEditionFactory()
     actor = AccountFactory()
     executor = _migrate(REGISTRATION_BEFORE)
-    historical_apps = executor.loader.project_state(
-        _targets(executor, REGISTRATION_BEFORE)
+    historical_apps = migration_project_state(
+        executor, _targets(executor, REGISTRATION_BEFORE)
     ).apps
     template_model = historical_apps.get_model("registration", "RegistrationTemplate")
     product_model = historical_apps.get_model(

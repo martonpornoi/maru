@@ -254,13 +254,59 @@ def test_affected_selection_adds_real_recovery_and_directly_changed_history() ->
 
 def test_real_graph_resolves_dependents_and_refuses_unknown_or_deleted() -> None:
     owners = affected_migration_owners((_change("src/maru/programme/models.py"),))
-    assert "programme" in owners
+    assert {"programme", "scheduling", "venues"} <= owners
     for change in (
         _change("src/maru/programme/migrations/0000_missing.py"),
         _change("src/maru/programme/models.py", "D"),
     ):
         with pytest.raises(ValueError, match=r"migration|schema"):
             affected_migration_owners((change,))
+
+
+@pytest.mark.parametrize("owner", ["scheduling", "venues"])
+def test_joint_scheduling_history_follows_either_owners_real_graph(owner: str) -> None:
+    inventory = load_history_inventory()
+    groups = build_groups()
+    owners = affected_migration_owners((_change(f"src/maru/{owner}/models.py"),))
+    assert "scheduling" in owners
+    selected = select_groups(groups, inventory, "affected", owners)
+    keys = {group.key for group in selected}
+    history = "tests/integration/test_scheduling_integrity_migrations.py"
+    assert inventory[history].owners == frozenset({"scheduling", "venues"})
+    assert RECOVERY_SMOKE in keys
+    assert all(
+        case_group(history, function, inventory) in keys
+        for function in inventory[history].tests
+    )
+    assert all(group.key in keys for group in groups if not group.historical)
+
+
+def test_current_scheduling_safety_is_not_deferred_with_rollback_history() -> None:
+    inventory = load_history_inventory()
+    groups = build_groups()
+    current = select_groups(groups, inventory, "current")
+    keys = {group.key for group in current}
+    for file in (
+        "test_programme_scheduling_source.py",
+        "test_scheduling_database_guards.py",
+        "test_scheduling_readiness.py",
+        "test_scheduling_reservations.py",
+        "test_scheduling_venue_continuity.py",
+        "test_venue_scheduling_binding_guards.py",
+        "test_venue_scheduling_source.py",
+    ):
+        assert f"tests/integration/{file}::current" in keys
+    historical_file = "tests/integration/test_scheduling_integrity_migrations.py"
+    assert not inventory[historical_file].shared_baseline
+    assert inventory[historical_file].tests == frozenset(
+        {
+            "test_empty_joint_graph_reverses_and_recovers_with_normal_migrations",
+            "test_planning_history_fences_both_owners_before_any_guard_is_removed",
+        }
+    )
+    history = [group for group in groups if group.file == historical_file]
+    assert len(history) == 2
+    assert all(group.historical and group.key not in keys for group in history)
 
 
 @pytest.mark.parametrize("count", [0, -1, 2])

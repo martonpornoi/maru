@@ -104,7 +104,8 @@ moderation, accountable decisions, and exact-recipient acknowledgement under
 ADR 0085. Review-side acceptance does not create a target receipt or Programme
 item. Issue #77, delivered through PR #78, adds explicit accepted-item
 conversion. Issue #79, delivered through PR #80, adds independent host relationships and
-availability, before Scheduling, interactive timetable editing,
+availability. Issue #81 begins Scheduling candidates, conflict evidence and
+governed Venue binding, before interactive timetable editing,
 staffing, releases, continuity, and integrated Programme-only rehearsal. Umbrella
 #48 remains open; no current profile or surface is activated by this kernel.
 
@@ -368,8 +369,10 @@ Coverage retains its 90-percent threshold and exclusions, with two-decimal
 reporting and measurement starting before application initialization.
 Draft-light feedback, fail-closed preflight, protected `PR gate` and no duplicate
 acceptance on the identical-tree squash remain. A head update clears prior
-destructive-review evidence before the revised scope can run. Issue #83 must
-itself pass exhaustive acceptance; its delivery state belongs in CURRENT.
+destructive-review evidence before the revised scope can run. Issue #83 delivered
+this policy through PR #84. ADR 0091 integrates Scheduling's historical ownership
+and retains earlier whole-file calibration as diagnostic tooling only. Exact
+acceptance and delivery evidence belongs in CURRENT and the checkpoints.
 Draft pull
 request 9 proved that the first Workforce header edit did not restore CodeQL
 extraction even though the job stayed green. ADR 0069 now uses an equivalent
@@ -766,9 +769,10 @@ coordination and governed ownership recovery. Issue #71 implements dormant
 staged review and accountable decisions. Issue #77 adds the dedicated accepted
 Applications adapter: one exact effective acceptance produces one private
 source-bound item with seven initially required readiness concerns, without
-activating a profile or creating hosts. Issue #79 adds Programme-owned host
-relationships and deliberately shared availability under ADR 0087. Next are
-Scheduling, staffing, release, continuity, setup, and integrated
+activating a profile or creating hosts. Issue #79 delivers Programme-owned host
+relationships and deliberately shared availability under ADR 0087. Issue #81
+begins Scheduling candidates, conflict evaluation and governed Venue binding.
+Next are the accessible editor, staffing, release, continuity, setup, and integrated
 acceptance in dependency order. Each child is separately verified and delivered.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from django.conf import settings
 from django.contrib.postgres.constraints import ExclusionConstraint
@@ -19,6 +19,9 @@ from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug
 
 from .writer_boundary import require_venue_writer
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 MAX_VENUE_REASON_LENGTH = 1_000
 MAX_VENUE_TEXT_LENGTH = 5_000
@@ -1443,6 +1446,79 @@ class VenueBookingOccupancy(_ClosedVenueModel):
                 "Booking occupancy must remain in its booking scope.",
                 code="venue_booking_occupancy_scope_mismatch",
             )
+
+
+class VenueSchedulingBinding(_AppendOnlyVenueModel):
+    """Immutable occurrence/placement binding; live occupancy stays Booking-owned."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="venue_scheduling_bindings",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="venue_scheduling_bindings",
+    )
+    booking = models.OneToOneField(
+        VenueBooking,
+        on_delete=models.PROTECT,
+        related_name="scheduling_binding",
+    )
+    source_intent = models.OneToOneField(
+        "scheduling.SchedulingReservationIntent",
+        on_delete=models.PROTECT,
+        related_name="venue_binding",
+    )
+    occurrence = models.ForeignKey(
+        "scheduling.SchedulingOccurrence",
+        on_delete=models.PROTECT,
+        related_name="venue_bindings",
+    )
+    placement = models.ForeignKey(
+        "scheduling.SchedulingPlacementRevision",
+        on_delete=models.PROTECT,
+        related_name="venue_bindings",
+    )
+    source_actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="venue_scheduling_placements_authored",
+    )
+    occurred_at = models.DateTimeField()
+
+    @override
+    def full_clean(
+        self,
+        exclude: Iterable[str] | None = None,
+        validate_unique: bool = True,
+        validate_constraints: bool = True,
+    ) -> None:
+        """Validate local fields while owner proof and SQL enforce foreign scope.
+
+        Parameters
+        ----------
+        exclude : Iterable[str] | None, default=None
+            Additional Django validation exclusions.
+        validate_unique : bool, default=True
+            Whether to validate local uniqueness before persistence.
+        validate_constraints : bool, default=True
+            Whether to validate local model constraints.
+        """
+        super().full_clean(
+            exclude=set(exclude or ())
+            | {
+                "organization",
+                "edition",
+                "source_intent",
+                "occurrence",
+                "placement",
+                "source_actor",
+            },
+            validate_unique=validate_unique,
+            validate_constraints=validate_constraints,
+        )
 
 
 class VenueCommandReceipt(_AppendOnlyVenueModel):

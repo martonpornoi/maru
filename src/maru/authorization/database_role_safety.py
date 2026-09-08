@@ -128,6 +128,22 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.programme_programmehostinvitation",
     "public.programme_programmehostrevision",
     "public.programme_programmehostavailabilitywindow",
+    "public.scheduling_schedulingeditioncontrol",
+    "public.scheduling_schedulingserviceday",
+    "public.scheduling_schedulingservicedayrevision",
+    "public.scheduling_schedulingoccurrence",
+    "public.scheduling_schedulingoccurrencerevision",
+    "public.scheduling_schedulingcandidate",
+    "public.scheduling_schedulingcandidaterevision",
+    "public.scheduling_schedulingplacementrevision",
+    "public.scheduling_schedulingcandidatemember",
+    "public.scheduling_schedulingplacementhostpresence",
+    "public.scheduling_schedulingevaluation",
+    "public.scheduling_schedulingconflict",
+    "public.scheduling_schedulingwarningacknowledgement",
+    "public.scheduling_schedulingreservationintent",
+    "public.scheduling_schedulingcommandreceipt",
+    "public.venues_venueschedulingbinding",
 )
 
 # Effects replay, Workforce adoption, and Organization structure evidence is

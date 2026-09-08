@@ -489,6 +489,11 @@ architecture documents, implementation issues, tests, and release notes.
   turnaround constraints, dependencies, and unpublished changes.
 - **SCH-004 — Drafts and publication:** Schedules must support draft versions,
   review, comparison, approval, publication, and revision history.
+  A draft candidate is an immutable-versioned set of placements with stable
+  occurrence identities. Alternative drafts may retain explicit conflicts or
+  unchecked dependencies without reserving rooms, confirming hosts or claiming
+  approval. Copying, moving, unplacing or restoring a draft retains its source
+  and old/new evidence without rewriting another candidate or prior history.
 - **SCH-005 — Personal decision view:** Volunteers must be able to compare
   suitable open shifts against their qualifications, interests, existing
   commitments, break needs, and preferred availability.
@@ -497,11 +502,19 @@ architecture documents, implementation issues, tests, and release notes.
 - **SCH-007 — Human override:** Authorized planners may override warnings with a
   recorded reason; hard safety or authorization constraints cannot be silently
   bypassed.
+  A warning acknowledgement binds the exact candidate and dependency
+  fingerprint. Source changes require reevaluation; acknowledgement cannot turn
+  a hard blocker, withheld availability or unavailable adapter into a pass.
 - **SCH-008 — Service days, layers, groups, and projections:** Editions must
   define service-day windows and scheduling precision, order and lock
   visibility layers, group related or recurring items with explicit sequence,
   and derive interactive, API, print, signage, person, room, and staff
   projections from the same approved schedule version.
+  Service days have explicit, non-overlapping windows within current edition
+  bounds, may cross local midnight, and retain versioned minute-grid precision.
+  Instants are offset-aware and persisted in UTC; ambiguous/nonexistent local
+  input is rejected. Repeated items retain explicit occurrence/group/sequence
+  identities rather than changing history through an implicit recurrence rule.
 - **SCH-009 — Three-phase work envelopes:** Every scheduled programme or
   operational item must distinguish preparation, effective delivery, and
   teardown intervals, with an invariant ordering of preparation start,

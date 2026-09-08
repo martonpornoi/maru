@@ -204,6 +204,10 @@ def current_adoption_catalog_snapshot() -> AdoptionCatalogSnapshot:
     from maru.registration.starter_catalog import (  # noqa: PLC0415
         platform_registration_starters,
     )
+    from maru.scheduling.adoption import (  # noqa: PLC0415
+        SCHEDULING_ADOPTION_ADAPTERS,
+        SCHEDULING_ADOPTION_CONFLICT_SOURCES,
+    )
     from maru.venues.adoption import (  # noqa: PLC0415
         VENUES_ADOPTION_ADAPTERS,
         VENUES_ADOPTION_CONFLICT_SOURCES,
@@ -232,6 +236,7 @@ def current_adoption_catalog_snapshot() -> AdoptionCatalogSnapshot:
             ("applications", APPLICATIONS_ADOPTION_ADAPTERS),
             ("participation", PARTICIPATION_ADOPTION_ADAPTERS),
             ("programme", PROGRAMME_ADOPTION_ADAPTERS),
+            ("scheduling", SCHEDULING_ADOPTION_ADAPTERS),
             ("registration", REGISTRATION_ADOPTION_ADAPTERS),
             ("venues", VENUES_ADOPTION_ADAPTERS),
             ("workforce", WORKFORCE_ADOPTION_ADAPTERS),
@@ -246,6 +251,7 @@ def current_adoption_catalog_snapshot() -> AdoptionCatalogSnapshot:
             ("applications", APPLICATIONS_ADOPTION_CONFLICT_SOURCES),
             ("participation", PARTICIPATION_ADOPTION_CONFLICT_SOURCES),
             ("programme", PROGRAMME_ADOPTION_CONFLICT_SOURCES),
+            ("scheduling", SCHEDULING_ADOPTION_CONFLICT_SOURCES),
             ("registration", REGISTRATION_ADOPTION_CONFLICT_SOURCES),
             ("venues", VENUES_ADOPTION_CONFLICT_SOURCES),
             ("workforce", WORKFORCE_ADOPTION_CONFLICT_SOURCES),

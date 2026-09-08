@@ -269,6 +269,20 @@ records one organization-neutral privileged audit. The calling domain must
 close all scoped authority and relationship rows first in the same transaction;
 identity deliberately does not import organizer models or invent that scope.
 
+## Identifier-only Scheduling seams
+
+Scheduling's authorized owner adapters use bounded identifier-only identity
+seams. `resolve_active_verified_person_references` returns current verified
+people in canonical order, without names or contact. The separate
+`lock_account_references_for_evidence` locks exact retained account references
+without changing older owners' person/verification eligibility rules; callers
+still authorize their own purpose. Both admit at most 2,000 explicit IDs.
+`edition_person_conflict_key` derives an edition-bounded pseudonymous key for
+authorized Programme/future Workforce overlap checks. It is not authority or
+anonymous data, and must not become a person directory or a persisted calendar
+copy in Scheduling history. The [Scheduling contract](scheduling.md) owns that
+consumer's field and retention ceiling.
+
 ## Tests
 
 PostgreSQL and API tests cover normalization, duplicate prevention,

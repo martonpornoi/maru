@@ -12,6 +12,7 @@ from tests.factories import AccountFactory, EventEditionFactory
 from tests.integration import (
     test_registration_configuration_lifecycle_commands as lifecycle_tests,
 )
+from tests.support.migrations import migration_project_state
 from tests.support.migrations import registration_migration_targets as _targets
 
 pytestmark = [
@@ -40,7 +41,7 @@ def _historical_apps(
     executor: MigrationExecutor,
     target: tuple[str, str],
 ) -> Apps:
-    return executor.loader.project_state(_targets(executor, target)).apps
+    return migration_project_state(executor, _targets(executor, target)).apps
 
 
 def _truncate_setup_binding_tables() -> None:

@@ -102,6 +102,7 @@ from maru.organizations.services import (
     update_organization_profile,
 )
 from maru.programme.readiness import programme_database_integrity_is_ready
+from maru.scheduling.readiness import scheduling_database_integrity_is_ready
 from maru.venues.readiness import venues_database_integrity_is_ready
 
 logger = logging.getLogger(__name__)
@@ -2021,6 +2022,7 @@ def _append_bounded_domain_integrity_readiness(
         ("charities_integrity", charities_database_integrity_is_ready),
         ("catalog_integrity", catalog_database_integrity_is_ready),
         ("programme_integrity", programme_database_integrity_is_ready),
+        ("scheduling_integrity", scheduling_database_integrity_is_ready),
         ("venues_integrity", venues_database_integrity_is_ready),
     )
     results: list[bool] = []

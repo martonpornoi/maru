@@ -1,11 +1,12 @@
 """Helpers that keep migration integration tests from contaminating the suite."""
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 
 from django.core.management import call_command
 from django.db import connection, transaction
 from django.db.migrations.executor import MigrationExecutor
+from django.db.migrations.state import ProjectState
 
 _REGISTRATION_DEPARTMENT_FK_MIGRATION = (
     "registration",
@@ -98,6 +99,22 @@ def migrate_test_targets(
     executor.migrate(targets, plan=plan)
 
 
+def migration_project_state(
+    executor: MigrationExecutor,
+    targets: Iterable[tuple[str, str | None]],
+) -> ProjectState:
+    """Build historical models without treating unmigration targets as graph nodes."""
+
+    selected = tuple(targets)
+    nodes = [(app, name) for app, name in selected if name is not None]
+    state = executor.loader.project_state(nodes)
+    absent_owners = {app for app, name in selected if name is None}
+    if any(app in absent_owners for app, _ in state.models):
+        msg = "Historical dependencies reintroduced an explicitly unmigrated owner."
+        raise ValueError(msg)
+    return state
+
+
 def current_migration_leaves() -> tuple[tuple[str, str], ...]:
     """Return every current leaf from the migration graph on disk."""
 
@@ -108,10 +125,10 @@ def current_migration_leaves() -> tuple[tuple[str, str], ...]:
 def registration_migration_targets(
     executor: MigrationExecutor,
     target: tuple[str, str],
-) -> tuple[tuple[str, str], ...]:
+) -> tuple[tuple[str, str | None], ...]:
     """Select compatible Workforce, Applications and Programme historical leaves."""
 
-    targets_by_app = {
+    targets_by_app: dict[str, tuple[str, str | None]] = {
         migration_key[0]: migration_key
         for migration_key in executor.loader.graph.leaf_nodes()
     }
@@ -124,16 +141,20 @@ def registration_migration_targets(
             targets_by_app["applications"] = _APPLICATIONS_BEFORE_PROGRAMME_OWNERSHIP
         if "programme" in targets_by_app:
             targets_by_app["programme"] = _PROGRAMME_BEFORE_ACCEPTED_CONVERSION
+        if "scheduling" in targets_by_app:
+            targets_by_app["scheduling"] = ("scheduling", None)
+        if "venues" in targets_by_app:
+            targets_by_app["venues"] = ("venues", "0002_venue_write_integrity")
     return tuple(sorted(targets_by_app.values()))
 
 
 def identity_migration_targets(
     executor: MigrationExecutor,
     target: tuple[str, str],
-) -> tuple[tuple[str, str], ...]:
+) -> tuple[tuple[str, str | None], ...]:
     """Select Applications and Workforce leaves compatible with Identity history."""
 
-    targets_by_app = {
+    targets_by_app: dict[str, tuple[str, str | None]] = {
         migration_key[0]: migration_key
         for migration_key in executor.loader.graph.leaf_nodes()
     }
@@ -145,6 +166,10 @@ def identity_migration_targets(
         targets_by_app["workforce"] = _WORKFORCE_PROGRAMME_CALL_FK_CONTRACT
         if "programme" in targets_by_app:
             targets_by_app["programme"] = _PROGRAMME_BEFORE_ACCEPTED_CONVERSION
+        if "scheduling" in targets_by_app:
+            targets_by_app["scheduling"] = ("scheduling", None)
+        if "venues" in targets_by_app:
+            targets_by_app["venues"] = ("venues", "0002_venue_write_integrity")
     return tuple(sorted(targets_by_app.values()))
 
 

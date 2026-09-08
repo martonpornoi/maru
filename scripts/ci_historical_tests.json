@@ -376,6 +376,17 @@
       "test_owning_fence_survives_a_missing_convergence_migration_record"
     ]
   },
+  "tests/integration/test_scheduling_integrity_migrations.py": {
+    "owners": [
+      "scheduling",
+      "venues"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_empty_joint_graph_reverses_and_recovers_with_normal_migrations",
+      "test_planning_history_fences_both_owners_before_any_guard_is_removed"
+    ]
+  },
   "tests/integration/test_scope_v2_readiness_command.py": {
     "owners": [
       "authorization",

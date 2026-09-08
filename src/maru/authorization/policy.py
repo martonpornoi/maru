@@ -673,6 +673,66 @@ def decide_verified_principal_exact_department(
     )
 
 
+def decide_verified_principal_exact_resource(
+    *,
+    principal_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_id: UUID,
+    resource_binding_id: UUID,
+    capability_code: str,
+    requested_fields: frozenset[str] | None = None,
+    at: datetime | None = None,
+) -> PolicyDecision:
+    """Authorize a verified person against one exact trusted resource binding.
+
+    Parameters
+    ----------
+    principal_id : UUID
+        Exact current verified person identifier.
+    organization_id : UUID
+        Organization expected to own the complete resource scope.
+    edition_id : UUID
+        Exact edition expected to own the resource.
+    department_id : UUID
+        Exact current responsible Department.
+    resource_binding_id : UUID
+        Immutable typed binding resolved through its complete owner chain.
+    capability_code : str
+        Closed capability required by the independently authorized caller.
+    requested_fields : frozenset[str] | None, default=None
+        Independent code-owned disclosure ceiling, when a read is requested.
+    at : datetime | None, default=None
+        Optional ordinary policy evaluation instant.
+
+    Returns
+    -------
+    PolicyDecision
+        Complete ordinary policy result, without exposing Identity models or
+        permitting a caller to construct its own authorization target.
+    """
+    principal = _active_verified_person_principal(principal_id)
+    if principal is None:
+        return PolicyDecision(
+            allowed=False,
+            fields=frozenset(),
+            obligations=frozenset(),
+            reason_code="account_inactive",
+        )
+    return decide(
+        principal=principal,
+        capability_code=capability_code,
+        resource=resolve_resource_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            resource_binding_id=resource_binding_id,
+        ),
+        requested_fields=requested_fields,
+        at=at,
+    )
+
+
 def decide_verified_principal_exact_self(
     *,
     principal_id: UUID,

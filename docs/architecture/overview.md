@@ -67,7 +67,9 @@ pinned recovery and export continuity contracts.
 The contract does not yet activate that profile or expose Programme/Scheduling
 routes. A dormant Programme private-item/readiness module is now installed,
 but both existing v1 manifests omit its capabilities, adapter, and event route;
-Scheduling remains absent. Successor changes must pin capabilities, destinations,
+ADR 0088 now adds the dormant [Scheduling candidate/conflict kernel](../modules/scheduling.md)
+and reciprocal Venue reservations, still without editor, release or activation.
+Successor changes must pin capabilities, destinations,
 writers/effects, and adapter/conflict sources to the exact profile version
 rather than treating a module namespace as permission for all present or
 future operations.

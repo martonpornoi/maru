@@ -1,8 +1,9 @@
-"""Run one deterministic, file-level shard of the integration test suite.
+"""Run a diagnostic file-level shard, not active risk-selected acceptance.
 
 Integration test files stay whole because several Maru tests intentionally alter
-database state. Accepted JUnit durations are the repository-owned scheduling
-weights. New files use a deterministic median duration until the map is refreshed.
+database state. Accepted JUnit evidence supplies repository-owned scheduling
+costs, with conservative hosted calibration under ADR 0089. New files use a
+deterministic median duration until the map is refreshed.
 """
 
 from __future__ import annotations
@@ -79,14 +80,14 @@ def discover_integration_tests(directory: Path) -> tuple[Path, ...]:
 def weigh_test_files(
     test_files: Sequence[Path], timing_file: Path = TIMING_FILE
 ) -> tuple[WeightedTestFile, ...]:
-    """Weigh files with measured milliseconds and a median fallback.
+    """Weigh files with accepted cost estimates and a median fallback.
 
     Parameters
     ----------
     test_files : Sequence[Path]
         The selected test files to validate in deterministic order.
     timing_file : Path, default=TIMING_FILE
-        JSON map of repository-relative paths to measured seconds.
+        JSON map of repository-relative paths to estimated cost seconds.
 
     Returns
     -------
@@ -108,12 +109,12 @@ def weigh_test_files(
 
 
 def load_timing_weights(timing_file: Path) -> dict[str, int]:
-    """Load positive measured durations as integer milliseconds.
+    """Load positive scheduling costs as integer milliseconds.
 
     Parameters
     ----------
     timing_file : Path
-        JSON file mapping repository test paths to duration seconds.
+        JSON file mapping repository test paths to estimated cost seconds.
 
     Returns
     -------

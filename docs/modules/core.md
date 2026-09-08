@@ -21,6 +21,9 @@ UX-029, INT-001, NFR-001, NFR-002, NFR-004, NFR-006, NFR-008, and NFR-009.
 - allowlisted structured JSON logging
 - RFC 9457-style DRF problem responses
 - liveness, database readiness, and build identity endpoints
+- data-free PostgreSQL relation-shape fingerprints for explicitly named owner
+  catalogs, covering table semantics, columns, collations, constraints and indexes;
+  owning modules retain their expected digests and fail-closed readiness decisions
 - the canonical served OpenAPI schema and private Swagger/ReDoc rendering
   adapters;
 - focused local sign-in and the unified `/admin/` host boundary;

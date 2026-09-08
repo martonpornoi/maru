@@ -24,6 +24,7 @@ from maru.programme.readiness import (
     inspect_programme_schema_catalog,
     programme_database_integrity_is_ready,
 )
+from maru.scheduling.readiness import SCHEDULING_INTEGRITY_CONTRACT
 from maru.venues.readiness import VENUES_INTEGRITY_CONTRACT
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -34,6 +35,7 @@ CONTRACTS = (
     CATALOG_INTEGRITY_CONTRACT,
     VENUES_INTEGRITY_CONTRACT,
     PROGRAMME_INTEGRITY_CONTRACT,
+    SCHEDULING_INTEGRITY_CONTRACT,
 )
 
 PROGRAMME_RELATIONS = tuple(

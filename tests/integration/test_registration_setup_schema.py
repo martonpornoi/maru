@@ -23,6 +23,7 @@ from tests.factories import (
     EventEditionFactory,
     RegistrationConfigurationFactory,
 )
+from tests.support.migrations import migration_project_state
 from tests.support.migrations import (
     registration_migration_targets as _migration_targets,
 )
@@ -52,7 +53,7 @@ def _migrate(target: tuple[str, str]) -> MigrationExecutor:
 
 
 def _historical_apps(executor: MigrationExecutor, target: tuple[str, str]) -> object:
-    return executor.loader.project_state(_migration_targets(executor, target)).apps
+    return migration_project_state(executor, _migration_targets(executor, target)).apps
 
 
 def _legacy_spine(apps: object, *, code: str, starts_on: date) -> tuple[object, object]:

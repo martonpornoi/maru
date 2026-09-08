@@ -48,6 +48,8 @@ pre-reset implementation unless the paragraph explicitly identifies the ADR
   [exact-seal Programme review and decisions](programme-review.md)
 - [`programme`](programme.md) - dormant private items, structurally separated
   information layers, evidence-backed readiness, and reviewed public copy
+- [`scheduling`](scheduling.md) - dormant service days, occurrences, immutable
+  candidate alternatives, conflict evidence and reciprocal Venue reservations
 - [`charities`](charities.md) - reusable partners, governed edition selection,
   independent review, approved media, and minimized public snapshots
 - [`venues`](venues.md) - reusable hotels and venues, exact edition space

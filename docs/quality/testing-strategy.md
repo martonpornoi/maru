@@ -1,7 +1,7 @@
 # Testing strategy
 
 Status: Active
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
@@ -335,6 +335,13 @@ required cases cannot pass. The complete partition covers each required group
 exactly once. No tests run concurrently in a shared database; real migration
 execution, commit visibility, downgrade fences and recovery assertions remain.
 
+Scheduling's empty committed reversal and populated reciprocal fence functions
+are declared historical with Scheduling and Venues ownership. Their parameter
+variants stay together, and normal restoration makes each function independent.
+Real Programme/Venue dependency changes include them through the actual graph.
+Current Scheduling and owner-adapter guards, readiness, conflicts, reservations
+and continuity remain selected on every code PR.
+
 ### Runtime and cost boundaries
 
 Routine hosted acceptance uses eight shards. Exhaustive hosted acceptance uses
@@ -351,8 +358,9 @@ JUnit observations for matching current-main groups; they are deliberately
 labelled cross-revision estimates. New groups receive the largest known group
 cost until measured; stale or invalid entries fail. Do not infer completeness
 from timings: collection and executed-case evidence establish it independently.
-The old file-level runner/map remain diagnostic tooling, not the PR selection
-authority. Record comparable setup, execution and teardown, not only case bodies.
+Under [ADR 0091](../architecture/decisions/0091-scheduling-ci-policy-integration.md),
+the old file-level runner/map and ADR 0089 calibration remain diagnostic tooling,
+not the PR selection authority. Record comparable setup, execution and teardown, not only case bodies.
 
 For a reviewed timing refresh, retain the exact receipt and all successful JUnit
 reports before another local certification replaces them. Match each report's
@@ -363,6 +371,16 @@ failures, errors, skips, missing or extra cases. Update only groups measured by
 that complete scope; current-only evidence cannot replace historical weights.
 Document the source revision and scope with the refresh. A timing edit changes
 scheduling only and itself requires exhaustive harness acceptance.
+
+The Scheduling integration extends only its thirteen new group estimates from
+the preserved complete successful `d22a267b8c5c7117208979e27fd02effd7190a57`
+local reports. Their relevant source is unchanged at the preserved feature
+head; the old whole-file reports have no group selection JSON. This is explicitly
+cross-revision bootstrap cost evidence, not a group-native refresh or current
+acceptance. Both variants of the two-owner fence contribute to one weight.
+See the [integration checkpoint](../checkpoints/2026-09-08-scheduling-ci-integration.md)
+for receipt, inventory and validation evidence. All later refreshes follow the
+selection/JUnit equality rule above.
 
 ### Nightly, release and failure handling
 

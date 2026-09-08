@@ -1,9 +1,9 @@
 # Venues module
 
 Status: venue catalog, edition selection, operational space booking, and
-independent public schedule projection implemented; Programme-linked
-publication reconciliation is contract-only
-Last updated: 2026-08-31
+independent public schedule projection implemented; dormant reciprocal Scheduling
+reservations implemented, Programme release remains contract-only
+Last updated: 2026-09-07
 
 ## Purpose and boundary
 
@@ -25,7 +25,14 @@ not independently publish a second public Programme schedule. Scheduling will
 own the one approved Programme release and its public, personal, department,
 venue, calendar, signage, and print projections. Unrelated operational Venue
 bookings retain the existing independent approval/publication lifecycle. This
-reconciliation is accepted architecture, not current runtime behavior.
+release reconciliation remains accepted architecture, not current runtime behavior.
+ADR 0088 now implements the dormant physical reservation boundary described in
+[Scheduling](scheduling.md): exact source intent and immutable binding, independent
+Venue approval, atomic replacement/cancellation, and explicit exclusion from the
+ordinary public/My Maru schedule. Linked bookings cannot be generically rescheduled
+or published. The initial placement author also cannot approve them. No current
+profile admits the reservation adapters; existing unrelated bookings keep their
+original lifecycle. See [joint migration/recovery](../operations/scheduling-migration-and-recovery.md).
 
 ## Reusable catalog and edition selection
 
@@ -186,9 +193,11 @@ outbox delivery, and readiness fingerprints without logging restricted
 fields. Backup/restore validation must include the `btree_gist` extension,
 exclusion constraint, append-only triggers, and typed binding functions.
 
-Remaining work includes programme ownership/adapters, schedule-version
-comparison, person/equipment/qualification conflicts, service-day layers,
+The dormant Scheduling owner now provides explicit service days, independent
+candidates, selected-host conflicts and the physical reservation adapter.
+Remaining work includes the accessible editor and visible candidate comparison,
+Programme release reconciliation, staffing/equipment/qualification checks,
 calendar/signage/print exports, accommodation blocks/assignment/allocation,
-travel, and hospitality fulfilment. Until the ADR 0081 adapter and release
-owner exist, Venue publication remains independent and must not be presented as
-the accepted Programme timetable.
+travel, and hospitality fulfilment. Until the ADR 0081 release owner exists,
+unrelated Venue publication remains independent and must not be presented as
+the accepted Programme timetable; linked bookings cannot use that publication path.

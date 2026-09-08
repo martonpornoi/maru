@@ -8,6 +8,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 
 from tests.factories import AccountFactory, EventEditionFactory
+from tests.support.migrations import migration_project_state
 from tests.support.migrations import registration_migration_targets as _targets
 
 pytestmark = [
@@ -33,7 +34,7 @@ def _migrate(target: tuple[str, str]) -> MigrationExecutor:
 
 
 def _historical_apps(executor: MigrationExecutor, target: tuple[str, str]) -> Any:
-    return executor.loader.project_state(_targets(executor, target)).apps
+    return migration_project_state(executor, _targets(executor, target)).apps
 
 
 def _actions(executor: MigrationExecutor, target: tuple[str, str]) -> set[str]:

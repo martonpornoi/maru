@@ -5,10 +5,10 @@ guided Workforce-only adoption, profile-scoped navigation, owner-rehearsed
 Registration desk for full-convention editions, and governed Position,
 Assignment, Availability, and Shift management locally verified; accepted
 Programme Operations contract surfaces remain inactive and non-routable despite
-dormant Applications and Programme domain foundations; complete
+dormant Applications, Programme, and Scheduling domain foundations; complete
 mutation-role, state-matrix, width/zoom, and release accessibility evidence
 pending
-Last updated: 2026-09-01
+Last updated: 2026-09-07
 
 ## Current executable experience
 
@@ -79,8 +79,10 @@ unadopted or unrelated personal workflows.
 
 `programme_operations@1` is an accepted contract, not part of the current
 executable experience. Dormant Applications-owned Programme call/proposal,
-preview-first import, and Department-ownership continuity plus Programme-owned
-item/readiness foundations are installed for schema and contract validation,
+preview-first import, staged review and accepted conversion, and Department
+ownership continuity plus Programme-owned item/readiness/host foundations and
+Scheduling-owned candidates/conflicts with governed Venue binding are installed
+for schema and contract validation,
 but current-profile policy and effect routes deny all use.
 The setup route does not resolve, and no shell, search, setup choice, API,
 Staff Console, public page, or personal destination may advertise them. The
@@ -89,10 +91,12 @@ immutable future manifest pins `audit`, `authorization`, `effects`, `events`,
 `applications`, `programme`, `scheduling`, `venues`, and `workforce`.
 Applications' Programme purpose/target/capability/events and Programme's
 namespace, capabilities, event, and reserved adapter descriptor do not widen
-either v1 manifest. Routes, destinations, production writers/effects,
-review/target paths, the adapter implementation, and the Scheduling namespace
+either v1 manifest. The accepted-conversion, host-dependency, and physical
+reservation implementations and Scheduling namespace remain dormant. Routes,
+destinations, production writers/effects, and executable review/target surfaces
 remain absent until successor runtime issues implement and validate the whole
-profile; no general `operations` namespace is implied.
+profile; installed kernels are not an executable Programme journey, and no
+general `operations` namespace is implied.
 
 Department retirement may now consult a non-disclosing Applications dependency
 state through the existing Organization-structure command. That changes no

@@ -1271,6 +1271,120 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"reason", "audit"}),
     ),
     Capability(
+        code="programme.view_scheduling_dependencies",
+        description=(
+            "Read minimized Programme and host consequences for an edition timetable."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {
+                "item_scheduling_facts",
+                "host_conflict_keys",
+                "current_shared_host_periods",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="venues.view_scheduling_dependencies",
+        description="Read one exact Venue space's minimized physical constraints.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"physical_dependencies"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="scheduling.view_planning",
+        description=(
+            "Read private service days, occurrences and candidate placement times."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {"service_days", "occurrences", "candidates", "placement_times"}
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="scheduling.view_history",
+        description="Read immutable planning-change evidence and rationale.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"planning_history"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="scheduling.view_conflicts",
+        description="Read candidate conflicts and minimized source-version evidence.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"conflicts", "dependency_versions"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="scheduling.manage_service_days",
+        description="Manage exact-edition service-day windows and precision.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="scheduling.manage_occurrences",
+        description=(
+            "Create, group and retire Programme occurrences without reserving rooms."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="scheduling.manage_candidates",
+        description=(
+            "Manage private timetable alternatives without approval or publication."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="scheduling.evaluate_candidates",
+        description=(
+            "Record candidate conflicts through independently authorized owner sources."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="scheduling.acknowledge_warnings",
+        description="Acknowledge one current warning, never a hard constraint.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="scheduling.manage_reservations",
+        description=(
+            "Request occurrence reservations with independent exact-space authority."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
         code="programme.view_hosts",
         description=(
             "View the exact Programme roster and deliberately shared host availability."
