@@ -201,6 +201,14 @@ seven contract widths. Browser axe checks report no violations on initial,
 placement, validation, stale, history and denied states; the reason textarea's
 inconclusive contrast check was separately measured at 17.12:1.
 
+The subsequent user-approved Chrome rehearsal verifies exact historical copy,
+archive and recovery-by-copy, restore without resurrecting a cancelled room
+hold, explicit repeat/group creation and retirement, and separate room-hold
+request/cancellation/replacement. Extending draft teardown leaves the old hold
+unchanged until the distinct confirmed Venue action. Chrome's accessibility
+scan reports an Acrobat-extension nested-interactive finding outside Maru's
+editor and main landmark; this is not a clean whole-browser scan or a Maru fix.
+
 The complete database-free suite passes 3,890 cases in 29.13s (two existing
 URLField warnings); all 64 frontend tests pass in 9.59s, including 31 new tests
 of the actual enhancement script. Fifteen real PostgreSQL HTTP cases pass in
@@ -209,11 +217,21 @@ includes fresh destination versions without writes. Focused lint, formatting,
 strict types and NumPy contracts pass. Earlier coverage/domain evidence remains
 in the checkpoint; these checks are not complete certification or runtime proof.
 See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
-Browser handling of the native discard confirmation stalled and exposed no
-controllable dialog; its unit coverage is not a completed browser case. Genuine
-200% zoom, reduced-motion emulation, broader recovery/action rehearsal and
-protected certification/delivery remain. No PR has been opened. The opt-in
-fixture is documented in the page contract; all browser leases are closed.
+The native discard prompt is visible in Chrome, but automated dismissal fails;
+user-assisted Cancel is pending. Do not infer input retention from unit tests.
+Genuine 200% zoom and enabled reduced-motion preference remain unverified;
+the editor has no computed CSS animation or transition at the current preference.
+Remaining browser gaps and protected certification/delivery are not complete.
+No PR has been opened. The existing classifier selects full integration and all
+historical tests for the new `tests/rehearsals/` harness; retain that policy and
+defer the expensive run until the final clean candidate is ready.
+
+The opt-in fixture is documented in the page contract. At this handoff, a
+one-hour synthetic lease started around 20:15 UTC on 2026-09-08 is open at
+`http://127.0.0.1:62284/rehearsal/` (terminal session 43421); it may expire before
+resume. Verify its live state, preserve the pending Chrome prompt, and do not
+run another database suite against the same fixture database while it is live.
+Earlier browser leases were closed. No scheduled check is added.
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain
 unchanged. This partial branch is not an editor-delivery or runtime claim.
@@ -247,8 +265,8 @@ deployment or production data is authorized.
 
 ## Smallest sensible next actions
 
-1. Finish #85's remaining browser acceptance, especially discard/recovery,
-   genuine zoom and reduced motion, and the remaining consequential form paths.
+1. Finish #85's remaining browser acceptance, especially user-assisted native
+   discard/recovery, genuine zoom and reduced motion, and exact saved-warning UI.
    Do not repeat completed native/HTTP implementation or count a fixture lease
    as automated browser acceptance.
 2. Certify the complete clean exact head with the policy-required scope.

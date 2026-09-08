@@ -467,3 +467,86 @@ human acceptance are unperformed; the enhancement itself adds no animation.
 Complete the remaining recovery/consequential-action browser cases and protected
 exact-head local/hosted gates before closing #85. #48 stays open. No partial-editor
 PR, production route, schedule or runtime/profile activation is introduced.
+
+## Chrome consequential-action rehearsal follow-up
+
+With explicit user approval, the remaining browser work moved to Chrome, using
+only the isolated synthetic Programme fixture and the same owner-backed commands
+at implementation commit `0b52a5486a3e8daa910362a99bc4a28f49729b44`. No application
+code changed during this follow-up. Each navigation's resulting visible state
+was inspected before the next command; browser navigation completion alone was
+not reliable evidence that the next form already represented its new selection.
+
+### Additional verified outcomes
+
+- Copying the explicitly selected empty first revision produces an empty new
+  private alternative, even though the current source draft contains a placement.
+  Archiving retains that alternative and removes its placement-entry controls.
+  Copying the archived revision creates a separate editable draft and retains the
+  archived source; no archive or historical record is deleted.
+- Requesting a physical hold requires a separately labelled Venue-visible reason
+  and explicit confirmation. Unplacing the occurrence advances the private draft
+  and empties its board, but leaves the old physical hold active at its original
+  source revision and envelope. Separate cancellation after unplacement succeeds
+  using that retained hold, without requiring the placement to remain current.
+- Restoring the exact populated historical revision restores its original draft
+  timing but does not resurrect the cancelled physical hold. A new hold requires
+  a new explicit command. Extending only draft teardown from 11:15 to 11:30
+  advances the candidate from revision 4 to 5 while its hold stays at revision 4
+  and 11:15. Only a subsequent confirmed replacement moves the physical hold to
+  revision 5 and 11:30; physical review remains draft, not Programme approval or
+  publication.
+- Creating an explicit first repetition group with sequence 1 adds exactly one
+  unplaced occurrence. Retiring it retains its group/sequence and visible retired
+  inventory entry, while removing it from active placement choices. The original
+  placed and unplaced occurrences remain separate and unchanged. No recurrence
+  expansion or implicit scheduling occurs.
+
+These are synthetic component journeys, not runtime-profile, physical-approval,
+screen-reader or every-action/every-role acceptance. Earlier automatic checks
+remain the evidence for the wider command and authorization matrix; this follow-up
+does not rerun them or claim a new test count or complete certification.
+
+### Browser-environment findings and remaining gaps
+
+Chrome's fixture accessibility check reports one serious `nested-interactive`
+finding at `#aiFabShadowRoot` / `.acrobat-button`, with zero incomplete rules and
+33 passing rules. Read-only DOM inspection identifies an Acrobat extension host
+outside both the Maru editor and main landmark; neither selector exists in the
+application, frontend or rehearsal source. The extension was not disabled or
+modified, and this result is not reported as a clean whole-browser axe run.
+Earlier isolated in-app checks retain their separately recorded scope.
+
+Chrome exposes the native discard confirmation, but supported dismissal attempts
+fail. One attempt left the form discarded without reliable evidence of which
+action resolved it and is not accepted as cancellation. The second prompt remains
+for user-assisted Cancel. Its pending create-draft fields are exactly
+`Synthetic cancellation evidence` and `Keep this form`; neither was submitted.
+Cancellation and deliberate-discard browser acceptance remain open until the
+actual resulting form is inspected. No browser-control workaround or replacement
+confirmation implementation is introduced to bypass this limitation.
+
+The zoom shortcut did not change Chrome's CSS viewport width or device-pixel
+ratio. Genuine 200% zoom remains unverified. Read-only computed-style inspection
+finds no editor animations or nonzero transitions with reduced motion currently
+off; this does not claim an enabled-preference test. Exact saved-warning UI and
+remaining manual accessibility/recovery evidence also remain open.
+
+At the handoff the current one-hour fixture lease, started around 20:15 UTC on
+2026-09-08, is held by terminal session 43421 at loopback port 62284. It may expire
+before a later reply; recheck before reusing it and never start another suite on
+that database while live. The pending confirmation and separate completed-work
+Chrome tab are retained for continuation. This is a temporary synthetic fixture,
+not a scheduled check, deployed application, or persistent user data.
+
+### Protected-delivery scope
+
+The unchanged CI classifier was run against protected main
+`ec0d2474810e27b72c9dbabcc1d210222e4989af` and implementation head `0b52a54`.
+It selects full integration and all historical tests because files under
+`tests/rehearsals/` are treated as global test-harness changes. This is not the
+routine current-schema-only path or a newly measured timing estimate. Do not
+move files or weaken classification to avoid required history. Final exact-head
+local certification is deferred until remaining acceptance and documentation are
+ready, followed by that same head's hosted PR gate and CodeQL. No PR is opened,
+#85 remains incomplete, and #48 remains open.
