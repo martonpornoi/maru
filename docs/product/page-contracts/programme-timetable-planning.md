@@ -1,6 +1,6 @@
 # Programme timetable planning
 
-- Status: Accepted implementation contract; not implemented or activated.
+- Status: Accepted contract; implementation in progress, not activated.
 - Child: [Accessible editor #85](https://github.com/martonpornoi/maru/issues/85).
 - Parent: [Programme Operations #48](https://github.com/martonpornoi/maru/issues/48).
 - Predecessor: [Scheduling #81](https://github.com/martonpornoi/maru/issues/81),
@@ -84,6 +84,9 @@ room reservation** beside candidate identity and version, not only in help.
 - Local-time input rejects ambiguous/nonexistent minutes; explicit UTC offsets
   can disambiguate an instant. Show the edition zone and offsets where needed;
   the browser's own time zone never chooses the instant silently.
+- Native submit buttons supply the closed action exactly once. Do not render a
+  second hidden action with the same name; repeated single-value fields fail
+  validation. The placement form's default submit path is Preview, never Save.
 - Preview reports the proposed envelope and exact available conflict sources
   without committing a placement. Save invokes the same versioned Scheduling
   command from every input method. Invalid structure cannot be saved. A

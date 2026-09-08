@@ -198,7 +198,11 @@ def scope_mocks(monkeypatch, *, allowed=True, fields=frozenset({"candidates"})):
     actor_id, organization_id, edition_id = uuid4(), uuid4(), uuid4()
     edition_loader = MagicMock(
         return_value=SchedulingEditionReference(
-            organization_id, edition_id, 4, accepts_scheduling_writes=True
+            organization_id,
+            edition_id,
+            4,
+            accepts_scheduling_writes=True,
+            zone_name="Europe/Budapest",
         )
     )
     person_loader = MagicMock(return_value=ActiveVerifiedPersonReference(actor_id))

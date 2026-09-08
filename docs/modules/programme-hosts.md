@@ -83,7 +83,12 @@ state, fences the item snapshot under the edition lock and audits disclosure.
   host, contact, working text, discussion or review is included. Ended history
   grants no later item-copy access.
 - `load_programme_host_roster`: `host_roster` ceiling; current relationship and
-  person identifiers/currentness, without history or availability.
+  person identifiers/currentness and current related-person display labels,
+  without contacts, history or availability. Identity resolves labels only after
+  Programme authorizes the bounded roster and locks the canonical person set.
+  Inactive/unverified people receive a neutral label; a missing expected current
+  label makes the read unavailable. Final authorization and read audit precede
+  release. Names are current labels, not historical identity snapshots.
 - `load_programme_host_history`: separate `host_history` ceiling; one exact
   relationship's retained rationale, actor and versions, never old exact periods.
 - `load_programme_host_dependencies`: `shared_host_availability` ceiling;

@@ -285,6 +285,13 @@ Convenience alone is not sufficient.
   their owner's existing capability and complete field ceiling. They are bounded
   complete inventories, not silently truncated search results. Base labels do
   not release summaries, delivery/review notes, provider contacts or calendars.
+- The item inspector loads only its explicitly selected independently authorized
+  Programme layer. Host-required times are Scheduling's retained placement
+  intent; labels come from Programme's protected roster and Identity's bounded
+  current-person query. Inactive identities receive neutral labels. Names and
+  required times are not consent, contact information or shared availability.
+  Final denial withholds the complete selected projection and retains a
+  minimized denial audit after rolling back the read transaction.
 - Ephemeral conflict preview uses the saved evaluator but returns only closed
   findings, observed candidate version, source availability and deferred checks.
   It retains no proposed placement, report, warning acknowledgement or booking.

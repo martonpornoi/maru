@@ -217,6 +217,8 @@ class SchedulingPlanningSnapshot:
         Explicit selected candidate, or none; no implicit first-candidate choice.
     placements
         Complete selected current manifest, excluding private owner layers.
+    zone_name
+        Trusted current Events IANA zone, independent of browser preferences.
     """
 
     control_version: int
@@ -227,6 +229,7 @@ class SchedulingPlanningSnapshot:
     candidates: tuple[PlanningCandidate, ...]
     selected_candidate_id: UUID | None
     placements: tuple[PlanningPlacement, ...]
+    zone_name: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -454,6 +457,9 @@ def _snapshot(
     scope: AuthorizedSchedulingScope,
 ) -> SchedulingPlanningSnapshot:
     ownership = _ownership(request)
+    edition = resolve_scheduling_edition_reference(**ownership, lock=False)
+    if edition is None:
+        raise SchedulingUnavailableError
     days = _bounded(
         list(
             SchedulingServiceDayRevision.objects.filter(
@@ -570,6 +576,7 @@ def _snapshot(
         ),
         selected_candidate_id=candidate_id,
         placements=_placements(selected) if selected else (),
+        zone_name=edition.zone_name,
     )
 
 

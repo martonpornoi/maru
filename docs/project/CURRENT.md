@@ -145,19 +145,27 @@ The owner reads use existing capability field ceilings without catalog or
 profile expansion. A real-policy test caught mismatched new field names; those
 were corrected and a fast catalog-consistency regression now covers the reads.
 
-The complete database-free suite passes 3,546 cases in 18.86s. All 130 focused
-PostgreSQL cases pass: 50 candidate/history/placement cases in 95.96s, 33
-evaluation/preview plus 19 Programme-query cases in 105.52s, and 28 Venue-source
-and inventory cases in 46.00s. These runs reused the single task-owned isolated
-schema and exclude its initial setup. Focused lint, formatting, strict types,
-NumPy contracts and maintained documentation validation pass (424 files, four
-skills, 215 requirement identifiers). No timing map, CI policy, original
-assertion or acceptance threshold changed. These are partial implementation
-checks, not complete editor, runtime-role or protected delivery acceptance.
+The inspector now loads only one explicitly selected owner layer. Host editing
+combines retained required-presence times with independently authorized current
+roster labels, never inferred availability or contacts. The planning snapshot
+supplies Events' trusted time zone. Strict native service-day and placement
+forms delegate to the existing commands; preview/save/replay/stale behavior is
+verified with real PostgreSQL commands. No pointer-specific writer is added.
+
+The complete database-free suite passes 3,590 cases in 23.97s, including 44 new
+form/adapter cases. All 132 affected current-behavior PostgreSQL cases pass in
+263.65s; three unchanged historical migration cases were not selected for this
+focused iteration and remain subject to policy-required certification. The
+isolated task-owned schema was reused. Earlier owner-inventory evidence remains
+in the checkpoint. Focused lint, formatting, strict types, NumPy contracts and
+maintained documentation validation pass (424 files, four skills, 215 requirement
+identifiers). No CI policy, timing map, acceptance threshold or existing
+assertion was weakened. This is not complete editor, browser, runtime-role or
+protected delivery acceptance.
 See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
-Independent inspector/host-presence composition, command forms/adapters,
-responsive board, browser rehearsal and protected certification/delivery remain
-incomplete. No PR has been opened for this partial editor.
+Remaining work includes candidate/occurrence/history/reservation controls,
+responsive board and form rendering, browser rehearsal and protected
+certification/delivery. No PR has been opened for this partial editor.
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain
 unchanged. This partial branch is not an editor-delivery or runtime claim.
@@ -191,9 +199,9 @@ deployment or production data is authorized.
 
 ## Smallest sensible next actions
 
-1. Complete #85's independent inspector/host-presence composition and
-   same-command accessible forms/board, including candidate history and recovery.
-   Reuse the implemented bounded inventories and non-mutating preview.
+1. Complete #85's remaining candidate/occurrence/history/reservation controls
+   and accessible board/form rendering, reusing the implemented owner inspector,
+   inventories, preview and native service-day/placement adapters.
 2. Run focused permission/failure/interaction tests and synthetic browser
    rehearsal, then certify the clean exact head with the policy-required scope.
    Obtain its own hosted PR gate and CodeQL before merge; reconcile #85 and #48

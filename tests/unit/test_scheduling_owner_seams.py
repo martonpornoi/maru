@@ -212,13 +212,14 @@ def test_events_owns_live_scheduling_without_reopening_private_content(
         organization_id,
         7,
         lifecycle,
+        "Europe/Budapest",
     )
     monkeypatch.setattr(event_queries.EventEdition, "objects", manager)
     result = event_queries.resolve_scheduling_edition_reference(
         organization_id=organization_id, edition_id=edition_id, lock=True
     )
     assert result == event_queries.SchedulingEditionReference(
-        organization_id, edition_id, 7, writable
+        organization_id, edition_id, 7, writable, "Europe/Budapest"
     )
     manager.all.return_value.select_for_update.assert_called_once_with(of=("self",))
     query.filter.assert_called_once_with(
@@ -227,7 +228,7 @@ def test_events_owns_live_scheduling_without_reopening_private_content(
         series__organization_id=organization_id,
     )
     query.filter.return_value.values_list.assert_called_once_with(
-        "id", "organization_id", "aggregate_version", "lifecycle"
+        "id", "organization_id", "aggregate_version", "lifecycle", "time_zone"
     )
 
 

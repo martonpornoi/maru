@@ -95,3 +95,53 @@ remain to implement. Keep #85 open with no completed-editor/PR/runtime claim.
 The exact-head complete local and hosted protected gates remain mandatory before
 delivery. Existing literal profiles, production routing and runtime ACLs are
 unchanged; no scheduled check-in was created or resumed.
+
+## Selected-layer inspector and native command adapters
+
+The follow-up after local checkpoint `925480c` adds one explicitly selected
+Programme inspector layer at a time: working copy, approved copy, delivery,
+readiness, roster or deliberately shared availability. Scheduling permission
+does not admit any Programme layer, and denied/unavailable layers never fall
+back to another source. Applications proposal/review text is not selectable.
+
+The host requirement reader validates the exact candidate version, manifest,
+occurrence binding and bounded complete presence rows before composing the
+independently authorized roster. Current related-person labels come from
+Identity only after Programme's canonical person locks. Inactive identities
+receive neutral labels; missing expected current labels fail closed. Retained
+required times are neither personal availability nor host consent. Both owner
+audits and final Scheduling authority precede release.
+
+Events' minimized Scheduling reference now supplies its trusted IANA zone to
+the planning snapshot. Native service-day and placement forms use it for exact
+minute input; browser/machine zones do not silently select instants. Native
+submit adapters delegate to the existing service-day/placement commands or
+non-mutating preview. Strict fields reject unknown/duplicate inputs, aliases,
+invalid intervals and incomplete required host times. Save requires a human
+reason and preserves the exact retry key/version. Preview never constructs a
+command request. Stale failure preserves the bound input without automatic
+rebase or partial state. The future renderer must submit the action only once
+and make Preview the default placement submit action.
+
+Verification:
+
+- All 44 new database-free form/adapter cases passed in 0.37s; the complete
+  3,590-case database-free suite passed in 23.97s with the two existing Django
+  URLField deprecation warnings.
+- The 28 selected roster/inspector/presence cases passed in 58.36s.
+- Three real native-command cases passed in 8.82s: preview/save/exact replay,
+  stale-input preservation/rollback, and service-day create/revise.
+- The expanded affected current-behavior run passed all 132 PostgreSQL cases in
+  263.65s. Only three unchanged historical host-schema/capability migration
+  cases were deselected for this iteration. This does not alter their inventory
+  or policy-required certification coverage. All tests reused the exact
+  task-owned isolated current schema, not production or shared data.
+- Focused Ruff, strict mypy, NumPy contracts, documentation validation and
+  whitespace checks passed. No CI classifier, timing map, coverage floor,
+  migration, runtime grant, route or profile was changed.
+
+This remains partial #85 implementation. Candidate/occurrence/history and
+physical-reservation controls, board/template rendering, browser interaction
+and accessibility rehearsal, and complete protected delivery remain. No PR or
+activated Programme workspace is claimed. Keep #85 and #48 open and continue
+the accepted editor contract before moving to the next umbrella child.

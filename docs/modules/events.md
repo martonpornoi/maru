@@ -177,6 +177,12 @@ occurrences, candidate revisions, conflict reports and explicit Venue binding
 (ADR 0088). Neither owner is executable under a current profile, and their
 declarations remain deliberately absent from both existing v1 manifests.
 
+The minimized `resolve_scheduling_edition_reference` supplies the current
+Events version, Scheduling lifecycle consequence and trusted IANA time zone.
+Timetable forms and display must use this zone rather than infer one from the
+browser or the machine running Maru. It is an owner reference for independently
+authorized callers, not a grant of planning or private edition-label access.
+
 ADR 0082 adds dormant Applications-owned Programme capabilities, the
 `applications.self.programme_proposal@1` purpose descriptor,
 `applications.target.programme_item@1`, and two registered event names. Those

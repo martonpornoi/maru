@@ -93,6 +93,21 @@ omits historical actor/reason, host identity/presence and availability, Programm
 copy and room names. Owner links are opaque, not dereference authority. Owner
 content/layers and current conflicts remain separate protected queries.
 
+`planning_inspector.load_scheduling_item_inspector` loads exactly one selected
+working, approved-copy, delivery, readiness, host-roster or shared-availability
+layer through its public Programme query. Scheduling planning permission does
+not grant any Programme layer, and denial never falls back to another query.
+Private Applications answers/review are not selectable inspector layers.
+
+`planning_hosts.load_scheduling_host_requirements` validates the exact current
+candidate manifest and occurrence, then composes retained required-presence
+times with Programme's independently authorized complete host roster. Unplaced
+occurrences have no invented presence requirements. Missing/foreign sources,
+manifest mismatch, overflow or stale candidate version fail closed. The roster
+and names are current; required times are the selected placement's immutable
+intent, not shared availability. Both owner audits and final Scheduling scope
+checks precede release, under canonical edition/person locking.
+
 `planning_preview.preview_scheduling_candidate` uses `scheduling.view_conflicts`
 and its existing `conflicts` / `dependency_versions` ceiling. It evaluates an
 exact current draft, optionally replacing or adding one unsaved placement, with
@@ -121,6 +136,26 @@ unchanged merely because its visible geometry happens to match. These helpers
 do not authorize, persist, reserve or publish anything. See the
 [page contract](../product/page-contracts/programme-timetable-planning.md) and
 [ADR 0092](../architecture/decisions/0092-dormant-accessible-timetable-editor.md).
+
+### Native editor submissions
+
+`planning_forms` provides strict service-day and placement controls. The base
+planning snapshot supplies the Events-owned IANA zone; browser/machine zones
+do not choose the instant. Inputs reject unknown fields, duplicate single
+values, noncanonical identifiers/numbers and ambiguous/nonexistent minutes.
+The four room-envelope boundaries and each selected host's required interval
+remain explicit. Selecting no host never infers a presence from leftover time
+values or claims that hosting is not required. Private draft conflicts are
+checked by preview/evaluation, not mistaken for form validation success.
+
+`planning_actions` reauthorizes before binding private input, then delegates
+to the existing preview, placement or service-day commands. Preview creates
+no command request. Saving needs a human reason and retains the exact submitted
+retry key and optimistic version; replay and stale failures use the existing
+command semantics. Invalid/recoverable input remains in the same bound form.
+These adapters do not mount a route or reserve, approve, publish or confirm a
+host. The remaining record/history/reservation controls and browser surface
+are still in progress under #85.
 
 ### Conflict-source boundary
 

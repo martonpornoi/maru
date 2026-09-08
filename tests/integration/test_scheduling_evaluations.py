@@ -25,6 +25,7 @@ from maru.scheduling import authorization as scheduling_authorization
 from maru.scheduling import (
     command_support,
     evaluation_sources,
+    planning_actions,
     planning_preview,
     planning_queries,
 )
@@ -50,6 +51,7 @@ from maru.scheduling.models import (
     SchedulingWarningAcknowledgement,
 )
 from maru.scheduling.occurrence_commands import create_scheduling_occurrence
+from maru.scheduling.planning_forms import PlanningPlacementForm, PlanningServiceDayForm
 from maru.scheduling.planning_preview import preview_scheduling_candidate
 from maru.scheduling.planning_queries import SchedulingReadRequest
 from maru.venues import scheduling_queries as venue_source
@@ -585,3 +587,125 @@ def test_preview_locks_complete_programme_people_before_final_actor(
     assert [event[0] for event in events] == ["people", "actor"]
     assert world.request.actor_id in events[0][1]
     assert len(events[0][1]) == 2
+
+
+def placement_submission(world, *, action="preview_placement", key=None, version=1):
+    intent = world.placement
+    host = intent.host_presences[0]
+    data = {
+        "action": action,
+        "retry_key": str(key or uuid4()),
+        "candidate_id": str(world.candidate.object_id),
+        "expected_version": str(version),
+        "occurrence_id": str(intent.occurrence_id),
+        "occurrence_version": str(intent.occurrence_version),
+        "day_id": str(intent.day_id),
+        "day_version": str(intent.day_version),
+        "space_selection_id": str(intent.space_selection_id),
+        "capacity_mode": intent.capacity_mode,
+        "expected_attendance": str(intent.expected_attendance),
+        "reason": "Explicit native-form placement"
+        if action == "save_placement"
+        else "",
+        **{
+            name: getattr(intent.envelope, name).isoformat(timespec="minutes")
+            for name in (
+                "setup_starts_at",
+                "effective_starts_at",
+                "effective_ends_at",
+                "teardown_ends_at",
+            )
+        },
+        f"host_{host.host_id.hex}_required": "required",
+        f"host_{host.host_id.hex}_starts_at": host.starts_at.isoformat(
+            timespec="minutes"
+        ),
+        f"host_{host.host_id.hex}_ends_at": host.ends_at.isoformat(timespec="minutes"),
+    }
+    return PlanningPlacementForm(
+        data,
+        zone_name="Europe/Budapest",
+        occurrences=((intent.occurrence_id, "Opening panel"),),
+        days=((intent.day_id, "Friday"),),
+        spaces=((intent.space_selection_id, "Main Stage"),),
+        hosts=((host.host_id, "Related host"),),
+    )
+
+
+def test_native_form_preview_save_and_exact_retry_use_real_owner_commands(
+    world, admitted
+):
+    before = domain_state()
+    form = placement_submission(world)
+    result = planning_actions.submit_planning_placement(
+        preview_request(world), form, authorizer=world.policy
+    )
+    assert result.complete
+    assert not result.findings
+    assert domain_state() == before
+    assert form.placement_intent == world.placement
+    saved_form = placement_submission(world, action="save_placement")
+    saved = planning_actions.submit_planning_placement(
+        preview_request(world), saved_form, authorizer=world.policy
+    )
+    assert saved.object_id == world.candidate.object_id
+    assert saved.version == 2
+    assert not saved.replayed
+    after_save = domain_state()
+    replay = planning_actions.submit_planning_placement(
+        preview_request(world), saved_form, authorizer=world.policy
+    )
+    assert replay.replayed
+    assert replay.receipt_id == saved.receipt_id
+    assert domain_state() == after_save
+    assert not VenueBooking.objects.exists()
+
+
+def test_native_stale_submission_retains_input_and_creates_no_partial_state(
+    world, admitted
+):
+    form = placement_submission(world, action="save_placement")
+    place(world)
+    before = domain_state()
+    original = dict(form.data)
+    with pytest.raises(SchedulingVersionConflictError):
+        planning_actions.submit_planning_placement(
+            preview_request(world), form, authorizer=world.policy
+        )
+    assert dict(form.data) == original
+    assert form.data["expected_version"] == "1"
+    assert domain_state() == before
+
+
+def test_native_day_create_and_revision_reuse_real_day_commands(world):
+    data = {
+        "action": "create_day",
+        "retry_key": str(uuid4()),
+        "reason": "Add the second service day",
+        "expected_version": "3",
+        "label": "Saturday",
+        "precision_minutes": "5",
+        "starts_at": (START + timedelta(days=1)).isoformat(timespec="minutes"),
+        "ends_at": (START + timedelta(days=1, hours=12)).isoformat(timespec="minutes"),
+    }
+    form = PlanningServiceDayForm(data, zone_name="Europe/Budapest")
+    created = planning_actions.submit_planning_service_day(
+        preview_request(world), form, authorizer=world.policy
+    )
+    assert created.version == 1
+    revised = PlanningServiceDayForm(
+        {
+            **data,
+            "action": "revise_day",
+            "retry_key": str(uuid4()),
+            "expected_version": "1",
+            "day_id": str(created.object_id),
+            "label": "Saturday operations",
+        },
+        zone_name="Europe/Budapest",
+    )
+    changed = planning_actions.submit_planning_service_day(
+        preview_request(world), revised, authorizer=world.policy
+    )
+    assert changed.object_id == created.object_id
+    assert changed.version == 2

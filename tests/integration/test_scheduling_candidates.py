@@ -12,9 +12,16 @@ from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
 from maru.events.models import EventEdition
 from maru.events.services import transition_edition
+from maru.programme import host_queries as programme_hosts
+from maru.programme import queries as programme_queries
 from maru.programme import scheduling_queries as programme_source
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
-from maru.scheduling import candidate_commands, occurrence_commands
+from maru.scheduling import (
+    candidate_commands,
+    occurrence_commands,
+    planning_hosts,
+    planning_inspector,
+)
 from maru.scheduling import planning_queries as queries
 from maru.scheduling.authorization import (
     VIEW_HISTORY,
@@ -46,6 +53,11 @@ from maru.scheduling.occurrence_commands import (
     create_scheduling_occurrence,
     retire_scheduling_occurrence,
     revise_scheduling_occurrence,
+)
+from maru.scheduling.planning_hosts import load_scheduling_host_requirements
+from maru.scheduling.planning_inspector import (
+    PlanningItemLayer,
+    load_scheduling_item_inspector,
 )
 from maru.scheduling.planning_queries import (
     SchedulingReadRequest,
@@ -774,3 +786,208 @@ def test_independent_alternatives_never_merge_their_manifests(planning_world):
         authorizer=planning_world.policy,
     )
     assert len(original.placements) == 1
+
+
+@pytest.fixture
+def host_inspection_admitted(monkeypatch):
+    monkeypatch.setattr(
+        planning_hosts,
+        "load_programme_host_roster",
+        partial(
+            programme_hosts.load_programme_host_roster,
+            authorizer=_TrustedProgrammeAuthorizer(),
+        ),
+    )
+
+
+def host_requirements(world, *, version=1, policy=None, occurrence=None):
+    return load_scheduling_host_requirements(
+        read_request(world),
+        candidate_id=world.candidate.object_id,
+        expected_version=version,
+        occurrence_id=occurrence or world.occurrence.object_id,
+        authorizer=policy or world.policy,
+    )
+
+
+def test_host_requirements_retain_explicit_times_not_availability(
+    planning_world, host_inspection_admitted
+):
+    placed = place(planning_world)
+    result = host_requirements(planning_world, version=placed.version)
+    assert result.presences == planning_world.placement.host_presences
+    assert result.roster.entries[0].display_label
+    assert result.roster.entries[0].relationship.state == "confirmed"
+    assert "availability" not in str(asdict(result))
+    assert "email" not in str(asdict(result))
+    assert AuditEvent.objects.filter(
+        operation="programme.query.host_roster", outcome="allow"
+    ).exists()
+    assert AuditEvent.objects.filter(
+        operation="scheduling.query.host_requirements", outcome="allow"
+    ).exists()
+
+
+def test_unplaced_host_requirements_are_empty_without_inventing_host_presence(
+    planning_world, host_inspection_admitted
+):
+    result = host_requirements(planning_world)
+    assert result.placement_id is None
+    assert result.presences == ()
+    assert len(result.roster.entries) == 1
+
+
+def test_host_requirements_require_independent_programme_roster_authority(
+    planning_world,
+):
+    place(planning_world)
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        host_requirements(planning_world, version=2)
+    assert not AuditEvent.objects.filter(
+        operation="scheduling.query.host_requirements", outcome="allow"
+    ).exists()
+    assert AuditEvent.objects.filter(
+        operation="scheduling.query.host_requirements", outcome="deny"
+    ).exists()
+
+
+def test_host_requirements_final_scheduling_revocation_withholds_names_and_times(
+    planning_world, host_inspection_admitted
+):
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        host_requirements(planning_world, policy=TrustedSchedulingPolicy(deny_at=2))
+    assert not AuditEvent.objects.filter(
+        operation="programme.query.host_roster", outcome="allow"
+    ).exists()
+    assert AuditEvent.objects.filter(
+        operation="scheduling.query.host_requirements", outcome="deny"
+    ).exists()
+
+
+def test_host_requirements_do_not_rebase_a_stale_candidate(
+    planning_world, host_inspection_admitted
+):
+    place(planning_world)
+    with pytest.raises(SchedulingVersionConflictError):
+        host_requirements(planning_world)
+
+
+def test_host_requirements_unknown_occurrence_is_unavailable(
+    planning_world, host_inspection_admitted
+):
+    with pytest.raises(SchedulingUnavailableError):
+        host_requirements(planning_world, occurrence=uuid4())
+
+
+def test_host_requirements_overflow_is_not_a_partial_roster(
+    planning_world, host_inspection_admitted, monkeypatch
+):
+    place(planning_world)
+    monkeypatch.setattr(planning_hosts, "MAX_HOSTS_PER_OCCURRENCE", 0)
+    with pytest.raises(SchedulingUnavailableError):
+        host_requirements(planning_world, version=2)
+
+
+def test_host_requirements_verify_manifest_occurrence_before_owner_disclosure(
+    planning_world, host_inspection_admitted, monkeypatch
+):
+    placed = place(planning_world)
+    first = SchedulingOccurrence.objects.get(id=planning_world.occurrence.object_id)
+    second = create_scheduling_occurrence(
+        next_request(planning_world),
+        occurrence=SchedulingOccurrenceInput(first.programme_item_id),
+        expected_control_version=4,
+        authorizer=planning_world.policy,
+    )
+    placement_id = candidate_revision(placed).members.get().placement_id
+    monkeypatch.setattr(
+        planning_hosts,
+        "_load_manifest",
+        lambda _revision: ((second.object_id, placement_id),),
+    )
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Incoherent placement reached Programme roster disclosure")
+
+    monkeypatch.setattr(planning_hosts, "load_programme_host_roster", forbidden)
+    with pytest.raises(SchedulingUnavailableError):
+        host_requirements(planning_world, version=2, occurrence=second.object_id)
+
+
+INSPECTOR_LOADERS = {
+    PlanningItemLayer.WORKING: (programme_queries, "load_programme_private_item"),
+    PlanningItemLayer.PUBLIC_COPY: (programme_queries, "load_programme_public_copy"),
+    PlanningItemLayer.DELIVERY: (programme_queries, "load_programme_delivery"),
+    PlanningItemLayer.READINESS: (programme_queries, "load_programme_readiness"),
+    PlanningItemLayer.HOSTS: (programme_hosts, "load_programme_host_roster"),
+    PlanningItemLayer.SHARED_AVAILABILITY: (
+        programme_hosts,
+        "load_programme_host_dependencies",
+    ),
+}
+
+
+@pytest.mark.parametrize("layer", list(PlanningItemLayer))
+def test_inspector_loads_only_the_explicit_real_owner_layer(
+    planning_world, layer, monkeypatch
+):
+    item = SchedulingOccurrence.objects.get(
+        id=planning_world.occurrence.object_id
+    ).programme_item_id
+    calls = []
+
+    def admit(selected_layer, original):
+        def load(*args, **kwargs):
+            calls.append(selected_layer)
+            return original(*args, **kwargs, authorizer=_TrustedProgrammeAuthorizer())
+
+        return load
+
+    for selected, (module, name) in INSPECTOR_LOADERS.items():
+        monkeypatch.setattr(module, name, admit(selected, getattr(module, name)))
+    result = load_scheduling_item_inspector(
+        read_request(planning_world),
+        item_id=item,
+        layer=layer,
+        authorizer=planning_world.policy,
+    )
+    assert calls == [layer]
+    assert result.layer is layer
+    assert result.item_id == item
+    assert AuditEvent.objects.filter(
+        operation=f"scheduling.query.item_layer_{layer.value}", outcome="allow"
+    ).exists()
+
+
+@pytest.mark.parametrize("layer", list(PlanningItemLayer))
+def test_inspector_never_uses_scheduling_permission_to_admit_a_programme_layer(
+    planning_world, layer
+):
+    item = SchedulingOccurrence.objects.get(
+        id=planning_world.occurrence.object_id
+    ).programme_item_id
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        load_scheduling_item_inspector(
+            read_request(planning_world),
+            item_id=item,
+            layer=layer,
+            authorizer=planning_world.policy,
+        )
+    assert not AuditEvent.objects.filter(
+        operation=f"scheduling.query.item_layer_{layer.value}", outcome="allow"
+    ).exists()
+
+
+def test_inspector_default_scheduling_policy_denies_before_owner_lookup(
+    planning_world, monkeypatch
+):
+    def forbidden(*args, **kwargs):
+        pytest.fail("Denied Scheduling read reached a Programme owner")
+
+    monkeypatch.setattr(planning_inspector, "_owner_layer", forbidden)
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        load_scheduling_item_inspector(
+            read_request(planning_world),
+            item_id=uuid4(),
+            layer=PlanningItemLayer.WORKING,
+        )
