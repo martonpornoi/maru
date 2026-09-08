@@ -87,6 +87,11 @@ room reservation** beside candidate identity and version, not only in help.
 - Native submit buttons supply the closed action exactly once. Do not render a
   second hidden action with the same name; repeated single-value fields fail
   validation. The placement form's default submit path is Preview, never Save.
+- Record forms accept only their selected existing command's fields. Retirement,
+  restore, archive, unplacement and physical changes require explicit consequence
+  confirmation. Reservation rationale is labelled as shared with Venues. A
+  fresh planning snapshot supplies the shared edition control for a new intent;
+  every successful Scheduling mutation advances it, not only creation.
 - Preview reports the proposed envelope and exact available conflict sources
   without committing a placement. Save invokes the same versioned Scheduling
   command from every input method. Invalid structure cannot be saved. A

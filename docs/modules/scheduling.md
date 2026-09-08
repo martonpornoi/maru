@@ -154,8 +154,31 @@ no command request. Saving needs a human reason and retains the exact submitted
 retry key and optimistic version; replay and stale failures use the existing
 command semantics. Invalid/recoverable input remains in the same bound form.
 These adapters do not mount a route or reserve, approve, publish or confirm a
-host. The remaining record/history/reservation controls and browser surface
-are still in progress under #85.
+host.
+
+`planning_record_forms.PlanningRecordForm` and
+`planning_record_actions.submit_planning_record` provide the remaining explicit
+record operations through the same owner commands: candidate creation, exact
+history copy/restore and terminal archive; occurrence creation/repetition,
+group revision and retirement; day retirement and unplacement; saved conflict
+evaluation and warning acknowledgement; and physical reservation replacement
+or cancellation. Only the server-selected operation's fields are accepted.
+Explicit group/sequence pairs use already-authorized choices, not recurrence
+inference. Creating the first candidate/occurrence may observe edition control
+zero; copying retained history requires a positive current control version.
+Every successful Scheduling mutation advances that shared control, not merely
+creation. A new command uses a fresh observed snapshot; stale pending input is
+never automatically rebased.
+
+Retirement, restore, archive, unplacement and physical changes require explicit
+consequence confirmation. Draft changes leave physical holds unchanged.
+Reservation reasons are visibly Venue-shared, and reservation commands retain
+their separate exact Venue authority and transactional replacement/rollback.
+Cancellation can select retained historical placement evidence after a draft
+edit, but still requires the current physical booking version. Neither a valid
+form nor warning acknowledgement bypasses fresh domain checks, overrides a
+blocker or confers approval/publication. The protected persisted-review/current-
+hold readouts and complete browser surface remain in progress under #85.
 
 ### Conflict-source boundary
 

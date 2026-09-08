@@ -34,6 +34,7 @@ from maru.scheduling.candidate_commands import (
     remove_scheduling_placement,
     restore_scheduling_candidate,
 )
+from maru.scheduling.catalogs import SchedulingOperation
 from maru.scheduling.command_support import (
     SchedulingLifecycleConflictError,
     SchedulingLimitError,
@@ -65,6 +66,8 @@ from maru.scheduling.planning_queries import (
     load_scheduling_historical_manifest,
     load_scheduling_planning,
 )
+from maru.scheduling.planning_record_actions import submit_planning_record
+from maru.scheduling.planning_record_forms import PlanningRecordForm
 from maru.venues.models import VenueBooking
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.integration import test_scheduling_placements as planning_helpers
@@ -438,6 +441,244 @@ def read_request(planning_world):
     return SchedulingReadRequest(
         request.actor_id, request.organization_id, request.edition_id, uuid4()
     )
+
+
+def record_form(operation, *, choices=None, **values):
+    return PlanningRecordForm(
+        {
+            "action": operation.value,
+            "retry_key": str(uuid4()),
+            "reason": "Explicit synthetic record change",
+            **{key: str(value) for key, value in values.items()},
+        },
+        operation=operation,
+        choices=choices,
+    )
+
+
+def test_native_candidate_history_round_trip_retains_exact_source(planning_world):
+    scope = read_request(planning_world)
+    policy = planning_world.policy
+    placed = place(planning_world)
+    source = candidate_revision(placed)
+    removed = submit_planning_record(
+        scope,
+        record_form(
+            SchedulingOperation.PLACEMENT_REMOVE,
+            candidate_id=placed.object_id,
+            occurrence_id=planning_world.occurrence.object_id,
+            expected_version=placed.version,
+            confirm="confirmed",
+        ),
+        authorizer=policy,
+    )
+    assert candidate_revision(removed).placement_count == 0
+    restore = record_form(
+        SchedulingOperation.CANDIDATE_RESTORE,
+        candidate_id=placed.object_id,
+        source_revision_id=source.id,
+        expected_version=removed.version,
+        confirm="confirmed",
+    )
+    restored = submit_planning_record(scope, restore, authorizer=policy)
+    assert candidate_revision(restored).source_revision_id == source.id
+    assert candidate_revision(restored).placement_count == 1
+    assert candidate_revision(placed).placement_count == 1
+    replay = submit_planning_record(scope, restore, authorizer=policy)
+    assert replay.replayed
+    assert replay.receipt_id == restored.receipt_id
+    archived = submit_planning_record(
+        scope,
+        record_form(
+            SchedulingOperation.CANDIDATE_ARCHIVE,
+            candidate_id=placed.object_id,
+            expected_version=restored.version,
+            confirm="confirmed",
+        ),
+        authorizer=policy,
+    )
+    assert (
+        SchedulingCandidate.objects.get(id=archived.object_id).lifecycle == "archived"
+    )
+    current_control = load_scheduling_planning(scope, authorizer=policy).control_version
+    assert current_control == 7
+    copied = submit_planning_record(
+        scope,
+        record_form(
+            SchedulingOperation.CANDIDATE_COPY,
+            label="Recovered alternative",
+            source_revision_id=source.id,
+            expected_version=current_control,
+        ),
+        authorizer=policy,
+    )
+    assert copied.object_id != placed.object_id
+    assert candidate_revision(copied).source_revision_id == source.id
+    assert candidate_revision(copied).placement_count == 1
+    assert not VenueBooking.objects.exists()
+
+
+def test_native_occurrence_repetition_group_revision_and_retirement(world, item):
+    command, policy, _, _ = world
+    scope = SchedulingReadRequest(
+        command.actor_id, command.organization_id, command.edition_id, uuid4()
+    )
+    group = uuid4()
+    choices = {
+        "item_id": ((item, "Opening"),),
+        "group_key": ((group, "Opening group"),),
+    }
+    results = [
+        submit_planning_record(
+            scope,
+            record_form(
+                SchedulingOperation.OCCURRENCE_CREATE,
+                choices=choices,
+                item_id=item,
+                group_key=group,
+                group_sequence=sequence,
+                expected_version=sequence - 1,
+            ),
+            authorizer=policy,
+        )
+        for sequence in (1, 2)
+    ]
+    assert results[0].object_id != results[1].object_id
+    assert SchedulingOccurrence.objects.filter(programme_item_id=item).count() == 2
+    revised = submit_planning_record(
+        scope,
+        record_form(
+            SchedulingOperation.OCCURRENCE_REVISE,
+            choices=choices,
+            item_id=item,
+            occurrence_id=results[1].object_id,
+            group_key="",
+            group_sequence="",
+            expected_version=1,
+        ),
+        authorizer=policy,
+    )
+    retired = submit_planning_record(
+        scope,
+        record_form(
+            SchedulingOperation.OCCURRENCE_RETIRE,
+            occurrence_id=revised.object_id,
+            expected_version=revised.version,
+            confirm="confirmed",
+        ),
+        authorizer=policy,
+    )
+    assert retired.version == 3
+    assert SchedulingOccurrence.objects.get(id=retired.object_id).lifecycle == "retired"
+    assert (
+        SchedulingOccurrenceRevision.objects.filter(
+            occurrence_id=retired.object_id
+        ).count()
+        == 3
+    )
+    assert (
+        SchedulingOccurrenceRevision.objects.get(
+            occurrence_id=retired.object_id, sequence=1
+        ).group_key
+        == group
+    )
+    assert not VenueBooking.objects.exists()
+
+
+def test_native_record_read_authority_does_not_grant_mutation(world):
+    command, _, _, _ = world
+    scope = SchedulingReadRequest(
+        command.actor_id, command.organization_id, command.edition_id, uuid4()
+    )
+    form = record_form(
+        SchedulingOperation.CANDIDATE_CREATE, label="Private", expected_version=0
+    )
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        submit_planning_record(
+            scope, form, authorizer=TrustedSchedulingPolicy(deny_at=2)
+        )
+    assert not SchedulingCandidate.objects.exists()
+    assert not SchedulingCommandReceipt.objects.exists()
+    assert form.data["label"] == "Private"
+
+
+def test_native_candidate_create_and_stale_control_do_not_rebase(world):
+    command, policy, _, _ = world
+    scope = SchedulingReadRequest(
+        command.actor_id, command.organization_id, command.edition_id, uuid4()
+    )
+    form = record_form(
+        SchedulingOperation.CANDIDATE_CREATE, label="First", expected_version=0
+    )
+    created = submit_planning_record(scope, form, authorizer=policy)
+    assert created.version == 1
+    stale = record_form(
+        SchedulingOperation.CANDIDATE_CREATE, label="Second", expected_version=0
+    )
+    original = dict(stale.data)
+    with pytest.raises(SchedulingVersionConflictError):
+        submit_planning_record(scope, stale, authorizer=policy)
+    assert dict(stale.data) == original
+    assert SchedulingCandidate.objects.count() == 1
+    assert SchedulingCommandReceipt.objects.count() == 1
+
+
+@pytest.mark.parametrize("foreign_organization", [False, True])
+def test_native_record_identifier_cannot_cross_trusted_scope(
+    world, foreign_organization
+):
+    command, policy, _, edition = world
+    candidate = create(world)
+    other = (
+        EventEditionFactory()
+        if foreign_organization
+        else EventEditionFactory(
+            organization=edition.organization, series=edition.series
+        )
+    )
+    scope = SchedulingReadRequest(
+        command.actor_id, other.organization_id, other.id, uuid4()
+    )
+    form = record_form(
+        SchedulingOperation.CANDIDATE_ARCHIVE,
+        candidate_id=candidate.object_id,
+        expected_version=1,
+        confirm="confirmed",
+    )
+    with pytest.raises(SchedulingUnavailableError):
+        submit_planning_record(scope, form, authorizer=policy)
+    assert SchedulingCandidate.objects.get(id=candidate.object_id).lifecycle == "draft"
+    assert SchedulingCommandReceipt.objects.count() == 1
+
+
+def test_native_copy_still_requires_independent_history_authority(world):
+    command, _, _, _ = world
+    candidate = create(world)
+
+    class DenyHistory(TrustedSchedulingPolicy):
+        def authorize(self, **kwargs):
+            if kwargs["capability_code"] == VIEW_HISTORY:
+                return PolicyDecision(
+                    allowed=False,
+                    fields=frozenset(),
+                    obligations=frozenset(),
+                    reason_code="synthetic_history_denial",
+                )
+            return super().authorize(**kwargs)
+
+    scope = SchedulingReadRequest(
+        command.actor_id, command.organization_id, command.edition_id, uuid4()
+    )
+    form = record_form(
+        SchedulingOperation.CANDIDATE_COPY,
+        source_revision_id=revision(candidate).id,
+        expected_version=1,
+        label="Cannot copy without history",
+    )
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        submit_planning_record(scope, form, authorizer=DenyHistory())
+    assert SchedulingCandidate.objects.count() == 1
+    assert SchedulingCommandReceipt.objects.count() == 1
 
 
 def test_current_planning_does_not_imply_history_or_private_owner_layers(

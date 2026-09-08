@@ -18,7 +18,11 @@ from .planning_queries import PLANNING_FIELDS
 if TYPE_CHECKING:
     from .authorization import SchedulingAuthorizer
     from .command_support import SchedulingCommandResult
-    from .planning_forms import PlanningPlacementForm, PlanningServiceDayForm
+    from .planning_forms import (
+        PlanningCommandForm,
+        PlanningPlacementForm,
+        PlanningServiceDayForm,
+    )
     from .planning_preview import SchedulingPlanningPreview
     from .planning_queries import SchedulingReadRequest
 
@@ -37,7 +41,7 @@ def _authorize(
 
 
 def _command_request(
-    request: SchedulingReadRequest, form: PlanningPlacementForm | PlanningServiceDayForm
+    request: SchedulingReadRequest, form: PlanningCommandForm
 ) -> SchedulingCommandRequest:
     return SchedulingCommandRequest(
         request.actor_id,

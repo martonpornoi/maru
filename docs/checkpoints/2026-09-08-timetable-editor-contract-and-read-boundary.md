@@ -145,3 +145,51 @@ physical-reservation controls, board/template rendering, browser interaction
 and accessibility rehearsal, and complete protected delivery remain. No PR or
 activated Programme workspace is claimed. Keep #85 and #48 open and continue
 the accepted editor contract before moving to the next umbrella child.
+
+## Complete native record command adapters
+
+The follow-up after local checkpoint `456d9c4` adds the remaining closed native
+record controls. These delegate candidate create/copy/restore/archive,
+occurrence creation/repetition/group revision/retirement, day retirement,
+unplacement, saved conflict evaluation, exact warning acknowledgement and
+physical reservation replacement/cancellation to the existing owner commands.
+There is no second writer, new schema, profile expansion or mounted route.
+
+Each form accepts only its server-selected operation's fields. Item/group
+choices must already be independently authorized, group/sequence meaning stays
+explicit, and all operations require a human reason and exact retry key.
+Consequential actions require confirmation, and room-hold reasons are labelled
+Venue-visible. Form validation does not grant mutation/history/Venue authority
+or let a hard blocker be acknowledged. Domain failures preserve entered values
+and do not retry against newer optimistic versions.
+
+The real history round trip exposed a test assumption that only creation
+advances edition control. All successful Scheduling mutations advance it. The
+test now observes a fresh snapshot for the new copy intent, and copy input
+requires the positive control version already required by the command. A
+separate test confirms stale pending creation is not silently rebased. An
+additional scope fixture correction uses Events' actual `series` relation.
+Neither correction changes a domain or acceptance contract.
+
+Verification for this slice:
+
+- The complete database-free suite passed 3,671 tests in 22.65s, including 81
+  new record-control cases and the two existing Django URLField warnings.
+- The 17 selected native-command PostgreSQL cases passed in 38.54s using the
+  same label-verified task-owned current schema. They exercise retained history,
+  exact replay, explicit repeated occurrences, day retirement, base-read versus
+  mutation/history authority, cross-edition/organization denial, stale sources,
+  forbidden blocker acknowledgement, physical replacement rollback and historic
+  cancellation after unplacement. Draft movement/unplacement leaves the current
+  room hold active until an explicit physical command succeeds.
+- Focused lint, formatting, strict mypy, NumPy contracts, whitespace and
+  maintained-documentation validation passed (424 files, four skills, 215
+  requirement identifiers). No complete certification is claimed here.
+- Existing test bodies, CI/classification/timing files, historical acceptance,
+  coverage floor, migrations, runtime ACLs and production routing are unchanged.
+
+The complete browser surface is still pending, including protected persisted-
+evaluation/current-booking readouts, board/forms, browser/accessibility
+rehearsal and exact-head local/hosted protected acceptance. Keep #85 and #48 open
+with no partial-editor PR or runtime claim. Continue those editor tasks before
+the next umbrella child; no scheduled check-in has been created or resumed.

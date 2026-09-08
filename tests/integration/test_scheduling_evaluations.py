@@ -31,6 +31,7 @@ from maru.scheduling import (
 )
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
 from maru.scheduling.candidate_commands import archive_scheduling_candidate
+from maru.scheduling.catalogs import SchedulingOperation
 from maru.scheduling.command_support import (
     SchedulingLifecycleConflictError,
     SchedulingLimitError,
@@ -48,15 +49,18 @@ from maru.scheduling.models import (
     SchedulingEditionControl,
     SchedulingEvaluation,
     SchedulingOccurrence,
+    SchedulingServiceDay,
     SchedulingWarningAcknowledgement,
 )
 from maru.scheduling.occurrence_commands import create_scheduling_occurrence
 from maru.scheduling.planning_forms import PlanningPlacementForm, PlanningServiceDayForm
 from maru.scheduling.planning_preview import preview_scheduling_candidate
 from maru.scheduling.planning_queries import SchedulingReadRequest
+from maru.scheduling.planning_record_actions import submit_planning_record
 from maru.venues import scheduling_queries as venue_source
 from maru.venues.models import VenueBooking
 from tests.integration.test_programme_commands import _TrustedProgrammeAuthorizer
+from tests.integration.test_scheduling_candidates import record_form
 from tests.integration.test_scheduling_days import TrustedSchedulingPolicy
 from tests.integration.test_scheduling_placements import (
     START,
@@ -709,3 +713,74 @@ def test_native_day_create_and_revision_reuse_real_day_commands(world):
     )
     assert changed.object_id == created.object_id
     assert changed.version == 2
+
+
+def test_native_day_retirement_uses_current_metadata_version(world):
+    result = submit_planning_record(
+        preview_request(world),
+        record_form(
+            SchedulingOperation.DAY_RETIRE,
+            day_id=world.day.object_id,
+            expected_version=world.day.version,
+            confirm="confirmed",
+        ),
+        authorizer=world.policy,
+    )
+    day = SchedulingServiceDay.objects.get(id=result.object_id)
+    assert day.lifecycle == "retired"
+    assert day.aggregate_version == 2
+    assert not VenueBooking.objects.exists()
+
+
+def test_native_warning_control_cannot_override_a_hard_blocker(world, admitted):
+    placed = place(world, intent=replace(world.placement, expected_attendance=9_000))
+    _, report = evaluate(world, placed)
+    blocker = report.conflicts.get(code="venue_capacity")
+    form = record_form(SchedulingOperation.WARNING_ACKNOWLEDGE, conflict_id=blocker.id)
+    with pytest.raises(SchedulingUnavailableError):
+        submit_planning_record(preview_request(world), form, authorizer=world.policy)
+    assert not SchedulingWarningAcknowledgement.objects.exists()
+    assert not VenueBooking.objects.exists()
+
+
+@pytest.mark.parametrize("withdrawn", [False, True])
+def test_native_evaluation_and_warning_control_recheck_current_dependencies(
+    world, admitted, withdrawn
+):
+    availability(world)
+    placed = place(world)
+    result = submit_planning_record(
+        preview_request(world),
+        record_form(
+            SchedulingOperation.EVALUATION_RECORD,
+            candidate_id=placed.object_id,
+            expected_version=placed.version,
+        ),
+        authorizer=world.policy,
+    )
+    report = SchedulingEvaluation.objects.get(id=result.object_id)
+    warning = report.conflicts.get(code="host_outside_preference")
+    form = record_form(SchedulingOperation.WARNING_ACKNOWLEDGE, conflict_id=warning.id)
+    if withdrawn:
+        availability(world, state="withdrawn")
+        with pytest.raises(SchedulingVersionConflictError):
+            submit_planning_record(
+                preview_request(world), form, authorizer=world.policy
+            )
+        assert not SchedulingWarningAcknowledgement.objects.exists()
+    else:
+        accepted = submit_planning_record(
+            preview_request(world), form, authorizer=world.policy
+        )
+        assert (
+            SchedulingWarningAcknowledgement.objects.get(
+                id=accepted.object_id
+            ).conflict_id
+            == warning.id
+        )
+        replay = submit_planning_record(
+            preview_request(world), form, authorizer=world.policy
+        )
+        assert replay.replayed
+        assert replay.receipt_id == accepted.receipt_id
+    assert not VenueBooking.objects.exists()

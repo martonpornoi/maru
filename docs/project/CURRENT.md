@@ -152,18 +152,27 @@ supplies Events' trusted time zone. Strict native service-day and placement
 forms delegate to the existing commands; preview/save/replay/stale behavior is
 verified with real PostgreSQL commands. No pointer-specific writer is added.
 
-The complete database-free suite passes 3,590 cases in 23.97s, including 44 new
-form/adapter cases. All 132 affected current-behavior PostgreSQL cases pass in
-263.65s; three unchanged historical migration cases were not selected for this
-focused iteration and remain subject to policy-required certification. The
-isolated task-owned schema was reused. Earlier owner-inventory evidence remains
-in the checkpoint. Focused lint, formatting, strict types, NumPy contracts and
-maintained documentation validation pass (424 files, four skills, 215 requirement
-identifiers). No CI policy, timing map, acceptance threshold or existing
-assertion was weakened. This is not complete editor, browser, runtime-role or
-protected delivery acceptance.
+The remaining native record adapters now cover candidate create/copy/restore/
+archive, occurrence repetition/grouping/retirement, service-day retirement,
+unplacement, saved evaluation, exact warning acknowledgement and explicit
+physical hold replacement/cancellation. Consequential actions require deliberate
+confirmation; Venue-visible reasons are identified. Existing independent owner
+authority, immutable history, optimistic versions and retries remain in charge.
+
+The complete database-free suite passes 3,671 cases in 22.65s, including 81 new
+record-control cases. The 17 selected native-command PostgreSQL cases pass in
+38.54s, covering history recovery, independent mutation/history authority,
+cross-edition/organization denial, forbidden blocker overrides, stale sources,
+reservation rollback and unchanged holds after draft edits. These reuse only
+the isolated task-owned schema. Earlier 132-case affected current-behavior and
+owner-inventory results remain in the checkpoint; unchanged historical cases
+remain subject to policy-required certification. Focused lint, formatting,
+strict types, NumPy contracts and maintained documentation validation pass
+(424 files, four skills, 215 requirement identifiers). No CI policy, timing map,
+acceptance threshold or existing assertion was weakened. This is not complete editor, browser,
+runtime-role or protected delivery acceptance.
 See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
-Remaining work includes candidate/occurrence/history/reservation controls,
+Remaining work includes protected persisted-review and current-hold readouts,
 responsive board and form rendering, browser rehearsal and protected
 certification/delivery. No PR has been opened for this partial editor.
 No production route, navigation, runtime write grant or adoption profile has
@@ -199,9 +208,9 @@ deployment or production data is authorized.
 
 ## Smallest sensible next actions
 
-1. Complete #85's remaining candidate/occurrence/history/reservation controls
-   and accessible board/form rendering, reusing the implemented owner inspector,
-   inventories, preview and native service-day/placement adapters.
+1. Complete #85's protected persisted-review/current-hold readouts and accessible
+   board/form rendering, reusing the implemented owner inspector, inventories,
+   preview and complete native command adapters.
 2. Run focused permission/failure/interaction tests and synthetic browser
    rehearsal, then certify the clean exact head with the policy-required scope.
    Obtain its own hosted PR gate and CodeQL before merge; reconcile #85 and #48
