@@ -159,22 +159,34 @@ physical hold replacement/cancellation. Consequential actions require deliberate
 confirmation; Venue-visible reasons are identified. Existing independent owner
 authority, immutable history, optimistic versions and retries remain in charge.
 
-The complete database-free suite passes 3,671 cases in 22.65s, including 81 new
-record-control cases. The 17 selected native-command PostgreSQL cases pass in
-38.54s, covering history recovery, independent mutation/history authority,
-cross-edition/organization denial, forbidden blocker overrides, stale sources,
-reservation rollback and unchanged holds after draft edits. These reuse only
-the isolated task-owned schema. Earlier 132-case affected current-behavior and
-owner-inventory results remain in the checkpoint; unchanged historical cases
-remain subject to policy-required certification. Focused lint, formatting,
-strict types, NumPy contracts and maintained documentation validation pass
-(424 files, four skills, 215 requirement identifiers). No CI policy, timing map,
-acceptance threshold or existing assertion was weakened. This is not complete editor, browser,
-runtime-role or protected delivery acceptance.
+Fresh conflict review now separates saved completeness from live dependency
+status and returns no fingerprints, calendars or acknowledgement rationale.
+The current-hold reader orders reciprocal intents by immutable command control
+version, then rechecks the existing exact-resource Venue boundary. It preserves
+an active hold after draft movement/unplacement and observes cancellation or
+independent physical approval without publishing Programme timing.
+
+Initial board composition and native rendering are implemented: complete item/
+occurrence inventory, stable day/room lanes, stale-metadata warnings, explicit
+overnight dates/offsets, escaped owner labels and Preview-first native forms.
+They reuse the management shell; no interactive route is mounted. Trusted HTTP
+orchestration, filters, full inspector/history/conflict presentation, pointer
+prefill and unsaved-input behavior remain to connect before browser acceptance.
+
+The complete database-free suite passes 3,690 cases in 23.05s, including 19 new
+composition/rendering cases. All 152 cases in the affected candidate/evaluation/
+reservation PostgreSQL files pass in 370.66s, plus a real independent-approval
+readout case in 3.99s. The same isolated task-owned current schema was reused;
+this is not complete certification. Earlier evidence remains in the checkpoint.
+Focused lint, formatting, strict types, NumPy contracts and documentation
+validation pass (424 files, four skills, 215 requirement identifiers). A direct
+syntax-tree comparison preserved all 102 original test functions in the five
+modified existing test files. No CI policy, timing map, acceptance threshold,
+historical scope, migration, runtime grant or existing assertion was weakened.
+Browser, runtime-role and protected delivery acceptance remain outstanding.
 See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
-Remaining work includes protected persisted-review and current-hold readouts,
-responsive board and form rendering, browser rehearsal and protected
-certification/delivery. No PR has been opened for this partial editor.
+Complete interaction orchestration, browser rehearsal and protected
+certification/delivery remain. No PR has been opened for this partial editor.
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain
 unchanged. This partial branch is not an editor-delivery or runtime claim.
@@ -208,9 +220,9 @@ deployment or production data is authorized.
 
 ## Smallest sensible next actions
 
-1. Complete #85's protected persisted-review/current-hold readouts and accessible
-   board/form rendering, reusing the implemented owner inspector, inventories,
-   preview and complete native command adapters.
+1. Complete #85's trusted HTTP selection/command orchestration, filters and full
+   inspector/history/conflict presentation. Connect the native controls, pointer
+   prefill and unsaved-input recovery to the implemented board and owner reads.
 2. Run focused permission/failure/interaction tests and synthetic browser
    rehearsal, then certify the clean exact head with the policy-required scope.
    Obtain its own hosted PR gate and CodeQL before merge; reconcile #85 and #48

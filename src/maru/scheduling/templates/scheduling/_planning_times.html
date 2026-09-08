@@ -1,0 +1,6 @@
+<dl class="planning-times">
+  <div><dt>Preparation starts</dt><dd><time datetime="{{ envelope.setup_starts_at|date:'c' }}">{{ envelope.setup_starts_at|date:'D j M Y, H:i O' }}</time></dd></div>
+  <div><dt>Delivery starts</dt><dd><time datetime="{{ envelope.effective_starts_at|date:'c' }}">{{ envelope.effective_starts_at|date:'D j M Y, H:i O' }}</time></dd></div>
+  <div><dt>Delivery ends</dt><dd><time datetime="{{ envelope.effective_ends_at|date:'c' }}">{{ envelope.effective_ends_at|date:'D j M Y, H:i O' }}</time></dd></div>
+  <div><dt>Teardown ends</dt><dd><time datetime="{{ envelope.teardown_ends_at|date:'c' }}">{{ envelope.teardown_ends_at|date:'D j M Y, H:i O' }}</time></dd></div>
+</dl>

@@ -13,6 +13,7 @@ from django.db import DatabaseError
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events.models import EventEdition
 from maru.programme import scheduling_queries as programme_source
 from maru.programme.host_commands import replace_programme_host_availability
 from maru.programme.host_inputs import (
@@ -28,6 +29,7 @@ from maru.scheduling import (
     planning_actions,
     planning_preview,
     planning_queries,
+    planning_review,
 )
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
 from maru.scheduling.candidate_commands import archive_scheduling_candidate
@@ -57,8 +59,14 @@ from maru.scheduling.planning_forms import PlanningPlacementForm, PlanningServic
 from maru.scheduling.planning_preview import preview_scheduling_candidate
 from maru.scheduling.planning_queries import SchedulingReadRequest
 from maru.scheduling.planning_record_actions import submit_planning_record
+from maru.scheduling.planning_reservations import load_scheduling_reservation_review
+from maru.scheduling.planning_review import (
+    PlanningReviewState,
+    load_scheduling_candidate_review,
+)
 from maru.venues import scheduling_queries as venue_source
 from maru.venues.models import VenueBooking
+from tests.factories import EventEditionFactory
 from tests.integration.test_programme_commands import _TrustedProgrammeAuthorizer
 from tests.integration.test_scheduling_candidates import record_form
 from tests.integration.test_scheduling_days import TrustedSchedulingPolicy
@@ -741,6 +749,247 @@ def test_native_warning_control_cannot_override_a_hard_blocker(world, admitted):
         submit_planning_record(preview_request(world), form, authorizer=world.policy)
     assert not SchedulingWarningAcknowledgement.objects.exists()
     assert not VenueBooking.objects.exists()
+
+
+def review(world, *, version=2, request=None, policy=None):
+    return load_scheduling_candidate_review(
+        request or preview_request(world),
+        candidate_id=world.candidate.object_id,
+        expected_version=version,
+        authorizer=policy or world.policy,
+    )
+
+
+def test_review_readout_before_recording_is_live_checks_not_saved_evidence(
+    world, admitted
+):
+    place(world)
+    before = domain_state()
+    result = review(world)
+    assert result.state == PlanningReviewState.NOT_RECORDED
+    assert result.current.complete
+    assert result.current.findings == result.saved_findings == ()
+    assert result.evaluation_id is result.evaluated_at is result.saved_complete is None
+    assert domain_state() == before
+
+
+def test_review_readout_distinguishes_fresh_warning_and_retained_acknowledgement(
+    world, admitted
+):
+    availability(world)
+    placed = place(world)
+    _, report = evaluate(world, placed)
+    before = domain_state()
+    result = review(world)
+    assert result.state == PlanningReviewState.CURRENT
+    assert result.evaluation_id == report.id
+    assert result.evaluated_at == report.occurred_at
+    assert result.saved_complete
+    warning = result.saved_findings[0]
+    assert warning.finding.code == "host_outside_preference"
+    assert warning.eligible_for_acknowledgement
+    assert not warning.acknowledged
+    assert domain_state() == before
+    reason = "Private retained warning explanation"
+    acknowledge_scheduling_warning(
+        replace(next_request(world), reason=reason),
+        conflict_id=warning.id,
+        authorizer=world.policy,
+    )
+    reread = review(world)
+    assert reread.saved_findings[0].acknowledged
+    assert not reread.saved_findings[0].eligible_for_acknowledgement
+    serialized = json.dumps(asdict(reread), default=str)
+    for excluded in (
+        reason,
+        report.dependency_digest,
+        "fingerprint",
+        "source_evidence",
+        "person_key",
+        "host_id",
+        "email",
+    ):
+        assert excluded not in serialized
+
+
+@pytest.mark.parametrize(
+    ("withdrawn", "expected"),
+    [(False, PlanningReviewState.STALE), (True, PlanningReviewState.UNAVAILABLE)],
+)
+def test_review_readout_never_presents_changed_dependencies_as_current(
+    world, admitted, withdrawn, expected
+):
+    availability(world)
+    placed = place(world)
+    evaluate(world, placed)
+    availability(world, state="withdrawn" if withdrawn else "shared", preference=False)
+    before = domain_state()
+    result = review(world)
+    assert result.state == expected
+    assert result.saved_complete
+    assert len(result.saved_findings) == 1
+    assert not result.saved_findings[0].eligible_for_acknowledgement
+    assert result.current.complete is not withdrawn
+    assert domain_state() == before
+
+
+def test_review_readout_does_not_relabel_an_old_candidate_report_after_edit(
+    world, admitted
+):
+    placed = place(world)
+    evaluate(world, placed)
+    changed = place(world, intent=moved(world), version=placed.version)
+    result = review(world, version=changed.version)
+    assert result.state == PlanningReviewState.NOT_RECORDED
+    assert result.evaluation_id is None
+    assert SchedulingEvaluation.objects.count() == 1
+    with pytest.raises(SchedulingUnavailableError):
+        review(world, version=placed.version)
+
+
+def test_review_readout_blockers_are_never_eligible_warning_overrides(world, admitted):
+    placed = place(world, intent=replace(world.placement, expected_attendance=9_000))
+    evaluate(world, placed)
+    result = review(world)
+    assert result.state == PlanningReviewState.CURRENT
+    assert result.current.complete
+    assert any(saved.finding.severity == "blocker" for saved in result.saved_findings)
+    assert not any(
+        saved.eligible_for_acknowledgement for saved in result.saved_findings
+    )
+
+
+@pytest.mark.parametrize("failure", ["overflow", "fingerprint"])
+def test_review_readout_withholds_incomplete_or_inconsistent_saved_findings(
+    world, admitted, monkeypatch, failure
+):
+    availability(world)
+    placed = place(world)
+    evaluate(world, placed)
+    request = preview_request(world)
+    if failure == "overflow":
+        monkeypatch.setattr(planning_review, "MAX_CONFLICTS", 0)
+        expected = SchedulingLimitError
+    else:
+        monkeypatch.setattr(
+            planning_review, "_finding_fingerprint", lambda *_args: "invalid"
+        )
+        expected = SchedulingUnavailableError
+    before = domain_state()
+    with pytest.raises(expected):
+        review(world, request=request)
+    assert not AuditEvent.objects.filter(
+        correlation_id=request.correlation_id, outcome="allow"
+    ).exists()
+    assert domain_state() == before
+
+
+def readout(world, kind, *, request=None, policy=None):
+    if kind == "review":
+        return review(world, request=request, policy=policy)
+    return load_scheduling_reservation_review(
+        request or preview_request(world),
+        occurrence_id=world.occurrence.object_id,
+        authorizer=policy or world.policy,
+    )
+
+
+@pytest.mark.parametrize("kind", ["review", "hold"])
+def test_readout_current_profiles_remain_denied_even_when_sources_are_admitted(
+    world, admitted, kind
+):
+    place(world)
+    if kind == "review":
+        reader = partial(
+            load_scheduling_candidate_review,
+            preview_request(world),
+            candidate_id=world.candidate.object_id,
+            expected_version=2,
+        )
+    else:
+        reader = partial(
+            load_scheduling_reservation_review,
+            preview_request(world),
+            occurrence_id=world.occurrence.object_id,
+        )
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        reader()
+
+
+@pytest.mark.parametrize("kind", ["review", "hold"])
+@pytest.mark.parametrize("foreign_organization", [False, True])
+def test_readout_never_follows_identifiers_outside_its_trusted_edition(
+    world, admitted, kind, foreign_organization
+):
+    place(world)
+    original = EventEdition.objects.select_related("organization", "series").get(
+        id=world.request.edition_id
+    )
+    other = (
+        EventEditionFactory()
+        if foreign_organization
+        else EventEditionFactory(
+            organization=original.organization, series=original.series
+        )
+    )
+    request = replace(
+        preview_request(world),
+        organization_id=other.organization_id,
+        edition_id=other.id,
+    )
+    with pytest.raises(SchedulingUnavailableError):
+        readout(world, kind, request=request)
+
+
+@pytest.mark.parametrize("kind", ["review", "hold"])
+@pytest.mark.parametrize("failure", ["final_denial", "audit"])
+def test_readout_final_policy_and_required_audit_withhold_every_owner_result(
+    world, admitted, monkeypatch, kind, failure
+):
+    placed = place(world)
+    reserve(world, placed=placed)
+    request = preview_request(world)
+    before = domain_state()
+    if failure == "audit":
+
+        def fail(*args, **kwargs):
+            raise DatabaseError("Synthetic readout audit failure")
+
+        monkeypatch.setattr(planning_queries, "append_audit", fail)
+        expected, policy = SchedulingUnavailableError, world.policy
+    else:
+        expected, policy = (
+            SchedulingAuthorizationDeniedError,
+            TrustedSchedulingPolicy(deny_at=2),
+        )
+    with pytest.raises(expected):
+        readout(world, kind, request=request, policy=policy)
+    assert not AuditEvent.objects.filter(
+        correlation_id=request.correlation_id, outcome="allow"
+    ).exists()
+    assert domain_state() == before
+
+
+@pytest.mark.parametrize("kind", ["review", "hold"])
+@pytest.mark.parametrize("missing", sorted(planning_preview.PREVIEW_FIELDS))
+def test_readout_requires_its_complete_independent_conflict_field_ceiling(
+    world, admitted, kind, missing
+):
+    place(world)
+
+    class PartialPolicy(TrustedSchedulingPolicy):
+        def authorize(self, **kwargs):
+            return PolicyDecision(
+                allowed=True,
+                fields=kwargs["requested_fields"] - {missing},
+                obligations=frozenset(),
+                reason_code="synthetic_readout_field_denial",
+            )
+
+    before = domain_state()
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        readout(world, kind, policy=PartialPolicy())
+    assert domain_state() == before
 
 
 @pytest.mark.parametrize("withdrawn", [False, True])

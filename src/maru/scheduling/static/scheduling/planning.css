@@ -1,0 +1,99 @@
+.planning-layout,
+.planning-lanes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  margin-block: 1.5rem;
+}
+
+.planning-layout > *,
+.planning-lane,
+.planning-command-form {
+  min-width: 0;
+}
+
+.planning-draft-label {
+  border-inline-start: 0.3rem solid #a75316;
+  padding: 0.75rem 1rem;
+  background: #fff3df;
+  color: #502706;
+  overflow-wrap: anywhere;
+}
+
+.planning-entry-list {
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.planning-entry-list > li {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #bcb8ae;
+  border-radius: 0.6rem;
+  background: #fff;
+  overflow-wrap: anywhere;
+}
+
+.planning-entry-list h3,
+.planning-entry-list h4 {
+  margin-block-start: 0;
+}
+
+.planning-state {
+  font-weight: 700;
+}
+
+.planning-warning {
+  padding: 0.65rem;
+  border-inline-start: 0.25rem solid #a75316;
+  background: #fff3df;
+  color: #502706;
+}
+
+.planning-times {
+  display: grid;
+  gap: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.planning-times dt {
+  font-weight: 700;
+}
+
+.planning-times dd {
+  margin-inline-start: 0;
+  overflow-wrap: anywhere;
+}
+
+.planning-command-form input,
+.planning-command-form select,
+.planning-command-form textarea {
+  max-width: 100%;
+}
+
+.planning-command-form button,
+.planning-select-form button {
+  min-height: 2.75rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.planning-lane :focus-visible,
+.planning-command-form :focus-visible,
+.planning-select-form :focus-visible {
+  outline: 3px solid #145ba6;
+  outline-offset: 3px;
+}
+
+@media (min-width: 64rem) {
+  .planning-layout {
+    grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 2fr);
+    align-items: start;
+  }
+
+  .planning-lanes {
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  }
+}

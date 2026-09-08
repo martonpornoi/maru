@@ -177,8 +177,63 @@ their separate exact Venue authority and transactional replacement/rollback.
 Cancellation can select retained historical placement evidence after a draft
 edit, but still requires the current physical booking version. Neither a valid
 form nor warning acknowledgement bypasses fresh domain checks, overrides a
-blocker or confers approval/publication. The protected persisted-review/current-
-hold readouts and complete browser surface remain in progress under #85.
+blocker or confers approval/publication.
+
+### Fresh review and current physical readouts
+
+`planning_review.load_scheduling_candidate_review` uses the existing conflict
+and dependency-version field ceiling. It compares the latest saved report for
+the exact current draft revision with freshly authorized owner dependencies.
+No report from a previous candidate revision is silently presented as current.
+Saved evidence is explicitly not recorded, current, stale or unavailable;
+historical completeness is separate from current source availability. Only a
+fresh complete matching warning without retained acknowledgement is eligible
+for the acknowledgement command, which still independently authorizes and
+rechecks all inputs. Blockers have no acknowledgement path. Closed findings
+and acknowledgement existence may be shown, but source JSON, dependency
+digests, fingerprints, calendars, acknowledgement rationale and actors are not
+returned. Missing/overflowed/inconsistent findings withhold the projection.
+
+`planning_reservations.load_scheduling_reservation_review` uses that same
+independent Scheduling field ceiling and the existing exact-resource Venue
+dependency query. It resolves the occurrence's latest reservation intent by
+immutable receipt **control version**, not wall-clock timestamp. No intent
+means no recorded reciprocal request; no Venue bookings are enumerated in that
+case. Otherwise Venues independently proves the bound room and current physical
+booking version/review state. Generic Venue cancellation is observed, while
+draft movement/unplacement still shows an unchanged previous hold. There is no
+new capability, edition-wide Venue grant or duplicate physical writer.
+
+An active result includes only its exact same-edition booking version, source
+candidate/version/placement and bound envelope needed for explicit replacement
+or historical cancellation. This is the consequence of a current authorized
+physical binding, not permission to browse arbitrary candidate history or
+read private reasons, titles or approvers. Unexpected owner bindings fail
+closed. Both readouts retain canonical edition/person order and required owner
+and Scheduling audits; final denial/audit failure withholds all results and
+rolls back success audits. Neither reader writes a report or domain command.
+
+### Board and native rendering composition
+
+`planning_board.build_scheduling_planning_board` is a database-free composition
+of already-authorized Scheduling, Programme-title and Venue-label snapshots.
+It distinguishes items before occurrence creation, occurrences before candidate
+selection, unplaced/placed occurrences and retained retirement. Duplicate or
+missing owner references withhold the whole board, rather than silently hiding
+work. Stable day identifiers retain saved placements under revised day metadata;
+changed day/occurrence revisions are labelled without rewriting geometry.
+Nonempty day/room lanes are ordered by exact delivery instants; complete empty
+day and room choices remain available separately for placement controls.
+
+The initial `scheduling/planning_board.html` component reuses the management
+shell, one H1/main, responsive labelled cards, explicit overnight dates/offsets,
+current physical-hold readout and native form rendering. Owner labels are
+escaped; generic forms retain input and link errors to controls. Submit buttons
+provide the action exactly once, with Preview first for placement forms.
+This is not yet the complete browser editor: trusted HTTP selection/command
+orchestration, filters, inspector/history/review presentation, pointer-prefill
+and unsaved-input behavior, browser rehearsal and protected acceptance remain.
+No production URL or navigation entry is mounted.
 
 ### Conflict-source boundary
 

@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
     from .authorization import AuthorizedSchedulingScope, SchedulingAuthorizer
     from .conflicts import SchedulingFinding
+    from .evaluation_sources import _CurrentEvaluation
     from .inputs import SchedulingPlacementInput
     from .planning_queries import SchedulingReadRequest
 
@@ -90,6 +91,28 @@ class SchedulingPlanningPreview:
     sources: tuple[PlanningSourceStatus, ...]
     not_evaluated: tuple[str, ...]
     complete: bool
+
+
+def _preview_projection(
+    current: _CurrentEvaluation, proposed_occurrence_id: UUID | None = None
+) -> SchedulingPlanningPreview:
+    return SchedulingPlanningPreview(
+        current.revision.candidate_id,
+        current.revision.sequence,
+        proposed_occurrence_id,
+        current.findings,
+        tuple(
+            PlanningSourceStatus(
+                str(source["source_code"]),
+                source["edition_version"] is not None
+                if source["source_code"] == SCHEDULING_TIME_CONFLICT_SOURCE
+                else source["available"] is True,
+            )
+            for source in current.evidence
+        ),
+        DEFERRED_SCHEDULING_CHECKS,
+        current.complete,
+    )
 
 
 def _proposed_facts(
@@ -193,22 +216,8 @@ def preview_scheduling_candidate(
                 raise SchedulingLimitError
             facts = (*retained, _proposed_facts(request, intent))
         current = _evaluate_candidate_facts(source_request, revision, facts)
-        return SchedulingPlanningPreview(
-            candidate_id,
-            revision.sequence,
-            placement.occurrence_id if placement is not None else None,
-            current.findings,
-            tuple(
-                PlanningSourceStatus(
-                    str(source["source_code"]),
-                    source["edition_version"] is not None
-                    if source["source_code"] == SCHEDULING_TIME_CONFLICT_SOURCE
-                    else source["available"] is True,
-                )
-                for source in current.evidence
-            ),
-            DEFERRED_SCHEDULING_CHECKS,
-            current.complete,
+        return _preview_projection(
+            current, placement.occurrence_id if placement is not None else None
         )
 
     return _read(

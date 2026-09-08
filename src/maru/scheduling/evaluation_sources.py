@@ -298,7 +298,7 @@ def _require_source_adoption(request: _SourceRequest) -> None:
 
 
 def _current_evaluation(
-    request: SchedulingCommandRequest, *, candidate_id: UUID, expected_version: int
+    request: _SourceRequest, *, candidate_id: UUID, expected_version: int
 ) -> _CurrentEvaluation:
     _require_source_adoption(request)
     revision = SchedulingCandidateRevision.objects.filter(

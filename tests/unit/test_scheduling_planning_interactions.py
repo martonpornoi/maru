@@ -88,6 +88,7 @@ def placement():
         SchedulingEnvelope(
             start, start, start + timedelta(hours=1), start + timedelta(hours=1)
         ),
+        uuid4(),
     )
 
 

@@ -193,3 +193,75 @@ evaluation/current-booking readouts, board/forms, browser/accessibility
 rehearsal and exact-head local/hosted protected acceptance. Keep #85 and #48 open
 with no partial-editor PR or runtime claim. Continue those editor tasks before
 the next umbrella child; no scheduled check-in has been created or resumed.
+
+## Fresh review, current holds and initial board rendering
+
+The follow-up after local checkpoint `611671b` adds independently audited
+conflict-review and physical-hold readouts plus the initial complete inventory,
+day/room board and native form rendering composition.
+
+Conflict review compares the latest saved report for the exact current draft
+revision with fresh owner dependencies. Historical completeness is separate
+from current availability, and a missing, stale or unavailable report never
+supplies eligible warning evidence. Hard blockers cannot be acknowledged.
+The projection returns no calendars, source JSON, dependency digests, warning
+fingerprints or acknowledgement actors/reasons. Missing/overflowed/inconsistent
+findings withhold the whole result. The saved evaluator and preview keep the
+same underlying algorithm; only their minimized projection is shared.
+
+Physical review orders Scheduling's reciprocal intents by the unique immutable
+command **control version**, not a wall-clock timestamp. Existing exact-resource
+Venue policy then proves the selected binding's live version/review state.
+Movement/unplacement retains an earlier hold until an explicit physical command
+succeeds; generic Venue cancellation and independent approval are reflected.
+No new Venue reader, capability or broad grant is needed. The active envelope
+is the current authorized reciprocal binding's consequence, not arbitrary
+history/rationale access. Both readers retain required minimized audits and
+canonical locking; final denial/audit failure rolls back success audits.
+
+The pure board composer receives independently authorized title, room and
+Scheduling snapshots. It preserves items with no occurrence, explicit repeats,
+unplaced/placed and retired occurrences. Missing/duplicate references fail
+closed. Planning placements now include their stable day identifier, so a
+revised day does not silently drop retained geometry from the board. Changed
+metadata is visibly distinguished from the saved placement envelope.
+
+Initial templates reuse the management shell, one H1/main, labelled ordered
+cards, explicit overnight dates and offsets, current physical-hold readout and
+native form/error rendering. Labels are escaped. The action is submitted only
+once, Preview is first for placement forms, and recoverable errors retain
+entered values and the retry key. This is a dormant rendering component, not a
+complete HTTP workspace or browser/accessibility acceptance claim.
+
+Verification:
+
+- All 3,690 database-free tests passed in 23.05s, with the two existing Django
+  URLField deprecation warnings. Nineteen new composition/rendering tests cover
+  complete inventories, duplicates/missing references, stale day continuity,
+  ordering, escaped owner labels, landmarks/IDs, explicit times, native action
+  cardinality, Preview-first ordering and linked retained form errors.
+- The initial 23 readout cases passed in 63.92s. The subsequent complete affected
+  candidate/evaluation/reservation run passed all 152 PostgreSQL cases in 370.66s,
+  including current-profile and cross-organization/edition denials, current/
+  stale/unavailable warning evidence, independent field/final-audit failures,
+  current/historical room holds and real owner-backed board composition.
+- One additional real independent-Venue-approval readout case passed in 3.99s:
+  physical version two and approved state are visible while Programme timing
+  stays unpublished. Six unchanged continuity cases were not selected for this
+  focused follow-up; policy-required certification retains them.
+- All database tests reused the same exact label-verified synthetic task schema.
+  These 153 current-behavior cases are focused evidence, not whole-suite or
+  runtime-role certification. No migration, CI classifier/timing/coverage policy,
+  current profile, production URL or runtime grant changed.
+- Focused Ruff/formatting (12 Python files), strict mypy and NumPy contracts
+  (six source files), whitespace and maintained-documentation validation passed
+  (424 files, four skills, 215 requirement identifiers). A syntax-tree comparison
+  confirmed all 102 original test functions in the five modified existing test
+  files were retained unchanged; an insertion-placement mistake was corrected
+  before the complete run.
+
+Remaining editor work is trusted HTTP selection/command orchestration, native
+filters and full inspector/history/conflict presentation, pointer-prefill and
+unsaved-input behavior, then complete synthetic browser and protected delivery
+acceptance. No production route is mounted and no partial-editor PR is open.
+#85 and #48 remain open; no schedule has been created or resumed.

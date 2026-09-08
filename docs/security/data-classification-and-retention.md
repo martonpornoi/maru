@@ -298,6 +298,25 @@ Convenience alone is not sufficient.
   Host identifiers, availability periods, source digests and acknowledgement
   fingerprints are not exposed by the preview projection. A preview can append
   minimized sensitive-read audits only and never authorizes a later mutation.
+- Saved-conflict review uses the independent conflict/dependency field ceiling.
+  It returns bounded closed findings and acknowledgement existence for the
+  current draft revision, not acknowledgement rationale/actors, source JSON,
+  dependency digests, fingerprints or calendars. Fresh eligibility is not
+  mutation authority. Stale or unavailable sources never make an old warning
+  or acknowledgement current.
+- Current physical-hold review orders Scheduling's reciprocal intents by their
+  immutable command control version, then asks the existing exact-resource
+  Venue boundary for the live binding. The active same-edition booking version,
+  review state and bound candidate/placement envelope are current physical
+  consequences, not arbitrary history access. No room contacts, booking titles,
+  reasons, approvers or foreign busy periods leave this projection. No recorded
+  reciprocal intent produces only a Scheduling-owned no-request result, without
+  enumerating Venue bookings or claiming general room availability.
+- Board composition receives only independently audited owner projections and
+  performs no additional reads. Missing/duplicate references withhold the
+  complete composition. Current owner labels are escaped and never described as
+  historical copy; stable day identity preserves visibly stale placements after
+  metadata changes. Rendering introduces no new persistent fields or analytics.
 - Planning query audit retains exact scope/correlation, closed purpose and
   policy outcome, not labels, filter text, rationale, geometry or owner content.
   The editor collects no activity analytics and introduces no browser storage,

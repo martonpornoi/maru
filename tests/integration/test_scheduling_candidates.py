@@ -12,6 +12,7 @@ from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
 from maru.events.models import EventEdition
 from maru.events.services import transition_edition
+from maru.identity.models import Account
 from maru.programme import host_queries as programme_hosts
 from maru.programme import queries as programme_queries
 from maru.programme import scheduling_queries as programme_source
@@ -41,7 +42,12 @@ from maru.scheduling.command_support import (
     SchedulingUnavailableError,
     SchedulingVersionConflictError,
 )
-from maru.scheduling.inputs import SchedulingCommandRequest, SchedulingOccurrenceInput
+from maru.scheduling.day_commands import revise_scheduling_service_day
+from maru.scheduling.inputs import (
+    SchedulingCommandRequest,
+    SchedulingOccurrenceInput,
+    SchedulingServiceDayInput,
+)
 from maru.scheduling.models import (
     SchedulingCandidate,
     SchedulingCandidateRevision,
@@ -55,6 +61,7 @@ from maru.scheduling.occurrence_commands import (
     retire_scheduling_occurrence,
     revise_scheduling_occurrence,
 )
+from maru.scheduling.planning_board import build_scheduling_planning_board
 from maru.scheduling.planning_hosts import load_scheduling_host_requirements
 from maru.scheduling.planning_inspector import (
     PlanningItemLayer,
@@ -69,6 +76,7 @@ from maru.scheduling.planning_queries import (
 from maru.scheduling.planning_record_actions import submit_planning_record
 from maru.scheduling.planning_record_forms import PlanningRecordForm
 from maru.venues.models import VenueBooking
+from maru.venues.timetable_queries import list_venue_timetable_spaces
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.integration import test_scheduling_placements as planning_helpers
 from tests.integration.test_programme_commands import (
@@ -712,6 +720,62 @@ def test_current_planning_does_not_imply_history_or_private_owner_layers(
     assert audit.outcome == "allow"
     assert audit.safe_metadata["access_purpose"] == "planning"
     assert "First draft" not in repr(audit.safe_metadata)
+
+
+def test_real_owner_board_keeps_placement_under_a_revised_stable_day(planning_world):
+    placed = place(planning_world)
+    scope = read_request(planning_world)
+    original = load_scheduling_planning(
+        scope, candidate_id=placed.object_id, authorizer=planning_world.policy
+    )
+    day = original.days[0]
+    revise_scheduling_service_day(
+        next_request(planning_world),
+        day_id=day.id,
+        expected_version=day.version,
+        day=SchedulingServiceDayInput(
+            "Revised Friday", day.window, day.precision_minutes
+        ),
+        authorizer=planning_world.policy,
+    )
+    edition = EventEdition.objects.select_related("organization").get(
+        id=scope.edition_id
+    )
+    actor = Account.objects.get(id=scope.actor_id)
+    CapabilityGrantFactory(
+        principal=actor,
+        organization=edition.organization,
+        edition=edition,
+        capability_code="venues.view_workspace",
+    )
+    before = SchedulingCommandReceipt.objects.count()
+    snapshot = load_scheduling_planning(
+        scope, candidate_id=placed.object_id, authorizer=planning_world.policy
+    )
+    items = programme_queries.list_programme_timetable_items(
+        actor_id=scope.actor_id,
+        organization_id=scope.organization_id,
+        edition_id=scope.edition_id,
+        correlation_id=scope.correlation_id,
+        authorizer=_TrustedProgrammeAuthorizer(),
+    )
+    spaces = list_venue_timetable_spaces(
+        actor_id=scope.actor_id,
+        organization_id=scope.organization_id,
+        edition_id=scope.edition_id,
+        correlation_id=scope.correlation_id,
+    )
+    board = build_scheduling_planning_board(snapshot, items=items, spaces=spaces)
+    assert len(board.lanes) == 1
+    assert board.lanes[0].day.id == day.id
+    assert board.lanes[0].day.label == "Revised Friday"
+    assert board.lanes[0].entries[0].metadata_changed
+    assert (
+        board.lanes[0].entries[0].placement.envelope
+        == planning_world.placement.envelope
+    )
+    assert SchedulingCommandReceipt.objects.count() == before
+    assert not VenueBooking.objects.exists()
 
 
 def test_no_selected_candidate_does_not_silently_pick_the_first(planning_world):

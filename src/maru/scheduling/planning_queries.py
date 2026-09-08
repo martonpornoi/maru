@@ -183,6 +183,8 @@ class PlanningPlacement:
         Proposed capacity, not an attendee or Registration count.
     envelope
         Absolute preparation, effective delivery and teardown boundaries.
+    day_id
+        Stable owning day, even when the selected historical day revision changed.
     """
 
     id: UUID
@@ -193,6 +195,7 @@ class PlanningPlacement:
     capacity_mode: str
     expected_attendance: int
     envelope: SchedulingEnvelope
+    day_id: UUID
 
 
 @dataclass(frozen=True, slots=True)
@@ -425,7 +428,7 @@ def _placements(revision: SchedulingCandidateRevision) -> tuple[PlanningPlacemen
             edition_id=revision.edition_id,
             id__in=[placement for _, placement in manifest],
         )
-        .select_related("occurrence_revision")
+        .select_related("occurrence_revision", "day_revision")
         .order_by("effective_starts_at", "id")[: MAX_OCCURRENCES + 1]
     )
     actual = {(row.occurrence_revision.occurrence_id, row.id) for row in rows}
@@ -446,6 +449,7 @@ def _placements(revision: SchedulingCandidateRevision) -> tuple[PlanningPlacemen
                 row.effective_ends_at,
                 row.teardown_ends_at,
             ),
+            row.day_revision.day_id,
         )
         for row in rows
     )
