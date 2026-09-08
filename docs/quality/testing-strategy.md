@@ -1,7 +1,7 @@
 # Testing strategy
 
 Status: Active
-Last updated: 2026-09-05
+Last updated: 2026-09-07
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
@@ -82,7 +82,7 @@ unrelated earlier Workforce error. This distinguishes the intended protection
 from merely observing that some migration prevented downgrade.
 
 Benchmark whole groups including shared setup and final restoration. A fast
-case body alone is not a suite-speed claim. Refresh whole-file scheduling weights
+case body alone is not a suite-speed claim. Refresh indivisible-group scheduling weights
 from JUnit evidence after moving cases; compare full certification with the same
 coverage and eight-worker topology before claiming an overall speedup. Keep the
 120-minute fail-stop, complete selection, and branch-aware coverage gate intact.
@@ -279,157 +279,134 @@ matrix and is not production approval.
 
 ## GitHub acceptance topology
 
-Draft pull requests classify the submitted diff and validate only the locked
-Python inputs and exact Actions policy. Their stable `PR gate` remains
-explicitly non-green until the author selects **Ready for review**. That event,
-plus ready-state opens, synchronizations, and reopenings, starts authoritative
-acceptance. Converting a pull request back to draft cancels obsolete work and
-restores the non-green draft result. Superseded runs are cancelled and one
-stable `PR gate` remains the branch-protection target:
+[ADR 0090](../architecture/decisions/0090-risk-based-postgresql-acceptance.md)
+owns risk-selected PostgreSQL acceptance. Drafts retain cheap locked-input and
+Actions-policy feedback and an explicitly non-green `PR gate`. Ready-state
+changes run the authoritative exact merge-candidate path; superseded runs are
+cancelled. Documentation-only changes avoid PostgreSQL.
 
-- documentation-only changes run static and warning-fatal documentation checks
-  without PostgreSQL;
-- ordinary Python changes run static/contracts/documentation, unit tests, and a
-  PostgreSQL selection consisting of directly changed tests, tests named for or
-  importing affected modules, and critical API/readiness smoke. The classifier
-  promotes a missing, unmeasurable, or greater-than-30-minute selection to full
-  acceptance instead of letting the targeted lane exceed its 45-minute limit;
-- frontend and dependency work adds only the relevant generated-contract,
-  build, and advisory checks. A ready graph-visible manifest, lock, or workflow
-  diff first runs the pinned dependency-review Action inside `changes`, failing
-  on an introduced moderate-or-higher vulnerability in runtime, development,
-  or unknown scope before fan-out. `Dockerfile` keeps broader security routing
-  but does not select this graph comparison. Checked-in Staff Console output is
-  classified as frontend work,
-  while Django templates and non-Staff-Console static assets are classified
-  with their owning Python module. Every non-full quality run also executes the
-  distribution-license and release-metadata contracts. When the diff changes
-  root package metadata/legal files, frontend source, or `src/maru`, it also
-  builds and inspects a wheel and source archive against every current Django
-  template/static asset and both PEP 639 legal files. A root legal-file-only
-  change therefore cannot bypass packaging evidence; and
-- migrations, models, settings, locks, security/authority boundaries,
-  cross-cutting top-level Django templates/static, workflows, test
-  configuration, and CI harnesses fail closed to reusable full acceptance.
+| Code change | Required PostgreSQL evidence |
+| --- | --- |
+| Ordinary source, template or frontend behavior | Every current-schema integration case |
+| Domain models or migrations | Current cases, affected owner/dependent historical cases and committed whole-graph recovery |
+| Direct historical-test changes | Current cases, the changed historical file and whole-graph recovery |
+| Global authorization, identity, audit, runtime settings/readiness, dependencies, workflows, shared test helpers or inventory | Every current and historical case |
+| Protected or mass deletion | Exhaustive evidence plus exact current-owner destructive review |
 
-Deleting 25 or more paths, or deleting or renaming protected source, tests,
-repository automation, governance records, or critical root policy/deployment
-files requires `destructive-change-reviewed` and full acceptance. Under the
-current sole-maintainer policy, only the repository owner's exact label-
-application event for the current head conveys approval; every other pull-
-request action treats an existing label as stale. A trusted, no-checkout
-`pull_request_target` control removes the
-stale UI label after head, readiness, draft, or reopen transitions, without
-relying on its token-generated event to retrigger acceptance. The maintainer
-must review the new scope before reapplying it. Repository safety passes before
-selected work can fan out, and a
-targeted selection that unexpectedly contains no tests fails instead of
-silently passing.
+All code paths also run the unit suite, static analysis, NumPy and semantic
+docstrings, warning-fatal documentation, Django/OpenAPI/client contracts,
+frontend test/type/build validation and security audits. Combined branch-aware
+coverage retains the 90-percent threshold, with no new exclusions. Two-decimal
+reporting prevents a value such as 89.56 from passing as a rounded whole 90.
+PostgreSQL execution uses `coverage run -m scripts.run_postgres_acceptance`
+so recording includes Django initialization and graph planning before pytest;
+do not nest a second pytest-cov recorder around this already-recorded process.
+SQLite never
+substitutes for PostgreSQL.
 
-This routing is a reviewed repository policy, not an independent server-side
-classifier. A pull request can modify its candidate workflow and classifier, so
-the present sole-maintainer model assumes that the only person with write and
-merge authority reviews such changes. Before granting that authority to another
-person, enable stale-dismissing approval and CODEOWNER review or introduce a
-separately designed trusted-base policy check.
+### Explicit membership and grouping
 
-Both frontend paths reject tracked diffs and untracked files after rebuilding
-the checked-in Staff Console output, so a newly emitted chunk or legal asset
-cannot disappear from the submitted change.
+`scripts/ci_historical_tests.json` lists exact top-level historical functions
+and migration owners. Everything unlisted remains current behavior, including
+current permissions, raw-DML, concurrency and readiness cases in mixed files.
+No speed-based or filename-based exclusion is allowed. Unknown files/functions,
+owners, duplicate entries and unsafe fixture grouping fail before execution.
+When adding a migration test, review its actual executor and recovery behavior
+and declare its owners; merely importing a migration does not make a current
+guard test historical.
 
-Reusable full acceptance runs static analysis, strict NumPy documentation,
-Django/OpenAPI/client contracts, Staff Console acceptance, dependency audits,
-the unit suite, and every integration file. Static analysis, documentation,
-contracts/frontend, and security run concurrently so one late category does
-not delay the others or obscure its failure. It distributes integration files
-across eight isolated PostgreSQL jobs; files remain whole and serialized within
-a job. The checked-in timing map sums file-level JUnit durations from a
-successful exact local certification run. A new file receives a deterministic
-median fallback for its first diagnostic run, while a committed clean candidate
-must refresh the inventory so its paths exactly match every current integration
-file. The selector validates non-empty unique assignment and uses deterministic
-path/index tie-breaks. Static checks, including the focused distribution-license
-contracts, and dependency security must pass before unit or integration work
-starts, so an early policy or advisory failure does not spend database runner-
-minutes.
+The planner resolves changed nodes and their descendants from Django's actual
+migration graph without a database connection. Model-only changes include their
+owner's current leaves and dependents. Unknown or deleted schema nodes promote
+to exhaustive history. New unrelated behavior tests remain current; actual
+affected history additionally requires the committed full-graph recovery case.
 
-The dependency-diff step and current-tree audits prove different things. The
-former can reject a newly introduced vulnerable dependency before installation;
-the latter can catch an unchanged lock entry after advisory knowledge changes.
-The 2026-08-21 live graph contained 293 packages across PyPI, npm, GitHub
-Actions, and the root repository document, and read-only comparisons recognized
-Maru's uv, pnpm, project, and workflow inputs. Neither result covers an
-unsupported or unparseable manifest or the `Dockerfile` base image. Automated
-license enforcement remains deferred, and OpenSSF Scorecard output and
-pull-request comments remain disabled.
+Current cases in each file remain serial together. Independently restorable
+historical functions can occupy different isolated databases; every
+parameterized variant stays with its function. Four shared historical baselines
+remain indivisible. The inventory separately reviews the one independently
+repeatable module-scoped invitation RSA-key fixture; it is not shared database
+state. New broad-scoped fixtures require another explicit grouping review.
 
-The unit suite is explicitly non-database; its only former PostgreSQL receipt
-test now belongs to integration. Unit and integration jobs publish hidden
-coverage parts and JUnit diagnostics for seven days. One job combines them and
-enforces branch-aware 90-percent coverage. Exact clean-tree Issue #63
-certification timings cover all 175 current integration files and replace the
-stale 2026-08-21 inventory, which omitted 19 current files and retained one
-deleted path. The refreshed deterministic schedule balances all eight shards
-between 4,525.6 and 4,525.9 measured seconds. The first hosted Issue #63 run
-demonstrated why the refresh was required: seven shards passed, while the stale
-schedule assigned 5,680.7 locally measured seconds to shard 3 and GitHub
-cancelled it at the existing 120-minute fail-stop. The refreshed balance keeps
-the timeout, complete file selection, database isolation, and combined coverage
-boundary unchanged. Matrix fail-fast is disabled, blanket retries are forbidden,
-and external actions plus PostgreSQL and container bases are pinned to reviewed
-immutable digests. `Full CI gate` certifies high-risk pull requests, manual
-runs, and releases. Merge-queue support remains disabled until that event emits
-the same required `PR gate`.
+Every worker collects the complete integration suite and checks it against the
+source inventory before selecting its unique groups. Selection JSON records
+actual case IDs. Empty, missing, duplicate, skipped or incompletely executed
+required cases cannot pass. The complete partition covers each required group
+exactly once. No tests run concurrently in a shared database; real migration
+execution, commit visibility, downgrade fences and recovery assertions remain.
 
-The later preview-first Programme import candidate demonstrated that path-
-complete timing evidence can still become stale after a migration tail changes.
-Its first hosted run passed seven shards; shard 5 reached 98 percent and
-continued issuing PostgreSQL work without an assertion failure until the 120-
-minute job limit cancelled it. Exact-head local JUnit evidence showed that this
-shard actually needed 5,690.7 seconds despite a 4,551.6-second projection. A
-complete 178-file refresh now balances the deterministic schedule between
-5,217.370 and 5,217.442 seconds. The 120-minute fail-stop, eight-shard selection,
-serial whole-file isolation, fail-fast policy, no-retry boundary, and combined
-branch-coverage requirement remain unchanged.
+### Runtime and cost boundaries
 
-Since the 2026-08-20 public transition, every repository workflow uses standard
-GitHub-hosted runners and the repository has no registered self-hosted runner.
-Actions are limited to the exact immutable revisions in
-`.github/actions-allowlist.json`, workflow tokens default to read-only, and
-fork pull requests receive no publishing or environment authority. GitHub may
-hold eligible contribution-code `pull_request` runs from a first-time fork
-contributor until a maintainer approves execution. That starts isolated read-
-only execution and is not approval of the pull request. The base-branch metadata
-cleanup remains no-checkout trusted automation and is not subject to that fork-
-code approval. Contributors still run `scripts/certify.ps1`
-before review for complete local feedback, but the unsigned local receipt never
-substitutes for GitHub's current merge-candidate result.
-The pull-request workflow does not repeat acceptance on the identical-tree
-squash push to `main`; managed CodeQL still owns its default-branch scan, and
-release publication recertifies the exact current `main` commit.
+Routine hosted acceptance uses eight shards. Exhaustive hosted acceptance uses
+sixteen smaller groups, at most eight running concurrently, with the unchanged
+120-minute per-job limit. Local acceptance uses eight isolated PostgreSQL
+containers and the same selection/grouping rules. Two hosted waves incur some
+additional setup overhead; they give individual jobs headroom, not a promise
+that the complete historical suite becomes fast. Matrix fail-fast stays disabled
+and blanket retries remain prohibited.
 
-GitHub Pages publication is not another full acceptance path. After a protected
-pull request merges, its dedicated workflow rebuilds only the already-accepted
-documentation surface from protected `main`, with point-in-time current-main
-checks immediately before build and deployment: locked-input and Action-policy
-preflight, PyDocLint, semantic docstring validation, maintained Markdown
-validation, and warning-fatal Sphinx/AutoAPI. It starts no PostgreSQL service
-and runs no application test matrix. A read-only build job produces one fresh
-generated-HTML artifact; a separate `github-pages` job with only Pages write and
-OIDC authority deploys it. Pull requests and non-main manual dispatches cannot
-publish. First-deployment evidence additionally exercises one Mermaid page in a
-real browser against its exact accepted script origins; that external behavior
-is not inferred from a successful static build.
+`scripts/ci_test_group_timings.json` contains scheduling estimates, not evidence
+of acceptance. The initial estimates sum successful exact-head PR #82 local
+JUnit observations for matching current-main groups; they are deliberately
+labelled cross-revision estimates. New groups receive the largest known group
+cost until measured; stale or invalid entries fail. Do not infer completeness
+from timings: collection and executed-case evidence establish it independently.
+The old file-level runner/map remain diagnostic tooling, not the PR selection
+authority. Record comparable setup, execution and teardown, not only case bodies.
 
-Managed CodeQL default setup does not analyze fork pull requests, and its native
-merge protection does not cover Dependabot pull requests. `PR gate` remains the
-required merge result for those changes; default-branch and weekly CodeQL scans
-retain post-merge coverage. A cross-repository fork contribution still needs a
-documented rehearsal before Maru calls that path fully proven.
+For a reviewed timing refresh, retain the exact receipt and all successful JUnit
+reports before another local certification replaces them. Match each report's
+file/function (all parameter variants included) through `case_group()` and sum
+its JUnit case durations, including setup and teardown, per group. Reconcile
+every executed case with the shard selection JSON, rejecting duplicates,
+failures, errors, skips, missing or extra cases. Update only groups measured by
+that complete scope; current-only evidence cannot replace historical weights.
+Document the source revision and scope with the refresh. A timing edit changes
+scheduling only and itself requires exhaustive harness acceptance.
 
-The ephemeral Actions databases prove migrations, constraints, authorization,
-and transactional behavior; they are not production restore/PITR or runtime-
-credential evidence.
+### Nightly, release and failure handling
+
+The full-acceptance workflow runs nightly for changed default-branch revisions.
+Authenticated read-only run history deduplicates an already successful or active
+exact-main run. Successful deduplication requires that run's actual successful
+`Full CI gate`, bound to the exact revision and latest attempt; a selector-only
+successful workflow is not test evidence. Earlier failed/cancelled runs cause an actionable red selection
+job, not another expensive blind retry. Repair the failure or deliberately
+dispatch after inspecting its cause. Nightly failures block release and work
+depending on that boundary; they must not become ignored background noise.
+Manual dispatch requests full acceptance explicitly. Release publication always
+recertifies its exact current-main revision independently of nightly deduplication.
+
+This accepts that an unforeseen historical compatibility interaction may be
+found after an ordinary merge, while keeping current safety evidence on every
+code PR and exhaustive pre-merge evidence for global safety changes.
+Historical-only release testing is not the adopted policy.
+
+### Protected execution and retained evidence
+
+Repository safety precedes expensive fan-out. Protected/mass deletion and
+renaming retain the exact fresh owner-applied destructive-review requirement.
+Dependency review remains a fail-fast, read-only diff check for graph-visible
+manifest/lock/workflow changes; current-tree audits still detect later advisory
+knowledge. Unsupported manifests, container images and deferred license policy
+are not silently covered by dependency review.
+
+Standard ephemeral hosted runners, immutable Actions/PostgreSQL digests,
+read-only contribution tokens and no persistent self-hosted runner remain.
+Workflow/classifier changes require the sole maintainer's review; before another
+person receives merge authority, add mandatory CODEOWNER review or a separately
+reviewed trusted-base policy. Generated frontend output must match tracked and
+untracked build results. See [repository governance](../development/repository-governance.md)
+for the unchanged trust, destructive-review and supply-chain boundaries.
+
+Unit and integration jobs retain coverage parts, selection JSON and JUnit
+diagnostics for seven days. The aggregate gate requires every selected job and
+combined coverage. Local unsigned receipts never replace hosted acceptance.
+No duplicate application acceptance runs on the identical-tree squash push.
+CodeQL remains independent, with its documented fork/Dependabot limitations.
+Pages publication builds documentation only and adds no application acceptance
+or PR publication authority. CI is not deployment, production restore/PITR,
+runtime-credential or production-readiness evidence.
 
 ### Next GitHub testing layers
 

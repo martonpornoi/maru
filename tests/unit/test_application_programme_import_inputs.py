@@ -270,6 +270,11 @@ def test_typed_proposal_answers_have_one_canonical_shape(
     answer = item.answers[0]
     assert answer.field_type.value == field_type
     assert answer.value == expected
+    projected = answer.as_application_value()
+    assert projected == (list(expected) if isinstance(expected, tuple) else expected)
+    if isinstance(projected, list):
+        projected.append("local-edit")
+        assert answer.value == expected
 
 
 @pytest.mark.parametrize(
@@ -314,6 +319,21 @@ def test_typed_proposal_answers_have_one_canonical_shape(
         ),
         ("unknown", "value", "applications_programme_import_field_invalid"),
         ("short_text", None, "applications_programme_import_field_invalid"),
+        ("decimal", None, "applications_programme_import_field_invalid"),
+        ("decimal", "1e2", "applications_programme_import_field_invalid"),
+        ("decimal", "1.00001", "applications_programme_import_field_invalid"),
+        (
+            "decimal",
+            "1234567890123456789",
+            "applications_programme_import_field_invalid",
+        ),
+        (
+            "multiple_choice",
+            ["talk", "talk"],
+            "applications_programme_import_field_invalid",
+        ),
+        ("date", "20270101", "applications_programme_import_field_invalid"),
+        ("time", "25:30:00", "applications_programme_import_field_invalid"),
     ],
 )
 def test_typed_proposal_answers_reject_wrong_or_excluded_shapes(
@@ -491,6 +511,127 @@ def test_parser_accepts_only_raw_bytes() -> None:
         parse_programme_import_document("{}")  # type: ignore[arg-type]
 
     assert failure.value.code == "applications_programme_import_payload_type_invalid"
+
+
+@pytest.mark.parametrize(
+    ("field_type", "constraints"),
+    [
+        ("integer", {"minimum_value": -(2**31), "maximum_value": 2**31 - 1}),
+        ("integer", {"minimum_value": None, "maximum_value": None}),
+        ("decimal", {"minimum_value": "-1.25", "maximum_value": "12.34"}),
+        ("decimal", {"minimum_value": None, "maximum_value": None}),
+        ("decimal", {"minimum_value": "0", "maximum_value": "0"}),
+        ("short_text", {"minimum_length": None, "maximum_length": None}),
+        ("boolean", {}),
+        ("date", {}),
+        ("time", {}),
+        ("instant", {}),
+        ("address", {}),
+        (
+            "single_choice",
+            {
+                "options": [
+                    {"code": "talk", "label": "Talk"},
+                    {"code": "panel", "label": "Panel"},
+                ]
+            },
+        ),
+    ],
+)
+def test_call_question_constraints_survive_canonical_round_trip(
+    field_type: str, constraints: dict[str, object]
+) -> None:
+    """Certify current schema parsing and reloading, independent of migrations."""
+    call = _call_item()
+    question = call["definition"]["sections"][0]["questions"][0]
+    question.update(field_type=field_type, constraints=constraints)
+
+    parsed = parse_programme_import_document(_raw(_document(items=[call])))
+    item = parsed.items[0]
+    assert isinstance(item, ProgrammeImportCallItemInput)
+    canonical = json.loads(item.canonical_payload)
+    assert (
+        canonical["definition"]["sections"][0]["questions"][0]["constraints"]
+        == constraints
+    )
+    reloaded = parse_programme_import_item_payload(item.canonical_payload)
+    assert isinstance(reloaded, ProgrammeImportCallItemInput)
+    assert reloaded.definition_input == item.definition_input
+    assert reloaded.source_digest == item.source_digest
+
+
+@pytest.mark.parametrize(
+    ("source_type", "constraints", "value"),
+    [
+        ("short_text", {"minimum_length": 0, "maximum_length": 160}, "Café"),
+        ("integer", {"minimum_value": None, "maximum_value": None}, 0),
+        ("integer", {"minimum_value": None, "maximum_value": None}, -(2**31)),
+        ("integer", {"minimum_value": None, "maximum_value": None}, 2**31 - 1),
+        ("boolean", {}, False),
+        ("boolean", {}, True),
+    ],
+)
+def test_call_conditions_preserve_typed_values_and_stable_evidence(
+    source_type: str, constraints: dict[str, object], value: object
+) -> None:
+    call = _call_item()
+    questions = call["definition"]["sections"][0]["questions"]
+    questions[0].update(field_type=source_type, constraints=constraints)
+    questions[1]["condition"] = {
+        "question_key": "title",
+        "operator": "equals",
+        "value": value,
+    }
+
+    item = parse_programme_import_document(_raw(_document(items=[call]))).items[0]
+    assert isinstance(item, ProgrammeImportCallItemInput)
+    condition = item.definition_input.sections[0].questions[1].condition
+    assert condition is not None
+    assert condition.value == value
+    assert type(condition.value) is type(value)
+    assert (
+        parse_programme_import_item_payload(item.canonical_payload).source_digest
+        == item.source_digest
+    )
+
+
+@pytest.mark.parametrize("value", [None, [], {}, 2**31, -(2**31) - 1])
+def test_call_conditions_reject_invalid_value_shapes_without_echoing_them(
+    value: object,
+) -> None:
+    call = _call_item()
+    question = call["definition"]["sections"][0]["questions"][1]
+    question["condition"] = {
+        "question_key": "title",
+        "operator": "equals",
+        "value": value,
+    }
+    with pytest.raises(ProgrammeImportInputError) as failure:
+        parse_programme_import_document(_raw(_document(items=[call])))
+    assert failure.value.code == "applications_programme_import_field_invalid"
+    assert failure.value.field == "value"
+    assert (
+        failure.value.pointer
+        == "/items/0/definition/sections/0/questions/1/condition/value"
+    )
+
+
+def test_call_conditions_reject_unrecognized_operators_at_the_condition_boundary() -> (
+    None
+):
+    call = _call_item()
+    call["definition"]["sections"][0]["questions"][1]["condition"] = {
+        "question_key": "title",
+        "operator": "untrusted-secret-operator",
+        "value": "talk",
+    }
+    with pytest.raises(ProgrammeImportInputError) as failure:
+        parse_programme_import_document(_raw(_document(items=[call])))
+    assert failure.value.code == "applications_programme_import_field_invalid"
+    assert (
+        failure.value.pointer == "/items/0/definition/sections/0/questions/1/condition"
+    )
+    assert "untrusted-secret" not in str(failure.value)
 
 
 @pytest.mark.parametrize(

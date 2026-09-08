@@ -103,7 +103,7 @@ independent review and
 moderation, accountable decisions, and exact-recipient acknowledgement under
 ADR 0085. Review-side acceptance does not create a target receipt or Programme
 item. Issue #77, delivered through PR #78, adds explicit accepted-item
-conversion. Issue #79 now develops independent host relationships and
+conversion. Issue #79, delivered through PR #80, adds independent host relationships and
 availability, before Scheduling, interactive timetable editing,
 staffing, releases, continuity, and integrated Programme-only rehearsal. Umbrella
 #48 remains open; no current profile or surface is activated by this kernel.
@@ -356,19 +356,21 @@ browser slice only; deployment/stopped-writer cutover, broader visual and
 mutation-role coverage, keyboard/automated accessibility, representative
 restore/PITR, and owner/governance gates remain.
 
-ADR 0060 replaces unconditional twelve-shard pull-request acceptance with a
-change-aware stable `PR gate`: documentation changes use no PostgreSQL,
-ordinary module work uses bounded affected tests, and high-risk boundaries fail
-closed to reusable full acceptance. ADR 0066 makes drafts cheap and explicitly
-non-green until **Ready for review**, then runs the authoritative selected path.
-Repository safety now precedes fan-out, protected renames and every destructive
-change require full acceptance, and the identical-tree squash push no longer
-repeats pull-request acceptance. Full certification uses a database-free unit
-job, eight measured whole-file PostgreSQL integration shards, combined
-coverage, four parallel non-database gates, and a stable `Full CI gate`.
-Accepted main-run timings are refreshed; missing or over-30-minute targeted
-projections promote to full acceptance. A head update also clears prior
-destructive-review evidence before the revised scope can run. Draft pull
+ADR 0090 supersedes ADRs 0060/0061/0063/0066's selection and grouping rules:
+documentation changes use no PostgreSQL; every code PR runs all current-schema
+cases; domain schema changes add affected owner/dependent history and committed
+whole-graph recovery; global safety/harness and destructive changes require
+exhaustive history. Changed-revision nightly acceptance and releases retain
+full history. Routine and local runs use eight isolated databases; exhaustive
+hosted runs use sixteen smaller groups with at most eight active databases and
+unchanged per-job limits. Shared historical baselines remain indivisible.
+Coverage retains its 90-percent threshold and exclusions, with two-decimal
+reporting and measurement starting before application initialization.
+Draft-light feedback, fail-closed preflight, protected `PR gate` and no duplicate
+acceptance on the identical-tree squash remain. A head update clears prior
+destructive-review evidence before the revised scope can run. Issue #83 must
+itself pass exhaustive acceptance; its delivery state belongs in CURRENT.
+Draft pull
 request 9 proved that the first Workforce header edit did not restore CodeQL
 extraction even though the job stayed green. ADR 0069 now uses an equivalent
 bounded `TypeVar` for that one union-bounded generic and rejects the two header
@@ -764,7 +766,7 @@ coordination and governed ownership recovery. Issue #71 implements dormant
 staged review and accountable decisions. Issue #77 adds the dedicated accepted
 Applications adapter: one exact effective acceptance produces one private
 source-bound item with seven initially required readiness concerns, without
-activating a profile or creating hosts. Issue #79 develops Programme-owned host
+activating a profile or creating hosts. Issue #79 adds Programme-owned host
 relationships and deliberately shared availability under ADR 0087. Next are
 Scheduling, staffing, release, continuity, setup, and integrated
 acceptance in dependency order. Each child is separately verified and delivered.

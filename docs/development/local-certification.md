@@ -1,7 +1,7 @@
 # Local exact-commit certification
 
 Status: Required contributor evidence; GitHub independently verifies pull requests
-Last updated: 2026-08-21
+Last updated: 2026-09-07
 
 ## What the gate proves
 
@@ -12,12 +12,22 @@ Last updated: 2026-08-21
   quality, and a fresh warning-fatal Sphinx build;
 - Django system and migration drift, production settings, OpenAPI and generated
   TypeScript contracts, and the Staff Console test/type/build boundary;
-- every unit and PostgreSQL integration test; and
+- every unit and current-schema PostgreSQL test, plus risk-selected history; and
 - combined branch-aware coverage at or above 90 percent.
 
+Coverage starts before the PostgreSQL runner initializes Django, using
+`coverage run -m scripts.run_postgres_acceptance`. Unit tests retain pytest-cov.
+The shared configuration uses two-decimal reporting at the same 90-percent
+threshold, so a whole-number rounded shortfall cannot certify a candidate.
+The local type-analysis cache lives inside the fresh `.local-ci/` artifact
+directory, preventing stale Django model relationships from another branch
+from entering exact-commit certification.
+
 The test phase uses one database-free unit process and eight deterministic
-integration processes backed by eight isolated PostgreSQL containers. Every
-integration file stays whole and serial within its shard. The containers are
+integration processes backed by eight isolated PostgreSQL containers. Current
+cases in a file stay together; independently restorable historical functions
+may form separate groups, while shared historical baselines stay indivisible.
+Each database executes serially. The containers are
 local Docker resources, not eight GitHub-hosted runners. An unreachable unit
 database URL makes accidental database use fail instead of silently changing
 the unit boundary.
@@ -30,13 +40,26 @@ Start Docker Desktop, make the working tree clean, and run:
 ./scripts/certify.ps1
 ```
 
-The default of eight integration shards fits the current 24-logical-core,
-64-GB certifier. A maintainer may lower `-IntegrationShards` for diagnostic
-work, but only the default eight-shard command is repository acceptance.
+Default `Auto` compares the clean head to the resolved `origin/main` commit;
+fetch first and pass `-Base EXACT_BASE` for another reviewed comparison.
+The local and hosted paths use the same ADR 0090 classification and migration
+dependency closure. Global safety/harness changes require exhaustive history;
+ordinary code changes no longer require an exhaustive local run. Running on
+the base itself fails conservatively to exhaustive mode. Use `-Mode Full` for
+explicit complete certification. Pre-review runs require eight isolated databases.
+
+`-Mode CurrentDiagnostic` benchmarks only unit/current-schema PostgreSQL tests
+and their unchanged 90-percent combined branch coverage. It skips non-database
+quality gates and emits `diagnostic_success`, never certification success. It
+cannot replace the required scope for a high-risk diff. Only that diagnostic
+mode accepts fewer than eight databases; results from different worker counts
+are not comparable whole-suite speedup evidence.
 
 Successful local evidence is written below `.local-ci/` and includes
 `certification.json`, JUnit reports, process logs, XML/HTML coverage, and the
-generated contributor site in `docs/_build/html`. `.local-ci/` is ignored and
+generated contributor site in `docs/_build/html`. Version-2 receipts record the
+exact head, resolved base, historical scope, elapsed time and gates actually run.
+Per-shard selection JSON records actual collected case identities. `.local-ci/` is ignored and
 must not be committed or presented as a cryptographic attestation. The command
 deletes only that verified, repository-contained artifact directory and its own
 `maru-cert-*` containers.
@@ -68,12 +91,15 @@ fail-closed acceptance path on standard ephemeral hosted Linux runners. The
 stable required result is `PR gate`, not a file uploaded from the contributor's
 computer.
 
-Documentation-only changes avoid PostgreSQL, ordinary source changes run unit
-and affected integration tests, and changes to workflows, dependencies, models,
-migrations, settings, security boundaries, or the test harness invoke the
-complete eight-shard matrix. Missing timing evidence or a targeted projection
-over 30 minutes also routes to full acceptance. This selection is repository
-policy, not a contributor assertion.
+Documentation-only hosted changes avoid PostgreSQL. Every code PR runs current
+PostgreSQL behavior plus the history required by ADR 0090: domain schema changes
+add affected owners/dependents and whole-graph recovery; global safety, runtime,
+dependency and test-harness changes retain exhaustive history. The hosted
+exhaustive path uses sixteen smaller groups with at most eight running at once;
+routine paths use eight. Local certification always uses eight isolated services.
+This selection is repository policy, not a contributor assertion. See the
+[testing strategy](../quality/testing-strategy.md#github-acceptance-topology)
+for inventory review, parameterized/shared-fixture grouping and nightly behavior.
 
 Draft pull requests perform only the classifier and locked-input/Actions-policy
 preflight and retain an explicitly non-green `PR gate`. **Ready for review**

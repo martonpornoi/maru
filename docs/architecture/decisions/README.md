@@ -65,7 +65,7 @@ the system.
 | [0058](0058-professional-python-documentation-contracts.md) | Partially superseded | Require complete public NumPy contracts and reject generated boilerplate; ADR 0059 strengthens signature synchronization and exact raises |
 | [0059](0059-strict-pydoclint-and-bounded-ruff-exemptions.md) | Accepted | Enable the strictest useful PyDocLint contract and replace broad Ruff exemptions with eight bounded global categories |
 | [0060](0060-protected-collaboration-and-release-evidence.md) | Partially superseded | Protected GitHub flow, CalVer, and evidence-bearing OCI releases; ADR 0061 replaces its six-shard full-acceptance decision |
-| [0061](0061-latency-bounded-full-acceptance.md) | Accepted | Change-aware hosted acceptance with eight measured PostgreSQL shards, restored for public collaboration by ADR 0063 |
+| [0061](0061-latency-bounded-full-acceptance.md) | Partially superseded | Parallel quality gates remain; ADR 0090 replaces whole-file grouping and historical selection |
 | [0062](0062-local-exact-commit-certification.md) | Superseded | Historical private-repository local certification topology; ADR 0063 restores hosted execution after the public transition |
 | [0063](0063-public-hosted-protected-collaboration.md) | Partially superseded | Public hosted merge-candidate acceptance, no-bypass rulesets, immutable Action allowlisting, and no persistent runner; ADR 0066 replaces merge-group, exact-head, and nine-database details |
 | [0064](0064-repository-supply-chain-and-code-scanning-policy.md) | Accepted | Security-only dependency automation, fail-fast lock and Actions policy checks, and reconciled CodeQL merge thresholds |
@@ -92,6 +92,7 @@ the system.
 | [0085](0085-exact-revision-programme-review-and-decisions.md) | Accepted | Pin dedicated Programme review to exact submitted seals, immutable staged policies, independent actors, accountable decisions, and recipient-only acknowledgement without conversion or activation |
 | [0086](0086-source-bound-programme-accepted-item-conversion.md) | Accepted | Convert exact effective acceptance into a reciprocally source-bound private Programme item and unresolved readiness without hosting or activation |
 | [0087](0087-programme-host-confirmation-and-availability.md) | Accepted | Keep Programme host invitations, person-owned confirmation and deliberately shared availability separate from proposal and attendee relationships |
+| [0090](0090-risk-based-postgresql-acceptance.md) | Accepted | Retain current PostgreSQL behavior on code PRs, risk-select history and run exhaustive changed-revision nightly/release acceptance with bounded concurrency |
 
 New ADRs use the next four-digit number and contain:
 

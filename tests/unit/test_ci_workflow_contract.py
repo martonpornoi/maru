@@ -418,7 +418,7 @@ def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> 
     assert "python scripts/validate_actions_allowlist.py" in workflow
     assert workflow.count("needs: preflight") == 4
     assert jobs["unit"]["needs"] == ["static", "security"]
-    assert jobs["integration"]["needs"] == ["static", "security"]
+    assert jobs["integration"]["needs"] == ["preflight", "static", "security"]
     license_step = next(
         step
         for step in jobs["static"]["steps"]
@@ -435,9 +435,20 @@ def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> 
     assert "uv build --out-dir .ci-distributions" in package_step["run"]
     assert "scripts/verify_package_artifacts.py" in package_step["run"]
     assert "if" not in package_step
-    assert "shard: [1, 2, 3, 4, 5, 6, 7, 8]" in workflow
-    assert "--shard-count 8" in workflow
-    assert "scripts/run_ci_test_shard.py" in workflow
+    assert jobs["integration"]["strategy"]["max-parallel"] == 8
+    assert "fromJSON(needs.preflight.outputs.matrix)" in workflow
+    assert "steps.database-plan.outputs.matrix" in workflow
+    assert "--plan-only --github-output" in workflow
+    assert '"$SHARD_COUNT"' in workflow
+    assert "scripts.run_postgres_acceptance" in workflow
+    assert "--evidence reports/selection-" in workflow
+    integration_run = next(
+        step["run"]
+        for step in jobs["integration"]["steps"]
+        if step.get("name") == "Run validated risk-selected shard"
+    )
+    assert "coverage run -m scripts.run_postgres_acceptance" in integration_run
+    assert "--cov" not in integration_run
     assert "coverage combine .ci-artifacts/coverage-parts" in workflow
     assert "coverage report --fail-under=90" in workflow
     assert "name: Full CI gate" in workflow
@@ -694,13 +705,14 @@ def test_pages_external_settings_have_exact_checked_in_desired_state() -> None:
 
 def test_local_certification_preserves_database_isolation_and_total_coverage() -> None:
     certification = LOCAL_CERTIFICATION_PATH.read_text(encoding="utf-8")
+    assert '$env:MYPY_CACHE_DIR = Join-Path $ArtifactRoot "mypy"' in certification
 
     for required in (
         "[int] $IntegrationShards = 8",
         "postgres:17.11-alpine@sha256:",
         '"maru-cert-integration-$Shard-$RunToken"',
         "maru_unit_no_database",
-        '"scripts/run_ci_test_shard.py"',
+        '"-m", "coverage", "run", "-m", "scripts.run_postgres_acceptance"',
         '"coverage", "combine"',
         '"coverage", "report", "--fail-under=90"',
         "Certification requires a clean working tree",

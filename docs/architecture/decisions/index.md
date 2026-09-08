@@ -20,6 +20,11 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0090](0090-risk-based-postgresql-acceptance.md) defines current PostgreSQL
+acceptance, historical migration selection, nightly deduplication and bounded
+isolated work groups. It supersedes earlier selection/grouping rules without
+lowering coverage or changing protected merge authority.
+
 | ADR | Status | Decision |
 | --- | --- | --- |
 | [0072](0072-protected-exact-main-sphinx-pages-publication.md) | Accepted | Publish warning-fatal Sphinx output from protected `main` through a least-privilege Pages boundary. |

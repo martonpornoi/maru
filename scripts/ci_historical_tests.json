@@ -1,0 +1,451 @@
+{
+  "tests/integration/test_application_programme_conversion_migrations.py": {
+    "owners": [
+      "applications",
+      "authorization",
+      "programme"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_completed_conversion_fences_contraction_before_any_guard_is_removed",
+      "test_empty_conversion_reversal_preserves_the_old_source_column_and_reinstalls",
+      "test_organizer_item_survives_unused_conversion_downgrade_and_upgrade"
+    ]
+  },
+  "tests/integration/test_application_programme_import_historical_retirement.py": {
+    "owners": [
+      "applications",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_historical_orphan_staging_remains_disposable_after_upgrade"
+    ]
+  },
+  "tests/integration/test_application_programme_import_migration_executor.py": {
+    "owners": [
+      "applications",
+      "authorization",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_capability_contraction_refuses_retained_authority",
+      "test_each_populated_relation_independently_blocks_terminal_downgrade",
+      "test_empty_slice_reverses_and_reapplies_with_dependent_contracts",
+      "test_populated_schema_preflight_refuses_after_guard_reversal",
+      "test_workforce_contract_reverses_fail_closed_and_reapplies_exactly"
+    ]
+  },
+  "tests/integration/test_application_programme_review_migrations.py": {
+    "owners": [
+      "applications",
+      "authorization"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_empty_review_schema_reverses_and_installs_the_actual_final_guards",
+      "test_retained_review_fences_downgrade_before_any_guard_or_table_is_removed",
+      "test_retained_review_role_fences_authorization_vocabulary_downgrade"
+    ]
+  },
+  "tests/integration/test_applications_integrity_function_acl_migration.py": {
+    "owners": [
+      "applications",
+      "programme"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_acl_migration_reverses_and_reapplies_without_definition_drift",
+      "test_programme_integrity_reverse_restores_legacy_and_reapplies_exactly"
+    ]
+  },
+  "tests/integration/test_authority_issuance_schema.py": {
+    "owners": [
+      "authorization"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_additive_forward_preserves_legacy_authority_without_inference",
+      "test_fresh_forward_and_clean_reverse_are_symmetric",
+      "test_nonempty_ledger_refuses_schema_downgrade"
+    ]
+  },
+  "tests/integration/test_authority_provenance_activation_schema.py": {
+    "owners": [
+      "authorization"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_clean_reverse_and_forward_are_symmetric",
+      "test_reverse_refuses_an_activated_latch",
+      "test_reverse_restores_foundational_authorization_function_definitions",
+      "test_reverse_restores_prior_owned_issuance_function_definitions"
+    ]
+  },
+  "tests/integration/test_authority_provenance_migration_fences.py": {
+    "owners": [
+      "audit",
+      "authorization"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_audit_reverse_restores_prior_owned_append_only_function",
+      "test_authorization_function_acl_hardening_preserves_preexisting_acl_state",
+      "test_authorization_reverse_leaves_owned_audit_boundary_installed",
+      "test_authorization_reverse_refuses_a_missing_latch",
+      "test_full_graph_reverse_and_forward_preserve_migration_ownership",
+      "test_reserved_audit_guard_accepts_exact_active_upgrade_and_fences_reverse",
+      "test_reserved_audit_guard_upgrade_rejects_legacy_orphan"
+    ]
+  },
+  "tests/integration/test_authorization_scope_v2_history.py": {
+    "owners": [
+      "authorization",
+      "workforce"
+    ],
+    "shared_baseline": true,
+    "tests": [
+      "test_fresh_activation_installs_helpers_and_creates_no_authority",
+      "test_populated_activation_backfills_deterministically_and_is_idempotent",
+      "test_populated_preflight_rejects_a_delegation_cycle",
+      "test_populated_preflight_rejects_nonpersistable_or_too_broad_grant",
+      "test_reverse_removes_only_reproducible_bindings"
+    ]
+  },
+  "tests/integration/test_authorization_scope_v2_schema.py": {
+    "owners": [
+      "authorization",
+      "events",
+      "organizations",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_scope_v2_migration_preserves_existing_authority_without_inference"
+    ]
+  },
+  "tests/integration/test_edition_workspace_migrations.py": {
+    "owners": [
+      "events",
+      "organizations"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_aggregate_backfill_and_overlong_legacy_span_preflight",
+      "test_downgrade_fences_refuse_to_drop_nonempty_workspace_history",
+      "test_historical_workspace_target_can_restore_the_complete_current_graph"
+    ]
+  },
+  "tests/integration/test_idn011_database_migrations.py": {
+    "owners": [
+      "identity",
+      "organizations",
+      "participation",
+      "registration",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_organization_preflight_rejects_all_legacy_subjects",
+      "test_participation_preflight_rejects_legacy_platform_subject",
+      "test_registration_preflight_rejects_complete_legacy_platform_subject_graph",
+      "test_workforce_preflight_rejects_every_legacy_platform_subject_table"
+    ]
+  },
+  "tests/integration/test_invitation_token_digest_key_migration.py": {
+    "owners": [
+      "audit",
+      "identity"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_identity_0014_orders_and_enforces_audit_retry_uniqueness",
+      "test_upgrade_refuses_active_legacy_token_then_allows_terminal_evidence"
+    ]
+  },
+  "tests/integration/test_organization_representation_history.py": {
+    "owners": [
+      "audit",
+      "effects",
+      "identity",
+      "organizations"
+    ],
+    "shared_baseline": true,
+    "tests": [
+      "test_fix_forward_preflight_rejects_existing_platform_capability_grant",
+      "test_fix_forward_preflight_rejects_ineligible_provisioning_subjects",
+      "test_hardened_downgrade_fence_allows_clean_reverse_plan",
+      "test_hardened_downgrade_fence_detects_surviving_governance_artifacts",
+      "test_hardening_preflight_rejects_existing_platform_role_assignment"
+    ]
+  },
+  "tests/integration/test_platform_invitation_retention.py": {
+    "independent_fixtures": ["invitation_private_key"],
+    "owners": [
+      "identity"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_empty_v8_reverses_reapplies_and_restores_exact_catalog",
+      "test_populated_v7_v1_receipt_after_v2_activation_upgrades_to_v8"
+    ]
+  },
+  "tests/integration/test_programme_capability_migration.py": {
+    "owners": [
+      "authorization",
+      "programme"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_durable_programme_grant_refuses_capability_contraction",
+      "test_durable_programme_role_refuses_capability_contraction",
+      "test_programme_capability_expansion_and_empty_reversal_are_exact"
+    ]
+  },
+  "tests/integration/test_programme_department_ownership_recovery.py": {
+    "owners": [
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_historical_orphans_recover_by_exact_id_with_break_glass_evidence"
+    ]
+  },
+  "tests/integration/test_programme_hosts.py": {
+    "owners": [
+      "authorization",
+      "programme"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_empty_host_schema_reverses_and_reapplies_exactly",
+      "test_retained_host_history_fences_downgrade_before_any_guard_removal"
+    ]
+  },
+  "tests/integration/test_programme_integrity_migrations.py": {
+    "owners": [
+      "programme"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_empty_programme_integrity_reverses_and_reapplies_exactly",
+      "test_populated_programme_downgrade_refuses_before_removing_guards"
+    ]
+  },
+  "tests/integration/test_registration_configuration_source_binding_migration.py": {
+    "owners": [
+      "registration"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_binding_guards_migrate_forward_and_reverse_with_closed_acl",
+      "test_complete_configuration_without_exact_start_evidence_rolls_back",
+      "test_populated_complete_binding_fails_closed_on_reverse",
+      "test_populated_forged_complete_binding_fails_closed_on_forward",
+      "test_raw_binding_updates_delete_and_truncate_roll_back",
+      "test_receipt_only_binding_without_atomic_effect_evidence_rolls_back"
+    ]
+  },
+  "tests/integration/test_registration_profile_audience_migration.py": {
+    "owners": [
+      "registration"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_profile_audience_backfill_and_compatible_reverse_are_exact"
+    ]
+  },
+  "tests/integration/test_registration_profile_extension_capability_migration.py": {
+    "owners": [
+      "authorization",
+      "registration"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_catalog_expansion_is_atomic_and_empty_reversal_is_exact"
+    ]
+  },
+  "tests/integration/test_registration_profile_extension_lifecycle_migration.py": {
+    "owners": [
+      "registration"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_lifecycle_action_and_guard_migrate_forward_and_reverse_exactly",
+      "test_populated_multi_open_successor_graph_fails_closed_on_forward",
+      "test_populated_successor_graph_fails_closed_on_reverse"
+    ]
+  },
+  "tests/integration/test_registration_profile_extension_value_history.py": {
+    "owners": [
+      "registration"
+    ],
+    "shared_baseline": true,
+    "tests": [
+      "test_forward_backfills_exact_latest_control_from_legacy_revisions",
+      "test_forward_boundary_rejects_invalid_deferred_data",
+      "test_forward_rejects_a_noncontiguous_legacy_revision_sequence",
+      "test_forward_rejects_legacy_value_against_a_draft_field",
+      "test_forward_rejects_legacy_value_incompatible_with_field_definition",
+      "test_forward_rejects_legacy_value_that_violates_writer_policy",
+      "test_forward_rejects_legacy_value_with_blank_source_channel",
+      "test_forward_rejects_representative_noncanonical_legacy_values",
+      "test_forward_retires_the_legacy_public_execute_guard_function",
+      "test_real_forward_case_leaves_no_history_schema_recorder_or_callbacks"
+    ]
+  },
+  "tests/integration/test_registration_profile_extension_value_migration.py": {
+    "owners": [
+      "registration"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_durable_command_receipt_fences_populated_reverse",
+      "test_empty_reverse_and_reapply_are_exact",
+      "test_profile_value_schema_and_closed_helpers_migrate_forward_and_reverse"
+    ]
+  },
+  "tests/integration/test_registration_setup_schema.py": {
+    "owners": [
+      "registration"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_definition_action_schema_is_additive_and_reverses_to_exact_state",
+      "test_populated_migration_backfills_only_observable_legacy_evidence"
+    ]
+  },
+  "tests/integration/test_registration_template_lifecycle_migration.py": {
+    "owners": [
+      "registration"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_populated_unproven_activation_fails_closed_on_forward",
+      "test_populated_unproven_template_fails_closed_on_forward",
+      "test_template_lifecycle_generation_cleanly_reverses_and_reapplies",
+      "test_template_publication_evidence_is_a_populated_downgrade_fence"
+    ]
+  },
+  "tests/integration/test_representation_readiness_command.py": {
+    "owners": [
+      "audit",
+      "effects",
+      "identity",
+      "organizations"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_no_fail_report_detects_all_required_blocker_classes_privately",
+      "test_pre_hardening_exact_governance_evidence_has_readiness_parity"
+    ]
+  },
+  "tests/integration/test_retired_department_authority_migration.py": {
+    "owners": [
+      "authorization",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_preflight_and_reverse_fence_preserve_closed_authority"
+    ]
+  },
+  "tests/integration/test_retired_department_authority_readiness_contract.py": {
+    "owners": [
+      "authorization",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_clean_full_reverse_blocks_both_catalog_gates"
+    ]
+  },
+  "tests/integration/test_runtime_executable_function_hardening.py": {
+    "owners": [
+      "audit",
+      "authorization",
+      "identity",
+      "organizations",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_activated_database_refuses_runtime_helper_downgrade",
+      "test_fresh_and_populated_forward_reverse_preserve_definition_identity_and_acl",
+      "test_owning_fence_survives_a_missing_convergence_migration_record"
+    ]
+  },
+  "tests/integration/test_scope_v2_readiness_command.py": {
+    "owners": [
+      "authorization",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_historical_blockers_are_counted_without_subject_disclosure_and_fail",
+      "test_historical_catalog_categories_and_scope_ranks_are_counted"
+    ]
+  },
+  "tests/integration/test_workforce_department_fk_contract_migration.py": {
+    "owners": [
+      "applications",
+      "charities",
+      "logistics",
+      "registration",
+      "venues",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_successor_reverses_fail_closed_and_reapplies_current_contract"
+    ]
+  },
+  "tests/integration/test_workforce_programme_department_fk_contract_migration.py": {
+    "owners": [
+      "applications",
+      "programme",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_programme_successor_reverses_fail_closed_and_reapplies"
+    ]
+  },
+  "tests/integration/test_workforce_scope_v2_integrity.py": {
+    "owners": [
+      "authorization",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_migration_preflight_rejects_existing_department_cycle",
+      "test_migration_preserves_legacy_edition_wide_role_evidence"
+    ]
+  },
+  "tests/integration/test_workforce_structure_migration.py": {
+    "owners": [
+      "authorization",
+      "workforce"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_department_order_is_preserved_and_downgrade_fence_runs_first"
+    ]
+  },
+  "tests/integration/test_workforce_structure_write_integrity_migration.py": {
+    "owners": [
+      "authorization",
+      "workforce"
+    ],
+    "shared_baseline": true,
+    "tests": [
+      "test_empty_edition_remains_control_free_at_conceptual_version_zero",
+      "test_empty_forward_and_reverse_install_and_remove_the_guard_graph",
+      "test_populated_legacy_scope_gets_one_control_without_receipt_or_inference",
+      "test_preflight_rejects_department_count_and_depth_bounds",
+      "test_preflight_rejects_unapproved_gap_evidence_then_recovers",
+      "test_preflight_rejects_unknown_cascading_department_reference"
+    ]
+  }
+}
