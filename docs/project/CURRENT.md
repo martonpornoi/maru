@@ -73,7 +73,7 @@ That optimization pilot is closed; the later separately approved #83 CI task is
 described below. No Docker cleanup is authorized. See the
 [pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
 
-## Current bounded outcome: Scheduling acceptance after delivered CI
+## Current bounded outcome: Accessible Programme timetable editor
 
 Issue #77 was delivered through PR #78, squash
 `6279cb50d287d70e33e2bebabda3e54564668475`. Issue #79 was delivered through
@@ -109,50 +109,58 @@ passed 6,226 Python tests at 90.02% in 15m58s locally; it omitted history and
 non-database quality gates. The 20–35-minute hosted routine target remains
 unmeasured, not a promise for the high-risk Scheduling PR.
 
-### Active Scheduling child
+### Delivered Scheduling foundation
 
-Issue [#81](https://github.com/martonpornoi/maru/issues/81) remains open in
-[PR #82](https://github.com/martonpornoi/maru/pull/82), branch
-`codex/programme-scheduling-candidates`. Its prior head
-`4e6eb1bde8a681b6d5cebb0cdbeaac2bbbc77f68` passed full local certification
-(6,575 Python and 33 frontend tests), but hosted shards 5, 6 and 7 timed out in
-[run 34132347435](https://github.com/martonpornoi/maru/actions/runs/34132347435).
-That old gate cannot certify the updated branch and must not be blindly rerun.
+Issue [#81](https://github.com/martonpornoi/maru/issues/81) is closed through
+[PR #82](https://github.com/martonpornoi/maru/pull/82), protected squash
+`ec0d2474810e27b72c9dbabcc1d210222e4989af` on 2026-09-08. Exact candidate
+`85db2e16a453355b534dfb2e37e6695bb858e635` passed exhaustive local certification:
+6,887 Python tests, 33 frontend tests, all ten quality gates, eight PostgreSQL
+databases and 90.34% combined coverage in 108m19s. Its own
+[hosted acceptance](https://github.com/martonpornoi/maru/actions/runs/34208969678),
+all sixteen database jobs, `PR gate` and CodeQL passed before merge. The clean
+main worktree was synchronized and the squash tree equals the certified head.
+The [delivery checkpoint](../checkpoints/2026-09-08-scheduling-protected-delivery.md)
+retains exact provenance, recovery and cost evidence. Do not rerun the old
+timed-out head or treat this delivered child as pending.
 
-The delivered CI main is integrated without changing Scheduling behavior
-or removing existing assertions. [ADR 0088](../architecture/decisions/0088-versioned-scheduling-candidates-and-venue-binding.md),
-the [owner contract](../modules/scheduling.md) and
-[recovery guide](../operations/scheduling-migration-and-recovery.md) define
-service days, stable occurrences, immutable alternatives, explainable conflicts,
-explicit host presence and reciprocal Venue reservation evidence. A draft is
-not a reservation, host consent, approval or publication. All sixteen new
-relations remain runtime SELECT-only; neither literal profile nor a route,
-UI, API, worker or release is activated.
+### Active editor child
 
-[ADR 0091](../architecture/decisions/0091-scheduling-ci-policy-integration.md)
-reconciles the old whole-file calibration as diagnostic tooling, with ADR 0090
-authoritative for acceptance. The inventory explicitly owns Scheduling's
-independent empty reversal and two-owner fence functions; all current guards,
-readiness, reservations, concurrency and source/field denials remain mandatory.
-New group estimates use preserved complete successful JUnit evidence, not
-fabricated measurements. The [integration checkpoint](../checkpoints/2026-09-08-scheduling-ci-integration.md)
-records provenance and focused verification. The full database-free suite passed
-3,511 tests in 28.15 seconds. Actual collection selected all 3,376 PostgreSQL
-cases for full scope and 3,249 for current scope; all thirteen new cost estimates
-match retained complete evidence. Repository lint/format, maintained docs and
-script docstring checks pass. This is focused evidence, not database acceptance.
+Issue [#85](https://github.com/martonpornoi/maru/issues/85) is the next native
+child of [#48](https://github.com/martonpornoi/maru/issues/48), on branch
+`codex/programme-timetable-editor` from that protected main. Its
+[page contract](../product/page-contracts/programme-timetable-planning.md) and
+[ADR 0092](../architecture/decisions/0092-dormant-accessible-timetable-editor.md)
+define one dormant progressively enhanced editor. Equivalent pointer and
+keyboard forms reuse Scheduling commands; private owner layers retain their
+independent authority. Draft edits never silently reserve rooms or publish.
 
-Prior implementation and repair evidence remains in the
-[implementation](../checkpoints/2026-09-07-scheduling-candidates-and-venue-binding.md),
-[certification follow-up](../checkpoints/2026-09-07-scheduling-certification-follow-up.md)
-and [timing-repair](../checkpoints/2026-09-07-scheduling-hosted-timing-repair.md)
-checkpoints. Fresh exhaustive local certification, independent hosted acceptance,
-protected delivery and issue reconciliation are still required for this
-integration. Neither the old feature receipt nor PR #84 certifies it.
+Implementation is in progress: bounded audited planning/history projections
+and pure local-minute/comparison helpers pass 26 focused PostgreSQL cases and
+31 database-free cases. The complete database-free suite now passes 3,542 cases
+in 18.74s. The existing candidate suite plus all 26 new read cases passes 40
+PostgreSQL cases in 71.94s; existing test bodies remain unchanged. The new cases
+live beside the candidate contracts, so no timing map or CI policy is changed.
+The fresh database setup plus initial 21 cases took
+2m40s; the expanded 26-case rerun on the same isolated schema took 56.18s.
+The added lifecycle fixture initially violated the genuine draft-first guard;
+it now uses ordinary Events transition commands and passes without changing
+that guard. Focused lint, formatting, strict types and NumPy contracts pass.
+Maintained documentation validation passes (424 files, four skills and 215
+requirement identifiers). These are partial implementation checks, not complete
+editor, runtime-role or protected delivery acceptance.
+See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
+The browser editor,
+owner layer composition, non-mutating conflict preview, command adapters,
+browser rehearsal and protected certification/delivery remain incomplete.
+No production route, navigation, runtime write grant or adoption profile has
+been activated. Current literal manifests and SELECT-only containment remain
+unchanged. This partial branch is not an editor-delivery or runtime claim.
 
 Work stays single-agent. Preserve other worktrees and stashes. The temporary
-#83 app reminder remains deleted and #77's check-in disabled; do not recreate
-either. No Docker cleanup, deployment or production data is authorized.
+#82 heartbeat is paused after successful delivery; #83 remains deleted and
+#77 disabled. Do not recreate or resume them for #85. No general Docker cleanup,
+deployment or production data is authorized.
 
 ## What can be evaluated today
 
@@ -166,7 +174,8 @@ either. No Docker cleanup, deployment or production data is authorized.
   (#61); Applications calls and acknowledged collaborative proposals (#63);
   preview-first import (#66); Department continuity (#64); review and decisions
   (#71); explicit source-bound accepted conversion (#77); host confirmation
-  and deliberately shared per-item availability (#79). These remain dormant
+  and deliberately shared per-item availability (#79); Scheduling candidates,
+  conflict evidence and governed Venue binding (#81). These remain dormant
   foundations, not a departmental workspace.
   [Events](../modules/events.md), [Applications](../modules/applications.md),
   and the [Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md)
@@ -177,13 +186,13 @@ either. No Docker cleanup, deployment or production data is authorized.
 
 ## Smallest sensible next actions
 
-1. Finish #82's integration of the delivered CI policy, including explicit
-   historical membership, real dependency selection, meaningful regressions,
-   timing provenance and current documentation.
-2. Certify the resulting clean exact head with exhaustive history, then push
-   once for fresh hosted acceptance. Merge only after its own PR gate and CodeQL
-   pass; reconcile #81 and #48 and synchronize main. Do not rerun #83 or treat
-   either older receipt as acceptance of the new head.
+1. Complete #85's owner-backed queries, conflict preview and same-command
+   accessible forms/board, including explicit candidate history and recovery.
+2. Run focused permission/failure/interaction tests and synthetic browser
+   rehearsal, then certify the clean exact head with the policy-required scope.
+   Obtain its own hosted PR gate and CodeQL before merge; reconcile #85 and #48
+   and synchronize main. Neither #82's receipt nor a component fixture certifies
+   the new editor or a provisioned runtime.
 3. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48)
    sequentially: accessible editor, Workforce staffing, atomic release/outputs,
    on-site continuity, guided setup/surfaces and integrated acceptance. No routine

@@ -1,17 +1,21 @@
 """Stable occurrence and independent candidate-history transaction evidence."""
 
-from dataclasses import replace
+from dataclasses import asdict, replace
 from functools import partial
 from uuid import uuid4
 
 import pytest
+from django.db import DatabaseError
 
 import maru.effects.services as effect_services
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
+from maru.events.models import EventEdition
+from maru.events.services import transition_edition
 from maru.programme import scheduling_queries as programme_source
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
 from maru.scheduling import candidate_commands, occurrence_commands
+from maru.scheduling import planning_queries as queries
 from maru.scheduling.authorization import (
     VIEW_HISTORY,
     SchedulingAuthorizationDeniedError,
@@ -20,6 +24,7 @@ from maru.scheduling.candidate_commands import (
     archive_scheduling_candidate,
     copy_scheduling_candidate,
     create_scheduling_candidate,
+    remove_scheduling_placement,
     restore_scheduling_candidate,
 )
 from maru.scheduling.command_support import (
@@ -42,13 +47,27 @@ from maru.scheduling.occurrence_commands import (
     retire_scheduling_occurrence,
     revise_scheduling_occurrence,
 )
+from maru.scheduling.planning_queries import (
+    SchedulingReadRequest,
+    list_scheduling_candidate_history,
+    load_scheduling_historical_manifest,
+    load_scheduling_planning,
+)
 from maru.venues.models import VenueBooking
-from tests.factories import AccountFactory, EventEditionFactory
+from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
+from tests.integration import test_scheduling_placements as planning_helpers
 from tests.integration.test_programme_commands import (
     _create,
     _TrustedProgrammeAuthorizer,
 )
 from tests.integration.test_scheduling_days import TrustedSchedulingPolicy
+from tests.integration.test_scheduling_placements import (
+    candidate_revision,
+    next_request,
+    place,
+)
+
+planning_world = planning_helpers.world
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
@@ -400,3 +419,358 @@ def test_late_history_field_revocation_is_denied(world):
             authorizer=RevokeHistory(),
         )
     assert SchedulingCandidate.objects.count() == 1
+
+
+def read_request(planning_world):
+    request = planning_world.request
+    return SchedulingReadRequest(
+        request.actor_id, request.organization_id, request.edition_id, uuid4()
+    )
+
+
+def test_current_planning_does_not_imply_history_or_private_owner_layers(
+    planning_world,
+):
+    place(planning_world)
+    before = SchedulingCommandReceipt.objects.count()
+    snapshot = load_scheduling_planning(
+        read_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        authorizer=planning_world.policy,
+    )
+    assert snapshot.control_version == 4
+    assert (
+        len(snapshot.days) == len(snapshot.occurrences) == len(snapshot.candidates) == 1
+    )
+    assert snapshot.candidates[0].version == 2
+    assert snapshot.placements[0].envelope == planning_world.placement.envelope
+    assert snapshot.occurrences[0].id == planning_world.occurrence.object_id
+    assert snapshot.days[0].id == planning_world.day.object_id
+    assert snapshot.days[0].label == "Friday"
+    assert (
+        snapshot.placements[0].space_id == planning_world.placement.space_selection_id
+    )
+    output = repr(asdict(snapshot))
+    for excluded in ("reason", "actor_id", "host", "availability", "working_summary"):
+        assert excluded not in output
+    assert str(planning_world.placement.host_presences[0].host_id) not in output
+    assert SchedulingCommandReceipt.objects.count() == before
+    audit = AuditEvent.objects.get(operation="scheduling.query.planning")
+    assert audit.outcome == "allow"
+    assert audit.safe_metadata["access_purpose"] == "planning"
+    assert "First draft" not in repr(audit.safe_metadata)
+
+
+def test_no_selected_candidate_does_not_silently_pick_the_first(planning_world):
+    place(planning_world)
+    snapshot = load_scheduling_planning(
+        read_request(planning_world), authorizer=planning_world.policy
+    )
+    assert len(snapshot.candidates) == 1
+    assert snapshot.selected_candidate_id is None
+    assert snapshot.placements == ()
+
+
+def test_current_profiles_deny_all_planning_and_history_reads(planning_world):
+    request = read_request(planning_world)
+    calls = (
+        lambda: load_scheduling_planning(request),
+        lambda: list_scheduling_candidate_history(
+            request, candidate_id=planning_world.candidate.object_id
+        ),
+        lambda: load_scheduling_historical_manifest(
+            request, revision_id=candidate_revision(planning_world.candidate).id
+        ),
+    )
+    for call in calls:
+        with pytest.raises(SchedulingAuthorizationDeniedError):
+            call()
+    assert (
+        AuditEvent.objects.filter(
+            operation__startswith="scheduling.query.", outcome="deny"
+        ).count()
+        == 3
+    )
+
+
+def test_history_authority_is_separate_from_planning_authority(planning_world):
+    class PlanningOnly:
+        def authorize(self, **kwargs):
+            return PolicyDecision(
+                allowed=kwargs["capability_code"] != VIEW_HISTORY,
+                fields=kwargs["requested_fields"],
+                obligations=frozenset(),
+                reason_code="synthetic_planning_only",
+            )
+
+    policy = PlanningOnly()
+    assert load_scheduling_planning(
+        read_request(planning_world), authorizer=policy
+    ).candidates
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        list_scheduling_candidate_history(
+            read_request(planning_world),
+            candidate_id=planning_world.candidate.object_id,
+            authorizer=policy,
+        )
+
+
+@pytest.mark.parametrize("removed", sorted(queries.PLANNING_FIELDS))
+def test_each_missing_planning_field_denies_before_loading_labels(
+    planning_world, monkeypatch, removed
+):
+    class MissingField:
+        def authorize(self, **kwargs):
+            return PolicyDecision(
+                allowed=True,
+                fields=kwargs["requested_fields"] - {removed},
+                obligations=frozenset(),
+                reason_code="synthetic_partial_projection",
+            )
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("A denied request reached the identifying loader")
+
+    monkeypatch.setattr(queries, "_snapshot", forbidden)
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        load_scheduling_planning(
+            read_request(planning_world), authorizer=MissingField()
+        )
+
+
+def test_final_revocation_releases_neither_labels_nor_success_audit(planning_world):
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        load_scheduling_planning(
+            read_request(planning_world), authorizer=TrustedSchedulingPolicy(deny_at=2)
+        )
+    assert not AuditEvent.objects.filter(
+        operation="scheduling.query.planning", outcome="allow"
+    ).exists()
+    assert AuditEvent.objects.filter(
+        operation="scheduling.query.planning", outcome="deny"
+    ).exists()
+
+
+@pytest.mark.parametrize("field", ["organization_id", "edition_id", "actor_id"])
+def test_foreign_or_missing_scope_is_non_disclosing(planning_world, field):
+    request = replace(read_request(planning_world), **{field: uuid4()})
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        load_scheduling_planning(request, authorizer=planning_world.policy)
+
+
+@pytest.mark.parametrize("same_organization", [False, True])
+def test_missing_or_foreign_candidate_has_the_same_unavailable_shape(
+    planning_world, same_organization
+):
+    current = EventEdition.objects.get(id=planning_world.request.edition_id)
+    other_edition = EventEditionFactory(
+        **({"series": current.series} if same_organization else {})
+    )
+    other_actor = AccountFactory()
+    other = create_scheduling_candidate(
+        SchedulingCommandRequest(
+            other_actor.id,
+            other_edition.organization_id,
+            other_edition.id,
+            uuid4(),
+            uuid4(),
+            "Foreign private reason",
+            "test",
+        ),
+        label="Foreign private candidate",
+        expected_control_version=0,
+        authorizer=planning_world.policy,
+    )
+    for candidate in (uuid4(), other.object_id):
+        with pytest.raises(SchedulingUnavailableError):
+            load_scheduling_planning(
+                read_request(planning_world),
+                candidate_id=candidate,
+                authorizer=planning_world.policy,
+            )
+        with pytest.raises(SchedulingUnavailableError):
+            list_scheduling_candidate_history(
+                read_request(planning_world),
+                candidate_id=candidate,
+                authorizer=planning_world.policy,
+            )
+    with pytest.raises(SchedulingUnavailableError):
+        load_scheduling_historical_manifest(
+            read_request(planning_world),
+            revision_id=candidate_revision(other).id,
+            authorizer=planning_world.policy,
+        )
+    snapshot = load_scheduling_planning(
+        read_request(planning_world), authorizer=planning_world.policy
+    )
+    assert len(snapshot.candidates) == 1
+    assert "Foreign private" not in repr(snapshot)
+
+
+@pytest.mark.parametrize("lifecycle", ["draft", "closing", "archived", "cancelled"])
+def test_empty_edition_is_truthful_and_closed_lifecycle_is_read_only(lifecycle):
+    actor, edition = AccountFactory(), EventEditionFactory()
+    CapabilityGrantFactory(
+        organization=edition.organization,
+        edition=edition,
+        principal=actor,
+        capability_code="events.transition",
+    )
+    path = (
+        ("cancelled",)
+        if lifecycle == "cancelled"
+        else ("preparing", "ready", "live", "closing", "archived")
+    )
+    for state in path:
+        if edition.lifecycle == lifecycle:
+            break
+        edition = transition_edition(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            to_state=state,
+            actor=actor,
+            reason="Synthetic closed-edition read acceptance",
+            correlation_id=uuid4(),
+        )
+    request = SchedulingReadRequest(
+        actor.id, edition.organization_id, edition.id, uuid4()
+    )
+    snapshot = load_scheduling_planning(request, authorizer=TrustedSchedulingPolicy())
+    assert snapshot.control_version == 0
+    assert snapshot.days == snapshot.occurrences == snapshot.candidates == ()
+    assert snapshot.accepts_writes is (lifecycle == "draft")
+    assert not SchedulingEditionControl.objects.filter(edition_id=edition.id).exists()
+
+
+def test_history_retains_reason_and_old_geometry_after_unplacement(planning_world):
+    placed = place(planning_world)
+    old = candidate_revision(placed)
+    remove_scheduling_placement(
+        next_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        occurrence_id=planning_world.occurrence.object_id,
+        expected_version=2,
+        authorizer=planning_world.policy,
+    )
+    current = load_scheduling_planning(
+        read_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        authorizer=planning_world.policy,
+    )
+    retained = load_scheduling_historical_manifest(
+        read_request(planning_world),
+        revision_id=old.id,
+        authorizer=planning_world.policy,
+    )
+    assert current.placements == ()
+    assert len(current.occurrences) == 1
+    assert retained.entry.reason == planning_world.request.reason
+    assert retained.entry.version == 2
+    assert retained.entry.actor_id == planning_world.request.actor_id
+    assert retained.placements[0].envelope == planning_world.placement.envelope
+    page = list_scheduling_candidate_history(
+        read_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        authorizer=planning_world.policy,
+    )
+    assert [entry.version for entry in page.entries] == [3, 2, 1]
+    assert page.next_before_version is None
+
+
+def test_history_cursor_is_explicit_and_does_not_repeat_entries(
+    planning_world, monkeypatch
+):
+    place(planning_world)
+    monkeypatch.setattr(queries, "HISTORY_PAGE_SIZE", 1)
+    first = list_scheduling_candidate_history(
+        read_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        authorizer=planning_world.policy,
+    )
+    assert first.entries[0].version == first.next_before_version == 2
+    second = list_scheduling_candidate_history(
+        read_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        before_version=first.next_before_version,
+        authorizer=planning_world.policy,
+    )
+    assert second.entries[0].version == 1
+    assert second.next_before_version is None
+    end = list_scheduling_candidate_history(
+        read_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        before_version=1,
+        authorizer=planning_world.policy,
+    )
+    assert end.entries == ()
+
+
+def test_archive_remains_inspectable_but_is_never_an_approval(planning_world):
+    archive_scheduling_candidate(
+        next_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        expected_version=1,
+        authorizer=planning_world.policy,
+    )
+    snapshot = load_scheduling_planning(
+        read_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        authorizer=planning_world.policy,
+    )
+    assert snapshot.candidates[0].lifecycle == "archived"
+    assert "approved" not in repr(asdict(snapshot))
+
+
+@pytest.mark.parametrize(
+    "bound", ["MAX_CANDIDATES", "MAX_OCCURRENCES", "MAX_RETAINED_SERVICE_DAYS"]
+)
+def test_overflow_is_unavailable_not_a_partial_passing_inventory(
+    planning_world, monkeypatch, bound
+):
+    monkeypatch.setattr(queries, bound, 0)
+    with pytest.raises(SchedulingLimitError):
+        load_scheduling_planning(
+            read_request(planning_world), authorizer=planning_world.policy
+        )
+    assert not AuditEvent.objects.filter(operation="scheduling.query.planning").exists()
+
+
+def test_audit_failure_cannot_release_a_successful_projection(
+    planning_world, monkeypatch
+):
+    def broken_audit(*args, **kwargs):
+        raise DatabaseError("Synthetic audit failure")
+
+    control = SchedulingEditionControl.objects.get(
+        edition_id=planning_world.request.edition_id
+    )
+    monkeypatch.setattr(queries, "append_audit", broken_audit)
+    with pytest.raises(SchedulingUnavailableError):
+        load_scheduling_planning(
+            read_request(planning_world), authorizer=planning_world.policy
+        )
+    control.refresh_from_db()
+    assert control.aggregate_version == 3
+
+
+def test_independent_alternatives_never_merge_their_manifests(planning_world):
+    place(planning_world)
+    other = create_scheduling_candidate(
+        next_request(planning_world),
+        label="Alternative",
+        expected_control_version=4,
+        authorizer=planning_world.policy,
+    )
+    snapshot = load_scheduling_planning(
+        read_request(planning_world),
+        candidate_id=other.object_id,
+        authorizer=planning_world.policy,
+    )
+    assert len(snapshot.candidates) == 2
+    assert snapshot.placements == ()
+    original = load_scheduling_planning(
+        read_request(planning_world),
+        candidate_id=planning_world.candidate.object_id,
+        authorizer=planning_world.policy,
+    )
+    assert len(original.placements) == 1

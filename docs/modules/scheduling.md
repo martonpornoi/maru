@@ -2,7 +2,7 @@
 
 Status: dormant candidate/conflict and reciprocal physical-reservation kernel;
 no Programme timetable editor, approval, release or current-profile activation.
-Last updated: 2026-09-07. See [CURRENT](../project/CURRENT.md) for verification
+Last updated: 2026-09-08. See [CURRENT](../project/CURRENT.md) for verification
 and protected-delivery status; this guide is the owner contract, not a merge claim.
 
 ## Ownership and adoption
@@ -72,6 +72,37 @@ placement, 10,000 findings and one million conflict comparisons. Bounded
 overflow is unavailable or a refused command, never a truncated passing report.
 
 ## Current dependencies and explainable conflicts
+
+### Planner read boundary
+
+The in-progress [editor child #85](https://github.com/martonpornoi/maru/issues/85)
+adds `planning_queries` without mounting a surface or granting runtime writes.
+`load_scheduling_planning` returns all bounded current day, occurrence and
+candidate summaries, plus the complete explicitly selected candidate manifest.
+No selection means inventory only, not an implicit first-candidate choice.
+Overflow and missing current revisions are unavailable, never silently omitted
+records. The edition mutex, final scope/field authorization and required
+read audit protect the multi-query snapshot.
+
+`list_scheduling_candidate_history` requires independent history authority and
+returns explicit newest-first pages of fifty changes with an exclusive version
+cursor. `load_scheduling_historical_manifest` validates the exact immutable
+manifest count and digest before releasing geometry and retained rationale.
+Neither query dereferences Programme or Venue private models. Current planning
+omits historical actor/reason, host identity/presence and availability, Programme
+copy and room names. Owner links are opaque, not dereference authority. Owner
+content/layers and current conflicts remain separate protected queries.
+
+`planning_interactions` provides database-free exact local-minute conversion and
+comparison of already-authorized manifests. Offset-free daylight-saving gaps
+and folds fail explicitly; an offset identifies an exact instant. Comparisons
+use stable occurrences and never describe a changed placement revision as
+unchanged merely because its visible geometry happens to match. These helpers
+do not authorize, persist, reserve or publish anything. See the
+[page contract](../product/page-contracts/programme-timetable-planning.md) and
+[ADR 0092](../architecture/decisions/0092-dormant-accessible-timetable-editor.md).
+
+### Conflict-source boundary
 
 The exact source descriptors are:
 

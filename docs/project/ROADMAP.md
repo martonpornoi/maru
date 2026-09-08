@@ -104,9 +104,11 @@ moderation, accountable decisions, and exact-recipient acknowledgement under
 ADR 0085. Review-side acceptance does not create a target receipt or Programme
 item. Issue #77, delivered through PR #78, adds explicit accepted-item
 conversion. Issue #79, delivered through PR #80, adds independent host relationships and
-availability. Issue #81 begins Scheduling candidates, conflict evidence and
-governed Venue binding, before interactive timetable editing,
-staffing, releases, continuity, and integrated Programme-only rehearsal. Umbrella
+availability. Issue #81, delivered through PR #82, adds Scheduling candidates,
+conflict evidence and governed Venue binding. Issue #85 now implements the
+[accessible timetable editor](../product/page-contracts/programme-timetable-planning.md)
+under ADR 0092, before staffing, releases, continuity, and integrated
+Programme-only rehearsal. Umbrella
 #48 remains open; no current profile or surface is activated by this kernel.
 
 Profile v1 declares incumbent-system coexistence and the current manual,

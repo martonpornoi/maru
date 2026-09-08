@@ -268,6 +268,30 @@ Convenience alone is not sufficient.
   evidence from one consistent point and never fabricates a proposal, host,
   readiness fact, rendition, occurrence, Shift, or release.
 
+### Scheduling private planning projections
+
+- Private day/candidate labels, occurrence grouping and placement geometry are
+  operational data, not released programme copy. Entered labels can raise their
+  classification above C1. Opaque Programme and Venue links do not grant access
+  to either owner's content. Required host-presence, host identity and personal
+  availability remain separately authorized; the base planning projection
+  includes none of them.
+- Retained candidate rationale and actor attribution are restricted history,
+  released only with `scheduling.view_history` and its complete field ceiling.
+  Current planning permission does not imply history, conflict, Programme-layer
+  or Venue-operation access. History pages and exact manifests are audited
+  before release, and never join host calendars or private proposal/review data.
+- Planning query audit retains exact scope/correlation, closed purpose and
+  policy outcome, not labels, filter text, rationale, geometry or owner content.
+  The editor collects no activity analytics and introduces no browser storage,
+  offline mutation queue or production retention schedule. Unsaved form state
+  is transient authenticated-page state only.
+- No new persistent planning field or disposal executor is introduced by the
+  editor read boundary. Existing immutable command/history evidence remains
+  subject to the Programme Operations retention, legal-hold, export and recovery
+  gates before activation. A synthetic owner-backed query is not approval to
+  process production personal data or widen a current adoption profile.
+
 ### Logistics custody and restricted contact
 
 - Reusable external-party identity contains only legal/public operational
