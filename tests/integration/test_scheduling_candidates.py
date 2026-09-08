@@ -1,12 +1,16 @@
 """Stable occurrence and independent candidate-history transaction evidence."""
 
 from dataclasses import asdict, replace
+from datetime import timedelta
 from functools import partial
 from uuid import uuid4
 
 import pytest
+from django.conf import settings
 from django.db import DatabaseError
 from django.http import QueryDict
+from django.middleware.csrf import get_token
+from django.test import RequestFactory
 
 import maru.effects.services as effect_services
 from maru.audit.models import AuditEvent
@@ -20,11 +24,14 @@ from maru.programme import scheduling_queries as programme_source
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
 from maru.scheduling import (
     candidate_commands,
+    evaluation_sources,
     occurrence_commands,
     planning_hosts,
     planning_inspector,
 )
 from maru.scheduling import planning_queries as queries
+from maru.scheduling import planning_views as planning_http
+from maru.scheduling import planning_workspace as workspace
 from maru.scheduling.authorization import (
     VIEW_HISTORY,
     SchedulingAuthorizationDeniedError,
@@ -56,6 +63,7 @@ from maru.scheduling.models import (
     SchedulingEditionControl,
     SchedulingOccurrence,
     SchedulingOccurrenceRevision,
+    SchedulingServiceDay,
 )
 from maru.scheduling.occurrence_commands import (
     create_scheduling_occurrence,
@@ -78,6 +86,7 @@ from maru.scheduling.planning_queries import (
 from maru.scheduling.planning_record_actions import submit_planning_record
 from maru.scheduling.planning_record_forms import PlanningRecordForm
 from maru.scheduling.planning_selection import PlanningSelection
+from maru.scheduling.planning_views import scheduling_planning_view
 from maru.venues.models import VenueBooking
 from maru.venues.timetable_queries import list_venue_timetable_spaces
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
@@ -1398,5 +1407,447 @@ def test_native_factory_starts_then_extends_one_explicit_group_without_replay_wr
     assert (
         SchedulingCandidate.objects.get(id=selection.candidate_id).aggregate_version
         == 1
+    )
+    assert not VenueBooking.objects.exists()
+
+
+@pytest.fixture
+def native_http_world(planning_world, monkeypatch):
+    """Compose real owner reads using only the existing isolated-test admission."""
+    scope = read_request(planning_world)
+    edition = EventEdition.objects.get(id=scope.edition_id)
+    CapabilityGrantFactory(
+        principal=Account.objects.get(id=scope.actor_id),
+        organization=edition.organization,
+        edition=edition,
+        capability_code="venues.view_workspace",
+    )
+    monkeypatch.setattr(
+        workspace,
+        "list_programme_timetable_items",
+        partial(
+            programme_queries.list_programme_timetable_items,
+            authorizer=_TrustedProgrammeAuthorizer(),
+        ),
+    )
+    return planning_world
+
+
+def native_http_request(world, data=None, *, admitted=True, valid_csrf=True):
+    """Exercise the unmounted server adapter with an actual valid CSRF token."""
+    factory = RequestFactory()
+    seed = factory.get("/synthetic-component/")
+    token = get_token(seed)
+    if data is None:
+        http_request = seed
+    else:
+        posted = data.copy()
+        posted["csrfmiddlewaretoken"] = token if valid_csrf else "invalid"
+        http_request = factory.post(
+            "/synthetic-component/",
+            data=posted.urlencode(),
+            content_type="application/x-www-form-urlencoded",
+        )
+        http_request.COOKIES[settings.CSRF_COOKIE_NAME] = seed.META["CSRF_COOKIE"]
+    http_request.user = Account.objects.get(id=world.request.actor_id)
+    response = scheduling_planning_view(
+        http_request,
+        organization_id=world.request.organization_id,
+        edition_id=world.request.edition_id,
+        edition_label="Synthetic private edition",
+        **({"authorizer": world.policy} if admitted else {}),
+    )
+    if hasattr(response, "render"):
+        response.render()
+    return response
+
+
+def native_http_selection(world, *, mode="overview", **changes):
+    selection = PlanningSelection(
+        candidate_id=world.candidate.object_id,
+        day_id=world.day.object_id,
+        occurrence_id=world.occurrence.object_id,
+        mode=mode,
+    )
+    data = QueryDict(mutable=True)
+    for name, value in replace(selection, **changes).hidden_values():
+        data[name] = value
+    data["action"] = "select"
+    return data
+
+
+def native_http_intent(response, *, action, **values):
+    assert response.status_code == 200, response.content.decode()
+    form = response.context_data["control"].form
+    assert form is not None
+    data = QueryDict(mutable=True)
+    for name, value in response.context_data["selection_state"]:
+        data[name] = value
+    for field in form:
+        if field.name != "action":
+            value = field.value()
+            data[field.name] = "" if value is None else str(value)
+    data["action"] = action
+    data["reason"] = "Explicit synthetic HTTP planning intent"
+    for name, value in values.items():
+        data[name] = str(value)
+    return data
+
+
+@pytest.mark.parametrize(
+    ("action", "model", "selected_field"),
+    [
+        (SchedulingOperation.CANDIDATE_CREATE, SchedulingCandidate, "candidate_id"),
+        (SchedulingOperation.OCCURRENCE_CREATE, SchedulingOccurrence, "occurrence_id"),
+        ("create_day", SchedulingServiceDay, "day_id"),
+    ],
+)
+def test_native_http_real_create_reload_and_exact_replay(
+    native_http_world, action, model, selected_field
+):
+    world = native_http_world
+    opened = native_http_request(world, native_http_selection(world, mode=action))
+    values = {"label": "Second private draft"}
+    if action == SchedulingOperation.OCCURRENCE_CREATE:
+        values = {"start_group": "new", "group_sequence": "1"}
+    elif action == "create_day":
+        end = opened.context_data["snapshot"].days[0].window.ends_at
+        values = {
+            "label": "Evening programme",
+            "starts_at": end.isoformat(timespec="minutes"),
+            "ends_at": (end + timedelta(hours=1)).isoformat(timespec="minutes"),
+            "precision_minutes": "5",
+        }
+    data = native_http_intent(opened, action=action, **values)
+    before_ids = set(model.objects.values_list("id", flat=True))
+    before_receipts = SchedulingCommandReceipt.objects.count()
+    saved = native_http_request(world, data)
+    assert saved.status_code == 200, saved.content.decode()
+    added_ids = set(model.objects.values_list("id", flat=True)) - before_ids
+    assert len(added_ids) == 1
+    assert getattr(saved.context_data["selection"], selected_field) in added_ids
+    assert "Command completed" in saved.context_data["status_message"]
+    replay = native_http_request(world, data)
+    assert replay.status_code == 200, replay.content.decode()
+    assert "no duplicate change" in replay.context_data["status_message"]
+    assert model.objects.count() == len(before_ids) + 1
+    assert SchedulingCommandReceipt.objects.count() == before_receipts + 1
+    assert not VenueBooking.objects.exists()
+    assert (
+        SchedulingCandidate.objects.get(id=world.candidate.object_id).aggregate_version
+        == 1
+    )
+    if action == SchedulingOperation.OCCURRENCE_CREATE:
+        revision = SchedulingOccurrenceRevision.objects.get(
+            occurrence_id=added_ids.pop()
+        )
+        assert str(revision.group_key) == data["new_group_key"]
+        assert revision.group_sequence == 1
+
+
+def test_native_http_get_audits_owner_reads_without_choosing_a_draft(native_http_world):
+    response = native_http_request(native_http_world)
+    assert response.status_code == 200
+    assert response.context_data["snapshot"].selected_candidate_id is None
+    assert response.context_data["snapshot"].placements == ()
+    assert "no-store" in response["Cache-Control"]
+    for operation in (
+        "scheduling.query.planning",
+        "programme.query.timetable_items",
+        "venues.query.timetable_spaces",
+    ):
+        assert AuditEvent.objects.filter(operation=operation, outcome="allow").exists()
+
+
+def test_native_http_history_comparison_copy_and_restore_keep_exact_sources(
+    native_http_world,
+):
+    world = native_http_world
+    first_revision = candidate_revision(world.candidate)
+    placed = place(world)
+    placed_revision = candidate_revision(placed)
+    selection = native_http_selection(
+        world,
+        mode="history",
+        history_id=first_revision.id,
+        compare_id=placed_revision.id,
+    )
+    history = native_http_request(world, selection)
+    assert history.status_code == 200, history.content.decode()
+    assert history.context_data["manifest"].placements == ()
+    assert len(history.context_data["comparison"].placements) == 1
+    assert len(history.context_data["changes"]) == 1
+    assert history.context_data["changes"][0].status == "added"
+    assert b"Immutable revision comparison" in history.content
+    assert b"Current labels are not historical item content" in history.content
+    assert len(history.context_data["history"].entries) == 2
+
+    selection["ui_mode"] = SchedulingOperation.CANDIDATE_COPY
+    copy_form = native_http_request(world, selection)
+    copied = native_http_request(
+        world,
+        native_http_intent(
+            copy_form,
+            action=SchedulingOperation.CANDIDATE_COPY,
+            label="Copy of exact empty source",
+        ),
+    )
+    assert copied.status_code == 200, copied.content.decode()
+    copied_id = copied.context_data["selection"].candidate_id
+    copied_revision = SchedulingCandidateRevision.objects.get(candidate_id=copied_id)
+    assert copied_id != world.candidate.object_id
+    assert copied_revision.placement_count == 0
+    assert copied_revision.source_revision_id == first_revision.id
+
+    selection["ui_mode"] = SchedulingOperation.CANDIDATE_RESTORE
+    restore_form = native_http_request(world, selection)
+    restored = native_http_request(
+        world,
+        native_http_intent(
+            restore_form,
+            action=SchedulingOperation.CANDIDATE_RESTORE,
+            confirm="confirmed",
+        ),
+    )
+    assert restored.status_code == 200, restored.content.decode()
+    assert restored.context_data["snapshot"].placements == ()
+    versions = SchedulingCandidateRevision.objects.filter(
+        candidate_id=world.candidate.object_id
+    ).order_by("sequence")
+    assert list(versions.values_list("placement_count", flat=True)) == [0, 1, 0]
+    assert versions.last().source_revision_id == first_revision.id
+    assert versions[1].id == placed_revision.id
+    assert not VenueBooking.objects.exists()
+
+
+def test_native_http_venue_labels_need_independent_real_permission(
+    planning_world, monkeypatch
+):
+    monkeypatch.setattr(
+        workspace,
+        "list_programme_timetable_items",
+        partial(
+            programme_queries.list_programme_timetable_items,
+            authorizer=_TrustedProgrammeAuthorizer(),
+        ),
+    )
+    response = native_http_request(planning_world)
+    assert response.status_code == 403
+    assert set(response.context_data) == {"failure_message"}
+    assert b"Synthetic private edition" not in response.content
+    assert b"First draft" not in response.content
+    assert not AuditEvent.objects.filter(
+        operation="venues.query.timetable_spaces", outcome="allow"
+    ).exists()
+
+
+@pytest.mark.parametrize("other_tenant", [False, True])
+def test_native_http_foreign_candidate_never_enters_rendered_context(
+    native_http_world, other_tenant
+):
+    world = native_http_world
+    edition = EventEditionFactory(
+        **(
+            {}
+            if other_tenant
+            else {
+                "series": EventEdition.objects.get(id=world.request.edition_id).series
+            }
+        )
+    )
+    foreign = create_scheduling_candidate(
+        replace(
+            next_request(world),
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+        ),
+        label="Other scope private candidate",
+        expected_control_version=0,
+        authorizer=world.policy,
+    )
+    before = SchedulingCommandReceipt.objects.count()
+    response = native_http_request(
+        world,
+        native_http_selection(world, candidate_id=foreign.object_id),
+    )
+    assert response.status_code == 503
+    assert set(response.context_data) == {"failure_message"}
+    assert b"Other scope private candidate" not in response.content
+    assert b"Synthetic private edition" not in response.content
+    assert str(foreign.object_id).encode() not in response.content
+    assert SchedulingCommandReceipt.objects.count() == before
+
+
+def test_native_http_invalid_csrf_precedes_all_private_reads(native_http_world):
+    before = AuditEvent.objects.count()
+    response = native_http_request(
+        native_http_world,
+        native_http_selection(native_http_world),
+        valid_csrf=False,
+    )
+    assert response.status_code == 403
+    assert AuditEvent.objects.count() == before
+    assert b"Synthetic private edition" not in response.content
+    assert b"First draft" not in response.content
+
+
+def test_native_http_default_profile_denies_before_parsing_or_owner_reads(
+    native_http_world, monkeypatch
+):
+    def forbidden(*args, **kwargs):
+        pytest.fail("Current-profile denial reached private selection or owner reads")
+
+    monkeypatch.setattr(workspace, "list_programme_timetable_items", forbidden)
+    monkeypatch.setattr(workspace, "list_venue_timetable_spaces", forbidden)
+    monkeypatch.setattr("maru.scheduling.planning_views._selection", forbidden)
+    response = native_http_request(
+        native_http_world, QueryDict("action=unknown&private=unparsed"), admitted=False
+    )
+    assert response.status_code == 403
+    assert set(response.context_data) == {"failure_message"}
+    assert b"Synthetic private edition" not in response.content
+    assert b"First draft" not in response.content
+    assert AuditEvent.objects.filter(
+        operation="scheduling.query.planning", outcome="deny"
+    ).exists()
+
+
+def test_native_http_inspector_does_not_inherit_owner_layer_authority(
+    native_http_world,
+):
+    response = native_http_request(
+        native_http_world,
+        native_http_selection(native_http_world, layer=PlanningItemLayer.WORKING),
+    )
+    assert response.status_code == 403
+    assert set(response.context_data) == {"failure_message"}
+    assert b"Synthetic private edition" not in response.content
+    assert b"First draft" not in response.content
+    assert not AuditEvent.objects.filter(
+        operation="scheduling.query.item_layer_working", outcome="allow"
+    ).exists()
+
+
+def test_native_http_stale_create_retains_exact_pending_input(native_http_world):
+    world = native_http_world
+    action = SchedulingOperation.CANDIDATE_CREATE
+    opened = native_http_request(world, native_http_selection(world, mode=action))
+    data = native_http_intent(opened, action=action, label="Still unsaved alternative")
+    create_scheduling_candidate(
+        next_request(world),
+        label="Concurrent alternative",
+        expected_control_version=opened.context_data["snapshot"].control_version,
+        authorizer=world.policy,
+    )
+    before = SchedulingCommandReceipt.objects.count()
+    response = native_http_request(world, data)
+    assert response.status_code == 409, response.content.decode()
+    bound = response.context_data["control"].form
+    for name in ("label", "reason", "expected_version", "retry_key"):
+        assert bound[name].value() == data[name]
+    assert "nothing was automatically rebased" in response.context_data["action_error"]
+    assert SchedulingCommandReceipt.objects.count() == before
+    assert not SchedulingCandidateRevision.objects.filter(
+        label="Still unsaved alternative"
+    ).exists()
+
+
+def test_native_http_lost_success_refresh_can_replay_the_committed_intent(
+    native_http_world, monkeypatch
+):
+    world = native_http_world
+    action = SchedulingOperation.CANDIDATE_CREATE
+    opened = native_http_request(world, native_http_selection(world, mode=action))
+    data = native_http_intent(opened, action=action, label="Committed before read loss")
+    actual_read = planning_http.load_scheduling_planning
+    calls = 0
+
+    def lose_success_refresh(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 3:
+            raise DatabaseError("Synthetic lost connection after commit")
+        return actual_read(*args, **kwargs)
+
+    monkeypatch.setattr(planning_http, "load_scheduling_planning", lose_success_refresh)
+    before = SchedulingCommandReceipt.objects.count()
+    response = native_http_request(world, data)
+    assert response.status_code == 503
+    assert set(response.context_data) == {"failure_message"}
+    assert b"Do not assume a submitted change failed" in response.content
+    assert b"Synthetic lost connection" not in response.content
+    assert SchedulingCommandReceipt.objects.count() == before + 1
+    assert (
+        SchedulingCandidateRevision.objects.filter(
+            label="Committed before read loss"
+        ).count()
+        == 1
+    )
+    monkeypatch.setattr(planning_http, "load_scheduling_planning", actual_read)
+    replay = native_http_request(world, data)
+    assert replay.status_code == 200, replay.content.decode()
+    assert "no duplicate change" in replay.context_data["status_message"]
+    assert SchedulingCommandReceipt.objects.count() == before + 1
+
+
+def test_native_http_placement_preview_save_and_retry_share_real_commands(
+    native_http_world, host_inspection_admitted, monkeypatch
+):
+    world = native_http_world
+    monkeypatch.setattr(
+        evaluation_sources, "profile_allows_conflict_source", lambda *_args: True
+    )
+    monkeypatch.setattr(
+        evaluation_sources,
+        "load_programme_scheduling_dependencies",
+        partial(
+            programme_source.load_programme_scheduling_dependencies,
+            authorizer=_TrustedProgrammeAuthorizer(),
+        ),
+    )
+    opened = native_http_request(world, native_http_selection(world, mode="placement"))
+    data = native_http_intent(
+        opened,
+        action="preview_placement",
+        space_selection_id=world.placement.space_selection_id,
+        capacity_mode=world.placement.capacity_mode,
+        expected_attendance=world.placement.expected_attendance,
+    )
+    for name, value in asdict(world.placement.envelope).items():
+        data[name] = value.isoformat(timespec="minutes")
+    for host in world.placement.host_presences:
+        prefix = f"host_{host.host_id.hex}"
+        data[f"{prefix}_required"] = "required"
+        data[f"{prefix}_starts_at"] = host.starts_at.isoformat(timespec="minutes")
+        data[f"{prefix}_ends_at"] = host.ends_at.isoformat(timespec="minutes")
+    before = SchedulingCommandReceipt.objects.count()
+    preview = native_http_request(world, data)
+    assert preview.status_code == 200, preview.content.decode()
+    assert preview.context_data["preview"].complete
+    assert "Preview only" in preview.context_data["status_message"]
+    assert SchedulingCommandReceipt.objects.count() == before
+    assert (
+        SchedulingCandidateRevision.objects.filter(
+            candidate_id=world.candidate.object_id
+        ).count()
+        == 1
+    )
+    data["action"] = "save_placement"
+    saved = native_http_request(world, data)
+    assert saved.status_code == 200, saved.content.decode()
+    assert (
+        saved.context_data["snapshot"].placements[0].envelope
+        == world.placement.envelope
+    )
+    assert saved.context_data["selection"].occurrence_id == world.occurrence.object_id
+    replay = native_http_request(world, data)
+    assert replay.status_code == 200, replay.content.decode()
+    assert "no duplicate change" in replay.context_data["status_message"]
+    assert SchedulingCommandReceipt.objects.count() == before + 1
+    assert (
+        SchedulingCandidateRevision.objects.filter(
+            candidate_id=world.candidate.object_id
+        ).count()
+        == 2
     )
     assert not VenueBooking.objects.exists()

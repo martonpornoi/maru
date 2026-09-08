@@ -318,3 +318,53 @@ The next work is to connect these typed components to trusted HTTP request and
 response handling, native filter/inspector/history/conflict presentation and
 pointer/unsaved-state behavior, then perform browser and protected acceptance.
 This is still one incomplete #85 editor, not a separately delivered child.
+
+## Trusted HTTP and native information workspace follow-up
+
+The unmounted server adapter now connects exact native selection and forms to
+the existing owner reads/commands. Actor identity comes from the authenticated
+request, tenant/edition from trusted arguments, and ordinary CSRF checks remain
+enabled. Responses are no-store, private POST values are masked, URL filters
+are rejected, and base permission/audit precede private selection binding.
+Current policy and lifecycle compute task choices without adding a page ACL.
+Current-source copy retains the writer's independent history-read requirement.
+
+The management shell now renders filters, selected item/layer context, paged
+immutable history and exact comparison, and current/saved conflict findings
+with closed human causes and safe next actions. Native query forms do not nest
+or duplicate successful single-value fields. Current item labels beside old
+geometry are explicitly current; availability does not silently load names or
+render periods for an unshared relationship. Only the explicitly requested
+layer is queried. Each owner keeps its own canonical transaction/lock set.
+
+Successful commands reload real records and select the affected resource.
+Preview and recoverable errors preserve the exact pending form/key/version;
+permission failures withhold all prior private context. A lost success refresh
+can follow a committed command, so the error heading says attention is needed,
+not that the action failed. Exact replay confirms that receipt without a
+duplicate. No raw source exception is returned, and no private draft action
+implicitly publishes timing or alters physical holds.
+
+Verification for this increment:
+
+- The complete database-free suite passes 3,882 cases in 21.70s, with the two
+  existing Django URLField deprecation warnings.
+- Ninety-three HTTP/rendering unit cases pass in 3.82s under branch-aware
+  coverage. The three new source modules total 95.33%; workspace composition
+  and conflict explanations are 100%, HTTP dispatch is 92.75%. This is focused
+  component coverage, not whole-application certification.
+- Fourteen real PostgreSQL HTTP cases pass in 42.58s, reusing the same exact
+  label-verified synthetic task database. Creation of days, candidates and first
+  groups, positive CSRF, preview/save and exact replay, immutable comparison,
+  historical copy/restore, stale input, current-profile and independent-layer
+  denial, foreign tenant/edition candidates and post-commit refresh loss all
+  exercise actual owner reads/commands. Seventy other cases in the existing
+  candidate test file were deselected for this focused increment.
+- Focused Ruff/formatting, strict mypy, NumPy contracts, whitespace and maintained
+  documentation checks pass. Existing test assertions, migrations, runtime
+  permissions, profile manifests, CI/history classification, timing inventory
+  and coverage thresholds remain unchanged.
+
+Pointer-assisted prefill, unsaved-input protection, synthetic browser rehearsal
+and the full protected acceptance/delivery gates still remain. Neither #85 nor
+#48 is closed; no partial-editor PR, runtime route or scheduled check is added.

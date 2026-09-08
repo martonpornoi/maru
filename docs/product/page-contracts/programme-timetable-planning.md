@@ -141,6 +141,16 @@ candidate, day or edition while editing warns before discarding unsaved input.
 No offline write queue, autosave claim, personal-data browser cache or hidden
 background mutation is introduced.
 
+The native request adapter uses ordinary CSRF protection, sensitive-POST
+masking and no-store responses. After a completed command it reloads actual
+owner records, rather than presenting optimistic browser state as persisted.
+If that reload fails, completion is uncertain from the page's point of view:
+do not claim that nothing changed. Retrying the exact pending intent confirms
+the retained result without duplicate writes. If current permission or a
+complete owner read cannot be proved, withhold the whole private workspace;
+recoverable command failures retain input only while that context remains
+authorized.
+
 ## Failure and accessibility acceptance
 
 Cover empty setup, populated planning, denied base and restricted layers,

@@ -17,16 +17,19 @@
 
 <details class="maru-access-summary">
   <summary><strong>Access</strong> · {{ access_label|default:'Authorized planning read' }}</summary>
+  {% if available_actions %}<p>Currently available: {% for label in available_actions %}{{ label }}{% if not forloop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
   <p>Programme titles and room labels require separate owner permission. Host information, delivery instructions, public copy and readiness appear only through their explicitly selected authorized layer. A visible draft does not grant permission to edit or reserve it.</p>
 </details>
 
-{% if action_error %}<div class="baseline-errors" role="alert" tabindex="-1" data-maru-focus-on-load><h2>Action not completed</h2><p>{{ action_error }}</p></div>{% endif %}
+{% if action_error %}<div class="baseline-errors" role="alert" tabindex="-1" data-maru-focus-on-load><h2>Action needs attention</h2><p>{{ action_error }}</p></div>{% endif %}
 {% if status_message %}<p class="baseline-notice" role="status">{{ status_message }}</p>{% endif %}
+{% if selection %}{% include 'scheduling/_planning_filters.html' %}{% endif %}
 
 <div class="planning-layout">
   <section class="baseline-panel planning-inventory" aria-labelledby="planning-inventory-title">
     <h2 id="planning-inventory-title">Programme inventory</h2>
-    <p>{{ board.entries|length }} item or occurrence entries. Repeated occurrences stay separate.</p>
+    <p>{{ board.entries|length }} {% if complete_board %}matching entries of {{ complete_board.entries|length }} total{% else %}item or occurrence entries{% endif %}. Repeated occurrences stay separate.</p>
+    {% if can_select %}<form method="post" id="planning-inventory-selection" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=inventory_state %}<input type="hidden" name="action" value="select">{% endif %}
     <ul class="planning-entry-list">
       {% for entry in board.entries %}
       <li id="inventory-{{ entry.key }}" data-planning-entry data-state="{{ entry.state }}" data-item="{{ entry.item.item.id }}" {% if entry.occurrence %}data-occurrence="{{ entry.occurrence.id }}"{% endif %}>
@@ -36,17 +39,12 @@
         {% if entry.day %}<p>{{ entry.day.label }} · {{ entry.space.venue_label }} / {{ entry.space.label }}</p>{% endif %}
         {% if entry.metadata_changed %}<p class="planning-warning">Day or occurrence metadata changed. Review current details before saving.</p>{% endif %}
         {% if can_select %}
-        <form method="post" class="planning-select-form">
-          {% csrf_token %}
-          <input type="hidden" name="item_id" value="{{ entry.item.item.id }}">
-          {% if entry.occurrence %}<input type="hidden" name="occurrence_id" value="{{ entry.occurrence.id }}">{% endif %}
-          {% if board.candidate %}<input type="hidden" name="candidate_id" value="{{ board.candidate.id }}">{% endif %}
-          <button type="submit" name="action" value="select_item">Inspect {{ entry.item.internal_title }}{% if entry.occurrence.group_sequence %}, occurrence {{ entry.occurrence.group_sequence }}{% endif %}</button>
-        </form>
+        <button type="submit" name="{% if entry.occurrence %}ui_occurrence_id{% else %}ui_item_id{% endif %}" value="{% if entry.occurrence %}{{ entry.occurrence.id }}{% else %}{{ entry.item.item.id }}{% endif %}">Select {{ entry.item.internal_title }}{% if entry.occurrence.group_sequence %}, occurrence {{ entry.occurrence.group_sequence }}{% endif %}</button>
         {% endif %}
       </li>
-      {% empty %}<li>No Programme items yet. Add an organizer-created item or convert an accepted proposal before creating an occurrence.</li>{% endfor %}
+      {% empty %}<li>{% if complete_board.entries %}No entries match these filters. Clear filters to see the complete inventory.{% else %}No Programme items yet. Add an organizer-created item or convert an accepted proposal before creating an occurrence.{% endif %}</li>{% endfor %}
     </ul>
+    {% if can_select %}</form>{% endif %}
   </section>
 
   <section class="baseline-panel planning-board" aria-labelledby="planning-board-title">
@@ -75,6 +73,11 @@
     </div>
   </section>
 </div>
+
+{% if selection %}{% include 'scheduling/_planning_tools.html' %}{% endif %}
+{% include 'scheduling/_planning_inspector.html' %}
+{% include 'scheduling/_planning_review.html' %}
+{% include 'scheduling/_planning_history.html' %}
 
 {% if placement_form %}
 <section class="baseline-panel" aria-labelledby="planning-edit-title">

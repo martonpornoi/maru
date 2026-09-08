@@ -261,10 +261,50 @@ version. Historical copy/restore never falls back from a missing selected
 historical revision to current timing. Every submitted form still requires the
 existing independently authorized owner command.
 
-This is not yet the complete browser editor: trusted HTTP selection/command
-orchestration, visible filter controls, inspector/history/review presentation, pointer-prefill
-and unsaved-input behavior, browser rehearsal and protected acceptance remain.
-No production URL or navigation entry is mounted.
+### Dormant HTTP workspace
+
+`planning_views.scheduling_planning_view` is an unmounted GET/POST adapter with
+ordinary CSRF protection, no-store responses and sensitive-POST masking. Actor
+identity comes only from the authenticated request; organization, edition and
+the parent label are server-resolved arguments. A successful audited base read
+precedes private selection binding. Query-string filters, file uploads, unknown
+actions, duplicated single-value fields and action/mode mismatches are rejected.
+Native query forms carry the closed `ui_` namespace separately from exact
+command fields. A query never becomes a writer because of hidden selection.
+
+`planning_workspace.compose_planning_workspace` checks the selected task's
+independent capabilities, queries Programme titles and Venue room labels, then
+resolves selection against the complete board before filtering visible cards.
+It loads only explicitly requested inspector, history, conflict or physical
+layers; placement separately authorizes the current host roster. Both current
+and historical candidate copy require independent history authority. Access and
+task choices are computed from current policy and lifecycle, not a new ACL.
+Owner transactions retain their canonical person-lock sets; the whole page is
+not wrapped in an actor-first cross-owner transaction.
+
+Native filters, the selected item, information layers, immutable history and
+comparison, and current/saved conflict findings are rendered explicitly. Current
+item labels beside historical geometry are marked as current, not retained
+content. Shared availability discloses periods only for a shared relationship
+and does not silently load host names. The closed `planning_presentation`
+explanations identify each finding's cause and safe next action without owner
+lookups or automatic overrides. Missing checks, saved completeness and fresh
+source availability remain distinct.
+
+Submissions delegate through the existing strict action adapters. Success
+reloads actual owner state and selects the affected day, occurrence or draft;
+preview keeps the exact unsaved form and retry key. Recoverable command errors
+retain authorized input without rebasing optimistic versions. Permission loss
+withholds all prior private context. A failed post-command refresh may follow
+a committed command: the generic unavailable response never asserts failure,
+and an exact retry confirms the retained result without duplicate writes. The
+adapter does not log raw exception details or persist private form/filter input
+in URLs, sessions or browser storage.
+
+This is not yet the complete browser editor: pointer-prefill, unsaved-input
+protection, browser rehearsal and protected acceptance remain. No production
+URL or navigation entry is mounted; isolated component admission and owner
+database tests are not provisioned runtime/profile evidence.
 
 ### Conflict-source boundary
 

@@ -1,0 +1,7 @@
+{% extends 'core/baseline_admin_base.html' %}
+{% block baseline_page_title %}Timetable planning unavailable · Maru{% endblock %}
+{% block baseline_content %}
+<header class="baseline-page-heading"><h1>Timetable planning unavailable</h1></header>
+<div class="baseline-errors" role="alert"><p>{{ failure_message }}</p></div>
+<p>No private item, host, room or draft information is included in this response.</p>
+{% endblock %}

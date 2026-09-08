@@ -1,5 +1,6 @@
 <form method="post" id="{{ form_id }}" class="planning-command-form" data-planning-command>
   {% csrf_token %}
+  {% include 'scheduling/_planning_state.html' with state=state %}
   {% for field in form.hidden_fields %}{% if field.name != 'action' %}{{ field }}{% endif %}{% endfor %}
   {% if form.errors %}
     <div class="baseline-errors" role="alert" tabindex="-1" data-maru-focus-on-load>

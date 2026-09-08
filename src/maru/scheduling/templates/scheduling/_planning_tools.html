@@ -1,0 +1,38 @@
+<section class="baseline-panel" aria-labelledby="planning-tools-title">
+  <h2 id="planning-tools-title">Planning tools</h2>
+  <p>Choose one task. Opening or refreshing a form does not save a change. Review the target, reason and any confirmation before submitting.</p>
+  <form method="post" id="planning-tools" data-planning-navigation>
+    {% csrf_token %}
+    {% include 'scheduling/_planning_state.html' with state=mode_state %}
+    <input type="hidden" name="action" value="select">
+    <label for="planning-tool-mode">Task</label>
+    <select id="planning-tool-mode" name="ui_mode">{% for value, label in mode_choices %}<option value="{{ value }}" {% if selection.mode == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    <button type="submit">Open task / deliberately start a fresh form</button>
+  </form>
+</section>
+
+{% if selected_item %}
+<section class="baseline-panel" aria-labelledby="planning-selected-title">
+  <h2 id="planning-selected-title" tabindex="-1" {% if not control.form.errors and not action_error %}data-maru-focus-on-load{% endif %}>Selected item: {{ selected_item.internal_title }}</h2>
+  {% if selection_hidden %}<p class="planning-warning">This selection is outside the visible filters. It remains selected; clear filters to see its card.</p>{% endif %}
+  {% if selected_entry.occurrence %}<p>Exact occurrence selected{% if selected_entry.occurrence.group_key %} · Group sequence {{ selected_entry.occurrence.group_sequence }}{% endif %} · Metadata version {{ selected_entry.occurrence.version }} · {{ selected_entry.occurrence.lifecycle }}.</p>
+  {% else %}<p>No occurrence selected. Choose an exact occurrence above or create one explicitly.</p>{% endif %}
+  <p>Choose one independently authorized information layer. Switching layers does not load private proposal answers or review text.</p>
+  <form method="post" id="planning-layer" data-planning-navigation>
+    {% csrf_token %}
+    {% include 'scheduling/_planning_state.html' with state=layer_state %}
+    <input type="hidden" name="action" value="select">
+    <label for="planning-layer-choice">Information layer</label>
+    <select id="planning-layer-choice" name="ui_layer"><option value="">No layer selected</option>{% for value, label in layer_choices %}<option value="{{ value }}" {% if selection.layer == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    <button type="submit">Load selected layer</button>
+  </form>
+</section>
+{% endif %}
+
+{% if control %}
+<section class="baseline-panel" aria-labelledby="planning-control-title">
+  <h2 id="planning-control-title">{{ control.title }}</h2>
+  <p>{{ control.guidance }}</p>
+  {% if control.form %}{% include 'scheduling/_planning_form.html' with form=control.form form_id='planning-editor-form' submit_actions=control.button_choices state=selection_state %}{% endif %}
+</section>
+{% endif %}

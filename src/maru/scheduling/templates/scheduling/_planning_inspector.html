@@ -1,0 +1,26 @@
+{% if inspector %}
+<section class="baseline-panel" aria-labelledby="planning-inspector-title">
+  <h2 id="planning-inspector-title">Selected information layer</h2>
+  {% if inspector.layer == 'working' %}
+    <h3>Private working information</h3>
+    {% if inspector.data.working %}<p>Working source item version {{ inspector.data.working.item_version }}.</p><h4>{{ inspector.data.working.internal_title }}</h4><p class="planning-prose">{{ inspector.data.working.working_summary }}</p>{% else %}<p>No working revision is available.</p>{% endif %}
+  {% elif inspector.layer == 'public_copy' %}
+    <h3>Approved public copy</h3>
+    {% if inspector.data %}<p>Copy rendition {{ inspector.data.rendition_number }}. This approves the copy, not Programme timing or release.</p><h4>{{ inspector.data.public_title }}</h4><p class="planning-prose">{{ inspector.data.public_summary }}</p><p class="planning-prose">{{ inspector.data.public_content_note }}</p>{% else %}<p>No approved public copy is available.</p>{% endif %}
+  {% elif inspector.layer == 'delivery' %}
+    <h3>Private delivery instructions</h3>
+    {% if inspector.data %}<p>Source item version {{ inspector.data.item_version }}.</p><dl><dt>Technical requirements</dt><dd class="planning-prose">{{ inspector.data.technical_requirements|default:'Not recorded' }}</dd><dt>Accessibility delivery</dt><dd class="planning-prose">{{ inspector.data.accessibility_delivery|default:'Not recorded' }}</dd><dt>Media consent delivery notes</dt><dd class="planning-prose">{{ inspector.data.media_consent_notes|default:'Not recorded' }}</dd></dl>{% else %}<p>No delivery revision is available.</p>{% endif %}
+  {% elif inspector.layer == 'readiness' %}
+    <h3>Item readiness concerns</h3><p>These are source-specific concerns, not an overall approval or a readiness percentage.</p>
+    <ul>{% for concern in inspector.data %}<li>{{ concern.concern }}: <strong>{{ concern.state }}</strong> · Current requirement {{ concern.requirement_version }}, dependency {{ concern.dependency_version }}{% if concern.evidence_requirement_version %} · Evidence requirement {{ concern.evidence_requirement_version }}, dependency {{ concern.evidence_dependency_version }}{% endif %}</li>{% empty %}<li>No readiness concerns were returned by the authorized source.</li>{% endfor %}</ul>
+  {% elif inspector.layer == 'hosts' %}
+    <h3>Current host relationships</h3><p>Current identity labels are not historical identity evidence. No contact details or personal availability are included in this layer.</p>
+    <ul>{% for host in inspector.data.entries %}<li><strong>{{ host.display_label }}</strong> · {{ host.relationship.role }} · {{ host.relationship.state }} · Version {{ host.relationship.version }}{% if not host.person_current %} · Person is not currently available{% endif %}<details><summary>Relationship reference</summary><p>{{ host.relationship.host_id }}</p></details></li>{% empty %}<li>No host relationships are recorded.</li>{% endfor %}</ul>
+  {% elif inspector.layer == 'shared_availability' %}
+    <h3>Deliberately shared host availability</h3><p>Names require the separate Hosts layer. Exact relationship references let you match the authorized layers without silently loading another one. Missing or unshared periods never mean available.</p>
+    {% for host in inspector.data.hosts %}<section><h4>Host relationship {{ forloop.counter }}</h4><p>Reference {{ host.host_id }} · {{ host.status }} · Host version {{ host.host_version }}, availability version {{ host.availability_version }}.</p>
+      {% if host.status == 'shared' %}<ul>{% for period in host.periods %}<li>{{ period.kind }}: <time datetime="{{ period.starts_at|date:'c' }}">{{ period.starts_at|date:'D j M Y, H:i O' }}</time> to <time datetime="{{ period.ends_at|date:'c' }}">{{ period.ends_at|date:'D j M Y, H:i O' }}</time></li>{% empty %}<li>No usable shared intervals are present.</li>{% endfor %}</ul>{% else %}<p>No shared periods are disclosed for this relationship.</p>{% endif %}
+    </section>{% empty %}<p>No host dependencies are recorded.</p>{% endfor %}
+  {% endif %}
+</section>
+{% endif %}

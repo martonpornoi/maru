@@ -67,14 +67,22 @@
   overflow-wrap: anywhere;
 }
 
+.planning-prose {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .planning-command-form input,
 .planning-command-form select,
-.planning-command-form textarea {
+.planning-command-form textarea,
+[data-planning-navigation] input,
+[data-planning-navigation] select {
   max-width: 100%;
 }
 
 .planning-command-form button,
-.planning-select-form button {
+[data-planning-navigation] button,
+[data-planning-navigation] select {
   min-height: 2.75rem;
   white-space: normal;
   overflow-wrap: anywhere;
@@ -82,7 +90,7 @@
 
 .planning-lane :focus-visible,
 .planning-command-form :focus-visible,
-.planning-select-form :focus-visible {
+[data-planning-navigation] :focus-visible {
   outline: 3px solid #145ba6;
   outline-offset: 3px;
 }

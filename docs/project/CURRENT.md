@@ -166,34 +166,36 @@ version, then rechecks the existing exact-resource Venue boundary. It preserves
 an active hold after draft movement/unplacement and observes cancellation or
 independent physical approval without publishing Programme timing.
 
-Initial board composition and native rendering are implemented: complete item/
-occurrence inventory, stable day/room lanes, stale-metadata warnings, explicit
-overnight dates/offsets, escaped owner labels and Preview-first native forms.
-They reuse the management shell; no interactive route is mounted. Strict
-transient selection now separates the `ui_` namespace from exact command input,
-rejects ambiguous fields and resolves scoped targets before filtering visible
-cards. Complete choices and selected context survive filtering. Native control
-composition prefills exact target/control versions, preserves bound retry input,
-and retains historical hold sources for cancellation. The first occurrence
-group can now be started explicitly; repetition never creates implicit work.
-Trusted HTTP orchestration, visible filters, full inspector/history/conflict
-presentation, pointer prefill and unsaved-input behavior remain to connect.
+The native workspace now connects trusted HTTP requests to owner reads and
+existing commands. It uses ordinary CSRF protection, no-store responses and
+sensitive-POST masking. Strict `ui_` selection resolves against complete owner
+inventories before visible filtering. Exact forms retain submitted versions and
+retry keys; first-group creation stays explicit. Current policy computes task
+choices, including independent history permission for any candidate copy.
 
-The complete database-free suite passes 3,789 cases in 26.63s. The final focused
-180-case selection/control/record suite passes with 97.79% branch-aware coverage
-across those three source modules, not whole-application coverage. Eight native
-command PostgreSQL cases pass in 14.15s, including first-group creation, exact
-retry and explicit extension without extra occurrences or physical changes.
-The same isolated task-owned current schema was reused; 62 unrelated cases in
-that file were not selected. Earlier 152-case and independent-approval evidence
-remains in the checkpoint. These are focused checks, not complete certification.
+The shared shell now renders native filters, selected information layers,
+immutable history/comparison, conflict causes and safe next actions. Current
+labels are distinguished from historical geometry; shared availability never
+silently supplies host names or unshared periods. Owner denial withholds all
+prior private context. Success reloads actual records; lost success refresh is
+reported as uncertain completion, with exact replay confirming the committed
+result without duplicate writes. Private draft changes do not publish or
+implicitly alter room holds.
+
+The complete database-free suite passes 3,882 cases in 21.70s, with the two
+existing URLField warnings. Ninety-three focused HTTP/rendering cases pass
+with 95.33% branch-aware coverage across the three new source modules. Fourteen
+real PostgreSQL HTTP cases pass in 42.58s, including positive CSRF, creation,
+preview/save, exact replay, historical copy/restore, stale input, independent
+owner permissions, foreign scopes and post-commit refresh-loss recovery. They
+reuse the isolated task-owned current schema; 70 unrelated cases in that file
+were not selected. Earlier component/domain evidence remains in the checkpoint.
+These are focused checks, not complete certification or runtime-role evidence.
 Focused lint, formatting, strict types, NumPy contracts and documentation checks
-pass. No CI policy, timing map, acceptance threshold, historical scope, migration
-or runtime grant changed; existing assertions remain, with the record-dispatch
-test explicitly accounting for the two new native-only group fields.
-Browser, runtime-role and protected delivery acceptance remain outstanding.
+pass. No CI policy, timing map, acceptance threshold, historical scope, migration,
+runtime grant or pre-existing test assertion was changed in this increment.
 See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
-Complete interaction orchestration, browser rehearsal and protected
+Pointer prefill, unsaved-input protection, browser rehearsal and protected
 certification/delivery remain. No PR has been opened for this partial editor.
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain

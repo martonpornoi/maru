@@ -74,6 +74,29 @@ source intent. Reevaluate candidates against current source versions after
 recovery. Never restore withdrawn host periods as current availability or infer
 consent, independent approval or future release from an old report.
 
+## Dormant editor request recovery
+
+The unmounted timetable editor component uses ordinary authenticated requests,
+CSRF protection, no-store responses and masked sensitive POST fields. It does
+not change the current-profile or runtime SELECT-only boundary. Do not mount it
+or substitute an owner login to work around denied runtime writes.
+
+An authorized validation or stale-version response retains the exact pending
+form, retry key and observed versions. Review current owner records before
+deliberately starting a new intent; never automatically rebase or replay a
+different payload with the old key. A dependency/database failure may follow a
+successful command commit. The page therefore reports uncertain completion,
+not an assurance that no change occurred. Retry the exact retained request to
+confirm its existing receipt, or use independently authorized history when
+access is restored. Do not create a new candidate merely because a success
+refresh failed.
+
+Permission loss or unavailable complete owner reads withhold previously loaded
+private labels and layers. Diagnose with existing minimized command/audit
+evidence, not logged form bodies, raw owner exceptions, host calendars or private
+reasons. A current draft change still leaves physical room holds unchanged;
+inspect the exact authorized hold before deliberate replacement/cancellation.
+
 ## Meaningful verification
 
 Focused tests cover DST and grid edges, explicit person presence, candidate
