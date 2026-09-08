@@ -1,6 +1,6 @@
 # ADR 0089: Conservative hosted test-cost calibration
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0091 for acceptance selection and grouping
 - Date: 2026-09-07
 - Requirements: NFR-001, NFR-002, NFR-003
 - Partially supersedes: ADR 0060's requirement that every scheduling weight is

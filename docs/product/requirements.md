@@ -1679,6 +1679,11 @@ architecture documents, implementation issues, tests, and release notes.
 - **NFR-001 — Thorough testing:** Critical workflows, permission boundaries,
   tenant isolation, concurrency, migrations, exports, and recovery must be
   automatically tested according to `docs/quality/testing-strategy.md`.
+  Code pull requests retain current-schema PostgreSQL behavior and unchanged
+  coverage gates. Historical migration acceptance is risk-selected before merge
+  and exhaustive for global safety/harness changes, changed-revision nightly
+  checks and releases, under ADR 0090. Deferred historical failures require
+  repair; they are not permission to release or silently ignore regressions.
 - **NFR-002 — Living documentation:** Product, architecture, API, operations,
   security, and role-specific user documentation are deliverables.
 - **NFR-003 — Checkpoint continuity:** Every material change must leave a

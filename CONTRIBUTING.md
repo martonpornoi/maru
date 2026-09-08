@@ -47,12 +47,15 @@ Run the local acceptance command before requesting review:
 ```
 
 For a focused change, run the smallest relevant tests during development. The
-full local command remains the contributor's pre-review obligation, but its
+scope-selected local command remains the contributor's pre-review obligation, but its
 receipt is not a server trust boundary. Every ready pull request independently
 satisfies the repository-owned `PR gate` on isolated GitHub-hosted runners.
-Low-risk changes use a fail-closed affected-test plan; workflows, dependencies,
-models, migrations, settings, security boundaries, and test infrastructure run
-the complete hosted acceptance matrix.
+Every code PR keeps current-schema PostgreSQL behavior. Domain schema changes add
+affected historical boundaries and real whole-graph recovery; global safety,
+dependency and test-harness changes require exhaustive history. ADR 0090 and the
+[local certification guide](docs/development/local-certification.md) define
+the shared local/hosted selection policy. Use `-Mode Full` for explicit exhaustive
+certification; `CurrentDiagnostic` is a benchmark, not pre-review evidence.
 
 Open unfinished work as a draft. Draft updates run only the cheap locked-input
 and automation-policy feedback and intentionally keep `PR gate` red. After the

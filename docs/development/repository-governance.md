@@ -107,21 +107,23 @@ to those pull requests, while managed CodeQL retains default-branch and weekly
 scans. Review these coverage limits explicitly rather than interpreting a
 missing pull-request CodeQL result as complete analysis.
 
-The hosted `PR gate` retains ADR 0060's change-aware boundary: documentation-
-only changes avoid PostgreSQL, ordinary Python work runs unit and bounded
-affected integration tests, and high-risk paths invoke the complete eight-
-shard reusable matrix. Targeted selection also routes to the full matrix when
-the accepted timing map is unavailable, any selected file lacks an accepted
-timing, or the estimate exceeds 1,800 seconds. This 30-minute execution ceiling
-leaves 15 minutes for setup and runtime variance inside the targeted lane's
-45-minute timeout. Before the full matrix fans out, a lightweight preflight
+The hosted `PR gate` uses ADR 0090's risk-based boundary: documentation-only
+changes avoid PostgreSQL, every code PR retains all current-schema cases, domain
+schema changes add affected historical boundaries and real full-graph recovery,
+and global safety/harness changes require exhaustive history. The routine matrix
+uses eight isolated databases. The exhaustive hosted matrix uses sixteen smaller
+groups with a maximum of eight simultaneous database jobs and unchanged
+120-minute per-job limits. Before the matrix fans out, a lightweight preflight
 requires a current `uv.lock` and exact parity between every workflow reference
 and `.github/actions-allowlist.json`. `scripts/certify.ps1` remains the required
 local pre-review command, but its unsigned receipt is contributor evidence
 rather than a server trust boundary. Details are in
 [local exact-commit certification](local-certification.md), ADR 0063, and ADR
-0064. The unit layer is database-free; successful full acceptance starts eight
-independent PostgreSQL services for the eight whole-file integration shards.
+0064. The unit layer remains database-free. Default local certification selects
+the required historical scope from an exact base-to-head diff; a diagnostic-only
+receipt cannot replace that required evidence. Nightly full acceptance deduplicates
+exact-main success/in-progress runs and surfaces prior failures without blindly
+retrying. Releases independently recertify the exact current-main revision.
 
 For a ready pull request whose dedicated classifier output identifies a graph-
 visible manifest, lock, or workflow change, the same `changes` job performs

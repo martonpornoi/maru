@@ -1,6 +1,7 @@
 """Unit coverage for strict Programme call and proposal inputs."""
 
-from datetime import UTC, datetime
+from dataclasses import replace
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -404,3 +405,224 @@ def test_canonical_digest_is_strict_unicode_and_lowercase_uuid_json() -> None:
     )
     with pytest.raises(TypeError):
         canonical_programme_json({"unsupported": object()})
+
+
+@pytest.mark.parametrize(
+    ("field_type", "changes", "field", "code"),
+    [
+        ("short_text", {"required": 1}, "required", "required_choice_invalid"),
+        ("short_text", {"options": []}, "options", "question_options_invalid"),
+        ("short_text", {"options": ("talk",)}, "options", "question_options_invalid"),
+        (
+            "short_text",
+            {"options": (ProgrammeCallQuestionOptionInput(code="talk", label="Talk"),)},
+            "options",
+            "question_options_invalid",
+        ),
+        ("single_choice", {"options": ()}, "options", "question_options_invalid"),
+        ("integer", {"minimum_length": 0}, "maximum_length", "length_bound_invalid"),
+        (
+            "short_text",
+            {"minimum_length": True},
+            "minimum_length",
+            "length_bound_invalid",
+        ),
+        (
+            "short_text",
+            {"minimum_length": -1},
+            "minimum_length",
+            "length_bound_invalid",
+        ),
+        (
+            "short_text",
+            {"maximum_length": 65537},
+            "maximum_length",
+            "length_bound_invalid",
+        ),
+        (
+            "short_text",
+            {"minimum_length": 10, "maximum_length": 9},
+            "maximum_length",
+            "length_bound_invalid",
+        ),
+        (
+            "short_text",
+            {"minimum_value": Decimal(0)},
+            "maximum_value",
+            "numeric_bound_invalid",
+        ),
+        ("decimal", {"minimum_value": 1}, "minimum_value", "numeric_bound_invalid"),
+        (
+            "decimal",
+            {"minimum_value": Decimal("NaN")},
+            "minimum_value",
+            "numeric_bound_invalid",
+        ),
+        (
+            "decimal",
+            {"maximum_value": Decimal("Infinity")},
+            "maximum_value",
+            "numeric_bound_invalid",
+        ),
+        (
+            "decimal",
+            {"minimum_value": Decimal("0.00001")},
+            "minimum_value",
+            "numeric_bound_invalid",
+        ),
+        (
+            "decimal",
+            {"maximum_value": Decimal("1E18")},
+            "maximum_value",
+            "numeric_bound_invalid",
+        ),
+        (
+            "decimal",
+            {"minimum_value": Decimal(2), "maximum_value": Decimal(1)},
+            "maximum_value",
+            "numeric_bound_invalid",
+        ),
+        (
+            "multiple_choice",
+            {"maximum_choices": True},
+            "maximum_choices",
+            "maximum_choices_invalid",
+        ),
+        (
+            "multiple_choice",
+            {"maximum_choices": 0},
+            "maximum_choices",
+            "maximum_choices_invalid",
+        ),
+        (
+            "multiple_choice",
+            {"maximum_choices": 3},
+            "maximum_choices",
+            "maximum_choices_invalid",
+        ),
+        (
+            "short_text",
+            {"maximum_choices": 1},
+            "maximum_choices",
+            "maximum_choices_invalid",
+        ),
+        (
+            "short_text",
+            {"reference_kind": "programme.person"},
+            "reference_kind",
+            "reference_kind_invalid",
+        ),
+        (
+            "person_reference",
+            {"reference_kind": "Invalid!"},
+            "reference_kind",
+            "reference_kind_invalid",
+        ),
+        ("short_text", {"condition": {}}, "condition", "condition_invalid"),
+    ],
+)
+def test_question_input_rejects_incompatible_or_ambiguous_constraints(
+    field_type: str, changes: dict[str, object], field: str, code: str
+) -> None:
+    """Reject invalid call schemas at the public DTO boundary, without a database."""
+    question = _typed_question(
+        key="session", position=1, field_type=ProgrammeCallQuestionType(field_type)
+    )
+
+    with pytest.raises(ValidationError) as failure:
+        replace(question, **changes)
+
+    assert set(failure.value.error_dict) == {field}
+    assert failure.value.error_dict[field][0].code == f"applications_programme_{code}"
+
+
+def test_question_input_preserves_valid_boundary_constraints_and_retention() -> None:
+    """Keep inclusive limits usable instead of rejecting every constrained form."""
+    decimal = replace(
+        _typed_question(
+            key="budget", position=1, field_type=ProgrammeCallQuestionType.DECIMAL
+        ),
+        minimum_value=Decimal("-99999999999999.9999"),
+        maximum_value=Decimal("99999999999999.9999"),
+    )
+    text = replace(
+        _question(),
+        minimum_length=0,
+        maximum_length=65536,
+        retention_policy_code=" programme.retention:v1 ",
+    )
+    assert decimal.minimum_value < decimal.maximum_value
+    assert text.minimum_length == 0
+    assert text.maximum_length == 65536
+    assert text.retention_policy_code == "programme.retention:v1"
+
+
+@pytest.mark.parametrize("count", [2, 101])
+def test_question_options_reject_duplicate_codes_and_oversized_sets(count: int) -> None:
+    """Enforce uniqueness and the option-count bound before persistence."""
+    question = _typed_question(
+        key="format", position=1, field_type=ProgrammeCallQuestionType.SINGLE_CHOICE
+    )
+    with pytest.raises(ValidationError) as failure:
+        replace(question, options=(question.options[0],) * count)
+    assert failure.value.error_dict["options"][0].code == (
+        "applications_programme_question_options_invalid"
+    )
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"closes_at": datetime(2026, 12, 31, tzinfo=UTC)},
+        {"opens_at": datetime(2027, 3, 1, tzinfo=UTC)},
+        {"applicant_edit_until": datetime(2026, 12, 31, tzinfo=UTC)},
+        {"applicant_edit_until": datetime(2027, 3, 2, tzinfo=UTC)},
+    ],
+)
+def test_call_windows_reject_out_of_order_editing_and_submission(
+    changes: dict[str, datetime],
+) -> None:
+    with pytest.raises(ValidationError) as failure:
+        replace(_definition(), **changes)
+    assert failure.value.error_dict["closes_at"][0].code == (
+        "applications_programme_window_order_invalid"
+    )
+
+
+def test_call_rejects_question_keys_duplicated_across_distinct_sections() -> None:
+    definition = _definition()
+    duplicate = replace(definition.sections[0], key="details", position=2)
+    with pytest.raises(ValidationError) as failure:
+        replace(definition, sections=(*definition.sections, duplicate))
+    assert failure.value.error_dict["sections"][0].code == (
+        "applications_programme_question_graph_invalid"
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "exception"),
+    [
+        (float("nan"), ValueError),
+        (float("inf"), ValueError),
+        (Decimal("NaN"), ValueError),
+        (Decimal("Infinity"), ValueError),
+        (datetime(2027, 1, 1), ValueError),  # noqa: DTZ001 - reject naive input
+        (time(12, 30), ValueError),
+        ({1: "ambiguous key"}, TypeError),
+        ({"e\u0301": 1, "\u00e9": 2}, ValueError),
+    ],
+)
+def test_canonical_payload_rejects_lossy_or_ambiguous_values(
+    value: object, exception: type[Exception]
+) -> None:
+    with pytest.raises(exception):
+        canonical_programme_json({"value": value})
+
+
+def test_canonical_payload_keeps_supported_scalar_and_civil_time_types() -> None:
+    assert (
+        canonical_programme_json(
+            {"values": (1.5, date(2027, 1, 1), time(12, 30, tzinfo=UTC))}
+        )
+        == b'{"values":[1.5,"2027-01-01","12:30:00+00:00"]}'
+    )

@@ -2,6 +2,13 @@ name: Reusable full acceptance
 
 on:
   workflow_call:
+    inputs:
+      history:
+        type: string
+        default: all
+      base:
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -11,6 +18,10 @@ jobs:
     name: Locked inputs and Actions policy
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      history: ${{ steps.database-plan.outputs.history }}
+      shard-count: ${{ steps.database-plan.outputs.shard_count }}
+      matrix: ${{ steps.database-plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -23,6 +34,19 @@ jobs:
           python -m pip install uv==0.11.29 PyYAML==6.0.3
           uv lock --check
           python scripts/validate_actions_allowlist.py
+      - name: Resolve database acceptance scope before fan-out
+        id: database-plan
+        env:
+          HISTORY_SCOPE: ${{ inputs.history }}
+          ACCEPTANCE_BASE: ${{ inputs.base }}
+        run: |
+          uv sync --all-groups --locked
+          if [[ "$HISTORY_SCOPE" == "affected" ]]; then
+            git fetch --no-tags origin "$ACCEPTANCE_BASE"
+          fi
+          uv run python -m scripts.run_postgres_acceptance \
+            --history "$HISTORY_SCOPE" --base "$ACCEPTANCE_BASE" \
+            --plan-only --github-output "$GITHUB_OUTPUT"
 
   static:
     name: Full Python static analysis
@@ -231,14 +255,15 @@ jobs:
           retention-days: 7
 
   integration:
-    name: Full PostgreSQL integration (${{ matrix.shard }}/8)
-    needs: [static, security]
+    name: PostgreSQL ${{ needs.preflight.outputs.history }} (${{ matrix.shard }})
+    needs: [preflight, static, security]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
       fail-fast: false
+      max-parallel: 8
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: ${{ fromJSON(needs.preflight.outputs.matrix) }}
     services:
       postgres:
         image: postgres:17.11-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
@@ -254,6 +279,9 @@ jobs:
           --health-retries 15
     env:
       MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:5432/maru
+      HISTORY_SCOPE: ${{ needs.preflight.outputs.history }}
+      ACCEPTANCE_BASE: ${{ inputs.base }}
+      SHARD_COUNT: ${{ needs.preflight.outputs.shard-count }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -269,13 +297,18 @@ jobs:
           restore-keys: ${{ runner.os }}-uv-
       - run: python -m pip install uv==0.11.29
       - run: uv sync --all-groups --locked
-      - name: Run measured file-level shard
+      - name: Run validated risk-selected shard
         run: |
           mkdir -p coverage-parts reports
+          if [[ "$HISTORY_SCOPE" == "affected" ]]; then
+            git fetch --no-tags origin "$ACCEPTANCE_BASE"
+          fi
           COVERAGE_FILE=coverage-parts/.coverage.integration-${{ matrix.shard }} \
-            uv run python scripts/run_ci_test_shard.py \
-            --shard-index ${{ matrix.shard }} --shard-count 8 -- \
-            -q --cov=maru --cov-report= --cov-fail-under=0 \
+            uv run coverage run -m scripts.run_postgres_acceptance \
+            --history "$HISTORY_SCOPE" --base "$ACCEPTANCE_BASE" \
+            --shard-index ${{ matrix.shard }} --shard-count "$SHARD_COUNT" \
+            --evidence reports/selection-${{ matrix.shard }}.json -- \
+            -q \
             --junitxml=reports/integration-${{ matrix.shard }}.xml \
             --durations=25
       - name: Upload integration diagnostics

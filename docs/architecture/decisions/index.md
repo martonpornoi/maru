@@ -20,6 +20,11 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0090](0090-risk-based-postgresql-acceptance.md) defines current PostgreSQL
+acceptance, historical migration selection, nightly deduplication and bounded
+isolated work groups. It supersedes earlier selection/grouping rules without
+lowering coverage or changing protected merge authority.
+
 | ADR | Status | Decision |
 | --- | --- | --- |
 | [0072](0072-protected-exact-main-sphinx-pages-publication.md) | Accepted | Publish warning-fatal Sphinx output from protected `main` through a least-privilege Pages boundary. |
@@ -39,11 +44,16 @@ For present implementation status, use the
 | [0086](0086-source-bound-programme-accepted-item-conversion.md) | Accepted | Convert exact effective acceptance through reciprocal owner receipts and initially unresolved readiness. |
 | [0087](0087-programme-host-confirmation-and-availability.md) | Accepted | Invite exact Programme hosts, retain person-owned confirmation and purpose-scoped availability, and invalidate only dependent readiness. |
 | [0088](0088-versioned-scheduling-candidates-and-venue-binding.md) | Accepted | Keep versioned timetable alternatives separate from governed physical reservations and the future single release. |
-| [0089](0089-conservative-hosted-test-cost-calibration.md) | Accepted | Keep complete test inventories while conservatively calibrating hosted scheduling costs; acceptance remains independent. |
+| [0089](0089-conservative-hosted-test-cost-calibration.md) | Partially superseded | Preserve exact-evidence whole-file cost calibration as diagnostic tooling under ADR 0091. |
+| [0090](0090-risk-based-postgresql-acceptance.md) | Accepted | Retain current safety tests and risk-selected history with bounded isolated groups. |
+| [0091](0091-scheduling-ci-policy-integration.md) | Accepted | Apply the delivered risk policy to Scheduling's joint-owner history without reviving whole-file acceptance. |
 
 ADR 0089 partially supersedes ADR 0060 only for scheduling-weight provenance:
 weights may be conservative exact-head estimates rather than raw durations
 from one run. ADR 0063's independent hosted acceptance remains unchanged.
+ADR 0091 partially supersedes ADR 0089's whole-file acceptance topology: ADR
+0090 owns active selection and grouping; the earlier calibration contract
+remains available for diagnostic whole-file evidence, not merge acceptance.
 
 ADR 0073 partially supersedes the example-data and source-derived-template
 parts of [ADR 0042](0042-synthetic-only-educational-fixtures.md) and

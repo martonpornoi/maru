@@ -2,8 +2,8 @@
 
 The module intentionally uses only the Python standard library so the first CI
 job can make a decision before installing project dependencies. High-risk
-paths fail closed to the full acceptance workflow; ordinary module changes run
-a bounded PostgreSQL selection, and documentation-only changes use no database.
+paths require exhaustive history; ordinary code changes retain all current
+PostgreSQL behavior, and documentation-only changes use no database.
 """
 
 from __future__ import annotations
@@ -140,6 +140,8 @@ class CIPlan:
         Whether the pull request needs explicit destructive-change review.
     deleted_count : int
         Number of deleted repository paths.
+    history : str, default="all"
+        Historical depth: ``current``, ``affected`` or exhaustive ``all``.
 
     Attributes
     ----------
@@ -161,6 +163,8 @@ class CIPlan:
         Whether the pull request needs explicit destructive-change review.
     deleted_count : int
         Number of deleted repository paths.
+    history : str
+        Historical depth required in addition to current behavior.
     """
 
     documentation: bool
@@ -172,6 +176,7 @@ class CIPlan:
     integration: str
     destructive: bool
     deleted_count: int
+    history: str = "all"
 
     def github_outputs(self) -> dict[str, str]:
         """Return lowercase values suitable for ``GITHUB_OUTPUT``.
@@ -189,6 +194,7 @@ class CIPlan:
             "security": str(self.security).lower(),
             "dependency_review": str(self.dependency_review).lower(),
             "integration": self.integration,
+            "history": self.history,
             "destructive": str(self.destructive).lower(),
             "deleted_count": str(self.deleted_count),
         }
@@ -261,12 +267,10 @@ def classify_changes(changes: Sequence[ChangedFile]) -> CIPlan:
     security = any(_is_security_related(path) for path in paths)
     dependency_review = any(_is_dependency_review_related(path) for path in paths)
     full = any(_requires_full_integration(path) for path in paths)
-    targeted = python and any(
-        path.startswith(("src/", "tests/integration/")) for path in paths
-    )
     protected_deletion = any(_is_protected_deletion(change.path) for change in deleted)
     destructive = protected_deletion or len(deleted) >= MASS_DELETION_THRESHOLD
-    integration = "full" if full or destructive else "targeted" if targeted else "none"
+    integration = "full" if python or frontend or full or destructive else "none"
+    history = historical_scope(changes, destructive=destructive)
     return CIPlan(
         documentation=documentation,
         frontend=frontend,
@@ -277,7 +281,66 @@ def classify_changes(changes: Sequence[ChangedFile]) -> CIPlan:
         integration=integration,
         destructive=destructive,
         deleted_count=len(deleted),
+        history=history,
     )
+
+
+def historical_scope(
+    changes: Sequence[ChangedFile], *, destructive: bool = False
+) -> str:
+    """Select historical depth while current PostgreSQL behavior stays mandatory.
+
+    Parameters
+    ----------
+    changes : Sequence[ChangedFile]
+        Exact candidate diff, including deleted and renamed source paths.
+    destructive : bool, default=False
+        Whether reviewed destructive scope requires exhaustive acceptance.
+
+    Returns
+    -------
+    str
+        ``all`` for global safety/harness changes, ``affected`` for domain
+        schema or integration changes, otherwise ``current``.
+    """
+    paths = tuple(change.path.as_posix() for change in changes)
+    global_prefixes = (
+        ".github/",
+        ".githooks/",
+        "scripts/",
+        "tests/support/",
+        "src/maru/settings/",
+        "src/maru/audit/",
+        "src/maru/authorization/",
+        "src/maru/identity/",
+    )
+    global_files = {
+        "compose.yaml",
+        "Dockerfile",
+        "pyproject.toml",
+        "uv.lock",
+        "tests/conftest.py",
+        "src/maru/core/database_integrity_readiness.py",
+    }
+    if destructive or any(
+        path.startswith(global_prefixes)
+        or (
+            path.startswith("tests/")
+            and not path.startswith(("tests/unit/", "tests/integration/"))
+        )
+        or path in global_files
+        or path.endswith("/conftest.py")
+        for path in paths
+    ):
+        return "all"
+    if any(
+        "/migrations/" in path
+        or path.endswith("/models.py")
+        or path.startswith("tests/integration/")
+        for path in paths
+    ):
+        return "affected"
+    return "current"
 
 
 def select_targeted_integration_tests(
@@ -349,7 +412,7 @@ def enforce_targeted_time_budget(
     integration_directory : Path
         Directory containing integration test files.
     timing_file : Path
-        Accepted file-cost map used by full sharding, including ADR 0089 calibration.
+        Diagnostic whole-file cost map, including retained ADR 0089 calibration.
 
     Returns
     -------

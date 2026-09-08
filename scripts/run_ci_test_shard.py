@@ -1,4 +1,4 @@
-"""Run one deterministic, file-level shard of the integration test suite.
+"""Run a diagnostic file-level shard, not active risk-selected acceptance.
 
 Integration test files stay whole because several Maru tests intentionally alter
 database state. Accepted JUnit evidence supplies repository-owned scheduling
