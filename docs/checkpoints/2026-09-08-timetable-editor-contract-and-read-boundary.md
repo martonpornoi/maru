@@ -368,3 +368,102 @@ Verification for this increment:
 Pointer-assisted prefill, unsaved-input protection, synthetic browser rehearsal
 and the full protected acceptance/delivery gates still remain. Neither #85 nor
 #48 is closed; no partial-editor PR, runtime route or scheduled check is added.
+
+## Pointer, pending-input and browser-rehearsal follow-up
+
+The editor now progressively enhances its native forms with exact destination
+selection, drag-assisted placement/movement, and four keyboard/pointer-accessible
+time shortcuts. Drag carries only a constant non-private text marker; an internal
+in-memory selection must match offered active occurrence/day/room controls. Its
+ordinary CSRF-protected selection POST opens freshly versioned native forms,
+never saves, and cannot carry a different target's command versions. Empty boards
+use explicitly selected native destinations. The four unnamed range inputs map
+grid minutes through Events' IANA zone and explicit UTC offsets, including folds,
+gaps and overnight days. They change one time only, preserve invalid/off-grid
+input until deliberately replaced, and never adjust required host intervals.
+
+The in-memory pending-input guard compares the exact form, keeps bound preview
+and recoverable-error responses pending, and excludes only the CSRF token from
+its comparison. Current-page navigation asks for deliberate discard; command
+submissions retain their exact payload, and unload/pageshow handling does not
+claim offline persistence. No autosave, telemetry, browser storage, background
+request, new dependency, CI policy, migration, runtime grant or profile is added.
+
+Browser rehearsal exposed and corrected four usability defects: day/room filters
+hid the unassigned backlog; repeated occurrences had indistinguishable selection
+labels; several forms omitted shared shell styling; and a desktop flex basis
+made narrow action buttons 192 pixels high. The accepted filtering contract and
+its existing test were explicitly updated to retain unassigned entries without
+inventing a day/room assignment. Other existing assertions remain; new rendered
+form checks enforce shared styling and shortened display references while exact
+UUIDs remain submitted. Fresh-cache narrow action buttons measure 48.59 pixels.
+
+### Verification
+
+- Complete database-free suite: 3,890 passed in 29.13s, with the two existing
+  Django URLField warnings. The final focused HTTP/rendering group passes 101
+  cases in 1.40s. Earlier coverage results above apply to their earlier increment,
+  not a fresh combined coverage claim.
+- All 64 frontend tests pass in 9.59s, including 31 new cases loading the actual
+  Django enhancement asset. They cover pending previews/errors, cancellation,
+  navigation/unload, exact native drag selection and rejected external/invalid
+  payloads, each time field, DST folds/gaps, overnight dates, invalid/grid edges,
+  explicit zone handling and absence of persistence/network writes. Strict
+  frontend types also pass; no Vite file-access or TypeScript scope is widened.
+- Fifteen owner-backed PostgreSQL HTTP cases pass in 44.59s, with 70 unrelated
+  cases deselected, using the isolated task-owned current schema. The new case
+  advances the real draft between page load and destination selection and proves
+  fresh form versions, no extra command receipt and no Venue booking. The prior
+  CSRF, replay, stale, history, denial and refresh-loss cases remain intact.
+- Focused Ruff/formatting, strict Python types and NumPy contracts pass.
+
+### Synthetic browser evidence and limits
+
+The opt-in `tests/rehearsals/programme_timetable.py` fixture is documented in the
+page contract. It uses ordinary synthetic authenticated sessions, sealed test
+policies and actual owner commands on a loopback live server and test database.
+Neither its route, diagnostics nor synthetic role switch exists in production.
+Each completed lease was closed through the visible Finish control. Lease
+durations are not test-performance measurements.
+
+Verified browser cases include initial no-draft selection; filtered unassigned
+backlog; exact repeated-occurrence selection; real drag to a day/room lane;
+equivalent native destination selection; keyboard and pointer time prefill;
+non-mutating preview; explicit save and reloaded revision; exact history comparison
+showing added versus unchanged occurrences; invalid envelope preservation/error
+focus; and a real concurrent-control stale response preserving reason/name and
+focusing recovery guidance. Preview clearly distinguishes missing host blockers
+from available implemented checks and not-evaluated staffing/rest/accessibility/
+release concerns. The resize rehearsal preserves host intervals and creates no
+implicit physical approval or publication.
+
+Separate browser sessions exercise view-only tools without mutations, manage-only
+base denial, anonymous denial, default current-profile denial, independent
+Programme delivery-layer denial and unavailable title-source recovery. Denied
+and unavailable pages withhold prior private labels/records. Expected 400/403/409/
+503 test outcomes are not unexpected application failures; a fixture-finish
+favicon request returned 404. No whole-console-clean claim follows.
+
+Placement and history/comparison were measured at 320, 390, 768, 958, 1024, 1280
+and 1920 window CSS pixels (15-pixel scrollbars reduce content width): no page
+overflow, one H1/main, no duplicate IDs, and labelled controls. Narrow screenshots
+confirm stacked fields, readable envelopes, visible focus and corrected action
+heights. Native Enter/Tab/arrow interaction and pointer movement were exercised.
+These are representative synthetic cases, not every action/role combination.
+
+Fixture-only axe-core 4.10.3 analysis uses WCAG 2 A/AA, 2.1 A/AA and 2.2 AA tags.
+Initial, placement, invalid, stale, history and denied states report zero
+violations. Placement/error/stale states retain one incomplete color-contrast
+rule for the reason textarea; its observed foreground `rgb(7, 27, 58)` on solid
+white computes to 17.12:1 and was inspected separately, not reported as an axe
+pass. Initial/history/denied runs report no incomplete rules.
+
+The native discard-confirmation interaction stalled the in-app browser connection
+and exposed no controllable JavaScript dialog. A fresh tab resumed other work;
+unit cancellation/retention tests do not close that browser case. The documented
+zoom shortcut did not change CSS width or device-pixel ratio, so genuine 200%
+zoom remains unverified. Reduced-motion emulation, screen-reader and representative
+human acceptance are unperformed; the enhancement itself adds no animation.
+Complete the remaining recovery/consequential-action browser cases and protected
+exact-head local/hosted gates before closing #85. #48 stays open. No partial-editor
+PR, production route, schedule or runtime/profile activation is introduced.

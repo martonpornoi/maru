@@ -1,7 +1,7 @@
 <section class="baseline-panel" aria-labelledby="planning-filters-title">
   <h2 id="planning-filters-title">Choose draft and filter the board</h2>
-  <p>Filters change this view only. Before switching context, save or deliberately discard unsaved form input.</p>
-  <form method="post" id="planning-filters" data-planning-navigation>
+  <p>Day and room filters keep unassigned work available to place. Filters change this view only. Before switching context, save or deliberately discard unsaved form input.</p>
+  <form method="post" id="planning-filters" class="baseline-form" data-planning-navigation>
     {% csrf_token %}
     {% include 'scheduling/_planning_state.html' with state=filter_state %}
     <div class="baseline-field"><label for="planning-filter-candidate">Private draft</label>

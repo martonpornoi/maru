@@ -1,0 +1,12 @@
+<section class="baseline-panel" aria-labelledby="planning-destination-title">
+  <h2 id="planning-destination-title">Place or move an occurrence</h2>
+  <p>Choose an exact occurrence, service day and room to open a fresh placement form. Existing times remain visible for review; changing the day does not silently move its times or host requirements.</p>
+  <form method="post" id="planning-destination" class="baseline-form" data-planning-navigation data-planning-destination>
+    {% csrf_token %}{% include 'scheduling/_planning_state.html' with state=placement_start_state %}<input type="hidden" name="action" value="select">
+    <div class="baseline-field planning-destination-occurrence"><label for="planning-destination-occurrence">Occurrence</label><select id="planning-destination-occurrence" name="ui_occurrence_id" required><option value="">Choose an occurrence</option>{% for entry in complete_board.entries %}{% if entry.occurrence and entry.state != 'retired' %}<option value="{{ entry.occurrence.id }}" {% if selection.occurrence_id == entry.occurrence.id %}selected{% endif %}>{{ entry.item.internal_title }}{% if entry.occurrence.group_sequence %} · Sequence {{ entry.occurrence.group_sequence }}{% endif %} · {{ entry.state|title }} · {{ entry.occurrence.id }}</option>{% endif %}{% endfor %}</select></div>
+    <div class="baseline-field"><label for="planning-destination-day">Service day</label><select id="planning-destination-day" name="ui_day_id" required><option value="">Choose a service day</option>{% for day in complete_board.days %}{% if day.lifecycle == 'active' %}<option value="{{ day.id }}" {% if selection.day_id == day.id %}selected{% endif %}>{{ day.label }}</option>{% endif %}{% endfor %}</select></div>
+    <div class="baseline-field"><label for="planning-destination-room">Room or room combination</label><select id="planning-destination-room" name="ui_space_id" required><option value="">Choose a room</option>{% for space in complete_board.spaces %}{% if space.lifecycle == 'active' %}<option value="{{ space.id }}" {% if selection.space_id == space.id %}selected{% endif %}>{{ space.venue_label }} / {{ space.label }}</option>{% endif %}{% endfor %}</select></div>
+    <button type="submit">Open placement form — nothing saved</button>
+    <p class="planning-drop-target" data-planning-drop-selected hidden>Drag an occurrence here to use the chosen day and room. You can also drop onto an existing day/room lane below. The ordinary controls above perform the same action.</p>
+  </form>
+</section>

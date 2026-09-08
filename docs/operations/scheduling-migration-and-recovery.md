@@ -97,6 +97,16 @@ evidence, not logged form bodies, raw owner exceptions, host calendars or privat
 reasons. A current draft change still leaves physical room holds unchanged;
 inspect the exact authorized hold before deliberate replacement/cancellation.
 
+The editor keeps entered input only in the current page. Its enhancement warns
+before another form/link discards a changed or pending intent and uses the
+browser's unload warning when available. Cancel the warning to keep the exact
+input; deliberately continue only after saving or deciding to discard it.
+Browser crashes, disabled scripts, unsupported unload warnings or losing the
+page are not recoverable drafts: there is no offline cache or autosave. Preview
+does not remove this pending-input warning. A fresh destination selection opens
+a new form with freshly observed versions, never a silently rebased old command.
+Pointer time shortcuts leave all host requirements unchanged for explicit review.
+
 ## Meaningful verification
 
 Focused tests cover DST and grid edges, explicit person presence, candidate

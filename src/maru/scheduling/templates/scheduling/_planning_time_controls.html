@@ -1,0 +1,8 @@
+<fieldset class="planning-time-controls" data-planning-time-controls data-zone="{{ board.zone_name }}" data-start="{{ selected_day.window.starts_at|date:'c' }}" data-end="{{ selected_day.window.ends_at|date:'c' }}" data-step="{{ selected_day.precision_minutes }}" hidden>
+  <legend>Time shortcuts for {{ selected_day.label }}</legend>
+  <p>Each slider fills only its matching field above, using this service day's exact minute grid. Required host intervals are unchanged. Review all four dates, offsets and host intervals, then Preview or Save explicitly.</p>
+  <div><label for="planning-range-setup">Preparation starts</label><input id="planning-range-setup" type="range" data-planning-time="setup_starts_at" aria-describedby="planning-value-setup"><output id="planning-value-setup" for="planning-range-setup"></output></div>
+  <div><label for="planning-range-delivery-start">Delivery starts</label><input id="planning-range-delivery-start" type="range" data-planning-time="effective_starts_at" aria-describedby="planning-value-delivery-start"><output id="planning-value-delivery-start" for="planning-range-delivery-start"></output></div>
+  <div><label for="planning-range-delivery-end">Delivery ends</label><input id="planning-range-delivery-end" type="range" data-planning-time="effective_ends_at" aria-describedby="planning-value-delivery-end"><output id="planning-value-delivery-end" for="planning-range-delivery-end"></output></div>
+  <div><label for="planning-range-teardown">Teardown ends</label><input id="planning-range-teardown" type="range" data-planning-time="teardown_ends_at" aria-describedby="planning-value-teardown"><output id="planning-value-teardown" for="planning-range-teardown"></output></div>
+</fieldset>

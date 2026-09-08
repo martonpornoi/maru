@@ -301,10 +301,28 @@ and an exact retry confirms the retained result without duplicate writes. The
 adapter does not log raw exception details or persist private form/filter input
 in URLs, sessions or browser storage.
 
-This is not yet the complete browser editor: pointer-prefill, unsaved-input
-protection, browser rehearsal and protected acceptance remain. No production
-URL or navigation entry is mounted; isolated component admission and owner
-database tests are not provisioned runtime/profile evidence.
+The lightweight `planning.js` enhancement uses the same native selection POST
+for drag placement/movement. Only currently offered exact destinations are
+accepted; the server reloads their versions before opening a form. Private
+identifiers stay out of external drag payloads. Keyboard selection is equivalent,
+including empty boards where an explicit day and room must first be chosen.
+Day/room filters retain unassigned work while constraining placed entries; text
+and explicit state filters still apply. Repeated occurrences have concise visible
+references and full exact identities in native choices and submitted values.
+
+Four unnamed range controls prefill individual native time fields on the selected
+service day's grid. They use Events' explicit zone, preserve offsets through DST
+and midnight, and neither clamp existing invalid input nor alter host intervals.
+They do not supply a second command payload. Input remains unsaved until the
+explicit native command; Preview still does not save. Navigation and unload
+guards protect changed or server-retained pending forms without storage, autosave,
+background requests or automatic version rebasing.
+
+Browser rehearsal and protected acceptance are incomplete; consult CURRENT and
+the checkpoint for verified cases and tool limitations. The page contract
+documents a loopback-only opt-in fixture and local accessibility diagnostics.
+No production URL or navigation entry is mounted; isolated component admission
+and owner database tests are not provisioned runtime/profile evidence.
 
 ### Conflict-source boundary
 

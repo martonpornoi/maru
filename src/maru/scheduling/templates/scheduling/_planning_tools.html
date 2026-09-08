@@ -1,7 +1,7 @@
 <section class="baseline-panel" aria-labelledby="planning-tools-title">
   <h2 id="planning-tools-title">Planning tools</h2>
   <p>Choose one task. Opening or refreshing a form does not save a change. Review the target, reason and any confirmation before submitting.</p>
-  <form method="post" id="planning-tools" data-planning-navigation>
+  <form method="post" id="planning-tools" class="baseline-form" data-planning-navigation>
     {% csrf_token %}
     {% include 'scheduling/_planning_state.html' with state=mode_state %}
     <input type="hidden" name="action" value="select">
@@ -15,10 +15,10 @@
 <section class="baseline-panel" aria-labelledby="planning-selected-title">
   <h2 id="planning-selected-title" tabindex="-1" {% if not control.form.errors and not action_error %}data-maru-focus-on-load{% endif %}>Selected item: {{ selected_item.internal_title }}</h2>
   {% if selection_hidden %}<p class="planning-warning">This selection is outside the visible filters. It remains selected; clear filters to see its card.</p>{% endif %}
-  {% if selected_entry.occurrence %}<p>Exact occurrence selected{% if selected_entry.occurrence.group_key %} · Group sequence {{ selected_entry.occurrence.group_sequence }}{% endif %} · Metadata version {{ selected_entry.occurrence.version }} · {{ selected_entry.occurrence.lifecycle }}.</p>
+  {% if selected_entry.occurrence %}<p>Exact occurrence selected · Reference {{ selected_entry.occurrence.id|stringformat:'s'|slice:':8' }}{% if selected_entry.occurrence.group_key %} · Group sequence {{ selected_entry.occurrence.group_sequence }}{% endif %} · Metadata version {{ selected_entry.occurrence.version }} · {{ selected_entry.occurrence.lifecycle }}.</p>
   {% else %}<p>No occurrence selected. Choose an exact occurrence above or create one explicitly.</p>{% endif %}
   <p>Choose one independently authorized information layer. Switching layers does not load private proposal answers or review text.</p>
-  <form method="post" id="planning-layer" data-planning-navigation>
+  <form method="post" id="planning-layer" class="baseline-form" data-planning-navigation>
     {% csrf_token %}
     {% include 'scheduling/_planning_state.html' with state=layer_state %}
     <input type="hidden" name="action" value="select">

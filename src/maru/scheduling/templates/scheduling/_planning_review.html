@@ -7,7 +7,7 @@
   {% include 'scheduling/_planning_findings.html' with evaluation=review.current rows=review_rows %}
   {% if saved_review_rows %}<h3>Retained saved findings</h3><p>These belong to the saved report above. Historical acknowledgement never overrides a changed source or a hard blocker.</p><ul>
     {% for row in saved_review_rows %}<li><strong>{{ row.finding.severity|title }}: {{ row.explanation }}</strong> · {% if row.saved.acknowledged %}acknowledgement recorded{% else %}no acknowledgement recorded{% endif %}.
-      {% if can_acknowledge and row.saved.eligible_for_acknowledgement %}<form method="post" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=ack_state %}<input type="hidden" name="action" value="select"><button type="submit" name="ui_conflict_id" value="{{ row.saved.id }}">Review this warning acknowledgement</button></form>{% endif %}
+      {% if can_acknowledge and row.saved.eligible_for_acknowledgement %}<form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=ack_state %}<input type="hidden" name="action" value="select"><button type="submit" name="ui_conflict_id" value="{{ row.saved.id }}">Review this warning acknowledgement</button></form>{% endif %}
     </li>{% endfor %}
   </ul>{% endif %}
 </section>

@@ -1851,3 +1851,33 @@ def test_native_http_placement_preview_save_and_retry_share_real_commands(
         == 2
     )
     assert not VenueBooking.objects.exists()
+
+
+def test_native_http_destination_query_uses_fresh_versions_and_does_not_write(
+    native_http_world, host_inspection_admitted
+):
+    world = native_http_world
+    page = native_http_request(world, native_http_selection(world))
+    assert page.status_code == 200
+    assert page.context_data["can_start_placement"]
+    assert b"Open placement form" in page.content
+    selected = QueryDict(mutable=True)
+    for name, value in page.context_data["placement_start_state"]:
+        selected[name] = value
+    selected["action"] = "select"
+    selected["ui_occurrence_id"] = str(world.occurrence.object_id)
+    selected["ui_day_id"] = str(world.day.object_id)
+    selected["ui_space_id"] = str(world.placement.space_selection_id)
+    placed = place(world)
+    before = SchedulingCommandReceipt.objects.count()
+    response = native_http_request(world, selected)
+    assert response.status_code == 200, response.content.decode()
+    form = response.context_data["control"].form
+    assert form is not None
+    assert not form.is_bound
+    assert form["expected_version"].value() == placed.version
+    assert form["occurrence_id"].value() == world.occurrence.object_id
+    assert form["day_id"].value() == world.day.object_id
+    assert form["space_selection_id"].value() == world.placement.space_selection_id
+    assert SchedulingCommandReceipt.objects.count() == before
+    assert not VenueBooking.objects.exists()

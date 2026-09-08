@@ -182,21 +182,38 @@ reported as uncertain completion, with exact replay confirming the committed
 result without duplicate writes. Private draft changes do not publish or
 implicitly alter room holds.
 
-The complete database-free suite passes 3,882 cases in 21.70s, with the two
-existing URLField warnings. Ninety-three focused HTTP/rendering cases pass
-with 95.33% branch-aware coverage across the three new source modules. Fourteen
-real PostgreSQL HTTP cases pass in 42.58s, including positive CSRF, creation,
-preview/save, exact replay, historical copy/restore, stale input, independent
-owner permissions, foreign scopes and post-commit refresh-loss recovery. They
-reuse the isolated task-owned current schema; 70 unrelated cases in that file
-were not selected. Earlier component/domain evidence remains in the checkpoint.
-These are focused checks, not complete certification or runtime-role evidence.
-Focused lint, formatting, strict types, NumPy contracts and documentation checks
-pass. No CI policy, timing map, acceptance threshold, historical scope, migration,
-runtime grant or pre-existing test assertion was changed in this increment.
+Pointer placement now opens the same exact occurrence/day/room form as native
+selection, without saving or carrying another target's command versions.
+Accessible range controls fill one exact edition-zone minute field at a time;
+host intervals remain unchanged. Unsaved-input protection retains the current
+form in memory, warns on navigation and recognizes pending previews/errors.
+No autosave, private drag payload, browser persistence or background request is
+added. Day/room filters now retain the unassigned backlog, with the matching
+contract/test updated explicitly; they never assign that backlog implicitly.
+
+Synthetic browser rehearsal verifies drag and native placement, keyboard and
+pointer time input, preview/save, immutable comparison, validation/stale-input
+retention and focus, view-only/manage-only/anonymous/current-profile denial,
+independent layer denial and unavailable-source recovery. It found and corrected
+ambiguous repeated-occurrence labels, missing shared form styling and oversized
+narrow action buttons. Placement/history layouts have no page overflow at all
+seven contract widths. Browser axe checks report no violations on initial,
+placement, validation, stale, history and denied states; the reason textarea's
+inconclusive contrast check was separately measured at 17.12:1.
+
+The complete database-free suite passes 3,890 cases in 29.13s (two existing
+URLField warnings); all 64 frontend tests pass in 9.59s, including 31 new tests
+of the actual enhancement script. Fifteen real PostgreSQL HTTP cases pass in
+44.59s on the isolated task database, with 70 unrelated cases deselected. This
+includes fresh destination versions without writes. Focused lint, formatting,
+strict types and NumPy contracts pass. Earlier coverage/domain evidence remains
+in the checkpoint; these checks are not complete certification or runtime proof.
 See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
-Pointer prefill, unsaved-input protection, browser rehearsal and protected
-certification/delivery remain. No PR has been opened for this partial editor.
+Browser handling of the native discard confirmation stalled and exposed no
+controllable dialog; its unit coverage is not a completed browser case. Genuine
+200% zoom, reduced-motion emulation, broader recovery/action rehearsal and
+protected certification/delivery remain. No PR has been opened. The opt-in
+fixture is documented in the page contract; all browser leases are closed.
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain
 unchanged. This partial branch is not an editor-delivery or runtime claim.
@@ -230,12 +247,11 @@ deployment or production data is authorized.
 
 ## Smallest sensible next actions
 
-1. Connect #85's strict selection and native control composition to trusted HTTP
-   orchestration, visible filters and full
-   inspector/history/conflict presentation. Connect the native controls, pointer
-   prefill and unsaved-input recovery to the implemented board and owner reads.
-2. Run focused permission/failure/interaction tests and synthetic browser
-   rehearsal, then certify the clean exact head with the policy-required scope.
+1. Finish #85's remaining browser acceptance, especially discard/recovery,
+   genuine zoom and reduced motion, and the remaining consequential form paths.
+   Do not repeat completed native/HTTP implementation or count a fixture lease
+   as automated browser acceptance.
+2. Certify the complete clean exact head with the policy-required scope.
    Obtain its own hosted PR gate and CodeQL before merge; reconcile #85 and #48
    and synchronize main. Neither #82's receipt nor a component fixture certifies
    the new editor or a provisioned runtime.

@@ -108,7 +108,9 @@ availability. Issue #81, delivered through PR #82, adds Scheduling candidates,
 conflict evidence and governed Venue binding. Issue #85 now implements the
 [accessible timetable editor](../product/page-contracts/programme-timetable-planning.md)
 under ADR 0092, before staffing, releases, continuity, and integrated
-Programme-only rehearsal. Umbrella
+Programme-only rehearsal. Native HTTP, pointer-assisted exact placement and
+unsaved-input guards are implemented locally; remaining browser acceptance and
+protected delivery are still open. Umbrella
 #48 remains open; no current profile or surface is activated by this kernel.
 
 Profile v1 declares incumbent-system coexistence and the current manual,
@@ -773,7 +775,7 @@ Applications adapter: one exact effective acceptance produces one private
 source-bound item with seven initially required readiness concerns, without
 activating a profile or creating hosts. Issue #79 delivers Programme-owned host
 relationships and deliberately shared availability under ADR 0087. Issue #81
-begins Scheduling candidates, conflict evaluation and governed Venue binding.
+delivers Scheduling candidates, conflict evaluation and governed Venue binding.
 Next are the accessible editor, staffing, release, continuity, setup, and integrated
 acceptance in dependency order. Each child is separately verified and delivered.
 

@@ -294,9 +294,14 @@ def filter_planning_board(
         for entry in board.entries
         if (not query or query in entry.item.internal_title.casefold())
         and selection.state in {"all", entry.state}
-        and (not selection.day_id or (entry.day and entry.day.id == selection.day_id))
         and (
-            not selection.space_id
+            not entry.placement
+            or not selection.day_id
+            or (entry.day and entry.day.id == selection.day_id)
+        )
+        and (
+            not entry.placement
+            or not selection.space_id
             or (entry.space and entry.space.id == selection.space_id)
         )
     )

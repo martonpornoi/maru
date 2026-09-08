@@ -220,6 +220,9 @@ def _transport_context(selection: PlanningSelection) -> dict[str, Any]:
         "inventory_state": inventory.hidden_values(
             exclude=frozenset({"item_id", "occurrence_id"})
         ),
+        "placement_start_state": replace(inventory, mode="placement").hidden_values(
+            exclude=frozenset({"item_id", "occurrence_id", "day_id", "space_id"})
+        ),
         "mode_state": replace(selection, conflict_id=None).hidden_values(
             exclude=frozenset({"mode"})
         ),
@@ -372,6 +375,13 @@ def compose_planning_workspace(
         ),
         "selection_hidden": entry is not None and entry not in visible.entries,
         "can_select": True,
+        "can_start_placement": snapshot.accepts_writes
+        and complete_board.candidate is not None
+        and complete_board.candidate.lifecycle == "draft"
+        and _MODE_CAPABILITIES["placement"] <= access,
+        "selected_day": next(
+            (day for day in snapshot.days if day.id == selection.day_id), None
+        ),
         "control": control,
         "is_placement": selection.mode == "placement",
         "mode_choices": tuple(

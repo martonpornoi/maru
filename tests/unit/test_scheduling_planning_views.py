@@ -630,6 +630,86 @@ def test_read_only_workspace_has_no_new_mutation_options(http_world):
 
 
 @pytest.mark.parametrize(
+    "restriction", ["no_candidate", "archived", "read_only", "manage", "conflicts"]
+)
+def test_native_destination_requires_a_writable_draft_and_both_permissions(
+    http_world, restriction
+):
+    if restriction == "archived":
+        snapshot = http_world["snapshot"]
+        http_world["snapshot"] = replace(
+            snapshot,
+            candidates=tuple(
+                replace(candidate, lifecycle="archived")
+                for candidate in snapshot.candidates
+            ),
+        )
+    elif restriction == "read_only":
+        http_world["snapshot"] = replace(http_world["snapshot"], accepts_writes=False)
+    elif restriction in {"manage", "conflicts"}:
+        http_world["denied"].add(
+            MANAGE_CANDIDATES if restriction == "manage" else VIEW_CONFLICTS
+        )
+    data = None if restriction == "no_candidate" else selected_post(http_world)
+    _request, response = request_page(http_world, data)
+    assert response.status_code == 200
+    assert response.context_data["can_start_placement"] is False
+    assert 'id="planning-destination"' not in rendered(response)
+    workspace.load_scheduling_host_requirements.assert_not_called()
+
+
+def test_destination_and_time_controls_do_not_supply_mutation_attribution(http_world):
+    _request, response = request_page(
+        http_world, selected_post(http_world, mode="placement")
+    )
+    assert response.status_code == 200
+    context = response.context_data
+    state = dict(context["placement_start_state"])
+    assert state["ui_mode"] == "placement"
+    assert (
+        not {"ui_occurrence_id", "ui_item_id", "ui_day_id", "ui_space_id"}
+        & state.keys()
+    )
+    assert all(name.startswith("ui_") for name in state)
+    assert state["ui_history_id"] == state["ui_compare_id"] == state["ui_layer"] == ""
+    assert context["selected_day"].id == context["selection"].day_id
+    elements = board_helpers.Elements(rendered(response)).elements
+    ranges = [
+        attrs
+        for tag, attrs in elements
+        if tag == "input" and attrs.get("type") == "range"
+    ]
+    assert len(ranges) == 4
+    assert all("name" not in attrs for attrs in ranges)
+    assert all("aria-describedby" in attrs for attrs in ranges)
+    scripts = [attrs for tag, attrs in elements if tag == "script"]
+    assert len(scripts) == 1
+    assert scripts[0]["src"].endswith("/scheduling/planning.js")
+    assert "defer" in scripts[0]
+
+
+def test_enhanced_workspace_does_not_turn_owner_labels_into_scripts(http_world):
+    attack = '</select><script>alert("private")</script>'
+    items = workspace.list_programme_timetable_items.return_value
+    workspace.list_programme_timetable_items.return_value = (
+        replace(items[0], internal_title=attack),
+        *items[1:],
+    )
+    _request, response = request_page(
+        http_world,
+        selected_post(http_world, text="", state="all", day_id=None, space_id=None),
+    )
+    html = rendered(response)
+    assert attack not in html
+    assert "&lt;script&gt;" in html
+    scripts = [
+        attrs for tag, attrs in board_helpers.Elements(html).elements if tag == "script"
+    ]
+    assert len(scripts) == 1
+    assert scripts[0]["src"].endswith("/scheduling/planning.js")
+
+
+@pytest.mark.parametrize(
     ("error", "status"),
     [
         (VenueAuthorizationDeniedError, 403),
@@ -677,7 +757,13 @@ class NativeFormShape(HTMLParser):
         attributes = dict(attrs)
         if tag == "form":
             self.nested |= self.current is not None
-            self.current = {"fields": [], "buttons": []}
+            self.current = {
+                "fields": [],
+                "buttons": [],
+                "planning": "data-planning-navigation" in attributes
+                or "data-planning-command" in attributes,
+                "classes": attributes.get("class", "").split(),
+            }
             self.forms.append(self.current)
         elif self.current is not None and "name" in attributes:
             if tag in {"input", "select", "textarea"}:
@@ -715,6 +801,8 @@ def test_rendered_native_forms_have_no_nesting_or_duplicate_successful_fields(
     assert not parsed.nested
     assert len(parsed.forms) >= 3
     for form in parsed.forms:
+        if form["planning"]:
+            assert "baseline-form" in form["classes"]
         assert len(form["fields"]) == len(set(form["fields"]))
         for clicked in form["buttons"]:
             assert clicked not in form["fields"]
@@ -730,6 +818,21 @@ def test_every_closed_conflict_has_a_cause_and_safe_next_action(code):
     assert row["explanation"]
     assert row["next_action"]
     assert "_" not in row["explanation"]
+
+
+def test_native_occurrence_labels_shorten_uuid_without_changing_exact_targets(
+    http_world,
+):
+    _request, response = request_page(
+        http_world, selected_post(http_world, text="", day_id=None, space_id=None)
+    )
+    html = rendered(response)
+    occurrence_id = str(http_world["selection"].occurrence_id)
+    assert f" · Occurrence {occurrence_id[:8]}" in html
+    assert f" · Occurrence {occurrence_id}" not in html
+    assert f"Reference {occurrence_id[:8]}" in html
+    assert f"Reference {occurrence_id}" not in html
+    assert f'value="{occurrence_id}"' in html
 
 
 def test_read_only_conflict_review_never_offers_acknowledgement(http_world):

@@ -214,12 +214,16 @@ def test_day_room_filters_conjoin_without_inventing_placement_for_unplaced_items
         space_id=board.spaces[0].id,
     )
     result = filter_planning_board(board, selection)
-    assert len(result.entries) == 2
+    assert len(result.entries) == 4
+    assigned = tuple(entry for entry in result.entries if entry.placement)
+    assert len(assigned) == 2
     assert all(
         entry.day.id == selection.day_id and entry.space.id == selection.space_id
-        for entry in result.entries
+        for entry in assigned
     )
-    assert (
-        filter_planning_board(board, replace(selection, state="unplaced")).entries == ()
-    )
+    unplaced = filter_planning_board(board, replace(selection, state="unplaced"))
+    assert len(unplaced.entries) == 1
+    assert unplaced.entries[0].day is None
+    assert unplaced.entries[0].space is None
+    assert unplaced.entries[0].placement is None
     assert len(board.entries) == 4

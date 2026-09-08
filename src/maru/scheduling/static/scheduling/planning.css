@@ -1,3 +1,36 @@
+.planning-layout .baseline-panel {
+  margin-top: 0;
+}
+
+[data-planning-workspace] .baseline-panel {
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+#planning-filters,
+#planning-destination {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+#planning-filters .baseline-field,
+#planning-destination .baseline-field {
+  margin-top: 0;
+}
+
+#planning-filters .baseline-form-actions,
+#planning-destination > button,
+#planning-destination > p,
+.planning-destination-occurrence {
+  grid-column: 1 / -1;
+}
+
+[data-planning-workspace] .baseline-form-actions button {
+  width: auto;
+  flex: 1 1 auto;
+  margin-top: 0;
+}
+
 .planning-layout,
 .planning-lanes {
   display: grid;
@@ -72,6 +105,45 @@
   overflow-wrap: anywhere;
 }
 
+.planning-time-controls {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  margin-block: 1.5rem;
+}
+
+.planning-time-controls[hidden] {
+  display: none;
+}
+
+.planning-time-controls label,
+.planning-time-controls output {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.planning-time-controls input[type="range"] {
+  width: 100%;
+  min-height: 2.75rem;
+  accent-color: #145ba6;
+}
+
+.planning-drop-target,
+[data-planning-lane].planning-drop-ready {
+  border: 2px dashed #145ba6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+[data-planning-drag-ready] {
+  cursor: grab;
+}
+
+.planning-drag-active {
+  outline: 3px solid #145ba6;
+  outline-offset: 3px;
+}
+
 .planning-command-form input,
 .planning-command-form select,
 .planning-command-form textarea,
@@ -93,6 +165,13 @@
 [data-planning-navigation] :focus-visible {
   outline: 3px solid #145ba6;
   outline-offset: 3px;
+}
+
+@media (min-width: 48rem) {
+  #planning-filters,
+  #planning-destination {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 64rem) {
