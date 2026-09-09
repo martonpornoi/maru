@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-08
+Last updated: 2026-09-09
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -239,6 +239,11 @@ leases (terminal sessions 43421 and 13211) were explicitly closed and their
 cleanup completed. The original unsaved form and stale-warning DOM are retained
 for inspection, but their loopback servers are no longer running. Reopen a fresh
 isolated fixture before further server actions; do not repeat completed cases.
+On the user-requested 2026-09-09 resume, a fresh one-hour fixture is open at
+`http://127.0.0.1:63149/rehearsal/` (terminal session 36907), awaiting assisted
+zoom/confirmation checks. Its baseline is 1920 CSS pixels, device-pixel ratio 1,
+and reduced motion off. Verify the lease before reuse; no acceptance is inferred
+from starting it. Remote main remains `ec0d247`; #85 is open without a PR.
 No scheduled check or full certification is running.
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain
