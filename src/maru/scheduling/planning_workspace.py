@@ -40,6 +40,8 @@ from .planning_queries import (
 from .planning_reservations import load_scheduling_reservation_review
 from .planning_review import load_scheduling_candidate_review
 from .planning_selection import filter_planning_board, resolve_planning_selection
+from .planning_staffing_forms import STAFFING_MODE_LABELS, STAFFING_WRITE_MODES
+from .planning_staffing_workspace import compose_planning_staffing
 
 if TYPE_CHECKING:
     from django.http import QueryDict
@@ -51,6 +53,7 @@ if TYPE_CHECKING:
 
 
 _MODE_CAPABILITIES = {
+    **{mode: frozenset({VIEW_PLANNING}) for mode in STAFFING_MODE_LABELS},
     "overview": frozenset({VIEW_PLANNING}),
     "history": frozenset({VIEW_HISTORY}),
     "review": frozenset({VIEW_CONFLICTS}),
@@ -73,6 +76,7 @@ _MODE_CAPABILITIES = {
     Op.RESERVATION_CANCEL: frozenset({MANAGE_RESERVATIONS, VIEW_CONFLICTS}),
 }
 _MODE_LABELS = {
+    **STAFFING_MODE_LABELS,
     "overview": "Selected item",
     "history": "Draft history and comparison",
     "review": "Current conflict review",
@@ -210,6 +214,11 @@ def _transport_context(selection: PlanningSelection) -> dict[str, Any]:
         compare_id=None,
         before_version=None,
         conflict_id=None,
+        requirement_id=None,
+        binding_id=None,
+        demand_id=None,
+        staffing_through_version=None,
+        staffing_after_version=None,
     )
     inventory = replace(overview, layer=None)
     return {
@@ -351,6 +360,13 @@ def compose_planning_workspace(
     )
     selection, entry = resolve_planning_selection(complete_board, selection)
     layers = _layers(scope, snapshot, selection, authorizer)
+    staffing = (
+        compose_planning_staffing(
+            scope, snapshot, selection, data=data, authorizer=authorizer
+        )
+        if selection.mode in STAFFING_MODE_LABELS
+        else {}
+    )
     control = None
     if selection.mode in _TITLES:
         control = build_planning_control(
@@ -387,7 +403,9 @@ def compose_planning_workspace(
         "mode_choices": tuple(
             (mode, _MODE_LABELS[mode])
             for mode, required in _MODE_CAPABILITIES.items()
-            if required <= access and (snapshot.accepts_writes or mode not in _TITLES)
+            if required <= access
+            and (mode not in STAFFING_MODE_LABELS or mode == "staffing")
+            and (snapshot.accepts_writes or mode not in _TITLES)
         ),
         "access_label": "Read-only edition"
         if not snapshot.accepts_writes
@@ -395,11 +413,17 @@ def compose_planning_workspace(
         "available_actions": tuple(
             _MODE_LABELS[mode]
             for mode, required in _MODE_CAPABILITIES.items()
-            if required <= access and (snapshot.accepts_writes or mode not in _TITLES)
+            if required <= access
+            and (mode not in STAFFING_MODE_LABELS or mode == "staffing")
+            and (
+                snapshot.accepts_writes
+                or mode not in (_TITLES.keys() | STAFFING_WRITE_MODES)
+            )
         ),
         **layers,
         **_presentation_context(
             layers, complete_board, access, accepts_writes=snapshot.accepts_writes
         ),
         **_transport_context(selection),
+        **staffing,
     }

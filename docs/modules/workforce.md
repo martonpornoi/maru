@@ -640,6 +640,17 @@ deliberate work-comparison purpose may disclose the work briefing. Write
 admission separately requires `workforce.manage_shifts` and does not grant read
 authority. Neither adapter is activated in either executable profile.
 
+`programme_staffing_choices.list_programme_staffing_positions` supplies current
+Position titles and active Department labels for a native requirement form. It
+independently requires `workforce.view_structure` with both `positions` and
+`departments`, not Shift management or Programme authority. Closed Positions and
+retired Departments are excluded; no assignments, holder counts or people are
+selected. `list_programme_linkable_demands` instead requires work-field authority
+and matches every normalized explicit term. Any retained commitment or binding
+lineage excludes a draft. Both catalogs are complete-or-unavailable at 1,024 rows,
+reauthorize under canonical scope and audit before returning labels. A choice is
+not continued eligibility: preview and apply independently resolve current facts.
+
 `programme_binding_queries.load_programme_bindings` returns the complete current
 binding set for one Programme item, at most 128 retained requirements, after
 independent Programme requirement and Workforce work-field admission. It selects

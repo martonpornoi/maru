@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-from typing import TYPE_CHECKING, Any
+from copy import deepcopy
+from dataclasses import asdict, replace
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
 
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, transaction
+from django.http import QueryDict
 from django.template.response import TemplateResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -15,7 +17,16 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
+from maru.programme.commands import (
+    ProgrammeCommandError,
+    ProgrammeIdempotencyConflictError,
+    ProgrammeLifecycleConflictError,
+    ProgrammeLimitConflictError,
+    ProgrammeVersionConflictError,
+)
 from maru.programme.queries import ProgrammeQueryError
+from maru.programme.staffing_commands import ProgrammeStaffingCommandResult
+from maru.programme.staffing_sources import ProgrammeStaffingSourceConflictError
 from maru.venues.scheduling_queries import (
     VenueSchedulingSourceDeniedError,
     VenueSchedulingSourceUnavailableError,
@@ -33,6 +44,23 @@ from maru.venues.services import (
 from maru.venues.timetable_queries import (
     VenueTimetableQueryDeniedError,
     VenueTimetableQueryUnavailableError,
+)
+from maru.workforce.programme_binding import (
+    ProgrammeStaffingBindingPreview,
+    ProgrammeStaffingBindingResult,
+)
+from maru.workforce.programme_impact import ProgrammeStaffingImpactError
+from maru.workforce.programme_staffing_queries import (
+    ProgrammeStaffingDeniedError,
+    ProgrammeStaffingUnavailableError,
+)
+from maru.workforce.shift_commands import (
+    ShiftAuthorizationDeniedError,
+    ShiftCommandError,
+    ShiftLifecycleConflictError,
+    ShiftRetryConflictError,
+    ShiftStateConflictError,
+    ShiftVersionConflictError,
 )
 
 from .authorization import (
@@ -60,17 +88,41 @@ from .planning_selection import (
     PlanningSelection,
     split_planning_post,
 )
+from .planning_staffing_actions import (
+    submit_planning_staffing_binding,
+    submit_planning_staffing_requirement,
+)
+from .planning_staffing_forms import (
+    BINDING_ACTIONS,
+    BINDING_MODES,
+    REQUIREMENT_ACTIONS,
+    STAFFING_MODE_LABELS,
+    PlanningStaffingBindingForm,
+    PlanningStaffingRequirementForm,
+)
 from .planning_workspace import compose_planning_workspace
 
 if TYPE_CHECKING:
-    from django.http import HttpRequest, HttpResponse, QueryDict
+    from django.http import HttpRequest, HttpResponse
+
+    from maru.identity.models import Account
 
     from .authorization import SchedulingAuthorizer
     from .planning_forms import PlanningCommandForm
     from .planning_queries import SchedulingPlanningSnapshot
 
+type PlanningSubmission = (
+    SchedulingCommandResult
+    | SchedulingPlanningPreview
+    | ProgrammeStaffingCommandResult
+    | ProgrammeStaffingBindingPreview
+    | ProgrammeStaffingBindingResult
+    | None
+)
+
 
 _ACTION_MODES = {
+    **{operation: operation for operation in REQUIREMENT_ACTIONS},
     "preview_placement": "placement",
     "save_placement": "placement",
     "create_day": "create_day",
@@ -78,6 +130,8 @@ _ACTION_MODES = {
     **{operation.value: operation.value for operation in PLANNING_RECORD_OPERATIONS},
 }
 _DENIALS = (
+    ProgrammeStaffingDeniedError,
+    ShiftAuthorizationDeniedError,
     SchedulingAuthorizationDeniedError,
     ProgrammeAuthorizationDeniedError,
     VenueTimetableQueryDeniedError,
@@ -85,6 +139,11 @@ _DENIALS = (
     VenueSchedulingSourceDeniedError,
 )
 _UNAVAILABLE = (
+    ProgrammeCommandError,
+    ProgrammeStaffingSourceConflictError,
+    ProgrammeStaffingUnavailableError,
+    ProgrammeStaffingImpactError,
+    ShiftCommandError,
     SchedulingCommandError,
     ProgrammeQueryError,
     VenueTimetableQueryUnavailableError,
@@ -109,6 +168,15 @@ def _selection(request: HttpRequest) -> tuple[PlanningSelection, QueryDict | Non
     if selection is None or len(actions) != 1:
         raise _InvalidPlanningRequestError
     action = actions[0]
+    if selection.mode in STAFFING_MODE_LABELS:
+        selection = replace(
+            selection,
+            layer=None,
+            history_id=None,
+            compare_id=None,
+            before_version=None,
+            conflict_id=None,
+        )
     if action in {"select", "clear_filters"}:
         query = PlanningQueryForm(command)
         if not query.is_valid():
@@ -118,6 +186,8 @@ def _selection(request: HttpRequest) -> tuple[PlanningSelection, QueryDict | Non
                 selection, day_id=None, space_id=None, text="", state="all"
             )
         return selection, None
+    if action in BINDING_ACTIONS and selection.mode in BINDING_MODES:
+        return selection, command
     if action not in _ACTION_MODES or selection.mode != _ACTION_MODES[action]:
         raise _InvalidPlanningRequestError
     return selection, command
@@ -127,7 +197,42 @@ def _submit(
     scope: SchedulingReadRequest,
     form: PlanningCommandForm,
     authorizer: SchedulingAuthorizer,
-) -> SchedulingCommandResult | SchedulingPlanningPreview | None:
+    *,
+    actor: Account | None = None,
+    selection: PlanningSelection | None = None,
+) -> PlanningSubmission:
+    if isinstance(form, PlanningStaffingRequirementForm | PlanningStaffingBindingForm):
+        if (
+            selection is None
+            or selection.item_id is None
+            or selection.occurrence_id is None
+        ):
+            raise _InvalidPlanningRequestError
+        if isinstance(form, PlanningStaffingRequirementForm):
+            return submit_planning_staffing_requirement(
+                scope,
+                form,
+                item_id=selection.item_id,
+                occurrence_id=selection.occurrence_id,
+                requirement_id=selection.requirement_id,
+                scheduling_authorizer=authorizer,
+            )
+        if (
+            actor is None
+            or selection.requirement_id is None
+            or selection.candidate_id is None
+        ):
+            raise _InvalidPlanningRequestError
+        return submit_planning_staffing_binding(
+            actor,
+            scope,
+            form,
+            item_id=selection.item_id,
+            occurrence_id=selection.occurrence_id,
+            requirement_id=selection.requirement_id,
+            candidate_id=selection.candidate_id,
+            scheduling_authorizer=authorizer,
+        )
     if isinstance(form, PlanningPlacementForm):
         return submit_planning_placement(scope, form, authorizer=authorizer)
     if isinstance(form, PlanningServiceDayForm):
@@ -163,26 +268,45 @@ def _after_command(
 
 
 def _command_failure(error: Exception) -> tuple[int, str]:
-    if isinstance(error, SchedulingVersionConflictError | VenueVersionConflictError):
+    if isinstance(
+        error,
+        SchedulingVersionConflictError
+        | VenueVersionConflictError
+        | ProgrammeVersionConflictError
+        | ShiftVersionConflictError,
+    ):
         return (
             409,
             "The observed version changed. Your entered values and old version "
             "are retained. Refresh deliberately and review a new intent; "
             "nothing was automatically rebased.",
         )
-    if isinstance(error, SchedulingIdempotencyConflictError | VenueRetryConflictError):
+    if isinstance(
+        error,
+        SchedulingIdempotencyConflictError
+        | VenueRetryConflictError
+        | ProgrammeIdempotencyConflictError
+        | ShiftRetryConflictError,
+    ):
         return (
             409,
             "This retry key already describes different input. "
             "Check the retained result before deliberately starting a new intent.",
         )
-    if isinstance(error, SchedulingLifecycleConflictError | VenueStateConflictError):
+    if isinstance(
+        error,
+        SchedulingLifecycleConflictError
+        | VenueStateConflictError
+        | ProgrammeLifecycleConflictError
+        | ShiftLifecycleConflictError
+        | ShiftStateConflictError,
+    ):
         return (
             409,
             "The current edition or record no longer accepts this change. "
             "Your pending input has not been rewritten.",
         )
-    if isinstance(error, SchedulingLimitError):
+    if isinstance(error, SchedulingLimitError | ProgrammeLimitConflictError):
         return (
             409,
             "This action reached a complete-inventory or history limit. "
@@ -198,6 +322,17 @@ def _command_failure(error: Exception) -> tuple[int, str]:
 
 
 def _source_failure(error: Exception) -> tuple[int, str]:
+    if isinstance(error, ProgrammeStaffingImpactError):
+        return 409, (
+            "This work action is not available for the current draft or retained "
+            "decisions. Review an explicit successor or a genuinely uncommitted draft; "
+            "accepted work was not rewritten."
+        )
+    if isinstance(error, ProgrammeStaffingSourceConflictError):
+        return 409, (
+            "The staffing source changed. Retain this pending intent, refresh "
+            "deliberately and review a new exact-source preview."
+        )
     if isinstance(
         error,
         VenueAvailabilityConflictError
@@ -240,7 +375,13 @@ def _workspace_response(
         if control is None or control.form is None:
             raise _InvalidPlanningRequestError
         try:
-            result = _submit(scope, control.form, authorizer)
+            result = _submit(
+                scope,
+                control.form,
+                authorizer,
+                actor=cast("Account", request.user),
+                selection=context["selection"],
+            )
         except _DENIALS:
             # Venue authorization failures also inherit its command-error base.
             # They must withhold the page, not become a retained private form.
@@ -260,12 +401,14 @@ def _workspace_response(
 def _command_response(
     scope: SchedulingReadRequest,
     context: dict[str, Any],
-    result: SchedulingCommandResult | SchedulingPlanningPreview | None,
+    result: PlanningSubmission,
     action: str,
     authorizer: SchedulingAuthorizer,
 ) -> tuple[dict[str, Any], int]:
     if result is None:
         return context, 400
+    if isinstance(result, ProgrammeStaffingBindingPreview):
+        return _staffing_preview_response(context, result), 200
     if isinstance(result, SchedulingPlanningPreview):
         context.update(
             preview=result,
@@ -274,7 +417,23 @@ def _command_response(
             "No draft, evaluation or physical hold was saved.",
         )
         return context, 200
-    selection = _after_command(context["selection"], result, action)
+    if isinstance(
+        result, ProgrammeStaffingCommandResult | ProgrammeStaffingBindingResult
+    ):
+        selection = replace(
+            context["selection"],
+            mode="staffing",
+            layer=None,
+            requirement_id=result.requirement_id
+            if isinstance(result, ProgrammeStaffingCommandResult)
+            else context["selection"].requirement_id,
+            binding_id=None,
+            demand_id=None,
+            staffing_through_version=None,
+            staffing_after_version=None,
+        )
+    else:
+        selection = _after_command(context["selection"], result, action)
     snapshot = load_scheduling_planning(
         scope, candidate_id=selection.candidate_id, authorizer=authorizer
     )
@@ -288,6 +447,58 @@ def _command_response(
         "No Programme timetable was published."
     )
     return refreshed, 200
+
+
+def _staffing_preview_response(
+    context: dict[str, Any], preview: ProgrammeStaffingBindingPreview
+) -> dict[str, Any]:
+    control = context["control"]
+    if not isinstance(control.form, PlanningStaffingBindingForm):
+        raise _InvalidPlanningRequestError
+    data = QueryDict(mutable=True)
+    data.update(control.form.data)
+    data["preview_digest"] = preview.digest
+    data["confirm"] = ""
+    form = PlanningStaffingBindingForm(data)
+    for name in ("operation", "demand_id"):
+        form.fields[name] = deepcopy(control.form.fields[name])
+    actions: tuple[tuple[str, str], ...] = (
+        ("staffing_preview", "Preview work impact"),
+    )
+    if context.get("staffing_can_apply"):
+        actions += (("staffing_apply", "Apply reviewed work request"),)
+    before = asdict(preview.demand.expectation) if preview.demand else {}
+    after = asdict(preview.selection.expectation)
+    labels = {
+        "position_id": "Position reference",
+        "title": "Work title",
+        "location_label": "Reporting place",
+        "briefing": "Work instructions",
+        "supervision_note": "Supervision instructions",
+        "starts_at": "Work starts",
+        "ends_at": "Work ends",
+        "required_headcount": "People required",
+        "break_minutes": "Planned break in minutes",
+        "minimum_rest_minutes": "Rest after work in minutes",
+    }
+    return {
+        **context,
+        "control": replace(control, form=form, submit_actions=actions),
+        "staffing_preview": preview,
+        "staffing_impact_rows": tuple(
+            {
+                "label": label,
+                "before": before.get(name),
+                "after": after[name],
+                "changed": name in preview.impact.changed_fields,
+                "is_time": name in {"starts_at", "ends_at"},
+            }
+            for name, label in labels.items()
+        ),
+        "status_message": "Preview only. No requirement, Workforce demand or "
+        "volunteer decision was changed. Applying requires explicit impact "
+        "confirmation and both owners' current management authority.",
+    }
 
 
 def _failure(request: HttpRequest, status: int, message: str) -> HttpResponse:

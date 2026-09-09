@@ -1,6 +1,7 @@
 # Programme staffing
 
-- Status: Accepted continuation contract; dormant implementation in progress.
+- Status: Accepted continuation contract; native implementation and focused
+  synthetic rehearsal complete locally, issue-level certification pending.
 - Child: [Staffing #88](https://github.com/martonpornoi/maru/issues/88).
 - Parent: [Programme Operations #48](https://github.com/martonpornoi/maru/issues/48).
 - Requirements: HR-009, HR-014, HR-015, SCH-003, SCH-007, SCH-009, SCH-010,

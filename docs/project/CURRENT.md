@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-09
+Last updated: 2026-09-10
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -218,8 +218,24 @@ ceilings, fixed pagination, audit failure, foreign scope, changed source/work an
 the actual claim/independent-confirmation/underfilled-lock path are covered.
 The [coverage/history checkpoint](../checkpoints/2026-09-09-programme-staffing-coverage-and-history.md)
 retains this evidence. The native [staffing page contract](../product/page-contracts/programme-staffing.md)
-is defined; UI implementation, browser acceptance and
-complete certification remain unfinished. No PR or staffing merge exists.
+now has native requirement, fixed-history and exact work preview/apply controls.
+Nine real PostgreSQL HTTP cases passed in 48.50s, including all four work actions,
+retained retries, stale source rejection, CSRF/read-only denial and uncertain
+post-commit reload recovery. Six minimized choice-reader cases also passed.
+The latest full fast run passed **4,244 unit tests in 21.37s**; five subsequently
+added template-focus regression cases passed separately.
+
+Two finite synthetic browser leases are closed. Planner revision/validation,
+history, preview/apply, keyboard confirmation and independently withheld/read-only
+roles were rehearsed. Overview and impact fit all seven UX-029 widths; the
+corrected impact preview has zero automated accessibility violations. A discovered
+staffing focus defect was fixed and rechecked in the browser. This does not close
+#87's native discard, genuine zoom or enabled reduced-motion gates, nor claim
+representative-human, screen-reader or provisioned-runtime acceptance. See the
+[native staffing checkpoint](../checkpoints/2026-09-10-programme-staffing-native-workflow.md).
+Remaining #88 work is issue-level concurrency and own-person/no-Participation
+acceptance, complete certification and protected delivery. No PR or staffing
+merge exists; no production route, profile or runtime writer is activated.
 See the [persistence checkpoint](../checkpoints/2026-09-09-programme-staffing-requirement-persistence.md)
 and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
 

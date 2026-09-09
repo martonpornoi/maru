@@ -13,7 +13,7 @@
 
 {% if selected_item %}
 <section class="baseline-panel" aria-labelledby="planning-selected-title">
-  <h2 id="planning-selected-title" tabindex="-1" {% if not control.form.errors and not action_error %}data-maru-focus-on-load{% endif %}>Selected item: {{ selected_item.internal_title }}</h2>
+  <h2 id="planning-selected-title" tabindex="-1" {% if not control.form.errors and not action_error and not staffing_active %}data-maru-focus-on-load{% endif %}>Selected item: {{ selected_item.internal_title }}</h2>
   {% if selection_hidden %}<p class="planning-warning">This selection is outside the visible filters. It remains selected; clear filters to see its card.</p>{% endif %}
   {% if selected_entry.occurrence %}<p>Exact occurrence selected · Reference {{ selected_entry.occurrence.id|stringformat:'s'|slice:':8' }}{% if selected_entry.occurrence.group_key %} · Group sequence {{ selected_entry.occurrence.group_sequence }}{% endif %} · Metadata version {{ selected_entry.occurrence.version }} · {{ selected_entry.occurrence.lifecycle }}.</p>
   {% else %}<p>No occurrence selected. Choose an exact occurrence above or create one explicitly.</p>{% endif %}
@@ -29,9 +29,11 @@
 </section>
 {% endif %}
 
+{% include 'scheduling/_planning_staffing.html' %}
+
 {% if control %}
 <section class="baseline-panel" aria-labelledby="planning-control-title">
-  <h2 id="planning-control-title">{{ control.title }}</h2>
+  <h2 id="planning-control-title" {% if staffing_active %}tabindex="-1"{% if not control.form.errors and not action_error and not staffing_preview %} data-maru-focus-on-load{% endif %}{% endif %}>{{ control.title }}</h2>
   <p>{{ control.guidance }}</p>
   {% if control.form %}{% include 'scheduling/_planning_form.html' with form=control.form form_id='planning-editor-form' submit_actions=control.button_choices state=selection_state %}{% endif %}
 </section>

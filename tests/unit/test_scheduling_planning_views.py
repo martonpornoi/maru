@@ -621,6 +621,7 @@ def test_read_only_workspace_has_no_new_mutation_options(http_world):
     http_world["snapshot"] = replace(http_world["snapshot"], accepts_writes=False)
     _request, response = request_page(http_world)
     assert {mode for mode, _label in response.context_data["mode_choices"]} == {
+        "staffing",
         "overview",
         "history",
         "review",
