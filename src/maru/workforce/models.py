@@ -24,6 +24,8 @@ from maru.workforce.availability_inputs import (
     AvailabilityWindowInput,
     normalize_availability_windows,
 )
+from maru.workforce.programme_staffing_inputs import MAX_PROGRAMME_BINDING_REVISIONS
+from maru.workforce.programme_staffing_writer import require_programme_staffing_writer
 
 MAX_ONBOARDING_DOCUMENT_BYTES = 10 * 1024 * 1024
 MAX_STRUCTURE_CHANGED_FIELDS = 16
@@ -3230,3 +3232,290 @@ class ShiftCommitmentCommandReceipt(UUIDTimeStampedModel):
             "Shift commitment receipts are immutable.",
             code="immutable_shift_commitment_receipt",
         )
+
+
+class _ProgrammeBindingRecord(UUIDTimeStampedModel):
+    """Keep dormant staffing binding writes inside their explicit owner command."""
+
+    _append_only = False
+
+    class Meta:
+        """Exclude the shared owner-only behavior from the database schema."""
+
+        abstract = True
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate local fields without loading another module's private models.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django.
+        **kwargs : Any
+            Keyword arguments forwarded to Django.
+
+        Raises
+        ------
+        ValidationError
+            If a retained revision is overwritten or the writer boundary is absent.
+        """
+        require_programme_staffing_writer()
+        if self._append_only and not self._state.adding:
+            raise ValidationError("Programme binding revisions are immutable.")
+        # Public owner references and reciprocal SQL guards validate relations;
+        # full_clean must not dereference private Programme/Scheduling models.
+        self.full_clean(
+            exclude=tuple(
+                field.name for field in self._meta.fields if field.is_relation
+            )
+        )
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Preserve staffing link and decision lineage permanently within retention.
+
+        Parameters
+        ----------
+        *args : Any
+            Unused Django-compatible positional arguments.
+        **kwargs : Any
+            Unused Django-compatible keyword arguments.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Unreachable framework-compatible deletion result.
+
+        Raises
+        ------
+        ValidationError
+            Always, because a binding and its revisions are retained evidence.
+        """
+        del args, kwargs
+        raise ValidationError("Programme staffing binding history cannot be deleted.")
+
+
+class ProgrammeShiftBinding(_ProgrammeBindingRecord):
+    """One retained requirement identity and its explicitly selected current demand."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_shift_bindings",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_shift_bindings",
+    )
+    requirement = models.OneToOneField(
+        "programme.ProgrammeStaffingRequirement",
+        on_delete=models.PROTECT,
+        related_name="workforce_binding",
+    )
+    item = models.ForeignKey(
+        "programme.ProgrammeItem",
+        on_delete=models.PROTECT,
+        related_name="workforce_bindings",
+    )
+    occurrence = models.ForeignKey(
+        "scheduling.SchedulingOccurrence",
+        on_delete=models.PROTECT,
+        related_name="workforce_bindings",
+    )
+    demand = models.ForeignKey(
+        ShiftDemand, on_delete=models.PROTECT, related_name="programme_bindings"
+    )
+    version = models.PositiveBigIntegerField(
+        default=1,
+        validators=(
+            MinValueValidator(1),
+            MaxValueValidator(MAX_PROGRAMME_BINDING_REVISIONS),
+        ),
+    )
+    last_modified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_bindings_modified",
+    )
+
+    class Meta:
+        """Bound retained revisions and index exact-edition requirement lookup."""
+
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(
+                    version__gte=1, version__lte=MAX_PROGRAMME_BINDING_REVISIONS
+                ),
+                name="workforce_programme_binding_version",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "item"),
+                name="wrk_programme_binding_scope",
+            )
+        ]
+
+
+class ProgrammeShiftBindingRevision(_ProgrammeBindingRecord):
+    """Immutable exact-source binding, retry receipt and cross-owner effect lineage."""
+
+    _append_only = True
+
+    class Operation(models.TextChoices):
+        """Closed binding actions without implicit commitment transfers."""
+
+        CREATE = "create", "Create draft demand"
+        LINK = "link", "Link identical draft demand"
+        RECONCILE = "reconcile", "Reconcile uncommitted draft"
+        SUCCESSOR = "successor", "Create separate successor"
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_binding_revisions",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_binding_revisions",
+    )
+    binding = models.ForeignKey(
+        ProgrammeShiftBinding, on_delete=models.PROTECT, related_name="revisions"
+    )
+    sequence = models.PositiveBigIntegerField(
+        validators=(
+            MinValueValidator(1),
+            MaxValueValidator(MAX_PROGRAMME_BINDING_REVISIONS),
+        )
+    )
+    requirement_revision = models.ForeignKey(
+        "programme.ProgrammeStaffingRevision",
+        on_delete=models.PROTECT,
+        related_name="workforce_binding_revisions",
+    )
+    requirement_version = models.PositiveBigIntegerField()
+    occurrence_version = models.PositiveBigIntegerField()
+    candidate = models.ForeignKey(
+        "scheduling.SchedulingCandidate",
+        on_delete=models.PROTECT,
+        related_name="workforce_binding_revisions",
+    )
+    candidate_revision = models.ForeignKey(
+        "scheduling.SchedulingCandidateRevision",
+        on_delete=models.PROTECT,
+        related_name="workforce_binding_revisions",
+    )
+    placement = models.ForeignKey(
+        "scheduling.SchedulingPlacementRevision",
+        on_delete=models.PROTECT,
+        related_name="workforce_binding_revisions",
+    )
+    demand = models.ForeignKey(
+        ShiftDemand,
+        on_delete=models.PROTECT,
+        related_name="programme_binding_revisions",
+    )
+    demand_version = models.PositiveBigIntegerField()
+    predecessor = models.ForeignKey(
+        ShiftDemand,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="programme_successors",
+    )
+    operation = models.CharField(max_length=16, choices=Operation)
+    work_terms_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    source_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    preview_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_binding_commands",
+    )
+    reason = models.CharField(max_length=240)
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(max_length=32)
+    shift_receipt = models.OneToOneField(
+        ShiftDemandCommandReceipt,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="programme_binding_revisions",
+    )
+    cancellation_receipt = models.OneToOneField(
+        ShiftDemandCommandReceipt,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="programme_successor_revisions",
+    )
+    audit_event = models.OneToOneField(
+        "audit.AuditEvent",
+        on_delete=models.PROTECT,
+        related_name="programme_binding_revision",
+    )
+    domain_event = models.OneToOneField(
+        "effects.DomainEvent",
+        on_delete=models.PROTECT,
+        related_name="programme_binding_revision",
+    )
+
+    class Meta:
+        """Retain exact revision and actor-scoped retry uniqueness with closed shape."""
+
+        ordering = ("binding_id", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("binding", "sequence"),
+                name="workforce_programme_binding_sequence",
+            ),
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"),
+                name="workforce_programme_binding_retry",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    sequence__gte=1,
+                    sequence__lte=MAX_PROGRAMME_BINDING_REVISIONS,
+                    requirement_version__gt=0,
+                    occurrence_version__gt=0,
+                    demand_version__gt=0,
+                ),
+                name="workforce_programme_binding_positive",
+            ),
+            models.CheckConstraint(
+                condition=Q(operation__in=("create", "link", "reconcile", "successor")),
+                name="workforce_programme_binding_operation",
+            ),
+            models.CheckConstraint(
+                condition=~Q(reason="") & ~Q(source_channel=""),
+                name="workforce_programme_binding_evidence",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(operation="link", shift_receipt__isnull=True)
+                    | (~Q(operation="link") & Q(shift_receipt__isnull=False))
+                ),
+                name="workforce_programme_binding_shift",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(operation="successor", predecessor__isnull=False)
+                    | (
+                        ~Q(operation="successor")
+                        & Q(predecessor__isnull=True, cancellation_receipt__isnull=True)
+                    )
+                ),
+                name="workforce_programme_binding_predecessor",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "demand"),
+                name="wrk_programme_revision_demand",
+            )
+        ]

@@ -9,8 +9,9 @@ Last updated: 2026-09-09
 
 Issue #88 is adding the HR-015 staffing continuation under ADR 0093. Local
 Programme requirement persistence, immutable work terms, protected current reads
-and paginated history are implemented; exact source-bound Workforce demand
-commands, recovery UI and Scheduling coverage integration remain in progress.
+and paginated history are implemented, together with exact source selection and
+Workforce-owned binding/recovery commands. Recovery UI, Scheduling coverage
+integration and complete acceptance remain in progress.
 This is not a delivered staffing workflow or an activated Programme profile.
 
 ## Programme staffing requirements
@@ -20,7 +21,8 @@ exact current requirement and selected Scheduling alternative. It requires
 Programme work-field authority and Scheduling planning authority, retains the
 edition mutex across both reads, and rechecks Programme authority before release.
 Candidate, occurrence, placement and service-day revisions must remain current;
-copying another alternative does not replace the selected source. Its immutable
+the owning Programme item must still be active. Copying another alternative does
+not replace the selected source. Its immutable
 work/source digest is an optimistic comparison token, not portable authority.
 A cross-owner writer must acquire the canonical Workforce scope first and
 resolve the selection again before commit. This source read creates no demand.

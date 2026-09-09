@@ -109,11 +109,14 @@ class ProgrammeStaffingOverview:
         Current aggregate version for explicit later command preconditions.
     requirements
         Complete bounded set, including retained retired requirements.
+    item_lifecycle
+        Current item lifecycle; retained needs do not make withdrawn work active.
     """
 
     item_id: UUID
     item_version: int
     requirements: tuple[ProgrammeStaffingRequirementView, ...]
+    item_lifecycle: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,7 +216,7 @@ def _read[ResultT](
                 organization_id=request.organization_id,
                 edition_id=request.edition_id,
             )
-            .only("id", "aggregate_version")
+            .only("id", "aggregate_version", "lifecycle")
             .first()
         )
         if item is None:
@@ -289,6 +292,7 @@ def load_programme_staffing_requirements(
                 _view(by_requirement[identifier], occurrence_id=occurrence_id)
                 for identifier, occurrence_id in requirements
             ),
+            item.lifecycle,
         )
 
     return _read(

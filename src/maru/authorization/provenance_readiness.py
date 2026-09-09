@@ -140,6 +140,9 @@ _ACTIVATION_MIGRATIONS = (
     ("workforce", "0016_programme_call_department_fk_contract"),
     ("workforce", "0017_programme_import_department_fk_contract"),
     ("workforce", "0018_programme_department_ownership_contract"),
+    ("workforce", "0019_programme_shift_bindings"),
+    ("workforce", "0020_programme_binding_integrity"),
+    ("workforce", "0021_programme_binding_downgrade_fence"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -218,7 +221,7 @@ _STATEMENT_BEFORE_INSERT_UPDATE_DELETE = 2 | 4 | 8 | 16
 _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE = 2 | 4 | 8 | 16 | 32
 _STATEMENT_BEFORE_TRUNCATE = 2 | 32
 
-_TRIGGER_CONTRACTS = (
+_TRIGGER_CONTRACTS: tuple[_TriggerContract, ...] = (
     _TriggerContract(
         "authorization_capability_grant_guard",
         "authorization_capabilitygrant",
@@ -1066,7 +1069,48 @@ _TRIGGER_CONTRACTS = (
     ),
 )
 
+_TRIGGER_CONTRACTS += tuple(
+    contract
+    for table, short, guard in (
+        (
+            "workforce_programmeshiftbinding",
+            "binding",
+            "maru_guard_workforce_programme_binding()",
+        ),
+        (
+            "workforce_programmeshiftbindingrevision",
+            "binding_revision",
+            "maru_guard_workforce_programme_binding_revision()",
+        ),
+    )
+    for contract in (
+        _TriggerContract(
+            f"workforce_programme_{short}_guard",
+            table,
+            guard,
+            _ROW_BEFORE_INSERT_UPDATE_DELETE,
+        ),
+        _TriggerContract(
+            f"workforce_programme_{short}_truncate",
+            table,
+            "maru_refuse_workforce_shift_truncate()",
+            _STATEMENT_BEFORE_TRUNCATE,
+        ),
+        _TriggerContract(
+            f"workforce_programme_{short}_evidence",
+            table,
+            "maru_validate_workforce_programme_binding_evidence()",
+            _ROW_AFTER_INSERT_UPDATE,
+            deferrable=True,
+            initially_deferred=True,
+        ),
+    )
+)
+
 _CORE_FUNCTIONS = (
+    "maru_guard_workforce_programme_binding()",
+    "maru_guard_workforce_programme_binding_revision()",
+    "maru_validate_workforce_programme_binding_evidence()",
     "maru_assert_active_board_membership_provenance(uuid)",
     "maru_assert_active_executive_board(uuid)",
     "maru_assert_active_executive_board_v0009(uuid)",
@@ -1175,6 +1219,15 @@ _CORE_FUNCTIONS = (
 )
 
 _FUNCTION_DEFINITION_SHA256 = {
+    "maru_guard_workforce_programme_binding()": (
+        "d25a4860beb7cefe68435477dcfc522316ca3cb12924b98f818b65ab1520233b"
+    ),
+    "maru_guard_workforce_programme_binding_revision()": (
+        "37026b1c56d1e5e237d66a94d984f99daa9381df7ce88b5f38dbf0e6da115fc2"
+    ),
+    "maru_validate_workforce_programme_binding_evidence()": (
+        "d4b95c8fda189cf1adce2a282f2725f635a95c6c53b70c82b22241c6c15b59a7"
+    ),
     "maru_lock_retired_department_authority_writer()": (
         "159e4167b0d335bd0733ca60bc9bfdf6a5bb4b31c527b590152a7f584818d2fc"
     ),

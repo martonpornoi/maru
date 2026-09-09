@@ -685,6 +685,27 @@ def _validate_workforce_availability_changed(payload: dict[str, object]) -> None
         )
 
 
+def _validate_workforce_programme_staffing_changed(payload: dict[str, object]) -> None:
+    """Validate a content-free explicit staffing binding operation.
+
+    Parameters
+    ----------
+    payload : dict[str, object]
+        Only the closed adapter action; no work briefing or private source labels.
+
+    Raises
+    ------
+    ValidationError
+        If the action is unknown or additional content is present.
+    """
+    _require_exact_string_fields(payload, fields=frozenset({"action"}))
+    if payload["action"] not in {"create", "link", "reconcile", "successor"}:
+        raise ValidationError(
+            "Staffing binding action is not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
 def _validate_workforce_shift_demand_changed(payload: dict[str, object]) -> None:
     """Validate a minimized Shift-demand state change.
 
@@ -1238,6 +1259,12 @@ EVENT_DEFINITIONS = (
             "A person replaced, shared, or withdrew current edition availability."
         ),
         validator=_validate_workforce_availability_changed,
+    ),
+    EventDefinition(
+        name="workforce.programme_staffing.changed.v1",
+        schema_version=1,
+        description="An exact Programme staffing source was explicitly bound to work.",
+        validator=_validate_workforce_programme_staffing_changed,
     ),
     EventDefinition(
         name="workforce.shift_demand.changed.v1",

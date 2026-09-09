@@ -626,7 +626,8 @@ current lifecycle accepts staffing. These internal reference seams confer no
 authority and expose no labels, personnel or availability. Programme callers
 authorize their own exact command before resolution and recheck after locking.
 Recording or retiring a Programme requirement does not create, update or cancel
-a Workforce demand. The explicit bound-demand adapter remains unfinished in #88.
+a Workforce demand. The explicit binding commands described below are implemented
+locally in #88; the complete staffing surface and delivery remain unfinished.
 
 The separate, likewise unpinned `workforce.programme-staffing@1` adapter owns
 explicit work-impact reads. `programme_staffing_queries.load_programme_staffing_demand`
@@ -649,9 +650,46 @@ predecessor through Workforce; a cancelled or completed predecessor is retained
 without another cancellation. The preview distinguishes active claims and
 confirmations affected by cancellation from all preserved history. It never
 transfers decisions, reconfirms people or relocks work. An ordinary demand
-lifecycle version change alone does not mean its work terms changed. Persistent
-binding/source checks and the command's fresh impact-token comparison remain
-mandatory, unfinished parts of the adapter.
+lifecycle version change alone does not mean its work terms changed.
+
+`programme_binding.preview_programme_staffing_binding` composes these independently
+authorized inputs under the canonical owner lock chain. The typed change pins
+an explicit action, requirement/candidate/placement source, existing binding
+identity/version and exact current demand identity/version. The token includes
+actor/organization/edition/item, source evidence, work terms and retained/active
+counts. It neither proves human review nor grants authority. A new claim changes
+that token even if the demand command version did not change.
+
+`apply_programme_staffing_binding` requires current Programme staffing management
+and Workforce Shift management, plus independent work/source read authority.
+Under canonical locks it resolves the source and complete impact again, compares
+the preview, and calls existing Workforce create/update/cancel commands. Nested
+retry keys use separate deterministic namespaces. A late failure rolls back
+predecessor cancellation, new demand, commitments, receipts, audit and outbox
+together. Retry identity is actor/edition-bound; matching retries return the
+original minimal result after current authorization, without silently substituting
+current work or demanding that the old private candidate remain current.
+
+`ProgrammeShiftBinding` retains one stable lineage per Programme requirement;
+`ProgrammeShiftBindingRevision` is both its immutable exact-source revision and
+retry receipt. Each pins the exact requirement/occurrence/candidate/placement,
+target demand/version, explicit work/source/preview digests and reciprocal owner
+receipts/audit/event evidence. A demand cannot be borrowed from another retained
+lineage, including a predecessor. Shift and cancellation receipts cannot be reused
+by another binding revision. Binding history is bounded at 1,000 revisions and
+never erased to recover capacity. A successor retains its distinct terminal
+predecessor and starts an independent draft; opening claims, confirming people
+and locking coverage remain separate Workforce decisions.
+
+The rationale is explicitly Workforce-visible and subject to its 240-character
+bound; binding audit/events use `workforce-restricted` retention and the registered
+content-free `workforce.programme_staffing.changed.v1` action. New tables remain
+SELECT-only for the runtime role. PostgreSQL validates scope, current sources,
+identical work terms, uncommitted drafts, consecutive revisions, receipt uniqueness
+and reciprocal effects; its populated downgrade fence runs before guards can be
+removed. These commands remain in the existing private-planning lifecycle. They
+do not activate a runtime writer, provide published personal composition, or
+complete Scheduling coverage UI and browser acceptance.
 
 The query accepts 1–1,024 distinct exact-edition demand IDs and at most 4,096
 retained commitments in total. Missing or foreign selection, source inconsistency,

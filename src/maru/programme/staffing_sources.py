@@ -121,7 +121,8 @@ def load_programme_staffing_selection(
             None,
         )
         if (
-            requirement is None
+            overview.item_lifecycle != "active"
+            or requirement is None
             or requirement.lifecycle != "active"
             or (
                 requirement.revision_id,

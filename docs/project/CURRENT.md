@@ -178,18 +178,28 @@ minimized Workforce coverage source remains behind an unpinned adapter.
 
 Exact Programme/Scheduling source selection and a separate authorized Workforce
 work-impact read are also implemented locally. Candidate copying preserves the
-selected source; movement, current service-day changes and requirement retirement
-invalidate it. Closed impact rules require identical uncommitted drafts for
+selected source; movement, current service-day changes, inactive owning items
+and requirement retirement invalidate it. Closed impact rules require identical uncommitted drafts for
 linking, no retained commitments for reconciliation, and explicit predecessor
-cancellation/history preservation for successors. No binding command is exposed.
+cancellation/history preservation for successors.
 
-The latest full fast run passed 4,173 unit tests in 21.58s, with the same two
-pre-existing Django URLField warnings. A focused PostgreSQL regression passed
-43 cases in 102.35s, omitting the two unchanged requirement migration round-trip
-cases already checked below. Three new source files passed strict types and
-semantic docstrings; focused lint passed. These are not full certification,
+Workforce create/link/reconcile/successor binding commands are implemented
+locally through the existing Shift lifecycle. They retain exact source revisions,
+one-to-one owner receipts, independently authorized impact tokens and immutable
+lineage. New claims invalidate previews even without a demand-version change;
+late failures restore cancelled work and commitments atomically. Workforce
+`0019`–`0021` add the dormant tables, reciprocal guards and populated reverse fence.
+Both adapters and both new tables remain unactivated/SELECT-only.
+
+The latest full fast run passed **4,202 unit tests in 23.92s**, with the same two
+pre-existing Django URLField warnings. Focused binding acceptance passed **19
+PostgreSQL command/race cases in 80.26s** and **six integrity/recovery cases in
+32.75s**, including actual claims/confirmations, raw source forgery, disabled-guard
+detection and both migration paths. Migration drift is clean; strict types and
+semantic docstrings passed during implementation. These are not full certification,
 browser acceptance or protected delivery. See the
-[source/impact checkpoint](../checkpoints/2026-09-09-programme-staffing-source-and-impact.md).
+[binding checkpoint](../checkpoints/2026-09-09-programme-workforce-binding-kernel.md)
+and preceding [source/impact checkpoint](../checkpoints/2026-09-09-programme-staffing-source-and-impact.md).
 
 The earlier persistence acceptance passed 36 PostgreSQL cases and eight contract
 cases in 90.49s, including adversarial DML,
@@ -201,8 +211,8 @@ runtime acceptance claim. Migration drift, types and semantic docstrings pass.
 
 An existing CI-selection regression was also corrected: a new owner migration
 leaf can no longer hide consumers of older model migrations. No history,
-timeout, coverage or protected gate is weakened. Source-bound demand commands,
-successor/reconciliation, Scheduling/UI integration, browser acceptance and
+timeout, coverage or protected gate is weakened. Bound coverage/history projection,
+Scheduling/UI integration, browser acceptance and
 complete certification remain unfinished. No PR or staffing merge exists.
 See the [persistence checkpoint](../checkpoints/2026-09-09-programme-staffing-requirement-persistence.md)
 and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
@@ -232,12 +242,11 @@ and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffi
 
 ## Smallest sensible next actions
 
-1. Continue #88 with exact-source Workforce demand create/link/reconcile and
-   explicit successor commands under ADR 0093. Requirement persistence, exact
-   source selection and authorized impact inputs are implemented locally.
-   Reuse existing Workforce commands;
-   never silently rewrite accepted Shifts. Add reciprocal binding guards,
-   source-movement/commitment races and the remaining migration/recovery proof.
+1. Continue #88 with independently authorized binding/history and exact-source
+   Scheduling coverage projections, then the bounded native staffing/impact UI.
+   Requirement and Workforce binding kernels are implemented locally, including
+   their focused race, integrity and migration checks. Retain source freshness,
+   field ceilings and the existing Shift lifecycle; never silently rewrite work.
 2. Carry the staffing child through focused tests, appropriate exact-head
    certification and protected delivery. Include this post-editor checkpoint.
 3. Complete #87 before activation. Continue release/outputs, on-site continuity,

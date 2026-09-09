@@ -131,6 +131,8 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.programme_programmehostavailabilitywindow",
         "public.programme_programmestaffingrequirement",
         "public.programme_programmestaffingrevision",
+        "public.workforce_programmeshiftbinding",
+        "public.workforce_programmeshiftbindingrevision",
         "public.scheduling_schedulingeditioncontrol",
         "public.scheduling_schedulingserviceday",
         "public.scheduling_schedulingservicedayrevision",

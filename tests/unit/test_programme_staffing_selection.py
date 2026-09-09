@@ -63,10 +63,11 @@ def selection(monkeypatch):
         edition_version=1,
     )
     calls = []
+    overview = SimpleNamespace(requirements=(requirement,), item_lifecycle="active")
 
     def programme(*args, **kwargs):
         calls.append(("programme", args, kwargs))
-        return SimpleNamespace(requirements=(requirement,))
+        return overview
 
     def scheduling(*args, **kwargs):
         calls.append(("scheduling", args, kwargs))
@@ -90,6 +91,7 @@ def selection(monkeypatch):
         placement=placement,
         planning=planning,
         calls=calls,
+        overview=overview,
     )
 
 
@@ -122,6 +124,7 @@ def test_exact_selected_source_preserves_explicit_work_and_independent_policies(
 @pytest.mark.parametrize(
     ("target", "field", "value"),
     [
+        ("overview", "item_lifecycle", "retired"),
         ("requirement", "revision_id", uuid4()),
         ("requirement", "version", 2),
         ("requirement", "occurrence_id", uuid4()),

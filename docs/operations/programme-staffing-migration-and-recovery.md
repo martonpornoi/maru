@@ -1,7 +1,7 @@
 # Programme staffing migration and recovery
 
 **Audience:** Maintainers rehearsing the dormant HR-015 staffing foundation\
-**Outcome:** Retain explicit work history without activating Programme or changing shifts\
+**Outcome:** Retain exact work lineage through governed Shifts without activating Programme\
 **Status:** Local #88 continuation; no completed staffing PR or production approval
 
 ## Migration boundary
@@ -19,10 +19,19 @@ preserves the existing item, host and accepted-source contracts while extending
 the receipt function with closed staffing operations. `0012` places an explicit
 reverse fence before any of those protections can be removed.
 
+Workforce `0019_programme_shift_bindings` adds stable requirement-to-demand
+lineage and immutable source/retry/effect revisions. `0020` installs exact-source,
+uncommitted-work, scope, sequence and reciprocal evidence guards; `0021` places
+the populated reverse fence before their removal. One-to-one Shift/cancellation
+receipt links prevent reusing a prior owner command as a new binding action.
+The authorization readiness catalog pins all six new trigger attachments and
+three new function definitions. Neither migration creates authority or activates
+the dormant `workforce.programme-staffing@1` adapter.
+
 Use only synthetic data for the current pre-production rehearsal. Apply the
 ordinary complete migration graph with compatible code and the separate schema
 owner. Update the [runtime provisioning artifact](postgresql-runtime-role-provisioning.sql.example)
-and verify both staffing relations remain SELECT-only for the application role;
+and verify all four Programme/Workforce staffing relations remain SELECT-only for the application role;
 there is no approved Programme runtime writer. Inspect the exact Programme schema
 and function/trigger fingerprints and the current authorization contract before
 claiming runtime readiness. Green owner tests are not provisioned runtime proof.
@@ -35,6 +44,12 @@ records must remain unchanged. A requirement, including a retired one, or any
 revision blocks reversal through `0012` before a guard or table is removed.
 Retained staffing grants or role-bundle entries independently block contraction
 of the authorization vocabulary.
+
+When both Workforce binding tables are unused, their graph may be reversed to
+`0018` and reapplied without changing Programme requirements or ordinary Shifts.
+Any retained binding or revision blocks `0021` before removal of a guard. The
+broader Programme downgrade also traverses these dependent Workforce migrations;
+do not infer that an unused Programme layer permits removing retained work lineage.
 
 Once any staffing evidence exists, retain compatible code and fix forward.
 Do not fake migrations, disable guards, delete receipts, remove history, or
@@ -57,8 +72,24 @@ volunteer. A bounded history reserves one terminal retirement revision after
 is an explicit unavailable workflow pending a reviewed capacity decision, not
 permission to discard evidence.
 
+Binding apply requires its exact authorized impact preview and current authority
+after the canonical owner locks. Link only an identical uncommitted draft;
+reconcile only a draft with no retained commitments. Replacing a Position requires
+a separate successor. A successor explicitly cancels nonterminal old work through
+Workforce and leaves all old decisions/history attached to it; already cancelled
+or completed predecessors are not cancelled again. New work starts as an
+independent draft with no copied claims, confirmations or lock. The required
+rationale is Workforce-visible, not a private Programme discussion note.
+
+A late source, authority, audit or effect failure commits none of the adapter's
+owner mutations. Reload the complete impact after any changed source, demand
+version or retained/active count; a claim can invalidate the preview without
+advancing the demand version. Matching retries retain the original command result
+after current authorization. Binding history has a separate 1,000-revision bound;
+exhaustion requires a reviewed capacity/recovery decision, not history deletion.
+
 Coverage unavailability, source staleness and underfill must not be reported as
-current complete staffing. Source-bound demand reconciliation/successors,
-Scheduling coverage UI, browser acceptance and protected #88 delivery remain
+current complete staffing. Source-bound commands are implemented locally;
+Scheduling coverage/history UI, browser acceptance and protected #88 delivery remain
 unfinished. #87, atomic release, on-site continuity, guided setup and integrated
 Programme-only acceptance remain mandatory before activation under #48.
