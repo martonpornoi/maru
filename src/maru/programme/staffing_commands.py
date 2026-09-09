@@ -260,12 +260,14 @@ def change_programme_staffing_requirement(
         If the actor, scope, profile or capability is unavailable.
     ValidationError
         If input, explicit terms or the current edition envelope is invalid.
-    ProgrammeUnavailableError
-        If an authorized exact owner reference or required history is unavailable.
-    ProgrammeLifecycleConflictError
-        If the edition or selected owner no longer accepts the requested change.
-    ProgrammeLimitConflictError
-        If bounded requirement or revision history has no remaining room.
+
+    Notes
+    -----
+    Owner validation propagates ``ProgrammeUnavailableError`` when an exact
+    reference or required history is absent, ``ProgrammeLifecycleConflictError``
+    when the edition or selected owner no longer accepts the change, and
+    ``ProgrammeLimitConflictError`` when bounded requirement or revision history
+    has no remaining room.
     """
     for field, value in (
         ("actor_id", actor_id),

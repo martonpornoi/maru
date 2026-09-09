@@ -254,6 +254,17 @@ Ruff, four-file strict types and three-file semantic docstrings pass. See the
 Remaining #88 work is complete exact-commit certification and protected delivery.
 No PR or staffing merge exists; no production route, profile or runtime writer
 is activated.
+The first non-interactive certification stopped early after two propagated-
+exception docstrings failed PyDocLint. Their semantics are now documented in
+Notes, without changing exception behavior or suppressing checks; the complete
+PyDocLint scan passes. The partial run's 4,252 unit tests passed, but it is not
+certification. Its eight disposable databases/volumes were removed and partial
+logs retained. The complete non-database preflight now passes: locked dependency
+and security checks, package validation, 503-file strict types, documentation
+linters and warning-fatal Sphinx, migration/system/production-settings checks,
+unchanged generated API/assets, and all **64 frontend tests**. OpenAPI retains
+23 existing warnings and zero errors. The next clean-commit certification uses
+`CI=true` so dependency installation cannot await a hidden prompt.
 See the [persistence checkpoint](../checkpoints/2026-09-09-programme-staffing-requirement-persistence.md)
 and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
 
@@ -282,7 +293,7 @@ and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffi
 
 ## Smallest sensible next actions
 
-1. Certify the clean #88 candidate once through the required eight-database
+1. Certify the clean #88 candidate through the required eight-database
    exact-commit command. The included CI dependency-closure repair selects
    exhaustive history; a current-only diagnostic cannot substitute for it.
    Requirement, native UI, binding, coverage, race, personal-owner and migration

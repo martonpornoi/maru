@@ -226,10 +226,10 @@ def load_programme_staffing_selection(
     ProgrammeStaffingSelection
         Complete current source evidence and explicit work terms, with no personnel.
 
-    Raises
-    ------
-    ProgrammeStaffingSourceConflictError
-        If the exact requirement or private alternative no longer matches selection.
+    Notes
+    -----
+    The owner resolvers propagate ``ProgrammeStaffingSourceConflictError`` if the
+    exact requirement or private alternative no longer matches the selection.
     """
     with transaction.atomic():
         # Admission precedes parsing the opaque selection. The Programme reader
