@@ -128,6 +128,7 @@
   "tests/integration/test_programme_department_ownership_races.py": 29.097,
   "tests/integration/test_programme_department_ownership_recovery.py": 7.572,
   "tests/integration/test_programme_hosts.py": 296.705,
+  "tests/integration/test_programme_staffing_commands.py": 120.285,
   "tests/integration/test_programme_integrity_migrations.py": 538.329,
   "tests/integration/test_programme_queries.py": 30.711,
   "tests/integration/test_programme_scheduling_source.py": 59.538,

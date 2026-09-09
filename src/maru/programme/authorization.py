@@ -32,6 +32,8 @@ PROGRAMME_VIEW_PUBLIC_COPY: Final = "programme.view_public_copy"
 PROGRAMME_APPROVE_PUBLIC_COPY: Final = "programme.approve_public_copy"
 PROGRAMME_MANAGE_HOSTS: Final = "programme.manage_hosts"
 PROGRAMME_VIEW_HOSTS: Final = "programme.view_hosts"
+PROGRAMME_MANAGE_STAFFING: Final = "programme.manage_staffing"
+PROGRAMME_VIEW_STAFFING: Final = "programme.view_staffing"
 PROGRAMME_VIEW_SCHEDULING_DEPENDENCIES: Final = "programme.view_scheduling_dependencies"
 PROGRAMME_VIEW_HOST_SELF: Final = "programme.view_host_self"
 PROGRAMME_RESPOND_HOST_SELF: Final = "programme.respond_host_self"
@@ -60,6 +62,8 @@ PROGRAMME_CAPABILITY_CODES: Final = frozenset(
         PROGRAMME_APPROVE_PUBLIC_COPY,
         PROGRAMME_MANAGE_HOSTS,
         PROGRAMME_VIEW_HOSTS,
+        PROGRAMME_MANAGE_STAFFING,
+        PROGRAMME_VIEW_STAFFING,
         PROGRAMME_VIEW_SCHEDULING_DEPENDENCIES,
         *PROGRAMME_HOST_SELF_CAPABILITIES,
     }
@@ -295,6 +299,7 @@ __all__ = [
     "PROGRAMME_MANAGE_HOST_AVAILABILITY_SELF",
     "PROGRAMME_MANAGE_ITEMS",
     "PROGRAMME_MANAGE_READINESS",
+    "PROGRAMME_MANAGE_STAFFING",
     "PROGRAMME_RESPOND_HOST_SELF",
     "PROGRAMME_VIEW_DELIVERY",
     "PROGRAMME_VIEW_DISCUSSION",
@@ -304,6 +309,7 @@ __all__ = [
     "PROGRAMME_VIEW_PUBLIC_COPY",
     "PROGRAMME_VIEW_READINESS",
     "PROGRAMME_VIEW_SCHEDULING_DEPENDENCIES",
+    "PROGRAMME_VIEW_STAFFING",
     "AuthorizedProgrammeScope",
     "ExactPolicyProgrammeAuthorizer",
     "ProgrammeAuthorizationDenied",

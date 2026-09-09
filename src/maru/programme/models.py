@@ -66,6 +66,8 @@ _OWNER_MANAGED_RELATION_FIELDS = frozenset(
         "organization",
         "reviewed_by",
         "source_object",
+        "occurrence",
+        "position",
     }
 )
 
@@ -1531,6 +1533,166 @@ class ProgrammeHostAvailabilityWindow(_ScopedProgrammeHostModel):
         ]
 
 
+class ProgrammeStaffingRequirement(_ClosedProgrammeModel):
+    """Stable occurrence-owned staffing need with retained revision history."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_staffing_requirements",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_staffing_requirements",
+    )
+    item = models.ForeignKey(
+        ProgrammeItem,
+        on_delete=models.PROTECT,
+        related_name="staffing_requirements",
+    )
+    occurrence = models.ForeignKey(
+        "scheduling.SchedulingOccurrence",
+        on_delete=models.PROTECT,
+        related_name="programme_staffing_requirements",
+    )
+    version = models.PositiveBigIntegerField(default=1)
+    lifecycle = models.CharField(
+        max_length=16,
+        choices=text_choices(ProgrammeItemLifecycle),
+        default=ProgrammeItemLifecycle.ACTIVE.value,
+    )
+    item_version = models.PositiveBigIntegerField()
+    last_modified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_staffing_requirements_modified",
+    )
+
+    class Meta:
+        """Keep requirement identity scoped and versioned after retirement."""
+
+        ordering = ("occurrence_id", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(
+                    version__gt=0, version__lte=1_001, item_version__gt=0
+                ),
+                name="programme_staffing_versions_valid",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(lifecycle__in=("active", "retired")),
+                name="programme_staffing_lifecycle_closed",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "item"),
+                name="programme_staffing_scope_idx",
+            )
+        ]
+
+
+class ProgrammeStaffingRevision(_AppendOnlyProgrammeModel):
+    """Immutable explicit work terms or retirement of one staffing requirement."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_staffing_revisions",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_staffing_revisions",
+    )
+    item = models.ForeignKey(
+        ProgrammeItem,
+        on_delete=models.PROTECT,
+        related_name="staffing_revisions",
+    )
+    requirement = models.ForeignKey(
+        ProgrammeStaffingRequirement,
+        on_delete=models.PROTECT,
+        related_name="revisions",
+    )
+    sequence = models.PositiveBigIntegerField()
+    item_version = models.PositiveBigIntegerField()
+    occurrence_version = models.PositiveBigIntegerField()
+    operation = models.CharField(max_length=32)
+    lifecycle = models.CharField(
+        max_length=16, choices=text_choices(ProgrammeItemLifecycle)
+    )
+    position = models.ForeignKey(
+        "workforce.Position",
+        on_delete=models.PROTECT,
+        related_name="programme_staffing_revisions",
+    )
+    title = models.CharField(max_length=160)
+    location_label = models.CharField(max_length=160)
+    briefing = models.CharField(max_length=1_000)
+    supervision_note = models.CharField(max_length=500, blank=True)
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+    required_headcount = models.PositiveSmallIntegerField()
+    break_minutes = models.PositiveSmallIntegerField(default=0)
+    minimum_rest_minutes = models.PositiveSmallIntegerField(default=0)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_staffing_revisions_authored",
+    )
+    reason = models.CharField(max_length=MAX_PROGRAMME_REASON_LENGTH)
+    occurred_at = models.DateTimeField()
+
+    class Meta:
+        """Constrain bounded exact revisions without replacing command guards."""
+
+        ordering = ("requirement_id", "sequence")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("requirement", "sequence"),
+                name="programme_staffing_revision_seq_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    sequence__gt=0,
+                    sequence__lte=1_001,
+                    item_version__gt=0,
+                    occurrence_version__gt=0,
+                ),
+                name="programme_staffing_revision_versions",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    operation__in=(
+                        "staffing_create",
+                        "staffing_revise",
+                        "staffing_retire",
+                    )
+                ),
+                name="programme_staffing_revision_operation",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(lifecycle__in=("active", "retired")),
+                name="programme_staffing_revision_lifecycle",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(ends_at__gt=models.F("starts_at")),
+                name="programme_staffing_revision_interval",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    required_headcount__gte=1,
+                    required_headcount__lte=1_024,
+                    break_minutes__lte=1_440,
+                    minimum_rest_minutes__lte=2_880,
+                ),
+                name="programme_staffing_revision_limits",
+            ),
+        ]
+
+
 __all__ = [
     "ProgrammeCommandReceipt",
     "ProgrammeDeliveryRevision",
@@ -1546,5 +1708,7 @@ __all__ = [
     "ProgrammeReadinessEvidence",
     "ProgrammeReadinessRequirement",
     "ProgrammeReadinessRequirementRevision",
+    "ProgrammeStaffingRequirement",
+    "ProgrammeStaffingRevision",
     "ProgrammeWorkingRevision",
 ]

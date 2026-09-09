@@ -618,6 +618,16 @@ requires `workforce.view_shifts` with `shift_demands`, `coverage_states` and
 Admission precedes selection parsing, repeats inside a repeatable-read snapshot
 and after it, and mandatory value-minimized audit precedes result release.
 
+`programme_references.lock_programme_staffing_scope` discovers only the exact
+edition's series identity through Events, then acquires the existing canonical
+retired-authority/Organization/series/edition/structure lock chain. Its companion
+Position reference returns only opaque Position/Department IDs and whether the
+current lifecycle accepts staffing. These internal reference seams confer no
+authority and expose no labels, personnel or availability. Programme callers
+authorize their own exact command before resolution and recheck after locking.
+Recording or retiring a Programme requirement does not create, update or cancel
+a Workforce demand. The explicit bound-demand adapter remains unfinished in #88.
+
 The query accepts 1–1,024 distinct exact-edition demand IDs and at most 4,096
 retained commitments in total. Missing or foreign selection, source inconsistency,
 overflow and audit failure yield no partial result. It selects no briefing,

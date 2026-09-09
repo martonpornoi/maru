@@ -35,6 +35,8 @@ def test_host_capabilities_add_only_exact_edition_manager_authority():
     } == {
         code for code, capability in CAPABILITIES.items() if capability.persistable
     } - {
+        "programme.manage_staffing",
+        "programme.view_staffing",
         *SCHEDULING_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",

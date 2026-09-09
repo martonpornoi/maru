@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 MAX_STAFFING_HEADCOUNT = 1_024
 MAX_STAFFING_BREAK_MINUTES = 1_440
 MAX_STAFFING_REST_MINUTES = 2_880
+MAX_STAFFING_REQUIREMENTS_PER_ITEM = 128
+MAX_STAFFING_REQUIREMENT_REVISIONS = 1_000
 
 
 def _staffing_number(value: int, *, field: str, minimum: int, maximum: int) -> int:
@@ -62,6 +64,98 @@ def _staffing_instant(value: datetime, *, field: str) -> datetime:
             }
         )
     return instant
+
+
+@dataclass(frozen=True, slots=True)
+class ProgrammeStaffingChange:
+    """Explicit create, revision or retirement with all optimistic preconditions.
+
+    Attributes
+    ----------
+    item_id
+        Programme item independently authorized by the command.
+    occurrence_id
+        Stable occurrence belonging to that item; never reassigned on revision.
+    requirement_id
+        Existing requirement, or ``None`` for deliberate creation.
+    expected_item_version
+        Exact current Programme item aggregate version.
+    expected_requirement_version
+        Zero for creation, otherwise exact current requirement version.
+    expected_occurrence_version
+        Current Scheduling metadata version, not an implicit candidate selection.
+    expected_edition_version
+        Current Events version that owns the permitted work-time envelope.
+    expectation
+        Explicit complete work terms; must be ``None`` for retirement.
+    retire
+        Whether to retain the previous terms in a terminal retirement revision.
+    """
+
+    item_id: UUID
+    occurrence_id: UUID
+    requirement_id: UUID | None
+    expected_item_version: int
+    expected_requirement_version: int
+    expected_occurrence_version: int
+    expected_edition_version: int
+    expectation: ProgrammeStaffingExpectation | None
+    retire: bool = False
+
+    def normalized(self) -> ProgrammeStaffingChange:
+        """Validate one closed intent without resolving scope or granting authority.
+
+        Returns
+        -------
+        ProgrammeStaffingChange
+            Fresh immutable input with normalized explicit work terms.
+
+        Raises
+        ------
+        ValidationError
+            If the intent combines incompatible actions or invalid source versions.
+        """
+        for field in ("item_id", "occurrence_id"):
+            require_uuid(getattr(self, field), field=field)
+        if self.requirement_id is not None:
+            require_uuid(self.requirement_id, field="requirement_id")
+        for field in (
+            "expected_item_version",
+            "expected_occurrence_version",
+            "expected_edition_version",
+        ):
+            _staffing_number(
+                getattr(self, field), field=field, minimum=1, maximum=2**63 - 2
+            )
+        _staffing_number(
+            self.expected_requirement_version,
+            field="expected_requirement_version",
+            minimum=0 if self.requirement_id is None else 1,
+            maximum=0
+            if self.requirement_id is None
+            else MAX_STAFFING_REQUIREMENT_REVISIONS + 1,
+        )
+        if (
+            type(self.retire) is not bool
+            or (
+                self.retire
+                and (self.requirement_id is None or self.expectation is not None)
+            )
+            or (
+                not self.retire
+                and not isinstance(self.expectation, ProgrammeStaffingExpectation)
+            )
+        ):
+            raise ValidationError(
+                "Choose creation, complete revision, or explicit retirement.",
+                code="programme_staffing_intent_invalid",
+            )
+        return replace(
+            self,
+            expectation=self.expectation.normalized()
+            if self.expectation is not None
+            else None,
+        )
 
 
 @dataclass(frozen=True, slots=True)

@@ -170,14 +170,28 @@ linked from #48. ADR 0093 and HR-015 define exact source binding, immutable
 accepted work and minimized coverage; implementation and acceptance remain
 in progress. Work stays single-agent and #48 remains open.
 
-The local staffing foundation now validates explicit work terms and source
-references, classifies minimized coverage, and provides an independently
-authorized/audited Workforce source behind an unpinned adapter. Focused tests
-pass: 151 unit cases, two PostgreSQL source cases (12.09s after initialization),
-and 30 repaired catalog/inventory regressions. Strict types, lint and docstring
-checks pass. Requirement persistence, bound-demand commands, guards, UI,
-integrated acceptance and complete certification remain unfinished. There is
-no PR yet. See the [staffing foundation checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
+The local staffing implementation now includes Programme requirement
+create/revise/retire, immutable explicit terms, bounded independently authorized
+current/history reads, canonical owner references, reciprocal PostgreSQL guards,
+runtime SELECT-only containment and populated downgrade fences. The earlier
+minimized Workforce coverage source remains behind an unpinned adapter.
+
+The latest broad fast run passed 4,078 unit tests in 24.49s (two pre-existing
+Django URLField deprecation warnings). Subsequent focused acceptance passed 36
+PostgreSQL cases and eight contract cases in 90.49s, including adversarial DML,
+concurrency, read ceilings, audit failure and both migration paths. These are
+local step results, not complete issue certification. Exact Programme schema
+and guard fingerprints match; authority guard metadata is installed, but the
+flushed test database has no active cutover marker and is not a provisioned
+runtime acceptance claim. Migration drift, types and semantic docstrings pass.
+
+An existing CI-selection regression was also corrected: a new owner migration
+leaf can no longer hide consumers of older model migrations. No history,
+timeout, coverage or protected gate is weakened. Source-bound demand commands,
+successor/reconciliation, Scheduling/UI integration, browser acceptance and
+complete certification remain unfinished. No PR or staffing merge exists.
+See the [persistence checkpoint](../checkpoints/2026-09-09-programme-staffing-requirement-persistence.md)
+and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
 
 ## What can be evaluated today
 
@@ -204,10 +218,11 @@ no PR yet. See the [staffing foundation checkpoint](../checkpoints/2026-09-09-pr
 
 ## Smallest sensible next actions
 
-1. Continue #88 with Programme requirement persistence and exact-source demand
-   commands under ADR 0093. Reuse existing Workforce commands and the new
-   minimized reader; never silently rewrite accepted Shifts. Add reciprocal
-   guards, canonical-lock race tests and additive migration/recovery evidence.
+1. Continue #88 with exact-source Workforce demand create/link/reconcile and
+   explicit successor commands under ADR 0093. Requirement persistence and its
+   focused checks are implemented locally. Reuse existing Workforce commands;
+   never silently rewrite accepted Shifts. Add reciprocal binding guards,
+   source-movement/commitment races and the remaining migration/recovery proof.
 2. Carry the staffing child through focused tests, appropriate exact-head
    certification and protected delivery. Include this post-editor checkpoint.
 3. Complete #87 before activation. Continue release/outputs, on-site continuity,

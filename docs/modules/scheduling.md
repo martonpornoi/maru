@@ -1,8 +1,8 @@
 # Scheduling module
 
-Status: dormant candidate/conflict and reciprocal physical-reservation kernel;
-no Programme timetable editor, approval, release or current-profile activation.
-Last updated: 2026-09-08. See [CURRENT](../project/CURRENT.md) for verification
+Status: dormant candidate/conflict and reciprocal physical-reservation kernel,
+consumed by the dormant Programme editor; no approval, release or profile activation.
+Last updated: 2026-09-09. See [CURRENT](../project/CURRENT.md) for verification
 and protected-delivery status; this guide is the owner contract, not a merge claim.
 
 ## Ownership and adoption
@@ -16,10 +16,19 @@ PRG-008, VEN-001, VEN-002, VEN-008, AUD-001/AUD-003 and NFR-013.
 Programme owns item content, readiness, hosting confirmation and deliberately
 shared availability. Events owns edition lifecycle, dates and IANA zone.
 Venues owns actual physical occupancy and independent physical approval.
-Workforce remains the future owner of Shift demand and volunteer commitments.
+Workforce owns Shift demand and volunteer commitments; their Programme binding
+is being added in #88.
 Scheduling must use those owners' documented services, not their private models.
 Cross-owner database integrity deliberately verifies the exact foreign graph;
 it is not a user-facing data-access path.
+
+`staffing_references.resolve_staffing_occurrence_reference` supplies only one
+exact Programme-item-linked occurrence ID, metadata version and active/retired
+consequence. The independently authorized caller holds the canonical edition
+write scope. It provides no candidate, placement, public copy, host detail or
+authority, and never selects a timetable alternative. Requirement changes do
+not mutate Scheduling state; exact candidate/placement demand binding remains
+the next #88 continuation.
 
 Neither `full_convention@1` nor `workforce_only@1` admits the new capabilities,
 adapters or conflict sources. All fifteen Scheduling tables and the new Venue

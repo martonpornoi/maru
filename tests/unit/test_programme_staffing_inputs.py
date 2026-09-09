@@ -11,6 +11,7 @@ from maru.programme.staffing_inputs import (
     MAX_STAFFING_BREAK_MINUTES,
     MAX_STAFFING_HEADCOUNT,
     MAX_STAFFING_REST_MINUTES,
+    ProgrammeStaffingChange,
     ProgrammeStaffingExpectation,
     ProgrammeStaffingSource,
 )
@@ -35,6 +36,62 @@ def expectation():
         15,
         60,
     )
+
+
+def change():
+    return ProgrammeStaffingChange(uuid4(), uuid4(), None, 1, 0, 1, 1, expectation())
+
+
+def test_staffing_change_normalizes_without_choosing_a_candidate():
+    original = change()
+    normalized = original.normalized()
+    assert normalized.expectation == original.expectation.normalized()
+    assert normalized.requirement_id is None
+    assert not normalized.retire
+    assert original.expectation.title.startswith("  ")
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "expected_item_version",
+        "expected_occurrence_version",
+        "expected_edition_version",
+    ],
+)
+@pytest.mark.parametrize("value", [True, False, 0, -1, 1.0, "1", 2**63 - 1])
+def test_staffing_change_rejects_invalid_source_versions(field, value):
+    with pytest.raises(ValidationError):
+        replace(change(), **{field: value}).normalized()
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        {"expected_requirement_version": 1},
+        {"requirement_id": uuid4()},
+        {"retire": True},
+        {"expectation": None},
+        {"retire": "no"},
+        {"requirement_id": uuid4(), "expected_requirement_version": 1, "retire": True},
+        {"item_id": "invalid"},
+        {"occurrence_id": None},
+    ],
+)
+def test_staffing_change_rejects_ambiguous_or_foreign_shape(values):
+    with pytest.raises(ValidationError):
+        replace(change(), **values).normalized()
+
+
+def test_retirement_requires_an_existing_requirement_and_no_replacement_terms():
+    intent = replace(
+        change(),
+        requirement_id=uuid4(),
+        expected_requirement_version=1000,
+        retire=True,
+        expectation=None,
+    )
+    assert intent.normalized() == intent
 
 
 def test_explicit_work_is_normalized_without_mutating_input():

@@ -5,12 +5,19 @@ Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
 profile-scoped unified-shell context, and dormant Programme and Applications
 reference seams; Programme Operations remains inactive
-Last updated: 2026-09-06
+Last updated: 2026-09-09
 
 ## Purpose and requirements
 
 `maru.events` owns edition identity, adoption profile, and lifecycle for EVT-002
 through EVT-006, ARC-003, UX-009, UX-022, UX-023, UX-030, and NFR-013.
+
+`queries.resolve_edition_series_identity` returns only the candidate series UUID
+for an exact organization/edition pair with coherent series ownership. It grants
+no authority and acquires no lock. A governed cross-owner writer uses it only to
+discover the lock chain, then locks and revalidates Organization, series and
+edition in canonical order before narrower owner rows. Programme staffing uses
+this seam through Workforce rather than loading Events models privately.
 
 ## Owned data and invariants
 

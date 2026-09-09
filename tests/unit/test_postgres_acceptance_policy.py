@@ -263,6 +263,29 @@ def test_real_graph_resolves_dependents_and_refuses_unknown_or_deleted() -> None
             affected_migration_owners((change,))
 
 
+def test_new_owner_leaf_cannot_hide_consumers_of_an_older_model_migration(monkeypatch):
+    """Model changes retain older consumers; an exact new migration stays precise."""
+    earlier = ("programme", "0001_initial")
+    newer = ("programme", "0002_new_feature")
+    consumer = ("scheduling", "0001_initial")
+    graph = SimpleNamespace(
+        nodes={earlier, newer, consumer},
+        backwards_plan=lambda node: (
+            [earlier, newer, consumer] if node == earlier else [node]
+        ),
+    )
+    monkeypatch.setattr(
+        "django.db.migrations.loader.MigrationLoader",
+        lambda _: SimpleNamespace(graph=graph),
+    )
+    assert affected_migration_owners(
+        (_change("src/maru/programme/models.py"),)
+    ) == frozenset({"programme", "scheduling"})
+    assert affected_migration_owners(
+        (_change("src/maru/programme/migrations/0002_new_feature.py"),)
+    ) == frozenset({"programme"})
+
+
 @pytest.mark.parametrize("owner", ["scheduling", "venues"])
 def test_joint_scheduling_history_follows_either_owners_real_graph(owner: str) -> None:
     inventory = load_history_inventory()

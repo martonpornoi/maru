@@ -125,7 +125,7 @@ def _host_migration_contract_is_current() -> bool:
 _HOST_TRIGGERS, _HOST_FUNCTIONS = parse_database_integrity_sql_contracts(
     _HOST_MIGRATION.FORWARD_SQL
 )
-PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
+_HOST_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
     _ACCEPTED_INTEGRITY_CONTRACT,
     source_migration=("programme", "0008_host_integrity"),
     source_migration_module="maru.programme.migrations.0008_host_integrity",
@@ -135,6 +135,56 @@ PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
     source_contract_current=(
         _ACCEPTED_INTEGRITY_CONTRACT.source_contract_current
         and _host_migration_contract_is_current()
+    ),
+)
+
+
+_STAFFING_MIGRATION = import_module("maru.programme.migrations.0011_staffing_integrity")
+_STAFFING_FENCE = import_module(
+    "maru.programme.migrations.0012_staffing_downgrade_fence"
+)
+_STAFFING_FENCE_SOURCE_SHA256: Final = (
+    "e3abc764fd33ff4671525442e8871659ddf3cda10877dc208f39c52f4a5e4d99"
+)
+
+
+def _staffing_migration_contract_is_current() -> bool:
+    operations = tuple(_STAFFING_MIGRATION.Migration.operations)
+    fences = tuple(_STAFFING_FENCE.Migration.operations)
+    reverse = _STAFFING_FENCE.refuse_used_staffing_downgrade
+    source = inspect.getsource(reverse).replace("\r\n", "\n")
+    return (
+        len(operations) == len(fences) == 1
+        and isinstance(operations[0], migrations.RunSQL)
+        and operations[0].sql == _STAFFING_MIGRATION.FORWARD_SQL
+        and operations[0].reverse_sql == _STAFFING_MIGRATION.REVERSE_SQL
+        and tuple(_STAFFING_MIGRATION.Migration.dependencies)
+        == (
+            ("programme", "0010_staffing_requirements"),
+            ("authorization", "0028_programme_staffing_capabilities"),
+        )
+        and isinstance(fences[0], migrations.RunPython)
+        and fences[0].code is migrations.RunPython.noop
+        and fences[0].reverse_code is reverse
+        and tuple(_STAFFING_FENCE.Migration.dependencies)
+        == (("programme", "0011_staffing_integrity"),)
+        and hashlib.sha256(source.encode()).hexdigest() == _STAFFING_FENCE_SOURCE_SHA256
+    )
+
+
+_STAFFING_TRIGGERS, _STAFFING_FUNCTIONS = parse_database_integrity_sql_contracts(
+    _STAFFING_MIGRATION.FORWARD_SQL
+)
+PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
+    _HOST_INTEGRITY_CONTRACT,
+    source_migration=("programme", "0011_staffing_integrity"),
+    source_migration_module="maru.programme.migrations.0011_staffing_integrity",
+    terminal_migration=("programme", "0012_staffing_downgrade_fence"),
+    triggers={**_HOST_INTEGRITY_CONTRACT.triggers, **_STAFFING_TRIGGERS},
+    functions={**_HOST_INTEGRITY_CONTRACT.functions, **_STAFFING_FUNCTIONS},
+    source_contract_current=(
+        _HOST_INTEGRITY_CONTRACT.source_contract_current
+        and _staffing_migration_contract_is_current()
     ),
 )
 
@@ -198,6 +248,8 @@ PROGRAMME_RELATION_SEMANTICS: Final[
     "programme_programmehostinvitation": ("r", "p", False, False, False, "d"),
     "programme_programmehostrevision": ("r", "p", False, False, False, "d"),
     "programme_programmehostavailabilitywindow": ("r", "p", False, False, False, "d"),
+    "programme_programmestaffingrequirement": ("r", "p", False, False, False, "d"),
+    "programme_programmestaffingrevision": ("r", "p", False, False, False, "d"),
     "programme_programmeitem": ("r", "p", False, False, False, "d"),
     "programme_programmeitemsourcebinding": (
         "r",
@@ -255,6 +307,322 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # digest from pg_get_constraintdef(..., TRUE) or pg_get_indexdef(...).
 # An incomplete mapping deliberately keeps Programme readiness blocked.
 PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_programmes_edition_id_3b76c76c_fk_events_ev"
+    ): (
+        "6a31c0acb039c132e7b20c6f77f541a14ebb47451a3c4fdb0c7cf4ae9762b46c",
+        "03a7996ab8afb527585471eb2cbfd7058942319058cc05e3f26732b9ade4e0cc",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_programmes_item_id_4af55129_fk_programme"
+    ): (
+        "6a31c0acb039c132e7b20c6f77f541a14ebb47451a3c4fdb0c7cf4ae9762b46c",
+        "29bc9e574fb186040bcedd470867b5969bfc9cfe526c4fac8fc4a66bc20d7c84",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_programmes_last_modified_by_id_28482e46_fk_identity_"
+    ): (
+        "6a31c0acb039c132e7b20c6f77f541a14ebb47451a3c4fdb0c7cf4ae9762b46c",
+        "2c0aff8c19e72bf6f121c9bed55c36858f7a7d671ccee0e376cd614e2dbf22ac",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_programmes_occurrence_id_65d49afc_fk_schedulin"
+    ): (
+        "6a31c0acb039c132e7b20c6f77f541a14ebb47451a3c4fdb0c7cf4ae9762b46c",
+        "1f83f28297660944358326a5e1f402dcf15a53d73511e0f1cd639c8b8b9cf32c",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_programmes_organization_id_f8bd728d_fk_organizat"
+    ): (
+        "6a31c0acb039c132e7b20c6f77f541a14ebb47451a3c4fdb0c7cf4ae9762b46c",
+        "07f454abd16b9f770cd0320efd71f154b0187daf9dbe65e3e6e57121eacd062f",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_programmestaffingrequirement_item_version_check"
+    ): (
+        "266529509becaec155c88070ee9269179d92af1fe916647111917b724d479ed1",
+        "7b6d65d5670d3436adcbd8cae1a19da73177498534211163b7ab24ccb9fc8a50",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_programmestaffingrequirement_pkey"
+    ): (
+        "7f34a8c8922eb6dfb3caa97a32808b68a380d0e1d58433df5dfc0f943e5ed402",
+        "8c8464f42472e42ee190fc91ca8db79b5351d3a4609040516578d229c56f6fa5",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_programmestaffingrequirement_version_check"
+    ): (
+        "266529509becaec155c88070ee9269179d92af1fe916647111917b724d479ed1",
+        "ce468a9ec0ef7e34f6871d17c4cebc8cbb55944458fb50f5898e0a0cc9beb809",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_staffing_lifecycle_closed"
+    ): (
+        "266529509becaec155c88070ee9269179d92af1fe916647111917b724d479ed1",
+        "880b8febbfb7419537d3b00d8eb0bea81d6fe34ba51690d08b89d2aae092f1bc",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_staffing_versions_valid"
+    ): (
+        "266529509becaec155c88070ee9269179d92af1fe916647111917b724d479ed1",
+        "ebd1698c561048ad82f5491883eccb8f1546ca43ee130b38db3b4b82d2aee813",
+    ),
+    (
+        "constraint:programme_programmestaffingrequirement:"
+        "programme_staffingrequirement_evidence"
+    ): (
+        "71e2226f085937dbb5f6cd59196c8d2082220987a6704d095df108d9de91948b",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmes_actor_id_363fce8d_fk_identity_"
+    ): (
+        "cbb505cd693ddea6a1e614306d7aed4731223ea8b5d078f33ab3fabf4e5b59b8",
+        "4ed87fd0d94daa63ad880b35b54252ad3f58c69aabfdc3065c99dda56093b807",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmes_edition_id_a82800da_fk_events_ev"
+    ): (
+        "cbb505cd693ddea6a1e614306d7aed4731223ea8b5d078f33ab3fabf4e5b59b8",
+        "03a7996ab8afb527585471eb2cbfd7058942319058cc05e3f26732b9ade4e0cc",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmes_item_id_16e6c0ef_fk_programme"
+    ): (
+        "cbb505cd693ddea6a1e614306d7aed4731223ea8b5d078f33ab3fabf4e5b59b8",
+        "29bc9e574fb186040bcedd470867b5969bfc9cfe526c4fac8fc4a66bc20d7c84",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmes_organization_id_9d4957d6_fk_organizat"
+    ): (
+        "cbb505cd693ddea6a1e614306d7aed4731223ea8b5d078f33ab3fabf4e5b59b8",
+        "07f454abd16b9f770cd0320efd71f154b0187daf9dbe65e3e6e57121eacd062f",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmes_position_id_83cbaab3_fk_workforce"
+    ): (
+        "cbb505cd693ddea6a1e614306d7aed4731223ea8b5d078f33ab3fabf4e5b59b8",
+        "20744d41eadf7288467299431f8a55a71a3c187c6403b981379361bff25b4aed",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmes_requirement_id_72579c99_fk_programme"
+    ): (
+        "cbb505cd693ddea6a1e614306d7aed4731223ea8b5d078f33ab3fabf4e5b59b8",
+        "715139466aab91ed3d47e9c6e580d47f545a7a0b26c06d45184ee1f7843605fb",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_break_minutes_check"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "8e2a36b04c5d7865cd8815b8d1f0b370f866625441308663fc1c73f3560f1f6c",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_item_version_check"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "7b6d65d5670d3436adcbd8cae1a19da73177498534211163b7ab24ccb9fc8a50",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_minimum_rest_minutes_check"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "197c7d44d76b1bfdda2d4e1c60f5cdeb401399bfd88e20462edd369997df9094",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_occurrence_version_check"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "3bcb1500c3df52a97912d7c6f64eeb9e6a95dbe81ed9cabe44c65de48ade81d8",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_pkey"
+    ): (
+        "a7212cb713d36f204c0e5c17de51bbb34ba0e7ad8ce1f4b474ccbf828f357ae5",
+        "8c8464f42472e42ee190fc91ca8db79b5351d3a4609040516578d229c56f6fa5",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_required_headcount_check"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "1c1325909e122f7e2b10d4a4c5d64cc83e5207f34f4975781e70c6b01b00f3ae",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_sequence_check"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "8f426ab72466a993c9c30383cb064c0d9e1286aed4585cb08cb0ccdec86be0aa",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_staffing_revision_interval"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "f7f53564896884f1edf5917820a7ba41f7cffde42c77a1d84f965bcfaa474baf",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_staffing_revision_lifecycle"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "880b8febbfb7419537d3b00d8eb0bea81d6fe34ba51690d08b89d2aae092f1bc",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_staffing_revision_limits"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "9d260cf6c5bf0a3d01d373c2884d93c98a904b2427e5a3c13e31abc489942926",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_staffing_revision_operation"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "6acd16153731241c96d175a2735df7e8ea1ab78518394991c22648f171f62ae8",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_staffing_revision_seq_uq"
+    ): (
+        "eb0bd34803c4e0486ad16cb934ee227f3164dcfed8eba4843f19798ebb2d4df1",
+        "f13cd5112aa855b20572eb148d50223b5c16c4b6b18967512e41c682f112175b",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_staffing_revision_versions"
+    ): (
+        "62601de95b52e0d0013a3325131fa69afb2d9d3934c225d7273e381ee562d4d4",
+        "41f09f59c8875a17c9d160ad0e74f2e8bd97fad2ca05dd9fc7a31f739a1339bd",
+    ),
+    (
+        "constraint:programme_programmestaffingrevision:"
+        "programme_staffingrevision_evidence"
+    ): (
+        "9ac31761324d7a0d899e8253266c64453a6fc9497991912c26a8a9f33eec3d1e",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "index:programme_programmestaffingrequirement:"
+        "programme_programmestaffin_last_modified_by_id_28482e46"
+    ): (
+        "9ff6178f739ea0bade109d51e196980e3462646b2ce5ac3e3aed283c5316eaad",
+        "f189a7c50a7ce7ad3bc3048944ccdf14059c124e01f23aa2b08d556406378137",
+    ),
+    (
+        "index:programme_programmestaffingrequirement:"
+        "programme_programmestaffingrequirement_edition_id_3b76c76c"
+    ): (
+        "9ff6178f739ea0bade109d51e196980e3462646b2ce5ac3e3aed283c5316eaad",
+        "047bc830901f6b3fa383519275afdb38b4c568729689ba53741e88e07f9bee84",
+    ),
+    (
+        "index:programme_programmestaffingrequirement:"
+        "programme_programmestaffingrequirement_item_id_4af55129"
+    ): (
+        "9ff6178f739ea0bade109d51e196980e3462646b2ce5ac3e3aed283c5316eaad",
+        "4d35dfe0ddd8f17c1779086c10c8137866ae56101b0b927c5f403b9ed60021bf",
+    ),
+    (
+        "index:programme_programmestaffingrequirement:"
+        "programme_programmestaffingrequirement_occurrence_id_65d49afc"
+    ): (
+        "9ff6178f739ea0bade109d51e196980e3462646b2ce5ac3e3aed283c5316eaad",
+        "368f59807c755ad61cbee3602755f6c9f6dd3c4b5f9768ec2aa35b86dc8b2b5a",
+    ),
+    (
+        "index:programme_programmestaffingrequirement:"
+        "programme_programmestaffingrequirement_organization_id_f8bd728d"
+    ): (
+        "9ff6178f739ea0bade109d51e196980e3462646b2ce5ac3e3aed283c5316eaad",
+        "c191bf1ef32fba8790c706a1abdfcf209ae91a938d17ac1339fdbc3a21f51822",
+    ),
+    (
+        "index:programme_programmestaffingrequirement:"
+        "programme_programmestaffingrequirement_pkey"
+    ): (
+        "4e6fc037b645905409769e49803891e967a9e6a72e89c4a98b563e53f4cd8948",
+        "690b800c97e2d0c7754f756246d1a92500a66f0ddd16fef227a8fe4f99ce0f59",
+    ),
+    "index:programme_programmestaffingrequirement:programme_staffing_scope_idx": (
+        "5fb168b0b92be9c351bfed2ee64583d580469da885426decc678831bd7353620",
+        "e8e5e1a8414ca0fa7568a06dac2e83d2d2d9a3a33ff549dbeab6589050849140",
+    ),
+    (
+        "index:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_actor_id_363fce8d"
+    ): (
+        "6b811c1c0a2e3274bac3b94117983e8dd502e4f7e7b4bef6e1a4b369fd7861c2",
+        "9add77aef6c34505a577daa5d5d332e589c3ba82284f2a9441a22f18834bc077",
+    ),
+    (
+        "index:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_edition_id_a82800da"
+    ): (
+        "6b811c1c0a2e3274bac3b94117983e8dd502e4f7e7b4bef6e1a4b369fd7861c2",
+        "68c201244552c2a0f16f0ef830b35bec368518a2cf6f225f938aa9104e0a425a",
+    ),
+    (
+        "index:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_item_id_16e6c0ef"
+    ): (
+        "6b811c1c0a2e3274bac3b94117983e8dd502e4f7e7b4bef6e1a4b369fd7861c2",
+        "e92f5d15771e0bbd1039df31bebc652257b0c78b35f07d1ab4656a62f58636d1",
+    ),
+    (
+        "index:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_organization_id_9d4957d6"
+    ): (
+        "6b811c1c0a2e3274bac3b94117983e8dd502e4f7e7b4bef6e1a4b369fd7861c2",
+        "f88dbd66509e27e61df103a3cd4b882d4a7ef3c891d5287d5a5d1335c9e34540",
+    ),
+    (
+        "index:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_pkey"
+    ): (
+        "2970ef18cd561d1f4dd6047bb5d637401b18edbbff61ba0639567ed28c7705fd",
+        "62b8cfb9dc04344016e1cd40d755193a86c88802bbffc4b49a8c024a285c232a",
+    ),
+    (
+        "index:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_position_id_83cbaab3"
+    ): (
+        "6b811c1c0a2e3274bac3b94117983e8dd502e4f7e7b4bef6e1a4b369fd7861c2",
+        "7fffd5bd76916cb758faf70a163d28eba7c208f365a5fa40b8cb0335d2369e0a",
+    ),
+    (
+        "index:programme_programmestaffingrevision:"
+        "programme_programmestaffingrevision_requirement_id_72579c99"
+    ): (
+        "6b811c1c0a2e3274bac3b94117983e8dd502e4f7e7b4bef6e1a4b369fd7861c2",
+        "f6e191617f0626684c3396e3b3226d571b5418a1902d0387cd6495b530ba1cde",
+    ),
+    "index:programme_programmestaffingrevision:programme_staffing_revision_seq_uq": (
+        "31b65a9f573a13fb33a018a6c97f5c75df9f60123b414e0e2a36f93706620abc",
+        "dec670e9d441a40433067ee03901c5087691b46ae3a74e3d830766fc0c919908",
+    ),
     "constraint:programme_programmehostavailabilitywindow:programme_host_window_kind": (
         "e188a63e47ce088fcd4f16a36e7dc94a59d959fe3dee823a8b199813514fb412",
         "b8fecad9f486094b4b5139578c093b82bd8f09d558e7df1435ca62ff5a29a220",
@@ -795,7 +1163,7 @@ PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
     ),
     "constraint:programme_programmecommandreceipt:programme_command_operation_closed": (
         "69d64ca9ff30b925a62e5ceda594c1aba7aebf94d273e697efce3721c42b6513",
-        "5dbe934b7945785f67beac8dbfda7acb6eadc263f5ae4165503ec34bfb5a8b38",
+        "aa96039cefbfc326195765d17ec2244785cbf1b7a9653fad4315f1e3ca3d80ed",
     ),
     "constraint:programme_programmecommandreceipt:programme_command_retry_uq": (
         "6358fdf321257554281d71cf9659bff2557f29bff35c778c4126a1ec8b077945",

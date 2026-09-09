@@ -1271,6 +1271,28 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"reason", "audit"}),
     ),
     Capability(
+        code="programme.manage_staffing",
+        description=(
+            "Revise explicit Programme staffing needs without accepting volunteer work."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="programme.view_staffing",
+        description=(
+            "Read Programme staffing terms and retained requirement history, "
+            "not personnel."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"staffing_requirements", "staffing_history"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
         code="programme.view_scheduling_dependencies",
         description=(
             "Read minimized Programme and host consequences for an edition timetable."
