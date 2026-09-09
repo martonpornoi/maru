@@ -474,6 +474,17 @@ architecture documents, implementation issues, tests, and release notes.
   or reconfirm, remove, or discard a claimed or confirmed `ShiftCommitment`.
   Later changes require an impact-previewed recovery or explicit successor
   workflow.
+  Programme owns bounded, immutable staffing-requirement revisions. A demand
+  link pins one requirement revision and one explicit occurrence/candidate/
+  placement source; editing another alternative never selects or changes it.
+  Work intervals, instructions, headcount, break and rest expectations are
+  explicit. A draft with any retained commitment is not reconcilable. Changed
+  source versions produce stale coverage, not rewritten work. Claimed places
+  do not count as confirmed coverage; accepted underfill remains underfill.
+  Coverage reads require independent field authority and audit, distinguish
+  unavailable/withheld from zero, and exclude other volunteers' identities,
+  private explanations and full calendars. Published personal composition
+  remains governed by SCH-012 rather than exposing private candidates.
 
 ### Programme, shifts, and timetable planning
 

@@ -196,6 +196,7 @@
   "tests/integration/test_workforce_position_api.py": 9.868,
   "tests/integration/test_workforce_position_commands.py": 27.033,
   "tests/integration/test_workforce_position_html.py": 12.051,
+  "tests/integration/test_workforce_programme_coverage.py": 120.285,
   "tests/integration/test_workforce_programme_department_fk_contract_migration.py": 229.653,
   "tests/integration/test_workforce_scope_v2_integrity.py": 1231.602,
   "tests/integration/test_workforce_shifts.py": 120.285,

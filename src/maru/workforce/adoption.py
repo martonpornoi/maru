@@ -16,10 +16,24 @@ ASSIGNMENT_PARTICIPATION_EXCLUDED_ADAPTER = (
     "workforce.assignment.participation-excluded@1"
 )
 WORKFORCE_SELF_ADAPTER = "workforce.self@1"
+WORKFORCE_PROGRAMME_COVERAGE_ADAPTER = "workforce.programme-coverage@1"
 
 WORKFORCE_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
     owner_module="workforce",
     descriptors=(
+        AdoptionAdapterDescriptor(
+            code=WORKFORCE_PROGRAMME_COVERAGE_ADAPTER,
+            owner_module="workforce",
+            kind="programme-coverage",
+            result_semantics=(
+                "Returns complete authorized demand versions and minimized current "
+                "coverage without personnel labels, reasons or full calendars."
+            ),
+            failure_semantics=(
+                "Denies unpinned profiles and withholds all coverage on missing "
+                "authority, incomplete scope, source inconsistency or audit failure."
+            ),
+        ),
         AdoptionAdapterDescriptor(
             code=ASSIGNMENT_PARTICIPATION_REQUIRED_ADAPTER,
             owner_module="workforce",
@@ -138,6 +152,7 @@ __all__ = [
     "ASSIGNMENT_PARTICIPATION_REQUIRED_ADAPTER",
     "WORKFORCE_ADOPTION_ADAPTERS",
     "WORKFORCE_ADOPTION_CONFLICT_SOURCES",
+    "WORKFORCE_PROGRAMME_COVERAGE_ADAPTER",
     "WORKFORCE_SELF_ADAPTER",
     "AssignmentAdoptionProfileError",
     "assignment_uses_participation_evidence",

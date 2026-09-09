@@ -609,6 +609,33 @@ open, locked, cancelled, or completed `ShiftDemand`, or a claimed, confirmed,
 removed, or completed `ShiftCommitment`. Scheduling consumes minimized
 commitment envelopes and conflict facts rather than Workforce-private writers.
 
+ADR 0093 defines the next staffing source boundary. The dormant
+`workforce.programme-coverage@1` adapter is registered but deliberately absent
+from both executable profile manifests. Its identifier-only public query,
+`maru.workforce.programme_queries.load_programme_shift_coverage`, independently
+requires `workforce.view_shifts` with `shift_demands`, `coverage_states` and
+`suitability_consequences`; Programme authority does not grant that read.
+Admission precedes selection parsing, repeats inside a repeatable-read snapshot
+and after it, and mandatory value-minimized audit precedes result release.
+
+The query accepts 1–1,024 distinct exact-edition demand IDs and at most 4,096
+retained commitments in total. Missing or foreign selection, source inconsistency,
+overflow and audit failure yield no partial result. It selects no briefing,
+confirmation/removal reason or holder label. Results contain exact demand and
+Position IDs, demand version, work interval, minimized source digest and coverage.
+The digest changes with commitment, assignment and Availability versions and
+current suitability; it is a freshness token, not authority or personal data
+export. Callers must independently compare Programme and Scheduling source
+versions before describing the coverage as current for a timetable candidate.
+
+`programme_coverage.evaluate_staffing_coverage` separates pending claims,
+current independent confirmations, review-needed confirmation and locked
+underfill. Non-current sources expose null counts rather than zero; completed
+and cancelled work remain historical states. Draft reconciliation is only an
+advisory possibility when no retained commitment exists, never permission to
+write. This reader does not create requirements, bind demands, reconcile work,
+publish a personal timetable or activate Programme Operations.
+
 An interval recheck failure is a dedicated non-disclosing conflict. Browser
 recovery stays beside the approval action; the strict API returns stable `409`
 machine-readable recovery. Neither surface reveals which controller failed,

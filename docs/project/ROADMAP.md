@@ -105,12 +105,13 @@ ADR 0085. Review-side acceptance does not create a target receipt or Programme
 item. Issue #77, delivered through PR #78, adds explicit accepted-item
 conversion. Issue #79, delivered through PR #80, adds independent host relationships and
 availability. Issue #81, delivered through PR #82, adds Scheduling candidates,
-conflict evidence and governed Venue binding. Issue #85 now implements the
+conflict evidence and governed Venue binding. Issue #85 delivered the
 [accessible timetable editor](../product/page-contracts/programme-timetable-planning.md)
 under ADR 0092, before staffing, releases, continuity, and integrated
 Programme-only rehearsal. Native HTTP, pointer-assisted exact placement and
-unsaved-input guards are implemented locally; remaining browser acceptance and
-protected delivery are still open. Umbrella
+unsaved-input guards merged through PR #86 after full protected acceptance.
+Three browser checks remain mandatory before activation in #87, explicitly
+deferred by the user rather than waived. Umbrella
 #48 remains open; no current profile or surface is activated by this kernel.
 
 Profile v1 declares incumbent-system coexistence and the current manual,
@@ -776,7 +777,8 @@ source-bound item with seven initially required readiness concerns, without
 activating a profile or creating hosts. Issue #79 delivers Programme-owned host
 relationships and deliberately shared availability under ADR 0087. Issue #81
 delivers Scheduling candidates, conflict evaluation and governed Venue binding.
-Next are the accessible editor, staffing, release, continuity, setup, and integrated
+Issue #85 delivers the dormant accessible editor; #87 retains its deferred
+pre-activation browser checks. Next are staffing, release, continuity, setup, and integrated
 acceptance in dependency order. Each child is separately verified and delivered.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for

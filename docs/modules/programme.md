@@ -3,9 +3,19 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, worker, or production writer
 
-Last updated: 2026-09-06
+Last updated: 2026-09-09
 
 ## Purpose and ownership
+
+Issue #88 is adding the HR-015 staffing continuation under ADR 0093. The current
+local foundation supplies immutable typed work expectations and exact
+requirement/occurrence/candidate/placement references in `staffing_inputs`.
+Expectations normalize explicit work instructions and whole UTC-minute work
+intervals, reject coerced IDs/numbers and enforce headcount/break/rest bounds
+compatible with Workforce. This pure input contract does not resolve authority
+or persist requirements. Requirement history, source-bound demand commands,
+recovery and visible staffing controls remain in progress; no staffing writer
+or Programme profile is activated by the input classes.
 
 `maru.programme` owns the canonical private Programme item for one exact event
 edition. It separates working information, delivery facts, Department
