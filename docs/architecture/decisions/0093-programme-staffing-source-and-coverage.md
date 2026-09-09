@@ -45,6 +45,15 @@ empty demand; stale evidence cannot count as current coverage. Claimed places
 are not confirmed coverage. Locked underfill remains explicitly underfilled,
 even when the Workforce owner has accepted its reason.
 
+Binding lineage and its retained rationale are separate read purposes. Current
+binding views omit actor and rationale columns; history requires both Programme
+`staffing_history` and independent Workforce work-field authority, uses a fixed
+inclusive revision ceiling and bounded consecutive pages, and audits before
+releasing restricted decisions. Opaque owner references grant no directory or
+private-candidate access. Current coverage compares exact source and work-term
+fingerprints, not demand version equality: opening or locking unchanged work is
+not a source change. Private rationale never enters the coverage projection.
+
 Cross-owner writes acquire the canonical Workforce edition scope first:
 retired-authority boundary, Organization, series, edition, structure mutex,
 then affected owner aggregates in deterministic order. Fresh source facts and

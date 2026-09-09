@@ -483,7 +483,12 @@ architecture documents, implementation issues, tests, and release notes.
   do not count as confirmed coverage; accepted underfill remains underfill.
   Coverage reads require independent field authority and audit, distinguish
   unavailable/withheld from zero, and exclude other volunteers' identities,
-  private explanations and full calendars. Published personal composition
+  private explanations and full calendars. Retained binding decision history
+  has a separate fixed-ceiling read purpose requiring Programme history-field
+  and Workforce work-field authority; current coverage never grants that read.
+  Ordinary Shift lifecycle version changes do not invalidate unchanged bound
+  work terms, but changed terms require explicit source reconciliation.
+  Published personal composition
   remains governed by SCH-012 rather than exposing private candidates.
 
 ### Programme, shifts, and timetable planning

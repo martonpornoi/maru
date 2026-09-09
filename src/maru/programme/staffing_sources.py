@@ -12,6 +12,7 @@ from maru.scheduling.authorization import (
     SchedulingAuthorizer,
 )
 from maru.scheduling.planning_queries import (
+    SchedulingPlanningSnapshot,
     SchedulingReadRequest,
     load_scheduling_planning,
 )
@@ -25,7 +26,9 @@ from .authorization import (
 from .inputs import canonical_digest
 from .staffing_inputs import ProgrammeStaffingExpectation, ProgrammeStaffingSource
 from .staffing_queries import (
+    ProgrammeStaffingOverview,
     ProgrammeStaffingReadRequest,
+    ProgrammeStaffingRequirementView,
     load_programme_staffing_requirements,
 )
 
@@ -66,6 +69,131 @@ class ProgrammeStaffingSelection:
     edition_version: int
     expectation: ProgrammeStaffingExpectation
     evidence_digest: str
+
+
+def _requirement(
+    overview: ProgrammeStaffingOverview, source: ProgrammeStaffingSource
+) -> ProgrammeStaffingRequirementView:
+    if not isinstance(source, ProgrammeStaffingSource):
+        raise ProgrammeStaffingSourceConflictError
+    source.validated()
+    requirement = next(
+        (
+            row
+            for row in overview.requirements
+            if row.requirement_id == source.requirement_id
+        ),
+        None,
+    )
+    if (
+        overview.item_lifecycle != "active"
+        or requirement is None
+        or requirement.lifecycle != "active"
+        or (
+            requirement.revision_id,
+            requirement.version,
+            requirement.occurrence_id,
+            requirement.occurrence_version,
+        )
+        != (
+            source.requirement_revision_id,
+            source.requirement_version,
+            source.occurrence_id,
+            source.occurrence_version,
+        )
+    ):
+        raise ProgrammeStaffingSourceConflictError
+    return requirement
+
+
+def resolve_programme_staffing_selection(
+    overview: ProgrammeStaffingOverview,
+    planning: SchedulingPlanningSnapshot,
+    *,
+    source: ProgrammeStaffingSource,
+) -> ProgrammeStaffingSelection:
+    """Compare one explicit source against already authorized coherent owner views.
+
+    Parameters
+    ----------
+    overview : ProgrammeStaffingOverview
+        Complete Programme requirement view, including current item lifecycle.
+    planning : SchedulingPlanningSnapshot
+        Complete view of the explicitly selected private alternative.
+    source : ProgrammeStaffingSource
+        Exact retained or deliberately selected source identities.
+
+    Returns
+    -------
+    ProgrammeStaffingSelection
+        Consistent selection and work fingerprint, without granting authority.
+
+    Raises
+    ------
+    ProgrammeStaffingSourceConflictError
+        If the requirement, item, occurrence, alternative or day is no longer current.
+
+    Notes
+    -----
+    This pure comparison avoids reloading whole owner projections for each row.
+    Callers must independently authorize both owners, establish coherent scope
+    and reauthorize before disclosure. This helper performs no reads or writes.
+    """
+    requirement = _requirement(overview, source)
+    candidate = next(
+        (row for row in planning.candidates if row.id == source.candidate_id), None
+    )
+    occurrence = next(
+        (row for row in planning.occurrences if row.id == source.occurrence_id), None
+    )
+    placement = next(
+        (row for row in planning.placements if row.id == source.placement_id), None
+    )
+    day = next(
+        (
+            row
+            for row in planning.days
+            if placement is not None and row.id == placement.day_id
+        ),
+        None,
+    )
+    if (
+        candidate is None
+        or occurrence is None
+        or placement is None
+        or day is None
+        or candidate.lifecycle != "draft"
+        or candidate.revision_id != source.candidate_revision_id
+        or occurrence.lifecycle != "active"
+        or occurrence.item_id != overview.item_id
+        or occurrence.version != source.occurrence_version
+        or placement.occurrence_id != source.occurrence_id
+        or placement.occurrence_revision_id != occurrence.revision_id
+        or day.lifecycle != "active"
+        or placement.day_revision_id != day.revision_id
+        or planning.selected_candidate_id != source.candidate_id
+        or not planning.accepts_writes
+    ):
+        raise ProgrammeStaffingSourceConflictError
+    evidence = canonical_digest(
+        {
+            "item_id": overview.item_id,
+            "source": asdict(source),
+            "requirement_item_version": requirement.item_version,
+            "candidate_version": candidate.version,
+            "edition_version": planning.edition_version,
+            "expectation": asdict(requirement.expectation),
+        }
+    )
+    return ProgrammeStaffingSelection(
+        overview.item_id,
+        source,
+        requirement.item_version,
+        candidate.version,
+        planning.edition_version,
+        requirement.expectation,
+        evidence,
+    )
 
 
 def load_programme_staffing_selection(
@@ -109,35 +237,7 @@ def load_programme_staffing_selection(
         overview = load_programme_staffing_requirements(
             request, authorizer=programme_authorizer
         )
-        if not isinstance(source, ProgrammeStaffingSource):
-            raise ProgrammeStaffingSourceConflictError
-        source = source.validated()
-        requirement = next(
-            (
-                row
-                for row in overview.requirements
-                if row.requirement_id == source.requirement_id
-            ),
-            None,
-        )
-        if (
-            overview.item_lifecycle != "active"
-            or requirement is None
-            or requirement.lifecycle != "active"
-            or (
-                requirement.revision_id,
-                requirement.version,
-                requirement.occurrence_id,
-                requirement.occurrence_version,
-            )
-            != (
-                source.requirement_revision_id,
-                source.requirement_version,
-                source.occurrence_id,
-                source.occurrence_version,
-            )
-        ):
-            raise ProgrammeStaffingSourceConflictError
+        _requirement(overview, source)
         planning = load_scheduling_planning(
             SchedulingReadRequest(
                 request.actor_id,
@@ -148,42 +248,9 @@ def load_programme_staffing_selection(
             candidate_id=source.candidate_id,
             authorizer=scheduling_authorizer,
         )
-        candidate = next(
-            (row for row in planning.candidates if row.id == source.candidate_id), None
+        selection = resolve_programme_staffing_selection(
+            overview, planning, source=source
         )
-        occurrence = next(
-            (row for row in planning.occurrences if row.id == source.occurrence_id),
-            None,
-        )
-        placement = next(
-            (row for row in planning.placements if row.id == source.placement_id), None
-        )
-        day = next(
-            (
-                row
-                for row in planning.days
-                if placement is not None and row.id == placement.day_id
-            ),
-            None,
-        )
-        if (
-            candidate is None
-            or occurrence is None
-            or placement is None
-            or day is None
-            or candidate.lifecycle != "draft"
-            or candidate.revision_id != source.candidate_revision_id
-            or occurrence.lifecycle != "active"
-            or occurrence.item_id != request.item_id
-            or occurrence.version != source.occurrence_version
-            or placement.occurrence_id != source.occurrence_id
-            or placement.occurrence_revision_id != occurrence.revision_id
-            or day.lifecycle != "active"
-            or placement.day_revision_id != day.revision_id
-            or planning.selected_candidate_id != source.candidate_id
-            or not planning.accepts_writes
-        ):
-            raise ProgrammeStaffingSourceConflictError
         authorize_programme_scope(
             actor_id=request.actor_id,
             organization_id=request.organization_id,
@@ -192,22 +259,4 @@ def load_programme_staffing_selection(
             requested_fields=frozenset({"staffing_requirements"}),
             authorizer=programme_authorizer,
         )
-        evidence = canonical_digest(
-            {
-                "item_id": request.item_id,
-                "source": asdict(source),
-                "requirement_item_version": requirement.item_version,
-                "candidate_version": candidate.version,
-                "edition_version": planning.edition_version,
-                "expectation": asdict(requirement.expectation),
-            }
-        )
-        return ProgrammeStaffingSelection(
-            request.item_id,
-            source,
-            requirement.item_version,
-            candidate.version,
-            planning.edition_version,
-            requirement.expectation,
-            evidence,
-        )
+        return selection

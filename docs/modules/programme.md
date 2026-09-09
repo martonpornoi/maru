@@ -10,8 +10,9 @@ Last updated: 2026-09-09
 Issue #88 is adding the HR-015 staffing continuation under ADR 0093. Local
 Programme requirement persistence, immutable work terms, protected current reads
 and paginated history are implemented, together with exact source selection and
-Workforce-owned binding/recovery commands. Recovery UI, Scheduling coverage
-integration and complete acceptance remain in progress.
+Workforce-owned binding/recovery commands and exact-source Scheduling coverage.
+The [native staffing continuation](../product/page-contracts/programme-staffing.md),
+browser acceptance and complete certification remain in progress.
 This is not a delivered staffing workflow or an activated Programme profile.
 
 ## Programme staffing requirements
@@ -26,6 +27,22 @@ not replace the selected source. Its immutable
 work/source digest is an optimistic comparison token, not portable authority.
 A cross-owner writer must acquire the canonical Workforce scope first and
 resolve the selection again before commit. This source read creates no demand.
+The public pure `resolve_programme_staffing_selection` comparison uses already
+authorized coherent Programme and Scheduling snapshots. It avoids reloading
+whole projections for every coverage row and grants no authority of its own.
+
+The separate `scheduling.staffing_queries.load_planning_staffing` composition
+reads one item's complete requirements against an explicitly selected private
+alternative under the canonical owner lock chain. Both Programme and Scheduling
+authorize independently; Workforce binding and coverage purposes authorize again.
+Exact source and work-term digests determine freshness, so changed instructions
+or a moved source yield stale null counts while ordinary open/lock transitions
+can retain current coverage. Copying an alternative neither selects nor rebinds
+work. Missing Workforce authority is withheld, and an incomplete dependency makes
+the whole layer unavailable rather than partially covered. Rows contain opaque
+requirement/occurrence IDs and minimized states/counts, not work copy, rationale,
+personnel or full availability. This composition stays outside the base planning
+reader to preserve the owner dependency direction; it does not activate a route.
 
 `change_programme_staffing_requirement` accepts a typed `ProgrammeStaffingChange`
 under independent exact-edition `programme.manage_staffing` authority. Creation

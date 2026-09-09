@@ -191,7 +191,7 @@ late failures restore cancelled work and commitments atomically. Workforce
 `0019`–`0021` add the dormant tables, reciprocal guards and populated reverse fence.
 Both adapters and both new tables remain unactivated/SELECT-only.
 
-The latest full fast run passed **4,202 unit tests in 23.92s**, with the same two
+The latest full fast run passed **4,202 unit tests in 20.82s**, with the same two
 pre-existing Django URLField warnings. Focused binding acceptance passed **19
 PostgreSQL command/race cases in 80.26s** and **six integrity/recovery cases in
 32.75s**, including actual claims/confirmations, raw source forgery, disabled-guard
@@ -211,8 +211,14 @@ runtime acceptance claim. Migration drift, types and semantic docstrings pass.
 
 An existing CI-selection regression was also corrected: a new owner migration
 leaf can no longer hide consumers of older model migrations. No history,
-timeout, coverage or protected gate is weakened. Bound coverage/history projection,
-Scheduling/UI integration, browser acceptance and
+timeout, coverage or protected gate is weakened. Bound current/history reads and
+exact-source Scheduling coverage are now implemented locally. Their combined
+source/projection run passed **32 PostgreSQL cases in 122.62s**. Field/history
+ceilings, fixed pagination, audit failure, foreign scope, changed source/work and
+the actual claim/independent-confirmation/underfilled-lock path are covered.
+The [coverage/history checkpoint](../checkpoints/2026-09-09-programme-staffing-coverage-and-history.md)
+retains this evidence. The native [staffing page contract](../product/page-contracts/programme-staffing.md)
+is defined; UI implementation, browser acceptance and
 complete certification remain unfinished. No PR or staffing merge exists.
 See the [persistence checkpoint](../checkpoints/2026-09-09-programme-staffing-requirement-persistence.md)
 and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
@@ -242,10 +248,10 @@ and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffi
 
 ## Smallest sensible next actions
 
-1. Continue #88 with independently authorized binding/history and exact-source
-   Scheduling coverage projections, then the bounded native staffing/impact UI.
-   Requirement and Workforce binding kernels are implemented locally, including
-   their focused race, integrity and migration checks. Retain source freshness,
+1. Continue #88 with the bounded native requirement/history and staffing-impact
+   UI under its page contract. Requirement, binding, retained history and exact-
+   source coverage kernels are implemented locally, including focused read,
+   lifecycle, race, integrity and migration checks. Retain source freshness,
    field ceilings and the existing Shift lifecycle; never silently rewrite work.
 2. Carry the staffing child through focused tests, appropriate exact-head
    certification and protected delivery. Include this post-editor checkpoint.

@@ -640,6 +640,18 @@ deliberate work-comparison purpose may disclose the work briefing. Write
 admission separately requires `workforce.manage_shifts` and does not grant read
 authority. Neither adapter is activated in either executable profile.
 
+`programme_binding_queries.load_programme_bindings` returns the complete current
+binding set for one Programme item, at most 128 retained requirements, after
+independent Programme requirement and Workforce work-field admission. It selects
+no binding actor, rationale, retry payload or work briefing. Missing/foreign items,
+overflow and incomplete current revisions do not become an empty binding set.
+`load_programme_binding_history` instead requires Programme `staffing_history`
+plus Workforce work-field authority, and returns at most fifty consecutive
+decisions under a fixed inclusive ceiling and exclusive continuation cursor.
+Restricted actor references and rationale appear only in that historical purpose;
+they confer no personnel directory, private commitment or Scheduling authority.
+Both reads retain canonical scope, reauthorize and audit before disclosure.
+
 `programme_impact.evaluate_programme_staffing_impact` describes closed
 create/link/reconcile/successor consequences without granting authority. Linking
 an existing demand requires an uncommitted draft with identical explicit terms;
@@ -700,6 +712,15 @@ The digest changes with commitment, assignment and Availability versions and
 current suitability; it is a freshness token, not authority or personal data
 export. Callers must independently compare Programme and Scheduling source
 versions before describing the coverage as current for a timetable candidate.
+
+`load_programme_bound_demand_coverage` is the composable canonical-lock variant.
+It retains the same independent coverage field ceiling and complete-set bounds.
+Internally, Workforce reads explicit work terms to return only their fingerprint
+alongside the minimized coverage; no briefing leaves Workforce through this
+query. It does not select private commitment reasons or holder labels. Consumers
+compare this fingerprint to the immutable binding terms rather than rejecting
+ordinary open/lock version increments. The standalone repeatable-read reader
+retains its stricter no-briefing SELECT and owns its transaction as before.
 
 `programme_coverage.evaluate_staffing_coverage` separates pending claims,
 current independent confirmations, review-needed confirmation and locked

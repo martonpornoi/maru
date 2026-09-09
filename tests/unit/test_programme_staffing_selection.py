@@ -63,7 +63,9 @@ def selection(monkeypatch):
         edition_version=1,
     )
     calls = []
-    overview = SimpleNamespace(requirements=(requirement,), item_lifecycle="active")
+    overview = SimpleNamespace(
+        item_id=request.item_id, requirements=(requirement,), item_lifecycle="active"
+    )
 
     def programme(*args, **kwargs):
         calls.append(("programme", args, kwargs))

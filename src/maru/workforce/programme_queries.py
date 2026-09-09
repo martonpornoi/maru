@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, fields
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from django.db import transaction
 from django.utils import timezone
 
 from maru.audit.services import AuditRecord, append_audit
@@ -18,6 +19,8 @@ from maru.authorization.policy import (
 )
 from maru.events.adoption import profile_allows_adapter
 from maru.events.queries import edition_adoption_profile_reference
+from maru.programme.inputs import canonical_digest
+from maru.programme.staffing_inputs import ProgrammeStaffingExpectation
 
 from .adoption import WORKFORCE_PROGRAMME_COVERAGE_ADAPTER
 from .models import ShiftCommitment, ShiftDemand
@@ -28,6 +31,7 @@ from .programme_coverage import (
     StaffingSourceState,
     evaluate_staffing_coverage,
 )
+from .programme_references import lock_programme_staffing_scope
 from .shift_queries import (
     MAX_SHIFT_COMMITMENTS,
     MAX_SHIFT_DEMANDS,
@@ -80,6 +84,22 @@ class ProgrammeDemandCoverage:
     coverage: StaffingCoverage
 
 
+@dataclass(frozen=True, slots=True)
+class ProgrammeBoundDemandCoverage:
+    """Minimized work fingerprint and coverage from the same locked owner state.
+
+    Attributes
+    ----------
+    demand
+        Exact current demand, suitability digest and minimized coverage.
+    work_terms_digest
+        Exact work expectation fingerprint; no briefing or rationale is released.
+    """
+
+    demand: ProgrammeDemandCoverage
+    work_terms_digest: str
+
+
 def _authorize(
     *, actor_id: UUID, organization_id: UUID, edition_id: UUID
 ) -> PolicyDecision:
@@ -113,6 +133,30 @@ def _identifiers(demand_ids: tuple[UUID, ...]) -> tuple[UUID, ...]:
             "Use a complete bounded set of exact demand identifiers."
         )
     return tuple(sorted(demand_ids, key=str))
+
+
+def authorize_programme_coverage(
+    *, actor_id: UUID, organization_id: UUID, edition_id: UUID
+) -> PolicyDecision:
+    """Recheck the exact minimized coverage purpose without reading source rows.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Trusted current principal, independently verified by Workforce.
+    organization_id : UUID
+        Exact expected owner.
+    edition_id : UUID
+        Exact target edition whose profile must include the coverage adapter.
+
+    Returns
+    -------
+    PolicyDecision
+        Current field-aware decision, not portable authority for a later read.
+    """
+    return _authorize(
+        actor_id=actor_id, organization_id=organization_id, edition_id=edition_id
+    )
 
 
 def _load_counts(
@@ -324,6 +368,24 @@ def load_programme_shift_coverage(
     decision = _authorize(
         actor_id=actor_id, organization_id=organization_id, edition_id=edition_id
     )
+    _audit_coverage(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        correlation_id=correlation_id,
+        decision=decision,
+    )
+    return result
+
+
+def _audit_coverage(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    correlation_id: UUID,
+    decision: PolicyDecision,
+) -> None:
     append_audit(
         AuditRecord(
             principal_kind="account",
@@ -349,4 +411,94 @@ def load_programme_shift_coverage(
         ),
         occurred_at=timezone.now(),
     )
-    return result
+
+
+def load_programme_bound_demand_coverage(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    demand_ids: tuple[UUID, ...],
+    correlation_id: UUID,
+) -> tuple[ProgrammeBoundDemandCoverage, ...]:
+    """Read exact work fingerprints and coverage under canonical composition locks.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Trusted current person, independently admitted by Workforce.
+    organization_id : UUID
+        Exact tenant owning every demand.
+    edition_id : UUID
+        Exact edition, locked before its owner aggregates.
+    demand_ids : tuple[UUID, ...]
+        Complete distinct bounded demand selection, parsed after admission.
+    correlation_id : UUID
+        Trusted trace identifier for the mandatory sensitive-read audit.
+
+    Returns
+    -------
+    tuple[ProgrammeBoundDemandCoverage, ...]
+        Complete exact work fingerprints and minimized coverage, never personnel.
+
+    Raises
+    ------
+    StaffingCoverageIntegrityError
+        If correlation or the complete scoped work evidence is unavailable.
+
+    Notes
+    -----
+    This composable variant acquires the canonical owner lock chain and retains
+    it until the surrounding transaction ends. A caller composing other owners
+    must acquire that chain first. Unlike the standalone repeatable-read query,
+    it internally reads explicit work terms to compute a fingerprint. Those
+    terms never leave Workforce through this adapter. Ordinary demand lifecycle
+    version changes do not change the work fingerprint. Private commitment
+    reasons, holder labels and complete calendars are never selected.
+    """
+    scope = {
+        "actor_id": actor_id,
+        "organization_id": organization_id,
+        "edition_id": edition_id,
+    }
+    _authorize(**scope)
+    if not isinstance(correlation_id, UUID):
+        raise StaffingCoverageIntegrityError("Use a typed coverage correlation.")
+    identifiers = _identifiers(demand_ids)
+    with transaction.atomic():
+        lock_programme_staffing_scope(
+            organization_id=organization_id, edition_id=edition_id
+        )
+        _authorize(**scope)
+        demands = _load_counts(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            demand_ids=identifiers,
+        )
+        work_fields = tuple(
+            field.name for field in fields(ProgrammeStaffingExpectation)
+        )
+        work_rows = ShiftDemand.objects.filter(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            id__in=identifiers,
+        ).values("id", *work_fields)
+        fingerprints = {
+            row["id"]: canonical_digest(
+                asdict(
+                    ProgrammeStaffingExpectation(
+                        **{field: row[field] for field in work_fields}
+                    ).normalized()
+                )
+            )
+            for row in work_rows
+        }
+        if set(fingerprints) != set(identifiers):
+            raise StaffingCoverageIntegrityError("Complete bound work is unavailable.")
+        result = tuple(
+            ProgrammeBoundDemandCoverage(demand, fingerprints[demand.demand_id])
+            for demand in demands
+        )
+        decision = _authorize(**scope)
+        _audit_coverage(**scope, correlation_id=correlation_id, decision=decision)
+        return result

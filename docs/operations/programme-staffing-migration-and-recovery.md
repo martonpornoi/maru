@@ -89,7 +89,13 @@ after current authorization. Binding history has a separate 1,000-revision bound
 exhaustion requires a reviewed capacity/recovery decision, not history deletion.
 
 Coverage unavailability, source staleness and underfill must not be reported as
-current complete staffing. Source-bound commands are implemented locally;
+current complete staffing. The local composed reader compares exact bound source
+and work-term fingerprints; an ordinary Shift lifecycle increment is not itself
+a work change. Missing Workforce authority yields withheld null counts, and an
+incomplete dependency makes the complete coverage layer unavailable. Retained
+binding history has a separately authorized fixed ceiling and bounded cursor;
+current requirements or coverage do not grant historical rationale access.
+Source-bound commands and coverage/history queries are implemented locally;
 Scheduling coverage/history UI, browser acceptance and protected #88 delivery remain
 unfinished. #87, atomic release, on-site continuity, guided setup and integrated
 Programme-only acceptance remain mandatory before activation under #48.
