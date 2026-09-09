@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a dormant Programme timetable editor with equivalent pointer and native
+  keyboard forms, private information layers, conflict preview, recoverable
+  candidate history and explicit room-hold actions. Draft changes never publish
+  or silently reserve rooms. This does not activate a Programme profile; manual
+  browser acceptance and protected delivery remain pending
+  ([#85](https://github.com/martonpornoi/maru/issues/85), ADR 0092, SCH-007/010).
 - Added dormant Programme host/co-host invitations, independent personal
   confirmation and purpose-bounded availability. Self, roster and history reads
   have separate disclosure limits; withdrawal clears current exact periods,
@@ -98,6 +104,9 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Updated development dependencies to js-yaml 4.3.2 and Vitest 4.1.11 to address
+  GHSA-2883-xcg3-v3hh and GHSA-82fw-gwwq-j7x9. Locked installs and vulnerability
+  gates remain mandatory; these patches do not activate application features.
 - Routine code pull requests retain every current-schema PostgreSQL test while
   historical migration checks follow the changed boundary. Global safety and
   test-infrastructure changes, changed-revision nightly runs, and releases keep

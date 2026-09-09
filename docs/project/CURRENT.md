@@ -249,6 +249,24 @@ device-pixel ratio 1 and reduced motion off, not new acceptance evidence.
 Remote main remains `ec0d247`; #85 is open without a PR. Earlier reports, logs,
 receipt and coverage inputs are preserved outside `.local-ci/` before the next
 certification. No scheduled check is added.
+
+The first complete-certification attempt at `c10d301` encountered a protected
+old cache before tests started; the verified artifact root was moved aside,
+without changing its permissions. A fresh attempt passed all 3,890 unit tests
+in 57.60s but failed the dependency audit on js-yaml 4.3.1. Its exact process
+tree and eight disposable certification databases were stopped and removed;
+partial evidence is archived, not certified. Development inputs now pin
+js-yaml 4.3.2 and Vitest 4.1.11, addressing the high-severity YAML merge-budget
+and moderate mocker-path advisories under NFR-011. The current frontend audit
+reports no known vulnerabilities. Complete `check.ps1 -SkipPythonTests`
+preflight passes with both patches, including warning-fatal Sphinx, strict
+types, dependency audits, 64 frontend tests in 9.29s and unchanged generated API
+types/build assets. Existing local configuration/schema warnings remain; this
+database-free preflight does not verify live migration history. Documentation
+validation and diff whitespace checks also pass. Freeze this repaired candidate
+for the next exact-head full certification; neither an older receipt nor a
+partial passing unit run certifies it. No gate or history scope has been reduced.
+
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain
 unchanged. This partial branch is not an editor-delivery or runtime claim.

@@ -612,3 +612,51 @@ without waiting for manual browser settings. The resume fixture (session 36907)
 was explicitly finished and its cleanup completed; it provided no additional
 zoom or motion acceptance. Earlier exact certification and focused evidence are
 archived outside `.local-ci/` before the certifier recreates that artifact area.
+
+### Dependency-gate repair before full certification
+
+Candidate `c10d301e11965c53eedfbb80f3e734f601ff01cc` did not certify. An old
+protected cache prevented the initial run from starting tests; its exact
+repository-contained artifact root was moved aside with permissions unchanged.
+The fresh run passed 3,890 database-free cases in 57.60s (two existing URLField
+warnings), then failed its current-tree dependency audit. Its exact process
+tree and eight inspected disposable certification containers/anonymous volumes
+were stopped and removed; partial logs and reports remain archived under
+`.tools/certification-evidence/issue85-c10d301-20260909/attempt2/`.
+
+The NFR-011 supply-chain repair changes only compatible development-tool patches:
+
+- js-yaml 4.3.2 replaces 4.3.1 through the existing override, addressing the
+  high-severity merge-budget denial of service in
+  [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh).
+  Its dependency path is OpenAPI TypeScript generation through Redocly, not a
+  newly exposed Django YAML endpoint.
+- Vitest and its locked package family move from 4.1.10 to 4.1.11 for the
+  moderate mock-target path validation issue in
+  [GHSA-82fw-gwwq-j7x9](https://github.com/advisories/GHSA-82fw-gwwq-j7x9).
+  Vitest and its mocker were two audit entries for the same advisory, not two
+  distinct vulnerabilities or evidence of production exploitation.
+
+The frozen dependency install succeeds and `pnpm audit --audit-level moderate`
+reports no known vulnerabilities. The mandatory high-severity gate remains
+unchanged. With the YAML patch alone, generated API types were unchanged and
+all 64 frontend tests passed in 23.71s; that earlier run does not certify the
+subsequent Vitest patch. Full non-database preflight now precedes a fresh
+clean-head certification to catch cheap failures before another PostgreSQL
+fan-out. The scope remains exhaustive under the existing dependency/harness
+classification. No migration, authorization, runtime grant or profile changes
+are part of this security repair, and no new ADR is needed for patch updates
+within the accepted locked-dependency policy.
+
+The repaired-tree `scripts/check.ps1 -SkipPythonTests` preflight subsequently
+completed successfully: locked installation/audits, packaging, formatting/lint,
+strict types, documentation contracts, warning-fatal Sphinx, Django checks,
+production-setting checks, OpenAPI generation, frontend types, all 64 frontend
+tests on Vitest 4.1.11 in 9.29s, and build/generated-artifact drift gates. Existing
+local invitation-configuration and schema-enum warnings remain. Its deliberately
+unreachable database also produces a migration-history connection warning; this
+is not live database or migration acceptance. Separate documentation validation
+passes 424 Markdown files, four repository skills and 215 requirement IDs.
+The exact candidate is now ready for the policy-required full local run. PR
+description and release notes explicitly retain the manual browser gaps; no
+hosted acceptance, merge or component completion is claimed by this preflight.
