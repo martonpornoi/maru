@@ -74,6 +74,39 @@ source intent. Reevaluate candidates against current source versions after
 recovery. Never restore withdrawn host periods as current availability or infer
 consent, independent approval or future release from an old report.
 
+## Dormant editor request recovery
+
+The unmounted timetable editor component uses ordinary authenticated requests,
+CSRF protection, no-store responses and masked sensitive POST fields. It does
+not change the current-profile or runtime SELECT-only boundary. Do not mount it
+or substitute an owner login to work around denied runtime writes.
+
+An authorized validation or stale-version response retains the exact pending
+form, retry key and observed versions. Review current owner records before
+deliberately starting a new intent; never automatically rebase or replay a
+different payload with the old key. A dependency/database failure may follow a
+successful command commit. The page therefore reports uncertain completion,
+not an assurance that no change occurred. Retry the exact retained request to
+confirm its existing receipt, or use independently authorized history when
+access is restored. Do not create a new candidate merely because a success
+refresh failed.
+
+Permission loss or unavailable complete owner reads withhold previously loaded
+private labels and layers. Diagnose with existing minimized command/audit
+evidence, not logged form bodies, raw owner exceptions, host calendars or private
+reasons. A current draft change still leaves physical room holds unchanged;
+inspect the exact authorized hold before deliberate replacement/cancellation.
+
+The editor keeps entered input only in the current page. Its enhancement warns
+before another form/link discards a changed or pending intent and uses the
+browser's unload warning when available. Cancel the warning to keep the exact
+input; deliberately continue only after saving or deciding to discard it.
+Browser crashes, disabled scripts, unsupported unload warnings or losing the
+page are not recoverable drafts: there is no offline cache or autosave. Preview
+does not remove this pending-input warning. A fresh destination selection opens
+a new form with freshly observed versions, never a silently rebased old command.
+Pointer time shortcuts leave all host requirements unchanged for explicit review.
+
 ## Meaningful verification
 
 Focused tests cover DST and grid edges, explicit person presence, candidate

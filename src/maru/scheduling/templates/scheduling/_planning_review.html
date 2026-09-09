@@ -1,0 +1,14 @@
+{% if preview %}<section class="baseline-panel" aria-labelledby="planning-preview-title"><h2 id="planning-preview-title">Unsaved placement preview</h2><p>Candidate version {{ preview.candidate_version }} · Preview only; nothing was saved.</p>{% include 'scheduling/_planning_findings.html' with evaluation=preview rows=preview_rows %}</section>{% endif %}
+{% if review %}
+<section class="baseline-panel" aria-labelledby="planning-review-title">
+  <h2 id="planning-review-title">Current conflict review</h2>
+  <p>Saved report: <strong>{% if review.state == 'not_recorded' %}not recorded for this candidate version{% elif review.state == 'current' %}current{% elif review.state == 'stale' %}stale — not current approval{% else %}unavailable — do not rely on saved completeness{% endif %}</strong>.</p>
+  {% if review.evaluated_at %}<p>Recorded {{ review.evaluated_at|date:'D j M Y, H:i O' }} · Saved completeness: {{ review.saved_complete|yesno:'complete,incomplete' }}.</p>{% endif %}
+  {% include 'scheduling/_planning_findings.html' with evaluation=review.current rows=review_rows %}
+  {% if saved_review_rows %}<h3>Retained saved findings</h3><p>These belong to the saved report above. Historical acknowledgement never overrides a changed source or a hard blocker.</p><ul>
+    {% for row in saved_review_rows %}<li><strong>{{ row.finding.severity|title }}: {{ row.explanation }}</strong> · {% if row.saved.acknowledged %}acknowledgement recorded{% else %}no acknowledgement recorded{% endif %}.
+      {% if can_acknowledge and row.saved.eligible_for_acknowledgement %}<form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=ack_state %}<input type="hidden" name="action" value="select"><button type="submit" name="ui_conflict_id" value="{{ row.saved.id }}">Review this warning acknowledgement</button></form>{% endif %}
+    </li>{% endfor %}
+  </ul>{% endif %}
+</section>
+{% elif selection.mode == 'review' %}<section class="baseline-panel"><h2>Conflict review</h2><p>Select a current private draft to review its sources and findings.</p></section>{% endif %}

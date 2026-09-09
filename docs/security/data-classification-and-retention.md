@@ -268,6 +268,66 @@ Convenience alone is not sufficient.
   evidence from one consistent point and never fabricates a proposal, host,
   readiness fact, rendition, occurrence, Shift, or release.
 
+### Scheduling private planning projections
+
+- Private day/candidate labels, occurrence grouping and placement geometry are
+  operational data, not released programme copy. Entered labels can raise their
+  classification above C1. Opaque Programme and Venue links do not grant access
+  to either owner's content. Required host-presence, host identity and personal
+  availability remain separately authorized; the base planning projection
+  includes none of them.
+- Retained candidate rationale and actor attribution are restricted history,
+  released only with `scheduling.view_history` and its complete field ceiling.
+  Current planning permission does not imply history, conflict, Programme-layer
+  or Venue-operation access. History pages and exact manifests are audited
+  before release, and never join host calendars or private proposal/review data.
+- Programme working-title inventory and Venue room-label inventory each require
+  their owner's existing capability and complete field ceiling. They are bounded
+  complete inventories, not silently truncated search results. Base labels do
+  not release summaries, delivery/review notes, provider contacts or calendars.
+- The item inspector loads only its explicitly selected independently authorized
+  Programme layer. Host-required times are Scheduling's retained placement
+  intent; labels come from Programme's protected roster and Identity's bounded
+  current-person query. Inactive identities receive neutral labels. Names and
+  required times are not consent, contact information or shared availability.
+  Final denial withholds the complete selected projection and retains a
+  minimized denial audit after rolling back the read transaction.
+- Ephemeral conflict preview uses the saved evaluator but returns only closed
+  findings, observed candidate version, source availability and deferred checks.
+  It retains no proposed placement, report, warning acknowledgement or booking.
+  Host identifiers, availability periods, source digests and acknowledgement
+  fingerprints are not exposed by the preview projection. A preview can append
+  minimized sensitive-read audits only and never authorizes a later mutation.
+- Saved-conflict review uses the independent conflict/dependency field ceiling.
+  It returns bounded closed findings and acknowledgement existence for the
+  current draft revision, not acknowledgement rationale/actors, source JSON,
+  dependency digests, fingerprints or calendars. Fresh eligibility is not
+  mutation authority. Stale or unavailable sources never make an old warning
+  or acknowledgement current.
+- Current physical-hold review orders Scheduling's reciprocal intents by their
+  immutable command control version, then asks the existing exact-resource
+  Venue boundary for the live binding. The active same-edition booking version,
+  review state and bound candidate/placement envelope are current physical
+  consequences, not arbitrary history access. No room contacts, booking titles,
+  reasons, approvers or foreign busy periods leave this projection. No recorded
+  reciprocal intent produces only a Scheduling-owned no-request result, without
+  enumerating Venue bookings or claiming general room availability.
+- Board composition receives only independently audited owner projections and
+  performs no additional reads. Missing/duplicate references withhold the
+  complete composition. Current owner labels are escaped and never described as
+  historical copy; stable day identity preserves visibly stale placements after
+  metadata changes. Rendering introduces no new persistent fields or analytics.
+- Planning query audit retains exact scope/correlation, closed purpose and
+  policy outcome, not labels, filter text, rationale, geometry or owner content.
+  The editor collects no activity analytics and introduces no browser storage,
+  offline mutation queue or production retention schedule. Unsaved form state
+  is transient authenticated-page state only.
+- No new persistent planning field or disposal executor is introduced by the
+  editor read boundary. Existing immutable command/history evidence remains
+  subject to the Programme Operations retention, legal-hold, export and recovery
+  gates before activation. A synthetic owner-backed query is not approval to
+  process production personal data or widen a current adoption profile.
+
 ### Logistics custody and restricted contact
 
 - Reusable external-party identity contains only legal/public operational

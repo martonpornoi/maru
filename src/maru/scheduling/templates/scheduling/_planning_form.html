@@ -1,0 +1,19 @@
+<form method="post" id="{{ form_id }}" class="baseline-form planning-command-form" data-planning-command data-planning-pending="{{ form.is_bound|yesno:'true,false' }}">
+  {% csrf_token %}
+  {% include 'scheduling/_planning_state.html' with state=state %}
+  {% for field in form.hidden_fields %}{% if field.name != 'action' %}{{ field }}{% endif %}{% endfor %}
+  {% if form.errors %}
+    <div class="baseline-errors" role="alert" tabindex="-1" data-maru-focus-on-load>
+      <h3>Review this form</h3>
+      {{ form.non_field_errors }}
+      <ul>{% for field in form.visible_fields %}{% if field.errors %}<li><a href="#{{ field.id_for_label }}">{{ field.label }}: {{ field.errors|striptags }}</a></li>{% endif %}{% endfor %}</ul>
+      {% for field in form.hidden_fields %}{% if field.errors %}<p>The action or saved reference is invalid. Refresh deliberately before submitting a new intent.</p>{% endif %}{% endfor %}
+    </div>
+  {% endif %}
+  {% for field in form.visible_fields %}{% include 'core/_baseline_form_field.html' with field=field %}{% endfor %}
+  {% if is_placement and selected_day %}{% include 'scheduling/_planning_time_controls.html' %}{% endif %}
+  <div class="baseline-form-actions">
+    {% if is_placement %}<button type="submit" name="action" value="preview_placement">Preview changes</button><button type="submit" name="action" value="save_placement">Save private draft</button>
+    {% else %}{% for action in submit_actions %}<button type="submit" name="action" value="{{ action.value }}">{{ action.label }}</button>{% endfor %}{% endif %}
+  </div>
+</form>

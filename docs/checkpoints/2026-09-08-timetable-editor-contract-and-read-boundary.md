@@ -1,0 +1,662 @@
+# Timetable editor contract and initial read boundary
+
+- Date: 2026-09-08
+- Child: [#85](https://github.com/martonpornoi/maru/issues/85), native parent #48
+- Branch: `codex/programme-timetable-editor`
+- Base: protected `ec0d2474810e27b72c9dbabcc1d210222e4989af`
+- State: partial implementation; no pull request, certification or delivery yet
+
+ADR 0092 and the Programme timetable planning page contract define the next
+mandatory editor child. Pointer actions enhance the same explicit forms;
+private drafts, conflict preview, physical reservations and publication remain
+distinct. Existing profile manifests, routes and runtime ACLs are unchanged.
+The #82 delivery checkpoint reconciles the former stale pending handoff.
+
+The first implementation adds complete bounded Scheduling-owned current
+planning, independent fifty-row history pages and exact historical manifests.
+Reads use the edition mutex, final field authorization and audit-before-release.
+They omit private Programme layers, host identity/presence/availability, room
+labels and foreign booking facts. Immutable manifest count/digest checks and
+parent/current-revision completeness prevent a partial passing inventory.
+Pure helpers resolve exact edition-local or offset-bearing minutes and compare
+already-authorized placement revisions by stable occurrence identity.
+
+Focused verification passed 31 database-free cases and 26 real PostgreSQL
+cases. Initial schema creation plus 21 cases took 160 seconds; the expanded
+rerun reused only that isolated database's schema and took 56.18 seconds. Test
+cases retain real committed commands and per-test cleanup. An added fixture's
+attempt to create a closed edition correctly failed the draft-first database
+guard; the fixture now reaches those states through ordinary Events commands.
+No guard, assertion or acceptance scope was weakened. Focused lint/format,
+strict mypy and NumPy docstring checks passed for the new code.
+
+This is not a usable editor or completed issue. Owner-content composition,
+non-mutating current conflict preview, forms/server adapters, responsive board,
+browser interaction/accessibility rehearsal, complete exact-head certification
+and protected delivery remain. No schedule is created or re-enabled. Keep #85
+and #48 open and retain all integrated Programme acceptance gates.
+
+## Same-session verification completion
+
+All 3,542 database-free tests passed in 18.74s, with the two already-known
+Django URLField deprecation warnings. All 40 candidate/read PostgreSQL cases
+passed in 71.94s. The 26 new cases are colocated with the existing candidate
+contracts; a direct body comparison confirmed every original test remained
+unchanged. This resolves the legacy diagnostic inventory bookkeeping failure
+without changing a timing map, classifier, historical scope or any assertion.
+Maintained documentation validation passed for 424 Markdown files, four
+repository skills and 215 stable requirement identifiers; the new page is
+included in both the human catalog and Sphinx toctree.
+
+## Owner inventories and shared non-mutating preview
+
+The next local slice adds a complete Programme working-title inventory (2,000
+items maximum), a separately authorized Venue-label inventory (256 selections
+maximum), and current/unsaved candidate conflict preview. Programme SQL excludes
+working summaries and other layers; Venue SQL excludes contacts, notes, booking
+content and availability. Both inventories use existing capability fields,
+final authorization and mandatory minimized audits. Missing data and sentinel
+overflow do not become partial unscheduled/room lists.
+
+Preview shares the saved candidate evaluator and placement revision resolver.
+It retains all other candidate occurrences, detects room/host overlap, checks
+current versions, distinguishes blockers from unavailable sources and explicitly
+lists deferred staffing/rest/accessibility/release checks. Unsaved placements
+do not inherit physical reservation identity. The edition mutex precedes
+Programme's complete canonical person set and the final actor-only recheck.
+Final denial/audit failure withholds the projection and rolls back success
+audits. Only read audits are written; all Scheduling relations and versions,
+Venue bookings, domain events and outbox counts remain unchanged by preview.
+
+A real Venue workspace-policy test exposed mismatched field names in the new
+inventory. The inventory and preview now request the existing catalog fields,
+without changing the catalog or admitting any profile. Four fast consistency
+cases ensure editor read ceilings remain subsets of their owning capabilities.
+
+Verification for this follow-up slice:
+
+- All 3,546 database-free cases passed in 18.86s, with the two existing Django
+  URLField deprecation warnings.
+- All 50 candidate/history/placement PostgreSQL cases passed in 95.96s.
+- All 33 evaluation/preview and 19 Programme-query cases passed together in
+  105.52s, including the unchanged persisted evaluator contract.
+- All 28 Venue physical-source/inventory cases passed in 46.00s. The new label
+  success/isolation cases use real workspace policy, not future-source admission.
+- The 130 focused PostgreSQL cases reused only the task-owned isolated schema;
+  their combined 247.48s excludes initial migration setup. This is focused
+  iteration evidence, not a whole-suite speedup or certification claim.
+- Focused Ruff, strict mypy, NumPy docstrings, maintained documentation
+  validation and whitespace checks passed. No CI, historical inventory, timing
+  map, coverage threshold or existing assertion was changed.
+
+The inspector's independently protected layers and selected host-presence
+composition, forms/server adapters, responsive board and browser acceptance
+remain to implement. Keep #85 open with no completed-editor/PR/runtime claim.
+The exact-head complete local and hosted protected gates remain mandatory before
+delivery. Existing literal profiles, production routing and runtime ACLs are
+unchanged; no scheduled check-in was created or resumed.
+
+## Selected-layer inspector and native command adapters
+
+The follow-up after local checkpoint `925480c` adds one explicitly selected
+Programme inspector layer at a time: working copy, approved copy, delivery,
+readiness, roster or deliberately shared availability. Scheduling permission
+does not admit any Programme layer, and denied/unavailable layers never fall
+back to another source. Applications proposal/review text is not selectable.
+
+The host requirement reader validates the exact candidate version, manifest,
+occurrence binding and bounded complete presence rows before composing the
+independently authorized roster. Current related-person labels come from
+Identity only after Programme's canonical person locks. Inactive identities
+receive neutral labels; missing expected current labels fail closed. Retained
+required times are neither personal availability nor host consent. Both owner
+audits and final Scheduling authority precede release.
+
+Events' minimized Scheduling reference now supplies its trusted IANA zone to
+the planning snapshot. Native service-day and placement forms use it for exact
+minute input; browser/machine zones do not silently select instants. Native
+submit adapters delegate to the existing service-day/placement commands or
+non-mutating preview. Strict fields reject unknown/duplicate inputs, aliases,
+invalid intervals and incomplete required host times. Save requires a human
+reason and preserves the exact retry key/version. Preview never constructs a
+command request. Stale failure preserves the bound input without automatic
+rebase or partial state. The future renderer must submit the action only once
+and make Preview the default placement submit action.
+
+Verification:
+
+- All 44 new database-free form/adapter cases passed in 0.37s; the complete
+  3,590-case database-free suite passed in 23.97s with the two existing Django
+  URLField deprecation warnings.
+- The 28 selected roster/inspector/presence cases passed in 58.36s.
+- Three real native-command cases passed in 8.82s: preview/save/exact replay,
+  stale-input preservation/rollback, and service-day create/revise.
+- The expanded affected current-behavior run passed all 132 PostgreSQL cases in
+  263.65s. Only three unchanged historical host-schema/capability migration
+  cases were deselected for this iteration. This does not alter their inventory
+  or policy-required certification coverage. All tests reused the exact
+  task-owned isolated current schema, not production or shared data.
+- Focused Ruff, strict mypy, NumPy contracts, documentation validation and
+  whitespace checks passed. No CI classifier, timing map, coverage floor,
+  migration, runtime grant, route or profile was changed.
+
+This remains partial #85 implementation. Candidate/occurrence/history and
+physical-reservation controls, board/template rendering, browser interaction
+and accessibility rehearsal, and complete protected delivery remain. No PR or
+activated Programme workspace is claimed. Keep #85 and #48 open and continue
+the accepted editor contract before moving to the next umbrella child.
+
+## Complete native record command adapters
+
+The follow-up after local checkpoint `456d9c4` adds the remaining closed native
+record controls. These delegate candidate create/copy/restore/archive,
+occurrence creation/repetition/group revision/retirement, day retirement,
+unplacement, saved conflict evaluation, exact warning acknowledgement and
+physical reservation replacement/cancellation to the existing owner commands.
+There is no second writer, new schema, profile expansion or mounted route.
+
+Each form accepts only its server-selected operation's fields. Item/group
+choices must already be independently authorized, group/sequence meaning stays
+explicit, and all operations require a human reason and exact retry key.
+Consequential actions require confirmation, and room-hold reasons are labelled
+Venue-visible. Form validation does not grant mutation/history/Venue authority
+or let a hard blocker be acknowledged. Domain failures preserve entered values
+and do not retry against newer optimistic versions.
+
+The real history round trip exposed a test assumption that only creation
+advances edition control. All successful Scheduling mutations advance it. The
+test now observes a fresh snapshot for the new copy intent, and copy input
+requires the positive control version already required by the command. A
+separate test confirms stale pending creation is not silently rebased. An
+additional scope fixture correction uses Events' actual `series` relation.
+Neither correction changes a domain or acceptance contract.
+
+Verification for this slice:
+
+- The complete database-free suite passed 3,671 tests in 22.65s, including 81
+  new record-control cases and the two existing Django URLField warnings.
+- The 17 selected native-command PostgreSQL cases passed in 38.54s using the
+  same label-verified task-owned current schema. They exercise retained history,
+  exact replay, explicit repeated occurrences, day retirement, base-read versus
+  mutation/history authority, cross-edition/organization denial, stale sources,
+  forbidden blocker acknowledgement, physical replacement rollback and historic
+  cancellation after unplacement. Draft movement/unplacement leaves the current
+  room hold active until an explicit physical command succeeds.
+- Focused lint, formatting, strict mypy, NumPy contracts, whitespace and
+  maintained-documentation validation passed (424 files, four skills, 215
+  requirement identifiers). No complete certification is claimed here.
+- Existing test bodies, CI/classification/timing files, historical acceptance,
+  coverage floor, migrations, runtime ACLs and production routing are unchanged.
+
+The complete browser surface is still pending, including protected persisted-
+evaluation/current-booking readouts, board/forms, browser/accessibility
+rehearsal and exact-head local/hosted protected acceptance. Keep #85 and #48 open
+with no partial-editor PR or runtime claim. Continue those editor tasks before
+the next umbrella child; no scheduled check-in has been created or resumed.
+
+## Fresh review, current holds and initial board rendering
+
+The follow-up after local checkpoint `611671b` adds independently audited
+conflict-review and physical-hold readouts plus the initial complete inventory,
+day/room board and native form rendering composition.
+
+Conflict review compares the latest saved report for the exact current draft
+revision with fresh owner dependencies. Historical completeness is separate
+from current availability, and a missing, stale or unavailable report never
+supplies eligible warning evidence. Hard blockers cannot be acknowledged.
+The projection returns no calendars, source JSON, dependency digests, warning
+fingerprints or acknowledgement actors/reasons. Missing/overflowed/inconsistent
+findings withhold the whole result. The saved evaluator and preview keep the
+same underlying algorithm; only their minimized projection is shared.
+
+Physical review orders Scheduling's reciprocal intents by the unique immutable
+command **control version**, not a wall-clock timestamp. Existing exact-resource
+Venue policy then proves the selected binding's live version/review state.
+Movement/unplacement retains an earlier hold until an explicit physical command
+succeeds; generic Venue cancellation and independent approval are reflected.
+No new Venue reader, capability or broad grant is needed. The active envelope
+is the current authorized reciprocal binding's consequence, not arbitrary
+history/rationale access. Both readers retain required minimized audits and
+canonical locking; final denial/audit failure rolls back success audits.
+
+The pure board composer receives independently authorized title, room and
+Scheduling snapshots. It preserves items with no occurrence, explicit repeats,
+unplaced/placed and retired occurrences. Missing/duplicate references fail
+closed. Planning placements now include their stable day identifier, so a
+revised day does not silently drop retained geometry from the board. Changed
+metadata is visibly distinguished from the saved placement envelope.
+
+Initial templates reuse the management shell, one H1/main, labelled ordered
+cards, explicit overnight dates and offsets, current physical-hold readout and
+native form/error rendering. Labels are escaped. The action is submitted only
+once, Preview is first for placement forms, and recoverable errors retain
+entered values and the retry key. This is a dormant rendering component, not a
+complete HTTP workspace or browser/accessibility acceptance claim.
+
+Verification:
+
+- All 3,690 database-free tests passed in 23.05s, with the two existing Django
+  URLField deprecation warnings. Nineteen new composition/rendering tests cover
+  complete inventories, duplicates/missing references, stale day continuity,
+  ordering, escaped owner labels, landmarks/IDs, explicit times, native action
+  cardinality, Preview-first ordering and linked retained form errors.
+- The initial 23 readout cases passed in 63.92s. The subsequent complete affected
+  candidate/evaluation/reservation run passed all 152 PostgreSQL cases in 370.66s,
+  including current-profile and cross-organization/edition denials, current/
+  stale/unavailable warning evidence, independent field/final-audit failures,
+  current/historical room holds and real owner-backed board composition.
+- One additional real independent-Venue-approval readout case passed in 3.99s:
+  physical version two and approved state are visible while Programme timing
+  stays unpublished. Six unchanged continuity cases were not selected for this
+  focused follow-up; policy-required certification retains them.
+- All database tests reused the same exact label-verified synthetic task schema.
+  These 153 current-behavior cases are focused evidence, not whole-suite or
+  runtime-role certification. No migration, CI classifier/timing/coverage policy,
+  current profile, production URL or runtime grant changed.
+- Focused Ruff/formatting (12 Python files), strict mypy and NumPy contracts
+  (six source files), whitespace and maintained-documentation validation passed
+  (424 files, four skills, 215 requirement identifiers). A syntax-tree comparison
+  confirmed all 102 original test functions in the five modified existing test
+  files were retained unchanged; an insertion-placement mistake was corrected
+  before the complete run.
+
+Remaining editor work is trusted HTTP selection/command orchestration, native
+filters and full inspector/history/conflict presentation, pointer-prefill and
+unsaved-input behavior, then complete synthetic browser and protected delivery
+acceptance. No production route is mounted and no partial-editor PR is open.
+#85 and #48 remain open; no schedule has been created or resumed.
+
+## Strict selection and native control composition follow-up
+
+The editor now has a strict transient POST selection namespace and one native
+control composer. Selection is not command attribution: actor, tenant, versions
+and retry keys remain outside `ui_` state. Unknown and repeated values survive
+splitting and are rejected by the appropriate strict form. Scoped selection
+resolves before filtering; item selection never guesses its first repeated
+occurrence. Text/state/day/room filters change visible cards and lanes only,
+retaining complete choices and independently resolved selection.
+
+Each native command control uses the existing form and owner command. Fresh
+intents receive the observed shared control or exact target version, explicit
+targets and a new retry key. Bound forms receive no fresh initial values and
+preserve stale/invalid input and retries. Placement prefill uses all four exact
+instants and required host windows, never availability inference. Missing
+context and read-only lifecycle withhold new controls; archived alternatives
+remain copyable. Current room-hold cancellation keeps its original source even
+after unplacement, while replacement refers to the current selected placement.
+Missing selected history cannot silently fall back to current timing.
+
+Connecting the first-group workflow exposed a missing native action: previous
+choices only permitted existing groups. A planner can now deliberately start a
+new group with an explicit sequence and a retained opaque pending key. This
+edition-local grouping key is not a foreign-record reference or authority; the
+same owner command checks group uniqueness. The action creates exactly one
+occurrence; a second occurrence remains a separate versioned command.
+
+Verification for this increment:
+
+- The complete database-free suite passes 3,789 cases in 26.63s, with only the
+  two existing Django URLField deprecation warnings.
+- The final 180 focused selection/control/record cases pass in 1.71s under
+  branch-aware coverage. The three selected source modules total 97.79%; the
+  control composer is 96.97%, selection 97.89%, and record forms 100%. This is
+  component coverage, not complete certification or whole-application coverage.
+- Eight native-command PostgreSQL cases pass in 14.15s. Real owner projections
+  compose the new form; initial group creation, exact replay and explicit
+  second occurrence retain two command receipts and two ordinary occurrences,
+  leaving candidate timing and physical bookings unchanged. Sixty-two other
+  candidate-file cases were deselected for this focused incremental run.
+- Existing record-dispatch assertions remain, with two additional checks that
+  native-only new-group controls never become owner-command keyword arguments.
+  No CI classifier, timing inventory, coverage threshold, historical scope,
+  migration, runtime write grant or current profile was changed.
+- Focused Ruff/formatting, strict mypy, NumPy docstrings, whitespace and
+  maintained-documentation checks pass. No production route is mounted, no
+  HTTP/browser acceptance is claimed, and no partial-editor PR is opened.
+
+The next work is to connect these typed components to trusted HTTP request and
+response handling, native filter/inspector/history/conflict presentation and
+pointer/unsaved-state behavior, then perform browser and protected acceptance.
+This is still one incomplete #85 editor, not a separately delivered child.
+
+## Trusted HTTP and native information workspace follow-up
+
+The unmounted server adapter now connects exact native selection and forms to
+the existing owner reads/commands. Actor identity comes from the authenticated
+request, tenant/edition from trusted arguments, and ordinary CSRF checks remain
+enabled. Responses are no-store, private POST values are masked, URL filters
+are rejected, and base permission/audit precede private selection binding.
+Current policy and lifecycle compute task choices without adding a page ACL.
+Current-source copy retains the writer's independent history-read requirement.
+
+The management shell now renders filters, selected item/layer context, paged
+immutable history and exact comparison, and current/saved conflict findings
+with closed human causes and safe next actions. Native query forms do not nest
+or duplicate successful single-value fields. Current item labels beside old
+geometry are explicitly current; availability does not silently load names or
+render periods for an unshared relationship. Only the explicitly requested
+layer is queried. Each owner keeps its own canonical transaction/lock set.
+
+Successful commands reload real records and select the affected resource.
+Preview and recoverable errors preserve the exact pending form/key/version;
+permission failures withhold all prior private context. A lost success refresh
+can follow a committed command, so the error heading says attention is needed,
+not that the action failed. Exact replay confirms that receipt without a
+duplicate. No raw source exception is returned, and no private draft action
+implicitly publishes timing or alters physical holds.
+
+Verification for this increment:
+
+- The complete database-free suite passes 3,882 cases in 21.70s, with the two
+  existing Django URLField deprecation warnings.
+- Ninety-three HTTP/rendering unit cases pass in 3.82s under branch-aware
+  coverage. The three new source modules total 95.33%; workspace composition
+  and conflict explanations are 100%, HTTP dispatch is 92.75%. This is focused
+  component coverage, not whole-application certification.
+- Fourteen real PostgreSQL HTTP cases pass in 42.58s, reusing the same exact
+  label-verified synthetic task database. Creation of days, candidates and first
+  groups, positive CSRF, preview/save and exact replay, immutable comparison,
+  historical copy/restore, stale input, current-profile and independent-layer
+  denial, foreign tenant/edition candidates and post-commit refresh loss all
+  exercise actual owner reads/commands. Seventy other cases in the existing
+  candidate test file were deselected for this focused increment.
+- Focused Ruff/formatting, strict mypy, NumPy contracts, whitespace and maintained
+  documentation checks pass. Existing test assertions, migrations, runtime
+  permissions, profile manifests, CI/history classification, timing inventory
+  and coverage thresholds remain unchanged.
+
+Pointer-assisted prefill, unsaved-input protection, synthetic browser rehearsal
+and the full protected acceptance/delivery gates still remain. Neither #85 nor
+#48 is closed; no partial-editor PR, runtime route or scheduled check is added.
+
+## Pointer, pending-input and browser-rehearsal follow-up
+
+The editor now progressively enhances its native forms with exact destination
+selection, drag-assisted placement/movement, and four keyboard/pointer-accessible
+time shortcuts. Drag carries only a constant non-private text marker; an internal
+in-memory selection must match offered active occurrence/day/room controls. Its
+ordinary CSRF-protected selection POST opens freshly versioned native forms,
+never saves, and cannot carry a different target's command versions. Empty boards
+use explicitly selected native destinations. The four unnamed range inputs map
+grid minutes through Events' IANA zone and explicit UTC offsets, including folds,
+gaps and overnight days. They change one time only, preserve invalid/off-grid
+input until deliberately replaced, and never adjust required host intervals.
+
+The in-memory pending-input guard compares the exact form, keeps bound preview
+and recoverable-error responses pending, and excludes only the CSRF token from
+its comparison. Current-page navigation asks for deliberate discard; command
+submissions retain their exact payload, and unload/pageshow handling does not
+claim offline persistence. No autosave, telemetry, browser storage, background
+request, new dependency, CI policy, migration, runtime grant or profile is added.
+
+Browser rehearsal exposed and corrected four usability defects: day/room filters
+hid the unassigned backlog; repeated occurrences had indistinguishable selection
+labels; several forms omitted shared shell styling; and a desktop flex basis
+made narrow action buttons 192 pixels high. The accepted filtering contract and
+its existing test were explicitly updated to retain unassigned entries without
+inventing a day/room assignment. Other existing assertions remain; new rendered
+form checks enforce shared styling and shortened display references while exact
+UUIDs remain submitted. Fresh-cache narrow action buttons measure 48.59 pixels.
+
+### Verification
+
+- Complete database-free suite: 3,890 passed in 29.13s, with the two existing
+  Django URLField warnings. The final focused HTTP/rendering group passes 101
+  cases in 1.40s. Earlier coverage results above apply to their earlier increment,
+  not a fresh combined coverage claim.
+- All 64 frontend tests pass in 9.59s, including 31 new cases loading the actual
+  Django enhancement asset. They cover pending previews/errors, cancellation,
+  navigation/unload, exact native drag selection and rejected external/invalid
+  payloads, each time field, DST folds/gaps, overnight dates, invalid/grid edges,
+  explicit zone handling and absence of persistence/network writes. Strict
+  frontend types also pass; no Vite file-access or TypeScript scope is widened.
+- Fifteen owner-backed PostgreSQL HTTP cases pass in 44.59s, with 70 unrelated
+  cases deselected, using the isolated task-owned current schema. The new case
+  advances the real draft between page load and destination selection and proves
+  fresh form versions, no extra command receipt and no Venue booking. The prior
+  CSRF, replay, stale, history, denial and refresh-loss cases remain intact.
+- Focused Ruff/formatting, strict Python types and NumPy contracts pass.
+
+### Synthetic browser evidence and limits
+
+The opt-in `tests/rehearsals/programme_timetable.py` fixture is documented in the
+page contract. It uses ordinary synthetic authenticated sessions, sealed test
+policies and actual owner commands on a loopback live server and test database.
+Neither its route, diagnostics nor synthetic role switch exists in production.
+Each completed lease was closed through the visible Finish control. Lease
+durations are not test-performance measurements.
+
+Verified browser cases include initial no-draft selection; filtered unassigned
+backlog; exact repeated-occurrence selection; real drag to a day/room lane;
+equivalent native destination selection; keyboard and pointer time prefill;
+non-mutating preview; explicit save and reloaded revision; exact history comparison
+showing added versus unchanged occurrences; invalid envelope preservation/error
+focus; and a real concurrent-control stale response preserving reason/name and
+focusing recovery guidance. Preview clearly distinguishes missing host blockers
+from available implemented checks and not-evaluated staffing/rest/accessibility/
+release concerns. The resize rehearsal preserves host intervals and creates no
+implicit physical approval or publication.
+
+Separate browser sessions exercise view-only tools without mutations, manage-only
+base denial, anonymous denial, default current-profile denial, independent
+Programme delivery-layer denial and unavailable title-source recovery. Denied
+and unavailable pages withhold prior private labels/records. Expected 400/403/409/
+503 test outcomes are not unexpected application failures; a fixture-finish
+favicon request returned 404. No whole-console-clean claim follows.
+
+Placement and history/comparison were measured at 320, 390, 768, 958, 1024, 1280
+and 1920 window CSS pixels (15-pixel scrollbars reduce content width): no page
+overflow, one H1/main, no duplicate IDs, and labelled controls. Narrow screenshots
+confirm stacked fields, readable envelopes, visible focus and corrected action
+heights. Native Enter/Tab/arrow interaction and pointer movement were exercised.
+These are representative synthetic cases, not every action/role combination.
+
+Fixture-only axe-core 4.10.3 analysis uses WCAG 2 A/AA, 2.1 A/AA and 2.2 AA tags.
+Initial, placement, invalid, stale, history and denied states report zero
+violations. Placement/error/stale states retain one incomplete color-contrast
+rule for the reason textarea; its observed foreground `rgb(7, 27, 58)` on solid
+white computes to 17.12:1 and was inspected separately, not reported as an axe
+pass. Initial/history/denied runs report no incomplete rules.
+
+The native discard-confirmation interaction stalled the in-app browser connection
+and exposed no controllable JavaScript dialog. A fresh tab resumed other work;
+unit cancellation/retention tests do not close that browser case. The documented
+zoom shortcut did not change CSS width or device-pixel ratio, so genuine 200%
+zoom remains unverified. Reduced-motion emulation, screen-reader and representative
+human acceptance are unperformed; the enhancement itself adds no animation.
+Complete the remaining recovery/consequential-action browser cases and protected
+exact-head local/hosted gates before closing #85. #48 stays open. No partial-editor
+PR, production route, schedule or runtime/profile activation is introduced.
+
+## Chrome consequential-action rehearsal follow-up
+
+With explicit user approval, the remaining browser work moved to Chrome, using
+only the isolated synthetic Programme fixture and the same owner-backed commands
+at implementation commit `0b52a5486a3e8daa910362a99bc4a28f49729b44`. No application
+code changed during this follow-up. Each navigation's resulting visible state
+was inspected before the next command; browser navigation completion alone was
+not reliable evidence that the next form already represented its new selection.
+
+### Additional verified outcomes
+
+- Copying the explicitly selected empty first revision produces an empty new
+  private alternative, even though the current source draft contains a placement.
+  Archiving retains that alternative and removes its placement-entry controls.
+  Copying the archived revision creates a separate editable draft and retains the
+  archived source; no archive or historical record is deleted.
+- Requesting a physical hold requires a separately labelled Venue-visible reason
+  and explicit confirmation. Unplacing the occurrence advances the private draft
+  and empties its board, but leaves the old physical hold active at its original
+  source revision and envelope. Separate cancellation after unplacement succeeds
+  using that retained hold, without requiring the placement to remain current.
+- Restoring the exact populated historical revision restores its original draft
+  timing but does not resurrect the cancelled physical hold. A new hold requires
+  a new explicit command. Extending only draft teardown from 11:15 to 11:30
+  advances the candidate from revision 4 to 5 while its hold stays at revision 4
+  and 11:15. Only a subsequent confirmed replacement moves the physical hold to
+  revision 5 and 11:30; physical review remains draft, not Programme approval or
+  publication.
+- Creating an explicit first repetition group with sequence 1 adds exactly one
+  unplaced occurrence. Retiring it retains its group/sequence and visible retired
+  inventory entry, while removing it from active placement choices. The original
+  placed and unplaced occurrences remain separate and unchanged. No recurrence
+  expansion or implicit scheduling occurs.
+
+These are synthetic component journeys, not runtime-profile, physical-approval,
+screen-reader or every-action/every-role acceptance. Earlier automatic checks
+remain the evidence for the wider command and authorization matrix; this follow-up
+does not rerun them or claim a new test count or complete certification.
+
+### Browser-environment findings and remaining gaps
+
+Chrome's fixture accessibility check reports one serious `nested-interactive`
+finding at `#aiFabShadowRoot` / `.acrobat-button`, with zero incomplete rules and
+33 passing rules. Read-only DOM inspection identifies an Acrobat extension host
+outside both the Maru editor and main landmark; neither selector exists in the
+application, frontend or rehearsal source. The extension was not disabled or
+modified, and this result is not reported as a clean whole-browser axe run.
+Earlier isolated in-app checks retain their separately recorded scope.
+
+Chrome exposes the native discard confirmation, but supported dismissal attempts
+fail. One attempt left the form discarded without reliable evidence of which
+action resolved it and is not accepted as cancellation. The second prompt remains
+for user-assisted Cancel. Its pending create-draft fields are exactly
+`Synthetic cancellation evidence` and `Keep this form`; neither was submitted.
+Cancellation and deliberate-discard browser acceptance remain open until the
+actual resulting form is inspected. No browser-control workaround or replacement
+confirmation implementation is introduced to bypass this limitation.
+
+The zoom shortcut did not change Chrome's CSS viewport width or device-pixel
+ratio. Genuine 200% zoom remains unverified. Read-only computed-style inspection
+finds no editor animations or nonzero transitions with reduced motion currently
+off; this does not claim an enabled-preference test. Exact saved-warning UI and
+remaining manual accessibility/recovery evidence also remain open.
+
+At the handoff the current one-hour fixture lease, started around 20:15 UTC on
+2026-09-08, is held by terminal session 43421 at loopback port 62284. It may expire
+before a later reply; recheck before reusing it and never start another suite on
+that database while live. The pending confirmation and separate completed-work
+Chrome tab are retained for continuation. This is a temporary synthetic fixture,
+not a scheduled check, deployed application, or persistent user data.
+
+### Protected-delivery scope
+
+The unchanged CI classifier was run against protected main
+`ec0d2474810e27b72c9dbabcc1d210222e4989af` and implementation head `0b52a54`.
+It selects full integration and all historical tests because files under
+`tests/rehearsals/` are treated as global test-harness changes. This is not the
+routine current-schema-only path or a newly measured timing estimate. Do not
+move files or weaken classification to avoid required history. Final exact-head
+local certification is deferred until remaining acceptance and documentation are
+ready, followed by that same head's hosted PR gate and CodeQL. No PR is opened,
+#85 remains incomplete, and #48 remains open.
+
+## Exact warning acknowledgement and withdrawal rehearsal
+
+The loopback-only fixture now offers explicit synthetic-host availability
+sharing and withdrawal controls. They reuse the existing real owner-command
+test helper and sealed authorizer; no planner capability, production route,
+model write shortcut, migration or profile admission is introduced. Synthetic
+account provisioning is extracted unchanged into a named fixture helper to
+keep the setup within the existing lint complexity limit.
+
+Chrome rehearsal verifies the complete saved-warning decision path:
+
+- Deliberately shared availability produces a real non-preferred-slot warning.
+  Recording current checks shows a complete, current saved report while naming
+  the unsupported staffing, rest, accessibility and release checks separately.
+- The exact finding opens a reasoned acknowledgement form. Explicit submission
+  records acknowledgement without removing the warning or claiming approval.
+  A separately recorded new report requires its own acknowledgement; the earlier
+  report's decision is not silently applied to it.
+- With a new acknowledgement form open, the fixture's synthetic host withdraws
+  availability through its owner command in another tab. Submitting the old
+  intent returns HTTP 409, retains the exact entered rationale, focuses the
+  `Action needs attention` alert and does not automatically rebase.
+- The reloaded review distinguishes unavailable current host checks from the
+  old report's historical completeness. Its retained finding has no recorded
+  acknowledgement and no fresh acknowledgement-selection control. Unavailable
+  host data is not interpreted as availability or an overridable warning.
+
+The existing exact-acknowledgement/replay, withdrawal invalidation and native
+fresh-dependency regression selection passes four PostgreSQL cases in 11.98s,
+with 58 unrelated cases deselected. Focused Ruff and formatting pass. No
+application implementation or existing test assertions changed.
+
+Both Chrome fixture leases (sessions 43421 and 13211) were explicitly finished
+and their cleanup completed before the focused database tests. Their durations
+are manual rehearsal leases, not PostgreSQL performance results. The original
+native Cancel prompt remains untouched for user assistance; its old server has
+closed. The later stale-warning page is retained as rendered evidence only.
+Native Cancel/discard, genuine 200% zoom and enabled reduced-motion preference
+remain unverified. No full certification, PR, merge or scheduled check is claimed.
+
+### Manual-browser blocker revalidation
+
+A subsequent read-only Chrome check reports no native dialog and confirms both
+original create-draft values remain exactly `Synthetic cancellation evidence`
+and `Keep this form`, with unsaved-input guidance still visible. The dismissal
+action itself was not observed, so this proves retained input, not a controlled
+Cancel/discard sequence. Genuine 200% zoom and enabled reduced-motion evidence
+also remain unavailable without manual assistance. The same manual-browser
+blocker has persisted across three goal turns; automatic continuation stops at
+that boundary rather than repeating completed tests or claiming acceptance.
+
+### Unattended acceptance continuation on 2026-09-09
+
+The user cannot operate the PC now and explicitly asked not to lose unattended
+working time to the remaining manual checks. Their gaps stay documented; this
+does not waive them, lower test thresholds or authorize an unverified protected
+merge. Automated exact-head certification, review and PR preparation proceed
+without waiting for manual browser settings. The resume fixture (session 36907)
+was explicitly finished and its cleanup completed; it provided no additional
+zoom or motion acceptance. Earlier exact certification and focused evidence are
+archived outside `.local-ci/` before the certifier recreates that artifact area.
+
+### Dependency-gate repair before full certification
+
+Candidate `c10d301e11965c53eedfbb80f3e734f601ff01cc` did not certify. An old
+protected cache prevented the initial run from starting tests; its exact
+repository-contained artifact root was moved aside with permissions unchanged.
+The fresh run passed 3,890 database-free cases in 57.60s (two existing URLField
+warnings), then failed its current-tree dependency audit. Its exact process
+tree and eight inspected disposable certification containers/anonymous volumes
+were stopped and removed; partial logs and reports remain archived under
+`.tools/certification-evidence/issue85-c10d301-20260909/attempt2/`.
+
+The NFR-011 supply-chain repair changes only compatible development-tool patches:
+
+- js-yaml 4.3.2 replaces 4.3.1 through the existing override, addressing the
+  high-severity merge-budget denial of service in
+  [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh).
+  Its dependency path is OpenAPI TypeScript generation through Redocly, not a
+  newly exposed Django YAML endpoint.
+- Vitest and its locked package family move from 4.1.10 to 4.1.11 for the
+  moderate mock-target path validation issue in
+  [GHSA-82fw-gwwq-j7x9](https://github.com/advisories/GHSA-82fw-gwwq-j7x9).
+  Vitest and its mocker were two audit entries for the same advisory, not two
+  distinct vulnerabilities or evidence of production exploitation.
+
+The frozen dependency install succeeds and `pnpm audit --audit-level moderate`
+reports no known vulnerabilities. The mandatory high-severity gate remains
+unchanged. With the YAML patch alone, generated API types were unchanged and
+all 64 frontend tests passed in 23.71s; that earlier run does not certify the
+subsequent Vitest patch. Full non-database preflight now precedes a fresh
+clean-head certification to catch cheap failures before another PostgreSQL
+fan-out. The scope remains exhaustive under the existing dependency/harness
+classification. No migration, authorization, runtime grant or profile changes
+are part of this security repair, and no new ADR is needed for patch updates
+within the accepted locked-dependency policy.
+
+The repaired-tree `scripts/check.ps1 -SkipPythonTests` preflight subsequently
+completed successfully: locked installation/audits, packaging, formatting/lint,
+strict types, documentation contracts, warning-fatal Sphinx, Django checks,
+production-setting checks, OpenAPI generation, frontend types, all 64 frontend
+tests on Vitest 4.1.11 in 9.29s, and build/generated-artifact drift gates. Existing
+local invitation-configuration and schema-enum warnings remain. Its deliberately
+unreachable database also produces a migration-history connection warning; this
+is not live database or migration acceptance. Separate documentation validation
+passes 424 Markdown files, four repository skills and 215 requirement IDs.
+The exact candidate is now ready for the policy-required full local run. PR
+description and release notes explicitly retain the manual browser gaps; no
+hosted acceptance, merge or component completion is claimed by this preflight.

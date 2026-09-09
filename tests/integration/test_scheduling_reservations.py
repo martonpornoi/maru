@@ -4,17 +4,25 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from functools import partial
 from threading import Barrier
+from uuid import uuid4
 
 import pytest
 from django.db import DatabaseError, close_old_connections, transaction
 
 from maru.authorization.policy import PolicyDecision
-from maru.scheduling import command_support, reservation_sources
+from maru.identity.models import Account
+from maru.scheduling import command_support, planning_reservations, reservation_sources
+from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
 from maru.scheduling.candidate_commands import archive_scheduling_candidate
 from maru.scheduling.catalogs import SchedulingOperation
 from maru.scheduling.command_support import SchedulingUnavailableError
 from maru.scheduling.day_commands import retire_scheduling_service_day
 from maru.scheduling.models import SchedulingCommandReceipt, SchedulingReservationIntent
+from maru.scheduling.planning_record_actions import submit_planning_record
+from maru.scheduling.planning_reservations import (
+    PlanningReservationState,
+    load_scheduling_reservation_review,
+)
 from maru.scheduling.reservation_commands import (
     SchedulingReservationInput,
     change_scheduling_reservation,
@@ -26,12 +34,15 @@ from maru.venues.models import (
     VenueBookingOccupancy,
     VenueSchedulingBinding,
 )
+from maru.venues.scheduling_queries import VenueSchedulingSourceDeniedError
 from maru.venues.services import (
     VenueAuthorizationDeniedError,
     VenueCapacityConflictError,
     VenueResourceUnavailableError,
     VenueVersionConflictError,
+    cancel_venue_booking,
 )
+from tests.integration.test_scheduling_candidates import read_request, record_form
 from tests.integration.test_scheduling_placements import (
     member,
     moved,
@@ -97,6 +108,228 @@ def test_current_profiles_do_not_activate_physical_reservation(world):
         reserve(world, placed=placed)
     assert not SchedulingReservationIntent.objects.exists()
     assert not VenueBooking.objects.exists()
+
+
+def reservation_form(world, placed, *, previous=None, cancel=False):
+    return record_form(
+        SchedulingOperation.RESERVATION_CANCEL
+        if cancel
+        else SchedulingOperation.RESERVATION_REPLACE,
+        candidate_id=world.candidate.object_id,
+        candidate_version=placed.version,
+        placement_id=member(placed).placement_id,
+        previous_booking_id=previous.id if previous else "",
+        expected_booking_version=previous.aggregate_version if previous else 0,
+        confirm="confirmed",
+    )
+
+
+def test_native_physical_replace_unplace_and_historical_cancel_are_independent(
+    world, admitted
+):
+    placed = place(world)
+    scope = read_request(world)
+    first = submit_planning_record(
+        scope, reservation_form(world, placed), authorizer=world.policy
+    )
+    old = VenueBooking.objects.get(
+        id=SchedulingReservationIntent.objects.get(id=first.object_id).target_booking_id
+    )
+    changed = place(world, intent=moved(world), version=placed.version)
+    old.refresh_from_db()
+    assert old.lifecycle == "active"
+    assert old.aggregate_version == 1
+    second_form = reservation_form(world, changed, previous=old)
+    second = submit_planning_record(scope, second_form, authorizer=world.policy)
+    current = VenueBooking.objects.get(
+        id=SchedulingReservationIntent.objects.get(
+            id=second.object_id
+        ).target_booking_id
+    )
+    old.refresh_from_db()
+    assert old.lifecycle == "cancelled"
+    replay = submit_planning_record(scope, second_form, authorizer=world.policy)
+    assert replay.replayed
+    assert replay.receipt_id == second.receipt_id
+    assert VenueBooking.objects.count() == 2
+    submit_planning_record(
+        scope,
+        record_form(
+            SchedulingOperation.PLACEMENT_REMOVE,
+            candidate_id=changed.object_id,
+            occurrence_id=world.occurrence.object_id,
+            expected_version=changed.version,
+            confirm="confirmed",
+        ),
+        authorizer=world.policy,
+    )
+    current.refresh_from_db()
+    assert current.lifecycle == "active"
+    assert current.aggregate_version == 1
+    cancelled = submit_planning_record(
+        scope,
+        reservation_form(world, changed, previous=current, cancel=True),
+        authorizer=world.policy,
+    )
+    current.refresh_from_db()
+    assert current.lifecycle == "cancelled"
+    assert (
+        SchedulingReservationIntent.objects.get(
+            id=cancelled.object_id
+        ).target_booking_id
+        is None
+    )
+    assert not VenueBookingOccupancy.objects.filter(active=True).exists()
+    assert VenueSchedulingBinding.objects.count() == 2
+
+
+def test_native_failed_physical_replacement_retains_old_hold_and_entered_intent(
+    world, admitted
+):
+    placed = place(world)
+    _, reserved = reserve(world, placed=placed)
+    old = VenueBooking.objects.get(id=reserved.target_booking_id)
+    impossible = place(
+        world,
+        intent=replace(moved(world), expected_attendance=9_000),
+        version=placed.version,
+    )
+    form = reservation_form(world, impossible, previous=old)
+    original = dict(form.data)
+    before = SchedulingCommandReceipt.objects.count()
+    with pytest.raises(VenueCapacityConflictError):
+        submit_planning_record(read_request(world), form, authorizer=world.policy)
+    old.refresh_from_db()
+    assert old.lifecycle == "active"
+    assert old.aggregate_version == 1
+    assert VenueBooking.objects.count() == VenueSchedulingBinding.objects.count() == 1
+    assert SchedulingCommandReceipt.objects.count() == before
+    assert dict(form.data) == original
+
+
+def hold_review(world, *, request=None):
+    return load_scheduling_reservation_review(
+        request or read_request(world),
+        occurrence_id=world.occurrence.object_id,
+        authorizer=world.policy,
+    )
+
+
+def test_hold_readout_without_a_request_discloses_no_venue_facts(world, monkeypatch):
+    def forbidden(**kwargs):
+        pytest.fail("No reservation intent must not enumerate Venue bookings")
+
+    monkeypatch.setattr(
+        planning_reservations, "load_venue_scheduling_dependencies", forbidden
+    )
+    result = hold_review(world)
+    assert result.state == PlanningReservationState.NOT_REQUESTED
+    assert result.active is None
+    assert not VenueBooking.objects.exists()
+
+
+def test_hold_readout_follows_ordered_receipts_and_survives_draft_unplacement(
+    world, admitted
+):
+    placed = place(world)
+    _, first = reserve(world, placed=placed)
+    old = VenueBooking.objects.get(id=first.target_booking_id)
+    changed = place(world, intent=moved(world), version=placed.version)
+    retained = hold_review(world)
+    assert retained.state == PlanningReservationState.ACTIVE
+    assert retained.active.booking_id == old.id
+    assert retained.active.candidate_version == placed.version
+    assert retained.active.envelope == world.placement.envelope
+    assert retained.active.placement_id != member(changed).placement_id
+    _, second = reserve(world, placed=changed, previous=old)
+    submit_planning_record(
+        read_request(world),
+        record_form(
+            SchedulingOperation.PLACEMENT_REMOVE,
+            candidate_id=changed.object_id,
+            occurrence_id=world.occurrence.object_id,
+            expected_version=changed.version,
+            confirm="confirmed",
+        ),
+        authorizer=world.policy,
+    )
+    latest = hold_review(world)
+    assert latest.active.booking_id == second.target_booking_id
+    assert latest.active.booking_version == 1
+    assert latest.active.review_state == "draft"
+    assert latest.active.candidate_version == changed.version
+    assert latest.active.envelope == moved(world).envelope
+    cancel = record_form(
+        SchedulingOperation.RESERVATION_CANCEL,
+        candidate_id=latest.active.candidate_id,
+        candidate_version=latest.active.candidate_version,
+        placement_id=latest.active.placement_id,
+        previous_booking_id=latest.active.booking_id,
+        expected_booking_version=latest.active.booking_version,
+        confirm="confirmed",
+    )
+    submit_planning_record(read_request(world), cancel, authorizer=world.policy)
+    inactive = hold_review(world)
+    assert inactive.state == PlanningReservationState.NOT_ACTIVE
+    assert inactive.active is None
+
+
+def test_hold_readout_observes_ordinary_venue_cancellation(world, admitted):
+    placed = place(world)
+    _, reserved = reserve(world, placed=placed)
+    cancel_venue_booking(
+        actor=Account.objects.get(id=world.request.actor_id),
+        organization_id=world.request.organization_id,
+        edition_id=world.request.edition_id,
+        space_selection_id=world.placement.space_selection_id,
+        booking_id=reserved.target_booking_id,
+        expected_version=1,
+        reason="Physical hold no longer needed",
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    assert SchedulingReservationIntent.objects.count() == 1
+    result = hold_review(world)
+    assert result.state == PlanningReservationState.NOT_ACTIVE
+    assert result.active is None
+
+
+def test_hold_readout_cannot_substitute_scheduling_for_venue_authority(
+    world, admitted, monkeypatch
+):
+    placed = place(world)
+    reserve(world, placed=placed)
+
+    def denied(**kwargs):
+        raise VenueSchedulingSourceDeniedError
+
+    monkeypatch.setattr(
+        planning_reservations, "load_venue_scheduling_dependencies", denied
+    )
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        hold_review(world)
+
+
+@pytest.mark.parametrize("field", ["booking_id", "placement_id", "occurrence_id"])
+def test_hold_readout_rejects_mismatched_live_owner_binding(
+    world, admitted, monkeypatch, field
+):
+    placed = place(world)
+    reserve(world, placed=placed)
+    owner = planning_reservations.load_venue_scheduling_dependencies
+
+    def mismatched(**kwargs):
+        result = owner(**kwargs)
+        return replace(
+            result, reservations=(replace(result.reservations[0], **{field: uuid4()}),)
+        )
+
+    monkeypatch.setattr(
+        planning_reservations, "load_venue_scheduling_dependencies", mismatched
+    )
+    with pytest.raises(SchedulingUnavailableError):
+        hold_review(world)
 
 
 def test_both_owners_receive_exact_evidence_without_copying_private_layers(

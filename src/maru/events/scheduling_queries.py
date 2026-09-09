@@ -24,12 +24,15 @@ class SchedulingEditionReference:
         Current Events aggregate version for dependency freshness.
     accepts_scheduling_writes
         Whether current lifecycle admits private timetable planning.
+    zone_name
+        Events-owned IANA zone for explicit local timetable input and display.
     """
 
     organization_id: UUID
     edition_id: UUID
     version: int
     accepts_scheduling_writes: bool
+    zone_name: str
 
 
 def resolve_scheduling_edition_reference(
@@ -49,7 +52,7 @@ def resolve_scheduling_edition_reference(
     Returns
     -------
     SchedulingEditionReference | None
-        Current version and scheduling consequence without labels or private
+        Current version, time zone and scheduling consequence without labels or private
         edition facts; absent or incoherent scope returns unavailable.
     """
     query = EventEdition.objects.all()
@@ -62,7 +65,9 @@ def resolve_scheduling_edition_reference(
                 organization_id=organization_id,
                 series__organization_id=organization_id,
             )
-            .values_list("id", "organization_id", "aggregate_version", "lifecycle")
+            .values_list(
+                "id", "organization_id", "aggregate_version", "lifecycle", "time_zone"
+            )
             .first()
         )
     except (TypeError, ValueError, ValidationError):
@@ -74,4 +79,5 @@ def resolve_scheduling_edition_reference(
         edition_id=row[0],
         version=row[2],
         accepts_scheduling_writes=row[3] in _PLANNING_LIFECYCLES,
+        zone_name=row[4],
     )

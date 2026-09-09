@@ -9,7 +9,10 @@ from maru.events.queries import (
     resolve_edition_time_envelope_reference,
     resolve_private_planning_edition_reference,
 )
-from maru.identity.queries import resolve_active_verified_person_reference
+from maru.identity.queries import (
+    active_verified_person_account_display_labels,
+    resolve_active_verified_person_reference,
+)
 
 from .authorization import (
     DEFAULT_PROGRAMME_AUTHORIZER,
@@ -168,11 +171,15 @@ class ProgrammeHostRosterEntry:
         Exact already-related person, not a directory search result.
     person_current
         Whether Identity still proves an active verified person.
+    display_label
+        Current related person's display label, or a neutral unavailable label.
+        This is neither contact information nor a historical identity snapshot.
     """
 
     relationship: ProgrammeHostStateProjection
     account_id: UUID
     person_current: bool
+    display_label: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -504,6 +511,11 @@ def load_programme_host_roster(
     def load(
         item: ProgrammeItem, people: dict[UUID, bool]
     ) -> ProgrammeHostRosterSnapshot:
+        hosts = sorted(_hosts(item), key=lambda row: str(row.account_id))
+        current_ids = {host.account_id for host in hosts if people[host.account_id]}
+        labels = active_verified_person_account_display_labels(current_ids)
+        if set(labels) != current_ids:
+            raise ProgrammeQueryUnavailableError
         return ProgrammeHostRosterSnapshot(
             item.aggregate_version,
             tuple(
@@ -511,8 +523,9 @@ def load_programme_host_roster(
                     _state(h),
                     h.account_id,
                     people[h.account_id],
+                    labels.get(h.account_id, "Unavailable person"),
                 )
-                for h in sorted(_hosts(item), key=lambda row: str(row.account_id))
+                for h in hosts
             ),
         )
 

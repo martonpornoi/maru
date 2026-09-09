@@ -2,7 +2,7 @@
 
 Status: dormant candidate/conflict and reciprocal physical-reservation kernel;
 no Programme timetable editor, approval, release or current-profile activation.
-Last updated: 2026-09-07. See [CURRENT](../project/CURRENT.md) for verification
+Last updated: 2026-09-08. See [CURRENT](../project/CURRENT.md) for verification
 and protected-delivery status; this guide is the owner contract, not a merge claim.
 
 ## Ownership and adoption
@@ -72,6 +72,259 @@ placement, 10,000 findings and one million conflict comparisons. Bounded
 overflow is unavailable or a refused command, never a truncated passing report.
 
 ## Current dependencies and explainable conflicts
+
+### Planner read boundary
+
+The in-progress [editor child #85](https://github.com/martonpornoi/maru/issues/85)
+adds `planning_queries` without mounting a surface or granting runtime writes.
+`load_scheduling_planning` returns all bounded current day, occurrence and
+candidate summaries, plus the complete explicitly selected candidate manifest.
+No selection means inventory only, not an implicit first-candidate choice.
+Overflow and missing current revisions are unavailable, never silently omitted
+records. The edition mutex, final scope/field authorization and required
+read audit protect the multi-query snapshot.
+
+`list_scheduling_candidate_history` requires independent history authority and
+returns explicit newest-first pages of fifty changes with an exclusive version
+cursor. `load_scheduling_historical_manifest` validates the exact immutable
+manifest count and digest before releasing geometry and retained rationale.
+Neither query dereferences Programme or Venue private models. Current planning
+omits historical actor/reason, host identity/presence and availability, Programme
+copy and room names. Owner links are opaque, not dereference authority. Owner
+content/layers and current conflicts remain separate protected queries.
+
+`planning_inspector.load_scheduling_item_inspector` loads exactly one selected
+working, approved-copy, delivery, readiness, host-roster or shared-availability
+layer through its public Programme query. Scheduling planning permission does
+not grant any Programme layer, and denial never falls back to another query.
+Private Applications answers/review are not selectable inspector layers.
+
+`planning_hosts.load_scheduling_host_requirements` validates the exact current
+candidate manifest and occurrence, then composes retained required-presence
+times with Programme's independently authorized complete host roster. Unplaced
+occurrences have no invented presence requirements. Missing/foreign sources,
+manifest mismatch, overflow or stale candidate version fail closed. The roster
+and names are current; required times are the selected placement's immutable
+intent, not shared availability. Both owner audits and final Scheduling scope
+checks precede release, under canonical edition/person locking.
+
+`planning_preview.preview_scheduling_candidate` uses `scheduling.view_conflicts`
+and its existing `conflicts` / `dependency_versions` ceiling. It evaluates an
+exact current draft, optionally replacing or adding one unsaved placement, with
+the same owned revision resolution and evaluator as saved commands. Stale
+candidate versions are not rebased; missing/stale structural sources fail
+closed. Programme and Venue authorize their complete dependency sets separately.
+The edition mutex precedes the complete Programme person set and the final
+actor recheck. Read-only labels are composed in separate owner transactions,
+not in an actor-first transaction surrounding a multi-person preview.
+
+Preview returns only closed findings, exact candidate version, source
+availability and explicit deferred concerns. It exposes neither calendars nor
+persisted evaluation identifiers, dependency digests or warning fingerprints.
+Only read audits are appended: no placement, history, receipt, evaluation,
+acknowledgement, reservation, domain event or outbox message is created. A new
+unsaved placement cannot claim an existing physical hold as its own; retained
+holds continue to participate in conflict detection until explicitly replaced
+or cancelled. Complete means implemented sources were available, not that
+blockers, warnings or deferred release concerns are satisfied.
+
+`planning_interactions` provides database-free exact local-minute conversion and
+comparison of already-authorized manifests. Offset-free daylight-saving gaps
+and folds fail explicitly; an offset identifies an exact instant. Comparisons
+use stable occurrences and never describe a changed placement revision as
+unchanged merely because its visible geometry happens to match. These helpers
+do not authorize, persist, reserve or publish anything. See the
+[page contract](../product/page-contracts/programme-timetable-planning.md) and
+[ADR 0092](../architecture/decisions/0092-dormant-accessible-timetable-editor.md).
+
+### Native editor submissions
+
+`planning_forms` provides strict service-day and placement controls. The base
+planning snapshot supplies the Events-owned IANA zone; browser/machine zones
+do not choose the instant. Inputs reject unknown fields, duplicate single
+values, noncanonical identifiers/numbers and ambiguous/nonexistent minutes.
+The four room-envelope boundaries and each selected host's required interval
+remain explicit. Selecting no host never infers a presence from leftover time
+values or claims that hosting is not required. Private draft conflicts are
+checked by preview/evaluation, not mistaken for form validation success.
+
+`planning_actions` reauthorizes before binding private input, then delegates
+to the existing preview, placement or service-day commands. Preview creates
+no command request. Saving needs a human reason and retains the exact submitted
+retry key and optimistic version; replay and stale failures use the existing
+command semantics. Invalid/recoverable input remains in the same bound form.
+These adapters do not mount a route or reserve, approve, publish or confirm a
+host.
+
+`planning_record_forms.PlanningRecordForm` and
+`planning_record_actions.submit_planning_record` provide the remaining explicit
+record operations through the same owner commands: candidate creation, exact
+history copy/restore and terminal archive; occurrence creation/repetition,
+group revision and retirement; day retirement and unplacement; saved conflict
+evaluation and warning acknowledgement; and physical reservation replacement
+or cancellation. Only the server-selected operation's fields are accepted.
+An explicit group/sequence pair either uses an already-authorized group choice
+or deliberately starts a new group. The new form supplies one opaque group key;
+bound validation/retry retains it and requires an explicit sequence. This key
+is edition-local grouping, not a foreign-record reference or authority, and the
+existing owner command still enforces group/sequence uniqueness. Neither option
+infers recurrence or creates additional occurrences. Creating the first
+candidate/occurrence may observe edition control
+zero; copying retained history requires a positive current control version.
+Every successful Scheduling mutation advances that shared control, not merely
+creation. A new command uses a fresh observed snapshot; stale pending input is
+never automatically rebased.
+
+Retirement, restore, archive, unplacement and physical changes require explicit
+consequence confirmation. Draft changes leave physical holds unchanged.
+Reservation reasons are visibly Venue-shared, and reservation commands retain
+their separate exact Venue authority and transactional replacement/rollback.
+Cancellation can select retained historical placement evidence after a draft
+edit, but still requires the current physical booking version. Neither a valid
+form nor warning acknowledgement bypasses fresh domain checks, overrides a
+blocker or confers approval/publication.
+
+### Fresh review and current physical readouts
+
+`planning_review.load_scheduling_candidate_review` uses the existing conflict
+and dependency-version field ceiling. It compares the latest saved report for
+the exact current draft revision with freshly authorized owner dependencies.
+No report from a previous candidate revision is silently presented as current.
+Saved evidence is explicitly not recorded, current, stale or unavailable;
+historical completeness is separate from current source availability. Only a
+fresh complete matching warning without retained acknowledgement is eligible
+for the acknowledgement command, which still independently authorizes and
+rechecks all inputs. Blockers have no acknowledgement path. Closed findings
+and acknowledgement existence may be shown, but source JSON, dependency
+digests, fingerprints, calendars, acknowledgement rationale and actors are not
+returned. Missing/overflowed/inconsistent findings withhold the projection.
+
+`planning_reservations.load_scheduling_reservation_review` uses that same
+independent Scheduling field ceiling and the existing exact-resource Venue
+dependency query. It resolves the occurrence's latest reservation intent by
+immutable receipt **control version**, not wall-clock timestamp. No intent
+means no recorded reciprocal request; no Venue bookings are enumerated in that
+case. Otherwise Venues independently proves the bound room and current physical
+booking version/review state. Generic Venue cancellation is observed, while
+draft movement/unplacement still shows an unchanged previous hold. There is no
+new capability, edition-wide Venue grant or duplicate physical writer.
+
+An active result includes only its exact same-edition booking version, source
+candidate/version/placement and bound envelope needed for explicit replacement
+or historical cancellation. This is the consequence of a current authorized
+physical binding, not permission to browse arbitrary candidate history or
+read private reasons, titles or approvers. Unexpected owner bindings fail
+closed. Both readouts retain canonical edition/person order and required owner
+and Scheduling audits; final denial/audit failure withholds all results and
+rolls back success audits. Neither reader writes a report or domain command.
+
+### Board and native rendering composition
+
+`planning_board.build_scheduling_planning_board` is a database-free composition
+of already-authorized Scheduling, Programme-title and Venue-label snapshots.
+It distinguishes items before occurrence creation, occurrences before candidate
+selection, unplaced/placed occurrences and retained retirement. Duplicate or
+missing owner references withhold the whole board, rather than silently hiding
+work. Stable day identifiers retain saved placements under revised day metadata;
+changed day/occurrence revisions are labelled without rewriting geometry.
+Nonempty day/room lanes are ordered by exact delivery instants; complete empty
+day and room choices remain available separately for placement controls.
+
+The initial `scheduling/planning_board.html` component reuses the management
+shell, one H1/main, responsive labelled cards, explicit overnight dates/offsets,
+current physical-hold readout and native form rendering. Owner labels are
+escaped; generic forms retain input and link errors to controls. Submit buttons
+provide the action exactly once, with Preview first for placement forms.
+
+`planning_selection` separates transient `ui_` fields from exact command input
+without flattening repeated values or discarding unknown fields. The caller
+must authorize base scope before parsing. Candidate/day/room/item/occurrence
+selection is checked against complete authorized projections before filtering;
+selecting an item never implicitly selects its first repeated occurrence.
+Text/state/day/room filtering changes only visible cards and lanes, retaining
+complete form choices and the separately resolved selection. History/finding
+IDs and history cursors still require their own protected queries. Neither
+selection nor mutation input is persisted in a URL or browser storage.
+
+`planning_controls.build_planning_control` composes one ordinary form from those
+complete owner projections. It does not authorize, query or write. New forms
+use the observed edition control or exact target version and a fresh retry key;
+bound forms supply no new initial values and never rebase submitted versions.
+An exact occurrence and service day are selected before opening the placement
+form, so changing a target cannot silently reuse another target's version.
+The same four instants and explicitly required host intervals prefill the
+native fields. Missing context produces guidance, not an inferred selection;
+read-only lifecycle hides new forms without rewriting an already bound retry.
+Current-hold cancellation retains its original candidate/placement source,
+while explicit replacement uses the current draft and the observed booking
+version. Historical copy/restore never falls back from a missing selected
+historical revision to current timing. Every submitted form still requires the
+existing independently authorized owner command.
+
+### Dormant HTTP workspace
+
+`planning_views.scheduling_planning_view` is an unmounted GET/POST adapter with
+ordinary CSRF protection, no-store responses and sensitive-POST masking. Actor
+identity comes only from the authenticated request; organization, edition and
+the parent label are server-resolved arguments. A successful audited base read
+precedes private selection binding. Query-string filters, file uploads, unknown
+actions, duplicated single-value fields and action/mode mismatches are rejected.
+Native query forms carry the closed `ui_` namespace separately from exact
+command fields. A query never becomes a writer because of hidden selection.
+
+`planning_workspace.compose_planning_workspace` checks the selected task's
+independent capabilities, queries Programme titles and Venue room labels, then
+resolves selection against the complete board before filtering visible cards.
+It loads only explicitly requested inspector, history, conflict or physical
+layers; placement separately authorizes the current host roster. Both current
+and historical candidate copy require independent history authority. Access and
+task choices are computed from current policy and lifecycle, not a new ACL.
+Owner transactions retain their canonical person-lock sets; the whole page is
+not wrapped in an actor-first cross-owner transaction.
+
+Native filters, the selected item, information layers, immutable history and
+comparison, and current/saved conflict findings are rendered explicitly. Current
+item labels beside historical geometry are marked as current, not retained
+content. Shared availability discloses periods only for a shared relationship
+and does not silently load host names. The closed `planning_presentation`
+explanations identify each finding's cause and safe next action without owner
+lookups or automatic overrides. Missing checks, saved completeness and fresh
+source availability remain distinct.
+
+Submissions delegate through the existing strict action adapters. Success
+reloads actual owner state and selects the affected day, occurrence or draft;
+preview keeps the exact unsaved form and retry key. Recoverable command errors
+retain authorized input without rebasing optimistic versions. Permission loss
+withholds all prior private context. A failed post-command refresh may follow
+a committed command: the generic unavailable response never asserts failure,
+and an exact retry confirms the retained result without duplicate writes. The
+adapter does not log raw exception details or persist private form/filter input
+in URLs, sessions or browser storage.
+
+The lightweight `planning.js` enhancement uses the same native selection POST
+for drag placement/movement. Only currently offered exact destinations are
+accepted; the server reloads their versions before opening a form. Private
+identifiers stay out of external drag payloads. Keyboard selection is equivalent,
+including empty boards where an explicit day and room must first be chosen.
+Day/room filters retain unassigned work while constraining placed entries; text
+and explicit state filters still apply. Repeated occurrences have concise visible
+references and full exact identities in native choices and submitted values.
+
+Four unnamed range controls prefill individual native time fields on the selected
+service day's grid. They use Events' explicit zone, preserve offsets through DST
+and midnight, and neither clamp existing invalid input nor alter host intervals.
+They do not supply a second command payload. Input remains unsaved until the
+explicit native command; Preview still does not save. Navigation and unload
+guards protect changed or server-retained pending forms without storage, autosave,
+background requests or automatic version rebasing.
+
+Browser rehearsal and protected acceptance are incomplete; consult CURRENT and
+the checkpoint for verified cases and tool limitations. The page contract
+documents a loopback-only opt-in fixture and local accessibility diagnostics.
+No production URL or navigation entry is mounted; isolated component admission
+and owner database tests are not provisioned runtime/profile evidence.
+
+### Conflict-source boundary
 
 The exact source descriptors are:
 

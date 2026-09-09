@@ -55,7 +55,10 @@ from maru.programme.models import (
     ProgrammeReadinessRequirement,
     ProgrammeWorkingRevision,
 )
-from maru.programme.queries import load_programme_readiness
+from maru.programme.queries import (
+    ProgrammeQueryUnavailableError,
+    load_programme_readiness,
+)
 from maru.programme.readiness import programme_database_integrity_is_ready
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.integration.test_programme_commands import (
@@ -281,6 +284,86 @@ def remove(world, result):
     )
 
 
+def test_roster_labels_are_current_related_display_names_without_contact_data(world):
+    invite(world)
+    result = load_programme_host_roster(
+        read_request(world), authorizer=world[2]["authorizer"]
+    )
+    assert result.entries[0].display_label == world[1].display_name.strip()
+    assert world[1].email not in repr(result)
+    assert "availability" not in repr(result)
+    assert "Private organizer" not in repr(result)
+
+
+def test_roster_does_not_display_an_inactive_persons_retained_name(world):
+    invite(world)
+    world[1].is_active = False
+    world[1].save(update_fields=("is_active",))
+    result = load_programme_host_roster(
+        read_request(world), authorizer=world[2]["authorizer"]
+    )
+    assert not result.entries[0].person_current
+    assert result.entries[0].display_label == "Unavailable person"
+
+
+def test_roster_missing_current_identity_label_is_unavailable(world, monkeypatch):
+    invite(world)
+    monkeypatch.setattr(
+        host_queries, "active_verified_person_account_display_labels", lambda _ids: {}
+    )
+    with pytest.raises(ProgrammeQueryUnavailableError):
+        load_programme_host_roster(
+            read_request(world), authorizer=world[2]["authorizer"]
+        )
+
+
+def test_roster_labels_are_not_queried_before_field_authorization(world, monkeypatch):
+    invite(world)
+    policy = world[2]["authorizer"]
+    authorize = policy.authorize
+    monkeypatch.setattr(
+        policy,
+        "authorize",
+        lambda **kwargs: replace(authorize(**kwargs), fields=frozenset()),
+    )
+
+    def forbidden(_ids):
+        pytest.fail("Denied roster read reached Identity display labels")
+
+    monkeypatch.setattr(
+        host_queries, "active_verified_person_account_display_labels", forbidden
+    )
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        load_programme_host_roster(read_request(world), authorizer=policy)
+
+
+def test_roster_final_revocation_withholds_looked_up_names(world, monkeypatch):
+    invite(world)
+    policy = world[2]["authorizer"]
+    authorize = policy.authorize
+    labels = host_queries.active_verified_person_account_display_labels
+
+    def revoke_after_labels(ids):
+        result = labels(ids)
+        monkeypatch.setattr(
+            policy,
+            "authorize",
+            lambda **kwargs: replace(authorize(**kwargs), allowed=False),
+        )
+        return result
+
+    monkeypatch.setattr(
+        host_queries,
+        "active_verified_person_account_display_labels",
+        revoke_after_labels,
+    )
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        load_programme_host_roster(read_request(world), authorizer=policy)
+    assert not AuditEvent.objects.filter(
+        operation="programme.query.host_roster", outcome="allow"
+    ).exists()
+
+
 def test_self_roster_history_and_availability_have_independent_field_ceilings(world):
     first = invite(world)
     policy = world[2]["authorizer"]
@@ -295,6 +378,7 @@ def test_self_roster_history_and_availability_have_independent_field_ceilings(wo
     assert "Private organizer notes" not in repr(personal)
     roster = load_programme_host_roster(read_request(world), authorizer=policy)
     assert roster.entries[0].account_id == world[1].id
+    assert roster.entries[0].display_label == world[1].display_name.strip()
     assert "briefing" not in repr(roster)
     history = load_programme_host_history(
         read_request(world), host_id=first.host_id, authorizer=policy

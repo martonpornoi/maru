@@ -8,6 +8,8 @@ import pytest
 from maru.authorization.models import ScopedResourceBinding
 from maru.identity.models import Account
 from maru.scheduling.occurrence_commands import retire_scheduling_occurrence
+from maru.scheduling.planning_queries import SchedulingReadRequest
+from maru.scheduling.planning_reservations import load_scheduling_reservation_review
 from maru.venues.models import (
     VenueBooking,
     VenueBookingOccupancy,
@@ -61,6 +63,33 @@ def command(booking, actor):
         "correlation_id": uuid4(),
         "source_channel": "test",
     }
+
+
+def test_hold_readout_reflects_independent_approval_without_programme_publication(
+    world, admitted
+):
+    placed = place(world)
+    reserve(world, placed=placed)
+    booking = VenueBooking.objects.get()
+    approver = AccountFactory()
+    grant(approver, world)
+    approve_venue_booking(**command(booking, approver))
+    result = load_scheduling_reservation_review(
+        SchedulingReadRequest(
+            world.request.actor_id,
+            world.request.organization_id,
+            world.request.edition_id,
+            uuid4(),
+        ),
+        occurrence_id=world.occurrence.object_id,
+        authorizer=world.policy,
+    )
+    assert result.active.booking_id == booking.id
+    assert result.active.booking_version == 2
+    assert result.active.review_state == "approved"
+    assert result.active.candidate_version == placed.version
+    booking.refresh_from_db()
+    assert booking.publication_state == "unpublished"
 
 
 @pytest.mark.parametrize("author_state", ["active", "inactive", "unverified"])

@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-08
+Last updated: 2026-09-09
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -73,7 +73,7 @@ That optimization pilot is closed; the later separately approved #83 CI task is
 described below. No Docker cleanup is authorized. See the
 [pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
 
-## Current bounded outcome: Scheduling acceptance after delivered CI
+## Current bounded outcome: Accessible Programme timetable editor
 
 Issue #77 was delivered through PR #78, squash
 `6279cb50d287d70e33e2bebabda3e54564668475`. Issue #79 was delivered through
@@ -109,50 +109,172 @@ passed 6,226 Python tests at 90.02% in 15m58s locally; it omitted history and
 non-database quality gates. The 20–35-minute hosted routine target remains
 unmeasured, not a promise for the high-risk Scheduling PR.
 
-### Active Scheduling child
+### Delivered Scheduling foundation
 
-Issue [#81](https://github.com/martonpornoi/maru/issues/81) remains open in
-[PR #82](https://github.com/martonpornoi/maru/pull/82), branch
-`codex/programme-scheduling-candidates`. Its prior head
-`4e6eb1bde8a681b6d5cebb0cdbeaac2bbbc77f68` passed full local certification
-(6,575 Python and 33 frontend tests), but hosted shards 5, 6 and 7 timed out in
-[run 34132347435](https://github.com/martonpornoi/maru/actions/runs/34132347435).
-That old gate cannot certify the updated branch and must not be blindly rerun.
+Issue [#81](https://github.com/martonpornoi/maru/issues/81) is closed through
+[PR #82](https://github.com/martonpornoi/maru/pull/82), protected squash
+`ec0d2474810e27b72c9dbabcc1d210222e4989af` on 2026-09-08. Exact candidate
+`85db2e16a453355b534dfb2e37e6695bb858e635` passed exhaustive local certification:
+6,887 Python tests, 33 frontend tests, all ten quality gates, eight PostgreSQL
+databases and 90.34% combined coverage in 108m19s. Its own
+[hosted acceptance](https://github.com/martonpornoi/maru/actions/runs/34208969678),
+all sixteen database jobs, `PR gate` and CodeQL passed before merge. The clean
+main worktree was synchronized and the squash tree equals the certified head.
+The [delivery checkpoint](../checkpoints/2026-09-08-scheduling-protected-delivery.md)
+retains exact provenance, recovery and cost evidence. Do not rerun the old
+timed-out head or treat this delivered child as pending.
 
-The delivered CI main is integrated without changing Scheduling behavior
-or removing existing assertions. [ADR 0088](../architecture/decisions/0088-versioned-scheduling-candidates-and-venue-binding.md),
-the [owner contract](../modules/scheduling.md) and
-[recovery guide](../operations/scheduling-migration-and-recovery.md) define
-service days, stable occurrences, immutable alternatives, explainable conflicts,
-explicit host presence and reciprocal Venue reservation evidence. A draft is
-not a reservation, host consent, approval or publication. All sixteen new
-relations remain runtime SELECT-only; neither literal profile nor a route,
-UI, API, worker or release is activated.
+### Active editor child
 
-[ADR 0091](../architecture/decisions/0091-scheduling-ci-policy-integration.md)
-reconciles the old whole-file calibration as diagnostic tooling, with ADR 0090
-authoritative for acceptance. The inventory explicitly owns Scheduling's
-independent empty reversal and two-owner fence functions; all current guards,
-readiness, reservations, concurrency and source/field denials remain mandatory.
-New group estimates use preserved complete successful JUnit evidence, not
-fabricated measurements. The [integration checkpoint](../checkpoints/2026-09-08-scheduling-ci-integration.md)
-records provenance and focused verification. The full database-free suite passed
-3,511 tests in 28.15 seconds. Actual collection selected all 3,376 PostgreSQL
-cases for full scope and 3,249 for current scope; all thirteen new cost estimates
-match retained complete evidence. Repository lint/format, maintained docs and
-script docstring checks pass. This is focused evidence, not database acceptance.
+Issue [#85](https://github.com/martonpornoi/maru/issues/85) is the next native
+child of [#48](https://github.com/martonpornoi/maru/issues/48), on branch
+`codex/programme-timetable-editor` from that protected main. Its
+[page contract](../product/page-contracts/programme-timetable-planning.md) and
+[ADR 0092](../architecture/decisions/0092-dormant-accessible-timetable-editor.md)
+define one dormant progressively enhanced editor. Equivalent pointer and
+keyboard forms reuse Scheduling commands; private owner layers retain their
+independent authority. Draft edits never silently reserve rooms or publish.
 
-Prior implementation and repair evidence remains in the
-[implementation](../checkpoints/2026-09-07-scheduling-candidates-and-venue-binding.md),
-[certification follow-up](../checkpoints/2026-09-07-scheduling-certification-follow-up.md)
-and [timing-repair](../checkpoints/2026-09-07-scheduling-hosted-timing-repair.md)
-checkpoints. Fresh exhaustive local certification, independent hosted acceptance,
-protected delivery and issue reconciliation are still required for this
-integration. Neither the old feature receipt nor PR #84 certifies it.
+Implementation is in progress: bounded audited planning/history projections,
+exact local-minute/comparison helpers, independently authorized Programme-title
+and Venue-room inventories, and non-mutating conflict preview are implemented.
+Preview shares the saved evaluator and preserves canonical person locking;
+existing physical holds still block conflicting unsaved edits. It writes only
+read audits, never candidate/report/booking state, acknowledgements or events.
+The owner reads use existing capability field ceilings without catalog or
+profile expansion. A real-policy test caught mismatched new field names; those
+were corrected and a fast catalog-consistency regression now covers the reads.
+
+The inspector now loads only one explicitly selected owner layer. Host editing
+combines retained required-presence times with independently authorized current
+roster labels, never inferred availability or contacts. The planning snapshot
+supplies Events' trusted time zone. Strict native service-day and placement
+forms delegate to the existing commands; preview/save/replay/stale behavior is
+verified with real PostgreSQL commands. No pointer-specific writer is added.
+
+The remaining native record adapters now cover candidate create/copy/restore/
+archive, occurrence repetition/grouping/retirement, service-day retirement,
+unplacement, saved evaluation, exact warning acknowledgement and explicit
+physical hold replacement/cancellation. Consequential actions require deliberate
+confirmation; Venue-visible reasons are identified. Existing independent owner
+authority, immutable history, optimistic versions and retries remain in charge.
+
+Fresh conflict review now separates saved completeness from live dependency
+status and returns no fingerprints, calendars or acknowledgement rationale.
+The current-hold reader orders reciprocal intents by immutable command control
+version, then rechecks the existing exact-resource Venue boundary. It preserves
+an active hold after draft movement/unplacement and observes cancellation or
+independent physical approval without publishing Programme timing.
+
+The native workspace now connects trusted HTTP requests to owner reads and
+existing commands. It uses ordinary CSRF protection, no-store responses and
+sensitive-POST masking. Strict `ui_` selection resolves against complete owner
+inventories before visible filtering. Exact forms retain submitted versions and
+retry keys; first-group creation stays explicit. Current policy computes task
+choices, including independent history permission for any candidate copy.
+
+The shared shell now renders native filters, selected information layers,
+immutable history/comparison, conflict causes and safe next actions. Current
+labels are distinguished from historical geometry; shared availability never
+silently supplies host names or unshared periods. Owner denial withholds all
+prior private context. Success reloads actual records; lost success refresh is
+reported as uncertain completion, with exact replay confirming the committed
+result without duplicate writes. Private draft changes do not publish or
+implicitly alter room holds.
+
+Pointer placement now opens the same exact occurrence/day/room form as native
+selection, without saving or carrying another target's command versions.
+Accessible range controls fill one exact edition-zone minute field at a time;
+host intervals remain unchanged. Unsaved-input protection retains the current
+form in memory, warns on navigation and recognizes pending previews/errors.
+No autosave, private drag payload, browser persistence or background request is
+added. Day/room filters now retain the unassigned backlog, with the matching
+contract/test updated explicitly; they never assign that backlog implicitly.
+
+Synthetic browser rehearsal verifies drag and native placement, keyboard and
+pointer time input, preview/save, immutable comparison, validation/stale-input
+retention and focus, view-only/manage-only/anonymous/current-profile denial,
+independent layer denial and unavailable-source recovery. It found and corrected
+ambiguous repeated-occurrence labels, missing shared form styling and oversized
+narrow action buttons. Placement/history layouts have no page overflow at all
+seven contract widths. Browser axe checks report no violations on initial,
+placement, validation, stale, history and denied states; the reason textarea's
+inconclusive contrast check was separately measured at 17.12:1.
+
+The subsequent user-approved Chrome rehearsal verifies exact historical copy,
+archive and recovery-by-copy, restore without resurrecting a cancelled room
+hold, explicit repeat/group creation and retirement, and separate room-hold
+request/cancellation/replacement. Extending draft teardown leaves the old hold
+unchanged until the distinct confirmed Venue action. Chrome's accessibility
+scan reports an Acrobat-extension nested-interactive finding outside Maru's
+editor and main landmark; this is not a clean whole-browser scan or a Maru fix.
+Exact warning acknowledgement also passes in Chrome. A fresh report requires
+its own reasoned acknowledgement; withdrawing synthetic host availability while
+that form is open rejects the old intent, retains its exact rationale, focuses
+recovery guidance and marks saved completeness unavailable. The fixture's new
+availability controls reuse the host-owned command, not planner authority.
+Four related owner-backed PostgreSQL regressions pass in 11.98s.
+
+The complete database-free suite passes 3,890 cases in 29.13s (two existing
+URLField warnings); all 64 frontend tests pass in 9.59s, including 31 new tests
+of the actual enhancement script. Fifteen real PostgreSQL HTTP cases pass in
+44.59s on the isolated task database, with 70 unrelated cases deselected. This
+includes fresh destination versions without writes. Focused lint, formatting,
+strict types and NumPy contracts pass. Earlier coverage/domain evidence remains
+in the checkpoint; these checks are not complete certification or runtime proof.
+See the [editor contract checkpoint](../checkpoints/2026-09-08-timetable-editor-contract-and-read-boundary.md).
+Chrome's native discard prompt has since cleared and read-only inspection
+confirms both exact pending form values remain. The action that dismissed the
+prompt was not observed; controlled Cancel/discard acceptance still needs manual
+assistance. Do not infer the missing interaction from retention or unit tests.
+Genuine 200% zoom and enabled reduced-motion preference remain unverified;
+the editor has no computed CSS animation or transition at the current preference.
+Remaining browser gaps and protected certification/delivery are not complete.
+No PR has been opened. The existing classifier selects full integration and all
+historical tests for the new `tests/rehearsals/` harness; retain that policy and
+run the exact-head certification while the manual browser checks remain pending.
+On 2026-09-09 the user explicitly asked not to hold up unattended work for those
+checks. They remain unverified, not waived or claimed as passing; they no longer
+block automated certification, review or PR preparation. Protected merge checks
+and honest acceptance reporting remain mandatory.
+
+The opt-in fixture is documented in the page contract. Both subsequent Chrome
+leases (terminal sessions 43421 and 13211) were explicitly closed and their
+cleanup completed. The original unsaved form and stale-warning DOM are retained
+for inspection, but their loopback servers are no longer running. Reopen a fresh
+isolated fixture before further server actions; do not repeat completed cases.
+The 2026-09-09 resume fixture (session 36907) was also explicitly closed; no
+manual fixture lease remains. Its unchanged baseline was 1920 CSS pixels,
+device-pixel ratio 1 and reduced motion off, not new acceptance evidence.
+Remote main remains `ec0d247`; #85 is open without a PR. Earlier reports, logs,
+receipt and coverage inputs are preserved outside `.local-ci/` before the next
+certification. No scheduled check is added.
+
+The first complete-certification attempt at `c10d301` encountered a protected
+old cache before tests started; the verified artifact root was moved aside,
+without changing its permissions. A fresh attempt passed all 3,890 unit tests
+in 57.60s but failed the dependency audit on js-yaml 4.3.1. Its exact process
+tree and eight disposable certification databases were stopped and removed;
+partial evidence is archived, not certified. Development inputs now pin
+js-yaml 4.3.2 and Vitest 4.1.11, addressing the high-severity YAML merge-budget
+and moderate mocker-path advisories under NFR-011. The current frontend audit
+reports no known vulnerabilities. Complete `check.ps1 -SkipPythonTests`
+preflight passes with both patches, including warning-fatal Sphinx, strict
+types, dependency audits, 64 frontend tests in 9.29s and unchanged generated API
+types/build assets. Existing local configuration/schema warnings remain; this
+database-free preflight does not verify live migration history. Documentation
+validation and diff whitespace checks also pass. Freeze this repaired candidate
+for the next exact-head full certification; neither an older receipt nor a
+partial passing unit run certifies it. No gate or history scope has been reduced.
+
+No production route, navigation, runtime write grant or adoption profile has
+been activated. Current literal manifests and SELECT-only containment remain
+unchanged. This partial branch is not an editor-delivery or runtime claim.
 
 Work stays single-agent. Preserve other worktrees and stashes. The temporary
-#83 app reminder remains deleted and #77's check-in disabled; do not recreate
-either. No Docker cleanup, deployment or production data is authorized.
+#82 heartbeat is paused after successful delivery; #83 remains deleted and
+#77 disabled. Do not recreate or resume them for #85. No general Docker cleanup,
+deployment or production data is authorized.
 
 ## What can be evaluated today
 
@@ -166,7 +288,8 @@ either. No Docker cleanup, deployment or production data is authorized.
   (#61); Applications calls and acknowledged collaborative proposals (#63);
   preview-first import (#66); Department continuity (#64); review and decisions
   (#71); explicit source-bound accepted conversion (#77); host confirmation
-  and deliberately shared per-item availability (#79). These remain dormant
+  and deliberately shared per-item availability (#79); Scheduling candidates,
+  conflict evidence and governed Venue binding (#81). These remain dormant
   foundations, not a departmental workspace.
   [Events](../modules/events.md), [Applications](../modules/applications.md),
   and the [Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md)
@@ -177,13 +300,16 @@ either. No Docker cleanup, deployment or production data is authorized.
 
 ## Smallest sensible next actions
 
-1. Finish #82's integration of the delivered CI policy, including explicit
-   historical membership, real dependency selection, meaningful regressions,
-   timing provenance and current documentation.
-2. Certify the resulting clean exact head with exhaustive history, then push
-   once for fresh hosted acceptance. Merge only after its own PR gate and CodeQL
-   pass; reconcile #81 and #48 and synchronize main. Do not rerun #83 or treat
-   either older receipt as acceptance of the new head.
+1. Certify #85's clean exact head with the policy-required scope and prepare its
+   PR while the user is away. Inspect and repair actual failures; do not wait for
+   manual browser settings before doing this unattended work.
+2. Complete the remaining controlled discard/recovery, genuine zoom and reduced
+   motion evidence when a supported browser control or manual assistance is
+   available. Keep those gaps explicit in the PR and acceptance checklist. Obtain
+   the exact head's hosted PR gate and CodeQL before merge; reconcile #85 and #48
+   and synchronize main. Neither #82's receipt nor a component fixture certifies
+   the new editor or a provisioned runtime. Do not repeat completed native/HTTP
+   work or count a fixture lease as automated browser acceptance.
 3. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48)
    sequentially: accessible editor, Workforce staffing, atomic release/outputs,
    on-site continuity, guided setup/surfaces and integrated acceptance. No routine

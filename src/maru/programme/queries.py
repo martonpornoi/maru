@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     from datetime import datetime
 
 MAX_PROGRAMME_QUERY_ITEMS: Final = 200
+MAX_PROGRAMME_TIMETABLE_ITEMS: Final = 2_000
 _MAX_AUDIT_PURPOSE_LENGTH: Final = 160
 
 PROGRAMME_QUERY_FIELD_CEILINGS: Final = PROGRAMME_LAYER_FIELD_CEILINGS
@@ -80,6 +81,12 @@ class ProgrammeQueryUnavailableError(ProgrammeQueryError):
     """Hide whether a requested tenant-scoped item or layer exists."""
 
     reason_code = "programme_query_unavailable"
+
+
+class ProgrammeTimetableInventoryLimitError(ProgrammeQueryError):
+    """Refuse an incomplete timetable inventory without returning a partial list."""
+
+    reason_code = "programme_timetable_inventory_limit"
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,6 +178,25 @@ class ProgrammePrivateItemProjection:
 
     item: ProgrammeItemProjection
     working: ProgrammeWorkingProjection | None
+
+
+@dataclass(frozen=True, slots=True)
+class ProgrammeTimetableItemProjection:
+    """Minimized independently authorized item identity and current working label.
+
+    Attributes
+    ----------
+    item
+        Exact item identity, kind, lifecycle and current optimistic version.
+    internal_title
+        Current private operational label, never approved public copy.
+    working_version
+        Item version that produced the selected working label.
+    """
+
+    item: ProgrammeItemProjection
+    internal_title: str
+    working_version: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -700,6 +726,107 @@ def list_programme_private_items(
         reason=reason,
         correlation_id=correlation_id,
         source_channel=source_channel,
+        authorizer=authorizer,
+    )
+
+
+def list_programme_timetable_items(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    correlation_id: UUID,
+    authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
+) -> tuple[ProgrammeTimetableItemProjection, ...]:
+    """Read a complete bounded item inventory without private summaries or layers.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Authenticated current person, independently authorized by Programme.
+    organization_id : UUID
+        Expected exact owner of every item and working revision.
+    edition_id : UUID
+        Exact edition containing the inventory.
+    correlation_id : UUID
+        Trusted trace identity for the required minimized read audit.
+    authorizer : ProgrammeAuthorizer, default=DEFAULT_PROGRAMME_AUTHORIZER
+        Normal policy or the existing doubly guarded isolated-test substitute.
+
+    Returns
+    -------
+    tuple[ProgrammeTimetableItemProjection, ...]
+        All current item identities and working labels, including retained items.
+        More than 2,000 items is an explicit limit failure, not a truncated tray.
+    """
+
+    def load() -> tuple[ProgrammeTimetableItemProjection, ...]:
+        working = ProgrammeWorkingRevision.objects.filter(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            item_id=OuterRef("pk"),
+        ).order_by("-sequence", "-id")
+        rows = tuple(
+            ProgrammeItem.objects.filter(
+                organization_id=organization_id, edition_id=edition_id
+            )
+            .annotate(
+                latest_working_internal_title=Subquery(
+                    working.values("internal_title")[:1]
+                ),
+                latest_working_item_version=Subquery(
+                    working.values("item_version")[:1]
+                ),
+            )
+            .order_by("created_at", "id")
+            .values(
+                "id",
+                "kind",
+                "provenance_kind",
+                "lifecycle",
+                "aggregate_version",
+                "latest_working_internal_title",
+                "latest_working_item_version",
+            )[: MAX_PROGRAMME_TIMETABLE_ITEMS + 1]
+        )
+        if len(rows) > MAX_PROGRAMME_TIMETABLE_ITEMS:
+            raise ProgrammeTimetableInventoryLimitError
+        if any(
+            not isinstance(row["latest_working_internal_title"], str)
+            or not row["latest_working_internal_title"]
+            or type(row["latest_working_item_version"]) is not int
+            for row in rows
+        ):
+            raise ProgrammeQueryUnavailableError
+        return tuple(
+            ProgrammeTimetableItemProjection(
+                ProgrammeItemProjection(
+                    row["id"],
+                    row["kind"],
+                    row["provenance_kind"],
+                    row["lifecycle"],
+                    row["aggregate_version"],
+                ),
+                row["latest_working_internal_title"],
+                row["latest_working_item_version"],
+            )
+            for row in rows
+        )
+
+    return _authorized_query(
+        actor_id=actor_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        capability_code=PROGRAMME_VIEW_PRIVATE,
+        requested_fields=frozenset({"item_summaries", "working_information"}),
+        operation="programme.query.timetable_items",
+        loader=load,
+        target_type="events.edition",
+        target_id=edition_id,
+        target_count=len,
+        reason="Prepare the private Programme timetable inventory",
+        correlation_id=correlation_id,
+        source_channel="scheduling-planning",
         authorizer=authorizer,
     )
 

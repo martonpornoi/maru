@@ -540,6 +540,12 @@ architecture documents, implementation issues, tests, and release notes.
   resize, grouping, recurrence, and override must have an equivalent keyboard
   and explicit-form command. Status and conflict severity must never depend on
   color alone.
+  Pointer actions prefill the same explicit command rather than silently
+  saving. Preview is non-mutating and does not lock dependencies; save rechecks
+  exact versions and authority. Comparison uses stable occurrence identities,
+  history has independent read authority, and recovery creates new evidence
+  rather than rewriting an earlier candidate. Partial inventories, stale
+  checks, and unsaved input must remain explicit.
 - **SCH-012 — Atomic release and purpose-bounded projections:** An approved
   immutable schedule candidate may become active only after every required
   artifact and adapter result is validated. Publication changes one active-

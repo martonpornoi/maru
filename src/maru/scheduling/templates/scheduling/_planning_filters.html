@@ -1,0 +1,22 @@
+<section class="baseline-panel" aria-labelledby="planning-filters-title">
+  <h2 id="planning-filters-title">Choose draft and filter the board</h2>
+  <p>Day and room filters keep unassigned work available to place. Filters change this view only. Before switching context, save or deliberately discard unsaved form input.</p>
+  <form method="post" id="planning-filters" class="baseline-form" data-planning-navigation>
+    {% csrf_token %}
+    {% include 'scheduling/_planning_state.html' with state=filter_state %}
+    <div class="baseline-field"><label for="planning-filter-candidate">Private draft</label>
+      <select id="planning-filter-candidate" name="ui_candidate_id"><option value="">No draft selected</option>{% for candidate in snapshot.candidates %}<option value="{{ candidate.id }}" {% if selection.candidate_id == candidate.id %}selected{% endif %}>{{ candidate.label }} · Version {{ candidate.version }} · {{ candidate.lifecycle }}</option>{% endfor %}</select>
+    </div>
+    <div class="baseline-field"><label for="planning-filter-day">Service day</label>
+      <select id="planning-filter-day" name="ui_day_id"><option value="">All service days</option>{% for day in complete_board.days %}<option value="{{ day.id }}" {% if selection.day_id == day.id %}selected{% endif %}>{{ day.label }} · {{ day.lifecycle }}</option>{% endfor %}</select>
+    </div>
+    <div class="baseline-field"><label for="planning-filter-room">Room or room combination</label>
+      <select id="planning-filter-room" name="ui_space_id"><option value="">All rooms</option>{% for space in complete_board.spaces %}<option value="{{ space.id }}" {% if selection.space_id == space.id %}selected{% endif %}>{{ space.venue_label }} / {{ space.label }} · {{ space.lifecycle }}</option>{% endfor %}</select>
+    </div>
+    <div class="baseline-field"><label for="planning-filter-text">Find a working title</label><input id="planning-filter-text" name="ui_text" type="search" value="{{ selection.text }}" maxlength="240" autocomplete="off"></div>
+    <div class="baseline-field"><label for="planning-filter-state">Placement state</label>
+      <select id="planning-filter-state" name="ui_state"><option value="all">All entries</option>{% for value, label in state_choices %}<option value="{{ value }}" {% if selection.state == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    </div>
+    <div class="baseline-form-actions"><button type="submit" name="action" value="select">Apply selection and filters</button><button type="submit" name="action" value="clear_filters">Clear filters</button></div>
+  </form>
+</section>

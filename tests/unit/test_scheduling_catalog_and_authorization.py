@@ -36,6 +36,23 @@ from maru.scheduling.events import (
     SCHEDULING_CHANGED_EVENT,
     validate_scheduling_changed_payload,
 )
+from maru.scheduling.planning_preview import PREVIEW_FIELDS
+from maru.scheduling.planning_queries import HISTORY_FIELDS, PLANNING_FIELDS
+from maru.venues.timetable_queries import TIMETABLE_SPACE_FIELDS
+
+
+@pytest.mark.parametrize(
+    ("capability", "fields"),
+    [
+        ("scheduling.view_planning", PLANNING_FIELDS),
+        ("scheduling.view_history", HISTORY_FIELDS),
+        ("scheduling.view_conflicts", PREVIEW_FIELDS),
+        ("venues.view_workspace", TIMETABLE_SPACE_FIELDS),
+    ],
+)
+def test_editor_reads_request_only_preexisting_capability_fields(capability, fields):
+    assert fields
+    assert fields <= CAPABILITIES[capability].field_ceiling
 
 
 def test_declared_capabilities_and_event_do_not_activate_current_profiles():
@@ -181,7 +198,11 @@ def scope_mocks(monkeypatch, *, allowed=True, fields=frozenset({"candidates"})):
     actor_id, organization_id, edition_id = uuid4(), uuid4(), uuid4()
     edition_loader = MagicMock(
         return_value=SchedulingEditionReference(
-            organization_id, edition_id, 4, accepts_scheduling_writes=True
+            organization_id,
+            edition_id,
+            4,
+            accepts_scheduling_writes=True,
+            zone_name="Europe/Budapest",
         )
     )
     person_loader = MagicMock(return_value=ActiveVerifiedPersonReference(actor_id))

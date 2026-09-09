@@ -79,15 +79,12 @@ def _payload(
     }
 
 
-def _prepare(
-    request: SchedulingCommandRequest, intent: SchedulingPlacementInput
+def _placement_revisions(
+    *, organization_id: UUID, edition_id: UUID, intent: SchedulingPlacementInput
 ) -> _PlacementSources:
-    # The caller already holds Events' edition mutex. Resolve owned immutable
-    # identifiers before Programme locks the complete canonical person set.
-    scope = {
-        "organization_id": request.organization_id,
-        "edition_id": request.edition_id,
-    }
+    # Caller holds Events' edition mutex. This resolves only owned structure;
+    # each dependency owner must still authorize the complete selected input.
+    scope = {"organization_id": organization_id, "edition_id": edition_id}
     occurrence = (
         SchedulingOccurrenceRevision.objects.filter(
             **scope,
@@ -108,11 +105,22 @@ def _prepare(
     ).first()
     if occurrence is None or day is None:
         raise SchedulingUnavailableError
+    return _PlacementSources(occurrence, day)
+
+
+def _prepare(
+    request: SchedulingCommandRequest, intent: SchedulingPlacementInput
+) -> _PlacementSources:
+    sources = _placement_revisions(
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        intent=intent,
+    )
     load_programme_scheduling_dependencies(
         actor_id=request.actor_id,
         organization_id=request.organization_id,
         edition_id=request.edition_id,
-        item_ids=(occurrence.occurrence.programme_item_id,),
+        item_ids=(sources.occurrence.occurrence.programme_item_id,),
         host_ids=tuple(host.host_id for host in intent.host_presences),
         correlation_id=request.correlation_id,
         source_channel=request.source_channel,
@@ -125,7 +133,7 @@ def _prepare(
         correlation_id=request.correlation_id,
         source_channel=request.source_channel,
     )
-    return _PlacementSources(occurrence, day)
+    return sources
 
 
 def set_scheduling_placement(
