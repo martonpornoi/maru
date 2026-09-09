@@ -601,3 +601,14 @@ Cancel/discard sequence. Genuine 200% zoom and enabled reduced-motion evidence
 also remain unavailable without manual assistance. The same manual-browser
 blocker has persisted across three goal turns; automatic continuation stops at
 that boundary rather than repeating completed tests or claiming acceptance.
+
+### Unattended acceptance continuation on 2026-09-09
+
+The user cannot operate the PC now and explicitly asked not to lose unattended
+working time to the remaining manual checks. Their gaps stay documented; this
+does not waive them, lower test thresholds or authorize an unverified protected
+merge. Automated exact-head certification, review and PR preparation proceed
+without waiting for manual browser settings. The resume fixture (session 36907)
+was explicitly finished and its cleanup completed; it provided no additional
+zoom or motion acceptance. Earlier exact certification and focused evidence are
+archived outside `.local-ci/` before the certifier recreates that artifact area.

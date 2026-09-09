@@ -232,19 +232,23 @@ the editor has no computed CSS animation or transition at the current preference
 Remaining browser gaps and protected certification/delivery are not complete.
 No PR has been opened. The existing classifier selects full integration and all
 historical tests for the new `tests/rehearsals/` harness; retain that policy and
-defer the expensive run until the final clean candidate is ready.
+run the exact-head certification while the manual browser checks remain pending.
+On 2026-09-09 the user explicitly asked not to hold up unattended work for those
+checks. They remain unverified, not waived or claimed as passing; they no longer
+block automated certification, review or PR preparation. Protected merge checks
+and honest acceptance reporting remain mandatory.
 
 The opt-in fixture is documented in the page contract. Both subsequent Chrome
 leases (terminal sessions 43421 and 13211) were explicitly closed and their
 cleanup completed. The original unsaved form and stale-warning DOM are retained
 for inspection, but their loopback servers are no longer running. Reopen a fresh
 isolated fixture before further server actions; do not repeat completed cases.
-On the user-requested 2026-09-09 resume, a fresh one-hour fixture is open at
-`http://127.0.0.1:63149/rehearsal/` (terminal session 36907), awaiting assisted
-zoom/confirmation checks. Its baseline is 1920 CSS pixels, device-pixel ratio 1,
-and reduced motion off. Verify the lease before reuse; no acceptance is inferred
-from starting it. Remote main remains `ec0d247`; #85 is open without a PR.
-No scheduled check or full certification is running.
+The 2026-09-09 resume fixture (session 36907) was also explicitly closed; no
+manual fixture lease remains. Its unchanged baseline was 1920 CSS pixels,
+device-pixel ratio 1 and reduced motion off, not new acceptance evidence.
+Remote main remains `ec0d247`; #85 is open without a PR. Earlier reports, logs,
+receipt and coverage inputs are preserved outside `.local-ci/` before the next
+certification. No scheduled check is added.
 No production route, navigation, runtime write grant or adoption profile has
 been activated. Current literal manifests and SELECT-only containment remain
 unchanged. This partial branch is not an editor-delivery or runtime claim.
@@ -278,14 +282,16 @@ deployment or production data is authorized.
 
 ## Smallest sensible next actions
 
-1. Finish #85's remaining browser acceptance, especially user-assisted native
-   discard/recovery, genuine zoom and reduced motion.
-   Do not repeat completed native/HTTP implementation or count a fixture lease
-   as automated browser acceptance.
-2. Certify the complete clean exact head with the policy-required scope.
-   Obtain its own hosted PR gate and CodeQL before merge; reconcile #85 and #48
+1. Certify #85's clean exact head with the policy-required scope and prepare its
+   PR while the user is away. Inspect and repair actual failures; do not wait for
+   manual browser settings before doing this unattended work.
+2. Complete the remaining controlled discard/recovery, genuine zoom and reduced
+   motion evidence when a supported browser control or manual assistance is
+   available. Keep those gaps explicit in the PR and acceptance checklist. Obtain
+   the exact head's hosted PR gate and CodeQL before merge; reconcile #85 and #48
    and synchronize main. Neither #82's receipt nor a component fixture certifies
-   the new editor or a provisioned runtime.
+   the new editor or a provisioned runtime. Do not repeat completed native/HTTP
+   work or count a fixture lease as automated browser acceptance.
 3. Continue umbrella [#48](https://github.com/martonpornoi/maru/issues/48)
    sequentially: accessible editor, Workforce staffing, atomic release/outputs,
    on-site continuity, guided setup/surfaces and integrated acceptance. No routine
