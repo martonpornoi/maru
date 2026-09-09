@@ -15,6 +15,16 @@ This is not a delivered staffing workflow or an activated Programme profile.
 
 ## Programme staffing requirements
 
+`staffing_sources.load_programme_staffing_selection` independently resolves the
+exact current requirement and selected Scheduling alternative. It requires
+Programme work-field authority and Scheduling planning authority, retains the
+edition mutex across both reads, and rechecks Programme authority before release.
+Candidate, occurrence, placement and service-day revisions must remain current;
+copying another alternative does not replace the selected source. Its immutable
+work/source digest is an optimistic comparison token, not portable authority.
+A cross-owner writer must acquire the canonical Workforce scope first and
+resolve the selection again before commit. This source read creates no demand.
+
 `change_programme_staffing_requirement` accepts a typed `ProgrammeStaffingChange`
 under independent exact-edition `programme.manage_staffing` authority. Creation
 requires a current owned occurrence, Position and Department, explicit work

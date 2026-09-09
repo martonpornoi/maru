@@ -628,6 +628,31 @@ authorize their own exact command before resolution and recheck after locking.
 Recording or retiring a Programme requirement does not create, update or cancel
 a Workforce demand. The explicit bound-demand adapter remains unfinished in #88.
 
+The separate, likewise unpinned `workforce.programme-staffing@1` adapter owns
+explicit work-impact reads. `programme_staffing_queries.load_programme_staffing_demand`
+requires independent `workforce.view_shifts` authority for `shift_demands` and
+`coverage_states`. It reads one exact demand's person-facing work terms and
+aggregate retained/claimed/confirmed counts under the canonical scope, rechecks
+authority and audits before release. It does not load personnel labels, private
+decision reasons or availability. Unlike minimized planning coverage, this
+deliberate work-comparison purpose may disclose the work briefing. Write
+admission separately requires `workforce.manage_shifts` and does not grant read
+authority. Neither adapter is activated in either executable profile.
+
+`programme_impact.evaluate_programme_staffing_impact` describes closed
+create/link/reconcile/successor consequences without granting authority. Linking
+an existing demand requires an uncommitted draft with identical explicit terms;
+reconciliation requires a draft with no retained commitments, including removed
+history. A changed Position requires a successor because a demand's Position
+identity is immutable. A successor must explicitly cancel a nonterminal
+predecessor through Workforce; a cancelled or completed predecessor is retained
+without another cancellation. The preview distinguishes active claims and
+confirmations affected by cancellation from all preserved history. It never
+transfers decisions, reconfirms people or relocks work. An ordinary demand
+lifecycle version change alone does not mean its work terms changed. Persistent
+binding/source checks and the command's fresh impact-token comparison remain
+mandatory, unfinished parts of the adapter.
+
 The query accepts 1–1,024 distinct exact-edition demand IDs and at most 4,096
 retained commitments in total. Missing or foreign selection, source inconsistency,
 overflow and audit failure yield no partial result. It selects no briefing,

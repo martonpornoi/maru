@@ -17,10 +17,24 @@ ASSIGNMENT_PARTICIPATION_EXCLUDED_ADAPTER = (
 )
 WORKFORCE_SELF_ADAPTER = "workforce.self@1"
 WORKFORCE_PROGRAMME_COVERAGE_ADAPTER = "workforce.programme-coverage@1"
+WORKFORCE_PROGRAMME_STAFFING_ADAPTER = "workforce.programme-staffing@1"
 
 WORKFORCE_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
     owner_module="workforce",
     descriptors=(
+        AdoptionAdapterDescriptor(
+            code=WORKFORCE_PROGRAMME_STAFFING_ADAPTER,
+            owner_module="workforce",
+            kind="programme-staffing",
+            result_semantics=(
+                "Resolves authorized explicit work impact and binds selected "
+                "Programme requirements through governed Workforce commands."
+            ),
+            failure_semantics=(
+                "Denies unpinned profiles and rejects stale or incomplete "
+                "source evidence without rewriting retained volunteer decisions."
+            ),
+        ),
         AdoptionAdapterDescriptor(
             code=WORKFORCE_PROGRAMME_COVERAGE_ADAPTER,
             owner_module="workforce",

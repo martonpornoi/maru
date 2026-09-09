@@ -132,10 +132,11 @@ def test_owner_adapter_registries_are_complete_and_nonduplicating() -> None:
         ASSIGNMENT_PARTICIPATION_EXCLUDED_ADAPTER,
         WORKFORCE_SELF_ADAPTER,
         "workforce.programme-coverage@1",
+        "workforce.programme-staffing@1",
     }
 
     all_codes = [code for registry in _OWNER_ADAPTER_REGISTRIES for code in registry]
-    assert len(all_codes) == 32
+    assert len(all_codes) == 33
     assert len(set(all_codes)) == len(all_codes)
     assert all(
         code == descriptor.code

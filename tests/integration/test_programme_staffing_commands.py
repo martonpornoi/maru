@@ -94,42 +94,7 @@ def world(monkeypatch):
         expected_control_version=0,
         authorizer=TrustedSchedulingPolicy(),
     )
-    _, _, bundle = create_provenance_backed_role_bundle(
-        edition.organization,
-        code="programme-steward",
-        name="Programme steward",
-        capability_codes=("workforce.view_structure",),
-    )
-    department = create_department_for_test(
-        edition=edition, name="Programme", expected_code="programme"
-    )
-    template = PositionTemplate.objects.create(
-        organization=edition.organization,
-        code="programme-steward",
-        name="Programme steward",
-        description="Synthetic Programme work",
-        default_headcount=4,
-        default_capacity_codes=["volunteer"],
-        role_bundle=bundle,
-        status=PositionTemplate.Status.PUBLISHED,
-        created_by=actor,
-    )
-    position = save_position_for_test(
-        position=Position(
-            organization=edition.organization,
-            edition=edition,
-            template=template,
-            department=department,
-            role_bundle=bundle,
-            code="programme-steward",
-            title="Programme steward",
-            description="Synthetic operational station",
-            headcount=4,
-            capacity_codes=["volunteer"],
-            status=Position.Status.OPEN,
-            created_by=actor,
-        )
-    )
+    position = staffing_position(actor, edition)
     edition.refresh_from_db()
     terms = ProgrammeStaffingExpectation(
         position.id,
@@ -162,6 +127,46 @@ def world(monkeypatch):
         "reason": "Private staffing rationale",
     }
     return common, change
+
+
+def staffing_position(actor, edition):
+    """Create a governed synthetic Position without an assignment or Participation."""
+    _, _, bundle = create_provenance_backed_role_bundle(
+        edition.organization,
+        code="programme-steward",
+        name="Programme steward",
+        capability_codes=("workforce.view_structure",),
+    )
+    department = create_department_for_test(
+        edition=edition, name="Programme", expected_code="programme"
+    )
+    template = PositionTemplate.objects.create(
+        organization=edition.organization,
+        code="programme-steward",
+        name="Programme steward",
+        description="Synthetic Programme work",
+        default_headcount=4,
+        default_capacity_codes=["volunteer"],
+        role_bundle=bundle,
+        status=PositionTemplate.Status.PUBLISHED,
+        created_by=actor,
+    )
+    return save_position_for_test(
+        position=Position(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=bundle,
+            code="programme-steward",
+            title="Programme steward",
+            description="Synthetic operational station",
+            headcount=4,
+            capacity_codes=["volunteer"],
+            status=Position.Status.OPEN,
+            created_by=actor,
+        )
+    )
 
 
 def execute(world, *, change=None, key=None, overrides=None):

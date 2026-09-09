@@ -176,9 +176,23 @@ current/history reads, canonical owner references, reciprocal PostgreSQL guards,
 runtime SELECT-only containment and populated downgrade fences. The earlier
 minimized Workforce coverage source remains behind an unpinned adapter.
 
-The latest broad fast run passed 4,078 unit tests in 24.49s (two pre-existing
-Django URLField deprecation warnings). Subsequent focused acceptance passed 36
-PostgreSQL cases and eight contract cases in 90.49s, including adversarial DML,
+Exact Programme/Scheduling source selection and a separate authorized Workforce
+work-impact read are also implemented locally. Candidate copying preserves the
+selected source; movement, current service-day changes and requirement retirement
+invalidate it. Closed impact rules require identical uncommitted drafts for
+linking, no retained commitments for reconciliation, and explicit predecessor
+cancellation/history preservation for successors. No binding command is exposed.
+
+The latest full fast run passed 4,173 unit tests in 21.58s, with the same two
+pre-existing Django URLField warnings. A focused PostgreSQL regression passed
+43 cases in 102.35s, omitting the two unchanged requirement migration round-trip
+cases already checked below. Three new source files passed strict types and
+semantic docstrings; focused lint passed. These are not full certification,
+browser acceptance or protected delivery. See the
+[source/impact checkpoint](../checkpoints/2026-09-09-programme-staffing-source-and-impact.md).
+
+The earlier persistence acceptance passed 36 PostgreSQL cases and eight contract
+cases in 90.49s, including adversarial DML,
 concurrency, read ceilings, audit failure and both migration paths. These are
 local step results, not complete issue certification. Exact Programme schema
 and guard fingerprints match; authority guard metadata is installed, but the
@@ -219,8 +233,9 @@ and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffi
 ## Smallest sensible next actions
 
 1. Continue #88 with exact-source Workforce demand create/link/reconcile and
-   explicit successor commands under ADR 0093. Requirement persistence and its
-   focused checks are implemented locally. Reuse existing Workforce commands;
+   explicit successor commands under ADR 0093. Requirement persistence, exact
+   source selection and authorized impact inputs are implemented locally.
+   Reuse existing Workforce commands;
    never silently rewrite accepted Shifts. Add reciprocal binding guards,
    source-movement/commitment races and the remaining migration/recovery proof.
 2. Carry the staffing child through focused tests, appropriate exact-head
