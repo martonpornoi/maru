@@ -455,6 +455,13 @@ share its database with a concurrently running integration suite.
 
 ## Integrity, observation and remaining work
 
+All command transactions and locking planning reads acquire the shared Workforce
+parent scope before the Events edition, person set and Scheduling rows. The
+Events fact read reuses that held edition lock. This matches Programme source
+commands and binding operations: edition-first locking can otherwise deadlock
+against a binding's Organization lock during deferred receipt foreign-key checks.
+The source-movement, source-edit/read and binding races exercise this order.
+
 Commands lock the exact edition, canonical people, owner records and complete
 sorted physical-member union before selected rooms. Ordinary Venue writers
 share the physical lock order, including replacement across rooms. PostgreSQL

@@ -3,7 +3,7 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, worker, or production writer
 
-Last updated: 2026-09-09
+Last updated: 2026-09-10
 
 ## Purpose and ownership
 
@@ -11,11 +11,20 @@ Issue #88 is adding the HR-015 staffing continuation under ADR 0093. Local
 Programme requirement persistence, immutable work terms, protected current reads
 and paginated history are implemented, together with exact source selection and
 Workforce-owned binding/recovery commands and exact-source Scheduling coverage.
-The [native staffing continuation](../product/page-contracts/programme-staffing.md),
-browser acceptance and complete certification remain in progress.
+The [native staffing continuation](../product/page-contracts/programme-staffing.md)
+and focused synthetic browser rehearsal are implemented locally; complete
+certification remains in progress.
 This is not a delivered staffing workflow or an activated Programme profile.
 
 ## Programme staffing requirements
+
+`scope_references.resolve_private_planning_edition_reference` wraps the Events
+fact projection for Programme callers. Ordinary preauthorization stays read-only;
+locking item, host, readiness, source and staffing paths acquire the public
+canonical Workforce parent/edition scope before person or Programme rows. The
+already-held edition lock protects the subsequent Events fact read. This ordering
+prevents source/binding races from deadlocking at deferred evidence foreign keys;
+it changes no profile admission, lifecycle, capability or independent field ceiling.
 
 `staffing_sources.load_programme_staffing_selection` independently resolves the
 exact current requirement and selected Scheduling alternative. It requires

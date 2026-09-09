@@ -5,12 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
+from django.core.exceptions import ValidationError
 from django.db import DatabaseError, transaction
 from django.db.models import F
 
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.events.scheduling_queries import resolve_scheduling_edition_reference
+from maru.workforce.programme_references import lock_programme_staffing_scope
 
 from .authorization import (
     DEFAULT_SCHEDULING_AUTHORIZER,
@@ -370,7 +372,11 @@ def _audit(
 
 
 def _lock_edition(request: SchedulingReadRequest) -> None:
-    if resolve_scheduling_edition_reference(**_ownership(request), lock=True) is None:
+    try:
+        lock_programme_staffing_scope(**_ownership(request))
+    except ValidationError as error:
+        raise SchedulingAuthorizationDeniedError from error
+    if resolve_scheduling_edition_reference(**_ownership(request), lock=False) is None:
         raise SchedulingAuthorizationDeniedError
 
 
@@ -392,7 +398,8 @@ def _read[ResultT](
         require_identifier(value)
     try:
         with transaction.atomic():
-            # Match commands: edition mutex, then any complete owner-resolved
+            # Match commands: canonical shared parents, then edition mutex and
+            # any complete owner-resolved
             # person set, then the actor-only final recheck. Locking the actor
             # first would invert Programme's multi-host canonical lock order.
             _lock_edition(request)

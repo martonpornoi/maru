@@ -10,6 +10,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
 import maru.effects.services as effect_services
+import maru.programme.scope_references as programme_scope_references
 from maru.audit.models import AuditEvent
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import PolicyDecision
@@ -580,6 +581,7 @@ def test_list_is_bounded_deterministic_and_reauthorized(
 
 def test_readiness_summary_is_explainable_stale_and_constant_query_count(
     admits_exact_effect: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Expose evidence cursors and project staleness without per-row queries."""
     del admits_exact_effect
@@ -619,6 +621,18 @@ def test_readiness_summary_is_explainable_stale_and_constant_query_count(
         authorizer=authorizer,
     )
     query_authorizer = _TrustedAuthorizer()
+    lock_scope = programme_scope_references.lock_programme_staffing_scope
+    scope_queries: list[str] = []
+
+    def capture_scope(**kwargs: UUID) -> object:
+        with CaptureQueriesContext(connection) as scope_capture:
+            result = lock_scope(**kwargs)
+        scope_queries.extend(query["sql"] for query in scope_capture.captured_queries)
+        return result
+
+    monkeypatch.setattr(
+        programme_scope_references, "lock_programme_staffing_scope", capture_scope
+    )
 
     with CaptureQueriesContext(connection) as captured:
         readiness = load_programme_readiness(
@@ -646,14 +660,32 @@ def test_readiness_summary_is_explainable_stale_and_constant_query_count(
         and '"programme_' in query["sql"]
     ]
     assert len(programme_selects) == 2
-    # Host readiness must share the command's edition-first snapshot fence.
+    # Fixed parent locking replaces edition-first locking without adding any
+    # per-concern reads. Keep the prior 16-query budget plus its Events fact read;
+    # separately bound the new scope and enforce its actual parent lock order.
+    assert len(scope_queries) == 8
+    parent_locks = [query for query in scope_queries if "FOR UPDATE" in query]
+    assert len(parent_locks) == 3
+    for query, table in zip(
+        parent_locks,
+        (
+            "organizations_organization",
+            "organizations_conventionseries",
+            "events_eventedition",
+        ),
+        strict=True,
+    ):
+        assert f'"{table}"' in query
+    assert (
+        sum("pg_catalog.pg_advisory_xact_lock" in query for query in scope_queries) == 4
+    )
     edition_locks = [
         query
         for query in captured.captured_queries
         if '"events_eventedition"' in query["sql"] and "FOR UPDATE" in query["sql"]
     ]
     assert len(edition_locks) == 1
-    assert len(captured) - len(edition_locks) <= 16
+    assert len(captured) - len(scope_queries) <= 17
 
 
 def test_readiness_history_is_separate_bounded_audited_and_rationale_complete(

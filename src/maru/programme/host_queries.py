@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 from maru.events.queries import (
     resolve_edition_time_envelope_reference,
-    resolve_private_planning_edition_reference,
 )
 from maru.identity.queries import (
     active_verified_person_account_display_labels,
@@ -43,6 +42,7 @@ from .queries import (
     ProgrammeQueryUnavailableError,
     _authorized_query,
 )
+from .scope_references import resolve_private_planning_edition_reference
 
 if TYPE_CHECKING:
     from collections.abc import Callable

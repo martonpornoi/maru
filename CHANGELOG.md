@@ -15,11 +15,18 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant Programme staffing requirements, exact timetable-to-Shift
+  bindings, explicit work-impact preview/apply and independently authorized
+  coverage/history. Timetable edits mark coverage stale instead of silently
+  rewriting accepted volunteer work; successors preserve prior decisions.
+  Native controls are rehearsed with synthetic data, but Programme profile and
+  runtime activation remain gated
+  ([#88](https://github.com/martonpornoi/maru/issues/88), ADR 0093, HR-015).
 - Added a dormant Programme timetable editor with equivalent pointer and native
   keyboard forms, private information layers, conflict preview, recoverable
   candidate history and explicit room-hold actions. Draft changes never publish
   or silently reserve rooms. This does not activate a Programme profile; manual
-  browser acceptance and protected delivery remain pending
+  browser follow-ups remain gated by #87 before activation
   ([#85](https://github.com/martonpornoi/maru/issues/85), ADR 0092, SCH-007/010).
 - Added dormant Programme host/co-host invitations, independent personal
   confirmation and purpose-bounded availability. Self, roster and history reads

@@ -191,7 +191,7 @@ late failures restore cancelled work and commitments atomically. Workforce
 `0019`–`0021` add the dormant tables, reciprocal guards and populated reverse fence.
 Both adapters and both new tables remain unactivated/SELECT-only.
 
-The latest full fast run passed **4,202 unit tests in 20.82s**, with the same two
+An earlier full fast run passed **4,202 unit tests in 20.82s**, with the same two
 pre-existing Django URLField warnings. Focused binding acceptance passed **19
 PostgreSQL command/race cases in 80.26s** and **six integrity/recovery cases in
 32.75s**, including actual claims/confirmations, raw source forgery, disabled-guard
@@ -222,7 +222,7 @@ now has native requirement, fixed-history and exact work preview/apply controls.
 Nine real PostgreSQL HTTP cases passed in 48.50s, including all four work actions,
 retained retries, stale source rejection, CSRF/read-only denial and uncertain
 post-commit reload recovery. Six minimized choice-reader cases also passed.
-The latest full fast run passed **4,244 unit tests in 21.37s**; five subsequently
+The native-workflow full fast run passed **4,244 unit tests in 21.37s**; five subsequently
 added template-focus regression cases passed separately.
 
 Two finite synthetic browser leases are closed. Planner revision/validation,
@@ -233,9 +233,27 @@ staffing focus defect was fixed and rechecked in the browser. This does not clos
 #87's native discard, genuine zoom or enabled reduced-motion gates, nor claim
 representative-human, screen-reader or provisioned-runtime acceptance. See the
 [native staffing checkpoint](../checkpoints/2026-09-10-programme-staffing-native-workflow.md).
-Remaining #88 work is issue-level concurrency and own-person/no-Participation
-acceptance, complete certification and protected delivery. No PR or staffing
-merge exists; no production route, profile or runtime writer is activated.
+Issue-level races exposed and reproduced a real PostgreSQL deadlock between
+source movement and first binding: edition-first source locking inverted the
+binding's parent locks at deferred foreign-key commit. Programme source commands
+and locking reads, plus Scheduling commands and planning reads, now join the
+canonical parent scope before narrower locks. A redundant edition lock was
+removed; readiness retains two Programme SELECTs, separately bounded fixed scope
+overhead and explicit parent-order assertions.
+
+The combined final regression passed **30 cases in 112.17s**, including nine
+committed competing-owner scenarios, native staffing HTTP and host/privacy/read
+regressions. The real Workforce-only personal journey independently passed
+claim, different-organizer confirmation, lock and retained My Shifts after
+Assignment ending, with no Participation or unrelated-module state. This is
+compositional owner-boundary evidence, not Programme-only profile activation.
+The latest full fast run passed **4,252 unit tests in 25.53s** before the final
+redundant-lock removal; its focused regression passed in the 30-case run.
+Ruff, four-file strict types and three-file semantic docstrings pass. See the
+[concurrency and personal-input checkpoint](../checkpoints/2026-09-10-programme-staffing-concurrency-and-personal-inputs.md).
+Remaining #88 work is complete exact-commit certification and protected delivery.
+No PR or staffing merge exists; no production route, profile or runtime writer
+is activated.
 See the [persistence checkpoint](../checkpoints/2026-09-09-programme-staffing-requirement-persistence.md)
 and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
 
@@ -264,13 +282,13 @@ and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffi
 
 ## Smallest sensible next actions
 
-1. Continue #88 with the bounded native requirement/history and staffing-impact
-   UI under its page contract. Requirement, binding, retained history and exact-
-   source coverage kernels are implemented locally, including focused read,
-   lifecycle, race, integrity and migration checks. Retain source freshness,
-   field ceilings and the existing Shift lifecycle; never silently rewrite work.
-2. Carry the staffing child through focused tests, appropriate exact-head
-   certification and protected delivery. Include this post-editor checkpoint.
+1. Certify the clean #88 candidate once through the required eight-database
+   exact-commit command. The included CI dependency-closure repair selects
+   exhaustive history; a current-only diagnostic cannot substitute for it.
+   Requirement, native UI, binding, coverage, race, personal-owner and migration
+   focused acceptance is complete; retain source freshness and field ceilings.
+2. Carry that exact staffing candidate through protected PR delivery and main
+   synchronization, then close #88 with its verification and merge evidence.
 3. Complete #87 before activation. Continue release/outputs, on-site continuity,
    guided setup/surfaces and the integrated synthetic Programme-only journey.
    No routine approval is needed between delivered children; keep #48 open.

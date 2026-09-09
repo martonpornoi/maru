@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from django.db.models import F
 
-from maru.events.queries import resolve_private_planning_edition_reference
+from maru.programme.scope_references import resolve_private_planning_edition_reference
 
 from .authorization import (
     DEFAULT_PROGRAMME_AUTHORIZER,

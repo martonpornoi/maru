@@ -95,7 +95,14 @@ a work change. Missing Workforce authority yields withheld null counts, and an
 incomplete dependency makes the complete coverage layer unavailable. Retained
 binding history has a separately authorized fixed ceiling and bounded cursor;
 current requirements or coverage do not grant historical rationale access.
-Source-bound commands and coverage/history queries are implemented locally;
-Scheduling coverage/history UI, browser acceptance and protected #88 delivery remain
-unfinished. #87, atomic release, on-site continuity, guided setup and integrated
+Source-bound commands, coverage/history queries and native controls have focused
+local acceptance. A post-command reload failure is uncertain success, not proof
+of rollback: keep the original pending intent/retry key and inspect retained
+history or retry exactly. Never edit hidden source versions to force a stale form
+through. The parent lock order now applies to Programme source and Scheduling
+commands/locking reads as well as binding apply; do not restore edition-first
+locking or hide deadlocks by extending timeouts.
+
+Full certification and protected #88 delivery remain unfinished. #87, atomic
+release, on-site continuity, guided setup and integrated
 Programme-only acceptance remain mandatory before activation under #48.

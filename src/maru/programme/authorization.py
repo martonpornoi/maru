@@ -13,10 +13,9 @@ from maru.authorization.policy import (
     decide_verified_principal_exact_edition,
     decide_verified_principal_exact_self,
 )
-from maru.events.queries import (
-    resolve_private_planning_edition_reference,
-)
 from maru.identity.queries import resolve_active_verified_account_reference
+
+from .scope_references import resolve_private_planning_edition_reference
 
 if TYPE_CHECKING:
     from uuid import UUID

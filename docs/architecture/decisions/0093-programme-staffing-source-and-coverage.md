@@ -61,6 +61,16 @@ authority are checked under this scope; all state, receipts, audits, events and
 outbox work commit or roll back together. Each module owns its tables and
 guards; adapters use public commands and minimized typed queries.
 
+The same parent order applies to Programme source commands and locking reads,
+and to Scheduling commands and audited planning reads, not just the binding
+adapter. An edition-first source transaction can otherwise block at its deferred
+Organization foreign-key checks while a binding holds Organization and waits for
+that edition. Programme's `scope_references` composes the public Workforce scope
+with Events-owned facts; it does not reinterpret lifecycle or grant authority.
+Once the shared scope owns the edition lock, fact resolution does not acquire
+that identical lock a second time. Person and owner-aggregate locks remain after
+the shared parents. Do not mask this inversion with retries or longer timeouts.
+
 The personal reader uses only the caller's own retained Shift relationship.
 Private Programme alternatives are not disclosed through that relationship.
 Combined published host/volunteer timetables remain the later SCH-012 atomic-
