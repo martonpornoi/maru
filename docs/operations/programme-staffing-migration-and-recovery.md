@@ -51,6 +51,13 @@ Any retained binding or revision blocks `0021` before removal of a guard. The
 broader Programme downgrade also traverses these dependent Workforce migrations;
 do not infer that an unused Programme layer permits removing retained work lineage.
 
+An attempted older Programme, Scheduling or Venues downgrade can reverse these
+six unused staffing successors before reaching that owner's populated fence.
+The failed command is not an all-graph rollback: verify the exact remaining
+migration set and retained owner guards, then reapply the current graph before
+resuming ordinary operation. Retained owner records and revisions must be
+unchanged; missing current relations must not be described as full readiness.
+
 Once any staffing evidence exists, retain compatible code and fix forward.
 Do not fake migrations, disable guards, delete receipts, remove history, or
 truncate retained requirements to pass the fence. The test-only cleanup escape

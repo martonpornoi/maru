@@ -2,7 +2,7 @@
 
 Status: Implemented V02 worker boundary, exact-profile delivery guards, and
 value-minimized aggregate facts, including dormant Applications Programme facts
-Last updated: 2026-09-01
+Last updated: 2026-09-10
 
 ## Purpose and requirements
 
@@ -85,6 +85,13 @@ at least once: a provider timeout or worker crash can cause a repeat, so every
 handler or adapter must make that key an idempotency boundary or reconcile the
 ambiguous result.
 
+The ADR 0093 `workforce.programme_staffing.changed.v1` fact is likewise
+explicitly dormant. Its payload is only the closed binding action; staffing
+terms, people, rationale and private timetable content remain outside it.
+Neither an executable adoption profile nor the non-edition catalog pins a
+route, and neither internal acknowledgement nor notification handling is
+installed. Its explicit dormant declaration does not activate Programme work.
+
 `aggregate_domain_facts(...)` is the public read boundary for a bounded record
 history. The caller must provide exact organization, aggregate type/identifier,
 an event-name allowlist, and a limit. It returns event name, occurrence time,
@@ -133,10 +140,14 @@ quarantine error codes for operator diagnosis; these codes do not become
 Prometheus labels. Monitoring can request a non-zero result when quarantined
 work exists, and no payload or personal field is exposed.
 
-The built-in internal destination explicitly acknowledges every currently
-registered event definition. This is a durable no-op delivery boundary for
-facts that have no projector yet; provider connectors and future projectors use
-separate destinations and idempotency stores.
+The built-in internal destination acknowledges only the explicitly classified
+internal events. Every registered event belongs to exactly one of the closed
+internal or dormant sets; dormant facts have no internal or notification
+handler. Database-free tests enforce that complete partition before migration
+acceptance, which retains its existing independent registry check. Internal
+acknowledgement is a durable no-op boundary for facts without a projector;
+provider connectors and future projectors use separate destinations and
+idempotency stores.
 
 Replay is no longer a raw storage operation. The application command and
 management command require `effects.replay`, a non-empty reason, exact tenant

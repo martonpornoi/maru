@@ -280,10 +280,29 @@ The complete seven-case conversion/host recovery regression passed in
 only; migration guards and production behavior remain unchanged. See the
 [historical recovery checkpoint](../checkpoints/2026-09-10-programme-staffing-historical-recovery.md).
 The recovered partial logs contain the three known conversion-test failures;
-the remaining suite was not completed. Commit the verified repair and run fresh
-exact-commit certification; preserved partial results cannot substitute for it.
+the remaining suite was not completed. That repair was committed as `9a48829`.
 See the [persistence checkpoint](../checkpoints/2026-09-09-programme-staffing-requirement-persistence.md)
 and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
+
+The complete `9a48829` certification then finished all eight PostgreSQL shards:
+**3,683 passed, four failed**, with no skips or teardown errors. Its 4,252 unit
+tests, 64 frontend tests and non-database quality gates passed. Diagnostic
+combined branch-aware coverage is **90.56%**, but this failed run produced no
+certification receipt and permits no push or merge. Complete reports and all
+nine coverage parts are preserved locally.
+
+The verified follow-up declares the new staffing event explicitly dormant,
+adds fast registry/route-containment regressions, preserves exact retained
+Scheduling/Venues migrations and guards while permitting only six named empty
+staffing reversals, and makes the synthetic Shift truncate attempt reach its
+original guard despite new referencing tables. No migration, guard, route or
+coverage policy is weakened. **Five focused PostgreSQL checks passed in 227.32s**;
+the sole warning was an unavailable optional pytest cache. **All 4,254 unit
+tests passed in 21.89s**, with the two existing URLField warnings, using a
+dedicated workspace temporary directory after an initial Windows shared-temp
+permission failure. The [acceptance repair checkpoint](../checkpoints/2026-09-10-programme-staffing-acceptance-repairs.md)
+records the exact boundaries. Commit this repair and certify the new clean head;
+#88 is still local, and #87 and all Programme activation gates remain open.
 
 ## What can be evaluated today
 

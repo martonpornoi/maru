@@ -1,6 +1,11 @@
 import pytest
 from django.core.exceptions import ValidationError
 
+from maru.effects.handlers import (
+    ACKNOWLEDGED_DORMANT_EVENTS,
+    ACKNOWLEDGED_INTERNAL_EVENTS,
+    built_in_handler_registry,
+)
 from maru.effects.registry import (
     DEFINITIONS_BY_NAME,
     EVENT_DEFINITIONS,
@@ -12,6 +17,23 @@ from maru.effects.services import validate_effect_error_code
 def test_domain_event_registry_is_closed_and_unique() -> None:
     assert len(DEFINITIONS_BY_NAME) == len(EVENT_DEFINITIONS)
     assert all(definition.description for definition in EVENT_DEFINITIONS)
+
+
+def test_every_registered_event_has_an_explicit_handler_or_dormant_boundary() -> None:
+    assert ACKNOWLEDGED_INTERNAL_EVENTS.isdisjoint(ACKNOWLEDGED_DORMANT_EVENTS)
+    assert frozenset(DEFINITIONS_BY_NAME) == (
+        ACKNOWLEDGED_INTERNAL_EVENTS | ACKNOWLEDGED_DORMANT_EVENTS
+    )
+    handlers = built_in_handler_registry()
+    assert all(
+        handlers.resolve(event_name=event_name, destination="internal") is not None
+        for event_name in ACKNOWLEDGED_INTERNAL_EVENTS
+    )
+    assert all(
+        handlers.resolve(event_name=event_name, destination=destination) is None
+        for event_name in ACKNOWLEDGED_DORMANT_EVENTS
+        for destination in ("internal", "notifications")
+    )
 
 
 def test_registered_payload_requires_exact_bounded_schema() -> None:

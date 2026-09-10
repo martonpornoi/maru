@@ -6,7 +6,14 @@ from uuid import uuid4
 import pytest
 from django.core.exceptions import ValidationError
 
+from maru.effects.adoption import NON_EDITION_EFFECT_ROUTES
+from maru.effects.handlers import (
+    ACKNOWLEDGED_DORMANT_EVENTS,
+    ACKNOWLEDGED_INTERNAL_EVENTS,
+    built_in_handler_registry,
+)
 from maru.effects.registry import validate_event_payload
+from maru.events.adoption import ADOPTION_PROFILES
 from maru.programme.staffing_inputs import ProgrammeStaffingSource
 from maru.workforce.models import ProgrammeShiftBinding, ProgrammeShiftBindingRevision
 from maru.workforce.programme_impact import ProgrammeStaffingAction as Action
@@ -112,3 +119,20 @@ def test_binding_events_are_content_free(action):
             schema_version=1,
             payload={"action": action.value, "briefing": "private"},
         )
+
+
+def test_staffing_event_declaration_does_not_activate_any_delivery_route():
+    event_name = "workforce.programme_staffing.changed.v1"
+    assert event_name in ACKNOWLEDGED_DORMANT_EVENTS
+    assert event_name not in ACKNOWLEDGED_INTERNAL_EVENTS
+    handlers = built_in_handler_registry()
+    assert all(
+        handlers.resolve(event_name=event_name, destination=destination) is None
+        for destination in ("internal", "notifications")
+    )
+    assert all(name != event_name for name, _destination in NON_EDITION_EFFECT_ROUTES)
+    assert all(
+        route.event_name != event_name
+        for profile in ADOPTION_PROFILES.values()
+        for route in profile.effect_routes
+    )

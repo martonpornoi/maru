@@ -1441,7 +1441,9 @@ def _truncate_shift_commitments_without_test_reset() -> None:
             "TRUNCATE public.workforce_shiftcommitmentcommandreceipt, "
             "public.workforce_shiftcommitment, "
             "public.workforce_shiftdemandcommandreceipt, "
-            "public.workforce_shiftdemand"
+            "public.workforce_shiftdemand, "
+            "public.workforce_programmeshiftbindingrevision, "
+            "public.workforce_programmeshiftbinding"
         )
 
 
@@ -1481,3 +1483,6 @@ def test_database_guards_reject_tampering_subject_conversion_and_truncate() -> N
         )
     with pytest.raises(DatabaseError, match="cannot be truncated"):
         _truncate_shift_commitments_without_test_reset()
+    assert ShiftDemand.objects.filter(pk=demand.pk).exists()
+    assert ShiftCommitment.objects.filter(pk=commitment.pk).exists()
+    assert ShiftCommitmentCommandReceipt.objects.filter(pk=receipt.pk).exists()
