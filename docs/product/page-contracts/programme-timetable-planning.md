@@ -216,6 +216,15 @@ templates or assets so server/browser caches cannot validate an old version.
 
 ### Required evidence and exclusions
 
+Issue #87's [assisted observations](../../checkpoints/2026-09-10-programme-browser-assisted-observations.md)
+record maintainer-operated native Cancel/discard, populated 200% Chrome zoom
+and interaction with Windows Animation effects off. Browser-control timeouts
+prevented automated preference/viewport readback. Chrome 152.0.7977.83 (64-bit)
+and normal fixture closure are recorded. The maintainer also confirmed visible
+Tab focus kept in view at 200%. Protected evidence delivery remains pending.
+This is bounded synthetic evidence, not full
+UX-029 or activated Programme acceptance.
+
 Use focused unit/adapter tests for strict inputs, time conversion, safe errors,
 comparison, interaction parity and retained form state. Real PostgreSQL tests
 exercise owner-backed queries/commands, field/scope denial, immutable history,
