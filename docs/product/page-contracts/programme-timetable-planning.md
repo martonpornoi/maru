@@ -221,7 +221,9 @@ record maintainer-operated native Cancel/discard, populated 200% Chrome zoom
 and interaction with Windows Animation effects off. Browser-control timeouts
 prevented automated preference/viewport readback. Chrome 152.0.7977.83 (64-bit)
 and normal fixture closure are recorded. The maintainer also confirmed visible
-Tab focus kept in view at 200%. Protected evidence delivery remains pending.
+Tab focus kept in view at 200%. Protected PR #90 delivered the evidence and
+closed #87; its [delivery checkpoint](../../checkpoints/2026-09-11-programme-browser-protected-delivery.md)
+records exact-source verification and the approved local recovery exception.
 This is bounded synthetic evidence, not full
 UX-029 or activated Programme acceptance.
 
