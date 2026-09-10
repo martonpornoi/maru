@@ -265,6 +265,23 @@ linters and warning-fatal Sphinx, migration/system/production-settings checks,
 unchanged generated API/assets, and all **64 frontend tests**. OpenAPI retains
 23 existing warnings and zero errors. The next clean-commit certification uses
 `CI=true` so dependency installation cannot await a hidden prompt.
+
+The exhaustive `24e8fd7` attempt subsequently exposed older conversion/host
+downgrade expectations that omitted the six unused staffing successors and
+equated historical host integrity with current-schema readiness. The run was
+interrupted before completion; its processes and disposable containers are gone.
+Partial logs and unit coverage remain, but no PostgreSQL coverage or successful
+certification receipt exists. Do not treat the interrupted run as acceptance.
+Test-only corrections enumerate those exact successors, verify every retained
+host guard and ownership field, require current readiness to remain false while
+staffing relations are reversed, and restore full readiness after reapply.
+The complete seven-case conversion/host recovery regression passed in
+**928.25s (15m28s)** on the separate synthetic fixture. This repair changes tests
+only; migration guards and production behavior remain unchanged. See the
+[historical recovery checkpoint](../checkpoints/2026-09-10-programme-staffing-historical-recovery.md).
+The recovered partial logs contain the three known conversion-test failures;
+the remaining suite was not completed. Commit the verified repair and run fresh
+exact-commit certification; preserved partial results cannot substitute for it.
 See the [persistence checkpoint](../checkpoints/2026-09-09-programme-staffing-requirement-persistence.md)
 and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
 

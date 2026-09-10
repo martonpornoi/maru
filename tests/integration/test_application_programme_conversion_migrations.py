@@ -25,6 +25,7 @@ from maru.programme.models import (
 )
 from maru.programme.readiness import (
     _ACCEPTED_INTEGRITY_CONTRACT,
+    _HOST_INTEGRITY_CONTRACT,
     PROGRAMME_INTEGRITY_CONTRACT,
     programme_database_integrity_is_ready,
 )
@@ -48,7 +49,13 @@ pytestmark = [
     ),
 ]
 
-UNUSED_SCHEDULING_SUCCESSORS = {
+UNUSED_PLANNING_SUCCESSORS = {
+    ("programme", "0010_staffing_requirements"),
+    ("programme", "0011_staffing_integrity"),
+    ("programme", "0012_staffing_downgrade_fence"),
+    ("workforce", "0019_programme_shift_bindings"),
+    ("workforce", "0020_programme_binding_integrity"),
+    ("workforce", "0021_programme_binding_downgrade_fence"),
     ("scheduling", "0001_initial"),
     ("scheduling", "0002_service_day_retirement"),
     ("scheduling", "0003_scheduling_reservation_sources"),
@@ -167,13 +174,24 @@ def test_completed_conversion_fences_contraction_before_any_guard_is_removed(
         removed_unused = set(applied_before) - set(applied_after)
         # Only these exact unused successors may reverse before the populated
         # host fence. Every remaining owner recorder row must be identical.
-        assert removed_unused <= UNUSED_SCHEDULING_SUCCESSORS
+        assert removed_unused <= UNUSED_PLANNING_SUCCESSORS
         assert applied_after == {
             key: value
             for key, value in applied_before.items()
             if key not in removed_unused
         }
-        assert programme_database_integrity_is_ready()
+        # The retained host contract remains exact, but the current staffing
+        # schema was unused and reversed. It must not claim current readiness.
+        guards = inspect_database_integrity_catalog(_HOST_INTEGRITY_CONTRACT)
+        assert guards.source_contract_current
+        assert guards.required_migrations_applied
+        assert not guards.relations_installed
+        assert guards.relation_ownership_consistent
+        assert guards.trigger_contract_current
+        assert guards.function_contract_current
+        assert guards.function_execute_owner_only
+        assert guards.function_ownership_current
+        assert not programme_database_integrity_is_ready()
     else:
         # Django reverses unused successors before reaching the older populated
         # fence. Verify the retained conversion guards, not current host tables.
