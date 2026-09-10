@@ -73,7 +73,7 @@ That optimization pilot is closed; the later separately approved #83 CI task is
 described below. No Docker cleanup is authorized. See the
 [pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
 
-## Current bounded outcome: Programme approval and release planning
+## Current bounded outcome: complete Programme release eligibility (#91)
 
 Issue #77 was delivered through PR #78, squash
 `6279cb50d287d70e33e2bebabda3e54564668475`. Issue #79 was delivered through
@@ -220,9 +220,26 @@ retains provenance, the exception, browser limitations and cleanup evidence.
 Do not repeat the completed tests or browser checks.
 
 Active branch: `codex/programme-release-planning`, starting from the protected
-browser-evidence merge. Its initial post-delivery handoff travels with the next
-bounded change. Next is independent approval/atomic release and combined
-release-derived outputs under #48; no release implementation is claimed yet.
+browser-evidence merge. Its initial post-delivery handoff travels with #91.
+The release outcome is split into complete eligibility rules; protected owner
+collection/independent approval/atomic publication/invalidation; then shared
+release-derived outputs and change impact. #91 adds ADR 0094, SCH-012 detail and
+a pure rule matrix, not an authenticated collector or publication command.
+The focused regression run passed 265 tests in 1.64s and measured 100% statement/
+branch coverage for the rule module; its 137 cases passed again after the
+content-free exception refinement. Strict type and documentation checks passed.
+See the [eligibility checkpoint](../checkpoints/2026-09-11-programme-release-eligibility.md).
+Exact clean-commit certification and protected delivery remain pending; no
+release or profile is activated.
+
+The maintainer authorized unattended sequential delivery, without routine PR or
+merge confirmation. Genuine human checks become explicit #48 follow-up subtasks,
+not fabricated passes or waived activation gates. Keep one agent and current
+reasoning unless a concrete unresolved problem requires escalation; independent
+authorized work may proceed around such a dependency. After #48, continue with
+#42 and the director introduction/pilot package, then the agreed guidance,
+accessibility, continuity and succession priorities. No new schedule, production
+deployment, personal data, repository-policy bypass or general cleanup is authorized.
 All task-owned fixture/certification containers and watchers are closed; no
 schedule is active. Preserve unrelated worktrees, stashes, data and containers.
 
@@ -252,10 +269,10 @@ schedule is active. Preserve unrelated worktrees, stashes, data and containers.
 
 ## Smallest sensible next actions
 
-1. Define the bounded independent approval/atomic release and combined
-   personal/public/room output child under #48 from existing ownership contracts.
-2. Implement and verify that child through its own protected PR. Carry the #87
-   post-delivery checkpoint with it; do not reactivate completed browser work.
+1. Finish #91 exact-head certification and protected delivery; carry the #87
+   post-delivery checkpoint without repeating its completed acceptance.
+2. Deliver authenticated release source collection, independent approval,
+   atomic publication/invalidation, then shared outputs/change impact.
 3. Continue on-site continuity, guided setup/surfaces and integrated
    Programme-only acceptance. Keep #48 open and preserve all activation gates.
 

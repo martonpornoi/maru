@@ -98,6 +98,7 @@ the system.
 | [0091](0091-scheduling-ci-policy-integration.md) | Accepted | Integrate Scheduling's joint-owner history into risk-selected acceptance while retaining whole-file calibration as diagnostic evidence |
 | [0092](0092-dormant-accessible-timetable-editor.md) | Accepted | Reuse owner projections and versioned commands through one dormant progressively enhanced timetable editor with equivalent forms and pointer input |
 | [0093](0093-programme-staffing-source-and-coverage.md) | Accepted | Bind versioned Programme staffing to explicit Workforce demand and source revisions without rewriting accepted work |
+| [0094](0094-complete-programme-release-eligibility.md) | Accepted | Require complete exact-snapshot eligibility before independent Programme approval and atomic publication |
 
 New ADRs use the next four-digit number and contain:
 
