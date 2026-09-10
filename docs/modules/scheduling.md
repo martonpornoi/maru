@@ -1,8 +1,8 @@
 # Scheduling module
 
-Status: dormant candidate/conflict and reciprocal physical-reservation kernel;
-no Programme timetable editor, approval, release or current-profile activation.
-Last updated: 2026-09-08. See [CURRENT](../project/CURRENT.md) for verification
+Status: dormant candidate/conflict and reciprocal physical-reservation kernel,
+consumed by the dormant Programme editor; no approval, release or profile activation.
+Last updated: 2026-09-09. See [CURRENT](../project/CURRENT.md) for verification
 and protected-delivery status; this guide is the owner contract, not a merge claim.
 
 ## Ownership and adoption
@@ -16,16 +16,26 @@ PRG-008, VEN-001, VEN-002, VEN-008, AUD-001/AUD-003 and NFR-013.
 Programme owns item content, readiness, hosting confirmation and deliberately
 shared availability. Events owns edition lifecycle, dates and IANA zone.
 Venues owns actual physical occupancy and independent physical approval.
-Workforce remains the future owner of Shift demand and volunteer commitments.
+Workforce owns Shift demand and volunteer commitments; their Programme binding
+is being added in #88.
 Scheduling must use those owners' documented services, not their private models.
 Cross-owner database integrity deliberately verifies the exact foreign graph;
 it is not a user-facing data-access path.
+
+`staffing_references.resolve_staffing_occurrence_reference` supplies only one
+exact Programme-item-linked occurrence ID, metadata version and active/retired
+consequence. The independently authorized caller holds the canonical edition
+write scope. It provides no candidate, placement, public copy, host detail or
+authority, and never selects a timetable alternative. Requirement changes do
+not mutate Scheduling state. Exact candidate/placement demand binding is now
+implemented locally through the Workforce owner; #88 acceptance is unfinished.
 
 Neither `full_convention@1` nor `workforce_only@1` admits the new capabilities,
 adapters or conflict sources. All fifteen Scheduling tables and the new Venue
 binding table remain runtime SELECT-only. A schema migration, retained UUID,
 platform role or successful isolated test does not activate this workflow.
-There is no new HTTP route, API, UI, worker or effect-delivery handler. No
+There is no new production HTTP route, API, worker or effect-delivery handler.
+The native editor and staffing continuation remain unmounted components. No
 Registration, Participation, payment or attendance record is created.
 
 ## Owned state and commands
@@ -413,7 +423,44 @@ recovery; the current reserver and approver must still be verified active people
 The future release child must coordinate activation or invalidation atomically;
 this kernel has no released timetable to invalidate.
 
+## Native staffing continuation
+
+The [staffing page contract](../product/page-contracts/programme-staffing.md)
+extends Timetable planning, not a second shell or route.
+`planning_staffing_workspace` composes one exact item/occurrence purpose under
+canonical owner locks without adding staffing reads to the base planning query.
+Requirements/history, binding/history/choices and minimized coverage retain
+independent owner admission and audit boundaries.
+
+`planning_staffing_forms` defines closed requirement and work preview/apply inputs;
+`planning_staffing_actions` dispatches public owner commands after checking trusted
+scope and exact selected identities. Original versions, source references, reason
+and retry key survive recoverable failures. Preview adds its digest but neither
+rebases versions nor applies work. Apply needs fresh authority from both owners,
+explicit confirmation and a separate submit action. Read-only users may preview
+authorized impact but have no apply action. Withheld coverage has null counts.
+
+Fixed-ceiling history shows retained terms/reasons without loading a personnel
+directory. Overview, control, error and impact headings receive purpose-specific
+focus. Exact demand references identify the continuation in existing Shift
+planning; production cross-route hosting remains later activation work. This
+panel never opens, independently confirms or locks a Shift.
+
+The opt-in `tests/rehearsals/programme_staffing.py` lease uses real owner-backed
+fixtures and ordinary synthetic sessions on a loopback test server. Explicit
+`MARU_STAFFING_REHEARSAL=1`, a disposable test database and sealed policies are
+required. Run it directly through pytest, finish with its visible control and
+record browser evidence separately; a passing lease proves cleanup only. Never
+share its database with a concurrently running integration suite.
+
 ## Integrity, observation and remaining work
+
+All command transactions and locking planning reads acquire the shared Workforce
+parent scope before the Events edition, person set and Scheduling rows. The
+Events fact read reuses that held edition lock. This matches Programme source
+commands and binding operations: edition-first locking can otherwise deadlock
+against a binding's Organization lock during deferred receipt foreign-key checks.
+The source-movement, source-edit/read and binding races exercise this order.
 
 Commands lock the exact edition, canonical people, owner records and complete
 sorted physical-member union before selected rooms. Ordinary Venue writers
@@ -429,6 +476,7 @@ private rationale, host periods or private owner records as debugging payloads.
 
 The [migration/recovery runbook](../operations/scheduling-migration-and-recovery.md)
 describes exact schema/readiness, runtime ACLs and populated contraction fences.
-An accessible editor, staffing adapter, independent Programme approval, atomic
-release, role-specific outputs, on-site continuity, guided activation and
-integrated acceptance remain separate mandatory children of #48.
+The native editor was delivered dormant through #85. Staffing still requires #88
+acceptance and protected delivery. Independent Programme approval, atomic release,
+role-specific outputs, on-site continuity, guided activation and integrated
+acceptance remain mandatory #48 work; #87 retains deferred browser checks.

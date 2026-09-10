@@ -223,6 +223,14 @@
       "test_retained_host_history_fences_downgrade_before_any_guard_removal"
     ]
   },
+  "tests/integration/test_programme_staffing_commands.py": {
+    "owners": ["authorization", "programme", "scheduling", "workforce"],
+    "shared_baseline": false,
+    "tests": [
+      "test_retained_staffing_fences_downgrade_before_removing_any_guard",
+      "test_unused_staffing_schema_round_trip_preserves_existing_owner_records"
+    ]
+  },
   "tests/integration/test_programme_integrity_migrations.py": {
     "owners": [
       "programme"
@@ -410,6 +418,14 @@
     "shared_baseline": false,
     "tests": [
       "test_successor_reverses_fail_closed_and_reapplies_current_contract"
+    ]
+  },
+  "tests/integration/test_workforce_programme_binding_integrity.py": {
+    "owners": ["programme", "scheduling", "workforce"],
+    "shared_baseline": false,
+    "tests": [
+      "test_retained_binding_fences_downgrade_before_removing_its_guards",
+      "test_unused_binding_schema_round_trip_preserves_programme_requirements"
     ]
   },
   "tests/integration/test_workforce_programme_department_fk_contract_migration.py": {

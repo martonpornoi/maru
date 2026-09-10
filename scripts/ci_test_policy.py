@@ -292,10 +292,13 @@ def affected_migration_owners(changes: Sequence[ChangedFile]) -> frozenset[str]:
                 raise ValueError(f"unknown migration node: {node}")
             nodes.add(node)
         else:
-            leaves = loader.graph.leaf_nodes(owner)
-            if not leaves:
+            # Model changes can affect a relation introduced before the newest
+            # migration. Starting only at a leaf silently loses consumers pinned
+            # to an earlier migration when a new owner leaf is appended.
+            owner_nodes = {node for node in loader.graph.nodes if node[0] == owner}
+            if not owner_nodes:
                 raise ValueError(f"unknown migration owner: {owner}")
-            nodes.update(leaves)
+            nodes.update(owner_nodes)
     for node in nodes:
         owners.update(owner for owner, _name in loader.graph.backwards_plan(node))
     return frozenset(owners)

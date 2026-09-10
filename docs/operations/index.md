@@ -81,6 +81,7 @@ applications-programme-import-migration-and-recovery
 applications-programme-review-migration-and-recovery
 programme-conversion-migration-and-recovery
 programme-host-migration-and-recovery
+programme-staffing-migration-and-recovery
 scheduling-migration-and-recovery
 effects-worker-runbook
 github-pages-publication

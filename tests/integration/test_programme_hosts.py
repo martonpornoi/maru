@@ -16,6 +16,7 @@ from psycopg import sql
 
 import maru.effects.services as effect_services
 from maru.audit.models import AuditEvent
+from maru.core.database_integrity_readiness import inspect_database_integrity_catalog
 from maru.events.models import EventEdition
 from maru.events.services import transition_edition
 from maru.programme import host_queries
@@ -59,7 +60,10 @@ from maru.programme.queries import (
     ProgrammeQueryUnavailableError,
     load_programme_readiness,
 )
-from maru.programme.readiness import programme_database_integrity_is_ready
+from maru.programme.readiness import (
+    _HOST_INTEGRITY_CONTRACT,
+    programme_database_integrity_is_ready,
+)
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.integration.test_programme_commands import (
     _AllowThenDenyProgrammeAuthorizer,
@@ -805,6 +809,21 @@ def test_retained_host_history_fences_downgrade_before_any_guard_removal(world):
     assert ("programme", "0009_host_downgrade_fence") in MigrationRecorder(
         connection
     ).applied_migrations()
+    assert ProgrammeHostRelationship.objects.get(id=first.host_id).version == 1
+    # Unused staffing successors may reverse before this populated host fence.
+    # Prove the exact retained owner guards, not current-schema readiness.
+    guards = inspect_database_integrity_catalog(_HOST_INTEGRITY_CONTRACT)
+    assert guards.source_contract_current
+    assert guards.required_migrations_applied
+    assert not guards.relations_installed
+    assert guards.relation_ownership_consistent
+    assert guards.trigger_contract_current
+    assert guards.function_contract_current
+    assert guards.function_execute_owner_only
+    assert guards.function_ownership_current
+    assert not programme_database_integrity_is_ready()
+    executor = MigrationExecutor(connection)
+    executor.migrate(executor.loader.graph.leaf_nodes())
     assert ProgrammeHostRelationship.objects.get(id=first.host_id).version == 1
     assert programme_database_integrity_is_ready()
 

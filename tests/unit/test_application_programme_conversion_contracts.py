@@ -88,6 +88,8 @@ def test_conversion_capability_is_additive_exact_department_nondelegable():
     } - {
         "programme.manage_hosts",
         "programme.view_hosts",
+        "programme.manage_staffing",
+        "programme.view_staffing",
         *SCHEDULING_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",

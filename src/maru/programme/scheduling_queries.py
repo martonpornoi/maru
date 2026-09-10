@@ -14,7 +14,6 @@ from maru.events.queries import (
     EditionTimeEnvelopeReference,
     edition_adoption_profile_reference,
     resolve_edition_time_envelope_reference,
-    resolve_private_planning_edition_reference,
 )
 from maru.identity.queries import (
     edition_person_conflict_key,
@@ -39,6 +38,7 @@ from maru.programme.models import (
     ProgrammeReadinessRequirement,
 )
 from maru.programme.queries import ProgrammeQueryUnavailableError, _authorized_query
+from maru.programme.scope_references import resolve_private_planning_edition_reference
 
 MAX_SCHEDULING_SOURCE_ITEMS: Final = 2_000
 # Leave room for the independently authenticated actor in Identity's batch bound.

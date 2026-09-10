@@ -123,6 +123,7 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0025_programme_conversion_capability"),
     ("authorization", "0026_programme_host_capabilities"),
     ("authorization", "0027_scheduling_capabilities"),
+    ("authorization", "0028_programme_staffing_capabilities"),
     ("events", "0010_workforce_adoption_profile"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("organizations", "0014_purpose_bounded_representation"),
@@ -139,6 +140,9 @@ _ACTIVATION_MIGRATIONS = (
     ("workforce", "0016_programme_call_department_fk_contract"),
     ("workforce", "0017_programme_import_department_fk_contract"),
     ("workforce", "0018_programme_department_ownership_contract"),
+    ("workforce", "0019_programme_shift_bindings"),
+    ("workforce", "0020_programme_binding_integrity"),
+    ("workforce", "0021_programme_binding_downgrade_fence"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -217,7 +221,7 @@ _STATEMENT_BEFORE_INSERT_UPDATE_DELETE = 2 | 4 | 8 | 16
 _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE = 2 | 4 | 8 | 16 | 32
 _STATEMENT_BEFORE_TRUNCATE = 2 | 32
 
-_TRIGGER_CONTRACTS = (
+_TRIGGER_CONTRACTS: tuple[_TriggerContract, ...] = (
     _TriggerContract(
         "authorization_capability_grant_guard",
         "authorization_capabilitygrant",
@@ -1065,7 +1069,48 @@ _TRIGGER_CONTRACTS = (
     ),
 )
 
+_TRIGGER_CONTRACTS += tuple(
+    contract
+    for table, short, guard in (
+        (
+            "workforce_programmeshiftbinding",
+            "binding",
+            "maru_guard_workforce_programme_binding()",
+        ),
+        (
+            "workforce_programmeshiftbindingrevision",
+            "binding_revision",
+            "maru_guard_workforce_programme_binding_revision()",
+        ),
+    )
+    for contract in (
+        _TriggerContract(
+            f"workforce_programme_{short}_guard",
+            table,
+            guard,
+            _ROW_BEFORE_INSERT_UPDATE_DELETE,
+        ),
+        _TriggerContract(
+            f"workforce_programme_{short}_truncate",
+            table,
+            "maru_refuse_workforce_shift_truncate()",
+            _STATEMENT_BEFORE_TRUNCATE,
+        ),
+        _TriggerContract(
+            f"workforce_programme_{short}_evidence",
+            table,
+            "maru_validate_workforce_programme_binding_evidence()",
+            _ROW_AFTER_INSERT_UPDATE,
+            deferrable=True,
+            initially_deferred=True,
+        ),
+    )
+)
+
 _CORE_FUNCTIONS = (
+    "maru_guard_workforce_programme_binding()",
+    "maru_guard_workforce_programme_binding_revision()",
+    "maru_validate_workforce_programme_binding_evidence()",
     "maru_assert_active_board_membership_provenance(uuid)",
     "maru_assert_active_executive_board(uuid)",
     "maru_assert_active_executive_board_v0009(uuid)",
@@ -1174,6 +1219,15 @@ _CORE_FUNCTIONS = (
 )
 
 _FUNCTION_DEFINITION_SHA256 = {
+    "maru_guard_workforce_programme_binding()": (
+        "d25a4860beb7cefe68435477dcfc522316ca3cb12924b98f818b65ab1520233b"
+    ),
+    "maru_guard_workforce_programme_binding_revision()": (
+        "37026b1c56d1e5e237d66a94d984f99daa9381df7ce88b5f38dbf0e6da115fc2"
+    ),
+    "maru_validate_workforce_programme_binding_evidence()": (
+        "d4b95c8fda189cf1adce2a282f2725f635a95c6c53b70c82b22241c6c15b59a7"
+    ),
     "maru_lock_retired_department_authority_writer()": (
         "159e4167b0d335bd0733ca60bc9bfdf6a5bb4b31c527b590152a7f584818d2fc"
     ),
@@ -1289,7 +1343,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1d4ef9c453acc221e452c08d09a8d9f45c70618e3c2ea0c7fbcdfb8781d7bece"
     ),
     "maru_authorization_capability_min_scope(text)": (
-        "2f59ef62a470ae5559fdf6143566420b608756efd6359c3bc811972b5af07be0"
+        "fd1d35ce7030b5b31da2898287caa71fc86545ffdb855867dbdd183f5f9020b3"
     ),
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)": (
         "093a2f3a81a16d7a09bc782c23711aa4b108274ee7a9baf8fa955e52d82cc481"

@@ -42,6 +42,7 @@ contract for the surface being changed, and compare its status with the
   receipt-backed Department ownership continuity and exact-ID orphan recovery;
   no route is mounted.
 - [Programme timetable planning](programme-timetable-planning.md)
+- [Programme staffing](programme-staffing.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -60,4 +61,5 @@ programme-operations-adoption-setup
 programme-calls-and-acknowledged-proposals
 programme-call-and-proposal-import
 programme-timetable-planning
+programme-staffing
 ```

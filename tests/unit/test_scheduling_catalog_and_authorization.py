@@ -101,7 +101,9 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
         *current.EDITION_CAPABILITIES,
         *current.DEPARTMENT_CAPABILITIES,
         *current.RESOURCE_CAPABILITIES,
-    } == {code for code, definition in CAPABILITIES.items() if definition.persistable}
+    } == {
+        code for code, definition in CAPABILITIES.items() if definition.persistable
+    } - {"programme.manage_staffing", "programme.view_staffing"}
     for code in current.SCHEDULING_CAPABILITIES:
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
     for code in current.PHYSICAL_CAPABILITIES:

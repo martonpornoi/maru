@@ -19,6 +19,7 @@ from .command_support import SchedulingUnavailableError
 from .planning_board import PlanningInventoryState
 from .planning_inspector import PlanningItemLayer
 from .planning_record_forms import PLANNING_RECORD_OPERATIONS
+from .planning_staffing_forms import STAFFING_MODE_LABELS
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -33,6 +34,7 @@ _MODES = (
     "history",
     "review",
     "reservation",
+    *STAFFING_MODE_LABELS,
     *(operation.value for operation in sorted(PLANNING_RECORD_OPERATIONS)),
 )
 _UUID_FIELDS = (
@@ -44,9 +46,16 @@ _UUID_FIELDS = (
     "history_id",
     "compare_id",
     "conflict_id",
+    "requirement_id",
+    "binding_id",
+    "demand_id",
 )
 _TEXT_FIELDS = ("text", "state", "mode", "layer")
-_INTEGER_FIELDS = ("before_version",)
+_INTEGER_FIELDS = (
+    "before_version",
+    "staffing_through_version",
+    "staffing_after_version",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +90,16 @@ class PlanningSelection:
         Selected native editor, not a mutation dispatch or authorization decision.
     layer
         One explicitly selected Programme inspector layer, or none.
+    requirement_id
+        Explicit staffing need, independently resolved inside the selected item.
+    binding_id
+        Exact retained Workforce lineage for the selected history purpose.
+    demand_id
+        Explicit existing draft selected for linking, not implicit work creation.
+    staffing_through_version
+        Fixed inclusive ceiling for an explicitly selected staffing history.
+    staffing_after_version
+        Exclusive cursor within that fixed ceiling, or none at the beginning.
     """
 
     candidate_id: UUID | None = None
@@ -96,6 +115,11 @@ class PlanningSelection:
     state: str = "all"
     mode: str = "overview"
     layer: PlanningItemLayer | None = None
+    requirement_id: UUID | None = None
+    binding_id: UUID | None = None
+    demand_id: UUID | None = None
+    staffing_through_version: int | None = None
+    staffing_after_version: int | None = None
 
     def hidden_values(
         self, *, exclude: frozenset[str] = frozenset()
@@ -138,6 +162,12 @@ class PlanningSelectionForm(StrictInputForm):
             self.fields[f"ui_{name}"] = CanonicalUUIDField(required=False)
         self.fields["ui_before_version"] = StrictBase10IntegerField(
             required=False, min_value=1, max_value=2**63 - 2
+        )
+        self.fields["ui_staffing_through_version"] = StrictBase10IntegerField(
+            required=False, min_value=1, max_value=1001
+        )
+        self.fields["ui_staffing_after_version"] = StrictBase10IntegerField(
+            required=False, min_value=0, max_value=1000
         )
         self.fields["ui_text"] = forms.CharField(
             required=False, max_length=MAX_TITLE_LENGTH

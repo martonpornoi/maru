@@ -128,7 +128,11 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.programme_programmehostrelationship,
     public.programme_programmehostinvitation,
     public.programme_programmehostrevision,
-    public.programme_programmehostavailabilitywindow
+    public.programme_programmehostavailabilitywindow,
+    public.programme_programmestaffingrequirement,
+    public.programme_programmestaffingrevision,
+    public.workforce_programmeshiftbinding,
+    public.workforce_programmeshiftbindingrevision
     FROM maru_runtime;
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.programme_programmeeditioncontrol,
@@ -145,7 +149,11 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.programme_programmehostrelationship,
     public.programme_programmehostinvitation,
     public.programme_programmehostrevision,
-    public.programme_programmehostavailabilitywindow
+    public.programme_programmehostavailabilitywindow,
+    public.programme_programmestaffingrequirement,
+    public.programme_programmestaffingrevision,
+    public.workforce_programmeshiftbinding,
+    public.workforce_programmeshiftbindingrevision
     FROM PUBLIC;
 GRANT SELECT ON TABLE
     public.programme_programmeeditioncontrol,
@@ -162,7 +170,11 @@ GRANT SELECT ON TABLE
     public.programme_programmehostrelationship,
     public.programme_programmehostinvitation,
     public.programme_programmehostrevision,
-    public.programme_programmehostavailabilitywindow
+    public.programme_programmehostavailabilitywindow,
+    public.programme_programmestaffingrequirement,
+    public.programme_programmestaffingrevision,
+    public.workforce_programmeshiftbinding,
+    public.workforce_programmeshiftbindingrevision
     TO maru_runtime;
 
 -- Dormant Scheduling and its reciprocal Venue binding remain SELECT-only.

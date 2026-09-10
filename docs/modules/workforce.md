@@ -609,6 +609,138 @@ open, locked, cancelled, or completed `ShiftDemand`, or a claimed, confirmed,
 removed, or completed `ShiftCommitment`. Scheduling consumes minimized
 commitment envelopes and conflict facts rather than Workforce-private writers.
 
+ADR 0093 defines the next staffing source boundary. The dormant
+`workforce.programme-coverage@1` adapter is registered but deliberately absent
+from both executable profile manifests. Its identifier-only public query,
+`maru.workforce.programme_queries.load_programme_shift_coverage`, independently
+requires `workforce.view_shifts` with `shift_demands`, `coverage_states` and
+`suitability_consequences`; Programme authority does not grant that read.
+Admission precedes selection parsing, repeats inside a repeatable-read snapshot
+and after it, and mandatory value-minimized audit precedes result release.
+
+`programme_references.lock_programme_staffing_scope` discovers only the exact
+edition's series identity through Events, then acquires the existing canonical
+retired-authority/Organization/series/edition/structure lock chain. Its companion
+Position reference returns only opaque Position/Department IDs and whether the
+current lifecycle accepts staffing. These internal reference seams confer no
+authority and expose no labels, personnel or availability. Programme callers
+authorize their own exact command before resolution and recheck after locking.
+Recording or retiring a Programme requirement does not create, update or cancel
+a Workforce demand. The explicit binding commands described below are implemented
+locally in #88; the complete staffing surface and delivery remain unfinished.
+
+The separate, likewise unpinned `workforce.programme-staffing@1` adapter owns
+explicit work-impact reads. `programme_staffing_queries.load_programme_staffing_demand`
+requires independent `workforce.view_shifts` authority for `shift_demands` and
+`coverage_states`. It reads one exact demand's person-facing work terms and
+aggregate retained/claimed/confirmed counts under the canonical scope, rechecks
+authority and audits before release. It does not load personnel labels, private
+decision reasons or availability. Unlike minimized planning coverage, this
+deliberate work-comparison purpose may disclose the work briefing. Write
+admission separately requires `workforce.manage_shifts` and does not grant read
+authority. Neither adapter is activated in either executable profile.
+
+`programme_staffing_choices.list_programme_staffing_positions` supplies current
+Position titles and active Department labels for a native requirement form. It
+independently requires `workforce.view_structure` with both `positions` and
+`departments`, not Shift management or Programme authority. Closed Positions and
+retired Departments are excluded; no assignments, holder counts or people are
+selected. `list_programme_linkable_demands` instead requires work-field authority
+and matches every normalized explicit term. Any retained commitment or binding
+lineage excludes a draft. Both catalogs are complete-or-unavailable at 1,024 rows,
+reauthorize under canonical scope and audit before returning labels. A choice is
+not continued eligibility: preview and apply independently resolve current facts.
+
+`programme_binding_queries.load_programme_bindings` returns the complete current
+binding set for one Programme item, at most 128 retained requirements, after
+independent Programme requirement and Workforce work-field admission. It selects
+no binding actor, rationale, retry payload or work briefing. Missing/foreign items,
+overflow and incomplete current revisions do not become an empty binding set.
+`load_programme_binding_history` instead requires Programme `staffing_history`
+plus Workforce work-field authority, and returns at most fifty consecutive
+decisions under a fixed inclusive ceiling and exclusive continuation cursor.
+Restricted actor references and rationale appear only in that historical purpose;
+they confer no personnel directory, private commitment or Scheduling authority.
+Both reads retain canonical scope, reauthorize and audit before disclosure.
+
+`programme_impact.evaluate_programme_staffing_impact` describes closed
+create/link/reconcile/successor consequences without granting authority. Linking
+an existing demand requires an uncommitted draft with identical explicit terms;
+reconciliation requires a draft with no retained commitments, including removed
+history. A changed Position requires a successor because a demand's Position
+identity is immutable. A successor must explicitly cancel a nonterminal
+predecessor through Workforce; a cancelled or completed predecessor is retained
+without another cancellation. The preview distinguishes active claims and
+confirmations affected by cancellation from all preserved history. It never
+transfers decisions, reconfirms people or relocks work. An ordinary demand
+lifecycle version change alone does not mean its work terms changed.
+
+`programme_binding.preview_programme_staffing_binding` composes these independently
+authorized inputs under the canonical owner lock chain. The typed change pins
+an explicit action, requirement/candidate/placement source, existing binding
+identity/version and exact current demand identity/version. The token includes
+actor/organization/edition/item, source evidence, work terms and retained/active
+counts. It neither proves human review nor grants authority. A new claim changes
+that token even if the demand command version did not change.
+
+`apply_programme_staffing_binding` requires current Programme staffing management
+and Workforce Shift management, plus independent work/source read authority.
+Under canonical locks it resolves the source and complete impact again, compares
+the preview, and calls existing Workforce create/update/cancel commands. Nested
+retry keys use separate deterministic namespaces. A late failure rolls back
+predecessor cancellation, new demand, commitments, receipts, audit and outbox
+together. Retry identity is actor/edition-bound; matching retries return the
+original minimal result after current authorization, without silently substituting
+current work or demanding that the old private candidate remain current.
+
+`ProgrammeShiftBinding` retains one stable lineage per Programme requirement;
+`ProgrammeShiftBindingRevision` is both its immutable exact-source revision and
+retry receipt. Each pins the exact requirement/occurrence/candidate/placement,
+target demand/version, explicit work/source/preview digests and reciprocal owner
+receipts/audit/event evidence. A demand cannot be borrowed from another retained
+lineage, including a predecessor. Shift and cancellation receipts cannot be reused
+by another binding revision. Binding history is bounded at 1,000 revisions and
+never erased to recover capacity. A successor retains its distinct terminal
+predecessor and starts an independent draft; opening claims, confirming people
+and locking coverage remain separate Workforce decisions.
+
+The rationale is explicitly Workforce-visible and subject to its 240-character
+bound; binding audit/events use `workforce-restricted` retention and the registered
+content-free `workforce.programme_staffing.changed.v1` action. New tables remain
+SELECT-only for the runtime role. PostgreSQL validates scope, current sources,
+identical work terms, uncommitted drafts, consecutive revisions, receipt uniqueness
+and reciprocal effects; its populated downgrade fence runs before guards can be
+removed. These commands remain in the existing private-planning lifecycle. They
+do not activate a runtime writer, provide published personal composition, or
+complete Scheduling coverage UI and browser acceptance.
+
+The query accepts 1–1,024 distinct exact-edition demand IDs and at most 4,096
+retained commitments in total. Missing or foreign selection, source inconsistency,
+overflow and audit failure yield no partial result. It selects no briefing,
+confirmation/removal reason or holder label. Results contain exact demand and
+Position IDs, demand version, work interval, minimized source digest and coverage.
+The digest changes with commitment, assignment and Availability versions and
+current suitability; it is a freshness token, not authority or personal data
+export. Callers must independently compare Programme and Scheduling source
+versions before describing the coverage as current for a timetable candidate.
+
+`load_programme_bound_demand_coverage` is the composable canonical-lock variant.
+It retains the same independent coverage field ceiling and complete-set bounds.
+Internally, Workforce reads explicit work terms to return only their fingerprint
+alongside the minimized coverage; no briefing leaves Workforce through this
+query. It does not select private commitment reasons or holder labels. Consumers
+compare this fingerprint to the immutable binding terms rather than rejecting
+ordinary open/lock version increments. The standalone repeatable-read reader
+retains its stricter no-briefing SELECT and owns its transaction as before.
+
+`programme_coverage.evaluate_staffing_coverage` separates pending claims,
+current independent confirmations, review-needed confirmation and locked
+underfill. Non-current sources expose null counts rather than zero; completed
+and cancelled work remain historical states. Draft reconciliation is only an
+advisory possibility when no retained commitment exists, never permission to
+write. This reader does not create requirements, bind demands, reconcile work,
+publish a personal timetable or activate Programme Operations.
+
 An interval recheck failure is a dedicated non-disclosing conflict. Browser
 recovery stays beside the approval action; the strict API returns stable `409`
 machine-readable recovery. Neither surface reveals which controller failed,

@@ -11,7 +11,6 @@ from django.utils import timezone
 
 from maru.events.queries import (
     resolve_edition_time_envelope_reference,
-    resolve_private_planning_edition_reference,
 )
 from maru.identity.queries import resolve_active_verified_person_reference
 
@@ -72,6 +71,7 @@ from .models import (
     ProgrammeHostRevision,
     ProgrammeItem,
 )
+from .scope_references import resolve_private_planning_edition_reference
 from .writer_boundary import programme_writer
 
 if TYPE_CHECKING:

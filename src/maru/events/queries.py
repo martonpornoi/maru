@@ -40,6 +40,39 @@ class PrivatePlanningEditionReference:
     accepts_private_planning_writes: bool
 
 
+def resolve_edition_series_identity(
+    *, organization_id: UUID, edition_id: UUID
+) -> UUID | None:
+    """Resolve only the series ID needed to acquire canonical edition write locks.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Expected owner of both edition and series.
+    edition_id : UUID
+        Exact edition selected by an independently authorized command.
+
+    Returns
+    -------
+    UUID | None
+        Opaque candidate series ID, or unavailable for malformed or foreign scope.
+        This unlocked discovery grants no authority; the writer must lock and
+        recheck the entire chain before acquiring narrower owner rows.
+    """
+    try:
+        return (
+            EventEdition.objects.filter(
+                id=edition_id,
+                organization_id=organization_id,
+                series__organization_id=organization_id,
+            )
+            .values_list("series_id", flat=True)
+            .first()
+        )
+    except (TypeError, ValueError, ValidationError):
+        return None
+
+
 def resolve_private_planning_edition_reference(
     *,
     organization_id: UUID,

@@ -105,6 +105,26 @@
   overflow-wrap: anywhere;
 }
 
+.planning-staffing-card,
+.planning-staffing-impact {
+  min-width: 0;
+  margin-block: 1rem;
+  padding-block: 1rem;
+  border-block-start: 1px solid currentColor;
+  overflow-wrap: anywhere;
+}
+
+.planning-staffing-card dt,
+.planning-staffing-impact dt {
+  font-weight: 700;
+}
+
+.planning-staffing-card dd,
+.planning-staffing-impact dd {
+  margin-inline-start: 0;
+  margin-block-end: 0.75rem;
+}
+
 .planning-time-controls {
   display: grid;
   gap: 1rem;

@@ -39,6 +39,8 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
         "applications.convert_programme_acceptance",
         "programme.manage_hosts",
         "programme.view_hosts",
+        "programme.manage_staffing",
+        "programme.view_staffing",
         *SCHEDULING_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",
@@ -48,7 +50,7 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
 def test_review_scope_declaration_matches_the_runtime_readiness_fingerprint() -> None:
     """Catch stale capability-function pins without a PostgreSQL matrix run."""
     current = import_module(
-        "maru.authorization.migrations.0027_scheduling_capabilities"
+        "maru.authorization.migrations.0028_programme_staffing_capabilities"
     )
     declaration = current.FORWARD_SQL
     assert "$$ LANGUAGE plpgsql IMMUTABLE STRICT" in declaration
@@ -137,6 +139,8 @@ def test_authorization_min_scope_is_prior_catalog_plus_exact_department_code() -
         "applications.convert_programme_acceptance",
         "programme.manage_hosts",
         "programme.view_hosts",
+        "programme.manage_staffing",
+        "programme.view_staffing",
         *SCHEDULING_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",

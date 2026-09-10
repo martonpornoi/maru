@@ -3,9 +3,99 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, worker, or production writer
 
-Last updated: 2026-09-06
+Last updated: 2026-09-10
 
 ## Purpose and ownership
+
+Issue #88 is adding the HR-015 staffing continuation under ADR 0093. Local
+Programme requirement persistence, immutable work terms, protected current reads
+and paginated history are implemented, together with exact source selection and
+Workforce-owned binding/recovery commands and exact-source Scheduling coverage.
+The [native staffing continuation](../product/page-contracts/programme-staffing.md)
+and focused synthetic browser rehearsal are implemented locally; complete
+certification remains in progress.
+This is not a delivered staffing workflow or an activated Programme profile.
+
+## Programme staffing requirements
+
+`scope_references.resolve_private_planning_edition_reference` wraps the Events
+fact projection for Programme callers. Ordinary preauthorization stays read-only;
+locking item, host, readiness, source and staffing paths acquire the public
+canonical Workforce parent/edition scope before person or Programme rows. The
+already-held edition lock protects the subsequent Events fact read. This ordering
+prevents source/binding races from deadlocking at deferred evidence foreign keys;
+it changes no profile admission, lifecycle, capability or independent field ceiling.
+
+`staffing_sources.load_programme_staffing_selection` independently resolves the
+exact current requirement and selected Scheduling alternative. It requires
+Programme work-field authority and Scheduling planning authority, retains the
+edition mutex across both reads, and rechecks Programme authority before release.
+Candidate, occurrence, placement and service-day revisions must remain current;
+the owning Programme item must still be active. Copying another alternative does
+not replace the selected source. Its immutable
+work/source digest is an optimistic comparison token, not portable authority.
+A cross-owner writer must acquire the canonical Workforce scope first and
+resolve the selection again before commit. This source read creates no demand.
+The public pure `resolve_programme_staffing_selection` comparison uses already
+authorized coherent Programme and Scheduling snapshots. It avoids reloading
+whole projections for every coverage row and grants no authority of its own.
+
+The separate `scheduling.staffing_queries.load_planning_staffing` composition
+reads one item's complete requirements against an explicitly selected private
+alternative under the canonical owner lock chain. Both Programme and Scheduling
+authorize independently; Workforce binding and coverage purposes authorize again.
+Exact source and work-term digests determine freshness, so changed instructions
+or a moved source yield stale null counts while ordinary open/lock transitions
+can retain current coverage. Copying an alternative neither selects nor rebinds
+work. Missing Workforce authority is withheld, and an incomplete dependency makes
+the whole layer unavailable rather than partially covered. Rows contain opaque
+requirement/occurrence IDs and minimized states/counts, not work copy, rationale,
+personnel or full availability. This composition stays outside the base planning
+reader to preserve the owner dependency direction; it does not activate a route.
+
+`change_programme_staffing_requirement` accepts a typed `ProgrammeStaffingChange`
+under independent exact-edition `programme.manage_staffing` authority. Creation
+requires a current owned occurrence, Position and Department, explicit work
+instructions, whole UTC-minute work times within the edition envelope, and
+exact item/occurrence/edition versions. Revision additionally pins the current
+requirement version. Work need not equal the audience-facing interval: setup,
+teardown, briefing, reporting place, headcount, break and minimum rest are
+deliberate terms. References resolve through the owners' public identifier-only
+seams rather than their private models.
+
+One item retains at most 128 requirements, including retired needs. A
+requirement retains at most 1,000 ordinary revisions, plus one reserved
+retirement revision. Its stable occurrence identity cannot be reassigned.
+Retirement copies the previous work terms unchanged and is terminal; it can
+retain a closed Position or retired occurrence without rewriting that history.
+It is not a cancellation of Workforce demand and does not affect a volunteer.
+
+The canonical Workforce edition lock chain precedes Programme control/item and
+requirement locks. Current authority, owner references and optimistic versions
+are rechecked there. Each successful command atomically writes the current need,
+immutable revision, Programme receipt, minimized `programme.item.changed.v1`
+staffing event, audit and outbox evidence. Retry identity is actor/edition-bound;
+same normalized intent returns historical identifiers, not current private
+terms. Different intent conflicts, and current authorization remains mandatory.
+
+`load_programme_staffing_requirements` requires the separate
+`programme.view_staffing` capability and `staffing_requirements` field. It
+returns a complete bounded set at one item version, excludes decision rationale
+and historical actor fields from its SELECT, and grants no Workforce personnel
+read. `load_programme_staffing_history` independently requires `staffing_history`
+and releases restricted rationale only after audit. Pages contain at most fifty
+revisions, pinned to an explicit inclusive version ceiling and exclusive cursor;
+later changes never silently extend an in-progress historical read. Missing
+revisions, malformed/future cursors, partial field decisions, revoked authority
+or failed audit release no partial result.
+
+Programme migrations `0010`–`0012` add scope/lifecycle, immutable-term,
+reciprocal-evidence and truncate guards plus a populated downgrade fence.
+Authorization `0028` adds two exact-edition capabilities without grants. Both
+new tables remain runtime SELECT-only and neither executable profile gains
+these capabilities. See [staffing recovery](../operations/programme-staffing-migration-and-recovery.md).
+
+## Private item foundation
 
 `maru.programme` owns the canonical private Programme item for one exact event
 edition. It separates working information, delivery facts, Department

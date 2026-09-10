@@ -11,7 +11,6 @@ from django.db.models import OuterRef, QuerySet, Subquery
 
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.events.queries import resolve_private_planning_edition_reference
 from maru.programme.authorization import (
     DEFAULT_PROGRAMME_AUTHORIZER,
     PROGRAMME_VIEW_DELIVERY,
@@ -49,6 +48,7 @@ from maru.programme.models import (
     ProgrammeWorkingRevision,
 )
 from maru.programme.readiness import project_readiness_state
+from maru.programme.scope_references import resolve_private_planning_edition_reference
 
 if TYPE_CHECKING:
     from collections.abc import Callable

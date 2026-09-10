@@ -1,0 +1,72 @@
+{% if staffing_active %}
+<section class="baseline-panel" aria-labelledby="planning-staffing-title">
+  <h2 id="planning-staffing-title" tabindex="-1" {% if not control and not action_error and not staffing_preview %}data-maru-focus-on-load{% endif %}>Programme staffing</h2>
+  <p>Define explicit work for an occurrence, then deliberately request Workforce demand. A private timetable, staffing need or claim is not confirmed coverage or a published schedule.</p>
+  {% if staffing_guidance %}<p>{{ staffing_guidance }}</p>{% endif %}
+  {% if staffing_bindings_withheld %}<p class="planning-warning">Work binding information is withheld. Programme permission does not grant Workforce access; this is not an empty work request.</p>{% endif %}
+  {% if staffing_can_create %}<form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=staffing_create_state %}<button type="submit" name="action" value="select">Create requirement for the selected occurrence</button></form>{% endif %}
+  {% for row in staffing_rows %}
+  <article class="planning-staffing-card" aria-labelledby="staffing-need-{{ row.requirement.requirement_id }}">
+    <h3 id="staffing-need-{{ row.requirement.requirement_id }}">{{ row.requirement.expectation.title }}</h3>
+    <p>Requirement version {{ row.requirement.version }} · {{ row.requirement.lifecycle }}{% if selection.requirement_id == row.requirement.requirement_id %} · Selected requirement{% endif %}</p>
+    <dl>
+      <dt>Reporting place</dt><dd>{{ row.requirement.expectation.location_label }}</dd>
+      <dt>Explicit work interval</dt><dd><time datetime="{{ row.requirement.expectation.starts_at|date:'c' }}">{{ row.requirement.expectation.starts_at|date:'D j M Y, H:i O' }}</time> to <time datetime="{{ row.requirement.expectation.ends_at|date:'c' }}">{{ row.requirement.expectation.ends_at|date:'D j M Y, H:i O' }}</time> · {{ board.zone_name }}</dd>
+      <dt>People required</dt><dd>{{ row.requirement.expectation.required_headcount }}</dd>
+      <dt>Planned break / rest after work</dt><dd>{{ row.requirement.expectation.break_minutes }} / {{ row.requirement.expectation.minimum_rest_minutes }} minutes</dd>
+      <dt>Work instructions</dt><dd class="planning-prose">{{ row.requirement.expectation.briefing }}</dd>
+      <dt>Supervision instructions</dt><dd class="planning-prose">{{ row.requirement.expectation.supervision_note|default:'Not recorded' }}</dd>
+    </dl>
+    <details><summary>Exact requirement and Position references</summary><p>Requirement {{ row.requirement.requirement_id }} · Occurrence {{ row.requirement.occurrence_id }} · Position {{ row.requirement.expectation.position_id }}. These references grant no person or directory access.</p></details>
+    {% if row.binding %}<p>Retained work binding version {{ row.binding.version }} · Bound requirement version {{ row.binding.source.requirement_version }}. Demand was version {{ row.binding.demand_version }} at that decision; this is not its current lifecycle version.</p><p>Continue in the edition's Shift planning to open, confirm, lock or recover this work. That workspace checks its own permissions; this staffing panel performs none of those lifecycle actions. Exact demand reference: {{ row.binding.demand_id }}.</p>{% endif %}
+    {% if row.coverage %}
+      <p>Staffing source: <strong>{{ row.coverage.source_state|title }}</strong>.</p>
+      {% include 'scheduling/_staffing_coverage.html' with coverage=row.coverage.coverage %}
+    {% else %}<p>Choose an explicit private alternative to inspect exact-source coverage. No count is inferred.</p>{% endif %}
+    <form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=row.state %}<button type="submit" name="action" value="select">Select this requirement</button></form>
+    {% for action in row.actions %}<form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=action.state %}<button type="submit" name="action" value="select">{{ action.label }}</button></form>{% endfor %}
+  </article>
+  {% empty %}{% if not staffing_history and not staffing_guidance %}<p>No requirements were returned for this authorized item. Define the work explicitly; missing requirements do not prove adequate coverage.</p>{% endif %}{% endfor %}
+  {% if staffing_demand_choices != None %}
+  <form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=staffing_demand_state %}
+    <label for="staffing-existing-demand">Identical uncommitted draft work</label>
+    <select id="staffing-existing-demand" name="ui_demand_id"><option value="">Choose a matching draft</option>{% for demand in staffing_demand_choices %}<option value="{{ demand.id }}" {% if demand.id == selection.demand_id %}selected{% endif %}>{{ demand.title }} · {{ demand.starts_at|date:'D j M Y, H:i O' }} · Version {{ demand.version }} · {{ demand.id|stringformat:'s'|slice:':8' }}</option>{% endfor %}</select>
+    <button type="submit" name="action" value="select">Review selected draft for linking</button>
+    {% if not staffing_demand_choices %}<p>No identical, uncommitted and unbound draft is available. Create separate draft work if appropriate; no existing work was changed.</p>{% endif %}
+  </form>
+  {% endif %}
+  {% if staffing_history %}
+  <h3>{% if staffing_history_kind == 'requirement' %}Requirement history{% else %}Work binding history{% endif %}</h3>
+  <p>Fixed inclusive ceiling: version {{ staffing_history.through_version }}. Later changes do not extend this read. Historical work is not current coverage.</p>
+  <ol>{% for entry in staffing_history.entries %}<li>
+    {% if staffing_history_kind == 'requirement' %}
+      <h4>Version {{ entry.requirement.version }} · {{ entry.operation }}</h4>
+      <p>{{ entry.requirement.expectation.title }} · {{ entry.requirement.expectation.location_label }} · {{ entry.requirement.expectation.starts_at|date:'D j M Y, H:i O' }} to {{ entry.requirement.expectation.ends_at|date:'D j M Y, H:i O' }} · {{ entry.requirement.expectation.required_headcount }} people.</p>
+      <p class="planning-prose">{{ entry.requirement.expectation.briefing }}</p>
+      <dl><dt>Retained state</dt><dd>{{ entry.requirement.lifecycle }}</dd><dt>Supervision instructions</dt><dd class="planning-prose">{{ entry.requirement.expectation.supervision_note|default:'Not recorded' }}</dd><dt>Planned break / rest after work</dt><dd>{{ entry.requirement.expectation.break_minutes }} / {{ entry.requirement.expectation.minimum_rest_minutes }} minutes</dd><dt>Position reference</dt><dd>{{ entry.requirement.expectation.position_id }}</dd></dl>
+    {% else %}
+      <h4>Binding version {{ entry.binding.version }} · {{ entry.binding.operation }}</h4>
+      <p>Requirement version {{ entry.binding.source.requirement_version }} · Demand version {{ entry.binding.demand_version }} at the decision.</p>
+      <details><summary>Retained work lineage</summary><p>Demand {{ entry.binding.demand_id }}{% if entry.binding.predecessor_id %} · Preserved predecessor {{ entry.binding.predecessor_id }}{% endif %}.</p></details>
+    {% endif %}
+    <p class="planning-prose">Recorded reason: {{ entry.reason }}</p><p>{{ entry.occurred_at|date:'D j M Y, H:i O' }}</p>
+    <details><summary>Recorded actor reference</summary><p>{{ entry.actor_id }}. No personnel directory is loaded.</p></details>
+  </li>{% endfor %}</ol>
+  {% if staffing_history.next_after_version %}<form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=staffing_history_next_state %}<button type="submit" name="action" value="select">Next retained history page</button></form>{% endif %}
+  {% endif %}
+</section>
+{% endif %}
+
+{% if staffing_preview %}
+<section class="baseline-panel" aria-labelledby="staffing-impact-title">
+  <h2 id="staffing-impact-title" tabindex="-1" {% if not control.form.errors and not action_error %}data-maru-focus-on-load{% endif %}>Review exact work impact</h2>
+  <p>Action: <strong>{{ staffing_preview.impact.action }}</strong>. Requirement version {{ staffing_preview.selection.source.requirement_version }}, occurrence version {{ staffing_preview.selection.source.occurrence_version }}, candidate version {{ staffing_preview.selection.candidate_version }}.</p>
+  {% if staffing_preview.impact.cancel_predecessor %}<p class="planning-warning">Applying explicitly cancels the predecessor through Workforce. Its decisions stay in history. No volunteer claim, confirmation or lock transfers to the separate new draft.</p>{% endif %}
+  <p>Retained decisions: {{ staffing_preview.impact.retained_commitments }} · Active claims affected: {{ staffing_preview.impact.claims_affected }} · Active confirmations affected: {{ staffing_preview.impact.confirmations_affected }}.</p>
+  {% for row in staffing_impact_rows %}<div class="planning-staffing-impact"><h3>{{ row.label }}{% if row.changed %} · Changed{% endif %}</h3><dl>
+    <dt>Existing work</dt><dd class="planning-prose">{% if row.before == None %}No predecessor{% elif row.is_time %}{{ row.before|date:'D j M Y, H:i O' }}{% else %}{{ row.before|default_if_none:'Not recorded' }}{% endif %}</dd>
+    <dt>Requested work</dt><dd class="planning-prose">{% if row.is_time %}{{ row.after|date:'D j M Y, H:i O' }}{% elif row.after == '' %}Not recorded{% else %}{{ row.after }}{% endif %}</dd>
+  </dl></div>{% endfor %}
+  {% if not staffing_can_apply %}<p>Preview only: applying requires both Programme and Workforce management authority.</p>{% endif %}
+</section>
+{% endif %}

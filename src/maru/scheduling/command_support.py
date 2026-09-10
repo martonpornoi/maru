@@ -16,6 +16,7 @@ from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.scheduling_queries import resolve_scheduling_edition_reference
+from maru.workforce.programme_references import lock_programme_staffing_scope
 
 from .authorization import (
     AuthorizedSchedulingScope,
@@ -265,10 +266,17 @@ def _execute[IntentT, PreparedT](
             }
         )
         with transaction.atomic(), scheduling_writer():
+            # Shared parents precede the edition and owner rows. Otherwise a
+            # binding can hold Organization while awaiting our edition lock,
+            # and this command's deferred evidence FK waits on Organization.
+            lock_programme_staffing_scope(
+                organization_id=request.organization_id,
+                edition_id=request.edition_id,
+            )
             edition = resolve_scheduling_edition_reference(
                 organization_id=request.organization_id,
                 edition_id=request.edition_id,
-                lock=True,
+                lock=False,
             )
             if edition is None:
                 raise SchedulingAuthorizationDeniedError
