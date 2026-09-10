@@ -156,8 +156,9 @@ animation at the current preference, unit tests or green CI. Screen-reader,
 representative-human and provisioned-runtime acceptance remain separately open.
 No production route, navigation, runtime write grant or profile is activated.
 
-All synthetic browser leases and certification watchers are closed. Preserved
-reports are evidence, not running jobs. Do not rerun the completed suite or
+Previous synthetic browser leases and certification watchers are closed; the
+active assisted #87 retry is described below. Preserved reports are evidence,
+not running certification jobs. Do not rerun the completed suite or
 recreate old schedules. Preserve unrelated worktrees, stashes and containers;
 no general Docker cleanup or production data is authorized.
 
@@ -195,21 +196,30 @@ preview/apply, keyboard controls, independently restricted/read-only roles and
 seven widths. It does not close #87 or prove an activated Programme-only journey.
 
 Active branch: `codex/programme-browser-acceptance`, based on the verified
-staffing squash. The next bounded task is [#87](https://github.com/martonpornoi/maru/issues/87):
-controlled native Cancel/discard, genuine 200% browser zoom and enabled reduced
-motion. The first Chrome attempt verified exact field/retry retention after
-native Cancel, but subsequent deliberate discard could not be verified after
-the browser connection timed out. Genuine zoom and enabled reduced motion are
-still unperformed. Windows Settings did not expose a controllable window.
-The [partial browser checkpoint](../checkpoints/2026-09-10-programme-browser-acceptance-attempt.md)
-records the evidence and limitations. Use only the finite isolated synthetic
-fixture and the user-approved Chrome session for the remaining checks.
+staffing squash. The bounded task is [#87](https://github.com/martonpornoi/maru/issues/87).
+In the fresh synthetic Chrome fixture, the maintainer manually confirmed native
+Cancel retention, deliberate discard/reset, readable populated planning at
+genuine 200% Chrome zoom, and usable board interaction with Windows Animation
+effects off. Browser-control communication timed out: these are user-observed
+checks, not automated preference/viewport measurements. Chrome version was
+152.0.7977.83 (Official Build), 64-bit. The fixture closed normally and its exact
+disposable container was removed. The maintainer also confirmed Tab visibly
+highlights fields and keeps them in view at 200% on the retained page. All three
+deferred checks have bounded observed evidence; protected delivery remains.
+The maintainer chose to keep
+Animation effects off; do not revert that preference.
+The [assisted observations](../checkpoints/2026-09-10-programme-browser-assisted-observations.md)
+and [partial browser checkpoint](../checkpoints/2026-09-10-programme-browser-acceptance-attempt.md)
+retain distinct evidence and limitations, including the earlier exact field/retry
+retention. Use only the finite isolated fixture for remaining work.
 Screen-reader, representative-human and provisioned-runtime gates remain
 separate. All 64 frontend regressions passed in 27.24s; documentation validation
 and whitespace checks pass. The browser attempt ended through exact-process
 cleanup after the connection failed, not the normal Finish button; that is not
-a passing fixture or full browser acceptance. Work stays single-agent; no
-schedule or test container is currently running. Preserve unrelated worktrees,
+a passing fixture or full browser acceptance. The fresh assisted fixture later
+closed normally (one fixture test, 33m25s interactive lease, not automatic UX
+acceptance). Its verified container was removed. Work stays single-agent; no
+schedule or test container is active. Preserve unrelated worktrees,
 stashes, data and containers.
 
 ## What can be evaluated today
@@ -238,9 +248,9 @@ stashes, data and containers.
 
 ## Smallest sensible next actions
 
-1. Complete #87's three deferred real-browser checks and record exact source,
-   browser, inputs, outcomes and any repairs without claiming broader acceptance.
-2. Deliver that bounded evidence/repair child through its appropriate checks
+1. Deliver #87's recorded assisted checks without claiming broader or automated
+   acceptance; preserve the exact browser/source and cleanup evidence.
+2. Carry that bounded evidence child through its appropriate checks
    and protected PR. Keep the staffing delivery checkpoint in this change.
 3. Continue independent approval/atomic release and combined personal outputs,
    on-site continuity, guided setup/surfaces and the integrated synthetic

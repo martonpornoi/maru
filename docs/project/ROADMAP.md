@@ -110,8 +110,11 @@ conflict evidence and governed Venue binding. Issue #85 delivered the
 under ADR 0092, before staffing, releases, continuity, and integrated
 Programme-only rehearsal. Native HTTP, pointer-assisted exact placement and
 unsaved-input guards merged through PR #86 after full protected acceptance.
-Three browser checks remain mandatory before activation in #87, explicitly
-deferred by the user rather than waived. Umbrella
+The three browser checks deferred in #87 now have
+[bounded assisted evidence](../checkpoints/2026-09-10-programme-browser-assisted-observations.md):
+native Cancel/discard, populated genuine 200% zoom with visible keyboard focus,
+and usable interaction with Windows Animation effects off. Browser-control
+readback limitations remain explicit; protected evidence delivery is pending. Umbrella
 #48 remains open; no current profile or surface is activated by this kernel.
 
 Issue #88, delivered through PR #89, adds Programme-owned staffing requirements,
@@ -785,8 +788,9 @@ source-bound item with seven initially required readiness concerns, without
 activating a profile or creating hosts. Issue #79 delivers Programme-owned host
 relationships and deliberately shared availability under ADR 0087. Issue #81
 delivers Scheduling candidates, conflict evaluation and governed Venue binding.
-Issue #85 delivers the dormant accessible editor; #87 retains its deferred
-pre-activation browser checks. Next are staffing, release, continuity, setup, and integrated
+Issue #85 delivers the dormant accessible editor; #87 records assisted
+pre-activation browser checks pending protected delivery. Issue #88 delivers
+governed staffing. Next are release, continuity, setup, and integrated
 acceptance in dependency order. Each child is separately verified and delivered.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
