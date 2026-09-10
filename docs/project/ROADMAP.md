@@ -114,6 +114,14 @@ Three browser checks remain mandatory before activation in #87, explicitly
 deferred by the user rather than waived. Umbrella
 #48 remains open; no current profile or surface is activated by this kernel.
 
+Issue #88, delivered through PR #89, adds Programme-owned staffing requirements,
+explicit exact-source Workforce bindings, minimized coverage/history and native
+work-impact preview/apply under ADR 0093. Retained volunteer commitments are
+never silently rewritten by timetable movement. Personal Workforce inputs are
+proved compositionally without Participation; combined published personal
+projections remain part of atomic release/outputs. Deferred browser acceptance,
+release, on-site continuity and guided integrated adoption remain mandatory.
+
 Profile v1 declares incumbent-system coexistence and the current manual,
 copy-on-write structure setup. General partner import, complete continuity
 export, print/offline packs, automated decommissioning, profile expansion,

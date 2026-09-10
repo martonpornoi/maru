@@ -73,7 +73,7 @@ That optimization pilot is closed; the later separately approved #83 CI task is
 described below. No Docker cleanup is authorized. See the
 [pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
 
-## Current bounded outcome: Programme staffing
+## Current bounded outcome: Programme browser acceptance
 
 Issue #77 was delivered through PR #78, squash
 `6279cb50d287d70e33e2bebabda3e54564668475`. Issue #79 was delivered through
@@ -161,148 +161,56 @@ reports are evidence, not running jobs. Do not rerun the completed suite or
 recreate old schedules. Preserve unrelated worktrees, stashes and containers;
 no general Docker cleanup or production data is authorized.
 
-Next implementation is Programme-owned staffing requirements with Workforce-
-owned demand/commitments and minimized Scheduling coverage, followed by atomic
-release/outputs, on-site continuity, guided setup and integrated acceptance.
-The active branch is `codex/programme-staffing`, based on the verified merge.
-Native child [#88](https://github.com/martonpornoi/maru/issues/88) is open and
-linked from #48. ADR 0093 and HR-015 define exact source binding, immutable
-accepted work and minimized coverage; implementation and acceptance remain
-in progress. Work stays single-agent and #48 remains open.
+### Delivered staffing and active browser acceptance
 
-The local staffing implementation now includes Programme requirement
-create/revise/retire, immutable explicit terms, bounded independently authorized
-current/history reads, canonical owner references, reciprocal PostgreSQL guards,
-runtime SELECT-only containment and populated downgrade fences. The earlier
-minimized Workforce coverage source remains behind an unpinned adapter.
+Issue [#88](https://github.com/martonpornoi/maru/issues/88) is closed through
+[PR #89](https://github.com/martonpornoi/maru/pull/89), squash
+`dca412e97dfa40371e01db3222105f87cf9d4562` on 2026-09-10. The maintainer
+merged after protected acceptance. Clean local main and origin/main equal that
+result; its tree equals certified head
+`1883c55717f4d843ecbc3a15831aa1e7fc9ca36d`.
 
-Exact Programme/Scheduling source selection and a separate authorized Workforce
-work-impact read are also implemented locally. Candidate copying preserves the
-selected source; movement, current service-day changes, inactive owning items
-and requirement retirement invalidate it. Closed impact rules require identical uncommitted drafts for
-linking, no retained commitments for reconciliation, and explicit predecessor
-cancellation/history preservation for successors.
+ADR 0093 and HR-015 now have dormant Programme-owned versioned requirements,
+explicit Workforce create/link/reconcile/successor bindings, independently
+authorized source/impact/coverage/history, and native preview/apply controls.
+Canonical cross-owner locking, immutable accepted work, audit/receipt/outbox
+atomicity, runtime SELECT-only containment and populated recovery fences remain
+enforced. The staffing event is explicitly dormant. No profile, route, adapter
+or runtime writer is activated.
 
-Workforce create/link/reconcile/successor binding commands are implemented
-locally through the existing Shift lifecycle. They retain exact source revisions,
-one-to-one owner receipts, independently authorized impact tokens and immutable
-lineage. New claims invalidate previews even without a demand-version change;
-late failures restore cancelled work and commitments atomically. Workforce
-`0019`–`0021` add the dormant tables, reciprocal guards and populated reverse fence.
-Both adapters and both new tables remain unactivated/SELECT-only.
+Complete local certification passed 7,941 Python tests (4,254 unit and 3,687
+PostgreSQL), 64 frontend tests, all ten gates and 90.56% combined branch-aware
+coverage in 118m56s. Independent hosted acceptance passed all sixteen PostgreSQL
+jobs, Full CI gate, PR gate and CodeQL. Seventeen hosted reports contain zero
+failures, errors or skips. Full hosted latency was 3h08m18s: exhaustive history
+was selected by the CI dependency-closure repair, not a routine-path benchmark.
+No test rerun is needed for this delivered candidate. See the
+[staffing delivery checkpoint](../checkpoints/2026-09-10-programme-staffing-protected-delivery.md)
+for exact provenance, earlier repairs and preserved evidence.
 
-An earlier full fast run passed **4,202 unit tests in 20.82s**, with the same two
-pre-existing Django URLField warnings. Focused binding acceptance passed **19
-PostgreSQL command/race cases in 80.26s** and **six integrity/recovery cases in
-32.75s**, including actual claims/confirmations, raw source forgery, disabled-guard
-detection and both migration paths. Migration drift is clean; strict types and
-semantic docstrings passed during implementation. These are not full certification,
-browser acceptance or protected delivery. See the
-[binding checkpoint](../checkpoints/2026-09-09-programme-workforce-binding-kernel.md)
-and preceding [source/impact checkpoint](../checkpoints/2026-09-09-programme-staffing-source-and-impact.md).
+The no-Participation personal proof composes ordinary Workforce owner inputs;
+combined published host/volunteer timetables remain part of the release/output
+successor. Staffing browser evidence covered planner validation/history,
+preview/apply, keyboard controls, independently restricted/read-only roles and
+seven widths. It does not close #87 or prove an activated Programme-only journey.
 
-The earlier persistence acceptance passed 36 PostgreSQL cases and eight contract
-cases in 90.49s, including adversarial DML,
-concurrency, read ceilings, audit failure and both migration paths. These are
-local step results, not complete issue certification. Exact Programme schema
-and guard fingerprints match; authority guard metadata is installed, but the
-flushed test database has no active cutover marker and is not a provisioned
-runtime acceptance claim. Migration drift, types and semantic docstrings pass.
-
-An existing CI-selection regression was also corrected: a new owner migration
-leaf can no longer hide consumers of older model migrations. No history,
-timeout, coverage or protected gate is weakened. Bound current/history reads and
-exact-source Scheduling coverage are now implemented locally. Their combined
-source/projection run passed **32 PostgreSQL cases in 122.62s**. Field/history
-ceilings, fixed pagination, audit failure, foreign scope, changed source/work and
-the actual claim/independent-confirmation/underfilled-lock path are covered.
-The [coverage/history checkpoint](../checkpoints/2026-09-09-programme-staffing-coverage-and-history.md)
-retains this evidence. The native [staffing page contract](../product/page-contracts/programme-staffing.md)
-now has native requirement, fixed-history and exact work preview/apply controls.
-Nine real PostgreSQL HTTP cases passed in 48.50s, including all four work actions,
-retained retries, stale source rejection, CSRF/read-only denial and uncertain
-post-commit reload recovery. Six minimized choice-reader cases also passed.
-The native-workflow full fast run passed **4,244 unit tests in 21.37s**; five subsequently
-added template-focus regression cases passed separately.
-
-Two finite synthetic browser leases are closed. Planner revision/validation,
-history, preview/apply, keyboard confirmation and independently withheld/read-only
-roles were rehearsed. Overview and impact fit all seven UX-029 widths; the
-corrected impact preview has zero automated accessibility violations. A discovered
-staffing focus defect was fixed and rechecked in the browser. This does not close
-#87's native discard, genuine zoom or enabled reduced-motion gates, nor claim
-representative-human, screen-reader or provisioned-runtime acceptance. See the
-[native staffing checkpoint](../checkpoints/2026-09-10-programme-staffing-native-workflow.md).
-Issue-level races exposed and reproduced a real PostgreSQL deadlock between
-source movement and first binding: edition-first source locking inverted the
-binding's parent locks at deferred foreign-key commit. Programme source commands
-and locking reads, plus Scheduling commands and planning reads, now join the
-canonical parent scope before narrower locks. A redundant edition lock was
-removed; readiness retains two Programme SELECTs, separately bounded fixed scope
-overhead and explicit parent-order assertions.
-
-The combined final regression passed **30 cases in 112.17s**, including nine
-committed competing-owner scenarios, native staffing HTTP and host/privacy/read
-regressions. The real Workforce-only personal journey independently passed
-claim, different-organizer confirmation, lock and retained My Shifts after
-Assignment ending, with no Participation or unrelated-module state. This is
-compositional owner-boundary evidence, not Programme-only profile activation.
-The latest full fast run passed **4,252 unit tests in 25.53s** before the final
-redundant-lock removal; its focused regression passed in the 30-case run.
-Ruff, four-file strict types and three-file semantic docstrings pass. See the
-[concurrency and personal-input checkpoint](../checkpoints/2026-09-10-programme-staffing-concurrency-and-personal-inputs.md).
-Remaining #88 work is complete exact-commit certification and protected delivery.
-No PR or staffing merge exists; no production route, profile or runtime writer
-is activated.
-The first non-interactive certification stopped early after two propagated-
-exception docstrings failed PyDocLint. Their semantics are now documented in
-Notes, without changing exception behavior or suppressing checks; the complete
-PyDocLint scan passes. The partial run's 4,252 unit tests passed, but it is not
-certification. Its eight disposable databases/volumes were removed and partial
-logs retained. The complete non-database preflight now passes: locked dependency
-and security checks, package validation, 503-file strict types, documentation
-linters and warning-fatal Sphinx, migration/system/production-settings checks,
-unchanged generated API/assets, and all **64 frontend tests**. OpenAPI retains
-23 existing warnings and zero errors. The next clean-commit certification uses
-`CI=true` so dependency installation cannot await a hidden prompt.
-
-The exhaustive `24e8fd7` attempt subsequently exposed older conversion/host
-downgrade expectations that omitted the six unused staffing successors and
-equated historical host integrity with current-schema readiness. The run was
-interrupted before completion; its processes and disposable containers are gone.
-Partial logs and unit coverage remain, but no PostgreSQL coverage or successful
-certification receipt exists. Do not treat the interrupted run as acceptance.
-Test-only corrections enumerate those exact successors, verify every retained
-host guard and ownership field, require current readiness to remain false while
-staffing relations are reversed, and restore full readiness after reapply.
-The complete seven-case conversion/host recovery regression passed in
-**928.25s (15m28s)** on the separate synthetic fixture. This repair changes tests
-only; migration guards and production behavior remain unchanged. See the
-[historical recovery checkpoint](../checkpoints/2026-09-10-programme-staffing-historical-recovery.md).
-The recovered partial logs contain the three known conversion-test failures;
-the remaining suite was not completed. That repair was committed as `9a48829`.
-See the [persistence checkpoint](../checkpoints/2026-09-09-programme-staffing-requirement-persistence.md)
-and [earlier input/source checkpoint](../checkpoints/2026-09-09-programme-staffing-inputs-and-coverage.md).
-
-The complete `9a48829` certification then finished all eight PostgreSQL shards:
-**3,683 passed, four failed**, with no skips or teardown errors. Its 4,252 unit
-tests, 64 frontend tests and non-database quality gates passed. Diagnostic
-combined branch-aware coverage is **90.56%**, but this failed run produced no
-certification receipt and permits no push or merge. Complete reports and all
-nine coverage parts are preserved locally.
-
-The verified follow-up declares the new staffing event explicitly dormant,
-adds fast registry/route-containment regressions, preserves exact retained
-Scheduling/Venues migrations and guards while permitting only six named empty
-staffing reversals, and makes the synthetic Shift truncate attempt reach its
-original guard despite new referencing tables. No migration, guard, route or
-coverage policy is weakened. **Five focused PostgreSQL checks passed in 227.32s**;
-the sole warning was an unavailable optional pytest cache. **All 4,254 unit
-tests passed in 21.89s**, with the two existing URLField warnings, using a
-dedicated workspace temporary directory after an initial Windows shared-temp
-permission failure. The [acceptance repair checkpoint](../checkpoints/2026-09-10-programme-staffing-acceptance-repairs.md)
-records the exact boundaries. Commit this repair and certify the new clean head;
-#88 is still local, and #87 and all Programme activation gates remain open.
+Active branch: `codex/programme-browser-acceptance`, based on the verified
+staffing squash. The next bounded task is [#87](https://github.com/martonpornoi/maru/issues/87):
+controlled native Cancel/discard, genuine 200% browser zoom and enabled reduced
+motion. The first Chrome attempt verified exact field/retry retention after
+native Cancel, but subsequent deliberate discard could not be verified after
+the browser connection timed out. Genuine zoom and enabled reduced motion are
+still unperformed. Windows Settings did not expose a controllable window.
+The [partial browser checkpoint](../checkpoints/2026-09-10-programme-browser-acceptance-attempt.md)
+records the evidence and limitations. Use only the finite isolated synthetic
+fixture and the user-approved Chrome session for the remaining checks.
+Screen-reader, representative-human and provisioned-runtime gates remain
+separate. All 64 frontend regressions passed in 27.24s; documentation validation
+and whitespace checks pass. The browser attempt ended through exact-process
+cleanup after the connection failed, not the normal Finish button; that is not
+a passing fixture or full browser acceptance. Work stays single-agent; no
+schedule or test container is currently running. Preserve unrelated worktrees,
+stashes, data and containers.
 
 ## What can be evaluated today
 
@@ -318,7 +226,8 @@ records the exact boundaries. Commit this repair and certify the new clean head;
   (#71); explicit source-bound accepted conversion (#77); host confirmation
   and deliberately shared per-item availability (#79); Scheduling candidates,
   conflict evidence and governed Venue binding (#81); native/pointer timetable
-  editing (#85). These remain dormant
+  editing (#85); governed Programme staffing and Workforce coverage (#88).
+  These remain dormant
   foundations, not a departmental workspace.
   [Events](../modules/events.md), [Applications](../modules/applications.md),
   and the [Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md)
@@ -329,16 +238,13 @@ records the exact boundaries. Commit this repair and certify the new clean head;
 
 ## Smallest sensible next actions
 
-1. Certify the clean #88 candidate through the required eight-database
-   exact-commit command. The included CI dependency-closure repair selects
-   exhaustive history; a current-only diagnostic cannot substitute for it.
-   Requirement, native UI, binding, coverage, race, personal-owner and migration
-   focused acceptance is complete; retain source freshness and field ceilings.
-2. Carry that exact staffing candidate through protected PR delivery and main
-   synchronization, then close #88 with its verification and merge evidence.
-3. Complete #87 before activation. Continue release/outputs, on-site continuity,
-   guided setup/surfaces and the integrated synthetic Programme-only journey.
-   No routine approval is needed between delivered children; keep #48 open.
+1. Complete #87's three deferred real-browser checks and record exact source,
+   browser, inputs, outcomes and any repairs without claiming broader acceptance.
+2. Deliver that bounded evidence/repair child through its appropriate checks
+   and protected PR. Keep the staffing delivery checkpoint in this change.
+3. Continue independent approval/atomic release and combined personal outputs,
+   on-site continuity, guided setup/surfaces and the integrated synthetic
+   Programme-only journey. Keep #48 open and preserve all activation gates.
 
 Outside the Programme sequence, #42 owns the Workforce tutorial, #22 continuity,
 #23 accessibility and #24 later attendance/handover/actual-time behavior. They
