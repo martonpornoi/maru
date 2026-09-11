@@ -28,6 +28,10 @@ SECURITY INVOKER with fixed safe search paths and no PUBLIC execution. Bounded
 Programme readiness fingerprints the exact live table, constraints, indexes,
 functions, triggers, ownership and ACLs, including the refined receipt index.
 Runtime receives SELECT only on the new relation and no new executable writer.
+The [runtime provisioning artifact](postgresql-runtime-role-provisioning.sql.example)
+includes this relation in its explicit runtime SELECT grant and both PUBLIC and
+runtime write revocations. Updating the Python privilege inventory alone is not
+sufficient provisioning evidence.
 
 ## Reversal and recovery
 
@@ -38,6 +42,14 @@ Audit and Effects data. The same-transaction preflights take ACCESS EXCLUSIVE
 locks before contraction; never fake history or disable a guard to pass them.
 Once a decision exists, the expected result is a fix-forward refusal with
 schema, guards and migration evidence retained.
+
+An older populated staffing, hosting or Scheduling fence may be reached only
+after Django has reversed these exact unused placement-decision successors.
+That partial contraction must preserve the older owner's exact guards and data,
+but cannot report current Programme readiness. Retain the migration recorder
+evidence, reapply the compatible current graph and verify full readiness before
+resuming current application code. Do not mistake an older fence's correct
+refusal for rollback of every earlier migration in the attempted reversal.
 
 Recover by restoring mutually consistent Programme, Scheduling, Venues,
 Workforce, Identity/Authorization, Audit, Effects and migration history from the

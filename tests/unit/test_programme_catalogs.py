@@ -65,6 +65,8 @@ def test_programme_catalogs_are_exact_and_closed() -> None:
         "staffing_create",
         "staffing_revise",
         "staffing_retire",
+        "accessibility_fit_record",
+        "staffing_absence_record",
         "working_revise",
         "delivery_revise",
         "discussion_append",

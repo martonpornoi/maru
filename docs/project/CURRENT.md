@@ -255,6 +255,19 @@ expectation. Its corrected catalog/contract/shard-inventory group passed 41 case
 and all six new-relation runtime privilege cases passed. The first Sphinx build
 caught four ambiguous type references, now corrected; clean warning-fatal Sphinx,
 exact clean-commit certification, protected PR acceptance and merge remain pending.
+The first exact candidate `a4cdc7a6d8390f6ec554db1deace1366f5df69ce` failed
+seven unit checks: old exact inventory assertions and an omitted SELECT-only
+provisioning-artifact entry. Its fresh Sphinx build and 64 frontend tests passed;
+the remaining database workers were deliberately stopped after the unit failure,
+so no database completion, combined coverage or successful receipt is claimed.
+Their disposable services were removed and failure logs retained. The corrected
+complete unit suite passes all 4,503 tests. Nine focused real provisioning and
+older populated-fence recovery cases passed; the remaining staffing case first
+identified additional unused Workforce successors, then passed its corrected
+exact-inventory rerun. All 38 edition-creation tests also passed. The
+[correction checkpoint](../checkpoints/2026-09-11-release-source-certification-corrections.md)
+retains these separate reports and the failed attempt. New clean certification
+and independent protected acceptance are still required.
 The [implementation checkpoint](../checkpoints/2026-09-11-trusted-programme-release-sources.md)
 retains focused evidence and corrections without claiming a successful failed run.
 Runtime SELECT-only and explicit historical inventory changes require the ordinary
