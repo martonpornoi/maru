@@ -20,6 +20,11 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0094](0094-complete-programme-release-eligibility.md) separates the complete
+release-eligibility rule matrix from partial planning reports, authenticated
+owner collection, independent approval and atomic publication. The rule-only
+prerequisite activates no profile or release path.
+
 [ADR 0090](0090-risk-based-postgresql-acceptance.md) defines current PostgreSQL
 acceptance, historical migration selection, nightly deduplication and bounded
 isolated work groups. It supersedes earlier selection/grouping rules without

@@ -2,7 +2,7 @@
 
 Status: dormant candidate/conflict and reciprocal physical-reservation kernel,
 consumed by the dormant Programme editor; no approval, release or profile activation.
-Last updated: 2026-09-09. See [CURRENT](../project/CURRENT.md) for verification
+Last updated: 2026-09-11. See [CURRENT](../project/CURRENT.md) for verification
 and protected-delivery status; this guide is the owner contract, not a merge claim.
 
 ## Ownership and adoption
@@ -16,8 +16,8 @@ PRG-008, VEN-001, VEN-002, VEN-008, AUD-001/AUD-003 and NFR-013.
 Programme owns item content, readiness, hosting confirmation and deliberately
 shared availability. Events owns edition lifecycle, dates and IANA zone.
 Venues owns actual physical occupancy and independent physical approval.
-Workforce owns Shift demand and volunteer commitments; their Programme binding
-is being added in #88.
+Workforce owns Shift demand and volunteer commitments; their governed Programme
+binding is delivered by #88.
 Scheduling must use those owners' documented services, not their private models.
 Cross-owner database integrity deliberately verifies the exact foreign graph;
 it is not a user-facing data-access path.
@@ -28,7 +28,7 @@ consequence. The independently authorized caller holds the canonical edition
 write scope. It provides no candidate, placement, public copy, host detail or
 authority, and never selects a timetable alternative. Requirement changes do
 not mutate Scheduling state. Exact candidate/placement demand binding is now
-implemented locally through the Workforce owner; #88 acceptance is unfinished.
+implemented through the Workforce owner and delivered by #88.
 
 Neither `full_convention@1` nor `workforce_only@1` admits the new capabilities,
 adapters or conflict sources. All fifteen Scheduling tables and the new Venue
@@ -453,6 +453,38 @@ required. Run it directly through pytest, finish with its visible control and
 record browser evidence separately; a passing lease proves cleanup only. Never
 share its database with a concurrently running integration suite.
 
+## Complete release eligibility
+
+[ADR 0094](../architecture/decisions/0094-complete-programme-release-eligibility.md)
+and SCH-012 define `release_eligibility.evaluate_release_eligibility`, a pure
+database-free rule boundary. It requires all ten release categories against one
+exact scoped snapshot. Missing checks remain unavailable; stale/blocked checks,
+hard findings and unacknowledged warnings prevent eligibility. Only the closed
+hosting/staffing/person/rest categories permit owner-proven inapplicability.
+No caller-facing success flags, owner collector, route or command is added.
+
+Checks, findings and acknowledgement references use immutable tuples and exact
+enums. Digests are lower-case SHA-256, category count is bounded by the vocabulary,
+and findings/acknowledgements retain the 10,000 limit. Unknown, duplicate,
+over-bound, foreign-snapshot or orphaned evidence raises the content-free
+`scheduling_release_evidence_invalid` validation error. Results use stable
+category/fingerprint ordering, expose no copied calendars or private rationale,
+and neither read nor write database state. The result is not an approval receipt.
+
+The future protected collector must independently authorize and audit every
+owner source, prove complete membership and applicability, compute the scoped
+candidate/policy/dependency digest, and authenticate retained acknowledgements.
+Approval/publication must recollect and reauthorize under canonical locks.
+The rule function does not authenticate supplied facts and must never be exposed
+as an alternative authorization path. Existing `is_complete` planning reports
+still declare staffing, rest, accessibility-fit and release-readiness deferrals.
+
+No migration or runtime ACL change is needed for this prerequisite. Ordinary
+code rollback removes only unused policy code; it creates no durable state to
+reverse. Source collection, independent persisted approval, atomic publication,
+physical invalidation, shared projections and current privacy consequences are
+mandatory successors before any release can be offered.
+
 ## Integrity, observation and remaining work
 
 All command transactions and locking planning reads acquire the shared Workforce
@@ -476,7 +508,8 @@ private rationale, host periods or private owner records as debugging payloads.
 
 The [migration/recovery runbook](../operations/scheduling-migration-and-recovery.md)
 describes exact schema/readiness, runtime ACLs and populated contraction fences.
-The native editor was delivered dormant through #85. Staffing still requires #88
-acceptance and protected delivery. Independent Programme approval, atomic release,
+The native editor and staffing were delivered dormant through #85 and #88.
+The release-eligibility prerequisite adds no live workflow. Independent Programme approval, atomic release,
 role-specific outputs, on-site continuity, guided activation and integrated
-acceptance remain mandatory #48 work; #87 retains deferred browser checks.
+acceptance remain mandatory #48 work. #87 is delivered; representative-human
+and integrated acceptance remain separate gates.

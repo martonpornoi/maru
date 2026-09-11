@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-10
+Last updated: 2026-09-11
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -73,7 +73,7 @@ That optimization pilot is closed; the later separately approved #83 CI task is
 described below. No Docker cleanup is authorized. See the
 [pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
 
-## Current bounded outcome: Programme browser acceptance
+## Current bounded outcome: complete Programme release eligibility (#91)
 
 Issue #77 was delivered through PR #78, squash
 `6279cb50d287d70e33e2bebabda3e54564668475`. Issue #79 was delivered through
@@ -195,32 +195,53 @@ successor. Staffing browser evidence covered planner validation/history,
 preview/apply, keyboard controls, independently restricted/read-only roles and
 seven widths. It does not close #87 or prove an activated Programme-only journey.
 
-Active branch: `codex/programme-browser-acceptance`, based on the verified
-staffing squash. The bounded task is [#87](https://github.com/martonpornoi/maru/issues/87).
-In the fresh synthetic Chrome fixture, the maintainer manually confirmed native
-Cancel retention, deliberate discard/reset, readable populated planning at
-genuine 200% Chrome zoom, and usable board interaction with Windows Animation
-effects off. Browser-control communication timed out: these are user-observed
-checks, not automated preference/viewport measurements. Chrome version was
-152.0.7977.83 (Official Build), 64-bit. The fixture closed normally and its exact
-disposable container was removed. The maintainer also confirmed Tab visibly
-highlights fields and keeps them in view at 200% on the retained page. All three
-deferred checks have bounded observed evidence; protected delivery remains.
-The maintainer chose to keep
-Animation effects off; do not revert that preference.
-The [assisted observations](../checkpoints/2026-09-10-programme-browser-assisted-observations.md)
-and [partial browser checkpoint](../checkpoints/2026-09-10-programme-browser-acceptance-attempt.md)
-retain distinct evidence and limitations, including the earlier exact field/retry
-retention. Use only the finite isolated fixture for remaining work.
-Screen-reader, representative-human and provisioned-runtime gates remain
-separate. All 64 frontend regressions passed in 27.24s; documentation validation
-and whitespace checks pass. The browser attempt ended through exact-process
-cleanup after the connection failed, not the normal Finish button; that is not
-a passing fixture or full browser acceptance. The fresh assisted fixture later
-closed normally (one fixture test, 33m25s interactive lease, not automatic UX
-acceptance). Its verified container was removed. Work stays single-agent; no
-schedule or test container is active. Preserve unrelated worktrees,
-stashes, data and containers.
+Issue [#87](https://github.com/martonpornoi/maru/issues/87) is closed through
+[PR #90](https://github.com/martonpornoi/maru/pull/90), protected squash
+`d9dcd5074af494689912dc1524095b85343f5f2c`. Clean local main and origin/main
+match that result; its tree equals candidate
+`cb131c8c10ee46f12702dada1248204676b3670d`.
+
+The maintainer's Chrome 152.0.7977.83 (64-bit) observations cover native
+Cancel/discard, populated genuine 200% zoom with visible Tab focus kept in view,
+and usable board interaction with Windows Animation effects off. Browser-control
+readback limitations remain explicit. The maintainer chose to keep Animation
+effects off; do not revert that preference. Screen-reader, representative
+departmental use, provisioned runtime and integrated acceptance remain separate.
+
+All 7,810 Python tests passed (4,254 unit plus 3,556 current PostgreSQL), but the
+initial certification command failed at pnpm's non-interactive prompt. The
+maintainer approved one-off split-run acceptance: the unchanged candidate passed
+recovered non-database gates with CI=true, all 64 frontend tests and 90.38%
+combined coverage. No successful certification receipt was fabricated and no
+policy or threshold changed. Independent hosted documentation/quality, PR gate
+and CodeQL passed before exact-head guarded merge. The
+[delivery checkpoint](../checkpoints/2026-09-11-programme-browser-protected-delivery.md)
+retains provenance, the exception, browser limitations and cleanup evidence.
+Do not repeat the completed tests or browser checks.
+
+Active branch: `codex/programme-release-planning`, starting from the protected
+browser-evidence merge. Its initial post-delivery handoff travels with #91.
+The release outcome is split into complete eligibility rules; protected owner
+collection/independent approval/atomic publication/invalidation; then shared
+release-derived outputs and change impact. #91 adds ADR 0094, SCH-012 detail and
+a pure rule matrix, not an authenticated collector or publication command.
+The focused regression run passed 265 tests in 1.64s and measured 100% statement/
+branch coverage for the rule module; its 137 cases passed again after the
+content-free exception refinement. Strict type and documentation checks passed.
+See the [eligibility checkpoint](../checkpoints/2026-09-11-programme-release-eligibility.md).
+Exact clean-commit certification and protected delivery remain pending; no
+release or profile is activated.
+
+The maintainer authorized unattended sequential delivery, without routine PR or
+merge confirmation. Genuine human checks become explicit #48 follow-up subtasks,
+not fabricated passes or waived activation gates. Keep one agent and current
+reasoning unless a concrete unresolved problem requires escalation; independent
+authorized work may proceed around such a dependency. After #48, continue with
+#42 and the director introduction/pilot package, then the agreed guidance,
+accessibility, continuity and succession priorities. No new schedule, production
+deployment, personal data, repository-policy bypass or general cleanup is authorized.
+All task-owned fixture/certification containers and watchers are closed; no
+schedule is active. Preserve unrelated worktrees, stashes, data and containers.
 
 ## What can be evaluated today
 
@@ -248,13 +269,12 @@ stashes, data and containers.
 
 ## Smallest sensible next actions
 
-1. Deliver #87's recorded assisted checks without claiming broader or automated
-   acceptance; preserve the exact browser/source and cleanup evidence.
-2. Carry that bounded evidence child through its appropriate checks
-   and protected PR. Keep the staffing delivery checkpoint in this change.
-3. Continue independent approval/atomic release and combined personal outputs,
-   on-site continuity, guided setup/surfaces and the integrated synthetic
-   Programme-only journey. Keep #48 open and preserve all activation gates.
+1. Finish #91 exact-head certification and protected delivery; carry the #87
+   post-delivery checkpoint without repeating its completed acceptance.
+2. Deliver authenticated release source collection, independent approval,
+   atomic publication/invalidation, then shared outputs/change impact.
+3. Continue on-site continuity, guided setup/surfaces and integrated
+   Programme-only acceptance. Keep #48 open and preserve all activation gates.
 
 Outside the Programme sequence, #42 owns the Workforce tutorial, #22 continuity,
 #23 accessibility and #24 later attendance/handover/actual-time behavior. They

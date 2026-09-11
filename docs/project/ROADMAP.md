@@ -114,7 +114,9 @@ The three browser checks deferred in #87 now have
 [bounded assisted evidence](../checkpoints/2026-09-10-programme-browser-assisted-observations.md):
 native Cancel/discard, populated genuine 200% zoom with visible keyboard focus,
 and usable interaction with Windows Animation effects off. Browser-control
-readback limitations remain explicit; protected evidence delivery is pending. Umbrella
+readback limitations remain explicit. Protected PR #90 delivered that evidence
+and closed #87; its [delivery checkpoint](../checkpoints/2026-09-11-programme-browser-protected-delivery.md)
+records the maintainer-approved split-run local verification and green hosted gate. Umbrella
 #48 remains open; no current profile or surface is activated by this kernel.
 
 Issue #88, delivered through PR #89, adds Programme-owned staffing requirements,
@@ -122,14 +124,20 @@ explicit exact-source Workforce bindings, minimized coverage/history and native
 work-impact preview/apply under ADR 0093. Retained volunteer commitments are
 never silently rewritten by timetable movement. Personal Workforce inputs are
 proved compositionally without Participation; combined published personal
-projections remain part of atomic release/outputs. Deferred browser acceptance,
-release, on-site continuity and guided integrated adoption remain mandatory.
+projections remain part of atomic release/outputs. Release, on-site continuity
+and guided integrated adoption remain mandatory.
 
 Profile v1 declares incumbent-system coexistence and the current manual,
 copy-on-write structure setup. General partner import, complete continuity
 export, print/offline packs, automated decommissioning, profile expansion,
 post-edition retention execution, and production recovery remain the next
 trust-building outcomes rather than implied capabilities.
+
+The release outcome is now split under #48: #91 defines and tests complete
+exact-snapshot eligibility under ADR 0094; the next child supplies authenticated
+owner collection, independent approval, atomic publication and invalidation;
+the following child supplies shared release-derived outputs and change impact.
+An eligible rule result is not approval, publication or profile activation.
 
 ADR 0081 accepts `programme_operations@1` as an exact target contract. Its
 adopted product modules are Applications, Programme, Scheduling, Venues, and
@@ -789,7 +797,7 @@ activating a profile or creating hosts. Issue #79 delivers Programme-owned host
 relationships and deliberately shared availability under ADR 0087. Issue #81
 delivers Scheduling candidates, conflict evaluation and governed Venue binding.
 Issue #85 delivers the dormant accessible editor; #87 records assisted
-pre-activation browser checks pending protected delivery. Issue #88 delivers
+pre-activation browser checks delivered through PR #90. Issue #88 delivers
 governed staffing. Next are release, continuity, setup, and integrated
 acceptance in dependency order. Each child is separately verified and delivered.
 

@@ -576,6 +576,17 @@ architecture documents, implementation issues, tests, and release notes.
   append an invalidation that removes the unsafe placement from every normal
   projection. A known-invalid placement must not remain approved in a cached,
   printable, or last-published degraded artifact.
+  Release eligibility is separate from planning completeness and independent
+  approval. It requires complete current evidence for the exact candidate,
+  Programme readiness, approved public copy, hosting, physical approval and
+  constraints, accessibility fit, staffing, person conflicts and rest. Missing,
+  withheld, stale, unsupported or partial sources prevent approval; absence of
+  findings is not proof that a source ran. Only explicitly inapplicable hosting,
+  staffing, person-conflict and rest categories may be omitted operationally,
+  with current owner evidence still required in the complete check set. Every
+  warning acknowledgement binds the exact scoped release snapshot and finding;
+  none can waive a hard constraint or unavailable source. Eligibility confers
+  no authorization, persisted approval, publication or production readiness.
 
 ### Querying, reporting, and export
 
