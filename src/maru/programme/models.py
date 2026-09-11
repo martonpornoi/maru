@@ -40,6 +40,11 @@ from .host_catalogs import (
     ProgrammeHostRole,
     ProgrammeHostState,
 )
+from .release_inputs import (
+    MAX_PLACEMENT_DECISIONS,
+    ProgrammePlacementDecisionKind,
+    ProgrammePlacementDecisionState,
+)
 from .writer_boundary import require_programme_writer
 
 if TYPE_CHECKING:
@@ -68,6 +73,8 @@ _OWNER_MANAGED_RELATION_FIELDS = frozenset(
         "source_object",
         "occurrence",
         "position",
+        "placement",
+        "candidate_revision",
     }
 )
 
@@ -1141,7 +1148,11 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeModel):
             models.UniqueConstraint(
                 fields=("item", "resulting_item_version"),
                 condition=~models.Q(
-                    operation=ProgrammeCommandOperation.PUBLIC_RENDITION_RECORD.value
+                    operation__in=(
+                        ProgrammeCommandOperation.PUBLIC_RENDITION_RECORD.value,
+                        ProgrammeCommandOperation.ACCESSIBILITY_FIT_RECORD.value,
+                        ProgrammeCommandOperation.STAFFING_ABSENCE_RECORD.value,
+                    )
                 ),
                 name="programme_command_item_version_uq",
             ),
@@ -1237,13 +1248,17 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeModel):
                     "Item creation must be attributed to its creator and modifier.",
                     code="programme_receipt_create_actor_mismatch",
                 )
-        elif self.operation == ProgrammeCommandOperation.PUBLIC_RENDITION_RECORD.value:
+        elif self.operation in (
+            ProgrammeCommandOperation.PUBLIC_RENDITION_RECORD.value,
+            ProgrammeCommandOperation.ACCESSIBILITY_FIT_RECORD.value,
+            ProgrammeCommandOperation.STAFFING_ABSENCE_RECORD.value,
+        ):
             if (
                 self.resulting_control_version is not None
                 or self.resulting_item_version != self.expected_version
             ):
                 raise ValidationError(
-                    "Public-copy approval must preserve the current item version.",
+                    "An independent evidence stream must preserve the item version.",
                     code="programme_receipt_public_version_invalid",
                 )
         elif (
@@ -1693,6 +1708,110 @@ class ProgrammeStaffingRevision(_AppendOnlyProgrammeModel):
         ]
 
 
+class ProgrammePlacementDecision(_AppendOnlyProgrammeModel):
+    """Retain one accountable exact-source fit or no-staffing assessment."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_placement_decisions",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_placement_decisions",
+    )
+    item = models.ForeignKey(
+        ProgrammeItem,
+        on_delete=models.PROTECT,
+        related_name="placement_decisions",
+    )
+    occurrence = models.ForeignKey(
+        "scheduling.SchedulingOccurrence",
+        on_delete=models.PROTECT,
+        related_name="programme_placement_decisions",
+    )
+    candidate_revision = models.ForeignKey(
+        "scheduling.SchedulingCandidateRevision",
+        on_delete=models.PROTECT,
+        related_name="programme_placement_decisions",
+    )
+    placement = models.ForeignKey(
+        "scheduling.SchedulingPlacementRevision",
+        on_delete=models.PROTECT,
+        related_name="programme_decisions",
+    )
+    kind = models.CharField(
+        max_length=24, choices=text_choices(ProgrammePlacementDecisionKind)
+    )
+    state = models.CharField(
+        max_length=16, choices=text_choices(ProgrammePlacementDecisionState)
+    )
+    sequence = models.PositiveBigIntegerField()
+    item_version = models.PositiveBigIntegerField()
+    source_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    delivery_revision = models.ForeignKey(
+        ProgrammeDeliveryRevision,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="placement_decisions",
+    )
+    space_selection_version = models.PositiveBigIntegerField(null=True, blank=True)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_placement_decisions_authored",
+    )
+    reason = models.CharField(max_length=MAX_PROGRAMME_REASON_LENGTH)
+    occurred_at = models.DateTimeField()
+
+    class Meta:
+        """Keep each placement/purpose history bounded and structurally distinct."""
+
+        ordering = ("placement_id", "kind", "sequence")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("placement", "kind", "sequence"),
+                name="programme_placement_decision_seq_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    sequence__gt=0,
+                    sequence__lte=MAX_PLACEMENT_DECISIONS + 1,
+                    item_version__gt=0,
+                    state__in=("satisfied", "blocked", "withdrawn"),
+                )
+                & ~models.Q(reason="")
+                & (
+                    models.Q(sequence__lte=MAX_PLACEMENT_DECISIONS)
+                    | models.Q(state="withdrawn")
+                ),
+                name="programme_placement_decision_bounds",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    kind="accessibility_fit",
+                    delivery_revision__isnull=False,
+                    space_selection_version__isnull=False,
+                    space_selection_version__gt=0,
+                )
+                | models.Q(
+                    kind="staffing_not_required",
+                    delivery_revision__isnull=True,
+                    space_selection_version__isnull=True,
+                ),
+                name="programme_placement_decision_sources",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "item"),
+                name="prg_placement_decision_scope",
+            )
+        ]
+
+
 __all__ = [
     "ProgrammeCommandReceipt",
     "ProgrammeDeliveryRevision",
@@ -1704,6 +1823,7 @@ __all__ = [
     "ProgrammeHostRevision",
     "ProgrammeItem",
     "ProgrammeItemSourceBinding",
+    "ProgrammePlacementDecision",
     "ProgrammePublicRendition",
     "ProgrammeReadinessEvidence",
     "ProgrammeReadinessRequirement",

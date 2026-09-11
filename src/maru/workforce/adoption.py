@@ -18,10 +18,24 @@ ASSIGNMENT_PARTICIPATION_EXCLUDED_ADAPTER = (
 WORKFORCE_SELF_ADAPTER = "workforce.self@1"
 WORKFORCE_PROGRAMME_COVERAGE_ADAPTER = "workforce.programme-coverage@1"
 WORKFORCE_PROGRAMME_STAFFING_ADAPTER = "workforce.programme-staffing@1"
+WORKFORCE_PROGRAMME_RELEASE_SOURCE_ADAPTER = "workforce.programme-release-source@1"
 
 WORKFORCE_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
     owner_module="workforce",
     descriptors=(
+        AdoptionAdapterDescriptor(
+            code=WORKFORCE_PROGRAMME_RELEASE_SOURCE_ADAPTER,
+            owner_module="workforce",
+            kind="programme-release-source",
+            result_semantics=(
+                "Returns complete current and retained bound-work dependencies "
+                "and minimized combined-person consequences for exact release checks."
+            ),
+            failure_semantics=(
+                "Denies unpinned or independently unauthorized release purposes; "
+                "missing, inconsistent or over-bound evidence is never absence."
+            ),
+        ),
         AdoptionAdapterDescriptor(
             code=WORKFORCE_PROGRAMME_STAFFING_ADAPTER,
             owner_module="workforce",

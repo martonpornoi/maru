@@ -131,6 +131,7 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.programme_programmehostavailabilitywindow,
     public.programme_programmestaffingrequirement,
     public.programme_programmestaffingrevision,
+    public.programme_programmeplacementdecision,
     public.workforce_programmeshiftbinding,
     public.workforce_programmeshiftbindingrevision
     FROM maru_runtime;
@@ -152,6 +153,7 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.programme_programmehostavailabilitywindow,
     public.programme_programmestaffingrequirement,
     public.programme_programmestaffingrevision,
+    public.programme_programmeplacementdecision,
     public.workforce_programmeshiftbinding,
     public.workforce_programmeshiftbindingrevision
     FROM PUBLIC;
@@ -173,6 +175,7 @@ GRANT SELECT ON TABLE
     public.programme_programmehostavailabilitywindow,
     public.programme_programmestaffingrequirement,
     public.programme_programmestaffingrevision,
+    public.programme_programmeplacementdecision,
     public.workforce_programmeshiftbinding,
     public.workforce_programmeshiftbindingrevision
     TO maru_runtime;

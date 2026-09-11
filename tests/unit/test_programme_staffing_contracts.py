@@ -13,6 +13,7 @@ from maru.programme.authorization import PROGRAMME_CAPABILITY_CODES
 from maru.programme.commands import ProgrammeLimitConflictError
 from maru.programme.events import programme_item_changed_payload
 from maru.programme.readiness import (
+    _STAFFING_INTEGRITY_CONTRACT,
     PROGRAMME_INTEGRITY_CONTRACT,
     _staffing_migration_contract_is_current,
 )
@@ -55,7 +56,7 @@ def test_staffing_capabilities_are_exact_additive_and_independently_ceilinged():
         assert code in PROGRAMME_CAPABILITY_CODES
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
     assert CAPABILITIES["programme.view_staffing"].field_ceiling == frozenset(
-        {"staffing_requirements", "staffing_history"}
+        {"staffing_requirements", "staffing_history", "placement_decisions"}
     )
     assert CAPABILITIES["programme.manage_staffing"].obligations == frozenset(
         {"reason", "audit"}
@@ -65,6 +66,10 @@ def test_staffing_capabilities_are_exact_additive_and_independently_ceilinged():
 def test_staffing_migrations_keep_exact_integrity_and_reserved_retirement_room():
     assert _staffing_migration_contract_is_current()
     assert PROGRAMME_INTEGRITY_CONTRACT.terminal_migration == (
+        "programme",
+        "0015_placement_decision_downgrade_fence",
+    )
+    assert _STAFFING_INTEGRITY_CONTRACT.terminal_migration == (
         "programme",
         "0012_staffing_downgrade_fence",
     )

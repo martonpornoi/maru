@@ -461,7 +461,8 @@ database-free rule boundary. It requires all ten release categories against one
 exact scoped snapshot. Missing checks remain unavailable; stale/blocked checks,
 hard findings and unacknowledged warnings prevent eligibility. Only the closed
 hosting/staffing/person/rest categories permit owner-proven inapplicability.
-No caller-facing success flags, owner collector, route or command is added.
+The rule itself adds no caller-facing success flags, owner collector, route or
+command. The independently authorized collector is described below.
 
 Checks, findings and acknowledgement references use immutable tuples and exact
 enums. Digests are lower-case SHA-256, category count is bounded by the vocabulary,
@@ -471,9 +472,10 @@ over-bound, foreign-snapshot or orphaned evidence raises the content-free
 category/fingerprint ordering, expose no copied calendars or private rationale,
 and neither read nor write database state. The result is not an approval receipt.
 
-The future protected collector must independently authorize and audit every
-owner source, prove complete membership and applicability, compute the scoped
-candidate/policy/dependency digest, and authenticate retained acknowledgements.
+The protected collector independently authorizes and audits every owner source,
+proves complete membership and applicability, and computes the scoped candidate/
+policy/dependency digest. Authenticating retained release acknowledgements is a
+mandatory approval-workflow successor, not part of this source-only boundary.
 Approval/publication must recollect and reauthorize under canonical locks.
 The rule function does not authenticate supplied facts and must never be exposed
 as an alternative authorization path. Existing `is_complete` planning reports
@@ -481,9 +483,61 @@ still declare staffing, rest, accessibility-fit and release-readiness deferrals.
 
 No migration or runtime ACL change is needed for this prerequisite. Ordinary
 code rollback removes only unused policy code; it creates no durable state to
-reverse. Source collection, independent persisted approval, atomic publication,
+reverse. Independent persisted approval, atomic publication,
 physical invalidation, shared projections and current privacy consequences are
 mandatory successors before any release can be offered.
+
+### Trusted complete release preflight
+
+[ADR 0095](../architecture/decisions/0095-trusted-programme-release-sources.md)
+adds `release_preflight.load_release_preflight`. It takes trusted scope and exact
+candidate/revision/version, independently requires `release_preflight` under
+`scheduling.view_conflicts` and the unpinned `scheduling.release-preflight@1`
+adapter, and returns exactly the ten closed categories, minimized selected-
+occurrence findings and pure eligibility. It accepts no caller facts, calendars,
+applicability flags, warning acknowledgements or approvals. The companion
+`release_candidate_queries.load_release_candidate_source` requires the separate
+`scheduling.release-candidate-source@1` adapter and complete planning authority.
+Empty, stale, foreign, archived or incomplete exact manifests are unavailable.
+
+The compositor first resolves the complete Programme/Workforce person union and
+globally ordered Identity locks through the combined-person owner query, under
+the shared parent transaction. Only then may narrower source readers lock people.
+Failure to establish that union aborts; it must not continue with actor-only locks.
+Every category comes from the owner: seven current Programme concerns and current
+independent copy; selected hosts; current independent physical approval and
+constraints; exact Programme accessibility-fit decisions; current bound staffing
+or explicit no-staffing; and complete combined person/rest consequences.
+
+`release_staffing_sources` composes current requirement/manifest/binding/coverage
+proofs. Only active requirements need current covered or locked-covered work;
+retired requirements still retain operative predecessor demands as blockers.
+Claims, draft/open gaps, review-required confirmation, stale binding and accepted
+underfill cannot satisfy coverage. Cancelled/completed work stays in the source
+fingerprint but cannot cover active needs. A complete empty need/work set still
+requires the explicit Programme placement decision. No later publication of past
+work is implicitly exempted; the publication successor must contract safe retained
+history/current-duty behavior before Live activation.
+
+Missing documented owner evidence is unavailable, never omitted or zero. Field
+denial, mandatory audit failure and database errors abort disclosure. Programme,
+Workforce and Scheduling authority is rechecked at the final composition boundary.
+Venue physical/access sources are re-read for consistency without taking a new
+physical lock in an inverted order. Findings retain the existing 10,000 bound;
+the complete source fingerprints cover any deduplicated safe conflict projection.
+
+The digest binds exact scope, profile, policy, candidate, source versions and
+minimized consequences. It excludes caller-only identity/locks, correlation and
+audit IDs so independent authorized workflow roles observe identical evidence.
+Private source DTOs, copy, reasons and calendars are not persisted by Scheduling.
+Only required sensitive-read audits are written. Old planning acknowledgements
+do not apply: all release warnings remain unacknowledged in this source-only
+preflight. Neither a successful response nor its digest is portable authority.
+
+No current profile, route, writer, output or worker is activated. The following
+child must retain independent approval and release-warning evidence and repeat
+collection inside atomic publication/invalidation. See
+[source migration/recovery](../operations/programme-release-sources-migration-and-recovery.md).
 
 ## Integrity, observation and remaining work
 

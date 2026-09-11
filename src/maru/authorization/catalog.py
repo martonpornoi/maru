@@ -1289,7 +1289,9 @@ CAPABILITY_DEFINITIONS = (
         maximum_scope=ScopeLevel.EDITION,
         delegable=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
-        field_ceiling=frozenset({"staffing_requirements", "staffing_history"}),
+        field_ceiling=frozenset(
+            {"staffing_requirements", "staffing_history", "placement_decisions"}
+        ),
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
@@ -1305,6 +1307,7 @@ CAPABILITY_DEFINITIONS = (
                 "item_scheduling_facts",
                 "host_conflict_keys",
                 "current_shared_host_periods",
+                "release_person_references",
             }
         ),
         obligations=frozenset({"audit_sensitive_read"}),
@@ -1316,7 +1319,9 @@ CAPABILITY_DEFINITIONS = (
         delegable=True,
         requires_break_glass=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
-        field_ceiling=frozenset({"physical_dependencies"}),
+        field_ceiling=frozenset(
+            {"physical_dependencies", "accessibility_configuration"}
+        ),
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
@@ -1347,7 +1352,9 @@ CAPABILITY_DEFINITIONS = (
         maximum_scope=ScopeLevel.EDITION,
         delegable=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
-        field_ceiling=frozenset({"conflicts", "dependency_versions"}),
+        field_ceiling=frozenset(
+            {"conflicts", "dependency_versions", "release_preflight"}
+        ),
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
@@ -1507,7 +1514,9 @@ CAPABILITY_DEFINITIONS = (
         maximum_scope=ScopeLevel.EDITION,
         delegable=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
-        field_ceiling=frozenset({"delivery_information", "delivery_history"}),
+        field_ceiling=frozenset(
+            {"delivery_information", "delivery_history", "placement_decisions"}
+        ),
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
@@ -1532,7 +1541,9 @@ CAPABILITY_DEFINITIONS = (
         description="View approved Programme public-copy renditions for one edition.",
         maximum_scope=ScopeLevel.EDITION,
         delegable=True,
-        field_ceiling=frozenset({"latest_public_rendition"}),
+        field_ceiling=frozenset(
+            {"latest_public_rendition", "release_copy_consequences"}
+        ),
     ),
     Capability(
         code="programme.approve_public_copy",
@@ -1633,6 +1644,7 @@ CAPABILITY_DEFINITIONS = (
                 "coverage_states",
                 "holder_display_labels",
                 "suitability_consequences",
+                "programme_release_consequences",
             }
         ),
         obligations=frozenset({"audit_sensitive_read"}),

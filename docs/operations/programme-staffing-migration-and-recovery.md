@@ -2,7 +2,7 @@
 
 **Audience:** Maintainers rehearsing the dormant HR-015 staffing foundation\
 **Outcome:** Retain exact work lineage through governed Shifts without activating Programme\
-**Status:** Local #88 continuation; no completed staffing PR or production approval
+**Status:** Dormant #88 baseline delivered through PR #89; no production approval
 
 ## Migration boundary
 

@@ -231,6 +231,14 @@
       "test_unused_staffing_schema_round_trip_preserves_existing_owner_records"
     ]
   },
+  "tests/integration/test_programme_placement_decisions.py": {
+    "owners": ["programme", "scheduling", "venues", "workforce"],
+    "shared_baseline": false,
+    "tests": [
+      "test_populated_downgrade_fails_before_removing_schema_or_guards",
+      "test_unused_placement_graph_reverses_and_reapplies_with_existing_sources"
+    ]
+  },
   "tests/integration/test_programme_integrity_migrations.py": {
     "owners": [
       "programme"

@@ -488,6 +488,12 @@ architecture documents, implementation issues, tests, and release notes.
   and Workforce work-field authority; current coverage never grants that read.
   Ordinary Shift lifecycle version changes do not invalidate unchanged bound
   work terms, but changed terms require explicit source reconciliation.
+  Release-level staffing inapplicability requires an explicit current Programme
+  no-staffing decision for the exact placement and complete absence of active
+  needs and operative work across retained binding history. Requirement retirement
+  does not hide predecessor work. Combined host/volunteer checks preserve existing
+  cross-edition overlap and retained-rest protection without disclosing foreign
+  duty identity, calendar, scope or rationale.
   Published personal composition
   remains governed by SCH-012 rather than exposing private candidates.
 
@@ -587,6 +593,19 @@ architecture documents, implementation issues, tests, and release notes.
   warning acknowledgement binds the exact scoped release snapshot and finding;
   none can waive a hard constraint or unavailable source. Eligibility confers
   no authorization, persisted approval, publication or production readiness.
+  Accessibility fit requires an accountable Programme decision against the exact
+  placement, explicit delivery revision, selected physical configuration and
+  complete current access facts; generic readiness or an absent declaration is
+  insufficient. Fit and no-staffing decisions have independent immutable sequences
+  and retain actor, reason, source proof and withdrawal history without reopening
+  private content editing in Ready or Live. Copy eligibility requires the current
+  working revision and a current active verified reviewer distinct from every
+  retained working-copy author; author deactivation does not erase authorship.
+  Existing self-curated renditions remain historical, not qualifying release
+  approval. Source fingerprints exclude caller-only authorization/trace details so
+  independently authorized planner, approver and publisher share the same exact
+  evidence. Mandatory sensitive-read audit or independent field denial must
+  prevent disclosure, not turn an incomplete collection into a passing result.
 
 ### Querying, reporting, and export
 

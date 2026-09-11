@@ -34,6 +34,20 @@ or published. The initial placement author also cannot approve them. No current
 profile admits the reservation adapters; existing unrelated bookings keep their
 original lifecycle. See [joint migration/recovery](../operations/scheduling-migration-and-recovery.md).
 
+`accessibility_queries.load_venue_accessibility_sources` adds the dormant
+`venues.accessibility-configuration-source@1` adapter and separate
+`accessibility_configuration` field under `venues.view_scheduling_dependencies`.
+It requires independent exact-resource admission before projecting the selected
+configuration, access features and every current physical member's access facts.
+It selects no booking/contact/internal-description content and grants no physical
+approval or accessibility-fit judgment. Complete membership, active configuration
+and source bounds are mandatory; missing facts are unavailable. The owner-derived
+fingerprint includes current versions and explicit access facts. Programme may
+use this ephemeral projection for a human fit decision, never infer fit from it.
+No Venue migration, runtime privilege or current profile activation is added by
+this source. Atomic invalidation of future Programme releases remains mandatory
+publication work, not a guarantee supplied by point-in-time preflight.
+
 ## Reusable catalog and edition selection
 
 - `VenueProperty` represents a hotel, venue, or mixed property with legal and

@@ -328,6 +328,31 @@ Convenience alone is not sufficient.
   gates before activation. A synthetic owner-backed query is not approval to
   process production personal data or widen a current adoption profile.
 
+### Programme release-source minimization
+
+- Placement fit/no-staffing decisions and their historical actor/reason/source
+  proof are restricted Programme operational evidence. Current consequence and
+  private history have separate field ceilings; a preflight read grants no
+  rationale access. Their immutable receipts, audit and effects remain subject
+  to the exact Programme Operations legal-hold, retention/export and recovery
+  policy before activation. This child sets no arbitrary production expiry and
+  implements no destructive disposal executor.
+- Current copy consequences expose only item/rendition identity, versions and
+  independence/currentness, never working/public text or review rationale.
+  Retained working authorship remains authoritative after author deactivation.
+  Opaque person references are ephemeral lock/conflict inputs, not a directory.
+- Combined-person checks use a narrowly purpose-scoped global-by-account
+  Workforce query to preserve existing cross-edition/tenant rest protection.
+  Foreign scope, duty identity, account identity, times, title and rationale do
+  not leave that owner. Scheduling receives only selected-occurrence consequences
+  and complete dependency digests; no private calendar is copied into a release.
+- Preflight includes all ten mandatory categories, independent field admission,
+  final authority checks and required sensitive-read audit. Fingerprints omit
+  caller-only identity/locks and trace/audit IDs; they are not authorization
+  credentials. No user activity analytics, browser storage, production personal
+  data or profile activation is introduced. See ADR 0095 and the
+  [source recovery guide](../operations/programme-release-sources-migration-and-recovery.md).
+
 ### Logistics custody and restricted contact
 
 - Reusable external-party identity contains only legal/public operational

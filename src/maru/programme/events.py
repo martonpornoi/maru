@@ -35,6 +35,8 @@ PROGRAMME_EVENT_ACTIONS: Final = frozenset(
         "create_staffing",
         "revise_staffing",
         "retire_staffing",
+        "record_accessibility_fit",
+        "record_staffing_absence",
     }
 )
 PROGRAMME_EVENT_LAYERS: Final = frozenset(
@@ -47,6 +49,7 @@ PROGRAMME_EVENT_LAYERS: Final = frozenset(
         "public_copy",
         "hosts",
         "staffing",
+        "placement_decisions",
     }
 )
 PROGRAMME_EVENT_CONCERNS: Final = frozenset(
@@ -82,6 +85,8 @@ _ACTION_LAYERS: Final = MappingProxyType(
         "create_staffing": "staffing",
         "revise_staffing": "staffing",
         "retire_staffing": "staffing",
+        "record_accessibility_fit": "placement_decisions",
+        "record_staffing_absence": "placement_decisions",
     }
 )
 

@@ -17,6 +17,7 @@ from django.db.migrations.recorder import MigrationRecorder
 from django.test.utils import CaptureQueriesContext
 
 import maru.effects.services as effects
+from maru.core.database_integrity_readiness import inspect_database_integrity_catalog
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.programme import queries as programme_queries
 from maru.programme import scheduling_queries, staffing_commands, staffing_queries
@@ -33,7 +34,10 @@ from maru.programme.models import (
     ProgrammeStaffingRevision,
 )
 from maru.programme.queries import ProgrammeQueryUnavailableError
-from maru.programme.readiness import programme_database_integrity_is_ready
+from maru.programme.readiness import (
+    _STAFFING_INTEGRITY_CONTRACT,
+    programme_database_integrity_is_ready,
+)
 from maru.programme.staffing_commands import change_programme_staffing_requirement
 from maru.programme.staffing_inputs import (
     ProgrammeStaffingChange,
@@ -498,6 +502,11 @@ def test_unused_staffing_schema_round_trip_preserves_existing_owner_records(worl
 @pytest.mark.usefixtures("restores_current_migration_graph")
 def test_retained_staffing_fences_downgrade_before_removing_any_guard(world):
     first = execute(world)
+    before = MigrationRecorder(connection).applied_migrations()
+    retained = ProgrammeStaffingRequirement.objects.values().get(
+        id=first.requirement_id
+    )
+    current = MigrationExecutor(connection).loader.graph.leaf_nodes()
     with pytest.raises(RuntimeError, match="retained Programme staffing"):
         MigrationExecutor(connection).migrate(
             [("programme", "0010_staffing_requirements")]
@@ -508,6 +517,38 @@ def test_retained_staffing_fences_downgrade_before_removing_any_guard(world):
     assert (
         ProgrammeStaffingRequirement.objects.get(id=first.requirement_id).version == 1
     )
+    after = MigrationRecorder(connection).applied_migrations()
+    unused_successors = {
+        ("programme", "0013_placement_decisions"),
+        ("programme", "0014_placement_decision_integrity"),
+        ("programme", "0015_placement_decision_downgrade_fence"),
+        ("workforce", "0019_programme_shift_bindings"),
+        ("workforce", "0020_programme_binding_integrity"),
+        ("workforce", "0021_programme_binding_downgrade_fence"),
+    }
+    assert after == {
+        key: value for key, value in before.items() if key not in unused_successors
+    }
+    # Ordinary Django reversal may remove unused successors before the older
+    # populated fence. The retained staffing guards must remain exact; the
+    # partially contracted graph must not claim current application readiness.
+    guards = inspect_database_integrity_catalog(_STAFFING_INTEGRITY_CONTRACT)
+    assert guards.source_contract_current
+    assert guards.required_migrations_applied
+    assert guards.relation_ownership_consistent
+    assert guards.trigger_contract_current
+    assert guards.function_contract_current
+    assert guards.function_execute_owner_only
+    assert guards.function_ownership_current
+    assert not programme_database_integrity_is_ready()
+    assert ProgrammeStaffingRequirement.objects.values().get(
+        id=first.requirement_id
+    ) == (retained)
+    MigrationExecutor(connection).migrate(current)
+    assert set(MigrationRecorder(connection).applied_migrations()) == set(before)
+    assert ProgrammeStaffingRequirement.objects.values().get(
+        id=first.requirement_id
+    ) == (retained)
     assert programme_database_integrity_is_ready()
 
 

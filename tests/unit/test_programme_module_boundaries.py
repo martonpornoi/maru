@@ -65,6 +65,7 @@ def test_programme_imports_no_external_domain_models() -> None:
 def test_programme_model_validation_dereferences_no_external_relations() -> None:
     """Keep owner-model objects out of Programme validation code."""
     programme_model_types = (
+        programme_models.ProgrammePlacementDecision,
         programme_models.ProgrammeStaffingRequirement,
         programme_models.ProgrammeStaffingRevision,
         programme_models.ProgrammeHostRelationship,
