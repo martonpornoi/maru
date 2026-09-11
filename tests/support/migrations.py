@@ -145,6 +145,15 @@ def registration_migration_targets(
             targets_by_app["scheduling"] = ("scheduling", None)
         if "venues" in targets_by_app:
             targets_by_app["venues"] = ("venues", "0002_venue_write_integrity")
+        if "identity" in targets_by_app:
+            targets_by_app["identity"] = _IDENTITY_PROGRAMME_PROPOSAL_PERSON_GUARD
+        if "events" in targets_by_app:
+            targets_by_app["events"] = ("events", "0010_workforce_adoption_profile")
+        if "authorization" in targets_by_app:
+            targets_by_app["authorization"] = (
+                "authorization",
+                "0028_programme_staffing_capabilities",
+            )
     return tuple(sorted(targets_by_app.values()))
 
 
@@ -170,6 +179,13 @@ def identity_migration_targets(
             targets_by_app["scheduling"] = ("scheduling", None)
         if "venues" in targets_by_app:
             targets_by_app["venues"] = ("venues", "0002_venue_write_integrity")
+        if "events" in targets_by_app:
+            targets_by_app["events"] = ("events", "0010_workforce_adoption_profile")
+        if "authorization" in targets_by_app:
+            targets_by_app["authorization"] = (
+                "authorization",
+                "0028_programme_staffing_capabilities",
+            )
     return tuple(sorted(targets_by_app.values()))
 
 

@@ -31,6 +31,7 @@ from .models import (
     ProgrammeHostRelationship,
     ProgrammeItem,
     ProgrammePublicRendition,
+    ProgrammePublicRenditionWithdrawal,
     ProgrammeWorkingRevision,
 )
 from .queries import (
@@ -60,6 +61,7 @@ class _CopyMetadata:
     reviewed_by_id: UUID
     reviewer_authored: bool
     current_working_id: UUID | None
+    withdrawn: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,10 +94,14 @@ class ProgrammeReleasePeople:
         inactive references so their absence cannot masquerade as availability.
     selected_hosts
         Exactly requested purpose/account mappings under an independent field ceiling.
+    source_account_ids
+        Complete host/reviewer identities excluding only caller-only locking needs.
+        A caller who also owns a source remains included for source freshness.
     """
 
     account_ids: tuple[UUID, ...]
     selected_hosts: tuple[ProgrammeReleaseHostReference, ...]
+    source_account_ids: tuple[UUID, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,6 +218,14 @@ def _renditions(
         .annotate(
             reviewer_authored=Exists(authorship),
             current_working_id=Subquery(current_working),
+            withdrawn=Exists(
+                ProgrammePublicRenditionWithdrawal.objects.filter(
+                    rendition_id=OuterRef("id"),
+                    organization_id=request.organization_id,
+                    edition_id=request.edition_id,
+                    item_id=OuterRef("item_id"),
+                )
+            ),
         )
         .order_by("item_id")
         .values(
@@ -221,6 +235,7 @@ def _renditions(
             "reviewed_by_id",
             "reviewer_authored",
             "current_working_id",
+            "withdrawn",
         )
     )
     return tuple(_CopyMetadata(**row) for row in rows)
@@ -247,23 +262,23 @@ def _people(
         for row in hosts
         if row.id in host_ids
     )
-    accounts = tuple(
+    source_accounts = tuple(
         sorted(
             {
-                request.actor_id,
                 *(row.account_id for row in hosts),
                 *(row.reviewed_by_id for row in renditions),
             },
             key=str,
         )
     )
+    accounts = tuple(sorted({request.actor_id, *source_accounts}, key=str))
     if (
         len(hosts) > MAX_SCHEDULING_SOURCE_HOSTS
         or len(selected) != len(host_ids)
         or len(accounts) > MAX_PERSON_REFERENCE_BATCH
     ):
         raise ProgrammeQueryUnavailableError
-    return ProgrammeReleasePeople(accounts, selected)
+    return ProgrammeReleasePeople(accounts, selected, source_accounts)
 
 
 def _read[ResultT](
@@ -424,6 +439,8 @@ def load_programme_release_item_sources(
             rendition = by_item.get(item.id)
             if rendition is None:
                 state = "unavailable"
+            elif rendition.withdrawn:
+                state = "withdrawn"
             elif rendition.reviewer_authored:
                 state = "blocked"
             elif rendition.source_working_revision_id != rendition.current_working_id:

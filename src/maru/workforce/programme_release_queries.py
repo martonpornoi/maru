@@ -95,20 +95,22 @@ class ProgrammeRetainedWorkSource:
 
 def _authorize(
     request: ProgrammeStaffingReadRequest | ProgrammePlacementReadRequest,
+    *,
+    fields: frozenset[str] = RELEASE_FIELDS,
 ) -> PolicyDecision:
     decision = decide_verified_principal_exact_edition(
         principal_id=request.actor_id,
         organization_id=request.organization_id,
         edition_id=request.edition_id,
         capability_code="workforce.view_shifts",
-        requested_fields=RELEASE_FIELDS,
+        requested_fields=fields,
     )
     profile = edition_adoption_profile_reference(
         organization_id=request.organization_id, edition_id=request.edition_id
     )
     if (
         not decision.allowed
-        or not decision.fields >= RELEASE_FIELDS
+        or not decision.fields >= fields
         or profile is None
         or not profile_allows_adapter(
             profile.code, profile.version, WORKFORCE_PROGRAMME_RELEASE_SOURCE_ADAPTER

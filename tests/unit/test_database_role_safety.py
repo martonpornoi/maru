@@ -10,6 +10,7 @@ from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V1,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
+    RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4,
     RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
@@ -85,6 +86,8 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.authorization_authorityprovenanceactivation",
         "public.authorization_provenanceactivationlatch",
         "public.identity_platforminvitationretentionpolicycontrol",
+        "public.audit_auditnativemutationwitness",
+        "public.programme_programmepublicrenditionwithdrawal",
         "public.applications_programmecall",
         "public.applications_programmecalltrack",
         "public.applications_programmecallformat",
@@ -149,6 +152,16 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.scheduling_schedulingwarningacknowledgement",
         "public.scheduling_schedulingreservationintent",
         "public.scheduling_schedulingcommandreceipt",
+        "public.scheduling_schedulingreleasedependencykey",
+        "public.scheduling_schedulingreleasedependencychange",
+        "public.scheduling_schedulingreleasewarningacknowledgement",
+        "public.scheduling_schedulingreleaseapproval",
+        "public.scheduling_schedulingreleaseapprovalplacement",
+        "public.scheduling_schedulingreleaseapprovaldependency",
+        "public.scheduling_schedulingrelease",
+        "public.scheduling_schedulingreleaseartifact",
+        "public.scheduling_schedulingreleasewithdrawal",
+        "public.scheduling_schedulingreleasepointer",
         "public.venues_venueschedulingbinding",
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
@@ -345,7 +358,7 @@ def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
         not (append_only_relations | retained_aggregate_relations)
         & _APPLICATION_DRAFT_CHILD_RELATIONS
     )
-    assert len(select_only_bounded_relations) == 45
+    assert len(select_only_bounded_relations) == 55
     assert not select_only_bounded_relations & (
         append_only_relations
         | retained_aggregate_relations
@@ -385,6 +398,29 @@ def test_every_v3_runtime_function_has_a_readiness_definition_fingerprint() -> N
     assert allowlisted <= set(provenance_readiness._CORE_FUNCTIONS)
     assert allowlisted <= set(provenance_readiness._FUNCTION_DEFINITION_SHA256)
     assert len(allowlisted) == len(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3)
+
+
+def test_v4_preserves_v3_and_limits_release_writes_to_native_journal() -> None:
+    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4[:-14] == (
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3
+    )
+    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4[-2] == (
+        "public.maru_scheduling_record_native_release_change(text,uuid,uuid)"
+    )
+    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4[-1] == (
+        "public.maru_scheduling_published_person_conflict("
+        "uuid,timestamp with time zone,timestamp with time zone,"
+        "timestamp with time zone,uuid)"
+    )
+    assert len(set(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4)) == len(
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4
+    )
+    assert {
+        "public.audit_auditnativemutationwitness",
+        "public.scheduling_schedulingreleasedependencykey",
+        "public.scheduling_schedulingreleasedependencychange",
+        "public.programme_programmepublicrenditionwithdrawal",
+    } <= set(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS)
 
 
 def _result(**overrides: bool) -> RuntimeDatabaseRoleSafety:
@@ -482,7 +518,7 @@ def test_probe_binds_the_role_and_required_function_identities(
         list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
-        list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3),
+        list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4),
     ]
     configured_connections.__getitem__.assert_called_once_with("security")
     assert result.current_session_is_safe

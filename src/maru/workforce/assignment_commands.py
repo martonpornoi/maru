@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -12,7 +13,8 @@ from django.db import transaction
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
-from maru.audit.services import AuditRecord, append_audit
+from maru.audit.mutation_evidence import audited_mutation
+from maru.audit.services import AuditRecord
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.commands import (
     AuthorityCommandValidationError,
@@ -31,6 +33,7 @@ from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.participation.models import ParticipationCapacity
+from maru.scheduling.release_changes import record_workforce_release_change
 from maru.workforce.adoption import assignment_uses_participation_evidence
 from maru.workforce.assignment_inputs import (
     assignment_command_digest,
@@ -427,11 +430,12 @@ def _append_assignment_audit(
     operation: str,
     reason_code: str,
     changed_fields: tuple[str, ...],
+    retry_key: UUID,
     correlation_id: UUID,
     request_id: UUID | None,
     source_channel: str,
-) -> AuditEvent:
-    return append_audit(
+) -> UUID:
+    with audited_mutation(
         AuditRecord(
             principal_kind="account",
             principal_id=actor.id,
@@ -449,11 +453,14 @@ def _append_assignment_audit(
             source_channel=source_channel,
             obligations=tuple(sorted(scope.manage_decision.obligations)),
             changed_fields=changed_fields,
+            idempotency_key_hash=hashlib.sha256(str(retry_key).encode()).hexdigest(),
             safe_metadata={"policy_version": POLICY_VERSION},
             retention_class="workforce-restricted",
         ),
         occurred_at=scope.evaluated_at,
-    )
+    ) as mutation:
+        record_workforce_release_change(mutation)
+        return mutation.audit_id
 
 
 def _publish_assignment_event(
@@ -461,7 +468,7 @@ def _publish_assignment_event(
     assignment: PositionAssignment,
     actor: Account,
     event_name: str,
-    audit_event: AuditEvent,
+    audit_event: UUID,
     correlation_id: UUID,
 ) -> None:
     publish_domain_event(
@@ -478,7 +485,7 @@ def _publish_assignment_event(
                 "status": assignment.status,
             },
             correlation_id=correlation_id,
-            causation_id=audit_event.id,
+            causation_id=audit_event,
             actor_kind="account",
             actor_id=actor.id,
             retention_class="workforce-restricted",
@@ -813,6 +820,7 @@ def propose_position_assignment(  # noqa: DOC503 - helper raises field validatio
             actor=actor,
             assignment=assignment,
             operation="workforce.position_assignment.propose",
+            retry_key=retry_key,
             reason_code="assignment_proposed",
             changed_fields=("proposal", "effective_interval"),
             correlation_id=correlation_id,
@@ -1223,6 +1231,7 @@ def _decide_without_activation(
             actor=actor,
             assignment=assignment,
             operation="workforce.position_assignment.reject",
+            retry_key=retry_key,
             reason_code="assignment_rejected",
             changed_fields=("status", "decision_evidence"),
             correlation_id=correlation_id,
@@ -1464,6 +1473,7 @@ def end_position_assignment(
             actor=actor,
             assignment=assignment,
             operation="workforce.position_assignment.end",
+            retry_key=retry_key,
             reason_code="assignment_ended",
             changed_fields=(
                 "status",

@@ -2,7 +2,7 @@
 
 Status: Initial registration and record-history projections implemented;
 dormant Applications Programme facts have no mounted timeline
-Last updated: 2026-09-02
+Last updated: 2026-09-11
 
 “Track user activity” has three legitimate meanings in Maru. Combining them
 would create a surveillance system, an unusable audit log, and poor historical
@@ -67,6 +67,59 @@ Minimum fields:
 
 Audit does not record secrets, form contents, message bodies, medical detail,
 raw search text, or an entire before/after object by default.
+
+### Same-transaction native mutation attribution
+
+`audit.mutation_evidence.audited_mutation` is an internal replacement for an
+owner's existing successful `append_audit` call when a required derived owner
+must join that same mutation. It appends exactly one native event, inside the
+already active owner transaction and a nested atomic scope. It lends a frozen,
+minimized reference to that exact append; it does not issue human authority or
+authenticate an arbitrary caller-selected target.
+
+The consumer first calls `require_audited_mutation`, then validates its closed
+native-operation, changed-field and target contract through the source owner's
+documented seam. Evidence must be the exact live object on the same thread and
+database connection, with a retained audit row and a usable atomic transaction.
+Copied/reconstructed objects, old audit identifiers, expired copied contexts and
+rolled-back evidence cannot substitute. An inner mutation temporarily supersedes
+the outer lease. Exiting the scope revokes it even if the outer transaction stays
+open. A required derived-join failure must propagate through the native owner
+transaction; catching it and committing the earlier mutation is not supported.
+
+The proposed Audit migration adds `AuditNativeMutationWitness`, not a field to
+historical audit rows. The owner scope reserves one new audit UUID and sets a
+transaction-local capture selector for that exact insert. A narrowly scoped
+`SECURITY DEFINER` AFTER INSERT trigger captures the witness only on the actual
+Audit relation; transplanting it onto another table is rejected. Witness writes
+are database-owned and immutable. A selector alone cannot capture an old audit
+or grant authority; direct witness inserts fail the native trigger guard.
+Ordinary audit appends create no witness state.
+
+The internal stamp hashes the full top-level `xid8`, backend PID and server-start
+epoch, so savepoints share the actual native transaction without casting a row's
+32-bit `xmin`. Server/session context prevents treating copied transaction
+counters as portable provenance. It requires no elevated statistics/control-file
+access. It adds no activity tracking or audience, and is not included in public
+audit summaries, the historical semantic audit digest or long-term authority.
+Existing audit rows, table shape, unrelated append callers and sealed digests
+remain unchanged.
+
+Application verification also compares the witness stamp with the current
+transaction and requires the actual successful audit row. A restore must finish
+and commit before ordinary commands
+or activation resume; inserting restored historical rows in a maintenance
+transaction cannot authorize work in a later runtime transaction. Real restore,
+runtime SELECT-only witness grants and exact readiness remain pending
+verification in #96. The trigger guard is not a substitute for runtime privilege
+containment: a database owner can alter protected definitions and is not a
+runtime acceptance role. Populated witness reversal is fenced for fix-forward
+recovery before any trigger or table is removed.
+
+This attribution is not a database privilege, source freshness or release-safety
+proof. Those remain separate owner integration and database guard requirements
+in proposed [ADR 0096](decisions/0096-atomic-programme-release-and-invalidation.md).
+No current source command uses the new lease and no release is enabled yet.
 
 ## Events requiring audit
 

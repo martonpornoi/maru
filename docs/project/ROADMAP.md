@@ -135,11 +135,14 @@ trust-building outcomes rather than implied capabilities.
 
 The release outcome is now split under #48: #91 defines and tests complete
 exact-snapshot eligibility under ADR 0094 and is delivered through PR #93.
-Child #94 implements authenticated owner collection and missing fit/no-staffing
-evidence under ADR 0095. Its successor must persist independent approval and
-release-warning evidence with atomic publication and invalidation; the following
+Child #94 is delivered through PR #95 with authenticated owner collection and
+missing fit/no-staffing evidence under ADR 0095. Child #96 implements dormant independent
+approval and release-warning evidence with atomic publication and invalidation; the following
 child supplies shared release-derived outputs and change impact.
 An eligible rule result is not approval, publication or profile activation.
+Child #97 owns exact-readiness compatibility after logical PostgreSQL restore.
+It must pass before profile activation or a director pilot; same-image physical
+recovery evidence does not waive logical-restore or production/PITR acceptance.
 
 ADR 0081 accepts `programme_operations@1` as an exact target contract. Its
 adopted product modules are Applications, Programme, Scheduling, Venues, and

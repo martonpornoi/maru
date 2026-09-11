@@ -5,6 +5,10 @@ Applies to [#81](https://github.com/martonpornoi/maru/issues/81),
 and the [Scheduling owner contract](../modules/scheduling.md).
 Use synthetic data. This is not production deployment or profile-activation approval.
 
+The [atomic release extension](programme-atomic-release-migration-and-recovery.md)
+owns Scheduling 0007–0020 and its cross-owner recovery/readiness contract. The
+counts below describe the earlier candidate/Venue baseline, not the latest graph.
+
 ## Install and verify
 
 Scheduling `0001` through `0004` add fifteen owner relations and close the

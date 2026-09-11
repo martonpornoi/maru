@@ -9,6 +9,19 @@ Last updated: 2026-09-09
 
 ## Purpose and requirements
 
+The #96 native release integration joins changes to the edition's dates/time
+zone and operational ending (cancelled, closing or archived) to Scheduling's
+existing tracked source generation in the same transaction. Ordinary
+preparing/Ready/Live progression and profile label changes do not invalidate
+operational releases. The owner SQL classifier and deferred source guard require
+exact current native Audit evidence; skipping the application join cannot commit
+a tracked operational change. This does not activate Programme Operations.
+
+`write_references.lock_edition_ownership` is a profile-neutral internal seam:
+resolve the opaque series, then lock and revalidate Organization, series and
+edition before narrower rows. It grants no authority, lifecycle permission or
+profile eligibility. Venue commands reauthorize after taking these locks.
+
 `maru.events` owns edition identity, adoption profile, and lifecycle for EVT-002
 through EVT-006, ARC-003, UX-009, UX-022, UX-023, UX-030, and NFR-013.
 

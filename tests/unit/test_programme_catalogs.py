@@ -73,6 +73,7 @@ def test_programme_catalogs_are_exact_and_closed() -> None:
         "readiness_configure",
         "readiness_record",
         "public_rendition_record",
+        "public_rendition_withdraw",
     )
 
 

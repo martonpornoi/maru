@@ -1333,7 +1333,13 @@ CAPABILITY_DEFINITIONS = (
         delegable=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
         field_ceiling=frozenset(
-            {"service_days", "occurrences", "candidates", "placement_times"}
+            {
+                "service_days",
+                "occurrences",
+                "candidates",
+                "placement_times",
+                "release_manifest",
+            }
         ),
         obligations=frozenset({"audit_sensitive_read"}),
     ),
@@ -1343,7 +1349,7 @@ CAPABILITY_DEFINITIONS = (
         maximum_scope=ScopeLevel.EDITION,
         delegable=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
-        field_ceiling=frozenset({"planning_history"}),
+        field_ceiling=frozenset({"planning_history", "release_manifest"}),
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
@@ -1408,6 +1414,40 @@ CAPABILITY_DEFINITIONS = (
         description=(
             "Request occurrence reservations with independent exact-space authority."
         ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="scheduling.acknowledge_release_warnings",
+        description="Acknowledge one exact current release warning with a reason.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="scheduling.approve_release",
+        description=(
+            "Independently approve a complete exact timetable release snapshot."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="scheduling.publish_release",
+        description="Publish one independently approved exact Programme timetable.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="scheduling.withdraw_release",
+        description="Withdraw the active Programme release with an accountable reason.",
         maximum_scope=ScopeLevel.EDITION,
         delegable=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
@@ -1645,6 +1685,7 @@ CAPABILITY_DEFINITIONS = (
                 "holder_display_labels",
                 "suitability_consequences",
                 "programme_release_consequences",
+                "release_dependency_references",
             }
         ),
         obligations=frozenset({"audit_sensitive_read"}),

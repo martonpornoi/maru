@@ -1,7 +1,7 @@
 # Scheduling module
 
-Status: dormant candidate/conflict and reciprocal physical-reservation kernel,
-consumed by the dormant Programme editor; no approval, release or profile activation.
+Status: dormant candidate/conflict, physical-reservation and atomic-release kernel,
+consumed by unmounted Programme components; no current profile or route activation.
 Last updated: 2026-09-11. See [CURRENT](../project/CURRENT.md) for verification
 and protected-delivery status; this guide is the owner contract, not a merge claim.
 
@@ -31,14 +31,132 @@ not mutate Scheduling state. Exact candidate/placement demand binding is now
 implemented through the Workforce owner and delivered by #88.
 
 Neither `full_convention@1` nor `workforce_only@1` admits the new capabilities,
-adapters or conflict sources. All fifteen Scheduling tables and the new Venue
-binding table remain runtime SELECT-only. A schema migration, retained UUID,
+adapters or conflict sources. Scheduling tables and the Venue binding table
+remain runtime SELECT-only. A schema migration, retained UUID,
 platform role or successful isolated test does not activate this workflow.
 There is no new production HTTP route, API, worker or effect-delivery handler.
 The native editor and staffing continuation remain unmounted components. No
 Registration, Participation, payment or attendance record is created.
 
 ## Owned state and commands
+
+The #96 release work remains dormant and under delivery verification. Its contracts
+are `release_inputs` (exact versioned intent), `release_dependency_rules`
+(complete journal temporal consequences), `release_artifacts` (one mandatory
+canonical identity-only manifest), and the private `release_authorship`
+collector. The last walks complete candidate history through each exact copy
+source, checks selected-placement introduction, and includes contributors whose
+work was removed or restored. Later edits to a source candidate do not change
+an earlier copy's ancestry; inactive former authors remain exclusions, not
+required active approvers. Total ancestry metadata is bounded at 10,000 revisions
+and 100 candidates; overflow is unavailable rather than partially independent.
+
+The private `release_capture` compositor now assembles its entire owner-resolved
+person set, including an independently selected approver, before taking sorted
+Identity locks. It recollects Programme and Workforce references before acquiring
+the complete Venue physical closure, and then repeats the ten-category preflight.
+Its current result includes exact selected public-rendition identities and at most
+65,536 typed dependency uses. Multiple operational uses of one source for the
+same placement retain their latest immutable end; unrelated publisher-only
+identity does not change approval source membership. The separate private
+generation step locks and validates each native source before getting or creating
+its unique tracking key. All writes and nested read audits share the outer
+Scheduling command transaction. Collection alone creates no approval, artifact
+or active pointer; the release commands below consume it under their complete
+native review/publication graph.
+
+The canonical artifact retains the exact release, approval, candidate revision,
+complete source digest and occurrence/placement/approved-public-rendition
+membership. It contains no private copy, calendar, human reason, account or
+arbitrary file URL. A nonempty complete selection is required, up to 2,000
+occurrences and 2 MiB. Verification reconstructs expected semantic bytes from
+independently resolved source references: a recomputed checksum over altered
+membership is not enough. This internal manifest does not authorize disclosure;
+future outputs must use its exact references and current governing invalidation.
+
+Dependency-key and journal state is owned by the #96 release boundary. Global Identity
+and organization-level physical scopes are explicit closed exceptions to ordinary
+edition-owned records. SQL authenticates and locks each native source before first
+tracking, retains immutable identity, requires consecutive journal-backed advances
+and supplies database-owned change times. No background refresh grants current
+serving authority.
+
+For Venue property, selected-space and booking sources, first tracking also
+captures the completed native source version under its row lock. A pre-capture
+change already represented by that sealed version needs no retrospective journal
+entry. Post-capture operational changes must advance the native version and the
+journal; raw reuse/regression and auxiliary writes after the source receipt are
+rejected. Existing pre-baseline keys retain zero and remain conservatively
+journal-governed. These baselines are database-owned, not caller declarations.
+
+`release_changes.record_identity_release_deactivation` consumes live native Audit
+evidence from Identity's emergency command. `record_programme_release_change`
+uses Programme's SQL `maru_programme_release_mutation_sources(receipt_id)` seam:
+closed operational receipt/result references, never caller-supplied host identity
+or private values. SQL independently joins the exact audit, receipt, scope and
+host revision. Source changes acquire no foreign release pointer and create no
+Scheduling state for untracked sources. Private working edits, discussion and a
+new approved rendition do not withdraw an older exact approved copy. Relationship
+withdrawal affects host disclosure separately from availability changes.
+
+`record_workforce_release_change` uses Workforce's native SQL receipt seam with
+the exact retry-key hash, actor, scope, operation and target. Shift commitments
+advance their demand dependency; changes to current shared availability and
+assignment endings advance separate sources. These changes do not silently edit
+Shift commitments. A plan saved privately after sharing no longer supplies
+future coverage. Deferred owner guards require the same-transaction consequence.
+
+`record_events_release_change` joins envelope changes and operational ending,
+not ordinary Ready/Live progression. `record_venues_release_change` joins exact
+property, availability and physical-booking receipts, excluding independent
+Venue publication/withdrawal. Venue auxiliary rows cannot change a tracked sealed
+source version; a new native version must carry a fresh journal consequence.
+
+These joins call `maru_scheduling_record_native_release_change`, a narrow
+SECURITY DEFINER function which rechecks current owner proof and source-before-key
+locks, and can only advance an existing key with immutable native evidence. It
+cannot create keys, approvals, releases or pointer state. The explicit v4
+runtime function allowlist and genuine-login tests retain SELECT-only table
+containment, including Audit witnesses; historical audit UUIDs cannot be replayed.
+Venue immutable retry receipts are read without an unnecessary UPDATE lock.
+
+The native guard manifest pins complete migration sources, exact SQL operations,
+required recorders, supporting-owner trigger attachments and literal arguments,
+and live function metadata. `release_integrity.with_native_release_integrity`
+is the documented composition seam for Programme, Venues and Scheduling probes.
+Only the explicitly listed helpers may have owner-plus-configured-runtime ACLs;
+all other guards stay owner-only. Missing grants, PUBLIC, an extra grantee,
+delegated grant options or an undeclared helper keep readiness unavailable.
+The execution-boundary migration revokes defaults, creates no grants,
+and refuses to reopen execution once native witness or tracking evidence exists.
+Scheduling 0020 fences the full extension before earlier used-evidence checks
+could permit partial reversal. This guard proof supplements, not replaces,
+the complete runtime-role probe and persisted release graph/schema checks.
+
+`workforce_person_obligations` is a distinct global account-only source for
+unpublished approval freshness. Its native attribution remains the actual
+Workforce receipt and scoped Audit. It detects claim/withdrawal round trips
+without persisting foreign work identifiers in another edition's dependency
+manifest. Account source tracking and native work changes serialize in both
+orders, including first capture; source capture itself proves neither person
+eligibility nor an approved timetable. This approval-only generation does not
+replace reciprocal ongoing published-host work/rest protection.
+
+The additive release schema separates reasoned exact warning
+acknowledgements, independent approvals, selected immutable placements/public
+renditions, captured dependency uses, verified artifact bytes, retained
+publications and withdrawals, and one monotonic edition pointer. Its schema is
+not command, complete SQL integrity or acceptance evidence. Canonical publication
+locks, full raw-source containment, readiness/recovery, release commands and
+checked serving remain unfinished.
+No preparatory component constitutes a published release, a satisfied artifact
+pipeline or an activation permit.
+
+Release authority is separately declared by
+`scheduling.acknowledge_release_warnings`, `scheduling.approve_release`,
+`scheduling.publish_release` and `scheduling.withdraw_release`. All are exact
+edition-scoped, restricted and reason/audit obligated. Neither current adoption
+profile includes them; declaring their vocabulary creates no grants or route.
 
 Every command uses `SchedulingCommandRequest`: exact person, organization,
 edition, UUID retry key, correlation, normalized reason and bounded channel.
@@ -539,6 +657,73 @@ child must retain independent approval and release-warning evidence and repeat
 collection inside atomic publication/invalidation. See
 [source migration/recovery](../operations/programme-release-sources-migration-and-recovery.md).
 
+### Dormant review and publication commands under development
+
+Issue #96 adds `acknowledge_programme_release_warning` and
+`approve_programme_release` through the existing Scheduling command boundary.
+Their closed inputs select an exact candidate/version/source digest; they accept
+no caller-supplied eligibility result. Independent owner admission, complete
+source recollection and warning checks precede writes. Working/copy/restore
+authorship remains an exclusion even after an earlier author leaves.
+
+`publish_programme_release` rechecks that retained approval using a separately
+authorized publisher distinct from the approver. It may not create replacement
+tracking keys or refresh captured generations. The required internal
+`programme.release.canonical@1` artifact contains exact release/approval/source
+and placement/rendition references, not a public timetable or permission to
+disclose content. Both Python and PostgreSQL compare its semantic canonical
+bytes with retained selections; checksum consistency alone is insufficient.
+The database requires the artifact before the active-pointer write. Release,
+artifact, pointer, command receipt, native Audit witness, event and outbox remain
+one transaction. Failures preserve the previously committed pointer.
+
+`withdraw_programme_release` uses separate reasoned authority and exact pointer
+identity/version. It locks captured person references before changing the
+pointer, but does not require an unsafe or withdrawn source to become eligible
+again. Withdrawal retains immutable release/artifact history and advances the
+pointer to explicit absence; later publication cannot reset the version.
+Added/changed/removed counts compare exact occurrence/placement/rendition choices
+with the prior active release, not private draft labels.
+
+Migrations 0015–0017 add owner-only native dependency-membership derivation,
+bounded complete review membership, independent retained authorship and exact
+review/publication graphs. Same-transaction child evidence joins the original
+receipt's unique edition/control event and native Audit witness, so a new audit
+cannot reopen a committed approval. Ordinary role authorization and the complete
+ten-category business checks remain application/owner contracts; structural SQL
+membership or an Audit witness is not an eligibility or capability grant.
+New helpers have no PUBLIC execution or runtime writer grant. Populated review
+and publication downgrades are fenced for fix-forward recovery.
+
+`release_queries.load_programme_release_manifest` is the dormant checked-reference
+read boundary. Current selection requires `scheduling.view_planning`; explicitly
+selected history independently requires `scheduling.view_history`. Both require
+the `release_manifest` field ceiling, current exact-scope reauthorization and a
+successful sensitive-read audit. They return no private reasons, people, artifact
+bytes or owner content. Withdrawn/invalidated releases yield no selections.
+The reader verifies the exact semantic artifact and obtains all current dependency
+generations and complete indexed journal-range aggregates in one statement
+snapshot. Gaps, scope errors or missing evidence fail closed. Operational changes
+are interpreted against immutable obligation ends; disclosure has no historical
+expiry. Superseded history uses the same checks, not a last-good fallback.
+
+Ended intervals retain their exact approved history: a later operational change
+does not assert that the earlier approval was unsafe, and a previously recorded
+invalidation does not disappear when its interval ends. This is approval history,
+not attendance or proof that work happened. A fresh release still requires complete
+current eligibility for every selected placement; historical staffing is not future
+coverage, and historical references cannot waive current source checks. Explicit
+copy withdrawal continues to govern even an ended historical interval.
+
+This is a point-in-time manifest, not an enduring permission token: role-specific
+consumers must independently authorize and check current owner disclosure while
+rendering its exact retained references. No normal consumer, route, profile or
+worker is activated. Focused native-command, raw-bypass, reciprocal host/Workforce,
+shared physical and foreign-publication races exercise both commit and rollback
+orders. Complete source-pinned readiness, genuine-runtime containment and
+same-image physical recovery have focused evidence. See CURRENT for exact
+certification/delivery status; this contract is not production acceptance.
+
 ## Integrity, observation and remaining work
 
 All command transactions and locking planning reads acquire the shared Workforce
@@ -556,14 +741,21 @@ manifests, same-command child evidence, reciprocal holds and exact effects.
 
 `scheduling.planning.changed.v1` retains only the closed operation code in its
 payload, scoped to the edition/control version with actor and correlation.
+Release decisions use the separate dormant `scheduling.release.changed.v1`
+schema with only their four closed operation codes. Each family rejects the
+other's operations. Neither event activates a handler or profile route; the
+dormancy check covers both families. Release notifications and projections
+remain separate successors, not side effects of registering this schema.
 Operational diagnosis uses denied/unavailable/version-conflict categories,
 receipt/correlation identities and readiness status. Do not log source JSON,
 private rationale, host periods or private owner records as debugging payloads.
 
-The [migration/recovery runbook](../operations/scheduling-migration-and-recovery.md)
-describes exact schema/readiness, runtime ACLs and populated contraction fences.
+The [baseline migration/recovery runbook](../operations/scheduling-migration-and-recovery.md)
+and [atomic-release extension](../operations/programme-atomic-release-migration-and-recovery.md)
+describe exact schema/readiness, runtime ACLs and populated contraction fences.
 The native editor and staffing were delivered dormant through #85 and #88.
-The release-eligibility prerequisite adds no live workflow. Independent Programme approval, atomic release,
-role-specific outputs, on-site continuity, guided activation and integrated
-acceptance remain mandatory #48 work. #87 is delivered; representative-human
+Neither release eligibility nor dormant approval/publication adds a live workflow.
+Role-specific outputs, on-site continuity, logical-restore compatibility (#97),
+guided activation and integrated acceptance remain mandatory #48 work.
+#87 is delivered; representative-human
 and integrated acceptance remain separate gates.

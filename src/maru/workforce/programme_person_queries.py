@@ -28,6 +28,10 @@ from maru.scheduling.authorization import (
     DEFAULT_SCHEDULING_AUTHORIZER,
     SchedulingAuthorizer,
 )
+from maru.scheduling.catalogs import MAX_CONFLICTS
+from maru.scheduling.person_obligation_references import (
+    resolve_published_person_conflict,
+)
 from maru.scheduling.planning_queries import SchedulingReadRequest
 from maru.scheduling.release_candidate_queries import load_release_candidate_source
 
@@ -402,7 +406,47 @@ def load_programme_combined_person_source(
             *selected,
             *(_work_obligation(request, row, None) for row in global_work),
         )
-        consequences = evaluate_programme_person_conflicts(obligations)
+        # Enforce complete source/comparison bounds before any published-source
+        # loop. A malformed/oversized candidate must not trigger unbounded reads.
+        local_consequences = evaluate_programme_person_conflicts(obligations)
+        published_consequences = set()
+        published_digests = []
+        by_key = {
+            edition_person_conflict_key(
+                edition_id=request.edition_id, account_id=identifier
+            ): identifier
+            for identifier in relevant_accounts
+        }
+        for obligation in selected:
+            published = resolve_published_person_conflict(
+                account_id=by_key[obligation.person_key],
+                starts_at=obligation.starts_at,
+                ends_at=obligation.ends_at,
+                rest_ends_at=obligation.rest_ends_at,
+                replaced_edition_id=request.edition_id,
+            )
+            published_digests.append(published.evidence_digest)
+            for blocked, code in (
+                (published.overlap, "overlap"),
+                (published.rest, "rest"),
+            ):
+                if blocked and obligation.occurrence_id is not None:
+                    published_consequences.add(
+                        ProgrammePersonConsequence(
+                            obligation.occurrence_id, obligation.person_key, code
+                        )
+                    )
+        consequences = tuple(
+            sorted(
+                {
+                    *local_consequences,
+                    *published_consequences,
+                },
+                key=lambda row: (str(row.occurrence_id), str(row.person_key), row.code),
+            )
+        )
+        if len(consequences) > MAX_CONFLICTS:
+            raise ProgrammeStaffingUnavailableError
         unavailable = not relevant_accounts <= {row.account_id for row in current}
         baseline = (
             "unavailable"
@@ -440,6 +484,7 @@ def load_programme_combined_person_source(
                     ),
                     "selected_work": tuple(asdict(row) for row in selected_work),
                     "global_work": tuple(asdict(row) for row in global_work),
+                    "published_person_sources": tuple(published_digests),
                     "consequences": tuple(asdict(row) for row in consequences),
                 }
             ),

@@ -86,6 +86,7 @@ ACKNOWLEDGED_DORMANT_EVENTS = frozenset(
         "applications.programme_conversion.completed.v1",
         "programme.item.changed.v1",
         "scheduling.planning.changed.v1",
+        "scheduling.release.changed.v1",
         "workforce.programme_staffing.changed.v1",
     }
 )

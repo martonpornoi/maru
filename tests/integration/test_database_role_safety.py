@@ -19,6 +19,7 @@ from rest_framework.test import APIClient
 from maru.authorization.activation import activate_authority_provenance
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
+    RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4,
     RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
@@ -348,7 +349,7 @@ def _provision_runtime_role(
             ).format(role)
         )
         if grant_function_allowlist:
-            for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3:
+            for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4:
                 cursor.execute(
                     _function_privilege_statement(
                         action="GRANT",

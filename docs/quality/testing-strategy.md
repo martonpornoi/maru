@@ -342,6 +342,15 @@ Real Programme/Venue dependency changes include them through the actual graph.
 Current Scheduling and owner-adapter guards, readiness, conflicts, reservations
 and continuity remain selected on every code PR.
 
+The atomic-release extension declares its real unused execution-boundary
+reverse/reapply and used native-evidence fence as independently restorable
+historical functions across all participating owners. Parameter variants stay
+together; current source, publication, permission, disclosure and concurrency
+tests remain current-schema cases. New diagnostic whole-file estimates use the
+existing median fallback, not measured acceptance. New authoritative groups
+retain the largest known group fallback until complete matching evidence permits
+a reviewed refresh; no existing measured weights are lowered.
+
 ### Runtime and cost boundaries
 
 Routine hosted acceptance uses eight shards. Exhaustive hosted acceptance uses

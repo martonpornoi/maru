@@ -15,7 +15,8 @@ from django.utils import timezone
 from psycopg.types.range import Range
 
 from maru.audit.models import AuditEvent
-from maru.audit.services import AuditRecord, append_audit
+from maru.audit.mutation_evidence import audited_mutation
+from maru.audit.services import AuditRecord
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import (
     PolicyDecision,
@@ -26,8 +27,14 @@ from maru.authorization.policy import (
 )
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
-from maru.identity.queries import resolve_active_verified_person_reference
+from maru.events.write_references import lock_edition_ownership
+from maru.identity.queries import (
+    resolve_active_verified_account_reference,
+    resolve_active_verified_person_reference,
+)
 from maru.organizations.models import Organization
+from maru.organizations.write_references import lock_organization_ownership
+from maru.scheduling.release_changes import record_venues_release_change
 from maru.workforce.models import Department
 
 from .authorization import resolve_edition_space_target
@@ -437,14 +444,40 @@ def _require_decision(
     return decision
 
 
+def _lock_owner_scope(
+    *, actor_id: UUID, organization_id: UUID, edition_id: UUID | None
+) -> None:
+    if edition_id is None:
+        available = lock_organization_ownership(organization_id=organization_id)
+    else:
+        available = lock_edition_ownership(
+            organization_id=organization_id, edition_id=edition_id
+        )
+    if (
+        not available
+        or resolve_active_verified_account_reference(account_id=actor_id, lock=True)
+        is None
+    ):
+        raise VenueAuthorizationDeniedError
+
+
 def _organization_decision(
     *, actor: Account, organization_id: UUID, capability_code: str, at: datetime
 ) -> PolicyDecision:
-    return _require_decision(
+    _require_decision(
         actor=actor,
         capability_code=capability_code,
         target=resolve_organization_target(organization_id=organization_id),
         at=at,
+    )
+    _lock_owner_scope(
+        actor_id=actor.id, organization_id=organization_id, edition_id=None
+    )
+    return _require_decision(
+        actor=actor,
+        capability_code=capability_code,
+        target=resolve_organization_target(organization_id=organization_id),
+        at=timezone.now(),
     )
 
 
@@ -456,7 +489,7 @@ def _edition_decision(
     capability_code: str,
     at: datetime,
 ) -> PolicyDecision:
-    return _require_decision(
+    _require_decision(
         actor=actor,
         capability_code=capability_code,
         target=resolve_edition_target(
@@ -464,6 +497,17 @@ def _edition_decision(
             edition_id=edition_id,
         ),
         at=at,
+    )
+    _lock_owner_scope(
+        actor_id=actor.id, organization_id=organization_id, edition_id=edition_id
+    )
+    return _require_decision(
+        actor=actor,
+        capability_code=capability_code,
+        target=resolve_edition_target(
+            organization_id=organization_id, edition_id=edition_id
+        ),
+        at=timezone.now(),
     )
 
 
@@ -501,6 +545,22 @@ def _space_decision(
     )
     if target is None:
         raise VenueAuthorizationDeniedError
+    _lock_owner_scope(
+        actor_id=actor.id, organization_id=organization_id, edition_id=edition_id
+    )
+    target = resolve_edition_space_target(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        space_selection_id=space_selection_id,
+    )
+    decision = _require_decision(
+        actor=actor,
+        capability_code=capability_code,
+        target=target,
+        at=timezone.now(),
+    )
+    if target is None:
+        raise VenueAuthorizationDeniedError
     return _AuthorizedSpace(
         actor_id=actor.id,
         space_selection_id=row["id"],
@@ -522,11 +582,12 @@ def _existing_receipt(
     organization_id: UUID,
     request_digest: str,
 ) -> VenueCommandReceipt | None:
-    receipt = (
-        VenueCommandReceipt.objects.select_for_update()
-        .filter(actor=actor, operation=operation, idempotency_key=idempotency_key)
-        .first()
-    )
+    # Immutable receipts need no UPDATE privilege or row lock. The command has
+    # already locked its canonical owner scope; the unique retry key and exact
+    # digest still reject conflicting attempts, including another scope.
+    receipt = VenueCommandReceipt.objects.filter(
+        actor=actor, operation=operation, idempotency_key=idempotency_key
+    ).first()
     if receipt is None:
         return None
     if (
@@ -636,7 +697,7 @@ def _append_evidence_ids(
             correlation_id=correlation_id,
             source_channel=source_channel,
         )
-    audit = append_audit(
+    with audited_mutation(
         AuditRecord(
             principal_kind="account",
             principal_id=actor_id,
@@ -659,7 +720,8 @@ def _append_evidence_ids(
             retention_class="venue-operational",
         ),
         occurred_at=occurred_at,
-    )
+    ) as mutation:
+        record_venues_release_change(mutation)
     publish_domain_event(
         DomainEventRecord(
             event_name="venues.record.changed.v1",
@@ -675,7 +737,7 @@ def _append_evidence_ids(
                 "record_id": str(aggregate_id),
             },
             correlation_id=correlation_id,
-            causation_id=audit.id,
+            causation_id=mutation.audit_id,
             actor_kind="account",
             actor_id=actor_id,
             retention_class="venue-operational",
@@ -3670,9 +3732,6 @@ def reschedule_venue_booking(
     old_publication_state = booking.publication_state
     old_lifecycle = booking.lifecycle
     with venue_writer():
-        VenueBookingOccupancy.objects.filter(booking=booking, active=True).update(
-            active=False
-        )
         for field_name, value in values.items():
             setattr(booking, field_name, value)
         booking.setup_starts_at = envelope.setup_starts_at
@@ -3689,6 +3748,9 @@ def reschedule_venue_booking(
         booking.last_modified_by = actor
         booking.aggregate_version += 1
         booking.save()
+        VenueBookingOccupancy.objects.filter(booking=booking, active=True).update(
+            active=False
+        )
     _append_booking_history(
         booking=booking,
         actor=actor,
@@ -4348,15 +4410,15 @@ def cancel_venue_booking(
     old_publication_state = booking.publication_state
     old_lifecycle = booking.lifecycle
     with venue_writer():
-        VenueBookingOccupancy.objects.filter(booking=booking, active=True).update(
-            active=False
-        )
         booking.lifecycle = VenueBooking.Lifecycle.CANCELLED
         if booking.publication_state == VenueBooking.PublicationState.PUBLISHED:
             booking.publication_state = VenueBooking.PublicationState.WITHDRAWN
         booking.last_modified_by = actor
         booking.aggregate_version += 1
         booking.save()
+        VenueBookingOccupancy.objects.filter(booking=booking, active=True).update(
+            active=False
+        )
     return _record_booking_state_change(
         actor=actor,
         booking=booking,

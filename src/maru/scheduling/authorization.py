@@ -27,6 +27,10 @@ MANAGE_CANDIDATES: Final = "scheduling.manage_candidates"
 EVALUATE_CANDIDATES: Final = "scheduling.evaluate_candidates"
 ACKNOWLEDGE_WARNINGS: Final = "scheduling.acknowledge_warnings"
 MANAGE_RESERVATIONS: Final = "scheduling.manage_reservations"
+ACKNOWLEDGE_RELEASE_WARNINGS: Final = "scheduling.acknowledge_release_warnings"
+APPROVE_RELEASE: Final = "scheduling.approve_release"
+PUBLISH_RELEASE: Final = "scheduling.publish_release"
+WITHDRAW_RELEASE: Final = "scheduling.withdraw_release"
 SCHEDULING_CAPABILITIES: Final = frozenset(
     {
         VIEW_PLANNING,
@@ -38,6 +42,10 @@ SCHEDULING_CAPABILITIES: Final = frozenset(
         EVALUATE_CANDIDATES,
         ACKNOWLEDGE_WARNINGS,
         MANAGE_RESERVATIONS,
+        ACKNOWLEDGE_RELEASE_WARNINGS,
+        APPROVE_RELEASE,
+        PUBLISH_RELEASE,
+        WITHDRAW_RELEASE,
     }
 )
 

@@ -40,6 +40,9 @@ or permission to use production personal data.
   integrity, delegable continuity disposal, downgrade refusal, and fix-forward
   recovery for the dormant import schema.
 - [Effects worker](effects-worker-runbook.md)
+- [Programme atomic release migration and recovery](programme-atomic-release-migration-and-recovery.md)
+  covers the complete owner graph, used-evidence fence, physical recovery and
+  the separately tracked logical-restore prerequisite.
 - [GitHub Pages publication](github-pages-publication.md)
 - [Public repository readiness](public-repository-readiness.md)
 
@@ -84,6 +87,7 @@ programme-host-migration-and-recovery
 programme-staffing-migration-and-recovery
 scheduling-migration-and-recovery
 programme-release-sources-migration-and-recovery
+programme-atomic-release-migration-and-recovery
 effects-worker-runbook
 github-pages-publication
 public-repository-readiness

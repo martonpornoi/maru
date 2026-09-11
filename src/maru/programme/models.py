@@ -1085,6 +1085,47 @@ class ProgrammePublicRendition(_AppendOnlyProgrammeModel):
             )
 
 
+class ProgrammePublicRenditionWithdrawal(_AppendOnlyProgrammeModel):
+    """Withdraw exact disclosure without rewriting approved-copy history."""
+
+    rendition = models.OneToOneField(
+        ProgrammePublicRendition,
+        on_delete=models.PROTECT,
+        related_name="withdrawal",
+    )
+    item = models.ForeignKey(
+        ProgrammeItem, on_delete=models.PROTECT, related_name="public_copy_withdrawals"
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_public_copy_withdrawals",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_public_copy_withdrawals",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_public_copies_withdrawn",
+    )
+    item_version = models.PositiveBigIntegerField()
+    reason = models.CharField(max_length=MAX_PROGRAMME_REASON_LENGTH)
+    occurred_at = models.DateTimeField()
+
+    class Meta:
+        """Retain one independently attributed withdrawal for each exact rendition."""
+
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(item_version__gt=0) & ~models.Q(reason=""),
+                name="programme_copy_withdrawal_valid",
+            ),
+        ]
+
+
 class ProgrammeCommandReceipt(_AppendOnlyProgrammeModel):
     """Immutable idempotency and optimistic-concurrency evidence."""
 
@@ -1150,6 +1191,7 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeModel):
                 condition=~models.Q(
                     operation__in=(
                         ProgrammeCommandOperation.PUBLIC_RENDITION_RECORD.value,
+                        ProgrammeCommandOperation.PUBLIC_RENDITION_WITHDRAW.value,
                         ProgrammeCommandOperation.ACCESSIBILITY_FIT_RECORD.value,
                         ProgrammeCommandOperation.STAFFING_ABSENCE_RECORD.value,
                     )
@@ -1250,6 +1292,7 @@ class ProgrammeCommandReceipt(_AppendOnlyProgrammeModel):
                 )
         elif self.operation in (
             ProgrammeCommandOperation.PUBLIC_RENDITION_RECORD.value,
+            ProgrammeCommandOperation.PUBLIC_RENDITION_WITHDRAW.value,
             ProgrammeCommandOperation.ACCESSIBILITY_FIT_RECORD.value,
             ProgrammeCommandOperation.STAFFING_ABSENCE_RECORD.value,
         ):

@@ -19,6 +19,7 @@ from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
+from maru.audit.mutation_evidence import audited_mutation
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import (
@@ -44,6 +45,7 @@ from maru.identity.models import (
     IdentityChallenge,
     RestrictionAppeal,
 )
+from maru.scheduling.release_changes import record_identity_release_deactivation
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -847,7 +849,7 @@ def deactivate_person_account_for_platform_emergency(
             detail_code="platform_emergency_deactivation",
             source_channel=source_channel,
         )
-    append_audit(
+    with audited_mutation(
         AuditRecord(
             principal_kind="account",
             principal_id=actor.id,
@@ -867,7 +869,8 @@ def deactivate_person_account_for_platform_emergency(
             changed_fields=("is_active", "sessions"),
             retention_class="security-extended",
         )
-    )
+    ) as mutation:
+        record_identity_release_deactivation(mutation)
     return EmergencyAccountDeactivation(
         account=account,
         revoked_session_count=revoked_session_count,

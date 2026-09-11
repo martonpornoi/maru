@@ -60,6 +60,13 @@ the delivery-adoption check before event or outbox persistence. Future
 activation must add the exact route and matching handler together; registering
 the event name alone is not execution permission.
 
+Scheduling likewise keeps `scheduling.planning.changed.v1` separate from
+`scheduling.release.changed.v1`. Both retain only an exact closed operation code;
+release warning acknowledgement, independent approval, publication and withdrawal
+cannot masquerade as planning edits. Both schemas are explicitly dormant with no
+current-profile route or installed handler. Registration creates no notification,
+artifact delivery or activation; a future route must meet the same checks.
+
 It also includes dormant `applications.programme_call.changed.v1` and
 `applications.programme_proposal.changed.v1` schemas. Their payloads contain
 only the opaque call/proposal aggregate identifier, closed action,

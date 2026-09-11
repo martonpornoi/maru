@@ -50,6 +50,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
 @pytest.fixture
 def preflight_scope(release_scope, monkeypatch):
+    return configure_preflight_scope(release_scope, monkeypatch)
+
+
+def configure_preflight_scope(release_scope, monkeypatch):
     for module in (sources, programme_queries, programme_staffing_queries):
         monkeypatch.setattr(module, "profile_allows_adapter", lambda *_args: True)
     monkeypatch.setattr(sources, "profile_allows_conflict_source", lambda *_args: True)

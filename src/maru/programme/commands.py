@@ -20,9 +20,12 @@ from maru.applications.programme_authorization import (
 from maru.applications.programme_conversion_sources import (
     resolve_accepted_programme_source,
 )
+from maru.audit.mutation_evidence import audited_mutation
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.scheduling_queries import resolve_scheduling_edition_reference
+from maru.identity.queries import resolve_active_verified_person_reference
 from maru.programme.authorization import (
     DEFAULT_PROGRAMME_AUTHORIZER,
     PROGRAMME_APPROVE_PUBLIC_COPY,
@@ -90,6 +93,7 @@ from maru.programme.models import (
     ProgrammeWorkingRevision,
 )
 from maru.programme.writer_boundary import programme_writer
+from maru.scheduling.release_changes import record_programme_release_change
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -431,6 +435,14 @@ def _ensure_editable(scope: AuthorizedProgrammeScope) -> None:
         raise ProgrammeLifecycleConflictError
 
 
+def _ensure_public_review_open(scope: AuthorizedProgrammeScope) -> None:
+    edition = resolve_scheduling_edition_reference(
+        organization_id=scope.organization_id, edition_id=scope.edition_id
+    )
+    if edition is None or not edition.accepts_scheduling_writes:
+        raise ProgrammeLifecycleConflictError
+
+
 @overload
 def _locked_control(
     *,
@@ -632,7 +644,7 @@ def _record_success(
         resulting_control_version=resulting_control_version,
         resulting_item_version=resulting_item_version,
     )
-    audit = append_audit(
+    with audited_mutation(
         AuditRecord(
             principal_kind="account",
             principal_id=scope.actor_id,
@@ -655,7 +667,9 @@ def _record_success(
             retention_class="programme-restricted",
         ),
         occurred_at=occurred_at,
-    )
+    ) as mutation:
+        record_programme_release_change(mutation, receipt_id=receipt.id)
+        audit_id = mutation.audit_id
     publish_domain_event(
         DomainEventRecord(
             event_name=PROGRAMME_ITEM_CHANGED_EVENT,
@@ -677,7 +691,7 @@ def _record_success(
                 concern=concern,
             ),
             correlation_id=correlation_id,
-            causation_id=audit.id,
+            causation_id=audit_id,
             actor_kind="account",
             actor_id=scope.actor_id,
             retention_class="programme-restricted",
@@ -2155,7 +2169,7 @@ def approve_programme_public_rendition(
     organization_id : UUID
         The organization expected to own the edition.
     edition_id : UUID
-        The exact private-planning edition identifier.
+        The exact edition in Draft, Preparing, Ready or Live.
     item_id : UUID
         The exact Programme item identifier.
     source_working_revision_id : UUID
@@ -2185,6 +2199,13 @@ def approve_programme_public_rendition(
     -------
     ProgrammeCommandResult
         Immutable receipt and approved rendition identifier.
+
+    Notes
+    -----
+    Ready/Live review preserves the frozen private working revision and requires
+    a current person independent of every retained working-copy author. Older
+    draft self-curation remains history and is not qualifying release approval.
+    No rendition changes an active timetable or withdraws older reviewed copy.
     """
     (
         organization_id,
@@ -2266,7 +2287,7 @@ def approve_programme_public_rendition(
             )
             if replay is not None:
                 return replay
-            _ensure_editable(scope)
+            _ensure_public_review_open(scope)
             control = _locked_control(
                 organization_id=organization_id,
                 edition_id=edition_id,
@@ -2278,16 +2299,23 @@ def approve_programme_public_rendition(
                 item_id=item_id,
             )
             _require_version(actual=item.aggregate_version, expected=expected_version)
-            source = (
-                ProgrammeWorkingRevision.objects.select_for_update()
-                .filter(
-                    id=source_working_revision_id,
+            if not scope.accepts_private_planning_writes and (
+                resolve_active_verified_person_reference(account_id=scope.actor_id)
+                is None
+                or ProgrammeWorkingRevision.objects.filter(
                     item=item,
                     organization_id=organization_id,
                     edition_id=edition_id,
-                )
-                .first()
-            )
+                    actor_id=scope.actor_id,
+                ).exists()
+            ):
+                raise ProgrammeAuthorizationDenied
+            source = ProgrammeWorkingRevision.objects.filter(
+                id=source_working_revision_id,
+                item=item,
+                organization_id=organization_id,
+                edition_id=edition_id,
+            ).first()
             latest_source = (
                 ProgrammeWorkingRevision.objects.filter(item=item)
                 .order_by("-sequence", "-id")
@@ -2296,8 +2324,7 @@ def approve_programme_public_rendition(
             if source is None or latest_source is None or source.id != latest_source.id:
                 raise ProgrammeUnavailableError
             previous = (
-                ProgrammePublicRendition.objects.select_for_update()
-                .filter(item=item)
+                ProgrammePublicRendition.objects.filter(item=item)
                 .order_by("-rendition_number", "-id")
                 .first()
             )

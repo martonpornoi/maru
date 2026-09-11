@@ -73,7 +73,7 @@ That optimization pilot is closed; the later separately approved #83 CI task is
 described below. No Docker cleanup is authorized. See the
 [pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
 
-## Current bounded outcome: trusted Programme release sources (#94)
+## Current bounded outcome: independent approval and atomic release (#96)
 
 Issue #77 was delivered through PR #78, squash
 `6279cb50d287d70e33e2bebabda3e54564668475`. Issue #79 was delivered through
@@ -230,65 +230,93 @@ workflow took 24m17s. No split-run exception or threshold change was needed.
 The [delivery checkpoint](../checkpoints/2026-09-11-release-eligibility-protected-delivery.md)
 retains exact evidence. Do not rerun that completed certification.
 
-Active branch: `codex/programme-release-sources`, from the protected #93 merge.
-Native child [#94](https://github.com/martonpornoi/maru/issues/94) now owns the
-complete authenticated owner-source prerequisite, including explicit no-staffing
-and exact physical accessibility-fit evidence and combined person/rest checks.
-ADR 0094's ten-category pure policy grants no authority. Existing planning and
-coverage queries do not establish these complete release facts. The local change
-now implements the complete ten-category preflight, exact candidate/Venue inputs,
-retained staffing lineage, independently versioned fit/no-staffing decisions and
-history, current readiness/independent-copy evidence and combined global person/
-rest checks. Authorized planner, approver and publisher fingerprints agree;
-caller-only locks and trace/audit identities are not dependencies. Mandatory
-owner/field denial or audit failure withholds disclosure. Venue sources are
-re-read before disclosure without inverted physical locking. No planning-warning
-acknowledgement is accepted as release evidence.
+Issue [#94](https://github.com/martonpornoi/maru/issues/94) is closed through
+[PR #95](https://github.com/martonpornoi/maru/pull/95), protected squash
+`413997c938de86daa88dc626f70389c5b84af36a`. Its tree equals certified head
+`8cae3d5ea9d3faffaf29403f681e4053c2f3bef2`; clean local main equals that
+protected result and origin/main. Complete local certification passed 8,291
+Python tests, 64 frontend tests, all ten gates and 90.62% combined branch-aware
+coverage in 2h17m53s. Exact-head hosted exhaustive acceptance passed all sixteen
+PostgreSQL jobs, combined coverage, Full CI gate, PR gate and CodeQL. All
+seventeen hosted Python reports contain zero failures, errors or skips. Hosted
+latency was 2h58m16s; database jobs took 31m04s–111m47s. This is exhaustive
+acceptance, not a routine-path benchmark or production approval.
 
-Iterative focused checks passed for source/field isolation, real cross-tenant
-overlap/rest, actual confirmed/locked coverage, retired operative work, optimistic
-decision races, immutable reciprocal evidence, Ready/Live operational decisions
-without content reopening, and real unused reversal/populated fix-forward fences.
-Strict mypy, lint, documentation validation and corrected docstring checks passed.
-All 206 new focused cases passed; the wider run then caught an outdated catalog
-expectation. Its corrected catalog/contract/shard-inventory group passed 41 cases,
-and all six new-relation runtime privilege cases passed. The first Sphinx build
-caught four ambiguous type references, now corrected; clean warning-fatal Sphinx,
-exact clean-commit certification, protected PR acceptance and merge remain pending.
-The first exact candidate `a4cdc7a6d8390f6ec554db1deace1366f5df69ce` failed
-seven unit checks: old exact inventory assertions and an omitted SELECT-only
-provisioning-artifact entry. Its fresh Sphinx build and 64 frontend tests passed;
-the remaining database workers were deliberately stopped after the unit failure,
-so no database completion, combined coverage or successful receipt is claimed.
-Their disposable services were removed and failure logs retained. The corrected
-complete unit suite passes all 4,503 tests. Nine focused real provisioning and
-older populated-fence recovery cases passed; the remaining staffing case first
-identified additional unused Workforce successors, then passed its corrected
-exact-inventory rerun. All 38 edition-creation tests also passed. The
-[correction checkpoint](../checkpoints/2026-09-11-release-source-certification-corrections.md)
-retains these separate reports and the failed attempt. New clean certification
-and independent protected acceptance are still required.
-The [implementation checkpoint](../checkpoints/2026-09-11-trusted-programme-release-sources.md)
-retains focused evidence and corrections without claiming a successful failed run.
-Runtime SELECT-only and explicit historical inventory changes require the ordinary
-exhaustive acceptance scope; no history, gate or coverage threshold is waived.
-Persisted independent approval and atomic publication/invalidation follow it,
-then shared release-derived outputs/change impact. No release or profile is
-activated, and #92's genuine human acceptance remains pending rather than waived.
+ADR 0095's dormant ten-category preflight now uses exact trusted owner sources,
+independently versioned accessibility-fit/no-staffing decisions, current
+readiness/independent-copy evidence, retained staffing lineage and minimized
+combined person/rest consequences. It neither authenticates release-warning
+acknowledgements nor approves or publishes a timetable. The
+[delivery checkpoint](../checkpoints/2026-09-11-release-sources-protected-delivery.md)
+retains final evidence and the separately documented failed initial candidate.
+Do not repeat this completed certification or the earlier browser checks.
 
-The maintainer authorized unattended sequential delivery, without routine PR or
-merge confirmation. Genuine human checks become explicit #48 follow-up subtasks,
-not fabricated passes or waived activation gates. Keep one agent and current
-reasoning unless a concrete unresolved problem requires escalation; independent
-authorized work may proceed around such a dependency. After #48, continue with
-#42 and the director introduction/pilot package, then the agreed guidance,
-accessibility, continuity and succession priorities. No new schedule, production
-deployment, personal data, repository-policy bypass or general cleanup is authorized.
-Previous fixture/certification containers and watchers are closed; no schedule is
-active. The label-verified `maru-issue94-postgres` focused-test container and its
-anonymous synthetic volume were removed before certification; unrelated Docker
-resources were not touched. Certification manages its own eight isolated services.
-Preserve unrelated worktrees, stashes, data and containers.
+Active branch: `codex/programme-atomic-release`, from the protected #95 merge.
+Native child [#96](https://github.com/martonpornoi/maru/issues/96) now has dormant
+independent approval, exact warning evidence, verified canonical artifacts,
+atomic publication/withdrawal, checked manifests and same-transaction native
+source invalidation. Accepted ADR 0096 owns the dormant contract. Full certification,
+protected delivery and final acceptance reconciliation remain unfinished;
+the clean exact candidate is being prepared, with no #96 PR or merge yet.
+
+Programme also has independently reviewed Ready/Live copy continuation and
+immutable exact-copy withdrawal, without reopening private edits. Native owner
+guards cover Identity, Events, Programme, Workforce and complete Venue sources.
+Reciprocal published-host/Workforce checks protect retained commitments even
+when room/copy invalidation withholds release output. Replacement locks both
+old and new person sets. Checked current/history reads independently require
+field authority, current reauthorization and successful sensitive-read audit.
+Ended approved history is not attendance, future coverage or permission to
+grandfather a stale source into a fresh release.
+
+The complete new PostgreSQL regression passed 270 tests across 25 files in
+16m17s. It covers native owner/source changes, approval/publication/withdrawal,
+copy continuation, checked history, genuine-runtime containment, actual races
+and recovery. Earlier overlapping focused groups are not added to that count.
+The complete database-free suite passed 4,669 tests after fixing ten catalog,
+historical dependency and stale fixture failures. Fresh-cache typing passed all
+534 source files; full formatting/lint, 452-document validation and Python
+docstring checks pass. The prior query typing error was corrected with an exact
+withdrawal EXISTS annotation, preserving newest-copy/no-fallback semantics.
+Exact native schema/function/ACL readiness now passes on the isolated database.
+Expanded genuine runtime logins retain SELECT-only access to every new release,
+copy-withdrawal, journal and witness relation. Source and runtime contract
+unit checks pass. Four genuinely shared-physical edition races, all fifteen
+manifest cases and a populated foreign-release genuine-runtime claim rejection
+also passed. The final 27-case group passed in 1m49s, covering prior-release
+preservation on artifact/verification/audit failure, competing same-pointer
+publications and existing Programme queries. Exact full certification remains
+pending. The [implementation checkpoint](../checkpoints/2026-09-11-programme-atomic-release-kernel.md)
+retains this pre-certification milestone; focused results are not hosted acceptance.
+
+Scheduling 0020 fences the release extension before any later protections can
+reverse around used native evidence. Thirteen focused real recovery and
+readiness-contract cases passed, including ordinary unused reverse/reapply
+and refusal without recorder changes after use. A same-image PostgreSQL 17.11
+physical-backup clone passed exact readiness, retained artifact/pointer,
+new native disclosure withdrawal and exact retry; the source stayed unchanged.
+See the [release recovery runbook](../operations/programme-atomic-release-migration-and-recovery.md).
+The failed initial clone extraction attempts are not passing evidence.
+
+A genuine logical dump/restore exposed a separate existing exact-schema issue:
+PostgreSQL reparses some array-cast CHECK expressions into differently rendered
+catalog definitions. Native guard/ACL/recorder checks passed; exact schema
+readiness failed. Native child [#97](https://github.com/martonpornoi/maru/issues/97)
+owns logical-restore compatibility before activation/director pilot, with
+negative weakened-constraint tests. No fingerprints were waived or blindly
+rebaselined, and physical recovery is not claimed as logical or production/PITR
+acceptance.
+
+The maintainer authorizes unattended sequential delivery without routine PR or
+merge confirmation. Keep one agent, current model settings, exact certification
+and protected hosted gates. #92 remains deferred human acceptance, not passed
+or waived. Shared release-derived outputs/change impact, on-site continuity,
+guided setup and integrated acceptance follow; no profile, route, runtime writer
+or public release is activated here. After #48, continue #42 and the director
+pilot package, then the agreed guidance, accessibility, continuity and succession
+priorities. No schedules, production data/deployment, policy bypass or general
+Docker cleanup are authorized. Preserve unrelated worktrees, stashes and
+containers; only exact verified disposable task resources may be removed.
 
 ## What can be evaluated today
 
@@ -316,10 +344,9 @@ Preserve unrelated worktrees, stashes, data and containers.
 
 ## Smallest sensible next actions
 
-1. Deliver #94's complete trusted release-source collection and missing owner
-   evidence; preserve the existing independent scope and field boundaries.
-2. Deliver persisted independent approval, atomic publication/invalidation,
-   then shared outputs/change impact.
+1. Deliver #96's independent approval, exact warnings, atomic publication and
+   same-transaction safety/privacy invalidation with complete owner evidence.
+2. Deliver shared release-derived outputs and change impact.
 3. Continue on-site continuity, guided setup/surfaces and integrated
    Programme-only acceptance. Keep #48 open and preserve all activation gates.
 

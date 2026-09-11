@@ -12,6 +12,7 @@ from django.db import IntegrityError, transaction
 from django.utils.text import slugify
 
 from maru.audit.models import AuditEvent
+from maru.audit.mutation_evidence import audited_mutation
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION, require_capability
 from maru.authorization.enforcement import (
@@ -44,6 +45,7 @@ from maru.organizations.models import (
     Organization,
     OrganizationRepresentation,
 )
+from maru.scheduling.release_changes import record_events_release_change
 
 MAX_EDITION_NAME_LENGTH = 160
 MAX_EDITION_SLUG_LENGTH = 80
@@ -658,7 +660,7 @@ def update_event_edition(
             update_fields=(*changed_fields, "aggregate_version", "updated_at"),
         )
         audited_fields = (*changed_fields, "aggregate_version")
-        audit_event = append_audit(
+        with audited_mutation(
             AuditRecord(
                 principal_kind="account",
                 principal_id=actor.id,
@@ -678,7 +680,9 @@ def update_event_edition(
                 changed_fields=audited_fields,
                 safe_metadata={"policy_version": POLICY_VERSION},
             )
-        )
+        ) as mutation:
+            record_events_release_change(mutation)
+            update_audit_id = mutation.audit_id
         publish_domain_event(
             DomainEventRecord(
                 event_name="events.edition.details_updated.v1",
@@ -693,7 +697,7 @@ def update_event_edition(
                     "changed_fields": ",".join(changed_fields),
                 },
                 correlation_id=correlation_id,
-                causation_id=audit_event.id,
+                causation_id=update_audit_id,
                 actor_kind="account",
                 actor_id=actor.id,
             ),
@@ -943,7 +947,7 @@ def transition_edition(  # noqa: DOC503 - bare re-raise preserves original error
                 actor_id=actor.id,
                 reason=normalized_reason,
             )
-            audit_event = append_audit(
+            with audited_mutation(
                 _transition_audit_record(
                     actor=actor,
                     organization_id=organization_id,
@@ -960,7 +964,9 @@ def transition_edition(  # noqa: DOC503 - bare re-raise preserves original error
                         "aggregate_version",
                     ),
                 )
-            )
+            ) as mutation:
+                record_events_release_change(mutation)
+                transition_audit_id = mutation.audit_id
             publish_domain_event(
                 DomainEventRecord(
                     event_name="events.edition.lifecycle_transitioned.v1",
@@ -975,7 +981,7 @@ def transition_edition(  # noqa: DOC503 - bare re-raise preserves original error
                         "to_state": to_state,
                     },
                     correlation_id=correlation_id,
-                    causation_id=audit_event.id,
+                    causation_id=transition_audit_id,
                     actor_kind="account",
                     actor_id=actor.id,
                 ),

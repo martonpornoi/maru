@@ -59,6 +59,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
 @pytest.fixture
 def assessed(world, admitted, monkeypatch):
+    return assess_world(world, monkeypatch)
+
+
+def assess_world(world, monkeypatch):
     monkeypatch.setattr(queries, "profile_allows_adapter", lambda *_args: True)
     monkeypatch.setattr(
         workforce_sources, "profile_allows_adapter", lambda *_args: True

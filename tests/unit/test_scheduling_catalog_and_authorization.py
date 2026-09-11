@@ -34,7 +34,9 @@ from maru.scheduling.checks import (
 )
 from maru.scheduling.events import (
     SCHEDULING_CHANGED_EVENT,
+    SCHEDULING_RELEASE_CHANGED_EVENT,
     validate_scheduling_changed_payload,
+    validate_scheduling_release_changed_payload,
 )
 from maru.scheduling.planning_preview import PREVIEW_FIELDS
 from maru.scheduling.planning_queries import HISTORY_FIELDS, PLANNING_FIELDS
@@ -55,15 +57,17 @@ def test_editor_reads_request_only_preexisting_capability_fields(capability, fie
     assert fields <= CAPABILITIES[capability].field_ceiling
 
 
-def test_declared_capabilities_and_event_do_not_activate_current_profiles():
+@pytest.mark.parametrize(
+    "event_name", [SCHEDULING_CHANGED_EVENT, SCHEDULING_RELEASE_CHANGED_EVENT]
+)
+def test_declared_capabilities_and_event_do_not_activate_current_profiles(event_name):
     assert scheduling_dormancy_problem_codes() == ()
     assert check_scheduling_dormancy() == []
-    assert event_definition(SCHEDULING_CHANGED_EVENT) is not None
-    assert SCHEDULING_CHANGED_EVENT in ACKNOWLEDGED_DORMANT_EVENTS
+    assert event_definition(event_name) is not None
+    assert event_name in ACKNOWLEDGED_DORMANT_EVENTS
     handlers = built_in_handler_registry()
     assert all(
-        handlers.resolve(event_name=SCHEDULING_CHANGED_EVENT, destination=destination)
-        is None
+        handlers.resolve(event_name=event_name, destination=destination) is None
         for destination in ("internal", "notifications")
     )
     for code in auth.SCHEDULING_CAPABILITIES:
@@ -81,8 +85,11 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
     current = import_module(
         "maru.authorization.migrations.0027_scheduling_capabilities"
     )
+    release = import_module(
+        "maru.authorization.migrations.0029_programme_release_capabilities"
+    )
     assert set(current.SCHEDULING_CAPABILITIES) == {
-        *auth.SCHEDULING_CAPABILITIES,
+        *(auth.SCHEDULING_CAPABILITIES - set(release.RELEASE_CAPABILITIES)),
         "programme.view_scheduling_dependencies",
     }
     assert current.PHYSICAL_CAPABILITIES == ("venues.view_scheduling_dependencies",)
@@ -103,11 +110,43 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
         *current.RESOURCE_CAPABILITIES,
     } == {
         code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - {"programme.manage_staffing", "programme.view_staffing"}
+    } - {
+        "programme.manage_staffing",
+        "programme.view_staffing",
+        *release.RELEASE_CAPABILITIES,
+    }
     for code in current.SCHEDULING_CAPABILITIES:
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
     for code in current.PHYSICAL_CAPABILITIES:
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.RESOURCE
+
+
+def test_release_migration_adds_only_four_independent_edition_capabilities():
+    previous = import_module(
+        "maru.authorization.migrations.0028_programme_staffing_capabilities"
+    )
+    current = import_module(
+        "maru.authorization.migrations.0029_programme_release_capabilities"
+    )
+    assert current.RELEASE_CAPABILITIES == (
+        "scheduling.acknowledge_release_warnings",
+        "scheduling.approve_release",
+        "scheduling.publish_release",
+        "scheduling.withdraw_release",
+    )
+    assert current.ORGANIZATION_CAPABILITIES == previous.ORGANIZATION_CAPABILITIES
+    assert current.DEPARTMENT_CAPABILITIES == previous.DEPARTMENT_CAPABILITIES
+    assert current.RESOURCE_CAPABILITIES == previous.RESOURCE_CAPABILITIES
+    assert (
+        *previous.EDITION_CAPABILITIES,
+        *current.RELEASE_CAPABILITIES,
+    ) == current.EDITION_CAPABILITIES
+    assert {
+        *current.ORGANIZATION_CAPABILITIES,
+        *current.EDITION_CAPABILITIES,
+        *current.DEPARTMENT_CAPABILITIES,
+        *current.RESOURCE_CAPABILITIES,
+    } == {code for code, definition in CAPABILITIES.items() if definition.persistable}
 
 
 @pytest.mark.parametrize(
@@ -178,7 +217,14 @@ def test_missing_declarations_and_each_activation_path_fail_the_system_check(
 
 @pytest.mark.parametrize("operation", list(SchedulingOperation))
 def test_every_owned_operation_has_a_minimized_event(operation):
-    validate_scheduling_changed_payload({"operation": operation.value})
+    if operation.value.startswith("release_"):
+        validate_scheduling_release_changed_payload({"operation": operation.value})
+        with pytest.raises(ValidationError):
+            validate_scheduling_changed_payload({"operation": operation.value})
+    else:
+        validate_scheduling_changed_payload({"operation": operation.value})
+        with pytest.raises(ValidationError):
+            validate_scheduling_release_changed_payload({"operation": operation.value})
 
 
 @pytest.mark.parametrize(
@@ -194,6 +240,8 @@ def test_every_owned_operation_has_a_minimized_event(operation):
 def test_event_rejects_unknown_fields_private_values_and_unserialized_enums(payload):
     with pytest.raises(ValidationError):
         validate_scheduling_changed_payload(payload)
+    with pytest.raises(ValidationError):
+        validate_scheduling_release_changed_payload(payload)
 
 
 def scope_mocks(monkeypatch, *, allowed=True, fields=frozenset({"candidates"})):

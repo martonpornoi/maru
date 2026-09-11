@@ -14,6 +14,7 @@ from maru.charities.readiness import CHARITIES_INTEGRITY_CONTRACT
 from maru.core import database_integrity_readiness as integrity
 from maru.programme.readiness import PROGRAMME_INTEGRITY_CONTRACT
 from maru.scheduling.readiness import SCHEDULING_INTEGRITY_CONTRACT
+from maru.scheduling.release_integrity import NATIVE_RELEASE_MIGRATION_SOURCES
 from maru.venues.readiness import VENUES_INTEGRITY_CONTRACT
 
 if TYPE_CHECKING:
@@ -27,6 +28,14 @@ CONTRACTS = (
     PROGRAMME_INTEGRITY_CONTRACT,
     SCHEDULING_INTEGRITY_CONTRACT,
 )
+NATIVE_FUNCTIONS = {}
+for _reference, _digest in NATIVE_RELEASE_MIGRATION_SOURCES:
+    _app, _name = _reference.split(".", 1)
+    _module = import_module(f"maru.{_app}.migrations.{_name}")
+    _triggers, _functions = integrity.parse_database_integrity_sql_contracts(
+        getattr(_module, "FORWARD_SQL", "")
+    )
+    NATIVE_FUNCTIONS.update(_functions)
 
 
 def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> None:
@@ -43,9 +52,9 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         ("applications_integrity", True, 139, 29, 2),
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
-        ("venues_integrity", True, 20, 13, 2),
-        ("programme_integrity", True, 59, 24, 2),
-        ("scheduling_integrity", True, 46, 11, 2),
+        ("venues_integrity", True, 38, 54, 30),
+        ("programme_integrity", True, 67, 62, 30),
+        ("scheduling_integrity", True, 75, 51, 30),
     ]
     for contract in CONTRACTS:
         relations = set(integrity.bounded_context_relation_names(contract.app_label))
@@ -116,12 +125,43 @@ def test_function_contracts_pin_body_invoker_search_path_and_behavior() -> None:
                 "maru_validate_scheduling_linked_booking(uuid)": "void",
             }.get(function.identity, "trigger")
             and len(function.source_sha256) == 64
-            for function in contract.functions.values()
+            for identity, function in contract.functions.items()
+            if identity not in NATIVE_FUNCTIONS
         )
 
     function = next(iter(APPLICATIONS_INTEGRITY_CONTRACT.functions.values()))
     weakened = replace(function, source=function.source + "\n-- weakened")
     assert weakened.source_sha256 != function.source_sha256
+
+
+def test_native_release_contracts_pin_explicit_definers_and_every_owner_definition():
+    assert len(NATIVE_FUNCTIONS) == 41
+    assert {
+        name for name, function in NATIVE_FUNCTIONS.items() if function.security_definer
+    } == {
+        "maru_audit_capture_native_mutation()",
+        "maru_scheduling_record_native_release_change(text, uuid, uuid)",
+    }
+    for contract in (
+        VENUES_INTEGRITY_CONTRACT,
+        PROGRAMME_INTEGRITY_CONTRACT,
+        SCHEDULING_INTEGRITY_CONTRACT,
+    ):
+        assert {
+            name: contract.functions[name] for name in NATIVE_FUNCTIONS
+        } == NATIVE_FUNCTIONS
+        assert (
+            len(contract.supporting_triggers)
+            == {"venues": 58, "programme": 68, "scheduling": 47}[contract.app_label]
+        )
+        assert all(
+            function.configuration
+            in (
+                ("search_path=pg_catalog, public, pg_temp",),
+                ("search_path=pg_catalog",),
+            )
+            for function in NATIVE_FUNCTIONS.values()
+        )
 
 
 def test_public_sql_parser_composes_supporting_module_contracts() -> None:

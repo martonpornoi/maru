@@ -2,7 +2,7 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from functools import partial
 from threading import Barrier
 from uuid import uuid4
@@ -13,6 +13,7 @@ from django.db import close_old_connections
 import maru.effects.services as effect_services
 from maru.authorization.policy import PolicyDecision
 from maru.programme import scheduling_queries as programme_source
+from maru.programme.host_inputs import ProgrammeHostAvailabilityPeriod
 from maru.programme.queries import ProgrammeQueryUnavailableError
 from maru.scheduling import occurrence_commands, placement_commands
 from maru.scheduling.candidate_commands import (
@@ -82,10 +83,14 @@ class PlanningWorld:
 
 @pytest.fixture
 def world(monkeypatch):
+    return planning_world(monkeypatch)
+
+
+def planning_world(monkeypatch, *, starts_at=START, host_account=None):
     monkeypatch.setattr(
         effect_services, "require_effect_delivery_allowed", lambda **_kwargs: None
     )
-    scope = venues._scope(starts_on=date(2030, 8, 2))
+    scope = venues._scope(starts_on=starts_at.date())
     space = venues._selected_space(scope)
     venues._grant_space(scope.scheduler, scope, space, "venues.manage_space_schedule")
     set_edition_space_availability(
@@ -96,7 +101,7 @@ def world(monkeypatch):
         expected_version=1,
         intervals=(
             VenueAvailabilityInterval(
-                START, START + timedelta(hours=12), "Synthetic restriction"
+                starts_at, starts_at + timedelta(hours=12), "Synthetic restriction"
             ),
         ),
         reason="Synthetic room availability",
@@ -110,7 +115,7 @@ def world(monkeypatch):
     )
     host_world = (
         scope.scheduler,
-        AccountFactory(),
+        host_account or AccountFactory(),
         {
             "organization_id": scope.edition.organization_id,
             "edition_id": scope.edition.id,
@@ -120,7 +125,11 @@ def world(monkeypatch):
         },
     )
     host = hosting.share(
-        host_world, hosting.respond(host_world, hosting.invite(host_world))
+        host_world,
+        hosting.respond(host_world, hosting.invite(host_world)),
+        periods=(
+            ProgrammeHostAvailabilityPeriod(starts_at, starts_at + timedelta(hours=2)),
+        ),
     )
     monkeypatch.setattr(
         programme_source, "profile_allows_conflict_source", lambda *_args: True
@@ -160,7 +169,7 @@ def world(monkeypatch):
     day = create_scheduling_service_day(
         request,
         day=SchedulingServiceDayInput(
-            "Friday", SchedulingWindow(START, START + timedelta(hours=12)), 5
+            "Friday", SchedulingWindow(starts_at, starts_at + timedelta(hours=12)), 5
         ),
         expected_control_version=0,
         authorizer=policy,
@@ -178,10 +187,10 @@ def world(monkeypatch):
         authorizer=policy,
     )
     envelope = SchedulingEnvelope(
-        START,
-        START + timedelta(minutes=15),
-        START + timedelta(hours=1),
-        START + timedelta(hours=1, minutes=15),
+        starts_at,
+        starts_at + timedelta(minutes=15),
+        starts_at + timedelta(hours=1),
+        starts_at + timedelta(hours=1, minutes=15),
     )
     placement = SchedulingPlacementInput(
         occurrence.object_id,

@@ -403,6 +403,14 @@
       "test_planning_history_fences_both_owners_before_any_guard_is_removed"
     ]
   },
+  "tests/integration/test_scheduling_release_execution_migrations.py": {
+    "owners": ["audit", "authorization", "events", "identity", "programme", "scheduling", "venues", "workforce"],
+    "shared_baseline": false,
+    "tests": [
+      "test_native_evidence_fences_acl_reopening_before_any_migration_is_removed",
+      "test_unused_native_execution_boundary_really_reverses_and_recovers"
+    ]
+  },
   "tests/integration/test_scope_v2_readiness_command.py": {
     "owners": [
       "authorization",
