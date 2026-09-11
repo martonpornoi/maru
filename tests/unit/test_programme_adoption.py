@@ -14,6 +14,8 @@ from maru.events.adoption import (
 from maru.events.checks import current_adoption_catalog_snapshot
 from maru.programme.adoption import (
     PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER,
+    PROGRAMME_PLACEMENT_DECISION_ADAPTER,
+    PROGRAMME_RELEASE_SOURCE_ADAPTER,
 )
 
 PROGRAMME_CAPABILITIES = frozenset(
@@ -38,9 +40,20 @@ def test_programme_catalog_is_registered_but_every_current_profile_is_closed() -
     assert "programme" in snapshot.module_codes
     assert snapshot.capability_codes >= PROGRAMME_CAPABILITIES
     assert PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER in snapshot.adapter_codes
+    release_adapters = {
+        PROGRAMME_PLACEMENT_DECISION_ADAPTER,
+        PROGRAMME_RELEASE_SOURCE_ADAPTER,
+        "scheduling.release-candidate-source@1",
+        "scheduling.release-preflight@1",
+        "venues.accessibility-configuration-source@1",
+        "workforce.programme-release-source@1",
+    }
+    assert release_adapters <= snapshot.adapter_codes
 
     for profile_code, profile_version in ADOPTION_PROFILES:
         assert not profile_adopts_module(profile_code, profile_version, "programme")
+        for adapter in release_adapters:
+            assert not profile_allows_adapter(profile_code, profile_version, adapter)
         assert not profile_allows_adapter(
             profile_code,
             profile_version,
@@ -83,10 +96,15 @@ def test_programme_capabilities_are_exact_edition_and_layer_bounded() -> None:
         {"readiness_summary", "readiness_history"}
     )
     assert delivery_view.field_ceiling == frozenset(
-        {"delivery_information", "delivery_history"}
+        {"delivery_information", "delivery_history", "placement_decisions"}
     )
     assert discussion_view.field_ceiling == frozenset({"discussion_entries"})
-    assert public_view.field_ceiling == frozenset({"latest_public_rendition"})
+    assert public_view.field_ceiling == frozenset(
+        {
+            "latest_public_rendition",
+            "release_copy_consequences",
+        }
+    )
 
 
 def test_programme_event_is_registered_without_current_route() -> None:

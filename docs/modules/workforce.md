@@ -741,6 +741,34 @@ advisory possibility when no retained commitment exists, never permission to
 write. This reader does not create requirements, bind demands, reconcile work,
 publish a personal timetable or activate Programme Operations.
 
+The dormant `workforce.programme-release-source@1` adapter adds the independently
+ceilinged `programme_release_consequences` field under `workforce.view_shifts`.
+`programme_release_queries.load_programme_retained_work_source` retains the
+complete bounded requirement/binding history and every historical demand or
+predecessor identity, then reports current operative work. Retirement does not
+erase a demand; only its owner lifecycle can close it. Missing history members,
+foreign ownership, inconsistent heads and overflow are unavailable, not absence.
+`authorize_programme_release_source` permits a composing reader's final independent
+authority recheck without rereading private work.
+
+`programme_person_queries.load_programme_combined_person_source` accepts only
+exact candidate selection and independently resolves all selected Programme hosts
+and active claimed/confirmed bound workers. It holds shared parents, discovers
+the complete canonical person union, takes globally sorted Identity locks, and
+rechecks selected commitments before comparing duties. Its narrowly authorized
+global-by-account Workforce read preserves existing cross-edition/tenant overlap
+and retained post-work rest protection. It does not take a foreign edition lock
+or disclose foreign scope, duty ID, account ID, time, title or rationale. Only
+selected occurrences, edition-bounded conflict keys, closed consequences and an
+owner digest leave Workforce; Scheduling further minimizes the projection.
+
+Half-open intervals permit exact boundaries; host presence adds no invented
+universal rest requirement. Missing active-person evidence and completeness or
+comparison bounds cannot prove availability. Caller-only lock identities are not
+source dependencies, so independent authorized workflow roles share the same
+fingerprint. Sources are freshly authorized and audited before disclosure; no
+calendar copy, activity analytics, work mutation or publication is introduced.
+
 An interval recheck failure is a dedicated non-disclosing conflict. Browser
 recovery stays beside the approval action; the strict API returns stable `409`
 machine-readable recovery. Neither surface reveals which controller failed,

@@ -108,6 +108,8 @@ class ProgrammeCommandOperation(StrEnum):
     STAFFING_CREATE = "staffing_create"
     STAFFING_REVISE = "staffing_revise"
     STAFFING_RETIRE = "staffing_retire"
+    ACCESSIBILITY_FIT_RECORD = "accessibility_fit_record"
+    STAFFING_ABSENCE_RECORD = "staffing_absence_record"
     WORKING_REVISE = "working_revise"
     DELIVERY_REVISE = "delivery_revise"
     DISCUSSION_APPEND = "discussion_append"

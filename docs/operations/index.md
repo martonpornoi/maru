@@ -83,6 +83,7 @@ programme-conversion-migration-and-recovery
 programme-host-migration-and-recovery
 programme-staffing-migration-and-recovery
 scheduling-migration-and-recovery
+programme-release-sources-migration-and-recovery
 effects-worker-runbook
 github-pages-publication
 public-repository-readiness

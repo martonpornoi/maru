@@ -45,10 +45,13 @@ from maru.registration.adoption import (
 from maru.scheduling.adoption import (
     SCHEDULING_ADOPTION_ADAPTERS,
     SCHEDULING_ADOPTION_CONFLICT_SOURCES,
+    SCHEDULING_RELEASE_PREFLIGHT_ADAPTER,
+    SCHEDULING_RELEASE_SOURCE_ADAPTER,
     SCHEDULING_TIME_CONFLICT_SOURCE,
     SCHEDULING_VENUE_RESERVATION_ADAPTER,
 )
 from maru.venues.adoption import (
+    VENUES_ACCESSIBILITY_SOURCE_ADAPTER,
     VENUES_ADOPTION_ADAPTERS,
     VENUES_ADOPTION_CONFLICT_SOURCES,
     VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE,
@@ -63,6 +66,7 @@ from maru.workforce.adoption import (
     ASSIGNMENT_PARTICIPATION_REQUIRED_ADAPTER,
     WORKFORCE_ADOPTION_ADAPTERS,
     WORKFORCE_ADOPTION_CONFLICT_SOURCES,
+    WORKFORCE_PROGRAMME_RELEASE_SOURCE_ADAPTER,
     WORKFORCE_SELF_ADAPTER,
 )
 
@@ -125,18 +129,24 @@ def test_owner_adapter_registries_are_complete_and_nonduplicating() -> None:
     assert set(VENUES_ADOPTION_ADAPTERS) == {
         VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE,
         VENUES_SCHEDULING_RESERVATION_ADAPTER,
+        VENUES_ACCESSIBILITY_SOURCE_ADAPTER,
     }
-    assert set(SCHEDULING_ADOPTION_ADAPTERS) == {SCHEDULING_VENUE_RESERVATION_ADAPTER}
+    assert set(SCHEDULING_ADOPTION_ADAPTERS) == {
+        SCHEDULING_VENUE_RESERVATION_ADAPTER,
+        SCHEDULING_RELEASE_SOURCE_ADAPTER,
+        SCHEDULING_RELEASE_PREFLIGHT_ADAPTER,
+    }
     assert set(WORKFORCE_ADOPTION_ADAPTERS) == {
         ASSIGNMENT_PARTICIPATION_REQUIRED_ADAPTER,
         ASSIGNMENT_PARTICIPATION_EXCLUDED_ADAPTER,
         WORKFORCE_SELF_ADAPTER,
         "workforce.programme-coverage@1",
         "workforce.programme-staffing@1",
+        WORKFORCE_PROGRAMME_RELEASE_SOURCE_ADAPTER,
     }
 
     all_codes = [code for registry in _OWNER_ADAPTER_REGISTRIES for code in registry]
-    assert len(all_codes) == 33
+    assert len(all_codes) == 37
     assert len(set(all_codes)) == len(all_codes)
     assert all(
         code == descriptor.code

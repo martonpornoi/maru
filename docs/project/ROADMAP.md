@@ -134,9 +134,11 @@ post-edition retention execution, and production recovery remain the next
 trust-building outcomes rather than implied capabilities.
 
 The release outcome is now split under #48: #91 defines and tests complete
-exact-snapshot eligibility under ADR 0094; the next child supplies authenticated
-owner collection, independent approval, atomic publication and invalidation;
-the following child supplies shared release-derived outputs and change impact.
+exact-snapshot eligibility under ADR 0094 and is delivered through PR #93.
+Child #94 implements authenticated owner collection and missing fit/no-staffing
+evidence under ADR 0095. Its successor must persist independent approval and
+release-warning evidence with atomic publication and invalidation; the following
+child supplies shared release-derived outputs and change impact.
 An eligible rule result is not approval, publication or profile activation.
 
 ADR 0081 accepts `programme_operations@1` as an exact target contract. Its

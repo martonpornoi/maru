@@ -367,6 +367,53 @@ Applications-owned `programme_item` target kind, call activation, proposal
 seal, collaborator acknowledgement, proposal submission, or withdrawal cannot
 create a `ProgrammeItemSourceBinding` and is not accepted-item evidence.
 
+## Exact release-source decisions
+
+[ADR 0095](../architecture/decisions/0095-trusted-programme-release-sources.md)
+adds the dormant `programme.placement-decisions@1` and
+`programme.release-source@1` adapters. `placement_queries` supplies an exact
+authorized preview and separately ceilinged fixed-history pages;
+`placement_commands.record_programme_placement_decision` records accountable
+`accessibility_fit` or `staffing_not_required` decisions against that preview.
+Typed selection and decision intent retain item, occurrence, candidate/revision,
+placement and exact optimistic versions. The source digest is recomputed before
+write; it is not caller-supplied proof of success or permission.
+
+Fit requires explicit delivery revision and independently authorized complete
+Venue access/configuration facts. No algorithm infers suitability from prose.
+No-staffing requires complete absence of active requirements and operative work
+across all retained Workforce binding history. The owner explicitly records
+satisfied, blocked or withdrawn with reason. Exact immutable placement and
+matching owner sources permit reuse in an identical copied candidate, but the
+original candidate remains retained provenance, not reusable disclosure authority.
+
+Each placement/kind has its own contiguous stream: 1,000 ordinary decisions and
+one final withdrawal slot. Receipt, audit, event and outbox are atomic, with
+separate `programme.accessibility_fit` / `programme.staffing_absence` event
+aggregates keyed by placement and sequence. The item version does not advance.
+These operational decisions are allowed in Draft/Preparing/Ready/Live without
+reopening private content editing. Withdrawal may reference independently
+authorized historical candidate evidence after draft movement; its candidate
+version is that retained manifest's original sequence, while the item precondition
+is current. Retry requires current authority and returns the retained result.
+
+Previews require `placement_decisions` plus `delivery_information` or
+`staffing_requirements`; fixed-ceiling history instead requires `delivery_history`
+or `staffing_history`. Rationale and actor do not enter release preflight results.
+`release_queries` exposes complete seven-concern readiness and minimized current
+copy consequences under independently admitted readiness/copy/person-reference
+fields. Missing concern membership is unavailable. Public copy must reference the
+current working revision and have an active verified reviewer distinct from every
+retained working-copy author. Old self-curated copy stays historical; deactivating
+an author does not erase authorship. No private text becomes a public fallback.
+
+`collect_programme_release_person_references` supplies opaque ephemeral references
+for the complete lock closure, not a personnel directory or caller-selectable
+success flag. It includes current selected-item hosts and latest copy reviewers;
+the compositor must combine Workforce people before taking any person locks.
+The [source recovery guide](../operations/programme-release-sources-migration-and-recovery.md)
+documents schema, read-only runtime containment and populated downgrade fences.
+
 ## Database integrity and recovery
 
 Programme migrations are additive and seed no control, item, requirement,
@@ -413,8 +460,9 @@ Dedicated staged review, decisions and explicit accepted conversion are also
 implemented but dormant. Conversion creates private planning state only;
 Programme-owned host/co-host invitation, confirmation and deliberately shared
 per-item availability now have a separate dormant owner boundary.
-Scheduling candidates, conflicts and explicit Venue reservations now have a
-separate dormant owner kernel. Interactive timetable editing, staffing, release,
+Scheduling candidates, conflicts, explicit Venue reservations, interactive
+editing, staffing and complete release preflight now have dormant owner kernels.
+Persisted independent approval, atomic release,
 public and personal timetables, on-site continuity, profile activation, and
 integrated browser rehearsal remain later children of the Programme Operations
 umbrella.

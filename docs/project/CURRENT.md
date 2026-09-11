@@ -73,7 +73,7 @@ That optimization pilot is closed; the later separately approved #83 CI task is
 described below. No Docker cleanup is authorized. See the
 [pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
 
-## Current bounded outcome: complete Programme release eligibility (#91)
+## Current bounded outcome: trusted Programme release sources (#94)
 
 Issue #77 was delivered through PR #78, squash
 `6279cb50d287d70e33e2bebabda3e54564668475`. Issue #79 was delivered through
@@ -219,18 +219,49 @@ and CodeQL passed before exact-head guarded merge. The
 retains provenance, the exception, browser limitations and cleanup evidence.
 Do not repeat the completed tests or browser checks.
 
-Active branch: `codex/programme-release-planning`, starting from the protected
-browser-evidence merge. Its initial post-delivery handoff travels with #91.
-The release outcome is split into complete eligibility rules; protected owner
-collection/independent approval/atomic publication/invalidation; then shared
-release-derived outputs and change impact. #91 adds ADR 0094, SCH-012 detail and
-a pure rule matrix, not an authenticated collector or publication command.
-The focused regression run passed 265 tests in 1.64s and measured 100% statement/
-branch coverage for the rule module; its 137 cases passed again after the
-content-free exception refinement. Strict type and documentation checks passed.
-See the [eligibility checkpoint](../checkpoints/2026-09-11-programme-release-eligibility.md).
-Exact clean-commit certification and protected delivery remain pending; no
-release or profile is activated.
+Issue [#91](https://github.com/martonpornoi/maru/issues/91) is closed through
+[PR #93](https://github.com/martonpornoi/maru/pull/93), protected squash
+`60dc9aeb15e306e3d64abd0e76c5a455540402f7`. Its tree equals certified head
+`a6a9e6b28f985aa0172a0c077732c842e4301717`; clean local main was synchronized.
+Full local certification passed 7,947 Python tests, 64 frontend tests, all ten
+gates and 90.40% combined coverage in 30m01s. Exact-head hosted acceptance,
+PR gate and CodeQL passed; current PostgreSQL jobs took 7m22s–21m46s and the
+workflow took 24m17s. No split-run exception or threshold change was needed.
+The [delivery checkpoint](../checkpoints/2026-09-11-release-eligibility-protected-delivery.md)
+retains exact evidence. Do not rerun that completed certification.
+
+Active branch: `codex/programme-release-sources`, from the protected #93 merge.
+Native child [#94](https://github.com/martonpornoi/maru/issues/94) now owns the
+complete authenticated owner-source prerequisite, including explicit no-staffing
+and exact physical accessibility-fit evidence and combined person/rest checks.
+ADR 0094's ten-category pure policy grants no authority. Existing planning and
+coverage queries do not establish these complete release facts. The local change
+now implements the complete ten-category preflight, exact candidate/Venue inputs,
+retained staffing lineage, independently versioned fit/no-staffing decisions and
+history, current readiness/independent-copy evidence and combined global person/
+rest checks. Authorized planner, approver and publisher fingerprints agree;
+caller-only locks and trace/audit identities are not dependencies. Mandatory
+owner/field denial or audit failure withholds disclosure. Venue sources are
+re-read before disclosure without inverted physical locking. No planning-warning
+acknowledgement is accepted as release evidence.
+
+Iterative focused checks passed for source/field isolation, real cross-tenant
+overlap/rest, actual confirmed/locked coverage, retired operative work, optimistic
+decision races, immutable reciprocal evidence, Ready/Live operational decisions
+without content reopening, and real unused reversal/populated fix-forward fences.
+Strict mypy, lint, documentation validation and corrected docstring checks passed.
+All 206 new focused cases passed; the wider run then caught an outdated catalog
+expectation. Its corrected catalog/contract/shard-inventory group passed 41 cases,
+and all six new-relation runtime privilege cases passed. The first Sphinx build
+caught four ambiguous type references, now corrected; clean warning-fatal Sphinx,
+exact clean-commit certification, protected PR acceptance and merge remain pending.
+The [implementation checkpoint](../checkpoints/2026-09-11-trusted-programme-release-sources.md)
+retains focused evidence and corrections without claiming a successful failed run.
+Runtime SELECT-only and explicit historical inventory changes require the ordinary
+exhaustive acceptance scope; no history, gate or coverage threshold is waived.
+Persisted independent approval and atomic publication/invalidation follow it,
+then shared release-derived outputs/change impact. No release or profile is
+activated, and #92's genuine human acceptance remains pending rather than waived.
 
 The maintainer authorized unattended sequential delivery, without routine PR or
 merge confirmation. Genuine human checks become explicit #48 follow-up subtasks,
@@ -240,8 +271,11 @@ authorized work may proceed around such a dependency. After #48, continue with
 #42 and the director introduction/pilot package, then the agreed guidance,
 accessibility, continuity and succession priorities. No new schedule, production
 deployment, personal data, repository-policy bypass or general cleanup is authorized.
-All task-owned fixture/certification containers and watchers are closed; no
-schedule is active. Preserve unrelated worktrees, stashes, data and containers.
+Previous fixture/certification containers and watchers are closed; no schedule is
+active. The label-verified `maru-issue94-postgres` focused-test container and its
+anonymous synthetic volume were removed before certification; unrelated Docker
+resources were not touched. Certification manages its own eight isolated services.
+Preserve unrelated worktrees, stashes, data and containers.
 
 ## What can be evaluated today
 
@@ -269,10 +303,10 @@ schedule is active. Preserve unrelated worktrees, stashes, data and containers.
 
 ## Smallest sensible next actions
 
-1. Finish #91 exact-head certification and protected delivery; carry the #87
-   post-delivery checkpoint without repeating its completed acceptance.
-2. Deliver authenticated release source collection, independent approval,
-   atomic publication/invalidation, then shared outputs/change impact.
+1. Deliver #94's complete trusted release-source collection and missing owner
+   evidence; preserve the existing independent scope and field boundaries.
+2. Deliver persisted independent approval, atomic publication/invalidation,
+   then shared outputs/change impact.
 3. Continue on-site continuity, guided setup/surfaces and integrated
    Programme-only acceptance. Keep #48 open and preserve all activation gates.
 

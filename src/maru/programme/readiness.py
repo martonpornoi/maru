@@ -175,7 +175,7 @@ def _staffing_migration_contract_is_current() -> bool:
 _STAFFING_TRIGGERS, _STAFFING_FUNCTIONS = parse_database_integrity_sql_contracts(
     _STAFFING_MIGRATION.FORWARD_SQL
 )
-PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
+_STAFFING_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
     _HOST_INTEGRITY_CONTRACT,
     source_migration=("programme", "0011_staffing_integrity"),
     source_migration_module="maru.programme.migrations.0011_staffing_integrity",
@@ -185,6 +185,63 @@ PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
     source_contract_current=(
         _HOST_INTEGRITY_CONTRACT.source_contract_current
         and _staffing_migration_contract_is_current()
+    ),
+)
+
+
+_PLACEMENT_DECISION_MIGRATION = import_module(
+    "maru.programme.migrations.0014_placement_decision_integrity"
+)
+_PLACEMENT_DECISION_FENCE = import_module(
+    "maru.programme.migrations.0015_placement_decision_downgrade_fence"
+)
+
+
+def _placement_decision_migration_contract_is_current() -> bool:
+    operations = tuple(_PLACEMENT_DECISION_MIGRATION.Migration.operations)
+    fences = tuple(_PLACEMENT_DECISION_FENCE.Migration.operations)
+    reverse = _PLACEMENT_DECISION_FENCE.refuse_used_placement_decision_downgrade
+    source = inspect.getsource(reverse).replace("\r\n", "\n")
+    schema = import_module("maru.programme.migrations.0013_placement_decisions")
+    schema_fence = schema.Migration.operations[-1]
+    return (
+        len(operations) == len(fences) == 1
+        and isinstance(operations[0], migrations.RunSQL)
+        and operations[0].sql == _PLACEMENT_DECISION_MIGRATION.FORWARD_SQL
+        and operations[0].reverse_sql == _PLACEMENT_DECISION_MIGRATION.REVERSE_SQL
+        and tuple(_PLACEMENT_DECISION_MIGRATION.Migration.dependencies)
+        == (
+            ("programme", "0013_placement_decisions"),
+            ("workforce", "0021_programme_binding_downgrade_fence"),
+        )
+        and isinstance(schema_fence, migrations.RunSQL)
+        and schema_fence.sql == migrations.RunSQL.noop
+        and isinstance(schema_fence.reverse_sql, str)
+        and schema_fence.reverse_sql.strip()
+        == _PLACEMENT_DECISION_MIGRATION.UNUSED_PREFLIGHT.strip()
+        and isinstance(fences[0], migrations.RunPython)
+        and fences[0].code is migrations.RunPython.noop
+        and fences[0].reverse_code is reverse
+        and tuple(_PLACEMENT_DECISION_FENCE.Migration.dependencies)
+        == (("programme", "0014_placement_decision_integrity"),)
+        and hashlib.sha256(source.encode()).hexdigest()
+        == "b15d542a1bfdfe21a5a012cf8fec508d41f18fc259ec0776ca992fff31fd6003"
+    )
+
+
+_DECISION_TRIGGERS, _DECISION_FUNCTIONS = parse_database_integrity_sql_contracts(
+    _PLACEMENT_DECISION_MIGRATION.FORWARD_SQL
+)
+PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
+    _STAFFING_INTEGRITY_CONTRACT,
+    source_migration=("programme", "0014_placement_decision_integrity"),
+    source_migration_module="maru.programme.migrations.0014_placement_decision_integrity",
+    terminal_migration=("programme", "0015_placement_decision_downgrade_fence"),
+    triggers={**_STAFFING_INTEGRITY_CONTRACT.triggers, **_DECISION_TRIGGERS},
+    functions={**_STAFFING_INTEGRITY_CONTRACT.functions, **_DECISION_FUNCTIONS},
+    source_contract_current=(
+        _STAFFING_INTEGRITY_CONTRACT.source_contract_current
+        and _placement_decision_migration_contract_is_current()
     ),
 )
 
@@ -250,6 +307,7 @@ PROGRAMME_RELATION_SEMANTICS: Final[
     "programme_programmehostavailabilitywindow": ("r", "p", False, False, False, "d"),
     "programme_programmestaffingrequirement": ("r", "p", False, False, False, "d"),
     "programme_programmestaffingrevision": ("r", "p", False, False, False, "d"),
+    "programme_programmeplacementdecision": ("r", "p", False, False, False, "d"),
     "programme_programmeitem": ("r", "p", False, False, False, "d"),
     "programme_programmeitemsourcebinding": (
         "r",
@@ -307,6 +365,189 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # digest from pg_get_constraintdef(..., TRUE) or pg_get_indexdef(...).
 # An incomplete mapping deliberately keeps Programme readiness blocked.
 PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_placement_decision_bounds"
+    ): (
+        "aff4d15db7054ff2d7f1358b0edf5c632309b753830e885014a5b2417cd95540",
+        "73f729ed0b6c33c431c8f98a925af0e0b4e07ae1536310382bf960610fd826aa",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_placement_decision_evidence"
+    ): (
+        "23b6ab289ea64a87cd09b9792c69d9d275788a6842b6ae4bd3cd38ad79c114ba",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_placement_decision_seq_uq"
+    ): (
+        "75cfdbfd12e9a05616972eb4545d123f072e6f1ac1772d0fc74b2220fe608213",
+        "794aef80d61bd3de5f365d0365942519afd81aca309c399472007a668a1703dd",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_placement_decision_sources"
+    ): (
+        "aff4d15db7054ff2d7f1358b0edf5c632309b753830e885014a5b2417cd95540",
+        "e3fea4aab27106e37d956c9184b1889863dd864f1721950d88988a9488579b96",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmep_actor_id_0aa379a3_fk_identity_"
+    ): (
+        "307abc006fad554d0a7ed7813e208be180cc24c0ab913f60d72de968d6b69e2c",
+        "4ed87fd0d94daa63ad880b35b54252ad3f58c69aabfdc3065c99dda56093b807",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmep_candidate_revision_i_e7c4c533_fk_schedulin"
+    ): (
+        "307abc006fad554d0a7ed7813e208be180cc24c0ab913f60d72de968d6b69e2c",
+        "5b3887c153fe7155cd197e80957e6f4e124af1889337efa7197dce74704cfe2c",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmep_delivery_revision_id_ac17e288_fk_programme"
+    ): (
+        "307abc006fad554d0a7ed7813e208be180cc24c0ab913f60d72de968d6b69e2c",
+        "f053b51f32258f1af2b16084ac2845f37858512a2b16e83af0d561436fadbcd3",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmep_edition_id_3ced36da_fk_events_ev"
+    ): (
+        "307abc006fad554d0a7ed7813e208be180cc24c0ab913f60d72de968d6b69e2c",
+        "03a7996ab8afb527585471eb2cbfd7058942319058cc05e3f26732b9ade4e0cc",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmep_item_id_2d59737f_fk_programme"
+    ): (
+        "307abc006fad554d0a7ed7813e208be180cc24c0ab913f60d72de968d6b69e2c",
+        "29bc9e574fb186040bcedd470867b5969bfc9cfe526c4fac8fc4a66bc20d7c84",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmep_occurrence_id_8e223fe3_fk_schedulin"
+    ): (
+        "307abc006fad554d0a7ed7813e208be180cc24c0ab913f60d72de968d6b69e2c",
+        "1f83f28297660944358326a5e1f402dcf15a53d73511e0f1cd639c8b8b9cf32c",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmep_organization_id_7e2cd84a_fk_organizat"
+    ): (
+        "307abc006fad554d0a7ed7813e208be180cc24c0ab913f60d72de968d6b69e2c",
+        "07f454abd16b9f770cd0320efd71f154b0187daf9dbe65e3e6e57121eacd062f",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmep_placement_id_13f862b5_fk_schedulin"
+    ): (
+        "307abc006fad554d0a7ed7813e208be180cc24c0ab913f60d72de968d6b69e2c",
+        "2ec2c0fec428c8eff47a9a24adb5b22946acac64a1723653a8d55ffcb4e2bbf1",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecis_space_selection_version_check"
+    ): (
+        "aff4d15db7054ff2d7f1358b0edf5c632309b753830e885014a5b2417cd95540",
+        "aa70448e8bdcbe070056bdb63c3d0d1b06fe9bcbdf63245d6e1f8d41fddd0971",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_item_version_check"
+    ): (
+        "aff4d15db7054ff2d7f1358b0edf5c632309b753830e885014a5b2417cd95540",
+        "7b6d65d5670d3436adcbd8cae1a19da73177498534211163b7ab24ccb9fc8a50",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_pkey"
+    ): (
+        "ea01dcab547178330f2b4a8c96b94c54709e00db8545b2f4608ab0e4a52ae1ef",
+        "8c8464f42472e42ee190fc91ca8db79b5351d3a4609040516578d229c56f6fa5",
+    ),
+    (
+        "constraint:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_sequence_check"
+    ): (
+        "aff4d15db7054ff2d7f1358b0edf5c632309b753830e885014a5b2417cd95540",
+        "8f426ab72466a993c9c30383cb064c0d9e1286aed4585cb08cb0ccdec86be0aa",
+    ),
+    "index:programme_programmeplacementdecision:prg_placement_decision_scope": (
+        "69fc319d6db1bbb74bf9899e12c870c1cc8b0d89d1ece9a201b5cf4a5b5c2e73",
+        "d06242602178e288ab5cc5405bb94cdc3b52a6feef101a66a61d46f3c107c439",
+    ),
+    "index:programme_programmeplacementdecision:programme_placement_decision_seq_uq": (
+        "ac7233edddade65cfd7df500de6b16028a539b15eb06acc6f36193af70c526fb",
+        "38eb697ae73b85efde4e2fc1effa16cf227fe92bdb743c8bba9fbcd42fdf4f9f",
+    ),
+    (
+        "index:programme_programmeplacementdecision:"
+        "programme_programmeplaceme_candidate_revision_id_e7c4c533"
+    ): (
+        "fdccb687c4ef104bb26bbd2e415ddc35e5e858848e148a68a2d7c18ef51217bf",
+        "173de75b8340a7abd9f73fcd3e3265f999066bbdfe9263e3ea116e75fd7ea969",
+    ),
+    (
+        "index:programme_programmeplacementdecision:"
+        "programme_programmeplaceme_delivery_revision_id_ac17e288"
+    ): (
+        "fdccb687c4ef104bb26bbd2e415ddc35e5e858848e148a68a2d7c18ef51217bf",
+        "6d7a8377ab8e3720866186f906919e2d7a4d56c40bc7f92497dac03d38c0a534",
+    ),
+    (
+        "index:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_actor_id_0aa379a3"
+    ): (
+        "fdccb687c4ef104bb26bbd2e415ddc35e5e858848e148a68a2d7c18ef51217bf",
+        "debf2d71458d51891f3d4007da2f457067e6f346d4bbbf3ce090d619f4a57608",
+    ),
+    (
+        "index:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_edition_id_3ced36da"
+    ): (
+        "fdccb687c4ef104bb26bbd2e415ddc35e5e858848e148a68a2d7c18ef51217bf",
+        "62a300da863fb71b9bd9d7c483bfb4ea496644abcfd9715f46941f25803cf5f9",
+    ),
+    (
+        "index:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_item_id_2d59737f"
+    ): (
+        "fdccb687c4ef104bb26bbd2e415ddc35e5e858848e148a68a2d7c18ef51217bf",
+        "3590a1c7075658dd818249d8236a1d74542cf86fdabce552c93afb512412794a",
+    ),
+    (
+        "index:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_occurrence_id_8e223fe3"
+    ): (
+        "fdccb687c4ef104bb26bbd2e415ddc35e5e858848e148a68a2d7c18ef51217bf",
+        "4e856be4bb8ec925534362ad28e598330ec0784712da9e4fd79faf452bf9310a",
+    ),
+    (
+        "index:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_organization_id_7e2cd84a"
+    ): (
+        "fdccb687c4ef104bb26bbd2e415ddc35e5e858848e148a68a2d7c18ef51217bf",
+        "b69208909fc24d89573a727f1477ed8a4e8845cfbd2d23d40a39b89267117366",
+    ),
+    (
+        "index:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_pkey"
+    ): (
+        "16bff560dea292cecdd5fb1b28cc5b2150857ec9be9756da397ee423a0ade9d9",
+        "8907c4ba4eaca6601593edced36ebce686f8d83322ecfb6bc81ba78a4fbe917e",
+    ),
+    (
+        "index:programme_programmeplacementdecision:"
+        "programme_programmeplacementdecision_placement_id_13f862b5"
+    ): (
+        "fdccb687c4ef104bb26bbd2e415ddc35e5e858848e148a68a2d7c18ef51217bf",
+        "6502451a39b8db59f18525c03c89da2bf99943b42febcebf02975b3cf381cad9",
+    ),
     (
         "constraint:programme_programmestaffingrequirement:"
         "programme_programmes_edition_id_3b76c76c_fk_events_ev"
@@ -1163,7 +1404,7 @@ PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
     ),
     "constraint:programme_programmecommandreceipt:programme_command_operation_closed": (
         "69d64ca9ff30b925a62e5ceda594c1aba7aebf94d273e697efce3721c42b6513",
-        "aa96039cefbfc326195765d17ec2244785cbf1b7a9653fad4315f1e3ca3d80ed",
+        "b10f4233dca6afe8dbe561ad10e954427b9c4c661991868e41272594379e625f",
     ),
     "constraint:programme_programmecommandreceipt:programme_command_retry_uq": (
         "6358fdf321257554281d71cf9659bff2557f29bff35c778c4126a1ec8b077945",
@@ -2037,7 +2278,7 @@ PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
     ),
     "index:programme_programmecommandreceipt:programme_command_item_version_uq": (
         "f6cd0da22b210bce57f842c047259cd69149838bbd0dfcd86c48309902823b0e",
-        "005e5455d05ed36799e001fdb9828ce13cd25d6921131d07317f9148b8a99f3f",
+        "12dc08debe816506dd159f8b12e39b7d012550a27a6203290ce019957ddc48de",
     ),
     "index:programme_programmecommandreceipt:programme_command_retry_uq": (
         "c808a3e796941af76de9d4dbc309b140526c1037d45c2e85fcfacd27653886e6",

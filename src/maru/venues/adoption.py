@@ -10,10 +10,24 @@ from maru.events.adoption_contracts import (
 VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE = "venues.attendee-schedule@1"
 VENUES_SCHEDULING_CONFLICT_SOURCE = "venues.physical-scheduling-dependencies@1"
 VENUES_SCHEDULING_RESERVATION_ADAPTER = "venues.scheduling-reservation@1"
+VENUES_ACCESSIBILITY_SOURCE_ADAPTER = "venues.accessibility-configuration-source@1"
 
 VENUES_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
     owner_module="venues",
     descriptors=(
+        AdoptionAdapterDescriptor(
+            code=VENUES_ACCESSIBILITY_SOURCE_ADAPTER,
+            owner_module="venues",
+            kind="exact-accessibility-configuration-source",
+            result_semantics=(
+                "Discloses only independently authorized current selected "
+                "configuration and member access facts for an explicit fit decision."
+            ),
+            failure_semantics=(
+                "Unpinned, unauthorized, incomplete or retired physical sources "
+                "provide no fit evidence or inferred accessibility assessment."
+            ),
+        ),
         AdoptionAdapterDescriptor(
             code=VENUES_SCHEDULING_RESERVATION_ADAPTER,
             owner_module="venues",
@@ -62,6 +76,7 @@ VENUES_ADOPTION_CONFLICT_SOURCES = build_adoption_conflict_source_registry(
 
 
 __all__ = [
+    "VENUES_ACCESSIBILITY_SOURCE_ADAPTER",
     "VENUES_ADOPTION_ADAPTERS",
     "VENUES_ADOPTION_CONFLICT_SOURCES",
     "VENUES_ATTENDEE_SCHEDULE_ADAPTER_CODE",
