@@ -965,7 +965,7 @@ def test_page9_trigger_helpers_do_not_expand_runtime_execute_closure() -> None:
     _provision_runtime_role(role_name)
 
     assert not set(_PAGE9_TRIGGER_HELPER_IDENTITIES) & set(
-        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4
     )
     with connection.cursor() as cursor:
         cursor.execute(
@@ -1224,12 +1224,22 @@ def test_unsafe_database_privileges_are_rejected(privilege: str) -> None:
     assert not result.target_role_is_safe
 
 
-def test_public_only_function_execute_is_rejected() -> None:
+@pytest.mark.parametrize(
+    ("allowlist", "expected_available"),
+    [
+        (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3, False),
+        (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4, True),
+    ],
+    ids=["obsolete-v3", "current-v4"],
+)
+def test_public_only_function_execute_is_rejected(
+    allowlist: tuple[str, ...], expected_available: bool
+) -> None:
     _prepare_least_privilege_boundary()
     role_name = _create_role()
     _provision_runtime_role(role_name, grant_function_allowlist=False)
     with connection.cursor() as cursor:
-        for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3:
+        for identity in allowlist:
             cursor.execute(
                 _function_privilege_statement(
                     action="GRANT",
@@ -1240,16 +1250,20 @@ def test_public_only_function_execute_is_rejected() -> None:
 
     result = probe_runtime_database_role_safety(role_name=role_name)
 
-    assert result.required_function_execute_available
+    assert result.required_function_execute_available is expected_available
     assert not result.function_execute_boundary_safe
     assert not result.target_role_is_safe
 
 
-def test_every_required_function_needs_explicit_effective_execute() -> None:
+@pytest.mark.parametrize(
+    "denied_identity", RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4
+)
+def test_every_required_function_needs_explicit_effective_execute(
+    denied_identity: str,
+) -> None:
     _prepare_least_privilege_boundary()
     role_name = _create_role()
     _provision_runtime_role(role_name)
-    denied_identity = RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3[-1]
     with connection.cursor() as cursor:
         cursor.execute(
             _function_privilege_statement(
@@ -2085,7 +2099,7 @@ def test_genuine_runtime_login_is_safe_and_persistent_replica_setting_is_not() -
                     actor=structure_actor,
                 )
                 readiness_response = APIClient().get("/health/ready")
-                assert readiness_response.status_code == 200
+                assert readiness_response.status_code == 200, readiness_response.json()
                 assert readiness_response.json() == {
                     "status": "ok",
                     "dependencies": {

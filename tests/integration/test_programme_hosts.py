@@ -15,7 +15,7 @@ from django.db.migrations.recorder import MigrationRecorder
 from psycopg import sql
 
 import maru.effects.services as effect_services
-from maru.audit.models import AuditEvent
+from maru.audit.models import AuditEvent, AuditNativeMutationWitness
 from maru.core.database_integrity_readiness import inspect_database_integrity_catalog
 from maru.events.models import EventEdition
 from maru.events.services import transition_edition
@@ -61,7 +61,7 @@ from maru.programme.queries import (
     load_programme_readiness,
 )
 from maru.programme.readiness import (
-    _HOST_INTEGRITY_CONTRACT,
+    PROGRAMME_INTEGRITY_CONTRACT,
     programme_database_integrity_is_ready,
 )
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
@@ -791,37 +791,50 @@ def test_empty_host_schema_reverses_and_reapplies_exactly():
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT to_regclass('public.programme_programmehostrelationship'), "
-            "to_regprocedure('public.maru_guard_programme_host()')"
+            "to_regprocedure('public.maru_guard_programme_host()'), "
+            "to_regclass('public.programme_programmeplacementdecision'), "
+            "to_regprocedure('public.maru_guard_programme_placement_decision()'), "
+            "to_regclass('public.programme_programmestaffingrequirement'), "
+            "to_regprocedure('public.maru_guard_programme_staffing()'), "
+            "to_regclass('public.workforce_programmeshiftbinding'), "
+            "to_regprocedure('public.maru_guard_workforce_programme_binding()')"
         )
-        assert cursor.fetchone() == (None, None)
+        assert cursor.fetchone() == (None,) * 8
     executor = MigrationExecutor(connection)
     executor.migrate(executor.loader.graph.leaf_nodes())
     assert programme_database_integrity_is_ready()
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT to_regclass('public.workforce_programmeshiftbinding') IS NOT NULL, "
+            "to_regprocedure('public.maru_guard_workforce_programme_binding()') "
+            "IS NOT NULL"
+        )
+        assert cursor.fetchone() == (True, True)
 
 
 @pytest.mark.usefixtures("restores_current_migration_graph")
 def test_retained_host_history_fences_downgrade_before_any_guard_removal(world):
     first = invite(world)
-    with pytest.raises(RuntimeError, match="Cannot remove Programme host integrity"):
+    before = MigrationRecorder(connection).applied_migrations()
+    host_fence = import_module("maru.programme.migrations.0009_host_downgrade_fence")
+    with (
+        pytest.raises(RuntimeError, match="Cannot remove Programme host integrity"),
+        connection.schema_editor() as editor,
+    ):
+        host_fence.refuse_used_host_downgrade(apps, editor)
+    assert AuditNativeMutationWitness.objects.exists()
+    with pytest.raises(RuntimeError, match="retain its execution boundary"):
         MigrationExecutor(connection).migrate(
             [("programme", "0007_host_relationships")]
         )
-    assert ("programme", "0009_host_downgrade_fence") in MigrationRecorder(
-        connection
-    ).applied_migrations()
+    assert MigrationRecorder(connection).applied_migrations() == before
     assert ProgrammeHostRelationship.objects.get(id=first.host_id).version == 1
-    # Unused staffing successors may reverse before this populated host fence.
-    # Prove the exact retained owner guards, not current-schema readiness.
-    guards = inspect_database_integrity_catalog(_HOST_INTEGRITY_CONTRACT)
-    assert guards.source_contract_current
-    assert guards.required_migrations_applied
-    assert not guards.relations_installed
-    assert guards.relation_ownership_consistent
-    assert guards.trigger_contract_current
-    assert guards.function_contract_current
+    # Native evidence now fences the entire extension before any supposedly
+    # unused successor can reverse. Retain the complete current owner contract.
+    guards = inspect_database_integrity_catalog(PROGRAMME_INTEGRITY_CONTRACT)
+    assert guards.ready
     assert guards.function_execute_owner_only
-    assert guards.function_ownership_current
-    assert not programme_database_integrity_is_ready()
+    assert programme_database_integrity_is_ready()
     executor = MigrationExecutor(connection)
     executor.migrate(executor.loader.graph.leaf_nodes())
     assert ProgrammeHostRelationship.objects.get(id=first.host_id).version == 1

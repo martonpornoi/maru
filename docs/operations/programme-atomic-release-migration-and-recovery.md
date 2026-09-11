@@ -37,6 +37,15 @@ native function definitions, supporting trigger attachments/arguments, owner,
 search path and ACLs. A migration record or matching function name alone proves
 nothing. Never recalculate accepted hashes from an unexplained live database.
 
+Derive a new relation's reviewed baseline from a clean, ordinarily migrated
+disposable database. A reused development database can retain PostgreSQL's
+physical dropped-column slots after reverse/reapply experiments, even when its
+visible column names and types match. The #96 certification repair identified
+exactly this difference in the release-dependency key: two retired slots had
+entered its initial pin. The corrected pin matches clean forward migrations;
+negative tests still reject both one- and two-slot variants. This is not
+permission to normalize away physical drift or recalculate a deployed pin.
+
 ## Reverse only while genuinely unused
 
 Scheduling 0020 is the top-level fence for this release extension. It takes
@@ -46,6 +55,14 @@ warning, approval, release or pointer exists. This prevents Django's per-migrati
 commits from partially removing later protections before an older used-evidence
 fence refuses. A null active pointer, expired interval or withdrawn copy is
 still retained evidence, not an unused installation.
+
+Native owner work can establish this fence before any timetable is approved.
+For example, creating an organizer-owned Programme item retains an Audit
+witness even without an Applications conversion or release pointer. A later
+attempt to remove the conversion predecessor must preserve every current
+migration and guard, not partially reverse supposedly unused successors. The
+older conversion-specific populated fence also remains in force. Absence of a
+published timetable is therefore not permission to downgrade this extension.
 
 An unused extension can reverse through Scheduling 0011 and reapply the full
 current leaves using real committed migrations. Deeper predecessor boundaries

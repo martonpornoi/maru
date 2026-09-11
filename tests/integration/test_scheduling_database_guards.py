@@ -27,6 +27,60 @@ from tests.integration.test_scheduling_reservations import reserve
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
+RELEASE_TABLE_SUFFIXES = frozenset(
+    {
+        "schedulingreleasedependencykey",
+        "schedulingreleasedependencychange",
+        "schedulingreleasewarningacknowledgement",
+        "schedulingreleaseapproval",
+        "schedulingreleaseapprovalplacement",
+        "schedulingreleaseapprovaldependency",
+        "schedulingrelease",
+        "schedulingreleaseartifact",
+        "schedulingreleasepointer",
+        "schedulingreleasewithdrawal",
+    }
+)
+
+
+def assert_raw_guard_matrix(expected, *, mutable_versions):
+    """Require actual populated rows and check-violation denials for every table."""
+    models = {
+        model._meta.model_name: model
+        for model in apps.get_app_config("scheduling").get_models()
+    }
+    planning = set(
+        import_module("maru.scheduling.migrations.0005_integrity_guards").TABLE_SUFFIXES
+    )
+    assert planning.isdisjoint(RELEASE_TABLE_SUFFIXES)
+    assert set(models) == planning | RELEASE_TABLE_SUFFIXES
+    assert set(expected) <= models.keys()
+    checked = set()
+    for name in sorted(expected):
+        model = models[name]
+        row = model.objects.first()
+        assert row is not None, model.__name__
+        retained = model.objects.values().get(id=row.id)
+        table = connection.ops.quote_name(model._meta.db_table)
+        field = mutable_versions.get(name, "updated_at")
+        assert model._meta.get_field(field).concrete
+        quoted = connection.ops.quote_name(field)
+        update = f"{quoted} = {quoted}" + (" + 1" if name in mutable_versions else "")
+        for statement in (
+            f"UPDATE {table} SET {update} WHERE id = %s",  # noqa: S608 -- quoted identifiers, closed expression
+            f"DELETE FROM {table} WHERE id = %s",  # noqa: S608 -- quoted table, bound identity
+        ):
+            with (
+                pytest.raises(DatabaseError) as rejected,
+                transaction.atomic(),
+                connection.cursor() as cursor,
+            ):
+                cursor.execute(statement, [row.id])
+            assert rejected.value.__cause__.sqlstate == "23514"
+        assert model.objects.values().get(id=row.id) == retained, model.__name__
+        checked.add(name)
+    assert checked == set(expected)
+
 
 def seed(world):
     availability(world)
@@ -40,7 +94,7 @@ def seed(world):
     return report
 
 
-def test_every_scheduling_table_rejects_raw_update_and_delete(world, admitted):
+def test_every_planning_table_rejects_raw_update_and_delete(world, admitted):
     seed(world)
     mutable = {
         "schedulingeditioncontrol",
@@ -48,32 +102,12 @@ def test_every_scheduling_table_rejects_raw_update_and_delete(world, admitted):
         "schedulingoccurrence",
         "schedulingcandidate",
     }
-    checked = []
-    for model in apps.get_app_config("scheduling").get_models():
-        row = model.objects.first()
-        assert row is not None, model.__name__
-        table = connection.ops.quote_name(model._meta.db_table)
-        update = (
-            '"aggregate_version" = "aggregate_version" + 1'
-            if model._meta.model_name in mutable
-            else '"updated_at" = "updated_at"'
-        )
-        for statement in (
-            f"UPDATE {table} SET {update} WHERE id = %s",  # noqa: S608 -- quoted table and closed assignment
-            f"DELETE FROM {table} WHERE id = %s",  # noqa: S608 -- quoted table, bound identity
-        ):
-            with (
-                pytest.raises(DatabaseError),
-                transaction.atomic(),
-                connection.cursor() as cursor,
-            ):
-                cursor.execute(statement, [row.id])
-        assert model.objects.filter(id=row.id).exists(), model.__name__
-        checked.append(model._meta.model_name)
     expected = import_module(
         "maru.scheduling.migrations.0005_integrity_guards"
     ).TABLE_SUFFIXES
-    assert set(checked) == set(expected)
+    assert_raw_guard_matrix(
+        expected, mutable_versions=dict.fromkeys(mutable, "aggregate_version")
+    )
 
 
 def test_truncate_is_blocked_without_the_isolated_test_reset_factor(world, admitted):

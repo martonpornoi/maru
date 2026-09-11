@@ -8,7 +8,10 @@ from django.db.migrations.recorder import MigrationRecorder
 from maru.audit.mutation_evidence import audited_mutation
 from maru.core.database_integrity_readiness import inspect_database_integrity_catalog
 from maru.scheduling.models import SchedulingReleaseDependencyKey
-from maru.scheduling.readiness import SCHEDULING_INTEGRITY_CONTRACT
+from maru.scheduling.readiness import (
+    SCHEDULING_INTEGRITY_CONTRACT,
+    scheduling_database_integrity_is_ready,
+)
 from maru.scheduling.writer_boundary import scheduling_writer
 from tests.factories import AccountFactory
 from tests.integration.test_audit_mutation_evidence import _record
@@ -25,6 +28,7 @@ def test_unused_native_execution_boundary_really_reverses_and_recovers():
     executor = MigrationExecutor(connection)
     leaves = executor.loader.graph.leaf_nodes()
     assert inspect_database_integrity_catalog(SCHEDULING_INTEGRITY_CONTRACT).ready
+    assert scheduling_database_integrity_is_ready()
     try:
         executor.migrate([_BEFORE_EXECUTION_BOUNDARY])
         catalog = inspect_database_integrity_catalog(SCHEDULING_INTEGRITY_CONTRACT)
@@ -43,6 +47,7 @@ def test_unused_native_execution_boundary_really_reverses_and_recovers():
     finally:
         MigrationExecutor(connection).migrate(leaves)
     assert inspect_database_integrity_catalog(SCHEDULING_INTEGRITY_CONTRACT).ready
+    assert scheduling_database_integrity_is_ready()
 
 
 @pytest.mark.parametrize("evidence", ["witness", "key"])

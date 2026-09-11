@@ -9,7 +9,9 @@ import pytest
 from django.db import IntegrityError, connection, transaction
 
 from maru.effects.models import DomainEvent
+from maru.programme.release_inputs import ProgrammePlacementDecisionKind
 from maru.scheduling import release_publication_commands as commands
+from maru.scheduling import release_review_commands
 from maru.scheduling.authorization import (
     APPROVE_RELEASE,
     SchedulingAuthorizationDeniedError,
@@ -19,14 +21,24 @@ from maru.scheduling.models import (
     SchedulingRelease,
     SchedulingReleaseApproval,
     SchedulingReleaseArtifact,
+    SchedulingReleaseDependencyChange,
     SchedulingReleasePointer,
     SchedulingReleaseWithdrawal,
 )
 from maru.scheduling.release_artifacts import ReleaseArtifactInvalidError
 from maru.scheduling.release_inputs import (
+    ReleaseApprovalIntent,
     ReleasePublicationIntent,
+    ReleaseWarningIntent,
     ReleaseWithdrawalIntent,
 )
+from tests.integration.test_programme_placement_decisions import apply, preview
+from tests.integration.test_scheduling_database_guards import (
+    RELEASE_TABLE_SUFFIXES,
+    assert_raw_guard_matrix,
+)
+from tests.integration.test_scheduling_evaluations import availability
+from tests.integration.test_scheduling_release_preflight import load
 from tests.integration.test_scheduling_release_review_commands import (
     admitted as admitted,  # noqa: PLC0414
 )
@@ -82,6 +94,53 @@ def withdraw(scope, release, *, version=None, attribution=None):
         attribution or request(scope),
         intent=ReleaseWithdrawalIntent(release.object_id, version or release.version),
         scheduling_authorizer=scope.world.policy,
+    )
+
+
+def test_every_release_table_rejects_raw_update_and_delete(review_scope):
+    # Establish real tracking before a native owner mutation, so the journal
+    # row is genuine too. Later warning/approval/release/withdrawal use commands.
+    approve(review_scope)
+    changed = availability(review_scope.world, preference=True)
+    review_scope.selection = replace(
+        review_scope.selection, expected_item_version=changed.resulting_item_version
+    )
+    apply(
+        review_scope,
+        preview(review_scope, ProgrammePlacementDecisionKind.STAFFING_NOT_REQUIRED),
+    )
+    preflight = load(review_scope)
+    assert not preflight.eligibility.stale_checks
+    assert not preflight.eligibility.blocked_checks
+    review_scope.release_selection = replace(
+        review_scope.release_selection, source_snapshot_digest=preflight.snapshot_digest
+    )
+    (warning,) = preflight.findings
+    assert warning.severity == "warning"
+    acknowledged = release_review_commands.acknowledge_programme_release_warning(
+        replace(review_scope.review_request, idempotency_key=uuid4()),
+        intent=ReleaseWarningIntent(
+            review_scope.release_selection, warning.fingerprint
+        ),
+        programme_authorizer=review_scope.policy,
+        scheduling_authorizer=review_scope.world.policy,
+    )
+    approved = approve(
+        review_scope,
+        request=replace(review_scope.review_request, idempotency_key=uuid4()),
+        intent=ReleaseApprovalIntent(
+            review_scope.release_selection, (acknowledged.object_id,)
+        ),
+    )
+    published = publish(review_scope, approved)
+    withdraw(review_scope, published)
+    assert SchedulingReleaseDependencyChange.objects.exists()
+    assert_raw_guard_matrix(
+        RELEASE_TABLE_SUFFIXES,
+        mutable_versions={
+            "schedulingreleasedependencykey": "generation",
+            "schedulingreleasepointer": "version",
+        },
     )
 
 

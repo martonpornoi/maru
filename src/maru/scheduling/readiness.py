@@ -82,7 +82,7 @@ SCHEDULING_SCHEMA_SHA256: Final = {
         "7e59e5d9f33c2c78a4fa670eab661032be036e1edc24d9b95571184a2bc1cb1a"
     ),
     "scheduling_schedulingreleasedependencykey": (
-        "f82357f33936105b897034321d88225cd478073d8584cd892cbe54e70dfcac35"
+        "7bf22b9a64f657f6011d492f338275602c6be6b8c5cdf91530d86ad957e3ab33"
     ),
     "scheduling_schedulingreleasepointer": (
         "0ae52d9d890069efe11ef35dcee8ec7d1a88ec3d22ba59124628ba042ce9d420"

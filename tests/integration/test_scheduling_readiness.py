@@ -4,7 +4,10 @@ import pytest
 from django.apps import apps
 from django.db import connection, transaction
 
+from maru.core.database_integrity_readiness import inspect_database_integrity_catalog
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
 from maru.scheduling.readiness import (
+    SCHEDULING_INTEGRITY_CONTRACT,
     SCHEDULING_SCHEMA_SHA256,
     scheduling_database_integrity_is_ready,
 )
@@ -38,6 +41,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
     ],
 )
 def test_scheduling_readiness_rejects_schema_and_integrity_drift(tamper):
+    catalog = inspect_database_integrity_catalog(SCHEDULING_INTEGRITY_CONTRACT)
+    assert catalog.ready, catalog
+    assert (
+        collect_relation_schema_fingerprints(tuple(SCHEDULING_SCHEMA_SHA256))
+        == SCHEDULING_SCHEMA_SHA256
+    )
     assert scheduling_database_integrity_is_ready()
     with transaction.atomic():
         with connection.cursor() as cursor:
@@ -75,3 +84,25 @@ def test_schema_catalog_is_exactly_the_current_scheduling_model_graph():
     assert set(SCHEDULING_SCHEMA_SHA256) == {
         model._meta.db_table for model in apps.get_app_config("scheduling").get_models()
     }
+
+
+@pytest.mark.parametrize("dropped_slots", [1, 2])
+def test_release_key_readiness_rejects_reused_development_column_layout(dropped_slots):
+    """Pin a clean migration shape, not a development drop-and-readd fingerprint."""
+    assert scheduling_database_integrity_is_ready()
+    with transaction.atomic(), connection.cursor() as cursor:
+        for _ in range(dropped_slots):
+            cursor.execute(
+                "ALTER TABLE public.scheduling_schedulingreleasedependencykey "
+                "DROP COLUMN initial_source_version"
+            )
+            cursor.execute(
+                "ALTER TABLE public.scheduling_schedulingreleasedependencykey "
+                "ADD COLUMN initial_source_version bigint NOT NULL "
+                "CHECK (initial_source_version >= 0)"
+            )
+        # Names and types alone still match; physical retired slots do not.
+        assert inspect_database_integrity_catalog(SCHEDULING_INTEGRITY_CONTRACT).ready
+        assert not scheduling_database_integrity_is_ready()
+        transaction.set_rollback(True)
+    assert scheduling_database_integrity_is_ready()

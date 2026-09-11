@@ -255,9 +255,11 @@ Active branch: `codex/programme-atomic-release`, from the protected #95 merge.
 Native child [#96](https://github.com/martonpornoi/maru/issues/96) now has dormant
 independent approval, exact warning evidence, verified canonical artifacts,
 atomic publication/withdrawal, checked manifests and same-transaction native
-source invalidation. Accepted ADR 0096 owns the dormant contract. Full certification,
-protected delivery and final acceptance reconciliation remain unfinished;
-the clean exact candidate is being prepared, with no #96 PR or merge yet.
+source invalidation. Accepted ADR 0096 owns the dormant contract. Initial exact
+candidate `341f77e8730a88f272d93aaa68d828b99052276e` failed certification. Its
+identified causes are repaired and focused checks pass; a new clean candidate
+still requires full certification and protected delivery. No #96 PR or merge
+has occurred. The complete failed run is preserved, not a success receipt.
 
 Programme also has independently reviewed Ready/Live copy continuation and
 immutable exact-copy withdrawal, without reopening private edits. Native owner
@@ -269,25 +271,31 @@ field authority, current reauthorization and successful sensitive-read audit.
 Ended approved history is not attendance, future coverage or permission to
 grandfather a stale source into a fresh release.
 
-The complete new PostgreSQL regression passed 270 tests across 25 files in
-16m17s. It covers native owner/source changes, approval/publication/withdrawal,
-copy continuation, checked history, genuine-runtime containment, actual races
-and recovery. Earlier overlapping focused groups are not added to that count.
-The complete database-free suite passed 4,669 tests after fixing ten catalog,
-historical dependency and stale fixture failures. Fresh-cache typing passed all
-534 source files; full formatting/lint, 452-document validation and Python
-docstring checks pass. The prior query typing error was corrected with an exact
-withdrawal EXISTS annotation, preserving newest-copy/no-fallback semantics.
-Exact native schema/function/ACL readiness now passes on the isolated database.
-Expanded genuine runtime logins retain SELECT-only access to every new release,
-copy-withdrawal, journal and witness relation. Source and runtime contract
-unit checks pass. Four genuinely shared-physical edition races, all fifteen
-manifest cases and a populated foreign-release genuine-runtime claim rejection
-also passed. The final 27-case group passed in 1m49s, covering prior-release
-preservation on artifact/verification/audit failure, competing same-pointer
-publications and existing Programme queries. Exact full certification remains
-pending. The [implementation checkpoint](../checkpoints/2026-09-11-programme-atomic-release-kernel.md)
-retains this pre-certification milestone; focused results are not hosted acceptance.
+The pre-certification 270-case PostgreSQL regression and the separate final
+27-case publication/query group passed. They cover native source changes,
+independent release decisions, exact artifacts, checked history, actual shared
+physical/person races and runtime containment. The
+[implementation checkpoint](../checkpoints/2026-09-11-programme-atomic-release-kernel.md)
+retains that historical evidence; overlapping groups are not summed.
+
+Initial certification passed 4,669 unit tests and 4,102 of 4,136 PostgreSQL
+tests, with 34 database failures and no errors or skips. Warning-fatal Sphinx
+also failed; later non-database gates and combined coverage did not run.
+The repaired dependency-key pin now matches clean ordinary migrations, not two
+retired physical column slots from a reused development database. New tests
+reject both one- and two-slot drift. Native guards, migration SQL and runtime
+permissions were not weakened. Old audit/fence fixtures now exercise the real
+native boundary; the populated raw-write matrix covers all 25 Scheduling tables.
+
+Repair verification passed 23 readiness/runtime cases, 62 recovery/audit cases,
+the three-case complete-table/physical-restore group, and three final Workforce
+recovery cases. The last group repeats an expanded empty-roundtrip case, so
+these are not a summed suite count. The consolidated database-free suite passed
+4,676 tests after expanding two outdated CI assertions to all nine native
+recovery owners. Repository lint/format and 444-document validation pass, as
+does the qualified-return warning-fatal Sphinx build. See the
+[certification repair checkpoint](../checkpoints/2026-09-11-programme-release-certification-repair.md)
+for exact provenance and the still-required clean-commit certification.
 
 Scheduling 0020 fences the release extension before any later protections can
 reverse around used native evidence. Thirteen focused real recovery and

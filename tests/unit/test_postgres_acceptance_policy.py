@@ -286,8 +286,23 @@ def test_new_owner_leaf_cannot_hide_consumers_of_an_older_model_migration(monkey
     ) == frozenset({"programme"})
 
 
-@pytest.mark.parametrize("owner", ["scheduling", "venues"])
-def test_joint_scheduling_history_follows_either_owners_real_graph(owner: str) -> None:
+_NATIVE_SCHEDULING_RECOVERY_OWNERS = frozenset(
+    {
+        "applications",
+        "audit",
+        "authorization",
+        "events",
+        "identity",
+        "programme",
+        "scheduling",
+        "venues",
+        "workforce",
+    }
+)
+
+
+@pytest.mark.parametrize("owner", sorted(_NATIVE_SCHEDULING_RECOVERY_OWNERS))
+def test_joint_scheduling_history_follows_each_native_owner_graph(owner: str) -> None:
     inventory = load_history_inventory()
     groups = build_groups()
     owners = affected_migration_owners((_change(f"src/maru/{owner}/models.py"),))
@@ -295,7 +310,7 @@ def test_joint_scheduling_history_follows_either_owners_real_graph(owner: str) -
     selected = select_groups(groups, inventory, "affected", owners)
     keys = {group.key for group in selected}
     history = "tests/integration/test_scheduling_integrity_migrations.py"
-    assert inventory[history].owners == frozenset({"scheduling", "venues"})
+    assert inventory[history].owners == _NATIVE_SCHEDULING_RECOVERY_OWNERS
     assert RECOVERY_SMOKE in keys
     assert all(
         case_group(history, function, inventory) in keys

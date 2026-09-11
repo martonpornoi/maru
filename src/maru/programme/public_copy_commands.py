@@ -45,8 +45,9 @@ from .writer_boundary import programme_writer
 if TYPE_CHECKING:
     from uuid import UUID
 
+    import maru.programme.commands
+
     from .authorization import ProgrammeAuthorizer
-    from .commands import ProgrammeCommandResult
 
 
 @_audit_command_errors(
@@ -66,7 +67,7 @@ def withdraw_programme_public_rendition(
     correlation_id: UUID,
     source_channel: str,
     authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
-) -> ProgrammeCommandResult:
+) -> maru.programme.commands.ProgrammeCommandResult:
     """Withdraw one exact public rendition and its retained release disclosure.
 
     Parameters
@@ -96,7 +97,7 @@ def withdraw_programme_public_rendition(
 
     Returns
     -------
-    ProgrammeCommandResult
+    maru.programme.commands.ProgrammeCommandResult
         Immutable withdrawal receipt and identifier; no copied public or private text.
 
     Notes
@@ -142,7 +143,7 @@ def withdraw_programme_public_rendition(
         }
     )
 
-    def mutate() -> ProgrammeCommandResult:
+    def mutate() -> maru.programme.commands.ProgrammeCommandResult:
         with transaction.atomic(), programme_writer():
             scope = _postauthorize(
                 actor_id=actor_id,

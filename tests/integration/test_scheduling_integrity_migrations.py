@@ -1,10 +1,14 @@
 """Ordinary committed empty reversal and populated joint-graph recovery fences."""
 
+from importlib import import_module
+
 import pytest
+from django.apps import apps
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.recorder import MigrationRecorder
 
+from maru.audit.models import AuditNativeMutationWitness
 from maru.scheduling.models import SchedulingCandidate, SchedulingCandidateRevision
 from maru.scheduling.readiness import scheduling_database_integrity_is_ready
 from maru.venues.readiness import venues_database_integrity_is_ready
@@ -15,18 +19,6 @@ pytestmark = [
     pytest.mark.django_db(transaction=True),
     pytest.mark.usefixtures("restores_current_migration_graph"),
 ]
-
-UNUSED_STAFFING_SUCCESSORS = {
-    ("programme", "0010_staffing_requirements"),
-    ("programme", "0011_staffing_integrity"),
-    ("programme", "0012_staffing_downgrade_fence"),
-    ("programme", "0013_placement_decisions"),
-    ("programme", "0014_placement_decision_integrity"),
-    ("programme", "0015_placement_decision_downgrade_fence"),
-    ("workforce", "0019_programme_shift_bindings"),
-    ("workforce", "0020_programme_binding_integrity"),
-    ("workforce", "0021_programme_binding_downgrade_fence"),
-}
 
 
 def test_empty_joint_graph_reverses_and_recovers_with_normal_migrations():
@@ -63,14 +55,22 @@ def test_planning_history_fences_both_owners_before_any_guard_is_removed(world, 
     revision = SchedulingCandidateRevision.objects.values().get(
         candidate_id=world.candidate.object_id, sequence=world.candidate.version
     )
-    assert before >= UNUSED_STAFFING_SUCCESSORS
-    with pytest.raises(RuntimeError, match="retain compatible code and fix forward"):
-        MigrationExecutor(connection).migrate([target])
-    # Only these empty successors may reverse before the retained owner fence.
-    # Every original Scheduling/Venues migration and exact guard must survive.
-    assert set(MigrationRecorder(connection).applied_migrations()) == (
-        before - UNUSED_STAFFING_SUCCESSORS
+    reference = (
+        "maru.scheduling.migrations.0006_scheduling_downgrade_fence"
+        if target[0] == "scheduling"
+        else "maru.venues.migrations.0005_scheduling_downgrade_fence"
     )
+    with (
+        pytest.raises(RuntimeError, match="retain compatible code and fix forward"),
+        connection.schema_editor() as editor,
+    ):
+        import_module(reference).refuse_used_scheduling_downgrade(apps, editor)
+    assert AuditNativeMutationWitness.objects.exists()
+    with pytest.raises(RuntimeError, match="retain its execution boundary"):
+        MigrationExecutor(connection).migrate([target])
+    # Native source evidence fences the current extension before any successor
+    # can reverse, including successors with no direct staffing records yet.
+    assert set(MigrationRecorder(connection).applied_migrations()) == before
     assert SchedulingCandidate.objects.values().get(id=candidate["id"]) == candidate
     assert (
         SchedulingCandidateRevision.objects.values().get(id=revision["id"]) == revision
