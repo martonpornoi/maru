@@ -118,6 +118,13 @@ rather than replace the curated summary.
 
 ### Changed
 
+- PostgreSQL acceptance now plans smaller jobs from measured group costs and
+  conservative runtime budgets. Local certification executes the same exact
+  assignments as GitHub with at most eight disposable databases, retains
+  interrupted timing diagnostics and refuses certification without measured
+  headroom. Test selection, coverage and the protected two-hour hosted limit
+  remain unchanged (ADR 0098, NFR-001).
+
 - Updated development dependencies to js-yaml 4.3.2 and Vitest 4.1.11 to address
   GHSA-2883-xcg3-v3hh and GHSA-82fw-gwwq-j7x9. Locked installs and vulnerability
   gates remain mandatory; these patches do not activate application features.

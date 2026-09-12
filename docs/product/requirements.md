@@ -1774,6 +1774,10 @@ architecture documents, implementation issues, tests, and release notes.
   and exhaustive for global safety/harness changes, changed-revision nightly
   checks and releases, under ADR 0090. Deferred historical failures require
   repair; they are not permission to release or silently ignore regressions.
+  ADR 0098 budgets complete PostgreSQL groups into bounded jobs with identical
+  local/hosted assignments and measured pre-push headroom. Suite growth must not
+  silently consume the timeout margin; budget failures require replanning or
+  optimization, never omitted tests or weakened acceptance.
 - **NFR-002 — Living documentation:** Product, architecture, API, operations,
   security, and role-specific user documentation are deliverables.
 - **NFR-003 — Checkpoint continuity:** Every material change must leave a

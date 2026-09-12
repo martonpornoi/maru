@@ -353,16 +353,20 @@ a reviewed refresh; no existing measured weights are lowered.
 
 ### Runtime and cost boundaries
 
-Routine hosted acceptance uses eight shards. Exhaustive hosted acceptance uses
-sixteen smaller groups, at most eight running concurrently, with the unchanged
-120-minute per-job limit. Local acceptance uses eight isolated PostgreSQL
-containers and the same selection/grouping rules. Two hosted waves incur some
-additional setup overhead; they give individual jobs headroom, not a promise
-that the complete historical suite becomes fast. Matrix fail-fast stays disabled
-and blanket retries remain prohibited.
+ADR 0098 replaces fixed routine/exhaustive counts with deterministic budgeted
+partitions of the same required groups. The planner targets at most sixty
+minutes per job after a 1.5 slowdown multiplier and ten-minute overhead reserve.
+It selects between eight and sixty-four shards (or fewer only when the whole
+scope contains fewer groups), preserving at most eight simultaneous isolated
+databases and the unchanged 120-minute hosted limit. An indivisible oversized
+group or infeasible complete partition fails preflight; it never drops tests.
+Local certification executes the exact same source-bound assignments through a
+worker queue, with a fresh database per shard and one serial test process inside.
+More shards add startup overhead and do not promise a faster exhaustive suite.
+Matrix fail-fast stays disabled and blanket retries remain prohibited.
 
 `scripts/ci_test_group_timings.json` contains scheduling estimates, not evidence
-of acceptance. The initial estimates sum successful exact-head PR #82 local
+of acceptance. Its original estimates summed successful exact-head PR #82 local
 JUnit observations for matching current-main groups; they are deliberately
 labelled cross-revision estimates. New groups receive the largest known group
 cost until measured; stale or invalid entries fail. Do not infer completeness
@@ -370,6 +374,27 @@ from timings: collection and executed-case evidence establish it independently.
 Under [ADR 0091](../architecture/decisions/0091-scheduling-ci-policy-integration.md),
 the old file-level runner/map and ADR 0089 calibration remain diagnostic tooling,
 not the PR selection authority. Record comparable setup, execution and teardown, not only case bodies.
+
+`scripts/update_ci_group_timings.py` refreshes active group costs from preserved
+complete local evidence, optionally taking the larger matching hosted observation.
+It checks the exact full-scope receipt/head/base, unchanged measured test files,
+complete selection/JUnit identity equality and no failures, errors, skips or
+duplicate groups. The sidecar `.provenance.json` records source and evidence
+hashes. Explicit diagnostic hosted-file exclusions are only for unusable
+cross-environment comparisons; their local costs and every test remain included.
+They cannot exclude a failed report or all hosted observations. The planner
+adds slowdown and overhead separately, never interpreting timings as acceptance.
+
+Each execution compares its source-derived plan fingerprint with preflight (and
+the frozen local manifest). Collection still verifies every selected case.
+Incremental `selection-N.timings.jsonl` records setup/call/teardown as they finish;
+an absent finish record means interrupted evidence, not a passing report.
+Local certification requires every shard's actual elapsed time plus 50% slowdown
+and ten minutes overhead to stay within ninety minutes, leaving a further thirty
+minutes before GitHub's cap. Failed headroom blocks certification/push readiness.
+Repository source changes invalidate an old execution manifest; new groups retain
+conservative fallback costs until measured. Every change still needs its selected
+local acceptance, so historical growth cannot rely on an old timing estimate alone.
 
 For a reviewed timing refresh, retain the exact receipt and all successful JUnit
 reports before another local certification replaces them. Match each report's

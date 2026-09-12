@@ -22,6 +22,7 @@ jobs:
       history: ${{ steps.database-plan.outputs.history }}
       shard-count: ${{ steps.database-plan.outputs.shard_count }}
       matrix: ${{ steps.database-plan.outputs.matrix }}
+      plan-fingerprint: ${{ steps.database-plan.outputs.plan_fingerprint }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -282,6 +283,7 @@ jobs:
       HISTORY_SCOPE: ${{ needs.preflight.outputs.history }}
       ACCEPTANCE_BASE: ${{ inputs.base }}
       SHARD_COUNT: ${{ needs.preflight.outputs.shard-count }}
+      PLAN_FINGERPRINT: ${{ needs.preflight.outputs.plan-fingerprint }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -307,6 +309,7 @@ jobs:
             uv run coverage run -m scripts.run_postgres_acceptance \
             --history "$HISTORY_SCOPE" --base "$ACCEPTANCE_BASE" \
             --shard-index ${{ matrix.shard }} --shard-count "$SHARD_COUNT" \
+            --expected-plan "$PLAN_FINGERPRINT" \
             --evidence reports/selection-${{ matrix.shard }}.json -- \
             -q \
             --junitxml=reports/integration-${{ matrix.shard }}.xml \

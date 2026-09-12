@@ -60,53 +60,6 @@ function Invoke-Checked {
     }
 }
 
-function Start-IsolatedPostgres {
-    param(
-        [Parameter(Mandatory)]
-        [string] $Name
-    )
-
-    Write-Host "Starting isolated PostgreSQL container $Name..."
-    Invoke-Checked $Docker @(
-        "run", "--detach", "--rm", "--name", $Name,
-        "--env", "POSTGRES_DB=maru",
-        "--env", "POSTGRES_USER=maru",
-        "--env", "POSTGRES_PASSWORD=maru",
-        "--publish", "127.0.0.1::5432",
-        "--health-cmd", "pg_isready -U maru -d maru",
-        "--health-interval", "2s",
-        "--health-timeout", "3s",
-        "--health-retries", "30",
-        $PostgresImage
-    ) | Out-Null
-
-    $Healthy = $false
-    for ($Attempt = 1; $Attempt -le 90; $Attempt += 1) {
-        $Health = (@(
-            & $Docker "inspect" "--format" "{{.State.Health.Status}}" $Name
-        ) -join [Environment]::NewLine).Trim()
-        if ($LASTEXITCODE -ne 0) {
-            throw "Could not inspect PostgreSQL container $Name."
-        }
-        if ($Health -eq "healthy") {
-            $Healthy = $true
-            break
-        }
-        Start-Sleep -Seconds 1
-    }
-    if (-not $Healthy) {
-        throw "PostgreSQL container $Name did not become healthy."
-    }
-
-    $PublishedPort = (@(
-        & $Docker "port" $Name "5432/tcp" | Select-Object -First 1
-    ) -join [Environment]::NewLine).Trim()
-    if ($LASTEXITCODE -ne 0 -or $PublishedPort -notmatch "(?<port>[0-9]+)$") {
-        throw "Could not resolve the published port for $Name."
-    }
-    return [int] $Matches.port
-}
-
 function Start-TestProcess {
     param(
         [Parameter(Mandatory)]
@@ -174,10 +127,9 @@ $Uv = Resolve-RequiredCommand -Name "uv" -FallbackPaths @(
 $Docker = Resolve-RequiredCommand -Name "docker"
 $Git = Resolve-RequiredCommand -Name "git"
 $PowerShell = Resolve-RequiredCommand -Name "pwsh"
-$PostgresImage = "postgres:17.11-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73"
 
 Push-Location $RepositoryRoot
-$Containers = [Collections.Generic.List[string]]::new()
+$Jobs = [Collections.Generic.List[object]]::new()
 try {
     $WorkingTree = (@(
         & $Git "status" "--porcelain"
@@ -215,7 +167,7 @@ try {
         Join-Path $ArtifactRoot "reports"
     ) -Force
 
-    Write-Host "Certifying exact commit $Commit with $IntegrationShards integration shards."
+    Write-Host "Certifying exact commit $Commit with at most $IntegrationShards database workers."
     Invoke-Checked $Docker @("info", "--format", "{{.ServerVersion}}")
     Invoke-Checked $Uv @("sync", "--all-groups", "--locked")
     $Python = Join-Path $RepositoryRoot ".venv/Scripts/python.exe"
@@ -224,7 +176,7 @@ try {
     }
     $PlanText = & $Python "-m" "scripts.run_postgres_acceptance" `
         "--history" $HistoryScope "--base" $BaseCommit "--plan-only" `
-        "--shard-count" "$IntegrationShards"
+        "--write-plan" "$ReportDirectory/plan.json"
     if ($LASTEXITCODE -ne 0) {
         throw "Could not validate the complete PostgreSQL acceptance plan."
     }
@@ -232,8 +184,6 @@ try {
     $HistoryScope = $AcceptancePlan.history
     Write-Host "Historical scope: $HistoryScope; base: $BaseCommit"
 
-    $RunToken = "$($Commit.Substring(0, 10))-$PID".ToLowerInvariant()
-    $Jobs = [Collections.Generic.List[object]]::new()
 
     $Jobs.Add((Start-TestProcess `
         -Name "unit" `
@@ -243,24 +193,14 @@ try {
             "--junitxml=$ReportDirectory/unit.xml", "--durations=25"
         )))
 
-    for ($Shard = 1; $Shard -le $IntegrationShards; $Shard += 1) {
-        $ContainerName = "maru-cert-integration-$Shard-$RunToken"
-        $Containers.Add($ContainerName)
-        $Port = Start-IsolatedPostgres -Name $ContainerName
-        $Jobs.Add((Start-TestProcess `
-            -Name "integration-$Shard" `
-            -DatabasePort $Port `
-            -Arguments @(
-                "-m", "coverage", "run", "-m", "scripts.run_postgres_acceptance",
-                "--history", "$HistoryScope", "--base", "$BaseCommit",
-                "--shard-index", "$Shard",
-                "--shard-count", "$IntegrationShards",
-                "--evidence", "$ReportDirectory/selection-$Shard.json",
-                "--", "-q", "-p", "no:cacheprovider",
-                "--junitxml=$ReportDirectory/integration-$Shard.xml",
-                "--durations=25"
-            )))
-    }
+    $Jobs.Add((Start-TestProcess `
+        -Name "integration-pool" `
+        -Arguments @(
+            "-m", "scripts.run_postgres_pool",
+            "--plan", "$ReportDirectory/plan.json",
+            "--output", "$ArtifactRoot",
+            "--workers", "$IntegrationShards"
+        )))
 
     $RepositoryGateError = $null
     try {
@@ -300,6 +240,16 @@ try {
         throw "Maru certification failed."
     }
 
+    $PoolResult = Get-Content -LiteralPath (Join-Path $ArtifactRoot "pool-result.json") -Raw | ConvertFrom-Json
+    if ($PoolResult.plan_fingerprint -ne $AcceptancePlan.plan_fingerprint -or
+        $PoolResult.expected_shards -ne $AcceptancePlan.shards -or
+        @($PoolResult.results).Count -ne $AcceptancePlan.shards -or
+        @($PoolResult.results | Where-Object { $_.shard -lt 1 -or $_.shard -gt $AcceptancePlan.shards }).Count -gt 0 -or
+        @($PoolResult.results | Where-Object { $_.status -ne "success" -or -not $_.headroom -or -not $_.container_removed }).Count -gt 0 -or
+        @($PoolResult.results.shard | Sort-Object -Unique).Count -ne $AcceptancePlan.shards) {
+        throw "The exact PostgreSQL pool is incomplete or lacks measured timing headroom."
+    }
+
     Invoke-Checked $Python @(
         "-m", "coverage", "combine", "$CoverageDirectory"
     )
@@ -321,15 +271,18 @@ try {
     }
 
     $Evidence = [ordered]@{
-        schema_version = 2
+        schema_version = 3
         result = "success"
         commit = $Commit
         base_commit = $BaseCommit
         historical_scope = $HistoryScope
         elapsed_seconds = [math]::Round($CertificationClock.Elapsed.TotalSeconds, 3)
         completed_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
-        integration_shards = $IntegrationShards
-        isolated_postgres_instances = $IntegrationShards
+        integration_shards = $AcceptancePlan.shards
+        isolated_postgres_instances = $AcceptancePlan.shards
+        max_concurrent_postgres_instances = $IntegrationShards
+        plan_fingerprint = $AcceptancePlan.plan_fingerprint
+        measured_timing_headroom = $true
         branch_coverage_minimum_percent = 90
         gates = @(
             "locked_dependencies",
@@ -354,8 +307,19 @@ try {
     Write-Host "Maru $($Evidence.result) for exact commit $Commit ($HistoryScope history)."
 }
 finally {
-    foreach ($Container in $Containers) {
-        & $Docker "rm" "--force" $Container 2>$null | Out-Null
+    foreach ($Job in $Jobs) {
+        if (-not $Job.Process.HasExited) {
+            if ($Job.Name -eq "integration-pool") {
+                New-Item -ItemType File -Path (Join-Path $ArtifactRoot "cancel-pool") -Force | Out-Null
+                if (-not $Job.Process.WaitForExit(30000)) {
+                    Write-Warning "The exact local pool is still cleaning up; inspect its recorded resources before another run."
+                }
+            }
+            else {
+                $Job.Process.Kill()
+                $Job.Process.WaitForExit()
+            }
+        }
     }
     Pop-Location
 }

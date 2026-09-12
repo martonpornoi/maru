@@ -37,6 +37,23 @@ exact-person host/volunteer output. Native child
 room/department/operator acceptance as the immediately following delivery.
 This decomposition drops no #48 scope and does not waive operational acceptance.
 
+PR #101 is open at original certified head `35bc135fc2c9d7e7c448b4619dd681b60ac74e15`.
+Full local certification passed 9,044 Python tests, 64 frontend tests, all ten
+gates and 90.66% coverage in 2h42m35s. Its first hosted attempt passed fifteen
+PostgreSQL groups but group 15 exceeded two hours; that run is not accepted.
+Original local evidence and hosted timing diagnostics are preserved separately.
+
+The maintainer authorized an ADR 0098 CI-hardening repair in this same PR, but
+explicitly prohibited pushing on estimates alone. The local candidate replaces
+fixed shard counts with a conservative one-hour budget, shared exact manifests,
+eight-worker fresh-database execution and a measured-headroom certification
+condition. Initial refreshed estimates select 39 exhaustive shards; these are
+not measured new-run durations. All 4,836 unit tests passed in 33.55 seconds,
+including planner, incremental evidence, bounded concurrency and failure cleanup.
+Repository lint/format, semantic documentation and strict script docstrings
+passed. Full exact-plan certification remains pending; do not push, merge, or
+start #100 until that boundary is satisfied.
+
 ADR 0097, owner references, closed JSON/calendar and dormant HTML/print surfaces
 are implemented on this candidate; protected delivery is still pending:
 
@@ -60,8 +77,9 @@ Earlier public/native-manifest regressions passed 36 in 250.36s. Strict focused
 typing/docstrings passed. The consolidated focused PostgreSQL set passed 129
 cases in 721.59s, without failures. Repository-wide typing (549 source files),
 lint/formatting, strict docstrings and semantic docs (566 files) passed.
-Exact clean-commit local certification and independent protected acceptance
-remain pending. These overlapping development counts are not certification.
+Those development counts preceded the completed original local certification
+above. Replacement clean-commit certification and independent protected
+acceptance remain pending after the CI repair.
 
 The first certification failed two exact unit inventories, now repaired without
 relaxing their assertions or acceptance scope. All 4,793 units then passed in
@@ -109,8 +127,9 @@ activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Finish #99's consolidated checks, exact local certification, ready PR,
-   protected gate/CodeQL, squash and exact-main synchronization.
+1. Finish PR #101's budgeted CI repair locally, validate full exact assignments
+   and measured timing headroom, then push for protected gate/CodeQL, squash
+   and exact-main synchronization. Never push solely on predicted durations.
 2. Deliver #100's independently authorized room/department operator run sheets.
 3. Deliver detailed change impact, governed destination delivery and recipient
    acknowledgement through the same output boundaries.
@@ -141,6 +160,7 @@ not production approval. Never infer readiness from a page, test count or green 
 
 [ADR 0090](../architecture/decisions/0090-risk-based-postgresql-acceptance.md)
 retains current PostgreSQL behavior for code changes and exhaustive history for
-global safety/harness changes. Focused checks, exact local certification, hosted
+global safety/harness changes. ADR 0098 replaces fixed job counts and differing
+local/hosted partitions with budgeted exact assignments. Focused checks, exact local certification, hosted
 acceptance and production approval are distinct. Historical-model reconstruction
 is a measured cost; documentation or Docker cleanup is not a test-speedup claim.
