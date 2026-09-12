@@ -32,7 +32,7 @@ LOCAL_TEST_LIMIT = (MEASURED_CEILING_SECONDS - OVERHEAD_SECONDS) / SLOWDOWN_FACT
 
 
 def _docker(*args: str) -> str:
-    executable = shutil.which("docker")
+    executable = shutil.which("docker.exe" if sys.platform == "win32" else "docker")
     if executable is None:
         raise RuntimeError("Docker is unavailable")
     return subprocess.run(  # noqa: S603 - resolved local tool, closed task-owned arguments

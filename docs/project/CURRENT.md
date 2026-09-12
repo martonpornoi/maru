@@ -54,6 +54,12 @@ Repository lint/format, semantic documentation and strict script docstrings
 passed. Full exact-plan certification remains pending; do not push, merge, or
 start #100 until that boundary is satisfied.
 
+The first repair certification at `858a7f2` failed before database startup:
+Windows selected Docker's extensionless non-native wrapper. No PostgreSQL
+assertion or timing result was produced. Native executable selection is now
+corrected with Windows/Linux regression checks; replacement certification is
+required, and the failed candidate cannot be used as acceptance.
+
 ADR 0097, owner references, closed JSON/calendar and dormant HTML/print surfaces
 are implemented on this candidate; protected delivery is still pending:
 

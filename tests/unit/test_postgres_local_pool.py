@@ -146,6 +146,33 @@ def test_missing_docker_fails_without_launching_shell(monkeypatch):
         pool._docker("info")
 
 
+@pytest.mark.parametrize(
+    ("platform", "expected"), [("win32", "docker.exe"), ("linux", "docker")]
+)
+def test_docker_uses_native_executable_without_selecting_windows_shell_wrapper(
+    monkeypatch, platform, expected
+):
+    names = []
+    commands = []
+
+    def resolve(name):
+        names.append(name)
+        return f"/synthetic/{name}"
+
+    def execute(arguments, **kwargs):
+        commands.append((arguments, kwargs))
+        return SimpleNamespace(stdout=" synthetic-version\n")
+
+    monkeypatch.setattr(pool.sys, "platform", platform)
+    monkeypatch.setattr(pool.shutil, "which", resolve)
+    monkeypatch.setattr(pool.subprocess, "run", execute)
+    assert pool._docker("info") == "synthetic-version"
+    assert names == [expected]
+    assert commands[0][0] == [f"/synthetic/{expected}", "info"]
+    assert commands[0][1]["check"]
+    assert "shell" not in commands[0][1]
+
+
 @pytest.mark.parametrize("cleanup_failure", [False, True])
 def test_database_startup_failure_retains_result_and_attempts_exact_cleanup(
     monkeypatch, tmp_path, cleanup_failure
