@@ -43,6 +43,7 @@ contract for the surface being changed, and compare its status with the
   no route is mounted.
 - [Programme timetable planning](programme-timetable-planning.md)
 - [Programme staffing](programme-staffing.md)
+- [Released Programme timetable](programme-released-timetable.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -62,4 +63,6 @@ programme-calls-and-acknowledged-proposals
 programme-call-and-proposal-import
 programme-timetable-planning
 programme-staffing
+programme-released-timetable
+personal-programme-timetable
 ```

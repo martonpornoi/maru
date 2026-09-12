@@ -1325,6 +1325,18 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
+        code="scheduling.view_host_self",
+        description=(
+            "View only one's own confirmed hosting in the checked Programme release."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"own_host_schedule"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
         code="scheduling.view_planning",
         description=(
             "Read private service days, occurrences and candidate placement times."

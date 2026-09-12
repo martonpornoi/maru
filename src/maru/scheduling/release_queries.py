@@ -176,11 +176,11 @@ def _dependency_state(release: SchedulingRelease) -> ProgrammeReleaseState:
 
 
 def _manifest(
-    request: SchedulingReadRequest, release_id: UUID | None
+    *, organization_id: UUID, edition_id: UUID, release_id: UUID | None
 ) -> ProgrammeReleaseManifest:
     ownership = {
-        "organization_id": request.organization_id,
-        "edition_id": request.edition_id,
+        "organization_id": organization_id,
+        "edition_id": edition_id,
     }
     pointer = SchedulingReleasePointer.objects.filter(**ownership).first()
     version = pointer.version if pointer else 0
@@ -276,7 +276,11 @@ def load_programme_release_manifest(  # noqa: DOC502 - The guarded read and load
     def loader(_scope: object) -> ProgrammeReleaseManifest:
         if release_id is not None:
             require_identifier(release_id)
-        return _manifest(request, release_id)
+        return _manifest(
+            organization_id=request.organization_id,
+            edition_id=request.edition_id,
+            release_id=release_id,
+        )
 
     return _read(
         request,

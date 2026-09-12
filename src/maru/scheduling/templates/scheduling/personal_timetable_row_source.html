@@ -1,0 +1,8 @@
+{% if row.kind == 'hosting' %}
+  <p>Host reference: {{ row.purpose.host_id }}. Occurrence: {{ row.presence.occurrence_id }}.
+    Placement: {{ row.presence.placement_id }}. Room: {{ row.room.space_id }}.
+    Service day: {{ row.presence.day_id }}.</p>
+{% else %}
+  <p>Work commitment: {{ row.shift.commitment_id }}. Current demand:
+    {{ row.shift.instructions.demand_id }}. Department: {{ row.shift.instructions.department_id }}.</p>
+{% endif %}

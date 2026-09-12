@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from django.db.models import Exists, OuterRef
+
 from maru.events.queries import (
     resolve_edition_time_envelope_reference,
 )
@@ -36,6 +38,7 @@ from .models import (
     ProgrammeHostRevision,
     ProgrammeItem,
     ProgrammePublicRendition,
+    ProgrammePublicRenditionWithdrawal,
 )
 from .queries import (
     ProgrammePublicCopyProjection,
@@ -422,6 +425,7 @@ def load_programme_host_self(
     -------
     ProgrammeHostSelfSnapshot
         Complete own-purpose snapshot after current relationship proof and audit.
+        Explicitly withdrawn latest public copy is absent, with no older fallback.
     """
 
     def load(
@@ -451,6 +455,20 @@ def load_programme_host_self(
         rendition = (
             ProgrammePublicRendition.objects.filter(item=item)
             .order_by("-rendition_number")
+            .annotate(
+                is_withdrawn=Exists(
+                    ProgrammePublicRenditionWithdrawal.objects.filter(
+                        rendition_id=OuterRef("pk")
+                    )
+                )
+            )
+            .values(
+                "rendition_number",
+                "public_title",
+                "public_summary",
+                "public_content_note",
+                "is_withdrawn",
+            )
             .first()
             if host.state == "confirmed"
             else None
@@ -469,12 +487,12 @@ def load_programme_host_self(
             host.availability_version,
             _periods(host),
             ProgrammePublicCopyProjection(
-                rendition.rendition_number,
-                rendition.public_title,
-                rendition.public_summary,
-                rendition.public_content_note,
+                rendition["rendition_number"],
+                rendition["public_title"],
+                rendition["public_summary"],
+                rendition["public_content_note"],
             )
-            if rendition is not None
+            if rendition is not None and not rendition["is_withdrawn"]
             else None,
         )
 

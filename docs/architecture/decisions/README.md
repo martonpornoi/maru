@@ -101,6 +101,7 @@ the system.
 | [0094](0094-complete-programme-release-eligibility.md) | Accepted | Require complete exact-snapshot eligibility before independent Programme approval and atomic publication |
 | [0095](0095-trusted-programme-release-sources.md) | Accepted | Collect complete trusted owner sources with independently versioned fit/no-staffing decisions and minimized combined person/rest consequences |
 | [0096](0096-atomic-programme-release-and-invalidation.md) | Accepted | Retain independent exact approval, atomic release and same-transaction governing invalidation without rewriting history or coupling privacy exit to foreign pointers |
+| [0097](0097-release-derived-programme-output-boundaries.md) | Accepted | Derive purpose-bounded outputs from checked exact releases without treating planner authority or retained artifacts as public admission |
 
 New ADRs use the next four-digit number and contain:
 

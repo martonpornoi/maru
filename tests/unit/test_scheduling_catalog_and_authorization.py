@@ -57,6 +57,39 @@ def test_editor_reads_request_only_preexisting_capability_fields(capability, fie
     assert fields <= CAPABILITIES[capability].field_ceiling
 
 
+def test_host_schedule_policy_uses_exact_self_not_edition_planner(monkeypatch):
+    decision = PolicyDecision(
+        allowed=True,
+        fields=frozenset({"own_host_schedule"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+        reason_code="self_relationship",
+    )
+    personal = MagicMock(return_value=decision)
+    planner = MagicMock(side_effect=AssertionError("Not planner authority"))
+    monkeypatch.setattr(auth, "decide_verified_principal_exact_self", personal)
+    monkeypatch.setattr(auth, "decide_verified_principal_exact_edition", planner)
+    actor, organization, edition = uuid4(), uuid4(), uuid4()
+    assert (
+        auth.ExactSchedulingAuthorizer().authorize(
+            principal_id=actor,
+            organization_id=organization,
+            edition_id=edition,
+            capability_code=auth.VIEW_HOST_SELF,
+            requested_fields=decision.fields,
+        )
+        == decision
+    )
+    personal.assert_called_once_with(
+        principal_id=actor,
+        owner_account_id=actor,
+        organization_id=organization,
+        edition_id=edition,
+        capability_code=auth.VIEW_HOST_SELF,
+        requested_fields=decision.fields,
+    )
+    planner.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "event_name", [SCHEDULING_CHANGED_EVENT, SCHEDULING_RELEASE_CHANGED_EVENT]
 )
@@ -71,8 +104,14 @@ def test_declared_capabilities_and_event_do_not_activate_current_profiles(event_
         for destination in ("internal", "notifications")
     )
     for code in auth.SCHEDULING_CAPABILITIES:
-        assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
-        assert not CAPABILITIES[code].allow_self
+        if code == auth.VIEW_HOST_SELF:
+            assert CAPABILITIES[code].maximum_scope == ScopeLevel.RESOURCE
+            assert CAPABILITIES[code].allow_self
+            assert not CAPABILITIES[code].persistable
+            assert CAPABILITIES[code].field_ceiling == frozenset({"own_host_schedule"})
+        else:
+            assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
+            assert not CAPABILITIES[code].allow_self
     for profile in ADOPTION_PROFILES.values():
         assert not profile.capability_codes & auth.SCHEDULING_CAPABILITIES
         assert "scheduling" not in profile.modules
@@ -89,7 +128,11 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
         "maru.authorization.migrations.0029_programme_release_capabilities"
     )
     assert set(current.SCHEDULING_CAPABILITIES) == {
-        *(auth.SCHEDULING_CAPABILITIES - set(release.RELEASE_CAPABILITIES)),
+        *(
+            auth.SCHEDULING_CAPABILITIES
+            - set(release.RELEASE_CAPABILITIES)
+            - {auth.VIEW_HOST_SELF}
+        ),
         "programme.view_scheduling_dependencies",
     }
     assert current.PHYSICAL_CAPABILITIES == ("venues.view_scheduling_dependencies",)

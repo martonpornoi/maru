@@ -1,0 +1,8 @@
+<p>Organization: {{ snapshot.organization_id }}. Edition: {{ snapshot.edition_id }}.</p>
+<p>Private person reference: {{ snapshot.actor_id }}.</p>
+{% if snapshot.edition_label %}<p>{{ snapshot.edition_label.name }} — current edition context version {{ snapshot.edition_label.version }}.</p>{% endif %}
+{% if snapshot.hosting %}<p>Hosting release sequence: {{ snapshot.hosting.reference.pointer_version|default_if_none:"not checked" }}.
+  Exact release: {{ snapshot.hosting.reference.release_id|default_if_none:"none" }}.</p>{% endif %}
+<p>Private point-in-time copy checked {{ checked_label }} ({{ snapshot.zone_name }}).
+  Keep it secure. Recheck online before relying on it. A saved file cannot be remotely
+  erased or guaranteed current. Calendar imports may not update earlier entries.</p>

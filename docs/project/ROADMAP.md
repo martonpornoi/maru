@@ -136,9 +136,14 @@ trust-building outcomes rather than implied capabilities.
 The release outcome is now split under #48: #91 defines and tests complete
 exact-snapshot eligibility under ADR 0094 and is delivered through PR #93.
 Child #94 is delivered through PR #95 with authenticated owner collection and
-missing fit/no-staffing evidence under ADR 0095. Child #96 implements dormant independent
-approval and release-warning evidence with atomic publication and invalidation; the following
-child supplies shared release-derived outputs and change impact.
+missing fit/no-staffing evidence under ADR 0095. Child #96 is delivered through
+PR #98 with dormant independent approval, release-warning evidence, atomic
+publication and governing invalidation under ADR 0096. Child #99 supplies shared
+release-derived public and personal projections, combined host/work timetables
+and output formats. Child #100 retains independently authorized room/department
+operator run sheets as the immediately following delivery; no operational
+acceptance is waived by this decomposition. Detailed change impact, governed
+delivery and acknowledgement then follow using those same boundaries.
 An eligible rule result is not approval, publication or profile activation.
 Child #97 owns exact-readiness compatibility after logical PostgreSQL restore.
 It must pass before profile activation or a director pilot; same-image physical

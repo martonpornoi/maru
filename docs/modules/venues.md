@@ -249,9 +249,20 @@ ownership is unavailable, not a partial room list. Exact scope, final
 authorization and required minimized audit precede disclosure. These labels
 are not proof of physical availability or permission to reserve a space.
 
-Remaining work includes the accessible editor and visible candidate comparison,
-Programme release reconciliation, staffing/equipment/qualification checks,
+`programme_output_queries.load_released_room_wayfinding` supplies ADR 0097's
+separate public Programme wayfinding boundary. It independently resolves the
+exact-profile-admitted current Programme release, then reads only selected
+room/venue local names with current selection versions. It accepts no arbitrary
+room list or planner permission. Missing, foreign, incomplete or changing source
+evidence is unavailable. Private restrictions, contacts, staffing identities,
+access/layout documents and independent Venue publication are not consulted.
+These are explicitly current owner names, not immutable historical release
+labels; Scheduling's native release checks govern whether the selected approved
+physical timing remains usable. No current profile pins the public adapter.
+
+Remaining work includes integrated editor acceptance,
+Programme release-output reconciliation, equipment/qualification checks,
 calendar/signage/print exports, accommodation blocks/assignment/allocation,
-travel, and hospitality fulfilment. Until the ADR 0081 release owner exists,
-unrelated Venue publication remains independent and must not be presented as
+travel, and hospitality fulfilment. Unrelated Venue publication remains
+independent and must not be presented as
 the accepted Programme timetable; linked bookings cannot use that publication path.

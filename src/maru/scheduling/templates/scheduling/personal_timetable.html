@@ -1,0 +1,83 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}My hosting and work timetable - My Maru{% endblock %}
+{% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'scheduling/personal_timetable.css' %}">{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-maru-home' %}">My Maru</a> / My hosting and work timetable</div>{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+<div id="content-main" class="maru-personal-home personal-timetable">
+  <header>
+    {% if snapshot.edition_label %}<p>{{ snapshot.edition_label.name }}</p>{% endif %}
+    <h1>{{ state_title|default:"My hosting and work timetable" }}</h1>
+    <p>Your own required host presence and retained work. These records are not evidence of attendance.</p>
+  </header>
+  {% include "core/_page_access_mount.html" %}
+  {% if state_title %}
+    <p role="status">{{ state_message }}</p>
+    <p><a href="?">Reload timetable</a></p>
+  {% else %}
+    <p><strong>Time zone:</strong> {{ snapshot.zone_name }}. <strong>Last checked:</strong> {{ checked_label }}.</p>
+    <p><strong>Hosting:</strong> {{ hosting_state }}.</p>
+    {% if snapshot.shifts is None %}<p><strong>Workforce:</strong> Not adopted for this edition.</p>
+    {% elif not snapshot.shifts %}<p><strong>Workforce:</strong> No retained work records.</p>{% endif %}
+    <details class="personal-source"><summary>Scope, source and saved-copy limits</summary>{% include "scheduling/personal_timetable_source.html" %}</details>
+    <div class="personal-print-source">{% include "scheduling/personal_timetable_source.html" %}</div>
+    {% if print_view %}<p class="personal-controls">Use your browser's Print command. This page contains private hosting and work information.</p>
+    {% else %}
+      <nav class="personal-controls" aria-label="Complete private timetable copies">
+        <a href="?format=print">Print-friendly view</a>
+        <a href="?format=json">Download private JSON</a>
+        {% if calendar_available %}<a href="?format=calendar">Download private calendar</a>{% endif %}
+      </nav>
+    {% endif %}
+    {% if not calendar_available %}<p>Combined calendar download is unavailable until the hosting release is checked again. Your work remains unchanged.</p>{% endif %}
+    <section aria-labelledby="personal-agenda-heading">
+      <h2 id="personal-agenda-heading">Hosting and work by time</h2>
+      {% if rows %}<ol class="personal-agenda">
+        {% for row in rows %}<li>
+          <article>
+            <p><strong>{{ row.state_label }}</strong></p>
+            <h3>{{ row.title }}</h3>
+            <p><strong>From:</strong> {{ row.starts_label }}<br><strong>Until:</strong> {{ row.ends_label }}</p>
+            {% if row.kind == 'hosting' %}
+              <p>{{ row.room.venue_name }} / {{ row.room.room_name }}</p>
+              <p class="personal-prose">{{ row.purpose.briefing }}</p>
+              <p><strong>Surrounding event context — not additional assigned work:</strong><br>
+                Preparation: {{ row.preparation_label }} to {{ row.delivery_label }}<br>
+                Delivery: {{ row.delivery_label }} to {{ row.delivery_end_label }}<br>
+                Teardown: {{ row.delivery_end_label }} to {{ row.teardown_label }}</p>
+              <p class="personal-evidence">Host version {{ row.purpose.version }}, invitation {{ row.purpose.invitation_sequence }};
+                room version {{ row.room.space_version }}, venue version {{ row.room.venue_version }}.</p>
+            {% else %}
+              <p><strong>Retained rest ends:</strong> {{ row.rest_label }}</p>
+              <p><strong>Current work instructions</strong> (version {{ row.shift.instructions.version }}, {{ row.shift.instructions.status }}):
+                {{ row.shift.instructions.department_name }} / {{ row.shift.instructions.position_title }}.</p>
+              <p><strong>Current location label:</strong> {{ row.shift.instructions.location }}.
+                This is not an immutable accepted location or an automatic relocation.</p>
+              <p class="personal-prose">{{ row.shift.instructions.briefing }}</p>
+              {% if row.shift.instructions.supervision_note %}<p class="personal-prose"><strong>Supervision:</strong> {{ row.shift.instructions.supervision_note }}</p>{% endif %}
+              <p class="personal-evidence">Work version {{ row.shift.version }}. Times come from your retained commitment, not a Programme placement.</p>
+            {% endif %}
+            <details class="personal-source"><summary>Source identifiers for {{ row.title }}</summary>{% include "scheduling/personal_timetable_row_source.html" %}</details>
+            <div class="personal-print-source">{% include "scheduling/personal_timetable_row_source.html" %}</div>
+          </article>
+        </li>{% endfor %}
+      </ol>{% else %}<p>No approved host presence or retained work intervals to show. This does not confirm availability or attendance.</p>{% endif %}
+    </section>
+    {% if unscheduled %}<section aria-labelledby="personal-purpose-heading">
+      <h2 id="personal-purpose-heading">Hosting records without an approved time</h2>
+      <p>These are your own invitation records, not additional scheduled commitments.</p>
+      <ul class="personal-agenda">{% for purpose in unscheduled %}<li>
+        <h3>{{ purpose.title }}</h3><p><strong>{{ purpose.state|capfirst }}</strong> — {{ purpose.role }}.</p>
+        <p class="personal-prose">{{ purpose.briefing }}</p>
+        <p>Host version {{ purpose.version }}, invitation {{ purpose.invitation_sequence }}.</p>
+      </li>{% endfor %}</ul>
+    </section>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}
