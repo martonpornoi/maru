@@ -63,6 +63,14 @@ lint/formatting, strict docstrings and semantic docs (566 files) passed.
 Exact clean-commit local certification and independent protected acceptance
 remain pending. These overlapping development counts are not certification.
 
+The first certification failed two exact unit inventories, now repaired without
+relaxing their assertions or acceptance scope. All 4,793 units then passed in
+28.26s with task-local temporary storage. Hardened native Identity timestamp
+tests passed 24 PostgreSQL cases in 143.35s using database-clock bounds and
+past/future owner-clock offsets. Inventory/selection checks passed 124 cases.
+The cancelled run has no success receipt; its logs
+are archived and its eight disposable databases were removed.
+
 Synthetic public/private browser rehearsals covered seven widths, keyboard
 controls, print-friendly HTML, copy-link actions, isolation and failure/recovery.
 They corrected excessive provenance and pale private agenda headings. Both fresh

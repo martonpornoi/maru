@@ -69,6 +69,35 @@ These overlapping development counts are not additive whole-suite certification.
 Exact-commit local/hosted acceptance remains pending at this snapshot; CURRENT
 and the eventual PR own newer evidence.
 
+### Initial certification repair
+
+The initial `b6b32447f4b33de243f8026047f5b47ad48dd080` certification failed
+two unit inventory checks: the exact owner-adapter registry expectation had not
+included the new public adapter, and five new integration files were missing
+from the diagnostic whole-file timing map. The repaired registry remains exact
+and nonduplicating; the timing additions use the existing 29.955-second median
+fallback, not measured acceptance. Authoritative group selection, historical
+scope and coverage thresholds are unchanged.
+
+Once failure was known, only that run's verified PostgreSQL and quality-gate
+processes were cancelled. The parent exited with failure and removed its eight
+disposable databases normally. Logs and partial reports were archived; there is
+no success receipt. A separate unit retry hit the Windows shared temporary
+directory permissions. With a task-local temporary directory, all 4,793 unit
+tests passed in 28.26 seconds.
+
+Before cancellation, a PostgreSQL progress failure identified the native
+Identity deactivation case by its exact collected order. Its full 23-case file
+passed in isolation in 146.22 seconds, so the original failure was not reproduced.
+Inspection found that it bounded database-authored journal time using a different
+host clock. The test now uses database-clock bounds and checks both backdated
+and future-dated owner time, retaining exact audit attribution and proving that
+application time cannot select the journal timestamp. No production timestamp,
+native guard, readiness fingerprint or permission contract is changed.
+The strengthened file passed all 24 PostgreSQL cases in 143.35 seconds;
+adapter, timing-inventory and acceptance-policy checks passed all 124 cases in
+12.38 seconds. Complete replacement certification remains required.
+
 ## Synthetic browser observations
 
 Both components used isolated loopback fixtures and synthetic data, not an

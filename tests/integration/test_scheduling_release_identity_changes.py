@@ -51,6 +51,13 @@ def _flush():
         cursor.execute("SET CONSTRAINTS ALL DEFERRED")
 
 
+def _database_now():
+    # The journal is database-authored; host/VM wall clocks need not agree.
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT clock_timestamp()")
+        return cursor.fetchone()[0]
+
+
 def _raw_deactivate(account):
     Account.objects.filter(pk=account.id).update(is_active=False)
     _flush()
@@ -73,7 +80,7 @@ def _raw_advance(key):
 
 def test_native_deactivation_advances_exact_global_dependency(people):
     key = _track(people[1])
-    before = timezone.now()
+    before = _database_now()
     result = _deactivate(people)
     _flush()
     key.refresh_from_db()
@@ -81,7 +88,7 @@ def test_native_deactivation_advances_exact_global_dependency(people):
     assert not result.account.is_active
     assert key.generation == change.generation == 2
     assert change.organization_id is change.edition_id is None
-    assert before <= change.recorded_at <= timezone.now()
+    assert before <= change.recorded_at <= _database_now()
     assert change.source_audit.target_id == people[1].id
     assert change.source_audit.operation == "identity.account.emergency_deactivate"
     assert AuditNativeMutationWitness.objects.filter(
@@ -251,18 +258,20 @@ def test_old_allowed_audit_does_not_substitute_for_native_source_mutation(people
     assert not SchedulingReleaseDependencyChange.objects.exists()
 
 
-def test_journal_uses_database_time_not_backdated_owner_time(people):
+@pytest.mark.parametrize("clock_offset", [timedelta(days=-10), timedelta(days=10)])
+def test_journal_uses_database_time_not_shifted_owner_time(people, clock_offset):
     _track(people[1])
-    actual_now = timezone.now()
+    actual_now = _database_now()
+    owner_time = actual_now + clock_offset
     with patch(
         "maru.identity.services.timezone.now",
-        return_value=actual_now - timedelta(days=10),
+        return_value=owner_time,
     ):
         _deactivate(people)
     _flush()
     change = SchedulingReleaseDependencyChange.objects.get()
-    assert change.recorded_at >= actual_now
-    assert change.source_audit.occurred_at == actual_now - timedelta(days=10)
+    assert actual_now <= change.recorded_at <= _database_now()
+    assert change.source_audit.occurred_at == owner_time
 
 
 def test_unrelated_tracked_account_edit_does_not_invalidate(people):
