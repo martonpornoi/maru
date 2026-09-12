@@ -20,7 +20,7 @@ from django.utils import timezone
 
 import maru.effects.services as effect_services
 import maru.programme.commands as programme_commands
-from maru.audit.models import AuditEvent
+from maru.audit.models import AuditEvent, AuditNativeMutationWitness
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
@@ -1492,7 +1492,15 @@ def test_audit_failure_rolls_back_and_preserves_original_failure(
     def fail_audit(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("synthetic_audit_unavailable")
 
-    monkeypatch.setattr(programme_commands, "append_audit", fail_audit)
+    def fail_error_audit(*_args: object, **_kwargs: object) -> None:
+        raise RuntimeError("synthetic_error_audit_unavailable")
+
+    # Successful native mutations now append through the live Audit lease;
+    # failure reporting still uses Programme's best-effort error audit. Fail
+    # both with distinct errors to prove the secondary failure cannot mask the
+    # original dependency error or retain partial native evidence.
+    monkeypatch.setattr("maru.audit.mutation_evidence.append_audit", fail_audit)
+    monkeypatch.setattr(programme_commands, "append_audit", fail_error_audit)
     with pytest.raises(RuntimeError, match="synthetic_audit_unavailable"):
         _create(
             actor=actor,
@@ -1510,6 +1518,7 @@ def test_audit_failure_rolls_back_and_preserves_original_failure(
     assert not AuditEvent.objects.filter(
         capability_code="programme.manage_items"
     ).exists()
+    assert not AuditNativeMutationWitness.objects.exists()
 
 
 def test_inactive_actor_is_denied_before_trusted_policy() -> None:

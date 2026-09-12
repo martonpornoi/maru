@@ -7,6 +7,34 @@ Last updated: 2026-09-07
 
 ## Purpose and boundary
 
+The #96 native release work joins property location/lifecycle, selection
+availability and booking reschedule/approval/cancellation to existing Scheduling
+dependency generations in the same owner transaction. Exact native receipts and
+Audit witnesses, including each resulting source version, govern deferred SQL
+enforcement. Private property contacts/notes and labels are not physical changes.
+Venue's independent booking publication/withdrawal does not cancel Programme's
+physical reservation. Unsupported edits to tracked physical member or selection
+facts fail closed until a native owner command defines their evidence contract.
+
+Venue writers now take Organization, optional series/edition, actor, complete
+property and physical-member closure before selection and narrower locks, and
+reauthorize after parent/person locking. Physical scope is recollected after
+locking; a changed closure fails instead of acquiring a newly discovered parent
+out of order. These are profile-neutral ownership locks, not Workforce adoption.
+Full publication races, auxiliary raw-source integrity, runtime and recovery
+acceptance remain open within #96; this is not an activation or merge claim.
+
+`release_queries.lock_venue_release_sources` is the owner boundary for complete
+release capture. Inside the compositor's existing READ COMMITTED transaction,
+after its complete person union, it independently authorizes the selected
+physical resources, locks their property/member/selection union and local bound
+bookings, then rereads current evidence and authority after waits. It returns
+only exact selected physical identities and the existing minimized snapshot.
+Foreign busy booking/edition identities remain undisclosed and unlocked; no
+tracking key, reservation or approval is created by this query. Missing or
+changed closure fails as a whole. Scheduling must supply its entire trusted
+candidate selection; these references are not a publication permit.
+
 `maru.venues` owns organizer-reusable hotel and venue facts and the explicit
 decision to use them in an event edition. A property is not a Maru tenant. It
 belongs to the organizing `Organization`; edition selections additionally

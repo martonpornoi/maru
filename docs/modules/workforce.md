@@ -18,6 +18,56 @@ Last updated: 2026-09-02
 
 ## Purpose and requirements
 
+The #96 native release integration joins exact demand/commitment, deliberately
+shared Availability and assignment-ending receipts to tracked Scheduling source
+generations in their owner transaction. Receipt/Audit attribution includes actor,
+scope, operation, correlation, source channel and hashed native retry key. A
+commitment affects its exact demand; a private draft replacing shared
+Availability invalidates that source too. Skipping a required join cannot commit
+the tracked native receipt. This grants no ability to alter a release, create a
+tracking key or activate a Programme profile. Reciprocal published-host protection
+also applies to ordinary claim/confirmation, without making Programme disclosure
+or activation a Workforce-only permission prerequisite.
+
+The closed global `workforce_person_obligations` source retains only an opaque
+account reference and monotonic generation, not another edition's demand or
+calendar identity. Each native commitment claim, confirmation, withdrawal,
+removal, completion or cancellation advances an existing tracked person key.
+The exact scoped receipt and Audit remain Workforce-owned; only the explicit
+person-work cause may map that proven native scope into the global dependency.
+This makes a later undone work change observable to an unpublished approval
+without exposing the other convention. Ongoing staffing and relationship
+disclosure still have separate dependencies and temporal rules.
+
+`programme_release_references.collect_programme_release_work_references` resolves
+the complete native demand/occurrence and claimed/confirmed work reference set
+from an independently authorized exact Scheduling candidate. The separate
+`release_dependency_references` field is required alongside release consequences;
+ordinary minimized conflict permission does not disclose these references.
+The compositor must hold an outer transaction, combine this set with Programme's
+person closure before globally sorted Identity locks, then recollect both sets.
+References include only local bound demands, accounts and their exact assignment
+and shared-availability identities, never foreign tenant work or private text.
+Closed/predecessor demand membership remains explicit. No tracking or release
+is written, and publication eligibility remains a separate complete check.
+
+Shift commands lock their complete bounded affected-person union after owning
+parents and before work rows, then freshly check actor and policy. Inactive
+retained workers remain lockable for cleanup, not eligible for new work. An early
+raw commitment guard uses a non-waiting account lock before older subject
+guards, preventing an inverted raw write from waiting on a captured person.
+Current Availability windows are read without UPDATE locks: the owning plan is
+already locked, windows are replacement-only, and their database guard requires
+a conflicting parent KEY SHARE. No runtime table permission is widened.
+Focused source, real two-connection, foreign-edition and genuine-login tests
+cover this boundary. The minimized Scheduling-owned published-person source
+returns only overlap/rest consequences and an opaque retained-history digest.
+Both application checks and native commitment guards consult it under account
+serialization. Room/copy invalidation does not cancel retained host time;
+governed relationship ending or deliberate release replacement/withdrawal does.
+It exposes no foreign edition, calendar or reason. See CURRENT for #96 delivery
+status and the atomic-release recovery runbook for the separate #97 restore gate.
+
 `maru.workforce` owns the executable HR-007 through HR-014 slices defined by
 ADRs 0019, 0028, 0075, 0076, 0077, 0078, 0080, and 0084, plus IDN-011,
 IDN-014, EVT-006, PRG-011, UX-030, and NFR-013. It turns an edition responsibility into

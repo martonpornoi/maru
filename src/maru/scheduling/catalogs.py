@@ -10,6 +10,7 @@ MAX_CANDIDATES: Final = 100
 MAX_REVISIONS: Final = 1_000
 MAX_CANDIDATE_REVISIONS: Final = 10_000
 MAX_CONFLICTS: Final = 10_000
+MAX_RELEASE_DEPENDENCY_USES: Final = 65_536
 MAX_CONFLICT_COMPARISONS: Final = 1_000_000
 MAX_TITLE_LENGTH: Final = 240
 MAX_REASON_LENGTH: Final = 1_000
@@ -55,6 +56,37 @@ class SchedulingOperation(StrEnum):
     WARNING_ACKNOWLEDGE = "warning_acknowledge"
     RESERVATION_REPLACE = "reservation_replace"
     RESERVATION_CANCEL = "reservation_cancel"
+    RELEASE_WARNING_ACKNOWLEDGE = "release_warning_acknowledge"
+    RELEASE_APPROVE = "release_approve"
+    RELEASE_PUBLISH = "release_publish"
+    RELEASE_WITHDRAW = "release_withdraw"
+
+
+# Release decisions have separate objects, not candidate-edit authorship.
+PLANNING_OPERATION_VALUES: Final = (
+    "day_create",
+    "day_revise",
+    "day_retire",
+    "occurrence_create",
+    "occurrence_revise",
+    "occurrence_retire",
+    "candidate_create",
+    "candidate_copy",
+    "placement_set",
+    "placement_remove",
+    "candidate_restore",
+    "candidate_archive",
+    "evaluation_record",
+    "warning_acknowledge",
+    "reservation_replace",
+    "reservation_cancel",
+)
+RELEASE_OPERATION_VALUES: Final = (
+    "release_warning_acknowledge",
+    "release_approve",
+    "release_publish",
+    "release_withdraw",
+)
 
 
 class SchedulingConflictSeverity(StrEnum):

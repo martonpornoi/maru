@@ -166,10 +166,10 @@ def test_receipt_lookup_distinguishes_absence_replay_and_changed_intent() -> Non
     query = MagicMock()
     with patch.object(
         VenueCommandReceipt.objects,
-        "select_for_update",
+        "filter",
         return_value=query,
     ):
-        query.filter.return_value.first.return_value = None
+        query.first.return_value = None
         assert (
             services._existing_receipt(
                 actor=actor,
@@ -188,7 +188,7 @@ def test_receipt_lookup_distinguishes_absence_replay_and_changed_intent() -> Non
             request_digest="a" * 64,
             resulting_version=3,
         )
-        query.filter.return_value.first.return_value = receipt
+        query.first.return_value = receipt
         assert (
             services._existing_receipt(
                 actor=actor,

@@ -1,13 +1,16 @@
 """Raw source integrity, readiness and both retained-binding migration paths."""
 
 import json
+from importlib import import_module
 from uuid import uuid4
 
 import pytest
+from django.apps import apps
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.recorder import MigrationRecorder
 
+from maru.audit.models import AuditNativeMutationWitness
 from maru.authorization.provenance_readiness import _inspect_cutover_state
 from maru.programme.models import ProgrammeStaffingRequirement
 from maru.workforce.models import ProgrammeShiftBinding, ProgrammeShiftBindingRevision
@@ -121,34 +124,49 @@ def test_disabled_binding_guard_is_detected_without_reading_private_rows(binding
 @pytest.mark.usefixtures("restores_current_migration_graph")
 def test_retained_binding_fences_downgrade_before_removing_its_guards(binding_world):
     original = create(binding_world)
-    with pytest.raises(RuntimeError, match="retained Programme Shift lineage"):
+    before = MigrationRecorder(connection).applied_migrations()
+    retained = ProgrammeShiftBinding.objects.values().get(id=original.binding_id)
+    revision = ProgrammeShiftBindingRevision.objects.values().get(
+        id=original.revision_id
+    )
+    fence = import_module(
+        "maru.workforce.migrations.0021_programme_binding_downgrade_fence"
+    )
+    with (
+        pytest.raises(RuntimeError, match="retained Programme Shift lineage"),
+        connection.schema_editor() as editor,
+    ):
+        fence.refuse_used_programme_binding_downgrade(apps, editor)
+    assert AuditNativeMutationWitness.objects.exists()
+    with pytest.raises(RuntimeError, match="retain its execution boundary"):
         MigrationExecutor(connection).migrate(
             [("workforce", "0019_programme_shift_bindings")]
         )
-    assert ("workforce", "0021_programme_binding_downgrade_fence") in MigrationRecorder(
-        connection
-    ).applied_migrations()
+    assert MigrationRecorder(connection).applied_migrations() == before
     assert ProgrammeShiftBinding.objects.get(id=original.binding_id).version == 1
+    assert (
+        ProgrammeShiftBinding.objects.values().get(id=original.binding_id) == retained
+    )
+    assert (
+        ProgrammeShiftBindingRevision.objects.values().get(id=original.revision_id)
+        == revision
+    )
     assert _inspect_cutover_state().guards_installed
 
 
 @pytest.mark.usefixtures("restores_current_migration_graph")
-def test_unused_binding_schema_round_trip_preserves_programme_requirements(
+def test_native_requirements_fence_binding_contraction_without_a_binding(
     binding_world,
 ):
     identifier = binding_world.selection.source.requirement_id
+    before = MigrationRecorder(connection).applied_migrations()
     assert not ProgrammeShiftBinding.objects.exists()
-    MigrationExecutor(connection).migrate(
-        [("workforce", "0018_programme_department_ownership_contract")]
-    )
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT to_regclass('public.workforce_programmeshiftbinding'), "
-            "to_regprocedure('public.maru_guard_workforce_programme_binding()')"
+    assert AuditNativeMutationWitness.objects.exists()
+    with pytest.raises(RuntimeError, match="retain its execution boundary"):
+        MigrationExecutor(connection).migrate(
+            [("workforce", "0018_programme_department_ownership_contract")]
         )
-        assert cursor.fetchone() == (None, None)
+    assert MigrationRecorder(connection).applied_migrations() == before
     assert ProgrammeStaffingRequirement.objects.get(id=identifier).version == 1
-    executor = MigrationExecutor(connection)
-    executor.migrate(executor.loader.graph.leaf_nodes())
     assert not ProgrammeShiftBinding.objects.exists()
     assert _inspect_cutover_state().guards_installed

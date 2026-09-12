@@ -3,18 +3,33 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, worker, or production writer
 
-Last updated: 2026-09-10
+Last updated: 2026-09-11
 
 ## Purpose and ownership
 
-Issue #88 is adding the HR-015 staffing continuation under ADR 0093. Local
+Issue #88 delivered the dormant HR-015 staffing continuation through PR #89 under
+ADR 0093. The
 Programme requirement persistence, immutable work terms, protected current reads
 and paginated history are implemented, together with exact source selection and
 Workforce-owned binding/recovery commands and exact-source Scheduling coverage.
 The [native staffing continuation](../product/page-contracts/programme-staffing.md)
-and focused synthetic browser rehearsal are implemented locally; complete
-certification remains in progress.
-This is not a delivered staffing workflow or an activated Programme profile.
+and focused synthetic browser rehearsal are implemented. [CURRENT](../project/CURRENT.md)
+retains exact certification and protected-delivery evidence. This is not an
+activated Programme profile or production deployment.
+
+Issue #96 implements the dormant release successor. Its native mutation seam,
+`maru_programme_release_mutation_sources(receipt_id)`, resolves closed operational
+item/host identities from Programme's exact receipt and result revision. The
+Scheduling join records current native audit attribution; a deferred Programme
+guard refuses a tracked operational receipt without its same-transaction journal
+consequence. Hosting withdrawal has a distinct ongoing disclosure consequence;
+availability changes affect operational safety. Private working edits, discussion
+and new approved renditions do not withdraw previously approved copy. The additive
+copy-review and exact-withdrawal commands below have focused native transaction
+evidence, including composed readiness, genuine runtime containment and same-image
+physical recovery. See CURRENT for certification/delivery status and the
+[release recovery contract](../operations/programme-atomic-release-migration-and-recovery.md)
+for the unresolved #97 logical-restore gate. No Programme profile is activated.
 
 ## Programme staffing requirements
 
@@ -289,6 +304,32 @@ private item version or invalidating readiness evidence. Its event uses the
 rendition's own aggregate stream. Approval does not implement Applications
 review, moderation, timetable approval, release, or publication.
 
+Under SCH-012, Ready/Live public-copy review remains possible without reopening
+private working-information or delivery editing. It selects the latest retained
+working revision and requires a currently active verified reviewer different
+from every retained working author. Draft/Preparing self-curation history remains
+compatible, but does not qualify as independent release evidence. A new rendition
+requires a new independent timetable approval/publication to enter a release.
+
+`public_copy_commands.withdraw_programme_public_rendition` uses separately checked
+`programme.approve_public_copy` authority, a current verified actor, exact item
+version and exact rendition identity, a required reason and an idempotency key.
+This privacy/disclosure exit also remains available after ordinary editing or
+operational review closes, including Closing/Archived editions and retained items.
+It appends `ProgrammePublicRenditionWithdrawal`, preserving the rendition, item
+version and other renditions. Its independent receipt, native Audit witness,
+`withdraw_public_copy` event and outbox commit with the exact copy's native
+disclosure-generation change. Missing evidence rolls back the entire change.
+The command does not withdraw a whole release or change a Scheduling pointer.
+
+Withdrawal of a rendition governs all retained output selecting that exact copy,
+including historical releases. The ordinary current-copy query chooses the latest
+rendition first, returns absence if it is withdrawn, and never falls back to old
+wording. A withdrawn older rendition does not hide a separately approved newer
+one. Private public-copy review history separately exposes withdrawal time, actor
+reference and rationale under its restricted history field ceiling; public-copy
+read authority does not grant that history or reason.
+
 The C0 public-copy query reads only the approved-rendition relation and its four
 approved projection fields. It returns the same absent result for an existing
 item without approved copy, an unknown identifier, a sibling edition, or a
@@ -411,6 +452,10 @@ an author does not erase authorship. No private text becomes a public fallback.
 for the complete lock closure, not a personnel directory or caller-selectable
 success flag. It includes current selected-item hosts and latest copy reviewers;
 the compositor must combine Workforce people before taking any person locks.
+Its source-account set excludes caller-only locking needs without excluding an
+actor who is also a host or copy reviewer. This lets independent approvers and
+publishers retain identical governing source membership while locking their
+own current authority separately.
 The [source recovery guide](../operations/programme-release-sources-migration-and-recovery.md)
 documents schema, read-only runtime containment and populated downgrade fences.
 

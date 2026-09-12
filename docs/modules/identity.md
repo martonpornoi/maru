@@ -6,7 +6,7 @@ strict platform account-invitation HTML/API adapters, the repository-verified
 User accounts first experience slice, and an author-verified retention-v10
 corrective candidate; complete rendered owner acceptance, independent retention
 acceptance, production policy activation, and writer cutover remain gated
-Last updated: 2026-09-01
+Last updated: 2026-09-11
 
 ## Purpose and requirements
 
@@ -17,6 +17,18 @@ not own organizer profiles, participation, applications, HR, orders, finance,
 or conduct cases. ADR 0013 defines verified identity and scoped restrictions.
 
 ## Owned data and invariants
+
+The #96 release-invalidation draft joins the existing native emergency account
+deactivation to Scheduling through live Audit mutation evidence. If the account
+is tracked, its eligibility change must retain a current same-transaction journal
+entry or the complete native transaction rolls back. Database validation checks
+the exact global target, native operation and revoked sessions. The account lock
+precedes the dependency key; no foreign edition/release pointer is acquired.
+Untracked changes create no Scheduling state. Relevant eligibility mutations
+require `READ COMMITTED` before key visibility is consulted, including the first-
+tracking race. Unrelated account label edits do not invalidate release sources.
+Full runtime/recovery and publication acceptance remain pending under #96; this
+does not activate a Programme profile or a new account-administration workflow.
 
 - opaque UUID account ID;
 - normalized case-folded email and optional human login handle;

@@ -28,6 +28,7 @@ PROGRAMME_EVENT_ACTIONS: Final = frozenset(
         "configure_readiness",
         "record_readiness",
         "approve_public_copy",
+        "withdraw_public_copy",
         "invite_host",
         "respond_host",
         "remove_host",
@@ -78,6 +79,7 @@ _ACTION_LAYERS: Final = MappingProxyType(
         "configure_readiness": "readiness",
         "record_readiness": "readiness",
         "approve_public_copy": "public_copy",
+        "withdraw_public_copy": "public_copy",
         "invite_host": "hosts",
         "respond_host": "hosts",
         "remove_host": "hosts",
@@ -127,7 +129,7 @@ def validate_programme_item_changed_payload(payload: dict[str, object]) -> None:
         or _ACTION_LAYERS.get(action) != layer
         or (action in {"configure_readiness", "record_readiness"} and concern == "none")
         or (
-            action == "approve_public_copy"
+            action in {"approve_public_copy", "withdraw_public_copy"}
             and concern != ProgrammeReadinessConcern.PUBLIC_COPY.value
         )
         or (
@@ -136,6 +138,7 @@ def validate_programme_item_changed_payload(payload: dict[str, object]) -> None:
                 "configure_readiness",
                 "record_readiness",
                 "approve_public_copy",
+                "withdraw_public_copy",
             }
             and concern != "none"
         )

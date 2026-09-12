@@ -101,6 +101,7 @@ def append_audit(
     record: AuditRecord,
     *,
     occurred_at: datetime | None = None,
+    event_id: UUID | None = None,
 ) -> AuditEvent:
     """Append audit.
 
@@ -110,6 +111,9 @@ def append_audit(
         The domain record to validate, persist, or project.
     occurred_at : datetime | None, default=None
         The time at which the event occurred.
+    event_id : UUID | None, default=None
+        Internally reserved event identity, or the ordinary model-generated UUID.
+        Selecting an identifier grants no mutation or audit authority.
 
     Returns
     -------
@@ -120,6 +124,8 @@ def append_audit(
     values["obligations"] = list(record.obligations)
     values["changed_fields"] = list(record.changed_fields)
     values["safe_metadata"] = record.safe_metadata or {}
+    if event_id is not None:
+        values["id"] = event_id
     return AuditEvent.objects.create(
         occurred_at=occurred_at or timezone.now(),
         **values,

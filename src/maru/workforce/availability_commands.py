@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -12,13 +13,15 @@ from django.db import transaction
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
-from maru.audit.services import AuditRecord, append_audit
+from maru.audit.mutation_evidence import audited_mutation
+from maru.audit.services import AuditRecord
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import PolicyDecision, decide, resolve_self_target
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
+from maru.scheduling.release_changes import record_workforce_release_change
 from maru.workforce.availability_inputs import (
     AvailabilityWindowInput,
     availability_window_set_digest,
@@ -370,11 +373,12 @@ def _append_availability_audit(
     scope: _AvailabilityScope,
     plan: PersonAvailabilityPlan,
     action: str,
+    retry_key: UUID,
     correlation_id: UUID,
     request_id: UUID | None,
     source_channel: str,
-) -> AuditEvent:
-    return append_audit(
+) -> UUID:
+    with audited_mutation(
         AuditRecord(
             principal_kind="account",
             principal_id=scope.actor.id,
@@ -392,6 +396,7 @@ def _append_availability_audit(
             source_channel=source_channel,
             obligations=tuple(sorted(scope.decision.obligations)),
             changed_fields=("status", "current_windows"),
+            idempotency_key_hash=hashlib.sha256(str(retry_key).encode()).hexdigest(),
             safe_metadata={
                 "policy_version": POLICY_VERSION,
                 "target_count": plan.window_count,
@@ -399,14 +404,16 @@ def _append_availability_audit(
             retention_class="workforce-personal",
         ),
         occurred_at=scope.evaluated_at,
-    )
+    ) as mutation:
+        record_workforce_release_change(mutation)
+        return mutation.audit_id
 
 
 def _publish_availability_event(
     *,
     scope: _AvailabilityScope,
     plan: PersonAvailabilityPlan,
-    audit_event: AuditEvent,
+    audit_event: UUID,
     correlation_id: UUID,
 ) -> None:
     publish_domain_event(
@@ -423,7 +430,7 @@ def _publish_availability_event(
                 "window_count": str(plan.window_count),
             },
             correlation_id=correlation_id,
-            causation_id=audit_event.id,
+            causation_id=audit_event,
             actor_kind="account",
             actor_id=scope.actor.id,
             retention_class="workforce-personal",
@@ -649,6 +656,7 @@ def save_person_availability(  # noqa: DOC503 - composed command boundary
             scope=scope,
             plan=plan,
             action=action,
+            retry_key=retry_key,
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,
@@ -796,6 +804,7 @@ def withdraw_person_availability(  # noqa: DOC503 - composed command boundary
             scope=scope,
             plan=plan,
             action=action,
+            retry_key=retry_key,
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,

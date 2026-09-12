@@ -17,6 +17,8 @@ from maru.core.database_integrity_readiness import (
 )
 from maru.core.relation_schema_readiness import relation_schema_is_current
 
+from .release_integrity import with_native_release_integrity
+
 _BASE = build_database_integrity_contract(
     status_key="scheduling_integrity",
     app_label="scheduling",
@@ -33,27 +35,64 @@ _VENUE = build_database_integrity_contract(
 )
 _FENCE = import_module("maru.scheduling.migrations.0006_scheduling_downgrade_fence")
 _FENCE_SHA256 = "1d7fb01e7311dadbbd9d48899a240a37a9fccf4f47bf001da24d24528d6803b6"
-SCHEDULING_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
-    _BASE,
-    triggers={
-        **_BASE.triggers,
-        **{
-            name: trigger
-            for name, trigger in _VENUE.triggers.items()
-            if trigger.table.startswith("scheduling_")
-        },
-    },
-    functions={**_BASE.functions, **_VENUE.functions},
-    source_contract_current=(
-        _BASE.source_contract_current
-        and _VENUE.source_contract_current
-        and hashlib.sha256(
-            inspect.getsource(_FENCE).replace("\r\n", "\n").encode()
-        ).hexdigest()
-        == _FENCE_SHA256
-    ),
+SCHEDULING_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
+    with_native_release_integrity(
+        replace(
+            _BASE,
+            triggers={
+                **_BASE.triggers,
+                **{
+                    name: trigger
+                    for name, trigger in _VENUE.triggers.items()
+                    if trigger.table.startswith("scheduling_")
+                },
+            },
+            functions={**_BASE.functions, **_VENUE.functions},
+            runtime_executable_functions=frozenset(
+                {"maru_validate_scheduling_linked_booking(uuid)"}
+            ),
+            source_contract_current=(
+                _BASE.source_contract_current
+                and _VENUE.source_contract_current
+                and hashlib.sha256(
+                    inspect.getsource(_FENCE).replace("\r\n", "\n").encode()
+                ).hexdigest()
+                == _FENCE_SHA256
+            ),
+        )
+    )
 )
 SCHEDULING_SCHEMA_SHA256: Final = {
+    "scheduling_schedulingrelease": (
+        "d55f04acfae85f56d670781c15231a39a70ad8afefeb502101b0331bd430f451"
+    ),
+    "scheduling_schedulingreleaseapproval": (
+        "063ce6fd3fe8eccafc1d6cbcd3a0658873bfff33182de9be3d00d7020f15e01e"
+    ),
+    "scheduling_schedulingreleaseapprovaldependency": (
+        "635ecad486650031d209bac3928984fcc65d85c457c58fc0e9fe14270377600b"
+    ),
+    "scheduling_schedulingreleaseapprovalplacement": (
+        "fa21d5dfc2a33cbde2600597b5a78d999c8174fb235ecbbbd5022af33dec7166"
+    ),
+    "scheduling_schedulingreleaseartifact": (
+        "c5c2f071be61ad504f7a3deb15b22470a90770746c6583ecd954b8c77685cba9"
+    ),
+    "scheduling_schedulingreleasedependencychange": (
+        "7e59e5d9f33c2c78a4fa670eab661032be036e1edc24d9b95571184a2bc1cb1a"
+    ),
+    "scheduling_schedulingreleasedependencykey": (
+        "7bf22b9a64f657f6011d492f338275602c6be6b8c5cdf91530d86ad957e3ab33"
+    ),
+    "scheduling_schedulingreleasepointer": (
+        "0ae52d9d890069efe11ef35dcee8ec7d1a88ec3d22ba59124628ba042ce9d420"
+    ),
+    "scheduling_schedulingreleasewarningacknowledgement": (
+        "ae963cdbad26aba2744bef050e6c3decbc6ec3a1fb020e4c30f43ee27ca809c2"
+    ),
+    "scheduling_schedulingreleasewithdrawal": (
+        "d09587d087927d7f04db119b678efb404b151ea5d8eb42de84c43054f10fe82f"
+    ),
     "scheduling_schedulingcandidate": (
         "2f8518f5624a2349f621fc46f2436e32d88a79defffec7ac7d38198f123d32fa"
     ),
@@ -64,7 +103,7 @@ SCHEDULING_SCHEMA_SHA256: Final = {
         "307fe3e44d7db5f44f460bc8602dd5006aec7abda05102bb17db6b7606fbac73"
     ),
     "scheduling_schedulingcommandreceipt": (
-        "3bd7e36974aa7af5a1b897a1df783087ac53f618d4b3f23766b2338a51b431d2"
+        "37ef869ca955ffe87a9e684733952ee976385aa2a95a4099bf562b2e25d8cf12"
     ),
     "scheduling_schedulingconflict": (
         "f8ad18e82e6a9a05b61707371a088c41f9cb02223f062eceec0fb78af596bc29"

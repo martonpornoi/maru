@@ -35,6 +35,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
 @pytest.fixture
 def release_scope(assessed, monkeypatch):
+    return configure_release_scope(assessed, monkeypatch)
+
+
+def configure_release_scope(assessed, monkeypatch):
     monkeypatch.setattr(sources, "profile_allows_adapter", lambda *_args: True)
     item = ProgrammeItem.objects.get(id=assessed.selection.item_id)
     for concern in ProgrammeReadinessConcern:

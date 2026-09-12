@@ -2,14 +2,20 @@
   "tests/integration/test_application_programme_conversion_migrations.py": {
     "owners": [
       "applications",
+      "audit",
       "authorization",
-      "programme"
+      "events",
+      "identity",
+      "programme",
+      "scheduling",
+      "venues",
+      "workforce"
     ],
     "shared_baseline": false,
     "tests": [
       "test_completed_conversion_fences_contraction_before_any_guard_is_removed",
       "test_empty_conversion_reversal_preserves_the_old_source_column_and_reinstalls",
-      "test_organizer_item_survives_unused_conversion_downgrade_and_upgrade"
+      "test_organizer_item_native_evidence_fences_conversion_downgrade"
     ]
   },
   "tests/integration/test_application_programme_import_historical_retirement.py": {
@@ -214,8 +220,15 @@
   },
   "tests/integration/test_programme_hosts.py": {
     "owners": [
+      "applications",
+      "audit",
       "authorization",
-      "programme"
+      "events",
+      "identity",
+      "programme",
+      "scheduling",
+      "venues",
+      "workforce"
     ],
     "shared_baseline": false,
     "tests": [
@@ -224,19 +237,19 @@
     ]
   },
   "tests/integration/test_programme_staffing_commands.py": {
-    "owners": ["authorization", "programme", "scheduling", "workforce"],
+    "owners": ["applications", "audit", "authorization", "events", "identity", "programme", "scheduling", "venues", "workforce"],
     "shared_baseline": false,
     "tests": [
       "test_retained_staffing_fences_downgrade_before_removing_any_guard",
-      "test_unused_staffing_schema_round_trip_preserves_existing_owner_records"
+      "test_native_owner_records_fence_staffing_contraction_without_requirements"
     ]
   },
   "tests/integration/test_programme_placement_decisions.py": {
-    "owners": ["programme", "scheduling", "venues", "workforce"],
+    "owners": ["applications", "audit", "authorization", "events", "identity", "programme", "scheduling", "venues", "workforce"],
     "shared_baseline": false,
     "tests": [
       "test_populated_downgrade_fails_before_removing_schema_or_guards",
-      "test_unused_placement_graph_reverses_and_reapplies_with_existing_sources"
+      "test_native_sources_fence_placement_contraction_without_a_decision"
     ]
   },
   "tests/integration/test_programme_integrity_migrations.py": {
@@ -393,14 +406,19 @@
     ]
   },
   "tests/integration/test_scheduling_integrity_migrations.py": {
-    "owners": [
-      "scheduling",
-      "venues"
-    ],
+    "owners": ["applications", "audit", "authorization", "events", "identity", "programme", "scheduling", "venues", "workforce"],
     "shared_baseline": false,
     "tests": [
       "test_empty_joint_graph_reverses_and_recovers_with_normal_migrations",
       "test_planning_history_fences_both_owners_before_any_guard_is_removed"
+    ]
+  },
+  "tests/integration/test_scheduling_release_execution_migrations.py": {
+    "owners": ["audit", "authorization", "events", "identity", "programme", "scheduling", "venues", "workforce"],
+    "shared_baseline": false,
+    "tests": [
+      "test_native_evidence_fences_acl_reopening_before_any_migration_is_removed",
+      "test_unused_native_execution_boundary_really_reverses_and_recovers"
     ]
   },
   "tests/integration/test_scope_v2_readiness_command.py": {
@@ -429,11 +447,11 @@
     ]
   },
   "tests/integration/test_workforce_programme_binding_integrity.py": {
-    "owners": ["programme", "scheduling", "workforce"],
+    "owners": ["applications", "audit", "authorization", "events", "identity", "programme", "scheduling", "venues", "workforce"],
     "shared_baseline": false,
     "tests": [
       "test_retained_binding_fences_downgrade_before_removing_its_guards",
-      "test_unused_binding_schema_round_trip_preserves_programme_requirements"
+      "test_native_requirements_fence_binding_contraction_without_a_binding"
     ]
   },
   "tests/integration/test_workforce_programme_department_fk_contract_migration.py": {

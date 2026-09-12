@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Final
 from uuid import UUID, uuid4
 
 from django.db import connection, transaction
-from django.db.models import OuterRef, QuerySet, Subquery
+from django.db.models import Exists, OuterRef, QuerySet, Subquery
 
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
@@ -43,6 +43,7 @@ from maru.programme.models import (
     ProgrammeDepartmentDiscussionEntry,
     ProgrammeItem,
     ProgrammePublicRendition,
+    ProgrammePublicRenditionWithdrawal,
     ProgrammeReadinessEvidence,
     ProgrammeReadinessRequirement,
     ProgrammeWorkingRevision,
@@ -413,6 +414,12 @@ class ProgrammePublicCopyReviewHistoryEntryProjection:
         The retained review rationale.
     occurred_at
         The authoritative review timestamp.
+    withdrawn_at
+        Exact later disclosure withdrawal time, or no withdrawal.
+    withdrawn_by_id
+        Opaque withdrawal actor under this private history ceiling, or none.
+    withdrawal_reason
+        Retained private withdrawal rationale, or none; never a public-copy field.
     """
 
     rendition_number: int
@@ -423,6 +430,9 @@ class ProgrammePublicCopyReviewHistoryEntryProjection:
     actor_id: UUID
     reason: str
     occurred_at: datetime
+    withdrawn_at: datetime | None = None
+    withdrawn_by_id: UUID | None = None
+    withdrawal_reason: str | None = None
 
 
 def programme_query_field_ceiling(layer: str) -> frozenset[str]:
@@ -1628,6 +1638,9 @@ def list_programme_public_copy_review_history(
                 "reviewed_by_id",
                 "review_reason",
                 "reviewed_at",
+                "withdrawal__occurred_at",
+                "withdrawal__actor_id",
+                "withdrawal__reason",
             )[: _bounded_limit(limit)]
         )
         return tuple(
@@ -1640,6 +1653,9 @@ def list_programme_public_copy_review_history(
                 actor_id=rendition["reviewed_by_id"],
                 reason=rendition["review_reason"],
                 occurred_at=rendition["reviewed_at"],
+                withdrawn_at=rendition["withdrawal__occurred_at"],
+                withdrawn_by_id=rendition["withdrawal__actor_id"],
+                withdrawal_reason=rendition["withdrawal__reason"],
             )
             for rendition in renditions
         )
@@ -1694,7 +1710,9 @@ def load_programme_public_copy(
     Returns
     -------
     ProgrammePublicCopyProjection | None
-        Latest approved public fields, or the uniform absent result.
+        Latest approved public fields, or uniform absence if missing or withdrawn.
+        Withdrawal never falls back to an older rendition. This private-module
+        query is not the checked release-serving boundary.
     """
     item_id = require_uuid(item_id, field="item_id")
 
@@ -1706,15 +1724,23 @@ def load_programme_public_copy(
                 edition_id=edition_id,
             )
             .order_by("-rendition_number", "-id")
+            .annotate(
+                is_withdrawn=Exists(
+                    ProgrammePublicRenditionWithdrawal.objects.filter(
+                        rendition_id=OuterRef("pk")
+                    )
+                )
+            )
             .values(
                 "rendition_number",
                 "public_title",
                 "public_summary",
                 "public_content_note",
+                "is_withdrawn",
             )
             .first()
         )
-        if rendition is None:
+        if rendition is None or rendition["is_withdrawn"]:
             return None
         return ProgrammePublicCopyProjection(
             rendition_number=rendition["rendition_number"],

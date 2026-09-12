@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from maru.audit.mutation_evidence import audited_mutation
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.effects.services import DomainEventRecord, publish_domain_event
@@ -24,7 +25,12 @@ from .authorization import (
     SchedulingAuthorizer,
     authorize_scheduling_scope,
 )
-from .events import SCHEDULING_CHANGED_EVENT, SCHEDULING_CHANGED_SCHEMA_VERSION
+from .catalogs import RELEASE_OPERATION_VALUES
+from .events import (
+    SCHEDULING_CHANGED_EVENT,
+    SCHEDULING_CHANGED_SCHEMA_VERSION,
+    SCHEDULING_RELEASE_CHANGED_EVENT,
+)
 from .inputs import SchedulingCommandRequest, scheduling_digest
 from .models import SchedulingCommandReceipt, SchedulingEditionControl
 from .writer_boundary import _command_receipt_scope, scheduling_writer
@@ -145,31 +151,32 @@ def _audit(
     obligations: tuple[str, ...] = ("audit",),
     occurred_at: datetime | None = None,
 ) -> UUID:
-    return append_audit(
-        AuditRecord(
-            principal_kind="account",
-            principal_id=request.actor_id,
-            principal_context_id=None,
-            organization_id=request.organization_id,
-            event_edition_id=request.edition_id,
-            capability_code=capability,
-            operation=f"scheduling.command.{operation.value}",
-            target_type="scheduling.object",
-            target_id=target_id,
-            outcome=outcome,
-            reason_code=reason_code,
-            correlation_id=request.correlation_id,
-            request_id=request.correlation_id,
-            source_channel=request.source_channel,
-            obligations=obligations,
-            idempotency_key_hash=hashlib.sha256(
-                str(request.idempotency_key).encode()
-            ).hexdigest(),
-            safe_metadata={"policy_version": POLICY_VERSION},
-            retention_class="programme-restricted",
-        ),
-        occurred_at=occurred_at,
-    ).id
+    record = AuditRecord(
+        principal_kind="account",
+        principal_id=request.actor_id,
+        principal_context_id=None,
+        organization_id=request.organization_id,
+        event_edition_id=request.edition_id,
+        capability_code=capability,
+        operation=f"scheduling.command.{operation.value}",
+        target_type="scheduling.object",
+        target_id=target_id,
+        outcome=outcome,
+        reason_code=reason_code,
+        correlation_id=request.correlation_id,
+        request_id=request.correlation_id,
+        source_channel=request.source_channel,
+        obligations=obligations,
+        idempotency_key_hash=hashlib.sha256(
+            str(request.idempotency_key).encode()
+        ).hexdigest(),
+        safe_metadata={"policy_version": POLICY_VERSION},
+        retention_class="programme-restricted",
+    )
+    if outcome == "allow" and operation.value in RELEASE_OPERATION_VALUES:
+        with audited_mutation(record, occurred_at=occurred_at) as evidence:
+            return evidence.audit_id
+    return append_audit(record, occurred_at=occurred_at).id
 
 
 def _record_success(
@@ -207,7 +214,11 @@ def _record_success(
     )
     publish_domain_event(
         DomainEventRecord(
-            event_name=SCHEDULING_CHANGED_EVENT,
+            event_name=(
+                SCHEDULING_RELEASE_CHANGED_EVENT
+                if operation.value in RELEASE_OPERATION_VALUES
+                else SCHEDULING_CHANGED_EVENT
+            ),
             schema_version=SCHEDULING_CHANGED_SCHEMA_VERSION,
             organization_id=request.organization_id,
             event_edition_id=request.edition_id,

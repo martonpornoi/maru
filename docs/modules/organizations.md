@@ -17,6 +17,13 @@ UX-014 through UX-021, UX-024, UX-025, UX-029, UX-030, and NFR-013.
 
 ## Owned data and invariants
 
+`write_references.lock_organization_ownership` and `lock_series_ownership`
+are profile-neutral internal locking seams. They require an existing transaction
+and exact opaque ownership IDs, lock Organization before series, and return only
+existence/coherent ownership. They grant no capability, adoption or lifecycle
+authority and create no data. Events uses them to complete its edition lock
+chain; Venue callers reauthorize after taking this chain before narrower locks.
+
 - `Organization`: the independently governed tenant/data-controller boundary,
   with UUID, slug, public and optional legal identity, lifecycle, contact,
   primary country, ordered default languages, and time-zone default. New

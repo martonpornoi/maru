@@ -116,6 +116,7 @@ class ProgrammeCommandOperation(StrEnum):
     READINESS_CONFIGURE = "readiness_configure"
     READINESS_RECORD = "readiness_record"
     PUBLIC_RENDITION_RECORD = "public_rendition_record"
+    PUBLIC_RENDITION_WITHDRAW = "public_rendition_withdraw"
 
 
 PROGRAMME_ORGANIZER_CORE_SOURCE: Final = "programme.source.organizer-core@1"
@@ -333,6 +334,9 @@ PROGRAMME_PUBLIC_COPY_REVIEW_HISTORY_FIELD_CEILING = frozenset(
         "actor_id",
         "reason",
         "occurred_at",
+        "withdrawn_at",
+        "withdrawn_by_id",
+        "withdrawal_reason",
     }
 )
 

@@ -606,6 +606,28 @@ architecture documents, implementation issues, tests, and release notes.
   independently authorized planner, approver and publisher share the same exact
   evidence. Mandatory sensitive-read audit or independent field denial must
   prevent disclosure, not turn an incomplete collection into a passing result.
+  Timetable approval requires a currently authorized person distinct from the
+  candidate's retained authors and the selected placements' authors, including
+  copy/restore provenance. Publication requires its own currently authorized
+  person distinct from that approver. Exact warning acknowledgements, approval,
+  publication and whole-release withdrawal retain immutable reasoned evidence
+  and reauthorize retries. Publication compares the expected active-release
+  identity and pointer version; prior withdrawal does not reset that version.
+  An unpublished approval must become stale after any governing native source
+  change, including a cross-edition work change subsequently undone. Retaining
+  that freshness evidence must not disclose the foreign calendar or tenant.
+  Published host obligations and Workforce work/rest must serialize person
+  decisions reciprocally; invalidating a room alone does not silently release
+  a person's still-retained commitment.
+  In Ready and Live, an independently authorized current person may review a
+  new public rendition of the latest retained working revision without reopening
+  private working-information edits. That operational reviewer must differ from
+  all retained working-copy authors. Historical draft self-curation remains
+  history, not qualifying release evidence. Deliberate reasoned withdrawal of
+  one exact public rendition must govern every retained release using that copy,
+  including historical output; it must not withdraw another rendition or silently
+  replace an active timetable. New reviewed copy needs a new independent
+  timetable approval and publication before appearing in release-derived output.
 
 ### Querying, reporting, and export
 

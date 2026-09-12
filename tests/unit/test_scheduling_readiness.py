@@ -19,7 +19,7 @@ def test_every_new_owned_relation_is_runtime_select_only():
         "public." + model._meta.db_table
         for model in apps.get_app_config("scheduling").get_models()
     } | {"public.venues_venueschedulingbinding"}
-    assert len(names) == 16
+    assert len(names) == 26
     assert names <= set(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS)
 
 

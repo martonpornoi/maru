@@ -124,6 +124,7 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.programme_programmereadinessrequirementrevision,
     public.programme_programmereadinessevidence,
     public.programme_programmepublicrendition,
+    public.programme_programmepublicrenditionwithdrawal,
     public.programme_programmecommandreceipt,
     public.programme_programmehostrelationship,
     public.programme_programmehostinvitation,
@@ -146,6 +147,7 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.programme_programmereadinessrequirementrevision,
     public.programme_programmereadinessevidence,
     public.programme_programmepublicrendition,
+    public.programme_programmepublicrenditionwithdrawal,
     public.programme_programmecommandreceipt,
     public.programme_programmehostrelationship,
     public.programme_programmehostinvitation,
@@ -168,6 +170,7 @@ GRANT SELECT ON TABLE
     public.programme_programmereadinessrequirementrevision,
     public.programme_programmereadinessevidence,
     public.programme_programmepublicrendition,
+    public.programme_programmepublicrenditionwithdrawal,
     public.programme_programmecommandreceipt,
     public.programme_programmehostrelationship,
     public.programme_programmehostinvitation,
@@ -181,8 +184,20 @@ GRANT SELECT ON TABLE
     TO maru_runtime;
 
 -- Dormant Scheduling and its reciprocal Venue binding remain SELECT-only.
--- No route, worker, profile pin or generic Venue command may write this graph.
+-- No route, worker or profile pin activates release creation. Native owner
+-- invalidation uses only the narrow journal function granted below, not DML.
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.audit_auditnativemutationwitness,
+    public.scheduling_schedulingreleasedependencykey,
+    public.scheduling_schedulingreleasedependencychange,
+    public.scheduling_schedulingreleasewarningacknowledgement,
+    public.scheduling_schedulingreleaseapproval,
+    public.scheduling_schedulingreleaseapprovalplacement,
+    public.scheduling_schedulingreleaseapprovaldependency,
+    public.scheduling_schedulingrelease,
+    public.scheduling_schedulingreleaseartifact,
+    public.scheduling_schedulingreleasewithdrawal,
+    public.scheduling_schedulingreleasepointer,
     public.scheduling_schedulingeditioncontrol,
     public.scheduling_schedulingserviceday,
     public.scheduling_schedulingservicedayrevision,
@@ -201,6 +216,17 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.venues_venueschedulingbinding
     FROM maru_runtime, PUBLIC;
 GRANT SELECT ON TABLE
+    public.audit_auditnativemutationwitness,
+    public.scheduling_schedulingreleasedependencykey,
+    public.scheduling_schedulingreleasedependencychange,
+    public.scheduling_schedulingreleasewarningacknowledgement,
+    public.scheduling_schedulingreleaseapproval,
+    public.scheduling_schedulingreleaseapprovalplacement,
+    public.scheduling_schedulingreleaseapprovaldependency,
+    public.scheduling_schedulingrelease,
+    public.scheduling_schedulingreleaseartifact,
+    public.scheduling_schedulingreleasewithdrawal,
+    public.scheduling_schedulingreleasepointer,
     public.scheduling_schedulingeditioncontrol,
     public.scheduling_schedulingserviceday,
     public.scheduling_schedulingservicedayrevision,
@@ -783,7 +809,7 @@ REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role FROM PUBLIC;
 REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role
     FROM maru_runtime;
 
--- Functions are executable by PUBLIC by default. The ADR 0080 v3 allowlist
+-- Functions are executable by PUBLIC by default. The ADR 0096 v4 allowlist
 -- below is the complete non-trigger helper closure used by Maru's current
 -- runtime SQL and database triggers. A change must update code, migration
 -- evidence, this file, and the genuine-login service smoke together.
@@ -792,6 +818,22 @@ REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM maru_runtime;
 ALTER DEFAULT PRIVILEGES FOR ROLE maru_migration IN SCHEMA public
     REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION
+    public.maru_audit_current_native_transaction_stamp(),
+    public.maru_identity_release_deactivation_valid(uuid, uuid),
+    public.maru_programme_release_mutation_sources(uuid),
+    public.maru_programme_release_change_valid(text, uuid, uuid, uuid, uuid),
+    public.maru_workforce_release_mutation_sources(uuid),
+    public.maru_workforce_release_change_valid(text, uuid, uuid, uuid, uuid),
+    public.maru_events_release_change_valid(uuid, uuid, uuid, uuid),
+    public.maru_venues_release_mutation_sources(uuid),
+    public.maru_venues_release_change_valid(text, uuid, uuid, uuid, uuid),
+    public.maru_scheduling_lock_release_source(text, uuid, uuid, uuid),
+    public.maru_scheduling_release_native_change_valid(text, uuid, uuid, uuid, uuid),
+    public.maru_validate_scheduling_linked_booking(uuid),
+    public.maru_scheduling_record_native_release_change(text, uuid, uuid),
+    public.maru_scheduling_published_person_conflict(
+        uuid, timestamp with time zone, timestamp with time zone,
+        timestamp with time zone, uuid),
     public.maru_assert_active_board_membership_provenance(uuid),
     public.maru_assert_active_executive_board(uuid),
     public.maru_assert_active_executive_board_v0009(uuid),

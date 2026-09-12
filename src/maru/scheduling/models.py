@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, override
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -12,9 +13,12 @@ from django.db import models
 from maru.core.models import UUIDTimeStampedModel
 
 from .catalogs import (
+    MAX_CONFLICTS,
+    MAX_OCCURRENCES,
     MAX_REASON_LENGTH,
     MAX_SOURCE_CHANNEL_LENGTH,
     MAX_TITLE_LENGTH,
+    PLANNING_OPERATION_VALUES,
     CandidateLifecycle,
     SchedulingCapacityMode,
     SchedulingConflictCode,
@@ -24,6 +28,14 @@ from .catalogs import (
     scheduling_choices,
     scheduling_values,
 )
+from .release_catalogs import (
+    EDITION_RELEASE_DEPENDENCIES,
+    GLOBAL_RELEASE_DEPENDENCIES,
+    ORGANIZATION_RELEASE_DEPENDENCIES,
+    ReleaseDependencyKind,
+)
+from .release_dependency_rules import ReleaseDependencyHorizon
+from .release_eligibility import ReleaseCheck
 from .writer_boundary import require_scheduling_writer
 
 if TYPE_CHECKING:
@@ -42,6 +54,8 @@ _OWNER_RELATIONS = frozenset(
         "command_receipt",
         "previous_booking",
         "venue_receipt",
+        "source_audit",
+        "public_rendition",
     }
 )
 _DIGEST_VALIDATOR = RegexValidator(
@@ -49,19 +63,8 @@ _DIGEST_VALIDATOR = RegexValidator(
 )
 
 
-class _SchedulingModel(UUIDTimeStampedModel):
+class _SchedulingOwnedModel(UUIDTimeStampedModel):
     """Enforce the owner ORM boundary without dereferencing foreign models."""
-
-    organization = models.ForeignKey(
-        "organizations.Organization",
-        on_delete=models.PROTECT,
-        related_name="scheduling_%(class)s_rows",
-    )
-    edition = models.ForeignKey(
-        "events.EventEdition",
-        on_delete=models.PROTECT,
-        related_name="scheduling_%(class)s_rows",
-    )
 
     class Meta:
         """Configure Django's declarative class metadata."""
@@ -128,6 +131,26 @@ class _SchedulingModel(UUIDTimeStampedModel):
         """
         del args, kwargs
         raise ValidationError("Scheduling history is retained; use lifecycle commands.")
+
+
+class _SchedulingModel(_SchedulingOwnedModel):
+    """Keep ordinary Scheduling records strictly organization- and edition-owned."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="scheduling_%(class)s_rows",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="scheduling_%(class)s_rows",
+    )
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        abstract = True
 
 
 class _ImmutableSchedulingModel(_SchedulingModel):
@@ -367,7 +390,11 @@ class SchedulingCandidateRevision(_AttributedSchedulingEvidence):
     sequence = models.PositiveBigIntegerField()
     label = models.CharField(max_length=MAX_TITLE_LENGTH)
     operation = models.CharField(
-        max_length=32, choices=scheduling_choices(SchedulingOperation)
+        max_length=32,
+        choices=tuple(
+            (value, value.replace("_", " ").title())
+            for value in PLANNING_OPERATION_VALUES
+        ),
     )
     source_revision = models.ForeignKey(
         "self",
@@ -391,7 +418,7 @@ class SchedulingCandidateRevision(_AttributedSchedulingEvidence):
                 condition=models.Q(
                     sequence__gt=0,
                     placement_count__lte=2_000,
-                    operation__in=scheduling_values(SchedulingOperation),
+                    operation__in=PLANNING_OPERATION_VALUES,
                 )
                 & ~models.Q(label="")
                 & ~models.Q(reason=""),
@@ -685,5 +712,496 @@ class SchedulingCommandReceipt(_AttributedSchedulingEvidence):
                 )
                 & ~models.Q(reason=""),
                 name="sch_command_receipt_shape",
+            ),
+        ]
+
+
+class SchedulingReleaseDependencyKey(_SchedulingOwnedModel):
+    """One native source generation without locking or enumerating foreign releases.
+
+    Global Identity and organization-owned physical sources deliberately have
+    broader scope than edition-owned sources. Closed kind/scope checks and owner
+    reference guards must prove those exceptions; an opaque UUID is not proof.
+    """
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="scheduling_release_dependency_keys",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="scheduling_release_dependency_keys",
+    )
+    kind = models.CharField(
+        max_length=40, choices=scheduling_choices(ReleaseDependencyKind)
+    )
+    source_id = models.UUIDField()
+    generation = models.PositiveBigIntegerField(default=1)
+    initial_source_version = models.PositiveBigIntegerField(default=0, editable=False)
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("kind", "source_id"), name="sch_release_dependency_source_uq"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(generation__gt=0, generation__lt=2**63 - 1),
+                name="sch_release_dependency_gen",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        kind__in=tuple(
+                            sorted(kind.value for kind in GLOBAL_RELEASE_DEPENDENCIES)
+                        ),
+                        organization__isnull=True,
+                        edition__isnull=True,
+                    )
+                    | models.Q(
+                        kind__in=tuple(
+                            sorted(
+                                kind.value for kind in ORGANIZATION_RELEASE_DEPENDENCIES
+                            )
+                        ),
+                        organization__isnull=False,
+                        edition__isnull=True,
+                    )
+                    | models.Q(
+                        kind__in=tuple(
+                            sorted(kind.value for kind in EDITION_RELEASE_DEPENDENCIES)
+                        ),
+                        organization__isnull=False,
+                        edition__isnull=False,
+                    )
+                ),
+                name="sch_release_dependency_scope",
+            ),
+        ]
+
+
+class SchedulingReleaseDependencyChange(_SchedulingOwnedModel):
+    """Append-only source change governing every exact captured dependency.
+
+    Native audit attribution is retained by reference, not copied private reason
+    or authority. A database-owned recorded time governs temporal consequence;
+    caller-supplied effective dates cannot move an invalidation into the past.
+    """
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="scheduling_release_dependency_changes",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="scheduling_release_dependency_changes",
+    )
+    dependency = models.ForeignKey(
+        SchedulingReleaseDependencyKey,
+        on_delete=models.PROTECT,
+        related_name="changes",
+    )
+    generation = models.PositiveBigIntegerField()
+    source_audit = models.ForeignKey(
+        "audit.AuditEvent",
+        on_delete=models.PROTECT,
+        related_name="scheduling_release_dependency_changes",
+    )
+    recorded_at = models.DateTimeField()
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Insert source change evidence without allowing historical rewriting.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the owner boundary.
+        **kwargs : Any
+            Keyword arguments forwarded to the owner boundary.
+
+        Raises
+        ------
+        ValidationError
+            If this immutable journal row was already persisted.
+        """
+        if not self._state.adding:
+            raise ValidationError("Scheduling dependency evidence is append-only.")
+        super().save(*args, **kwargs)
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("dependency", "generation"),
+                name="sch_release_change_generation_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("dependency", "source_audit"),
+                name="sch_release_change_audit_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(generation__gt=1, generation__lt=2**63 - 1),
+                name="sch_release_change_generation",
+            ),
+        ]
+
+
+class SchedulingReleaseWarningAcknowledgement(_AttributedSchedulingEvidence):
+    """Reasoned acknowledgement of one freshly authenticated release warning."""
+
+    command_receipt = models.OneToOneField(
+        SchedulingCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="release_warning_acknowledgement",
+    )
+    candidate_revision = models.ForeignKey(
+        SchedulingCandidateRevision,
+        on_delete=models.PROTECT,
+        related_name="release_warning_acknowledgements",
+    )
+    source_snapshot_digest = models.CharField(
+        max_length=64, validators=[_DIGEST_VALIDATOR]
+    )
+    finding_fingerprint = models.CharField(
+        max_length=64, validators=[_DIGEST_VALIDATOR]
+    )
+    check_code = models.CharField(
+        max_length=32, choices=scheduling_choices(ReleaseCheck)
+    )
+    finding_code = models.CharField(max_length=64)
+    occurrence = models.ForeignKey(
+        SchedulingOccurrence,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="release_warning_acknowledgements",
+    )
+    other_occurrence = models.ForeignKey(
+        SchedulingOccurrence,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="other_release_warning_acknowledgements",
+    )
+
+    class Meta:
+        """Keep one actor's acknowledgement of an exact snapshot warning unique."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=(
+                    "candidate_revision",
+                    "source_snapshot_digest",
+                    "finding_fingerprint",
+                    "actor",
+                ),
+                name="sch_release_warning_actor_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(check_code__in=scheduling_values(ReleaseCheck)),
+                name="sch_release_warning_check",
+            ),
+        ]
+
+
+class SchedulingReleaseApproval(_AttributedSchedulingEvidence):
+    """Immutable independent approval of one complete current release snapshot."""
+
+    command_receipt = models.OneToOneField(
+        SchedulingCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="release_approval",
+    )
+    candidate_revision = models.ForeignKey(
+        SchedulingCandidateRevision,
+        on_delete=models.PROTECT,
+        related_name="release_approvals",
+    )
+    source_snapshot_digest = models.CharField(
+        max_length=64, validators=[_DIGEST_VALIDATOR]
+    )
+    manifest_digest = models.CharField(max_length=64, validators=[_DIGEST_VALIDATOR])
+    eligibility_policy = models.CharField(max_length=80)
+    warning_ids = ArrayField(
+        models.UUIDField(), size=MAX_CONFLICTS, default=list, blank=True
+    )
+    placement_count = models.PositiveIntegerField()
+    dependency_count = models.PositiveIntegerField()
+
+    class Meta:
+        """Reject empty approval manifests and preserve bounded placement counts."""
+
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(
+                    placement_count__gte=1, placement_count__lte=MAX_OCCURRENCES
+                ),
+                name="sch_release_approval_count",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    dependency_count__gte=1, dependency_count__lte=65_536
+                ),
+                name="sch_release_approval_deps",
+            ),
+        ]
+
+
+class SchedulingReleaseApprovalPlacement(_ImmutableSchedulingModel):
+    """Exact occurrence placement and separately approved public copy selection."""
+
+    approval = models.ForeignKey(
+        SchedulingReleaseApproval,
+        on_delete=models.PROTECT,
+        related_name="placements",
+    )
+    occurrence = models.ForeignKey(
+        SchedulingOccurrence,
+        on_delete=models.PROTECT,
+        related_name="release_approval_placements",
+    )
+    placement = models.ForeignKey(
+        SchedulingPlacementRevision,
+        on_delete=models.PROTECT,
+        related_name="release_approval_placements",
+    )
+    public_rendition = models.ForeignKey(
+        "programme.ProgrammePublicRendition",
+        on_delete=models.PROTECT,
+        related_name="scheduling_release_approval_placements",
+    )
+
+    class Meta:
+        """An approval selects exactly one retained placement for each occurrence."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("approval", "occurrence"),
+                name="sch_release_approval_occ_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("approval", "placement"),
+                name="sch_release_approval_place_uq",
+            ),
+        ]
+
+
+class SchedulingReleaseApprovalDependency(_ImmutableSchedulingModel):
+    """Captured generation and exact ongoing consequence for one approval source."""
+
+    approval = models.ForeignKey(
+        SchedulingReleaseApproval,
+        on_delete=models.PROTECT,
+        related_name="dependencies",
+    )
+    dependency = models.ForeignKey(
+        SchedulingReleaseDependencyKey,
+        on_delete=models.PROTECT,
+        related_name="approval_captures",
+    )
+    approval_placement = models.ForeignKey(
+        SchedulingReleaseApprovalPlacement,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="dependencies",
+    )
+    captured_generation = models.PositiveBigIntegerField()
+    horizon = models.CharField(
+        max_length=24, choices=scheduling_choices(ReleaseDependencyHorizon)
+    )
+    operational_ends_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        """Keep captured source uses unique, complete and temporally explicit."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("approval", "dependency", "approval_placement", "horizon"),
+                nulls_distinct=False,
+                name="sch_release_dependency_use_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    captured_generation__gte=1, captured_generation__lt=2**63 - 1
+                ),
+                name="sch_release_capture_generation",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        horizon="operational",
+                        operational_ends_at__isnull=False,
+                        approval_placement__isnull=False,
+                    )
+                    | models.Q(
+                        horizon__in=("approval_only", "disclosure"),
+                        operational_ends_at__isnull=True,
+                    )
+                ),
+                name="sch_release_capture_horizon",
+            ),
+        ]
+
+
+class SchedulingRelease(_AttributedSchedulingEvidence):
+    """One immutable published timetable, retained even after supersession."""
+
+    command_receipt = models.OneToOneField(
+        SchedulingCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="release",
+    )
+    approval = models.OneToOneField(
+        SchedulingReleaseApproval,
+        on_delete=models.PROTECT,
+        related_name="release",
+    )
+    previous_release = models.ForeignKey(
+        "self",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="successors",
+    )
+    pointer_version = models.PositiveBigIntegerField()
+    added_count = models.PositiveIntegerField()
+    changed_count = models.PositiveIntegerField()
+    removed_count = models.PositiveIntegerField()
+
+    class Meta:
+        """Reserve one exact publication version inside its owning edition."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("edition", "pointer_version"),
+                name="sch_release_pointer_version_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    pointer_version__gte=1, pointer_version__lt=2**63 - 1
+                ),
+                name="sch_release_pointer_version",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    added_count__lte=MAX_OCCURRENCES,
+                    changed_count__lte=MAX_OCCURRENCES,
+                    removed_count__lte=MAX_OCCURRENCES,
+                ),
+                name="sch_release_impact_counts",
+            ),
+        ]
+
+
+class SchedulingReleaseArtifact(_ImmutableSchedulingModel):
+    """Exact prepared mandatory bytes; their existence grants no serving authority."""
+
+    release = models.ForeignKey(
+        SchedulingRelease,
+        on_delete=models.PROTECT,
+        related_name="artifacts",
+    )
+    contract = models.CharField(max_length=80)
+    sha256 = models.CharField(max_length=64, validators=[_DIGEST_VALIDATOR])
+    byte_length = models.PositiveIntegerField()
+    payload = models.BinaryField()
+
+    class Meta:
+        """Retain exactly one bounded canonical artifact for each publication."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("release", "contract"),
+                name="sch_release_artifact_contract_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(contract="programme.release.canonical@1"),
+                name="sch_release_artifact_contract",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    byte_length__gte=1, byte_length__lte=2 * 1024 * 1024
+                ),
+                name="sch_release_artifact_bytes",
+            ),
+        ]
+
+
+class SchedulingReleaseWithdrawal(_AttributedSchedulingEvidence):
+    """Explicit reasoned whole-release withdrawal, never an empty timetable."""
+
+    command_receipt = models.OneToOneField(
+        SchedulingCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="release_withdrawal",
+    )
+    release = models.OneToOneField(
+        SchedulingRelease,
+        on_delete=models.PROTECT,
+        related_name="withdrawal",
+    )
+    pointer_version = models.PositiveBigIntegerField()
+
+    class Meta:
+        """Retain the exact edition pointer sequence occupied by withdrawal."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("edition", "pointer_version"),
+                name="sch_release_withdraw_version_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    pointer_version__gt=1, pointer_version__lt=2**63 - 1
+                ),
+                name="sch_release_withdraw_version",
+            ),
+        ]
+
+
+class SchedulingReleasePointer(_SchedulingModel):
+    """One monotonic active-release pointer; absence is distinct from withdrawal."""
+
+    edition = models.OneToOneField(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_release_pointer",
+    )
+    active_release = models.ForeignKey(
+        SchedulingRelease,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="active_pointers",
+    )
+    command_receipt = models.OneToOneField(
+        SchedulingCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="active_release_pointer",
+    )
+    version = models.PositiveBigIntegerField()
+
+    class Meta:
+        """A pointer first appears with publication and never resets its version."""
+
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(version__gte=1, version__lt=2**63 - 1),
+                name="sch_release_current_version",
             ),
         ]

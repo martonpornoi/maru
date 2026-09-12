@@ -73,6 +73,29 @@ RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3: Final[tuple[str, ...]] = (
     "public.maru_assert_active_maru_operators_v0009(uuid)",
 )
 
+# ADR 0096 adds native invalidation only. The sole new SECURITY DEFINER writer
+# cannot create tracking, approval, release or profile state. Its other helpers
+# prove exact native source/receipt attribution under their owning contracts.
+RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4: Final[tuple[str, ...]] = (
+    *RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
+    "public.maru_audit_current_native_transaction_stamp()",
+    "public.maru_identity_release_deactivation_valid(uuid,uuid)",
+    "public.maru_programme_release_mutation_sources(uuid)",
+    "public.maru_programme_release_change_valid(text,uuid,uuid,uuid,uuid)",
+    "public.maru_workforce_release_mutation_sources(uuid)",
+    "public.maru_workforce_release_change_valid(text,uuid,uuid,uuid,uuid)",
+    "public.maru_events_release_change_valid(uuid,uuid,uuid,uuid)",
+    "public.maru_venues_release_mutation_sources(uuid)",
+    "public.maru_venues_release_change_valid(text,uuid,uuid,uuid,uuid)",
+    "public.maru_scheduling_lock_release_source(text,uuid,uuid,uuid)",
+    "public.maru_scheduling_release_native_change_valid(text,uuid,uuid,uuid,uuid)",
+    "public.maru_validate_scheduling_linked_booking(uuid)",
+    "public.maru_scheduling_record_native_release_change(text,uuid,uuid)",
+    "public.maru_scheduling_published_person_conflict("
+    "uuid,timestamp with time zone,timestamp with time zone,"
+    "timestamp with time zone,uuid)",
+)
+
 # These control relations are deliberately readable, but never writable, by
 # the application login. Their mutations belong to the controlled
 # migration/cutover owner described in ADR-0046. The Programme schema is also
@@ -84,6 +107,8 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.authorization_authorityprovenanceactivation",
     "public.authorization_provenanceactivationlatch",
     "public.identity_platforminvitationretentionpolicycontrol",
+    "public.audit_auditnativemutationwitness",
+    "public.programme_programmepublicrenditionwithdrawal",
     "public.applications_programmecall",
     "public.applications_programmecalltrack",
     "public.applications_programmecallformat",
@@ -148,6 +173,16 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.scheduling_schedulingwarningacknowledgement",
     "public.scheduling_schedulingreservationintent",
     "public.scheduling_schedulingcommandreceipt",
+    "public.scheduling_schedulingreleasedependencykey",
+    "public.scheduling_schedulingreleasedependencychange",
+    "public.scheduling_schedulingreleasewarningacknowledgement",
+    "public.scheduling_schedulingreleaseapproval",
+    "public.scheduling_schedulingreleaseapprovalplacement",
+    "public.scheduling_schedulingreleaseapprovaldependency",
+    "public.scheduling_schedulingrelease",
+    "public.scheduling_schedulingreleaseartifact",
+    "public.scheduling_schedulingreleasewithdrawal",
+    "public.scheduling_schedulingreleasepointer",
     "public.venues_venueschedulingbinding",
 )
 
@@ -1129,7 +1164,7 @@ def probe_runtime_database_role_safety(
                 list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
-                list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3),
+                list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4),
             ],
         )
         row = cursor.fetchone()

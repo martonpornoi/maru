@@ -13,7 +13,7 @@ from django.db import DatabaseError, close_old_connections, connection, transact
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.recorder import MigrationRecorder
 
-from maru.audit.models import AuditEvent
+from maru.audit.models import AuditEvent, AuditNativeMutationWitness
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.services import transition_edition
 from maru.identity.models import Account
@@ -59,6 +59,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
 @pytest.fixture
 def assessed(world, admitted, monkeypatch):
+    return assess_world(world, monkeypatch)
+
+
+def assess_world(world, monkeypatch):
     monkeypatch.setattr(queries, "profile_allows_adapter", lambda *_args: True)
     monkeypatch.setattr(
         workforce_sources, "profile_allows_adapter", lambda *_args: True
@@ -287,18 +291,21 @@ def test_populated_downgrade_fails_before_removing_schema_or_guards(assessed):
 
 
 @pytest.mark.usefixtures("restores_current_migration_graph")
-def test_unused_placement_graph_reverses_and_reapplies_with_existing_sources(assessed):
+def test_native_sources_fence_placement_contraction_without_a_decision(assessed):
     item_id = assessed.selection.item_id
     before = ProgrammeItem.objects.get(id=item_id).aggregate_version
-    MigrationExecutor(connection).migrate(
-        [("programme", "0012_staffing_downgrade_fence")]
-    )
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT to_regclass('public.programme_programmeplacementdecision'), "
-            "to_regprocedure('public.maru_guard_programme_placement_decision()')"
+    applied_before = MigrationRecorder(connection).applied_migrations()
+    assert not ProgrammePlacementDecision.objects.exists()
+    assert AuditNativeMutationWitness.objects.exists()
+    # The decision itself is unused, but its native Programme/Venue sources
+    # already retain release-boundary evidence. Empty schema reversal remains
+    # covered by the committed empty-host/extension round trips.
+    with pytest.raises(RuntimeError, match="retain its execution boundary"):
+        MigrationExecutor(connection).migrate(
+            [("programme", "0012_staffing_downgrade_fence")]
         )
-        assert cursor.fetchone() == (None, None)
+    assert MigrationRecorder(connection).applied_migrations() == applied_before
+    assert not ProgrammePlacementDecision.objects.exists()
     assert ProgrammeItem.objects.get(id=item_id).aggregate_version == before
     executor = MigrationExecutor(connection)
     executor.migrate(executor.loader.graph.leaf_nodes())

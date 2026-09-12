@@ -7,7 +7,11 @@ from typing import TYPE_CHECKING
 from django.core.checks import CheckMessage, Error, Tags, register
 
 from .authorization import SCHEDULING_CAPABILITIES
-from .events import SCHEDULING_CHANGED_EVENT, SCHEDULING_CHANGED_SCHEMA_VERSION
+from .events import (
+    SCHEDULING_CHANGED_EVENT,
+    SCHEDULING_CHANGED_SCHEMA_VERSION,
+    SCHEDULING_RELEASE_CHANGED_EVENT,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -40,10 +44,12 @@ def scheduling_dormancy_problem_codes() -> tuple[str, ...]:
         problems.add("catalog.module-missing")
     if not SCHEDULING_CAPABILITIES.issubset(CAPABILITIES):
         problems.add("catalog.capability-missing")
-    event = event_definition(SCHEDULING_CHANGED_EVENT)
-    if event is None or event.schema_version != SCHEDULING_CHANGED_SCHEMA_VERSION:
-        problems.add("catalog.event-missing-or-mismatched")
-    if any(name == SCHEDULING_CHANGED_EVENT for name, _ in NON_EDITION_EFFECT_ROUTES):
+    event_names = {SCHEDULING_CHANGED_EVENT, SCHEDULING_RELEASE_CHANGED_EVENT}
+    for name in event_names:
+        event = event_definition(name)
+        if event is None or event.schema_version != SCHEDULING_CHANGED_SCHEMA_VERSION:
+            problems.add("catalog.event-missing-or-mismatched")
+    if any(name in event_names for name, _ in NON_EDITION_EFFECT_ROUTES):
         problems.add("dormancy.non-edition-effect-route")
     for profile in ADOPTION_PROFILES.values():
         if "scheduling" in profile.modules:
@@ -56,10 +62,7 @@ def scheduling_dormancy_problem_codes() -> tuple[str, ...]:
             SCHEDULING_ADOPTION_CONFLICT_SOURCES
         ):
             problems.add("dormancy.conflict-source-adopted")
-        if any(
-            route.event_name == SCHEDULING_CHANGED_EVENT
-            for route in profile.effect_routes
-        ):
+        if any(route.event_name in event_names for route in profile.effect_routes):
             problems.add("dormancy.effect-route-adopted")
     return tuple(sorted(problems))
 

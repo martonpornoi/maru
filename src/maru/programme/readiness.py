@@ -19,6 +19,7 @@ from maru.core.database_integrity_readiness import (
     database_integrity_contract_is_ready,
     parse_database_integrity_sql_contracts,
 )
+from maru.scheduling.release_integrity import with_native_release_integrity
 
 from .catalogs import (
     ProgrammeReadinessDisposition,
@@ -232,17 +233,21 @@ def _placement_decision_migration_contract_is_current() -> bool:
 _DECISION_TRIGGERS, _DECISION_FUNCTIONS = parse_database_integrity_sql_contracts(
     _PLACEMENT_DECISION_MIGRATION.FORWARD_SQL
 )
-PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
-    _STAFFING_INTEGRITY_CONTRACT,
-    source_migration=("programme", "0014_placement_decision_integrity"),
-    source_migration_module="maru.programme.migrations.0014_placement_decision_integrity",
-    terminal_migration=("programme", "0015_placement_decision_downgrade_fence"),
-    triggers={**_STAFFING_INTEGRITY_CONTRACT.triggers, **_DECISION_TRIGGERS},
-    functions={**_STAFFING_INTEGRITY_CONTRACT.functions, **_DECISION_FUNCTIONS},
-    source_contract_current=(
-        _STAFFING_INTEGRITY_CONTRACT.source_contract_current
-        and _placement_decision_migration_contract_is_current()
-    ),
+PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
+    with_native_release_integrity(
+        replace(
+            _STAFFING_INTEGRITY_CONTRACT,
+            source_migration=("programme", "0014_placement_decision_integrity"),
+            source_migration_module="maru.programme.migrations.0014_placement_decision_integrity",
+            terminal_migration=("programme", "0015_placement_decision_downgrade_fence"),
+            triggers={**_STAFFING_INTEGRITY_CONTRACT.triggers, **_DECISION_TRIGGERS},
+            functions={**_STAFFING_INTEGRITY_CONTRACT.functions, **_DECISION_FUNCTIONS},
+            source_contract_current=(
+                _STAFFING_INTEGRITY_CONTRACT.source_contract_current
+                and _placement_decision_migration_contract_is_current()
+            ),
+        )
+    )
 )
 
 
@@ -318,6 +323,14 @@ PROGRAMME_RELATION_SEMANTICS: Final[
         "d",
     ),
     "programme_programmepublicrendition": ("r", "p", False, False, False, "d"),
+    "programme_programmepublicrenditionwithdrawal": (
+        "r",
+        "p",
+        False,
+        False,
+        False,
+        "d",
+    ),
     "programme_programmereadinessevidence": (
         "r",
         "p",
@@ -365,6 +378,138 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # digest from pg_get_constraintdef(..., TRUE) or pg_get_indexdef(...).
 # An incomplete mapping deliberately keeps Programme readiness blocked.
 PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_copy_withdrawal_valid"
+    ): (
+        "5ffd04c89f07602fcc50792220a51cdeae5e8edeea4d95fd2b1a9fe04370ffcc",
+        "bfc3dbb78d0c210dacc868f9b61aa942f006ed7aa11fa507d9ba5d309319afda",
+    ),
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmep_actor_id_cc2cbc45_fk_identity_"
+    ): (
+        "edde1c516ba7156f0111e90e9bff8dfbb7e4af1ee4550ea36ea8ae9ffb33a698",
+        "4ed87fd0d94daa63ad880b35b54252ad3f58c69aabfdc3065c99dda56093b807",
+    ),
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmep_edition_id_de061c96_fk_events_ev"
+    ): (
+        "edde1c516ba7156f0111e90e9bff8dfbb7e4af1ee4550ea36ea8ae9ffb33a698",
+        "03a7996ab8afb527585471eb2cbfd7058942319058cc05e3f26732b9ade4e0cc",
+    ),
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmep_item_id_e63c9fb5_fk_programme"
+    ): (
+        "edde1c516ba7156f0111e90e9bff8dfbb7e4af1ee4550ea36ea8ae9ffb33a698",
+        "29bc9e574fb186040bcedd470867b5969bfc9cfe526c4fac8fc4a66bc20d7c84",
+    ),
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmep_organization_id_a0acaa9e_fk_organizat"
+    ): (
+        "edde1c516ba7156f0111e90e9bff8dfbb7e4af1ee4550ea36ea8ae9ffb33a698",
+        "07f454abd16b9f770cd0320efd71f154b0187daf9dbe65e3e6e57121eacd062f",
+    ),
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmep_rendition_id_c5fddeb5_fk_programme"
+    ): (
+        "edde1c516ba7156f0111e90e9bff8dfbb7e4af1ee4550ea36ea8ae9ffb33a698",
+        "6eb93318d73a6d834dac1bbbdd6ad348dc6de8d7139fcbfecb62cb9bd0f061cb",
+    ),
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmepublicrenditionwithdrawal_item_version_check"
+    ): (
+        "5ffd04c89f07602fcc50792220a51cdeae5e8edeea4d95fd2b1a9fe04370ffcc",
+        "7b6d65d5670d3436adcbd8cae1a19da73177498534211163b7ab24ccb9fc8a50",
+    ),
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmepublicrenditionwithdrawal_pkey"
+    ): (
+        "e72bfa181eddb31ff20ea146cf0c00bfc4b836d9ee3779e4e405c9f2f85cbc35",
+        "8c8464f42472e42ee190fc91ca8db79b5351d3a4609040516578d229c56f6fa5",
+    ),
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmepublicrenditionwithdrawal_rendition_id_key"
+    ): (
+        "d37414d8ed7352fd3383ac3b832b976cdea8ff6d31975206ba665f5f53032aa2",
+        "d2e685d9734058c1abe074ec9688f0e1be387eb13f24a7b01fbeaaa078ffa971",
+    ),
+    (
+        "constraint:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_public_withdrawal_evidence"
+    ): (
+        "a377d91f512a8e45e947d1c03bd946f33841ae8cac6c3cce13e0289ccfd4cd54",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "index:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmepublicr_edition_id_de061c96"
+    ): (
+        "7b83e7af55f47eae5318adea7721120b0808ed3648205310cdc66609e98870c5",
+        "f3e4ef9cf1bd9b2050264f83c6d72ed94bacccf20f1a0fb699bd6b77763595f2",
+    ),
+    (
+        "index:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmepublicr_organization_id_a0acaa9e"
+    ): (
+        "7b83e7af55f47eae5318adea7721120b0808ed3648205310cdc66609e98870c5",
+        "190553aca3c303b6208ba049a2e58c7afe10ffc3184183f9bb41d691670caaa2",
+    ),
+    (
+        "index:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmepublicrenditionwithdrawal_actor_id_cc2cbc45"
+    ): (
+        "7b83e7af55f47eae5318adea7721120b0808ed3648205310cdc66609e98870c5",
+        "b770e1bf5ef602b583f4885d4d7736c2ac1334b5febba3ee704b5ae30f73f71e",
+    ),
+    (
+        "index:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmepublicrenditionwithdrawal_item_id_e63c9fb5"
+    ): (
+        "7b83e7af55f47eae5318adea7721120b0808ed3648205310cdc66609e98870c5",
+        "62e116f3c08f5fa5e3867d52c7a12b98a9ffad7b14e2783b4502488ca667274c",
+    ),
+    (
+        "index:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmepublicrenditionwithdrawal_pkey"
+    ): (
+        "8b5254f4dc20c6f8c6d7d48eae31f719c5e192b9476319a1b6357793d5669037",
+        "67681f333658726ed8f6848664910ee4a84765a5589b0bf70ef0c53eb32a0c1c",
+    ),
+    (
+        "index:"
+        "programme_programmepublicrenditionwithdrawal:"
+        "programme_programmepublicrenditionwithdrawal_rendition_id_key"
+    ): (
+        "6213a06ff3fd166e1d6c722e0c14d9a23129c40b17c433135e99423034cb956b",
+        "0d80e473c807b574734cbdeea07b336169ee999f1488b9d0e14443213cf56ead",
+    ),
+    "constraint:programme_programmecommandreceipt:programme_release_receipt_evidence": (
+        "10b2a0b352900ef0fca94ea78e2276c8609a569a7ca425b31f6823ff65c3c2c1",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
     (
         "constraint:programme_programmeplacementdecision:"
         "programme_placement_decision_bounds"
@@ -1404,7 +1549,7 @@ PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
     ),
     "constraint:programme_programmecommandreceipt:programme_command_operation_closed": (
         "69d64ca9ff30b925a62e5ceda594c1aba7aebf94d273e697efce3721c42b6513",
-        "b10f4233dca6afe8dbe561ad10e954427b9c4c661991868e41272594379e625f",
+        "f09e0ba94a405c0688aed5d0117e286278029d38a6055e90e0d8b92af1bb3ba1",
     ),
     "constraint:programme_programmecommandreceipt:programme_command_retry_uq": (
         "6358fdf321257554281d71cf9659bff2557f29bff35c778c4126a1ec8b077945",
@@ -2278,7 +2423,7 @@ PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
     ),
     "index:programme_programmecommandreceipt:programme_command_item_version_uq": (
         "f6cd0da22b210bce57f842c047259cd69149838bbd0dfcd86c48309902823b0e",
-        "12dc08debe816506dd159f8b12e39b7d012550a27a6203290ce019957ddc48de",
+        "dd5ccbba16d507ca684294e8cdb9fbf7cb9467c9016212727491a6b952cbdcdf",
     ),
     "index:programme_programmecommandreceipt:programme_command_retry_uq": (
         "c808a3e796941af76de9d4dbc309b140526c1037d45c2e85fcfacd27653886e6",

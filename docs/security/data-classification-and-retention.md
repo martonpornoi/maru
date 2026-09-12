@@ -353,6 +353,34 @@ Convenience alone is not sufficient.
   data or profile activation is introduced. See ADR 0095 and the
   [source recovery guide](../operations/programme-release-sources-migration-and-recovery.md).
 
+### Atomic Programme release evidence
+
+Independent timetable approvals, warning reasons, exact-copy withdrawals and
+their actor/source attribution are restricted operational decision history.
+Immutable records do not imply public access or an unlimited production
+retention policy. The Programme Operations legal-hold, retention/export and
+recovery gates still apply before activation; #96 adds no destructive disposal
+executor, activity analytics or arbitrary production expiry.
+
+Canonical release artifacts retain minimized exact IDs and source digests, not
+copy, private notes, calendar periods or account identifiers. Checked manifests
+require independent current/history capability, the `release_manifest` field,
+final reauthorization and successful sensitive-read audit. Stored bytes and
+digests are not disclosure credentials. Exact-copy and relationship withdrawal
+govern past as well as future disclosure; private history reasons never enter
+ordinary released projections.
+
+Dependency journals retain closed source identity, generation, native Audit
+attribution and database recording time solely to govern retained release
+safety/freshness. Global person-work references identify only an already
+authorized account; native Workforce receipts retain their real owner scope.
+The reciprocal published-host source returns booleans and an opaque history
+digest, not another convention's identity, calendar or people. Audit witnesses
+prove native same-transaction attribution, not permission or eligibility.
+These records must be recovered consistently with all owners, not reissued or
+silently deleted to reset freshness. See
+[atomic-release recovery](../operations/programme-atomic-release-migration-and-recovery.md).
+
 ### Logistics custody and restricted contact
 
 - Reusable external-party identity contains only legal/public operational

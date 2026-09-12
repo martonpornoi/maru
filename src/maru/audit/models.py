@@ -310,3 +310,77 @@ class AuditEvent(UUIDTimeStampedModel):
             "Audit events are append-only.",
             code="immutable_audit_event",
         )
+
+
+class AuditNativeMutationWitness(models.Model):
+    """Database-owned opt-in live transaction proof, not historical authority."""
+
+    audit_event = models.OneToOneField(
+        AuditEvent,
+        primary_key=True,
+        on_delete=models.PROTECT,
+        related_name="native_mutation_witness",
+    )
+    transaction_stamp = models.CharField(max_length=64, validators=[SHA256_VALIDATOR])
+    created_at = models.DateTimeField()
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(transaction_stamp__regex=r"^[0-9a-f]{64}$"),
+                name="audit_native_witness_stamp_shape",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        """Return a content-free label without resolving its privileged audit.
+
+        Returns
+        -------
+        str
+            A stable label without backend, actor or source identity.
+        """
+        return "Native audit mutation witness"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Reject ORM inserts and updates; only the native audit trigger writes.
+
+        Parameters
+        ----------
+        *args : Any
+            Ignored framework arguments.
+        **kwargs : Any
+            Ignored framework keyword arguments.
+
+        Raises
+        ------
+        ValidationError
+            Always, because an ORM object cannot mint a database witness.
+        """
+        del args, kwargs
+        raise ValidationError("Native audit witnesses are database-owned.")
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Retain the database witness instead of permitting ORM deletion.
+
+        Parameters
+        ----------
+        *args : Any
+            Ignored framework arguments.
+        **kwargs : Any
+            Ignored framework keyword arguments.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Unreachable framework deletion shape.
+
+        Raises
+        ------
+        ValidationError
+            Always, because native audit witnesses are retained.
+        """
+        del args, kwargs
+        raise ValidationError("Native audit witnesses are retained.")

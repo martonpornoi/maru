@@ -9,14 +9,16 @@ PostgreSQL catalog without reading tenant or personal rows.
 from __future__ import annotations
 
 import hashlib
+import inspect
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from functools import cache
 from importlib import import_module
 from typing import TYPE_CHECKING, Final, Protocol, cast
 
 from django.apps import apps
+from django.conf import settings
 from django.db import DatabaseError, connection, migrations
 
 if TYPE_CHECKING:
@@ -45,7 +47,7 @@ _FUNCTION_RE: Final = re.compile(
     rf"CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+"
     rf"(?P<schema>{_IDENTIFIER})\.(?P<name>{_IDENTIFIER})\s*"
     r"\((?P<arguments>.*?)\)\s*"
-    r"RETURNS\s+(?P<result>[a-z0-9_.\s\"]+?)\s+AS\s+"
+    r"RETURNS\s+(?P<result>TABLE\s*\([^()]+\)|[a-z0-9_.\s\"]+?)\s+AS\s+"
     r"(?P<delimiter>\$[a-z0-9_]*\$)"
     r"(?P<source>.*?)"
     r"(?P=delimiter)\s+LANGUAGE\s+"
@@ -53,12 +55,12 @@ _FUNCTION_RE: Final = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 _DROP_TRIGGER_RE: Final = re.compile(
-    rf"DROP\s+TRIGGER\s+IF\s+EXISTS\s+(?P<name>{_IDENTIFIER})\s+"
+    rf"DROP\s+TRIGGER\s+(?:IF\s+EXISTS\s+)?(?P<name>{_IDENTIFIER})\s+"
     rf"ON\s+(?P<schema>{_IDENTIFIER})\.(?P<table>{_IDENTIFIER})\s*;",
     re.IGNORECASE,
 )
 _DROP_FUNCTION_RE: Final = re.compile(
-    rf"DROP\s+FUNCTION\s+IF\s+EXISTS\s+(?P<schema>{_IDENTIFIER})\."
+    rf"DROP\s+FUNCTION\s+(?:IF\s+EXISTS\s+)?(?P<schema>{_IDENTIFIER})\."
     rf"(?P<name>{_IDENTIFIER})\((?P<arguments>[^)]*)\)\s*;",
     re.IGNORECASE,
 )
@@ -96,6 +98,8 @@ class TriggerContract:
         The deferrable retained in this immutable projection.
     initially_deferred
         The initially deferred retained in this immutable projection.
+    arguments
+        Exact literal trigger arguments in their declared order.
     """
 
     name: str
@@ -105,6 +109,7 @@ class TriggerContract:
     is_constraint: bool
     deferrable: bool
     initially_deferred: bool
+    arguments: tuple[str, ...] = ()
 
     @property
     def catalog_row(self) -> tuple[object, ...]:
@@ -125,7 +130,9 @@ class TriggerContract:
             self.deferrable,
             self.initially_deferred,
             True,
-            0,
+            len(self.arguments),
+            True,
+            b"".join(value.encode("utf-8") + b"\x00" for value in self.arguments),
             True,
         )
 
@@ -210,6 +217,13 @@ class DatabaseIntegrityContract:
         The functions mapping to validate or transform.
     source_contract_current
         The source contract current retained in this immutable projection.
+    runtime_executable_functions
+        Explicit function identities permitted to the configured runtime login.
+        Empty by default; all other functions remain owner-only.
+    supporting_migrations
+        Additional exact migration recorders required by composed owner guards.
+    supporting_triggers
+        Exact native attachments on other owners participating in this contract.
     """
 
     status_key: str
@@ -220,6 +234,9 @@ class DatabaseIntegrityContract:
     triggers: Mapping[str, TriggerContract]
     functions: Mapping[str, FunctionContract]
     source_contract_current: bool
+    runtime_executable_functions: frozenset[str] = frozenset()
+    supporting_migrations: tuple[tuple[str, str], ...] = ()
+    supporting_triggers: Mapping[str, TriggerContract] = field(default_factory=dict)
 
     @property
     def required_migrations(self) -> tuple[tuple[str, str], ...]:
@@ -230,7 +247,15 @@ class DatabaseIntegrityContract:
         tuple[tuple[str, str], ...]
             The matching required migrations records in deterministic order.
         """
-        return tuple(dict.fromkeys((self.source_migration, self.terminal_migration)))
+        return tuple(
+            dict.fromkeys(
+                (
+                    self.source_migration,
+                    self.terminal_migration,
+                    *self.supporting_migrations,
+                )
+            )
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -255,6 +280,9 @@ class DatabaseIntegrityCatalog:
         The function execute owner only retained in this immutable projection.
     function_ownership_current
         The function ownership current retained in this immutable projection.
+    function_execute_boundary_closed
+        Exact owner-only ACLs, or owner plus the explicitly configured runtime
+        login for declared helpers, without PUBLIC or delegated grant options.
     """
 
     source_contract_current: bool
@@ -265,6 +293,7 @@ class DatabaseIntegrityCatalog:
     function_contract_current: bool
     function_execute_owner_only: bool
     function_ownership_current: bool
+    function_execute_boundary_closed: bool
 
     @property
     def ready(self) -> bool:
@@ -284,7 +313,7 @@ class DatabaseIntegrityCatalog:
                 self.relation_ownership_consistent,
                 self.trigger_contract_current,
                 self.function_contract_current,
-                self.function_execute_owner_only,
+                self.function_execute_boundary_closed,
                 self.function_ownership_current,
             )
         )
@@ -306,8 +335,13 @@ def _canonical_type_list(arguments: str, *, declarations: bool) -> str:
 def _parse_trigger_contracts(sql: str) -> dict[str, TriggerContract]:
     contracts: dict[str, TriggerContract] = {}
     for match in _TRIGGER_RE.finditer(sql):
-        if match.group("arguments").strip():
-            raise ValueError("integrity trigger functions must not take SQL arguments")
+        arguments = match.group("arguments").strip()
+        if arguments and not re.fullmatch(
+            r"'(?:[^']|'')*'(?:\s*,\s*'(?:[^']|'')*')*", arguments
+        ):
+            raise ValueError(
+                "integrity trigger arguments must be explicit string literals"
+            )
         name = match.group("name").lower()
         events = {event.strip().upper() for event in match.group("events").split("OR")}
         trigger_type = 1 if match.group("level").upper() == "ROW" else 0
@@ -332,6 +366,10 @@ def _parse_trigger_contracts(sql: str) -> dict[str, TriggerContract]:
             deferrable=match.group("deferrable") is not None,
             initially_deferred=(
                 (match.group("initial") or "").upper() == "INITIALLY DEFERRED"
+            ),
+            arguments=tuple(
+                value.replace("''", "'")
+                for value in re.findall(r"'((?:[^']|'')*)'", arguments)
             ),
         )
         if name in contracts:
@@ -363,6 +401,10 @@ def _parse_function_contracts(sql: str) -> dict[str, FunctionContract]:
             if search_path is not None
             else ()
         )
+        result = " ".join(match.group("result").lower().split())
+        returns_table = result.startswith("table")
+        if returns_table:
+            result = "TABLE(" + result[result.index("(") + 1 : -1].strip() + ")"
         contract = FunctionContract(
             identity=identity,
             source=match.group("source"),
@@ -382,10 +424,10 @@ def _parse_function_contracts(sql: str) -> dict[str, FunctionContract]:
             strict=(
                 " STRICT" in f" {options}" or "RETURNS NULL ON NULL INPUT" in options
             ),
-            returns_set=False,
+            returns_set=returns_table,
             kind="f",
             configuration=configuration,
-            result=" ".join(match.group("result").lower().split()),
+            result=result,
         )
         if identity in contracts:
             raise ValueError(f"duplicate integrity function declaration: {identity}")
@@ -517,6 +559,112 @@ def build_database_integrity_contract(
         triggers=triggers,
         functions=functions,
         source_contract_current=source_contract_current,
+    )
+
+
+def extend_database_integrity_contract(
+    contract: DatabaseIntegrityContract,
+    *,
+    migration_module: str,
+    source_sha256: str,
+    runtime_executable_functions: frozenset[str] = frozenset(),
+    security_definer_functions: frozenset[str] = frozenset(),
+) -> DatabaseIntegrityContract:
+    """Compose a source-pinned additive migration without relaxing the base builder.
+
+    Parameters
+    ----------
+    contract : DatabaseIntegrityContract
+        Existing owner contract whose earlier invariants remain mandatory.
+    migration_module : str
+        Exact module containing schema operations and at most one exported RunSQL.
+    source_sha256 : str
+        Reviewed normalized full-file digest, including dependencies and fences.
+    runtime_executable_functions : frozenset[str], default=frozenset()
+        Explicit helper identities from this migration's parsed function set.
+    security_definer_functions : frozenset[str], default=frozenset()
+        Explicit exceptional definitions; no other function may become a definer.
+
+    Returns
+    -------
+    DatabaseIntegrityContract
+        Combined function definitions, owner-attached triggers and exact recorders.
+        Unsupported or changed source leaves the resulting contract unready.
+
+    Raises
+    ------
+    ValueError
+        If the migration module does not identify one explicit Maru owner.
+    """
+    module = import_module(migration_module)
+    source = inspect.getsource(module).replace("\r\n", "\n")
+    sql_operations = tuple(
+        operation
+        for operation in module.Migration.operations
+        if isinstance(operation, migrations.RunSQL)
+    )
+    forward = getattr(module, "FORWARD_SQL", "")
+    reverse = getattr(module, "REVERSE_SQL", "")
+    try:
+        triggers, functions = parse_database_integrity_sql_contracts(forward)
+    except (KeyError, TypeError, ValueError):
+        triggers, functions = {}, {}
+        source_current = False
+    else:
+        source_current = (
+            hashlib.sha256(source.encode()).hexdigest() == source_sha256
+            and (
+                (not forward and not reverse and not sql_operations)
+                or (
+                    len(sql_operations) == 1
+                    and sql_operations[0].sql == forward
+                    and sql_operations[0].reverse_sql == reverse
+                    and bool(forward and reverse)
+                )
+            )
+            and runtime_executable_functions <= functions.keys()
+            and {
+                identity
+                for identity, function in functions.items()
+                if function.security_definer
+            }
+            == security_definer_functions
+            and all(
+                function.configuration
+                in (_REQUIRED_SEARCH_PATH, ("search_path=pg_catalog",))
+                for function in functions.values()
+            )
+        )
+    parts = migration_module.split(".")
+    if not re.fullmatch(
+        r"maru\.[a-z][a-z0-9_]*\.migrations\.[a-z0-9_]+", migration_module
+    ):
+        raise ValueError("Use one exact Maru owner migration module.")
+    return replace(
+        contract,
+        triggers={
+            **contract.triggers,
+            **{
+                name: trigger
+                for name, trigger in triggers.items()
+                if trigger.table.startswith(contract.app_label + "_")
+            },
+        },
+        functions={**contract.functions, **functions},
+        supporting_triggers={
+            **contract.supporting_triggers,
+            **{
+                name: trigger
+                for name, trigger in triggers.items()
+                if not trigger.table.startswith(contract.app_label + "_")
+            },
+        },
+        source_contract_current=contract.source_contract_current and source_current,
+        supporting_migrations=tuple(
+            dict.fromkeys((*contract.supporting_migrations, (parts[1], parts[3])))
+        ),
+        runtime_executable_functions=contract.runtime_executable_functions
+        | runtime_executable_functions,
     )
 
 
@@ -678,7 +826,9 @@ def inspect_database_integrity_catalog(
                    trigger.tginitdeferred,
                    trigger.tgqual IS NULL,
                    trigger.tgnargs,
-                   cardinality(trigger.tgattr::smallint[]) = 0
+                   cardinality(trigger.tgattr::smallint[]) = 0,
+                   trigger.tgargs,
+                   procedure.proowner = relation.relowner
               FROM pg_catalog.pg_trigger AS trigger
               JOIN pg_catalog.pg_class AS relation
                 ON relation.oid = trigger.tgrelid
@@ -690,10 +840,11 @@ def inspect_database_integrity_catalog(
                 ON procedure_namespace.oid = procedure.pronamespace
              WHERE NOT trigger.tgisinternal
                AND relation_namespace.nspname = 'public'
-               AND relation.relname = ANY(%s::text[])
+               AND (relation.relname = ANY(%s::text[])
+                    OR trigger.tgname = ANY(%s::text[]))
              ORDER BY relation.relname, trigger.tgname
             """,
-            [list(relations)],
+            [list(relations), sorted(contract.supporting_triggers)],
         )
         trigger_rows = cursor.fetchall()
 
@@ -735,6 +886,35 @@ def inspect_database_integrity_catalog(
                            ON namespace.oid = relation.relnamespace
                         WHERE namespace.nspname = 'public'
                           AND relation.relname = %s
+                   ),
+                   (
+                       SELECT count(*) = CASE
+                                  WHEN required.identity = ANY(%s::text[])
+                                       AND %s <> '' THEN 2 ELSE 1 END
+                          AND count(DISTINCT privilege.grantee) = count(*)
+                          AND bool_or(privilege.grantee = procedure.proowner)
+                          AND bool_and(
+                              privilege.grantor = procedure.proowner
+                              AND COALESCE(privilege.grantee = procedure.proowner
+                              OR (
+                                  required.identity = ANY(%s::text[])
+                                  AND privilege.grantee = runtime.oid
+                                  AND NOT privilege.is_grantable
+                                  AND runtime.oid <> procedure.proowner
+                                  AND runtime.rolcanlogin
+                                  AND NOT runtime.rolsuper
+                                  AND NOT runtime.rolcreaterole
+                                  AND NOT runtime.rolcreatedb
+                                  AND NOT runtime.rolreplication
+                                  AND NOT runtime.rolbypassrls
+                              ), FALSE)
+                          )
+                         FROM pg_catalog.aclexplode(
+                             COALESCE(procedure.proacl, pg_catalog.acldefault(
+                                 'f'::pg_catalog."char", procedure.proowner
+                             ))
+                         ) AS privilege
+                        WHERE privilege.privilege_type = 'EXECUTE'
                    )
               FROM pg_catalog.unnest(%s::text[]) AS required(identity)
               LEFT JOIN pg_catalog.pg_proc AS procedure
@@ -743,9 +923,18 @@ def inspect_database_integrity_catalog(
                 )
               LEFT JOIN pg_catalog.pg_language AS language
                 ON language.oid = procedure.prolang
+              LEFT JOIN pg_catalog.pg_roles AS runtime
+                ON runtime.rolname = %s
              ORDER BY required.identity
             """,
-            [relations[0], list(contract.functions)],
+            [
+                relations[0],
+                sorted(contract.runtime_executable_functions),
+                settings.RUNTIME_DATABASE_ROLE,
+                sorted(contract.runtime_executable_functions),
+                list(contract.functions),
+                settings.RUNTIME_DATABASE_ROLE,
+            ],
         )
         function_rows = cursor.fetchall()
 
@@ -759,11 +948,16 @@ def inspect_database_integrity_catalog(
         relation_ownership_consistent=relation_ownership_consistent,
         trigger_contract_current=_trigger_rows_are_current(
             trigger_rows,
-            contract.triggers,
+            {**contract.triggers, **contract.supporting_triggers},
         ),
         function_contract_current=functions_current,
         function_execute_owner_only=execute_owner_only,
         function_ownership_current=function_ownership_current,
+        function_execute_boundary_closed=(
+            contract.runtime_executable_functions <= contract.functions.keys()
+            and len(function_rows) == len(contract.functions)
+            and all(bool(row[1]) and bool(row[15]) for row in function_rows)
+        ),
     )
 
 
@@ -797,6 +991,7 @@ __all__ = [
     "bounded_context_relation_names",
     "build_database_integrity_contract",
     "database_integrity_contract_is_ready",
+    "extend_database_integrity_contract",
     "inspect_database_integrity_catalog",
     "parse_database_integrity_sql_contracts",
 ]

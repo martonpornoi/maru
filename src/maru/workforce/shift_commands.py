@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from dataclasses import dataclass
 from datetime import timedelta
@@ -10,11 +11,12 @@ from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
 
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import DatabaseError, models, transaction
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
-from maru.audit.services import AuditRecord, append_audit
+from maru.audit.mutation_evidence import audited_mutation
+from maru.audit.services import AuditRecord
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import (
     PolicyDecision,
@@ -25,7 +27,13 @@ from maru.authorization.policy import (
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
+from maru.identity.queries import lock_account_references_for_evidence
 from maru.organizations.models import Organization
+from maru.scheduling.command_support import SchedulingUnavailableError
+from maru.scheduling.person_obligation_references import (
+    resolve_published_person_conflict,
+)
+from maru.scheduling.release_changes import record_workforce_release_change
 from maru.workforce.edition_write_scope import (
     LockedWorkforceEditionWriteScope,
     lock_active_department_write_target,
@@ -405,12 +413,79 @@ def authorize_shift_self_command(
     )
 
 
+def _lock_shift_people(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    actor_id: UUID,
+    demand_id: UUID | None,
+    commitment_id: UUID | None,
+    self_only: bool,
+) -> None:
+    # The owning parent scope is already locked. Do not take a demand or
+    # commitment lock until the complete person union is held in UUID order.
+    if commitment_id is not None:
+        selected = (
+            ShiftCommitment.objects.filter(
+                id=commitment_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+            )
+            .values_list("demand_id", "account_id")
+            .first()
+        )
+        if selected is None:
+            raise ShiftUnavailableError
+        if self_only and selected[1] != actor_id:
+            raise ShiftAuthorizationDeniedError
+        demand_id = selected[0]
+    if (
+        demand_id is not None
+        and not ShiftDemand.objects.filter(
+            id=demand_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ).exists()
+    ):
+        raise ShiftUnavailableError
+
+    def references() -> tuple[UUID, ...]:
+        accounts = (
+            tuple(
+                ShiftCommitment.objects.filter(
+                    demand_id=demand_id,
+                    organization_id=organization_id,
+                    edition_id=edition_id,
+                    status__in=_ACTIVE_COMMITMENT_STATES,
+                )
+                .order_by("account_id")
+                .values_list("account_id", flat=True)
+                .distinct()[: _MAX_SHIFT_COMMITMENTS + 1]
+            )
+            if demand_id is not None
+            else ()
+        )
+        if len(accounts) > _MAX_SHIFT_COMMITMENTS:
+            raise ShiftStateConflictError
+        return tuple(sorted({actor_id, *accounts}))
+
+    complete = references()
+    if lock_account_references_for_evidence(account_ids=complete) != complete:
+        raise ShiftUnavailableError
+    if references() != complete:
+        raise ShiftStateConflictError(
+            "The affected person set changed; reload the Shift."
+        )
+
+
 def _lock_organizer_scope(
     *,
     actor: Account,
     organization_id: UUID,
     series_id: UUID,
     edition_id: UUID,
+    demand_id: UUID | None = None,
+    commitment_id: UUID | None = None,
 ) -> _OrganizerScope:
     try:
         locked = lock_workforce_edition_write_scope(
@@ -420,6 +495,14 @@ def _lock_organizer_scope(
         )
     except ValidationError as error:
         raise ShiftAuthorizationDeniedError from error
+    _lock_shift_people(
+        organization_id=locked.organization_id,
+        edition_id=locked.edition_id,
+        actor_id=actor.id,
+        demand_id=demand_id,
+        commitment_id=commitment_id,
+        self_only=False,
+    )
     persisted_actor = Account.objects.filter(pk=actor.pk, is_active=True).first()
     if persisted_actor is None:
         raise ShiftAuthorizationDeniedError
@@ -448,7 +531,12 @@ def _lock_organizer_scope(
 
 
 def _lock_self_scope(
-    *, actor: Account, organization_id: UUID, edition_id: UUID
+    *,
+    actor: Account,
+    organization_id: UUID,
+    edition_id: UUID,
+    demand_id: UUID | None = None,
+    commitment_id: UUID | None = None,
 ) -> _SelfScope:
     series_id = _edition_series_id(
         organization_id=organization_id,
@@ -462,6 +550,14 @@ def _lock_self_scope(
         )
     except ValidationError as error:
         raise ShiftAuthorizationDeniedError from error
+    _lock_shift_people(
+        organization_id=locked.organization_id,
+        edition_id=locked.edition_id,
+        actor_id=actor.id,
+        demand_id=demand_id,
+        commitment_id=commitment_id,
+        self_only=True,
+    )
     persisted_actor = Account.objects.filter(
         pk=actor.pk,
         account_kind=Account.Kind.PERSON,
@@ -691,15 +787,16 @@ def _append_shift_audit(
     operation: str,
     reason_code: str,
     changed_fields: tuple[str, ...],
+    retry_key: UUID,
     correlation_id: UUID,
     request_id: UUID | None,
     source_channel: str,
     target_count: int | None = None,
-) -> AuditEvent:
+) -> UUID:
     safe_metadata: dict[str, object] = {"policy_version": POLICY_VERSION}
     if target_count is not None:
         safe_metadata["target_count"] = target_count
-    return append_audit(
+    with audited_mutation(
         AuditRecord(
             principal_kind="account",
             principal_id=scope.actor.id,
@@ -717,6 +814,7 @@ def _append_shift_audit(
             source_channel=source_channel,
             obligations=tuple(sorted(scope.decision.obligations)),
             changed_fields=changed_fields,
+            idempotency_key_hash=hashlib.sha256(str(retry_key).encode()).hexdigest(),
             safe_metadata=safe_metadata,
             retention_class=(
                 "workforce-personal"
@@ -725,7 +823,9 @@ def _append_shift_audit(
             ),
         ),
         occurred_at=scope.evaluated_at,
-    )
+    ) as mutation:
+        record_workforce_release_change(mutation)
+        return mutation.audit_id
 
 
 def _publish_shift_event(
@@ -736,7 +836,7 @@ def _publish_shift_event(
     aggregate_version: int,
     event_name: str,
     status: str,
-    audit_event: AuditEvent,
+    audit_event: UUID,
     correlation_id: UUID,
 ) -> None:
     publish_domain_event(
@@ -750,7 +850,7 @@ def _publish_shift_event(
             aggregate_version=aggregate_version,
             payload={"status": status},
             correlation_id=correlation_id,
-            causation_id=audit_event.id,
+            causation_id=audit_event,
             actor_kind="account",
             actor_id=scope.actor.id,
             retention_class="workforce-restricted",
@@ -788,6 +888,7 @@ def _record_demand_change(
         target_id=demand.id,
         capability_code=MANAGE_SHIFTS,
         operation=f"workforce.shift_demand.{action}",
+        retry_key=retry_key,
         reason_code=f"shift_demand_{action}",
         changed_fields=changed_fields,
         correlation_id=correlation_id,
@@ -837,6 +938,7 @@ def _record_commitment_change(
         target_id=commitment.id,
         capability_code=capability_code,
         operation=f"workforce.shift_commitment.{action}",
+        retry_key=retry_key,
         reason_code=f"shift_commitment_{action}",
         changed_fields=changed_fields,
         correlation_id=correlation_id,
@@ -1165,6 +1267,7 @@ def update_shift_demand(
             organization_id=organization_id,
             series_id=series_id,
             edition_id=edition_id,
+            demand_id=demand_id,
         )
         _require_lifecycle(
             edition=scope.edition,
@@ -1256,14 +1359,14 @@ def _current_availability(
     if plan is None:
         raise ShiftAvailabilityConflictError
     covering = tuple(
-        PersonAvailabilityWindow.objects.select_for_update()
-        .filter(
+        # Current windows are replacement-only. The plan above is already held
+        # FOR UPDATE; its window guard takes a conflicting parent KEY SHARE.
+        PersonAvailabilityWindow.objects.filter(
             plan=plan,
             created_by_version=plan.command_version,
             starts_at__lte=demand.starts_at,
             ends_at__gte=demand.ends_at,
-        )
-        .order_by("preference", "id")[:2]
+        ).order_by("preference", "id")[:2]
     )
     if len(covering) != 1:
         raise ShiftAvailabilityConflictError
@@ -1306,6 +1409,17 @@ def _require_no_overlap(
     if exclude_id is not None:
         conflicts = conflicts.exclude(id=exclude_id)
     if conflicts.exists():
+        raise ShiftOverlapConflictError
+    try:
+        published = resolve_published_person_conflict(
+            account_id=account_id,
+            starts_at=demand.starts_at,
+            ends_at=demand.ends_at,
+            rest_ends_at=rest_end,
+        )
+    except (SchedulingUnavailableError, DatabaseError) as error:
+        raise ShiftUnavailableError from error
+    if published.overlap or published.rest:
         raise ShiftOverlapConflictError
 
 
@@ -1355,6 +1469,7 @@ def _transition_shift_demand(  # noqa: PLR0912,PLR0915
             organization_id=organization_id,
             series_id=series_id,
             edition_id=edition_id,
+            demand_id=demand_id,
         )
         permitted = (
             _CLEANUP_EDITION_LIFECYCLES
@@ -1718,6 +1833,7 @@ def claim_shift(
             actor=actor,
             organization_id=organization_id,
             edition_id=edition_id,
+            demand_id=demand_id,
         )
         _require_lifecycle(
             edition=scope.edition,
@@ -1893,6 +2009,7 @@ def withdraw_shift_claim(
             actor=actor,
             organization_id=organization_id,
             edition_id=edition_id,
+            commitment_id=commitment_id,
         )
         _require_lifecycle(
             edition=scope.edition,
@@ -1977,6 +2094,7 @@ def _organizer_commitment_change(
             organization_id=organization_id,
             series_id=series_id,
             edition_id=edition_id,
+            commitment_id=commitment_id,
         )
         _require_lifecycle(
             edition=scope.edition,
