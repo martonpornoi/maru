@@ -23,6 +23,17 @@ change is not yet a classified time/room move. It supplies no recipient lookup,
 delivery, acknowledgement, new route or profile activation. Those #104 contracts
 and their independently authorized composers and persistence remain in progress.
 
+`release_impact_queries.load_programme_release_impact` now supplies an audited
+history-only comparison of one exact published release and its retained
+predecessor. Both `planning_history` and `release_manifest` fields are required
+before lookup and before final disclosure. It reads complete scoped immutable
+geometry, identifies actual day/room/preparation/delivery/teardown changes, and
+rechecks both native manifests around composition. It exposes no Programme
+text, recipient or work record. Publication version and observed pointer version
+remain distinct. Withdrawn or invalidated governing state yields `changes=None`,
+not an empty successful comparison or invented mass removal. Recipient-specific
+composition, communication and acknowledgement remain unfinished #104 work.
+
 ### Existing owner boundary
 
 `maru.scheduling` owns service days, stable occurrences, comparable timetable

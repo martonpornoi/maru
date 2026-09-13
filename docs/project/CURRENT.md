@@ -49,8 +49,16 @@ and all 5,066 unit cases passed in 32.52s (two existing Django warnings).
 Publication-history integration assertions were strengthened for the initial,
 replacement and post-withdrawal counts; they remain unexecuted under ADR 0100
 and are verification debt for #102. No new database or migration was introduced.
-The full issue is not delivered: authorized rich impact, recipient eligibility,
-governed delivery, acknowledgement persistence and user surfaces remain. Reuse
+An audited exact-publication/predecessor history query now distinguishes actual
+day/room/phase differences, rechecks governing manifests and suppresses the
+comparison explicitly on withdrawal/invalidation. Its database-free focused
+comparison/query tests pass (74 cases, 0.56s), and all 5,089 units pass in 32.58s.
+Ruff, strict types and NumPy/doc-link checks pass. Real history, audit,
+cross-scope denial and suppression assertions are maintained but unexecuted.
+These are focused development results, not exact-head PR certification. No
+#104 PR has been pushed. The full issue is not delivered:
+recipient eligibility, governed delivery, acknowledgement persistence and user
+surfaces remain. Reuse
 owner commands/queries and shared
 output boundaries; do not silently relocate accepted Shifts or turn
 acknowledgement into attendance, work acceptance or release approval.

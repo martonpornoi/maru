@@ -26,6 +26,7 @@ from maru.scheduling.models import (
 )
 from maru.scheduling.planning_queries import SchedulingReadRequest
 from maru.scheduling.release_artifacts import ReleaseArtifactInvalidError
+from maru.scheduling.release_impact_queries import load_programme_release_impact
 from tests.integration.test_scheduling_release_publication_commands import (
     admitted as admitted,  # noqa: PLC0414
 )
@@ -113,6 +114,28 @@ def test_historical_manifest_uses_independent_history_authority(review_scope):
         capability_code=VIEW_HISTORY,
         outcome="allow",
     ).exists()
+    impact = load_programme_release_impact(
+        SchedulingReadRequest(
+            review_scope.request.actor_id,
+            review_scope.request.organization_id,
+            review_scope.request.edition_id,
+            uuid4(),
+        ),
+        release_id=second.object_id,
+        authorizer=review_scope.world.policy,
+    )
+    assert impact.previous_release_id == first.object_id
+    assert impact.release_version == impact.observed_pointer_version == 2
+    assert impact.is_active
+    assert impact.changes is not None
+    assert len(impact.changes) == 1
+    assert impact.changes[0].selection.kind == "unchanged"
+    assert impact.changes[0].geometry_fields == ()
+    assert AuditEvent.objects.filter(
+        operation="scheduling.query.release_impact",
+        capability_code=VIEW_HISTORY,
+        outcome="allow",
+    ).exists()
 
 
 def test_whole_withdrawal_never_returns_retained_selections(review_scope):
@@ -127,6 +150,19 @@ def test_whole_withdrawal_never_returns_retained_selections(review_scope):
     assert SchedulingReleaseArtifact.objects.filter(
         release_id=published.object_id
     ).exists()
+    impact = load_programme_release_impact(
+        SchedulingReadRequest(
+            review_scope.request.actor_id,
+            review_scope.request.organization_id,
+            review_scope.request.edition_id,
+            uuid4(),
+        ),
+        release_id=published.object_id,
+        authorizer=review_scope.world.policy,
+    )
+    assert impact.after_state == "withdrawn"
+    assert impact.changes is None
+    assert not impact.is_active
 
 
 def test_native_copy_withdrawal_invalidates_current_and_historical_manifest(
@@ -154,6 +190,19 @@ def test_native_copy_withdrawal_invalidates_current_and_historical_manifest(
         assert result.state == "invalidated"
         assert result.selections == ()
         assert result.is_active  # Invalidation is not pointer replacement.
+    impact = load_programme_release_impact(
+        SchedulingReadRequest(
+            review_scope.request.actor_id,
+            review_scope.request.organization_id,
+            review_scope.request.edition_id,
+            uuid4(),
+        ),
+        release_id=published.object_id,
+        authorizer=review_scope.world.policy,
+    )
+    assert impact.after_state == "invalidated"
+    assert impact.changes is None
+    assert impact.is_active
 
 
 def test_manifest_fails_closed_if_required_artifact_verification_fails(review_scope):
@@ -183,6 +232,21 @@ def test_release_read_denies_before_loading_private_reference(review_scope):
             authorizer=DEFAULT_SCHEDULING_AUTHORIZER,
         )
     loader.assert_not_called()
+    with (
+        patch("maru.scheduling.release_impact_queries._load") as impact_loader,
+        pytest.raises(SchedulingAuthorizationDeniedError),
+    ):
+        load_programme_release_impact(
+            SchedulingReadRequest(
+                review_scope.request.actor_id,
+                review_scope.request.organization_id,
+                review_scope.request.edition_id,
+                uuid4(),
+            ),
+            release_id="not-an-identifier",
+            authorizer=DEFAULT_SCHEDULING_AUTHORIZER,
+        )
+    impact_loader.assert_not_called()
 
 
 @pytest.mark.parametrize("field", ["organization_id", "edition_id"])
@@ -199,6 +263,16 @@ def test_release_read_denies_foreign_scope_before_manifest_load(review_scope, fi
     ):
         load(review_scope, request=replace(request, **{field: uuid4()}))
     loader.assert_not_called()
+    with (
+        patch("maru.scheduling.release_impact_queries._load") as impact_loader,
+        pytest.raises(SchedulingAuthorizationDeniedError),
+    ):
+        load_programme_release_impact(
+            replace(request, **{field: uuid4()}),
+            release_id=uuid4(),
+            authorizer=review_scope.world.policy,
+        )
+    impact_loader.assert_not_called()
 
 
 def test_failed_read_audit_releases_no_manifest(review_scope):
