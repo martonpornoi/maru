@@ -125,6 +125,7 @@
   "tests/integration/test_production_identity.py": 13.515,
   "tests/integration/test_programme_authorization.py": 0.466,
   "tests/integration/test_programme_capability_migration.py": 1186.818,
+  "tests/integration/test_programme_change_notice_migrations.py": 29.955,
   "tests/integration/test_programme_commands.py": 36.817,
   "tests/integration/test_programme_combined_person_source.py": 180.0,
   "tests/integration/test_programme_current_release_sources.py": 180.0,

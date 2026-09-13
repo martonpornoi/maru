@@ -183,6 +183,8 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.scheduling_schedulingreleaseartifact",
     "public.scheduling_schedulingreleasewithdrawal",
     "public.scheduling_schedulingreleasepointer",
+    "public.scheduling_schedulingchangenotice",
+    "public.scheduling_schedulingchangenoticeevidence",
     "public.venues_venueschedulingbinding",
 )
 

@@ -1346,7 +1346,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1d4ef9c453acc221e452c08d09a8d9f45c70618e3c2ea0c7fbcdfb8781d7bece"
     ),
     "maru_authorization_capability_min_scope(text)": (
-        "dfe0849c4f0a91764ec8bea4f0135d99dd7bfd38aaf2221e46c8295ef3706c84"
+        "7e7d5042e16b12d8792da14e5871a5a52663c2491bf336db01711e063e9b5d3a"
     ),
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)": (
         "093a2f3a81a16d7a09bc782c23711aa4b108274ee7a9baf8fa955e52d82cc481"

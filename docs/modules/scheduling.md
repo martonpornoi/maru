@@ -26,12 +26,39 @@ canonical sorted person locks, repeated eligibility and final sender audit.
 It never invokes recipient output reads, loads a release or returns contacts,
 private instructions, a directory or a portable sending permission.
 The additive Authorization capability migration is unpinned by every current
-profile, assigns no grant and fences downgrade after retained use. PostgreSQL
-migration/runtime evidence is maintained but deferred to #102.
+profile, assigns no grant and fences downgrade after retained use. The approved
+disposable schema-only check observed exact forward metadata; PostgreSQL
+workflow, reverse-migration and runtime evidence remain deferred to #102.
 
-Persisted preparation, independent review, explicit manual handoff, immutable
-exact-recipient acknowledgement and user surfaces are not implemented by this
-query and remain the current #104 outcome. Do not close #104 or its #48 checklist
+`change_notice_queries.preview_programme_change_notice` admits the real sender's
+separate `scheduling.view_change_notices` / `change_notices` field before inspecting
+the recipient selector. `change_notice_sources` composes existing actual-sender
+owner reads; no personal read is impersonated. It repeats current source/purpose
+proof before final authority and mandatory audit. The exact current publication
+or latest withdrawal and one affected occurrence determine the preview. Missing,
+unchanged, duplicate, foreign or moving sources cannot become a notice. Suppressed
+comparison means no old content, not an empty timetable or work cancellation.
+The digest includes source generations and purpose versions, excluding labels,
+so a newer material change cannot inherit old acknowledgement. Internal real-self
+composition shares that digest but is not yet a public notice/self-read boundary.
+
+`SchedulingChangeNotice` and `SchedulingChangeNoticeEvidence` retain scoped,
+immutable preparation and independent review/handoff/acknowledgement references,
+not copied contact details, message bodies or rendered timetable content. The
+existing command receipt/control stream gains five closed change operations and
+the minimized dormant `scheduling.change_notice.changed.v1` event. Dedicated
+notice read/prepare/review/handoff capabilities and exact-self read/acknowledge
+capabilities remain absent from every current profile. Native guards and exact
+readiness include the new tables/functions; runtime access remains SELECT-only.
+The reverse fence preserves both new evidence and earlier operator/release
+history before removing successor guards. Retained history requires fix-forward
+recovery; #97 logical restore and #102 database acceptance are not waived.
+
+Persisted preparation/review/handoff/acknowledgement commands, exact-receipt fresh
+replay, protected personal notice queries and user surfaces remain the current
+#104 outcome. A command must serialize its final source-generation observation
+after complete canonical owner/person locks, not reuse a preview as authority.
+Do not close #104 or its #48 checklist
 item on recipient-reference support alone.
 
 ### Change-impact read foundations (#105 under #104)

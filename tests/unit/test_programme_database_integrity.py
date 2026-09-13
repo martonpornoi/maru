@@ -23,7 +23,7 @@ def test_integrity_migration_is_one_exact_reversible_sql_contract() -> None:
     assert operation.reverse_sql == migration.REVERSE_SQL
     assert PROGRAMME_INTEGRITY_CONTRACT.source_contract_current
     assert len(PROGRAMME_INTEGRITY_CONTRACT.triggers) == 67
-    assert len(PROGRAMME_INTEGRITY_CONTRACT.functions) == 62
+    assert len(PROGRAMME_INTEGRITY_CONTRACT.functions) == 64
     assert migration.FORWARD_SQL.count("REVOKE ALL ON FUNCTION") == 15
     no_truncate = {
         trigger.table

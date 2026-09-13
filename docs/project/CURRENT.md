@@ -49,10 +49,15 @@ assertions are maintained but unexecuted. All 5,332 unit tests pass in 44.54s;
 the first full run exposed one historical catalog expectation, now repaired.
 Closed notice preparation/decision inputs and pure independent review, manual
 handoff and exact-recipient acknowledgement rules are also implemented locally.
-All 5,383 unit tests pass in 32.36s, including 51 new notice-rule checks. Strict
-types (569 sources), Ruff and semantic documentation checks pass. No full
-certification, persisted notice workflow or user surface is claimed yet. Existing
-read queries and pure lifecycle rules do not confer sending authority.
+The schema/native-guard and actual-sender notice-preview increment is now local.
+All 5,472 unit tests pass in 35.96s, including 40 new source/preview checks, with
+two existing URLField warnings. Strict types (572 sources), Ruff, focused
+docstrings, semantic documentation (593 sources) and documentation structure pass.
+The full run exposed a missing legacy diagnostic timing entry for the new
+migration-test file; its documented 29.955-second median planning fallback is
+now registered, not a measured PostgreSQL duration. Active group timings and
+their provenance remain untouched. No full certification, persisted notice
+commands, protected personal notice query or user surface is claimed yet.
 
 Keep preparation, review, handoff and acknowledgement distinct. Do not impersonate
 recipients, relocate accepted Shifts, infer attendance/work acceptance, restore
@@ -63,6 +68,20 @@ The maintainer explicitly approved a bounded disposable **schema-only migration
 and metadata check** for #104's new tables. This narrow exception permits exact
 schema fingerprint collection, not PostgreSQL test suites, runtime workflow
 acceptance, recovery acceptance or a database-certification success claim.
+That check completed: fresh schema migration took 153.578s, total 153.609s.
+Exact table metadata and native function/trigger/ACL checks matched; the exact
+disposable container was removed and existing containers were untouched. The
+[schema checkpoint](../checkpoints/2026-09-13-programme-notice-schema-and-preview.md)
+records fingerprints, retained logs and the distinction between observed forward
+SQL and later unit-checked Python reverse fences. Database workflow, race,
+reverse/reapply and weakened-schema tests are maintained but unexecuted #102 debt.
+
+Next inside #104: implement immutable prepare/review/handoff/acknowledge commands,
+genuine personal notice reads and same-shell surfaces. The writer must serialize
+source generations after complete owner/person admission and revalidate exact
+source/purpose on receipt replay; generic `_execute` replay does not yet provide
+that notice-specific protection. Do not wire the new operations to a UI or claim
+the workflow complete until those checks and maintained database cases exist.
 
 ## Checklist-first delivery priority
 

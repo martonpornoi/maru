@@ -8,7 +8,13 @@ from django.db import migrations
 _previous = import_module(
     "maru.authorization.migrations.0030_programme_operator_capabilities"
 )
-CHANGE_COMMUNICATION_CAPABILITIES = ("scheduling.view_change_recipients",)
+CHANGE_COMMUNICATION_CAPABILITIES = (
+    "scheduling.view_change_recipients",
+    "scheduling.view_change_notices",
+    "scheduling.prepare_change_notices",
+    "scheduling.review_change_notices",
+    "scheduling.handoff_change_notices",
+)
 ORGANIZATION_CAPABILITIES = _previous.ORGANIZATION_CAPABILITIES
 EDITION_CAPABILITIES = (
     *_previous.EDITION_CAPABILITIES,
@@ -52,18 +58,20 @@ REVERSE_SQL = _previous.FORWARD_SQL
 
 
 def refuse_used_change_capability_downgrade(apps: Any, schema_editor: Any) -> None:
-    """Retain native capability validation after any retained grant or role use."""
+    """Fence this successor before its existing operator predecessor can be lost."""
     schema_editor.execute(
         "LOCK TABLE public.authorization_capabilitygrant, "
         "public.authorization_rolebundle IN ACCESS EXCLUSIVE MODE"
     )
     grant = apps.get_model("authorization", "CapabilityGrant")
     bundle = apps.get_model("authorization", "RoleBundle")
-    if grant.objects.filter(
-        capability_code__in=CHANGE_COMMUNICATION_CAPABILITIES
-    ).exists() or any(
+    retained_capabilities = (
+        *CHANGE_COMMUNICATION_CAPABILITIES,
+        *_previous.OPERATOR_CAPABILITIES,
+    )
+    if grant.objects.filter(capability_code__in=retained_capabilities).exists() or any(
         bundle.objects.filter(capability_codes__contains=[code]).exists()
-        for code in CHANGE_COMMUNICATION_CAPABILITIES
+        for code in retained_capabilities
     ):
         raise RuntimeError(
             "Programme change authority exists; retain it and fix forward."
@@ -71,7 +79,7 @@ def refuse_used_change_capability_downgrade(apps: Any, schema_editor: Any) -> No
 
 
 class Migration(migrations.Migration):
-    """Add sender recipient selection, not a profile or executable notice workflow."""
+    """Add dormant sender notice authority, never self grants or profile activation."""
 
     dependencies: ClassVar[list[tuple[str, str]]] = [
         ("authorization", "0030_programme_operator_capabilities"),

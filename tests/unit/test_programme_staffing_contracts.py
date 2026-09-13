@@ -50,7 +50,11 @@ def test_staffing_capabilities_are_exact_additive_and_independently_ceilinged():
         assert getattr(current, field) == getattr(previous, field)
     assert {code for code, value in CAPABILITIES.items() if value.persistable} == {
         *OPERATOR_CAPABILITIES,
-        *CHANGE_COMMUNICATION_CAPABILITIES,
+        *(
+            code
+            for code in CHANGE_COMMUNICATION_CAPABILITIES
+            if CAPABILITIES[code].persistable
+        ),
         "scheduling.acknowledge_release_warnings",
         "scheduling.approve_release",
         "scheduling.publish_release",

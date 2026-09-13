@@ -4,22 +4,12 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from enum import StrEnum
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
 
+from .change_catalogs import ChangeRecipientPurpose
 from .inputs import require_version
-
-
-class ChangeRecipientPurpose(StrEnum):
-    """An exact owner relationship or operational scope, not an audience list."""
-
-    HOST = "host"
-    WORK = "work"
-    ROOM = "room"
-    DEPARTMENT = "department"
-    EDITION = "edition"
 
 
 def _identifier(value: object) -> None:

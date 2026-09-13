@@ -263,10 +263,16 @@ def test_new_sender_capability_is_dormant_and_native_catalog_is_additive():
     current = import_module(
         "maru.authorization.migrations.0031_programme_change_communication_capabilities"
     )
-    assert current.CHANGE_COMMUNICATION_CAPABILITIES == (VIEW_CHANGE_RECIPIENTS,)
+    assert current.CHANGE_COMMUNICATION_CAPABILITIES == (
+        VIEW_CHANGE_RECIPIENTS,
+        "scheduling.view_change_notices",
+        "scheduling.prepare_change_notices",
+        "scheduling.review_change_notices",
+        "scheduling.handoff_change_notices",
+    )
     assert (
         *previous.EDITION_CAPABILITIES,
-        VIEW_CHANGE_RECIPIENTS,
+        *current.CHANGE_COMMUNICATION_CAPABILITIES,
     ) == current.EDITION_CAPABILITIES
     for name in (
         "ORGANIZATION_CAPABILITIES",

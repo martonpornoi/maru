@@ -36,9 +36,10 @@ Missing, foreign, inactive and ineligible subjects share an unavailable result.
 No release or private instructions are read by recipient selection.
 
 The additive native capability migration preserves existing scope ceilings and
-rejects downgrade after retained grant/role use. Its expected function definition
-is derived from reviewed source, not claimed as observed PostgreSQL evidence.
-No current profile pins this capability and no grant or route is created.
+rejects downgrade after retained grant/role use. No current profile pins the new
+capabilities and no grant or route is created. The narrowly approved disposable
+schema check observed the exact forward table/function/trigger metadata; it is
+not workflow, reverse-migration or runtime-role acceptance.
 
 The subsequent persisted workflow must keep these facts independent:
 
@@ -72,12 +73,49 @@ revoked purpose. Regeneration must recheck current disclosure authority. Native
 schema, runtime permissions, recovery and exact readiness remain mandatory;
 do not fabricate observed fingerprints or bypass deferred PostgreSQL execution.
 
+`SchedulingChangeNotice` retains only scoped release/occurrence, exact recipient
+and purpose, observed pointer/source state, source fingerprint and attributable
+preparation evidence. `SchedulingChangeNoticeEvidence` appends one independent
+approval or rejection, optional manual handoff and optional exact-person
+acknowledgement. Each fact has its own receipt and contiguous evidence sequence.
+Neither table copies a message, contact, invitation briefing or timetable body.
+Both are immutable and runtime SELECT-only while dormant. Native guards link
+scope, lifecycle and transaction witness to the existing Scheduling receipt,
+Audit and closed `scheduling.change_notice.changed.v1` event stream. The event
+contains only its operation and has no adopted provider route.
+
+The source composer resolves host/work recipients through actual-sender owner
+queries and operators through independent sender and subject admission. Genuine
+self composition uses only the authenticated person's existing owner queries.
+One exact current publication or latest withdrawal is selected; an arbitrary
+historical baseline is not accepted. Only one affected occurrence is projected.
+Suppression exposes no old geometry or copy; a scope-membership-only check can
+justify a warning without inventing a removal. Digests bind current purpose and
+complete current/predecessor dependency generations as well as exact comparison
+references. A second material change while already invalidated therefore cannot
+inherit an earlier acknowledgement. Labels are excluded from the digest, but a
+label moving during a read still makes that observation unavailable.
+
+`preview_programme_change_notice` independently requires the actual sender's
+`scheduling.view_change_notices` field authority, repeats the complete sources,
+then reauthorizes and audits before disclosure. Its preview is not portable
+sending authority. Mutation composition must additionally serialize relevant
+source generations after complete owner/person admission, and recheck current
+purpose/source on exact receipt replay; existing generic replay alone is not
+sufficient for notice commands.
+
+Downgrade must refuse retained notice, notice-capability, prior operator-authority
+or release history before removing successor protections. Restore all participating
+owners and evidence consistently, then require exact readiness. Do not rebaseline
+weakened constraints or treat the separate logical-restore issue #97 as resolved.
+
 ## Current implementation boundary and consequences
 
-The local implementation includes sender-authorized operator recipient selection,
-its dormant capability, closed notice inputs and pure evidence lifecycle rules.
-Persisted preparation/review/handoff, acknowledgement and user surfaces remain
-#104 work; neither selection nor pure rules deliver the persisted workflow.
+The local implementation includes recipient selection, dormant capability/schema
+and native guards, closed inputs, pure lifecycle rules and sender notice preview.
+Persisted preparation/review/handoff and acknowledgement commands, protected
+personal notice queries and user surfaces remain #104 work. Installed tables and
+read-only preview do not deliver the persisted workflow.
 This ADR does not create another delivery item or displace #48's decomposition.
 
 PostgreSQL tests and migration/recovery cases remain maintained but unexecuted

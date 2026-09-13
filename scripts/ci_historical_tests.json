@@ -421,6 +421,14 @@
       "test_unused_operator_catalog_reverses_and_reapplies_through_real_migrations"
     ]
   },
+  "tests/integration/test_programme_change_notice_migrations.py": {
+    "owners": ["audit", "authorization", "events", "identity", "programme", "scheduling", "venues", "workforce"],
+    "shared_baseline": false,
+    "tests": [
+      "test_notice_authority_blocks_downgrade_before_any_successor_recorder_changes",
+      "test_unused_notice_extension_reverses_and_recovers_with_real_migrations"
+    ]
+  },
   "tests/integration/test_scheduling_release_execution_migrations.py": {
     "owners": ["audit", "authorization", "events", "identity", "programme", "scheduling", "venues", "workforce"],
     "shared_baseline": false,

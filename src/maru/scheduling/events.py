@@ -4,11 +4,16 @@ from typing import Final
 
 from django.core.exceptions import ValidationError
 
-from .catalogs import PLANNING_OPERATION_VALUES, RELEASE_OPERATION_VALUES
+from .catalogs import (
+    CHANGE_OPERATION_VALUES,
+    PLANNING_OPERATION_VALUES,
+    RELEASE_OPERATION_VALUES,
+)
 
 SCHEDULING_CHANGED_EVENT: Final = "scheduling.planning.changed.v1"
 SCHEDULING_CHANGED_SCHEMA_VERSION: Final = 1
 SCHEDULING_RELEASE_CHANGED_EVENT: Final = "scheduling.release.changed.v1"
+SCHEDULING_NOTICE_CHANGED_EVENT: Final = "scheduling.change_notice.changed.v1"
 
 
 # The shared closed validator raises the documented error for both public seams.
@@ -47,6 +52,27 @@ def validate_scheduling_release_changed_payload(payload: dict[str, object]) -> N
     no artifact, person, source reference or human explanation.
     """
     _validate_operation(payload, RELEASE_OPERATION_VALUES)
+
+
+def validate_scheduling_notice_changed_payload(payload: dict[str, object]) -> None:  # noqa: DOC502
+    """Validate a minimized notice fact without disclosing people or change content.
+
+    Parameters
+    ----------
+    payload : dict[str, object]
+        Untrusted event payload before atomic publication.
+
+    Raises
+    ------
+    ValidationError
+        For extra fields, untyped values or an unknown notice operation.
+
+    Notes
+    -----
+    This internal event is not a recipient message or provider delivery receipt.
+    No external route or current profile is activated by its registration.
+    """
+    _validate_operation(payload, CHANGE_OPERATION_VALUES)
 
 
 def _validate_operation(

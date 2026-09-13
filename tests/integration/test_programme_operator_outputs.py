@@ -26,6 +26,9 @@ from maru.programme.staffing_inputs import (
 from maru.programme.staffing_queries import ProgrammeStaffingReadRequest
 from maru.scheduling import operator_scope
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
+from maru.scheduling.change_catalogs import ChangeRecipientPurpose
+from maru.scheduling.change_inputs import ChangeRecipientSelection
+from maru.scheduling.change_notice_queries import preview_programme_change_notice
 from maru.scheduling.change_recipient_queries import (
     OperatorChangeRecipientRequest,
     load_operator_change_recipient,
@@ -200,16 +203,27 @@ def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
         'FROM "registration_',
     ):
         assert excluded not in statements
-    _assert_operator_change_recipient(request, monkeypatch)
+    _assert_operator_change_recipient(
+        request,
+        monkeypatch,
+        release_id=published.object_id,
+        occurrence_id=result.occurrences[0].occurrence_id,
+    )
 
 
-def _assert_operator_change_recipient(request, monkeypatch):
+def _assert_operator_change_recipient(
+    request, monkeypatch, *, release_id, occurrence_id
+):
     original = policy.profile_allows_capability
     monkeypatch.setattr(
         policy,
         "profile_allows_capability",
         lambda code, version, capability: (
-            capability == "scheduling.view_change_recipients"
+            capability
+            in {
+                "scheduling.view_change_recipients",
+                "scheduling.view_change_notices",
+            }
             or original(code, version, capability)
         ),
     )
@@ -251,6 +265,56 @@ def _assert_operator_change_recipient(request, monkeypatch):
     ):
         with pytest.raises(SchedulingUnavailableError):
             load_operator_change_recipient(changed)
+    _assert_exact_notice_preview(
+        attribution, request, release_id=release_id, occurrence_id=occurrence_id
+    )
+
+
+def _assert_exact_notice_preview(sender, recipient, *, release_id, occurrence_id):
+    selection = ChangeRecipientSelection(
+        ChangeRecipientPurpose(recipient.kind.value),
+        recipient.target_id,
+        recipient.actor_id,
+    )
+    arguments = {
+        "release_id": release_id,
+        "occurrence_id": occurrence_id,
+        "recipient": selection,
+    }
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        preview_programme_change_notice(sender, **arguments)
+    for capability in (
+        "scheduling.view_change_notices",
+        "scheduling.view_operator_output",
+        "venues.view_operator_wayfinding",
+    ):
+        CapabilityGrantFactory(
+            organization_id=sender.organization_id,
+            edition_id=sender.edition_id,
+            principal_id=sender.actor_id,
+            capability_code=capability,
+        )
+    result = preview_programme_change_notice(sender, **arguments)
+    assert result.recipient_id == recipient.actor_id != sender.actor_id
+    assert result.change.occurrence_id == occurrence_id
+    assert result.change.kind == "added"
+    assert (
+        result.snapshot_digest
+        == preview_programme_change_notice(sender, **arguments).snapshot_digest
+    )
+    assert AuditEvent.objects.filter(
+        principal_id=sender.actor_id,
+        operation="scheduling.query.programme_change_notice_preview",
+        outcome="allow",
+    ).exists()
+    assert not AuditEvent.objects.filter(
+        principal_id=recipient.actor_id,
+        operation="scheduling.query.programme_change_notice_preview",
+    ).exists()
+    with pytest.raises(SchedulingUnavailableError):
+        preview_programme_change_notice(
+            sender, **{**arguments, "occurrence_id": uuid4()}
+        )
 
 
 @pytest.mark.parametrize("kind", [OperatorScopeKind.ROOM, OperatorScopeKind.DEPARTMENT])

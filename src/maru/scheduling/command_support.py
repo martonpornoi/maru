@@ -25,10 +25,11 @@ from .authorization import (
     SchedulingAuthorizer,
     authorize_scheduling_scope,
 )
-from .catalogs import RELEASE_OPERATION_VALUES
+from .catalogs import CHANGE_OPERATION_VALUES, RELEASE_OPERATION_VALUES
 from .events import (
     SCHEDULING_CHANGED_EVENT,
     SCHEDULING_CHANGED_SCHEMA_VERSION,
+    SCHEDULING_NOTICE_CHANGED_EVENT,
     SCHEDULING_RELEASE_CHANGED_EVENT,
 )
 from .inputs import SchedulingCommandRequest, scheduling_digest
@@ -173,7 +174,10 @@ def _audit(
         safe_metadata={"policy_version": POLICY_VERSION},
         retention_class="programme-restricted",
     )
-    if outcome == "allow" and operation.value in RELEASE_OPERATION_VALUES:
+    if outcome == "allow" and operation.value in (
+        *RELEASE_OPERATION_VALUES,
+        *CHANGE_OPERATION_VALUES,
+    ):
         with audited_mutation(record, occurred_at=occurred_at) as evidence:
             return evidence.audit_id
     return append_audit(record, occurred_at=occurred_at).id
@@ -217,6 +221,8 @@ def _record_success(
             event_name=(
                 SCHEDULING_RELEASE_CHANGED_EVENT
                 if operation.value in RELEASE_OPERATION_VALUES
+                else SCHEDULING_NOTICE_CHANGED_EVENT
+                if operation.value in CHANGE_OPERATION_VALUES
                 else SCHEDULING_CHANGED_EVENT
             ),
             schema_version=SCHEDULING_CHANGED_SCHEMA_VERSION,

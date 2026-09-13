@@ -60,6 +60,11 @@ class SchedulingOperation(StrEnum):
     RELEASE_APPROVE = "release_approve"
     RELEASE_PUBLISH = "release_publish"
     RELEASE_WITHDRAW = "release_withdraw"
+    CHANGE_PREPARE = "change_prepare"
+    CHANGE_APPROVE = "change_approve"
+    CHANGE_REJECT = "change_reject"
+    CHANGE_HANDOFF = "change_handoff"
+    CHANGE_ACKNOWLEDGE = "change_acknowledge"
 
 
 # Release decisions have separate objects, not candidate-edit authorship.
@@ -86,6 +91,13 @@ RELEASE_OPERATION_VALUES: Final = (
     "release_approve",
     "release_publish",
     "release_withdraw",
+)
+CHANGE_OPERATION_VALUES: Final = (
+    "change_prepare",
+    "change_approve",
+    "change_reject",
+    "change_handoff",
+    "change_acknowledge",
 )
 
 

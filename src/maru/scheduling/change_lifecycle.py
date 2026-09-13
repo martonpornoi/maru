@@ -3,29 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from enum import StrEnum
 from uuid import UUID
 
+from .change_catalogs import ChangeNoticeAction, ChangeNoticeReview
 from .command_support import (
     SchedulingLifecycleConflictError,
     SchedulingVersionConflictError,
 )
-
-
-class ChangeNoticeAction(StrEnum):
-    """Closed facts; export and provider delivery are deliberately not included."""
-
-    APPROVE = "approve"
-    REJECT = "reject"
-    HANDOFF = "handoff"
-    ACKNOWLEDGE = "acknowledge"
-
-
-class ChangeNoticeReview(StrEnum):
-    """An independent review outcome is not handoff or acknowledgement."""
-
-    APPROVED = "approved"
-    REJECTED = "rejected"
 
 
 @dataclass(frozen=True, slots=True)
