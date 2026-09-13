@@ -152,6 +152,11 @@ minutes each. This is timeout resilience, not a total-work reduction or
 Programme adoption.
 An eligible rule result is not approval, publication or profile activation.
 Child #97 owns exact-readiness compatibility after logical PostgreSQL restore.
+The maintainer-authorized ADR 0100 now temporarily defers PostgreSQL execution
+during dormant feature development, retaining tests and all non-database gates.
+#48 must restore exhaustive local/hosted database, coverage and timing acceptance
+before activation or integrated Programme acceptance; deferred development is
+not a database-correctness or readiness claim.
 It must pass before profile activation or a director pilot; same-image physical
 recovery evidence does not waive logical-restore or production/PITR acceptance.
 

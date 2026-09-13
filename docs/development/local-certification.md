@@ -5,6 +5,31 @@ Last updated: 2026-09-12
 
 ## What the gate proves
 
+### Temporary Programme development policy
+
+[ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md)
+currently sets `scripts/ci_postgresql_policy.json` to `deferred`, as explicitly
+requested by the maintainer. Default `scripts/certify.ps1` runs exact-commit
+non-database development acceptance through `certify_deferred.ps1`, without
+Docker or PostgreSQL. It retains locked inputs, packaging, static/NumPy/Sphinx,
+static Django/generated contracts, frontend, vulnerability and all unit checks.
+`scripts/check.ps1` also runs units only unless tests are explicitly omitted.
+Use a non-interactive environment (`CI=true`) and the pinned pnpm 11.9.0.
+
+The receipt is **`postgresql_deferred`**, not `success`: it reports zero database
+instances and null combined coverage/headroom. Preserve older complete evidence
+outside `.local-ci/` before the next run clears it. No receipt from an earlier
+head certifies a later candidate. Maintain all PostgreSQL cases and inventories,
+but record new/changed unexecuted cases as debt rather than running them during
+this phase. Unit coverage cannot stand in for the unchanged full 90-percent gate.
+
+Restore the tracked mode to `required` through a reviewed change before #48
+acceptance or activation, then run `-Mode Full` on the clean final candidate and
+obtain independent hosted full acceptance. While deferred, explicit Full and
+CurrentDiagnostic certification are fenced. The remaining procedure describes
+that retained full-certification boundary, not checks silently claimed by the
+temporary development path.
+
 `scripts/certify.ps1` checks one clean local commit and covers:
 
 - locked Python and Staff Console dependencies plus vulnerability audits;

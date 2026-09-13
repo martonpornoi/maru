@@ -1787,6 +1787,13 @@ architecture documents, implementation issues, tests, and release notes.
   local/hosted assignments and measured pre-push headroom. Suite growth must not
   silently consume the timeout margin; budget failures require replanning or
   optimization, never omitted tests or weakened acceptance.
+  Exception: maintainer-authorized ADR 0100 temporarily defers PostgreSQL
+  execution and database-dependent combined coverage during dormant Programme
+  development. Maintain all cases and record unexecuted verification debt;
+  retain every non-database gate. Restore exhaustive local/hosted acceptance,
+  measured headroom and the unchanged coverage threshold before Programme
+  activation, integrated acceptance, a director pilot or release. A deferred
+  development result is not database or production acceptance.
 - **NFR-002 — Living documentation:** Product, architecture, API, operations,
   security, and role-specific user documentation are deliverables.
 - **NFR-003 — Checkpoint continuity:** Every material change must leave a

@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added an explicit temporary Programme-development CI policy: PostgreSQL
+  execution and database-dependent coverage are deferred, while unit, static,
+  documentation, frontend and security checks remain required. Database tests
+  remain maintained; full verification must be restored before Programme
+  activation, pilot or release (#48, ADR 0100).
 - Added dormant private Programme run sheets for independently authorized room,
   Department and edition operators. Approved preparation/delivery/teardown,
   reviewed copy, current wayfinding and requested delivery/staffing instructions

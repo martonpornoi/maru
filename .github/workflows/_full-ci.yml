@@ -32,6 +32,7 @@ jobs:
           python-version: "3.12"
       - name: Verify locked and immutable automation inputs
         run: |
+          python scripts/ci_development_policy.py require-full
           python -m pip install uv==0.11.29 PyYAML==6.0.3
           uv lock --check
           python scripts/validate_actions_allowlist.py

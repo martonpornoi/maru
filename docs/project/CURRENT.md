@@ -70,7 +70,36 @@ is present, with exact-purpose admission, mandatory owner audits, current room
 and retained-work membership, checked release geometry and reviewed copy, and
 requested-only private delivery/staffing fields. Current owner instructions and
 immutable accepted work intervals remain separate. No #100 certification, push
-or protected acceptance is claimed.
+or protected acceptance is claimed for the later CI-policy candidate.
+
+The feature-only exact head `ff36db6896a0ff0d073e9737086d676f5a8d1e30`
+subsequently completed all ten local gates: 9,254 Python cases (4,986 units and
+4,268 PostgreSQL cases), 64 frontend cases and 90.65% combined branch-aware
+coverage in 3h36m16s. All 42 jobs passed and removed their containers; the slowest
+took 49m17s, with an 83m56s conservative projection. Independent report matching
+reconciles all 337 groups with no failure, error, skip or duplicate. Complete
+evidence is preserved under `.tools/certification-evidence/issue100-ff36db6-complete/`.
+The first failed dependency-install attempt remains separately recorded. This
+is historical evidence for that exact feature head, not certification of later
+policy changes.
+
+The maintainer then explicitly requested PostgreSQL execution be deferred until
+Programme is finished. [ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md)
+implements a tracked temporary development policy in this same pending PR.
+Maintain all database cases and record unexecuted changes as verification debt;
+do not run new PostgreSQL checks during this phase. PR/local unit, static,
+documentation, packaging, frontend and security checks remain required. Combined
+database coverage and headroom remain unavailable, never falsely successful.
+Nightly/manual full selection is deferred and full/release acceptance is fenced.
+Restore the tracked required mode and exhaustive local/hosted evidence before
+Programme profile activation, integrated acceptance, a director pilot or release.
+The new policy regressions pass: 105 focused cases and all 5,015 units (32.02s).
+An initial Windows temporary-directory permission error was repaired with an
+isolated task-owned test directory; it was not waived. Policy parsing rejects
+malformed inputs, full acceptance refuses deferred execution, and workflow
+contracts preserve non-database gates and original risk selection. The candidate
+still needs exact non-database development acceptance and the protected hosted
+gate before delivery. See the [policy checkpoint](../checkpoints/2026-09-13-programme-postgresql-deferral.md).
 
 Focused evidence: all 4,986 units passed in 34.20s (two existing Django URL-field
 deprecation warnings); 17 PostgreSQL cases passed in 299.59s including fresh
@@ -94,8 +123,9 @@ exact ID. Launcher/observer failures and teardown-session warnings remain record
 not passing browser evidence. The warning-fatal documentation build also passed.
 
 See the [operator checkpoint](../checkpoints/2026-09-13-programme-operator-run-sheets.md)
-for evidence and limitations. Next: certify the clean exact candidate with its
-source-bound PostgreSQL plan and measured headroom, then protected delivery.
+for evidence and limitations. Next: verify the temporary policy and certify the
+clean exact candidate through its explicitly deferred non-database development
+path, then protected delivery. Do not rerun the preserved full feature evidence.
 Human-only native-print, zoom, screen-reader and calendar-client checks are
 explicitly retained under #92 and remain unpassed. #97 still blocks activation.
 
@@ -123,7 +153,8 @@ activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Preserve #101's completed exact-head local/hosted evidence; do not rerun it.
+1. Preserve #101's delivery and #100's completed feature-head local evidence;
+   do not rerun them. Follow ADR 0100's temporary PostgreSQL deferral.
 2. Deliver #100's independently authorized room/department operator run sheets.
 3. Deliver detailed change impact, governed destination delivery and recipient
    acknowledgement through the same output boundaries.

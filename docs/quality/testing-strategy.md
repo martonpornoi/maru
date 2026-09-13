@@ -6,6 +6,25 @@ Last updated: 2026-09-08
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
 
+## Temporary Programme development exception
+
+The maintainer explicitly authorized
+[ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md):
+while `scripts/ci_postgresql_policy.json` says `deferred`, do not run PostgreSQL
+acceptance locally or in routine PR/nightly workflows. Continue maintaining all
+current and historical cases, fixtures, tenant/field denial, native constraint,
+concurrency and migration/recovery coverage as features change. Record unexecuted
+cases as verification debt. No files are removed, ignored or replaced by SQLite.
+
+All unit, static, documentation, packaging, frontend and security gates remain.
+Database-dependent combined coverage and timing are **deferred**, not passed or
+waived forever. Full/release acceptance is blocked. Restore `required` under
+#48 before Programme activation, integrated acceptance or a director pilot;
+execute exhaustive exact-candidate local and hosted acceptance and repair every
+failure. The unchanged 90-percent combined threshold, source-bound plans,
+isolation and timing-headroom policy below then apply in full again. This
+temporary tradeoff reduces immediate assurance and can accumulate repair work.
+
 ## Test layers
 
 ### Domain unit tests

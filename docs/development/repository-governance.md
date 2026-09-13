@@ -2,6 +2,20 @@
 
 ## Branch workflow
 
+During the maintainer-authorized dormant Programme phase,
+[ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md)
+temporarily overrides only PostgreSQL execution and database-dependent combined
+coverage below. The tracked policy selects an explicit deferred development
+path, preserving original risk/history output, every non-database gate,
+destructive review, dependency review, CodeQL and the protected `PR gate`.
+No GitHub ruleset or bypass actor is changed. Scheduled/manual full selection
+records deferral; reusable full/release acceptance fails before database fan-out.
+Tests stay tracked and maintained. Restore exhaustive local/hosted evidence and
+the unchanged coverage/timing requirements before #48 activation, integrated
+acceptance, a director pilot or release. A green development PR is not proof of
+database correctness. The ordinary full policy below resumes when the tracked
+mode returns to `required`.
+
 Create work from current `main`, push a focused branch, and open a pull request.
 The protected status is `PR gate`; isolated GitHub-hosted runners evaluate the
 current pull-request merge candidate derived from the submitted head and

@@ -33,7 +33,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+          POSTGRESQL_POLICY=$(python scripts/ci_development_policy.py mode)
+          if [[ "$POSTGRESQL_POLICY" == "deferred" ]]; then
+            echo "run_full=false" >> "$GITHUB_OUTPUT"
+            echo "PostgreSQL acceptance is deferred under #48 / ADR 0100; no database result is claimed." >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             echo "run_full=true" >> "$GITHUB_OUTPUT"
           else
             python scripts/nightly_ci.py
