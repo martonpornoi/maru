@@ -175,8 +175,10 @@ def verify_continuity_files(
 
     Notes
     -----
-    Signature, scope, age, parsing and filesystem errors propagate without normal
-    content. A purpose-specific exclusive lock prevents cooperating verifier races.
+    Signature, scope, age and parsing errors prevent normal content. Filesystem
+    errors propagate; cleanup can fail after a complete output was published, so
+    a failed invocation must not be treated as permission to use any output file.
+    A purpose-specific exclusive lock prevents cooperating verifier races.
     Save verified metadata before decoding/rendering: even malformed newer signed
     payload cannot license an older fallback. A crash may leave a lock for accountable
     operator recovery; never automatically erase a stale lock or known-state record.

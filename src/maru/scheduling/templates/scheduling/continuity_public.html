@@ -1,0 +1,5 @@
+{% extends "scheduling/public_timetable.html" %}
+{% load static %}
+{% block output_title %}Programme now and next · Maru{% endblock %}
+{% block output_styles %}<link rel="stylesheet" href="{% static 'scheduling/continuity.css' %}">{% endblock %}
+{% block output_content %}{% include "scheduling/_continuity_page.html" %}{% endblock %}

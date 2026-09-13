@@ -14,12 +14,20 @@ body:has(> .continuity-skip) { margin: 0; padding: 1rem; font: 1rem/1.6 system-u
 .continuity-skip { position: absolute; top: -10rem; }
 .continuity-skip:focus { position: static; }
 .continuity-controls { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1rem; }
+.programme-continuity-page { max-width: 80rem; min-width: 0; overflow-wrap: anywhere; }
+.continuity-controls a, .continuity-controls button, .continuity-controls summary { min-height: 2.75rem; padding: .5rem; }
+.continuity-controls :focus-visible { outline: .2rem solid #2463ba; outline-offset: .2rem; }
+.continuity-layer { display: flex; align-items: start; gap: .6rem; min-height: 2.75rem; padding: .5rem; }
+.continuity-layer input { flex: 0 0 auto; margin-top: .25rem; }
+.programme-continuity h3 { color: inherit; background: transparent; font-size: 1.15rem; }
 @media (max-width: 40rem) {
   .programme-continuity dl { grid-template-columns: minmax(0, 1fr); gap: .25rem; }
   .programme-continuity dd { margin-block-end: .75rem; }
   .continuity-source, .continuity-card { padding: .75rem; }
 }
 @media print {
+  #header, #nav-sidebar, .breadcrumbs, .toggle-nav-sidebar, #footer, .maru-page-access { display: none !important; }
+  #container, #main, #content, #content-main, #main-content { width: auto !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; }
   .continuity-controls, .continuity-skip { display: none !important; }
   .programme-continuity { color: #000; max-width: none; }
   .continuity-card { break-inside: avoid; border-radius: 0; }

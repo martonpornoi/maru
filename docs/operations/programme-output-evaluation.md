@@ -13,6 +13,10 @@ an isolated synthetic rehearsal; do not add production routes, enable profiles,
 or load real personal data to try this guide. Operator run sheets are a separate
 private purpose, never an expanded public or personal timetable.
 
+For the separate dormant now/next pages, signed snapshots and accountable offline
+verification, use [Programme on-site continuity](programme-onsite-continuity.md).
+Ordinary JSON/calendar downloads described here are not signed continuity packs.
+
 ## Public timetable
 
 1. Open the public timetable through the synthetic rehearsal's visible link.

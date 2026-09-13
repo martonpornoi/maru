@@ -43,17 +43,27 @@ Branch: `codex/programme-onsite-continuity`, from protected PR #110.
 item: useful now/next and run sheets, deterministic versioned print/export packs,
 a signed last-published view and explicit degraded operation. ADR 0103 contracts
 the read-only signature, independent trust, bounded expiry and known-state rules.
-Local work now includes closed audience cards, now/next grouping, independently
+Local work includes closed audience cards, now/next grouping, independently
 admitted owner composition, dedicated scoped signing, and a database-free offline
 file verifier. The latter persists known metadata before producing dated HTML;
 it rejects older releases, clock rollback and implicit lost-history resets.
-The database-free suite passed 5,729 tests in 45.30s before the latest presentation
-and file-tool additions; those additions separately passed 68 presentation/state
-tests and 15 real temporary-file tests. This is not exact-head certification or
-protected delivery. The [source/offline checkpoint](../checkpoints/2026-09-13-programme-continuity-sources-and-offline.md)
-records boundaries, the resolved Windows temp-directory obstacle and remaining
-work. Next wire the contracted shared-shell HTTP/print/download surfaces, add
-maintained native cases without running them, and rehearse synthetic browser use.
+The three contracted shared-shell live/print/download surfaces are now wired
+only in dormant output routes. The [operator runbook](../operations/programme-onsite-continuity.md)
+documents independent key/trust provisioning, protected history, storage failure,
+clock custody, replacement and disposal. No real keys were provisioned.
+
+The database-free suite passed 5,729 tests in 45.30s before presentation, file-tool
+and HTTP additions. Subsequent focused checks passed 68 presentation/state cases,
+15 real temporary-file cases, and finally 90 payload/HTTP cases in 3.72s.
+Three owner-authorized PostgreSQL cases were added but not executed. Synthetic
+browser checks at 1280 by 720 covered the three audiences, ordinary/empty/
+withdrawn/invalidated/denied/unavailable states, own hosting unadopted, explicit
+operator layers and print-friendly content. A reused mock shell dictionary was
+corrected; recovery now receives fresh context. No native database authority or
+full accessibility/viewport acceptance is inferred from that component fixture.
+The [surface checkpoint](../checkpoints/2026-09-13-programme-continuity-surfaces.md)
+records precise evidence and #92 gaps. Next review and certify the clean exact
+candidate, then submit #107 through the protected PR flow; it is not yet delivered.
 
 Offline material is a bounded historical snapshot, not current permission,
 fresh instructions or a writable source. Specify source time/age, expiry,

@@ -26,7 +26,9 @@ from maru.programme.staffing_inputs import (
     ProgrammeStaffingSource,
 )
 from maru.programme.staffing_queries import ProgrammeStaffingReadRequest
+from maru.scheduling import continuity_queries as continuity
 from maru.scheduling import operator_scope
+from maru.scheduling.adoption import SCHEDULING_CONTINUITY_ADAPTER
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
 from maru.scheduling.change_catalogs import ChangeNoticeAction, ChangeRecipientPurpose
 from maru.scheduling.change_inputs import (
@@ -57,6 +59,7 @@ from maru.scheduling.command_support import (
     SchedulingUnavailableError,
     SchedulingVersionConflictError,
 )
+from maru.scheduling.continuity_protocol import ContinuityScope
 from maru.scheduling.inputs import SchedulingCommandRequest
 from maru.scheduling.models import (
     SchedulingChangeNotice,
@@ -150,6 +153,64 @@ def operator_world(review_scope, monkeypatch):
         ),
     )
     return review_scope
+
+
+def test_native_continuity_retains_exact_operator_fields_and_required_audits(
+    operator_world, monkeypatch
+):
+    # Maintained database acceptance debt under #102, not run during #107 development.
+    monkeypatch.setattr(
+        continuity,
+        "profile_allows_adapter",
+        lambda _code, _version, adapter: adapter == SCHEDULING_CONTINUITY_ADAPTER,
+    )
+    publish(operator_world, approve(operator_world))
+    request = operator_request(operator_world, kind=OperatorScopeKind.ROOM)
+    scope = ContinuityScope(
+        request.organization_id,
+        request.edition_id,
+        "private_operator",
+        request.actor_id,
+        request.kind.value,
+        request.target_id,
+    )
+    result = continuity.load_continuity_projection(
+        scope, correlation_id=request.correlation_id
+    )
+    assert result.scope == scope
+    assert (
+        result.entries[0].context[0]
+        == operator_world.world.placement.envelope.setup_starts_at
+    )
+    assert not any(
+        fact.code == "technical" for row in result.entries for fact in row.facts
+    )
+    for capability in BASE_CAPABILITIES:
+        assert AuditEvent.objects.filter(
+            principal_id=request.actor_id,
+            capability_code=capability,
+            outcome="allow",
+            target_id=request.target_id,
+        ).exists()
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        continuity.load_continuity_projection(
+            replace(scope, layers=("technical",)), correlation_id=uuid4()
+        )
+    before = AuditEvent.objects.filter(
+        principal_id=request.actor_id, outcome="allow"
+    ).count()
+    with patch.object(
+        operator_scope,
+        "append_audit",
+        side_effect=DatabaseError("synthetic audit outage"),
+    ), pytest.raises(SchedulingUnavailableError):
+        continuity.load_continuity_projection(scope, correlation_id=uuid4())
+    assert (
+        AuditEvent.objects.filter(
+            principal_id=request.actor_id, outcome="allow"
+        ).count()
+        == before
+    )
 
 
 def operator_request(

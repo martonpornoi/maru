@@ -2,15 +2,19 @@
 
 from dataclasses import replace
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
+from maru.scheduling import continuity_queries as continuity
 from maru.scheduling import personal_output_queries as outputs
 from maru.scheduling import personal_output_rendering as formats
+from maru.scheduling.adoption import SCHEDULING_CONTINUITY_ADAPTER
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
 from maru.scheduling.command_support import SchedulingUnavailableError
+from maru.scheduling.continuity_protocol import ContinuityScope
 from maru.workforce.shift_commands import (
     ShiftAuthorizationDeniedError,
     ShiftUnavailableError,
@@ -22,6 +26,45 @@ from tests.integration.test_workforce_timetable_outputs import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
+
+
+def test_native_continuity_preserves_workforce_only_isolation_and_exact_person(
+    scope, monkeypatch
+):
+    # No profile promotion: admit only this fixture's otherwise dormant adapter.
+    monkeypatch.setattr(
+        continuity,
+        "profile_allows_adapter",
+        lambda _code, _version, adapter: adapter == SCHEDULING_CONTINUITY_ADAPTER,
+    )
+    _demand, commitment = accepted_work(scope)
+    request = ContinuityScope(
+        scope.edition.organization_id,
+        scope.edition.id,
+        "exact_person",
+        scope.person.id,
+        "personal",
+    )
+    before = excluded_counts()
+    with CaptureQueriesContext(connection) as captured:
+        result = continuity.load_continuity_projection(request, correlation_id=uuid4())
+    assert result.release_state == "unadopted"
+    assert result.entries[0].key == f"work:{commitment.id}"
+    assert result.entries[0].starts_at == commitment.starts_at
+    assert result.entries[0].ends_at == commitment.ends_at
+    assert excluded_counts() == before
+    statements = "\n".join(row["sql"] for row in captured)
+    for excluded in (
+        'FROM "programme_',
+        'FROM "scheduling_',
+        'FROM "participation_',
+        'FROM "registration_',
+    ):
+        assert excluded not in statements
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        continuity.load_continuity_projection(
+            replace(request, actor_id=uuid4()), correlation_id=uuid4()
+        )
 
 
 def test_real_workforce_only_composition_has_no_programme_queries_or_side_effects(

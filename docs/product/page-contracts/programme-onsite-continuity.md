@@ -1,6 +1,6 @@
 # Programme now and continuity
 
-Status: Contracted, dormant implementation in progress under #107. ADR 0103
+Status: Dormant implementation prepared under #107; protected delivery pending. ADR 0103
 defines trust and expiry. Neither this contract nor synthetic routes activate
 Programme Operations or replace #92/#102 acceptance.
 
@@ -126,3 +126,10 @@ expiry, warnings and complete content without controls obscuring it. Native prin
 genuine 200% zoom, screen-reader and representative operator comprehension remain
 #92 human acceptance. #108 connects normal owning-task selections; #109 owns the
 integrated setup/recovery/stop-use proof, not just these timetable exports.
+
+The [operator runbook](../../operations/programme-onsite-continuity.md) gives
+the exact signing/trust formats, offline command, custody and failure procedure.
+The [component surface checkpoint](../../checkpoints/2026-09-13-programme-continuity-surfaces.md)
+records the observed 1280-pixel state/layer/print-friendly evidence and explicitly
+unverified remaining viewport, keyboard and human checks. It is not full UX-029
+or native authority acceptance; CURRENT records subsequent certification/delivery.

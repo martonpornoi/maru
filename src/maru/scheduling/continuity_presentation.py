@@ -219,7 +219,7 @@ def render_continuity_body(
     mode = (
         "Historical / degraded copy - disconnected"
         if offline
-        else "Freshly checked online view - saved copies become historical"
+        else "Live source checked"
     )
     warning = (
         "This device cannot know newer releases, withdrawals, permission "
@@ -241,17 +241,14 @@ def render_continuity_body(
         "<section class='continuity-source' aria-labelledby='continuity-source'>"
         f"<h2 id='continuity-source'>{mode}</h2>"
         f"<p><strong>{_STATE_LABELS[projection.release_state]}</strong></p>{suppression}"
-        f"<p>{warning}</p><p>Now/next is frozen at {_instant(at, zone)}. "
-        "It does not prove attendance, qualification or work performed.</p>"
         f"<p><strong>Time zone:</strong> {escape(projection.zone_name)}. "
         f"<strong>Source checked:</strong> {_instant(observed, zone)}. "
         "<strong>Source age at rendering:</strong> "
         f"{int((at - observed).total_seconds())} seconds.</p>"
         "<p><strong>Replace/dispose no later than:</strong> "
         f"{_instant(expires_at, zone)}. "
-        "Replace sooner on any known change, withdrawal or stop-use. "
-        "This is not a freshness guarantee; expiry cannot erase saved "
-        "or printed copies.</p></section>"
+        "Saved copies are historical, not a freshness guarantee. "
+        "Replace sooner on a known change or stop-use.</p></section>"
         + _group("now", grouped.now, indexes, zone)
         + _group("next", grouped.next, indexes, zone)
         + "<section aria-labelledby='continuity-agenda'>"
@@ -264,6 +261,9 @@ def render_continuity_body(
         )
         + "</section>"
         + _source_details(projection, zone)
+        + f"<p>{warning}</p><p>Now/next is frozen at {_instant(at, zone)}. "
+        "It does not prove attendance, qualification or work performed. "
+        "Expiry cannot erase saved or printed copies.</p>"
         + "<p>Private copies require controlled encrypted event storage "
         "and accountable paper custody. A download or print is not handoff, "
         "acknowledgement, acceptance or a write channel.</p></div>"
