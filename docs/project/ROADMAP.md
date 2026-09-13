@@ -159,6 +159,11 @@ integrated rehearsal. #102 restores
 database acceptance; #97 recovery and #92 human acceptance remain mandatory.
 Document discovered prerequisites under their owning item and defer unrelated
 ideas. #108's dormant fixture enables acceptance before its final promotion.
+Its first guided item-workspace increment supplies labelled core-item work,
+separate delivery/readiness/public-copy tasks and protected history. Readiness
+evidence, discussion, withdrawal/hosting, Applications intake/review/conversion,
+ordinary task continuations and accountable setup remain required increments;
+none is replaced by specialist records or closure of a supporting PR.
 Delivered with #99, ADR 0098 adds budgeted CI assignments and measured
 headroom to address recurring historical-test timeouts without weakening safety
 selection or coverage. Its complete hosted run passed all 39 jobs below 50

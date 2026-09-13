@@ -568,6 +568,43 @@ responsibility and deliberately adopted Workforce binding lineage, never the
 Applications call that originally supplied an item. These owner queries neither
 activate a profile nor replace later integrated/human acceptance.
 
+### Dormant guided item workspace
+
+The [item workspace](../product/page-contracts/programme-item-workspace.md) is
+the first #108 guided-surface increment. `workbench_urls` is deliberately absent
+from production routing. Shared Administration pages select labelled private
+items, create organizer core work, revise working/delivery information,
+configure readiness applicability, deliberately approve public copy and inspect
+separately authorized histories. These are adapters over existing commands, not
+new writers, profile activation, evidence of satisfied readiness or publication.
+
+`workbench_queries.load_programme_workbench_inventory` adds a complete bounded
+title-only inventory and exact edition creation cursor. It selects no working
+summaries or adjacent layer values. `load_programme_workbench_item` binds the
+existing item/working field ceiling to the exact hidden working-revision identity
+needed by public-copy approval. Both use existing `programme.view_private`
+item/working fields, canonical parent/edition locks, final authorization and
+required minimized `programme.query.workbench_*` audit before disclosure.
+The additional source UUID is a private command reference, not a broadened
+generic working projection, authority token or directory. Existing projection
+field ceilings and current manifests remain unchanged.
+
+Delivery/readiness/public-copy navigation and values require each owner's
+independent capability and field decision. History is explicitly selected and
+uses its existing history field, including `programme.view_private` for public
+review history; each page truthfully caps history at the newest 200 records.
+Strict CSRF forms retain the originally displayed version/source and retry key
+after conflict. Errors recheck disclosure and mutation authority before returning
+bounded private input. The browser warns before abandoning pending input;
+no autosave, local storage, new activity collection or offline write is added.
+
+No schema, runtime privilege or migration changes are required. Native coherent
+source/command, wrong-edition, current-profile denial and required-audit failure
+cases remain maintained but unexecuted under #102/ADR 0100. This surface still
+needs the remaining #108 intake/review/conversion/host/notice/setup connections,
+readiness evidence/discussion/withdrawal controls, #109 integrated proof and #92
+human acceptance. It does not justify final activation or closing #48/#108.
+
 ### Exact-person timetable purposes
 
 `timetable_queries.load_personal_host_purposes` reads up to 2,000 complete

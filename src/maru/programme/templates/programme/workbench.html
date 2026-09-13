@@ -1,0 +1,78 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Programme items · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'programme/workbench.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Administration / Programme items{% if selected %} / {{ task_label }}{% endif %}</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench">
+  <h1>{% if selected %}{{ selected.private.working.internal_title }}{% else %}Programme items{% endif %}</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Exact-edition private Programme{% if selected %} · {{ task_label }}{% endif %}</summary>
+    <p>Working information is authorized independently from delivery, readiness and public-copy fields. Only permitted tasks are linked. Each destination and command checks current authority again.</p>
+    <p>{% if form %}This task permits a command attempt; current lifecycle, source versions and any independent-review requirements are checked on submission.{% else %}Read-only for this task in the current state.{% endif %}</p>
+    <p>Organization {{ organization_id }} · Edition {{ edition_id }}</p>
+  </details>
+  {% if message %}<div class="baseline-notice" role="alert" tabindex="-1" autofocus id="programme-message"><p>{{ message }}</p></div>{% endif %}
+  <p class="programme-boundary">Private preparation, readiness evidence, public-copy approval and timetable publication are separate decisions. None creates a host invitation or volunteer commitment.</p>
+  {% if selected %}
+  <p><a href="{{ root_url }}">Back to Programme items</a></p>
+  <nav aria-label="Selected item tasks"><ul class="programme-task-links">{% for code, label in links %}<li><a href="{{ root_url }}{{ selected.private.item.id }}/{{ code }}/"{% if code == task %} aria-current="page"{% endif %}>{{ label }}</a></li>{% endfor %}</ul></nav>
+  <p>Item state: {{ selected.private.item.lifecycle }} · Version {{ selected.private.item.aggregate_version }} · {{ task_label }}</p>
+  {% if task == "working" or task == "public-copy" %}
+  <section class="baseline-panel" aria-labelledby="programme-working-heading"><h2 id="programme-working-heading">Current private working copy</h2>
+    <p>{{ selected.private.working.internal_title }}</p><p class="programme-text">{{ selected.private.working.working_summary|default:"No working summary recorded." }}</p>
+    <p>Working source version {{ selected.private.working.item_version }}. This is not public copy.</p>
+  </section>
+  {% endif %}
+  {% if task == "delivery" %}
+  <section class="baseline-panel" aria-labelledby="programme-delivery-heading"><h2 id="programme-delivery-heading">Current delivery instructions</h2>
+    {% if delivery %}<dl><dt>Technical requirements</dt><dd>{{ delivery.technical_requirements|default:"Not recorded" }}</dd><dt>Accessibility delivery</dt><dd>{{ delivery.accessibility_delivery|default:"Not recorded" }}</dd><dt>Media consent notes</dt><dd>{{ delivery.media_consent_notes|default:"Not recorded" }}</dd></dl><p>Delivery source version {{ delivery.item_version }}.</p>
+    {% else %}<p>No delivery revision recorded. Absence is not confirmation that requirements are satisfied.</p>{% endif %}
+  </section>
+  {% endif %}
+  {% if task == "readiness" %}
+  <section aria-labelledby="programme-readiness-heading"><h2 id="programme-readiness-heading">Explainable readiness</h2>
+    <p>Each concern stands alone. Required, stale, blocked and unavailable are not ready. Applicability decisions do not record satisfaction, confirm hosts or approve a release.</p>
+    <ul class="programme-cards">{% for concern, label in readiness_cards %}<li><h3>{{ label }}</h3><p><strong>{{ concern.state }}</strong></p><p>Requirement version {{ concern.requirement_version }} · Dependency version {{ concern.dependency_version }}</p>
+      {% if concern.source_code %}<p>Evidence source {{ concern.source_code }} · Source version {{ concern.source_version|default_if_none:"Not recorded" }}</p>{% endif %}
+    </li>{% empty %}<li>No readiness concerns returned. This is not release approval.</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% if task == "public-copy" %}
+  <section class="baseline-panel" aria-labelledby="programme-public-heading"><h2 id="programme-public-heading">Latest available reviewed copy</h2>
+    {% if public_copy %}<h3>{{ public_copy.public_title }}</h3><p class="programme-text">{{ public_copy.public_summary }}</p><p>{{ public_copy.public_content_note }}</p><p>Rendition {{ public_copy.rendition_number }}. Check the released timetable separately; this page does not publish it.</p>
+    {% else %}<p>No available reviewed public copy. A withdrawn latest rendition never falls back to an older one.</p>{% endif %}
+    <p>Enter public text deliberately; private working text is not copied into the approval form. Approval against frozen Ready/Live working copy requires a reviewer independent of every retained working-copy author. Draft self-curation is not release approval.</p>
+  </section>
+  {% endif %}
+  {% if history_selected %}
+  <section aria-labelledby="programme-history-heading"><h2 id="programme-history-heading">{{ task_label }}</h2><p>At most the latest 200 entries are shown. This bounded view is not a complete history export. Retained reasons and withdrawn copy are private historical evidence, not current instructions.</p>
+    <ol class="programme-cards">{% for entry in history %}<li>
+      {% if task == "working-history" %}<h3>{{ entry.internal_title }}</h3><p>{{ entry.working_summary }}</p>
+      {% elif task == "delivery-history" %}<dl><dt>Technical requirements</dt><dd>{{ entry.technical_requirements }}</dd><dt>Accessibility delivery</dt><dd>{{ entry.accessibility_delivery }}</dd><dt>Media consent notes</dt><dd>{{ entry.media_consent_notes }}</dd></dl>
+      {% elif task == "readiness-history" %}<h3>{{ entry.concern }} · {{ entry.kind }}</h3><p>{{ entry.disposition|default_if_none:"" }} {{ entry.state|default_if_none:"" }}</p><p>{{ entry.note }}</p><p>Requirement version {{ entry.requirement_version }} · Dependency version {{ entry.dependency_version|default_if_none:"Not recorded" }}</p>
+      {% elif task == "public-copy-history" %}<h3>Rendition {{ entry.rendition_number }} · {{ entry.public_title }}</h3><p>{{ entry.public_summary }}</p><p>{{ entry.public_content_note }}</p>{% if entry.withdrawn_at %}<p>Withdrawn {{ entry.withdrawn_at }} · {{ entry.withdrawal_reason }}</p>{% endif %}
+      {% endif %}
+      <p><strong>Retained reason:</strong> {{ entry.reason }}</p><p>{{ entry.occurred_at }} · Actor reference {{ entry.actor_id }}</p>
+    </li>{% empty %}<li>No entries in this history.</li>{% endfor %}</ol>
+  </section>
+  {% endif %}
+  {% else %}
+  <p>Select an item to prepare its private working information and independently authorized layers. Accepted proposals must advance through their reviewed Applications conversion, not this core-item form.</p>
+  <section aria-labelledby="programme-inventory-heading"><h2 id="programme-inventory-heading">Private item inventory</h2>
+    <ul class="programme-cards">{% for row in inventory.items %}<li><h3><a href="{{ root_url }}{{ row.item.id }}/working/">{{ row.internal_title }}</a></h3><p>{{ row.item.kind }} · {{ row.item.lifecycle }} · Version {{ row.item.aggregate_version }}</p></li>
+    {% empty %}<li>No Programme items yet. An authorized organizer can create core work below; accepted proposals use the separate conversion journey.</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% if form %}
+  <section class="baseline-panel" aria-labelledby="programme-command-heading"><h2 id="programme-command-heading">{% if selected %}{{ button_label }}{% else %}Create organizer core work{% endif %}</h2>
+    {% if form.errors %}<p>Original values and version are retained. Reloading this page discards entered input; review the latest source before starting a new attempt.</p>{% endif %}
+    <p data-programme-dirty hidden role="status">Unsaved Programme input. Changing pages discards it; no draft is saved automatically.</p>
+    <form method="post" action="{{ request.path }}" data-programme-command{% if form.errors %} data-programme-pending="true"{% endif %}>{% csrf_token %}{{ form.as_div }}<button type="submit">{{ button_label }}</button></form>
+  </section>
+  {% else %}<p>No edit controls are available for this task and current state.</p>{% endif %}
+</div>
+{% endblock %}

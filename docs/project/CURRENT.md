@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-13
+Last updated: 2026-09-14
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -42,6 +42,25 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 ## Active bounded outcome: guided departmental journey (#108)
 
 Branch: `codex/programme-guided-journey`, from protected PR #111.
+The first dormant item-workspace increment is implemented locally: complete
+labelled private inventory, organizer core creation, separate working/delivery/
+readiness applicability/public-copy forms, selected protected histories and
+pending-input protection. New owner queries retain exact creation and working
+source versions under canonical scope locks and required audit. No new domain
+writer, migration, runtime privilege, production route or profile pin is added.
+Focused feedback passes 86 database-free HTTP/query/form cases in 1.46s, five
+frontend guard cases, four-module strict typing and NumPy documentation.
+The 1280-by-720 synthetic browser exercised labelled navigation, separated
+layers, empty/view-only states and stale form retention; native authority and
+full human/accessibility acceptance are not claimed. Final exact-head
+certification and protected delivery remain pending; see the
+[item-workspace checkpoint](../checkpoints/2026-09-14-programme-item-workspace.md).
+
+#48 was found accidentally closed by PR #111's commit-linked event. The PR's
+negative phrase containing a GitHub closing keyword was removed and #48 reopened;
+#108/#109/#102/#97/#92 were verified open. Future supporting PRs use ordinary
+references for parents, without a negated closing-keyword phrase.
+
 [#108](https://github.com/martonpornoi/maru/issues/108) owns connected setup,
 call/proposal/review, private item/readiness and host surfaces plus coherent
 continuations into the existing editor, staffing, release, notices and continuity.
@@ -50,9 +69,10 @@ users must select authorized labelled tasks, not discover or paste UUIDs.
 Current-profile manifests, production routing, writers and authority remain
 unchanged while these surfaces and the isolated fixture are developed.
 
-First reconcile the inherited setup contract's obsolete implementation-status
-clauses, map exact role/field/lifecycle and query boundaries, and implement the
-missing guided intake and item work in reviewable increments. Keep #108 open
+The inherited setup contract now acknowledges installed dormant Scheduling and
+accepted-item conversion. Remaining item controls (typed readiness evidence,
+discussion, withdrawal and hosting), guided intake/review/conversion, task
+continuations and setup are explicitly sequenced in #108. Keep #108 open
 through final gated promotion: its dormant fixture enables #109/#92 acceptance,
 not the other way around. #102 database restoration and #97 logical recovery
 remain prerequisites for final integrated acceptance and activation.
@@ -136,9 +156,9 @@ activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Preserve PR #111's exact delivery and archived verification; follow ADR 0100.
-2. Reconcile the guided journey's contract, owner/role map and visible continuations.
-3. Deliver #108's dormant connected departmental journey in coherent increments.
+1. Finish exact-head certification and protected delivery of the item workspace.
+2. Preserve archived evidence and keep parent issues open; follow ADR 0100.
+3. Continue #108's documented remaining owner-task increments and connections.
 4. Complete #102 PostgreSQL restoration, #97 logical recovery and #92 human
    acceptance before integrated Programme-only acceptance or activation.
 5. After #48, continue #42 and the director introduction/pilot package, then the
