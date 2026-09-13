@@ -97,6 +97,8 @@ class ProgrammeChangeNoticePreview:
         Exact owner relationship or independently admitted operator selection.
     snapshot_digest
         Complete source, purpose and generation fingerprint; not a permission token.
+    dependency_digest
+        Exact dependency-use snapshot for a writer's final generation-lock check.
     change
         One permitted comparison, absent when governing state suppresses it.
     """
@@ -109,6 +111,7 @@ class ProgrammeChangeNoticePreview:
     recipient_label: str
     recipient: ChangeRecipientSelection
     snapshot_digest: str
+    dependency_digest: str
     change: _Change | None
 
 
@@ -238,13 +241,16 @@ def _generation_digest(
         SchedulingReleaseApprovalDependency.objects.filter(
             **_scope(request), approval_id__in=approvals
         )
-        .order_by("approval_id", "dependency_id")
+        .order_by("approval_id", "dependency_id", "approval_placement_id", "horizon")
         .values_list(
             "approval_id",
             "dependency_id",
             "captured_generation",
             "dependency__generation",
             "approval__dependency_count",
+            "approval_placement_id",
+            "horizon",
+            "operational_ends_at",
         )[: 2 * MAX_RELEASE_DEPENDENCY_USES + 1]
     )
     if not rows or len(rows) > 2 * MAX_RELEASE_DEPENDENCY_USES:
@@ -255,7 +261,7 @@ def _generation_digest(
         selected = tuple(row for row in rows if row[0] == approval_id)
         if (
             not 1 <= len(selected) <= MAX_RELEASE_DEPENDENCY_USES
-            or len({row[1] for row in selected}) != len(selected)
+            or len({(row[1], row[5], row[6]) for row in selected}) != len(selected)
             or any(
                 row[4] != len(selected)
                 or type(row[2]) is not int
@@ -342,6 +348,7 @@ def _finish(
         ):
             raise SchedulingUnavailableError
         selected = matching[0]
+    dependency_digest = _generation_digest(request, release)
     digest = scheduling_digest(
         {
             "contract": "programme.change-notice@1",
@@ -355,7 +362,7 @@ def _finish(
             "recipient": recipient.payload(),
             "purpose": _jsonable(dict(purpose_proof)),
             "change": _jsonable(asdict(selected)) if selected is not None else None,
-            "generations": _generation_digest(request, release),
+            "generations": dependency_digest,
         }
     )
     return ProgrammeChangeNoticePreview(
@@ -367,6 +374,7 @@ def _finish(
         recipient_label,
         recipient,
         digest,
+        dependency_digest,
         selected,
     )
 

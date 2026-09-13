@@ -39,8 +39,9 @@ or latest withdrawal and one affected occurrence determine the preview. Missing,
 unchanged, duplicate, foreign or moving sources cannot become a notice. Suppressed
 comparison means no old content, not an empty timetable or work cancellation.
 The digest includes source generations and purpose versions, excluding labels,
-so a newer material change cannot inherit old acknowledgement. Internal real-self
-composition shares that digest but is not yet a public notice/self-read boundary.
+so a newer material change cannot inherit old acknowledgement. Legitimate reuse
+of one dependency across multiple placement/horizon uses remains complete, rather
+than being rejected as a duplicate source.
 
 `SchedulingChangeNotice` and `SchedulingChangeNoticeEvidence` retain scoped,
 immutable preparation and independent review/handoff/acknowledgement references,
@@ -54,12 +55,38 @@ The reverse fence preserves both new evidence and earlier operator/release
 history before removing successor guards. Retained history requires fix-forward
 recovery; #97 logical restore and #102 database acceptance are not waived.
 
-Persisted preparation/review/handoff/acknowledgement commands, exact-receipt fresh
-replay, protected personal notice queries and user surfaces remain the current
-#104 outcome. A command must serialize its final source-generation observation
-after complete canonical owner/person locks, not reuse a preview as authority.
-Do not close #104 or its #48 checklist
-item on recipient-reference support alone.
+`change_notice_commands` now provides dormant `prepare_programme_change_notice`,
+`review_programme_change_notice` (explicit approve/reject only),
+`handoff_programme_change_notice` and `acknowledge_programme_change_notice`.
+Each command independently requires its write capability and current read/source
+authority. Preparation binds a preview digest/pointer; subsequent facts bind the
+exact notice, digest and optimistic evidence version. Rejection is terminal;
+handoff and acknowledgement are distinct optional facts after approval. The
+personal action accepts no private explanation and uses a fixed action reason.
+No accepted Shift, attendance, contact record or provider delivery is changed.
+
+Canonical owner/person admission precedes the final read-committed dependency
+freeze. The writer locks the complete key union in kind/source order, then checks
+the exact dependency-use snapshot without acquiring more owner sources. Each
+closed notice operation must supply `_execute` with fresh source/purpose replay
+validation. Exact retries verify the retained notice/fact, recheck authority and
+freeze sources before returning the original receipt; they do not append another
+review or acknowledgement. Different intent on the same retry key still conflicts.
+
+`load_programme_change_notice` returns restricted preparation rationale, current
+source and independent evidence under sender notice-field authority.
+`load_personal_programme_change_notice` admits only the actual recipient's own
+approved package and genuine current purpose. Its result includes exact source,
+evidence version and handoff/acknowledgement booleans, but no other actors or
+organizer rationale. `change_notice_records` checks scoped, contiguous independent
+facts and receipt equality; personal reads defer rationale, verifying its receipt
+equality in SQL as a boolean rather than materializing that private text.
+Stale or revoked sources cannot produce cached old-content fallback.
+
+User surfaces, complete maintained native negative/race cases and protected
+delivery remain the current #104 outcome. PostgreSQL workflow cases remain
+unexecuted #102 debt. Do not close #104 or its #48 checklist item on these local
+command/query foundations alone.
 
 ### Change-impact read foundations (#105 under #104)
 
@@ -1032,9 +1059,10 @@ manifests, same-command child evidence, reciprocal holds and exact effects.
 `scheduling.planning.changed.v1` retains only the closed operation code in its
 payload, scoped to the edition/control version with actor and correlation.
 Release decisions use the separate dormant `scheduling.release.changed.v1`
-schema with only their four closed operation codes. Each family rejects the
-other's operations. Neither event activates a handler or profile route; the
-dormancy check covers both families. Release notifications and projections
+schema with only their four closed operation codes. Notice evidence uses
+`scheduling.change_notice.changed.v1` with its five closed operations. Each family
+rejects the others' operations. None activates a handler or profile route; the
+dormancy check covers all three families. Release notifications and projections
 remain separate successors, not side effects of registering this schema.
 Operational diagnosis uses denied/unavailable/version-conflict categories,
 receipt/correlation identities and readiness status. Do not log source JSON,

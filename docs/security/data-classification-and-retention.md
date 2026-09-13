@@ -475,8 +475,13 @@ legal-hold handling, and consistent backup aging before production activation.
 No new indefinite-retention entitlement, production duration or disposal executor
 is introduced. Restore Scheduling, its source owners, Audit and Effects from one
 consistent point; do not erase evidence through an unsafe schema downgrade.
-The schema and sender preview remain dormant; commands, personal notice access
-and the complete departmental workflow are not yet delivered by this increment.
+The schema, commands and sender/personal notice queries remain dormant. The
+personal detail query defers rationale fields and verifies receipt equality as
+a scoped database boolean; no organizer explanation is materialized into the
+personal projection. Its public result excludes other actors and reasons. The
+acknowledgement command takes no free-text explanation. User surfaces, database
+acceptance and the complete departmental workflow are not delivered merely by
+these local command/query foundations.
 
 ### Logistics custody and restricted contact
 

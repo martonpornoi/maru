@@ -5,6 +5,7 @@ from typing import Final
 
 MAX_CHANGE_NOTICES: Final = 65_536
 MAX_CHANGE_NOTICE_INVENTORY: Final = 256
+MAX_CHANGE_NOTICE_FACTS: Final = 3
 
 
 class ChangeRecipientPurpose(StrEnum):

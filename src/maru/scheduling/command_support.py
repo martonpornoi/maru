@@ -258,6 +258,8 @@ def _execute[IntentT, PreparedT](
     prepare: Callable[[IntentT], PreparedT],
     write: Callable[[_CommandTransaction, IntentT, PreparedT], tuple[UUID, int]],
     authorizer: SchedulingAuthorizer,
+    revalidate_replay: Callable[[IntentT, SchedulingCommandReceipt], None]
+    | None = None,
 ) -> SchedulingCommandResult:
     request = request.normalized()
 
@@ -273,6 +275,10 @@ def _execute[IntentT, PreparedT](
 
     def action() -> SchedulingCommandResult:
         authorize()
+        if operation.value in CHANGE_OPERATION_VALUES and revalidate_replay is None:
+            # A historical notice receipt cannot preserve revoked recipient
+            # purpose or stale source. Closed new operations must supply proof.
+            raise SchedulingUnavailableError
         intent = normalize()
         digest = scheduling_digest(
             {
@@ -307,6 +313,8 @@ def _execute[IntentT, PreparedT](
             if receipt is not None:
                 if receipt.request_digest != digest:
                     raise SchedulingIdempotencyConflictError
+                if revalidate_replay is not None:
+                    revalidate_replay(intent, receipt)
                 authorize(lock=True)
                 return _result(receipt, replayed=True)
             if not scope.accepts_writes:

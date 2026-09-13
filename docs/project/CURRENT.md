@@ -38,26 +38,27 @@ in its [own checkpoint](../checkpoints/2026-09-13-programme-operator-protected-d
 
 Branch: `codex/programme-change-communication`, from protected PR #106.
 [#104](https://github.com/martonpornoi/maru/issues/104) remains the active #48
-checklist item. Its read child #105 is delivered. Remaining work is sender-side
-operator recipient selection, governed version-bound preparation, independent
-review, explicit manual handoff or deliberately adopted Effects routing,
-immutable exact-recipient acknowledgement and user surfaces.
-Sender-authorized operator selection is now implemented locally under ADR 0102,
-with an additive unpinned capability, source-derived native function fingerprint
-and used-capability downgrade fence. Real sender/purpose/audit integration
-assertions are maintained but unexecuted. All 5,332 unit tests pass in 44.54s;
-the first full run exposed one historical catalog expectation, now repaired.
-Closed notice preparation/decision inputs and pure independent review, manual
-handoff and exact-recipient acknowledgement rules are also implemented locally.
-The schema/native-guard and actual-sender notice-preview increment is now local.
-All 5,472 unit tests pass in 35.96s, including 40 new source/preview checks, with
-two existing URLField warnings. Strict types (572 sources), Ruff, focused
-docstrings, semantic documentation (593 sources) and documentation structure pass.
-The full run exposed a missing legacy diagnostic timing entry for the new
-migration-test file; its documented 29.955-second median planning fallback is
-now registered, not a measured PostgreSQL duration. Active group timings and
-their provenance remain untouched. No full certification, persisted notice
-commands, protected personal notice query or user surface is claimed yet.
+checklist item. Its read child #105 is delivered. Local ADR 0102 work now includes
+operator recipient selection, closed inputs/lifecycle rules, immutable notice
+schema/native guards, exact sender preview, prepare/review/handoff/acknowledge
+commands and protected sender/personal detail queries. New commands freeze the
+complete dependency-key union after owner/person admission and revalidate source,
+purpose and retained evidence on exact receipt replay. Personal reads do not
+materialize organizer rationale or return other actors. A source can legitimately
+serve multiple placement/horizon uses; the preview now validates each exact use
+instead of incorrectly rejecting repeated dependency identity.
+
+All 5,505 unit tests pass in 47.83s with two existing URLField warnings. Strict
+types (574 sources), Ruff, focused docstrings, semantic documentation (595 sources)
+and documentation structure pass. Maintained integration cases collect successfully
+but were not executed: they now include real operator notice preparation, review,
+acknowledgement, handoff, retries, event-failure rollback and stale retry after
+withdrawal. Native negative/race coverage still needs completion before #104's PR.
+The new migration file's legacy 29.955-second diagnostic estimate remains only a
+documented median fallback; no active measured timing or provenance was changed.
+The [command checkpoint](../checkpoints/2026-09-13-programme-notice-commands.md)
+records this local boundary. No full certification, user surface, protected push
+or #104 completion is claimed.
 
 Keep preparation, review, handoff and acknowledgement distinct. Do not impersonate
 recipients, relocate accepted Shifts, infer attendance/work acceptance, restore
@@ -76,12 +77,15 @@ records fingerprints, retained logs and the distinction between observed forward
 SQL and later unit-checked Python reverse fences. Database workflow, race,
 reverse/reapply and weakened-schema tests are maintained but unexecuted #102 debt.
 
-Next inside #104: implement immutable prepare/review/handoff/acknowledge commands,
-genuine personal notice reads and same-shell surfaces. The writer must serialize
-source generations after complete owner/person admission and revalidate exact
-source/purpose on receipt replay; generic `_execute` replay does not yet provide
-that notice-specific protection. Do not wire the new operations to a UI or claim
-the workflow complete until those checks and maintained database cases exist.
+Next inside #104: complete maintained native negative/race scenarios and the
+same-shell preparation/review/handoff and personal acknowledgement surfaces,
+including bounded discovery, stale/rejected states and current timetable links.
+Define the page contract before interface implementation. Preserve the final
+source-lock ordering and notice-specific replay hook; do not substitute cached
+preview data or organizer rationale for genuine self-purpose proof. Then run
+exact-head deferred-mode certification and protected delivery for the complete
+#104 outcome. Required human acceptance belongs under #92/#48, not an unattended
+success claim. No additional schema-only run is needed by this command increment.
 
 ## Checklist-first delivery priority
 

@@ -95,6 +95,10 @@ complete current/predecessor dependency generations as well as exact comparison
 references. A second material change while already invalidated therefore cannot
 inherit an earlier acknowledgement. Labels are excluded from the digest, but a
 label moving during a read still makes that observation unavailable.
+Dependency identity alone is not unique within an approval: one native source
+can legitimately serve multiple placement/horizon uses. The snapshot preserves
+each complete use, its captured/current generation and declared approval count;
+it rejects duplicate uses, not legitimate source reuse.
 
 `preview_programme_change_notice` independently requires the actual sender's
 `scheduling.view_change_notices` field authority, repeats the complete sources,
@@ -104,6 +108,32 @@ source generations after complete owner/person admission, and recheck current
 purpose/source on exact receipt replay; existing generic replay alone is not
 sufficient for notice commands.
 
+The command implementation follows that ordering with a final, read-committed
+generation freeze: resolve all owner/person sources first, then lock the complete
+dependency-key union in kind/source order and compare its current snapshot to the
+preview's dependency digest. Perform no subsequent owner-source acquisition
+while holding those keys. A source writer may wait on a key, but the notice writer
+must not then wait on that writer's source row. Notice writes use the existing
+edition mutex and atomic Scheduling receipt/control stream; no second aggregate
+or cross-module mutation is added.
+
+Every closed notice operation must provide a replay validator to `_execute`.
+A matching retry reauthorizes the operation, recomposes current source/purpose,
+validates its exact retained notice/fact and freezes generations before returning
+the original identifier-only receipt. It does not attempt the already-completed
+transition again. A changed intent remains an idempotency conflict; a revoked or
+stale purpose never becomes grandfathered authority through receipt existence.
+
+`load_programme_change_notice` separately requires sender notice-field authority
+and current owner sources. `load_personal_programme_change_notice` resolves only
+the actual recipient's own approved package and genuine current owner purpose.
+It excludes preparer/reviewer identifiers and organizer rationale from its result;
+receipt-reason equality is verified as a scoped database boolean without fetching
+the rationale into the personal projection. Inconsistent evidence is unavailable;
+a changed source requires refresh/new preparation, not a fallback to old content.
+The acknowledgement API accepts no free-text reason and supplies only a fixed
+code-owned action description to the common receipt/audit contract.
+
 Downgrade must refuse retained notice, notice-capability, prior operator-authority
 or release history before removing successor protections. Restore all participating
 owners and evidence consistently, then require exact readiness. Do not rebaseline
@@ -112,10 +142,11 @@ weakened constraints or treat the separate logical-restore issue #97 as resolved
 ## Current implementation boundary and consequences
 
 The local implementation includes recipient selection, dormant capability/schema
-and native guards, closed inputs, pure lifecycle rules and sender notice preview.
-Persisted preparation/review/handoff and acknowledgement commands, protected
-personal notice queries and user surfaces remain #104 work. Installed tables and
-read-only preview do not deliver the persisted workflow.
+and native guards, closed inputs, lifecycle rules, sender preview, governed
+prepare/review/handoff/acknowledge commands and protected sender/personal detail
+queries. User surfaces, complete maintained negative/race coverage and protected
+delivery remain #104 work. Local commands and pure tests do not establish
+PostgreSQL workflow correctness, an activated profile or departmental acceptance.
 This ADR does not create another delivery item or displace #48's decomposition.
 
 PostgreSQL tests and migration/recovery cases remain maintained but unexecuted

@@ -94,6 +94,7 @@ def test_digest_excludes_labels_and_actor_but_not_exact_recipient(world):
         "recipient_label",
         "recipient",
         "snapshot_digest",
+        "dependency_digest",
         "change",
     }
     other = sources._finish(
@@ -398,10 +399,12 @@ def test_generation_snapshot_requires_complete_exact_approval_sources(
     approval, second, dependency = UUID(int=10), UUID(int=11), UUID(int=12)
     rows = {
         "empty": (),
-        "missing_approval": ((approval, dependency, 1, 2, 1),),
-        "count": ((approval, dependency, 1, 2, 2),),
-        "duplicate": ((approval, dependency, 1, 2, 2),) * 2,
-        "regressed": ((approval, dependency, 3, 2, 1),),
+        "missing_approval": (
+            (approval, dependency, 1, 2, 1, None, "disclosure", None),
+        ),
+        "count": ((approval, dependency, 1, 2, 2, None, "disclosure", None),),
+        "duplicate": ((approval, dependency, 1, 2, 2, None, "disclosure", None),) * 2,
+        "regressed": ((approval, dependency, 3, 2, 1, None, "disclosure", None),),
     }[variant]
     monkeypatch.setattr(
         sources,
@@ -421,6 +424,31 @@ def test_generation_snapshot_requires_complete_exact_approval_sources(
     )
     with pytest.raises(SchedulingUnavailableError):
         sources._generation_digest(request, SimpleNamespace())
+
+
+def test_shared_dependency_can_serve_several_distinct_placements(monkeypatch):
+    request = planning_queries.SchedulingReadRequest(
+        *(UUID(int=n) for n in range(1, 5))
+    )
+    approval, dependency = UUID(int=10), UUID(int=11)
+    monkeypatch.setattr(sources, "_approval_ids", Mock(return_value=(approval,)))
+    rows = (
+        (approval, dependency, 1, 2, 2, UUID(int=12), "disclosure", None),
+        (approval, dependency, 1, 2, 2, UUID(int=13), "disclosure", None),
+    )
+    lookup = Mock()
+    lookup.order_by.return_value.values_list.return_value = rows
+    monkeypatch.setattr(
+        sources.SchedulingReleaseApprovalDependency.objects,
+        "filter",
+        Mock(return_value=lookup),
+    )
+    first = sources._generation_digest(request, SimpleNamespace())
+    assert len(first) == 64
+    lookup.order_by.return_value.values_list.return_value = tuple(
+        (*row[:3], 3, *row[4:]) for row in rows
+    )
+    assert sources._generation_digest(request, SimpleNamespace()) != first
 
 
 @pytest.mark.parametrize(
