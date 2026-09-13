@@ -55,6 +55,15 @@ acknowledgement. No step alters attendance, accepted work or release approval.
 Effects delivery requires an explicitly pinned adopted route; otherwise provide
 the reviewed manual package without creating general Communications records.
 
+Review may instead reject the package; that immutable rejection prevents handoff
+and acknowledgement. Corrections require a new prepared package and independent
+review. One notice retains at most one review, one manual handoff claim and one
+exact-recipient acknowledgement. Handoff and acknowledgement may occur in either
+order after approval, with an optimistic evidence version for each new fact.
+Duplicate facts are lifecycle conflicts, not proof of an idempotent retry.
+Host/work input selects an owner relationship; callers cannot supply a substitute
+recipient account. Operator selection requires its explicit person and scope.
+
 Persisted notice state belongs to Scheduling's governed owner boundary, with
 immutable exact source/purpose references, atomic command/audit/event evidence,
 fresh authorization even on replay and database-enforced scope/lifecycle rules.
@@ -65,14 +74,19 @@ do not fabricate observed fingerprints or bypass deferred PostgreSQL execution.
 
 ## Current implementation boundary and consequences
 
-The first implementation adds only sender-authorized operator recipient
-selection and its dormant capability. Persisted preparation/review/handoff,
-acknowledgement and user surfaces remain #104 work, not delivered by this query.
+The local implementation includes sender-authorized operator recipient selection,
+its dormant capability, closed notice inputs and pure evidence lifecycle rules.
+Persisted preparation/review/handoff, acknowledgement and user surfaces remain
+#104 work; neither selection nor pure rules deliver the persisted workflow.
 This ADR does not create another delivery item or displace #48's decomposition.
 
 PostgreSQL tests and migration/recovery cases remain maintained but unexecuted
 under ADR 0100. #102 restores their evidence before integrated acceptance or
 activation. A green development PR is not database or departmental acceptance.
+The maintainer subsequently authorized a bounded disposable schema-only migration
+and metadata check for this new schema while retaining the PostgreSQL test-suite
+deferral. It collects exact readiness fingerprints only; it does not certify
+workflow behavior, native negative/race cases, populated recovery or #102.
 
 ## Requirements affected
 

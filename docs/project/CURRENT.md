@@ -47,15 +47,22 @@ with an additive unpinned capability, source-derived native function fingerprint
 and used-capability downgrade fence. Real sender/purpose/audit integration
 assertions are maintained but unexecuted. All 5,332 unit tests pass in 44.54s;
 the first full run exposed one historical catalog expectation, now repaired.
-Focused owner/catalog checks, strict types, Ruff and NumPy/semantic docs pass. No full
-certification or state-changing communication implementation is claimed for this
-continuation yet. Existing read queries do not confer sending authority.
+Closed notice preparation/decision inputs and pure independent review, manual
+handoff and exact-recipient acknowledgement rules are also implemented locally.
+All 5,383 unit tests pass in 32.36s, including 51 new notice-rule checks. Strict
+types (569 sources), Ruff and semantic documentation checks pass. No full
+certification, persisted notice workflow or user surface is claimed yet. Existing
+read queries and pure lifecycle rules do not confer sending authority.
 
 Keep preparation, review, handoff and acknowledgement distinct. Do not impersonate
 recipients, relocate accepted Shifts, infer attendance/work acceptance, restore
 suppressed historical content or silently adopt general Communications.
 New native schema must retain truthful readiness, recovery and #102 verification
 debt; do not fabricate observed fingerprints or execute deferred PostgreSQL tests.
+The maintainer explicitly approved a bounded disposable **schema-only migration
+and metadata check** for #104's new tables. This narrow exception permits exact
+schema fingerprint collection, not PostgreSQL test suites, runtime workflow
+acceptance, recovery acceptance or a database-certification success claim.
 
 ## Checklist-first delivery priority
 
@@ -82,8 +89,9 @@ displacing #48. Supporting deliveries never close a parent outcome alone.
 ## Temporary testing policy and activation gates
 
 Maintain PostgreSQL tests, historical inventories and migration/recovery
-fixtures as features change, but do not execute PostgreSQL during this dormant
-development phase. Run focused non-database feedback and exact-commit development
+fixtures as features change, but do not execute PostgreSQL test suites during
+this dormant development phase. Only the explicitly approved #104 disposable
+schema/metadata check above is excepted. Run focused non-database feedback and exact-commit development
 acceptance before each protected PR. Record unexecuted database coverage as
 verification debt, not success; do not invent timing observations.
 

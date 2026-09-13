@@ -9,6 +9,15 @@ and protected-delivery status; this guide is the owner contract, not a merge cla
 
 ### Governed change communication (#104, in progress)
 
+`change_inputs` closes preparation to one exact release, occurrence, observed
+pointer version, preview digest and purpose. Host/work recipients are resolved
+from their owner relationships, not caller-supplied accounts. Decision input
+selects the exact notice, digest and evidence version. `change_lifecycle` keeps
+independent approval/rejection, manual handoff and exact-recipient acknowledgement
+separate. Rejection is terminal for that package; acknowledgement can precede
+external handoff after approval. These pure rules perform no authorization or
+storage and are not yet a complete persisted communication workflow.
+
 ADR 0102's `change_recipient_queries.load_operator_change_recipient` requires
 the actual sender's separate `scheduling.view_change_recipients` capability and
 `operator_recipients` fields. It selects one exact verified person/purpose, with
