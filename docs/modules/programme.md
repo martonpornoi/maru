@@ -3,7 +3,21 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, worker, or production writer
 
-Last updated: 2026-09-11
+Last updated: 2026-09-13
+
+## Exact change-recipient reference (#104, in progress)
+
+`change_recipient_queries.load_host_change_recipient` selects one exact current
+confirmed host under the authenticated **sender's** real `host_roster` authority.
+It reuses the bounded audited roster query and its canonical complete person
+locking; it never calls a personal query as the recipient. Only the chosen active
+verified person's operational label/account, item version and exact relationship
+state/role/version/invitation sequence leave this boundary. Contacts, invitation
+copy and availability do not. Unknown, ended or inactive recipients are
+unavailable. A composing communication command must retain its canonical outer
+scope and recheck this proof; the DTO is neither delivery nor portable authority.
+Notice preparation, persistence and acknowledgement remain Scheduling-owned #104
+work, not an activated Programme messaging feature.
 
 ## Purpose and ownership
 

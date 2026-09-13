@@ -36,6 +36,7 @@ from maru.scheduling.personal_work_release_impact import (
 from maru.scheduling.release_inputs import ReleaseCandidateSelection
 from maru.venues.models import EditionSpaceSelection
 from maru.venues.operator_queries import load_operator_wayfinding
+from maru.workforce import change_recipient_queries as recipient_queries
 from maru.workforce import operator_links as work_links
 from maru.workforce import personal_programme_links as personal_links
 from maru.workforce.models import ShiftCommitment, ShiftDemand
@@ -555,6 +556,13 @@ def test_department_without_room_gets_its_linked_work_and_retained_predecessor_o
         outcome="allow",
         capability_code="scheduling.view_work_self",
     ).exists()
+    _assert_selected_work_recipient(
+        request,
+        work,
+        person_id,
+        result.entries[0].placement.occurrence_id,
+        monkeypatch,
+    )
     statements = [
         row["sql"]
         for row in captured
@@ -569,6 +577,46 @@ def test_department_without_room_gets_its_linked_work_and_retained_predecessor_o
             "availability_plan_id",
         ):
             assert excluded not in statement
+
+
+def _assert_selected_work_recipient(
+    request, work, person_id, occurrence_id, monkeypatch
+):
+    monkeypatch.setattr(
+        recipient_queries, "profile_allows_adapter", lambda *_args: True
+    )
+    CapabilityGrantFactory(
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        principal_id=request.actor_id,
+        capability_code="workforce.view_shifts",
+    )
+    recipient_request = recipient_queries.ProgrammeWorkRecipientRequest(
+        request.actor_id,
+        request.organization_id,
+        request.edition_id,
+        uuid4(),
+        occurrence_id,
+        ShiftCommitment.objects.get(demand_id=work.successor.demand_id).id,
+    )
+    recipient = recipient_queries.load_work_change_recipient(recipient_request)
+    assert recipient.account_id == person_id != request.actor_id
+    assert recipient.work.demand_id == work.successor.demand_id
+    assert AuditEvent.objects.filter(
+        operation="workforce.programme_change_recipient.read",
+        principal_id=request.actor_id,
+        outcome="allow",
+        target_id=recipient_request.commitment_id,
+    ).exists()
+    with pytest.raises(recipient_queries.ProgrammeStaffingUnavailableError):
+        recipient_queries.load_work_change_recipient(
+            replace(
+                recipient_request,
+                commitment_id=ShiftCommitment.objects.get(
+                    demand_id=work.first.demand_id
+                ).id,
+            )
+        )
 
 
 def test_department_membership_requires_work_links_without_requested_details(

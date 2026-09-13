@@ -1741,6 +1741,12 @@ architecture documents, implementation issues, tests, and release notes.
   discovery. The active/predecessor comparison selects only those occurrences;
   timetable additions/removals and changed geometry do not create, confirm,
   cancel, retime or relocate retained work.
+  Preparing a communication must resolve its deliberately selected recipient
+  through the sender's independently authorized owner fields, not by invoking
+  a personal read as another actor. Confirmed hosting and operative retained
+  work use exact owner relationships/commitments, current verified identity and
+  source versions; each sensitive-read audit is attributed to the actual sender.
+  A recipient reference is not a delivery, acknowledgement or portable permission.
 
 ### Privacy, compliance, and participant control
 

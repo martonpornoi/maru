@@ -427,6 +427,15 @@ own claims/confirmations and audits `scheduling.query.personal_work_release_impa
 ended/unlinked work grants no release discovery. No current profile pins it.
 Exact-recipient communication and acknowledgement require their own documented
 storage, purpose, retention and recovery contract before implementation.
+Sender-side recipient references are separately authorized: Programme's existing
+audited `host_roster` read selects one confirmed relationship; Workforce's
+`workforce.programme_change_recipient.read` requires coverage/holder-label fields,
+explicit staffing adoption and one exact operative work/occurrence match. Both
+return only the chosen current account/operational label and versioned purpose,
+not contacts or private instructions. They never attribute a preparer's read to
+the recipient or impersonate a personal query. Existing owner read-retention
+classes apply; no recipient list, communication history or new retention period
+is persisted by these transient references.
 
 ### Logistics custody and restricted contact
 

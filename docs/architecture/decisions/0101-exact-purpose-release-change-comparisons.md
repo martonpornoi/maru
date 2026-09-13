@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-13
 - Issue: [#104](https://github.com/martonpornoi/maru/issues/104)
+- Read-foundation delivery child: [#105](https://github.com/martonpornoi/maru/issues/105)
 
 ## Context
 
@@ -91,6 +92,18 @@ No context change retimes, relocates, confirms or cancels the retained Shift.
 Own work linkage, both native manifests and final authority/audit are rechecked.
 Partial adoption or moving/incomplete owner evidence is unavailable; suppressed
 native state returns no comparison rather than a last-good timetable.
+
+Sender-side host/work recipient references use the authenticated sender's real
+owner fields, not a personal read performed as someone else. Programme selects
+one confirmed current host through its audited roster boundary. Workforce
+requires organizer coverage/holder-label fields and an exact operative commitment
+to the requested occurrence through complete retained lineage. Current verified
+identity, canonical person ordering, minimized labels, source versions and actual
+sender-attributed audit are mandatory. No contact or arbitrary account selection
+is accepted. A composing command retains its canonical transaction and rechecks
+these references before using them; they are not portable serving or sending
+permissions. Operator recipient selection and the persisted communication
+workflow remain in #104 after this read-only delivery child.
 
 ## Consequences
 

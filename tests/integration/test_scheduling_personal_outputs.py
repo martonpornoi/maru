@@ -15,6 +15,8 @@ from maru.authorization import policy
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.participation.models import Participation
+from maru.programme.change_recipient_queries import load_host_change_recipient
+from maru.programme.host_queries import ProgrammeHostReadRequest
 from maru.programme.models import ProgrammeHostRelationship
 from maru.scheduling import personal_output_queries as composition
 from maru.scheduling import personal_output_rendering as formats
@@ -34,6 +36,7 @@ from maru.workforce.models import (
 )
 from tests.factories import (
     AccountFactory,
+    CapabilityGrantFactory,
     OrganizationMembershipFactory,
     ParticipationFactory,
 )
@@ -97,6 +100,7 @@ def arguments(scope):
 
 def test_personal_presence_is_exact_released_work_not_full_envelope_or_public_copy(
     personal_scope,
+    monkeypatch,
 ):
     published = publish(personal_scope, approve(personal_scope))
     inputs = arguments(personal_scope)
@@ -141,6 +145,39 @@ def test_personal_presence_is_exact_released_work_not_full_envelope_or_public_co
         outcome="allow",
         principal_id=inputs["actor_id"],
         capability_code="scheduling.view_host_self",
+    ).exists()
+    sender = AccountFactory()
+    original = policy.profile_allows_capability
+    monkeypatch.setattr(
+        policy,
+        "profile_allows_capability",
+        lambda code, version, capability: (
+            capability == "programme.view_hosts" or original(code, version, capability)
+        ),
+    )
+    CapabilityGrantFactory(
+        organization_id=inputs["organization_id"],
+        edition_id=inputs["edition_id"],
+        principal=sender,
+        capability_code="programme.view_hosts",
+    )
+    recipient = load_host_change_recipient(
+        ProgrammeHostReadRequest(
+            sender.id,
+            inputs["organization_id"],
+            inputs["edition_id"],
+            personal_scope.selection.item_id,
+            uuid4(),
+        ),
+        host_id=presence.host_id,
+    )
+    assert recipient.account_id == inputs["actor_id"] != sender.id
+    assert recipient.relationship.state == "confirmed"
+    assert AuditEvent.objects.filter(
+        operation="programme.query.host_roster",
+        principal_id=sender.id,
+        capability_code="programme.view_hosts",
+        outcome="allow",
     ).exists()
 
 

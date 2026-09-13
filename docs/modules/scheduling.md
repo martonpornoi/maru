@@ -2,12 +2,12 @@
 
 Status: dormant candidate/conflict, physical-reservation and atomic-release kernel,
 consumed by unmounted Programme components; no current profile or route activation.
-Last updated: 2026-09-11. See [CURRENT](../project/CURRENT.md) for verification
+Last updated: 2026-09-13. See [CURRENT](../project/CURRENT.md) for verification
 and protected-delivery status; this guide is the owner contract, not a merge claim.
 
 ## Ownership and adoption
 
-### Change-impact implementation in progress (#104)
+### Change-impact read foundations (#105 under #104)
 
 `release_impact.compare_release_selections` is the pure bounded comparison of
 two complete exact canonical selection tuples. It retains deterministic stable
@@ -20,8 +20,9 @@ two disjoint maximum selections retain the complete union rather than truncating
 This helper authenticates no release or scope and reads no owner. Its callers
 must never turn unavailable evidence into an empty manifest. A placement ID
 change is not yet a classified time/room move. It supplies no recipient lookup,
-delivery, acknowledgement, new route or profile activation. Those #104 contracts
-and their independently authorized composers and persistence remain in progress.
+delivery, acknowledgement, new route or profile activation. The independently
+authorized purpose queries below compose those references. Communication and
+acknowledgement persistence remain #104 work.
 
 `release_impact_queries.load_programme_release_impact` now supplies an audited
 history-only comparison of one exact published release and its retained
@@ -31,8 +32,8 @@ geometry, identifies actual day/room/preparation/delivery/teardown changes, and
 rechecks both native manifests around composition. It exposes no Programme
 text, recipient or work record. Publication version and observed pointer version
 remain distinct. Withdrawn or invalidated governing state yields `changes=None`,
-not an empty successful comparison or invented mass removal. Recipient-specific
-composition, communication and acknowledgement remain unfinished #104 work.
+not an empty successful comparison or invented mass removal. The separate
+recipient-purpose composers below do not inherit planner-history authority.
 
 `personal_release_impact.load_personal_host_release_impact` implements the
 separate real-self comparison in [ADR 0101](../architecture/decisions/0101-exact-purpose-release-change-comparisons.md).
@@ -48,8 +49,8 @@ No confirmed purpose yields no release metadata; unavailable governing state
 yields `changes=None`, not fabricated cancellation. The complete union is bounded
 at twice the 2,000-row per-side ceiling. Repeated owner purposes/native manifests,
 final self authorization and mandatory audit fence disclosure. This adds no
-schema, route, acknowledgement, delivery or Workforce mutation. Other recipient
-purposes and the communication/acknowledgement workflow remain unfinished.
+schema, route, acknowledgement, delivery or Workforce mutation. The
+communication/acknowledgement workflow remains unfinished under #104.
 
 `operator_release_impact.load_operator_release_impact` independently compares
 the active release and retained predecessor within ADR 0099's exact room,

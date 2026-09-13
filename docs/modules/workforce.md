@@ -759,6 +759,18 @@ audit precede disclosure. This is not a portable grant to Scheduling geometry,
 copy, delivery or acknowledgement and changes no Shift. The internal lineage
 reader is shared with operator queries; each public purpose authorizes separately.
 
+`change_recipient_queries.load_work_change_recipient` independently resolves one
+deliberately selected operative commitment and occurrence under the authenticated
+sender's real `workforce.view_shifts` coverage/holder-label fields and explicit
+Programme staffing adoption. It never calls a personal query as the recipient.
+Canonical scope and sorted sender/recipient Identity locks, complete retained
+lineage, repeated source/adoption/authority checks and mandatory sender-attributed
+audit precede disclosure. Only exact current recipient label/account and opaque
+work/demand/binding versions/state are returned. Ended, foreign, mismatched,
+incomplete or moving sources cannot become a recipient or successor substitution.
+The reference is not a delivery, acknowledgement or timetable disclosure grant;
+the composing command must hold and recheck its canonical transaction scope.
+
 `ProgrammeShiftBinding` retains one stable lineage per Programme requirement;
 `ProgrammeShiftBindingRevision` is both its immutable exact-source revision and
 retry receipt. Each pins the exact requirement/occurrence/candidate/placement,

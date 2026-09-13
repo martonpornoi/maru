@@ -43,6 +43,9 @@ Branch: `codex/programme-change-impact`, from protected PR #103.
 [#104](https://github.com/martonpornoi/maru/issues/104) is the next native #48
 child: explain exact published changes, identify affected authorized purposes,
 prepare governed communication and retain exact-recipient acknowledgement.
+Native child [#105](https://github.com/martonpornoi/maru/issues/105) now owns the
+independently reviewed read-foundation delivery; #104 retains the entire later
+state-changing communication/acknowledgement journey and stays open.
 The exact-selection comparator, publication-count reuse and audited planner
 history comparison are implemented. ADR 0101 adds independent current-self host,
 exact room/Department/edition operator and own operative volunteer comparisons
@@ -70,8 +73,16 @@ tests passed 108 cases in 0.63s. Maintained integration assertions cover real
 self/operator scope, audit, denial, withdrawal, unchanged commitments and retained
 predecessor lineage, but remain unexecuted debt for #102. No #104 exact-head
 certification or PR has been pushed; the full issue is not delivered.
+Sender-side host/work references now select exact current recipients through the
+actual sender's independently authorized owner fields, never personal-query
+impersonation. Their 44 focused unit cases pass in 0.45s; real synthetic owner
+and sender-attributed audit assertions are maintained but unexecuted. Static,
+NumPy/semantic documentation and Ruff/format checks pass for that addition.
+Next delivery step is exact-head non-database certification and protected PR for
+#105. Preserve #104/#48 and all their remaining acceptance rather than closing
+the parent with these read helpers.
 
-Next: implement sender-authorized exact recipient resolution, governed
+After #105: implement sender-side operator recipient selection, governed
 communication preparation/review/manual handoff, immutable exact-recipient
 acknowledgement and user surfaces. Do not impersonate recipients while preparing
 a communication, silently relocate Shifts or infer attendance/work acceptance.
@@ -117,7 +128,7 @@ activation and a director pilot, not further dormant in-scope development.
 ## Smallest sensible next actions
 
 1. Preserve PR #103's exact delivery and archived verification; follow ADR 0100.
-2. Deliver #104 change impact, governed delivery and exact-recipient acknowledgement.
+2. Deliver #105 read foundations, then finish #104 governed delivery and acknowledgement.
 3. Continue on-site continuity and guided setup/surfaces.
 4. Complete #102 PostgreSQL restoration, #97 logical recovery and #92 human
    acceptance before integrated Programme-only acceptance or activation.
