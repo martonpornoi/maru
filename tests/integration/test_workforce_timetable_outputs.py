@@ -15,6 +15,10 @@ from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.adoption import AdoptionProfileCode
 from maru.identity.services import deactivate_person_account_for_platform_emergency
+from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
+from maru.scheduling.personal_work_release_impact import (
+    load_personal_work_release_impact,
+)
 from maru.workforce import timetable_queries as queries
 from maru.workforce.assignment_commands import (
     approve_position_assignment,
@@ -26,6 +30,7 @@ from maru.workforce.models import (
     PositionAssignment,
     ShiftCommitment,
 )
+from maru.workforce.personal_programme_links import load_personal_programme_work_links
 from maru.workforce.shift_commands import (
     ShiftAuthorizationDeniedError,
     ShiftUnavailableError,
@@ -116,6 +121,10 @@ def test_exact_person_output_is_audited_minimized_and_non_participation(scope):
     effects = (DomainEvent.objects.count(), OutboxMessage.objects.count())
     with CaptureQueriesContext(connection) as captured:
         result = queries.load_personal_shift_timetable(**arguments(scope))
+        programme_links = load_personal_programme_work_links(**arguments(scope))
+    assert programme_links is None
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        load_personal_work_release_impact(**arguments(scope))
     assert len(result) == 1
     entry = result[0]
     assert entry.commitment_id == commitment.id
@@ -208,6 +217,9 @@ def test_inactive_person_cannot_read_retained_work(scope):
         queries.load_personal_shift_timetable(**arguments(scope))
     entries.assert_not_called()
 
+    with pytest.raises(ShiftAuthorizationDeniedError):
+        load_personal_programme_work_links(**arguments(scope))
+
 
 @pytest.mark.parametrize("field", ["organization_id", "edition_id"])
 def test_foreign_scope_denies_before_work_lookup(scope, field):
@@ -217,6 +229,8 @@ def test_foreign_scope_denies_before_work_lookup(scope, field):
     ):
         queries.load_personal_shift_timetable(**(arguments(scope) | {field: uuid4()}))
     entries.assert_not_called()
+    with pytest.raises(ShiftAuthorizationDeniedError):
+        load_personal_programme_work_links(**(arguments(scope) | {field: uuid4()}))
 
 
 def test_missing_exact_profile_adapter_and_partial_fields_cannot_disclose_work(scope):

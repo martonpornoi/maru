@@ -43,6 +43,7 @@ from .release_artifacts import (
 from .release_authorship import _load_release_authorship
 from .release_capture import _capture_release_generations, _load_release_sources
 from .release_eligibility import RELEASE_ELIGIBILITY_POLICY
+from .release_impact import compare_release_selections
 from .release_inputs import (
     ReleaseCandidateSelection,
     ReleasePublicationIntent,
@@ -246,8 +247,7 @@ def _prepare_publication(
         if release is None:
             raise SchedulingUnavailableError
         previous = _placements(release.approval)
-    before = {row.occurrence_id: row for row in previous}
-    after = {row.occurrence_id: row for row in placements}
+    impact = compare_release_selections(before=previous, after=placements)
     release_id = uuid4()
     artifact = prepare_canonical_release_artifact(
         release_id=release_id,
@@ -269,9 +269,9 @@ def _prepare_publication(
         pointer,
         release_id,
         artifact,
-        len(after.keys() - before.keys()),
-        sum(before[key] != after[key] for key in before.keys() & after.keys()),
-        len(before.keys() - after.keys()),
+        impact.added_count,
+        impact.changed_count,
+        impact.removed_count,
     )
 
 

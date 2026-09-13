@@ -402,6 +402,41 @@ legal hold and recovery policy before activation. JSON, calendars and printouts
 are private point-in-time copies: authorized custodians must protect and recheck
 them, and Maru cannot promise remote recall of withdrawn or superseded files.
 
+### Programme release-change comparisons
+
+ADR 0101's comparison projections are transient restricted operational evidence,
+not a recipient directory or new activity collection. Planner history, exact own
+confirmed hosting and exact room/Department/edition operator purposes authorize
+independently. Own host comparison carries relationship version, invitation
+sequence and own immutable presence, not invitation prose, other hosts or contacts.
+Operator comparison carries current scope-link versions and only independently
+in-scope geometry on each side, never an unadmitted destination. Copy references
+do not authorize either text. Withdrawn/invalidated sources and lost current
+purpose suppress disclosure rather than restoring old notification content.
+
+Mandatory existing Scheduling/Programme/operator sensitive-read audits retain
+opaque scope/principal/trace and purpose under existing retention classes, not
+the compared body. No new persisted comparison, communication receipt, analytics,
+retention period or disposal executor is introduced by these read boundaries.
+Workforce's `workforce.personal_programme_links.read` audit separately records
+exact-self retained binding-reference access under `workforce-personal`, without
+work instructions or other recipients. Opaque current commitment/demand/binding
+versions and states are transient own-work evidence, not a new work snapshot.
+Scheduling's separate `scheduling.view_work_self` capability admits only linked
+own claims/confirmations and audits `scheduling.query.personal_work_release_impact`;
+ended/unlinked work grants no release discovery. No current profile pins it.
+Exact-recipient communication and acknowledgement require their own documented
+storage, purpose, retention and recovery contract before implementation.
+Sender-side recipient references are separately authorized: Programme's existing
+audited `host_roster` read selects one confirmed relationship; Workforce's
+`workforce.programme_change_recipient.read` requires coverage/holder-label fields,
+explicit staffing adoption and one exact operative work/occurrence match. Both
+return only the chosen current account/operational label and versioned purpose,
+not contacts or private instructions. They never attribute a preparer's read to
+the recipient or impersonate a personal query. Existing owner read-retention
+classes apply; no recipient list, communication history or new retention period
+is persisted by these transient references.
+
 ### Logistics custody and restricted contact
 
 - Reusable external-party identity contains only legal/public operational

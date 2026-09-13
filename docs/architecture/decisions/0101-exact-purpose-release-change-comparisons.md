@@ -1,0 +1,132 @@
+# ADR 0101: Exact-purpose release change comparisons
+
+- Status: Accepted
+- Date: 2026-09-13
+- Issue: [#104](https://github.com/martonpornoi/maru/issues/104)
+- Read-foundation delivery child: [#105](https://github.com/martonpornoi/maru/issues/105)
+
+## Context
+
+ADR 0097 admits exact-person approved hosting, not arbitrary planner history.
+ADR 0099 admits independently scoped operator output, not a recipient directory.
+A new placement reference can change required host presence without changing
+effective delivery times. Conversely, a room or copy change need not change
+retained Workforce work. A whole-release comparison cannot stand in for any
+of these independently authorized purposes.
+
+## Decision
+
+Compare exact canonical publication selections by stable occurrence identity.
+Planner/history comparison requires both history and release-manifest fields.
+It distinguishes membership, reference changes and actual immutable geometry.
+An explicit historical release selects its own retained predecessor; callers
+cannot fabricate a baseline or substitute a private candidate.
+
+An exact-person hosting comparison instead uses real Scheduling host-self and
+Programme host-self authority. Only currently confirmed own relationships permit
+release lookup. The query compares the active publication with its retained
+immediate predecessor, never an arbitrary caller-selected historical release.
+Each side independently selects only approved presence for those exact own
+relationships and verifies occurrence-to-item membership. Pending or ended
+relationships do not confer historical schedule access. No confirmed purpose
+means no release lookup or release-existence disclosure.
+
+Stable comparison identity is the pair of host relationship and occurrence.
+Addition/removal of own presence is separate from addition/removal of an event.
+Required own start/end, surrounding phase geometry, service-day bounds, exact
+room and selected reviewed-copy references are compared independently. No other
+host, private copy, availability, contact, planner rationale or Shift is returned.
+Current relationship version and invitation sequence remain distinct from the
+immutable publication and placement identities. A copy-reference change is not
+permission to display either text or claim which words changed.
+
+Every side uses complete bounded native manifest verification and current
+withdrawal/invalidation consequences. Suppressed comparison is explicit, never
+an empty successful comparison, invented mass cancellation or last-good fallback.
+An available first publication has actual additions from an absent predecessor.
+The complete union can be twice the per-side limit; it must not be truncated.
+Canonical parent ordering, independently repeated owner purposes and both
+manifest observations precede final authorization and mandatory read audit.
+
+This refines ADR 0097 only to permit this exact own-purpose predecessor
+comparison. It grants no general history, communication, acknowledgement,
+offline-freshness or work-mutation authority. No profile, route or writer grant
+is activated. Workforce recipients require their own owner-bound comparison;
+filtering planner or hosting output does not implement it.
+
+An operator comparison independently admits the exact room, Department or edition
+through ADR 0099's Scheduling geometry and owner scope-link authorities. Current
+Venue responsibility and, only when adopted, complete retained Workforce binding
+lineage determine membership on each side separately. It compares the active
+release and its retained predecessor, with no arbitrary-history selector. An
+occurrence leaving a room/Department appears as leaving that purpose: the response
+does not imply global cancellation or disclose its now-unadmitted destination.
+Both-side geometry and copy-reference differences are exposed only when both
+sides remain in the current purpose. Current membership versions accompany the
+immutable geometry; they confer no contact, personnel or private-content access.
+Owner links, adoption, both native manifests and authority are repeated before
+mandatory audit and disclosure, including for an empty or suppressed result.
+This extends ADR 0099 only for this bounded predecessor comparison.
+
+Workforce supplies a separate exact-self retained Programme-work reference.
+Real `workforce.view_self` admission and deliberately adopted Programme staffing
+are required before binding lookup. Owned commitment demands, never caller IDs,
+select complete current/retained binding lineage; unrelated successor demands
+are not returned. Commitment state/version, demand version and binding version
+remain separate. Claimed, confirmed and ended states retain their meaning; a
+superseded binding does not silently cancel accepted work. Unadopted Programme
+returns an explicit absent layer without work, Programme or Scheduling lookup.
+These opaque references independently authorize no Scheduling geometry or copy;
+the volunteer comparison uses its own Scheduling admission boundary below.
+
+Add the dormant non-persistable exact-self capability
+`scheduling.view_work_self`, restricted to `own_work_schedule`. No current profile
+pins it, and no grant or catalog migration is needed for a non-persistable self
+purpose. Both that Scheduling capability and real Workforce self/adapter
+admission are mandatory. Only linked own retained claims and confirmations
+justify release lookup; ended or unrelated work cannot discover a release.
+The active release and its retained predecessor supply exact occurrence context,
+with geometry selected only for the independently proven own occurrences.
+Material copy/placement reference and day/room/phase differences remain distinct.
+No context change retimes, relocates, confirms or cancels the retained Shift.
+Own work linkage, both native manifests and final authority/audit are rechecked.
+Partial adoption or moving/incomplete owner evidence is unavailable; suppressed
+native state returns no comparison rather than a last-good timetable.
+
+Sender-side host/work recipient references use the authenticated sender's real
+owner fields, not a personal read performed as someone else. Programme selects
+one confirmed current host through its audited roster boundary. Workforce
+requires organizer coverage/holder-label fields and an exact operative commitment
+to the requested occurrence through complete retained lineage. Current verified
+identity, canonical person ordering, minimized labels, source versions and actual
+sender-attributed audit are mandatory. No contact or arbitrary account selection
+is accepted. A composing command retains its canonical transaction and rechecks
+these references before using them; they are not portable serving or sending
+permissions. Operator recipient selection and the persisted communication
+workflow remain in #104 after this read-only delivery child.
+
+## Consequences
+
+- Hosts can distinguish a change to their required presence from a changed
+  public timetable without receiving other people's assignments.
+- Revoked purpose or newly unsafe historical evidence can suppress comparison;
+  an old notification must not restore that disclosure authority.
+- Comparison is read evidence, not proof of delivery, acknowledgement, attendance,
+  work acceptance or release approval. Governed communication and immutable
+  exact-recipient acknowledgement remain separate implementation work in #104.
+- PostgreSQL assertions are maintained but unexecuted under ADR 0100; #102 must
+  restore database acceptance before integrated acceptance or activation.
+
+## Alternatives considered
+
+- Filter the planner DTO after loading it: rejected because history authority
+  and recipient authority are different, independently checked purposes.
+- Compare only delivery start/end: rejected because required own presence,
+  room, preparation and copy can change independently.
+- Treat a suppressed predecessor as empty: rejected because it fabricates
+  additions and hides the loss of authoritative comparison evidence.
+
+## Requirements affected
+
+SCH-004/006/009/010/012, OPS-009, AUD-001 and NFR-001/013. ADRs 0096, 0097,
+0099 and 0100 otherwise remain accepted.

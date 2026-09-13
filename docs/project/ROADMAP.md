@@ -141,10 +141,15 @@ PR #98 with dormant independent approval, release-warning evidence, atomic
 publication and governing invalidation under ADR 0096. Child #99 is delivered
 through PR #101 and supplies shared
 release-derived public and personal projections, combined host/work timetables
-and output formats. Child #100 retains independently authorized room/department
-operator run sheets as the immediately following delivery; no operational
-acceptance is waived by this decomposition. Detailed change impact, governed
-delivery and acknowledgement then follow using those same boundaries.
+and output formats. Child #100 is delivered through PR #103 with independently
+authorized room/Department/edition operator run sheets. #104 owns detailed change
+impact, governed communication and exact-recipient acknowledgement. Its native
+child #105 separately delivers dormant read-only release comparisons across
+planner, host, operator and volunteer purposes plus sender-authorized host/work
+recipient references under ADR 0101. #104 stays open for operator recipient
+selection, governed preparation/review/manual handoff or explicitly adopted
+Effects routing, immutable acknowledgement and user surfaces. This delivery
+decomposition does not waive the complete #104/#48 operational journey.
 Delivered with #99, ADR 0098 adds budgeted CI assignments and measured
 headroom to address recurring historical-test timeouts without weakening safety
 selection or coverage. Its complete hosted run passed all 39 jobs below 50

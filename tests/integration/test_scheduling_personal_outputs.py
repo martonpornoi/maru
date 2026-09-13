@@ -15,9 +15,12 @@ from maru.authorization import policy
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.participation.models import Participation
+from maru.programme.change_recipient_queries import load_host_change_recipient
+from maru.programme.host_queries import ProgrammeHostReadRequest
 from maru.programme.models import ProgrammeHostRelationship
 from maru.scheduling import personal_output_queries as composition
 from maru.scheduling import personal_output_rendering as formats
+from maru.scheduling import personal_release_impact as impact
 from maru.scheduling import personal_release_references as outputs
 from maru.scheduling import planning_queries
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
@@ -33,6 +36,7 @@ from maru.workforce.models import (
 )
 from tests.factories import (
     AccountFactory,
+    CapabilityGrantFactory,
     OrganizationMembershipFactory,
     ParticipationFactory,
 )
@@ -96,6 +100,7 @@ def arguments(scope):
 
 def test_personal_presence_is_exact_released_work_not_full_envelope_or_public_copy(
     personal_scope,
+    monkeypatch,
 ):
     published = publish(personal_scope, approve(personal_scope))
     inputs = arguments(personal_scope)
@@ -130,6 +135,50 @@ def test_personal_presence_is_exact_released_work_not_full_envelope_or_public_co
         principal_id=inputs["actor_id"],
         capability_code="scheduling.view_host_self",
     ).exists()
+    changes = impact.load_personal_host_release_impact(**inputs)
+    assert changes.release_id == published.object_id
+    assert changes.previous_state == "absent"
+    assert changes.changes[0].kind == "added"
+    assert changes.changes[0].after == presence
+    assert AuditEvent.objects.filter(
+        operation="scheduling.query.personal_host_release_impact",
+        outcome="allow",
+        principal_id=inputs["actor_id"],
+        capability_code="scheduling.view_host_self",
+    ).exists()
+    sender = AccountFactory()
+    original = policy.profile_allows_capability
+    monkeypatch.setattr(
+        policy,
+        "profile_allows_capability",
+        lambda code, version, capability: (
+            capability == "programme.view_hosts" or original(code, version, capability)
+        ),
+    )
+    CapabilityGrantFactory(
+        organization_id=inputs["organization_id"],
+        edition_id=inputs["edition_id"],
+        principal=sender,
+        capability_code="programme.view_hosts",
+    )
+    recipient = load_host_change_recipient(
+        ProgrammeHostReadRequest(
+            sender.id,
+            inputs["organization_id"],
+            inputs["edition_id"],
+            personal_scope.selection.item_id,
+            uuid4(),
+        ),
+        host_id=presence.host_id,
+    )
+    assert recipient.account_id == inputs["actor_id"] != sender.id
+    assert recipient.relationship.state == "confirmed"
+    assert AuditEvent.objects.filter(
+        operation="programme.query.host_roster",
+        principal_id=sender.id,
+        capability_code="programme.view_hosts",
+        outcome="allow",
+    ).exists()
 
 
 def test_person_without_host_purpose_learns_no_release_existence(personal_scope):
@@ -141,6 +190,10 @@ def test_person_without_host_purpose_learns_no_release_existence(personal_scope)
     assert result.pointer_version is None
     assert result.release_id is None
     assert result.purposes == result.presences == ()
+    with patch.object(impact, "_manifest", side_effect=AssertionError("no lookup")):
+        changes = impact.load_personal_host_release_impact(**inputs)
+    assert changes.state is changes.pointer_version is changes.release_id is None
+    assert changes.changes is None
 
 
 def test_confirmed_host_before_publication_has_truthful_absent_state(personal_scope):
@@ -170,6 +223,9 @@ def test_withdrawal_never_advertises_old_host_presence(personal_scope, operation
     assert after.presences == ()
     assert after.purposes == before.purposes
     assert after.state == ("invalidated" if operation == "copy" else "withdrawn")
+    changes = impact.load_personal_host_release_impact(**inputs)
+    assert changes.state == after.state
+    assert changes.changes is None
 
 
 def test_profile_cannot_use_planner_permission_as_personal_access(
@@ -177,6 +233,12 @@ def test_profile_cannot_use_planner_permission_as_personal_access(
 ):
     with pytest.raises(SchedulingAuthorizationDeniedError):
         outputs.load_personal_host_release_reference(**arguments(review_scope))
+    with (
+        patch.object(impact, "_load") as loader,
+        pytest.raises(SchedulingAuthorizationDeniedError),
+    ):
+        impact.load_personal_host_release_impact(**arguments(review_scope))
+    loader.assert_not_called()
 
 
 def test_foreign_personal_scope_fails_before_release_disclosure(personal_scope):
@@ -184,6 +246,14 @@ def test_foreign_personal_scope_fails_before_release_disclosure(personal_scope):
         outputs.load_personal_host_release_reference(
             **(arguments(personal_scope) | {"organization_id": uuid4()})
         )
+    with (
+        patch.object(impact, "_load") as loader,
+        pytest.raises(SchedulingAuthorizationDeniedError),
+    ):
+        impact.load_personal_host_release_impact(
+            **(arguments(personal_scope) | {"organization_id": uuid4()})
+        )
+    loader.assert_not_called()
 
 
 def test_personal_composition_gets_own_room_and_keeps_empty_work_explicit(
@@ -261,6 +331,31 @@ def test_sensitive_scheduling_audit_failure_releases_no_personal_result(personal
         pytest.raises(RuntimeError, match="audit unavailable"),
     ):
         outputs.load_personal_host_release_reference(**arguments(personal_scope))
+
+    with (
+        patch.object(
+            planning_queries, "_audit", side_effect=RuntimeError("audit unavailable")
+        ),
+        pytest.raises(RuntimeError, match="audit unavailable"),
+    ):
+        impact.load_personal_host_release_impact(**arguments(personal_scope))
+
+
+def test_own_change_uses_retained_predecessor_without_planner_history(personal_scope):
+    first = publish(personal_scope, approve(personal_scope))
+    second_scope = SimpleNamespace(**vars(personal_scope))
+    second_scope.review_request = replace(
+        personal_scope.review_request, idempotency_key=uuid4()
+    )
+    second = publish(
+        second_scope, approve(second_scope), prior=first.object_id, version=1
+    )
+    result = impact.load_personal_host_release_impact(**arguments(personal_scope))
+    assert result.release_id == second.object_id
+    assert result.previous_release_id == first.object_id
+    assert result.pointer_version == 2
+    assert result.changes[0].kind == "unchanged"
+    assert result.changes[0].before == result.changes[0].after
 
 
 def _accepted_independent_work(scope):

@@ -82,18 +82,42 @@ def operator_staffing_adopted(request: OperatorReadRequest) -> bool:
 def _load_links(
     request: OperatorReadRequest, *, occurrence_ids: set[UUID] | None = None
 ) -> tuple[OperatorWorkLink, ...]:
+    return _load_lineage(
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        department_id=(
+            request.target_id if request.kind is OperatorScopeKind.DEPARTMENT else None
+        ),
+        occurrence_ids=occurrence_ids,
+    )
+
+
+def _load_lineage(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_id: UUID | None = None,
+    occurrence_ids: set[UUID] | None = None,
+    demand_ids: set[UUID] | None = None,
+) -> tuple[OperatorWorkLink, ...]:
     ownership = {
-        "organization_id": request.organization_id,
-        "edition_id": request.edition_id,
+        "organization_id": organization_id,
+        "edition_id": edition_id,
     }
     bindings_query = ProgrammeShiftBinding.objects.filter(**ownership)
     if occurrence_ids is not None:
         bindings_query = bindings_query.filter(occurrence_id__in=occurrence_ids)
-    if request.kind is OperatorScopeKind.DEPARTMENT:
+    if department_id is not None:
         bindings_query = bindings_query.filter(
-            Q(demand__position__department_id=request.target_id)
-            | Q(revisions__demand__position__department_id=request.target_id)
-            | Q(revisions__predecessor__position__department_id=request.target_id)
+            Q(demand__position__department_id=department_id)
+            | Q(revisions__demand__position__department_id=department_id)
+            | Q(revisions__predecessor__position__department_id=department_id)
+        )
+    if demand_ids is not None:
+        bindings_query = bindings_query.filter(
+            Q(demand_id__in=demand_ids)
+            | Q(revisions__demand_id__in=demand_ids)
+            | Q(revisions__predecessor_id__in=demand_ids)
         )
     bindings = tuple(
         bindings_query.order_by("id")
@@ -142,10 +166,10 @@ def _load_links(
         for row in ShiftDemand.objects.filter(
             **ownership,
             id__in={row[1] for row in pairs},
-            position__organization_id=request.organization_id,
-            position__edition_id=request.edition_id,
-            position__department__organization_id=request.organization_id,
-            position__department__edition_id=request.edition_id,
+            position__organization_id=organization_id,
+            position__edition_id=edition_id,
+            position__department__organization_id=organization_id,
+            position__department__edition_id=edition_id,
         ).values_list("id", "command_version", "position__department_id")
     }
     if set(demands) != {row[1] for row in pairs}:
@@ -161,8 +185,8 @@ def _load_links(
             demand == indexed[binding][3],
         )
         for binding, demand in pairs
-        if request.kind is not OperatorScopeKind.DEPARTMENT
-        or demands[demand][1] == request.target_id
+        if (department_id is None or demands[demand][1] == department_id)
+        and (demand_ids is None or demand in demand_ids)
     )
 
 

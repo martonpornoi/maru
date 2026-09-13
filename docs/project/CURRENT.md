@@ -6,133 +6,107 @@ Phase: Progressive adoption and pre-production release evaluation.
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
 production-ready release or supported hosted service. Use synthetic data only.
 This concise handoff owns current work; the [roadmap](ROADMAP.md) owns sequencing,
-the [production ledger](PRODUCTION_CONSOLIDATION.md) retains the detailed baseline,
+the [production ledger](PRODUCTION_CONSOLIDATION.md) retains the baseline,
 and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-[#99](https://github.com/martonpornoi/maru/issues/99) is closed through
-[PR #101](https://github.com/martonpornoi/maru/pull/101), protected squash
-`f999fb510b69901798959e16c120bf0fd15b839d` at 2026-09-13 01:10:30 UTC.
-Its tree equals certified head `ed654e27ff1328fde01171e93d74ceb16c5676c6`;
-clean local main was synchronized to that result and origin/main.
+[#100](https://github.com/martonpornoi/maru/issues/100) is closed through
+[PR #103](https://github.com/martonpornoi/maru/pull/103), protected squash
+`2931d6e3d2dbf2341b1103873f4f22d153d5e1fa` at 2026-09-13 13:13:40 UTC.
+Its tree equals verified head `97ef3a59c8ad15eca56f45c7842c4da541cc3c41`;
+clean local main was synchronized to this result and origin/main.
 
-ADR 0097 delivers dormant public and exact-person host/volunteer output from
-the active approved release. Independent owner authority, approved immutable
-copy, separately versioned current instructions and retained Workforce work
-stay distinct across typed/JSON/calendar/rendered/print adapters. Native
-withdrawal/invalidation fails closed without silently cancelling or relocating
-accepted Shifts. No profile, production route or runtime writer is activated.
+ADR 0099 delivers dormant independently authorized room, Department and edition
+operator run sheets across HTML/print, JSON and calendar projections. Exact
+released geometry and reviewed copy remain separate from current instructions
+and retained accepted Workforce work. No profile, production route or writer
+grant is activated. Human-only output checks remain under #92.
 
-ADR 0098 replaces fixed PostgreSQL counts and differing local/hosted partitions
-with budgeted source-bound assignments, at most eight concurrent fresh databases,
-incremental diagnostics and measured pre-push timing headroom. Full replacement
-local certification passed all ten gates, 9,089 Python tests, 64 frontend tests
-and 90.67% combined branch-aware coverage in 3h32m58s. All 39 local jobs passed
-in 30m22s–51m54s; every disposable container was removed. The worst conservative
-projection was 87m51s against the unchanged two-hour hosted limit.
+ADR 0100 implements the maintainer's explicit temporary PostgreSQL deferral.
+Exact-head local development acceptance passed all eight retained gates,
+5,015 unit tests and 64 frontend tests in 16m32s. Hosted acceptance, CodeQL and
+the protected PR gate passed on that head in a 26m35s workflow. PostgreSQL paths
+were explicitly skipped. The receipt records `postgresql_deferred`, zero
+databases and null combined coverage/headroom; this is not database acceptance.
 
-Independent hosted acceptance, CodeQL and the protected PR gate passed on that
-exact head. All 39 hosted PostgreSQL jobs passed in 27m22s–49m58s, median 39m58s,
-with at least 70m02s timeout margin. Total hosted workflow latency was 3h19m26s.
-Downloaded reports independently reconcile all 334 complete groups, 4,251
-PostgreSQL cases and 4,838 units, with no failure, error, skip or duplicate.
+The older feature-only head `ff36db6896a0ff0d073e9737086d676f5a8d1e30`
+had already passed full local acceptance: 9,254 Python tests, 64 frontend tests,
+90.65% combined coverage and all 42 database jobs in 3h36m16s. Preserve that
+evidence separately; it does not certify later commits. Do not repeat completed
+verification. [The delivery checkpoint](../checkpoints/2026-09-13-programme-operator-protected-delivery.md)
+records exact results, preserved archives and remaining gates.
 
-This is timeout resilience, not a whole-suite speedup: exhaustive local wall
-time increased 31.0% over the original eight-way run. Original timed-out hosted
-attempts and the failed Windows Docker-wrapper launcher candidate remain
-separate from the completely certified repair. No timeout, coverage or scope
-waiver was used. Do not repeat completed certification.
+## Active bounded outcome: timetable change impact (#104)
 
-See the [protected delivery checkpoint](../checkpoints/2026-09-13-programme-output-protected-delivery.md),
-[output evaluator guide](../operations/programme-output-evaluation.md),
-[ADR 0098](../architecture/decisions/0098-budgeted-postgresql-shard-planning.md)
-and [local certification procedure](../development/local-certification.md).
-The prior atomic release #96 / PR #98 remains delivered under ADR 0096.
+Branch: `codex/programme-change-impact`, from protected PR #103.
+[#104](https://github.com/martonpornoi/maru/issues/104) is the next native #48
+child: explain exact published changes, identify affected authorized purposes,
+prepare governed communication and retain exact-recipient acknowledgement.
+Native child [#105](https://github.com/martonpornoi/maru/issues/105) now owns the
+independently reviewed read-foundation delivery; #104 retains the entire later
+state-changing communication/acknowledgement journey and stays open.
+The exact-selection comparator, publication-count reuse and audited planner
+history comparison are implemented. ADR 0101 adds independent current-self host,
+exact room/Department/edition operator and own operative volunteer comparisons
+of the active release and retained predecessor. Own required host presence,
+released event geometry and retained accepted work remain distinct. Each side
+is scoped independently; leaving a room/Department discloses no unadmitted
+destination and is not global cancellation. Suppressed native state is not an
+empty successful comparison or invented mass cancellation.
 
-## Active bounded delivery: operator run sheets (#100)
+Workforce now independently proves exact-self current/retained binding lineage
+from own commitment demands, not caller-selected IDs or successor substitution.
+Its shared private lineage reader retains existing operator contracts. The
+separate non-persistable `scheduling.view_work_self` capability admits only linked
+own claims/confirmations; ended/unlinked work grants no release discovery.
+No current profile pins it, and no grant, schema, route or module is activated.
+Current owner versions and both native manifests are rechecked before final
+authority and mandatory audit. No private copy, other recipient, contact,
+availability, arbitrary history selector or planner-authorizer substitute exists.
 
-Branch: `codex/programme-operator-run-sheets`, based on the protected #101 result.
-[#100](https://github.com/martonpornoi/maru/issues/100) is the next native #48
-child. It retains the room/department/operator acceptance explicitly separated
-from #99; closing #99 does not deliver or waive that audience.
+Latest focused development verification: all 5,250 unit tests passed in 33.52s
+(two existing Django URL-field warnings). Ruff/formatting (1,089 files), strict
+types (564 files), semantic/NumPy docstrings and documentation validation pass.
+The work-reference tests passed 44 cases in 0.47s; volunteer/authority/history
+tests passed 108 cases in 0.63s. Maintained integration assertions cover real
+self/operator scope, audit, denial, withdrawal, unchanged commitments and retained
+predecessor lineage, but remain unexecuted debt for #102. No #104 exact-head
+certification or PR has been pushed; the full issue is not delivered.
+Sender-side host/work references now select exact current recipients through the
+actual sender's independently authorized owner fields, never personal-query
+impersonation. Their 44 focused unit cases pass in 0.45s; real synthetic owner
+and sender-attributed audit assertions are maintained but unexecuted. Static,
+NumPy/semantic documentation and Ruff/format checks pass for that addition.
+Next delivery step is exact-head non-database certification and protected PR for
+#105. Preserve #104/#48 and all their remaining acceptance rather than closing
+the parent with these read helpers.
 
-[ADR 0099](../architecture/decisions/0099-purpose-scoped-programme-operator-outputs.md)
-and the [run-sheet page contract](../product/page-contracts/programme-operator-run-sheets.md)
-define independent room, Department and edition operator purposes. Department
-membership follows current Venue responsibility and deliberately adopted
-Workforce binding lineage, never inferred Programme item/proposal ownership.
-Five new field-ceilinged read capabilities and native migration 0030 grant no
-authority or profile activation; retained grant/role use fences downgrade.
+After #105: implement sender-side operator recipient selection, governed
+communication preparation/review/manual handoff, immutable exact-recipient
+acknowledgement and user surfaces. Do not impersonate recipients while preparing
+a communication, silently relocate Shifts or infer attendance/work acceptance.
+On-site continuity and guided departmental surfaces follow.
+Keep #48 open through the complete integrated journey.
 
-Local typed/JSON/calendar/shared-Administration-shell HTML/print implementation
-is present, with exact-purpose admission, mandatory owner audits, current room
-and retained-work membership, checked release geometry and reviewed copy, and
-requested-only private delivery/staffing fields. Current owner instructions and
-immutable accepted work intervals remain separate. No #100 certification, push
-or protected acceptance is claimed for the later CI-policy candidate.
+## Temporary testing policy and activation gates
 
-The feature-only exact head `ff36db6896a0ff0d073e9737086d676f5a8d1e30`
-subsequently completed all ten local gates: 9,254 Python cases (4,986 units and
-4,268 PostgreSQL cases), 64 frontend cases and 90.65% combined branch-aware
-coverage in 3h36m16s. All 42 jobs passed and removed their containers; the slowest
-took 49m17s, with an 83m56s conservative projection. Independent report matching
-reconciles all 337 groups with no failure, error, skip or duplicate. Complete
-evidence is preserved under `.tools/certification-evidence/issue100-ff36db6-complete/`.
-The first failed dependency-install attempt remains separately recorded. This
-is historical evidence for that exact feature head, not certification of later
-policy changes.
+Maintain PostgreSQL tests, historical inventories and migration/recovery
+fixtures as features change, but do not execute PostgreSQL during this dormant
+development phase. Run focused non-database feedback and exact-commit development
+acceptance before each protected PR. Record unexecuted database coverage as
+verification debt, not success; do not invent timing observations.
 
-The maintainer then explicitly requested PostgreSQL execution be deferred until
-Programme is finished. [ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md)
-implements a tracked temporary development policy in this same pending PR.
-Maintain all database cases and record unexecuted changes as verification debt;
-do not run new PostgreSQL checks during this phase. PR/local unit, static,
-documentation, packaging, frontend and security checks remain required. Combined
-database coverage and headroom remain unavailable, never falsely successful.
-Nightly/manual full selection is deferred and full/release acceptance is fenced.
-Restore the tracked required mode and exhaustive local/hosted evidence before
-Programme profile activation, integrated acceptance, a director pilot or release.
-The new policy regressions pass: 105 focused cases and all 5,015 units (32.02s).
-An initial Windows temporary-directory permission error was repaired with an
-isolated task-owned test directory; it was not waived. Policy parsing rejects
-malformed inputs, full acceptance refuses deferred execution, and workflow
-contracts preserve non-database gates and original risk selection. The candidate
-still needs exact non-database development acceptance and the protected hosted
-gate before delivery. See the [policy checkpoint](../checkpoints/2026-09-13-programme-postgresql-deferral.md).
-
-Focused evidence: all 4,986 units passed in 34.20s (two existing Django URL-field
-deprecation warnings); 17 PostgreSQL cases passed in 299.59s including fresh
-schema setup (156.36s). They cover exact native scopes, person/tenant denial,
-withdrawal, mandatory audit, requested-column privacy, a Department with linked
-work but no room, retained predecessor intervals, real HTTP reauthorization and
-real unused migration reversal/reapply plus retained grant/role downgrade
-fences. The disposable container was removed. Repository-wide Ruff, formatting,
-type, NumPy-docstring and semantic-docstring checks pass. Earlier focused
-failures were repaired fixture permissions and catalog inventories, not waivers.
-The two real HTTP cases also pass exact-copy invalidation followed by release
-withdrawal in a focused 183.31-second fresh-database rerun.
-
-The isolated browser journey now covers exact-purpose/default/all-layer output,
-retained work, denial, source failure/withdrawal, private downloads and print view.
-A per-response CSP nonce repairs blocked shared navigation; modal semantics and
-collapsed-section focus filtering repair the exposed keyboard boundary. Fresh
-checks pass Close/Escape, focus containment/return, keyboard layer submission and
-seven responsive widths without overflow. Fixture containers were removed by
-exact ID. Launcher/observer failures and teardown-session warnings remain recorded,
-not passing browser evidence. The warning-fatal documentation build also passed.
-
-See the [operator checkpoint](../checkpoints/2026-09-13-programme-operator-run-sheets.md)
-for evidence and limitations. Next: verify the temporary policy and certify the
-clean exact candidate through its explicitly deferred non-database development
-path, then protected delivery. Do not rerun the preserved full feature evidence.
-Human-only native-print, zoom, screen-reader and calendar-client checks are
-explicitly retained under #92 and remain unpassed. #97 still blocks activation.
+[#102](https://github.com/martonpornoi/maru/issues/102) owns restoring the tracked
+required mode and exhaustive exact-head local/hosted database, combined coverage
+and timing acceptance before integrated acceptance, Programme activation, a
+director pilot or release. [ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md)
+fences full/release acceptance and adding the Programme profile while deferred.
 
 ## Existing foundation and mandatory gates
 
 Programme children #57, #59, #61, #63, #66, #64, #71, #77, #79, #81, #85,
-#88, #91, #94, #96 and #99 are delivered dormant. Do not restart those tasks.
+#88, #91, #94, #96, #99 and #100 are delivered dormant. Do not restart those tasks.
 The [Programme Operations contract](../product/page-contracts/programme-operations-adoption-setup.md)
 and owning [Programme](../modules/programme.md),
 [Applications](../modules/applications.md), [Events](../modules/events.md) and
@@ -153,14 +127,11 @@ activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Preserve #101's delivery and #100's completed feature-head local evidence;
-   do not rerun them. Follow ADR 0100's temporary PostgreSQL deferral.
-2. Deliver #100's independently authorized room/department operator run sheets.
-3. Deliver detailed change impact, governed destination delivery and recipient
-   acknowledgement through the same output boundaries.
-4. Continue on-site continuity, #97 logical recovery, guided setup/surfaces and
-   integrated Programme-only acceptance. Keep #48 open through the complete
-   journey; retain #92 and every other activation gate.
+1. Preserve PR #103's exact delivery and archived verification; follow ADR 0100.
+2. Deliver #105 read foundations, then finish #104 governed delivery and acknowledgement.
+3. Continue on-site continuity and guided setup/surfaces.
+4. Complete #102 PostgreSQL restoration, #97 logical recovery and #92 human
+   acceptance before integrated Programme-only acceptance or activation.
 5. After #48, continue #42 and the director introduction/pilot package, then the
    agreed guidance/accessibility and continuity/succession priorities. #22, #23
    and #24 retain their separate Workforce ownership and are not absorbed here.

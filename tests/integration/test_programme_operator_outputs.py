@@ -27,12 +27,18 @@ from maru.programme.staffing_queries import ProgrammeStaffingReadRequest
 from maru.scheduling import operator_scope
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
 from maru.scheduling.operator_output_queries import load_operator_run_sheet
+from maru.scheduling.operator_release_impact import load_operator_release_impact
 from maru.scheduling.operator_release_references import load_operator_release_reference
 from maru.scheduling.operator_scope import OperatorReadRequest, OperatorScopeKind
+from maru.scheduling.personal_work_release_impact import (
+    load_personal_work_release_impact,
+)
 from maru.scheduling.release_inputs import ReleaseCandidateSelection
 from maru.venues.models import EditionSpaceSelection
 from maru.venues.operator_queries import load_operator_wayfinding
+from maru.workforce import change_recipient_queries as recipient_queries
 from maru.workforce import operator_links as work_links
+from maru.workforce import personal_programme_links as personal_links
 from maru.workforce.models import ShiftCommitment, ShiftDemand
 from maru.workforce.programme_impact import ProgrammeStaffingAction
 from maru.workforce.programme_staffing_inputs import ProgrammeStaffingBindingChange
@@ -152,6 +158,7 @@ def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
     request = operator_request(operator_world, kind=kind)
     with CaptureQueriesContext(connection) as captured:
         result = load_operator_release_reference(request)
+        impact = load_operator_release_impact(request)
         copies = load_operator_programme_copy(
             request, expected_release_id=published.object_id
         )
@@ -160,6 +167,10 @@ def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
         )
     assert result.state == "available"
     assert result.release_id == published.object_id
+    assert impact.release_id == published.object_id
+    assert impact.previous_state == "absent"
+    assert impact.changes[0].kind == "added"
+    assert impact.changes[0].after == result.occurrences[0]
     assert not result.staffing_adopted
     assert len(result.occurrences) == len(copies) == len(rooms) == 1
     assert result.occurrences[0].envelope == operator_world.world.placement.envelope
@@ -208,6 +219,8 @@ def test_exact_operator_grants_reject_foreign_scope_and_person(operator_world):
     ):
         with pytest.raises(SchedulingAuthorizationDeniedError):
             load_operator_run_sheet(changed)
+        with pytest.raises(SchedulingAuthorizationDeniedError):
+            load_operator_release_impact(changed)
 
 
 def test_each_owner_denies_missing_authority_even_before_any_release(operator_world):
@@ -234,6 +247,9 @@ def test_withdrawal_removes_approved_content_without_last_good_fallback(operator
     assert result.occurrences == ()
     assert load_operator_programme_copy(request, expected_release_id=None) == ()
     assert load_operator_wayfinding(request, expected_release_id=None) == ()
+    impact = load_operator_release_impact(request)
+    assert impact.state == "withdrawn"
+    assert impact.changes is None
 
 
 def test_successful_owner_audit_is_required_before_content_can_return(operator_world):
@@ -439,6 +455,14 @@ def test_department_without_room_gets_its_linked_work_and_retained_predecessor_o
         result = load_operator_run_sheet(request, layers=frozenset({"staffing"}))
     assert result.reference.release_id == published.object_id
     assert len(result.entries) == 1
+    impact = load_operator_release_impact(request)
+    assert impact.room_links == ()
+    assert impact.staffing_adopted
+    assert impact.changes[0].after == result.entries[0].placement
+    assert {row.demand_id for row in impact.work_links} == {
+        work.first.demand_id,
+        work.successor.demand_id,
+    }
     assert result.staffing.adopted
     assert {row.demand_id for row in result.staffing.demands} == {
         work.first.demand_id,
@@ -460,6 +484,85 @@ def test_department_without_room_gets_its_linked_work_and_retained_predecessor_o
         predecessor.retained_work[0].rest_ends_at,
     ) == work.original_interval
     assert successor.retained_work[0].state == "confirmed"
+    monkeypatch.setattr(personal_links, "profile_allows_adapter", lambda *_args: True)
+    person_id = ShiftCommitment.objects.get(demand_id=work.first.demand_id).account_id
+    own_links = personal_links.load_personal_programme_work_links(
+        actor_id=person_id,
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        correlation_id=uuid4(),
+    )
+    assert {row.demand_id for row in own_links} == {
+        work.first.demand_id,
+        work.successor.demand_id,
+    }
+    assert {(row.status, row.current) for row in own_links} == {
+        ("removed", False),
+        ("confirmed", True),
+    }
+    original_policy = policy.profile_allows_capability
+    monkeypatch.setattr(
+        policy,
+        "profile_allows_capability",
+        lambda code, version, capability: (
+            capability == "scheduling.view_work_self"
+            or original_policy(code, version, capability)
+        ),
+    )
+    work_before = tuple(
+        ShiftCommitment.objects.filter(account_id=person_id)
+        .values_list(
+            "id",
+            "status",
+            "command_version",
+            "starts_at",
+            "ends_at",
+            "rest_ends_at",
+        )
+        .order_by("id")
+    )
+    work_impact = load_personal_work_release_impact(
+        actor_id=person_id,
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        correlation_id=uuid4(),
+    )
+    assert work_impact.release_id == published.object_id
+    assert len(work_impact.changes) == 1
+    assert work_impact.changes[0].work.demand_id == work.successor.demand_id
+    assert work_impact.changes[0].work.status == "confirmed"
+    assert (
+        work_impact.changes[0].after.placement_id
+        == result.entries[0].placement.placement_id
+    )
+    assert (
+        tuple(
+            ShiftCommitment.objects.filter(account_id=person_id)
+            .values_list(
+                "id",
+                "status",
+                "command_version",
+                "starts_at",
+                "ends_at",
+                "rest_ends_at",
+            )
+            .order_by("id")
+        )
+        == work_before
+    )
+    assert AuditEvent.objects.filter(
+        principal_id=person_id,
+        operation="scheduling.query.personal_work_release_impact",
+        outcome="allow",
+        capability_code="scheduling.view_work_self",
+    ).exists()
+    _assert_selected_work_recipient(
+        request,
+        work,
+        person_id,
+        result.entries[0].placement.occurrence_id,
+        monkeypatch,
+    )
     statements = [
         row["sql"]
         for row in captured
@@ -474,6 +577,46 @@ def test_department_without_room_gets_its_linked_work_and_retained_predecessor_o
             "availability_plan_id",
         ):
             assert excluded not in statement
+
+
+def _assert_selected_work_recipient(
+    request, work, person_id, occurrence_id, monkeypatch
+):
+    monkeypatch.setattr(
+        recipient_queries, "profile_allows_adapter", lambda *_args: True
+    )
+    CapabilityGrantFactory(
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        principal_id=request.actor_id,
+        capability_code="workforce.view_shifts",
+    )
+    recipient_request = recipient_queries.ProgrammeWorkRecipientRequest(
+        request.actor_id,
+        request.organization_id,
+        request.edition_id,
+        uuid4(),
+        occurrence_id,
+        ShiftCommitment.objects.get(demand_id=work.successor.demand_id).id,
+    )
+    recipient = recipient_queries.load_work_change_recipient(recipient_request)
+    assert recipient.account_id == person_id != request.actor_id
+    assert recipient.work.demand_id == work.successor.demand_id
+    assert AuditEvent.objects.filter(
+        operation="workforce.programme_change_recipient.read",
+        principal_id=request.actor_id,
+        outcome="allow",
+        target_id=recipient_request.commitment_id,
+    ).exists()
+    with pytest.raises(recipient_queries.ProgrammeStaffingUnavailableError):
+        recipient_queries.load_work_change_recipient(
+            replace(
+                recipient_request,
+                commitment_id=ShiftCommitment.objects.get(
+                    demand_id=work.first.demand_id
+                ).id,
+            )
+        )
 
 
 def test_department_membership_requires_work_links_without_requested_details(

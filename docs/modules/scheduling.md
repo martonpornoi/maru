@@ -2,10 +2,82 @@
 
 Status: dormant candidate/conflict, physical-reservation and atomic-release kernel,
 consumed by unmounted Programme components; no current profile or route activation.
-Last updated: 2026-09-11. See [CURRENT](../project/CURRENT.md) for verification
+Last updated: 2026-09-13. See [CURRENT](../project/CURRENT.md) for verification
 and protected-delivery status; this guide is the owner contract, not a merge claim.
 
 ## Ownership and adoption
+
+### Change-impact read foundations (#105 under #104)
+
+`release_impact.compare_release_selections` is the pure bounded comparison of
+two complete exact canonical selection tuples. It retains deterministic stable
+occurrence identity, both references, membership status and independent placement
+versus reviewed-copy reference changes. Publication uses its counts, preserving
+the existing added/changed/removed contract. The function validates the same
+canonical nested identities, uniqueness and per-side bounds as release artifacts;
+two disjoint maximum selections retain the complete union rather than truncating.
+
+This helper authenticates no release or scope and reads no owner. Its callers
+must never turn unavailable evidence into an empty manifest. A placement ID
+change is not yet a classified time/room move. It supplies no recipient lookup,
+delivery, acknowledgement, new route or profile activation. The independently
+authorized purpose queries below compose those references. Communication and
+acknowledgement persistence remain #104 work.
+
+`release_impact_queries.load_programme_release_impact` now supplies an audited
+history-only comparison of one exact published release and its retained
+predecessor. Both `planning_history` and `release_manifest` fields are required
+before lookup and before final disclosure. It reads complete scoped immutable
+geometry, identifies actual day/room/preparation/delivery/teardown changes, and
+rechecks both native manifests around composition. It exposes no Programme
+text, recipient or work record. Publication version and observed pointer version
+remain distinct. Withdrawn or invalidated governing state yields `changes=None`,
+not an empty successful comparison or invented mass removal. The separate
+recipient-purpose composers below do not inherit planner-history authority.
+
+`personal_release_impact.load_personal_host_release_impact` implements the
+separate real-self comparison in [ADR 0101](../architecture/decisions/0101-exact-purpose-release-change-comparisons.md).
+It accepts no recipient, historical-release selector or authorizer substitute.
+Programme independently proves current own purposes before any release lookup;
+only confirmed relationships select approved presence on each side of the
+active release's retained predecessor transition. The stable key is host plus
+occurrence, not merely occurrence. Own-presence additions/removals, required
+start/end, surrounding phases, day bounds, room and exact copy-reference changes
+remain distinct. Current relationship version and invitation sequence accompany
+immutable presence sources without invitation text, private copy or other hosts.
+No confirmed purpose yields no release metadata; unavailable governing state
+yields `changes=None`, not fabricated cancellation. The complete union is bounded
+at twice the 2,000-row per-side ceiling. Repeated owner purposes/native manifests,
+final self authorization and mandatory audit fence disclosure. This adds no
+schema, route, acknowledgement, delivery or Workforce mutation. The
+communication/acknowledgement workflow remains unfinished under #104.
+
+`operator_release_impact.load_operator_release_impact` independently compares
+the active release and retained predecessor within ADR 0099's exact room,
+Department or edition authority. Each side is separately constrained by current
+Venue room responsibility and optional independently authorized retained
+Workforce links. Movement out of scope returns no destination or other-side
+fields and is not labelled global cancellation. Current owner membership
+versions accompany the bounded immutable transition; copy references grant no
+text permission. Complete links/adoption, native manifests, final owner authority
+and mandatory audit are rechecked even for empty/suppressed results. This does
+not enumerate people with grants, expose personnel or modify retained work.
+
+`personal_work_release_impact.load_personal_work_release_impact` requires the
+separate non-persistable `scheduling.view_work_self` capability with only
+`own_work_schedule`, pinned by no current profile. Workforce independently
+proves exact-self retained Programme binding references through its public owner
+query. Only linked own claims/confirmations justify any release lookup; ended
+and unrelated work disclose no release existence. Geometry is selected only for
+those occurrences in the checked active/predecessor manifests. Copy/placement
+references and actual day/room/phase changes are independent and never change
+retained accepted work. The result contains versioned opaque own work linkage,
+not a personnel directory or private instructions. Both owner links and native
+manifests are rechecked before final authority/audit; partial adoption is
+unavailable, not an empty or unadopted success. There is no caller-selected
+recipient, history selector, authorizer substitute or new grant/migration.
+
+### Existing owner boundary
 
 `maru.scheduling` owns service days, stable occurrences, comparable timetable
 candidates, explicit required host presence, conflict evidence and deliberate

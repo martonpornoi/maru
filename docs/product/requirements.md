@@ -653,6 +653,12 @@ architecture documents, implementation issues, tests, and release notes.
   including historical output; it must not withdraw another rendition or silently
   replace an active timetable. New reviewed copy needs a new independent
   timetable approval and publication before appearing in release-derived output.
+  Exact released-selection comparison uses stable occurrence identities and
+  distinguishes membership additions/removals from placement-reference and
+  reviewed-copy-reference changes. A new placement reference does not alone
+  prove a time or room move, and missing/withheld source evidence must never be
+  substituted with an empty selection to imply cancellation. Comparison alone
+  confers no recipient, serving, delivery or acknowledgement authority.
 
 ### Querying, reporting, and export
 
@@ -1710,6 +1716,37 @@ architecture documents, implementation issues, tests, and release notes.
   version-stamped last-published snapshot and printable pack. This first
   boundary does not imply check-in, lateness, absence, Shift actual time, work
   disputes, Shift handover, payroll, or general incident-command capability.
+  An exact-person host comparison requires independent current Programme and
+  Scheduling self authority and only currently confirmed own relationships.
+  It compares own approved presence in the active release and its retained
+  immediate predecessor, not arbitrary history. Own-presence membership, required
+  start/end, surrounding phases, day/room and selected reviewed-copy references
+  remain distinct. No confirmed purpose means no release-existence lookup;
+  withdrawn/invalidated governing state means explicit suppressed comparison,
+  never fabricated additions or cancellations. Current relationship versions do
+  not rewrite immutable released intervals. Comparison alone proves no delivery,
+  acknowledgement, work acceptance or attendance.
+  Room, Department and edition change comparisons independently require the
+  current exact operator purpose and each owner's scope-link authority. Each
+  side is reduced to that current membership. Leaving a scope is not global
+  cancellation and reveals no unadmitted destination; current owner-link versions
+  remain distinct from immutable release facts and retained work.
+  Workforce proves exact-self retained Programme work through its own current
+  self authority and explicit staffing adoption. Only own retained demand IDs
+  select current/predecessor binding lineage; no successor work or other person
+  is implicitly substituted. Commitment, demand and binding versions/states are
+  distinct, and the opaque references independently grant no timetable access.
+  A separate Scheduling self-purpose admits released context only for those
+  exact own linked claims/confirmations. Ended/unlinked work grants no release
+  discovery. The active/predecessor comparison selects only those occurrences;
+  timetable additions/removals and changed geometry do not create, confirm,
+  cancel, retime or relocate retained work.
+  Preparing a communication must resolve its deliberately selected recipient
+  through the sender's independently authorized owner fields, not by invoking
+  a personal read as another actor. Confirmed hosting and operative retained
+  work use exact owner relationships/commitments, current verified identity and
+  source versions; each sensitive-read audit is attributed to the actual sender.
+  A recipient reference is not a delivery, acknowledgement or portable permission.
 
 ### Privacy, compliance, and participant control
 

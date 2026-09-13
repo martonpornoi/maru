@@ -743,6 +743,34 @@ together. Retry identity is actor/edition-bound; matching retries return the
 original minimal result after current authorization, without silently substituting
 current work or demanding that the old private candidate remain current.
 
+`personal_programme_links.load_personal_programme_work_links` supplies a
+separate dormant exact-self reference for change-impact composition (ADR 0101).
+It requires real Workforce self authority and current verified identity, then
+explicit Programme staffing adoption before any binding/work lookup. Only own
+retained commitment demands select complete current/predecessor lineage. The
+result contains opaque commitment/demand/binding/occurrence references and
+independent current versions/state, not accepted intervals, private instructions,
+another person or a successor demand the person never held. Ended work remains
+history, and an old binding does not silently cancel still-retained work.
+`None` means unadopted staffing; an empty tuple means an authorized complete
+collection has no Programme-linked own work. Canonical scope/person locking,
+repeated work/lineage/adoption checks, final authority and mandatory minimized
+audit precede disclosure. This is not a portable grant to Scheduling geometry,
+copy, delivery or acknowledgement and changes no Shift. The internal lineage
+reader is shared with operator queries; each public purpose authorizes separately.
+
+`change_recipient_queries.load_work_change_recipient` independently resolves one
+deliberately selected operative commitment and occurrence under the authenticated
+sender's real `workforce.view_shifts` coverage/holder-label fields and explicit
+Programme staffing adoption. It never calls a personal query as the recipient.
+Canonical scope and sorted sender/recipient Identity locks, complete retained
+lineage, repeated source/adoption/authority checks and mandatory sender-attributed
+audit precede disclosure. Only exact current recipient label/account and opaque
+work/demand/binding versions/state are returned. Ended, foreign, mismatched,
+incomplete or moving sources cannot become a recipient or successor substitution.
+The reference is not a delivery, acknowledgement or timetable disclosure grant;
+the composing command must hold and recheck its canonical transaction scope.
+
 `ProgrammeShiftBinding` retains one stable lineage per Programme requirement;
 `ProgrammeShiftBindingRevision` is both its immutable exact-source revision and
 retry receipt. Each pins the exact requirement/occurrence/candidate/placement,
