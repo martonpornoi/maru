@@ -64,6 +64,9 @@ full accessibility/viewport acceptance is inferred from that component fixture.
 The [surface checkpoint](../checkpoints/2026-09-13-programme-continuity-surfaces.md)
 records precise evidence and #92 gaps. Next review and certify the clean exact
 candidate, then submit #107 through the protected PR flow; it is not yet delivered.
+The first exact run at `23a5ec2` stopped on one native-test formatting difference
+after package/dependency checks; no receipt was produced and no PostgreSQL ran.
+The formatting is corrected for the next complete exact-commit run.
 
 Offline material is a bounded historical snapshot, not current permission,
 fresh instructions or a writable source. Specify source time/age, expiry,

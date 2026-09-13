@@ -199,11 +199,14 @@ def test_native_continuity_retains_exact_operator_fields_and_required_audits(
     before = AuditEvent.objects.filter(
         principal_id=request.actor_id, outcome="allow"
     ).count()
-    with patch.object(
-        operator_scope,
-        "append_audit",
-        side_effect=DatabaseError("synthetic audit outage"),
-    ), pytest.raises(SchedulingUnavailableError):
+    with (
+        patch.object(
+            operator_scope,
+            "append_audit",
+            side_effect=DatabaseError("synthetic audit outage"),
+        ),
+        pytest.raises(SchedulingUnavailableError),
+    ):
         continuity.load_continuity_projection(scope, correlation_id=uuid4())
     assert (
         AuditEvent.objects.filter(
