@@ -653,6 +653,12 @@ architecture documents, implementation issues, tests, and release notes.
   including historical output; it must not withdraw another rendition or silently
   replace an active timetable. New reviewed copy needs a new independent
   timetable approval and publication before appearing in release-derived output.
+  Exact released-selection comparison uses stable occurrence identities and
+  distinguishes membership additions/removals from placement-reference and
+  reviewed-copy-reference changes. A new placement reference does not alone
+  prove a time or room move, and missing/withheld source evidence must never be
+  substituted with an empty selection to imply cancellation. Comparison alone
+  confers no recipient, serving, delivery or acknowledgement authority.
 
 ### Querying, reporting, and export
 

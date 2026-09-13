@@ -193,6 +193,12 @@ def test_release_and_withdrawal_preserve_artifact_and_monotonic_retry_history(
 
 def test_replacement_and_post_withdrawal_publication_do_not_reset_history(review_scope):
     first = publish(review_scope, approve(review_scope))
+    first_row = SchedulingRelease.objects.get(id=first.object_id)
+    assert (
+        first_row.added_count,
+        first_row.changed_count,
+        first_row.removed_count,
+    ) == (1, 0, 0)
     review_scope.review_request = replace(
         review_scope.review_request, idempotency_key=uuid4()
     )
@@ -212,7 +218,18 @@ def test_replacement_and_post_withdrawal_publication_do_not_reset_history(review
     )
     third = publish(review_scope, approve(review_scope), version=3)
     assert third.version == 4
-    assert SchedulingRelease.objects.get(id=third.object_id).added_count == 1
+    third_row = SchedulingRelease.objects.get(id=third.object_id)
+    assert (
+        third_row.added_count,
+        third_row.changed_count,
+        third_row.removed_count,
+    ) == (1, 0, 0)
+    first_row.refresh_from_db()
+    assert (
+        first_row.added_count,
+        first_row.changed_count,
+        first_row.removed_count,
+    ) == (1, 0, 0)
     assert SchedulingRelease.objects.count() == 3
 
 

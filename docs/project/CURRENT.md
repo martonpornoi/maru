@@ -43,7 +43,15 @@ Branch: `codex/programme-change-impact`, from protected PR #103.
 [#104](https://github.com/martonpornoi/maru/issues/104) is the next native #48
 child: explain exact published changes, identify affected authorized purposes,
 prepare governed communication and retain exact-recipient acknowledgement.
-Implementation is not yet claimed. Reuse owner commands/queries and shared
+The initial pure exact-selection comparator and publication-count reuse are
+implemented locally; 111 focused comparison/artifact cases passed in 0.50s,
+and all 5,066 unit cases passed in 32.52s (two existing Django warnings).
+Publication-history integration assertions were strengthened for the initial,
+replacement and post-withdrawal counts; they remain unexecuted under ADR 0100
+and are verification debt for #102. No new database or migration was introduced.
+The full issue is not delivered: authorized rich impact, recipient eligibility,
+governed delivery, acknowledgement persistence and user surfaces remain. Reuse
+owner commands/queries and shared
 output boundaries; do not silently relocate accepted Shifts or turn
 acknowledgement into attendance, work acceptance or release approval.
 

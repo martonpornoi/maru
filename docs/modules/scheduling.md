@@ -7,6 +7,24 @@ and protected-delivery status; this guide is the owner contract, not a merge cla
 
 ## Ownership and adoption
 
+### Change-impact implementation in progress (#104)
+
+`release_impact.compare_release_selections` is the pure bounded comparison of
+two complete exact canonical selection tuples. It retains deterministic stable
+occurrence identity, both references, membership status and independent placement
+versus reviewed-copy reference changes. Publication uses its counts, preserving
+the existing added/changed/removed contract. The function validates the same
+canonical nested identities, uniqueness and per-side bounds as release artifacts;
+two disjoint maximum selections retain the complete union rather than truncating.
+
+This helper authenticates no release or scope and reads no owner. Its callers
+must never turn unavailable evidence into an empty manifest. A placement ID
+change is not yet a classified time/room move. It supplies no recipient lookup,
+delivery, acknowledgement, new route or profile activation. Those #104 contracts
+and their independently authorized composers and persistence remain in progress.
+
+### Existing owner boundary
+
 `maru.scheduling` owns service days, stable occurrences, comparable timetable
 candidates, explicit required host presence, conflict evidence and deliberate
 reservation intent. [ADR 0088](../architecture/decisions/0088-versioned-scheduling-candidates-and-venue-binding.md)
