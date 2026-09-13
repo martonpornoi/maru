@@ -1,0 +1,13 @@
+.programme-notices { max-width: 76rem; overflow-wrap: anywhere; }
+.programme-notices h2, .programme-notices h3 { color: var(--body-fg); }
+.programme-notices .baseline-panel, .notice-list > li { padding: 1rem; margin-block: 1rem; border: 1px solid var(--hairline-color); border-radius: .5rem; }
+.programme-notices form > div { margin-block: .75rem; }
+.programme-notices label { display: block; margin-block-end: .25rem; }
+.programme-notices input:not([type=hidden]), .programme-notices select { box-sizing: border-box; max-width: 100%; width: 32rem; }
+.programme-notices textarea { box-sizing: border-box; max-width: 100%; width: 100%; resize: vertical; }
+.programme-notices button { white-space: normal; min-height: 2.75rem; }
+.programme-notices :focus-visible { outline: 3px solid var(--link-fg); outline-offset: 3px; }
+.notice-comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; }
+.notice-comparison dd { margin-inline-start: 0; margin-block-end: .75rem; }
+.notice-list { padding-inline-start: 1.25rem; }
+.notice-warning { border-inline-start: .25rem solid var(--link-fg); padding-inline-start: .75rem; }

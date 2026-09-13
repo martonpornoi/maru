@@ -1756,6 +1756,15 @@ architecture documents, implementation issues, tests, and release notes.
   facts; export or handoff cannot substitute for acknowledgement. A newer material
   change requires new acknowledgement, and historical notice existence cannot
   restore revoked purpose or withdrawn/invalidated content.
+  Organizer and personal notice surfaces reuse these exact commands. Personal
+  discovery filters the actual recipient before inspecting records and exposes
+  only approved currently authorized packages, never organizer rationale. Bounded
+  inventories distinguish currently viewable packages from proof of delivery
+  completeness. Manual communication may hand off a recipient-only link; it must
+  not copy organizer rationale into the handoff message. Closed forms retain exact
+  retry/source versions and reject extra actors, substituted recipients and
+  authority flags. Guided adoption connects these components through authorized
+  task selections rather than requiring people to find database identifiers.
 
 ### Privacy, compliance, and participant control
 

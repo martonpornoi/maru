@@ -144,8 +144,18 @@ weakened constraints or treat the separate logical-restore issue #97 as resolved
 The local implementation includes recipient selection, dormant capability/schema
 and native guards, closed inputs, lifecycle rules, sender preview, governed
 prepare/review/handoff/acknowledge commands and protected sender/personal detail
-queries. User surfaces, complete maintained negative/race coverage and protected
-delivery remain #104 work. Local commands and pure tests do not establish
+queries. Dormant shared-shell forms now use these same entrypoints, including
+independent review/rejection, manual link-only handoff and personal acknowledgement.
+Bounded inventory discovery filters actual personal recipients and approval before
+detail reads; each owner transaction completes before the next begins. An outer
+transaction is rejected rather than accumulating incompatible person lock order.
+Stale/denied entries release no metadata; failed dependencies prevent partial
+output. The inventory is not evidence of delivery completeness. Manual handoff
+messages contain a recipient-only link, not private organizer rationale. The
+guided #108 journey owns integration with authorized owning-task selections.
+Maintained native negative/race scenarios include forged facts and competing
+reviews with bounded server-side waits. Protected delivery remains pending.
+Local commands and pure tests do not establish
 PostgreSQL workflow correctness, an activated profile or departmental acceptance.
 This ADR does not create another delivery item or displace #48's decomposition.
 

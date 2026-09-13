@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant Programme change-notice preparation, independent review,
+  manual recipient-link handoff and exact-person acknowledgement. Coordinators
+  can distinguish approval, handoff and missing acknowledgement without silently
+  changing volunteer work. Personal views exclude organizer rationale. These
+  synthetic components do not activate Programme Operations; PostgreSQL acceptance
+  remains deferred to #102 (#104, ADR 0102, OPS-009).
 - Added an explicit temporary Programme-development CI policy: PostgreSQL
   execution and database-dependent coverage are deferred, while unit, static,
   documentation, frontend and security checks remain required. Database tests

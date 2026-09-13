@@ -83,10 +83,31 @@ facts and receipt equality; personal reads defer rationale, verifying its receip
 equality in SQL as a boolean rather than materializing that private text.
 Stale or revoked sources cannot produce cached old-content fallback.
 
-User surfaces, complete maintained native negative/race cases and protected
-delivery remain the current #104 outcome. PostgreSQL workflow cases remain
-unexecuted #102 debt. Do not close #104 or its #48 checklist item on these local
-command/query foundations alone.
+The dormant [notice surfaces](../product/page-contracts/programme-change-notices.md)
+now compose strict preview/preparation, independent review/rejection, manual
+handoff and genuine personal acknowledgement forms in the existing shells.
+The reviewed manual message contains only the exact recipient-only link, never
+organizer rationale or a provider delivery claim. Hidden versions/digests are
+rechecked by commands, not refreshed behind a submitted action. Ordinary control
+authority is computed independently; read access never grants mutation.
+
+`load_programme_change_notice_inventory` bounds exact-edition candidates at 256,
+optionally filtered to a release. Personal candidates are recipient-filtered and
+approved in SQL before detail reads. Each detail recomposes its own current
+purpose in a separate transaction, and final candidate admission repeats. Stale
+or denied entries expose no identifiers or counts; dependency failure/overflow
+fails the whole inventory. This is currently viewable work, not a historical or
+delivery-completeness report. An outer transaction is rejected to prevent
+accumulating differently ordered owner locks. No new schema or runtime privilege
+is needed for these read/transport adapters.
+
+Maintained real operator cases include forged review/acknowledgement evidence,
+pre-approval handoff rejection and separate-connection competing reviews, with
+15-second lock and 30-second statement timeouts. PostgreSQL workflow cases remain
+unexecuted #102 debt. Protected delivery remains pending. #108 owns connecting
+the labelled exact-reference controls to ordinary authorized task selections;
+#92 retains genuine human/screen-reader acceptance. Neither these components nor
+a green development PR activates Programme Operations.
 
 ### Change-impact read foundations (#105 under #104)
 

@@ -41,24 +41,31 @@ Branch: `codex/programme-change-communication`, from protected PR #106.
 checklist item. Its read child #105 is delivered. Local ADR 0102 work now includes
 operator recipient selection, closed inputs/lifecycle rules, immutable notice
 schema/native guards, exact sender preview, prepare/review/handoff/acknowledge
-commands and protected sender/personal detail queries. New commands freeze the
+commands, protected sender/personal detail queries, bounded current-purpose
+inventories and shared-shell organizer/personal forms. New commands freeze the
 complete dependency-key union after owner/person admission and revalidate source,
 purpose and retained evidence on exact receipt replay. Personal reads do not
 materialize organizer rationale or return other actors. A source can legitimately
 serve multiple placement/horizon uses; the preview now validates each exact use
 instead of incorrectly rejecting repeated dependency identity.
 
-All 5,505 unit tests pass in 47.83s with two existing URLField warnings. Strict
-types (574 sources), Ruff, focused docstrings, semantic documentation (595 sources)
-and documentation structure pass. Maintained integration cases collect successfully
-but were not executed: they now include real operator notice preparation, review,
-acknowledgement, handoff, retries, event-failure rollback and stale retry after
-withdrawal. Native negative/race coverage still needs completion before #104's PR.
+The interface increment passed all 5,549 unit tests in 34.44s before its final
+presentation/link-only-message refinement; the final focused set passes 45 tests
+in 1.35s. Strict types (576 sources), Ruff and semantic documentation pass.
+Maintained integration cases collect successfully but were not executed: they
+include real operator notice preparation/review/acknowledgement/handoff, retries,
+event-failure rollback, stale retry after withdrawal, forged review/acknowledgement
+facts and competing separate-connection reviews. Race helpers bound server lock
+waits at 15s and statements at 30s; no measured PostgreSQL runtime is claimed.
 The new migration file's legacy 29.955-second diagnostic estimate remains only a
 documented median fallback; no active measured timing or provenance was changed.
-The [command checkpoint](../checkpoints/2026-09-13-programme-notice-commands.md)
-records this local boundary. No full certification, user surface, protected push
-or #104 completion is claimed.
+The [surface checkpoint](../checkpoints/2026-09-13-programme-notice-surfaces.md)
+records database-free synthetic browser evidence, including all seven reflow
+widths, validation focus and distinct review/handoff/acknowledgement states.
+Organizer reasons are excluded from the personal view and the copyable manual
+message contains only a recipient-only link. Shared-shell context is copied per
+response; comparison headings have explicit readable foreground color.
+No exact-head certification, protected push or #104 completion is claimed yet.
 
 Keep preparation, review, handoff and acknowledgement distinct. Do not impersonate
 recipients, relocate accepted Shifts, infer attendance/work acceptance, restore
@@ -77,15 +84,14 @@ records fingerprints, retained logs and the distinction between observed forward
 SQL and later unit-checked Python reverse fences. Database workflow, race,
 reverse/reapply and weakened-schema tests are maintained but unexecuted #102 debt.
 
-Next inside #104: complete maintained native negative/race scenarios and the
-same-shell preparation/review/handoff and personal acknowledgement surfaces,
-including bounded discovery, stale/rejected states and current timetable links.
-Define the page contract before interface implementation. Preserve the final
-source-lock ordering and notice-specific replay hook; do not substitute cached
-preview data or organizer rationale for genuine self-purpose proof. Then run
-exact-head deferred-mode certification and protected delivery for the complete
-#104 outcome. Required human acceptance belongs under #92/#48, not an unattended
-success claim. No additional schema-only run is needed by this command increment.
+Next inside #104: exact-head deferred-mode certification and protected delivery.
+Preserve the final source-lock ordering and notice-specific replay hook. The
+inventory rejects an outer transaction instead of accumulating differently
+ordered owner locks. It reports currently viewable packages, not delivery
+completeness. #108 must connect the dormant labelled reference controls to
+authorized owning-task selections so ordinary department users do not need to
+find UUIDs. Required human acceptance belongs under #92/#48, not an unattended
+success claim. No additional schema-only run is needed by this surface increment.
 
 ## Checklist-first delivery priority
 
