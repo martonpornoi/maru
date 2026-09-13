@@ -148,6 +148,7 @@ def _allowed(
 
 
 def _secure(response: HttpResponse, nonce: str = "") -> HttpResponse:
+    nonce = nonce or token_urlsafe(32)
     response["Cache-Control"] = "private, no-store"
     response["X-Content-Type-Options"] = "nosniff"
     response["Referrer-Policy"] = "same-origin"

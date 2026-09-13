@@ -640,3 +640,22 @@ def test_final_core_form_order_leads_with_work_not_rationale(page):
     form = parsed(call(page)).select_one(".programme-workbench form")
     labels = [label.get_text() for label in form.select("label")]
     assert labels == ["Item type:", "Working title:", "Working summary:", "Reason:"]
+
+
+@pytest.mark.parametrize(
+    "response_kind", ["html", "redirect", "denied", "invalid", "unavailable"]
+)
+def test_security_policy_has_a_nonempty_nonce_for_every_response(page, response_kind):
+    if response_kind == "denied":
+        page.auth.side_effect = ProgrammeAuthorizationDeniedError
+    if response_kind == "unavailable":
+        page.listing.side_effect = ProgrammeQueryUnavailableError
+    response = call(
+        page,
+        data=submitted(page, "create") if response_kind == "redirect" else None,
+        query="?unknown=1" if response_kind == "invalid" else "",
+    )
+    policy = response["Content-Security-Policy"]
+    nonce = policy.split("'nonce-", 1)[1].split("'", 1)[0]
+    assert len(nonce) >= 32
+    assert "private, no-store" in response["Cache-Control"]

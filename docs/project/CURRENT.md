@@ -53,7 +53,10 @@ frontend guard cases, four-module strict typing and NumPy documentation.
 The 1280-by-720 synthetic browser exercised labelled navigation, separated
 layers, empty/view-only states and stale form retention; native authority and
 full human/accessibility acceptance are not claimed. Final exact-head
-certification and protected delivery remain pending; see the
+certification and protected delivery remain pending. The first exact run was
+stopped after Sphinx after review found an empty CSP nonce on non-HTML responses;
+fresh nonces and five response-shape regressions correct it before recertification.
+No successful receipt or PostgreSQL result is claimed for that interrupted run; see the
 [item-workspace checkpoint](../checkpoints/2026-09-14-programme-item-workspace.md).
 
 #48 was found accidentally closed by PR #111's commit-linked event. The PR's
