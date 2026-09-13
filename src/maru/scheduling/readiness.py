@@ -63,6 +63,12 @@ SCHEDULING_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
     )
 )
 SCHEDULING_SCHEMA_SHA256: Final = {
+    "scheduling_schedulingchangenotice": (
+        "03dff3e21873790c372bb6f8b14a59eeede1e6d54709dc8bbb4e94c592f52033"
+    ),
+    "scheduling_schedulingchangenoticeevidence": (
+        "2808e91ea662e17dd44a4a6021d659639f63c497beb83722da36d073b79c1f22"
+    ),
     "scheduling_schedulingrelease": (
         "d55f04acfae85f56d670781c15231a39a70ad8afefeb502101b0331bd430f451"
     ),
@@ -103,7 +109,7 @@ SCHEDULING_SCHEMA_SHA256: Final = {
         "307fe3e44d7db5f44f460bc8602dd5006aec7abda05102bb17db6b7606fbac73"
     ),
     "scheduling_schedulingcommandreceipt": (
-        "37ef869ca955ffe87a9e684733952ee976385aa2a95a4099bf562b2e25d8cf12"
+        "f780a30dd23c8bd3b703fb8bd964a1c1d37ca36127620556bbd3af5e84c99c04"
     ),
     "scheduling_schedulingconflict": (
         "f8ad18e82e6a9a05b61707371a088c41f9cb02223f062eceec0fb78af596bc29"

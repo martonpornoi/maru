@@ -386,6 +386,14 @@ def _validate_programme_item_changed(payload: dict[str, object]) -> None:
     validate_programme_item_changed_payload(payload)
 
 
+def _validate_scheduling_notice_changed(payload: dict[str, object]) -> None:
+    from maru.scheduling.events import (  # noqa: PLC0415
+        validate_scheduling_notice_changed_payload,
+    )
+
+    validate_scheduling_notice_changed_payload(payload)
+
+
 def _validate_charity_partner_changed(payload: dict[str, object]) -> None:
     _require_exact_string_fields(
         payload,
@@ -1145,6 +1153,12 @@ EVENT_DEFINITIONS = (
         schema_version=1,
         description="An independent release review or publication decision changed.",
         validator=_validate_scheduling_release_changed,
+    ),
+    EventDefinition(
+        name="scheduling.change_notice.changed.v1",
+        schema_version=1,
+        description="An exact Programme change notice or evidence fact was recorded.",
+        validator=_validate_scheduling_notice_changed,
     ),
     EventDefinition(
         name="programme.item.changed.v1",

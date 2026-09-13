@@ -1,0 +1,95 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}{{ title }} · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'scheduling/change_notices.css' %}">{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">{% if personal %}My Maru{% else %}Administration{% endif %} / Programme changes</div>{% endblock %}
+{% block content %}
+<div class="programme-notices">
+  <header><h1>{{ title }}</h1>
+    <p>{% if personal %}Review your own approved Programme change and acknowledge that exact package.{% else %}Prepare an exact change, obtain independent review, and record deliberate manual handoff.{% endif %}</p>
+  </header>
+  {% if message %}<div class="baseline-notice" role="alert" tabindex="-1" autofocus id="notice-message"><p>{{ message }}</p></div>{% endif %}
+  {% if not unavailable %}
+  <details class="maru-access-summary"><summary><strong>Access</strong> · {% if personal %}Your own Programme notices{% else %}Exact-edition Programme change notices{% endif %}</summary>
+    <p>Current notice and owning-purpose access are checked independently. Each action checks its own permission and current source again. A visible control or source reference grants no authority.</p>
+    <p>Organization {{ organization_id }} · Edition {{ edition_id }}</p>
+  </details>
+  <p class="notice-warning">Manual communication only: no delivery provider is configured here. Preparation, approval, manual handoff and acknowledgement are different facts. None changes accepted work or attendance.</p>
+  {% endif %}
+  <p><a href="{{ request.path }}">Refresh notice inventory</a></p>
+  {% if invalid_form %}<form method="post" action="{{ request.path }}" class="baseline-panel">{% csrf_token %}{{ invalid_form.as_div }}<button type="submit">Retry this action</button></form>{% endif %}
+  {% if selection_form %}
+  <form method="get" class="baseline-panel" aria-labelledby="notice-filter-heading">
+    <h2 id="notice-filter-heading">Find a package</h2>
+    {{ selection_form.as_div }}<button type="submit">Show current notices</button>
+  </form>
+  <section aria-labelledby="notice-inventory-heading"><h2 id="notice-inventory-heading">Currently viewable packages</h2>
+    <p>This is not a delivery-completeness report. Stale or no-longer-authorized packages are not shown, and an empty list does not mean everyone was notified.</p>
+    <ul class="notice-list">{% for notice in inventory %}<li>
+      <a href="?notice={{ notice.notice_id }}">Open {{ notice.preview.recipient.purpose }} change{% if not personal %} for {{ notice.preview.recipient_label }}{% endif %}</a>
+      <p>Notice {{ notice.notice_id }} · Occurrence {{ notice.preview.occurrence_id }}</p>
+      {% if personal %}<p>{% if notice.acknowledged %}Acknowledged{% else %}Not acknowledged{% endif %} · {% if notice.handed_off %}Manual handoff recorded{% else %}No manual handoff recorded{% endif %}</p>
+      {% else %}<p>{{ notice.state.review|default:"Awaiting independent review" }} · {% if notice.state.handed_off_by_id %}Manual handoff recorded{% else %}No manual handoff recorded{% endif %} · {% if notice.state.acknowledged_by_id %}Acknowledged{% else %}Not acknowledged{% endif %}</p>{% endif %}
+    </li>{% empty %}<li>No currently viewable packages in this selection.</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% if preview_form %}
+  <section class="baseline-panel" aria-labelledby="notice-preview-heading"><h2 id="notice-preview-heading">Preview a Programme change</h2>
+    <p>Select the exact released occurrence and owning purpose. Host and work relationships determine their person; operator purposes need an explicit account. These reference controls are for the dormant component; the guided departmental journey connects authorized owning-task selections.</p>
+    <form method="post" action="{{ request.path }}">{% csrf_token %}{{ preview_form.as_div }}<button type="submit">Preview without preparing</button></form>
+  </section>
+  {% endif %}
+  {% if preview %}
+  <section class="baseline-panel" aria-labelledby="notice-package-heading"><h2 id="notice-package-heading">Exact change package</h2>
+    <p><strong>Source state:</strong> {{ source_label }} · <strong>Purpose:</strong> {{ preview.recipient.purpose }}</p>
+    {% if not personal %}<p><strong>Recipient:</strong> {{ preview.recipient_label }}</p>{% endif %}
+    <p>Release {{ preview.release_id }} · Pointer version {{ preview.pointer_version }}<br>Occurrence {{ preview.occurrence_id }}</p>
+    {% if preview.change %}
+      <p><strong>Change:</strong> {{ preview.change.kind }} within this purpose. Removal from this scope is not global cancellation or cancellation of work.</p>
+      <p><strong>Changed fields:</strong> {{ changed_labels|join:", "|default:"Scope membership" }}. A changed reviewed-copy reference grants no access to private copy.</p>
+      <div class="notice-comparison">
+        <section aria-labelledby="notice-before-heading"><h3 id="notice-before-heading">Previous released context</h3>{% include "scheduling/change_notice_geometry.html" with geometry=preview.change.before only %}</section>
+        <section aria-labelledby="notice-after-heading"><h3 id="notice-after-heading">Current released context</h3>{% include "scheduling/change_notice_geometry.html" with geometry=preview.change.after only %}</section>
+      </div>
+    {% else %}<p>Comparison is suppressed. Earlier content and room geometry are not available here. Recheck the current timetable and coordinate with the Programme organizer; do not infer that work was cancelled.</p>{% endif %}
+    <details><summary>Exact source fingerprint</summary><p>{{ preview.snapshot_digest }}</p><p>Every action recomposes current sources. This fingerprint is not permission to disclose or send.</p></details>
+    {% if personal %}
+      {% if preview.recipient.purpose == "host" or preview.recipient.purpose == "work" %}<p><a href="/my/{{ organization_id }}/{{ edition_id }}/timetable/">Open my current hosting and work timetable</a></p>
+      {% else %}<p><a href="/admin/programme/run-sheets/{{ organization_id }}/{{ edition_id }}/{{ preview.recipient.purpose }}/{{ preview.recipient.target_id }}/">Open my currently authorized operator run sheet</a></p>{% endif %}
+    {% else %}
+      {% if preview.recipient.purpose == "room" or preview.recipient.purpose == "department" or preview.recipient.purpose == "edition" %}<p><a href="/admin/programme/run-sheets/{{ organization_id }}/{{ edition_id }}/{{ preview.recipient.purpose }}/{{ preview.recipient.target_id }}/">Open the currently authorized operator run sheet</a></p>{% endif %}
+    {% endif %}
+  </section>
+  {% endif %}
+  {% if detail %}
+  <section class="baseline-panel" aria-labelledby="notice-evidence-heading"><h2 id="notice-evidence-heading">Separate evidence</h2>
+    {% if personal %}<p>Approved for your current purpose. Evidence version {{ detail.version }}.</p>
+      <p>{% if detail.handed_off %}Manual handoff recorded — not provider delivery evidence.{% else %}No manual handoff recorded. You may still acknowledge the approved package you can see here.{% endif %}</p>
+      <p>{% if detail.acknowledged %}You acknowledged this exact change.{% else %}You have not acknowledged this exact change.{% endif %}</p>
+    {% else %}<p>Evidence version {{ detail.state.version }} · {{ detail.state.review|default:"Awaiting independent review" }}</p>
+      <p><strong>Preparation reason (organizer only):</strong> {{ detail.reason }}</p>
+      <p>{% if detail.state.handed_off_by_id %}Manual handoff recorded — not provider delivery evidence.{% else %}No manual handoff recorded.{% endif %}</p>
+      <p>{% if detail.state.acknowledged_by_id %}Exact recipient acknowledged this change.{% else %}No exact-recipient acknowledgement recorded.{% endif %}</p>
+      {% if detail.state.review == "rejected" %}<p>This package was rejected. It cannot be handed off or acknowledged. A corrected source needs a new package and independent review.</p>{% endif %}
+      {% if detail.state.review == "approved" %}
+        <h3>Manual communication package</h3>
+        <p>Share only the recipient-only link below, not this organizer page or its rationale. The recipient will see the freshly checked approved package. Copying the message does not record handoff.</p>
+        <label for="notice-manual-message">Reviewed link handoff message</label>
+        <textarea id="notice-manual-message" readonly rows="5">Please review this exact Programme change and acknowledge it in Maru: {{ recipient_url }}
+This does not accept new work or confirm attendance.</textarea>
+        <p><a href="{{ recipient_url }}">Recipient-only acknowledgement link</a> — works only for the exact currently authorized recipient.</p>
+      {% endif %}
+    {% endif %}
+  </section>
+  {% endif %}
+  {% if prepare_form %}<form method="post" action="{{ request.path }}" class="baseline-panel" aria-labelledby="notice-prepare-heading">{% csrf_token %}<h2 id="notice-prepare-heading">Prepare for independent review</h2>{{ prepare_form.as_div }}<button type="submit">Prepare this exact package</button></form>{% endif %}
+  {% for action, form in actions %}<form method="post" action="{{ request.path }}" class="baseline-panel" aria-labelledby="notice-{{ action }}-heading">{% csrf_token %}
+    <h2 id="notice-{{ action }}-heading">{% if action == "approve" %}Approve independently{% elif action == "reject" %}Reject this package{% elif action == "handoff" %}Record manual handoff{% else %}Acknowledge this exact change{% endif %}</h2>
+    <p>{% if action == "handoff" %}Record this only after deliberately handing off the reviewed package. This is your claim, not proof of receipt.{% elif action == "acknowledge" %}This records that you acknowledged this exact package. It does not accept new work, alter existing work, or confirm attendance.{% elif action == "reject" %}Rejection is final for this package; it prevents handoff and acknowledgement.{% else %}Approval applies to this exact source and purpose. It does not send a message.{% endif %}</p>
+    {{ form.as_div }}<button type="submit">{% if action == "approve" %}Approve package{% elif action == "reject" %}Reject package{% elif action == "handoff" %}Record my manual handoff{% else %}Acknowledge exact change{% endif %}</button>
+  </form>{% endfor %}
+</div>
+{% endblock %}

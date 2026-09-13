@@ -123,6 +123,14 @@ NATIVE_RELEASE_MIGRATION_SOURCES: Final = (
         "scheduling.0020_release_recovery_fence",
         "bf03c76e4afc7b7f4938eec1312aef4baba8e0ebe842260bd49ed04b61f97e4a",
     ),
+    (
+        "scheduling.0021_change_notice_schema",
+        "f69449e859b1f67fd664a4f5697b06384cdd6f21bea9345402f0760a6d22937f",
+    ),
+    (
+        "scheduling.0022_change_notice_integrity",
+        "bcdda00256d8955799ed4a6015c9f944d51ac4119bd943e3f20b8ff292b81918",
+    ),
 )
 NATIVE_RELEASE_RUNTIME_FUNCTIONS: Final = frozenset(
     {

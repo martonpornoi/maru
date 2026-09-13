@@ -28,6 +28,11 @@ from .catalogs import (
     scheduling_choices,
     scheduling_values,
 )
+from .change_catalogs import (
+    ChangeNoticeAction,
+    ChangeNoticeSourceState,
+    ChangeRecipientPurpose,
+)
 from .release_catalogs import (
     EDITION_RELEASE_DEPENDENCIES,
     GLOBAL_RELEASE_DEPENDENCIES,
@@ -56,6 +61,7 @@ _OWNER_RELATIONS = frozenset(
         "venue_receipt",
         "source_audit",
         "public_rendition",
+        "recipient",
     }
 )
 _DIGEST_VALIDATOR = RegexValidator(
@@ -712,6 +718,107 @@ class SchedulingCommandReceipt(_AttributedSchedulingEvidence):
                 )
                 & ~models.Q(reason=""),
                 name="sch_command_receipt_shape",
+            ),
+        ]
+
+
+class SchedulingChangeNotice(_AttributedSchedulingEvidence):
+    """One immutable exact-source and exact-recipient communication preparation."""
+
+    command_receipt = models.OneToOneField(
+        SchedulingCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="change_notice",
+    )
+    release = models.ForeignKey(
+        "SchedulingRelease", on_delete=models.PROTECT, related_name="change_notices"
+    )
+    occurrence = models.ForeignKey(
+        "SchedulingOccurrence", on_delete=models.PROTECT, related_name="change_notices"
+    )
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_change_notices",
+    )
+    recipient_purpose = models.CharField(
+        max_length=16, choices=scheduling_choices(ChangeRecipientPurpose)
+    )
+    recipient_target_id = models.UUIDField()
+    pointer_version = models.PositiveBigIntegerField()
+    source_state = models.CharField(
+        max_length=24, choices=scheduling_choices(ChangeNoticeSourceState)
+    )
+    snapshot_digest = models.CharField(max_length=64, validators=[_DIGEST_VALIDATOR])
+
+    class Meta:
+        """Retain one package per exact source and purpose without copied messages."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=(
+                    "edition",
+                    "recipient",
+                    "recipient_purpose",
+                    "recipient_target_id",
+                    "release",
+                    "snapshot_digest",
+                ),
+                name="sch_change_notice_exact_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    pointer_version__gt=0,
+                    recipient_purpose__in=scheduling_values(ChangeRecipientPurpose),
+                    source_state__in=scheduling_values(ChangeNoticeSourceState),
+                    snapshot_digest__regex=r"^[0-9a-f]{64}$",
+                )
+                & ~models.Q(reason=""),
+                name="sch_change_notice_shape",
+            ),
+        ]
+
+
+class SchedulingChangeNoticeEvidence(_AttributedSchedulingEvidence):
+    """Independent review, explicit handoff and exact-person acknowledgement facts."""
+
+    notice = models.ForeignKey(
+        SchedulingChangeNotice, on_delete=models.PROTECT, related_name="evidence"
+    )
+    command_receipt = models.OneToOneField(
+        SchedulingCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="change_notice_evidence",
+    )
+    action = models.CharField(
+        max_length=16, choices=scheduling_choices(ChangeNoticeAction)
+    )
+    sequence = models.PositiveSmallIntegerField()
+
+    class Meta:
+        """Bound evidence to one independent review and distinct subsequent facts."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("notice", "sequence"), name="sch_change_evidence_sequence_uq"
+            ),
+            models.UniqueConstraint(
+                fields=("notice", "action"), name="sch_change_evidence_action_uq"
+            ),
+            models.UniqueConstraint(
+                fields=("notice",),
+                condition=models.Q(action__in=("approve", "reject")),
+                name="sch_change_evidence_review_uq",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(action__in=("approve", "reject"), sequence=2)
+                    | models.Q(
+                        action__in=("handoff", "acknowledge"), sequence__in=(3, 4)
+                    )
+                )
+                & ~models.Q(reason=""),
+                name="sch_change_evidence_shape",
             ),
         ]
 

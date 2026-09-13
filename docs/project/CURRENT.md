@@ -11,89 +11,116 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-[#100](https://github.com/martonpornoi/maru/issues/100) is closed through
-[PR #103](https://github.com/martonpornoi/maru/pull/103), protected squash
-`2931d6e3d2dbf2341b1103873f4f22d153d5e1fa` at 2026-09-13 13:13:40 UTC.
-Its tree equals verified head `97ef3a59c8ad15eca56f45c7842c4da541cc3c41`;
-clean local main was synchronized to this result and origin/main.
+[#105](https://github.com/martonpornoi/maru/issues/105) is closed through
+[PR #106](https://github.com/martonpornoi/maru/pull/106), protected squash
+`1f4ea840d25ed2571dbc78052398f1cd9c612f70` at 2026-09-13 15:40:08 UTC.
+Its tree equals certified head `cd38cd384990ddfacbe8982064bad7e9492b9ef9`;
+clean local main was fast-forwarded to that result and origin/main.
 
-ADR 0099 delivers dormant independently authorized room, Department and edition
-operator run sheets across HTML/print, JSON and calendar projections. Exact
-released geometry and reviewed copy remain separate from current instructions
-and retained accepted Workforce work. No profile, production route or writer
-grant is activated. Human-only output checks remain under #92.
+ADR 0101 delivers dormant exact release comparisons for independently authorized
+planner/history, current-self hosts, operative retained volunteers and exact
+room/Department/edition operators. Programme and Workforce also resolve exact
+sender-authorized host/work recipients without impersonating personal readers.
+Current instructions, released facts and retained accepted work remain distinct.
+No profile, route, writer or schema was activated.
 
-ADR 0100 implements the maintainer's explicit temporary PostgreSQL deferral.
-Exact-head local development acceptance passed all eight retained gates,
-5,015 unit tests and 64 frontend tests in 16m32s. Hosted acceptance, CodeQL and
-the protected PR gate passed on that head in a 26m35s workflow. PostgreSQL paths
-were explicitly skipped. The receipt records `postgresql_deferred`, zero
-databases and null combined coverage/headroom; this is not database acceptance.
+Exact-head local development acceptance passed all eight retained gates in
+14m43s (883.234 seconds), including 5,294 unit tests in 32.60s. Hosted acceptance
+and PR gate passed in 26m49s; quality took 26m20s, units 1m09s and CodeQL passed.
+PostgreSQL was explicitly skipped under ADR 0100: the schema-4 receipt records
+`postgresql_deferred`, zero databases and null combined coverage/headroom.
+Maintained database assertions are unexecuted #102 debt, not passed tests.
+[The delivery checkpoint](../checkpoints/2026-09-13-programme-change-read-protected-delivery.md)
+records exact evidence and its preserved archive. Prior #100/#103 evidence remains
+in its [own checkpoint](../checkpoints/2026-09-13-programme-operator-protected-delivery.md).
 
-The older feature-only head `ff36db6896a0ff0d073e9737086d676f5a8d1e30`
-had already passed full local acceptance: 9,254 Python tests, 64 frontend tests,
-90.65% combined coverage and all 42 database jobs in 3h36m16s. Preserve that
-evidence separately; it does not certify later commits. Do not repeat completed
-verification. [The delivery checkpoint](../checkpoints/2026-09-13-programme-operator-protected-delivery.md)
-records exact results, preserved archives and remaining gates.
+## Active bounded outcome: governed change communication (#104)
 
-## Active bounded outcome: timetable change impact (#104)
+Branch: `codex/programme-change-communication`, from protected PR #106.
+[#104](https://github.com/martonpornoi/maru/issues/104) remains the active #48
+checklist item. Its read child #105 is delivered. Local ADR 0102 work now includes
+operator recipient selection, closed inputs/lifecycle rules, immutable notice
+schema/native guards, exact sender preview, prepare/review/handoff/acknowledge
+commands, protected sender/personal detail queries, bounded current-purpose
+inventories and shared-shell organizer/personal forms. New commands freeze the
+complete dependency-key union after owner/person admission and revalidate source,
+purpose and retained evidence on exact receipt replay. Personal reads do not
+materialize organizer rationale or return other actors. A source can legitimately
+serve multiple placement/horizon uses; the preview now validates each exact use
+instead of incorrectly rejecting repeated dependency identity.
 
-Branch: `codex/programme-change-impact`, from protected PR #103.
-[#104](https://github.com/martonpornoi/maru/issues/104) is the next native #48
-child: explain exact published changes, identify affected authorized purposes,
-prepare governed communication and retain exact-recipient acknowledgement.
-Native child [#105](https://github.com/martonpornoi/maru/issues/105) now owns the
-independently reviewed read-foundation delivery; #104 retains the entire later
-state-changing communication/acknowledgement journey and stays open.
-The exact-selection comparator, publication-count reuse and audited planner
-history comparison are implemented. ADR 0101 adds independent current-self host,
-exact room/Department/edition operator and own operative volunteer comparisons
-of the active release and retained predecessor. Own required host presence,
-released event geometry and retained accepted work remain distinct. Each side
-is scoped independently; leaving a room/Department discloses no unadmitted
-destination and is not global cancellation. Suppressed native state is not an
-empty successful comparison or invented mass cancellation.
+The interface increment passed all 5,549 unit tests in 34.44s before its final
+presentation/link-only-message refinement; the final focused set passes 45 tests
+in 1.35s. Strict types (576 sources), Ruff and semantic documentation pass.
+Maintained integration cases collect successfully but were not executed: they
+include real operator notice preparation/review/acknowledgement/handoff, retries,
+event-failure rollback, stale retry after withdrawal, forged review/acknowledgement
+facts and competing separate-connection reviews. Race helpers bound server lock
+waits at 15s and statements at 30s; no measured PostgreSQL runtime is claimed.
+The new migration file's legacy 29.955-second diagnostic estimate remains only a
+documented median fallback; no active measured timing or provenance was changed.
+The [surface checkpoint](../checkpoints/2026-09-13-programme-notice-surfaces.md)
+records database-free synthetic browser evidence, including all seven reflow
+widths, validation focus and distinct review/handoff/acknowledgement states.
+Organizer reasons are excluded from the personal view and the copyable manual
+message contains only a recipient-only link. Shared-shell context is copied per
+response; comparison headings have explicit readable foreground color.
+No exact-head certification, protected push or #104 completion is claimed yet.
 
-Workforce now independently proves exact-self current/retained binding lineage
-from own commitment demands, not caller-selected IDs or successor substitution.
-Its shared private lineage reader retains existing operator contracts. The
-separate non-persistable `scheduling.view_work_self` capability admits only linked
-own claims/confirmations; ended/unlinked work grants no release discovery.
-No current profile pins it, and no grant, schema, route or module is activated.
-Current owner versions and both native manifests are rechecked before final
-authority and mandatory audit. No private copy, other recipient, contact,
-availability, arbitrary history selector or planner-authorizer substitute exists.
+Keep preparation, review, handoff and acknowledgement distinct. Do not impersonate
+recipients, relocate accepted Shifts, infer attendance/work acceptance, restore
+suppressed historical content or silently adopt general Communications.
+New native schema must retain truthful readiness, recovery and #102 verification
+debt; do not fabricate observed fingerprints or execute deferred PostgreSQL tests.
+The maintainer explicitly approved a bounded disposable **schema-only migration
+and metadata check** for #104's new tables. This narrow exception permits exact
+schema fingerprint collection, not PostgreSQL test suites, runtime workflow
+acceptance, recovery acceptance or a database-certification success claim.
+That check completed: fresh schema migration took 153.578s, total 153.609s.
+Exact table metadata and native function/trigger/ACL checks matched; the exact
+disposable container was removed and existing containers were untouched. The
+[schema checkpoint](../checkpoints/2026-09-13-programme-notice-schema-and-preview.md)
+records fingerprints, retained logs and the distinction between observed forward
+SQL and later unit-checked Python reverse fences. Database workflow, race,
+reverse/reapply and weakened-schema tests are maintained but unexecuted #102 debt.
 
-Latest focused development verification: all 5,250 unit tests passed in 33.52s
-(two existing Django URL-field warnings). Ruff/formatting (1,089 files), strict
-types (564 files), semantic/NumPy docstrings and documentation validation pass.
-The work-reference tests passed 44 cases in 0.47s; volunteer/authority/history
-tests passed 108 cases in 0.63s. Maintained integration assertions cover real
-self/operator scope, audit, denial, withdrawal, unchanged commitments and retained
-predecessor lineage, but remain unexecuted debt for #102. No #104 exact-head
-certification or PR has been pushed; the full issue is not delivered.
-Sender-side host/work references now select exact current recipients through the
-actual sender's independently authorized owner fields, never personal-query
-impersonation. Their 44 focused unit cases pass in 0.45s; real synthetic owner
-and sender-attributed audit assertions are maintained but unexecuted. Static,
-NumPy/semantic documentation and Ruff/format checks pass for that addition.
-Next delivery step is exact-head non-database certification and protected PR for
-#105. Preserve #104/#48 and all their remaining acceptance rather than closing
-the parent with these read helpers.
+Next inside #104: exact-head deferred-mode certification and protected delivery.
+Preserve the final source-lock ordering and notice-specific replay hook. The
+inventory rejects an outer transaction instead of accumulating differently
+ordered owner locks. It reports currently viewable packages, not delivery
+completeness. #108 must connect the dormant labelled reference controls to
+authorized owning-task selections so ordinary department users do not need to
+find UUIDs. Required human acceptance belongs under #92/#48, not an unattended
+success claim. No additional schema-only run is needed by this surface increment.
 
-After #105: implement sender-side operator recipient selection, governed
-communication preparation/review/manual handoff, immutable exact-recipient
-acknowledgement and user surfaces. Do not impersonate recipients while preparing
-a communication, silently relocate Shifts or infer attendance/work acceptance.
-On-site continuity and guided departmental surfaces follow.
-Keep #48 open through the complete integrated journey.
+## Checklist-first delivery priority
+
+The maintainer reaffirmed every item in #48's visible delivery decomposition as
+the number-one priority. It now links #104 -> #105 -> PR #106, reconciles delivered
+#100 and names each remaining outcome:
+
+- [#107](https://github.com/martonpornoi/maru/issues/107): on-site now/next,
+  run sheets, signed/versioned continuity, export and degraded operation.
+- [#108](https://github.com/martonpornoi/maru/issues/108): connected guided
+  departmental surfaces and finally gated Programme profile promotion.
+- [#109](https://github.com/martonpornoi/maru/issues/109): integrated synthetic
+  setup-to-on-site, recovery, stop-use, isolation and excluded-side-effect proof.
+- #102, #97 and #92: mandatory database, logical recovery and human gates.
+
+#107/#108/#109 name existing checklist items, not additional scope. Implement
+#108's dormant surfaces/fixture before #109/#92 acceptance, then perform its
+final gated promotion; do not require activation before the isolated fixture.
+Keep #108 and #48 open until their full outcomes and required evidence exist.
+Document discovered prerequisites beneath the owning checklist item with a
+linked issue, dependency and reason. Capture unrelated ideas separately without
+displacing #48. Supporting deliveries never close a parent outcome alone.
 
 ## Temporary testing policy and activation gates
 
 Maintain PostgreSQL tests, historical inventories and migration/recovery
-fixtures as features change, but do not execute PostgreSQL during this dormant
-development phase. Run focused non-database feedback and exact-commit development
+fixtures as features change, but do not execute PostgreSQL test suites during
+this dormant development phase. Only the explicitly approved #104 disposable
+schema/metadata check above is excepted. Run focused non-database feedback and exact-commit development
 acceptance before each protected PR. Record unexecuted database coverage as
 verification debt, not success; do not invent timing observations.
 
@@ -106,7 +133,7 @@ fences full/release acceptance and adding the Programme profile while deferred.
 ## Existing foundation and mandatory gates
 
 Programme children #57, #59, #61, #63, #66, #64, #71, #77, #79, #81, #85,
-#88, #91, #94, #96, #99 and #100 are delivered dormant. Do not restart those tasks.
+#88, #91, #94, #96, #99, #100 and #105 are delivered dormant. Do not restart those tasks.
 The [Programme Operations contract](../product/page-contracts/programme-operations-adoption-setup.md)
 and owning [Programme](../modules/programme.md),
 [Applications](../modules/applications.md), [Events](../modules/events.md) and
@@ -127,9 +154,9 @@ activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Preserve PR #103's exact delivery and archived verification; follow ADR 0100.
-2. Deliver #105 read foundations, then finish #104 governed delivery and acknowledgement.
-3. Continue on-site continuity and guided setup/surfaces.
+1. Preserve PR #106's exact delivery and archived verification; follow ADR 0100.
+2. Finish #104 governed change delivery and exact-recipient acknowledgement.
+3. Deliver #107 continuity and #108's dormant connected departmental journey.
 4. Complete #102 PostgreSQL restoration, #97 logical recovery and #92 human
    acceptance before integrated Programme-only acceptance or activation.
 5. After #48, continue #42 and the director introduction/pilot package, then the

@@ -83,6 +83,40 @@ The print view preserves scope, source versions and saved-copy warnings; opening
 it does not automatically start printing. A Department sheet with staffing not
 adopted is explicitly rooms-only, not evidence that no volunteer work exists.
 
+## Governed Programme change notices
+
+In an explicitly isolated future-profile fixture, a coordinator can preview one
+released occurrence and its host/work relationship or exact operator purpose.
+The component currently uses labelled exact references; #108 must connect normal
+department users through authorized task selections before activation.
+
+1. Preview without mutation, inspect the exact change/source state and prepare
+   a reasoned package. Suppressed comparisons never restore old room geometry.
+2. A different authorized person approves or rejects that exact package.
+   Rejection prevents further handoff and acknowledgement for the package.
+3. For approved packages, copy only **Reviewed link handoff message** to the
+   convention's existing appropriate channel. Do not copy the organizer page or
+   its private rationale. The recipient-only link rechecks the person's current
+   purpose and the exact source; it is not a bearer permission.
+4. Deliberately record manual handoff only after doing it. There is no configured
+   delivery provider, and neither copying the link nor recording handoff proves
+   receipt. Missing acknowledgement remains visible.
+5. The actual recipient opens their own approved notice and acknowledges the
+   exact change, without supplying another person or an explanation. This can
+   happen before manual handoff. It does not accept new work or confirm attendance.
+
+The currently viewable inventory is bounded and not a completeness report of all
+affected recipients. Narrow to one release on overflow. Stale/conflicting actions
+require a fresh deliberate preview; missing purpose never becomes permission
+through a retained notice. On an uncertain request outcome, retry the original
+intent/key rather than invent another handoff. No old private content is returned
+as a fallback. Database/race/recovery acceptance stays deferred to #102; the
+schema-only metadata observation is not a passed workflow test.
+
+See the [notice page contract](../product/page-contracts/programme-change-notices.md)
+for authority and interaction states. The component remains unmounted in normal
+profiles. Representative-human, zoom and screen-reader acceptance remain #92.
+
 ## When information cannot be used
 
 Withdrawn or invalidated Programme releases do not retain a previously approved
@@ -91,7 +125,8 @@ work and known hosting state, but withholds the combined calendar until the
 release is checked again. Operator sheets contain no approved rows while the
 release is absent, withdrawn or invalidated; their calendar is unavailable.
 Contact the organizer through the convention's existing
-channel; this component does not send change notices or record acknowledgement.
+channel; the timetable reader itself does not send or acknowledge change notices.
+Use the separate governed notice component only in its admitted purpose.
 
 For a temporary source failure, reload; Maru does not silently serve an earlier
 or partial timetable. A not-available address reveals no hidden tenant or record.

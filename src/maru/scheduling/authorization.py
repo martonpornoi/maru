@@ -22,6 +22,24 @@ if TYPE_CHECKING:
 VIEW_PLANNING: Final = "scheduling.view_planning"
 VIEW_HOST_SELF: Final = "scheduling.view_host_self"
 VIEW_WORK_SELF: Final = "scheduling.view_work_self"
+VIEW_CHANGE_RECIPIENTS: Final = "scheduling.view_change_recipients"
+VIEW_CHANGE_NOTICES: Final = "scheduling.view_change_notices"
+PREPARE_CHANGE_NOTICES: Final = "scheduling.prepare_change_notices"
+REVIEW_CHANGE_NOTICES: Final = "scheduling.review_change_notices"
+HANDOFF_CHANGE_NOTICES: Final = "scheduling.handoff_change_notices"
+VIEW_CHANGE_SELF: Final = "scheduling.view_change_self"
+ACKNOWLEDGE_CHANGE_SELF: Final = "scheduling.acknowledge_change_self"
+CHANGE_COMMUNICATION_CAPABILITIES: Final = frozenset(
+    {
+        VIEW_CHANGE_RECIPIENTS,
+        VIEW_CHANGE_NOTICES,
+        PREPARE_CHANGE_NOTICES,
+        REVIEW_CHANGE_NOTICES,
+        HANDOFF_CHANGE_NOTICES,
+        VIEW_CHANGE_SELF,
+        ACKNOWLEDGE_CHANGE_SELF,
+    }
+)
 VIEW_HISTORY: Final = "scheduling.view_history"
 VIEW_CONFLICTS: Final = "scheduling.view_conflicts"
 MANAGE_DAYS: Final = "scheduling.manage_service_days"
@@ -39,6 +57,7 @@ SCHEDULING_CAPABILITIES: Final = frozenset(
         VIEW_PLANNING,
         VIEW_HOST_SELF,
         VIEW_WORK_SELF,
+        *CHANGE_COMMUNICATION_CAPABILITIES,
         VIEW_HISTORY,
         VIEW_CONFLICTS,
         MANAGE_DAYS,
@@ -129,7 +148,12 @@ class ExactSchedulingAuthorizer:
         PolicyDecision
             Current exact-profile decision without a foreign model.
         """
-        if capability_code in {VIEW_HOST_SELF, VIEW_WORK_SELF}:
+        if capability_code in {
+            VIEW_HOST_SELF,
+            VIEW_WORK_SELF,
+            VIEW_CHANGE_SELF,
+            ACKNOWLEDGE_CHANGE_SELF,
+        }:
             return decide_verified_principal_exact_self(
                 principal_id=principal_id,
                 owner_account_id=principal_id,

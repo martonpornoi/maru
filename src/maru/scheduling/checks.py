@@ -10,6 +10,7 @@ from .authorization import SCHEDULING_CAPABILITIES
 from .events import (
     SCHEDULING_CHANGED_EVENT,
     SCHEDULING_CHANGED_SCHEMA_VERSION,
+    SCHEDULING_NOTICE_CHANGED_EVENT,
     SCHEDULING_RELEASE_CHANGED_EVENT,
 )
 
@@ -46,7 +47,11 @@ def scheduling_dormancy_problem_codes() -> tuple[str, ...]:
         problems.add("catalog.module-missing")
     if not dormant_capabilities.issubset(CAPABILITIES):
         problems.add("catalog.capability-missing")
-    event_names = {SCHEDULING_CHANGED_EVENT, SCHEDULING_RELEASE_CHANGED_EVENT}
+    event_names = {
+        SCHEDULING_CHANGED_EVENT,
+        SCHEDULING_RELEASE_CHANGED_EVENT,
+        SCHEDULING_NOTICE_CHANGED_EVENT,
+    }
     for name in event_names:
         event = event_definition(name)
         if event is None or event.schema_version != SCHEDULING_CHANGED_SCHEMA_VERSION:

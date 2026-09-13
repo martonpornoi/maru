@@ -437,6 +437,52 @@ the recipient or impersonate a personal query. Existing owner read-retention
 classes apply; no recipient list, communication history or new retention period
 is persisted by these transient references.
 
+ADR 0102 adds a distinct restricted sender purpose for selecting one current
+operator recipient. `scheduling.query.operator_change_recipient` is audited as
+the actual sender under `scheduling.view_change_recipients`, never as the subject
+whose geometry and membership eligibility ordinary policy evaluates. Only the
+chosen verified account/operational label, exact purpose, adoption consequence
+and policy contract are transiently returned. There is no address, directory,
+release content, private instruction, new notice history or new retention period.
+Existing `programme-restricted` sensitive-read retention applies to this selector.
+
+### Governed Programme notice evidence
+
+ADR 0102's Scheduling notice tables add restricted, edition-owned operational
+evidence for OPS-009. Exact recipient identity and host/work/operator purpose
+are C2 personal operational data; privileged preparer/reviewer attribution and
+entered rationale remain C3 restricted evidence. The mixed notice/evidence
+records therefore require the restricted notice boundary, never public output.
+Stored fields are scoped release/occurrence references, recipient and purpose
+references, pointer/source state, digest, actor/time/reason and linked command
+receipt; later facts add the closed action and evidence sequence. No message
+body, copied timetable, contact address, invitation briefing, availability,
+attendance or accepted-work change is stored by these tables.
+
+The sender preview uses current owner-authorized labels transiently, repeats
+source/purpose proof and audits the actual sender before disclosure. Source
+digests are binding evidence, not permission or an anonymization claim. Stored
+notice existence cannot restore withdrawn content or a revoked relationship.
+Personal acknowledgement must collect no private explanation: it records only
+the exact authenticated recipient's explicit action with code-owned attribution,
+separate from manual handoff, attendance and work acceptance. The personal query
+must exclude organizer rationale and other actors' evidence fields.
+
+These immutable records share the existing restricted operational-evidence and
+Audit retention discipline. The owning organization must approve active-use,
+purpose-end/review and disposition triggers, lawful purpose, subject/export and
+legal-hold handling, and consistent backup aging before production activation.
+No new indefinite-retention entitlement, production duration or disposal executor
+is introduced. Restore Scheduling, its source owners, Audit and Effects from one
+consistent point; do not erase evidence through an unsafe schema downgrade.
+The schema, commands and sender/personal notice queries remain dormant. The
+personal detail query defers rationale fields and verifies receipt equality as
+a scoped database boolean; no organizer explanation is materialized into the
+personal projection. Its public result excludes other actors and reasons. The
+acknowledgement command takes no free-text explanation. User surfaces, database
+acceptance and the complete departmental workflow are not delivered merely by
+these local command/query foundations.
+
 ### Logistics custody and restricted contact
 
 - Reusable external-party identity contains only legal/public operational

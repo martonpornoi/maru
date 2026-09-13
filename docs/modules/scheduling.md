@@ -7,6 +7,108 @@ and protected-delivery status; this guide is the owner contract, not a merge cla
 
 ## Ownership and adoption
 
+### Governed change communication (#104, in progress)
+
+`change_inputs` closes preparation to one exact release, occurrence, observed
+pointer version, preview digest and purpose. Host/work recipients are resolved
+from their owner relationships, not caller-supplied accounts. Decision input
+selects the exact notice, digest and evidence version. `change_lifecycle` keeps
+independent approval/rejection, manual handoff and exact-recipient acknowledgement
+separate. Rejection is terminal for that package; acknowledgement can precede
+external handoff after approval. These pure rules perform no authorization or
+storage and are not yet a complete persisted communication workflow.
+
+ADR 0102's `change_recipient_queries.load_operator_change_recipient` requires
+the actual sender's separate `scheduling.view_change_recipients` capability and
+`operator_recipients` fields. It selects one exact verified person/purpose, with
+independent subject geometry/Venue-link/optional Department-work-link policy,
+canonical sorted person locks, repeated eligibility and final sender audit.
+It never invokes recipient output reads, loads a release or returns contacts,
+private instructions, a directory or a portable sending permission.
+The additive Authorization capability migration is unpinned by every current
+profile, assigns no grant and fences downgrade after retained use. The approved
+disposable schema-only check observed exact forward metadata; PostgreSQL
+workflow, reverse-migration and runtime evidence remain deferred to #102.
+
+`change_notice_queries.preview_programme_change_notice` admits the real sender's
+separate `scheduling.view_change_notices` / `change_notices` field before inspecting
+the recipient selector. `change_notice_sources` composes existing actual-sender
+owner reads; no personal read is impersonated. It repeats current source/purpose
+proof before final authority and mandatory audit. The exact current publication
+or latest withdrawal and one affected occurrence determine the preview. Missing,
+unchanged, duplicate, foreign or moving sources cannot become a notice. Suppressed
+comparison means no old content, not an empty timetable or work cancellation.
+The digest includes source generations and purpose versions, excluding labels,
+so a newer material change cannot inherit old acknowledgement. Legitimate reuse
+of one dependency across multiple placement/horizon uses remains complete, rather
+than being rejected as a duplicate source.
+
+`SchedulingChangeNotice` and `SchedulingChangeNoticeEvidence` retain scoped,
+immutable preparation and independent review/handoff/acknowledgement references,
+not copied contact details, message bodies or rendered timetable content. The
+existing command receipt/control stream gains five closed change operations and
+the minimized dormant `scheduling.change_notice.changed.v1` event. Dedicated
+notice read/prepare/review/handoff capabilities and exact-self read/acknowledge
+capabilities remain absent from every current profile. Native guards and exact
+readiness include the new tables/functions; runtime access remains SELECT-only.
+The reverse fence preserves both new evidence and earlier operator/release
+history before removing successor guards. Retained history requires fix-forward
+recovery; #97 logical restore and #102 database acceptance are not waived.
+
+`change_notice_commands` now provides dormant `prepare_programme_change_notice`,
+`review_programme_change_notice` (explicit approve/reject only),
+`handoff_programme_change_notice` and `acknowledge_programme_change_notice`.
+Each command independently requires its write capability and current read/source
+authority. Preparation binds a preview digest/pointer; subsequent facts bind the
+exact notice, digest and optimistic evidence version. Rejection is terminal;
+handoff and acknowledgement are distinct optional facts after approval. The
+personal action accepts no private explanation and uses a fixed action reason.
+No accepted Shift, attendance, contact record or provider delivery is changed.
+
+Canonical owner/person admission precedes the final read-committed dependency
+freeze. The writer locks the complete key union in kind/source order, then checks
+the exact dependency-use snapshot without acquiring more owner sources. Each
+closed notice operation must supply `_execute` with fresh source/purpose replay
+validation. Exact retries verify the retained notice/fact, recheck authority and
+freeze sources before returning the original receipt; they do not append another
+review or acknowledgement. Different intent on the same retry key still conflicts.
+
+`load_programme_change_notice` returns restricted preparation rationale, current
+source and independent evidence under sender notice-field authority.
+`load_personal_programme_change_notice` admits only the actual recipient's own
+approved package and genuine current purpose. Its result includes exact source,
+evidence version and handoff/acknowledgement booleans, but no other actors or
+organizer rationale. `change_notice_records` checks scoped, contiguous independent
+facts and receipt equality; personal reads defer rationale, verifying its receipt
+equality in SQL as a boolean rather than materializing that private text.
+Stale or revoked sources cannot produce cached old-content fallback.
+
+The dormant [notice surfaces](../product/page-contracts/programme-change-notices.md)
+now compose strict preview/preparation, independent review/rejection, manual
+handoff and genuine personal acknowledgement forms in the existing shells.
+The reviewed manual message contains only the exact recipient-only link, never
+organizer rationale or a provider delivery claim. Hidden versions/digests are
+rechecked by commands, not refreshed behind a submitted action. Ordinary control
+authority is computed independently; read access never grants mutation.
+
+`load_programme_change_notice_inventory` bounds exact-edition candidates at 256,
+optionally filtered to a release. Personal candidates are recipient-filtered and
+approved in SQL before detail reads. Each detail recomposes its own current
+purpose in a separate transaction, and final candidate admission repeats. Stale
+or denied entries expose no identifiers or counts; dependency failure/overflow
+fails the whole inventory. This is currently viewable work, not a historical or
+delivery-completeness report. An outer transaction is rejected to prevent
+accumulating differently ordered owner locks. No new schema or runtime privilege
+is needed for these read/transport adapters.
+
+Maintained real operator cases include forged review/acknowledgement evidence,
+pre-approval handoff rejection and separate-connection competing reviews, with
+15-second lock and 30-second statement timeouts. PostgreSQL workflow cases remain
+unexecuted #102 debt. Protected delivery remains pending. #108 owns connecting
+the labelled exact-reference controls to ordinary authorized task selections;
+#92 retains genuine human/screen-reader acceptance. Neither these components nor
+a green development PR activates Programme Operations.
+
 ### Change-impact read foundations (#105 under #104)
 
 `release_impact.compare_release_selections` is the pure bounded comparison of
@@ -112,7 +214,7 @@ Registration, Participation, payment or attendance record is created.
 
 ## Owned state and commands
 
-The #96 release work remains dormant and under delivery verification. Its contracts
+The #96 release work is delivered but remains dormant. Its contracts
 are `release_inputs` (exact versioned intent), `release_dependency_rules`
 (complete journal temporal consequences), `release_artifacts` (one mandatory
 canonical identity-only manifest), and the private `release_authorship`
@@ -978,9 +1080,10 @@ manifests, same-command child evidence, reciprocal holds and exact effects.
 `scheduling.planning.changed.v1` retains only the closed operation code in its
 payload, scoped to the edition/control version with actor and correlation.
 Release decisions use the separate dormant `scheduling.release.changed.v1`
-schema with only their four closed operation codes. Each family rejects the
-other's operations. Neither event activates a handler or profile route; the
-dormancy check covers both families. Release notifications and projections
+schema with only their four closed operation codes. Notice evidence uses
+`scheduling.change_notice.changed.v1` with its five closed operations. Each family
+rejects the others' operations. None activates a handler or profile route; the
+dormancy check covers all three families. Release notifications and projections
 remain separate successors, not side effects of registering this schema.
 Operational diagnosis uses denied/unavailable/version-conflict categories,
 receipt/correlation identities and readiness status. Do not log source JSON,

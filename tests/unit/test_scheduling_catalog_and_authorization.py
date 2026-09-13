@@ -34,8 +34,10 @@ from maru.scheduling.checks import (
 )
 from maru.scheduling.events import (
     SCHEDULING_CHANGED_EVENT,
+    SCHEDULING_NOTICE_CHANGED_EVENT,
     SCHEDULING_RELEASE_CHANGED_EVENT,
     validate_scheduling_changed_payload,
+    validate_scheduling_notice_changed_payload,
     validate_scheduling_release_changed_payload,
 )
 from maru.scheduling.operator_scope import OPERATOR_CAPABILITIES
@@ -101,7 +103,12 @@ def test_personal_schedule_policy_uses_exact_self_not_edition_planner(
 
 
 @pytest.mark.parametrize(
-    "event_name", [SCHEDULING_CHANGED_EVENT, SCHEDULING_RELEASE_CHANGED_EVENT]
+    "event_name",
+    [
+        SCHEDULING_CHANGED_EVENT,
+        SCHEDULING_RELEASE_CHANGED_EVENT,
+        SCHEDULING_NOTICE_CHANGED_EVENT,
+    ],
 )
 def test_declared_capabilities_and_event_do_not_activate_current_profiles(event_name):
     assert scheduling_dormancy_problem_codes() == ()
@@ -114,17 +121,22 @@ def test_declared_capabilities_and_event_do_not_activate_current_profiles(event_
         for destination in ("internal", "notifications")
     )
     for code in auth.SCHEDULING_CAPABILITIES:
-        if code in {auth.VIEW_HOST_SELF, auth.VIEW_WORK_SELF}:
+        if code in {
+            auth.VIEW_HOST_SELF,
+            auth.VIEW_WORK_SELF,
+            auth.VIEW_CHANGE_SELF,
+            auth.ACKNOWLEDGE_CHANGE_SELF,
+        }:
             assert CAPABILITIES[code].maximum_scope == ScopeLevel.RESOURCE
             assert CAPABILITIES[code].allow_self
             assert not CAPABILITIES[code].persistable
-            assert CAPABILITIES[code].field_ceiling == frozenset(
-                {
-                    "own_host_schedule"
-                    if code == auth.VIEW_HOST_SELF
-                    else "own_work_schedule",
-                }
-            )
+            expected_fields = {
+                auth.VIEW_HOST_SELF: frozenset({"own_host_schedule"}),
+                auth.VIEW_WORK_SELF: frozenset({"own_work_schedule"}),
+                auth.VIEW_CHANGE_SELF: frozenset({"own_change_notices"}),
+                auth.ACKNOWLEDGE_CHANGE_SELF: frozenset(),
+            }
+            assert CAPABILITIES[code].field_ceiling == expected_fields[code]
         else:
             assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
             assert not CAPABILITIES[code].allow_self
@@ -148,6 +160,7 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
             auth.SCHEDULING_CAPABILITIES
             - set(release.RELEASE_CAPABILITIES)
             - {auth.VIEW_HOST_SELF, auth.VIEW_WORK_SELF}
+            - auth.CHANGE_COMMUNICATION_CAPABILITIES
         ),
         "programme.view_scheduling_dependencies",
     }
@@ -174,6 +187,7 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
         "programme.view_staffing",
         *release.RELEASE_CAPABILITIES,
         *OPERATOR_CAPABILITIES,
+        *auth.CHANGE_COMMUNICATION_CAPABILITIES,
     }
     for code in current.SCHEDULING_CAPABILITIES:
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
@@ -208,7 +222,7 @@ def test_release_migration_adds_only_four_independent_edition_capabilities():
         *current.RESOURCE_CAPABILITIES,
     } == {
         code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - OPERATOR_CAPABILITIES
+    } - OPERATOR_CAPABILITIES - auth.CHANGE_COMMUNICATION_CAPABILITIES
 
 
 @pytest.mark.parametrize(
@@ -279,7 +293,15 @@ def test_missing_declarations_and_each_activation_path_fail_the_system_check(
 
 @pytest.mark.parametrize("operation", list(SchedulingOperation))
 def test_every_owned_operation_has_a_minimized_event(operation):
-    if operation.value.startswith("release_"):
+    if operation.value.startswith("change_"):
+        validate_scheduling_notice_changed_payload({"operation": operation.value})
+        for validator in (
+            validate_scheduling_changed_payload,
+            validate_scheduling_release_changed_payload,
+        ):
+            with pytest.raises(ValidationError):
+                validator({"operation": operation.value})
+    elif operation.value.startswith("release_"):
         validate_scheduling_release_changed_payload({"operation": operation.value})
         with pytest.raises(ValidationError):
             validate_scheduling_changed_payload({"operation": operation.value})

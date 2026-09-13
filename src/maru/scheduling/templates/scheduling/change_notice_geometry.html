@@ -1,0 +1,11 @@
+{% if geometry %}
+<dl>
+  <dt>Room reference</dt><dd>{{ geometry.space_id }}</dd>
+  <dt>Preparation starts</dt><dd>{{ geometry.envelope.setup_starts_at|date:"c" }}</dd>
+  <dt>Delivery starts</dt><dd>{{ geometry.envelope.effective_starts_at|date:"c" }}</dd>
+  <dt>Delivery ends</dt><dd>{{ geometry.envelope.effective_ends_at|date:"c" }}</dd>
+  <dt>Teardown ends</dt><dd>{{ geometry.envelope.teardown_ends_at|date:"c" }}</dd>
+  {% if geometry.starts_at %}<dt>Required host presence</dt><dd>{{ geometry.starts_at|date:"c" }} to {{ geometry.ends_at|date:"c" }}</dd>{% endif %}
+</dl>
+<p>Times include their UTC offset. Surrounding phases are Programme context, not additional assigned work.</p>
+{% else %}<p>No released context on this side within this purpose.</p>{% endif %}

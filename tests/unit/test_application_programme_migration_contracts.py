@@ -52,7 +52,7 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
 def test_review_scope_declaration_matches_the_runtime_readiness_fingerprint() -> None:
     """Catch stale capability-function pins without a PostgreSQL matrix run."""
     current = import_module(
-        "maru.authorization.migrations.0030_programme_operator_capabilities"
+        "maru.authorization.migrations.0031_programme_change_communication_capabilities"
     )
     declaration = current.FORWARD_SQL
     assert "$$ LANGUAGE plpgsql IMMUTABLE STRICT" in declaration

@@ -1,12 +1,14 @@
 """Real exact-purpose operator reads preserve native release and owner ceilings."""
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from threading import Barrier
 from types import SimpleNamespace
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
-from django.db import connection
+from django.db import DatabaseError, connection, connections, transaction
 from django.test.utils import CaptureQueriesContext
 
 from maru.audit.models import AuditEvent
@@ -26,6 +28,40 @@ from maru.programme.staffing_inputs import (
 from maru.programme.staffing_queries import ProgrammeStaffingReadRequest
 from maru.scheduling import operator_scope
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
+from maru.scheduling.change_catalogs import ChangeNoticeAction, ChangeRecipientPurpose
+from maru.scheduling.change_inputs import (
+    ChangeNoticeDecisionIntent,
+    ChangeRecipientSelection,
+    PrepareChangeNoticeIntent,
+)
+from maru.scheduling.change_notice_commands import (
+    acknowledge_programme_change_notice,
+    handoff_programme_change_notice,
+    prepare_programme_change_notice,
+    review_programme_change_notice,
+)
+from maru.scheduling.change_notice_inventory import (
+    load_programme_change_notice_inventory,
+)
+from maru.scheduling.change_notice_queries import (
+    load_personal_programme_change_notice,
+    load_programme_change_notice,
+    preview_programme_change_notice,
+)
+from maru.scheduling.change_recipient_queries import (
+    OperatorChangeRecipientRequest,
+    load_operator_change_recipient,
+)
+from maru.scheduling.command_support import (
+    SchedulingLifecycleConflictError,
+    SchedulingUnavailableError,
+    SchedulingVersionConflictError,
+)
+from maru.scheduling.inputs import SchedulingCommandRequest
+from maru.scheduling.models import (
+    SchedulingChangeNotice,
+    SchedulingChangeNoticeEvidence,
+)
 from maru.scheduling.operator_output_queries import load_operator_run_sheet
 from maru.scheduling.operator_release_impact import load_operator_release_impact
 from maru.scheduling.operator_release_references import load_operator_release_reference
@@ -33,6 +69,7 @@ from maru.scheduling.operator_scope import OperatorReadRequest, OperatorScopeKin
 from maru.scheduling.personal_work_release_impact import (
     load_personal_work_release_impact,
 )
+from maru.scheduling.planning_queries import SchedulingReadRequest
 from maru.scheduling.release_inputs import ReleaseCandidateSelection
 from maru.venues.models import EditionSpaceSelection
 from maru.venues.operator_queries import load_operator_wayfinding
@@ -152,7 +189,7 @@ def operator_request(
 
 @pytest.mark.parametrize("kind", list(OperatorScopeKind))
 def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
-    operator_world, kind
+    operator_world, kind, monkeypatch
 ):
     published = publish(operator_world, approve(operator_world))
     request = operator_request(operator_world, kind=kind)
@@ -194,6 +231,326 @@ def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
         'FROM "registration_',
     ):
         assert excluded not in statements
+    _assert_operator_change_recipient(
+        request,
+        monkeypatch,
+        release_id=published.object_id,
+        occurrence_id=result.occurrences[0].occurrence_id,
+        release_scope=operator_world,
+    )
+
+
+def _assert_operator_change_recipient(
+    request, monkeypatch, *, release_id, occurrence_id, release_scope
+):
+    original = policy.profile_allows_capability
+    monkeypatch.setattr(
+        policy,
+        "profile_allows_capability",
+        lambda code, version, capability: (
+            capability
+            in {
+                "scheduling.view_change_recipients",
+                "scheduling.view_change_notices",
+                "scheduling.prepare_change_notices",
+                "scheduling.review_change_notices",
+                "scheduling.handoff_change_notices",
+                "scheduling.view_change_self",
+                "scheduling.acknowledge_change_self",
+            }
+            or original(code, version, capability)
+        ),
+    )
+    sender = AccountFactory()
+    attribution = SchedulingReadRequest(
+        sender.id, request.organization_id, request.edition_id, uuid4()
+    )
+    selected = OperatorChangeRecipientRequest(
+        attribution, request.actor_id, request.kind, request.target_id
+    )
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        load_operator_change_recipient(selected)
+    CapabilityGrantFactory(
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        principal=sender,
+        capability_code="scheduling.view_change_recipients",
+    )
+    with CaptureQueriesContext(connection) as captured:
+        result = load_operator_change_recipient(selected)
+    assert result.account_id == request.actor_id != sender.id
+    assert result.kind is request.kind
+    assert result.target_id == request.target_id
+    assert AuditEvent.objects.filter(
+        principal_id=sender.id,
+        event_edition_id=request.edition_id,
+        operation="scheduling.query.operator_change_recipient",
+        outcome="allow",
+    ).exists()
+    assert not AuditEvent.objects.filter(
+        principal_id=request.actor_id,
+        operation="scheduling.query.operator_change_recipient",
+    ).exists()
+    statements = "\n".join(row["sql"] for row in captured)
+    assert 'FROM "scheduling_schedulingrelease"' not in statements
+    for changed in (
+        replace(selected, account_id=AccountFactory().id),
+        replace(selected, target_id=uuid4()),
+    ):
+        with pytest.raises(SchedulingUnavailableError):
+            load_operator_change_recipient(changed)
+    _assert_exact_notice_preview(
+        attribution,
+        request,
+        release_id=release_id,
+        occurrence_id=occurrence_id,
+        release_scope=release_scope,
+    )
+
+
+def _assert_exact_notice_preview(
+    sender, recipient, *, release_id, occurrence_id, release_scope
+):
+    selection = ChangeRecipientSelection(
+        ChangeRecipientPurpose(recipient.kind.value),
+        recipient.target_id,
+        recipient.actor_id,
+    )
+    arguments = {
+        "release_id": release_id,
+        "occurrence_id": occurrence_id,
+        "recipient": selection,
+    }
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        preview_programme_change_notice(sender, **arguments)
+    for capability in (
+        "scheduling.view_change_notices",
+        "scheduling.view_operator_output",
+        "venues.view_operator_wayfinding",
+    ):
+        CapabilityGrantFactory(
+            organization_id=sender.organization_id,
+            edition_id=sender.edition_id,
+            principal_id=sender.actor_id,
+            capability_code=capability,
+        )
+    result = preview_programme_change_notice(sender, **arguments)
+    assert result.recipient_id == recipient.actor_id != sender.actor_id
+    assert result.change.occurrence_id == occurrence_id
+    assert result.change.kind == "added"
+    assert (
+        result.snapshot_digest
+        == preview_programme_change_notice(sender, **arguments).snapshot_digest
+    )
+    assert AuditEvent.objects.filter(
+        principal_id=sender.actor_id,
+        operation="scheduling.query.programme_change_notice_preview",
+        outcome="allow",
+    ).exists()
+    assert not AuditEvent.objects.filter(
+        principal_id=recipient.actor_id,
+        operation="scheduling.query.programme_change_notice_preview",
+    ).exists()
+    with pytest.raises(SchedulingUnavailableError):
+        preview_programme_change_notice(
+            sender, **{**arguments, "occurrence_id": uuid4()}
+        )
+    _assert_notice_lifecycle(sender, recipient, result, release_scope)
+
+
+def _notice_attribution(reader):
+    return SchedulingCommandRequest(
+        actor_id=reader.actor_id,
+        organization_id=reader.organization_id,
+        edition_id=reader.edition_id,
+        correlation_id=uuid4(),
+        idempotency_key=uuid4(),
+        reason="Synthetic reviewed Programme change",
+        source_channel="notice-rehearsal",
+    )
+
+
+def _assert_notice_lifecycle(sender, recipient, preview, release_scope):
+    for capability in (
+        "scheduling.prepare_change_notices",
+        "scheduling.handoff_change_notices",
+        "scheduling.review_change_notices",
+    ):
+        CapabilityGrantFactory(
+            organization_id=sender.organization_id,
+            edition_id=sender.edition_id,
+            principal_id=sender.actor_id,
+            capability_code=capability,
+        )
+    attribution = _notice_attribution(sender)
+    intent = PrepareChangeNoticeIntent(
+        preview.release_id,
+        preview.occurrence_id,
+        preview.pointer_version,
+        preview.recipient,
+        preview.snapshot_digest,
+    )
+    prepared = prepare_programme_change_notice(attribution, intent)
+    assert prepare_programme_change_notice(attribution, intent).replayed
+    notice = SchedulingChangeNotice.objects.get(id=prepared.object_id)
+    own = SchedulingReadRequest(
+        recipient.actor_id,
+        recipient.organization_id,
+        recipient.edition_id,
+        uuid4(),
+    )
+    with pytest.raises(SchedulingUnavailableError):
+        load_personal_programme_change_notice(own, notice_id=notice.id)
+    assert not load_programme_change_notice_inventory(own, personal=True)
+    decision = ChangeNoticeDecisionIntent(notice.id, 1, preview.snapshot_digest)
+    with pytest.raises(SchedulingLifecycleConflictError):
+        handoff_programme_change_notice(_notice_attribution(sender), decision)
+    _assert_forged_notice_fact_rejected(notice)
+    with pytest.raises(SchedulingLifecycleConflictError):
+        review_programme_change_notice(
+            _notice_attribution(sender),
+            decision,
+            action=ChangeNoticeAction.APPROVE,
+        )
+    review_request = _notice_reviewer(sender)
+    with (
+        patch(
+            "maru.scheduling.command_support.publish_domain_event",
+            side_effect=RuntimeError("synthetic event sink unavailable"),
+        ),
+        pytest.raises(RuntimeError, match="synthetic event sink"),
+    ):
+        review_programme_change_notice(
+            review_request, decision, action=ChangeNoticeAction.APPROVE
+        )
+    assert not SchedulingChangeNoticeEvidence.objects.filter(notice=notice).exists()
+    review_request = _race_notice_review(review_request, decision)
+    assert review_programme_change_notice(
+        review_request, decision, action=ChangeNoticeAction.APPROVE
+    ).replayed
+    personal = load_personal_programme_change_notice(own, notice_id=notice.id)
+    assert personal.version == 2
+    assert not personal.acknowledged
+    assert not personal.handed_off
+    assert [
+        row.notice_id
+        for row in load_programme_change_notice_inventory(own, personal=True)
+    ] == [notice.id]
+    with pytest.raises(SchedulingUnavailableError):
+        load_personal_programme_change_notice(sender, notice_id=notice.id)
+    ack_request = replace(decision, expected_version=2)
+    ack_key = uuid4()
+    acknowledge_programme_change_notice(own, ack_request, idempotency_key=ack_key)
+    assert acknowledge_programme_change_notice(
+        own, ack_request, idempotency_key=ack_key
+    ).replayed
+    handoff = _notice_attribution(sender)
+    handoff_intent = replace(decision, expected_version=3)
+    handoff_programme_change_notice(handoff, handoff_intent)
+    final = load_personal_programme_change_notice(own, notice_id=notice.id)
+    assert final.version == 4
+    assert final.acknowledged
+    assert final.handed_off
+    assert load_programme_change_notice(sender, notice_id=notice.id).state.version == 4
+    with pytest.raises(SchedulingVersionConflictError):
+        handoff_programme_change_notice(_notice_attribution(sender), handoff_intent)
+    with (
+        pytest.raises(DatabaseError),
+        transaction.atomic(),
+        connection.cursor() as cursor,
+    ):
+        cursor.execute(
+            "UPDATE public.scheduling_schedulingchangenotice "
+            "SET reason = %s WHERE id = %s",
+            ["forged replacement", notice.id],
+        )
+    withdraw(
+        release_scope,
+        SimpleNamespace(object_id=preview.release_id),
+        version=preview.pointer_version,
+    )
+    with pytest.raises(SchedulingVersionConflictError):
+        acknowledge_programme_change_notice(own, ack_request, idempotency_key=ack_key)
+    assert SchedulingChangeNoticeEvidence.objects.filter(notice=notice).count() == 3
+
+
+def _notice_reviewer(sender):
+    reviewer = AccountFactory()
+    for capability in (
+        "scheduling.view_change_notices",
+        "scheduling.view_change_recipients",
+        "scheduling.view_operator_output",
+        "venues.view_operator_wayfinding",
+        "scheduling.review_change_notices",
+    ):
+        CapabilityGrantFactory(
+            organization_id=sender.organization_id,
+            edition_id=sender.edition_id,
+            principal=reviewer,
+            capability_code=capability,
+        )
+    return _notice_attribution(replace(sender, actor_id=reviewer.id))
+
+
+def _insert_forged_notice_fact(cursor, notice, action, sequence):
+    cursor.execute(
+        "INSERT INTO public.scheduling_schedulingchangenoticeevidence "
+        "(id, organization_id, edition_id, actor_id, reason, created_at, "
+        "updated_at, occurred_at, "
+        "command_receipt_id, notice_id, action, sequence) "
+        "SELECT %s, organization_id, edition_id, actor_id, reason, created_at, "
+        "updated_at, occurred_at, "
+        "command_receipt_id, id, %s, %s "
+        "FROM public.scheduling_schedulingchangenotice WHERE id = %s",
+        [uuid4(), action, sequence, notice.id],
+    )
+    cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
+
+def _assert_forged_notice_fact_rejected(notice):
+    # A preparation receipt is not witness for a new review or acknowledgement.
+    for action, sequence in (("approve", 2), ("acknowledge", 3)):
+        with (
+            pytest.raises(DatabaseError),
+            transaction.atomic(),
+            connection.cursor() as cursor,
+        ):
+            _insert_forged_notice_fact(cursor, notice, action, sequence)
+    assert not SchedulingChangeNoticeEvidence.objects.filter(notice=notice).exists()
+
+
+def _race_notice_review(attribution, decision):
+    # Separate real connections; server-side timeouts also bound a locking bug.
+    ready = Barrier(2)
+    requests = (attribution, replace(attribution, idempotency_key=uuid4()))
+
+    def review(index):
+        try:
+            with connections["default"].cursor() as cursor:
+                cursor.execute("SET lock_timeout = '15s'")
+                cursor.execute("SET statement_timeout = '30s'")
+            ready.wait(timeout=10)
+            try:
+                review_programme_change_notice(
+                    requests[index], decision, action=ChangeNoticeAction.APPROVE
+                )
+            except SchedulingVersionConflictError:
+                return None
+            return requests[index]
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(review, index) for index in range(2)]
+        results = [future.result(timeout=45) for future in futures]
+    assert results.count(None) == 1
+    assert (
+        SchedulingChangeNoticeEvidence.objects.filter(
+            notice_id=decision.notice_id
+        ).count()
+        == 1
+    )
+    return next(result for result in results if result is not None)
 
 
 @pytest.mark.parametrize("kind", [OperatorScopeKind.ROOM, OperatorScopeKind.DEPARTMENT])

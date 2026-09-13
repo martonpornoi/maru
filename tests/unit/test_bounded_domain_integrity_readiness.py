@@ -52,9 +52,9 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         ("applications_integrity", True, 139, 29, 2),
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
-        ("venues_integrity", True, 38, 54, 30),
-        ("programme_integrity", True, 67, 62, 30),
-        ("scheduling_integrity", True, 75, 51, 30),
+        ("venues_integrity", True, 38, 56, 32),
+        ("programme_integrity", True, 67, 64, 32),
+        ("scheduling_integrity", True, 81, 53, 32),
     ]
     for contract in CONTRACTS:
         relations = set(integrity.bounded_context_relation_names(contract.app_label))
@@ -135,7 +135,7 @@ def test_function_contracts_pin_body_invoker_search_path_and_behavior() -> None:
 
 
 def test_native_release_contracts_pin_explicit_definers_and_every_owner_definition():
-    assert len(NATIVE_FUNCTIONS) == 41
+    assert len(NATIVE_FUNCTIONS) == 43
     assert {
         name for name, function in NATIVE_FUNCTIONS.items() if function.security_definer
     } == {
@@ -152,7 +152,7 @@ def test_native_release_contracts_pin_explicit_definers_and_every_owner_definiti
         } == NATIVE_FUNCTIONS
         assert (
             len(contract.supporting_triggers)
-            == {"venues": 58, "programme": 68, "scheduling": 47}[contract.app_label]
+            == {"venues": 64, "programme": 74, "scheduling": 47}[contract.app_label]
         )
         assert all(
             function.configuration

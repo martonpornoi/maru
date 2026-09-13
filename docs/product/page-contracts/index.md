@@ -45,6 +45,7 @@ contract for the surface being changed, and compare its status with the
 - [Programme staffing](programme-staffing.md)
 - [Released Programme timetable](programme-released-timetable.md)
 - [Programme operator run sheets](programme-operator-run-sheets.md)
+- [Programme change notices](programme-change-notices.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -67,4 +68,5 @@ programme-staffing
 programme-released-timetable
 personal-programme-timetable
 programme-operator-run-sheets
+programme-change-notices
 ```

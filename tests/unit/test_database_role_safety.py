@@ -162,6 +162,8 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.scheduling_schedulingreleaseartifact",
         "public.scheduling_schedulingreleasewithdrawal",
         "public.scheduling_schedulingreleasepointer",
+        "public.scheduling_schedulingchangenotice",
+        "public.scheduling_schedulingchangenoticeevidence",
         "public.venues_venueschedulingbinding",
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
@@ -358,7 +360,7 @@ def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
         not (append_only_relations | retained_aggregate_relations)
         & _APPLICATION_DRAFT_CHILD_RELATIONS
     )
-    assert len(select_only_bounded_relations) == 55
+    assert len(select_only_bounded_relations) == 57
     assert not select_only_bounded_relations & (
         append_only_relations
         | retained_aggregate_relations
