@@ -16,6 +16,7 @@ from .continuity_protocol import (
     VerifiedContinuityPackage,
     _base64,
     _canonical,
+    _date,
     _decode_manifest,
     _json,
     _scope_document,
@@ -61,12 +62,18 @@ def _known(
 ) -> tuple[dict[str, object], ContinuityManifest, ContinuityManifest | None]:
     document = _json(
         data,
-        frozenset({"contract", "latest", "release_high_water"}),
+        frozenset({"contract", "latest", "release_high_water", "last_verified_at"}),
         maximum=_MAX_KNOWN_STATE_BYTES,
     )
     if document["contract"] != CONTINUITY_KNOWN_STATE_CONTRACT:
         raise ContinuityInvalidError
     latest = _checkpoint(document["latest"], expected_scope=expected_scope, trust=trust)
+    if (
+        not _utc(latest.issued_at)
+        <= _date(document["last_verified_at"])
+        < _utc(latest.expires_at)
+    ):
+        raise ContinuityInvalidError
     high_water = (
         _checkpoint(
             document["release_high_water"], expected_scope=expected_scope, trust=trust
@@ -134,8 +141,8 @@ def verify_continuity_with_known_state(
     now : datetime
         Aware local verification clock, not proof of unseen online changes.
     known_state : bytes | None
-        Access-controlled local history containing signed metadata only. Preserve it
-        across restarts; missing history is never silently replaced by an old file.
+        Protected signed metadata and local last-verification time, never payload.
+        Preserve it across restarts; missing history is never silently reset.
     initialize : bool, default=False
         Explicit pre-outage initialization from a freshly obtained verified package.
         Not permission to reset missing, corrupt or rollback-suspected history.
@@ -179,6 +186,8 @@ def verify_continuity_with_known_state(
         document, latest, high_water = _known(
             known_state, expected_scope=expected_scope, trust=trust
         )
+        if _utc(now) < _date(document["last_verified_at"]):
+            raise ContinuityInvalidError
         _not_older(verified.manifest, latest, high_water)
         high_checkpoint = (
             checkpoint
@@ -190,6 +199,7 @@ def verify_continuity_with_known_state(
             "contract": CONTINUITY_KNOWN_STATE_CONTRACT,
             "latest": checkpoint,
             "release_high_water": high_checkpoint,
+            "last_verified_at": _utc(now).isoformat(),
         }
     )
     if len(result) > _MAX_KNOWN_STATE_BYTES:

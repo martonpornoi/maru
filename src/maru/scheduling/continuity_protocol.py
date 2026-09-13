@@ -274,20 +274,13 @@ def _scope_document(scope: ContinuityScope) -> dict[str, object]:
     }
 
 
-def _release_state(manifest: ContinuityManifest) -> None:
-    state, pointer, release = (
-        manifest.release_state,
-        manifest.pointer_version,
-        manifest.release_id,
-    )
+def _validate_release_state(
+    *, audience: str, state: str, pointer: int | None, release: UUID | None
+) -> None:
     if type(state) is not str or state not in _STATES:
         raise ContinuityInvalidError
     if state in {"unobserved", "unadopted"}:
-        valid = (
-            manifest.scope.audience == "exact_person"
-            and pointer is None
-            and release is None
-        )
+        valid = audience == "exact_person" and pointer is None and release is None
     else:
         valid = type(pointer) is int and 0 <= pointer <= 2**63 - 1
         if state == "absent":
@@ -337,7 +330,12 @@ def _manifest_document(manifest: ContinuityManifest) -> dict[str, object]:
         ZoneInfo(manifest.zone_name)
     except (ValueError, ZoneInfoNotFoundError) as error:
         raise ContinuityInvalidError from error
-    _release_state(manifest)
+    _validate_release_state(
+        audience=manifest.scope.audience,
+        state=manifest.release_state,
+        pointer=manifest.pointer_version,
+        release=manifest.release_id,
+    )
     return {
         "contract": CONTINUITY_CONTRACT,
         "scope": scope,

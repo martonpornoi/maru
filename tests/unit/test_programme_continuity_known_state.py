@@ -83,6 +83,19 @@ def test_initialization_is_explicit_and_replay_retains_identical_metadata(fixtur
         advance(fixture, known=known, initialize=True)
 
 
+def test_protected_last_verification_time_detects_clock_rollback_within_pack_life(
+    fixture,
+):
+    _, known = advance(fixture, initialize=True, now=NOW + timedelta(minutes=20))
+    with pytest.raises(protocol.ContinuityInvalidError):
+        advance(fixture, known=known, now=NOW + timedelta(minutes=10))
+    _, newer = advance(fixture, known=known, now=NOW + timedelta(minutes=21))
+    assert (
+        json.loads(newer)["last_verified_at"]
+        == (NOW + timedelta(minutes=21)).isoformat()
+    )
+
+
 @pytest.mark.parametrize("release_state", ["withdrawn", "invalidated"])
 def test_newer_suppression_cannot_be_replaced_with_still_unexpired_old_pack(
     fixture, release_state

@@ -45,6 +45,7 @@ from maru.registration.adoption import (
 from maru.scheduling.adoption import (
     SCHEDULING_ADOPTION_ADAPTERS,
     SCHEDULING_ADOPTION_CONFLICT_SOURCES,
+    SCHEDULING_CONTINUITY_ADAPTER,
     SCHEDULING_OPERATOR_RELEASE_ADAPTER,
     SCHEDULING_PUBLIC_RELEASE_ADAPTER,
     SCHEDULING_RELEASE_PREFLIGHT_ADAPTER,
@@ -134,6 +135,7 @@ def test_owner_adapter_registries_are_complete_and_nonduplicating() -> None:
         VENUES_ACCESSIBILITY_SOURCE_ADAPTER,
     }
     assert set(SCHEDULING_ADOPTION_ADAPTERS) == {
+        SCHEDULING_CONTINUITY_ADAPTER,
         SCHEDULING_OPERATOR_RELEASE_ADAPTER,
         SCHEDULING_PUBLIC_RELEASE_ADAPTER,
         SCHEDULING_VENUE_RESERVATION_ADAPTER,
@@ -150,7 +152,7 @@ def test_owner_adapter_registries_are_complete_and_nonduplicating() -> None:
     }
 
     all_codes = [code for registry in _OWNER_ADAPTER_REGISTRIES for code in registry]
-    assert len(all_codes) == 39
+    assert len(all_codes) == 40
     assert len(set(all_codes)) == len(all_codes)
     assert all(
         code == descriptor.code

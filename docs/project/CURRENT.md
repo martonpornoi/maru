@@ -43,11 +43,17 @@ Branch: `codex/programme-onsite-continuity`, from protected PR #110.
 item: useful now/next and run sheets, deterministic versioned print/export packs,
 a signed last-published view and explicit degraded operation. ADR 0103 contracts
 the read-only signature, independent trust, bounded expiry and known-state rules.
-The first local protocol/known-state layer passes 70 database-free tests in
-0.41s and strict types; it is not a completed pack, surface or protected delivery.
-Next compose the existing public, personal and operator owner projections; retain
-their independent admission, field ceilings, complete-or-unavailable evidence
-and mandatory sensitive-read audits.
+Local work now includes closed audience cards, now/next grouping, independently
+admitted owner composition, dedicated scoped signing, and a database-free offline
+file verifier. The latter persists known metadata before producing dated HTML;
+it rejects older releases, clock rollback and implicit lost-history resets.
+The database-free suite passed 5,729 tests in 45.30s before the latest presentation
+and file-tool additions; those additions separately passed 68 presentation/state
+tests and 15 real temporary-file tests. This is not exact-head certification or
+protected delivery. The [source/offline checkpoint](../checkpoints/2026-09-13-programme-continuity-sources-and-offline.md)
+records boundaries, the resolved Windows temp-directory obstacle and remaining
+work. Next wire the contracted shared-shell HTTP/print/download surfaces, add
+maintained native cases without running them, and rehearse synthetic browser use.
 
 Offline material is a bounded historical snapshot, not current permission,
 fresh instructions or a writable source. Specify source time/age, expiry,

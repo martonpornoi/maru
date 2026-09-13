@@ -11,6 +11,8 @@ from maru.programme.operator_queries import OperatorDeliveryInstructions
 from maru.programme.output_queries import ReleasedProgrammeCopy
 from maru.scheduling import operator_output_rendering as rendering
 from maru.scheduling import output_rendering as common
+from maru.scheduling.continuity_operator_source import operator_continuity_projection
+from maru.scheduling.continuity_protocol import ContinuityInvalidError, ContinuityScope
 from maru.scheduling.operator_output_queries import (
     OperatorRunSheet,
     OperatorRunSheetEntry,
@@ -134,6 +136,68 @@ def full_sheet(sheet):
             adopted=True, links=(link,), demands=(demand,)
         ),
     )
+
+
+def continuity(sheet, **changes):
+    scope = ContinuityScope(
+        sheet.organization_id,
+        sheet.edition_id,
+        "private_operator",
+        UUID(int=19),
+        sheet.kind.value,
+        sheet.target_id,
+        tuple(sorted(sheet.layers)),
+    )
+    return operator_continuity_projection(sheet, scope=replace(scope, **changes))
+
+
+def test_operator_continuity_preserves_envelope_and_private_layer_choice(sheet):
+    result = continuity(sheet)
+    entry = result.entries[0]
+    assert entry.starts_at == sheet.entries[0].placement.envelope.setup_starts_at
+    assert entry.ends_at == sheet.entries[0].placement.envelope.teardown_ends_at
+    assert entry.context[1] == START
+    assert result.work_status == "unrequested"
+    assert "technical" not in {fact.code for fact in entry.facts}
+
+
+def test_operator_continuity_retains_predecessors_without_inventing_attendance(
+    full_sheet,
+):
+    result = continuity(full_sheet)
+    event, demand = result.entries
+    facts = {fact.code: fact.value for fact in event.facts}
+    assert facts["technical"] == "Technical secret"
+    assert facts["accessibility"] == "Accessibility secret"
+    assert facts["media"] == "Media secret"
+    assert "version 2" in facts["delivery_version"]
+    work = {fact.code: fact.value for fact in demand.facts}
+    assert demand.starts_at == START
+    assert "retained predecessor, not cancelled" in work["programme_link"]
+    assert (START - timedelta(hours=2)).isoformat() in work["retained_work"]
+    assert "2 confirmed" in work["retained_work"]
+    assert "Not attendance evidence" in work["retained_work"]
+    assert work["required_headcount"] == "4"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("organization_id", UUID(int=20)),
+        ("edition_id", UUID(int=20)),
+        ("target_id", UUID(int=20)),
+        ("kind", "department"),
+        ("layers", ("technical",)),
+    ],
+)
+def test_operator_continuity_rejects_scope_or_field_mismatch(sheet, field, value):
+    with pytest.raises(ContinuityInvalidError):
+        continuity(sheet, **{field: value})
+
+
+def test_operator_continuity_never_omits_a_broken_requested_layer(full_sheet):
+    with pytest.raises(TimetableOutputInvalidError):
+        continuity(replace(full_sheet, staffing=None))
 
 
 def test_base_graph_is_closed_private_and_contains_no_unrequested_fields(sheet):

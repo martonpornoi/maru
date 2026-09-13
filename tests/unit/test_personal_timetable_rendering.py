@@ -11,6 +11,8 @@ from maru.events.personal_timetable_queries import PersonalTimetableEditionLabel
 from maru.programme.timetable_queries import PersonalHostPurpose
 from maru.scheduling import output_rendering as public_formats
 from maru.scheduling import personal_output_rendering as formats
+from maru.scheduling.continuity_protocol import ContinuityInvalidError
+from maru.scheduling.continuity_sources import personal_continuity_projection
 from maru.scheduling.output_rendering import TimetableOutputInvalidError
 from maru.scheduling.personal_output_queries import (
     PersonalHostingLayer,
@@ -99,6 +101,73 @@ def personal():
         PersonalHostingLayer(reference, (room,)),
         (shift,),
     )
+
+
+def continuity(personal, **scope):
+    return personal_continuity_projection(
+        personal,
+        **(
+            {
+                "actor_id": personal.actor_id,
+                "organization_id": personal.organization_id,
+                "edition_id": personal.edition_id,
+            }
+            | scope
+        ),
+    )
+
+
+def test_personal_continuity_keeps_required_presence_and_retained_work(personal):
+    result = continuity(personal)
+    host, work = result.entries
+    presence = personal.hosting.reference.presences[0]
+    assert host.starts_at == presence.starts_at
+    assert host.starts_at != host.context[0]
+    assert work.starts_at == personal.shifts[0].starts_at
+    assert work.context is None
+    facts = {fact.code: fact.value for fact in work.facts}
+    assert facts["commitment_version"] == "2"
+    assert "version 3" in facts["demand_version"]
+    assert facts["demand_status"] == "open"
+    assert facts["location"] == "Current desk label"
+
+
+@pytest.mark.parametrize("field", ["actor_id", "organization_id", "edition_id"])
+def test_personal_continuity_rejects_different_authenticated_scope(personal, field):
+    with pytest.raises(ContinuityInvalidError):
+        continuity(personal, **{field: UUID(int=99)})
+
+
+def test_personal_continuity_distinguishes_unobserved_unadopted_and_empty(personal):
+    unadopted = continuity(replace(personal, hosting=None))
+    assert unadopted.release_state == "unadopted"
+    assert unadopted.work_status == "available"
+    assert len(unadopted.entries) == 1
+    reference = replace(
+        personal.hosting.reference,
+        state=None,
+        pointer_version=None,
+        release_id=None,
+        published_at=None,
+        purposes=(),
+        presences=(),
+    )
+    empty = continuity(
+        replace(
+            personal,
+            hosting=replace(personal.hosting, reference=reference, rooms=()),
+            shifts=(),
+        )
+    )
+    assert empty.hosting_status == "unobserved"
+    assert empty.work_status == "available"
+    assert empty.entries == ()
+    assert continuity(replace(personal, shifts=None)).work_status == "unadopted"
+
+
+def test_personal_continuity_rejects_incomplete_host_layer_not_partial_work(personal):
+    with pytest.raises(TimetableOutputInvalidError):
+        continuity(replace(personal, hosting=replace(personal.hosting, rooms=())))
 
 
 def document(personal):

@@ -86,6 +86,12 @@ manifest metadata need not duplicate the private payload. Missing/lost known-sta
 history is not evidence that no newer state exists; initialize it deliberately
 while connected and preserve it during the outage.
 
+The protected record also retains the last local verification instant, without
+payload or telemetry transmission. A clock earlier than that instant fails closed,
+including rollback within a still-valid pack lifetime. This local timestamp is
+protected by device custody, not the issuer signature; restoring or tampering with
+the whole filesystem/clock cannot be reliably detected while disconnected.
+
 Expiry, invalid signature, known newer state or a failed verification produces
 no normal timetable. Online denial or unavailable sources never silently serve a
 last-good cache. Personal retained work is not cancelled by a timetable warning;
