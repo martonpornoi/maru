@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant public, personal and operator Programme now/next views, complete
+  print-friendly run sheets and dedicated signed continuity snapshots. A
+  preprovisioned offline verifier checks independent trust, expiry and protected
+  source history before rendering a dated fallback. Saved copies cannot discover
+  unseen changes or prove current authority; no Programme profile or offline
+  writes are activated (#107, ADR 0103, OPS-009/SCH-010).
 - Added dormant Programme change-notice preparation, independent review,
   manual recipient-link handoff and exact-person acknowledgement. Coordinators
   can distinguish approval, handoff and missing acknowledgement without silently

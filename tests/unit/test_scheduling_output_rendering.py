@@ -9,6 +9,7 @@ import pytest
 
 from maru.programme.output_queries import ReleasedProgrammeCopy
 from maru.scheduling import output_rendering as rendering
+from maru.scheduling.continuity_sources import public_continuity_projection
 from maru.scheduling.output_queries import (
     PublicProgrammeTimetable,
     PublicTimetableEntry,
@@ -40,6 +41,33 @@ def snapshot():
         "Europe/Budapest",
         (entry,),
     )
+
+
+def test_public_continuity_preserves_reviewed_time_and_versions(snapshot):
+    result = public_continuity_projection(
+        snapshot, organization_id=UUID(int=20), edition_id=UUID(int=21)
+    )
+    assert result.scope.audience == "public"
+    assert result.observed_at == snapshot.checked_at
+    assert result.entries[0].starts_at == snapshot.entries[0].starts_at
+    assert result.entries[0].ends_at == snapshot.entries[0].ends_at
+    assert result.entries[0].context is None
+    facts = {fact.code: fact.value for fact in result.entries[0].facts}
+    assert facts["reviewed_copy"] == str(snapshot.entries[0].copy.rendition_id)
+    assert facts["summary"] == snapshot.entries[0].copy.summary
+    assert "technical" not in facts
+    assert "briefing" not in facts
+
+
+def test_public_continuity_validates_complete_owner_graph_first(snapshot):
+    invalid = replace(
+        snapshot,
+        entries=(replace(snapshot.entries[0], starts_at=snapshot.entries[0].ends_at),),
+    )
+    with pytest.raises(rendering.TimetableOutputInvalidError):
+        public_continuity_projection(
+            invalid, organization_id=UUID(int=20), edition_id=UUID(int=21)
+        )
 
 
 def test_json_has_closed_public_contract_and_retains_overnight_geometry(snapshot):

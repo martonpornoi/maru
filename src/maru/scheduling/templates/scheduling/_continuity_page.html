@@ -1,0 +1,42 @@
+<header class="baseline-page-heading">
+  <h1>{{ title }}</h1>
+  <p>Find current and next Programme work, read the complete run sheet, or make a bounded fallback copy.</p>
+</header>
+{% if state_message %}
+  <p role="status">{{ state_message }}</p>
+  <p><a href="?">Return to the live view without optional layers</a></p>
+{% else %}
+  <details class="continuity-access continuity-controls">
+    <summary>Access · {{ access_audience }} · {{ access_purpose }}</summary>
+    <p>The current profile and every contributing owner admitted this exact purpose. {{ access_layers }}. Viewing and exporting grant no editing, publication, attendance or acknowledgement authority.</p>
+  </details>
+  {% if not print_view %}
+    <nav class="continuity-controls" aria-label="Fresh source and complete copies">
+      <a href="{{ refresh_url }}">Refresh now and next</a>
+      <a href="{{ print_url }}">Print-friendly complete copy</a>
+      <a href="{{ pack_url }}">Download signed snapshot</a>
+      {% if notice_url %}<a href="{{ notice_url }}">Reviewed Programme change notices</a>{% endif %}
+    </nav>
+  {% else %}
+    <p>Use your browser's Print command. Keep the scope, source, expiry and warnings on every complete copy.</p>
+  {% endif %}
+  {{ continuity_body }}
+  {% if not print_view %}
+    <details class="continuity-controls">
+      <summary>About signed snapshots and offline use</summary>
+      <p>Signed downloads require a separately configured key and a new complete source check. If verification or configuration is unavailable, no file is produced. Ordinary live viewing remains separately available. Before an outage, an accountable operator must provision independent trust, initialize protected known state and rehearse the offline verifier; this download alone is not an offline app.</p>
+    </details>
+  {% endif %}
+  {% if operator_layers and not print_view %}
+    <form method="get" class="continuity-controls" aria-label="Choose complete operator instruction layers">
+      <fieldset>
+        <legend>Optional instructions for this operator purpose</legend>
+        {% for layer in operator_layers %}
+          <label class="continuity-layer"><input type="checkbox" name="{{ layer.code }}" value="1"{% if layer.selected %} checked{% endif %}> {{ layer.label }}</label>
+        {% endfor %}
+        <p>Each selected owner authorizes independently. A denied or unavailable layer prevents the complete result; it is never silently omitted.</p>
+        <button type="submit">Load selected complete view</button>
+      </fieldset>
+    </form>
+  {% endif %}
+{% endif %}

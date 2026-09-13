@@ -11,93 +11,83 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-[#105](https://github.com/martonpornoi/maru/issues/105) is closed through
-[PR #106](https://github.com/martonpornoi/maru/pull/106), protected squash
-`1f4ea840d25ed2571dbc78052398f1cd9c612f70` at 2026-09-13 15:40:08 UTC.
-Its tree equals certified head `cd38cd384990ddfacbe8982064bad7e9492b9ef9`;
-clean local main was fast-forwarded to that result and origin/main.
+[#104](https://github.com/martonpornoi/maru/issues/104) is closed through
+[PR #110](https://github.com/martonpornoi/maru/pull/110), protected squash
+`05a53ffbab6d9c233dfdf293172457ee2edfe536` at 2026-09-13 19:01:28 UTC.
+Its tree equals certified head `a83fc731721e5fb0483ae4de30b2bec320bc45bc`;
+clean local main and origin/main were synchronized to that result.
 
-ADR 0101 delivers dormant exact release comparisons for independently authorized
-planner/history, current-self hosts, operative retained volunteers and exact
-room/Department/edition operators. Programme and Workforce also resolve exact
-sender-authorized host/work recipients without impersonating personal readers.
-Current instructions, released facts and retained accepted work remain distinct.
-No profile, route, writer or schema was activated.
+ADR 0102 delivers dormant exact-source notice preparation, independent review,
+deliberate recipient-link manual handoff and genuine-recipient acknowledgement,
+with operator recipient selection and shared-shell organizer/personal surfaces.
+Commands and exact retries revalidate source, purpose and retained evidence.
+Personal reads exclude organizer rationale and other actors. The bounded
+inventory is currently viewable packages, not proof of delivery completeness.
+No Programme profile, production route, runtime writer or provider was activated.
 
 Exact-head local development acceptance passed all eight retained gates in
-14m43s (883.234 seconds), including 5,294 unit tests in 32.60s. Hosted acceptance
-and PR gate passed in 26m49s; quality took 26m20s, units 1m09s and CodeQL passed.
-PostgreSQL was explicitly skipped under ADR 0100: the schema-4 receipt records
-`postgresql_deferred`, zero databases and null combined coverage/headroom.
-Maintained database assertions are unexecuted #102 debt, not passed tests.
-[The delivery checkpoint](../checkpoints/2026-09-13-programme-change-read-protected-delivery.md)
-records exact evidence and its preserved archive. Prior #100/#103 evidence remains
-in its [own checkpoint](../checkpoints/2026-09-13-programme-operator-protected-delivery.md).
+16m57s (1,016.693 seconds), including 5,550 unit tests in 34.23s. Hosted units
+passed in 58.25s (1m20s job), all 64 frontend tests passed, quality took 24m02s,
+and the protected PR gate and CodeQL passed. Hosted workflow latency was 24m30s.
+The schema-4 receipt records `postgresql_deferred`, zero databases and null
+combined coverage/headroom. Native notice/race/migration scenarios remain
+unexecuted #102 debt. The [protected delivery checkpoint](../checkpoints/2026-09-13-programme-notice-protected-delivery.md)
+records exact evidence, preserved archives and issue reconciliation. The earlier
+approved 153.609-second schema-only observation remains limited to its
+[documented forward metadata](../checkpoints/2026-09-13-programme-notice-schema-and-preview.md).
 
-## Active bounded outcome: governed change communication (#104)
+## Active bounded outcome: on-site continuity (#107)
 
-Branch: `codex/programme-change-communication`, from protected PR #106.
-[#104](https://github.com/martonpornoi/maru/issues/104) remains the active #48
-checklist item. Its read child #105 is delivered. Local ADR 0102 work now includes
-operator recipient selection, closed inputs/lifecycle rules, immutable notice
-schema/native guards, exact sender preview, prepare/review/handoff/acknowledge
-commands, protected sender/personal detail queries, bounded current-purpose
-inventories and shared-shell organizer/personal forms. New commands freeze the
-complete dependency-key union after owner/person admission and revalidate source,
-purpose and retained evidence on exact receipt replay. Personal reads do not
-materialize organizer rationale or return other actors. A source can legitimately
-serve multiple placement/horizon uses; the preview now validates each exact use
-instead of incorrectly rejecting repeated dependency identity.
+Branch: `codex/programme-onsite-continuity`, from protected PR #110.
+[#107](https://github.com/martonpornoi/maru/issues/107) is the next #48 checklist
+item: useful now/next and run sheets, deterministic versioned print/export packs,
+a signed last-published view and explicit degraded operation. ADR 0103 contracts
+the read-only signature, independent trust, bounded expiry and known-state rules.
+Local work includes closed audience cards, now/next grouping, independently
+admitted owner composition, dedicated scoped signing, and a database-free offline
+file verifier. The latter persists known metadata before producing dated HTML;
+it rejects older releases, clock rollback and implicit lost-history resets.
+The three contracted shared-shell live/print/download surfaces are now wired
+only in dormant output routes. The [operator runbook](../operations/programme-onsite-continuity.md)
+documents independent key/trust provisioning, protected history, storage failure,
+clock custody, replacement and disposal. No real keys were provisioned.
 
-The interface increment passed all 5,549 unit tests in 34.44s before its final
-presentation/link-only-message refinement; the final focused set passes 45 tests
-in 1.35s. Strict types (576 sources), Ruff and semantic documentation pass.
-Maintained integration cases collect successfully but were not executed: they
-include real operator notice preparation/review/acknowledgement/handoff, retries,
-event-failure rollback, stale retry after withdrawal, forged review/acknowledgement
-facts and competing separate-connection reviews. Race helpers bound server lock
-waits at 15s and statements at 30s; no measured PostgreSQL runtime is claimed.
-The new migration file's legacy 29.955-second diagnostic estimate remains only a
-documented median fallback; no active measured timing or provenance was changed.
-The [surface checkpoint](../checkpoints/2026-09-13-programme-notice-surfaces.md)
-records database-free synthetic browser evidence, including all seven reflow
-widths, validation focus and distinct review/handoff/acknowledgement states.
-Organizer reasons are excluded from the personal view and the copyable manual
-message contains only a recipient-only link. Shared-shell context is copied per
-response; comparison headings have explicit readable foreground color.
-No exact-head certification, protected push or #104 completion is claimed yet.
+The database-free suite passed 5,729 tests in 45.30s before presentation, file-tool
+and HTTP additions. Subsequent focused checks passed 68 presentation/state cases,
+15 real temporary-file cases, and finally 90 payload/HTTP cases in 3.72s.
+Three owner-authorized PostgreSQL cases were added but not executed. Synthetic
+browser checks at 1280 by 720 covered the three audiences, ordinary/empty/
+withdrawn/invalidated/denied/unavailable states, own hosting unadopted, explicit
+operator layers and print-friendly content. A reused mock shell dictionary was
+corrected; recovery now receives fresh context. No native database authority or
+full accessibility/viewport acceptance is inferred from that component fixture.
+The [surface checkpoint](../checkpoints/2026-09-13-programme-continuity-surfaces.md)
+records precise evidence and #92 gaps. Next review and certify the clean exact
+candidate, then submit #107 through the protected PR flow; it is not yet delivered.
+The first exact run at `23a5ec2` stopped on one native-test formatting difference
+after package/dependency checks; no receipt was produced and no PostgreSQL ran.
+The formatting is corrected for the next complete exact-commit run.
 
-Keep preparation, review, handoff and acknowledgement distinct. Do not impersonate
-recipients, relocate accepted Shifts, infer attendance/work acceptance, restore
-suppressed historical content or silently adopt general Communications.
-New native schema must retain truthful readiness, recovery and #102 verification
-debt; do not fabricate observed fingerprints or execute deferred PostgreSQL tests.
-The maintainer explicitly approved a bounded disposable **schema-only migration
-and metadata check** for #104's new tables. This narrow exception permits exact
-schema fingerprint collection, not PostgreSQL test suites, runtime workflow
-acceptance, recovery acceptance or a database-certification success claim.
-That check completed: fresh schema migration took 153.578s, total 153.609s.
-Exact table metadata and native function/trigger/ACL checks matched; the exact
-disposable container was removed and existing containers were untouched. The
-[schema checkpoint](../checkpoints/2026-09-13-programme-notice-schema-and-preview.md)
-records fingerprints, retained logs and the distinction between observed forward
-SQL and later unit-checked Python reverse fences. Database workflow, race,
-reverse/reapply and weakened-schema tests are maintained but unexecuted #102 debt.
+Offline material is a bounded historical snapshot, not current permission,
+fresh instructions or a writable source. Specify source time/age, expiry,
+time zone, scope, verification, synchronization and disposal. Known withdrawal
+or invalidation must suppress ordinary content, not quietly fall back to old
+material. Reuse #104 communication; do not introduce attendance, actual-time,
+handover, general messaging or an on-site mutation relay.
 
-Next inside #104: exact-head deferred-mode certification and protected delivery.
-Preserve the final source-lock ordering and notice-specific replay hook. The
-inventory rejects an outer transaction instead of accumulating differently
-ordered owner locks. It reports currently viewable packages, not delivery
-completeness. #108 must connect the dormant labelled reference controls to
-authorized owning-task selections so ordinary department users do not need to
-find UUIDs. Required human acceptance belongs under #92/#48, not an unattended
-success claim. No additional schema-only run is needed by this surface increment.
+#108 explicitly owns connecting notice references to authorized owning-task
+selections so department users need not find UUIDs. #92 now includes unchecked
+notice human/screen-reader/genuine-zoom acceptance. The synthetic browser proof
+in the [surface checkpoint](../checkpoints/2026-09-13-programme-notice-surfaces.md)
+does not replace those checks or PostgreSQL execution. #102 records the new
+native notice verification debt. No additional schema-only execution is
+authorized by the completed #104 exception.
 
 ## Checklist-first delivery priority
 
 The maintainer reaffirmed every item in #48's visible delivery decomposition as
-the number-one priority. It now links #104 -> #105 -> PR #106, reconciles delivered
-#100 and names each remaining outcome:
+the number-one priority. #104/#105 are delivered through PRs #110/#106; #48's
+decomposition is reconciled and names each remaining outcome:
 
 - [#107](https://github.com/martonpornoi/maru/issues/107): on-site now/next,
   run sheets, signed/versioned continuity, export and degraded operation.
@@ -119,8 +109,8 @@ displacing #48. Supporting deliveries never close a parent outcome alone.
 
 Maintain PostgreSQL tests, historical inventories and migration/recovery
 fixtures as features change, but do not execute PostgreSQL test suites during
-this dormant development phase. Only the explicitly approved #104 disposable
-schema/metadata check above is excepted. Run focused non-database feedback and exact-commit development
+this dormant development phase. The approved #104 disposable schema/metadata
+exception is completed, not standing authority. Run focused non-database feedback and exact-commit development
 acceptance before each protected PR. Record unexecuted database coverage as
 verification debt, not success; do not invent timing observations.
 
@@ -133,7 +123,7 @@ fences full/release acceptance and adding the Programme profile while deferred.
 ## Existing foundation and mandatory gates
 
 Programme children #57, #59, #61, #63, #66, #64, #71, #77, #79, #81, #85,
-#88, #91, #94, #96, #99, #100 and #105 are delivered dormant. Do not restart those tasks.
+#88, #91, #94, #96, #99, #100, #104 and #105 are delivered dormant. Do not restart those tasks.
 The [Programme Operations contract](../product/page-contracts/programme-operations-adoption-setup.md)
 and owning [Programme](../modules/programme.md),
 [Applications](../modules/applications.md), [Events](../modules/events.md) and
@@ -154,9 +144,9 @@ activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Preserve PR #106's exact delivery and archived verification; follow ADR 0100.
-2. Finish #104 governed change delivery and exact-recipient acknowledgement.
-3. Deliver #107 continuity and #108's dormant connected departmental journey.
+1. Preserve PR #110's exact delivery and archived verification; follow ADR 0100.
+2. Contract and deliver #107 on-site continuity through its protected PR.
+3. Deliver #108's dormant connected departmental journey.
 4. Complete #102 PostgreSQL restoration, #97 logical recovery and #92 human
    acceptance before integrated Programme-only acceptance or activation.
 5. After #48, continue #42 and the director introduction/pilot package, then the

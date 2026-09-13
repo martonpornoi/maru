@@ -4,12 +4,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Programme timetable · Maru</title>
+  <title>{% block output_title %}Programme timetable · Maru{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'scheduling/public_timetable.css' %}">
+  {% block output_styles %}{% endblock %}
 </head>
 <body>
   <a class="skip-link" href="#timetable">Skip to timetable</a>
   <main id="timetable">
+    {% block output_content %}
     <header>
       <p class="eyebrow">Maru · Released Programme</p>
       <h1>Programme timetable</h1>
@@ -95,6 +97,7 @@
         <section><h2>Timetable needs review</h2><p>A required source changed after release. No room or programme entry is being advertised as currently approved. Wait for a reviewed replacement.</p></section>
       {% endif %}
     {% endif %}
+    {% endblock %}
   </main>
 </body>
 </html>

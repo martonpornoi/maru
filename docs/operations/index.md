@@ -14,6 +14,9 @@ or permission to use production personal data.
 
 - [Read and copy a Programme timetable](programme-output-evaluation.md) explains
   dormant public/personal synthetic output, source states and private saved copies.
+- [Programme now and offline continuity](programme-onsite-continuity.md) covers
+  now/next, complete run sheets, dedicated signing, independent offline trust,
+  protected history and disposal; it does not authorize production activation.
 - [Hands-on tutorial](maru-hands-on-tutorial.md) follows the main synthetic
   organization-to-edition journey.
 - [Clean convention onboarding](clean-convention-onboarding-walkthrough.md)
@@ -69,6 +72,7 @@ analogy.
 
 maru-hands-on-tutorial
 programme-output-evaluation
+programme-onsite-continuity
 clean-convention-onboarding-walkthrough
 empty-experience-baseline
 workforce-only-adoption-and-recovery

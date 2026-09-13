@@ -13,10 +13,24 @@ SCHEDULING_RELEASE_SOURCE_ADAPTER = "scheduling.release-candidate-source@1"
 SCHEDULING_RELEASE_PREFLIGHT_ADAPTER = "scheduling.release-preflight@1"
 SCHEDULING_PUBLIC_RELEASE_ADAPTER = "scheduling.public-release-output@1"
 SCHEDULING_OPERATOR_RELEASE_ADAPTER = "scheduling.operator-release-output@1"
+SCHEDULING_CONTINUITY_ADAPTER = "scheduling.programme-continuity@1"
 
 SCHEDULING_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
     owner_module="scheduling",
     descriptors=(
+        AdoptionAdapterDescriptor(
+            code=SCHEDULING_CONTINUITY_ADAPTER,
+            owner_module="scheduling",
+            kind="read-only-programme-continuity",
+            result_semantics=(
+                "Admits on-site views and bounded signed historical packs only "
+                "after the exact public, personal or operator owners admit the read."
+            ),
+            failure_semantics=(
+                "Unpinned, denied, incomplete or unverifiable evidence produces "
+                "no pack; expiry and known newer withdrawal prevent normal replay."
+            ),
+        ),
         AdoptionAdapterDescriptor(
             code=SCHEDULING_OPERATOR_RELEASE_ADAPTER,
             owner_module="scheduling",

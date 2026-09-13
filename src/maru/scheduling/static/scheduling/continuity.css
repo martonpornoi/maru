@@ -1,0 +1,36 @@
+.programme-continuity { color: var(--body-fg, #202b39); max-width: 80rem; }
+.programme-continuity *, .programme-continuity *::before, .programme-continuity *::after { box-sizing: border-box; }
+.programme-continuity p, .programme-continuity li, .programme-continuity dd { overflow-wrap: anywhere; line-height: 1.6; }
+.programme-continuity section { margin-block: 1.5rem; }
+.continuity-source, .continuity-card { border: 1px solid var(--hairline-color, #8993a3); border-radius: .5rem; padding: 1rem; margin-block: 1rem; }
+.continuity-warning { border-inline-start: .3rem solid #9a3e00; padding-inline-start: .8rem; font-weight: 600; }
+.programme-continuity dl { display: grid; grid-template-columns: minmax(8rem, 1fr) minmax(0, 3fr); gap: .5rem 1rem; }
+.programme-continuity dt { font-weight: 600; overflow-wrap: anywhere; }
+.programme-continuity dd { margin: 0; white-space: pre-wrap; }
+.programme-continuity a { color: var(--link-fg, #064f8c); text-decoration: underline; }
+.programme-continuity a:focus-visible, .continuity-skip:focus-visible { outline: .2rem solid #2463ba; outline-offset: .2rem; }
+.continuity-reference { font-size: .9rem; }
+body:has(> .continuity-skip) { margin: 0; padding: 1rem; font: 1rem/1.6 system-ui, sans-serif; background: #fff; color: #202b39; }
+.continuity-skip { position: absolute; top: -10rem; }
+.continuity-skip:focus { position: static; }
+.continuity-controls { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1rem; }
+.programme-continuity-page { max-width: 80rem; min-width: 0; overflow-wrap: anywhere; }
+.continuity-controls a, .continuity-controls button, .continuity-controls summary { min-height: 2.75rem; padding: .5rem; }
+.continuity-controls :focus-visible { outline: .2rem solid #2463ba; outline-offset: .2rem; }
+.continuity-layer { display: flex; align-items: start; gap: .6rem; min-height: 2.75rem; padding: .5rem; }
+.continuity-layer input { flex: 0 0 auto; margin-top: .25rem; }
+.programme-continuity h3 { color: inherit; background: transparent; font-size: 1.15rem; }
+@media (max-width: 40rem) {
+  .programme-continuity dl { grid-template-columns: minmax(0, 1fr); gap: .25rem; }
+  .programme-continuity dd { margin-block-end: .75rem; }
+  .continuity-source, .continuity-card { padding: .75rem; }
+}
+@media print {
+  #header, #nav-sidebar, .breadcrumbs, .toggle-nav-sidebar, #footer, .maru-page-access { display: none !important; }
+  #container, #main, #content, #content-main, #main-content { width: auto !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; }
+  .continuity-controls, .continuity-skip { display: none !important; }
+  .programme-continuity { color: #000; max-width: none; }
+  .continuity-card { break-inside: avoid; border-radius: 0; }
+  .programme-continuity a { color: #000; text-decoration: none; }
+  .programme-continuity p, .programme-continuity dd { overflow: visible; }
+}

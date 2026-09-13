@@ -20,12 +20,17 @@ from maru.programme.models import (
 )
 from maru.programme.public_copy_commands import withdraw_programme_public_rendition
 from maru.programme.queries import ProgrammeQueryUnavailableError
+from maru.scheduling import continuity_queries as continuity
 from maru.scheduling import output_queries as outputs
 from maru.scheduling import public_release_references as references
 from maru.scheduling import release_queries
-from maru.scheduling.adoption import SCHEDULING_PUBLIC_RELEASE_ADAPTER
+from maru.scheduling.adoption import (
+    SCHEDULING_CONTINUITY_ADAPTER,
+    SCHEDULING_PUBLIC_RELEASE_ADAPTER,
+)
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
 from maru.scheduling.command_support import SchedulingUnavailableError
+from maru.scheduling.continuity_protocol import ContinuityScope
 from maru.scheduling.release_artifacts import ReleaseArtifactInvalidError
 from maru.venues import programme_output_queries as room_outputs
 from maru.venues.models import EditionSpaceSelection
@@ -76,6 +81,41 @@ def public_scope(review_scope, monkeypatch):
 
 def load(scope):
     return outputs.load_public_programme_timetable(**scope_arguments(scope))
+
+
+def test_native_public_continuity_rechecks_withdrawal_without_visitor_effects(
+    public_scope, monkeypatch
+):
+    # Maintained for #102; PostgreSQL execution remains deferred under ADR 0100.
+    monkeypatch.setattr(
+        continuity,
+        "profile_allows_adapter",
+        lambda _code, _version, adapter: adapter == SCHEDULING_CONTINUITY_ADAPTER,
+    )
+    published = publish(public_scope, approve(public_scope))
+    scope = ContinuityScope(**scope_arguments(public_scope), audience="public")
+    before = (
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    )
+    result = continuity.load_continuity_projection(scope, correlation_id=uuid4())
+    assert result.release_id == published.object_id
+    assert result.entries[0].title == "Synthetic public opening"
+    assert result.entries[0].context is None
+    assert (
+        AuditEvent.objects.count(),
+        DomainEvent.objects.count(),
+        OutboxMessage.objects.count(),
+    ) == before
+    withdraw(public_scope, published)
+    ended = continuity.load_continuity_projection(scope, correlation_id=uuid4())
+    assert ended.release_state == "withdrawn"
+    assert ended.pointer_version > result.pointer_version
+    assert ended.entries == ()
+    monkeypatch.setattr(continuity, "profile_allows_adapter", lambda *_args: False)
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        continuity.load_continuity_projection(scope, correlation_id=uuid4())
 
 
 def end_copy(scope, rendition_id):

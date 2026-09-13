@@ -7,7 +7,7 @@ and protected-delivery status; this guide is the owner contract, not a merge cla
 
 ## Ownership and adoption
 
-### Governed change communication (#104, in progress)
+### Governed change communication (#104)
 
 `change_inputs` closes preparation to one exact release, occurrence, observed
 pointer version, preview digest and purpose. Host/work recipients are resolved
@@ -1061,6 +1061,42 @@ updates the exact native readiness fingerprint, and preserves existing function
 ACLs. It creates no grant, role or domain record. Reverse is refused after any
 retained grant or role references the vocabulary, including revoked history;
 retain evidence and fix forward instead. No other runtime privilege changes.
+
+### Read-only on-site continuity
+
+ADR 0103 adds the dormant `scheduling.programme-continuity@1` adapter without a
+profile pin, production route, migration or new runtime privilege.
+`continuity_queries.load_continuity_projection` first admits this adapter, then
+calls exactly the independently authorized public, own-person or operator owner
+query in a transaction and rechecks the profile. Existing parent/person locking,
+requested-field authorization and sensitive-read audits remain authoritative.
+Public composition adds neither a private query nor visitor activity collection.
+
+`continuity_sources` and `continuity_operator_source` validate each complete
+existing output graph before selecting closed cards. `continuity_payload` owns
+the canonical `scheduling.programme-onsite@1` document, now/next intervals,
+audience ceilings and bounds. `continuity_presentation` escapes every source
+string and renders shared-shell fragments or dated standalone offline HTML.
+`continuity_views` owns safe no-store live/print/pack routes; authenticated actors
+come from the request, never a query parameter. Missing signing policy disables
+signed downloads while separately authorized live views can remain available.
+
+`continuity_signing` uses dedicated tenant/edition Ed25519 process configuration.
+The database-free `continuity_protocol` verifies the closed signed manifest,
+hash, independent trust, scope and bounded time. `continuity_known_state` retains
+latest signed metadata, release high-water and protected local verification time.
+`continuity_offline` locks one exact purpose, persists verified metadata before
+payload decoding, and publishes a new complete historical HTML file without
+network access. It cannot detect unseen changes or erase existing copies.
+
+The [page contract](../product/page-contracts/programme-onsite-continuity.md) and
+[operator runbook](../operations/programme-onsite-continuity.md) own exact routes,
+key/trust formats, initialization, lifetime, storage failure and disposal.
+No signed file grants authority, acknowledgement, current freshness or offline
+writes. #104 remains the governed notice workflow. #108 connects ordinary task
+selection; #109 owns the broader profile exit archive and integrated journey.
+Native cases are maintained but unexecuted #102 debt under ADR 0100; human
+acceptance remains #92. CURRENT records exact delivery and verification status.
 
 ### Native integrity and recovery
 

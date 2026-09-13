@@ -146,10 +146,11 @@ authorized room/Department/edition operator run sheets. #104 owns detailed chang
 impact, governed communication and exact-recipient acknowledgement. Its native
 child #105 is delivered through PR #106 with dormant read-only comparisons across
 planner, host, operator and volunteer purposes plus sender-authorized host/work
-recipient references under ADR 0101. #104 stays open for operator recipient
-selection, governed preparation/review/manual handoff or explicitly adopted
-Effects routing, immutable acknowledgement and user surfaces. This delivery
-decomposition does not waive the complete #104/#48 operational journey.
+recipient references under ADR 0101. #104 is delivered through PR #110 with
+operator recipient selection, governed preparation/review/manual handoff,
+immutable acknowledgement and dormant shared-shell user surfaces under ADR
+0102. #108 retains guided owning-task selections, and #92/#102 retain human
+and native database acceptance. This does not complete the #48 operational journey.
 The visible #48 decomposition is the maintainer's first priority. Existing
 remaining outcomes are explicitly tracked as #107 on-site continuity, #108 guided
 departmental surfaces/gated activation and #109 integrated rehearsal. #102 restores
@@ -833,9 +834,10 @@ pre-activation browser checks delivered through PR #90. Issue #88 delivers
 governed staffing. Issues #91/#94/#96 deliver release preparation, review and
 atomic publication/invalidation. Issue #99 delivers public and exact-person
 output; #100 adds independently authorized room, Department and edition operator
-run sheets under ADR 0099. These remain dormant components, not an activated
-departmental workflow. Next are detailed change impact and governed delivery,
-on-site continuity, #97 logical recovery, guided setup and integrated acceptance
+run sheets under ADR 0099. #104 adds governed change communication and exact-self
+acknowledgement under ADR 0102. These remain dormant components, not an activated
+departmental workflow. Next are on-site continuity, #97 logical recovery,
+guided setup and integrated acceptance
 in dependency order. Human-only #92 checks remain an activation gate. Each
 child is separately verified and delivered.
 

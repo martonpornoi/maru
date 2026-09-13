@@ -1,0 +1,7 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+{% block baseline_page_title %}Programme operator now and next · Maru{% endblock %}
+{% block baseline_breadcrumbs %}Programme now and next{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'scheduling/continuity.css' %}">{% endblock %}
+{% block baseline_content %}{% include "scheduling/_continuity_page.html" %}{% endblock %}
