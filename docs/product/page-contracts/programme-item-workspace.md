@@ -1,6 +1,7 @@
 # Programme item workspace
 
-- Status: In development under #108; dormant routes only, not profile activation.
+- Status: First increment delivered through PR #112; #108 remains open. Dormant
+  routes only, not profile activation.
 - Requirements: PRG-005, PRG-006, PRG-008, UX-013, UX-029, NFR-013.
 - Decisions: ADRs 0081, 0086, 0087, 0096 and 0100.
 - Owner: Programme; shared Administration shell, no specialist-record dependency.
