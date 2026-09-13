@@ -1716,6 +1716,21 @@ architecture documents, implementation issues, tests, and release notes.
   version-stamped last-published snapshot and printable pack. This first
   boundary does not imply check-in, lateness, absence, Shift actual time, work
   disputes, Shift handover, payroll, or general incident-command capability.
+  An exact-person host comparison requires independent current Programme and
+  Scheduling self authority and only currently confirmed own relationships.
+  It compares own approved presence in the active release and its retained
+  immediate predecessor, not arbitrary history. Own-presence membership, required
+  start/end, surrounding phases, day/room and selected reviewed-copy references
+  remain distinct. No confirmed purpose means no release-existence lookup;
+  withdrawn/invalidated governing state means explicit suppressed comparison,
+  never fabricated additions or cancellations. Current relationship versions do
+  not rewrite immutable released intervals. Comparison alone proves no delivery,
+  acknowledgement, work acceptance or attendance.
+  Room, Department and edition change comparisons independently require the
+  current exact operator purpose and each owner's scope-link authority. Each
+  side is reduced to that current membership. Leaving a scope is not global
+  cancellation and reveals no unadmitted destination; current owner-link versions
+  remain distinct from immutable release facts and retained work.
 
 ### Privacy, compliance, and participant control
 

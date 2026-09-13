@@ -55,17 +55,27 @@ comparison explicitly on withdrawal/invalidation. Its database-free focused
 comparison/query tests pass (74 cases, 0.56s), and all 5,089 units pass in 32.58s.
 Ruff, strict types and NumPy/doc-link checks pass. Real history, audit,
 cross-scope denial and suppression assertions are maintained but unexecuted.
+ADR 0101 now adds independent current-self host and exact room/Department/edition
+operator predecessor comparisons. Required own presence differs from full event
+geometry; scope entry/exit does not disclose an unadmitted destination or imply
+global cancellation. Native manifests and current owner memberships are rechecked
+before final authority and mandatory audit. Neither query accepts arbitrary
+history, a different recipient or a planner-authorizer substitute. The 88 new
+database-free cases pass; all 5,177 units pass in 42.05s (two existing warnings).
+Strict types, Ruff/formatting and NumPy/documentation checks pass. Existing real
+owner/audit/tenant/withdrawal/retained-work assertions were extended, with a new
+host predecessor integration case; all remain unexecuted debt for #102.
 These are focused development results, not exact-head PR certification. No
 #104 PR has been pushed. The full issue is not delivered:
-recipient eligibility, governed delivery, acknowledgement persistence and user
+retained-volunteer eligibility, governed delivery, acknowledgement persistence and user
 surfaces remain. Reuse
 owner commands/queries and shared
 output boundaries; do not silently relocate accepted Shifts or turn
 acknowledgement into attendance, work acceptance or release approval.
 
-Next: map current release/Workforce/Effects contracts, define the exact change
-and recipient evidence in requirements and an ADR, then implement and test the
-bounded outcome. On-site continuity and guided departmental surfaces follow.
+Next: add Workforce-owned exact-self retained Programme binding references and
+independent volunteer change comparison, then define and implement governed
+communication and exact-recipient acknowledgement. On-site continuity and guided departmental surfaces follow.
 Keep #48 open through the complete integrated journey.
 
 ## Temporary testing policy and activation gates

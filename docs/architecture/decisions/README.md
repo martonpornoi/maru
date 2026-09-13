@@ -105,6 +105,7 @@ the system.
 | [0098](0098-budgeted-postgresql-shard-planning.md) | Accepted | Budget exact local/hosted PostgreSQL assignments, retain eight-worker isolation and require measured headroom before certification |
 | [0099](0099-purpose-scoped-programme-operator-outputs.md) | Accepted | Authorize room, Department and edition run sheets independently per owner, preserving exact releases, current instructions and retained work |
 | [0100](0100-temporary-programme-postgresql-deferral.md) | Accepted | Temporarily defer PostgreSQL development execution explicitly while retaining tests, non-database gates and mandatory full restoration before Programme acceptance |
+| [0101](0101-exact-purpose-release-change-comparisons.md) | Accepted | Compare exact release transitions and own confirmed host presence under independent authority without widening planner history or changing work |
 
 New ADRs use the next four-digit number and contain:
 

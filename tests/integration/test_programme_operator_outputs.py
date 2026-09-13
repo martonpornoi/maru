@@ -27,6 +27,7 @@ from maru.programme.staffing_queries import ProgrammeStaffingReadRequest
 from maru.scheduling import operator_scope
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
 from maru.scheduling.operator_output_queries import load_operator_run_sheet
+from maru.scheduling.operator_release_impact import load_operator_release_impact
 from maru.scheduling.operator_release_references import load_operator_release_reference
 from maru.scheduling.operator_scope import OperatorReadRequest, OperatorScopeKind
 from maru.scheduling.release_inputs import ReleaseCandidateSelection
@@ -152,6 +153,7 @@ def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
     request = operator_request(operator_world, kind=kind)
     with CaptureQueriesContext(connection) as captured:
         result = load_operator_release_reference(request)
+        impact = load_operator_release_impact(request)
         copies = load_operator_programme_copy(
             request, expected_release_id=published.object_id
         )
@@ -160,6 +162,10 @@ def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
         )
     assert result.state == "available"
     assert result.release_id == published.object_id
+    assert impact.release_id == published.object_id
+    assert impact.previous_state == "absent"
+    assert impact.changes[0].kind == "added"
+    assert impact.changes[0].after == result.occurrences[0]
     assert not result.staffing_adopted
     assert len(result.occurrences) == len(copies) == len(rooms) == 1
     assert result.occurrences[0].envelope == operator_world.world.placement.envelope
@@ -208,6 +214,8 @@ def test_exact_operator_grants_reject_foreign_scope_and_person(operator_world):
     ):
         with pytest.raises(SchedulingAuthorizationDeniedError):
             load_operator_run_sheet(changed)
+        with pytest.raises(SchedulingAuthorizationDeniedError):
+            load_operator_release_impact(changed)
 
 
 def test_each_owner_denies_missing_authority_even_before_any_release(operator_world):
@@ -234,6 +242,9 @@ def test_withdrawal_removes_approved_content_without_last_good_fallback(operator
     assert result.occurrences == ()
     assert load_operator_programme_copy(request, expected_release_id=None) == ()
     assert load_operator_wayfinding(request, expected_release_id=None) == ()
+    impact = load_operator_release_impact(request)
+    assert impact.state == "withdrawn"
+    assert impact.changes is None
 
 
 def test_successful_owner_audit_is_required_before_content_can_return(operator_world):
@@ -439,6 +450,14 @@ def test_department_without_room_gets_its_linked_work_and_retained_predecessor_o
         result = load_operator_run_sheet(request, layers=frozenset({"staffing"}))
     assert result.reference.release_id == published.object_id
     assert len(result.entries) == 1
+    impact = load_operator_release_impact(request)
+    assert impact.room_links == ()
+    assert impact.staffing_adopted
+    assert impact.changes[0].after == result.entries[0].placement
+    assert {row.demand_id for row in impact.work_links} == {
+        work.first.demand_id,
+        work.successor.demand_id,
+    }
     assert result.staffing.adopted
     assert {row.demand_id for row in result.staffing.demands} == {
         work.first.demand_id,

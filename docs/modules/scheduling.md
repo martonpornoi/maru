@@ -34,6 +34,34 @@ remain distinct. Withdrawn or invalidated governing state yields `changes=None`,
 not an empty successful comparison or invented mass removal. Recipient-specific
 composition, communication and acknowledgement remain unfinished #104 work.
 
+`personal_release_impact.load_personal_host_release_impact` implements the
+separate real-self comparison in [ADR 0101](../architecture/decisions/0101-exact-purpose-release-change-comparisons.md).
+It accepts no recipient, historical-release selector or authorizer substitute.
+Programme independently proves current own purposes before any release lookup;
+only confirmed relationships select approved presence on each side of the
+active release's retained predecessor transition. The stable key is host plus
+occurrence, not merely occurrence. Own-presence additions/removals, required
+start/end, surrounding phases, day bounds, room and exact copy-reference changes
+remain distinct. Current relationship version and invitation sequence accompany
+immutable presence sources without invitation text, private copy or other hosts.
+No confirmed purpose yields no release metadata; unavailable governing state
+yields `changes=None`, not fabricated cancellation. The complete union is bounded
+at twice the 2,000-row per-side ceiling. Repeated owner purposes/native manifests,
+final self authorization and mandatory audit fence disclosure. This adds no
+schema, route, acknowledgement, delivery or Workforce mutation. Other recipient
+purposes and the communication/acknowledgement workflow remain unfinished.
+
+`operator_release_impact.load_operator_release_impact` independently compares
+the active release and retained predecessor within ADR 0099's exact room,
+Department or edition authority. Each side is separately constrained by current
+Venue room responsibility and optional independently authorized retained
+Workforce links. Movement out of scope returns no destination or other-side
+fields and is not labelled global cancellation. Current owner membership
+versions accompany the bounded immutable transition; copy references grant no
+text permission. Complete links/adoption, native manifests, final owner authority
+and mandatory audit are rechecked even for empty/suppressed results. This does
+not enumerate people with grants, expose personnel or modify retained work.
+
 ### Existing owner boundary
 
 `maru.scheduling` owns service days, stable occurrences, comparable timetable

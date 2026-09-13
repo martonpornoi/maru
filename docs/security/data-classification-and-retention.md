@@ -402,6 +402,25 @@ legal hold and recovery policy before activation. JSON, calendars and printouts
 are private point-in-time copies: authorized custodians must protect and recheck
 them, and Maru cannot promise remote recall of withdrawn or superseded files.
 
+### Programme release-change comparisons
+
+ADR 0101's comparison projections are transient restricted operational evidence,
+not a recipient directory or new activity collection. Planner history, exact own
+confirmed hosting and exact room/Department/edition operator purposes authorize
+independently. Own host comparison carries relationship version, invitation
+sequence and own immutable presence, not invitation prose, other hosts or contacts.
+Operator comparison carries current scope-link versions and only independently
+in-scope geometry on each side, never an unadmitted destination. Copy references
+do not authorize either text. Withdrawn/invalidated sources and lost current
+purpose suppress disclosure rather than restoring old notification content.
+
+Mandatory existing Scheduling/Programme/operator sensitive-read audits retain
+opaque scope/principal/trace and purpose under existing retention classes, not
+the compared body. No new persisted comparison, communication receipt, analytics,
+retention period or disposal executor is introduced by these read boundaries.
+Exact-recipient communication and acknowledgement require their own documented
+storage, purpose, retention and recovery contract before implementation.
+
 ### Logistics custody and restricted contact
 
 - Reusable external-party identity contains only legal/public operational
