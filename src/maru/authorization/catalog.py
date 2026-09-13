@@ -1382,6 +1382,16 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
+        code="scheduling.view_work_self",
+        description="View Programme release context for one's own operative work.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"own_work_schedule"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
         code="scheduling.view_planning",
         description=(
             "Read private service days, occurrences and candidate placement times."

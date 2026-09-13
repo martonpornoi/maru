@@ -30,10 +30,14 @@ from maru.scheduling.operator_output_queries import load_operator_run_sheet
 from maru.scheduling.operator_release_impact import load_operator_release_impact
 from maru.scheduling.operator_release_references import load_operator_release_reference
 from maru.scheduling.operator_scope import OperatorReadRequest, OperatorScopeKind
+from maru.scheduling.personal_work_release_impact import (
+    load_personal_work_release_impact,
+)
 from maru.scheduling.release_inputs import ReleaseCandidateSelection
 from maru.venues.models import EditionSpaceSelection
 from maru.venues.operator_queries import load_operator_wayfinding
 from maru.workforce import operator_links as work_links
+from maru.workforce import personal_programme_links as personal_links
 from maru.workforce.models import ShiftCommitment, ShiftDemand
 from maru.workforce.programme_impact import ProgrammeStaffingAction
 from maru.workforce.programme_staffing_inputs import ProgrammeStaffingBindingChange
@@ -479,6 +483,78 @@ def test_department_without_room_gets_its_linked_work_and_retained_predecessor_o
         predecessor.retained_work[0].rest_ends_at,
     ) == work.original_interval
     assert successor.retained_work[0].state == "confirmed"
+    monkeypatch.setattr(personal_links, "profile_allows_adapter", lambda *_args: True)
+    person_id = ShiftCommitment.objects.get(demand_id=work.first.demand_id).account_id
+    own_links = personal_links.load_personal_programme_work_links(
+        actor_id=person_id,
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        correlation_id=uuid4(),
+    )
+    assert {row.demand_id for row in own_links} == {
+        work.first.demand_id,
+        work.successor.demand_id,
+    }
+    assert {(row.status, row.current) for row in own_links} == {
+        ("removed", False),
+        ("confirmed", True),
+    }
+    original_policy = policy.profile_allows_capability
+    monkeypatch.setattr(
+        policy,
+        "profile_allows_capability",
+        lambda code, version, capability: (
+            capability == "scheduling.view_work_self"
+            or original_policy(code, version, capability)
+        ),
+    )
+    work_before = tuple(
+        ShiftCommitment.objects.filter(account_id=person_id)
+        .values_list(
+            "id",
+            "status",
+            "command_version",
+            "starts_at",
+            "ends_at",
+            "rest_ends_at",
+        )
+        .order_by("id")
+    )
+    work_impact = load_personal_work_release_impact(
+        actor_id=person_id,
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        correlation_id=uuid4(),
+    )
+    assert work_impact.release_id == published.object_id
+    assert len(work_impact.changes) == 1
+    assert work_impact.changes[0].work.demand_id == work.successor.demand_id
+    assert work_impact.changes[0].work.status == "confirmed"
+    assert (
+        work_impact.changes[0].after.placement_id
+        == result.entries[0].placement.placement_id
+    )
+    assert (
+        tuple(
+            ShiftCommitment.objects.filter(account_id=person_id)
+            .values_list(
+                "id",
+                "status",
+                "command_version",
+                "starts_at",
+                "ends_at",
+                "rest_ends_at",
+            )
+            .order_by("id")
+        )
+        == work_before
+    )
+    assert AuditEvent.objects.filter(
+        principal_id=person_id,
+        operation="scheduling.query.personal_work_release_impact",
+        outcome="allow",
+        capability_code="scheduling.view_work_self",
+    ).exists()
     statements = [
         row["sql"]
         for row in captured

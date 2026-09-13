@@ -1731,6 +1731,16 @@ architecture documents, implementation issues, tests, and release notes.
   side is reduced to that current membership. Leaving a scope is not global
   cancellation and reveals no unadmitted destination; current owner-link versions
   remain distinct from immutable release facts and retained work.
+  Workforce proves exact-self retained Programme work through its own current
+  self authority and explicit staffing adoption. Only own retained demand IDs
+  select current/predecessor binding lineage; no successor work or other person
+  is implicitly substituted. Commitment, demand and binding versions/states are
+  distinct, and the opaque references independently grant no timetable access.
+  A separate Scheduling self-purpose admits released context only for those
+  exact own linked claims/confirmations. Ended/unlinked work grants no release
+  discovery. The active/predecessor comparison selects only those occurrences;
+  timetable additions/removals and changed geometry do not create, confirm,
+  cancel, retime or relocate retained work.
 
 ### Privacy, compliance, and participant control
 

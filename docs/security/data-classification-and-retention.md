@@ -418,6 +418,13 @@ Mandatory existing Scheduling/Programme/operator sensitive-read audits retain
 opaque scope/principal/trace and purpose under existing retention classes, not
 the compared body. No new persisted comparison, communication receipt, analytics,
 retention period or disposal executor is introduced by these read boundaries.
+Workforce's `workforce.personal_programme_links.read` audit separately records
+exact-self retained binding-reference access under `workforce-personal`, without
+work instructions or other recipients. Opaque current commitment/demand/binding
+versions and states are transient own-work evidence, not a new work snapshot.
+Scheduling's separate `scheduling.view_work_self` capability admits only linked
+own claims/confirmations and audits `scheduling.query.personal_work_release_impact`;
+ended/unlinked work grants no release discovery. No current profile pins it.
 Exact-recipient communication and acknowledgement require their own documented
 storage, purpose, retention and recovery contract before implementation.
 

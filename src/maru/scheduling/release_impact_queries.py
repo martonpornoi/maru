@@ -111,9 +111,18 @@ class ProgrammeReleaseImpact:
 
 
 def _geometry(
-    request: SchedulingReadRequest, manifest: ProgrammeReleaseManifest
+    request: SchedulingReadRequest,
+    manifest: ProgrammeReleaseManifest,
+    *,
+    occurrence_ids: set[UUID] | None = None,
 ) -> dict[UUID, ReleasedChangeGeometry]:
-    selected = {row.placement_id: row for row in manifest.selections}
+    selected = {
+        row.placement_id: row
+        for row in manifest.selections
+        if occurrence_ids is None or row.occurrence_id in occurrence_ids
+    }
+    if occurrence_ids is not None and not selected:
+        return {}
     rows = tuple(
         SchedulingPlacementRevision.objects.filter(
             organization_id=request.organization_id,

@@ -67,6 +67,31 @@ Owner links, adoption, both native manifests and authority are repeated before
 mandatory audit and disclosure, including for an empty or suppressed result.
 This extends ADR 0099 only for this bounded predecessor comparison.
 
+Workforce supplies a separate exact-self retained Programme-work reference.
+Real `workforce.view_self` admission and deliberately adopted Programme staffing
+are required before binding lookup. Owned commitment demands, never caller IDs,
+select complete current/retained binding lineage; unrelated successor demands
+are not returned. Commitment state/version, demand version and binding version
+remain separate. Claimed, confirmed and ended states retain their meaning; a
+superseded binding does not silently cancel accepted work. Unadopted Programme
+returns an explicit absent layer without work, Programme or Scheduling lookup.
+These opaque references independently authorize no Scheduling geometry or copy;
+the volunteer comparison uses its own Scheduling admission boundary below.
+
+Add the dormant non-persistable exact-self capability
+`scheduling.view_work_self`, restricted to `own_work_schedule`. No current profile
+pins it, and no grant or catalog migration is needed for a non-persistable self
+purpose. Both that Scheduling capability and real Workforce self/adapter
+admission are mandatory. Only linked own retained claims and confirmations
+justify release lookup; ended or unrelated work cannot discover a release.
+The active release and its retained predecessor supply exact occurrence context,
+with geometry selected only for the independently proven own occurrences.
+Material copy/placement reference and day/room/phase differences remain distinct.
+No context change retimes, relocates, confirms or cancels the retained Shift.
+Own work linkage, both native manifests and final authority/audit are rechecked.
+Partial adoption or moving/incomplete owner evidence is unavailable; suppressed
+native state returns no comparison rather than a last-good timetable.
+
 ## Consequences
 
 - Hosts can distinguish a change to their required presence from a changed

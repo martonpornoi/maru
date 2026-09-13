@@ -743,6 +743,22 @@ together. Retry identity is actor/edition-bound; matching retries return the
 original minimal result after current authorization, without silently substituting
 current work or demanding that the old private candidate remain current.
 
+`personal_programme_links.load_personal_programme_work_links` supplies a
+separate dormant exact-self reference for change-impact composition (ADR 0101).
+It requires real Workforce self authority and current verified identity, then
+explicit Programme staffing adoption before any binding/work lookup. Only own
+retained commitment demands select complete current/predecessor lineage. The
+result contains opaque commitment/demand/binding/occurrence references and
+independent current versions/state, not accepted intervals, private instructions,
+another person or a successor demand the person never held. Ended work remains
+history, and an old binding does not silently cancel still-retained work.
+`None` means unadopted staffing; an empty tuple means an authorized complete
+collection has no Programme-linked own work. Canonical scope/person locking,
+repeated work/lineage/adoption checks, final authority and mandatory minimized
+audit precede disclosure. This is not a portable grant to Scheduling geometry,
+copy, delivery or acknowledgement and changes no Shift. The internal lineage
+reader is shared with operator queries; each public purpose authorizes separately.
+
 `ProgrammeShiftBinding` retains one stable lineage per Programme requirement;
 `ProgrammeShiftBindingRevision` is both its immutable exact-source revision and
 retry receipt. Each pins the exact requirement/occurrence/candidate/placement,

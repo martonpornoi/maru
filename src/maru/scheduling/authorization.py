@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
 VIEW_PLANNING: Final = "scheduling.view_planning"
 VIEW_HOST_SELF: Final = "scheduling.view_host_self"
+VIEW_WORK_SELF: Final = "scheduling.view_work_self"
 VIEW_HISTORY: Final = "scheduling.view_history"
 VIEW_CONFLICTS: Final = "scheduling.view_conflicts"
 MANAGE_DAYS: Final = "scheduling.manage_service_days"
@@ -37,6 +38,7 @@ SCHEDULING_CAPABILITIES: Final = frozenset(
     {
         VIEW_PLANNING,
         VIEW_HOST_SELF,
+        VIEW_WORK_SELF,
         VIEW_HISTORY,
         VIEW_CONFLICTS,
         MANAGE_DAYS,
@@ -127,7 +129,7 @@ class ExactSchedulingAuthorizer:
         PolicyDecision
             Current exact-profile decision without a foreign model.
         """
-        if capability_code == VIEW_HOST_SELF:
+        if capability_code in {VIEW_HOST_SELF, VIEW_WORK_SELF}:
             return decide_verified_principal_exact_self(
                 principal_id=principal_id,
                 owner_account_id=principal_id,

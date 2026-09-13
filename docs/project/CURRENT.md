@@ -43,39 +43,39 @@ Branch: `codex/programme-change-impact`, from protected PR #103.
 [#104](https://github.com/martonpornoi/maru/issues/104) is the next native #48
 child: explain exact published changes, identify affected authorized purposes,
 prepare governed communication and retain exact-recipient acknowledgement.
-The initial pure exact-selection comparator and publication-count reuse are
-implemented locally; 111 focused comparison/artifact cases passed in 0.50s,
-and all 5,066 unit cases passed in 32.52s (two existing Django warnings).
-Publication-history integration assertions were strengthened for the initial,
-replacement and post-withdrawal counts; they remain unexecuted under ADR 0100
-and are verification debt for #102. No new database or migration was introduced.
-An audited exact-publication/predecessor history query now distinguishes actual
-day/room/phase differences, rechecks governing manifests and suppresses the
-comparison explicitly on withdrawal/invalidation. Its database-free focused
-comparison/query tests pass (74 cases, 0.56s), and all 5,089 units pass in 32.58s.
-Ruff, strict types and NumPy/doc-link checks pass. Real history, audit,
-cross-scope denial and suppression assertions are maintained but unexecuted.
-ADR 0101 now adds independent current-self host and exact room/Department/edition
-operator predecessor comparisons. Required own presence differs from full event
-geometry; scope entry/exit does not disclose an unadmitted destination or imply
-global cancellation. Native manifests and current owner memberships are rechecked
-before final authority and mandatory audit. Neither query accepts arbitrary
-history, a different recipient or a planner-authorizer substitute. The 88 new
-database-free cases pass; all 5,177 units pass in 42.05s (two existing warnings).
-Strict types, Ruff/formatting and NumPy/documentation checks pass. Existing real
-owner/audit/tenant/withdrawal/retained-work assertions were extended, with a new
-host predecessor integration case; all remain unexecuted debt for #102.
-These are focused development results, not exact-head PR certification. No
-#104 PR has been pushed. The full issue is not delivered:
-retained-volunteer eligibility, governed delivery, acknowledgement persistence and user
-surfaces remain. Reuse
-owner commands/queries and shared
-output boundaries; do not silently relocate accepted Shifts or turn
-acknowledgement into attendance, work acceptance or release approval.
+The exact-selection comparator, publication-count reuse and audited planner
+history comparison are implemented. ADR 0101 adds independent current-self host,
+exact room/Department/edition operator and own operative volunteer comparisons
+of the active release and retained predecessor. Own required host presence,
+released event geometry and retained accepted work remain distinct. Each side
+is scoped independently; leaving a room/Department discloses no unadmitted
+destination and is not global cancellation. Suppressed native state is not an
+empty successful comparison or invented mass cancellation.
 
-Next: add Workforce-owned exact-self retained Programme binding references and
-independent volunteer change comparison, then define and implement governed
-communication and exact-recipient acknowledgement. On-site continuity and guided departmental surfaces follow.
+Workforce now independently proves exact-self current/retained binding lineage
+from own commitment demands, not caller-selected IDs or successor substitution.
+Its shared private lineage reader retains existing operator contracts. The
+separate non-persistable `scheduling.view_work_self` capability admits only linked
+own claims/confirmations; ended/unlinked work grants no release discovery.
+No current profile pins it, and no grant, schema, route or module is activated.
+Current owner versions and both native manifests are rechecked before final
+authority and mandatory audit. No private copy, other recipient, contact,
+availability, arbitrary history selector or planner-authorizer substitute exists.
+
+Latest focused development verification: all 5,250 unit tests passed in 33.52s
+(two existing Django URL-field warnings). Ruff/formatting (1,089 files), strict
+types (564 files), semantic/NumPy docstrings and documentation validation pass.
+The work-reference tests passed 44 cases in 0.47s; volunteer/authority/history
+tests passed 108 cases in 0.63s. Maintained integration assertions cover real
+self/operator scope, audit, denial, withdrawal, unchanged commitments and retained
+predecessor lineage, but remain unexecuted debt for #102. No #104 exact-head
+certification or PR has been pushed; the full issue is not delivered.
+
+Next: implement sender-authorized exact recipient resolution, governed
+communication preparation/review/manual handoff, immutable exact-recipient
+acknowledgement and user surfaces. Do not impersonate recipients while preparing
+a communication, silently relocate Shifts or infer attendance/work acceptance.
+On-site continuity and guided departmental surfaces follow.
 Keep #48 open through the complete integrated journey.
 
 ## Temporary testing policy and activation gates

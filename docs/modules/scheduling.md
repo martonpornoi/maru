@@ -62,6 +62,20 @@ text permission. Complete links/adoption, native manifests, final owner authorit
 and mandatory audit are rechecked even for empty/suppressed results. This does
 not enumerate people with grants, expose personnel or modify retained work.
 
+`personal_work_release_impact.load_personal_work_release_impact` requires the
+separate non-persistable `scheduling.view_work_self` capability with only
+`own_work_schedule`, pinned by no current profile. Workforce independently
+proves exact-self retained Programme binding references through its public owner
+query. Only linked own claims/confirmations justify any release lookup; ended
+and unrelated work disclose no release existence. Geometry is selected only for
+those occurrences in the checked active/predecessor manifests. Copy/placement
+references and actual day/room/phase changes are independent and never change
+retained accepted work. The result contains versioned opaque own work linkage,
+not a personnel directory or private instructions. Both owner links and native
+manifests are rechecked before final authority/audit; partial adoption is
+unavailable, not an empty or unadopted success. There is no caller-selected
+recipient, history selector, authorizer substitute or new grant/migration.
+
 ### Existing owner boundary
 
 `maru.scheduling` owns service days, stable occurrences, comparable timetable
