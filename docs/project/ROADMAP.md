@@ -149,11 +149,13 @@ planner, host, operator and volunteer purposes plus sender-authorized host/work
 recipient references under ADR 0101. #104 is delivered through PR #110 with
 operator recipient selection, governed preparation/review/manual handoff,
 immutable acknowledgement and dormant shared-shell user surfaces under ADR
-0102. #108 retains guided owning-task selections, and #92/#102 retain human
+0102. #107 is delivered through PR #111 with dormant now/next, complete run sheets,
+print, signed continuity and preprovisioned offline known-state verification under
+ADR 0103. #108 retains guided owning-task selections, and #92/#102 retain human
 and native database acceptance. This does not complete the #48 operational journey.
-The visible #48 decomposition is the maintainer's first priority. Existing
-remaining outcomes are explicitly tracked as #107 on-site continuity, #108 guided
-departmental surfaces/gated activation and #109 integrated rehearsal. #102 restores
+The visible #48 decomposition is the maintainer's first priority. Remaining
+outcomes are #108 guided departmental surfaces/gated activation and #109
+integrated rehearsal. #102 restores
 database acceptance; #97 recovery and #92 human acceptance remain mandatory.
 Document discovered prerequisites under their owning item and defer unrelated
 ideas. #108's dormant fixture enables acceptance before its final promotion.
