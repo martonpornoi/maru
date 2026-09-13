@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-13
+Last updated: 2026-09-14
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -11,62 +11,74 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-[#104](https://github.com/martonpornoi/maru/issues/104) is closed through
-[PR #110](https://github.com/martonpornoi/maru/pull/110), protected squash
-`05a53ffbab6d9c233dfdf293172457ee2edfe536` at 2026-09-13 19:01:28 UTC.
-Its tree equals certified head `a83fc731721e5fb0483ae4de30b2bec320bc45bc`;
+[#107](https://github.com/martonpornoi/maru/issues/107) is closed through
+[PR #111](https://github.com/martonpornoi/maru/pull/111), protected squash
+`fa155a143945b4d7533d0b4f8fa6f9cbd826bfcf` at 2026-09-13 21:34:46 UTC.
+Its tree equals certified head `4e22719b43800528354893b109de4a6105f7a639`;
 clean local main and origin/main were synchronized to that result.
 
-ADR 0102 delivers dormant exact-source notice preparation, independent review,
-deliberate recipient-link manual handoff and genuine-recipient acknowledgement,
-with operator recipient selection and shared-shell organizer/personal surfaces.
-Commands and exact retries revalidate source, purpose and retained evidence.
-Personal reads exclude organizer rationale and other actors. The bounded
-inventory is currently viewable packages, not proof of delivery completeness.
-No Programme profile, production route, runtime writer or provider was activated.
+ADR 0103 delivers dormant public, exact-person and operator now/next, complete
+run sheets/print, dedicated signed snapshots and a database-free offline verifier.
+Independent trust, exact scope, expiry, known signed source history and protected
+local-clock history precede dated HTML. Known withdrawal/invalidation prevents old
+ordinary replay. The [operator runbook](../operations/programme-onsite-continuity.md)
+owns provisioning, custody, failure, replacement and disposal. No profile,
+production route, runtime privilege, schema or real signing key was activated.
 
-Exact-head local development acceptance passed all eight retained gates in
-16m57s (1,016.693 seconds), including 5,550 unit tests in 34.23s. Hosted units
-passed in 58.25s (1m20s job), all 64 frontend tests passed, quality took 24m02s,
-and the protected PR gate and CodeQL passed. Hosted workflow latency was 24m30s.
-The schema-4 receipt records `postgresql_deferred`, zero databases and null
-combined coverage/headroom. Native notice/race/migration scenarios remain
-unexecuted #102 debt. The [protected delivery checkpoint](../checkpoints/2026-09-13-programme-notice-protected-delivery.md)
-records exact evidence, preserved archives and issue reconciliation. The earlier
-approved 153.609-second schema-only observation remains limited to its
-[documented forward metadata](../checkpoints/2026-09-13-programme-notice-schema-and-preview.md).
+Exact-head local acceptance passed all eight retained gates in 15m22s
+(922.107 seconds), including 5,788 units in 36.12s and 64 frontend tests. Hosted
+units passed in 64.71s (1m24s job); quality took 27m54s and workflow latency was
+28m21s. PR gate and CodeQL passed without hosted repair or rerun. The schema-4
+receipt records `postgresql_deferred`, zero databases and null combined
+coverage/headroom. The [protected delivery checkpoint](../checkpoints/2026-09-13-programme-continuity-protected-delivery.md)
+records exact evidence, the corrected local formatting failure and safe cleanup.
 
-## Active bounded outcome: on-site continuity (#107)
+Three maintained native cases remain #102 debt. The 1280-by-720 synthetic
+audience/state/layer/print-friendly rehearsal is not native authority, full
+viewport or accessibility acceptance. Remaining widths, keyboard, native print,
+genuine zoom, screen reader and offline operator comprehension are explicitly
+unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-programme-continuity-surfaces.md).
 
-Branch: `codex/programme-onsite-continuity`, from protected PR #110.
-[#107](https://github.com/martonpornoi/maru/issues/107) is the next #48 checklist
-item: useful now/next and run sheets, deterministic versioned print/export packs,
-a signed last-published view and explicit degraded operation. ADR 0103 contracts
-the read-only signature, independent trust, bounded expiry and known-state rules.
-Local work includes closed audience cards, now/next grouping, independently
-admitted owner composition, dedicated scoped signing, and a database-free offline
-file verifier. The latter persists known metadata before producing dated HTML;
-it rejects older releases, clock rollback and implicit lost-history resets.
-The three contracted shared-shell live/print/download surfaces are now wired
-only in dormant output routes. The [operator runbook](../operations/programme-onsite-continuity.md)
-documents independent key/trust provisioning, protected history, storage failure,
-clock custody, replacement and disposal. No real keys were provisioned.
+## Active bounded outcome: guided departmental journey (#108)
 
-The database-free suite passed 5,729 tests in 45.30s before presentation, file-tool
-and HTTP additions. Subsequent focused checks passed 68 presentation/state cases,
-15 real temporary-file cases, and finally 90 payload/HTTP cases in 3.72s.
-Three owner-authorized PostgreSQL cases were added but not executed. Synthetic
-browser checks at 1280 by 720 covered the three audiences, ordinary/empty/
-withdrawn/invalidated/denied/unavailable states, own hosting unadopted, explicit
-operator layers and print-friendly content. A reused mock shell dictionary was
-corrected; recovery now receives fresh context. No native database authority or
-full accessibility/viewport acceptance is inferred from that component fixture.
-The [surface checkpoint](../checkpoints/2026-09-13-programme-continuity-surfaces.md)
-records precise evidence and #92 gaps. Next review and certify the clean exact
-candidate, then submit #107 through the protected PR flow; it is not yet delivered.
-The first exact run at `23a5ec2` stopped on one native-test formatting difference
-after package/dependency checks; no receipt was produced and no PostgreSQL ran.
-The formatting is corrected for the next complete exact-commit run.
+Branch: `codex/programme-guided-journey`, from protected PR #111.
+The first dormant item-workspace increment is implemented locally: complete
+labelled private inventory, organizer core creation, separate working/delivery/
+readiness applicability/public-copy forms, selected protected histories and
+pending-input protection. New owner queries retain exact creation and working
+source versions under canonical scope locks and required audit. No new domain
+writer, migration, runtime privilege, production route or profile pin is added.
+Focused feedback passes 86 database-free HTTP/query/form cases in 1.46s, five
+frontend guard cases, four-module strict typing and NumPy documentation.
+The 1280-by-720 synthetic browser exercised labelled navigation, separated
+layers, empty/view-only states and stale form retention; native authority and
+full human/accessibility acceptance are not claimed. Final exact-head
+certification and protected delivery remain pending. The first exact run was
+stopped after Sphinx after review found an empty CSP nonce on non-HTML responses;
+fresh nonces and five response-shape regressions correct it before recertification.
+No successful receipt or PostgreSQL result is claimed for that interrupted run; see the
+[item-workspace checkpoint](../checkpoints/2026-09-14-programme-item-workspace.md).
+
+#48 was found accidentally closed by PR #111's commit-linked event. The PR's
+negative phrase containing a GitHub closing keyword was removed and #48 reopened;
+#108/#109/#102/#97/#92 were verified open. Future supporting PRs use ordinary
+references for parents, without a negated closing-keyword phrase.
+
+[#108](https://github.com/martonpornoi/maru/issues/108) owns connected setup,
+call/proposal/review, private item/readiness and host surfaces plus coherent
+continuations into the existing editor, staffing, release, notices and continuity.
+Reuse each owner's commands/queries and the shared shells. Ordinary department
+users must select authorized labelled tasks, not discover or paste UUIDs.
+Current-profile manifests, production routing, writers and authority remain
+unchanged while these surfaces and the isolated fixture are developed.
+
+The inherited setup contract now acknowledges installed dormant Scheduling and
+accepted-item conversion. Remaining item controls (typed readiness evidence,
+discussion, withdrawal and hosting), guided intake/review/conversion, task
+continuations and setup are explicitly sequenced in #108. Keep #108 open
+through final gated promotion: its dormant fixture enables #109/#92 acceptance,
+not the other way around. #102 database restoration and #97 logical recovery
+remain prerequisites for final integrated acceptance and activation.
 
 Offline material is a bounded historical snapshot, not current permission,
 fresh instructions or a writable source. Specify source time/age, expiry,
@@ -75,7 +87,10 @@ or invalidation must suppress ordinary content, not quietly fall back to old
 material. Reuse #104 communication; do not introduce attendance, actual-time,
 handover, general messaging or an on-site mutation relay.
 
-#108 explicitly owns connecting notice references to authorized owning-task
+#104 remains delivered through PR #110 under ADR 0102. Its exact-source review,
+manual handoff and genuine-person acknowledgement are not generic messaging or
+proof of delivery completeness. #108 explicitly owns connecting notice references
+to authorized owning-task
 selections so department users need not find UUIDs. #92 now includes unchecked
 notice human/screen-reader/genuine-zoom acceptance. The synthetic browser proof
 in the [surface checkpoint](../checkpoints/2026-09-13-programme-notice-surfaces.md)
@@ -87,10 +102,8 @@ authorized by the completed #104 exception.
 
 The maintainer reaffirmed every item in #48's visible delivery decomposition as
 the number-one priority. #104/#105 are delivered through PRs #110/#106; #48's
-decomposition is reconciled and names each remaining outcome:
+decomposition is reconciled; #107 is delivered through PR #111. Remaining outcomes:
 
-- [#107](https://github.com/martonpornoi/maru/issues/107): on-site now/next,
-  run sheets, signed/versioned continuity, export and degraded operation.
 - [#108](https://github.com/martonpornoi/maru/issues/108): connected guided
   departmental surfaces and finally gated Programme profile promotion.
 - [#109](https://github.com/martonpornoi/maru/issues/109): integrated synthetic
@@ -110,7 +123,8 @@ displacing #48. Supporting deliveries never close a parent outcome alone.
 Maintain PostgreSQL tests, historical inventories and migration/recovery
 fixtures as features change, but do not execute PostgreSQL test suites during
 this dormant development phase. The approved #104 disposable schema/metadata
-exception is completed, not standing authority. Run focused non-database feedback and exact-commit development
+exception is completed, not standing authority. Run focused non-database feedback
+and exact-commit development
 acceptance before each protected PR. Record unexecuted database coverage as
 verification debt, not success; do not invent timing observations.
 
@@ -123,7 +137,8 @@ fences full/release acceptance and adding the Programme profile while deferred.
 ## Existing foundation and mandatory gates
 
 Programme children #57, #59, #61, #63, #66, #64, #71, #77, #79, #81, #85,
-#88, #91, #94, #96, #99, #100, #104 and #105 are delivered dormant. Do not restart those tasks.
+#88, #91, #94, #96, #99, #100, #104, #105 and #107 are delivered dormant.
+Do not restart those tasks.
 The [Programme Operations contract](../product/page-contracts/programme-operations-adoption-setup.md)
 and owning [Programme](../modules/programme.md),
 [Applications](../modules/applications.md), [Events](../modules/events.md) and
@@ -144,9 +159,9 @@ activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Preserve PR #110's exact delivery and archived verification; follow ADR 0100.
-2. Contract and deliver #107 on-site continuity through its protected PR.
-3. Deliver #108's dormant connected departmental journey.
+1. Finish exact-head certification and protected delivery of the item workspace.
+2. Preserve archived evidence and keep parent issues open; follow ADR 0100.
+3. Continue #108's documented remaining owner-task increments and connections.
 4. Complete #102 PostgreSQL restoration, #97 logical recovery and #92 human
    acceptance before integrated Programme-only acceptance or activation.
 5. After #48, continue #42 and the director introduction/pilot package, then the

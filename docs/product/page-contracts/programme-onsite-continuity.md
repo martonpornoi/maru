@@ -1,6 +1,6 @@
 # Programme now and continuity
 
-Status: Dormant implementation prepared under #107; protected delivery pending. ADR 0103
+Status: Delivered dormant under #107 through protected PR #111. ADR 0103
 defines trust and expiry. Neither this contract nor synthetic routes activate
 Programme Operations or replace #92/#102 acceptance.
 

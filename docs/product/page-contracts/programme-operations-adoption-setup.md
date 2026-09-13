@@ -68,8 +68,9 @@ readiness, Venue approval, and current Workforce commitments. General
 Communications, attendee personalization, payments, attendance, accreditation,
 charity, merchandise, and broad Logistics remain outside the profile.
 
-`programme` and `scheduling` are contract names, not current executable module
-namespaces. Profile activation is forbidden until their public commands,
+`programme` and `scheduling` now have installed dormant owning implementations,
+including release and continuity surfaces. Neither current adoption profile
+admits the Programme workflow. Profile activation is forbidden until their public commands,
 queries, events, capabilities, destinations, database boundaries, and recovery
 behavior exist and the whole versioned manifest passes integrated acceptance.
 
@@ -85,8 +86,8 @@ Each module keeps one source of truth:
   revisions and included-collaborator acknowledgements. Its dormant review kernel
   also owns explicit staged policies, reviewer conflicts, moderation, decisions,
   deliberate recipient messages, and individual acknowledgements. General
-  applicant-visible conversations and the typed accepted-target receipt remain
-  later contracts. Proposal collaborators are not hosts.
+  applicant-visible conversations remain later work. ADR 0086 now implements the
+  dormant reciprocal accepted-target receipt. Proposal collaborators are not hosts.
 - **Programme** owns the accepted Programme item, host and co-host purpose
   relationships, readiness evidence, approved public renditions, and
   organizer-created core events. It never imports private review answers as

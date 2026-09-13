@@ -6,7 +6,7 @@ from types import MappingProxyType
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import connection
+from django.db import DatabaseError, connection
 from django.test.utils import CaptureQueriesContext
 
 import maru.effects.services as effect_services
@@ -68,6 +68,11 @@ from maru.programme.queries import (
     load_programme_public_copy,
     load_programme_readiness,
     programme_query_field_ceiling,
+)
+from maru.programme.workbench_queries import (
+    ProgrammeWorkbenchRequest,
+    load_programme_workbench_inventory,
+    load_programme_workbench_item,
 )
 from tests.factories import AccountFactory, EventEditionFactory
 
@@ -1098,3 +1103,97 @@ def test_timetable_inventory_uses_the_current_private_label_not_public_copy(
     assert projection.internal_title == "Updated planning label"
     assert projection.working_version == revised.resulting_item_version
     assert "Still private summary" not in repr(projection)
+
+
+def test_workbench_coherent_sources_feed_real_working_and_public_copy_commands(
+    timetable_inventory,
+):
+    """Maintain native #108 source/version proof; execution is deferred under #102."""
+    common, item, _ = timetable_inventory
+    policy = common["authorizer"]
+    scope = ProgrammeWorkbenchRequest(
+        **{key: value for key, value in common.items() if key != "authorizer"}
+    )
+    inventory = load_programme_workbench_inventory(scope, authorizer=policy)
+    assert inventory.control_version == 1
+    assert [row.item.id for row in inventory.items] == [item.id]
+    assert "PRIVATE organizer-only working summary" not in repr(inventory)
+    before = load_programme_workbench_item(scope, item_id=item.id, authorizer=policy)
+    source = item.working_revisions.get(id=before.working_revision_id)
+    assert before.private.working.internal_title == source.internal_title
+    revised = revise_programme_working(
+        actor_id=scope.actor_id,
+        organization_id=scope.organization_id,
+        edition_id=scope.edition_id,
+        item_id=item.id,
+        internal_title="Revised guided private item",
+        working_summary="Explicit private work, not public copy",
+        expected_version=before.private.item.aggregate_version,
+        reason="Synthetic guided revision",
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="programme-workbench",
+        authorizer=policy,
+    )
+    after = load_programme_workbench_item(scope, item_id=item.id, authorizer=policy)
+    assert after.working_revision_id != before.working_revision_id
+    assert after.private.item.aggregate_version == revised.resulting_item_version
+    assert after.private.working.internal_title == "Revised guided private item"
+    approved = approve_programme_public_rendition(
+        actor_id=scope.actor_id,
+        organization_id=scope.organization_id,
+        edition_id=scope.edition_id,
+        item_id=item.id,
+        source_working_revision_id=after.working_revision_id,
+        public_title="Explicit guided public copy",
+        expected_version=after.private.item.aggregate_version,
+        reason="Synthetic deliberate public-copy curation, not release approval",
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="programme-workbench",
+        authorizer=policy,
+    )
+    assert approved.resulting_item_version == after.private.item.aggregate_version
+    assert (
+        AuditEvent.objects.filter(
+            operation="programme.query.workbench_item", outcome="allow"
+        ).count()
+        == 2
+    )
+
+
+def test_workbench_native_scope_and_audit_failure_release_no_partial_projection(
+    timetable_inventory,
+    monkeypatch,
+):
+    """Keep cross-scope and required-audit failure as unexecuted native #102 debt."""
+    common, item, edition = timetable_inventory
+    policy = common["authorizer"]
+    scope = ProgrammeWorkbenchRequest(
+        **{key: value for key, value in common.items() if key != "authorizer"}
+    )
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        load_programme_workbench_inventory(scope)
+    other = EventEditionFactory(series=edition.series)
+    foreign = ProgrammeWorkbenchRequest(
+        scope.actor_id, scope.organization_id, other.id, uuid4()
+    )
+    assert load_programme_workbench_inventory(foreign, authorizer=policy).items == ()
+    with pytest.raises(ProgrammeQueryUnavailableError):
+        load_programme_workbench_item(foreign, item_id=item.id, authorizer=policy)
+    before = AuditEvent.objects.filter(
+        operation="programme.query.workbench_item", outcome="allow"
+    ).count()
+
+    def unavailable(_record):
+        raise DatabaseError("Synthetic audit failure")
+
+    monkeypatch.setattr(programme_queries, "append_audit", unavailable)
+    with pytest.raises(DatabaseError):
+        load_programme_workbench_item(scope, item_id=item.id, authorizer=policy)
+    assert (
+        AuditEvent.objects.filter(
+            operation="programme.query.workbench_item", outcome="allow"
+        ).count()
+        == before
+    )

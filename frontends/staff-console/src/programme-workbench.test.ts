@@ -1,0 +1,70 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const { readFileSync } = await vi.importActual<{
+  readFileSync(path: string, encoding: "utf8"): string;
+}>("node:fs");
+const { cwd } = await vi.importActual<{ cwd(): string }>("node:process");
+const source = readFileSync(
+  `${cwd()}/../../src/maru/programme/static/programme/workbench.js`, "utf8"
+);
+
+function boot(pending = false) {
+  document.body.innerHTML = `<p data-programme-dirty hidden></p>
+    <form data-programme-command data-programme-pending="${pending}">
+      <input name="expected_version" value="7" type="hidden">
+      <input name="idempotency_key" value="same-retry" type="hidden">
+      <input name="csrfmiddlewaretoken" value="csrf" type="hidden">
+      <textarea name="reason">Original reason</textarea><button>Save</button>
+    </form>`;
+  new Function("window", "document", source)(window, document);
+  return document.querySelector<HTMLFormElement>("form")!;
+}
+function unload() {
+  const event = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+}
+function edit(form: HTMLFormElement, name: string, value: string) {
+  const field = form.elements.namedItem(name) as HTMLInputElement;
+  field.value = value;
+  field.dispatchEvent(new Event("input", { bubbles: true }));
+}
+afterEach(() => { document.body.innerHTML = ""; });
+
+describe("Programme original-intent navigation guard", () => {
+  it("does not block unchanged input or rotating CSRF transport", () => {
+    const form = boot();
+    expect(unload()).toBe(false);
+    edit(form, "csrfmiddlewaretoken", "new-csrf");
+    expect(unload()).toBe(false);
+  });
+  it("warns after edits without changing version or retry identity", () => {
+    const form = boot();
+    edit(form, "reason", "New retained reason");
+    expect(unload()).toBe(true);
+    expect(document.querySelector("[data-programme-dirty]")).toBeVisible();
+    expect(new FormData(form).get("expected_version")).toBe("7");
+    expect(new FormData(form).get("idempotency_key")).toBe("same-retry");
+    edit(form, "reason", "Original reason");
+    expect(unload()).toBe(false);
+  });
+  it("treats a returned invalid or conflicting form as pending immediately", () => {
+    boot(true);
+    expect(unload()).toBe(true);
+    expect(document.querySelector("[data-programme-dirty]")).toBeVisible();
+  });
+  it("permits deliberate command submit and restores protection on pageshow", () => {
+    const form = boot(true);
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+    expect(unload()).toBe(false);
+    window.dispatchEvent(new Event("pageshow"));
+    expect(unload()).toBe(true);
+  });
+  it("ignores detached forms and safely handles read-only pages", () => {
+    const form = boot(true);
+    form.remove();
+    expect(unload()).toBe(false);
+    new Function("window", "document", source)(window, document);
+    expect(unload()).toBe(false);
+  });
+});

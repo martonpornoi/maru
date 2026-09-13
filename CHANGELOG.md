@@ -15,6 +15,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a dormant guided Programme item workspace with labelled item selection,
+  organizer core creation, separated working/delivery/readiness/public-copy
+  tasks and permission-scoped history. Forms retain original version and retry
+  identity after conflict and warn before abandoning unsaved input. This first
+  #108 increment does not activate Programme or publish a timetable; database
+  and integrated/human acceptance remain gated.
+
 - Added dormant public, personal and operator Programme now/next views, complete
   print-friendly run sheets and dedicated signed continuity snapshots. A
   preprovisioned offline verifier checks independent trust, expiry and protected
