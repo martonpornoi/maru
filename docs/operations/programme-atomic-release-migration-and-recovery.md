@@ -48,6 +48,21 @@ permission to normalize away physical drift or recalculate a deployed pin.
 
 ## Reverse only while genuinely unused
 
+Authorization 0030 adds the five operator-purpose read capabilities under
+[ADR 0099](../architecture/decisions/0099-purpose-scoped-programme-operator-outputs.md).
+It replaces the exact native capability-scope function without changing its
+owner, execute ACL or search path. Apply the complete graph and matching
+Authorization readiness pin; a recorder entry alone is insufficient. It grants
+no capability, activates no profile and introduces no domain tables.
+
+This additive catalog can reverse to 0029 only before any grant or role bundle
+has retained one of the five codes. The reverse fence locks both authority
+tables and fails before changing the function or migration recorder. Revoked
+grants and unassigned retained role bundles still fence reversal: keep the
+compatible code/catalog and fix forward rather than deleting authority history.
+Successful unused reversal must reapply current leaves before serving the new
+operator code. This does not loosen any older Scheduling evidence fence.
+
 Scheduling 0020 is the top-level fence for this release extension. It takes
 explicit ACCESS EXCLUSIVE locks and refuses reversal if any retained native
 Audit witness, dependency key, reviewed Programme copy, copy withdrawal,

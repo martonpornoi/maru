@@ -38,6 +38,7 @@ from maru.scheduling.events import (
     validate_scheduling_changed_payload,
     validate_scheduling_release_changed_payload,
 )
+from maru.scheduling.operator_scope import OPERATOR_CAPABILITIES
 from maru.scheduling.planning_preview import PREVIEW_FIELDS
 from maru.scheduling.planning_queries import HISTORY_FIELDS, PLANNING_FIELDS
 from maru.venues.timetable_queries import TIMETABLE_SPACE_FIELDS
@@ -157,6 +158,7 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
         "programme.manage_staffing",
         "programme.view_staffing",
         *release.RELEASE_CAPABILITIES,
+        *OPERATOR_CAPABILITIES,
     }
     for code in current.SCHEDULING_CAPABILITIES:
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
@@ -189,7 +191,9 @@ def test_release_migration_adds_only_four_independent_edition_capabilities():
         *current.EDITION_CAPABILITIES,
         *current.DEPARTMENT_CAPABILITIES,
         *current.RESOURCE_CAPABILITIES,
-    } == {code for code, definition in CAPABILITIES.items() if definition.persistable}
+    } == {
+        code for code, definition in CAPABILITIES.items() if definition.persistable
+    } - OPERATOR_CAPABILITIES
 
 
 @pytest.mark.parametrize(

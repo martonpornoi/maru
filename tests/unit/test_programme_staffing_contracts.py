@@ -22,6 +22,7 @@ from maru.programme.staffing_inputs import (
     MAX_STAFFING_REQUIREMENT_REVISIONS,
     MAX_STAFFING_REQUIREMENTS_PER_ITEM,
 )
+from maru.scheduling.operator_scope import OPERATOR_CAPABILITIES
 from tests.unit.test_programme_staffing_inputs import change
 
 
@@ -47,6 +48,7 @@ def test_staffing_capabilities_are_exact_additive_and_independently_ceilinged():
     ):
         assert getattr(current, field) == getattr(previous, field)
     assert {code for code, value in CAPABILITIES.items() if value.persistable} == {
+        *OPERATOR_CAPABILITIES,
         "scheduling.acknowledge_release_warnings",
         "scheduling.approve_release",
         "scheduling.publish_release",

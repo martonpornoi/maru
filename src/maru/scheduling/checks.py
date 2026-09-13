@@ -38,11 +38,13 @@ def scheduling_dormancy_problem_codes() -> tuple[str, ...]:
         SCHEDULING_ADOPTION_ADAPTERS,
         SCHEDULING_ADOPTION_CONFLICT_SOURCES,
     )
+    from maru.scheduling.operator_scope import OPERATOR_CAPABILITIES  # noqa: PLC0415
 
     problems: set[str] = set()
+    dormant_capabilities = SCHEDULING_CAPABILITIES | OPERATOR_CAPABILITIES
     if "scheduling" not in ADOPTION_MODULE_NAMESPACE_CATALOG:
         problems.add("catalog.module-missing")
-    if not SCHEDULING_CAPABILITIES.issubset(CAPABILITIES):
+    if not dormant_capabilities.issubset(CAPABILITIES):
         problems.add("catalog.capability-missing")
     event_names = {SCHEDULING_CHANGED_EVENT, SCHEDULING_RELEASE_CHANGED_EVENT}
     for name in event_names:
@@ -54,7 +56,7 @@ def scheduling_dormancy_problem_codes() -> tuple[str, ...]:
     for profile in ADOPTION_PROFILES.values():
         if "scheduling" in profile.modules:
             problems.add("dormancy.module-adopted")
-        if profile.capability_codes & SCHEDULING_CAPABILITIES:
+        if profile.capability_codes & dormant_capabilities:
             problems.add("dormancy.capability-adopted")
         if profile.adapter_codes & frozenset(SCHEDULING_ADOPTION_ADAPTERS):
             problems.add("dormancy.adapter-adopted")

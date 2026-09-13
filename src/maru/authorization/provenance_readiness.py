@@ -125,6 +125,7 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0027_scheduling_capabilities"),
     ("authorization", "0028_programme_staffing_capabilities"),
     ("authorization", "0029_programme_release_capabilities"),
+    ("authorization", "0030_programme_operator_capabilities"),
     ("events", "0010_workforce_adoption_profile"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("organizations", "0014_purpose_bounded_representation"),
@@ -1344,7 +1345,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1d4ef9c453acc221e452c08d09a8d9f45c70618e3c2ea0c7fbcdfb8781d7bece"
     ),
     "maru_authorization_capability_min_scope(text)": (
-        "48baad3767176915a039fffed9c8541b11108e5845862ddc6f75ec5c06eb7d7c"
+        "0e6936d9f9ea108835151f25d35d3dbcbf442c15b0495e9e6c8186811518d2c8"
     ),
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)": (
         "093a2f3a81a16d7a09bc782c23711aa4b108274ee7a9baf8fa955e52d82cc481"

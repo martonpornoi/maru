@@ -747,7 +747,8 @@ The result explicitly separates immutable release publication time from the
 server's last checked time. Venue labels carry their own current room/venue
 versions; they are not a historical label snapshot. The query returns no host
 identity, contacts, availability, staffing names, working copy or private reasons.
-Personal and operator layers remain independent, purpose-bound #99 work.
+Personal outputs are independently purpose-bound under #99. Operator run sheets
+remain separately governed #100 work under ADR 0099.
 
 `output_rendering` implements `scheduling.public-timetable@1` JSON and a public
 iCalendar download from the same freshly obtained typed projection. Strict shape,
@@ -836,6 +837,56 @@ scopes never discover names. The chronological agenda labels own required host
 presence, surrounding event context, tentative claims, confirmed and historical
 work independently. The [personal page contract](../product/page-contracts/personal-programme-timetable.md)
 retains source, responsive, print and deferred human-acceptance requirements.
+
+### Exact-purpose operator run sheets
+
+ADR 0099 adds the dormant `scheduling.operator-release-output@1` adapter and
+`operator_output_queries.load_operator_run_sheet`. `OperatorReadRequest` selects
+one current typed Venue room, exact non-retired Department or exact edition.
+Each owner uses `operator_scope.operator_read` with its own fixed capability and
+nonempty field set. The request is never authorization proof; ordinary current
+verified-person resource/Department/edition policy and exact adapter admission
+precede owner discovery. Canonical shared parents and the structure mutex precede
+actor locks. Successful owner audit is mandatory; no current profile is enabled.
+
+`operator_release_references` validates the whole active canonical/native release
+internally but returns only in-purpose occurrences, approved three-phase geometry
+and opaque owner references. Department scope is the union of current responsible
+rooms and deliberately adopted Workforce-linked work. Independent `scope_links`
+authority is required for the latter even without requested staffing detail;
+unadopted staffing means explicitly rooms-only membership. Neither Programme item
+ownership nor reporting descendants are inferred from a Department filter.
+
+The base layer independently requires Programme `reviewed_copy` and Venue
+`wayfinding`/`scope_links`. Optional `technical`, `accessibility`, `media` and
+`staffing` default to unrequested. Every requested owner must authorize even an
+empty approved scope. Current instructions and wayfinding retain their own
+versions; immutable reviewed copy and placement remain release facts. Composing
+owners and the release are checked again before returning a complete result.
+Unavailable or denied layers never silently become a reduced successful output.
+
+`operator_output_rendering` accepts only the closed `OperatorRunSheet` graph for
+`scheduling.operator-run-sheet@1` JSON and private calendar. It rejects malformed,
+mixed-audience, duplicated, incomplete and oversized sources. Bounds are 2,000
+occurrences, 256 current room selections, 1,024 work links/demands, 4,096 retained
+commitments and eight MiB per encoded output. Calendar intervals cover preparation
+through teardown, explicitly label delivery times and use purpose-specific UIDs,
+`CLASS:PRIVATE` and `TRANSP:TRANSPARENT`. There are no invitations or rosters.
+
+`operator_output_views` supplies dormant shared-Administration HTML/print and
+complete downloads. Its synthetic route family is
+`/admin/programme/run-sheets/<organization>/<edition>/<room|department|edition>/<target>/`.
+No production URL includes it. Closed generic layer controls request authority;
+they do not confer it. All formats are private/no-store; denial is 404, admitted
+malformed options 400, incomplete evidence/audit failure 503, and a nonavailable
+calendar 409. Native print, true zoom and representative reader acceptance remain
+#92. CURRENT distinguishes implementation progress from exact protected delivery.
+
+Authorization migration 0030 adds five edition-or-narrower capability codes,
+updates the exact native readiness fingerprint, and preserves existing function
+ACLs. It creates no grant, role or domain record. Reverse is refused after any
+retained grant or role references the vocabulary, including revoked history;
+retain evidence and fix forward instead. No other runtime privilege changes.
 
 ### Native integrity and recovery
 

@@ -1,0 +1,101 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+{% block baseline_page_title %}Programme run sheet · Maru{% endblock %}
+{% block baseline_breadcrumbs %}Programme run sheet{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'scheduling/operator_run_sheet.css' %}">{% endblock %}
+
+{% block baseline_content %}
+<header class="baseline-page-heading">
+  <p class="baseline-kicker">Programme · Private operator output</p>
+  <h1>Programme run sheet</h1>
+  <p>Approved room preparation, delivery and teardown, with separately authorized current instructions.</p>
+</header>
+{% if state_message %}
+  <p class="baseline-notice" role="status">{{ state_message }}</p>
+  <p><a href="?">Reload the base run sheet without optional layers</a></p>
+{% else %}
+  <details class="maru-access-summary operator-controls">
+    <summary><strong>Access</strong> · Authorized {{ snapshot.kind }} run sheet</summary>
+    <p>Scheduling geometry, Programme reviewed copy and Venue wayfinding were independently authorized for this exact target. Every requested extra layer passed its own field checks. This output grants no editing, publication, person-directory or attendance authority.</p>
+  </details>
+  <section class="baseline-panel" aria-labelledby="operator-state-title">
+    <h2 id="operator-state-title">Scope and source</h2>
+    <p><strong>{{ state_label }}</strong></p>
+    <p><strong>Scope:</strong> {{ snapshot.kind }} / {{ snapshot.target_id }}<br>
+      <strong>Organization:</strong> {{ snapshot.organization_id }}<br>
+      <strong>Edition:</strong> {{ snapshot.edition_id }}</p>
+    {% if snapshot.kind == "department" %}<p>Department membership means {% if snapshot.reference.staffing_adopted %}currently responsible rooms and explicitly linked work{% else %}currently responsible rooms only; the Programme staffing adapter is not adopted{% endif %}. It does not mean Programme item ownership or reporting-tree descendants.</p>{% endif %}
+    <p><strong>Release:</strong> {{ snapshot.reference.release_id|default:"Not applicable" }} · Pointer version {{ snapshot.reference.pointer_version }}<br>
+      <strong>Published:</strong> {{ published_label }}<br>
+      <strong>Last checked:</strong> {{ checked_label }} · <strong>Time zone:</strong> {{ snapshot.reference.zone_name }}</p>
+    <p><strong>Requested extra layers:</strong> {{ requested_layer_labels|join:"; "|default:"None" }}.</p>
+    <p class="operator-notice">{{ notice }}</p>
+  </section>
+
+  <form method="get" class="baseline-panel operator-controls" aria-labelledby="operator-controls-title">
+    <h2 id="operator-controls-title">Choose requested layers and a format</h2>
+    <p>These controls request access; they do not grant it. A denied requested layer prevents the complete output. Changing these controls saves no Programme or Shift data.</p>
+    <fieldset><legend>Optional private layers</legend>
+      {% for key, label, selected in layer_options %}<label class="operator-layer"><input type="checkbox" name="{{ key }}" value="1"{% if selected %} checked{% endif %}> {{ label }}</label>{% endfor %}
+    </fieldset>
+    <div class="operator-actions">
+      <button type="submit" name="format" value="html">Show requested run sheet</button>
+      <button type="submit" name="format" value="print">Print-friendly view</button>
+      <button type="submit" name="format" value="json">Download private JSON</button>
+      {% if calendar_available %}<button type="submit" name="format" value="calendar">Download private calendar</button>{% endif %}
+    </div>
+    {% if not calendar_available %}<p>No calendar is available until the current Programme release is available.</p>{% endif %}
+  </form>
+  {% if print_view %}<p class="operator-controls">Use your browser's Print command. The printed copy retains scope, source versions and saved-copy warnings.</p>{% endif %}
+
+  <section aria-labelledby="operator-agenda-title">
+    <h2 id="operator-agenda-title">Approved run of show</h2>
+    {% if rows %}<ol class="operator-agenda">{% for row in rows %}<li>
+      <article aria-labelledby="operator-entry-{{ forloop.counter }}">
+        <h3 id="operator-entry-{{ forloop.counter }}">{{ row.entry.copy.title }}</h3>
+        <p><strong>{{ row.entry.room.venue_name }} / {{ row.entry.room.room_name }}</strong><br>
+          Service day begins {{ row.day_label }}</p>
+        <dl class="operator-times">
+          <dt>Preparation</dt><dd>{{ row.setup_label }} to {{ row.delivery_label }}</dd>
+          <dt>Delivery</dt><dd>{{ row.delivery_label }} to {{ row.delivery_end_label }}</dd>
+          <dt>Teardown</dt><dd>{{ row.delivery_end_label }} to {{ row.teardown_label }}</dd>
+        </dl>
+        <p class="operator-prose">{{ row.entry.copy.summary }}</p>
+        {% if row.entry.copy.content_note %}<p class="operator-prose"><strong>Reviewed content note:</strong> {{ row.entry.copy.content_note }}</p>{% endif %}
+        {% for label, text in row.instructions %}<h4>{{ label }} — current</h4><p class="operator-prose">{{ text|default:"No instruction recorded in this requested layer." }}</p>{% endfor %}
+        {% if row.entry.delivery %}<p class="operator-evidence">Current delivery revision {{ row.entry.delivery.revision_id|default:"None recorded" }}, version {{ row.entry.delivery.version }}; checked {{ checked_label }}. These current notes are not immutable release copy.</p>{% endif %}
+        <p class="operator-evidence">Occurrence {{ row.entry.placement.occurrence_id }}<br>
+          Placement {{ row.entry.placement.placement_id }} · Service day {{ row.entry.placement.day_id }}<br>
+          Reviewed rendition {{ row.entry.copy.rendition_id }}<br>
+          Room {{ row.entry.room.space_id }} · Room version {{ row.entry.room.space_version }}, venue version {{ row.entry.room.venue_version }}</p>
+      </article>
+    </li>{% endfor %}</ol>{% else %}<p>No approved timetable rows are available in this exact scope. No out-of-scope or earlier timetable is shown.</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="operator-work-title">
+    <h2 id="operator-work-title">Linked work</h2>
+    {% if snapshot.staffing is None %}<p>Staffing details were not requested. This does not mean no staffing is needed.</p>
+    {% elif not snapshot.staffing.adopted %}<p>The Programme staffing adapter is not adopted. No empty staffing or coverage claim is made.</p>
+    {% else %}
+      <p>Current demand instructions and retained commitment intervals are separate. A predecessor is not automatically cancelled or relocated. Claims are not confirmations; confirmed counts do not prove current qualification, availability, attendance or actual work.</p>
+      {% if work_rows %}<ol class="operator-agenda">{% for row in work_rows %}<li>
+        <article aria-labelledby="operator-work-{{ forloop.counter }}">
+          <h3 id="operator-work-{{ forloop.counter }}">{{ row.demand.title }}</h3>
+          <p><strong>Current demand:</strong> {{ row.demand.state }} · Requested headcount {{ row.demand.required_headcount }} · Version {{ row.demand.version }}</p>
+          <p><strong>Current requested interval:</strong> {{ row.start_label }} to {{ row.end_label }}<br>
+            <strong>Current location label:</strong> {{ row.demand.location|default:"Not recorded" }}</p>
+          <p class="operator-prose">{{ row.demand.briefing }}</p>
+          {% if row.demand.supervision %}<p class="operator-prose"><strong>Supervision:</strong> {{ row.demand.supervision }}</p>{% endif %}
+          <h4>Retained work intervals and states</h4>
+          {% if row.retained %}<ul>{% for retained in row.retained %}<li><strong>{{ retained.work.state }}: {{ retained.work.count }}</strong> — {{ retained.start_label }} to {{ retained.end_label }}; retained rest ends {{ retained.rest_label }}.</li>{% endfor %}</ul>{% else %}<p>No retained commitments for this exact demand. Requested headcount is not confirmed coverage.</p>{% endif %}
+          <h4>Explicit Programme links</h4>
+          <ul>{% for item in row.links %}<li>{{ item.title }} — {% if item.link.current %}currently selected demand{% else %}retained predecessor demand{% endif %}.<br>
+            <span class="operator-evidence">Occurrence {{ item.link.occurrence_id }}; binding {{ item.link.binding_id }}, version {{ item.link.binding_version }}.</span></li>{% endfor %}</ul>
+          <p class="operator-evidence">Demand {{ row.demand.demand_id }}. Counts appear once for this demand; multiple links do not multiply accepted work.</p>
+        </article>
+      </li>{% endfor %}</ol>{% else %}<p>No linked demand or retained work in this authorized approved scope. This is not an edition-wide coverage or availability statement.</p>{% endif %}
+    {% endif %}
+  </section>
+{% endif %}
+{% endblock %}

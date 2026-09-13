@@ -512,9 +512,9 @@ per-item availability now have a separate dormant owner boundary.
 Scheduling candidates, conflicts, explicit Venue reservations, interactive
 editing, staffing and complete release preflight now have dormant owner kernels.
 Persisted independent approval and atomic release are now provided by dormant
-Scheduling under ADR 0096. Shared public/personal timetables (#99), on-site
-continuity, profile activation and integrated browser rehearsal remain in the
-Programme Operations delivery sequence.
+Scheduling under ADR 0096. Public/personal timetables are delivered dormant under
+#99; operator run sheets (#100), on-site continuity, profile activation and
+integrated browser rehearsal remain in the Programme Operations delivery sequence.
 
 ### Exact released public copy
 
@@ -528,6 +528,31 @@ choice; explicit withdrawal never falls back to another copy. Scope, item
 ownership, complete selection and final release/disclosure state are checked.
 Reviewer/source-working metadata, host identities and operational notes are not
 selected. No current profile admits this public output and no route is activated.
+
+### Purpose-scoped operator copy and instructions
+
+ADR 0099's `operator_queries.load_operator_programme_copy` independently requires
+`programme.view_operator_copy` with `reviewed_copy` against the exact persisted
+room, Department or edition operator purpose. It re-resolves Scheduling's checked
+in-purpose reference itself and reads only the exact selected non-withdrawn
+reviewed rendition. It does not call or widen the public query, accept arbitrary
+item lists, disclose reviewer metadata or fall back to newer/older text.
+
+`load_operator_delivery_instructions` separately requires
+`programme.view_operator_delivery` and a nonempty subset of `technical`,
+`accessibility` and `media`. Only requested columns are selected. Returned current
+delivery revision identity, sequence and source time are distinct from immutable
+release copy; the composed output records observation time. Unrequested fields
+are `None` in the typed graph and absent from the instruction JSON object.
+Requested blank instructions are not an omitted permission check. Even empty
+approved scopes require all requested field authority. Complete current owner
+and release rechecks and mandatory `programme.operator_output.read` evidence use
+`programme-restricted` retention. No host/private review/person records are read.
+
+Programme items have no Department owner: operator membership follows Venue
+responsibility and deliberately adopted Workforce binding lineage, never the
+Applications call that originally supplied an item. These owner queries neither
+activate a profile nor replace later integrated/human acceptance.
 
 ### Exact-person timetable purposes
 

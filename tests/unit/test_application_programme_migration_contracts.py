@@ -10,6 +10,7 @@ from maru.authorization.provenance_readiness import (
     _function_definition_fingerprint,
 )
 from maru.scheduling.authorization import SCHEDULING_CAPABILITIES
+from maru.scheduling.operator_scope import OPERATOR_CAPABILITIES
 
 
 def test_review_scope_catalog_preserves_every_existing_capability() -> None:
@@ -42,6 +43,7 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
         "programme.manage_staffing",
         "programme.view_staffing",
         *SCHEDULING_CAPABILITIES,
+        *OPERATOR_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",
     }
@@ -50,7 +52,7 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
 def test_review_scope_declaration_matches_the_runtime_readiness_fingerprint() -> None:
     """Catch stale capability-function pins without a PostgreSQL matrix run."""
     current = import_module(
-        "maru.authorization.migrations.0029_programme_release_capabilities"
+        "maru.authorization.migrations.0030_programme_operator_capabilities"
     )
     declaration = current.FORWARD_SQL
     assert "$$ LANGUAGE plpgsql IMMUTABLE STRICT" in declaration
@@ -142,6 +144,7 @@ def test_authorization_min_scope_is_prior_catalog_plus_exact_department_code() -
         "programme.manage_staffing",
         "programme.view_staffing",
         *SCHEDULING_CAPABILITIES,
+        *OPERATOR_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",
     }

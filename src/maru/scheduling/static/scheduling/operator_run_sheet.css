@@ -1,0 +1,24 @@
+.operator-run-sheet { max-width: 80rem; min-width: 0; overflow-wrap: anywhere; }
+.operator-run-sheet .operator-layer { display: flex; align-items: start; gap: .6rem; min-height: 2.75rem; padding: .5rem; }
+.operator-run-sheet .operator-layer input { flex: 0 0 auto; margin-top: .25rem; }
+.operator-run-sheet .operator-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-block: 1rem; }
+.operator-run-sheet button, .operator-run-sheet summary { min-height: 2.75rem; }
+.operator-run-sheet :focus-visible { outline: 3px solid var(--link-fg, #005ea8); outline-offset: 3px; }
+.operator-run-sheet .operator-agenda { list-style: none; padding: 0; }
+.operator-run-sheet .operator-agenda > li { border: 1px solid var(--hairline-color, #999); padding: 1rem; margin-block: 1rem; border-radius: .4rem; }
+.operator-run-sheet .operator-agenda h3 { color: inherit; background: transparent; font-size: 1.1rem; }
+.operator-run-sheet .operator-times { display: grid; grid-template-columns: minmax(7rem, auto) 1fr; gap: .35rem 1rem; }
+.operator-run-sheet .operator-times dt { font-weight: 600; }
+.operator-run-sheet .operator-times dd { margin: 0; }
+.operator-run-sheet .operator-prose { white-space: pre-wrap; }
+.operator-run-sheet .operator-evidence { font-size: .9rem; }
+@media (max-width: 42rem) {
+  .operator-run-sheet .operator-times { display: block; }
+  .operator-run-sheet .operator-times dd { margin-block-end: .75rem; }
+}
+@media print {
+  #header, #nav-sidebar, .breadcrumbs, .toggle-nav-sidebar, #footer,
+  .operator-controls, .maru-page-access { display: none !important; }
+  #container, #main, #content, #main-content { width: auto !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; }
+  .operator-run-sheet .operator-agenda > li { break-inside: avoid; }
+}

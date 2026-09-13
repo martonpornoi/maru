@@ -37,6 +37,13 @@ def test_sidebar_drawer_has_accessible_controls_and_interaction_contract() -> No
     assert 'element.setAttribute("aria-hidden", "true")' in shell
     assert "element.inert = hidden" in shell
     assert "window.setTimeout(() => closeButton.focus(), 0)" in shell
+    assert 'sidebar.setAttribute("role", "dialog")' in shell
+    assert 'sidebar.setAttribute("aria-modal", "true")' in shell
+    assert 'sidebar.removeAttribute("role")' in shell
+    assert 'sidebar.removeAttribute("aria-modal")' in shell
+    assert '"summary",' in shell
+    assert "!insideClosedDetails(element)" in shell
+    assert 'parent.matches("details:not([open])")' in shell
 
 
 def test_shell_collapses_before_phone_width_without_forcing_content_overflow() -> None:

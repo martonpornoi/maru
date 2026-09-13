@@ -814,8 +814,14 @@ relationships and deliberately shared availability under ADR 0087. Issue #81
 delivers Scheduling candidates, conflict evaluation and governed Venue binding.
 Issue #85 delivers the dormant accessible editor; #87 records assisted
 pre-activation browser checks delivered through PR #90. Issue #88 delivers
-governed staffing. Next are release, continuity, setup, and integrated
-acceptance in dependency order. Each child is separately verified and delivered.
+governed staffing. Issues #91/#94/#96 deliver release preparation, review and
+atomic publication/invalidation. Issue #99 delivers public and exact-person
+output; #100 adds independently authorized room, Department and edition operator
+run sheets under ADR 0099. These remain dormant components, not an activated
+departmental workflow. Next are detailed change impact and governed delivery,
+on-site continuity, #97 logical recovery, guided setup and integrated acceptance
+in dependency order. Human-only #92 checks remain an activation gate. Each
+child is separately verified and delivered.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme

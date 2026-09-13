@@ -133,6 +133,8 @@
   "tests/integration/test_programme_department_ownership_recovery.py": 7.572,
   "tests/integration/test_programme_hosts.py": 296.705,
   "tests/integration/test_programme_operational_public_review.py": 29.955,
+  "tests/integration/test_programme_operator_migrations.py": 29.955,
+  "tests/integration/test_programme_operator_outputs.py": 29.955,
   "tests/integration/test_programme_public_copy_withdrawal.py": 29.955,
   "tests/integration/test_programme_release_work_references.py": 29.955,
   "tests/integration/test_programme_staffing_commands.py": 120.285,

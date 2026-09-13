@@ -57,17 +57,47 @@ Branch: `codex/programme-operator-run-sheets`, based on the protected #101 resul
 child. It retains the room/department/operator acceptance explicitly separated
 from #99; closing #99 does not deliver or waive that audience.
 
-Contract mapping is underway. Define independent room, Department and edition
-operator purposes, field ceilings, exact active-release/source rechecks and
-complete empty/denied/unavailable states before implementing owner queries.
-Current technical/accessibility/media instructions, immutable placement facts,
-Venue wayfinding and any adopted Workforce layer remain separately authorized
-and versioned. A timetable filter never grants private owner access.
+[ADR 0099](../architecture/decisions/0099-purpose-scoped-programme-operator-outputs.md)
+and the [run-sheet page contract](../product/page-contracts/programme-operator-run-sheets.md)
+define independent room, Department and edition operator purposes. Department
+membership follows current Venue responsibility and deliberately adopted
+Workforce binding lineage, never inferred Programme item/proposal ownership.
+Five new field-ceilinged read capabilities and native migration 0030 grant no
+authority or profile activation; retained grant/role use fences downgrade.
 
-No #100 implementation or acceptance is claimed yet. Human-only browser,
-native-print and screen-reader checks belong to #92 and remain unpassed.
-This branch currently records the completed #101 handoff; new code, focused
-checks, exact certification and protected delivery remain ahead.
+Local typed/JSON/calendar/shared-Administration-shell HTML/print implementation
+is present, with exact-purpose admission, mandatory owner audits, current room
+and retained-work membership, checked release geometry and reviewed copy, and
+requested-only private delivery/staffing fields. Current owner instructions and
+immutable accepted work intervals remain separate. No #100 certification, push
+or protected acceptance is claimed.
+
+Focused evidence: all 4,986 units passed in 34.20s (two existing Django URL-field
+deprecation warnings); 17 PostgreSQL cases passed in 299.59s including fresh
+schema setup (156.36s). They cover exact native scopes, person/tenant denial,
+withdrawal, mandatory audit, requested-column privacy, a Department with linked
+work but no room, retained predecessor intervals, real HTTP reauthorization and
+real unused migration reversal/reapply plus retained grant/role downgrade
+fences. The disposable container was removed. Repository-wide Ruff, formatting,
+type, NumPy-docstring and semantic-docstring checks pass. Earlier focused
+failures were repaired fixture permissions and catalog inventories, not waivers.
+The two real HTTP cases also pass exact-copy invalidation followed by release
+withdrawal in a focused 183.31-second fresh-database rerun.
+
+The isolated browser journey now covers exact-purpose/default/all-layer output,
+retained work, denial, source failure/withdrawal, private downloads and print view.
+A per-response CSP nonce repairs blocked shared navigation; modal semantics and
+collapsed-section focus filtering repair the exposed keyboard boundary. Fresh
+checks pass Close/Escape, focus containment/return, keyboard layer submission and
+seven responsive widths without overflow. Fixture containers were removed by
+exact ID. Launcher/observer failures and teardown-session warnings remain recorded,
+not passing browser evidence. The warning-fatal documentation build also passed.
+
+See the [operator checkpoint](../checkpoints/2026-09-13-programme-operator-run-sheets.md)
+for evidence and limitations. Next: certify the clean exact candidate with its
+source-bound PostgreSQL plan and measured headroom, then protected delivery.
+Human-only native-print, zoom, screen-reader and calendar-client checks are
+explicitly retained under #92 and remain unpassed. #97 still blocks activation.
 
 ## Existing foundation and mandatory gates
 

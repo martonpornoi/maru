@@ -413,6 +413,14 @@
       "test_planning_history_fences_both_owners_before_any_guard_is_removed"
     ]
   },
+  "tests/integration/test_programme_operator_migrations.py": {
+    "owners": ["authorization"],
+    "shared_baseline": false,
+    "tests": [
+      "test_operator_authority_history_refuses_downgrade_before_recorder_changes",
+      "test_unused_operator_catalog_reverses_and_reapplies_through_real_migrations"
+    ]
+  },
   "tests/integration/test_scheduling_release_execution_migrations.py": {
     "owners": ["audit", "authorization", "events", "identity", "programme", "scheduling", "venues", "workforce"],
     "shared_baseline": false,

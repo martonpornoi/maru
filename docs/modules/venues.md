@@ -260,6 +260,19 @@ These are explicitly current owner names, not immutable historical release
 labels; Scheduling's native release checks govern whether the selected approved
 physical timing remains usable. No current profile pins the public adapter.
 
+ADR 0099's `operator_queries.load_operator_room_links` returns bounded complete
+opaque current room membership under independent `venues.view_operator_wayfinding`
+and `scope_links` at an exact operator purpose. A room means that exact active
+typed selection; a Department means current responsibility, not descendants,
+the whole venue or physical combination members. This content-free query does
+not recursively resolve a release. `load_operator_wayfinding` independently
+requires `wayfinding`, re-resolves the checked in-purpose release and returns
+only selected current room/venue names with their own versions. Missing, moving,
+oversized or denied evidence fails closed, including empty-scope field checks.
+The common owner read boundary appends mandatory `venues.operator_output.read`
+audit with `programme-restricted` retention. Neither query uses public admission
+or fetches private restrictions, contacts or equipment/access documents.
+
 Remaining work includes integrated editor acceptance,
 Programme release-output reconciliation, equipment/qualification checks,
 calendar/signage/print exports, accommodation blocks/assignment/allocation,
