@@ -7,7 +7,7 @@ and protected-delivery status; this guide is the owner contract, not a merge cla
 
 ## Ownership and adoption
 
-### Governed change communication (#104, in progress)
+### Governed change communication (#104)
 
 `change_inputs` closes preparation to one exact release, occurrence, observed
 pointer version, preview digest and purpose. Host/work recipients are resolved

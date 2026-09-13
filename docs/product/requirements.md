@@ -1765,6 +1765,18 @@ architecture documents, implementation issues, tests, and release notes.
   retry/source versions and reject extra actors, substituted recipients and
   authority flags. Guided adoption connects these components through authorized
   task selections rather than requiring people to find database identifiers.
+  Programme continuity is read-only and separately admitted by the exact profile.
+  Signed packs bind audience, scope, source time, release/pointer state, requested
+  field ceiling, payload integrity and expiry; verification uses independently
+  provisioned trusted keys, not keys supplied by the pack. Online now/next and
+  print use the same complete owner projections. Disconnected output is always
+  historical/degraded, cannot assert current permission or unseen changes, and
+  cannot record work, attendance, handoff or acknowledgement. Known newer
+  withdrawal/invalidation and expired or unverifiable packs suppress ordinary
+  material. Protected known-state history must not silently roll back. Private
+  files and print copies require explicit encrypted-device custody, bounded
+  retention and disposal; remote erasure is not promised. The bounded on-site
+  pack does not replace the full-profile export and stop-use contract.
 
 ### Privacy, compliance, and participant control
 

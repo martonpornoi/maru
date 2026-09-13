@@ -154,7 +154,8 @@ output. The inventory is not evidence of delivery completeness. Manual handoff
 messages contain a recipient-only link, not private organizer rationale. The
 guided #108 journey owns integration with authorized owning-task selections.
 Maintained native negative/race scenarios include forged facts and competing
-reviews with bounded server-side waits. Protected delivery remains pending.
+reviews with bounded server-side waits. CURRENT and the delivery checkpoints
+record protected acceptance and its limits.
 Local commands and pure tests do not establish
 PostgreSQL workflow correctness, an activated profile or departmental acceptance.
 This ADR does not create another delivery item or displace #48's decomposition.

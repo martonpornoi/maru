@@ -41,8 +41,11 @@ approved 153.609-second schema-only observation remains limited to its
 Branch: `codex/programme-onsite-continuity`, from protected PR #110.
 [#107](https://github.com/martonpornoi/maru/issues/107) is the next #48 checklist
 item: useful now/next and run sheets, deterministic versioned print/export packs,
-a signed last-published view and explicit degraded operation. Map the existing
-public, personal and operator owner projections before implementation; retain
+a signed last-published view and explicit degraded operation. ADR 0103 contracts
+the read-only signature, independent trust, bounded expiry and known-state rules.
+The first local protocol/known-state layer passes 70 database-free tests in
+0.41s and strict types; it is not a completed pack, surface or protected delivery.
+Next compose the existing public, personal and operator owner projections; retain
 their independent admission, field ceilings, complete-or-unavailable evidence
 and mandatory sensitive-read audits.
 
