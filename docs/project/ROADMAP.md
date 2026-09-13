@@ -138,15 +138,18 @@ exact-snapshot eligibility under ADR 0094 and is delivered through PR #93.
 Child #94 is delivered through PR #95 with authenticated owner collection and
 missing fit/no-staffing evidence under ADR 0095. Child #96 is delivered through
 PR #98 with dormant independent approval, release-warning evidence, atomic
-publication and governing invalidation under ADR 0096. Child #99 supplies shared
+publication and governing invalidation under ADR 0096. Child #99 is delivered
+through PR #101 and supplies shared
 release-derived public and personal projections, combined host/work timetables
 and output formats. Child #100 retains independently authorized room/department
 operator run sheets as the immediately following delivery; no operational
 acceptance is waived by this decomposition. Detailed change impact, governed
 delivery and acknowledgement then follow using those same boundaries.
-Before #99 protected delivery, ADR 0098 adds budgeted CI assignments and measured
+Delivered with #99, ADR 0098 adds budgeted CI assignments and measured
 headroom to address recurring historical-test timeouts without weakening safety
-selection or coverage. This is a delivery prerequisite, not Programme adoption.
+selection or coverage. Its complete hosted run passed all 39 jobs below 50
+minutes each. This is timeout resilience, not a total-work reduction or
+Programme adoption.
 An eligible rule result is not approval, publication or profile activation.
 Child #97 owns exact-readiness compatibility after logical PostgreSQL restore.
 It must pass before profile activation or a director pilot; same-image physical

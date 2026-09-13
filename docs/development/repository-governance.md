@@ -110,10 +110,12 @@ missing pull-request CodeQL result as complete analysis.
 The hosted `PR gate` uses ADR 0090's risk-based boundary: documentation-only
 changes avoid PostgreSQL, every code PR retains all current-schema cases, domain
 schema changes add affected historical boundaries and real full-graph recovery,
-and global safety/harness changes require exhaustive history. The routine matrix
-uses eight isolated databases. The exhaustive hosted matrix uses sixteen smaller
-groups with a maximum of eight simultaneous database jobs and unchanged
-120-minute per-job limits. Before the matrix fans out, a lightweight preflight
+and global safety/harness changes require exhaustive history. ADR 0098 replaces
+fixed matrix counts with budgeted complete-group assignments shared by local
+and hosted execution. At most eight isolated database jobs run simultaneously,
+with unchanged 120-minute hosted limits and a measured local headroom requirement.
+Matrix growth preserves complete selected coverage; it does not reduce total
+migration work. Before the matrix fans out, a lightweight preflight
 requires a current `uv.lock` and exact parity between every workflow reference
 and `.github/actions-allowlist.json`. `scripts/certify.ps1` remains the required
 local pre-review command, but its unsigned receipt is contributor evidence
