@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 from scripts.ci_changes import classify_changes, git_changes
+from scripts.ci_test_budget import execution_plan
 from scripts.ci_test_policy import (
     ROOT,
     HistoricalFile,
@@ -63,6 +65,13 @@ class CollectionBoundary:
         self.selected_count = 0
         self.passed_count = 0
         self.skipped = False
+        self.timing_path = evidence.with_suffix(".timings.jsonl") if evidence else None
+        if self.timing_path is not None:
+            self.timing_path.parent.mkdir(parents=True, exist_ok=True)
+            with self.timing_path.open("x", encoding="utf-8") as stream:
+                stream.write(
+                    json.dumps({"event": "start", "unix_time": time.time()}) + "\n"
+                )
 
     @pytest.hookimpl(trylast=True)
     def pytest_collection_modifyitems(
@@ -132,6 +141,21 @@ class CollectionBoundary:
         report : pytest.TestReport
             One setup, call or teardown report.
         """
+        if self.timing_path is not None:
+            with self.timing_path.open("a", encoding="utf-8") as stream:
+                stream.write(
+                    json.dumps(
+                        {
+                            "event": "phase",
+                            "nodeid": report.nodeid,
+                            "phase": report.when,
+                            "duration": report.duration,
+                            "outcome": report.outcome,
+                        },
+                        sort_keys=True,
+                    )
+                    + "\n"
+                )
         if report.skipped:
             self.skipped = True
         if report.when == "call" and report.passed:
@@ -153,6 +177,20 @@ class CollectionBoundary:
             and (self.skipped or self.passed_count != self.selected_count)
         ):
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
+        if self.timing_path is not None:
+            with self.timing_path.open("a", encoding="utf-8") as stream:
+                stream.write(
+                    json.dumps(
+                        {
+                            "event": "finish",
+                            "unix_time": time.time(),
+                            "selected": self.selected_count,
+                            "passed": self.passed_count,
+                            "exitstatus": int(session.exitstatus),
+                        }
+                    )
+                    + "\n"
+                )
 
 
 def resolve_scope(
@@ -195,6 +233,31 @@ def resolve_scope(
     return history, owners, frozenset(change.path.as_posix() for change in changes)
 
 
+def _resolve_plan(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+    required: Sequence[TestGroup],
+    history: str,
+) -> dict[str, object]:
+    plan = execution_plan(required, history=history, base=args.base)
+    count = len(plan["shards"])
+    if args.shard_count is not None and args.shard_count != count:
+        parser.error("shard count does not match the independently budgeted plan")
+    args.shard_count = count
+    if args.plan_file is not None:
+        supplied = json.loads(args.plan_file.read_text(encoding="utf-8-sig"))
+        if supplied != plan:
+            parser.error("frozen manifest differs from current source-derived plan")
+    if args.expected_plan is not None and args.expected_plan != plan["fingerprint"]:
+        parser.error("execution plan fingerprint differs from the preflight")
+    if args.write_plan is not None:
+        if not args.plan_only:
+            parser.error("writing a manifest requires planning without execution")
+        args.write_plan.parent.mkdir(parents=True, exist_ok=True)
+        args.write_plan.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+    return plan
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Validate complete coverage of work groups and execute one serial shard.
 
@@ -214,7 +277,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--base")
     parser.add_argument("--shard-index", type=int, default=1)
-    parser.add_argument("--shard-count", type=int, default=8)
+    parser.add_argument("--shard-count", type=int)
+    parser.add_argument("--plan-file", type=Path)
+    parser.add_argument("--write-plan", type=Path)
+    parser.add_argument("--expected-plan")
     parser.add_argument("--evidence", type=Path)
     parser.add_argument("--github-output", type=Path)
     parser.add_argument("--plan-only", action="store_true")
@@ -243,13 +309,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "maru.settings.test")
     django.setup()
     history, owners, changed = resolve_scope(args.history, args.base)
-    if args.github_output is not None:
-        if not args.plan_only:
-            parser.error("workflow outputs require planning without test execution")
-        args.shard_count = 16 if history == "all" else 8
+    if args.github_output is not None and not args.plan_only:
+        parser.error("workflow outputs require planning without test execution")
     inventory = load_history_inventory()
     groups = build_groups()
     required = select_groups(groups, inventory, history, owners, changed)
+    plan = _resolve_plan(args, parser, required, history)
     shards = partition_groups(required, args.shard_count)
     if not 1 <= args.shard_index <= args.shard_count:
         parser.error("shard index is outside the requested partition")
@@ -265,12 +330,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         ],
         "shard": args.shard_index,
         "shards": args.shard_count,
+        "plan_fingerprint": plan["fingerprint"],
+        "predicted_seconds": plan["estimated_seconds"],
         "groups": [group.key for group in selected],
     }
     print(json.dumps(summary, sort_keys=True), flush=True)
     if args.github_output is not None:
         with args.github_output.open("a", encoding="utf-8") as output:
             output.write(f"history={history}\nshard_count={args.shard_count}\n")
+            output.write(f"plan_fingerprint={plan['fingerprint']}\n")
             output.write(f"matrix={json.dumps(list(range(1, args.shard_count + 1)))}\n")
     if args.plan_only:
         return 0

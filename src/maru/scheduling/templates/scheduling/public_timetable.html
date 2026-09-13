@@ -1,0 +1,100 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programme timetable · Maru</title>
+  <link rel="stylesheet" href="{% static 'scheduling/public_timetable.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#timetable">Skip to timetable</a>
+  <main id="timetable">
+    <header>
+      <p class="eyebrow">Maru · Released Programme</p>
+      <h1>Programme timetable</h1>
+      <p>Read the released programme, find its time and room, or make a point-in-time copy.</p>
+      <details class="access">
+        <summary>Access: public reviewed information</summary>
+        <p>This view contains reviewed programme text and released effective times. Private host details, volunteer work and operational instructions are separate. Reading does not register you for the convention.</p>
+      </details>
+    </header>
+    {% if state_title %}
+      <section aria-labelledby="state-heading">
+        <h2 id="state-heading">{{ state_title }}</h2>
+        <p>{{ state_message }}</p>
+        <p><a href="?">Reload the complete timetable</a></p>
+      </section>
+    {% else %}
+      <section class="source" aria-labelledby="source-heading">
+        <h2 id="source-heading">Release sequence {{ snapshot.pointer_version }} · {{ snapshot.state|capfirst }}</h2>
+        <p>Time zone: {{ snapshot.zone_name }}. Checked: {{ checked_label }}.</p>
+        <details class="source-details">
+          <summary>Publication and saved-copy limits</summary>
+          {% include 'scheduling/public_timetable_source.html' %}
+        </details>
+        <div class="print-source">
+          {% include 'scheduling/public_timetable_source.html' %}
+        </div>
+      </section>
+      {% if snapshot.state == 'available' %}
+        {% if not print_view %}
+          <nav class="formats" aria-label="Complete timetable copies">
+            <a href="?format=print">Print-friendly complete timetable</a>
+            <a href="?format=calendar">Download complete calendar</a>
+            <a href="?format=json">Download complete JSON</a>
+          </nav>
+          <form method="get" class="filters">
+            <fieldset>
+              <legend>Find a day and room</legend>
+              <div class="filter-grid">
+                <div><label for="day">Service day starting</label>
+                  <select id="day" name="day">
+                    <option value="">All service days</option>
+                    {% for identifier, label in days %}<option value="{{ identifier }}"{% if options.day_id == identifier %} selected{% endif %}>{{ label }}</option>{% endfor %}
+                  </select>
+                </div>
+                <div><label for="room">Room</label>
+                  <select id="room" name="room">
+                    <option value="">All rooms</option>
+                    {% for identifier, label in rooms %}<option value="{{ identifier }}"{% if options.space_id == identifier %} selected{% endif %}>{{ label }}</option>{% endfor %}
+                  </select>
+                </div>
+              </div>
+              <button type="submit">Apply filters</button>
+              <a href="?">Clear filters</a>
+            </fieldset>
+          </form>
+        {% else %}
+          <p class="print-guidance">Use your browser's Print command. This complete copy is not an offline freshness guarantee. <a href="?">Back to interactive timetable</a></p>
+        {% endif %}
+        <p class="result-count">Showing {{ rows|length }} of {{ total_count }} released occurrences. Downloads always contain the complete newly checked release.</p>
+        <div class="entries">
+          {% for row in rows %}
+            <article class="entry" aria-labelledby="occurrence-{{ row.entry.occurrence_id }}">
+              <p class="day-label">Service day starting {{ row.day_label }}</p>
+              <h2 id="occurrence-{{ row.entry.occurrence_id }}">{{ row.entry.copy.title }}</h2>
+              <dl>
+                <dt>Starts</dt><dd><time datetime="{{ row.starts_iso }}">{{ row.starts_label }}</time></dd>
+                <dt>Ends</dt><dd><time datetime="{{ row.ends_iso }}">{{ row.ends_label }}</time></dd>
+                <dt>Where</dt><dd>{{ row.entry.room.venue_name }} / {{ row.entry.room.room_name }}</dd>
+              </dl>
+              {% if row.entry.copy.summary %}<p class="copy">{{ row.entry.copy.summary }}</p>{% endif %}
+              {% if row.entry.copy.content_note %}<p class="copy"><strong>Content note:</strong> {{ row.entry.copy.content_note }}</p>{% endif %}
+              <p class="owner-version">Wayfinding versions: room {{ row.entry.room.space_version }}, venue {{ row.entry.room.venue_version }}.</p>
+            </article>
+          {% empty %}
+            <section><h2>No matching occurrences</h2><p>The release is available, but no occurrences match both filters. <a href="?">Show the complete timetable</a>.</p></section>
+          {% endfor %}
+        </div>
+      {% elif snapshot.state == 'absent' %}
+        <section><h2>No timetable published yet</h2><p>A reviewed Programme release has not been published here. Check back after the organizer releases it.</p></section>
+      {% elif snapshot.state == 'withdrawn' %}
+        <section><h2>Timetable withdrawn</h2><p>The previous release is no longer being served. Do not treat an earlier saved copy as current. Wait for the organizer's replacement.</p></section>
+      {% else %}
+        <section><h2>Timetable needs review</h2><p>A required source changed after release. No room or programme entry is being advertised as currently approved. Wait for a reviewed replacement.</p></section>
+      {% endif %}
+    {% endif %}
+  </main>
+</body>
+</html>

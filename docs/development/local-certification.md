@@ -1,7 +1,7 @@
 # Local exact-commit certification
 
 Status: Required contributor evidence; GitHub independently verifies pull requests
-Last updated: 2026-09-08
+Last updated: 2026-09-12
 
 ## What the gate proves
 
@@ -23,8 +23,11 @@ The local type-analysis cache lives inside the fresh `.local-ci/` artifact
 directory, preventing stale Django model relationships from another branch
 from entering exact-commit certification.
 
-The test phase uses one database-free unit process and eight deterministic
-integration processes backed by eight isolated PostgreSQL containers. Current
+The test phase uses one database-free unit process and a bounded local worker
+pool executing the same budgeted shard manifest as GitHub. At most eight
+PostgreSQL containers run concurrently; each shard receives a fresh database.
+The compatibility parameter `-IntegrationShards` now limits worker concurrency,
+not the number of planned shards. Current
 cases in a file stay together; independently restorable historical functions
 may form separate groups, while shared historical baselines stay indivisible.
 Each database executes serially. The containers are
@@ -57,9 +60,16 @@ are not comparable whole-suite speedup evidence.
 
 Successful local evidence is written below `.local-ci/` and includes
 `certification.json`, JUnit reports, process logs, XML/HTML coverage, and the
-generated contributor site in `docs/_build/html`. Version-2 receipts record the
+generated contributor site in `docs/_build/html`. Receipts record the
 exact head, resolved base, historical scope, elapsed time and gates actually run.
-Per-shard selection JSON records actual collected case identities. `.local-ci/` is ignored and
+Version-3 receipts also record the exact plan fingerprint, total shards,
+maximum concurrent databases and measured timing-headroom result. The local
+pool retains one resource/result record per shard, incremental timing JSONL,
+and `pool-result.json`. Each measured job, including cleanup, must fit a
+90-minute conservative projection after a 50% slowdown and ten-minute overhead
+allowance; otherwise no success receipt is written. This is substantial margin,
+not a guarantee about every GitHub runner. Per-shard selection JSON records
+actual collected case identities. `.local-ci/` is ignored and
 must not be committed or presented as a cryptographic attestation. The command
 deletes only that verified, repository-contained artifact directory and its own
 `maru-cert-*` containers.
@@ -70,6 +80,30 @@ same non-database gates and audits, followed by the complete Python suite unless
 receipt.
 
 ## Diagnostic whole-file cost calibration
+
+For a cheap current budget/assignment preview without starting PostgreSQL:
+
+```powershell
+.venv/Scripts/python.exe -m scripts.run_postgres_acceptance --history all --base EXACT_BASE_COMMIT --plan-only --write-plan .tools/postgresql-plan.json
+```
+
+`predicted_seconds` includes the slowdown multiplier and overhead reserve;
+`estimated_seconds` in the CLI summary is the raw group-weight sum. The frozen
+manifest retains the conservative estimates, every assignment and a normalized
+source fingerprint. This command creates no certification receipt and does not
+measure runtime. Do not reuse its manifest after changing source or policy.
+
+For the active group-cost refresher (not the old whole-file diagnostics):
+
+```powershell
+.venv/Scripts/python.exe -m scripts.update_ci_group_timings --local-evidence PRESERVED_FULL_EVIDENCE --commit EXACT_MEASURED_COMMIT --base EXACT_BASE_COMMIT --destination scripts/ci_test_group_timings.json
+```
+
+Optional `--hosted-evidence DIRECTORY` consumes complete passing hosted reports
+whose provenance must first be independently verified. Explicit repeated
+`--exclude-hosted-file tests/integration/EXACT_FILE.py` omits only an unusable
+hosted cost comparison; the full local cost and every test remain required.
+Review the generated provenance sidecar and certify the resulting candidate.
 
 ADR 0091 retains the following ADR 0089 tooling for whole-file diagnostics.
 It does not update the active group map or choose acceptance scope. Use the
@@ -130,8 +164,9 @@ Documentation-only hosted changes avoid PostgreSQL. Every code PR runs current
 PostgreSQL behavior plus the history required by ADR 0090: domain schema changes
 add affected owners/dependents and whole-graph recovery; global safety, runtime,
 dependency and test-harness changes retain exhaustive history. The hosted
-exhaustive path uses sixteen smaller groups with at most eight running at once;
-routine paths use eight. Local certification always uses eight isolated services.
+exhaustive and routine paths choose a bounded count from measured group costs
+under ADR 0098, with at most eight running at once. Local certification executes
+those same independently verified assignments through eight database workers.
 This selection is repository policy, not a contributor assertion. See the
 [testing strategy](../quality/testing-strategy.md#github-acceptance-topology)
 for inventory review, parameterized/shared-fixture grouping and nightly behavior.

@@ -709,10 +709,8 @@ def test_local_certification_preserves_database_isolation_and_total_coverage() -
 
     for required in (
         "[int] $IntegrationShards = 8",
-        "postgres:17.11-alpine@sha256:",
-        '"maru-cert-integration-$Shard-$RunToken"',
         "maru_unit_no_database",
-        '"-m", "coverage", "run", "-m", "scripts.run_postgres_acceptance"',
+        '"-m", "scripts.run_postgres_pool"',
         '"coverage", "combine"',
         '"coverage", "report", "--fail-under=90"',
         "Certification requires a clean working tree",
@@ -724,16 +722,24 @@ def test_local_certification_preserves_database_isolation_and_total_coverage() -
     ):
         assert required in certification
 
-    assert '"--shard-count", "$IntegrationShards"' in certification
+    assert '"--workers", "$IntegrationShards"' in certification
+    assert '"--write-plan" "$ReportDirectory/plan.json"' in certification
     assert '"maru-cert-unit-$RunToken"' not in certification
-    assert "isolated_postgres_instances = $IntegrationShards" in certification
+    assert "isolated_postgres_instances = $AcceptancePlan.shards" in certification
+    assert "max_concurrent_postgres_instances = $IntegrationShards" in certification
+    assert "measured_timing_headroom = $true" in certification
+    assert "-not $_.container_removed" in certification
     assert (
         certification.count(
             '& $Git "status" "--porcelain"\n    ) -join [Environment]::NewLine).Trim()'
         )
         == 2
     )
-    assert "    ) | Out-Null\n\n    $Healthy = $false" in certification
+    pool = (REPOSITORY_ROOT / "scripts/run_postgres_pool.py").read_text()
+    assert "postgres:17.11-alpine@sha256:" in pool
+    assert '"127.0.0.1::5432"' in pool
+    assert '"type=tmpfs,destination=/var/lib/postgresql/data"' in pool
+    assert '"rm", "--force", container_id' in pool
 
 
 def test_repository_push_guard_blocks_main_deletion_and_non_fast_forward() -> None:

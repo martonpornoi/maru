@@ -12,6 +12,8 @@ or permission to use production personal data.
 
 ## Explore safely
 
+- [Read and copy a Programme timetable](programme-output-evaluation.md) explains
+  dormant public/personal synthetic output, source states and private saved copies.
 - [Hands-on tutorial](maru-hands-on-tutorial.md) follows the main synthetic
   organization-to-edition journey.
 - [Clean convention onboarding](clean-convention-onboarding-walkthrough.md)
@@ -66,6 +68,7 @@ analogy.
 :maxdepth: 1
 
 maru-hands-on-tutorial
+programme-output-evaluation
 clean-convention-onboarding-walkthrough
 empty-experience-baseline
 workforce-only-adoption-and-recovery

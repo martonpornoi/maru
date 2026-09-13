@@ -15,6 +15,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant public and exact-person Programme timetables with reviewed
+  public copy, private host presence plus retained volunteer work, and complete
+  JSON/calendar/print-friendly copies. Withdrawn releases stop advertising
+  previous Programme times without silently moving accepted shifts. Current
+  instructions, historical work and saved-copy limits remain explicit. These
+  synthetic evaluation surfaces do not activate Programme Operations; room and
+  department run sheets follow separately (#99, #100, ADR 0097, SCH-006/010).
 - Added dormant Programme staffing requirements, exact timetable-to-Shift
   bindings, explicit work-impact preview/apply and independently authorized
   coverage/history. Timetable edits mark coverage stale instead of silently
@@ -110,6 +117,13 @@ rather than replace the curated summary.
   ([#38](https://github.com/martonpornoi/maru/issues/38)).
 
 ### Changed
+
+- PostgreSQL acceptance now plans smaller jobs from measured group costs and
+  conservative runtime budgets. Local certification executes the same exact
+  assignments as GitHub with at most eight disposable databases, retains
+  interrupted timing diagnostics and refuses certification without measured
+  headroom. Test selection, coverage and the protected two-hour hosted limit
+  remain unchanged (ADR 0098, NFR-001).
 
 - Updated development dependencies to js-yaml 4.3.2 and Vitest 4.1.11 to address
   GHSA-2883-xcg3-v3hh and GHSA-82fw-gwwq-j7x9. Locked installs and vulnerability

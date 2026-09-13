@@ -611,9 +611,9 @@ def test_same_named_class_case_is_current_and_parameter_colons_do_not_split() ->
     assert items[0].name == "test_old[a::b]"
 
 
-@pytest.mark.parametrize(("resolved", "count"), [("current", 8), ("all", 16)])
+@pytest.mark.parametrize("resolved", ["current", "all"])
 def test_hosted_plan_emits_resolved_scope_before_matrix_fanout(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, resolved: str, count: int
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, resolved: str
 ) -> None:
     monkeypatch.setattr(
         runner, "resolve_scope", lambda *_args: (resolved, frozenset(), frozenset())
@@ -626,9 +626,17 @@ def test_hosted_plan_emits_resolved_scope_before_matrix_fanout(
         == 0
     )
     values = dict(line.split("=", 1) for line in output.read_text().splitlines())
+    count = len(
+        runner.execution_plan(
+            select_groups(build_groups(), load_history_inventory(), resolved),
+            history=resolved,
+            base=None,
+        )["shards"]
+    )
     assert values["history"] == resolved
     assert json.loads(values["matrix"]) == list(range(1, count + 1))
     assert int(values["shard_count"]) == count
+    assert len(values["plan_fingerprint"]) == 64
 
 
 @pytest.mark.parametrize("argument", ["-k", "--deselect=one", "--ignore=tests", "-n2"])

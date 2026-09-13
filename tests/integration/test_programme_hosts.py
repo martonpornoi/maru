@@ -12,6 +12,7 @@ from django.apps import apps
 from django.db import DatabaseError, close_old_connections, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.recorder import MigrationRecorder
+from django.test.utils import CaptureQueriesContext
 from psycopg import sql
 
 import maru.effects.services as effect_services
@@ -53,9 +54,11 @@ from maru.programme.models import (
     ProgrammeHostRelationship,
     ProgrammeHostRevision,
     ProgrammeItem,
+    ProgrammePublicRendition,
     ProgrammeReadinessRequirement,
     ProgrammeWorkingRevision,
 )
+from maru.programme.public_copy_commands import withdraw_programme_public_rendition
 from maru.programme.queries import (
     ProgrammeQueryUnavailableError,
     load_programme_readiness,
@@ -613,6 +616,76 @@ def test_confirmed_person_sees_only_approved_copy_and_ended_history_sees_no_late
     assert history.public_copy is None
     assert "Later approved item copy" not in repr(history)
     assert history.invitations[0].title == "Visible session"
+
+
+@pytest.mark.parametrize("withdraw_latest", [False, True])
+def test_host_copy_respects_exact_withdrawal_without_fallback(world, withdraw_latest):
+    confirmed = respond(world, invite(world))
+    manager, _, common = world
+    working = ProgrammeWorkingRevision.objects.get(item_id=common["item_id"])
+
+    def approve(title):
+        return approve_programme_public_rendition(
+            **common,
+            actor_id=manager.id,
+            source_working_revision_id=working.id,
+            public_title=title,
+            expected_version=confirmed.resulting_item_version,
+            reason="Explicit synthetic host-visible public copy",
+            idempotency_key=uuid4(),
+            correlation_id=uuid4(),
+        )
+
+    first = approve("First reviewed title")
+    second = approve("Second reviewed title")
+    request = read_request(world, personal=True)
+    with CaptureQueriesContext(connection) as captured:
+        before = load_programme_host_self(request, authorizer=common["authorizer"])
+    assert before.public_copy.public_title == "Second reviewed title"
+    content_queries = [
+        row["sql"]
+        for row in captured
+        if 'FROM "programme_programmepublicrendition"' in row["sql"]
+    ]
+    assert len(content_queries) == 1
+    assert all(
+        field not in content_queries[0]
+        for field in (
+            "review_reason",
+            "reviewed_by_id",
+            "reviewed_at",
+            "source_working_revision_id",
+        )
+    )
+    withdraw_programme_public_rendition(
+        **common,
+        actor_id=manager.id,
+        rendition_id=(second if withdraw_latest else first).result_object_id,
+        expected_version=confirmed.resulting_item_version,
+        reason="Private synthetic withdrawal explanation",
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    after = load_programme_host_self(request, authorizer=common["authorizer"])
+    if withdraw_latest:
+        assert after.public_copy is None
+        assert "First reviewed title" not in repr(after)
+        assert "Second reviewed title" not in repr(after)
+    else:
+        assert after.public_copy.public_title == "Second reviewed title"
+    assert "Private synthetic withdrawal explanation" not in repr(after)
+    assert after.invitations == before.invitations
+    assert (
+        ProgrammePublicRendition.objects.filter(
+            id__in=(first.result_object_id, second.result_object_id)
+        ).count()
+        == 2
+    )
+
+    approve("Fresh third reviewed title")
+    fresh = load_programme_host_self(request, authorizer=common["authorizer"])
+    assert fresh.public_copy.public_title == "Fresh third reviewed title"
+    assert fresh.public_copy.rendition_number == 3
 
 
 def test_roster_locks_actor_and_hosts_in_one_identifier_order(world, monkeypatch):

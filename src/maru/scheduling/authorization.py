@@ -11,6 +11,7 @@ from django.db import connection
 from maru.authorization.policy import (
     PolicyDecision,
     decide_verified_principal_exact_edition,
+    decide_verified_principal_exact_self,
 )
 from maru.events.scheduling_queries import resolve_scheduling_edition_reference
 from maru.identity.queries import resolve_active_verified_person_reference
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
 VIEW_PLANNING: Final = "scheduling.view_planning"
+VIEW_HOST_SELF: Final = "scheduling.view_host_self"
 VIEW_HISTORY: Final = "scheduling.view_history"
 VIEW_CONFLICTS: Final = "scheduling.view_conflicts"
 MANAGE_DAYS: Final = "scheduling.manage_service_days"
@@ -34,6 +36,7 @@ WITHDRAW_RELEASE: Final = "scheduling.withdraw_release"
 SCHEDULING_CAPABILITIES: Final = frozenset(
     {
         VIEW_PLANNING,
+        VIEW_HOST_SELF,
         VIEW_HISTORY,
         VIEW_CONFLICTS,
         MANAGE_DAYS,
@@ -124,6 +127,15 @@ class ExactSchedulingAuthorizer:
         PolicyDecision
             Current exact-profile decision without a foreign model.
         """
+        if capability_code == VIEW_HOST_SELF:
+            return decide_verified_principal_exact_self(
+                principal_id=principal_id,
+                owner_account_id=principal_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                capability_code=capability_code,
+                requested_fields=requested_fields,
+            )
         return decide_verified_principal_exact_edition(
             principal_id=principal_id,
             organization_id=organization_id,

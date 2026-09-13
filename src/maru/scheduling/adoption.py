@@ -11,10 +11,25 @@ SCHEDULING_VENUE_RESERVATION_ADAPTER = "scheduling.venue-reservation@1"
 SCHEDULING_TIME_CONFLICT_SOURCE = "scheduling.service-day-and-placement@1"
 SCHEDULING_RELEASE_SOURCE_ADAPTER = "scheduling.release-candidate-source@1"
 SCHEDULING_RELEASE_PREFLIGHT_ADAPTER = "scheduling.release-preflight@1"
+SCHEDULING_PUBLIC_RELEASE_ADAPTER = "scheduling.public-release-output@1"
 
 SCHEDULING_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
     owner_module="scheduling",
     descriptors=(
+        AdoptionAdapterDescriptor(
+            code=SCHEDULING_PUBLIC_RELEASE_ADAPTER,
+            owner_module="scheduling",
+            kind="public-release-output",
+            result_semantics=(
+                "Admits only the current checked Programme release and exact "
+                "owner-selected reviewed copy and effective timing; no planner "
+                "permission, host identity or private layer is implied."
+            ),
+            failure_semantics=(
+                "Unpinned profiles, withdrawn or invalidated releases and "
+                "incomplete or moving evidence cannot serve last-good content."
+            ),
+        ),
         AdoptionAdapterDescriptor(
             code=SCHEDULING_RELEASE_PREFLIGHT_ADAPTER,
             owner_module="scheduling",

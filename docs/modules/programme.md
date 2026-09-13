@@ -326,7 +326,11 @@ Withdrawal of a rendition governs all retained output selecting that exact copy,
 including historical releases. The ordinary current-copy query chooses the latest
 rendition first, returns absence if it is withdrawn, and never falls back to old
 wording. A withdrawn older rendition does not hide a separately approved newer
-one. Private public-copy review history separately exposes withdrawal time, actor
+one. The confirmed person's host self-view applies the same latest-first,
+no-withdrawn-copy/no-older-fallback rule under its own relationship authority;
+its content query does not fetch private review rationale or reviewer fields.
+Only a genuinely new reviewed rendition can supply replacement wording.
+Private public-copy review history separately exposes withdrawal time, actor
 reference and rationale under its restricted history field ceiling; public-copy
 read authority does not grant that history or reason.
 
@@ -507,7 +511,40 @@ Programme-owned host/co-host invitation, confirmation and deliberately shared
 per-item availability now have a separate dormant owner boundary.
 Scheduling candidates, conflicts, explicit Venue reservations, interactive
 editing, staffing and complete release preflight now have dormant owner kernels.
-Persisted independent approval, atomic release,
-public and personal timetables, on-site continuity, profile activation, and
-integrated browser rehearsal remain later children of the Programme Operations
-umbrella.
+Persisted independent approval and atomic release are now provided by dormant
+Scheduling under ADR 0096. Shared public/personal timetables (#99), on-site
+continuity, profile activation and integrated browser rehearsal remain in the
+Programme Operations delivery sequence.
+
+### Exact released public copy
+
+`output_queries.load_released_programme_copy` owns the deliberately public text
+boundary for ADR 0097. It independently resolves Scheduling's currently admitted,
+complete active-release reference and compares the caller's expected release ID.
+That ID is an optimistic precondition, not a capability to discover other copies.
+Only exact selected immutable rendition IDs are read: reviewed public title,
+summary and content note. A newer rendition never substitutes for the release's
+choice; explicit withdrawal never falls back to another copy. Scope, item
+ownership, complete selection and final release/disclosure state are checked.
+Reviewer/source-working metadata, host identities and operational notes are not
+selected. No current profile admits this public output and no route is activated.
+
+### Exact-person timetable purposes
+
+`timetable_queries.load_personal_host_purposes` reads up to 2,000 complete
+retained own relationships under real `programme.view_host_self` policy, with
+only `own_host_relationship` and `own_host_invitation` fields. Current profile,
+verified person and exact tenant/edition are independently checked. Canonical
+parent and actor locks precede rows; final authorization and mandatory
+`programme.query.personal_host_timetable` audit precede disclosure. There is no
+caller-selectable subject or injected authorizer in this query.
+
+The current relationship's exact immutable invitation supplies its deliberate
+title and briefing. Private working/public-copy selection, organizer rationale,
+other people and exact availability are not fetched. Relationship version and
+invitation sequence retain distinct source meaning. Pending invitations and
+declined/withdrawn/removed history are not confirmed hosting, scheduled work or
+attendance. This owner query gives no time or room: a separate checked Scheduling
+query must prove approved presence for confirmed purposes. Missing/inconsistent
+copy, bounds and database failures withhold the whole result. No Participation
+or profile activation is inferred and no personal route is mounted by this query.

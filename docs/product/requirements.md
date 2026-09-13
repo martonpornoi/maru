@@ -521,6 +521,13 @@ architecture documents, implementation issues, tests, and release notes.
   commitments, break needs, and preferred availability.
 - **SCH-006 — Edition outputs:** Approved timetable data must feed public APIs,
   personal calendars, signage, staff briefings, exports, and print layouts.
+  Public output has separate exact-profile admission, not planner authority.
+  It selects the released immutable reviewed copy rather than the latest copy,
+  rechecks current withdrawal/invalidation, and exposes no private day labels,
+  host identities or operational layers. Every format preserves release identity
+  and explicit source/state meaning, rejects incomplete or oversized evidence,
+  and escapes untrusted text for its transport. A download is not an enduring
+  permission, remote-erasure mechanism or offline-freshness guarantee.
 - **SCH-007 — Human override:** Authorized planners may override warnings with a
   recorded reason; hard safety or authorization constraints cannot be silently
   bypassed.
@@ -555,6 +562,15 @@ architecture documents, implementation issues, tests, and release notes.
   timing but retain their own visibility, edit authority, ownership, history,
   and publication rules. A comment or shift layer must not silently alter the
   approved public schedule.
+  Current wayfinding names and operational instructions must identify their
+  owning source versions rather than masquerading as immutable released text.
+  Personal Shift intervals come from retained accepted work, not a replacement
+  Programme placement; claims, confirmations and ended history remain distinct.
+  Personal hosting requires both exact-self Scheduling field authority and an
+  independently proven Programme host purpose. Only confirmed purposes select
+  approved host-presence intervals; the surrounding preparation/delivery/teardown
+  envelope is context, not a silent assignment of every phase. A person without
+  confirmed hosting learns no release existence from this private layer.
 - **SCH-011 — Accessible interactive timetable editing:** Timetable planning
   must provide an unscheduled-item inventory, service-day and room views,
   stable filters, access-controlled layers, conflict preview, and recoverable
@@ -1758,6 +1774,10 @@ architecture documents, implementation issues, tests, and release notes.
   and exhaustive for global safety/harness changes, changed-revision nightly
   checks and releases, under ADR 0090. Deferred historical failures require
   repair; they are not permission to release or silently ignore regressions.
+  ADR 0098 budgets complete PostgreSQL groups into bounded jobs with identical
+  local/hosted assignments and measured pre-push headroom. Suite growth must not
+  silently consume the timeout margin; budget failures require replanning or
+  optimization, never omitted tests or weakened acceptance.
 - **NFR-002 — Living documentation:** Product, architecture, API, operations,
   security, and role-specific user documentation are deliverables.
 - **NFR-003 — Checkpoint continuity:** Every material change must leave a

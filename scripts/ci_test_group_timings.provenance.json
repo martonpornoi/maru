@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "commit": "35bc135fc2c9d7e7c448b4619dd681b60ac74e15",
+  "base": "0bea1b46f8611f3da8a3d3664f258505a8deb7e4",
+  "historical_scope": "all",
+  "local_groups": 334,
+  "hosted_observed_groups": 312,
+  "excluded_hosted_files": [
+    "tests/integration/test_admin_edition_context.py",
+    "tests/integration/test_page10_account_invitation_api.py"
+  ],
+  "method": "maximum complete observed local/hosted group cost; planner separately adds slowdown and overhead",
+  "inputs": [
+    {
+      "name": "certification.json",
+      "sha256": "b1ee4b47c5b22643a6abae74a1cbe545d7c9f86a20475735f927f609702679f4"
+    },
+    {
+      "name": "integration-1.xml",
+      "sha256": "9507bb1c438c31f2c5b938893605ec5783b1410cada04819e23140ffa3cfc533"
+    },
+    {
+      "name": "selection-1.json",
+      "sha256": "4e3bc114a009580e7b7d62b0746d58cf15e802d82ff1ee78f181fc68bd710a4e"
+    },
+    {
+      "name": "integration-2.xml",
+      "sha256": "213292f3ec6f841eaf657012f491db72e28de61680c21a1b433ce77204564818"
+    },
+    {
+      "name": "selection-2.json",
+      "sha256": "de32f3e7e54fa505be4caec3fa07083262f54c9b6612ba5184549762aa7d4097"
+    },
+    {
+      "name": "integration-3.xml",
+      "sha256": "d32c2285e30306c3a2a02a028fd7684f2f775309ff1632e7d8a834755a19e765"
+    },
+    {
+      "name": "selection-3.json",
+      "sha256": "ea9306ad44b691d769e9cdcabd17ebf45b64cd8a9ded8e9220e9f5ceaff3791c"
+    },
+    {
+      "name": "integration-4.xml",
+      "sha256": "aa84b1a748eb4accca46c1d05c086d2a714c2ac0b493a106a5c21509065d75ab"
+    },
+    {
+      "name": "selection-4.json",
+      "sha256": "8ac430811e0958c65a1c5e6bdf51690c8a720b34dfc2a4143564246738444dc7"
+    },
+    {
+      "name": "integration-5.xml",
+      "sha256": "df7add8b9f15743bde538a2f31388a50dfb9457332443785d0e6a225aead18d7"
+    },
+    {
+      "name": "selection-5.json",
+      "sha256": "548e0a6a0bc970988b9482b28638b0dfcf7de0ab45b193bc8d2e6d2012ecb630"
+    },
+    {
+      "name": "integration-6.xml",
+      "sha256": "47055c1eaff12513de9b807461a6c3d2065491bee663f41e26766fd341675b20"
+    },
+    {
+      "name": "selection-6.json",
+      "sha256": "c5c400a53f5b1de30c6ea3679c20509724f8fd0cd2b25668c25c59fd655c8457"
+    },
+    {
+      "name": "integration-7.xml",
+      "sha256": "9516cee54bfa45142f87e20ee1418f643dac6d12aa3a9f62bc1a49df6b9c0dbf"
+    },
+    {
+      "name": "selection-7.json",
+      "sha256": "ba59f7366fc775da05fe4b1ccc43ef372f793ad3c4be41dc5f33792700f297cc"
+    },
+    {
+      "name": "integration-8.xml",
+      "sha256": "d4faea43d08d00d67c12f9674913f585ab7a6a6e39265000320936ac59458263"
+    },
+    {
+      "name": "selection-8.json",
+      "sha256": "f839c6839e4e406ec2a831c8b3abdc57316aa42c6f01f1298fd5317121ff46d4"
+    },
+    {
+      "name": "integration-1.xml",
+      "sha256": "12425769bb8e682da4267743c2fb090ffcc9f746ddf960412baa2f2ee50e642f"
+    },
+    {
+      "name": "selection-1.json",
+      "sha256": "71e130aaa9feb491b731393063cd770877bf3e0405f833985a16141a85c3f4cb"
+    },
+    {
+      "name": "integration-10.xml",
+      "sha256": "59a6974b695453033b535462f8982e1440b4c4ee1c58a185b7cd548ba397dfc2"
+    },
+    {
+      "name": "selection-10.json",
+      "sha256": "2a456da0db94aee51c71f7ad96890c9247de89a320a9eddf277a2daedefb23da"
+    },
+    {
+      "name": "integration-11.xml",
+      "sha256": "2486350712d7883b2e11a1df75c87cafa159ee79894882f94c3b02a77ff38853"
+    },
+    {
+      "name": "selection-11.json",
+      "sha256": "fbeb2c83fdbd9566ff8e4e23668ce1936ecb168bcec6283deee870d673d4ae77"
+    },
+    {
+      "name": "integration-12.xml",
+      "sha256": "24cf547e1ed831a23ffe5f347441101f00ffc1d5fad9c4fe3739d4fb10ceb3b1"
+    },
+    {
+      "name": "selection-12.json",
+      "sha256": "549c3c1763ae9a70defadc05289bdd44ebf6c0352b90533e7a3c23f448a375ff"
+    },
+    {
+      "name": "integration-13.xml",
+      "sha256": "2c54235ab5e36fd134ae38594606fd6017d8a3cb391576824eca0a3626646f9f"
+    },
+    {
+      "name": "selection-13.json",
+      "sha256": "758d3170506044397d02694de4301a1a11cd413d213102a5a728d9e50adb8537"
+    },
+    {
+      "name": "integration-14.xml",
+      "sha256": "ca3e05fe21ef0ae82433eb7fd5ffa969d9bb14186a2d841a51426e65d0e94ecb"
+    },
+    {
+      "name": "selection-14.json",
+      "sha256": "407bdfcc3b6b355c7030ea4e12c951345ae9e0fa86865b18b57ca00a6364db8c"
+    },
+    {
+      "name": "integration-16.xml",
+      "sha256": "8a6e98df9a27de6a11e62781b5ae5ee8462b6ff4a0b5de9b975a89e36d3f7db5"
+    },
+    {
+      "name": "selection-16.json",
+      "sha256": "53a04d46bc153250975db5de889021139277394d292e63564bea719dd57d872c"
+    },
+    {
+      "name": "integration-2.xml",
+      "sha256": "d8e614153b7eec6f0c0a3d0a4856857e9bcdf41b77c3aa029e2120cb1c240c7b"
+    },
+    {
+      "name": "selection-2.json",
+      "sha256": "aab4475e8797458ae210b96a9609344f4edf8231dfbc2e24d542a133b18d3bc3"
+    },
+    {
+      "name": "integration-3.xml",
+      "sha256": "2d0ab95ce2b0850b3b4f5c6be9ffadd64966453a70afec07ea9f348a2b35cea7"
+    },
+    {
+      "name": "selection-3.json",
+      "sha256": "66e9300d5fc2fb5649541c60159d7e71cc55fc2cbf8f6fc8082e16d85bb45a4f"
+    },
+    {
+      "name": "integration-4.xml",
+      "sha256": "310698197d545df56812a3f84cddf7caa017f9079498b2d54289e45c4c72413b"
+    },
+    {
+      "name": "selection-4.json",
+      "sha256": "5f438a1bdb9294d94e521dc6945aa3ef9fe712c75696858137f6d6e19fee709e"
+    },
+    {
+      "name": "integration-5.xml",
+      "sha256": "a609d235f466b71f184f37b5996e1c3d8351881894c9b1878277afa5da2ee64b"
+    },
+    {
+      "name": "selection-5.json",
+      "sha256": "36b80580d5ef47a3d41b6ebe9887961cc0a7e1bbe0becbf3a9ebf118dace43a0"
+    },
+    {
+      "name": "integration-6.xml",
+      "sha256": "2167021c3fd8d992bf481f4d6b479c824f8d35cba32972a55e34777f791691d8"
+    },
+    {
+      "name": "selection-6.json",
+      "sha256": "d3138d3aaaf2a11b4d2ba145d9ab145475b06ef0b88bc94e45b4489bcd7528a3"
+    },
+    {
+      "name": "integration-7.xml",
+      "sha256": "a60f9fd6bd98f324556bf62b07bc2e46bcc2617e1d9565eb3b49b2e309c7c521"
+    },
+    {
+      "name": "selection-7.json",
+      "sha256": "2acbb796bc7252849215b3d686005c3dd0bb718c65f8acb4600a53543739cd6a"
+    },
+    {
+      "name": "integration-8.xml",
+      "sha256": "bf86730f08451405293149ce0a5e078a00edcef7bb7e80a7eb6d91517755a7d7"
+    },
+    {
+      "name": "selection-8.json",
+      "sha256": "7f0d9388c59fb83316425cb8b7aa78e6ccd6c688c2aa66532fce600639bf67ac"
+    },
+    {
+      "name": "integration-9.xml",
+      "sha256": "1c7f001fde568026fd77ed38251ef7cbfcbdc993732a8c8a7c2a905fa67608f5"
+    },
+    {
+      "name": "selection-9.json",
+      "sha256": "feba921e49b8cd73073afba3c8b60d1002ec4c863a242d7e6c0951a37aa0c360"
+    }
+  ]
+}

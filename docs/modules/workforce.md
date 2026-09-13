@@ -1321,3 +1321,25 @@ Programme Department ownership continuity is installed only as a protected
 cross-module retirement contract; it does not activate Programme Operations,
 grant recovery through a current profile or root role, or mount any call,
 import, recovery, review, or timetable surface.
+
+### Personal timetable owner input
+
+`timetable_queries.load_personal_shift_timetable` is the minimized cross-owner
+input for #99, independent of Programme, Scheduling and Participation reads.
+The trusted authenticated actor is also the only possible work owner: there is
+no separately selectable person. Current exact Workforce self-service adoption,
+verified person and `workforce.view_self` with the `shifts` field are rechecked
+before disclosure. Canonical parent locks precede the actor lock; required
+`workforce.personal_timetable.read` audit evidence precedes release of content.
+Its purpose is the person's own retained work, with `workforce-personal`
+retention, not general activity tracking. Audit failure releases no result.
+
+The complete bounded input retains commitment ID, command version, status and
+its own start/end/rest instants. Current demand instructions and their version,
+lifecycle and current Department/Position labels are a separately identified
+source. No current Programme placement rewrites accepted work. Unclaimed demand
+is absent; a claim is not independently confirmed work, and removed/completed
+history is not attendance. Ended assignments do not erase retained commitments.
+No planner identity, confirmation/removal rationale or availability calendar is
+fetched. Missing owner joins and overflow are unavailable, not partial success.
+This input does not itself mount a personal calendar or activate Programme.

@@ -94,13 +94,15 @@ the system.
 | [0087](0087-programme-host-confirmation-and-availability.md) | Accepted | Keep Programme host invitations, person-owned confirmation and deliberately shared availability separate from proposal and attendee relationships |
 | [0088](0088-versioned-scheduling-candidates-and-venue-binding.md) | Accepted | Separate immutable timetable candidates and explainable conflicts from governed Venue reservations and the future single release |
 | [0089](0089-conservative-hosted-test-cost-calibration.md) | Partially superseded | Exact-evidence whole-file calibration remains diagnostic; ADR 0091 reconciles acceptance with ADR 0090's group policy |
-| [0090](0090-risk-based-postgresql-acceptance.md) | Accepted | Retain current PostgreSQL behavior on code PRs, risk-select history and run exhaustive changed-revision nightly/release acceptance with bounded concurrency |
+| [0090](0090-risk-based-postgresql-acceptance.md) | Partially superseded | Retain risk selection and coverage; ADR 0098 replaces fixed counts with budgeted exact local/hosted assignments |
 | [0091](0091-scheduling-ci-policy-integration.md) | Accepted | Integrate Scheduling's joint-owner history into risk-selected acceptance while retaining whole-file calibration as diagnostic evidence |
 | [0092](0092-dormant-accessible-timetable-editor.md) | Accepted | Reuse owner projections and versioned commands through one dormant progressively enhanced timetable editor with equivalent forms and pointer input |
 | [0093](0093-programme-staffing-source-and-coverage.md) | Accepted | Bind versioned Programme staffing to explicit Workforce demand and source revisions without rewriting accepted work |
 | [0094](0094-complete-programme-release-eligibility.md) | Accepted | Require complete exact-snapshot eligibility before independent Programme approval and atomic publication |
 | [0095](0095-trusted-programme-release-sources.md) | Accepted | Collect complete trusted owner sources with independently versioned fit/no-staffing decisions and minimized combined person/rest consequences |
 | [0096](0096-atomic-programme-release-and-invalidation.md) | Accepted | Retain independent exact approval, atomic release and same-transaction governing invalidation without rewriting history or coupling privacy exit to foreign pointers |
+| [0097](0097-release-derived-programme-output-boundaries.md) | Accepted | Derive purpose-bounded outputs from checked exact releases without treating planner authority or retained artifacts as public admission |
+| [0098](0098-budgeted-postgresql-shard-planning.md) | Accepted | Budget exact local/hosted PostgreSQL assignments, retain eight-worker isolation and require measured headroom before certification |
 
 New ADRs use the next four-digit number and contain:
 

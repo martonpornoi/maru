@@ -1,396 +1,172 @@
 # Current project state
 
-Last updated: 2026-09-11
+Last updated: 2026-09-12
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
 production-ready release or supported hosted service. Use synthetic data only.
-This file is the restart guide; the [roadmap](ROADMAP.md) owns outcome sequencing,
-the [production-consolidation ledger](PRODUCTION_CONSOLIDATION.md) retains the
-detailed baseline, and [checkpoints](../checkpoints/index.md) preserve history.
+This concise handoff owns current work; the [roadmap](ROADMAP.md) owns sequencing,
+the [production ledger](PRODUCTION_CONSOLIDATION.md) retains the detailed baseline,
+and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
-## Previous delivered Programme baseline
+## Latest protected delivery
 
-Programme review and accountable decisions (#71) were delivered through
-[PR #72](https://github.com/martonpornoi/maru/pull/72), protected squash
-`47960893902d910d86f9b5c8fe5d9b5b2dc65fed`. Issues #66 and #64 were already
-closed through PRs #69 and #70. None of these is pending implementation.
+[#96](https://github.com/martonpornoi/maru/issues/96) is closed through
+[PR #98](https://github.com/martonpornoi/maru/pull/98), protected squash
+`0bea1b46f8611f3da8a3d3664f258505a8deb7e4` at 2026-09-12 01:49:41 UTC.
+Its tree equals certified head `aa1ede69fb880dcb12d627bbfc049fba23166e68`;
+clean local main was synchronized to that result and origin/main.
 
-Under ADR 0085, the dormant Applications kernel now supports exact-seal review
-cases, immutable stage/rubric/template policies, independent scoring and
-recusal, moderation/reopening, accountable decisions, and recipient-only
-message acknowledgement. It retains audited, field-scoped projections,
-canonical locking, runtime SELECT-only relations, readiness fingerprints, and
-populated downgrade fences. Review-side acceptance does not create a Programme
-item or host, and no Programme profile, route, UI, API, or worker is activated.
+ADR 0096 provides dormant independent exact-candidate approval, warning evidence,
+canonical artifacts, atomic publication/withdrawal, checked manifests and native
+safety/privacy invalidation. Reciprocal published-host/Workforce protections
+retain accepted work independently of room/copy disclosure. No profile is active.
+Local certification passed 8,850 Python tests, 64 frontend tests, all ten gates
+and 90.64% combined coverage in 2h29m54s. Independent hosted acceptance and CodeQL
+passed; all sixteen PostgreSQL groups completed within the unchanged timeout.
+See the [delivery checkpoint](../checkpoints/2026-09-12-atomic-release-protected-delivery.md)
+and [recovery runbook](../operations/programme-atomic-release-migration-and-recovery.md).
+Do not repeat its completed certification or treat prior failed candidates as current.
 
-The tested PR head was `6cd0c317ecc9ad6262dbf2baa91649d4a91c8661`.
-Its complete local certification passed 5,841 Python tests and 33 frontend
-tests, all eight PostgreSQL shards, and the combined 90% branch-aware coverage
-gate. Hosted [full acceptance](https://github.com/martonpornoi/maru/actions/runs/33975720775)
-and [CodeQL](https://github.com/martonpornoi/maru/actions/runs/33975720037)
-passed before merge. These are exact-revision results, not the current suite
-count, deployment evidence, or production approval.
+## Active bounded delivery: public and personal outputs (#99)
 
-Detailed implementation and recovery evidence is in the
-[review checkpoint](../checkpoints/2026-09-05-programme-staged-review-and-decisions.md),
-[readiness correction](../checkpoints/2026-09-05-programme-review-readiness-follow-up.md),
-[Applications contract](../modules/applications.md), and
-[review recovery runbook](../operations/applications-programme-review-migration-and-recovery.md).
+Branch: `codex/programme-release-outputs`, based on the protected #98 result.
+[#99](https://github.com/martonpornoi/maru/issues/99) now owns shared public and
+exact-person host/volunteer output. Native child
+[#100](https://github.com/martonpornoi/maru/issues/100) retains the original
+room/department/operator acceptance as the immediately following delivery.
+This decomposition drops no #48 scope and does not waive operational acceptance.
 
-## Completed maintenance
+PR #101 is open at original certified head `35bc135fc2c9d7e7c448b4619dd681b60ac74e15`.
+Full local certification passed 9,044 Python tests, 64 frontend tests, all ten
+gates and 90.66% coverage in 2h42m35s. Its first hosted attempt passed fifteen
+PostgreSQL groups but group 15 exceeded two hours; that run is not accepted.
+Original local evidence and hosted timing diagnostics are preserved separately.
 
-Issue [#73](https://github.com/martonpornoi/maru/issues/73) was delivered through
-PR #74 as protected squash `08ae02ef12e21e2bf91990c9527ebd840d624c54`.
-It reconciles this handoff and the roadmap, and corrects both rehearsal paths to
-remove anonymous volumes associated with exact label-verified containers.
-Named-volume cleanup, complete namespace checks, and stopped retention remain
-separate and explicit. See the
-[maintenance checkpoint](../checkpoints/2026-09-05-handoff-and-rehearsal-resource-hygiene.md)
-and its linked PR for candidate-specific verification and delivery state.
+The maintainer authorized an ADR 0098 CI-hardening repair in this same PR, but
+explicitly prohibited pushing on estimates alone. The local candidate replaces
+fixed shard counts with a conservative one-hour budget, shared exact manifests,
+eight-worker fresh-database execution and a measured-headroom certification
+condition. Initial refreshed estimates select 39 exhaustive shards; these are
+not measured new-run durations. All 4,836 unit tests passed in 33.55 seconds,
+including planner, incremental evidence, bounded concurrency and failure cleanup.
+Repository lint/format, semantic documentation and strict script docstrings
+passed. Full exact-plan certification remains pending; do not push, merge, or
+start #100 until that boundary is satisfied.
 
-Pre-existing Docker cleanup requires a separately approved exact inventory;
-unrelated projects, persistent Maru data, and uncertain orphaned volumes must
-not be pruned. Follow [local Docker housekeeping](../development/docker-housekeeping.md).
-This maintenance does not implement a Programme child or optimize migrations.
+The first repair certification at `858a7f2` failed before database startup:
+Windows selected Docker's extensionless non-native wrapper. No PostgreSQL
+assertion or timing result was produced. Native executable selection is now
+corrected with Windows/Linux regression checks; replacement certification is
+required, and the failed candidate cannot be used as acceptance.
 
-Issue [#75](https://github.com/martonpornoi/maru/issues/75) was delivered through
-[PR #76](https://github.com/martonpornoi/maru/pull/76), protected squash
-`89d3b10662dab882bcd5cc34bc53a8ac817e21ec`, with clean local main synchronized.
-Twelve serial Registration historical cases
-reuse committed compatible setup; both schema round trips and the populated
-recovery fence retain ordinary committed execution. Every original assertion
-remains, with additional real-migration leakage and deferred-input checks.
-The comparable fresh-database group passed in 14m07s for 18 tests versus 44m03s
-for the original 15, about 68 percent less elapsed time. The focused 19-test
-PostgreSQL isolation run and independent current-schema/guard inspections also
-passed. Exact-head local certification passed 5,846 Python tests, 33 frontend
-tests, eight PostgreSQL shards, and the unchanged coverage and quality gates.
-[Hosted acceptance](https://github.com/martonpornoi/maru/actions/runs/34027199995)
-and CodeQL passed before merge. Hosted PostgreSQL jobs still ranged from
-73m41s to 109m45s; the group improvement is not a whole-suite speedup claim.
-That optimization pilot is closed; the later separately approved #83 CI task is
-described below. No Docker cleanup is authorized. See the
-[pilot checkpoint](../checkpoints/2026-09-06-registration-migration-test-pilot.md).
+ADR 0097, owner references, closed JSON/calendar and dormant HTML/print surfaces
+are implemented on this candidate; protected delivery is still pending:
 
-## Current bounded outcome: independent approval and atomic release (#96)
+- Public admission is separate from planner authority. Exact selected reviewed
+  copy and minimized current wayfinding require complete release/source rechecks.
+  Withdrawn copy cannot fall back or leak reviewer metadata through host-self.
+- Personal hosting requires exact-self Scheduling plus Programme owner authority.
+  Only confirmed purposes obtain approved own presence. Workforce retains its
+  own claimed/confirmed/ended work intervals and current instruction versions.
+- Unadopted, empty, denied and unavailable layers remain distinct. Workforce-only
+  needs no Programme or Participation. Actual own records justify current
+  Events label/version; empty scopes do not discover edition names.
+- Typed/JSON, calendar and shared-shell private/public pages use bounded complete
+  fresh projections. Withdrawn/invalidated hosting withholds combined calendar
+  imports but preserves unchanged authorized work in JSON/HTML. Print retains
+  scope and source identities. No attendance or offline guarantee is implied.
 
-Issue #77 was delivered through PR #78, squash
-`6279cb50d287d70e33e2bebabda3e54564668475`. Issue #79 was delivered through
-[PR #80](https://github.com/martonpornoi/maru/pull/80), squash
-`7ef234b20867c13674999f5cfc0e47fd65039716`. Programme host confirmation and
-deliberately shared availability are dormant delivered foundations, not pending
-implementation. The [host delivery checkpoint](../checkpoints/2026-09-07-programme-host-protected-delivery.md)
-retains its exact verification and recovery evidence.
+The latest focused unit batch passed 172 catalog/format/page checks in 1.46s.
+The private HTTP/composition batch passed 24 PostgreSQL checks in 201.69s.
+Earlier public/native-manifest regressions passed 36 in 250.36s. Strict focused
+typing/docstrings passed. The consolidated focused PostgreSQL set passed 129
+cases in 721.59s, without failures. Repository-wide typing (549 source files),
+lint/formatting, strict docstrings and semantic docs (566 files) passed.
+Those development counts preceded the completed original local certification
+above. Replacement clean-commit certification and independent protected
+acceptance remain pending after the CI repair.
 
-### Delivered CI prerequisite
+The first certification failed two exact unit inventories, now repaired without
+relaxing their assertions or acceptance scope. All 4,793 units then passed in
+28.26s with task-local temporary storage. Hardened native Identity timestamp
+tests passed 24 PostgreSQL cases in 143.35s using database-clock bounds and
+past/future owner-clock offsets. Inventory/selection checks passed 124 cases.
+The cancelled run has no success receipt; its logs
+are archived and its eight disposable databases were removed.
 
-Issue [#83](https://github.com/martonpornoi/maru/issues/83) is closed through
-[PR #84](https://github.com/martonpornoi/maru/pull/84), protected squash
-`c0cf5a24d7593744bbb52ad0f9293deaf21e393a` on 2026-09-08. The clean main
-worktree was fast-forwarded to that identical-tree result.
+Synthetic public/private browser rehearsals covered seven widths, keyboard
+controls, print-friendly HTML, copy-link actions, isolation and failure/recovery.
+They corrected excessive provenance and pale private agenda headings. Both fresh
+fixtures closed normally and viewport overrides were reset; an earlier expired
+public fixture is recorded as incomplete. Real zoom, native print, screen-reader
+and human comprehension remain unproven for these new outputs under #92.
 
-Exact head `dfc775445d146ab86423544860e9a1726f0131f2` passed exhaustive local
-certification: 6,350 Python tests, 33 frontend tests, all quality gates and
-90.20% combined branch-aware coverage in 95m22s. Independent
-[hosted acceptance](https://github.com/martonpornoi/maru/actions/runs/34161506336),
-PR gate and CodeQL passed. All sixteen PostgreSQL jobs passed in 35m23s–63m08s
-each, with at most eight simultaneous databases; total PostgreSQL job time was
-846m30s and complete workflow latency was 122m20s. Smaller jobs avoided the
-per-job timeout; exhaustive history remains costly.
+See the [component checkpoint](../checkpoints/2026-09-12-public-and-personal-programme-outputs.md),
+[evaluator guide](../operations/programme-output-evaluation.md),
+[public page contract](../product/page-contracts/programme-released-timetable.md),
+[personal page contract](../product/page-contracts/personal-programme-timetable.md)
+and [Scheduling module](../modules/scheduling.md). No route/profile/runtime
+writer activation, schema rewrite, external sending or production data is added.
 
-[ADR 0090](../architecture/decisions/0090-risk-based-postgresql-acceptance.md)
-keeps current PostgreSQL behavior on every code PR, affected history for domain
-schema changes, and full history for global safety/harness changes, changed-main
-nightly checks and releases. Two-decimal coverage and initialization recording
-retain the unchanged 90% threshold without rounded shortfalls. The separately
-[verified current-path diagnostic](../checkpoints/2026-09-07-postgresql-current-path-verified.md)
-passed 6,226 Python tests at 90.02% in 15m58s locally; it omitted history and
-non-database quality gates. The 20–35-minute hosted routine target remains
-unmeasured, not a promise for the high-risk Scheduling PR.
+## Existing foundation and mandatory gates
 
-### Delivered Scheduling foundation
+Programme children #57, #59, #61, #63, #66, #64, #71, #77, #79, #81, #85,
+#88, #91, #94 and #96 are delivered dormant. Do not restart those tasks.
+The [Programme Operations contract](../product/page-contracts/programme-operations-adoption-setup.md)
+and owning [Programme](../modules/programme.md),
+[Applications](../modules/applications.md), [Events](../modules/events.md) and
+[Workforce](../modules/workforce.md) documentation describe their boundaries.
 
-Issue [#81](https://github.com/martonpornoi/maru/issues/81) is closed through
-[PR #82](https://github.com/martonpornoi/maru/pull/82), protected squash
-`ec0d2474810e27b72c9dbabcc1d210222e4989af` on 2026-09-08. Exact candidate
-`85db2e16a453355b534dfb2e37e6695bb858e635` passed exhaustive local certification:
-6,887 Python tests, 33 frontend tests, all ten quality gates, eight PostgreSQL
-databases and 90.34% combined coverage in 108m19s. Its own
-[hosted acceptance](https://github.com/martonpornoi/maru/actions/runs/34208969678),
-all sixteen database jobs, `PR gate` and CodeQL passed before merge. The clean
-main worktree was synchronized and the squash tree equals the certified head.
-The [delivery checkpoint](../checkpoints/2026-09-08-scheduling-protected-delivery.md)
-retains exact provenance, recovery and cost evidence. Do not rerun the old
-timed-out head or treat this delivered child as pending.
+#87 is closed through protected PR #90 for the maintainer's bounded native
+Cancel/discard, actual 200% Chrome zoom and Windows Animation effects-off
+observations. Preserve that preference and evidence; it does not satisfy new
+integrated acceptance. The [browser checkpoint](../checkpoints/2026-09-11-programme-browser-protected-delivery.md)
+records the one-off split-run exception without a fabricated success receipt.
+#92 remains deferred human/screen-reader acceptance, not passed or waived.
 
-### Delivered dormant editor and next priority
-
-Issue [#85](https://github.com/martonpornoi/maru/issues/85) is delivered through
-[PR #86](https://github.com/martonpornoi/maru/pull/86), protected squash
-`cdb06d41a6d5795078a8ae19ee5e4a0ebbabd466` on 2026-09-09.
-Clean local main equals origin/main and that merge; the squash tree matches
-the certified candidate `e226e8ded449039057ee79e7540a456b6431ee44`.
-
-The dormant editor provides equivalent pointer/native forms, audited and
-independently authorized layers, conflict preview, immutable alternatives and
-history, stale-input recovery, and explicit physical-hold actions. Private
-drafts neither publish Programme work nor silently reserve rooms. Its
-[page contract](../product/page-contracts/programme-timetable-planning.md) and
-ADR 0092 remain authoritative.
-
-Complete local certification passed 7,426 Python tests (3,890 unit and 3,536
-PostgreSQL), 64 frontend tests, all eight full-history PostgreSQL groups, all
-quality/security/documentation gates and 90.49% combined coverage. Exact-head
-hosted acceptance passed all sixteen PostgreSQL groups, the full CI gate and
-required PR gate; CodeQL passed. No rerun or threshold reduction was needed.
-See the [protected-delivery checkpoint](../checkpoints/2026-09-09-timetable-editor-protected-delivery.md)
-for timings, links and preserved evidence.
-
-The user explicitly approved dormant delivery with three browser checks
-**deferred, not waived**, as mandatory pre-activation acceptance in
-[#87](https://github.com/martonpornoi/maru/issues/87): controlled native
-Cancel/deliberate discard, genuine 200% browser zoom, and enabled reduced
-motion. They are not proven by input retention, responsive widths, absence of
-animation at the current preference, unit tests or green CI. Screen-reader,
-representative-human and provisioned-runtime acceptance remain separately open.
-No production route, navigation, runtime write grant or profile is activated.
-
-Previous synthetic browser leases and certification watchers are closed; the
-active assisted #87 retry is described below. Preserved reports are evidence,
-not running certification jobs. Do not rerun the completed suite or
-recreate old schedules. Preserve unrelated worktrees, stashes and containers;
-no general Docker cleanup or production data is authorized.
-
-### Delivered staffing and active browser acceptance
-
-Issue [#88](https://github.com/martonpornoi/maru/issues/88) is closed through
-[PR #89](https://github.com/martonpornoi/maru/pull/89), squash
-`dca412e97dfa40371e01db3222105f87cf9d4562` on 2026-09-10. The maintainer
-merged after protected acceptance. Clean local main and origin/main equal that
-result; its tree equals certified head
-`1883c55717f4d843ecbc3a15831aa1e7fc9ca36d`.
-
-ADR 0093 and HR-015 now have dormant Programme-owned versioned requirements,
-explicit Workforce create/link/reconcile/successor bindings, independently
-authorized source/impact/coverage/history, and native preview/apply controls.
-Canonical cross-owner locking, immutable accepted work, audit/receipt/outbox
-atomicity, runtime SELECT-only containment and populated recovery fences remain
-enforced. The staffing event is explicitly dormant. No profile, route, adapter
-or runtime writer is activated.
-
-Complete local certification passed 7,941 Python tests (4,254 unit and 3,687
-PostgreSQL), 64 frontend tests, all ten gates and 90.56% combined branch-aware
-coverage in 118m56s. Independent hosted acceptance passed all sixteen PostgreSQL
-jobs, Full CI gate, PR gate and CodeQL. Seventeen hosted reports contain zero
-failures, errors or skips. Full hosted latency was 3h08m18s: exhaustive history
-was selected by the CI dependency-closure repair, not a routine-path benchmark.
-No test rerun is needed for this delivered candidate. See the
-[staffing delivery checkpoint](../checkpoints/2026-09-10-programme-staffing-protected-delivery.md)
-for exact provenance, earlier repairs and preserved evidence.
-
-The no-Participation personal proof composes ordinary Workforce owner inputs;
-combined published host/volunteer timetables remain part of the release/output
-successor. Staffing browser evidence covered planner validation/history,
-preview/apply, keyboard controls, independently restricted/read-only roles and
-seven widths. It does not close #87 or prove an activated Programme-only journey.
-
-Issue [#87](https://github.com/martonpornoi/maru/issues/87) is closed through
-[PR #90](https://github.com/martonpornoi/maru/pull/90), protected squash
-`d9dcd5074af494689912dc1524095b85343f5f2c`. Clean local main and origin/main
-match that result; its tree equals candidate
-`cb131c8c10ee46f12702dada1248204676b3670d`.
-
-The maintainer's Chrome 152.0.7977.83 (64-bit) observations cover native
-Cancel/discard, populated genuine 200% zoom with visible Tab focus kept in view,
-and usable board interaction with Windows Animation effects off. Browser-control
-readback limitations remain explicit. The maintainer chose to keep Animation
-effects off; do not revert that preference. Screen-reader, representative
-departmental use, provisioned runtime and integrated acceptance remain separate.
-
-All 7,810 Python tests passed (4,254 unit plus 3,556 current PostgreSQL), but the
-initial certification command failed at pnpm's non-interactive prompt. The
-maintainer approved one-off split-run acceptance: the unchanged candidate passed
-recovered non-database gates with CI=true, all 64 frontend tests and 90.38%
-combined coverage. No successful certification receipt was fabricated and no
-policy or threshold changed. Independent hosted documentation/quality, PR gate
-and CodeQL passed before exact-head guarded merge. The
-[delivery checkpoint](../checkpoints/2026-09-11-programme-browser-protected-delivery.md)
-retains provenance, the exception, browser limitations and cleanup evidence.
-Do not repeat the completed tests or browser checks.
-
-Issue [#91](https://github.com/martonpornoi/maru/issues/91) is closed through
-[PR #93](https://github.com/martonpornoi/maru/pull/93), protected squash
-`60dc9aeb15e306e3d64abd0e76c5a455540402f7`. Its tree equals certified head
-`a6a9e6b28f985aa0172a0c077732c842e4301717`; clean local main was synchronized.
-Full local certification passed 7,947 Python tests, 64 frontend tests, all ten
-gates and 90.40% combined coverage in 30m01s. Exact-head hosted acceptance,
-PR gate and CodeQL passed; current PostgreSQL jobs took 7m22s–21m46s and the
-workflow took 24m17s. No split-run exception or threshold change was needed.
-The [delivery checkpoint](../checkpoints/2026-09-11-release-eligibility-protected-delivery.md)
-retains exact evidence. Do not rerun that completed certification.
-
-Issue [#94](https://github.com/martonpornoi/maru/issues/94) is closed through
-[PR #95](https://github.com/martonpornoi/maru/pull/95), protected squash
-`413997c938de86daa88dc626f70389c5b84af36a`. Its tree equals certified head
-`8cae3d5ea9d3faffaf29403f681e4053c2f3bef2`; clean local main equals that
-protected result and origin/main. Complete local certification passed 8,291
-Python tests, 64 frontend tests, all ten gates and 90.62% combined branch-aware
-coverage in 2h17m53s. Exact-head hosted exhaustive acceptance passed all sixteen
-PostgreSQL jobs, combined coverage, Full CI gate, PR gate and CodeQL. All
-seventeen hosted Python reports contain zero failures, errors or skips. Hosted
-latency was 2h58m16s; database jobs took 31m04s–111m47s. This is exhaustive
-acceptance, not a routine-path benchmark or production approval.
-
-ADR 0095's dormant ten-category preflight now uses exact trusted owner sources,
-independently versioned accessibility-fit/no-staffing decisions, current
-readiness/independent-copy evidence, retained staffing lineage and minimized
-combined person/rest consequences. It neither authenticates release-warning
-acknowledgements nor approves or publishes a timetable. The
-[delivery checkpoint](../checkpoints/2026-09-11-release-sources-protected-delivery.md)
-retains final evidence and the separately documented failed initial candidate.
-Do not repeat this completed certification or the earlier browser checks.
-
-Active branch: `codex/programme-atomic-release`, from the protected #95 merge.
-Native child [#96](https://github.com/martonpornoi/maru/issues/96) now has dormant
-independent approval, exact warning evidence, verified canonical artifacts,
-atomic publication/withdrawal, checked manifests and same-transaction native
-source invalidation. Accepted ADR 0096 owns the dormant contract. Initial exact
-candidate `341f77e8730a88f272d93aaa68d828b99052276e` failed certification. Its
-identified causes are repaired and focused checks pass; a new clean candidate
-still requires full certification and protected delivery. No #96 PR or merge
-has occurred. The complete failed run is preserved, not a success receipt.
-
-Programme also has independently reviewed Ready/Live copy continuation and
-immutable exact-copy withdrawal, without reopening private edits. Native owner
-guards cover Identity, Events, Programme, Workforce and complete Venue sources.
-Reciprocal published-host/Workforce checks protect retained commitments even
-when room/copy invalidation withholds release output. Replacement locks both
-old and new person sets. Checked current/history reads independently require
-field authority, current reauthorization and successful sensitive-read audit.
-Ended approved history is not attendance, future coverage or permission to
-grandfather a stale source into a fresh release.
-
-The pre-certification 270-case PostgreSQL regression and the separate final
-27-case publication/query group passed. They cover native source changes,
-independent release decisions, exact artifacts, checked history, actual shared
-physical/person races and runtime containment. The
-[implementation checkpoint](../checkpoints/2026-09-11-programme-atomic-release-kernel.md)
-retains that historical evidence; overlapping groups are not summed.
-
-Initial certification passed 4,669 unit tests and 4,102 of 4,136 PostgreSQL
-tests, with 34 database failures and no errors or skips. Warning-fatal Sphinx
-also failed; later non-database gates and combined coverage did not run.
-The repaired dependency-key pin now matches clean ordinary migrations, not two
-retired physical column slots from a reused development database. New tests
-reject both one- and two-slot drift. Native guards, migration SQL and runtime
-permissions were not weakened. Old audit/fence fixtures now exercise the real
-native boundary; the populated raw-write matrix covers all 25 Scheduling tables.
-
-Repair verification passed 23 readiness/runtime cases, 62 recovery/audit cases,
-the three-case complete-table/physical-restore group, and three final Workforce
-recovery cases. The last group repeats an expanded empty-roundtrip case, so
-these are not a summed suite count. The consolidated database-free suite passed
-4,676 tests after expanding two outdated CI assertions to all nine native
-recovery owners. Repository lint/format and 444-document validation pass, as
-does the qualified-return warning-fatal Sphinx build. See the
-[certification repair checkpoint](../checkpoints/2026-09-11-programme-release-certification-repair.md)
-for exact provenance and the still-required clean-commit certification.
-
-Scheduling 0020 fences the release extension before any later protections can
-reverse around used native evidence. Thirteen focused real recovery and
-readiness-contract cases passed, including ordinary unused reverse/reapply
-and refusal without recorder changes after use. A same-image PostgreSQL 17.11
-physical-backup clone passed exact readiness, retained artifact/pointer,
-new native disclosure withdrawal and exact retry; the source stayed unchanged.
-See the [release recovery runbook](../operations/programme-atomic-release-migration-and-recovery.md).
-The failed initial clone extraction attempts are not passing evidence.
-
-A genuine logical dump/restore exposed a separate existing exact-schema issue:
-PostgreSQL reparses some array-cast CHECK expressions into differently rendered
-catalog definitions. Native guard/ACL/recorder checks passed; exact schema
-readiness failed. Native child [#97](https://github.com/martonpornoi/maru/issues/97)
-owns logical-restore compatibility before activation/director pilot, with
-negative weakened-constraint tests. No fingerprints were waived or blindly
-rebaselined, and physical recovery is not claimed as logical or production/PITR
-acceptance.
-
-The maintainer authorizes unattended sequential delivery without routine PR or
-merge confirmation. Keep one agent, current model settings, exact certification
-and protected hosted gates. #92 remains deferred human acceptance, not passed
-or waived. Shared release-derived outputs/change impact, on-site continuity,
-guided setup and integrated acceptance follow; no profile, route, runtime writer
-or public release is activated here. After #48, continue #42 and the director
-pilot package, then the agreed guidance, accessibility, continuity and succession
-priorities. No schedules, production data/deployment, policy bypass or general
-Docker cleanup are authorized. Preserve unrelated worktrees, stashes and
-containers; only exact verified disposable task resources may be removed.
-
-## What can be evaluated today
-
-- **Workforce-only:** guided edition adoption and the Organization structure,
-  Position, Assignment, Availability, and Shift journey, including independent
-  confirmation and retained personal history. It creates no unrelated
-  Registration, Participation, payment, or attendance state. See the
-  [Workforce contract](../modules/workforce.md) and
-  [adoption/recovery runbook](../operations/workforce-only-adoption-and-recovery.md).
-- **Programme foundations:** owned items and information/readiness layers
-  (#61); Applications calls and acknowledged collaborative proposals (#63);
-  preview-first import (#66); Department continuity (#64); review and decisions
-  (#71); explicit source-bound accepted conversion (#77); host confirmation
-  and deliberately shared per-item availability (#79); Scheduling candidates,
-  conflict evidence and governed Venue binding (#81); native/pointer timetable
-  editing (#85); governed Programme staffing and Workforce coverage (#88).
-  These remain dormant
-  foundations, not a departmental workspace.
-  [Events](../modules/events.md), [Applications](../modules/applications.md),
-  and the [Programme Operations setup contract](../product/page-contracts/programme-operations-adoption-setup.md)
-  own the details.
-- **Release evaluation:** `v2026.08.27-rc.1` remains an immutable synthetic
-  evaluation candidate. Exact-image runtime/static rehearsals and consumer
-  integrity checks are bounded evidence, not provider or production acceptance.
+#97 is open: logical dump/restore can re-render array-cast CHECK expressions and
+fail exact schema readiness. Native guards/ACLs/recorder checks and same-image
+physical recovery do not waive logical-restore acceptance. Preserve negative
+weakened-constraint tests; do not blindly rebaseline fingerprints. This blocks
+activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Deliver #96's independent approval, exact warnings, atomic publication and
-   same-transaction safety/privacy invalidation with complete owner evidence.
-2. Deliver shared release-derived outputs and change impact.
-3. Continue on-site continuity, guided setup/surfaces and integrated
-   Programme-only acceptance. Keep #48 open and preserve all activation gates.
+1. Finish PR #101's budgeted CI repair locally, validate full exact assignments
+   and measured timing headroom, then push for protected gate/CodeQL, squash
+   and exact-main synchronization. Never push solely on predicted durations.
+2. Deliver #100's independently authorized room/department operator run sheets.
+3. Deliver detailed change impact, governed destination delivery and recipient
+   acknowledgement through the same output boundaries.
+4. Continue on-site continuity, #97 logical recovery, guided setup/surfaces and
+   integrated Programme-only acceptance. Keep #48 open through the complete
+   journey; retain #92 and every other activation gate.
+5. After #48, continue #42 and the director introduction/pilot package, then the
+   agreed guidance/accessibility and continuity/succession priorities. #22, #23
+   and #24 retain their separate Workforce ownership and are not absorbed here.
 
-Outside the Programme sequence, #42 owns the Workforce tutorial, #22 continuity,
-#23 accessibility and #24 later attendance/handover/actual-time behavior. They
-are not absorbed or closed by this integration. Docker cleanup still requires
-a separately approved exact inventory.
+## Resume and operate safely
 
-## Known risks and production gates
+The maintainer authorizes unattended sequential PR/merge delivery. Use one agent
+and current model settings; no schedules, policy bypass, production deployment,
+personal data or general Docker cleanup. Preserve unrelated worktrees, stashes
+and containers. Remove only exact verified disposable task resources.
+Follow AGENTS, this handoff, roadmap, relevant contracts/ADRs and code/tests.
+Use the [agent workflow guide](../development/agent-workflows.md) to load only
+matching procedures; historical checkpoints are consulted as needed.
 
-- Programme has no usable timetable, staffing/release workspace, on-site pack,
-  or activated adoption profile. Dormant code is intentional, not abandoned.
-- Workforce import/export, printable/manual fallback, reconciliation,
-  expansion/decommissioning, and stopped-operation rehearsal are incomplete.
-  Do not replace an incumbent system based on scoped pages or APIs alone.
-- Representative accessibility (including screen readers, keyboard, zoom,
-  widths, and disclosure/mutation states) and two-human owner acceptance remain
-  open. Synthetic sessions and automated tests do not replace those gates.
-- Provider certification, deployment/stopped-writer cutover, runtime-role
-  provisioning, restore/PITR, worker supervision, load, telemetry, privacy,
-  safeguarding, training, and operational owner acceptance remain open.
-- Availability disposal needs approved retention, legal holds, observable
-  execution, and recovery. No production personal data is authorized.
-- Historical-model reconstruction is a measured test bottleneck. Documentation
-  and Docker disk cleanup do not establish a migration-test speedup.
+Workforce-only has guided structure/Position/Assignment/Availability/Shift
+operation; complete exit/continuity and representative accessibility remain
+open. Programme remains dormant, with no activated departmental workflow or
+on-site pack. Provider/deployment/runtime provisioning, restore/PITR, supervision,
+load, privacy, safeguarding, training and two-human operational acceptance are
+still production gates. The immutable `v2026.08.27-rc.1` is synthetic evaluation,
+not production approval. Never infer readiness from a page, test count or green CI.
 
-## Resume safely
-
-Follow `AGENTS.md`, this handoff, the roadmap, then the task's requirements,
-owning module/runbook, ADR index and related decisions, and code/tests. Use the
-[agent-assisted workflow guide](../development/agent-workflows.md) to select
-only matching procedures; historical checkpoints are consulted as needed.
-
-Preserve scope-before-disclosure authorization, immutable evidence, canonical
-lock order, runtime-role containment, and fix-forward recovery. NFR-013 forbids
-unadopted module side effects. Retired-route guards, migrations, ADRs, and
-historical checkpoints are not cleanup targets. Keep focused evidence, exact
-local certification, protected hosted acceptance, and production approval
-distinct. Replace superseded status rather than adding another delivery diary.
+[ADR 0090](../architecture/decisions/0090-risk-based-postgresql-acceptance.md)
+retains current PostgreSQL behavior for code changes and exhaustive history for
+global safety/harness changes. ADR 0098 replaces fixed job counts and differing
+local/hosted partitions with budgeted exact assignments. Focused checks, exact local certification, hosted
+acceptance and production approval are distinct. Historical-model reconstruction
+is a measured cost; documentation or Docker cleanup is not a test-speedup claim.

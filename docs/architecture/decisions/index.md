@@ -29,6 +29,9 @@ prerequisite activates no profile or release path.
 acceptance, historical migration selection, nightly deduplication and bounded
 isolated work groups. It supersedes earlier selection/grouping rules without
 lowering coverage or changing protected merge authority.
+ADR [0098](0098-budgeted-postgresql-shard-planning.md) replaces only its fixed
+counts and differing local/hosted assignments with runtime-budgeted manifests
+and measured local headroom, retaining every selection and coverage requirement.
 
 | ADR | Status | Decision |
 | --- | --- | --- |
@@ -50,7 +53,7 @@ lowering coverage or changing protected merge authority.
 | [0087](0087-programme-host-confirmation-and-availability.md) | Accepted | Invite exact Programme hosts, retain person-owned confirmation and purpose-scoped availability, and invalidate only dependent readiness. |
 | [0088](0088-versioned-scheduling-candidates-and-venue-binding.md) | Accepted | Keep versioned timetable alternatives separate from governed physical reservations and the future single release. |
 | [0089](0089-conservative-hosted-test-cost-calibration.md) | Partially superseded | Preserve exact-evidence whole-file cost calibration as diagnostic tooling under ADR 0091. |
-| [0090](0090-risk-based-postgresql-acceptance.md) | Accepted | Retain current safety tests and risk-selected history with bounded isolated groups. |
+| [0090](0090-risk-based-postgresql-acceptance.md) | Partially superseded | Retain current safety and historical selection; ADR 0098 budgets exact shared assignments. |
 | [0091](0091-scheduling-ci-policy-integration.md) | Accepted | Apply the delivered risk policy to Scheduling's joint-owner history without reviving whole-file acceptance. |
 
 ADR 0089 partially supersedes ADR 0060 only for scheduling-weight provenance:

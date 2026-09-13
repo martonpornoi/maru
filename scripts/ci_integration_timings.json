@@ -113,6 +113,7 @@
   "tests/integration/test_page_10_registration_definition_html.py": 9.707,
   "tests/integration/test_page_10_registration_setup_html.py": 24.92,
   "tests/integration/test_page_access_experience.py": 13.671,
+  "tests/integration/test_personal_timetable_composition.py": 29.955,
   "tests/integration/test_platform_account_invitation_schema.py": 14.412,
   "tests/integration/test_platform_administrator_boundary.py": 0.376,
   "tests/integration/test_platform_administrator_database_boundary.py": 35.139,
@@ -136,6 +137,7 @@
   "tests/integration/test_programme_release_work_references.py": 29.955,
   "tests/integration/test_programme_staffing_commands.py": 120.285,
   "tests/integration/test_programme_staffing_selection.py": 60.548,
+  "tests/integration/test_programme_timetable_outputs.py": 29.955,
   "tests/integration/test_programme_integrity_migrations.py": 538.329,
   "tests/integration/test_programme_queries.py": 30.711,
   "tests/integration/test_programme_placement_decisions.py": 180.0,
@@ -181,7 +183,9 @@
   "tests/integration/test_scheduling_days.py": 26.877,
   "tests/integration/test_scheduling_evaluations.py": 60.207,
   "tests/integration/test_scheduling_integrity_migrations.py": 92.66,
+  "tests/integration/test_scheduling_personal_outputs.py": 29.955,
   "tests/integration/test_scheduling_placements.py": 34.698,
+  "tests/integration/test_scheduling_public_outputs.py": 29.955,
   "tests/integration/test_scheduling_published_person_obligations.py": 29.955,
   "tests/integration/test_scheduling_readiness.py": 33.945,
   "tests/integration/test_scheduling_release_authorship.py": 29.955,
@@ -250,5 +254,6 @@
   "tests/integration/test_workforce_structure_snapshot.py": 5.198,
   "tests/integration/test_workforce_structure_write_integrity.py": 15.865,
   "tests/integration/test_workforce_structure_write_integrity_migration.py": 703.136,
+  "tests/integration/test_workforce_timetable_outputs.py": 29.955,
   "tests/integration/test_workforce_writer_boundary.py": 8.417
 }

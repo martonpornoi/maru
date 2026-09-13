@@ -724,7 +724,120 @@ orders. Complete source-pinned readiness, genuine-runtime containment and
 same-image physical recovery have focused evidence. See CURRENT for exact
 certification/delivery status; this contract is not production acceptance.
 
+## Dormant release-derived public output
+
+[ADR 0097](../architecture/decisions/0097-release-derived-programme-output-boundaries.md)
+defines #99's output boundary. `public_release_references.load_public_release_reference`
+requires the exact edition's `scheduling.public-release-output@1` adapter, which
+no current profile pins. It accepts no actor, planner policy, candidate, historical
+release selection or caller-provided source evidence. The checked active manifest,
+complete selected effective geometry and exact immutable service-day windows are
+internal owner references, not portable serving permissions. Private planning day
+labels and preparation/teardown phases are not public output fields.
+
+`output_queries.load_public_programme_timetable` composes independently resolved
+Programme reviewed copy and Venue wayfinding under canonical shared parent locks,
+then rechecks the complete current reference. Every owner re-resolves admission
+and the release itself. Absent, withdrawn and invalidated states have no entries;
+missing, changed, incomplete or unavailable owner evidence raises rather than
+returning partial or last-good content. Public reads create no visitor audit actor
+or activity stream and perform no Participation/Registration discovery.
+
+The result explicitly separates immutable release publication time from the
+server's last checked time. Venue labels carry their own current room/venue
+versions; they are not a historical label snapshot. The query returns no host
+identity, contacts, availability, staffing names, working copy or private reasons.
+Personal and operator layers remain independent, purpose-bound #99 work.
+
+`output_rendering` implements `scheduling.public-timetable@1` JSON and a public
+iCalendar download from the same freshly obtained typed projection. Strict shape,
+text, identity, instant and state validation rejects cross-audience dictionaries,
+duplicate occurrences, over 2,000 rows and output over eight MiB. JSON uses UTC
+ISO timestamps and an explicit public audience. It must be served as JSON with
+`no-store` and `nosniff`, never interpolated into HTML.
+
+Calendar encoding follows [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545.html),
+including escaped TEXT, CRLF and UTF-8-safe 75-octet folding. Occurrence UIDs
+remain stable across releases; extension properties retain release, pointer,
+rendition, service-day and current wayfinding versions. Effective start/end
+instants are UTC. `DTSTAMP` records the materialized observation; no invitation
+method, attendee, organizer, alarm, recurrence or external URL is emitted.
+Public events are transparent, not a claim of personal work. Unavailable states
+cannot produce a calendar download. Already imported or printed content cannot
+be remotely erased or guaranteed current by these ordinary adapters.
+
+No production route, profile, runtime writer or new background effect is mounted
+by these boundaries. CURRENT owns focused versus exact-commit delivery evidence.
+
 ## Integrity, observation and remaining work
+
+### Personal host release reference
+
+`personal_release_references.load_personal_host_release_reference` uses the
+non-persistable `scheduling.view_host_self` capability with only
+`own_host_schedule` fields. No current profile pins it, and it grants no planner,
+roster or public-copy authority. The real exact-self policy is followed by
+Programme's independently authorized own-purpose query. No confirmed hosting
+means no release lookup; the result's release state and pointer are `None`,
+not a false claim that no timetable was published.
+
+For confirmed purposes the canonical active manifest and native dependency
+consequences select only their own approved presence. Each presence retains
+stable occurrence, exact placement, room and service-day identity, required
+presence start/end, and the separate three-phase placement envelope. The envelope
+is context, not an instruction that the host must cover every phase. Selected
+presence completeness, scope, item ownership and interval bounds are checked;
+Programme purposes and release state are rechecked before final Scheduling
+authorization and mandatory `scheduling.query.personal_host_release` audit.
+Unavailable/withdrawn/invalidated sources provide no approved host intervals.
+Retained invitations remain private own history, and accepted Workforce work
+is never changed by this reference. Room labels and private rendered transports
+still require their separate owner/composition boundaries under #99.
+
+The new self capability adds no persistable grant or schema permission; existing
+native grant allowlists remain unchanged. Its catalog, self scope and exclusion
+from every current profile are covered separately from edition planner grants.
+
+`personal_output_queries.load_personal_timetable` composes only independently
+adopted hosting and Workforce layers. `None` means unadopted; empty means an
+authorized owner found no own records. A missing half of a layer's profile
+contract or adopted-but-denied/unavailable/moving data fails closed. Independent
+Venue wayfinding covers only approved own host rooms. Workforce-only needs no
+Programme or release query. No returned layer edits accepted work, creates an
+attendee relationship or claims attendance.
+
+`personal_output_rendering` provides `scheduling.personal-timetable@1` JSON and
+private RFC 5545 calendar snapshots. It accepts only the closed private DTO graph,
+not a dictionary, public response or extra owner fields. Bounds cover 2,000 host
+purposes, 2,000 own released occurrences, 4,096 retained Shifts and eight MiB of
+encoded output. Dates are aware/UTC, source collections deterministically sorted,
+and complete room/purpose membership, interval ordering, lifecycle and source
+state are validated. Public and private serializers cannot interchange payloads.
+
+Private calendars use stable host-purpose/occurrence and Shift-commitment IDs.
+Required host presence remains distinct from surrounding preparation/delivery/
+teardown context. Claims are `TENTATIVE`, confirmed work `CONFIRMED`, removed
+records `CANCELLED`; completed work is labelled historical and transparent.
+Operative claims and confirmations remain opaque time commitments, not attendance.
+Current demand location is explicitly described with its instruction version,
+not emitted as an allegedly immutable accepted `LOCATION`. Withdrawn/invalidated
+host release state blocks a combined calendar while JSON/rendered views may
+still show unchanged retained work. No recipients, invitation method, alarms,
+remote-erasure, reliable client-update or offline-freshness promise is emitted.
+
+`personal_output_views` provides the dormant exact-person shared My Maru surface
+and complete freshly checked HTML/print, JSON and calendar transports. It binds
+only the authenticated account, rejects subject/filter/duplicate query arguments,
+and never falls back to another owner's data. All responses are private/no-store;
+denied scope is 404, invalid input 400, incomplete evidence 503, and withdrawn or
+invalidated hosting calendar requests 409. HTML still shows unchanged work.
+Actual own records justify a minimized Events edition label/version; empty own
+scopes never discover names. The chronological agenda labels own required host
+presence, surrounding event context, tentative claims, confirmed and historical
+work independently. The [personal page contract](../product/page-contracts/personal-programme-timetable.md)
+retains source, responsive, print and deferred human-acceptance requirements.
+
+### Native integrity and recovery
 
 All command transactions and locking planning reads acquire the shared Workforce
 parent scope before the Events edition, person set and Scheduling rows. The

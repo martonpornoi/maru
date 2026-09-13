@@ -1,0 +1,17 @@
+.personal-timetable { max-width: 78rem; overflow-wrap: anywhere; }
+.personal-timetable .personal-controls { display: flex; flex-wrap: wrap; gap: .75rem; margin-block: 1rem; }
+.personal-timetable .personal-controls a, .personal-timetable summary { min-height: 2.75rem; padding: .5rem; box-sizing: border-box; }
+.personal-timetable :focus-visible { outline: 3px solid var(--link-fg, #005ea8); outline-offset: 3px; }
+.personal-timetable .personal-agenda { list-style: none; padding: 0; }
+.personal-timetable .personal-agenda h3 { color: inherit; background: transparent; font-size: 1.1rem; font-weight: 600; }
+.personal-timetable .personal-agenda > li { border: 1px solid var(--hairline-color, #999); border-radius: .4rem; padding: 1rem; margin-block: 1rem; }
+.personal-timetable .personal-prose { white-space: pre-wrap; }
+.personal-timetable .personal-evidence { font-size: .9rem; }
+.personal-timetable .personal-print-source { display: none; }
+@media print {
+  #header, #nav-sidebar, .breadcrumbs, .toggle-nav-sidebar, #footer,
+  .personal-controls, .personal-source, .maru-page-access { display: none !important; }
+  #container, #main, #content, #content-main { width: auto !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; }
+  .personal-timetable .personal-print-source { display: block; }
+  .personal-timetable .personal-agenda > li { break-inside: avoid; }
+}

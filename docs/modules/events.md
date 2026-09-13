@@ -447,6 +447,13 @@ single/bulk rollback on validation or effect failure.
 
 ## Limitations
 
+The internal `resolve_personal_timetable_edition_label` reference supplies only
+the current edition name and aggregate version. The personal timetable compositor
+must already hold canonical parents and independently authorized actual own
+hosting/work records; it rechecks those owners before disclosure. Empty personal
+scopes never perform this label lookup. This is not public discovery, an attendee
+dependency, a profile activation or permission to expose other edition settings.
+
 Cancellation closeout, template/configuration cloning, archive-amendment API,
 computed effective-access management, date-format preference, richer edition-
 local policy, and Programme Operations setup are not implemented. Edition
