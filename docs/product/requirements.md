@@ -1747,6 +1747,15 @@ architecture documents, implementation issues, tests, and release notes.
   work use exact owner relationships/commitments, current verified identity and
   source versions; each sensitive-read audit is attributed to the actual sender.
   A recipient reference is not a delivery, acknowledgement or portable permission.
+  Deliberate operator recipient selection requires separate sender recipient-field
+  authority. Check the selected verified person's exact Scheduling geometry and
+  Venue membership permissions, plus adopted Department staffing membership when
+  needed, without impersonating any recipient output read. Repeat current purpose
+  eligibility before actual-sender audit and disclosure. Preparation, independent
+  review, explicit manual handoff and exact-recipient acknowledgement are distinct
+  facts; export or handoff cannot substitute for acknowledgement. A newer material
+  change requires new acknowledgement, and historical notice existence cannot
+  restore revoked purpose or withdrawn/invalidated content.
 
 ### Privacy, compliance, and participant control
 

@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 VIEW_PLANNING: Final = "scheduling.view_planning"
 VIEW_HOST_SELF: Final = "scheduling.view_host_self"
 VIEW_WORK_SELF: Final = "scheduling.view_work_self"
+VIEW_CHANGE_RECIPIENTS: Final = "scheduling.view_change_recipients"
+CHANGE_COMMUNICATION_CAPABILITIES: Final = frozenset({VIEW_CHANGE_RECIPIENTS})
 VIEW_HISTORY: Final = "scheduling.view_history"
 VIEW_CONFLICTS: Final = "scheduling.view_conflicts"
 MANAGE_DAYS: Final = "scheduling.manage_service_days"
@@ -39,6 +41,7 @@ SCHEDULING_CAPABILITIES: Final = frozenset(
         VIEW_PLANNING,
         VIEW_HOST_SELF,
         VIEW_WORK_SELF,
+        *CHANGE_COMMUNICATION_CAPABILITIES,
         VIEW_HISTORY,
         VIEW_CONFLICTS,
         MANAGE_DAYS,

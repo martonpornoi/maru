@@ -437,6 +437,16 @@ the recipient or impersonate a personal query. Existing owner read-retention
 classes apply; no recipient list, communication history or new retention period
 is persisted by these transient references.
 
+ADR 0102 adds a distinct restricted sender purpose for selecting one current
+operator recipient. `scheduling.query.operator_change_recipient` is audited as
+the actual sender under `scheduling.view_change_recipients`, never as the subject
+whose geometry and membership eligibility ordinary policy evaluates. Only the
+chosen verified account/operational label, exact purpose, adoption consequence
+and policy contract are transiently returned. There is no address, directory,
+release content, private instruction, new notice history or new retention period.
+Existing `programme-restricted` sensitive-read retention applies. Later persisted
+communication evidence needs its own explicit data/lifecycle contract first.
+
 ### Logistics custody and restricted contact
 
 - Reusable external-party identity contains only legal/public operational

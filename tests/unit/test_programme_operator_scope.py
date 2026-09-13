@@ -18,7 +18,10 @@ from maru.scheduling.adoption import (
     SCHEDULING_ADOPTION_ADAPTERS,
     SCHEDULING_OPERATOR_RELEASE_ADAPTER,
 )
-from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
+from maru.scheduling.authorization import (
+    CHANGE_COMMUNICATION_CAPABILITIES,
+    SchedulingAuthorizationDeniedError,
+)
 from maru.scheduling.command_support import SchedulingUnavailableError
 
 CAPABILITY = "scheduling.view_operator_output"
@@ -84,7 +87,9 @@ def test_native_operator_catalog_is_additive_dormant_and_independently_ceilinged
         *current.EDITION_CAPABILITIES,
         *current.DEPARTMENT_CAPABILITIES,
         *current.RESOURCE_CAPABILITIES,
-    } == {code for code, definition in CAPABILITIES.items() if definition.persistable}
+    } == {
+        code for code, definition in CAPABILITIES.items() if definition.persistable
+    } - CHANGE_COMMUNICATION_CAPABILITIES
     for code in scope.OPERATOR_CAPABILITIES:
         definition = CAPABILITIES[code]
         assert definition.maximum_scope is ScopeLevel.EDITION

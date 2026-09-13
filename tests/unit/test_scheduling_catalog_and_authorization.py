@@ -148,6 +148,7 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
             auth.SCHEDULING_CAPABILITIES
             - set(release.RELEASE_CAPABILITIES)
             - {auth.VIEW_HOST_SELF, auth.VIEW_WORK_SELF}
+            - auth.CHANGE_COMMUNICATION_CAPABILITIES
         ),
         "programme.view_scheduling_dependencies",
     }
@@ -174,6 +175,7 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
         "programme.view_staffing",
         *release.RELEASE_CAPABILITIES,
         *OPERATOR_CAPABILITIES,
+        *auth.CHANGE_COMMUNICATION_CAPABILITIES,
     }
     for code in current.SCHEDULING_CAPABILITIES:
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION
@@ -208,7 +210,7 @@ def test_release_migration_adds_only_four_independent_edition_capabilities():
         *current.RESOURCE_CAPABILITIES,
     } == {
         code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - OPERATOR_CAPABILITIES
+    } - OPERATOR_CAPABILITIES - auth.CHANGE_COMMUNICATION_CAPABILITIES
 
 
 @pytest.mark.parametrize(

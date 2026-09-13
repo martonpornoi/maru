@@ -1325,6 +1325,15 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
+        code="scheduling.view_change_recipients",
+        description="Resolve one eligible operator recipient for Programme changes.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"operator_recipients"}),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
         code="scheduling.view_operator_output",
         description="Read approved geometry for an exact operator purpose target.",
         maximum_scope=ScopeLevel.EDITION,

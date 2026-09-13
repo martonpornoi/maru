@@ -26,6 +26,11 @@ from maru.programme.staffing_inputs import (
 from maru.programme.staffing_queries import ProgrammeStaffingReadRequest
 from maru.scheduling import operator_scope
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
+from maru.scheduling.change_recipient_queries import (
+    OperatorChangeRecipientRequest,
+    load_operator_change_recipient,
+)
+from maru.scheduling.command_support import SchedulingUnavailableError
 from maru.scheduling.operator_output_queries import load_operator_run_sheet
 from maru.scheduling.operator_release_impact import load_operator_release_impact
 from maru.scheduling.operator_release_references import load_operator_release_reference
@@ -33,6 +38,7 @@ from maru.scheduling.operator_scope import OperatorReadRequest, OperatorScopeKin
 from maru.scheduling.personal_work_release_impact import (
     load_personal_work_release_impact,
 )
+from maru.scheduling.planning_queries import SchedulingReadRequest
 from maru.scheduling.release_inputs import ReleaseCandidateSelection
 from maru.venues.models import EditionSpaceSelection
 from maru.venues.operator_queries import load_operator_wayfinding
@@ -152,7 +158,7 @@ def operator_request(
 
 @pytest.mark.parametrize("kind", list(OperatorScopeKind))
 def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
-    operator_world, kind
+    operator_world, kind, monkeypatch
 ):
     published = publish(operator_world, approve(operator_world))
     request = operator_request(operator_world, kind=kind)
@@ -194,6 +200,57 @@ def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
         'FROM "registration_',
     ):
         assert excluded not in statements
+    _assert_operator_change_recipient(request, monkeypatch)
+
+
+def _assert_operator_change_recipient(request, monkeypatch):
+    original = policy.profile_allows_capability
+    monkeypatch.setattr(
+        policy,
+        "profile_allows_capability",
+        lambda code, version, capability: (
+            capability == "scheduling.view_change_recipients"
+            or original(code, version, capability)
+        ),
+    )
+    sender = AccountFactory()
+    attribution = SchedulingReadRequest(
+        sender.id, request.organization_id, request.edition_id, uuid4()
+    )
+    selected = OperatorChangeRecipientRequest(
+        attribution, request.actor_id, request.kind, request.target_id
+    )
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        load_operator_change_recipient(selected)
+    CapabilityGrantFactory(
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        principal=sender,
+        capability_code="scheduling.view_change_recipients",
+    )
+    with CaptureQueriesContext(connection) as captured:
+        result = load_operator_change_recipient(selected)
+    assert result.account_id == request.actor_id != sender.id
+    assert result.kind is request.kind
+    assert result.target_id == request.target_id
+    assert AuditEvent.objects.filter(
+        principal_id=sender.id,
+        event_edition_id=request.edition_id,
+        operation="scheduling.query.operator_change_recipient",
+        outcome="allow",
+    ).exists()
+    assert not AuditEvent.objects.filter(
+        principal_id=request.actor_id,
+        operation="scheduling.query.operator_change_recipient",
+    ).exists()
+    statements = "\n".join(row["sql"] for row in captured)
+    assert 'FROM "scheduling_schedulingrelease"' not in statements
+    for changed in (
+        replace(selected, account_id=AccountFactory().id),
+        replace(selected, target_id=uuid4()),
+    ):
+        with pytest.raises(SchedulingUnavailableError):
+            load_operator_change_recipient(changed)
 
 
 @pytest.mark.parametrize("kind", [OperatorScopeKind.ROOM, OperatorScopeKind.DEPARTMENT])

@@ -7,6 +7,24 @@ and protected-delivery status; this guide is the owner contract, not a merge cla
 
 ## Ownership and adoption
 
+### Governed change communication (#104, in progress)
+
+ADR 0102's `change_recipient_queries.load_operator_change_recipient` requires
+the actual sender's separate `scheduling.view_change_recipients` capability and
+`operator_recipients` fields. It selects one exact verified person/purpose, with
+independent subject geometry/Venue-link/optional Department-work-link policy,
+canonical sorted person locks, repeated eligibility and final sender audit.
+It never invokes recipient output reads, loads a release or returns contacts,
+private instructions, a directory or a portable sending permission.
+The additive Authorization capability migration is unpinned by every current
+profile, assigns no grant and fences downgrade after retained use. PostgreSQL
+migration/runtime evidence is maintained but deferred to #102.
+
+Persisted preparation, independent review, explicit manual handoff, immutable
+exact-recipient acknowledgement and user surfaces are not implemented by this
+query and remain the current #104 outcome. Do not close #104 or its #48 checklist
+item on recipient-reference support alone.
+
 ### Change-impact read foundations (#105 under #104)
 
 `release_impact.compare_release_selections` is the pure bounded comparison of
@@ -112,7 +130,7 @@ Registration, Participation, payment or attendance record is created.
 
 ## Owned state and commands
 
-The #96 release work remains dormant and under delivery verification. Its contracts
+The #96 release work is delivered but remains dormant. Its contracts
 are `release_inputs` (exact versioned intent), `release_dependency_rules`
 (complete journal temporal consequences), `release_artifacts` (one mandatory
 canonical identity-only manifest), and the private `release_authorship`
