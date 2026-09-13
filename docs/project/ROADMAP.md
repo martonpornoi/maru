@@ -138,17 +138,25 @@ exact-snapshot eligibility under ADR 0094 and is delivered through PR #93.
 Child #94 is delivered through PR #95 with authenticated owner collection and
 missing fit/no-staffing evidence under ADR 0095. Child #96 is delivered through
 PR #98 with dormant independent approval, release-warning evidence, atomic
-publication and governing invalidation under ADR 0096. Child #99 supplies shared
+publication and governing invalidation under ADR 0096. Child #99 is delivered
+through PR #101 and supplies shared
 release-derived public and personal projections, combined host/work timetables
 and output formats. Child #100 retains independently authorized room/department
 operator run sheets as the immediately following delivery; no operational
 acceptance is waived by this decomposition. Detailed change impact, governed
 delivery and acknowledgement then follow using those same boundaries.
-Before #99 protected delivery, ADR 0098 adds budgeted CI assignments and measured
+Delivered with #99, ADR 0098 adds budgeted CI assignments and measured
 headroom to address recurring historical-test timeouts without weakening safety
-selection or coverage. This is a delivery prerequisite, not Programme adoption.
+selection or coverage. Its complete hosted run passed all 39 jobs below 50
+minutes each. This is timeout resilience, not a total-work reduction or
+Programme adoption.
 An eligible rule result is not approval, publication or profile activation.
 Child #97 owns exact-readiness compatibility after logical PostgreSQL restore.
+The maintainer-authorized ADR 0100 now temporarily defers PostgreSQL execution
+during dormant feature development, retaining tests and all non-database gates.
+#48 must restore exhaustive local/hosted database, coverage and timing acceptance
+before activation or integrated Programme acceptance; deferred development is
+not a database-correctness or readiness claim.
 It must pass before profile activation or a director pilot; same-image physical
 recovery evidence does not waive logical-restore or production/PITR acceptance.
 
@@ -811,8 +819,14 @@ relationships and deliberately shared availability under ADR 0087. Issue #81
 delivers Scheduling candidates, conflict evaluation and governed Venue binding.
 Issue #85 delivers the dormant accessible editor; #87 records assisted
 pre-activation browser checks delivered through PR #90. Issue #88 delivers
-governed staffing. Next are release, continuity, setup, and integrated
-acceptance in dependency order. Each child is separately verified and delivered.
+governed staffing. Issues #91/#94/#96 deliver release preparation, review and
+atomic publication/invalidation. Issue #99 delivers public and exact-person
+output; #100 adds independently authorized room, Department and edition operator
+run sheets under ADR 0099. These remain dormant components, not an activated
+departmental workflow. Next are detailed change impact and governed delivery,
+on-site continuity, #97 logical recovery, guided setup and integrated acceptance
+in dependency order. Human-only #92 checks remain an activation gate. Each
+child is separately verified and delivered.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme

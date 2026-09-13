@@ -124,6 +124,13 @@ $Uv = Resolve-RequiredCommand -Name "uv" -FallbackPaths @(
     ".tools/bin/uv.exe",
     ".tools/uv.exe"
 )
+$PolicyMode = & $Uv run --locked --all-groups python (Join-Path $PSScriptRoot "ci_development_policy.py") mode
+if ($LASTEXITCODE -ne 0) { throw "Invalid PostgreSQL acceptance policy." }
+if ($PolicyMode -eq "deferred") {
+    if ($Mode -ne "Auto") { throw "Restore required PostgreSQL policy before full or diagnostic database execution." }
+    & (Join-Path $PSScriptRoot "certify_deferred.ps1") -Base $Base
+    return
+}
 $Docker = Resolve-RequiredCommand -Name "docker"
 $Git = Resolve-RequiredCommand -Name "git"
 $PowerShell = Resolve-RequiredCommand -Name "pwsh"

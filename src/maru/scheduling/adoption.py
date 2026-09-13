@@ -12,10 +12,24 @@ SCHEDULING_TIME_CONFLICT_SOURCE = "scheduling.service-day-and-placement@1"
 SCHEDULING_RELEASE_SOURCE_ADAPTER = "scheduling.release-candidate-source@1"
 SCHEDULING_RELEASE_PREFLIGHT_ADAPTER = "scheduling.release-preflight@1"
 SCHEDULING_PUBLIC_RELEASE_ADAPTER = "scheduling.public-release-output@1"
+SCHEDULING_OPERATOR_RELEASE_ADAPTER = "scheduling.operator-release-output@1"
 
 SCHEDULING_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
     owner_module="scheduling",
     descriptors=(
+        AdoptionAdapterDescriptor(
+            code=SCHEDULING_OPERATOR_RELEASE_ADAPTER,
+            owner_module="scheduling",
+            kind="operator-release-output",
+            result_semantics=(
+                "Admits independently authorized exact room, Department or edition "
+                "run sheets with reviewed copy and explicitly requested owner layers."
+            ),
+            failure_semantics=(
+                "Denied, unpinned, moving or incomplete requested evidence cannot "
+                "produce a reduced complete output or a last-good fallback."
+            ),
+        ),
         AdoptionAdapterDescriptor(
             code=SCHEDULING_PUBLIC_RELEASE_ADAPTER,
             owner_module="scheduling",

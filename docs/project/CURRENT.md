@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-12
+Last updated: 2026-09-13
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -11,108 +11,128 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-[#96](https://github.com/martonpornoi/maru/issues/96) is closed through
-[PR #98](https://github.com/martonpornoi/maru/pull/98), protected squash
-`0bea1b46f8611f3da8a3d3664f258505a8deb7e4` at 2026-09-12 01:49:41 UTC.
-Its tree equals certified head `aa1ede69fb880dcb12d627bbfc049fba23166e68`;
+[#99](https://github.com/martonpornoi/maru/issues/99) is closed through
+[PR #101](https://github.com/martonpornoi/maru/pull/101), protected squash
+`f999fb510b69901798959e16c120bf0fd15b839d` at 2026-09-13 01:10:30 UTC.
+Its tree equals certified head `ed654e27ff1328fde01171e93d74ceb16c5676c6`;
 clean local main was synchronized to that result and origin/main.
 
-ADR 0096 provides dormant independent exact-candidate approval, warning evidence,
-canonical artifacts, atomic publication/withdrawal, checked manifests and native
-safety/privacy invalidation. Reciprocal published-host/Workforce protections
-retain accepted work independently of room/copy disclosure. No profile is active.
-Local certification passed 8,850 Python tests, 64 frontend tests, all ten gates
-and 90.64% combined coverage in 2h29m54s. Independent hosted acceptance and CodeQL
-passed; all sixteen PostgreSQL groups completed within the unchanged timeout.
-See the [delivery checkpoint](../checkpoints/2026-09-12-atomic-release-protected-delivery.md)
-and [recovery runbook](../operations/programme-atomic-release-migration-and-recovery.md).
-Do not repeat its completed certification or treat prior failed candidates as current.
+ADR 0097 delivers dormant public and exact-person host/volunteer output from
+the active approved release. Independent owner authority, approved immutable
+copy, separately versioned current instructions and retained Workforce work
+stay distinct across typed/JSON/calendar/rendered/print adapters. Native
+withdrawal/invalidation fails closed without silently cancelling or relocating
+accepted Shifts. No profile, production route or runtime writer is activated.
 
-## Active bounded delivery: public and personal outputs (#99)
+ADR 0098 replaces fixed PostgreSQL counts and differing local/hosted partitions
+with budgeted source-bound assignments, at most eight concurrent fresh databases,
+incremental diagnostics and measured pre-push timing headroom. Full replacement
+local certification passed all ten gates, 9,089 Python tests, 64 frontend tests
+and 90.67% combined branch-aware coverage in 3h32m58s. All 39 local jobs passed
+in 30m22s–51m54s; every disposable container was removed. The worst conservative
+projection was 87m51s against the unchanged two-hour hosted limit.
 
-Branch: `codex/programme-release-outputs`, based on the protected #98 result.
-[#99](https://github.com/martonpornoi/maru/issues/99) now owns shared public and
-exact-person host/volunteer output. Native child
-[#100](https://github.com/martonpornoi/maru/issues/100) retains the original
-room/department/operator acceptance as the immediately following delivery.
-This decomposition drops no #48 scope and does not waive operational acceptance.
+Independent hosted acceptance, CodeQL and the protected PR gate passed on that
+exact head. All 39 hosted PostgreSQL jobs passed in 27m22s–49m58s, median 39m58s,
+with at least 70m02s timeout margin. Total hosted workflow latency was 3h19m26s.
+Downloaded reports independently reconcile all 334 complete groups, 4,251
+PostgreSQL cases and 4,838 units, with no failure, error, skip or duplicate.
 
-PR #101 is open at original certified head `35bc135fc2c9d7e7c448b4619dd681b60ac74e15`.
-Full local certification passed 9,044 Python tests, 64 frontend tests, all ten
-gates and 90.66% coverage in 2h42m35s. Its first hosted attempt passed fifteen
-PostgreSQL groups but group 15 exceeded two hours; that run is not accepted.
-Original local evidence and hosted timing diagnostics are preserved separately.
+This is timeout resilience, not a whole-suite speedup: exhaustive local wall
+time increased 31.0% over the original eight-way run. Original timed-out hosted
+attempts and the failed Windows Docker-wrapper launcher candidate remain
+separate from the completely certified repair. No timeout, coverage or scope
+waiver was used. Do not repeat completed certification.
 
-The maintainer authorized an ADR 0098 CI-hardening repair in this same PR, but
-explicitly prohibited pushing on estimates alone. The local candidate replaces
-fixed shard counts with a conservative one-hour budget, shared exact manifests,
-eight-worker fresh-database execution and a measured-headroom certification
-condition. Initial refreshed estimates select 39 exhaustive shards; these are
-not measured new-run durations. All 4,836 unit tests passed in 33.55 seconds,
-including planner, incremental evidence, bounded concurrency and failure cleanup.
-Repository lint/format, semantic documentation and strict script docstrings
-passed. Full exact-plan certification remains pending; do not push, merge, or
-start #100 until that boundary is satisfied.
+See the [protected delivery checkpoint](../checkpoints/2026-09-13-programme-output-protected-delivery.md),
+[output evaluator guide](../operations/programme-output-evaluation.md),
+[ADR 0098](../architecture/decisions/0098-budgeted-postgresql-shard-planning.md)
+and [local certification procedure](../development/local-certification.md).
+The prior atomic release #96 / PR #98 remains delivered under ADR 0096.
 
-The first repair certification at `858a7f2` failed before database startup:
-Windows selected Docker's extensionless non-native wrapper. No PostgreSQL
-assertion or timing result was produced. Native executable selection is now
-corrected with Windows/Linux regression checks; replacement certification is
-required, and the failed candidate cannot be used as acceptance.
+## Active bounded delivery: operator run sheets (#100)
 
-ADR 0097, owner references, closed JSON/calendar and dormant HTML/print surfaces
-are implemented on this candidate; protected delivery is still pending:
+Branch: `codex/programme-operator-run-sheets`, based on the protected #101 result.
+[#100](https://github.com/martonpornoi/maru/issues/100) is the next native #48
+child. It retains the room/department/operator acceptance explicitly separated
+from #99; closing #99 does not deliver or waive that audience.
 
-- Public admission is separate from planner authority. Exact selected reviewed
-  copy and minimized current wayfinding require complete release/source rechecks.
-  Withdrawn copy cannot fall back or leak reviewer metadata through host-self.
-- Personal hosting requires exact-self Scheduling plus Programme owner authority.
-  Only confirmed purposes obtain approved own presence. Workforce retains its
-  own claimed/confirmed/ended work intervals and current instruction versions.
-- Unadopted, empty, denied and unavailable layers remain distinct. Workforce-only
-  needs no Programme or Participation. Actual own records justify current
-  Events label/version; empty scopes do not discover edition names.
-- Typed/JSON, calendar and shared-shell private/public pages use bounded complete
-  fresh projections. Withdrawn/invalidated hosting withholds combined calendar
-  imports but preserves unchanged authorized work in JSON/HTML. Print retains
-  scope and source identities. No attendance or offline guarantee is implied.
+[ADR 0099](../architecture/decisions/0099-purpose-scoped-programme-operator-outputs.md)
+and the [run-sheet page contract](../product/page-contracts/programme-operator-run-sheets.md)
+define independent room, Department and edition operator purposes. Department
+membership follows current Venue responsibility and deliberately adopted
+Workforce binding lineage, never inferred Programme item/proposal ownership.
+Five new field-ceilinged read capabilities and native migration 0030 grant no
+authority or profile activation; retained grant/role use fences downgrade.
 
-The latest focused unit batch passed 172 catalog/format/page checks in 1.46s.
-The private HTTP/composition batch passed 24 PostgreSQL checks in 201.69s.
-Earlier public/native-manifest regressions passed 36 in 250.36s. Strict focused
-typing/docstrings passed. The consolidated focused PostgreSQL set passed 129
-cases in 721.59s, without failures. Repository-wide typing (549 source files),
-lint/formatting, strict docstrings and semantic docs (566 files) passed.
-Those development counts preceded the completed original local certification
-above. Replacement clean-commit certification and independent protected
-acceptance remain pending after the CI repair.
+Local typed/JSON/calendar/shared-Administration-shell HTML/print implementation
+is present, with exact-purpose admission, mandatory owner audits, current room
+and retained-work membership, checked release geometry and reviewed copy, and
+requested-only private delivery/staffing fields. Current owner instructions and
+immutable accepted work intervals remain separate. No #100 certification, push
+or protected acceptance is claimed for the later CI-policy candidate.
 
-The first certification failed two exact unit inventories, now repaired without
-relaxing their assertions or acceptance scope. All 4,793 units then passed in
-28.26s with task-local temporary storage. Hardened native Identity timestamp
-tests passed 24 PostgreSQL cases in 143.35s using database-clock bounds and
-past/future owner-clock offsets. Inventory/selection checks passed 124 cases.
-The cancelled run has no success receipt; its logs
-are archived and its eight disposable databases were removed.
+The feature-only exact head `ff36db6896a0ff0d073e9737086d676f5a8d1e30`
+subsequently completed all ten local gates: 9,254 Python cases (4,986 units and
+4,268 PostgreSQL cases), 64 frontend cases and 90.65% combined branch-aware
+coverage in 3h36m16s. All 42 jobs passed and removed their containers; the slowest
+took 49m17s, with an 83m56s conservative projection. Independent report matching
+reconciles all 337 groups with no failure, error, skip or duplicate. Complete
+evidence is preserved under `.tools/certification-evidence/issue100-ff36db6-complete/`.
+The first failed dependency-install attempt remains separately recorded. This
+is historical evidence for that exact feature head, not certification of later
+policy changes.
 
-Synthetic public/private browser rehearsals covered seven widths, keyboard
-controls, print-friendly HTML, copy-link actions, isolation and failure/recovery.
-They corrected excessive provenance and pale private agenda headings. Both fresh
-fixtures closed normally and viewport overrides were reset; an earlier expired
-public fixture is recorded as incomplete. Real zoom, native print, screen-reader
-and human comprehension remain unproven for these new outputs under #92.
+The maintainer then explicitly requested PostgreSQL execution be deferred until
+Programme is finished. [ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md)
+implements a tracked temporary development policy in this same pending PR.
+Maintain all database cases and record unexecuted changes as verification debt;
+do not run new PostgreSQL checks during this phase. PR/local unit, static,
+documentation, packaging, frontend and security checks remain required. Combined
+database coverage and headroom remain unavailable, never falsely successful.
+Nightly/manual full selection is deferred and full/release acceptance is fenced.
+Restore the tracked required mode and exhaustive local/hosted evidence before
+Programme profile activation, integrated acceptance, a director pilot or release.
+The new policy regressions pass: 105 focused cases and all 5,015 units (32.02s).
+An initial Windows temporary-directory permission error was repaired with an
+isolated task-owned test directory; it was not waived. Policy parsing rejects
+malformed inputs, full acceptance refuses deferred execution, and workflow
+contracts preserve non-database gates and original risk selection. The candidate
+still needs exact non-database development acceptance and the protected hosted
+gate before delivery. See the [policy checkpoint](../checkpoints/2026-09-13-programme-postgresql-deferral.md).
 
-See the [component checkpoint](../checkpoints/2026-09-12-public-and-personal-programme-outputs.md),
-[evaluator guide](../operations/programme-output-evaluation.md),
-[public page contract](../product/page-contracts/programme-released-timetable.md),
-[personal page contract](../product/page-contracts/personal-programme-timetable.md)
-and [Scheduling module](../modules/scheduling.md). No route/profile/runtime
-writer activation, schema rewrite, external sending or production data is added.
+Focused evidence: all 4,986 units passed in 34.20s (two existing Django URL-field
+deprecation warnings); 17 PostgreSQL cases passed in 299.59s including fresh
+schema setup (156.36s). They cover exact native scopes, person/tenant denial,
+withdrawal, mandatory audit, requested-column privacy, a Department with linked
+work but no room, retained predecessor intervals, real HTTP reauthorization and
+real unused migration reversal/reapply plus retained grant/role downgrade
+fences. The disposable container was removed. Repository-wide Ruff, formatting,
+type, NumPy-docstring and semantic-docstring checks pass. Earlier focused
+failures were repaired fixture permissions and catalog inventories, not waivers.
+The two real HTTP cases also pass exact-copy invalidation followed by release
+withdrawal in a focused 183.31-second fresh-database rerun.
+
+The isolated browser journey now covers exact-purpose/default/all-layer output,
+retained work, denial, source failure/withdrawal, private downloads and print view.
+A per-response CSP nonce repairs blocked shared navigation; modal semantics and
+collapsed-section focus filtering repair the exposed keyboard boundary. Fresh
+checks pass Close/Escape, focus containment/return, keyboard layer submission and
+seven responsive widths without overflow. Fixture containers were removed by
+exact ID. Launcher/observer failures and teardown-session warnings remain recorded,
+not passing browser evidence. The warning-fatal documentation build also passed.
+
+See the [operator checkpoint](../checkpoints/2026-09-13-programme-operator-run-sheets.md)
+for evidence and limitations. Next: verify the temporary policy and certify the
+clean exact candidate through its explicitly deferred non-database development
+path, then protected delivery. Do not rerun the preserved full feature evidence.
+Human-only native-print, zoom, screen-reader and calendar-client checks are
+explicitly retained under #92 and remain unpassed. #97 still blocks activation.
 
 ## Existing foundation and mandatory gates
 
 Programme children #57, #59, #61, #63, #66, #64, #71, #77, #79, #81, #85,
-#88, #91, #94 and #96 are delivered dormant. Do not restart those tasks.
+#88, #91, #94, #96 and #99 are delivered dormant. Do not restart those tasks.
 The [Programme Operations contract](../product/page-contracts/programme-operations-adoption-setup.md)
 and owning [Programme](../modules/programme.md),
 [Applications](../modules/applications.md), [Events](../modules/events.md) and
@@ -133,9 +153,8 @@ activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Finish PR #101's budgeted CI repair locally, validate full exact assignments
-   and measured timing headroom, then push for protected gate/CodeQL, squash
-   and exact-main synchronization. Never push solely on predicted durations.
+1. Preserve #101's delivery and #100's completed feature-head local evidence;
+   do not rerun them. Follow ADR 0100's temporary PostgreSQL deferral.
 2. Deliver #100's independently authorized room/department operator run sheets.
 3. Deliver detailed change impact, governed destination delivery and recipient
    acknowledgement through the same output boundaries.

@@ -35,6 +35,7 @@ jobs:
       dependency-review: ${{ steps.plan.outputs.dependency_review }}
       integration: ${{ steps.plan.outputs.integration }}
       history: ${{ steps.plan.outputs.history }}
+      postgresql-deferred: ${{ steps.plan.outputs.postgresql_deferred }}
       destructive: ${{ steps.plan.outputs.destructive }}
       destructive-approved: ${{ steps.plan.outputs.destructive_approved }}
       deleted-count: ${{ steps.plan.outputs.deleted_count }}
@@ -101,6 +102,11 @@ jobs:
           exit 1
       - name: Record safe repository scope
         run: echo "Repository deletion policy is satisfied."
+      - name: Record temporary PostgreSQL deferral
+        if: ${{ needs.changes.outputs.postgresql-deferred == 'true' }}
+        run: |
+          echo "PostgreSQL execution and combined database coverage are DEFERRED under #48 / ADR 0100." >> "$GITHUB_STEP_SUMMARY"
+          echo "This PR result is development acceptance, not database, Programme activation or release acceptance." >> "$GITHUB_STEP_SUMMARY"
 
   quality:
     name: Relevant quality
@@ -321,6 +327,8 @@ jobs:
             (
               needs.changes.result != 'success' ||
               needs.repository-safety.result != 'success' ||
+              !contains(fromJSON('["none","targeted","full","deferred"]'), needs.changes.outputs.integration) ||
+              (needs.changes.outputs.integration == 'deferred' && needs.changes.outputs.postgresql-deferred != 'true') ||
               (needs.changes.outputs.integration == 'full' && needs.full.result != 'success') ||
               (needs.changes.outputs.integration != 'full' && needs.quality.result != 'success') ||
               (needs.changes.outputs.python == 'true' && needs.changes.outputs.integration != 'full' && needs.unit.result != 'success') ||

@@ -141,7 +141,15 @@ if ($UntrackedStaffConsoleFiles) {
     throw "Generated Staff Console output is not completely committed."
 }
 if (-not $SkipPythonTests) {
-    Invoke-Checked $Uv @(
-        "run", "pytest", "--cov=maru", "--cov-report=term-missing"
-    )
+    $PolicyMode = & $Uv run --locked python (Join-Path $PSScriptRoot "ci_development_policy.py") mode
+    if ($LASTEXITCODE -ne 0) { throw "Invalid PostgreSQL acceptance policy." }
+    if ($PolicyMode -eq "deferred") {
+        Write-Host "PostgreSQL and combined coverage DEFERRED under #48 / ADR 0100."
+        Invoke-Checked $Uv @("run", "pytest", "tests/unit", "-q")
+    }
+    else {
+        Invoke-Checked $Uv @(
+            "run", "pytest", "--cov=maru", "--cov-report=term-missing"
+        )
+    }
 }

@@ -1322,6 +1322,35 @@ cross-module retirement contract; it does not activate Programme Operations,
 grant recovery through a current profile or root role, or mount any call,
 import, recovery, review, or timetable surface.
 
+### Programme operator work input
+
+ADR 0099's `operator_links.load_operator_department_work_links` requires exact
+Department `workforce.view_operator_staffing` with `scope_links`, plus deliberately
+adopted `workforce.programme-staffing@1`. It resolves current demand and immutable
+binding/predecessor lineage in this Department. Contiguous history, head/version,
+owner-chain completeness and bounds are checked before returning only opaque
+occurrence/binding/demand identities and versions. Department work membership is
+required even when an operator does not request staffing details; it cannot be
+silently omitted after denial. No Programme ownership is inferred from proposals.
+
+`operator_queries.load_operator_staffing` independently requests `scope_links`,
+`work_instructions` and `coverage` against the exact room/Department/edition
+purpose and re-resolves Scheduling's current in-purpose release. It supplies
+current linked demand title, location, briefing, supervision, requested interval,
+headcount and lifecycle/version alongside retained commitment interval/state
+counts. Predecessor work remains explicit; a read never cancels, transfers or
+reconfirms it. Current requested work never replaces accepted start/end/rest
+instants. Multiple Programme links do not multiply a demand's work counts.
+
+No account/commitment identifiers, assignments, private reasons, qualification,
+availability calendars or attendance are selected. Claims are not confirmations;
+confirmed counts do not prove present eligibility or attendance. Bounds cover
+1,024 complete links/demands and 4,096 retained commitments. Unrequested staffing,
+unadopted staffing, authorized empty work and denied/unavailable requests remain
+distinct. Owner-source/adoption rechecks and mandatory
+`workforce.operator_output.read` evidence precede disclosure under
+`workforce-personal` retention. No profile or destination delivery is activated.
+
 ### Personal timetable owner input
 
 `timetable_queries.load_personal_shift_timetable` is the minimized cross-owner

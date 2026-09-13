@@ -381,6 +381,27 @@ These records must be recovered consistently with all owners, not reissued or
 silently deleted to reset freshness. See
 [atomic-release recovery](../operations/programme-atomic-release-migration-and-recovery.md).
 
+### Private Programme operator copies
+
+Room, Department and edition run sheets are separate restricted operational
+purposes under ADR 0099, not anonymous timetable augmentation or a person
+directory. Each owner requires ordinary exact-target and field authority before
+disclosure, including for requested layers with no approved rows. Optional
+Programme technical/accessibility/media columns are not selected when unrequested.
+Workforce coverage is minimized to demand instructions and retained interval/state
+counts; no account, assignment, contact, qualification or availability record is
+returned. Free-text instructions still require restricted handling.
+
+Successful owner reads retain minimized `OWNER.operator_output.read` Audit
+evidence with exact target, current principal, capability, policy version and
+trace IDs, never the copied instructions or roster. They use existing
+`programme-restricted` or `workforce-personal` retention classes; this adds no
+activity analytics, new production retention period or disposal executor.
+Apply the organization's approved operational purpose, lawful basis, retention,
+legal hold and recovery policy before activation. JSON, calendars and printouts
+are private point-in-time copies: authorized custodians must protect and recheck
+them, and Maru cannot promise remote recall of withdrawn or superseded files.
+
 ### Logistics custody and restricted contact
 
 - Reusable external-party identity contains only legal/public operational

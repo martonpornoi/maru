@@ -13,6 +13,7 @@ from maru.applications.programme_conversion_events import (
 from maru.applications.programme_conversion_inputs import ProgrammeConversionInput
 from maru.authorization.catalog import CAPABILITIES, ScopeLevel
 from maru.scheduling.authorization import SCHEDULING_CAPABILITIES
+from maru.scheduling.operator_scope import OPERATOR_CAPABILITIES
 
 
 def intent():
@@ -91,6 +92,7 @@ def test_conversion_capability_is_additive_exact_department_nondelegable():
         "programme.manage_staffing",
         "programme.view_staffing",
         *SCHEDULING_CAPABILITIES,
+        *OPERATOR_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",
     } == {

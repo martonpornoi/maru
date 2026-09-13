@@ -2,6 +2,20 @@
 
 ## Branch workflow
 
+During the maintainer-authorized dormant Programme phase,
+[ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md)
+temporarily overrides only PostgreSQL execution and database-dependent combined
+coverage below. The tracked policy selects an explicit deferred development
+path, preserving original risk/history output, every non-database gate,
+destructive review, dependency review, CodeQL and the protected `PR gate`.
+No GitHub ruleset or bypass actor is changed. Scheduled/manual full selection
+records deferral; reusable full/release acceptance fails before database fan-out.
+Tests stay tracked and maintained. Restore exhaustive local/hosted evidence and
+the unchanged coverage/timing requirements before #48 activation, integrated
+acceptance, a director pilot or release. A green development PR is not proof of
+database correctness. The ordinary full policy below resumes when the tracked
+mode returns to `required`.
+
 Create work from current `main`, push a focused branch, and open a pull request.
 The protected status is `PR gate`; isolated GitHub-hosted runners evaluate the
 current pull-request merge candidate derived from the submitted head and
@@ -110,10 +124,12 @@ missing pull-request CodeQL result as complete analysis.
 The hosted `PR gate` uses ADR 0090's risk-based boundary: documentation-only
 changes avoid PostgreSQL, every code PR retains all current-schema cases, domain
 schema changes add affected historical boundaries and real full-graph recovery,
-and global safety/harness changes require exhaustive history. The routine matrix
-uses eight isolated databases. The exhaustive hosted matrix uses sixteen smaller
-groups with a maximum of eight simultaneous database jobs and unchanged
-120-minute per-job limits. Before the matrix fans out, a lightweight preflight
+and global safety/harness changes require exhaustive history. ADR 0098 replaces
+fixed matrix counts with budgeted complete-group assignments shared by local
+and hosted execution. At most eight isolated database jobs run simultaneously,
+with unchanged 120-minute hosted limits and a measured local headroom requirement.
+Matrix growth preserves complete selected coverage; it does not reduce total
+migration work. Before the matrix fans out, a lightweight preflight
 requires a current `uv.lock` and exact parity between every workflow reference
 and `.github/actions-allowlist.json`. `scripts/certify.ps1` remains the required
 local pre-review command, but its unsigned receipt is contributor evidence

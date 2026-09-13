@@ -782,7 +782,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         namespace.integration_directory.resolve(),
         namespace.timing_file.resolve(),
     )
-    outputs = plan.github_outputs()
+    # Keep pure risk classification intact; only execution receives ADR 0100's
+    # explicit, tracked development policy. No omission is called a database pass.
+    if __package__:
+        from .ci_development_policy import apply_development_policy  # noqa: PLC0415
+    else:
+        from ci_development_policy import apply_development_policy  # noqa: PLC0415
+
+    outputs = apply_development_policy(plan.github_outputs())
     outputs["destructive_approved"] = str(
         not plan.destructive or "destructive-change-reviewed" in labels_value
     ).lower()

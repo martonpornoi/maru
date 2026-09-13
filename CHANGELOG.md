@@ -15,13 +15,25 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added an explicit temporary Programme-development CI policy: PostgreSQL
+  execution and database-dependent coverage are deferred, while unit, static,
+  documentation, frontend and security checks remain required. Database tests
+  remain maintained; full verification must be restored before Programme
+  activation, pilot or release (#48, ADR 0100).
+- Added dormant private Programme run sheets for independently authorized room,
+  Department and edition operators. Approved preparation/delivery/teardown,
+  reviewed copy, current wayfinding and requested delivery/staffing instructions
+  remain separately identified across HTML, print, JSON and private calendars.
+  Retained work is not silently relocated or presented as attendance. These
+  synthetic evaluation components do not activate Programme Operations
+  (#100, ADR 0099, SCH-010).
 - Added dormant public and exact-person Programme timetables with reviewed
   public copy, private host presence plus retained volunteer work, and complete
   JSON/calendar/print-friendly copies. Withdrawn releases stop advertising
   previous Programme times without silently moving accepted shifts. Current
   instructions, historical work and saved-copy limits remain explicit. These
-  synthetic evaluation surfaces do not activate Programme Operations; room and
-  department run sheets follow separately (#99, #100, ADR 0097, SCH-006/010).
+  synthetic evaluation surfaces do not activate Programme Operations
+  (#99, ADR 0097, SCH-006/010).
 - Added dormant Programme staffing requirements, exact timetable-to-Shift
   bindings, explicit work-impact preview/apply and independently authorized
   coverage/history. Timetable edits mark coverage stale instead of silently

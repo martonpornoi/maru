@@ -571,6 +571,15 @@ architecture documents, implementation issues, tests, and release notes.
   approved host-presence intervals; the surrounding preparation/delivery/teardown
   envelope is context, not a silent assignment of every phase. A person without
   confirmed hosting learns no release existence from this private layer.
+  Operator outputs require independent owner authority at an exact room,
+  Department or edition target. Department membership follows current Venue
+  responsibility and explicitly adopted Workforce Programme links, not inferred
+  Programme item or proposal ownership. Requested technical, accessibility,
+  media and staffing layers remain independently ceilinged and complete-or-
+  unavailable, including for an empty authorized scope. Current instructions
+  and retained accepted work keep their own versions and intervals; counts do
+  not imply current qualification, availability or attendance. No unrequested
+  field, person directory, private discussion or reviewer rationale is exposed.
 - **SCH-011 — Accessible interactive timetable editing:** Timetable planning
   must provide an unscheduled-item inventory, service-day and room views,
   stable filters, access-controlled layers, conflict preview, and recoverable
@@ -1778,6 +1787,13 @@ architecture documents, implementation issues, tests, and release notes.
   local/hosted assignments and measured pre-push headroom. Suite growth must not
   silently consume the timeout margin; budget failures require replanning or
   optimization, never omitted tests or weakened acceptance.
+  Exception: maintainer-authorized ADR 0100 temporarily defers PostgreSQL
+  execution and database-dependent combined coverage during dormant Programme
+  development. Maintain all cases and record unexecuted verification debt;
+  retain every non-database gate. Restore exhaustive local/hosted acceptance,
+  measured headroom and the unchanged coverage threshold before Programme
+  activation, integrated acceptance, a director pilot or release. A deferred
+  development result is not database or production acceptance.
 - **NFR-002 — Living documentation:** Product, architecture, API, operations,
   security, and role-specific user documentation are deliverables.
 - **NFR-003 — Checkpoint continuity:** Every material change must leave a

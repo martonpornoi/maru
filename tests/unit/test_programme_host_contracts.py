@@ -11,6 +11,7 @@ from maru.programme.authorization import PROGRAMME_HOST_SELF_CAPABILITIES
 from maru.programme.commands import ProgrammeLimitConflictError
 from maru.programme.host_commands import _require_host_history_room
 from maru.scheduling.authorization import SCHEDULING_CAPABILITIES
+from maru.scheduling.operator_scope import OPERATOR_CAPABILITIES
 
 
 def test_host_capabilities_add_only_exact_edition_manager_authority():
@@ -38,6 +39,7 @@ def test_host_capabilities_add_only_exact_edition_manager_authority():
         "programme.manage_staffing",
         "programme.view_staffing",
         *SCHEDULING_CAPABILITIES,
+        *OPERATOR_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",
     }
