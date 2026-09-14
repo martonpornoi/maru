@@ -64,7 +64,7 @@
     </section>
     {% elif task == "remove" %}<section class="baseline-panel"><h2>Remove hosting for {{ entry.display_label }}</h2><p>Removal ends the current invitation or confirmation and clears current availability. It is an organizer decision with retained rationale, not a claim that the person chose to withdraw. Any later invitation requires a new person-owned response.</p></section>
     {% elif task == "reinvite" %}<section class="baseline-panel"><h2>Invite {{ entry.display_label }} again</h2><p>Supply new deliberate host-visible copy. Reinvitation resets the ended relationship to invited and requires a fresh response; old confirmation and availability are not restored.</p></section>
-    {% elif task == "invite" %}<section class="baseline-panel"><h2>Prepare an explicit invitation</h2><p>Use one known person's exact verified login address. Do not include private discussion or review text in the host-visible title or briefing. This creates neither an account nor attendance and sends no automatic email.</p></section>{% endif %}
+    {% endif %}
   {% endif %}
   {% if form %}
   <section class="baseline-panel" aria-labelledby="host-command-heading"><h2 id="host-command-heading">{% if personal %}Record my decision{% else %}{{ task_label }}{% endif %}</h2>

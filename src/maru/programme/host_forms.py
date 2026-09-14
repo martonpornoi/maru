@@ -21,6 +21,7 @@ from .host_catalogs import (
     MAX_HOST_BRIEFING,
     MAX_HOST_INVITATION_TITLE,
 )
+from .host_invitation_preview import MAX_HOST_SELECTION_BYTES, HostInvitationIntent
 from .workbench_forms import ProgrammeWorkbenchForm
 
 _MINUTE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}\Z")
@@ -56,6 +57,12 @@ class ProgrammeHostCopyForm(ProgrammeWorkbenchForm):
 class ProgrammeHostInvitationForm(ProgrammeHostCopyForm):
     """Invite one known current person by an exact, purpose-limited address."""
 
+    transport_field_names = ProgrammeWorkbenchForm.transport_field_names | {
+        "action",
+        "selection_proof",
+        "confirm",
+    }
+
     recipient_email = forms.EmailField(
         label="Existing person's verified login email",
         max_length=254,
@@ -64,7 +71,51 @@ class ProgrammeHostInvitationForm(ProgrammeHostCopyForm):
             "this does not search a directory or create an account."
         ),
     )
-    field_order = ("recipient_email", "role", "title", "briefing", "reason")
+    field_order: tuple[str, ...] = (
+        "recipient_email",
+        "role",
+        "title",
+        "briefing",
+        "reason",
+    )
+
+    def to_intent(self) -> HostInvitationIntent:
+        """Retain deliberate input without resolving or accepting a person target.
+
+        Returns
+        -------
+        HostInvitationIntent
+            Original selector, item cursor, retry and invitation/rationale text.
+        """
+        return HostInvitationIntent(
+            **{
+                field: self.cleaned_data[field]
+                for field in (
+                    "recipient_email",
+                    "expected_version",
+                    "idempotency_key",
+                    "role",
+                    "title",
+                    "briefing",
+                    "reason",
+                )
+            }
+        )
+
+
+class ProgrammeHostInvitationConfirmForm(ProgrammeHostInvitationForm):
+    """Require exact signed selection and explicit confirmation before invitation."""
+
+    selection_proof = forms.CharField(
+        max_length=MAX_HOST_SELECTION_BYTES, widget=forms.HiddenInput
+    )
+    confirm = forms.BooleanField(
+        label=(
+            "Confirm this exact selected person and invitation; recording is not "
+            "email delivery or their hosting agreement"
+        )
+    )
+    field_order = (*ProgrammeHostInvitationForm.field_order, "confirm")
 
 
 class ProgrammeHostReinvitationForm(ProgrammeHostCopyForm):

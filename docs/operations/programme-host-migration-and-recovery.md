@@ -5,6 +5,30 @@ Applies to issue [#79](https://github.com/martonpornoi/maru/issues/79),
 and the dormant [host owner contract](../modules/programme-hosts.md).
 Use synthetic data; this is not activation or deployment approval.
 
+## Guided invitation recovery
+
+Keep the original selection proof, item version, retry key, selector and entered
+copy/reason after uncertainty. Confirmation verifies the original purpose-signed
+person selection and invokes the canonical owner before fresh reads. It never
+resolves the address again, even when the address is now absent or belongs to
+someone else. Fresh owner admission still checks current state; an original
+receipt is historical evidence, not current hosting, email delivery or consent.
+Private roster navigation is independently authorized and may be unavailable.
+
+Proof verification follows configured signing-key fallbacks and has no arbitrary
+age expiry. Retain required fallback keys through the recovery period. A missing,
+malformed or unverifiable proof, including an old pre-preview browser form, must
+not reconstruct a recipient from today's address or claim a successful receipt.
+Inspect retained owner history with separately authorized access before choosing
+a new intent. Changed input requires a deliberate new preview; a reused retry key
+with changed owner intent remains a canonical conflict. Do not rotate the retry
+key automatically or discard original recovery information after failure.
+
+This adapter change adds no schema or durable selection store. Existing native
+host tests are maintained but remain unexecuted under ADR 0100 and issue #102.
+Database-free form/signing tests and synthetic browser evidence do not replace
+native transaction, concurrency, runtime-role or restore acceptance.
+
 ## Additive installation
 
 Authorization `0026_programme_host_capabilities` preserves the preceding

@@ -23,6 +23,32 @@ Reinvitation selects an existing labelled roster relationship and requires new
 deliberate invitation copy and a fresh response. Private working prose is not
 copied into host-visible fields.
 
+Fresh invitations use a separate preview/confirmation step. Under current
+independent manager and private-item/roster authority, resolve the exact address
+once and pin that person with a purpose-signed original-intent proof. The proof
+binds actor, tenant, item, person, original item version/retry, role, deliberate
+title/briefing, rationale and selector text; it contains only an identifier and
+digest, not the address or private text. Preview records no invitation. Explicit
+confirmation verifies the proof without looking up the address again. Changing
+the person selection or other intent requires deliberate re-preview, not silent
+retargeting. Reinvitation continues to select the exact retained relationship.
+
+Original confirmed invitation POST reaches the unchanged owner command after
+current actor/tenant/adoption admission, before fresh manager, private roster or
+recipient reads. The owner independently enforces fresh admission and current
+person state when there is no receipt. A minimal original result is not current
+hosting state, email delivery, recipient confirmation or permission to read the
+roster. Offer a roster continuation only under its separate current read grants;
+losing that optional continuation must not hide an admitted receipt.
+
+Keep proof, selector, version, retry and entered copy after uncertainty. No
+arbitrary proof expiry is introduced; the existing signing-key fallback policy
+applies. Missing/invalid proof cannot reconstruct an old target from a mutable
+email or bypass canonical idempotency. Explain that no success is established and
+require fresh selection authority for deliberate re-preview; do not replace the
+retry automatically. Legacy unconfirmed forms without proof require inspection
+of retained history before a new intent, not a fabricated old receipt.
+
 ## Organizer scope
 
 The shared Administration shell uses a separately authorized working title and

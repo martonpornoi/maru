@@ -1,5 +1,6 @@
 """Database-free hosting HTTP contracts using real forms, templates and owner DTOs."""
 
+from contextlib import nullcontext
 from dataclasses import replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -13,11 +14,15 @@ from django.http import QueryDict
 from django.test import RequestFactory
 from django.urls import Resolver404, resolve
 
+from maru.programme import host_invitation_preview as selections
+from maru.programme import host_invitation_views as invitations
 from maru.programme import host_personal_views as personal
 from maru.programme import host_queries as queries
 from maru.programme import host_views as organizer
+from maru.programme import queries as item_queries
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
 from maru.programme.commands import ProgrammeVersionConflictError
+from maru.programme.host_commands import ProgrammeHostCommandResult
 from maru.programme.queries import (
     ProgrammeItemProjection,
     ProgrammePrivateItemProjection,
@@ -71,6 +76,13 @@ def hosting(monkeypatch):
     )
     auth = Mock(return_value=SimpleNamespace(accepts_private_planning_writes=True))
     monkeypatch.setattr(organizer, "authorize_programme_scope", auth)
+    monkeypatch.setattr(selections, "authorize_programme_scope", auth)
+    monkeypatch.setattr(item_queries, "authorize_programme_scope", auth)
+    monkeypatch.setattr(item_queries.transaction, "atomic", nullcontext)
+    monkeypatch.setattr(item_queries, "_append_query_audit", Mock())
+    monkeypatch.setattr(item_queries, "_append_query_denial_audit", Mock())
+    retry_admission = Mock()
+    monkeypatch.setattr(invitations, "authorize_host_retry_scope", retry_admission)
     private = Mock(return_value=selected)
     monkeypatch.setattr(organizer, "load_programme_workbench_item", private)
     readers = {}
@@ -118,7 +130,7 @@ def hosting(monkeypatch):
     monkeypatch.setattr(personal, "load_personal_host_purposes", purposes)
     address = Mock(return_value=SimpleNamespace(account_id=person_id))
     monkeypatch.setattr(
-        organizer, "resolve_active_verified_person_reference_by_email", address
+        selections, "resolve_active_verified_person_reference_by_email", address
     )
     edition_query = Mock(
         return_value=SimpleNamespace(version=11, zone_name="Europe/Budapest")
@@ -141,6 +153,9 @@ def hosting(monkeypatch):
     ):
         writers[name] = Mock()
         monkeypatch.setattr(organizer.host_commands, name, writers[name])
+    writers["invite_programme_host"].return_value = ProgrammeHostCommandResult(
+        UUID(int=80), item_id, host_id, UUID(int=81), 8, 1, 1, replayed=False
+    )
     return SimpleNamespace(
         actor=actor,
         organization=organization,
@@ -149,6 +164,7 @@ def hosting(monkeypatch):
         person_id=person_id,
         host_id=host_id,
         auth=auth,
+        retry_admission=retry_admission,
         private=private,
         readers=readers,
         purposes=purposes,
@@ -202,6 +218,10 @@ def call(
         return personal.personal_programme_hosts(
             request, **kwargs, item_id=None if task == "inventory" else page.item_id
         )
+    if task == "invite":
+        return invitations.programme_host_invitation(
+            request, page.organization, page.edition, page.item_id
+        )
     return organizer.programme_hosts(
         request, **kwargs, item_id=page.item_id, host_id=host_id
     )
@@ -218,6 +238,7 @@ def manager_data(task):
     values.update(role="host", title="Explicit invitation", briefing="Deliberate brief")
     if task == "invite":
         values["recipient_email"] = "river@example.test"
+        values["action"] = "preview"
     else:
         values["expected_host_version"] = "3"
     return values
@@ -243,6 +264,224 @@ def own_data(task="invitation"):
         "periods-0-ends_at": "2026-09-15T11:00",
         "periods-0-kind": "available",
     }
+
+
+def invitation_confirmation(page, data=None):
+    values = manager_data("invite") if data is None else data
+    response = call(page, "invite", values | {"action": "preview"})
+    assert response.status_code == 200
+    html = BeautifulSoup(response.content, "html.parser")
+    proof = html.select_one('[name="selection_proof"]')["value"]
+    return values | {"action": "confirm", "selection_proof": proof, "confirm": "on"}
+
+
+def test_preview_never_invites_and_requires_deliberate_confirmation(hosting):
+    data = invitation_confirmation(hosting)
+    hosting.writers["invite_programme_host"].assert_not_called()
+    response = call(hosting, "invite", data | {"confirm": ""})
+    assert response.status_code == 400
+    hosting.writers["invite_programme_host"].assert_not_called()
+    assert data["selection_proof"] in response.content.decode()
+
+
+@pytest.mark.parametrize("new_person", [None, UUID(int=99)])
+def test_original_confirmation_never_resolves_changed_address_again(
+    hosting, new_person
+):
+    data = invitation_confirmation(hosting)
+    hosting.address.reset_mock()
+    hosting.address.return_value = (
+        None if new_person is None else SimpleNamespace(account_id=new_person)
+    )
+    assert call(hosting, "invite", data).status_code == 200
+    hosting.address.assert_not_called()
+    supplied = hosting.writers["invite_programme_host"].call_args.kwargs
+    assert supplied["invitation"].account_id == hosting.person_id
+    assert supplied["source_channel"] == "programme-hosts"
+    assert supplied["idempotency_key"] == UUID(int=90)
+
+
+def test_original_receipt_precedes_fresh_authority_and_private_reads(hosting):
+    data = invitation_confirmation(hosting)
+    writer = hosting.writers["invite_programme_host"]
+    writer.return_value = replace(writer.return_value, replayed=True)
+    hosting.private.reset_mock()
+    hosting.auth.reset_mock()
+
+    def original_owner(**_kwargs):
+        hosting.private.assert_not_called()
+        hosting.auth.assert_not_called()
+        return writer.return_value
+
+    writer.side_effect = original_owner
+
+    def refused_read(*_args, **_kwargs):
+        writer.assert_called_once()
+        raise ProgrammeAuthorizationDeniedError
+
+    hosting.private.side_effect = refused_read
+    hosting.auth.side_effect = ProgrammeAuthorizationDeniedError
+    response = call(hosting, "invite", data)
+    assert response.status_code == 200
+    text = response.content.decode()
+    assert "original invitation receipt was recovered" in text
+    assert "PRIVATE working title" not in text
+    assert "river@example.test" not in text
+    assert "No private roster continuation" in text
+
+
+def test_optional_roster_link_revocation_falls_back_to_minimal_receipt(hosting):
+    data = invitation_confirmation(hosting)
+    hosting.private.side_effect = [
+        hosting.private.return_value,
+        ProgrammeAuthorizationDeniedError,
+    ]
+    response = call(hosting, "invite", data)
+    assert response.status_code == 200
+    assert "No private roster continuation" in response.content.decode()
+    assert (
+        "Open the independently authorized host roster" not in response.content.decode()
+    )
+
+
+def test_current_retry_admission_denial_prevents_owner_call(hosting):
+    data = invitation_confirmation(hosting)
+    hosting.retry_admission.side_effect = ProgrammeAuthorizationDeniedError
+    assert call(hosting, "invite", data).status_code == 404
+    hosting.writers["invite_programme_host"].assert_not_called()
+
+
+def test_retry_admission_revoked_during_render_discards_receipt(hosting, monkeypatch):
+    data = invitation_confirmation(hosting)
+    render = invitations.render_to_string
+
+    def revoke(*args, **kwargs):
+        html = render(*args, **kwargs)
+        hosting.retry_admission.side_effect = ProgrammeAuthorizationDeniedError
+        return html
+
+    monkeypatch.setattr(invitations, "render_to_string", revoke)
+    response = call(hosting, "invite", data)
+    assert response.status_code == 404
+    assert b"receipt references" not in response.content
+
+
+def test_fresh_private_authority_revoked_during_render_discards_preview(
+    hosting, monkeypatch
+):
+    render = invitations.render_to_string
+
+    def revoke(*args, **kwargs):
+        html = render(*args, **kwargs)
+        hosting.auth.side_effect = ProgrammeAuthorizationDeniedError
+        return html
+
+    monkeypatch.setattr(invitations, "render_to_string", revoke)
+    response = call(hosting, "invite", manager_data("invite"))
+    assert response.status_code == 404
+    assert b"river@example.test" not in response.content
+    hosting.writers["invite_programme_host"].assert_not_called()
+
+
+def test_foreign_owner_result_is_never_disclosed(hosting):
+    data = invitation_confirmation(hosting)
+    writer = hosting.writers["invite_programme_host"]
+    writer.return_value = replace(writer.return_value, item_id=UUID(int=99))
+    response = call(hosting, "invite", data)
+    assert response.status_code == 503
+    assert str(writer.return_value.receipt_id) not in response.content.decode()
+
+
+@pytest.mark.parametrize(
+    "field", ["selection_proof", "recipient_email", "title", "reason"]
+)
+def test_changed_or_missing_original_selection_cannot_invoke_owner(hosting, field):
+    data = invitation_confirmation(hosting)
+    data[field] = "other@example.test" if field == "recipient_email" else ""
+    response = call(hosting, "invite", data)
+    assert response.status_code == 400
+    hosting.writers["invite_programme_host"].assert_not_called()
+
+
+def test_deliberate_repreview_selects_new_person_without_confirmation(hosting):
+    data = invitation_confirmation(hosting)
+    hosting.address.return_value = SimpleNamespace(account_id=UUID(int=99))
+    response = call(
+        hosting,
+        "invite",
+        data
+        | {"action": "preview", "confirm": "", "recipient_email": "other@example.test"},
+    )
+    assert response.status_code == 200
+    assert str(UUID(int=99)) in response.content.decode()
+    hosting.writers["invite_programme_host"].assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "failure", [ProgrammeVersionConflictError, ProgrammeQueryUnavailableError]
+)
+def test_original_selection_survives_stale_or_uncertain_owner_failure(hosting, failure):
+    data = invitation_confirmation(hosting)
+    hosting.writers["invite_programme_host"].side_effect = failure
+    reader = hosting.readers["load_programme_host_roster"]
+    reader.return_value = replace(reader.return_value, item_version=8)
+    selected = hosting.private.return_value
+    hosting.private.return_value = replace(
+        selected,
+        private=replace(
+            selected.private,
+            item=replace(selected.private.item, aggregate_version=8),
+        ),
+    )
+    response = call(hosting, "invite", data)
+    assert response.status_code == (
+        409 if failure is ProgrammeVersionConflictError else 503
+    )
+    soup = BeautifulSoup(response.content, "html.parser")
+    for field in (
+        "selection_proof",
+        "idempotency_key",
+        "expected_version",
+        "title",
+        "recipient_email",
+        "reason",
+    ):
+        control = soup.select_one(f'[name="{field}"]')
+        assert (
+            control.get("value", control.get_text().removeprefix("\n")) == data[field]
+        )
+    assert soup.select_one('[name="confirm"]').has_attr("checked")
+    assert soup.select_one('[role="alert"]')["tabindex"] == "-1"
+
+
+def test_stale_preview_does_not_resolve_person_or_rebase_version(hosting):
+    response = call(
+        hosting, "invite", manager_data("invite") | {"expected_version": "6"}
+    )
+    assert response.status_code == 409
+    hosting.address.assert_not_called()
+    hosting.writers["invite_programme_host"].assert_not_called()
+
+
+def test_invitation_url_uses_preview_adapter_and_generic_adapter_cannot_bypass(hosting):
+    url = (
+        f"/admin/programme/hosts/{hosting.organization}/{hosting.edition}/"
+        f"{hosting.item_id}/invite/"
+    )
+    assert (
+        resolve(url, urlconf="maru.programme.host_urls").func
+        is invitations.programme_host_invitation
+    )
+    request = RequestFactory().post(url, manager_data("invite"))
+    request.user = SimpleNamespace(
+        pk=hosting.actor, is_authenticated=True, is_active=True
+    )
+    request._dont_enforce_csrf_checks = True
+    response = organizer.programme_hosts(
+        request, hosting.organization, hosting.edition, hosting.item_id, task="invite"
+    )
+    assert response.status_code == 400
+    hosting.writers["invite_programme_host"].assert_not_called()
 
 
 def confirmed(page):
@@ -291,13 +530,14 @@ def test_manager_commands_preserve_exact_scope_subject_and_original_versions(
                 ),
             ),
         )
+    data = invitation_confirmation(hosting) if task == "invite" else manager_data(task)
     response = call(
         hosting,
         task,
-        manager_data(task),
+        data,
         host_id=hosting.host_id if task != "invite" else None,
     )
-    assert response.status_code == 302
+    assert response.status_code == (200 if task == "invite" else 302)
     name = "remove_programme_host" if task == "remove" else "invite_programme_host"
     writer = hosting.writers[name]
     writer.assert_called_once()
@@ -521,13 +761,14 @@ def test_owner_conflict_preserves_original_version_retry_and_text(hosting, own):
         "respond_to_programme_host_invitation" if own else "invite_programme_host"
     ]
     writer.side_effect = ProgrammeVersionConflictError
-    data = own_data() if own else manager_data(task)
+    data = own_data() if own else invitation_confirmation(hosting)
     version = "expected_item_version" if own else "expected_version"
-    data[version] = "5"
+    if own:
+        data[version] = "5"
     response = call(hosting, task, data, own=own)
     assert response.status_code == 409
     soup = BeautifulSoup(response.content, "html.parser")
-    assert soup.select_one(f'[name="{version}"]')["value"] == "5"
+    assert soup.select_one(f'[name="{version}"]')["value"] == ("5" if own else "7")
     assert (
         soup.select_one('[name="idempotency_key"]')["value"] == data["idempotency_key"]
     )
@@ -621,7 +862,8 @@ def test_revocation_after_owner_refusal_does_not_echo_pending_private_input(
         raise ProgrammeVersionConflictError
 
     writer.side_effect = refuse
-    response = call(hosting, task, own_data() if own else manager_data(task), own=own)
+    data = own_data() if own else invitation_confirmation(hosting)
+    response = call(hosting, task, data, own=own)
     assert response.status_code == 404
     assert b"Explicit invitation" not in response.content
     assert b"Deliberate" not in response.content

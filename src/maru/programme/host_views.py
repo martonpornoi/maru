@@ -18,8 +18,6 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
-from maru.identity.queries import resolve_active_verified_person_reference_by_email
-
 from . import commands, host_commands, host_queries, queries
 from .authorization import (
     AuthorizedProgrammeScope,
@@ -28,7 +26,6 @@ from .authorization import (
 )
 from .host_catalogs import HOST_TERMINAL_STATES, MAX_HOSTS_PER_ITEM
 from .host_forms import (
-    ProgrammeHostInvitationForm,
     ProgrammeHostReinvitationForm,
     ProgrammeHostRemovalForm,
 )
@@ -42,7 +39,6 @@ if TYPE_CHECKING:
     from .workbench_forms import ProgrammeWorkbenchForm
 
 _FORMS: dict[str, type[ProgrammeWorkbenchForm]] = {
-    "invite": ProgrammeHostInvitationForm,
     "reinvite": ProgrammeHostReinvitationForm,
     "remove": ProgrammeHostRemovalForm,
 }
@@ -264,24 +260,8 @@ def _manager_submit(
             expected_host_version=values["expected_host_version"],
         )
         return
-    if task == "invite":
-        person = resolve_active_verified_person_reference_by_email(
-            email=values["recipient_email"]
-        )
-        if person is None:
-            raise ValidationError(
-                {
-                    "recipient_email": (
-                        "This address cannot receive a Programme invitation. "
-                        "Use an existing active verified person."
-                    )
-                }
-            )
-        account_id = person.account_id
-        host_version = 0
-    else:
-        account_id = context["entry"].account_id
-        host_version = values["expected_host_version"]
+    account_id = context["entry"].account_id
+    host_version = values["expected_host_version"]
     host_commands.invite_programme_host(
         **common,
         invitation=ProgrammeHostInvitationInput(
@@ -301,7 +281,7 @@ def _write(scope: ProgrammeWorkbenchRequest) -> None:
 
 
 def _selection(request: HttpRequest, task: str, host_id: UUID | None) -> None:
-    if request.GET or request.FILES or task not in _LABELS:
+    if request.GET or request.FILES or task not in _LABELS or task == "invite":
         raise ValueError
     if (host_id is not None) != (task in {"reinvite", "remove", "history"}):
         raise ValueError

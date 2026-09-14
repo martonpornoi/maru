@@ -47,6 +47,10 @@ from maru.programme.host_inputs import (
     ProgrammeHostInvitationInput,
     ProgrammeHostResponseInput,
 )
+from maru.programme.host_invitation_preview import (
+    prepare_host_invitation_preview,
+    verify_host_invitation_preview,
+)
 from maru.programme.host_queries import (
     ProgrammeHostReadRequest,
     load_programme_host_dependencies,
@@ -72,6 +76,7 @@ from maru.programme.readiness import (
     PROGRAMME_INTEGRITY_CONTRACT,
     programme_database_integrity_is_ready,
 )
+from maru.programme.workbench_queries import ProgrammeWorkbenchRequest
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.integration.test_programme_commands import (
     _AllowThenDenyProgrammeAuthorizer,
@@ -199,21 +204,48 @@ def test_guided_forms_preserve_real_host_versions_and_local_minute_intent(world)
     )
     assert form.is_valid(), form.errors
     values = form.cleaned_data
+    scope = ProgrammeWorkbenchRequest(
+        manager.id, common["organization_id"], common["edition_id"], uuid4()
+    )
+    selection = prepare_host_invitation_preview(
+        scope,
+        item_id=common["item_id"],
+        intent=form.to_intent(),
+        authorizer=common["authorizer"],
+    )
+    assert selection.person_id == person.id
+    assert ProgrammeHostRelationship.objects.count() == 0
+    # Synthetic Identity change before the first confirmation must not retarget it.
+    old_address = person.email
+    person.email = "moved-host@example.invalid"
+    person.save(update_fields=["email"])
+    other = AccountFactory(email=old_address)
+    verified = verify_host_invitation_preview(
+        scope, item_id=common["item_id"], intent=form.to_intent(), proof=selection.proof
+    )
     invited = invite_programme_host(
         **common,
         actor_id=manager.id,
         correlation_id=uuid4(),
         idempotency_key=values["idempotency_key"],
         reason=values["reason"],
-        invitation=ProgrammeHostInvitationInput(
-            person.id,
-            values["role"],
-            values["title"],
-            values["briefing"],
-            values["expected_version"],
-            0,
-        ),
+        invitation=verified.intent.invitation(verified.person_id),
     )
+    assert (
+        ProgrammeHostRelationship.objects.get(id=invited.host_id).account_id
+        == person.id
+    )
+    assert not ProgrammeHostRelationship.objects.filter(account_id=other.id).exists()
+    recovered = invite_programme_host(
+        **common,
+        actor_id=manager.id,
+        correlation_id=uuid4(),
+        idempotency_key=verified.intent.idempotency_key,
+        reason=verified.intent.reason,
+        invitation=verified.intent.invitation(verified.person_id),
+    )
+    assert recovered == replace(invited, replayed=True)
+    assert ProgrammeHostRevision.objects.count() == 1
     response = ProgrammeHostResponseForm(
         data={
             "expected_item_version": str(invited.resulting_item_version),
