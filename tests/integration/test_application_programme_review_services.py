@@ -28,6 +28,11 @@ from maru.applications.programme_review_queries import (
     list_self_programme_decisions,
 )
 from maru.applications.programme_review_rules import accepted_review_is_effective
+from maru.applications.programme_review_setup_queries import (
+    get_programme_review_setup,
+    get_programme_review_setup_policy,
+    list_programme_review_setup_calls,
+)
 from tests.integration.test_application_programme_services import (
     _AUTHORIZER,
     _admit_future_programme_effects,
@@ -39,6 +44,40 @@ pytestmark = [
     pytest.mark.integration,
     pytest.mark.usefixtures(_admit_future_programme_effects.__name__),
 ]
+
+
+def test_review_manager_setup_is_scoped_audited_and_separate_from_case_content():
+    """Maintain native setup discovery acceptance while ADR 0100 defers execution."""
+    world = create_review_world()
+    request = world.read(
+        world.call.manager.id,
+        MANAGE_REVIEW,
+        fields=frozenset({"review_setup"}),
+    )
+    page = list_programme_review_setup_calls(request=request, authorizer=_AUTHORIZER)
+    assert [item.call_id for item in page.items] == [world.call.call_id]
+    context = get_programme_review_setup(
+        request=request,
+        call_id=world.call.call_id,
+        authorizer=_AUTHORIZER,
+    )
+    assert context.policy_version == 1
+    assert context.questions
+    assert not hasattr(context, "answers")
+    policy = get_programme_review_setup_policy(
+        request=request,
+        call_id=world.call.call_id,
+        version=1,
+        authorizer=_AUTHORIZER,
+    )
+    assert policy.policy_id == world.policy_id
+    assert policy.reason == "Pin explicit synthetic review policy."
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        get_programme_review_detail(
+            request=request,
+            case_id=world.case_id,
+            authorizer=_AUTHORIZER,
+        )
 
 
 def test_complete_independent_review_decision_and_recipient_acknowledgement() -> None:

@@ -1,0 +1,11 @@
+<ol class="call-cards">
+{% for stage in definition.stages %}
+  <li><h3>Stage {{ forloop.counter }}: {{ stage.code }}</h3>
+    <p>Required independent reviews: {{ stage.required_reviews }}. Withhold structured identity: {{ stage.anonymous|yesno:"Yes,No" }}. Discussion after own complete score: {{ stage.discussion|yesno:"Yes,No" }}.</p>
+    <ul>{% for criterion in stage.criteria %}<li>{{ criterion.label }} ({{ criterion.code }}): {{ criterion.minimum }} through {{ criterion.maximum }}, inclusive.</li>{% endfor %}</ul>
+    <h4>Visible questions</h4><ul>{% for label in stage.question_labels %}<li>{{ label }}</li>{% endfor %}</ul>
+  </li>
+{% empty %}<li>No stages defined yet.</li>{% endfor %}
+</ol>
+<h3>Decision templates</h3>
+{% for item in definition.templates %}<section><h4>{{ item.outcome_label }}</h4><p>{{ item.text|linebreaksbr }}</p><p>Request receipt: {{ item.acknowledgement_required|yesno:"Yes,No" }}.</p></section>{% empty %}<p>No decision templates defined yet.</p>{% endfor %}

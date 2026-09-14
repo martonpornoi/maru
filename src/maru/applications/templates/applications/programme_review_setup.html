@@ -1,0 +1,44 @@
+{% extends "admin/base_site.html" %}
+{% load static tz %}
+{% block title %}Programme review setup · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Programme / Review setup</div>{% endblock %}
+{% block content %}
+<div class="programme-calls">
+  <h1>Programme review setup</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Exact Department review manager</summary><p>This workspace shows call configuration and review policy, not proposal answers, contributor profiles, scores or case discussions. Review, moderation and final decision require separate authority.</p><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}. Each destination checks authority again.</p></details>
+  <nav aria-label="Review setup tasks"><a href="{{ root_url }}">Choose a call</a>{% if source %} · <a href="{{ root_url }}{{ source.call.call_id }}/">Compose a policy for this call</a>{% if source.policy_version %} · <a href="{{ root_url }}{{ source.call.call_id }}/policies/{{ source.policy_version }}/">Latest saved policy (version {{ source.policy_version }})</a>{% endif %}{% endif %}</nav>
+  {% if page %}<ul class="call-cards">{% for call in page.items %}<li><h2><a href="{{ root_url }}{{ call.call_id }}/">{{ call.name }}</a></h2><p>{{ call.code }} · {{ call.status }} · Definition version {{ call.definition_version }}</p></li>{% empty %}<li>No calls are available for review setup in this Department.</li>{% endfor %}</ul>{% if page.next_cursor %}<p><a href="{{ root_url }}?after={{ page.next_cursor }}">Next page of calls</a></p>{% endif %}
+  {% elif source %}
+    <h2>{{ source.call.name }}</h2><p>{{ source.call.code }} · {{ source.call.status }} · Definition version {{ source.call.definition_version }} · Latest saved policy version {{ source.policy_version }}</p>
+    {% if not source.writable %}<p>Planning is closed. Saved configuration remains read-only; no new policy is permitted.</p>{% endif %}
+    {% if policy %}
+      <h2>Saved immutable policy version {{ policy.version }}</h2><p>Created {% timezone "UTC" %}{{ policy.created_at|date:"c" }}{% endtimezone %} (UTC).</p><h3>Creation reason</h3><p>{{ policy.reason|linebreaksbr }}</p>
+      {% include "applications/programme_review_policy_summary.html" with definition=summary %}
+      <nav aria-label="Policy history">{% if policy.version > 1 %}<a href="{{ root_url }}{{ source.call.call_id }}/policies/{{ policy.version|add:'-1' }}/">Previous policy version</a>{% endif %}{% if policy.version < source.policy_version %} · <a href="{{ root_url }}{{ source.call.call_id }}/policies/{{ policy.version|add:'1' }}/">Next policy version</a>{% endif %}</nav>
+    {% elif source.call.status == 'draft' %}<p>Review setup is pending. Finish and freeze this call's question configuration with its owner first. Activation may precede the call's future opening date; it does not publish or activate a Programme profile.</p>
+    {% elif form %}
+      <h2>Unsaved proposed policy</h2><p>Nothing in this composer is saved until you review and confirm the entire policy. Saved versions affect only deliberately opened future cases. There is no automatic score threshold, ranking or decision.</p>
+      {% if proposed and mode != 'stage' and mode != 'templates' %}{% include "applications/programme_review_policy_summary.html" with definition=summary %}{% endif %}
+      <form method="post" data-call-command data-call-pending="{% if form.is_bound or proposed.stages or proposed.templates %}true{% else %}false{% endif %}">{% csrf_token %}
+        {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this policy request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+        {% if mode == 'stage' %}<p>Define one stage. Supply at least one complete criterion row; leave unused rows entirely empty. Integer bounds are inclusive. Structured identity withholding does not remove identity written into free text.</p>{% endif %}
+        {% for field in form %}{% if field.is_hidden %}{{ field }}{% elif 'criterion_' not in field.name %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+        {% for row, populated in criterion_rows %}<details {% if forloop.first or populated %}open{% endif %}><summary>Criterion {{ forloop.counter }}{% if not forloop.first %} (optional){% endif %}</summary><fieldset><legend>Criterion {{ forloop.counter }} (leave all fields empty if unused)</legend>{% for field in row %}<div>{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}</fieldset></details>{% endfor %}
+        <p data-call-dirty role="status" hidden>This proposed policy is not confirmed as saved. Keep this page and inspect saved history after an uncertain attempt.</p>
+        {% if mode == 'stage' %}<button name="action" value="keep-stage" type="submit">Keep this stage in the unsaved policy</button>
+        {% elif mode == 'templates' %}<button name="action" value="keep-templates" type="submit">Keep these unsaved decision templates</button>
+        {% elif mode == 'confirm' %}<p>Original policy sequence: {{ form.expected_version.value }}. Saving appends one immutable version; existing cases keep their pinned policy.</p><button name="action" value="save" type="submit">Save confirmed policy</button><button name="action" value="back" type="submit" formnovalidate>Return to the unsaved policy overview</button><p>If the sequence is stale, inspect saved history first. You can then return to the overview and explicitly refresh the intent without losing your proposed stages or templates.</p>
+        {% else %}
+          {% for stage in proposed.stages %}<fieldset><legend>Stage {{ forloop.counter }}: {{ stage.code }}</legend><button name="action" value="edit:{{ forloop.counter0 }}" type="submit">Edit stage {{ forloop.counter }}</button><button name="action" value="remove:{{ forloop.counter0 }}" type="submit">Remove unsaved stage {{ forloop.counter }}</button>{% if not forloop.first %}<button name="action" value="up:{{ forloop.counter0 }}" type="submit">Move stage {{ forloop.counter }} earlier</button>{% endif %}{% if not forloop.last %}<button name="action" value="down:{{ forloop.counter0 }}" type="submit">Move stage {{ forloop.counter }} later</button>{% endif %}</fieldset>{% endfor %}
+          {% if proposed.stages|length < 8 %}<button name="action" value="add-stage" type="submit">Add an explicit stage</button>{% endif %}<button name="action" value="templates" type="submit">Define decision templates</button>
+          {% if proposed.stages and proposed.templates %}<button name="action" value="confirm" type="submit">Review complete policy before saving</button>{% endif %}
+          <p>Original policy sequence: {{ form.expected_version.value }}. Inspect current history before refreshing: refresh retains your proposed policy but starts a new retry intent against the latest sequence.</p><button name="action" value="refresh" type="submit">Explicitly refresh the policy sequence and retry intent</button>
+        {% endif %}
+      </form>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

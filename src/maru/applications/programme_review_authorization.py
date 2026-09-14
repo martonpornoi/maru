@@ -39,6 +39,7 @@ PROGRAMME_REVIEW_CAPABILITIES: Final = (
 REVIEW_FIELDS: Final = frozenset(
     {"review_context", "review_answers", "review_evidence"}
 )
+REVIEW_MANAGER_FIELDS: Final = frozenset({"review_context", "review_setup"})
 DECISION_SELF_FIELDS: Final = frozenset({"decision_message", "own_acknowledgement"})
 _DEFAULT_AUTHORIZER: Final = DEFAULT_APPLICATIONS_PROGRAMME_AUTHORIZER
 
@@ -144,9 +145,7 @@ def authorize_programme_review_scope(
         )
     else:
         ceiling = (
-            frozenset({"review_context"})
-            if capability_code == MANAGE_REVIEW
-            else REVIEW_FIELDS
+            REVIEW_MANAGER_FIELDS if capability_code == MANAGE_REVIEW else REVIEW_FIELDS
         )
         if department_id is None or not requested_fields <= ceiling:
             raise ApplicationsProgrammeAuthorizationDeniedError
