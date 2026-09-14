@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}My Programme reviews · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Programme / Review / My reviews</div>{% endblock %}
+{% block content %}
+<div class="programme-calls">
+  <h1>My Programme reviews</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · My independently authorized review assignments</summary><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}.</p><p>A named assignment is not a permission grant. Content requires your own conflict clearance, current source and independent field authority. This workspace cannot manage peers, moderate or decide outcomes.</p></details>
+  <nav aria-label="My review tasks"><a href="{{ root_url }}">Choose my review assignment</a>{% if source %} · <a href="{{ root_url }}{{ source.case.case_id }}/{{ source.assignment_id }}/">Assignment overview</a>{% endif %}</nav>
+  {% if page %}
+    <h2>My pending and active assignments</h2><p>Call labels and exact revision references do not disclose private proposal titles. Previous-stage assignments remain available for late recusal.</p>
+    <ul class="call-cards">{% for row in page.items %}<li><h3><a href="{{ root_url }}{{ row.case.case_id }}/{{ row.assignment_id }}/">{{ row.case.call_name }} · Revision {{ row.case.sequence }} · {{ row.rubric.code }}</a></h3><p>{{ row.state }} · Current case stage {{ row.case.stage_code }} · {{ row.case.state }}</p>{% if not row.case.current_revision %}<p>The pinned seal is no longer current; no fresh review work is offered.</p>{% endif %}</li>{% empty %}<li>No pending or active review assignments are available to you in this Department. Assignment and independent review authority are both required.</li>{% endfor %}</ul>
+    {% if page.next_cursor %}<p><a href="{{ root_url }}?after={{ page.next_cursor }}">Next page of my assignments</a></p>{% endif %}
+  {% elif source %}
+    <h2>{{ source.case.call_name }} · Submitted revision {{ source.case.sequence }}</h2>
+    <p>My assignment: {{ source.state }} · Original stage {{ source.rubric.code }} · Policy {{ source.case.policy_version }}.</p><p>Current case: {{ source.case.state }} · Stage {{ source.case.stage_code }} · Version {{ source.case.version }}.</p>
+    <details><summary>Exact retained references</summary><p>Case {{ source.case.case_id }} · Assignment {{ source.assignment_id }} · Seal {{ source.case.revision_id }}</p></details>
+    {% if not source.writable %}<p>Planning is closed; no fresh review action is offered.</p>{% endif %}
+    {% if not source.case.current_revision %}<p>This is no longer the current submitted seal. No newer source is silently selected.</p>{% endif %}
+    {% if source.state == "pending" %}<p>Declare your own conflict status before reading any protected submission content.</p>{% endif %}
+    {% if source.state == "removed" or source.state == "recused" %}<p>This assignment has ended. Evidence is retained; the assignment cannot be silently reactivated.</p>{% endif %}
+    {% if task == "overview" %}
+      <h2>Next review task</h2><ul>
+      {% if "clear" in actions %}<li><a href="clear/">Declare no conflict of interest</a></li>{% endif %}
+      {% if "recuse" in actions %}<li><a href="recuse/">Recuse myself with a reason</a></li>{% endif %}
+      {% if "score" in actions %}<li><a href="score/">Submit a complete independent rubric</a></li>{% endif %}
+      {% if "discuss" in actions %}<li><a href="discuss/">Add peer discussion</a></li>{% endif %}
+      {% for section in content_links %}<li><a href="{{ section }}/">Read permitted {{ section }}</a></li>{% endfor %}
+      </ul>
+      {% if not actions and not content_links %}<p>No fresh task or protected content is available in this assignment state. An original uncertain POST can still recover its receipt where current authority permits.</p>{% endif %}
+      <h2>Original stage rubric</h2><p>Configured independent reviews required: {{ source.rubric.required_reviews }}. No score, total, ranking or acceptance threshold is implied.</p><ul>{% for criterion in source.rubric.criteria %}<li>{{ criterion.label }} ({{ criterion.code }}): {{ criterion.minimum }} through {{ criterion.maximum }}, inclusive.</li>{% endfor %}</ul>
+      {% if source.rubric.anonymous %}<p>Structured contributor identity is withheld in this stage. Free text can still identify someone; anonymous authorship is not guaranteed.</p>{% endif %}
+      {% if source.rubric.discussion %}<p>Peer discussion becomes available after your own score; peers' scores and identities are not shown.</p>{% else %}<p>Peer discussion is disabled for this stage.</p>{% endif %}
+    {% endif %}
+    {% if result %}<div role="status"><h2>Review action confirmed</h2><p>{% if result.replayed %}The original receipt was recovered; no second change was made.{% else %}Your exact review action was recorded.{% endif %}</p><p>Receipt {{ result.receipt_id }} · Confirmed case version {{ result.version }}</p></div>
+    {% elif form %}
+      <h2>{% if task == "clear" %}Declare my conflict status{% elif task == "recuse" %}Recuse myself{% elif task == "score" %}Complete independent rubric{% else %}Peer discussion{% endif %}</h2>
+      {% if task == "score" %}<p>Enter every configured criterion deliberately. This appends a new review; it never overwrites earlier evidence. Scores are not prefilled or recommended.</p>{% elif task == "recuse" %}<p>Recusal ends this assignment and removes its effective review contribution without deleting history. It may invalidate a previously accepted decision's effectiveness.</p>{% endif %}
+      <form method="post" data-call-command data-call-pending="{% if form.is_bound %}true{% else %}false{% endif %}">{% csrf_token %}<input type="hidden" name="action" value="{{ task }}">
+        {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+        {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+        <p>Original case version: {{ form.expected_version.value }}. The assignment, rubric and retry proof are not refreshed after an uncertain attempt.</p><p data-call-dirty role="status" hidden>This review action is not confirmed. Keep this page after an uncertain attempt and inspect current state before starting a different intent.</p><button type="submit">Confirm exact review action</button>
+      </form>
+    {% elif task == "clear" or task == "recuse" or task == "score" or task == "discuss" %}<p>No fresh action is available for the current case and assignment state. Existing evidence remains retained.</p>{% endif %}
+    {% if task == "context" %}<h2>Permitted exact-revision context</h2><p>Track {{ review_context.selection.track_code }} · Format {{ review_context.selection.format_code }} · Requested duration {{ review_context.selection.requested_duration_minutes }} minutes.</p>{% if source.rubric.anonymous %}<p>Structured contributor profiles are withheld; free text may still identify people.</p>{% else %}<ul class="call-cards">{% for contributor in review_context.contributors %}<li><h3>{{ contributor.public_name }}</h3><p>{{ contributor.biography|linebreaksbr }}</p></li>{% empty %}<li>No contributor profile is included in this projection.</li>{% endfor %}</ul>{% endif %}{% endif %}
+    {% if task == "answers" %}<h2>Permitted exact-revision answers</h2><p>Only this stage's authorized question allowlist is shown. Links and files do not become download or identity grants.</p><ul class="call-cards">{% for row in answers %}<li><h3>{{ row.label }}</h3><p>Classification {{ row.classification }}</p><p>{{ row.text|linebreaksbr }}</p></li>{% empty %}<li>No answers are available in this permitted projection.</li>{% endfor %}</ul>{% endif %}
+    {% if task == "evidence" %}<h2>My review history and permitted discussion</h2><p>Append-only history in ascending case-version order. Peer scores, identities and private rationale are not exposed. Discussion text can contain voluntary identifying information.</p><ul class="call-cards">{% for row in evidence %}<li><h3>Version {{ row.version }} · {{ row.action }}</h3>{% if row.scores %}<dl>{% for code, value in row.scores %}<dt>{{ code }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>{% endif %}{% if row.text %}<p>{{ row.text|linebreaksbr }}</p>{% endif %}{% if row.reason %}<h4>My private rationale</h4><p>{{ row.reason|linebreaksbr }}</p>{% endif %}</li>{% empty %}<li>No evidence is available on this permitted page.</li>{% endfor %}</ul>{% if next_evidence %}<p><a href="?after={{ next_evidence }}">Next page of permitted history</a></p>{% endif %}{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

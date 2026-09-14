@@ -1,5 +1,19 @@
 # Applications API contract
 
+The dormant [own reviewer workspace](../product/page-contracts/programme-reviewer-work.md)
+reserves `mine/` and `mine/{case_id}/{assignment_id}/` beneath the same exact
+Department review root. Separate `clear/`, `recuse/`, `score/`, `discuss/` tasks
+use ordinary strict CSRF-protected forms and canonical review commands. Each
+POST retains the original assignment-stage rubric, case version and retry UUID.
+`context/`, `answers/` and `evidence/` are separate protected GET projections with
+independent field ceilings. Discovery uses an exclusive assignment UUID cursor;
+evidence uses an exclusive canonical positive case-version cursor. Both are
+bounded and complete. No JSON/REST/OpenAPI operation or production mount is added.
+`get_programme_reviewer_work` reads retained own metadata, including ended
+assignments, without granting protected content; `list_programme_reviewer_work`
+filters own pending/active assignments before pagination. Each query separately
+requires exact Department review_context authority and a minimized read audit.
+
 The dormant [named-reviewer management forms](../product/page-contracts/programme-review-management.md)
 reserve `cases/`, `cases/{case_id}/`, `cases/{case_id}/assign/` and
 `cases/{case_id}/assignments/{assignment_id}/remove/` beneath the exact Department

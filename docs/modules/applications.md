@@ -339,7 +339,12 @@ existing append-only owner command. Exact-seal selection and case opening now
 connect to separately authorized [named-reviewer management](../product/page-contracts/programme-review-management.md):
 complete retained rosters, known-email preview and exact-person confirmation or
 reasoned removal. Assignment grants no review capability or content access.
-Independent reviewer/moderator/decision/conversion tasks remain #108.
+The independently admitted [own reviewer workspace](../product/page-contracts/programme-reviewer-work.md)
+adds own conflict declarations/recusal, complete reasoned rubrics, permitted
+discussion and independently field-scoped sealed content/history. Its original
+assignment-stage metadata supports uncertain receipt replay without loading
+now-denied content. Moderator/decision/conversion and dedicated safe structured
+answer viewers remain #108; no production route or profile is activated.
 
 The [personal decision workspace](../product/page-contracts/programme-decision-receipts.md)
 adds reserved unmounted history and exact-message tasks with explicit own receipt.

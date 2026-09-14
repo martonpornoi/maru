@@ -69,7 +69,7 @@ command digest. A newer seal conflicts instead of being silently substituted.
 Trusted current-seal callers may retain None; command fields and absent-reference
 digest shape remain unchanged for historical retry receipts. The dormant browser
 case-opening task requires this proof and connects to separate named assignment
-management. Reviewer/moderator/decider work and accepted conversion remain #108
+management. Moderator/decider work and accepted conversion remain #108
 continuations.
 
 ## Roles and transitions
@@ -97,8 +97,29 @@ they send no invitation/email and grant no review access. Pending/active histori
 stage assignments may be removed late where the canonical source/planning guards
 allow it. Navigation checks `review_setup` and `review_context` independently and
 checks projection/admission again before and after rendering. See the recovery
-runbook for signing-key rotation and uncertain-intent handling. Content review,
-moderation, final decisions and accepted conversion remain separate #108 tasks.
+runbook for signing-key rotation and uncertain-intent handling. Moderation,
+final decisions and accepted conversion remain separate #108 tasks.
+
+The dormant [own reviewer workspace](../product/page-contracts/programme-reviewer-work.md)
+adds independently authorized own-assignment discovery, conflict clearance or
+recusal, complete explicit integer rubrics, and separately labelled peer
+discussion. `list_programme_reviewer_work` filters own pending/active assignments
+before bounded pagination and batches score-existence flags; the exact getter
+also retains removed/recused metadata for recovery. Shared call/seal labels do
+not import manager authority. Original immutable assignment-stage rubric and an
+own-score-exists eligibility flag are content-free `review_context`, not answer
+or evidence disclosure. No score is prefilled, totalled, ranked or recommended.
+
+Separate context, answer and evidence pages call `get_programme_review_detail`
+with the independently requested field only. Current active assignment, exact
+submitted seal, contributor exclusions, anonymity and additional sensitive
+authority still apply. Rendered output is compared against reauthorized owner
+projections before and after rendering. Pending assignments never load content.
+Each command POST first reads only scoped retained own metadata, preserving its
+original rubric/version/retry across stage or source changes. Successful old
+receipt/late recusal renders no now-denied submission content. Typed safe file,
+person/domain reference and other dedicated structured-answer viewers remain
+explicit #108 work; no unsafe reference resolution or download is invented.
 
 Every staff purpose also requires an active verified person, exact organization
 and edition, current owner Department, and current policy/field proof.
