@@ -1277,6 +1277,14 @@ architecture documents, implementation issues, tests, and release notes.
   Review data and other recipients' responses must not leak through that history.
   An accept decision does not itself create a Programme item or host: the later
   typed adapter must independently verify the still-effective exact decision.
+  Guided decision composition must preview the exact pinned template and
+  recipient-visible text separately from private rationale, and bind explicit
+  confirmation to that original actor/scope/case/version/retry/outcome/content
+  intent. Original receipt recovery must not require a newly permitted private
+  content read. Independently authorized deciders may inspect retained outgoing
+  messages under the exact case's `review_evidence` ceiling and sensitive-read
+  guards, without a recipient directory, counts or others' acknowledgement state;
+  this must not broaden reviewer or moderator history.
 - **PRG-005 — Accepted-item advance:** Acceptance must create tracked work for
   public copy, host confirmation, technical needs, accessibility, media
   consent, schedule availability, files, and other configured readiness.

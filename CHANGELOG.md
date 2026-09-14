@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant independent Programme decisions: deliberate outcomes, all-stage
+  readiness, exact recipient-message preview separated from private rationale,
+  signed confirmation and retained outgoing history. Original receipts remain
+  recoverable without renewed private reads. No production route or profile is
+  activated, and acceptance does not create an item or host relationship.
+
 - Added dormant independent Programme moderation: labelled case discovery,
   protected version-bound history, reasoned moderation, one-stage progression
   and deliberate reopening. Original receipts remain recoverable without a

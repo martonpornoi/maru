@@ -40,6 +40,8 @@ from .programme_reviewer_views import _answer_text
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from .programme_review_inputs import ProgrammeReviewStageInput
+
 _SOURCE = "programme-moderation"
 _ACTIONS = {
     "moderate": ProgrammeReviewAction.MODERATED,
@@ -216,13 +218,15 @@ def _submit(
         return None, 503
 
 
-def _stage_label(source: queries.ModerationCase, index: Any) -> str:
-    if type(index) is not int or not 0 <= index < len(source.stages):
+def _stage_label(stages: tuple[ProgrammeReviewStageInput, ...], index: Any) -> str:
+    if type(index) is not int or not 0 <= index < len(stages):
         raise ProgrammeReviewUnavailableError
-    return f"{index + 1}. {source.stages[index].code}"
+    return f"{index + 1}. {stages[index].code}"
 
 
-def _projection(detail: Any, source: queries.ModerationCase) -> dict[str, Any]:
+def _projection(
+    detail: Any, stages: tuple[ProgrammeReviewStageInput, ...]
+) -> dict[str, Any]:
     context: dict[str, Any] = {}
     if detail.context_json is not None:
         context["review_context"] = json.loads(detail.context_json)
@@ -252,11 +256,11 @@ def _projection(detail: Any, source: queries.ModerationCase) -> dict[str, Any]:
                 ("to_stage", "Destination stage"),
             ):
                 if key in payload:
-                    facts.append((label, _stage_label(source, payload[key])))
+                    facts.append((label, _stage_label(stages, payload[key])))
             rows.append(
                 {
                     "version": row["version"],
-                    "stage": _stage_label(source, row["stage"]),
+                    "stage": _stage_label(stages, row["stage"]),
                     "action": row["action"].replace("_", " "),
                     "reason": row.get("reason", ""),
                     "text": payload.get("text", ""),
@@ -323,7 +327,7 @@ def _detail(
             detail = facts = None
         else:
             context.update(
-                _projection(detail, source), facts=facts, snapshot=detail.version
+                _projection(detail, source.stages), facts=facts, snapshot=detail.version
             )
     if (
         request.method == "GET"
@@ -339,7 +343,7 @@ def _detail(
         end = len(source.stages) if form.is_bound else source.case.stage + 1
         form.fields["stage"].widget.choices = [
             ("", "Choose a stage deliberately"),
-            *[(i, _stage_label(source, i)) for i in range(end)],
+            *[(i, _stage_label(source.stages, i)) for i in range(end)],
         ]
     context["form"] = form
 

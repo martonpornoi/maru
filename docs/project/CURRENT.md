@@ -11,6 +11,21 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's independent moderation workspace is delivered through
+[PR #125](https://github.com/martonpornoi/maru/pull/125), protected squash
+`cb36b8eee6d7f4919fa3254f7fb543711c3a14ed` at 2026-09-14 19:05:32 UTC.
+Its tree equals certified head `91af3ccfc673de6d9280671ceb224b32baaf5807`;
+clean local main and origin/main match. All eight retained local gates passed
+in 19m26s (7,050 units in 63.60s and 85 frontend tests). Hosted units passed in
+75.26s, quality in 29m07s, documentation in 27m01s and workflow in 29m36s.
+Exact-head PR gate and CodeQL passed without canonical or hosted repair/rerun.
+The observed 53-second quality margin is not guaranteed; #113 retains the risk.
+One native scenario remains unexecuted #102 debt; genuine human acceptance
+remains #92. No writer, schema, profile or production route changed. See the
+[protected moderation checkpoint](../checkpoints/2026-09-14-programme-moderation-protected-delivery.md).
+
+### Preceding own reviewer delivery
+
 #108's own reviewer workspace is delivered through
 [PR #124](https://github.com/martonpornoi/maru/pull/124), protected squash
 `95ed7b847bf942be4ffcc07438d864fdb1b53961` at 2026-09-14 17:39:24 UTC.
@@ -229,8 +244,32 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-moderation-workspace`, from protected PR #124.
-The candidate adds independent moderator discovery, inspectable protected
+Branch: `codex/programme-decision-composition`, from protected PR #125.
+The local candidate implements independent final/wait-list composition with
+all-stage readiness, exact pinned recipient-message preview, separate private
+rationale, signed confirmation and retained decider-only outgoing history.
+Original confirmed receipts precede private reads; templates and history retain
+independent field/sensitive/actor guards. No new writer, schema, profile,
+production route, recipient directory or PostgreSQL-policy change.
+
+Inexpensive preflight: 7,175 units passed in 64.80s with three existing URLField
+warnings; 223 focused decision/moderation/containment tests passed in 3.03s.
+Focused typing, NumPy and semantic documentation checks passed; final clean-head
+certification and hosted acceptance are pending, not claimed by this preflight.
+Synthetic actual-form/signature browser evidence observed discovery, blank
+outcome, exact preview, tamper rejection/re-preview, minimal receipt, focused
+stale-input recovery, read-only/final and generic denial at 1280 CSS pixels.
+One H1/main and no document overflow were observed. Native wait-list successor,
+history and original receipt scenario is maintained but unexecuted #102 debt;
+human acceptance remains #92. See the
+[decision composition checkpoint](../checkpoints/2026-09-14-programme-decision-composition.md).
+Next: exact protected delivery, then accepted conversion and remaining #108
+connections, safe structured viewers, host retry recovery and guided setup.
+#102/#97/#109/#92 remain final gates before promotion or closing #48/#108.
+
+### Preceding moderation candidate evidence
+
+The protected candidate adds independent moderator discovery, inspectable protected
 evidence and deliberate moderation/stage movement/reopening. Original inspected
 version/retry intent and separate reviewer/manager/decider authority are retained.
 Fresh reopening follows existing OPEN/WAITLISTED rules, never widened final-case
@@ -245,8 +284,8 @@ labelled reopening and focused stale input retention, with one H1/main and no
 page overflow. Final, readonly and denied states were inspected. It does not
 claim native persistence or genuine human acceptance. One native scenario is
 maintained without execution or invented weights (#102); full human matrix
-remains #92. Exact clean-commit certification and hosted protected acceptance
-remain pending. See the
+remains #92. Subsequent exact clean-commit and hosted protected acceptance passed
+as recorded above. See the
 [moderation checkpoint](../checkpoints/2026-09-14-programme-moderation-workspace.md).
 
 ### Preceding own reviewer candidate evidence

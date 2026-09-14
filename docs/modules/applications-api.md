@@ -1,5 +1,19 @@
 # Applications API contract
 
+The dormant [decision composition tasks](../product/page-contracts/programme-decision-composition.md)
+reserve `decisions/` and `decisions/{case}/` beneath the exact-Department review
+root. `decide/` GET inspects all-stage readiness; POST requires either `preview`
+or `confirm`. Closed fields retain original version/retry, explicit outcome,
+recipient text and separate private rationale. Confirmation additionally requires
+the purpose-signed exact preview proof and an explicit checkbox. Re-preview never
+writes; changed intent cannot reuse a proof. Original confirmed POST reaches the
+canonical receipt before private metadata/evidence reads, with current route
+admission still required. `context/`, `answers/`, `evidence/` and outgoing
+`messages/` authorize independently; history cursors require an inspected positive
+case version and moved snapshots return 409 without mixed content. Messages are
+decider-only and expose no recipient roster or other person's receipt state.
+These are dormant HTML adapters, not mounted JSON/REST/OpenAPI operations.
+
 The dormant [moderation tasks](../product/page-contracts/programme-moderation.md)
 reserve `moderation/` under the exact-Department review root. The queue and
 `{case}/` overview use `list_programme_moderation_cases` and
