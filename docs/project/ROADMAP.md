@@ -164,15 +164,16 @@ labelled core-item work,
 separate delivery/readiness/public-copy tasks and protected history. PR #114 adds
 explicit readiness evidence, Department discussion, public-copy withdrawal and
 separate organizer/person-owned hosting tasks. Applications intake/review/conversion,
-starting with the dedicated call workspace delivered through PR #115 and its
-locally implemented creation/section/question/condition increment awaiting
-exact-head protected delivery, plus Department selection/reassignment,
+starting with the dedicated call workspace delivered through PR #115 and the
+creation/section/question/condition composer delivered through PR #116,
+continues next with Department selection/reassignment. Proposal/review/conversion,
 ordinary task continuations and accountable setup remain required increments;
 none is replaced by specialist records or closure of a supporting PR. #113 records
 the measured non-database quality-runtime margin. PR #116's original quality job
-now exceeded 30 minutes, making #113 an actual protected-delivery blocker. A
-bounded repair aligns routine Sphinx parallelism with existing full/local checks;
-fresh exact-head and hosted evidence must pass before resuming this decomposition.
+exceeded 30 minutes. Its protected repair aligned routine Sphinx parallelism with
+full/local checks and passed hosted quality in 26m35s. This clears that blocker,
+but the observed 3m25s margin is modest; #113 remains open for profiling and
+stronger future headroom while this decomposition resumes.
 Delivered with #99, ADR 0098 adds budgeted CI assignments and measured
 headroom to address recurring historical-test timeouts without weakening safety
 selection or coverage. Its complete hosted run passed all 39 jobs below 50

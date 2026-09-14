@@ -11,6 +11,25 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's call creation and structured form composition are delivered through
+[PR #116](https://github.com/martonpornoi/maru/pull/116), protected squash
+`c0d8356ba545da1bd08efb060691238116723208` at 2026-09-14 06:02:30 UTC.
+Its tree equals certified head `3bc48d8fdc480f34264ff93b0e5fe52f1e608280`;
+clean local main and origin/main match the squash. All eight retained local
+gates passed in 16m18s: 6,281 units in 38.21s and 81 frontend cases.
+Hosted units passed in 68.82s; quality took 26m35s, documentation 24m32s and
+overall workflow 27m00s. Exact-head PR gate and CodeQL passed.
+The original hosted head timed out in documentation. The repair aligned routine
+Sphinx parallelism with full/local checks, preserving all sources/warnings/gates
+and the 30-minute cap. Its 3m25s observed margin clears this blocker, but #113
+remains open for profiling and stronger headroom. The malformed creation-version
+status is also fixed with five HTTP regressions. Three maintained native cases
+remain #102 debt; the full human matrix remains #92. No schema, production route
+or profile was activated. See the
+[protected composer checkpoint](../checkpoints/2026-09-14-programme-call-composer-protected-delivery.md).
+
+### Preceding call-workspace delivery
+
 The first #108 Applications call workspace is delivered through
 [PR #115](https://github.com/martonpornoi/maru/pull/115), protected squash
 `ae97565ff03005a730ef8d492e2a1f72b04318e7` at 2026-09-14 03:22:08 UTC.
@@ -87,64 +106,30 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-call-composer`, from protected PR #115.
-PR #116 is open, not merged. Its first head
-`814393a2f9bd4fc3173e324f242afbb9d13648e8` passed all eight retained local gates
-in 16m10s (6,274 units in 38.43s), but hosted quality exceeded 30 minutes during
-Sphinx source highlighting. Hosted units and CodeQL passed; the PR gate failed.
-Its archived local receipt is not certification of the repair now in progress.
-#113 is therefore an actual delivery blocker: routine PR Sphinx now requests the
-same `-j auto` parallelism already used by full CI and local certification, keeping
-all warnings/sources/checks and the 30-minute timeout. The previously recorded
-malformed-creation-version status follow-up is also fixed locally: five cases
-verify bound HTTP 400 with no writer and retained input/evidence. All 132 focused
-CI/composer tests pass in 2.17s; fresh full preflight passes 6,281 cases in 39.03s
-and all 498 documentation pages validate. Exact-head certification and hosted
-acceptance of this repair are still pending. See the
-[quality parity checkpoint](../checkpoints/2026-09-14-pr-quality-documentation-parity.md).
+Branch: `codex/programme-call-departments`, from protected PR #116.
+Next bounded increment: independently authorized labelled Department selection
+and confirmed Draft-call reassignment through the existing dual-Department owner
+command. Accountable setup still owns first entry; the chooser must not invent
+edition-wide management, broad Workforce structure access or orphan discovery.
+Keep complete-or-unavailable choices, authorization before labels, required audit,
+reauthorization, original cursor/retry evidence and safe stale/denied states.
 
-The next bounded increment is locally implemented: explicit call creation and
-complete structured section/question/condition editing through the existing owner
-commands, including atomic cross-section moves. Fresh full-unit preflight passes
-6,274 tests in 38.61s; 101 focused composer cases pass in 1.78s. Focused Ruff,
-typing and NumPy documentation pass. An earlier cheap full-unit preflight exposed
-the historical direct-admin-template assumption; an exact inherited-shell check
-now verifies the composer retains the shared shell without broadening containment.
-The 1280-by-720 synthetic browser rehearsal verified creation, labelled options,
-focused error links, pending/stale retention, cross-section/section tasks and
-non-disclosing denied/read-only states. It used mocked non-persisting owner
-commands, not PostgreSQL. Three maintained native owner/replay cases remain
-unexecuted #102 debt; full human acceptance remains #92. Exact-head certification
-and protected delivery of this increment are pending. See the
-[call-composer checkpoint](../checkpoints/2026-09-14-programme-call-composer.md).
+The dedicated call inventory/configuration/lifecycle workspace (PR #115) and
+explicit creation/section/question/condition composer (PR #116) are merged.
+All seventeen types, bounded labelled options, ordering/removal and atomic
+cross-section moves reuse the complete typed owner graph. Creation confirms its
+starting collection and fences edition-local deadlines through owner completion.
+No new writer, schema, generic discriminator access, profile or production route
+was added. Exact protected delivery and the modest CI-parity repair are recorded
+above; prior failed candidates remain separately documented, not success evidence.
 
-The first dedicated Applications call-workspace increment is merged:
-exact-Department named inventory, complete manager configuration, metadata/policy,
-explicit edition-zone deadline replacement, ordered track/format/contributor-field
-tasks and confirmed activation/retirement/successor commands. A lossless adapter
-preserves every untouched question type, policy and source cursor. No new writer,
-schema, generic discriminator access, profile or production route is added.
-Focused database-free feedback passes 225 tests in 1.70s, and all 81 frontend
-cases pass. Final six-module typing, NumPy documentation and the 495-page
-documentation validator pass; exact-head certification and protected delivery
-also passed as recorded above.
-The first exact run stopped on the historical no-template containment assertion:
-6,165 units passed and one failed. The guard now permits only this exact dormant
-template's two identifiers, retains every generic-surface scan and additionally
-walks the entire production URL tree. Its 58 focused HTTP/containment cases pass,
-and fresh full-unit preflight passes all 6,171 cases in 37.28s. Fresh exact-head
-certification then passed. No success receipt was created for the failed
-candidate.
-The synthetic 1280-by-720 rehearsal corrected task order and action labels and
-verified stale-input retention, error focus, immutable, empty and denied states.
-Two maintained native cases remain unexecuted #102 debt; full human matrix is
-#92. See the [call-workspace checkpoint](../checkpoints/2026-09-14-programme-call-workspace.md).
-
-Next: certify and deliver the call composer, then authorized Department selection/reassignment,
-proposal/collaboration/review/conversion tasks and ordinary task connections.
-Keep contributor-owned profiles/acknowledgements, the single submission cursor
-and closed generic seams. Accountable setup and integrated proof follow those
-surfaces; #108 and #48 remain open.
+After Department selection/reassignment, finish proposal/collaboration/review/
+decision/conversion tasks, ordinary connections and accountable setup. Preserve
+contributor-owned profiles/acknowledgements and the single submission cursor.
+#108/#48 remain open; #109 integrated proof, #102 native restoration, #97 recovery
+and #92 human acceptance still precede promotion. The component browser evidence
+is synthetic and non-persisting. #113 remains a measured latency follow-up,
+not an excuse to displace the decomposition while delivery is unblocked.
 
 The second increment is merged: independently authorized Department discussion,
 typed readiness sources, exact public-copy withdrawal and separate organizer /
