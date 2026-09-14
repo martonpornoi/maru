@@ -649,11 +649,39 @@ def test_new_submitted_seal_needs_a_new_case_without_rebinding_old_decision():
         retry_key=uuid4(),
         correlation_id=uuid4(),
     )
+    old_seal = ProgrammeReviewCase.objects.get(id=world.case_id).revision_id
+    with pytest.raises(ProgrammeReviewConflictError):
+        world.command(
+            world.call.manager.id,
+            Intent(
+                Action.CASE_OPENED,
+                world.proposal_id,
+                policy_id=world.policy_id,
+                reference_id=old_seal,
+            ),
+            expected_version=0,
+        )
+    opening_intent = Intent(
+        Action.CASE_OPENED,
+        world.proposal_id,
+        policy_id=world.policy_id,
+        reference_id=sealed.target_id,
+    )
+    opening_retry = uuid4()
     opened = world.command(
         world.call.manager.id,
-        Intent(Action.CASE_OPENED, world.proposal_id, policy_id=world.policy_id),
+        opening_intent,
         expected_version=0,
+        retry_key=opening_retry,
     )
+    replayed = world.command(
+        world.call.manager.id,
+        opening_intent,
+        expected_version=0,
+        retry_key=opening_retry,
+    )
+    assert replayed.replayed
+    assert replayed.target_id == opened.target_id
     assert opened.target_id != world.case_id
     assert (
         ProgrammeReviewCase.objects.get(id=opened.target_id).revision_id

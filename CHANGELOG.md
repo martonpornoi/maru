@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant Programme review policy setup for Department review managers:
+  labelled call/question choices, explicit staged rubrics and decision templates,
+  recoverable unsaved composition and immutable reasoned policy history. There
+  are no scoring defaults or automatic outcomes. Setup does not expose private
+  answers or review evidence, and no production route or profile is activated.
+
 - Added dormant personal Programme decision history and exact-message receipt
   tasks. Included contributors can read their addressed historical messages and
   deliberately acknowledge their own required receipt, even after leaving a

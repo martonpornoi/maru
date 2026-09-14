@@ -12,6 +12,27 @@ exclude Programme.
 
 ## Policy and source of truth
 
+The dormant [review setup workspace](../product/page-contracts/programme-review-setup.md)
+now reserves Department-scoped call discovery, one-stage-at-a-time policy
+composition and exact immutable policy history. It uses independent
+`manage_programme_review` authority with exactly `review_setup` requested;
+the separate `review_context` ceiling still owns case/assignment context.
+Setup metadata contains no proposal answers, contributor directory or private
+review evidence. `list_programme_review_setup_calls` uses a bounded UUID cursor;
+`get_programme_review_setup` returns a complete maximum-500-question graph and
+the current policy sequence; `get_programme_review_setup_policy` reads one
+explicit positive version with its creation reason. All audit before release.
+
+The guided composer starts only from activated or retired immutable call
+configuration; Drafts remain setup-pending without removing the kernel's
+existing Draft-policy operation. Proposed stages/templates are validated
+request-carried form state, not persisted drafts or authority. Ordinary labelled
+controls explicitly choose quorum, rubric bounds, question visibility,
+structured anonymity, discussion and all four decision templates/receipt rules.
+Only final reasoned confirmation calls the canonical policy writer. Stale
+recovery retains the proposed policy and original proof; only explicit refresh
+creates a new version/retry intent. No schema, profile or production route changes.
+
 `ProgrammeReviewPolicy` retains append-only call policy versions. Each policy
 explicitly configures one to eight ordered stages. A stage has a unique code,
 one to sixteen required independent reviews, one to sixteen integer rubric
@@ -30,6 +51,14 @@ mutable answer sheet. It has its own optimistic version; it never increments
 the source submission's version. A new submitted seal needs a new case.
 Policy changes affect only deliberately opened future cases.
 
+`CASE_OPENED.reference_id` may bind the exact selected submitted seal. The
+canonical writer checks it under existing locks and includes it in the existing
+command digest. A newer seal conflicts instead of being silently substituted.
+Trusted current-seal callers may retain None; command fields and absent-reference
+digest shape remain unchanged for historical retry receipts. The next browser
+case-opening increment must require this proof. Case selection, named assignment,
+reviewer/moderator/decider work and accepted conversion remain #108 continuations.
+
 ## Roles and transitions
 
 Every staff purpose also requires an active verified person, exact organization
@@ -37,7 +66,7 @@ and edition, current owner Department, and current policy/field proof.
 
 | Role | Capability suffix after `applications.` | Bounded responsibility |
 | --- | --- | --- |
-| Review manager | `manage_programme_review` | Configure policy, open cases, assign/remove named reviewers; context and assignment roster only |
+| Review manager | `manage_programme_review` | Configure policy, open cases, assign/remove named reviewers; separately admitted setup metadata or case/assignment context, never answers/evidence |
 | Reviewer | `review_programme` | Declare own conflict status, score own active assignment, and join enabled discussion after own scoring |
 | Moderator | `moderate_programme_review` | Inspect private evidence, append rationale, advance or explicitly reopen stages |
 | Decision maker | `decide_programme` | Independently record a final or wait-list decision; nondelegable |

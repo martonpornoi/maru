@@ -330,6 +330,14 @@ Shift, schedule, or publication.
 
 ## Dormant Programme review and decisions
 
+The [review setup workspace](../product/page-contracts/programme-review-setup.md)
+adds reserved manager call discovery, explicit structured policy composition and
+immutable policy history. Its independent `review_setup` field ceiling exposes
+configuration only, never submission answers or private review evidence. Unsaved
+stage/template changes make no database record; final confirmation uses the
+existing append-only owner command. The selected-seal case guard is maintained
+now; case-opening and independent organizer review/conversion tasks remain #108.
+
 The [personal decision workspace](../product/page-contracts/programme-decision-receipts.md)
 adds reserved unmounted history and exact-message tasks with explicit own receipt.
 It uses exact-seal recipient queries and the dedicated review writer, not current

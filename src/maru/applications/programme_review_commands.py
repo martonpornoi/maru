@@ -278,6 +278,10 @@ def _open_case(
     if (
         expected_version != 0
         or policy is None
+        or (
+            command.reference_id is not None
+            and proposal.submitted_revision_id != command.reference_id
+        )
         or is_proposal_contributor(proposal, scope.actor_id)
         or ProgrammeReviewCase.objects.filter(
             revision_id=proposal.submitted_revision_id

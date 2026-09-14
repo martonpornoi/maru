@@ -61,6 +61,33 @@ def _scope(monkeypatch):
     return ids
 
 
+def test_setup_field_is_manager_only_and_never_implies_answer_authority(monkeypatch):
+    ids = _scope(monkeypatch)
+    authorizer = _TrustedAuthorizer()
+    review.authorize_programme_review_scope(
+        **ids,
+        capability_code=review.MANAGE_REVIEW,
+        requested_fields=frozenset({"review_setup"}),
+        authorizer=authorizer,
+    )
+    assert authorizer.calls == [(review.MANAGE_REVIEW, frozenset({"review_setup"}))]
+    for capability in (review.REVIEW, review.MODERATE, review.DECIDE):
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            review.authorize_programme_review_scope(
+                **ids,
+                capability_code=capability,
+                requested_fields=frozenset({"review_setup"}),
+                authorizer=authorizer,
+            )
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        review.authorize_programme_review_scope(
+            **ids,
+            capability_code=review.MANAGE_REVIEW,
+            requested_fields=frozenset({"review_setup", "review_answers"}),
+            authorizer=authorizer,
+        )
+
+
 @pytest.mark.parametrize("capability", sorted(review.REVIEW_STAFF_CAPABILITIES))
 def test_review_staff_scope_requires_exact_current_department_and_fields(
     monkeypatch, capability

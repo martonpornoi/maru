@@ -11,6 +11,21 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's exact personal decision history/receipt is delivered through
+[PR #120](https://github.com/martonpornoi/maru/pull/120), protected squash
+`75e2f37b1e7f8cc5b42470373b68304c4440977c` at 2026-09-14 11:54:37 UTC.
+Its tree equals certified head `342e469855858c535deb426facd4f6130b5d55ab`;
+clean local main and origin/main match the squash. All eight retained local
+gates passed in 17m07s, including 6,645 units in 40.50s and 85 frontend tests.
+Hosted units passed in 73.08s, quality in 27m10s, documentation in 25m01s and
+workflow in 27m37s; exact-head PR gate and CodeQL passed without hosted repair
+or rerun. The 2m50s quality margin is observed, not guaranteed future headroom;
+#113 remains open. Four maintained native cases remain #102 debt and human
+acceptance remains #92. No schema, production route or profile changed. See the
+[protected receipt checkpoint](../checkpoints/2026-09-14-programme-decision-receipts-protected-delivery.md).
+
+### Preceding personal workflow delivery
+
 #108's personal editing, collaboration and exact sealed-response/submission
 tasks are delivered through [PR #119](https://github.com/martonpornoi/maru/pull/119),
 protected squash `c6f26d1033a37d780c1d05341a25049b81814c2b` at
@@ -153,8 +168,41 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-decision-receipts`, from protected PR #119.
-The candidate implements exact-recipient decision history and deliberate own
+Branch: `codex/programme-review-setup`, from protected PR #120.
+This candidate implements independently authorized review-setup metadata queries,
+explicit one-stage-at-a-time policy composition, deliberate final save and
+immutable history. Proposed stages/templates are closed bounded request state,
+not persisted drafts; original optimistic/retry proof survives conflicts and
+only explicit refresh creates new intent. Optional criterion rows are compact
+native disclosures; populated/error rows stay open. Complete summaries use a
+single question-label map, not repeated scans. No quorum, score or outcome default.
+
+The selected-seal guard is implemented in the existing canonical case writer
+without changing legacy absent-reference retry shapes. The labelled case chooser
+and case-opening browser task are the next increment; no dead control is shown.
+No schema, production route, profile, dependency or PostgreSQL execution changes.
+All 6,733 database-free units pass in 41.35s, with three existing URLField warnings;
+the first full preflight exposed an unregistered shared-shell partial and was
+repaired with an exact parent/include assertion. Earlier focused fixtures needed
+isolated Windows temporary storage; no old files or permissions were changed.
+Ruff, focused mypy/NumPy documentation and documentation validation pass.
+Synthetic browser rehearsal observed discovery, explicit composition, confirmed
+save/history, compact criteria, read-only and generic detail denial at 1280 CSS
+pixels, with one H1/main and no document overflow. All database connections were
+forbidden; task-owned tabs and servers are stopped. Stale/invalid input recovery
+is HTTP-test evidence, not a claimed human/browser rehearsal. Native setup and
+selected-seal/replay acceptance are maintained but unexecuted under #102; full
+human evidence remains #92. Exact clean-commit and hosted certification are pending.
+See the [review setup checkpoint](../checkpoints/2026-09-14-programme-review-setup.md).
+
+Readable retained proposal/call context and independently admitted decision-source
+navigation remain an explicit #108 connection obligation, without importing
+current-proposal membership into addressed history. Reviewers, moderators and
+deciders remain separate tasks; no activation or PostgreSQL execution is implied.
+
+### Preceding recipient evidence
+
+The preceding protected candidate implements exact-recipient decision history and deliberate own
 receipt, reusing the review owner command and a new bounded exact-message getter.
 Addressed history survives proposal relationship, call or Department changes;
 read/write authority remains independent, and original case-version/retry proof
@@ -175,7 +223,7 @@ Version/retry retention is verified by HTTP tests, not hidden browser fields.
 All database access was forbidden in the synthetic fixture; its two tabs and
 server are stopped. Full human evidence remains #92; four extended native cases
 remain unexecuted #102 debt. Exact clean-commit certification and protected
-delivery are pending. See the [receipt checkpoint](../checkpoints/2026-09-14-programme-decision-receipts.md).
+delivery passed as recorded above. See the [receipt checkpoint](../checkpoints/2026-09-14-programme-decision-receipts.md).
 
 Next: separate organizer policy/review/moderation/decision and accepted conversion,
 then reference/file choosers, ordinary owner connections and accountable setup.

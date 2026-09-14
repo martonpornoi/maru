@@ -1234,6 +1234,11 @@ architecture documents, implementation issues, tests, and release notes.
   independence, optimistic versions, directly inspectable rationale, and
   append-only history. Proposal reopening, withdrawal, a newer seal, or owner
   retirement invalidates fresh review work without rewriting its evidence.
+  Guided case opening must bind the exact seal deliberately selected by the
+  manager, reject a newer replacement under the writer lock and retain that
+  selection in retry identity. Trusted current-state callers may still request
+  the current seal explicitly through their existing command contract; adding
+  browser proof must not silently invalidate historical retry receipts.
 - **PRG-004 — Decision communication:** Accept, reject, wait-list, and revision
   decisions must use templates while preserving a canonical conversation and
   any required acknowledgement.

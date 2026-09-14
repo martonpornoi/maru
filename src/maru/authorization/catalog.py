@@ -1078,7 +1078,7 @@ CAPABILITY_DEFINITIONS = (
         maximum_scope=ScopeLevel.DEPARTMENT,
         delegable=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
-        field_ceiling=frozenset({"review_context"}),
+        field_ceiling=frozenset({"review_context", "review_setup"}),
         obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
     ),
     Capability(

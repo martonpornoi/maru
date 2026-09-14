@@ -137,6 +137,16 @@ def test_application_templates_are_same_shell_and_free_of_mojibake() -> None:
             assert '{% include "applications/programme_personal_work.html" %}' in parent
             assert '{% extends "admin/base_site.html" %}' in parent
             assert "{% extends" not in source
+        elif template_path.name == "programme_review_policy_summary.html":
+            parent = (template_root / "programme_review_setup.html").read_text(
+                encoding="utf-8"
+            )
+            assert (
+                '{% include "applications/programme_review_policy_summary.html" '
+                "with definition=summary %}"
+            ) in parent
+            assert '{% extends "admin/base_site.html" %}' in parent
+            assert "{% extends" not in source
         elif template_path.name in {
             "programme_call_composer.html",
             "programme_call_departments.html",

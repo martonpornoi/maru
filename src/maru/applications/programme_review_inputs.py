@@ -245,7 +245,8 @@ class ProgrammeReviewCommandInput:
     policy_id
         Exact immutable policy only when opening a review case.
     reference_id
-        Reviewer account, assignment, or decision for its specific action.
+        Reviewer account, assignment, or decision for its specific action;
+        optional exact selected seal when opening a case.
     scores
         Ordered criterion/value pairs only for a scoring action.
     outcome
@@ -290,8 +291,7 @@ class ProgrammeReviewCommandInput:
         for field, default in defaults.items():
             if field not in allowed and getattr(self, field) != default:
                 _invalid()
-        for field in {"policy_id", "reference_id"} & allowed:
-            require_programme_uuid(getattr(self, field), field=field)
+        _require_references(self, allowed)
         if "stage" in allowed:
             _integer(self.stage, 0, MAX_REVIEW_STAGES - 1)
         policy = self.policy
@@ -324,9 +324,23 @@ class ProgrammeReviewCommandInput:
         return replace(self, policy=policy, scores=scores, text=text)
 
 
+def _require_references(
+    command: ProgrammeReviewCommandInput,
+    allowed: frozenset[str],
+) -> None:
+    for field in {"policy_id", "reference_id"} & allowed:
+        if (
+            command.action == ProgrammeReviewAction.CASE_OPENED
+            and field == "reference_id"
+            and command.reference_id is None
+        ):
+            continue
+        require_programme_uuid(getattr(command, field), field=field)
+
+
 _ACTION_FIELDS: Final = {
     ProgrammeReviewAction.POLICY_CREATED: frozenset({"policy"}),
-    ProgrammeReviewAction.CASE_OPENED: frozenset({"policy_id"}),
+    ProgrammeReviewAction.CASE_OPENED: frozenset({"policy_id", "reference_id"}),
     ProgrammeReviewAction.REVIEWER_ASSIGNED: frozenset({"reference_id"}),
     ProgrammeReviewAction.CONFLICT_CLEARED: frozenset({"reference_id"}),
     ProgrammeReviewAction.REVIEWER_RECUSED: frozenset({"reference_id"}),
