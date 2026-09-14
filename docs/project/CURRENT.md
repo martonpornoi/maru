@@ -11,6 +11,20 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+The first #108 Applications call workspace is delivered through
+[PR #115](https://github.com/martonpornoi/maru/pull/115), protected squash
+`ae97565ff03005a730ef8d492e2a1f72b04318e7` at 2026-09-14 03:22:08 UTC.
+Its tree equals certified head `5d5aa6d502f00fa8ae23e0cdcdfed19f34639840`;
+clean local main and origin/main match the squash. All eight retained local
+gates passed in 15m57s, including 6,171 units in 37.58s and 81 frontend cases.
+Hosted units passed in 77.70s; quality took 29m36s, leaving only 24 seconds to
+its limit. The exact-head PR gate and CodeQL passed. #113 records that increased
+latency risk, not guaranteed headroom. Two maintained native cases remain #102
+debt and human checks remain #92. No production route/profile or schema changed.
+See the [protected call-workspace checkpoint](../checkpoints/2026-09-14-programme-call-workspace-protected-delivery.md).
+
+### Preceding decision and hosting delivery
+
 The second #108 decision/hosting increment is delivered through
 [PR #114](https://github.com/martonpornoi/maru/pull/114), protected squash
 `bf990ff66714b568c9c59dbb6768ea0cc5ddf708` at 2026-09-14 01:16:20 UTC.
@@ -73,8 +87,10 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-call-workspace`, from protected PR #114.
-The first dedicated Applications call-workspace increment is implemented locally:
+Branch: `codex/programme-call-composer`, from protected PR #115.
+Next bounded increment: explicit call creation and complete structured
+section/question/condition editing through the existing owner commands.
+The first dedicated Applications call-workspace increment is merged:
 exact-Department named inventory, complete manager configuration, metadata/policy,
 explicit edition-zone deadline replacement, ordered track/format/contributor-field
 tasks and confirmed activation/retirement/successor commands. A lossless adapter
@@ -83,21 +99,21 @@ schema, generic discriminator access, profile or production route is added.
 Focused database-free feedback passes 225 tests in 1.70s, and all 81 frontend
 cases pass. Final six-module typing, NumPy documentation and the 495-page
 documentation validator pass; exact-head certification and protected delivery
-are pending.
+also passed as recorded above.
 The first exact run stopped on the historical no-template containment assertion:
 6,165 units passed and one failed. The guard now permits only this exact dormant
 template's two identifiers, retains every generic-surface scan and additionally
 walks the entire production URL tree. Its 58 focused HTTP/containment cases pass,
-and fresh full-unit preflight passes all 6,171 cases in 37.28s. Exact-head
-certification remains required. No success receipt was created for the failed
+and fresh full-unit preflight passes all 6,171 cases in 37.28s. Fresh exact-head
+certification then passed. No success receipt was created for the failed
 candidate.
 The synthetic 1280-by-720 rehearsal corrected task order and action labels and
 verified stale-input retention, error focus, immutable, empty and denied states.
 Two maintained native cases remain unexecuted #102 debt; full human matrix is
 #92. See the [call-workspace checkpoint](../checkpoints/2026-09-14-programme-call-workspace.md).
 
-Next: certify and deliver this bounded increment, then call creation and complete
-section/question/condition editing, authorized Department selection/reassignment,
+Next: call creation and complete section/question/condition editing,
+authorized Department selection/reassignment,
 proposal/collaboration/review/conversion tasks and ordinary task connections.
 Keep contributor-owned profiles/acknowledgements, the single submission cursor
 and closed generic seams. Accountable setup and integrated proof follow those
