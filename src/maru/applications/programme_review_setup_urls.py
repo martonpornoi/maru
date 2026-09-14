@@ -5,12 +5,36 @@ from django.urls import path
 from .programme_review_intake_views import programme_review_intake
 from .programme_review_management_views import programme_review_management
 from .programme_review_setup_views import programme_review_setup
+from .programme_reviewer_views import programme_reviewer_work
 
 _ROOT = (
     "admin/applications/programme-review/<uuid:organization_id>/"
     "<uuid:edition_id>/<uuid:department_id>/"
 )
 urlpatterns = [
+    path(_ROOT + "mine/", programme_reviewer_work, name="programme-review-mine"),
+    path(
+        _ROOT + "mine/<uuid:case_id>/<uuid:assignment_id>/",
+        programme_reviewer_work,
+        name="programme-review-own-assignment",
+    ),
+    *[
+        path(
+            _ROOT + "mine/<uuid:case_id>/<uuid:assignment_id>/" + task + "/",
+            programme_reviewer_work,
+            {"task": task},
+            name="programme-review-own-" + task,
+        )
+        for task in (
+            "clear",
+            "recuse",
+            "score",
+            "discuss",
+            "context",
+            "answers",
+            "evidence",
+        )
+    ],
     path(_ROOT + "cases/", programme_review_management, name="programme-review-cases"),
     path(
         _ROOT + "cases/<uuid:case_id>/",

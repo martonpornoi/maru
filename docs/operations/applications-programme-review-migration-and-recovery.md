@@ -1,5 +1,21 @@
 # Programme review migration and recovery
 
+## Retained own reviewer intent
+
+Own reviewer pages bind the URL-selected retained assignment's immutable policy
+stage, original case version, retry key, scores/text, rationale and confirmation.
+After stage progress, source invalidation or recusal/removal, keep the original
+request for canonical receipt recovery. Do not rebuild its rubric from the new
+case stage or require a protected answer/evidence read before replay. Scoped
+retained metadata is not content authority. A minimal receipt remains distinct
+from a fresh write or permission to reopen content. Inspect current state before
+starting a deliberately new intent; do not reactivate or rewrite historical
+assignments. Existing retention, audit, planning and capability guards apply.
+
+No migration or new runtime privilege is introduced by these dormant views.
+Native recovery remains unexecuted #102 debt during ADR 0100; this does not close
+logical-restore issue #97 or declare the Programme profile usable in production.
+
 ## Retained named-reviewer selections
 
 The dormant manager forms use Django purpose signing for identifier-only named

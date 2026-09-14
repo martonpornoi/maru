@@ -52,6 +52,10 @@ from maru.applications.programme_review_setup_queries import (
     get_programme_review_setup_policy,
     list_programme_review_setup_calls,
 )
+from maru.applications.programme_reviewer_queries import (
+    get_programme_reviewer_work,
+    list_programme_reviewer_work,
+)
 from maru.applications.programme_reviewer_selection import (
     prepare_programme_reviewer_selection,
     read_programme_reviewer_selection,
@@ -62,12 +66,158 @@ from tests.integration.test_application_programme_services import (
     _start_proposal,
 )
 from tests.support.programme_review import assign_and_score, create_review_world
+from tests.unit.test_application_programme_review_inputs import review_policy
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
     pytest.mark.integration,
     pytest.mark.usefixtures(_admit_future_programme_effects.__name__),
 ]
+
+
+def test_own_reviewer_metadata_retains_original_rubric_after_progress_and_recusal():
+    """Maintain native own scope/content/old-receipt debt without executing it."""
+    policy = review_policy()
+    first = policy.stages[0]
+    later = replace(
+        first,
+        code="technical",
+        criteria=(
+            replace(first.criteria[0], code="delivery", label="Delivery quality"),
+        ),
+    )
+    world = create_review_world(policy=replace(policy, stages=(first, later)))
+    assignment = world.command(
+        world.call.manager.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.REVIEWER_ASSIGNED,
+            world.case_id,
+            reference_id=world.reviewer.id,
+        ),
+    )
+    request = world.read(
+        world.reviewer.id, REVIEW, fields=frozenset({"review_context"})
+    )
+    common = {
+        "request": request,
+        "case_id": world.case_id,
+        "assignment_id": assignment.target_id,
+        "authorizer": _AUTHORIZER,
+    }
+    pending = get_programme_reviewer_work(**common)
+    assert pending.state == "pending"
+    assert not pending.has_scored
+    assert list_programme_reviewer_work(
+        request=request, authorizer=_AUTHORIZER
+    ).items == (pending,)
+    assert not list_programme_reviewer_work(
+        request=request, after_id=assignment.target_id, authorizer=_AUTHORIZER
+    ).items
+    for changes in (
+        {"actor_id": world.peer.id},
+        {"organization_id": uuid4()},
+        {"edition_id": uuid4()},
+        {"department_id": uuid4()},
+        {"capability_code": MANAGE_REVIEW},
+    ):
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_reviewer_work(
+                **(common | {"request": replace(request, **changes)})
+            )
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        get_programme_review_detail(
+            request=world.read(world.reviewer.id, REVIEW),
+            case_id=world.case_id,
+            authorizer=_AUTHORIZER,
+        )
+    world.command(
+        world.reviewer.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.CONFLICT_CLEARED,
+            world.case_id,
+            reference_id=assignment.target_id,
+        ),
+    )
+    original_version, retry = world.version, uuid4()
+    score = ProgrammeReviewCommandInput(
+        ProgrammeReviewAction.SCORED,
+        world.case_id,
+        reference_id=assignment.target_id,
+        scores=tuple((row.code, row.maximum) for row in first.criteria),
+    )
+    scored = world.command(
+        world.reviewer.id, score, expected_version=original_version, retry_key=retry
+    )
+    assert get_programme_reviewer_work(**common).has_scored
+    world.command(
+        world.reviewer.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.DISCUSSED,
+            world.case_id,
+            reference_id=assignment.target_id,
+            text="Synthetic discussion after my score.",
+        ),
+    )
+    assign_and_score(world, world.peer.id)
+    detail = get_programme_review_detail(
+        request=world.read(world.reviewer.id, REVIEW),
+        case_id=world.case_id,
+        authorizer=_AUTHORIZER,
+    )
+    assert str(world.peer.id) not in detail.evidence_json
+    assert (
+        len(
+            [
+                row
+                for row in json.loads(detail.evidence_json)
+                if row["action"] == "scored"
+            ]
+        )
+        == 1
+    )
+    world.command(
+        world.moderator.id,
+        ProgrammeReviewCommandInput(ProgrammeReviewAction.MODERATED, world.case_id),
+    )
+    world.command(
+        world.moderator.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.STAGE_ADVANCED, world.case_id
+        ),
+    )
+    retained = get_programme_reviewer_work(**common)
+    assert retained.case.stage == 1
+    assert retained.rubric == pending.rubric
+    assert retained.stage == 0
+    replay = world.command(
+        world.reviewer.id, score, expected_version=original_version, retry_key=retry
+    )
+    assert replay.replayed
+    assert replay.receipt_id == scored.receipt_id
+    world.command(
+        world.reviewer.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.REVIEWER_RECUSED,
+            world.case_id,
+            reference_id=assignment.target_id,
+        ),
+    )
+    assert get_programme_reviewer_work(**common).state == "recused"
+    assert not list_programme_reviewer_work(
+        request=request, authorizer=_AUTHORIZER
+    ).items
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        get_programme_review_detail(
+            request=world.read(world.reviewer.id, REVIEW),
+            case_id=world.case_id,
+            authorizer=_AUTHORIZER,
+        )
+    assert (
+        world.command(
+            world.reviewer.id, score, expected_version=original_version, retry_key=retry
+        ).receipt_id
+        == scored.receipt_id
+    )
 
 
 def test_named_manager_selection_preserves_person_after_email_change_and_late_removal():

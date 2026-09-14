@@ -11,6 +11,21 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's named reviewer management is delivered through
+[PR #123](https://github.com/martonpornoi/maru/pull/123), protected squash
+`d8fc19bae95ba683f90ed0d9422791400ac186e6` at 2026-09-14 16:21:52 UTC.
+Its tree equals certified head `f0a0838bb511ba2005c767b382c47c455765d359`;
+clean local main and origin/main match. All eight retained local gates passed
+in 16m48s (6,887 units in 41.72s). Hosted units passed in 62.29s, frontend in
+85 cases, quality in 27m52s, documentation in 25m45s and workflow in 28m21s.
+Exact-head PR gate and CodeQL passed without hosted repair/rerun. The observed
+2m08s quality margin is not guaranteed; #113 remains open. One native scenario
+remains unexecuted #102 debt and full human acceptance remains #92. No schema,
+profile or production route changed. See the
+[protected manager checkpoint](../checkpoints/2026-09-14-programme-reviewer-management-protected-delivery.md).
+
+### Preceding exact case-intake delivery
+
 #108's labelled exact-revision case opening is delivered through
 [PR #122](https://github.com/martonpornoi/maru/pull/122), protected squash
 `91e02f4633b497b7bd00f93aeb609cb344ccfb0e` at 2026-09-14 14:52:14 UTC.
@@ -198,8 +213,39 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-review-management`, from protected PR #122.
-Candidate: independently authorized case overview, complete retained roster,
+Branch: `codex/programme-reviewer-workspace`, from protected PR #123.
+Candidate: independently authorized own assignment discovery, conflict clearance/
+recusal, complete explicit rubric scoring, permitted discussion and separately
+field-scoped exact-seal context/answers/history. Retained own metadata carries
+the original immutable assignment-stage rubric and no submission content, so
+old version/retry requests reach canonical receipt recovery after progress.
+No score defaults, totals/ranking, peer roster, schema/profile/production route,
+permission grant or PostgreSQL-policy change is introduced.
+
+Inexpensive full preflight: 6,975 units passed in 72.38s, three existing URLField
+warnings. Browser review corrected confirmation order; the corrected forms,
+owner queries and containment then passed 110 focused tests in 1.95s. NumPy,
+semantic docs, strict typing and documentation reachability checks passed.
+Synthetic browser evidence covers pending clearance, blank rubric/confirmation,
+separate discussion, permitted answers, focused stale-input recovery, readonly
+and denial at 1280 CSS pixels; genuine full human acceptance remains #92.
+One maintained native scenario extends existing tests without execution or
+invented weights (#102 debt). Exact clean-commit certification and hosted
+protected acceptance are still required. See the
+[reviewer workspace checkpoint](../checkpoints/2026-09-14-programme-reviewer-workspace.md).
+Next: protected delivery, then independently admitted moderation/decision/
+conversion tasks and remaining #108 connections. Dedicated safe structured
+answer/reference viewers remain explicit #108 work, not silently bypassed.
+
+A database-forbidden real-form diagnosis also confirmed that the existing host
+invite adapter re-resolves email before its owner command on each original POST.
+Changed email can block the old receipt or rebase the supplied person; no native
+wrong-person mutation was executed or claimed. This is a separate unchecked #108
+recovery follow-up (comment 5666828850), not a change to the merged review writer.
+
+### Preceding named-manager candidate evidence
+
+The protected candidate supplies independently authorized case overview, complete retained roster,
 known-email preview, exact-person confirmation and reasoned assignment removal.
 Purpose-signed selection preserves original actor/scope/person/version/retry;
 confirmation never re-resolves a changed email. Current permissions, contributor/
@@ -218,7 +264,7 @@ timing weights; it remains unexecuted #102 debt. Full human checks remain #92.
 The first exact-commit certification stopped at documentation reachability before
 Sphinx because the new page lacked its hidden toctree entry; the catalog is now
 corrected. That failed attempt issued no receipt. Fresh clean-commit
-certification and protected delivery are pending. No schema,
+certification and protected delivery subsequently passed as recorded above. No schema,
 production route/profile, dependency, writer or PostgreSQL policy changed.
 See the [reviewer management checkpoint](../checkpoints/2026-09-14-programme-reviewer-management.md).
 Next: separately authorized reviewer conflict/scoring, moderation, final decision

@@ -1253,6 +1253,13 @@ architecture documents, implementation issues, tests, and release notes.
   contributor/opener/moderator/decider exclusions remain mandatory. Removed and
   recused assignments remain inspectable, and late reasoned removal preserves
   scores and decisions without silently reactivating anyone.
+  An independently authorized reviewer must discover only their own assignments.
+  Retained assignment metadata may expose its immutable stage rubric, call and
+  seal references under `review_context`, including after removal or progress,
+  solely for conflict decisions and exact-intent recovery. This is not permission
+  to read answers, contributor profiles or private evidence. Original score
+  requests remain bound to that assignment's original rubric, version and retry
+  proof; successful receipt replay must not depend on a now-denied content read.
 - **PRG-004 — Decision communication:** Accept, reject, wait-list, and revision
   decisions must use templates while preserving a canonical conversation and
   any required acknowledgement.

@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant own Programme review tasks: conflict declarations and recusal,
+  complete independent rubric scoring, permitted discussion and field-scoped
+  sealed answers/history. Original assignment-stage intent survives uncertain
+  retries without granting content, moderation or decision authority. No
+  production route or profile is activated.
+
 - Added dormant Department reviewer management: complete retained case rosters,
   known-person preview, deliberate exact-person assignment and reasoned removal.
   Original selections survive uncertain retries without re-resolving changed
