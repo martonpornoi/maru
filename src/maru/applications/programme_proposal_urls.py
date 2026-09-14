@@ -2,11 +2,18 @@
 
 from django.urls import path
 
+from .programme_decision_views import programme_decisions
 from .programme_personal_views import programme_personal_tasks
 from .programme_proposal_views import programme_proposals
 
 _ROOT = "my/applications/programme/<uuid:organization_id>/<uuid:edition_id>/"
 urlpatterns = [
+    path(_ROOT + "decisions/", programme_decisions, name="my-programme-decisions"),
+    path(
+        _ROOT + "decisions/<uuid:decision_id>/",
+        programme_decisions,
+        name="my-programme-decision",
+    ),
     path(_ROOT, programme_proposals, name="my-programme-proposals"),
     path(
         _ROOT + "calls/",

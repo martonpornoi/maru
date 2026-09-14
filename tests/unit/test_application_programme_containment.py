@@ -88,6 +88,9 @@ _FORBIDDEN_SURFACE_MARKERS = (
     "programmeproposal",
 )
 _DORMANT_TEMPLATE_MARKERS = {
+    "src/maru/applications/templates/applications/programme_decisions.html": frozenset(
+        {"programme-call", "programme_call"}
+    ),
     "src/maru/applications/templates/applications/programme_proposals.html": frozenset(
         {"programme-call", "programme_call"}
     ),
@@ -137,6 +140,15 @@ def _execution_surface_paths() -> tuple[Path, ...]:
     ):
         paths.update(_REPOSITORY_ROOT.glob(pattern))
     return tuple(sorted(paths, key=lambda path: path.as_posix()))
+
+
+def test_dormant_decision_template_admits_only_existing_shared_asset_markers():
+    path = (
+        _REPOSITORY_ROOT
+        / "src/maru/applications/templates/applications/programme_decisions.html"
+    )
+    assert _surface_markers(path, "programme-call programme_call") == ()
+    assert _surface_markers(path, "programme_proposal") == ("programme_proposal",)
 
 
 def _locked_manager(*, first: object | None = None, exists: bool = False) -> MagicMock:

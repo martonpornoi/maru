@@ -42,6 +42,14 @@ role-minimized existing-proposal context; the latter projects exact sealed share
 content and only the current actor's included frozen profile. Generic API
 serializers/discriminator exclusions remain unchanged.
 
+The [personal decision receipt companion](../product/page-contracts/programme-decision-receipts.md)
+reserves `/my/applications/programme/{organization_id}/{edition_id}/decisions/`
+and its exact `{decision_id}/` detail/POST route. It admits independently
+authorized exact-recipient history and deliberate own receipt only. The
+original optimistic proof belongs to the review case, not the proposal.
+`get_self_programme_decision` is a protected owner query, not a mounted API
+operation. No generic review, decision, target or profile exclusion changes.
+
 The routes below omit Programme definitions from starter and definition
 discovery and deny Programme submissions in generic applicant, answer, submit,
 review, decision, acceptance, target-record, and target-result paths. The

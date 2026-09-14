@@ -15,6 +15,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant personal Programme decision history and exact-message receipt
+  tasks. Included contributors can read their addressed historical messages and
+  deliberately acknowledge their own required receipt, even after leaving a
+  proposal. Private review notes and other people's responses remain hidden.
+  Receipt is not agreement or hosting consent; no production route or profile
+  is activated.
+
 - Extended the dormant personal Programme workspace with shared-answer and own-
   profile editing, labelled selection changes, invitations/roster decisions,
   sealing, exact-contribution acknowledgement, explicit reopening, submission and

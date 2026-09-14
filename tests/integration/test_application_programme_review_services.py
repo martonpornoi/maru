@@ -23,6 +23,7 @@ from maru.applications.programme_review_authorization import (
 from maru.applications.programme_review_inputs import ProgrammeReviewCommandInput
 from maru.applications.programme_review_queries import (
     get_programme_review_detail,
+    get_self_programme_decision,
     list_programme_review_cases,
     list_self_programme_decisions,
 )
@@ -84,6 +85,12 @@ def test_complete_independent_review_decision_and_recipient_acknowledgement() ->
     assert len(messages.items) == 1
     assert messages.items[0].decision_id == decision.target_id
     assert messages.items[0].own_acknowledged is False
+    assert (
+        get_self_programme_decision(
+            request=request, decision_id=decision.target_id, authorizer=_AUTHORIZER
+        )
+        == messages.items[0]
+    )
     assert "accountable review action" not in messages.items[0].message
     world.command(
         world.lead.id,
@@ -107,6 +114,16 @@ def test_complete_independent_review_decision_and_recipient_acknowledgement() ->
     assert acknowledgement.message is None
     assert acknowledgement.outcome is None
     assert acknowledgement.own_acknowledged_at is not None
+    assert (
+        get_self_programme_decision(
+            request=replace(
+                request, requested_fields=frozenset({"own_acknowledgement"})
+            ),
+            decision_id=decision.target_id,
+            authorizer=_AUTHORIZER,
+        )
+        == acknowledgement
+    )
     for receipt in ProgrammeReviewReceipt.objects.filter(
         case_id=world.case_id
     ).select_related("audit_event", "domain_event"):

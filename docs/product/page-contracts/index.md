@@ -49,6 +49,7 @@ contract for the surface being changed, and compare its status with the
 - [Programme now and continuity](programme-onsite-continuity.md)
 - [Programme item workspace](programme-item-workspace.md)
 - [Programme host workspace](programme-host-workspace.md)
+- [My Programme decisions and receipts](programme-decision-receipts.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -77,4 +78,5 @@ programme-item-workspace
 programme-host-workspace
 programme-call-workspace
 programme-proposal-workspace
+programme-decision-receipts
 ```
