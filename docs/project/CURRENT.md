@@ -88,8 +88,21 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 ## Active bounded outcome: guided departmental journey (#108)
 
 Branch: `codex/programme-call-composer`, from protected PR #115.
-Next bounded increment: explicit call creation and complete structured
-section/question/condition editing through the existing owner commands.
+The next bounded increment is locally implemented: explicit call creation and
+complete structured section/question/condition editing through the existing owner
+commands, including atomic cross-section moves. Fresh full-unit preflight passes
+6,274 tests in 38.61s; 101 focused composer cases pass in 1.78s. Focused Ruff,
+typing and NumPy documentation pass. An earlier cheap full-unit preflight exposed
+the historical direct-admin-template assumption; an exact inherited-shell check
+now verifies the composer retains the shared shell without broadening containment.
+The 1280-by-720 synthetic browser rehearsal verified creation, labelled options,
+focused error links, pending/stale retention, cross-section/section tasks and
+non-disclosing denied/read-only states. It used mocked non-persisting owner
+commands, not PostgreSQL. Three maintained native owner/replay cases remain
+unexecuted #102 debt; full human acceptance remains #92. Exact-head certification
+and protected delivery of this increment are pending. See the
+[call-composer checkpoint](../checkpoints/2026-09-14-programme-call-composer.md).
+
 The first dedicated Applications call-workspace increment is merged:
 exact-Department named inventory, complete manager configuration, metadata/policy,
 explicit edition-zone deadline replacement, ordered track/format/contributor-field
@@ -112,8 +125,7 @@ verified stale-input retention, error focus, immutable, empty and denied states.
 Two maintained native cases remain unexecuted #102 debt; full human matrix is
 #92. See the [call-workspace checkpoint](../checkpoints/2026-09-14-programme-call-workspace.md).
 
-Next: call creation and complete section/question/condition editing,
-authorized Department selection/reassignment,
+Next: certify and deliver the call composer, then authorized Department selection/reassignment,
 proposal/collaboration/review/conversion tasks and ordinary task connections.
 Keep contributor-owned profiles/acknowledgements, the single submission cursor
 and closed generic seams. Accountable setup and integrated proof follow those

@@ -123,9 +123,17 @@ adds a dedicated, unmounted #108 manager adapter over the existing Programme
 commands and complete managed projections. It provides exact-Department call
 selection and configuration review, metadata/policy editing, separately confirmed
 deadline replacement, explicit catalog ordering/removal and lifecycle actions.
-Call creation, section/question/condition controls and the separate proposal,
-review and conversion journeys remain unfinished #108 work. The generic studio
-and discriminator exclusions are unchanged.
+Explicit creation collects metadata, policy references, edition-local deadlines,
+an initial track/format and confirmation of the disclosed title/description and
+lead-name starting form. Structured section/question controls cover all seventeen
+closed types, typed conditions, bounded option rows, ordering and confirmed
+removal. Cross-section moves validate the complete final graph atomically;
+empty mandatory sections and broken dependencies are refused, not repaired.
+Creation fences the displayed edition version and zone under the canonical lock;
+editing preserves the original call cursor. Adding an option row saves no domain
+state. Cross-Department selection/reassignment and the separate proposal, review
+and conversion journeys remain unfinished #108 work. The generic studio and
+discriminator exclusions are unchanged.
 
 `programme_call_editor` reconstructs every typed question, condition, option,
 policy, catalog and duration bound without querying or writing. It refuses stale

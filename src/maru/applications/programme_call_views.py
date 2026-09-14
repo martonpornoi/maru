@@ -174,16 +174,19 @@ def _secure(response: HttpResponse, nonce: str = "") -> HttpResponse:
 
 
 def _render(
-    request: HttpRequest, scope: _Scope, context: dict[str, Any], status: int = 200
+    request: HttpRequest,
+    scope: _Scope,
+    context: dict[str, Any],
+    status: int = 200,
+    *,
+    template: str = "applications/programme_calls.html",
 ) -> HttpResponse:
     _authorize(scope)
     nonce = token_urlsafe(32)
     shell = dict(admin.site.each_context(request))
     shell.update(has_permission=True, title="Programme calls", maru_csp_nonce=nonce)
     shell.update(root_url=_root(scope), **context)
-    content = render_to_string(
-        "applications/programme_calls.html", shell, request=request
-    )
+    content = render_to_string(template, shell, request=request)
     if len(content.encode("utf-8")) > 8 * 1024 * 1024:
         return _secure(HttpResponse("Call workspace unavailable.", status=503), nonce)
     _authorize(scope)
@@ -449,6 +452,7 @@ def _serve(
         }[task]
         context["button_label"] = context["task_label"]
     if call_id is None:
+        context["can_create"] = planning
         context["calls"] = queries.list_managed_programme_calls(**_scope_values(scope))
         return _render(request, scope, context)
     source = queries.get_managed_programme_call_configuration(

@@ -165,7 +165,8 @@ separate delivery/readiness/public-copy tasks and protected history. PR #114 add
 explicit readiness evidence, Department discussion, public-copy withdrawal and
 separate organizer/person-owned hosting tasks. Applications intake/review/conversion,
 starting with the dedicated call workspace delivered through PR #115 and its
-next creation/section/question/condition increment,
+locally implemented creation/section/question/condition increment awaiting
+exact-head protected delivery, plus Department selection/reassignment,
 ordinary task continuations and accountable setup remain required increments;
 none is replaced by specialist records or closure of a supporting PR. #113 records
 the measured non-database quality-runtime margin as follow-up work, without
