@@ -10,6 +10,7 @@ from uuid import UUID
 import pytest
 from bs4 import BeautifulSoup
 from django.core.exceptions import ValidationError
+from django.db import DatabaseError
 from django.http import QueryDict
 from django.test import RequestFactory
 from django.urls import Resolver404, resolve
@@ -780,6 +781,22 @@ def test_unknown_address_is_bounded_validation_not_account_creation(hosting):
     response = call(hosting, "invite", manager_data("invite"))
     assert response.status_code == 400
     assert b"existing active verified person" in response.content
+    hosting.writers["invite_programme_host"].assert_not_called()
+
+
+def test_negative_lookup_audit_failure_does_not_disclose_match_result(
+    hosting, monkeypatch
+):
+    hosting.address.return_value = None
+    monkeypatch.setattr(
+        item_queries,
+        "_append_query_audit",
+        Mock(side_effect=DatabaseError("audit unavailable")),
+    )
+    response = call(hosting, "invite", manager_data("invite"))
+    assert response.status_code == 503
+    assert b"Person selection is unavailable" in response.content
+    assert b"This address cannot receive" not in response.content
     hosting.writers["invite_programme_host"].assert_not_called()
 
 

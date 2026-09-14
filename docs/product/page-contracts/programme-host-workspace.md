@@ -33,6 +33,10 @@ confirmation verifies the proof without looking up the address again. Changing
 the person selection or other intent requires deliberate re-preview, not silent
 retargeting. Reinvitation continues to select the exact retained relationship.
 
+Empty address matches are reauthorized and audited before returning the generic
+validation guidance, without retaining the entered address. If that audit is
+unavailable, the lookup result is not disclosed; show selection unavailable.
+
 Original confirmed invitation POST reaches the unchanged owner command after
 current actor/tenant/adoption admission, before fresh manager, private roster or
 recipient reads. The owner independently enforces fresh admission and current

@@ -207,12 +207,30 @@ def test_guided_forms_preserve_real_host_versions_and_local_minute_intent(world)
     scope = ProgrammeWorkbenchRequest(
         manager.id, common["organization_id"], common["edition_id"], uuid4()
     )
+    assert (
+        prepare_host_invitation_preview(
+            scope,
+            item_id=common["item_id"],
+            intent=replace(
+                form.to_intent(), recipient_email="absent-host@example.invalid"
+            ),
+            authorizer=common["authorizer"],
+        )
+        is None
+    )
+    empty_audit = AuditEvent.objects.get(
+        operation="programme.host_invitation.preview",
+        correlation_id=scope.correlation_id,
+    )
+    assert empty_audit.safe_metadata["target_count"] == 0
+    assert "absent-host@example.invalid" not in str(empty_audit.safe_metadata)
     selection = prepare_host_invitation_preview(
         scope,
         item_id=common["item_id"],
         intent=form.to_intent(),
         authorizer=common["authorizer"],
     )
+    assert selection is not None
     assert selection.person_id == person.id
     assert ProgrammeHostRelationship.objects.count() == 0
     # Synthetic Identity change before the first confirmation must not retarget it.

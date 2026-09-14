@@ -169,6 +169,13 @@ def _prepare(
         preview = prepare_host_invitation_preview(
             scope, item_id=item_id, intent=form.to_intent()
         )
+        if preview is None:
+            form.add_error(
+                "recipient_email",
+                "This address cannot receive a Programme invitation. "
+                "Use an existing active verified person.",
+            )
+            return None, 400
     except ValidationError as error:
         _errors(form, error)
         return None, 400

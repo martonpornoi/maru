@@ -288,7 +288,16 @@ browser rehearsal covered blank input, exact preview, focused stale recovery,
 minimal replay without roster authority and denial at 1280 CSS pixels, with one
 H1/main and no overflow. The existing native host scenario is maintained but
 unexecuted #102 debt; genuine human acceptance remains #92. Clean exact-commit
-certification and hosted protected acceptance are pending. See the
+certification for the original `145d46d` candidate passed all eight gates in
+18m31s (7,281 units in 44.12s, 85 frontend tests). PR #128 was opened; hosted
+units and CodeQL passed, but its quality run was deliberately cancelled during
+review repair, not accepted or merged. Final review found empty address matches
+needed the same required audit as positive selection. The repair returns only
+audited empty results, adds negative-audit regression cases, and requires a new
+clean exact-commit certification and fresh hosted acceptance. Original evidence
+is preserved separately and does not certify the repair. The repair preflight
+passed 7,284 units in 44.35s and 138 focused cases in 1.86s; static and document
+checks passed. See the [empty-selection audit repair](../checkpoints/2026-09-15-programme-host-empty-selection-audit.md) and the
 [host recovery checkpoint](../checkpoints/2026-09-15-programme-host-invitation-recovery.md).
 Next: protected delivery, then remaining #108 structured selectors/viewers,
 workflow connections and accountable setup. #102/#97/#109/#92 remain final gates.

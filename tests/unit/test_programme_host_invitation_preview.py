@@ -93,6 +93,24 @@ def test_audit_failure_releases_no_proof(selection):
         prepare(selection)
 
 
+@pytest.mark.parametrize("audit_available", [True, False])
+def test_empty_lookup_is_reauthorized_and_audited_before_validation(
+    selection, audit_available
+):
+    selection.address.side_effect = None
+    selection.address.return_value = None
+    if not audit_available:
+        selection.audit.side_effect = DatabaseError("Synthetic negative audit failure")
+        with pytest.raises(DatabaseError):
+            prepare(selection)
+    else:
+        assert prepare(selection) is None
+        assert selection.events[-2:] == ["authorize", "audit"]
+    record = selection.audit.call_args.args[0]
+    assert record.safe_metadata["target_count"] == 0
+    assert "river@example.test" not in repr(record)
+
+
 @pytest.mark.parametrize(
     "changes",
     [

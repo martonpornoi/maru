@@ -163,7 +163,7 @@ def prepare_host_invitation_preview(
     item_id: UUID,
     intent: HostInvitationIntent,
     authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
-) -> HostInvitationPreview:
+) -> HostInvitationPreview | None:
     """Resolve a known person once under locked, audited fresh manager admission.
 
     Parameters
@@ -179,17 +179,17 @@ def prepare_host_invitation_preview(
 
     Returns
     -------
-    HostInvitationPreview
-        Audited selection proof; no invitation or receipt has been created.
+    HostInvitationPreview | None
+        Audited selection proof or audited empty match; no invitation or receipt.
 
     Notes
     -----
     The owning admission/query boundary refuses closed private planning and
-    propagates validation when the address has no active verified person.
+    audits an empty match when the address has no active verified person.
     """
     require_uuid(item_id, field="item_id")
 
-    def load() -> HostInvitationPreview:
+    def load() -> HostInvitationPreview | None:
         admitted = authorize_programme_scope(
             actor_id=scope.actor_id,
             organization_id=scope.organization_id,
@@ -207,14 +207,7 @@ def prepare_host_invitation_preview(
             email=validated.recipient_email
         )
         if person is None:
-            raise ValidationError(
-                {
-                    "recipient_email": (
-                        "This address cannot receive a Programme invitation. "
-                        "Use an existing active verified person."
-                    )
-                }
-            )
+            return None
         normalized = validated.normalized(person.account_id)
         proof = signing.dumps(
             {
@@ -235,7 +228,7 @@ def prepare_host_invitation_preview(
         loader=load,
         target_type="programme.item",
         target_id=item_id,
-        target_count=lambda _preview: 1,
+        target_count=lambda preview: int(preview is not None),
         reason="Prepare one exact person for explicit Programme hosting confirmation",
         correlation_id=scope.correlation_id,
         source_channel="programme-hosts",
