@@ -48,6 +48,7 @@ contract for the surface being changed, and compare its status with the
 - [Programme change notices](programme-change-notices.md)
 - [Programme now and continuity](programme-onsite-continuity.md)
 - [Programme item workspace](programme-item-workspace.md)
+- [Programme host workspace](programme-host-workspace.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -73,4 +74,5 @@ programme-operator-run-sheets
 programme-change-notices
 programme-onsite-continuity
 programme-item-workspace
+programme-host-workspace
 ```

@@ -11,6 +11,23 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+The first #108 guided item-workspace increment is delivered through
+[PR #112](https://github.com/martonpornoi/maru/pull/112), protected squash
+`f64c96ed7e1912121de476d6ad4332b4c330b448` at 2026-09-13 23:20:08 UTC.
+Its tree equals certified head `191488a13f955c798bf846fe4f50fd73e1966247`;
+clean local main and origin/main match the squash. All eight retained local
+gates passed in 15m46s, including 5,879 units in 37.39s. Hosted units passed in
+64.59s, frontend acceptance passed 69 cases, quality took 28m07s and the overall
+workflow 28m38s. Exact-head PR gate and CodeQL passed without hosted repair.
+PostgreSQL remains deferred, with two new maintained native cases under #102;
+full human/browser evidence remains #92. See the
+[protected workspace checkpoint](../checkpoints/2026-09-14-programme-item-workspace-protected-delivery.md).
+The 30-minute quality limit has only 1m53s measured margin: #113 records the
+documentation/quality follow-up risk, not PostgreSQL evidence or guaranteed future
+headroom. It does not displace #48 unless it becomes a delivery blocker.
+
+### Preceding continuity delivery
+
 [#107](https://github.com/martonpornoi/maru/issues/107) is closed through
 [PR #111](https://github.com/martonpornoi/maru/pull/111), protected squash
 `fa155a143945b4d7533d0b4f8fa6f9cbd826bfcf` at 2026-09-13 21:34:46 UTC.
@@ -41,19 +58,35 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-guided-journey`, from protected PR #111.
-The first dormant item-workspace increment is implemented locally: complete
+Branch: `codex/programme-item-decisions`, from protected PR #112.
+The second increment is local: independently authorized Department discussion,
+typed readiness sources, exact public-copy withdrawal and separate organizer /
+genuine-person hosting tasks. The existing owner commands remain authoritative;
+there are no new writers, migrations, profile pins or production routes.
+Final focused database-free HTTP/query/form feedback passed 218 cases in 2.13s;
+seven actual-asset frontend cases passed. Browser feedback corrected edition-zone
+display, made evidence outcomes explicit and clarified pending
+period removal. Final retained certification and the next protected PR remain
+pending; this is not PostgreSQL or full human acceptance. The first exact-head
+certification stopped at full mypy: the new closed read-purpose parameter exposed
+five UUID-dictionary caller typing conflicts. Existing timetable callers now name
+their unchanged purpose explicitly; a fresh full certification is required.
+Four maintained native source/withdrawal and form-to-host-owner cases remain
+unexecuted #102 debt. See the
+[decision/hosting checkpoint](../checkpoints/2026-09-14-programme-decisions-and-hosting.md).
+
+The first dormant item-workspace increment is merged: complete
 labelled private inventory, organizer core creation, separate working/delivery/
 readiness applicability/public-copy forms, selected protected histories and
 pending-input protection. New owner queries retain exact creation and working
 source versions under canonical scope locks and required audit. No new domain
 writer, migration, runtime privilege, production route or profile pin is added.
-Focused feedback passes 86 database-free HTTP/query/form cases in 1.46s, five
+Focused feedback passes 91 database-free HTTP/query/form cases in 1.50s, five
 frontend guard cases, four-module strict typing and NumPy documentation.
 The 1280-by-720 synthetic browser exercised labelled navigation, separated
 layers, empty/view-only states and stale form retention; native authority and
-full human/accessibility acceptance are not claimed. Final exact-head
-certification and protected delivery remain pending. The first exact run was
+full human/accessibility acceptance are not claimed. Exact-head certification
+and protected delivery passed. The first exact run was
 stopped after Sphinx after review found an empty CSP nonce on non-HTML responses;
 fresh nonces and five response-shape regressions correct it before recertification.
 No successful receipt or PostgreSQL result is claimed for that interrupted run; see the
@@ -73,9 +106,9 @@ Current-profile manifests, production routing, writers and authority remain
 unchanged while these surfaces and the isolated fixture are developed.
 
 The inherited setup contract now acknowledges installed dormant Scheduling and
-accepted-item conversion. Remaining item controls (typed readiness evidence,
-discussion, withdrawal and hosting), guided intake/review/conversion, task
-continuations and setup are explicitly sequenced in #108. Keep #108 open
+accepted-item conversion. The local second increment completes the remaining item
+controls; guided intake/review/conversion, task continuations and setup are next
+in #108 after protected delivery. Keep #108 open
 through final gated promotion: its dormant fixture enables #109/#92 acceptance,
 not the other way around. #102 database restoration and #97 logical recovery
 remain prerequisites for final integrated acceptance and activation.

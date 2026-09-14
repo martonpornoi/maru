@@ -1,0 +1,83 @@
+{% extends "admin/base_site.html" %}
+{% load static tz %}
+{% block title %}{{ page_title }} · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'programme/workbench.js' %}" defer></script><script src="{% static 'programme/hosts.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">{% if personal %}My Maru / My hosting{% else %}Administration / Programme / Hosts{% endif %}</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench">
+  <h1>{{ page_title }}</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · {% if personal %}My exact hosting purposes{% else %}Exact-edition Programme hosting{% endif %}</summary>
+    {% if personal %}<p>Only your retained invitations, responses and purpose-owned availability are shown. Your hosting role grants no access to organizer working copy, discussion, review, other people or private delivery instructions.</p>
+    {% else %}<p>Private item labels, roster, history, shared availability and host management each require independent authority. An organizer cannot confirm, decline or share availability on another person's behalf.</p>{% endif %}
+    <p>{% if form %}This task permits an explicit command attempt. Current person, relationship, lifecycle and original source versions are checked again.{% else %}Read-only for this task and current state.{% endif %}</p>
+    <p>Organization {{ organization_id }} · Edition {{ edition_id }}</p>
+  </details>
+  {% if message %}<div class="baseline-notice" role="alert" tabindex="-1" autofocus id="host-message"><p>{{ message }}</p></div>{% endif %}
+  {% if personal %}
+    {% if task == "inventory" %}
+    <p>Choose one of your retained hosting purposes. An invitation is not confirmation; an ended relationship is history, not current work. These titles are deliberate invitation copy, not a published timetable.</p>
+    <ul class="programme-cards">{% for purpose in purposes %}<li><h2><a href="{{ root_url }}{{ purpose.item_id }}/invitation/">{{ purpose.title }}</a></h2><p>{{ purpose.role }} · {{ purpose.state }} · Invitation {{ purpose.invitation_sequence }}</p></li>{% empty %}<li>No retained hosting invitations for you in this edition.</li>{% endfor %}</ul>
+    {% else %}
+    <p><a href="{{ root_url }}">Back to my hosting</a></p>
+    <nav aria-label="My hosting tasks"><ul class="programme-task-links">
+      <li><a href="{{ root_url }}{{ item_id }}/invitation/">Invitation and response</a></li>
+      {% if can_availability %}<li><a href="{{ root_url }}{{ item_id }}/availability/">My availability</a></li>{% endif %}
+      {% if can_withdraw_availability %}<li><a href="{{ root_url }}{{ item_id }}/withdraw-availability/">Withdraw my availability</a></li>{% endif %}
+      <li><a href="{{ root_url }}{{ item_id }}/history/">My hosting history</a></li>
+    </ul></nav>
+    <p>My role: {{ snapshot.relationship.role }} · State: {{ snapshot.relationship.state }} · Invitation {{ snapshot.relationship.invitation_sequence }} · Relationship version {{ snapshot.relationship.version }}</p>
+    {% if task == "invitation" %}
+    <section class="baseline-panel" aria-labelledby="host-invitation-heading"><h2 id="host-invitation-heading">Your exact invitation</h2><h3>{{ invitation.title }}</h3><p class="programme-text">{{ invitation.briefing|default:"No additional host briefing was recorded." }}</p>
+      <p>Only you can respond to this invitation. Declining or withdrawing requires no private explanation. Confirmation does not register attendance or create a volunteer commitment.</p>
+      {% if snapshot.public_copy %}<h3>Currently available reviewed copy</h3><p>{{ snapshot.public_copy.public_title }}</p><p class="programme-text">{{ snapshot.public_copy.public_summary }}</p><p>{{ snapshot.public_copy.public_content_note }}</p><p>This is reviewed copy, not a promise of published times.</p>{% endif %}
+    </section>
+    {% elif task == "history" %}
+    <section aria-labelledby="host-own-history-heading"><h2 id="host-own-history-heading">My retained hosting history</h2><p>Ending a relationship does not reveal later private Programme changes or organizer rationale. Exact historical availability periods are not retained here.</p>
+      <ol class="programme-cards">{% for row in snapshot.history %}<li><p>Version {{ row.version }} · {{ row.role }} · {{ row.state }} · Invitation {{ row.invitation_sequence }}</p></li>{% empty %}<li>No retained response history.</li>{% endfor %}</ol>
+    </section>
+    {% elif task == "availability" %}
+    <section aria-labelledby="host-period-heading"><h2 id="host-period-heading">My purpose-owned availability</h2><p>Every local date/time below uses <strong>{{ zone_name }}</strong>. The edition envelope is {% localtime off %}{{ edition_starts|date:"c" }} through {{ edition_ends|date:"c" }}{% endlocaltime %} (exclusive end). Missing or repeated clock-change minutes are rejected rather than guessed.</p>
+      <p>Current sharing state: {{ snapshot.availability_state }} · Availability version {{ snapshot.availability_version }}. Saving replaces the complete set for this item only. No Workforce or other-item periods are copied. A shared empty set means explicitly unavailable; a private draft is not shared.</p>
+      <p>Mark unwanted periods for removal, or add another period. Keep positive, non-overlapping whole-minute intervals inside the edition. If its dates or zone changed, review the latest form before starting a new attempt.</p>
+    </section>
+    {% elif task == "withdraw-availability" %}
+    <section aria-labelledby="host-withdraw-heading"><h2 id="host-withdraw-heading">Withdraw my availability</h2><p>This clears your current exact periods for this item and marks availability withdrawn. It does not end confirmed hosting or copy periods elsewhere. This privacy exit does not reopen planning and requires no private explanation or period entry.</p></section>
+    {% endif %}
+    {% endif %}
+  {% else %}
+    <p><a href="{{ item_url }}">Back to the Programme item</a> · <a href="{{ root_url }}">Host roster</a>{% if can_invite %} · <a href="{{ root_url }}invite/">Invite a host</a>{% endif %}{% if can_availability %} · <a href="{{ root_url }}availability/">Shared availability</a>{% endif %}</p>
+    <p>Item state: {{ item_state }} · Version {{ roster.item_version }}. An invitation is recorded in Maru; this is not proof of email delivery or a person's confirmation.</p>
+    {% if task == "roster" %}
+    <ul class="programme-cards">{% for row in roster.entries %}<li><h2>{{ row.display_label }}</h2><p>{{ row.relationship.role }} · {{ row.relationship.state }} · Version {{ row.relationship.version }}{% if not row.person_current %} · Current person unavailable{% endif %}</p>
+      {% if can_history %}<p><a href="{{ root_url }}host/{{ row.relationship.host_id }}/history/">Review host history</a></p>{% endif %}
+      {% if can_manage %}{% if row.relationship.state == "invited" or row.relationship.state == "confirmed" %}<p><a href="{{ root_url }}host/{{ row.relationship.host_id }}/remove/">Remove this hosting relationship</a></p>{% elif row.person_current %}<p><a href="{{ root_url }}host/{{ row.relationship.host_id }}/reinvite/">Invite this person again</a></p>{% endif %}{% endif %}
+    </li>{% empty %}<li>No host relationships yet. Create an explicit invitation; proposal collaboration is not hosting consent.</li>{% endfor %}</ul>
+    {% elif task == "history" %}
+    <section aria-labelledby="host-history-heading"><h2 id="host-history-heading">History for {{ entry.display_label }}</h2><p>Complete bounded organizer history. Related display labels are current, not historical identity snapshots. Private availability drafts and exact historical periods are not shown.</p>
+      <ol class="programme-cards">{% for row in history %}<li><p>{{ row.relationship.state }} · {{ row.relationship.role }} · Version {{ row.relationship.version }} · {{ row.operation }}</p><p><strong>Retained reason:</strong> {{ row.reason }}</p><p>{{ row.occurred_at }} · Actor reference {{ row.actor_id }}</p></li>{% endfor %}</ol>
+    </section>
+    {% elif task == "availability" %}
+    <section aria-labelledby="host-shared-heading"><h2 id="host-shared-heading">Explicitly shared current availability</h2><p>Unknown or not-shared is not free time. Private drafts are not disclosed. Times include their UTC offset; exact historical periods are not retained here.</p>
+      <ul class="programme-cards">{% for label, row in shared_availability %}<li><h3>{{ label }}</h3><p>{{ row.status }} · Relationship version {{ row.host_version }} · Availability version {{ row.availability_version }}</p><ul>{% for period in row.periods %}<li>{{ period.starts_at|date:"c" }} to {{ period.ends_at|date:"c" }} · {{ period.kind }}</li>{% empty %}<li>No currently shared usable periods in this projection.</li>{% endfor %}</ul></li>{% empty %}<li>No host relationships.</li>{% endfor %}</ul>
+    </section>
+    {% elif task == "remove" %}<section class="baseline-panel"><h2>Remove hosting for {{ entry.display_label }}</h2><p>Removal ends the current invitation or confirmation and clears current availability. It is an organizer decision with retained rationale, not a claim that the person chose to withdraw. Any later invitation requires a new person-owned response.</p></section>
+    {% elif task == "reinvite" %}<section class="baseline-panel"><h2>Invite {{ entry.display_label }} again</h2><p>Supply new deliberate host-visible copy. Reinvitation resets the ended relationship to invited and requires a fresh response; old confirmation and availability are not restored.</p></section>
+    {% elif task == "invite" %}<section class="baseline-panel"><h2>Prepare an explicit invitation</h2><p>Use one known person's exact verified login address. Do not include private discussion or review text in the host-visible title or briefing. This creates neither an account nor attendance and sends no automatic email.</p></section>{% endif %}
+  {% endif %}
+  {% if form %}
+  <section class="baseline-panel" aria-labelledby="host-command-heading"><h2 id="host-command-heading">{% if personal %}Record my decision{% else %}{{ task_label }}{% endif %}</h2>
+    {% if pending or form.errors %}<p>Original input and versions are retained. Reloading discards these values; review current state before starting a new attempt.</p>{% endif %}
+    <p data-programme-dirty hidden role="status">Unsaved hosting input. Leaving this page discards it; nothing is saved automatically.</p>
+    <form method="post" action="{{ request.path }}" data-programme-command{% if pending or form.errors %} data-programme-pending="true"{% endif %}>{% csrf_token %}{{ form.as_div }}
+      {% if period_formset %}{{ period_formset.management_form }}{{ period_formset.non_form_errors }}
+      <div data-host-periods>{% for row in period_formset %}<fieldset data-host-period><legend>Availability period {{ forloop.counter }}</legend>{{ row.as_div }}</fieldset>{% endfor %}</div>
+      <template data-host-empty-period><fieldset data-host-period><legend>Additional availability period</legend>{{ period_formset.empty_form.as_div }}</fieldset></template>
+      <button type="button" data-host-add-period data-host-limit="128">Add availability period</button><p data-host-period-status role="status"></p>{% endif %}
+      <button type="submit">{% if personal %}Record my decision{% else %}{{ task_label }}{% endif %}</button>
+    </form>
+  </section>
+  {% elif task != "inventory" and task != "roster" %}<p>No edit controls are available for this task and current state.</p>{% endif %}
+</div>
+{% endblock %}

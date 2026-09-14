@@ -1,6 +1,7 @@
 # Programme host relationships and availability
 
-Status: dormant owner boundary; no active profile, invitation delivery, UI or API.
+Status: dormant owner boundary and guided HTML adapters; no active profile,
+production routes, automatic invitation delivery or API.
 Requirements: PRG-005, PRG-006, PRG-008, IDN-014 and NFR-013. Decision:
 [ADR 0087](../architecture/decisions/0087-programme-host-confirmation-and-availability.md).
 
@@ -22,6 +23,26 @@ fresh response. Limits fail closed, without truncating history or silently
 creating a second relationship.
 
 ## Public commands
+
+The [guided hosting page contract](../product/page-contracts/programme-host-workspace.md)
+adds separate Administration and My Maru adapters over these owner boundaries.
+The organizer selects a labelled roster entry, or deliberately supplies one known
+verified login address and fresh host-visible copy. The exact-address resolver
+returns identity only, not directory search results. It creates no account and
+does not send email. Host roster, history and shared availability remain separate
+field grants; version-coherent compositions fail unavailable rather than combine
+stale labels with a newer relationship. The personal inventory and invitation
+pages never query organizer working copy, roster or rationale.
+
+Native date/minute fields explicitly use the Events edition zone, rejecting
+missing/repeated DST minutes. A bounded formset replaces up to 128 periods for
+one purpose. Original item/host/invitation/edition versions and retry identity
+survive refusal. The separate availability-withdrawal form requires explicit
+confirmation but no period entry, private reason or live edition-date lookup.
+All authoritative state and lifecycle checks remain in the existing commands.
+The dormant `host_urls` routes are not included in production URL configuration.
+
+### Command catalog
 
 `maru.programme.host_commands` exposes:
 

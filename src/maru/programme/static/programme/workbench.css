@@ -37,6 +37,21 @@
 .programme-workbench form > div {
   margin-block: 1rem;
 }
+.programme-workbench input[type="checkbox"] {
+  width: auto;
+}
+.programme-workbench fieldset {
+  min-width: 0;
+  margin-block: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--hairline-color);
+}
+.programme-workbench fieldset > div {
+  margin-block: 0.75rem;
+}
+.programme-workbench legend {
+  font-weight: 600;
+}
 .programme-workbench label {
   display: block;
   font-weight: 600;

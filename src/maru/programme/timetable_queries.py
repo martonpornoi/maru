@@ -102,7 +102,12 @@ def _purposes(
 
 
 def load_personal_host_purposes(
-    *, actor_id: UUID, organization_id: UUID, edition_id: UUID, correlation_id: UUID
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    correlation_id: UUID,
+    purpose: str = "timetable",
 ) -> tuple[PersonalHostPurpose, ...]:
     """Read the current person's complete retained purposes under real self policy.
 
@@ -116,6 +121,8 @@ def load_personal_host_purposes(
         Exact edition whose current profile must admit the host-self capability.
     correlation_id : UUID
         Trusted identifier for the mandatory sensitive-read evidence.
+    purpose : str, default='timetable'
+        Closed timetable or hosting task attribution, never an authority override.
 
     Returns
     -------
@@ -129,6 +136,8 @@ def load_personal_host_purposes(
         If owner evidence is missing, inconsistent, over-bound or unavailable.
     ValidationError
         If trusted routing identifiers are malformed.
+    ValueError
+        If the caller requests an unregistered read purpose.
 
     Notes
     -----
@@ -141,6 +150,8 @@ def load_personal_host_purposes(
     declined/removed purposes are history, not work or attendance. Only a separate
     checked schedule query may assign released times to confirmed host purposes.
     """
+    if purpose not in {"timetable", "hosting"}:
+        raise ValueError("Choose a registered personal hosting read purpose.")
     if any(
         type(value) is not UUID or value.int == 0
         for value in (actor_id, organization_id, edition_id, correlation_id)
@@ -167,14 +178,24 @@ def load_personal_host_purposes(
             edition_id=edition_id,
             capability_code=PROGRAMME_VIEW_HOST_SELF,
             requested_fields=_FIELDS,
-            operation="programme.query.personal_host_timetable",
+            operation=(
+                "programme.query.personal_host_timetable"
+                if purpose == "timetable"
+                else "programme.query.personal_host_workspace"
+            ),
             loader=load,
             target_type="events.event_edition",
             target_id=edition_id,
             target_count=len,
-            reason="Own retained host timetable purposes",
+            reason=(
+                "Own retained host timetable purposes"
+                if purpose == "timetable"
+                else "Own retained hosting invitations and personal tasks"
+            ),
             correlation_id=correlation_id,
-            source_channel="programme-timetable",
+            source_channel="programme-timetable"
+            if purpose == "timetable"
+            else "programme-hosts",
             authorizer=DEFAULT_PROGRAMME_AUTHORIZER,
         )
     except DatabaseError as error:

@@ -199,7 +199,7 @@ def _load(request: SchedulingReadRequest) -> PersonalHostReleaseImpact:
         "edition_id": request.edition_id,
         "correlation_id": request.correlation_id,
     }
-    purposes = load_personal_host_purposes(**arguments)
+    purposes = load_personal_host_purposes(**arguments, purpose="timetable")
     confirmed = {row.host_id: row for row in purposes if row.state == "confirmed"}
     ownership = {
         "organization_id": request.organization_id,
@@ -233,7 +233,7 @@ def _load(request: SchedulingReadRequest) -> PersonalHostReleaseImpact:
             )
             after = _presences(request, current, confirmed)
             changes = _compare(confirmed, before, after, previous, current)
-    if load_personal_host_purposes(**arguments) != purposes:
+    if load_personal_host_purposes(**arguments, purpose="timetable") != purposes:
         raise SchedulingUnavailableError
     if (
         previous is not None

@@ -16,6 +16,12 @@ from django.urls import resolve
 
 from maru.programme import workbench_views as views
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
+from maru.programme.catalogs import (
+    PROGRAMME_DELIVERY_REVISION_SOURCE,
+    PROGRAMME_OPERATOR_ATTESTATION_SOURCE,
+    PROGRAMME_PUBLIC_RENDITION_SOURCE,
+    PROGRAMME_WORKING_REVISION_SOURCE,
+)
 from maru.programme.commands import (
     ProgrammeIdempotencyConflictError,
     ProgrammeLifecycleConflictError,
@@ -44,6 +50,10 @@ from maru.programme.workbench_forms import (
 from maru.programme.workbench_queries import (
     ProgrammeWorkbenchInventory,
     ProgrammeWorkbenchItem,
+)
+from maru.programme.workbench_sources import (
+    ProgrammeEvidenceSourceChoice,
+    ProgrammeWithdrawalChoice,
 )
 
 
@@ -659,3 +669,337 @@ def test_security_policy_has_a_nonempty_nonce_for_every_response(page, response_
     nonce = policy.split("'nonce-", 1)[1].split("'", 1)[0]
     assert len(nonce) >= 32
     assert "private, no-store" in response["Cache-Control"]
+
+
+@pytest.fixture
+def decisions(page, monkeypatch):
+    page.sources = {
+        layer: ProgrammeEvidenceSourceChoice(
+            code,
+            UUID(int=20 + index),
+            index + 1,
+            6,
+            f"Synthetic {layer} source {index + 1}",
+        )
+        for index, (layer, code) in enumerate(
+            {
+                "working": PROGRAMME_WORKING_REVISION_SOURCE,
+                "delivery": PROGRAMME_DELIVERY_REVISION_SOURCE,
+                "public-copy": PROGRAMME_PUBLIC_RENDITION_SOURCE,
+            }.items()
+        )
+    }
+
+    def source_choice(scope, *, item_id, layer):
+        assert scope.organization_id == page.organization
+        assert scope.edition_id == page.edition
+        assert item_id == page.item_id
+        return page.sources[layer]
+
+    page.source_reader = Mock(side_effect=source_choice)
+    page.withdrawal_reader = Mock(
+        return_value=(
+            ProgrammeWithdrawalChoice(UUID(int=44), 2, "Historical reviewed ceremony"),
+        )
+    )
+    page.person = Mock(return_value=SimpleNamespace(account_id=page.actor))
+    monkeypatch.setattr(views, "load_programme_evidence_source", page.source_reader)
+    monkeypatch.setattr(
+        views, "list_programme_withdrawal_choices", page.withdrawal_reader
+    )
+    monkeypatch.setattr(views, "resolve_active_verified_person_reference", page.person)
+    page.discussion_reader = Mock(
+        return_value=(
+            SimpleNamespace(
+                sequence=1,
+                body="Private Department decision",
+                reason="Restricted discussion reason",
+                occurred_at="Synthetic timestamp",
+                item_version=4,
+                actor_id=page.actor,
+                hidden_contact="Never disclose this extra field",
+            ),
+        )
+    )
+    monkeypatch.setattr(
+        views.queries, "list_programme_discussion", page.discussion_reader
+    )
+    for task, module, name in (
+        ("discussion", views.commands, "append_programme_discussion"),
+        ("evidence", views.commands, "record_programme_readiness_evidence"),
+        (
+            "withdrawal",
+            views.public_copy_commands,
+            "withdraw_programme_public_rendition",
+        ),
+    ):
+        page.writers[task] = Mock(return_value=SimpleNamespace(item_id=page.item_id))
+        monkeypatch.setattr(module, name, page.writers[task])
+    return page
+
+
+def test_evidence_requires_explicit_concern_outcome_and_source(decisions):
+    response = call(decisions, "evidence")
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.content, "html.parser")
+    for name in ("concern", "state", "source"):
+        field = soup.select_one(f'select[name="{name}"]')
+        assert field.find("option")["value"] == ""
+
+
+def decision_input(page, task):
+    specific = {
+        "discussion": {"body": "New private decision"},
+        "evidence": {
+            "concern": "technical_needs",
+            "state": "blocked",
+            "source": "operator",
+            "evidence_note": "Synthetic unresolved delivery requirement",
+        },
+        "withdrawal": {"rendition_id": str(UUID(int=44)), "confirm_withdrawal": "on"},
+    }
+    return {
+        "expected_version": "7",
+        "idempotency_key": str(UUID(int=90)),
+        "reason": "Synthetic decision reason",
+        **specific[task],
+    }
+
+
+@pytest.mark.parametrize("task", ["discussion", "evidence", "withdrawal"])
+def test_new_decisions_use_exact_scope_existing_writers_and_original_versions(
+    decisions, task
+):
+    response = call(decisions, task, decision_input(decisions, task))
+    assert response.status_code == 302
+    values = decisions.writers[task].call_args.kwargs
+    assert values["actor_id"] == decisions.actor
+    assert values["organization_id"] == decisions.organization
+    assert values["edition_id"] == decisions.edition
+    assert values["item_id"] == decisions.item_id
+    assert values["expected_version"] == 7
+    assert values["idempotency_key"] == UUID(int=90)
+    assert values["source_channel"] == "programme-workbench"
+    assert values["reason"] == "Synthetic decision reason"
+    assert "confirm_withdrawal" not in values
+    assert "source" not in values
+    if task == "evidence":
+        assert values["source_code"] == PROGRAMME_OPERATOR_ATTESTATION_SOURCE
+        assert values["source_object_id"] is values["source_version"] is None
+    elif task == "withdrawal":
+        assert values["rendition_id"] == UUID(int=44)
+    for other, writer in decisions.writers.items():
+        if other != task:
+            writer.assert_not_called()
+
+
+@pytest.mark.parametrize("layer", ["working", "delivery", "public-copy"])
+def test_evidence_forwards_only_the_selected_authorized_exact_source(decisions, layer):
+    source = decisions.sources[layer]
+    data = {**decision_input(decisions, "evidence"), "source": source.key}
+    response = call(decisions, "evidence", data)
+    assert response.status_code == 302
+    values = decisions.writers["evidence"].call_args.kwargs
+    assert (
+        values["source_code"],
+        values["source_object_id"],
+        values["source_version"],
+    ) == (
+        source.code,
+        source.object_id,
+        source.version,
+    )
+
+
+def test_evidence_does_not_fetch_or_offer_denied_delivery_sources(decisions):
+    def authorize(**kwargs):
+        if kwargs["capability_code"] == "programme.view_delivery":
+            raise ProgrammeAuthorizationDeniedError
+        return SimpleNamespace(accepts_private_planning_writes=True)
+
+    decisions.auth.side_effect = authorize
+    response = call(decisions, "evidence")
+    assert response.status_code == 200
+    assert all(
+        call.kwargs["layer"] != "delivery"
+        for call in decisions.source_reader.call_args_list
+    )
+    assert decisions.sources["delivery"].key not in response.content.decode()
+    decisions.source_reader.reset_mock()
+    response = call(
+        decisions,
+        "evidence",
+        {
+            **decision_input(decisions, "evidence"),
+            "source": decisions.sources["delivery"].key,
+        },
+    )
+    assert response.status_code == 400
+    decisions.writers["evidence"].assert_not_called()
+
+
+def test_expired_source_is_rejected_without_rebinding_to_latest(decisions):
+    original = decisions.sources["working"]
+    decisions.sources["working"] = replace(original, object_id=UUID(int=60), version=99)
+    response = call(
+        decisions,
+        "evidence",
+        {
+            **decision_input(decisions, "evidence"),
+            "source": original.key,
+        },
+    )
+    doc = parsed(response)
+    assert response.status_code == 400
+    assert doc.select_one('[name="expected_version"]')["value"] == "7"
+    assert doc.select_one('[name="idempotency_key"]')["value"] == str(UUID(int=90))
+    assert "Synthetic unresolved delivery requirement" in doc.get_text()
+    assert doc.select_one('form[data-programme-pending="true"]')
+    decisions.writers["evidence"].assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "field", ["source_code", "source_object_id", "source_version", "actor_id"]
+)
+def test_evidence_rejects_raw_source_or_authority_override(decisions, field):
+    response = call(
+        decisions,
+        "evidence",
+        {
+            **decision_input(decisions, "evidence"),
+            field: str(UUID(int=71)),
+        },
+    )
+    assert response.status_code == 400
+    decisions.writers["evidence"].assert_not_called()
+
+
+@pytest.mark.parametrize("task", ["discussion", "evidence", "withdrawal"])
+def test_new_decision_staleness_retains_original_form_and_focus(decisions, task):
+    decisions.writers[task].side_effect = ProgrammeVersionConflictError
+    response = call(decisions, task, decision_input(decisions, task))
+    doc = parsed(response)
+    assert response.status_code == 409
+    assert doc.select_one('[name="expected_version"]')["value"] == "7"
+    assert doc.select_one('[name="idempotency_key"]')["value"] == str(UUID(int=90))
+    assert doc.select_one('[role="alert"][autofocus]')
+    assert "Synthetic decision reason" in doc.get_text()
+
+
+@pytest.mark.parametrize("task", ["discussion", "evidence", "withdrawal"])
+def test_new_decision_read_denial_happens_before_selected_private_lookup(
+    decisions, task
+):
+    required = views._READS[task]
+
+    def authorize(**kwargs):
+        if (kwargs["capability_code"], kwargs.get("requested_fields")) == required:
+            raise ProgrammeAuthorizationDeniedError
+        return SimpleNamespace(accepts_private_planning_writes=True)
+
+    decisions.auth.side_effect = authorize
+    response = call(decisions, task)
+    assert response.status_code == 404
+    decisions.private.assert_not_called()
+    decisions.source_reader.assert_not_called()
+    decisions.discussion_reader.assert_not_called()
+    decisions.withdrawal_reader.assert_not_called()
+
+
+@pytest.mark.parametrize("task", ["discussion", "evidence", "withdrawal"])
+def test_new_decision_write_authority_is_independent_from_read(decisions, task):
+    def authorize(**kwargs):
+        if (
+            kwargs["capability_code"] == views._WRITES[task]
+            and kwargs.get("requested_fields") is None
+        ):
+            raise ProgrammeAuthorizationDeniedError
+        return SimpleNamespace(accepts_private_planning_writes=True)
+
+    decisions.auth.side_effect = authorize
+    assert not parsed(call(decisions, task)).select(".programme-workbench form")
+    response = call(decisions, task, decision_input(decisions, task))
+    assert response.status_code == 404
+    decisions.writers[task].assert_not_called()
+
+
+@pytest.mark.parametrize("retired", [False, True])
+def test_privacy_withdrawal_remains_available_with_planning_closed(decisions, retired):
+    decisions.auth.return_value = SimpleNamespace(accepts_private_planning_writes=False)
+    if retired:
+        selected = decisions.selected
+        decisions.private.return_value = replace(
+            selected,
+            private=replace(
+                selected.private,
+                item=replace(selected.private.item, lifecycle="retired"),
+            ),
+        )
+    response = call(decisions, "withdrawal")
+    assert response.status_code == 200
+    assert parsed(response).select_one('[name="rendition_id"]')
+    assert (
+        call(
+            decisions, "withdrawal", decision_input(decisions, "withdrawal")
+        ).status_code
+        == 302
+    )
+    assert not parsed(call(decisions, "discussion")).select(".programme-workbench form")
+    assert not parsed(call(decisions, "evidence")).select(".programme-workbench form")
+
+
+def test_withdrawal_requires_current_genuine_person(decisions):
+    decisions.person.return_value = None
+    assert not parsed(call(decisions, "withdrawal")).select(".programme-workbench form")
+    assert (
+        call(
+            decisions, "withdrawal", decision_input(decisions, "withdrawal")
+        ).status_code
+        == 404
+    )
+    decisions.writers["withdrawal"].assert_not_called()
+
+
+@pytest.mark.parametrize("change", ["unconfirmed", "foreign", "already-withdrawn"])
+def test_withdrawal_requires_confirmation_and_exact_available_choice(decisions, change):
+    data = decision_input(decisions, "withdrawal")
+    if change == "unconfirmed":
+        data.pop("confirm_withdrawal")
+    elif change == "foreign":
+        data["rendition_id"] = str(UUID(int=500))
+    else:
+        decisions.withdrawal_reader.return_value = ()
+    assert call(decisions, "withdrawal", data).status_code == 400
+    decisions.writers["withdrawal"].assert_not_called()
+
+
+def test_discussion_discloses_only_selected_explicit_history_fields(decisions):
+    response = call(decisions, "discussion")
+    doc = parsed(response)
+    assert response.status_code == 200
+    assert len(doc.select("h1")) == len(doc.select("main")) == 1
+    assert "Private Department decision" in doc.get_text()
+    assert "Restricted discussion reason" in doc.get_text()
+    assert "Never disclose this extra field" not in doc.get_text()
+    assert "Private working brief" not in doc.get_text()
+    assert "Secret technical cue" not in doc.get_text()
+    assert decisions.discussion_reader.call_args.kwargs["limit"] == 200
+    decisions.source_reader.assert_not_called()
+    decisions.withdrawal_reader.assert_not_called()
+
+
+@pytest.mark.parametrize("task", ["discussion", "evidence", "withdrawal"])
+def test_new_decision_dependency_failures_return_no_partial_private_content(
+    decisions, task
+):
+    reader = {
+        "discussion": decisions.discussion_reader,
+        "evidence": decisions.source_reader,
+        "withdrawal": decisions.withdrawal_reader,
+    }[task]
+    reader.side_effect = DatabaseError("Synthetic owner dependency failure")
+    response = call(decisions, task)
+    assert response.status_code == 503
+    assert "Private" not in response.content.decode()
+    assert "Historical reviewed ceremony" not in response.content.decode()
+    assert "no-store" in response["Cache-Control"]

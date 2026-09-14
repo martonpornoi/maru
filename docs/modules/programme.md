@@ -578,6 +578,17 @@ configure readiness applicability, deliberately approve public copy and inspect
 separately authorized histories. These are adapters over existing commands, not
 new writers, profile activation, evidence of satisfied readiness or publication.
 
+The second #108 increment adds Department discussion, explicit readiness
+attestations or independently authorized typed sources, and exact reasoned
+public-copy withdrawal. `workbench_sources` reads only identifiers, versions and
+deliberate labels under canonical locks, field authority and required audit; it
+does not fetch source bodies. Withdrawn latest public copy never falls back to an
+older rendition as evidence. Privacy withdrawal explicitly selects a retained,
+not-yet-withdrawn rendition and requires a current genuine person; it remains an
+owner-governed privacy exit for closed planning and retired items.
+An independently authorized Hosts link leads to the separate
+[organizer and personal hosting tasks](programme-hosts.md).
+
 `workbench_queries.load_programme_workbench_inventory` adds a complete bounded
 title-only inventory and exact edition creation cursor. It selects no working
 summaries or adjacent layer values. `load_programme_workbench_item` binds the
@@ -601,8 +612,8 @@ no autosave, local storage, new activity collection or offline write is added.
 No schema, runtime privilege or migration changes are required. Native coherent
 source/command, wrong-edition, current-profile denial and required-audit failure
 cases remain maintained but unexecuted under #102/ADR 0100. This surface still
-needs the remaining #108 intake/review/conversion/host/notice/setup connections,
-readiness evidence/discussion/withdrawal controls, #109 integrated proof and #92
+needs the remaining #108 intake/review/conversion/notice/setup connections,
+#109 integrated proof and #92
 human acceptance. It does not justify final activation or closing #48/#108.
 
 ### Exact-person timetable purposes
@@ -614,6 +625,11 @@ verified person and exact tenant/edition are independently checked. Canonical
 parent and actor locks precede rows; final authorization and mandatory
 `programme.query.personal_host_timetable` audit precede disclosure. There is no
 caller-selectable subject or injected authorizer in this query.
+
+The closed `purpose="hosting"` attribution reuses precisely the same self
+capability, fields, locking and mandatory audit for the guided hosting inventory;
+it uses `programme.query.personal_host_workspace` and `programme-hosts` instead
+of the unchanged default timetable attribution. It cannot widen read authority.
 
 The current relationship's exact immutable invitation supplies its deliberate
 title and briefing. Private working/public-copy selection, organizer rationale,
