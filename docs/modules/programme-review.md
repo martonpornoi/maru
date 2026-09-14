@@ -108,6 +108,9 @@ nonempty field ceiling, and audit correlation:
   the decision's own version/time and the current case version. Message/outcome
   and own acknowledgement/time have separate field ceilings. Another person's
   recipient or acknowledgement data is never projected.
+- `get_self_programme_decision`: one exact addressed message through the same
+  recipient/field/audit boundary, selected without scanning history pages.
+  Foreign and unknown identifiers are denied alike.
 
 Pages contain one to 100 results. Case queues use an exclusive UUID cursor;
 evidence uses exclusive case versions; recipient history uses the prior
@@ -141,6 +144,28 @@ the sensitive-read audit before returning. Audit failure prevents disclosure.
 Unknown/foreign reviewer objects are denied without exposing their version.
 
 ## Lifecycle, privacy, and recovery
+
+### Dormant personal decision workspace
+
+The [decision receipt page contract](../product/page-contracts/programme-decision-receipts.md)
+defines reserved personal history/detail routes. The adapter uses only the
+queries above and the existing closed acknowledgement command. A person sees
+escaped immutable messages and their own receipt, never staff evidence or other
+recipients' responses. Independent mutation authority permits an explicit
+receipt; no private rationale is requested. The form retains the original case
+version and retry key, including after a conflict or uncertain attempt.
+
+These tasks do not depend on current proposal membership, an active call,
+current Department or open planning. Addressed history and own receipt retain
+their existing lifecycle exception. Before/after-render reads prevent stale
+private disclosure; missing scope/object and unavailable dependencies produce
+generic failure. Shared shell/assets provide ordinary labels, focused errors,
+wrapping messages and pending-input protection. The exact template's asset
+markers are admitted by containment tests, while production routes and every
+generic Programme fence remain closed. Organizer review/conversion and wider
+navigation/setup remain #108 work; no current profile is activated.
+
+### Retained owner lifecycle
 
 Fresh staff work requires open private planning and the same submitted seal.
 Reopening, withdrawal, newer seals, and Department retirement serialize with

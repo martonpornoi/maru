@@ -720,7 +720,7 @@ def get_programme_review_detail(  # noqa: DOC503 -- Content-bound checks delegat
 
 
 @transaction.atomic
-def list_self_programme_decisions(
+def list_self_programme_decisions(  # noqa: DOC502 -- Shared recipient projection delegates denial.
     *,
     request: ProgrammeReviewReadRequest,
     after_id: UUID | None = None,
@@ -750,6 +750,52 @@ def list_self_programme_decisions(
     ApplicationsProgrammeAuthorizationDeniedError
         If identity, exact self purpose, fields, scope, or page bounds fail.
     """
+    return _self_decision_page(request, after_id, limit, authorizer)
+
+
+@transaction.atomic
+def get_self_programme_decision(
+    *,
+    request: ProgrammeReviewReadRequest,
+    decision_id: UUID,
+    authorizer: ApplicationsProgrammeAuthorizer = _DEFAULT_AUTHORIZER,
+) -> ProgrammeDecisionMessage:
+    """Read one exact addressed message without scanning other recipient pages.
+
+    Parameters
+    ----------
+    request : ProgrammeReviewReadRequest
+        Exact recipient self purpose and explicit message/own-receipt ceiling.
+    decision_id : UUID
+        Exact decision selected from the authorized recipient history.
+    authorizer : ApplicationsProgrammeAuthorizer, default=_DEFAULT_AUTHORIZER
+        Real policy or the established isolated-test admission seam.
+
+    Returns
+    -------
+    ProgrammeDecisionMessage
+        Immutable addressed message and independently filtered own receipt.
+
+    Raises
+    ------
+    ApplicationsProgrammeAuthorizationDeniedError
+        If the decision is unknown, foreign or not addressed to this person.
+    """
+    require_programme_uuid(decision_id, field="decision_id")
+    page = _self_decision_page(request, None, 1, authorizer, decision_id=decision_id)
+    if len(page.items) != 1:
+        raise ApplicationsProgrammeAuthorizationDeniedError
+    return page.items[0]
+
+
+def _self_decision_page(
+    request: ProgrammeReviewReadRequest,
+    after_id: UUID | None,
+    limit: int,
+    authorizer: ApplicationsProgrammeAuthorizer,
+    *,
+    decision_id: UUID | None = None,
+) -> ProgrammeDecisionPage:
     _limit(limit)
     if after_id is not None:
         require_programme_uuid(after_id, field="after_id")
@@ -768,6 +814,8 @@ def list_self_programme_decisions(
         entry__case__proposal__organization_id=request.organization_id,
         entry__case__proposal__edition_id=request.edition_id,
     )
+    if decision_id is not None:
+        query = query.filter(id=decision_id)
     if after_id is not None:
         previous = (
             query.filter(id=after_id).values_list("entry__created_at", "id").first()
@@ -804,7 +852,12 @@ def list_self_programme_decisions(
         )
         for row in rows[:limit]
     )
-    _audit(request, "self_decisions", None, authorizer)
+    _audit(
+        request,
+        "self_decision" if decision_id is not None else "self_decisions",
+        decision_id,
+        authorizer,
+    )
     return ProgrammeDecisionPage(
         items, rows[limit - 1].id if len(rows) > limit else None
     )

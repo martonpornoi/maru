@@ -25,6 +25,7 @@ from maru.applications.programme_review_inputs import (
 )
 from maru.applications.programme_review_queries import (
     get_programme_review_detail,
+    get_self_programme_decision,
     list_self_programme_decisions,
 )
 from maru.audit.models import AuditEvent
@@ -256,6 +257,10 @@ def test_outsiders_get_no_recipient_history_or_acknowledgement_authority():
         == ()
     )
     for decision_id in (decision.target_id, uuid4()):
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_self_programme_decision(
+                request=request, decision_id=decision_id, authorizer=_AUTHORIZER
+            )
         with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
             world.command(
                 world.peer.id,

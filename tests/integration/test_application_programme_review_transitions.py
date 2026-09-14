@@ -37,6 +37,7 @@ from maru.applications.programme_review_inputs import (
     ProgrammeReviewCommandInput as Intent,
 )
 from maru.applications.programme_review_queries import (
+    get_self_programme_decision,
     list_programme_review_cases,
     list_self_programme_decisions,
 )
@@ -475,6 +476,14 @@ def test_exact_included_collaborator_keeps_own_message_after_later_removal():
         self_access=True,
     )
     assert (
+        get_self_programme_decision(
+            request=collaborator_request,
+            decision_id=decision.target_id,
+            authorizer=_AUTHORIZER,
+        ).own_acknowledged
+        is True
+    )
+    assert (
         list_self_programme_decisions(
             request=collaborator_request, authorizer=_AUTHORIZER
         )
@@ -535,6 +544,15 @@ def test_retired_department_revokes_staff_review_but_not_addressed_history():
         list_self_programme_decisions(request=request, authorizer=_AUTHORIZER)
         .items[0]
         .own_acknowledged
+        is True
+    )
+
+    assert (
+        get_self_programme_decision(
+            request=request,
+            decision_id=decision.target_id,
+            authorizer=_AUTHORIZER,
+        ).own_acknowledged
         is True
     )
 

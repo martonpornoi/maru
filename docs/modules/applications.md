@@ -330,6 +330,14 @@ Shift, schedule, or publication.
 
 ## Dormant Programme review and decisions
 
+The [personal decision workspace](../product/page-contracts/programme-decision-receipts.md)
+adds reserved unmounted history and exact-message tasks with explicit own receipt.
+It uses exact-seal recipient queries and the dedicated review writer, not current
+proposal membership or generic Applications decisions. Read/acknowledgement
+capabilities remain separate. Historical decisions do not imply current effective
+acceptance, conversion or hosting. Organizer review/moderation/conversion and
+ordinary navigation remain unfinished #108 work.
+
 The separate [Programme review and decisions contract](programme-review.md)
 implements PRG-003/PRG-004 and ADR 0085. Explicit policies pin stage question
 allowlists, rubrics, quorum, anonymity, discussion, and decision templates to an
