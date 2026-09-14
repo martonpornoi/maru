@@ -23,6 +23,18 @@ review evidence. `list_programme_review_setup_calls` uses a bounded UUID cursor;
 the current policy sequence; `get_programme_review_setup_policy` reads one
 explicit positive version with its creation reason. All audit before release.
 
+`list_programme_review_intake_seals` uses that same exact `review_setup` ceiling
+to list only current submitted sources for the chosen call, filtering existing
+cases and all retained contributor conflicts before exclusive-cursor pagination.
+`get_programme_review_intake_seal` returns exact retained seal metadata with
+advisory eligibility, not answers or a case roster. Retained metadata remains
+readable after source changes so the original confirmed POST can reach canonical
+receipt replay. The dormant policy-to-source-to-confirmation journey supplies
+the exact seal and immutable policy, canonical creation version zero and original
+retry key. Reason/confirmation and safe error recovery reuse the shared shell.
+Named assignment, content review, moderation, decision and conversion remain
+separate independently authorized tasks; opening alone performs none of them.
+
 The guided composer starts only from activated or retired immutable call
 configuration; Drafts remain setup-pending without removing the kernel's
 existing Draft-policy operation. Proposed stages/templates are validated
