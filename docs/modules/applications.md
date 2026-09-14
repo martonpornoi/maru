@@ -131,9 +131,10 @@ removal. Cross-section moves validate the complete final graph atomically;
 empty mandatory sections and broken dependencies are refused, not repaired.
 Creation fences the displayed edition version and zone under the canonical lock;
 editing preserves the original call cursor. Adding an option row saves no domain
-state. Cross-Department selection/reassignment and the separate proposal, review
-and conversion journeys remain unfinished #108 work. The generic studio and
-discriminator exclusions are unchanged.
+state. A separate complete Department chooser and confirmed Draft transfer reuse
+independent exact-Department authority and the dedicated dual-scope owner command.
+The separate proposal, review and conversion journeys remain unfinished #108 work.
+The generic studio and discriminator exclusions are unchanged.
 
 `programme_call_editor` reconstructs every typed question, condition, option,
 policy, catalog and duration bound without querying or writing. It refuses stale
@@ -157,6 +158,31 @@ required protected-read audit before returning. It lists no other Departments,
 holders, proposal counts or contributor values and does not require broader
 Workforce structure permission. Ordinary ownership reassignment remains a
 different dual-Department command; no orphan discovery or recovery UI is added.
+
+`list_managed_programme_call_departments` in `programme_call_departments` starts
+from an independently admitted exact Department. It obtains Workforce's complete
+bounded ID-only current set, evaluates each exact call-management decision before
+resolving an ID/code/name choice and rechecks membership, all candidate decisions
+and current admitted scopes before audited disclosure. Only ordinary
+`permission_absent` removes a choice. Incomplete/unsupported policy, overflow,
+incoherent references, revocation or required audit failure discard the whole
+projection. No hidden names, counts, hierarchy or holder references escape.
+The supported management decision retains exactly its `reason`/`audit`
+obligations; this restricted read records its coded purpose through the existing
+protected-read audit contract, not a new free-form read-reason prompt.
+
+The reserved `departments/` task supplies ordinary labelled links distinguished
+by stable code. A Draft's `reassign/` task excludes its current owner from the
+closed destination field and confirms the current and destination scope, reason,
+original aggregate cursor and retry identity. Only `reassign_programme_call`
+writes; it retains canonical locking, both independent authorities and current
+private-planning checks. Configuration and retained evidence are not rewritten.
+After success, the destination overview authorizes afresh. After a lost response,
+the old source may be unavailable: the adapter supplies nondisclosing current-
+inventory guidance, never an orphan directory or a promise of no earlier commit.
+Read-only transfer pages load no other Department labels; ordinary chooser links
+remain available for admitted inventories after planning closes. Accountable
+setup still owns first entry. No edition-wide call-management grant is invented.
 
 A `ProgrammeCall` is a one-to-one facet over an `ApplicationDefinition` whose
 target kind is `programme_item`. It reuses the existing definition sections,

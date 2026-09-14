@@ -107,12 +107,21 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 ## Active bounded outcome: guided departmental journey (#108)
 
 Branch: `codex/programme-call-departments`, from protected PR #116.
-Next bounded increment: independently authorized labelled Department selection
-and confirmed Draft-call reassignment through the existing dual-Department owner
-command. Accountable setup still owns first entry; the chooser must not invent
-edition-wide management, broad Workforce structure access or orphan discovery.
-Keep complete-or-unavailable choices, authorization before labels, required audit,
-reauthorization, original cursor/retry evidence and safe stale/denied states.
+The next bounded Department-selection/reassignment increment is implemented
+locally, pending exact-head certification and protected delivery. The complete
+chooser independently admits each current Department before ID/code/name
+disclosure, rechecks candidate decisions and membership and requires audit.
+Only ordinary absent permission filters a choice; incomplete policy/dependencies
+discard the whole list. A separately confirmed Draft transfer uses the existing
+dual-Department owner command and original cursor/retry evidence. Accountable
+setup still owns first entry; no broader directory or orphan recovery is added.
+Focused feedback passes 80 cases in 1.31s; full unit preflight passes 6,362 in
+39.04s. Ruff, focused typing and NumPy documentation pass. The 1280-by-720
+synthetic browser confirms labels/codes, explicit confirmation, stale retention,
+success navigation and read-only/empty/denied states; it has no database or
+persistent command behavior. Two maintained native cases are unexecuted #102
+debt; full human acceptance remains #92. See the
+[Department task checkpoint](../checkpoints/2026-09-14-programme-call-departments.md).
 
 The dedicated call inventory/configuration/lifecycle workspace (PR #115) and
 explicit creation/section/question/condition composer (PR #116) are merged.

@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .programme_call_composer_views import programme_call_composer
+from .programme_call_department_views import programme_call_departments
 from .programme_call_views import programme_calls
 
 _ROOT = (
@@ -11,6 +12,16 @@ _ROOT = (
 )
 urlpatterns = [
     path(_ROOT, programme_calls, name="programme-calls"),
+    path(
+        _ROOT + "departments/",
+        programme_call_departments,
+        name="programme-call-departments",
+    ),
+    path(
+        _ROOT + "<uuid:call_id>/reassign/",
+        programme_call_departments,
+        name="programme-call-reassign",
+    ),
     path(_ROOT + "new/", programme_call_composer, name="programme-call-create"),
     path(
         _ROOT + "<uuid:call_id>/compose/section/",

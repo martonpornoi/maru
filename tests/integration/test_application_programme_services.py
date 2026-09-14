@@ -36,6 +36,10 @@ from maru.applications.programme_call_composer_forms import (
     ProgrammeCallCreationForm,
     ProgrammeQuestionForm,
 )
+from maru.applications.programme_call_department_views import ProgrammeCallTransferForm
+from maru.applications.programme_call_departments import (
+    list_managed_programme_call_departments,
+)
 from maru.applications.programme_call_editor import (
     edit_programme_call_question,
     edit_programme_call_section,
@@ -2242,3 +2246,131 @@ def test_foreign_and_missing_calls_have_indistinguishable_failure_evidence() -> 
         edition_id=local_edition.id
     ).exists()
     assert not DomainEvent.objects.filter(event_edition_id=local_edition.id).exists()
+
+
+@pytest.mark.parametrize("case", ["transfer", "destination-denied"])
+def test_guided_department_choices_and_transfer_native_owner(case: str) -> None:
+    """Maintain native projection, dual-scope transfer and replay debt for #102."""
+    edition = EventEditionFactory()
+    manager = AccountFactory(display_name="Synthetic call manager")
+    source = create_department_for_test(
+        edition=edition, name="Programme", expected_code="programme"
+    )
+    destination = create_department_for_test(
+        edition=edition, name="Stage", expected_code="stage"
+    )
+    hidden = create_department_for_test(
+        edition=edition, name="Private", expected_code="private"
+    )
+    denied = {hidden.id}
+    if case == "destination-denied":
+        denied.add(destination.id)
+
+    class ChoiceAuthorizer(_AllowExactProgrammeAuthorizer):
+        def authorize_department(self, **kwargs: object) -> PolicyDecision:
+            if kwargs["department_id"] in denied:
+                return PolicyDecision(
+                    allowed=False,
+                    fields=frozenset(),
+                    obligations=frozenset(),
+                    reason_code="permission_absent",
+                )
+            return PolicyDecision(
+                allowed=True,
+                fields=frozenset(),
+                obligations=frozenset({"reason", "audit"}),
+                reason_code="direct_grant",
+            )
+
+    authorizer = ChoiceAuthorizer()
+    common = {
+        "actor_id": manager.id,
+        "organization_id": edition.organization_id,
+        "edition_id": edition.id,
+        "source_channel": "test",
+        "authorizer": authorizer,
+    }
+    now = timezone.now()
+    created = create_programme_call(
+        **common,
+        definition_input=_definition(now, code="guided-transfer"),
+        configuration=_configuration(source.id),
+        expected_version=0,
+        reason="Create a synthetic transfer draft.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        now=now,
+    )
+    read_correlation = uuid4()
+    choices = list_managed_programme_call_departments(
+        **common, department_id=source.id, correlation_id=read_correlation
+    )
+    expected = (
+        {source.id} if case == "destination-denied" else {source.id, destination.id}
+    )
+    assert {item.department_id for item in choices} == expected
+    audits = AuditEvent.objects.filter(
+        correlation_id=read_correlation,
+        operation="applications.programme.query.managed_department_choices",
+    )
+    assert set(audits.values_list("target_id", flat=True)) == expected
+    retry = uuid4()
+    form = ProgrammeCallTransferForm(
+        data={
+            "destination_department_id": str(destination.id),
+            "expected_version": str(created.resulting_version),
+            "retry_key": str(retry),
+            "reason": "Transfer synthetic draft ownership.",
+            "confirm": "on",
+        },
+        choices=tuple(item for item in choices if item.department_id != source.id),
+    )
+    command = {
+        **common,
+        "call_id": created.target_id,
+        "source_department_id": source.id,
+        "destination_department_id": destination.id,
+        "expected_version": created.resulting_version,
+        "reason": "Transfer synthetic draft ownership.",
+        "retry_key": retry,
+        "correlation_id": uuid4(),
+        "now": now,
+    }
+    if case == "destination-denied":
+        assert not form.is_valid()
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            reassign_programme_call(**command)
+        assert (
+            ProgrammeCall.objects.get(id=created.target_id).owner_department_id
+            == source.id
+        )
+        assert not ProgrammeCommandReceipt.objects.filter(
+            edition_id=edition.id, action="call_reassigned"
+        ).exists()
+    else:
+        assert form.is_valid(), form.errors
+        command.update(
+            destination_department_id=UUID(
+                form.cleaned_data["destination_department_id"]
+            ),
+            expected_version=form.cleaned_data["expected_version"],
+            retry_key=form.cleaned_data["retry_key"],
+            reason=form.cleaned_data["reason"],
+        )
+        moved = reassign_programme_call(**command)
+        assert reassign_programme_call(**command) == replace(moved, replayed=True)
+        projection = get_managed_programme_call_configuration(
+            **common,
+            department_id=destination.id,
+            call_id=created.target_id,
+            correlation_id=uuid4(),
+        )
+        assert projection.summary.owner_department_id == destination.id
+        assert projection.summary.aggregate_version == created.resulting_version + 1
+        assert (
+            ProgrammeCommandReceipt.objects.filter(
+                edition_id=edition.id, action="call_reassigned"
+            ).count()
+            == 1
+        )
+    assert not ProgrammeProposal.objects.filter(edition_id=edition.id).exists()

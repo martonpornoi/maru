@@ -94,6 +94,9 @@ _DORMANT_TEMPLATE_MARKERS = {
     (
         "src/maru/applications/templates/applications/programme_call_composer.html"
     ): frozenset({"programme_call"}),
+    (
+        "src/maru/applications/templates/applications/programme_call_departments.html"
+    ): frozenset({"programme_call"}),
 }
 
 

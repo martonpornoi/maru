@@ -11,6 +11,7 @@
 <div class="programme-calls">
   <h1>{% if source %}{{ source.summary.name }}{% else %}Programme calls{% endif %}</h1>
   <p>Department: {{ department.label }}. This workspace is a dormant rehearsal surface, not a published call.</p>
+  <p><a href="{{ root_url }}departments/">Choose Department</a></p>
   <details><summary>Access · Exact-Department call management</summary><p>Each query and command checks your current verified identity and this exact Department. This grants no proposal answers, contributor profiles, review data, Workforce holders or Programme item authority.</p></details>
   {% block call_body %}
   {% if source %}
@@ -18,6 +19,7 @@
     <li><a href="{{ root_url }}">Department calls</a></li><li><a href="{{ call_url }}overview/"{% if task == "overview" %} aria-current="page"{% endif %}>Complete configuration</a></li>
     {% if can_edit %}<li><a href="{{ call_url }}details/"{% if task == "details" %} aria-current="page"{% endif %}>Details and policy</a></li><li><a href="{{ call_url }}window/"{% if task == "window" %} aria-current="page"{% endif %}>Replace deadlines</a></li><li><a href="{{ call_url }}activate/"{% if task == "activate" %} aria-current="page"{% endif %}>Activate domain call</a></li>{% endif %}
     {% if can_retire %}<li><a href="{{ call_url }}retire/"{% if task == "retire" %} aria-current="page"{% endif %}>Retire call</a></li>{% endif %}
+    {% if can_edit %}<li><a href="{{ call_url }}reassign/">Transfer call to another Department</a></li>{% endif %}
     {% if can_successor %}<li><a href="{{ call_url }}successor/"{% if task == "successor" %} aria-current="page"{% endif %}>Create successor draft</a></li>{% endif %}
   </ul></nav>
   <p>Call lineage version {{ source.summary.version }} · Current aggregate version {{ source.summary.aggregate_version }} · <strong>{{ source.summary.status }}</strong></p>
@@ -59,6 +61,6 @@
     <ul class="call-cards">{% for call in calls %}<li><h2><a href="{{ root_url }}{{ call.call_id }}/overview/">{{ call.name }}</a></h2><p>Lineage version {{ call.version }} · Aggregate version {{ call.aggregate_version }} · {{ call.status }}</p><p>{{ call.description }}</p></li>{% empty %}<li>No calls are available in this Department.</li>{% endfor %}</ul>
   {% endif %}
   {% endblock %}
-  <p class="call-consequence">Cross-Department selection, proposal collaboration, review and conversion continue under #108. No production profile or route is enabled by this workspace.</p>
+  <p class="call-consequence">Proposal collaboration, review and conversion continue under #108. No production profile or route is enabled by this workspace.</p>
 </div>
 {% endblock %}

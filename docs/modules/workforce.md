@@ -13,6 +13,16 @@ It conveys no holder, structure, discovery or authority information. Application
 reauthorizes and audits before releasing the label; broader Workforce structure
 permission is neither granted nor required by this limited purpose.
 
+For the separate authorized call-management chooser,
+`resolve_current_department_choice_reference` returns ID/code/name only. The
+stable edition-unique code distinguishes duplicate names. Applications first
+checks each exact candidate, rechecks the complete bounded current ID set and
+decisions, and audits each disclosed choice. This does not widen the existing
+two-field name-only reference or expose hierarchy, holders or hidden counts.
+The complete set remains bounded by `MAX_STRUCTURE_DEPARTMENTS`; overflow is
+unavailable, never a truncated directory. These internal owner references grant
+no new Workforce permission or mutation path.
+
 Status: Position, hierarchy, opportunity, agreement, authority onboarding,
 ADR 0041 containment, version-fenced Department and Position management, and
 the owner-safe Position assignment lifecycle with shared strict HTML/API

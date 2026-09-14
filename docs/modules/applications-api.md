@@ -1,7 +1,7 @@
 # Applications API contract
 
 Status: mounted versioned adapter contract
-Last updated: 2026-09-02
+Last updated: 2026-09-14
 
 All routes are organization- and edition-explicit. They require an active Maru
 person session, reject query parameters and unknown JSON fields, and authorize
@@ -17,14 +17,18 @@ returns a conflict without applying a partial write.
 
 ## Dormant Programme boundary
 
-The dormant Programme milestones add no route or API operation. Applications-owned Programme calls,
+The dormant Programme milestones add no production route or API operation. Applications-owned Programme calls,
 proposal collaborators, shared answers, contributor profiles, exact sealed
 revisions, acknowledgements, reopening, submission, and withdrawal remain a
 dormant command/query kernel. Preview-first import, Department ownership
 transitions, the retirement dependency seam, and exact-ID orphan recovery are
-also service-only. They have no serializer, OpenAPI component,
-schema operation, mounted browser view, template, navigation destination, or
-Django admin writer.
+also excluded from the generic API. They have no serializer, OpenAPI component,
+schema operation, mounted browser view or Django admin writer. The separate
+guided call workspace has reserved, unmounted HTML routes and templates for
+manager inventory, creation/composition, exact-authority Department selection
+and confirmed Draft ownership transfer. See its
+[page contract](../product/page-contracts/programme-call-workspace.md); these
+adapters do not make Programme available through the mounted API below.
 
 The routes below omit Programme definitions from starter and definition
 discovery and deny Programme submissions in generic applicant, answer, submit,

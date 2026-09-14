@@ -21,8 +21,10 @@ at the exact current Department, organization and edition. Context, hierarchy,
 Programme item access and Workforce structure access do not substitute. The
 Department name comes from a minimized Workforce reference only after exact
 Applications authorization, with reauthorization and required protected-read
-audit before disclosure. No holders, other Departments, proposals, answers,
-contributor values, invitation data, review counts or decision history are loaded.
+audit before disclosure. Ordinary single-Department tasks load no holders, other
+Departments, proposals, answers, contributor values, invitation data, review
+counts or decision history. The separate bounded chooser below has its own
+independent exact-Department disclosure contract.
 
 ## Bounded increments
 
@@ -89,6 +91,55 @@ link to the exact offending controls and receive focus after refused saves.
 These controls remain dormant and are accepted only after their implementation,
 focused and exact-head checks, and honestly scoped browser evidence. They do not
 complete the still-separate collaboration, review, conversion or activation gates.
+
+## Departments and reassignment
+
+An already admitted exact Department workspace supplies a **Choose Department**
+link at its reserved root plus `departments/`. Accountable setup still owns first
+entry into the first Department; this link does not introduce edition-wide call
+management, a recovery directory or implicit hierarchy/Workforce structure access.
+The chooser contains only current same-edition Departments for which this exact
+person independently has `applications.manage_programme_calls` authority.
+
+Authorize the anchor before loading the complete bounded ID-only Department set.
+Evaluate each candidate before resolving its name and stable Department code.
+Only the policy engine's ordinary `permission_absent` denial may remove a choice;
+invalid/incomplete decisions, unsupported obligations, owner-reference failure,
+overflow or audit outage make the complete chooser unavailable. Recheck the set,
+all candidate decisions and the anchor before required protected-read audit and
+disclosure. Return no partial list, hidden counts, holders or hierarchy. A separate
+minimized Workforce choice reference supplies ID/code/label; the existing exact
+name-only reference and its consumers remain unchanged. The stable code visibly
+distinguishes duplicate Department names without asking users to find UUIDs.
+
+Every link leads to a destination that authorizes again. Current-only selection
+remains useful for read-only call inventories after private planning closes;
+the chooser does not grant write permission. Empty/unavailable states must be
+truthful and must not suggest creating authority through this screen.
+
+A Draft's distinct **Transfer call to another Department** task uses the same
+complete authorized choices, excluding the current owner. It displays the source,
+destination labels/codes, effect on current ownership and retained history, then
+requires explicit confirmation, original call version, retry identity and reason.
+Only `reassign_programme_call` writes; it rechecks current authority at both exact
+Departments and the existing canonical lock/lifecycle/version/receipt contract.
+Successful navigation enters the chosen Department's call configuration. It does
+not modify the form, rewrite imports/proposals/history or create any other record.
+
+Closed planning or immutable calls have no transfer form. Invalid or stale input
+retains the original command evidence where the source is still viewable; a lost
+response may already have committed, so never promise that no earlier transfer
+occurred. If the source is no longer viewable, return the shared nondisclosing
+response and direct the operator toward current authorized Department inventories.
+Never recover an orphan or accept ownership through ordinary configuration.
+
+Use the existing shared shell, one H1/main, ordinary labelled links and forms,
+visible confirmation and error/pending-input behavior. Long names/codes must wrap;
+other widths, genuine zoom, keyboard/screen-reader and native discard acceptance
+remain honestly scoped #92 tasks. Maintain native dual-scope/replay tests for #102
+without running PostgreSQL under ADR 0100. Implementation and focused acceptance
+do not themselves constitute exact-head protected delivery, native acceptance or
+completion of the broader #108 journey.
 
 ## Lifecycle and outcomes
 
