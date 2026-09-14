@@ -215,7 +215,10 @@ and retained reason/confirmation, read-only and generic denial. One H1/main and
 no document overflow were observed; task-owned browser/server resources stopped.
 One maintained native scenario extends existing review services without new
 timing weights; it remains unexecuted #102 debt. Full human checks remain #92.
-Fresh clean-commit certification and protected delivery are pending. No schema,
+The first exact-commit certification stopped at documentation reachability before
+Sphinx because the new page lacked its hidden toctree entry; the catalog is now
+corrected. That failed attempt issued no receipt. Fresh clean-commit
+certification and protected delivery are pending. No schema,
 production route/profile, dependency, writer or PostgreSQL policy changed.
 See the [reviewer management checkpoint](../checkpoints/2026-09-14-programme-reviewer-management.md).
 Next: separately authorized reviewer conflict/scoring, moderation, final decision
