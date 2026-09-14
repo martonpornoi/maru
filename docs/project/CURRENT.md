@@ -67,7 +67,10 @@ Final focused database-free HTTP/query/form feedback passed 218 cases in 2.13s;
 seven actual-asset frontend cases passed. Browser feedback corrected edition-zone
 display, made evidence outcomes explicit and clarified pending
 period removal. Final retained certification and the next protected PR remain
-pending; this is not PostgreSQL or full human acceptance.
+pending; this is not PostgreSQL or full human acceptance. The first exact-head
+certification stopped at full mypy: the new closed read-purpose parameter exposed
+five UUID-dictionary caller typing conflicts. Existing timetable callers now name
+their unchanged purpose explicitly; a fresh full certification is required.
 Four maintained native source/withdrawal and form-to-host-owner cases remain
 unexecuted #102 debt. See the
 [decision/hosting checkpoint](../checkpoints/2026-09-14-programme-decisions-and-hosting.md).

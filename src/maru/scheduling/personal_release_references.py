@@ -268,7 +268,7 @@ def load_personal_host_release_reference(
     }
 
     def load(_scope: object) -> PersonalHostReleaseReference:
-        purposes = load_personal_host_purposes(**arguments)
+        purposes = load_personal_host_purposes(**arguments, purpose="timetable")
         confirmed = {row.host_id: row for row in purposes if row.state == "confirmed"}
         edition = resolve_scheduling_edition_reference(
             organization_id=organization_id, edition_id=edition_id
@@ -295,7 +295,7 @@ def load_personal_host_release_reference(
                 )
                 if published_at is None:
                     raise SchedulingUnavailableError
-        if load_personal_host_purposes(**arguments) != purposes:
+        if load_personal_host_purposes(**arguments, purpose="timetable") != purposes:
             raise SchedulingUnavailableError
         if (
             manifest is not None

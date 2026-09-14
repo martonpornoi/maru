@@ -55,6 +55,13 @@ existing immutable owner history and recovery procedures remain unchanged.
 
 Exact-head retained local certification and independent protected hosted checks
 are still required. Focused results are not a successful certification receipt.
+The first exact run at `4dd0e7e18da3b71625799d3b9eeec2c22f9bc199` failed full
+mypy because five existing Scheduling calls unpacked UUID-only dictionaries into
+the extended read signature. These callers now explicitly specify the unchanged
+`timetable` purpose. No successful receipt is claimed for that run; the corrected
+commit must pass fresh full typing and retained certification.
+Full-source mypy subsequently passed all 596 modules, and 84 existing personal
+release-impact/change-notice regressions passed in 0.70s with the explicit purpose.
 
 ## Synthetic browser evidence and explicit gaps
 

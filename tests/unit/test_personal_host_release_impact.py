@@ -184,7 +184,10 @@ def test_retained_predecessor_exact_scope_and_minimized_unchanged_result(world):
     for call in world.presences.call_args_list:
         assert call.args[0] == world.request
         assert call.args[2] == {world.host.host_id: world.host}
-    assert world.purposes.call_args.kwargs == asdict(world.request)
+    assert world.purposes.call_args.kwargs == {
+        **asdict(world.request),
+        "purpose": "timetable",
+    }
 
 
 def test_first_publication_is_actual_own_addition(world):

@@ -567,7 +567,7 @@ def _self_sources(
     if recipient.purpose is ChangeRecipientPurpose.HOST:
         hosts = tuple(
             host
-            for host in load_personal_host_purposes(**arguments)
+            for host in load_personal_host_purposes(**arguments, purpose="timetable")
             if host.host_id == recipient.target_id and host.state == "confirmed"
         )
         if len(hosts) != 1:
