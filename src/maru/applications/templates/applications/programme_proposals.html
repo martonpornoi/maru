@@ -1,0 +1,60 @@
+{% extends "admin/base_site.html" %}
+{% load static tz %}
+{% block title %}My Programme proposals · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">My Maru / Programme proposals</div>{% endblock %}
+{% block content %}
+<div class="programme-calls">
+  <h1>My Programme proposals</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · My exact proposal relationships</summary>
+    <p>Only your own proposals, accepted collaborations and live invitations in this edition are shown. This grants no organizer, review, hosting or other-person profile access.</p>
+    <p>Organization {{ organization_id }} · Edition {{ edition_id }}. Each destination checks authority again.</p>
+  </details>
+  <nav aria-label="My proposal tasks"><ul class="call-links"><li><a href="{{ root_url }}"{% if task == "inventory" %} aria-current="page"{% endif %}>My proposals</a></li><li><a href="{{ root_url }}calls/"{% if task == "calls" %} aria-current="page"{% endif %}>Find an available call</a></li></ul></nav>
+  {% if task == "inventory" %}
+  <p>Choose one of your private proposal records. Drafts are not submitted; collaboration does not make you a Programme host. Retained proposal access is separate from availability for starting a new one.</p>
+  <ul class="call-cards">{% for row in proposals %}<li>
+    <h2><a href="{{ root_url }}{{ row.summary.proposal_id }}/">{{ row.summary.call_name }}</a></h2>
+    <p>My relationship: {{ row.summary.relationship }} · {{ row.summary.state }} · Proposal version {{ row.summary.aggregate_version }}</p>
+    {% if row.selection %}<p>{{ row.selection.track_label }} ({{ row.selection.track_code }}) · {{ row.selection.format_label }} ({{ row.selection.format_code }}) · {{ row.selection.requested_duration_minutes }} minutes</p>{% endif %}
+    <p>Proposal reference: {{ row.summary.proposal_id }}</p>
+    {% if row.own_invitation %}<p>My invitation: {{ row.own_invitation.state }}. Expires {% timezone "UTC" %}{{ row.own_invitation.expires_at|date:"c" }}{% endtimezone %} (UTC).</p>{% endif %}
+  </li>{% empty %}<li>No proposals or live invitations are currently available to you in this edition. Available calls are a separate task.</li>{% endfor %}</ul>
+  {% elif task == "calls" %}
+    {% if not planning %}<p>New proposal creation is closed for this edition. You can still return to your authorized proposal history.</p>{% endif %}
+    <ul class="call-cards">{% for row in calls %}<li><h2><a href="{{ root_url }}calls/{{ row.summary.call_id }}/start/">{{ row.summary.name }}</a></h2><p>{{ row.summary.code }} · Call schema version {{ row.summary.version }}</p><p>{{ row.purpose }}</p><p>Draft editing through {% timezone "UTC" %}{{ row.summary.applicant_edit_until|date:"c" }}{% endtimezone %} (UTC, inclusive).</p></li>{% empty %}<li>No calls are currently available for you to start. This does not remove your existing proposals.</li>{% endfor %}</ul>
+  {% elif task == "start" %}
+  <section aria-labelledby="proposal-call"><h2 id="proposal-call">Start a private draft for {{ call.summary.name }}</h2>
+    <p>{{ call.summary.code }} · Call schema version {{ call.summary.version }} · Call version {{ call.summary.aggregate_version }}</p>
+    <dl><dt>Call guidance</dt><dd>{{ call.summary.description|default:"No additional guidance." }}</dd><dt>Collection purpose</dt><dd>{{ call.purpose }}</dd><dt>Information classification</dt><dd>{{ call.classification }}</dd><dt>Contributor consent policy</dt><dd>{{ call.contributor_consent_policy_code }}</dd></dl>
+    {% timezone "UTC" %}<p>All deadlines below are UTC: opens {{ call.summary.opens_at|date:"c" }} (inclusive); edit through {{ call.summary.applicant_edit_until|date:"c" }} (inclusive); submit before {{ call.summary.closes_at|date:"c" }} (exclusive).</p>{% endtimezone %}
+    <h3>Choose a track and format</h3><ul class="call-cards">{% for row in call.tracks %}<li><strong>{{ row.label }} ({{ row.code }})</strong><p>{{ row.description }}</p></li>{% endfor %}</ul>
+    <ul class="call-cards">{% for row in call.formats %}<li><strong>{{ row.label }} ({{ row.code }})</strong><p>{{ row.description }}</p><p>Duration: {{ row.minimum_duration_minutes }}–{{ row.maximum_duration_minutes }} whole minutes; suggested {{ row.default_duration_minutes }}. Enter your deliberate choice below.</p></li>{% endfor %}</ul>
+    <h3>My proposed public profile</h3><p>These are your own private proposal inputs, not published content or another person's profile. Review the organizer-supplied policy identified above before acknowledging it. This page identifies that policy but does not supply its text. If it is unavailable, request it and save a blank, non-public draft for now.</p>
+    <p>A field required before sealing does not require you to propose public values now. To decline publication, deliberately leave every proposed-public value blank; Maru will not erase entered values for you.</p>
+    <p class="call-consequence">Starting creates an Applications draft only. It does not submit it, create a Programme item, confirm hosting, reserve a time or room, register attendance or publish anything.</p>
+    <form method="post" data-call-command data-call-pending="{% if form.is_bound %}true{% else %}false{% endif %}">
+      {% csrf_token %}
+      {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+      {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+      <p data-call-dirty role="status" hidden>Input is not confirmed as saved. Check My proposals after an uncertain attempt before starting another draft.</p>
+      <button type="submit">Start my private draft</button>
+    </form>
+  </section>
+  {% elif task == "detail" %}
+  <section aria-labelledby="proposal-detail"><h2 id="proposal-detail">{{ detail.summary.call_name }}</h2><p>My relationship: {{ detail.summary.relationship }} · {{ detail.summary.state }} · Proposal version {{ detail.summary.aggregate_version }}</p><p>Proposal reference: {{ detail.summary.proposal_id }}</p>
+    {% if detail.selection %}<h3>Current selection</h3><p>{{ detail.selection.track_label }} ({{ detail.selection.track_code }}) · {{ detail.selection.format_label }} ({{ detail.selection.format_code }}) · {{ detail.selection.requested_duration_minutes }} minutes</p>{% endif %}
+    {% if detail.own_invitation %}<h3>My invitation</h3><p>{{ detail.own_invitation.state }} · Invitation {{ detail.own_invitation.generation }} · Expires {% timezone "UTC" %}{{ detail.own_invitation.expires_at|date:"c" }}{% endtimezone %} (UTC). Invitation response controls are not yet connected here.</p>{% endif %}
+    {% if detail.own_profile_requirements != None %}<h3>My proposed public profile</h3><p>Private proposal input only. Policy: {{ detail.contributor_consent_policy_code }}.</p>
+      {% if detail.own_profile %}<p>Proposed for later publication: {{ detail.own_profile.proposed_for_publication|yesno:"Yes,No" }} · Exact policy acknowledged: {{ detail.own_profile.consent_acknowledged|yesno:"Yes,No" }}</p><dl>{% for code, value in detail.own_profile.values %}<dt>{{ code }}</dt><dd>{{ value|default:"Not provided" }}</dd>{% endfor %}</dl>{% else %}<p>You have not recorded a profile revision for this proposal.</p>{% endif %}
+    {% endif %}
+    {% if detail.summary.sealed_revision_id %}<p>Current sealed revision reference: {{ detail.summary.sealed_revision_id }}.</p>{% endif %}
+    {% if detail.summary.submitted_revision_id %}<p>Submitted revision reference: {{ detail.summary.submitted_revision_id }}. Submission is not acceptance.</p>{% endif %}
+    <p>This overview is read-only. The displayed state comes from the proposal owner, not from the availability of new calls.</p>
+  </section>
+  {% endif %}
+  <section aria-labelledby="proposal-next"><h2 id="proposal-next">What remains in this rehearsal</h2><p>Shared-answer editing, changes to selection or your profile, invitations and responses, exact sealing and acknowledgement, submission and withdrawal are not yet connected to this personal surface. Starting a draft does not complete the proposal journey. Review and accepted-item conversion remain separate organizer tasks.</p></section>
+</div>
+{% endblock %}

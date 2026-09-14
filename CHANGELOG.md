@@ -15,6 +15,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant personal Programme intake: find an available call, choose a
+  labelled track/format and duration, deliberately supply your own profile and
+  consent, and start a private draft. Personal history remains separate from
+  new-call availability, and invitees cannot see contributor profiles. This is
+  not submission or an activated Programme module; the remaining collaborative
+  tasks stay tracked under #108.
+
 - Added dormant labelled Department navigation and a confirmed Draft-call transfer
   task. Choices require independent call-management authority; duplicate names
   are distinguished by stable codes. Transfers preserve configuration and history

@@ -11,6 +11,22 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's independently authorized Department chooser and confirmed Draft-call
+transfer are delivered through [PR #117](https://github.com/martonpornoi/maru/pull/117),
+protected squash `8634dad64927ed968c725404988745178a585df2` at
+2026-09-14 07:24:33 UTC. Its tree equals certified head
+`8152b5aeccd84540ebb925f637911ef6f5c84bef`; clean local main and origin/main
+match the squash. All eight retained local gates passed in 16m10s, with 6,362
+units in 38.20s and 81 frontend tests. Hosted units passed in 72.26s, quality
+took 23m56s, documentation 22m05s and overall workflow 24m30s. Exact-head PR gate
+and CodeQL passed without hosted repair or rerun. The observed 6m04s quality
+margin is not a future guarantee; #113 remains open. Two maintained native cases
+remain #102 debt and genuine human acceptance remains #92. No schema, production
+route or profile changed. See the
+[protected Department checkpoint](../checkpoints/2026-09-14-programme-call-departments-protected-delivery.md).
+
+### Preceding composer delivery
+
 #108's call creation and structured form composition are delivered through
 [PR #116](https://github.com/martonpornoi/maru/pull/116), protected squash
 `c0d8356ba545da1bd08efb060691238116723208` at 2026-09-14 06:02:30 UTC.
@@ -106,9 +122,26 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-call-departments`, from protected PR #116.
-The next bounded Department-selection/reassignment increment is implemented
-locally, pending exact-head certification and protected delivery. The complete
+Branch: `codex/programme-proposal-workspace`, from protected PR #117.
+The personal intake/overview increment is implemented locally, pending exact-head
+certification and protected delivery. Its accepted page contract precedes the
+adapter: labelled available calls, explicit selection/duration, contributor-owned
+profile/consent and private Draft creation through the existing command, plus
+independently authorized personal inventory/detail. Existing history does not
+depend on new-call discovery; invitees never request profile fields. It adds no
+schema, production route, profile member or domain writer.
+Focused feedback passes 54 cases in 1.56s; full unit preflight passes 6,417 in
+39.56s after isolating an unrelated Windows pytest-temp permission failure.
+Seven actual-asset input-guard cases, strict typing, NumPy and Ruff pass. The
+1280-by-720 synthetic browser confirms invalid/stale retention, labelled navigation
+and closed/empty/invitee/denied states, not persistent domain behavior. Two new
+native cases remain unexecuted #102 debt and full human acceptance remains #92.
+See the [personal-intake checkpoint](../checkpoints/2026-09-14-programme-personal-intake.md).
+After protected delivery, continue shared editing, own profile revisions,
+invitations/roster and exact sealing/acknowledgement/submission; those controls are
+explicitly unfinished, not implied by creation of a private draft.
+
+The Department-selection/reassignment increment is merged. The complete
 chooser independently admits each current Department before ID/code/name
 disclosure, rechecks candidate decisions and membership and requires audit.
 Only ordinary absent permission filters a choice; incomplete policy/dependencies
@@ -132,7 +165,7 @@ No new writer, schema, generic discriminator access, profile or production route
 was added. Exact protected delivery and the modest CI-parity repair are recorded
 above; prior failed candidates remain separately documented, not success evidence.
 
-After Department selection/reassignment, finish proposal/collaboration/review/
+After the delivered Department selection/reassignment, finish proposal/collaboration/review/
 decision/conversion tasks, ordinary connections and accountable setup. Preserve
 contributor-owned profiles/acknowledgements and the single submission cursor.
 #108/#48 remain open; #109 integrated proof, #102 native restoration, #97 recovery

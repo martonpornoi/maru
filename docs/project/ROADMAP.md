@@ -166,8 +166,9 @@ explicit readiness evidence, Department discussion, public-copy withdrawal and
 separate organizer/person-owned hosting tasks. Applications intake/review/conversion,
 starting with the dedicated call workspace delivered through PR #115 and the
 creation/section/question/condition composer delivered through PR #116,
-has a local Department selection/reassignment increment awaiting protected
-delivery. Proposal/review/conversion,
+now includes protected Department selection/reassignment through PR #117.
+Personal proposal intake/overview now has a local dormant increment; collaboration
+and review/conversion,
 ordinary task continuations and accountable setup remain required increments;
 none is replaced by specialist records or closure of a supporting PR. #113 records
 the measured non-database quality-runtime margin. PR #116's original quality job
