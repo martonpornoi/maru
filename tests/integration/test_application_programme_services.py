@@ -92,6 +92,7 @@ from maru.applications.programme_inputs import (
     ProgrammeProposalRevisionResponseInput,
     ProgrammeProposalSelectionInput,
 )
+from maru.applications.programme_proposal_forms import ProgrammeProposalStartForm
 from maru.applications.programme_queries import (
     available_programme_calls,
     get_managed_programme_call_configuration,
@@ -2374,3 +2375,88 @@ def test_guided_department_choices_and_transfer_native_owner(case: str) -> None:
             == 1
         )
     assert not ProgrammeProposal.objects.filter(edition_id=edition.id).exists()
+
+
+@pytest.mark.parametrize("publication", ["no", "yes"])
+def test_guided_personal_intake_native_owner_and_exact_replay(publication: str) -> None:
+    """Maintain real form-to-owner intake debt; the policy adapter stays synthetic."""
+    world = _active_call(code="guided-personal-intake")
+    lead = AccountFactory(display_name="Synthetic intake lead")
+    common = {
+        "actor_id": lead.id,
+        "organization_id": world.edition.organization_id,
+        "edition_id": world.edition.id,
+        "source_channel": "test",
+        "authorizer": _AUTHORIZER,
+        "now": world.now,
+    }
+    offered = available_programme_calls(**common, correlation_id=uuid4())
+    call = next(row for row in offered if row.summary.call_id == world.call_id)
+    retry = uuid4()
+    form = ProgrammeProposalStartForm(
+        {
+            "retry_key": str(retry),
+            "expected_version": "0",
+            "expected_call_version": str(call.summary.aggregate_version),
+            "expected_definition_version": str(call.summary.version),
+            "track": str(world.track_id),
+            "format": str(world.format_id),
+            "duration": "60",
+            "publication_choice": publication,
+            "public_name": "Synthetic lead" if publication == "yes" else "",
+            "consent_acknowledged": "on" if publication == "yes" else "",
+            "reason": "Start my synthetic private proposal.",
+            "confirm": "on",
+        },
+        source=call,
+    )
+    assert form.is_valid(), form.errors
+    command = {
+        **common,
+        "call_id": world.call_id,
+        "selection": form.selection,
+        "lead_profile": form.profile,
+        "expected_version": form.cleaned_data["expected_version"],
+        "reason": form.cleaned_data["reason"],
+        "retry_key": form.cleaned_data["retry_key"],
+        "correlation_id": uuid4(),
+    }
+    started = start_programme_proposal(**command)
+    assert start_programme_proposal(**command) == replace(started, replayed=True)
+    assert ProgrammeProposal.objects.filter(call_id=world.call_id).count() == 1
+    rows = list_self_programme_proposals(**common, correlation_id=uuid4())
+    assert [row.summary.proposal_id for row in rows] == [started.target_id]
+    read_correlation = uuid4()
+    detail = get_self_programme_proposal_detail(
+        **common,
+        proposal_id=started.target_id,
+        requested_fields=frozenset(
+            {"proposal_summary", "selection", "contributor_profiles"}
+        ),
+        correlation_id=read_correlation,
+    )
+    assert detail.summary is not None
+    assert detail.summary.state == "draft"
+    assert detail.summary.aggregate_version == started.resulting_version == 1
+    assert detail.summary.submitted_revision_id is None
+    assert detail.own_profile is not None
+    assert detail.own_profile.proposed_for_publication is (publication == "yes")
+    assert detail.own_profile.consent_acknowledged is (publication == "yes")
+    assert AuditEvent.objects.filter(
+        correlation_id=read_correlation,
+        operation="applications.programme.query.self_proposal_detail",
+    ).exists()
+    unrelated = AccountFactory(display_name="Synthetic unrelated person")
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        get_self_programme_proposal_detail(
+            **{**common, "actor_id": unrelated.id},
+            proposal_id=started.target_id,
+            requested_fields=frozenset({"proposal_summary"}),
+            correlation_id=uuid4(),
+        )
+    assert not ProgrammeProposalCollaborator.objects.filter(
+        proposal_id=started.target_id
+    ).exists()
+    assert not ProgrammeProposalRevision.objects.filter(
+        proposal_id=started.target_id
+    ).exists()

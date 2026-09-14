@@ -1,8 +1,8 @@
 # Programme calls and acknowledged proposals contract
 
 - Status: Dormant domain contract; no production route, API or generic admin
-  writer; #108's manager surface has a separate companion contract
-- Route: none reserved by issue #63; see the dedicated call-workspace contract
+  writer; #108's manager and personal intake surfaces have companion contracts
+- Route: none reserved by issue #63; see the dedicated companion contracts
 - Requirements: IDN-014, PRG-001, PRG-002, PRG-006, PRG-008, PRG-009,
   PRG-011,
   AUD-001, AUD-003, AUD-005, PRI-001, UX-005 through UX-008, UX-019,
@@ -17,6 +17,10 @@ defines #108's dedicated dormant manager routes and forms. It does not mount
 production routes, activate a profile, open generic definition writers or supply
 the still-unfinished proposal self-service/review journey below. This original
 #63 document remains the domain and contributor-disclosure contract.
+The [personal proposal workspace](programme-proposal-workspace.md) now defines
+the bounded dormant intake/overview increment. Shared editing, collaboration,
+exact sealing/acknowledgement and submission remain required continuation work;
+neither companion declares the complete journey delivered.
 
 Let a Programme Department define a call and let one proposal lead collaborate
 with invited contributors on one exact, attributable proposal revision. The
@@ -158,7 +162,9 @@ staffing, or publication.
   Department, proposal, person, or count.
 - **Invited:** show only the current person's invitation, purpose, expiry, and
   accept/decline actions; never enumerate other invitees.
-- **Expired:** acceptance is unavailable; explain that the lead may reinvite.
+- **Expired:** acceptance and invitee self-access are unavailable. The lead's
+  authorized roster can explain reinvitation; do not introduce an expired-self
+  grant merely to display that explanation.
 - **Stale:** apply nothing, retain local input safely, and identify only the
   caller-visible aggregate/version conflict.
 - **Sealed:** every content control is read-only and names the explicit reopen

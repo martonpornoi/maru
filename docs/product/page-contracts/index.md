@@ -76,4 +76,5 @@ programme-onsite-continuity
 programme-item-workspace
 programme-host-workspace
 programme-call-workspace
+programme-proposal-workspace
 ```

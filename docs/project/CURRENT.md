@@ -123,11 +123,23 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 ## Active bounded outcome: guided departmental journey (#108)
 
 Branch: `codex/programme-proposal-workspace`, from protected PR #117.
-Next: personal proposal intake and contributor-owned collaboration through the
-existing Applications commands and protected self projections. Keep existing
-proposal continuation independent of current-owner new-call discovery. Define
-the personal page contract before implementation; preserve the sole submission
-cursor, exact acknowledgements and explicit consent without directory access.
+The personal intake/overview increment is implemented locally, pending exact-head
+certification and protected delivery. Its accepted page contract precedes the
+adapter: labelled available calls, explicit selection/duration, contributor-owned
+profile/consent and private Draft creation through the existing command, plus
+independently authorized personal inventory/detail. Existing history does not
+depend on new-call discovery; invitees never request profile fields. It adds no
+schema, production route, profile member or domain writer.
+Focused feedback passes 54 cases in 1.56s; full unit preflight passes 6,417 in
+39.56s after isolating an unrelated Windows pytest-temp permission failure.
+Seven actual-asset input-guard cases, strict typing, NumPy and Ruff pass. The
+1280-by-720 synthetic browser confirms invalid/stale retention, labelled navigation
+and closed/empty/invitee/denied states, not persistent domain behavior. Two new
+native cases remain unexecuted #102 debt and full human acceptance remains #92.
+See the [personal-intake checkpoint](../checkpoints/2026-09-14-programme-personal-intake.md).
+After protected delivery, continue shared editing, own profile revisions,
+invitations/roster and exact sealing/acknowledgement/submission; those controls are
+explicitly unfinished, not implied by creation of a private draft.
 
 The Department-selection/reassignment increment is merged. The complete
 chooser independently admits each current Department before ID/code/name

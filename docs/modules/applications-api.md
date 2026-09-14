@@ -29,6 +29,11 @@ manager inventory, creation/composition, exact-authority Department selection
 and confirmed Draft ownership transfer. See its
 [page contract](../product/page-contracts/programme-call-workspace.md); these
 adapters do not make Programme available through the mounted API below.
+The [personal intake companion](../product/page-contracts/programme-proposal-workspace.md)
+likewise reserves unmounted HTML routes for own inventory, available calls,
+private draft creation and role-bounded overview. It adds no API operation or
+generic Programme discriminator access; collaborative editing and submission
+remain unfinished personal-surface work.
 
 The routes below omit Programme definitions from starter and definition
 discovery and deny Programme submissions in generic applicant, answer, submit,

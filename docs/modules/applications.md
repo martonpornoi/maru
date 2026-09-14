@@ -136,6 +136,21 @@ independent exact-Department authority and the dedicated dual-scope owner comman
 The separate proposal, review and conversion journeys remain unfinished #108 work.
 The generic studio and discriminator exclusions are unchanged.
 
+The separate [personal proposal workspace](../product/page-contracts/programme-proposal-workspace.md)
+reserves unmounted personal inventory, available-call discovery, explicit private
+draft creation and relationship-filtered overview routes. It reuses the existing
+self queries and `start_programme_proposal`, with labelled track/format choices,
+bounded duration, only configured subject-owned profile values, explicit
+publication intent and exact consent-policy acknowledgement. A blank non-public
+profile remains possible; hidden fields and contradictory choices are refused,
+not silently cleared. The displayed call schema/version and original proposal
+creation cursor/retry key fence the input. Existing proposal history never depends
+on new-call availability or current owner Department membership. Invitees receive
+only the minimal field ceiling; leads and accepted collaborators may additionally
+read only their own configured profile. Reauthorization surrounds rendered release.
+This intake increment does not supply the remaining editing/collaboration/seal/
+submission/review/conversion tasks or activate the Programme profile.
+
 `programme_call_editor` reconstructs every typed question, condition, option,
 policy, catalog and duration bound without querying or writing. It refuses stale
 or non-draft source cursors and validates the complete resulting graph after a
