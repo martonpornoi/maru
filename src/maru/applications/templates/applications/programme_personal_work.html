@@ -1,0 +1,54 @@
+{% load tz %}
+<section aria-labelledby="work-heading">
+  <h2 id="work-heading">{{ workflow.summary.call_name }}</h2>
+  <p>{{ workflow.summary.relationship }} · {{ workflow.summary.state }} · Proposal version {{ workflow.summary.aggregate_version }} · Call version {{ workflow.call_version }} · Schema {{ workflow.definition_version }}</p>
+  <p>Proposal reference: {{ workflow.summary.proposal_id }}.</p>
+  {% timezone "UTC" %}<p>UTC deadlines: opens {{ workflow.opens_at|date:"c" }}; editing through {{ workflow.edit_until|date:"c" }} (inclusive); acknowledgements and submission before {{ workflow.closes_at|date:"c" }} (exclusive).</p>{% endtimezone %}
+  {% if not workflow.planning %}<p>Private planning is closed. This is retained, independently authorized history.</p>{% endif %}
+  {% if action != "work" %}<p><a href="{{ work_url }}">Back to proposal tasks</a></p>{% endif %}
+  {% if detail.selection %}<h3>Current selection</h3><p>{{ detail.selection.track_label }} · {{ detail.selection.format_label }} · {{ detail.selection.requested_duration_minutes }} minutes.</p>{% endif %}
+  {% if detail.own_invitation %}<h3>My invitation</h3><p>{{ detail.own_invitation.state }} · generation {{ detail.own_invitation.generation }} · expires {% timezone "UTC" %}{{ detail.own_invitation.expires_at|date:"c" }}{% endtimezone %} (UTC). Accepting does not supply your profile or consent.</p>{% endif %}
+
+  {% if action == "work" %}
+  <h3>Available tasks</h3>
+  <ul class="call-links">{% for task_name, title in links %}<li><a href="{{ work_url }}{{ task_name }}/">{{ title }}</a></li>{% empty %}<li>No general change task is currently available. Existing history remains separate.</li>{% endfor %}
+    {% if workflow.summary.sealed_revision_id and workflow.summary.relationship != "invited" %}<li><a href="{{ work_url }}frozen/">Review my current exact seal</a></li>{% endif %}
+  </ul>
+  <p>Each destination checks its own authority again. Resolve pending invitations and required shared answers; each contributor must provide their own profile before sealing. After sealing, each included collaborator responds before the lead can submit.</p>
+  {% endif %}
+
+  {% if detail.answers != None %}<h3>Shared applicant answers</h3><ul class="call-cards">{% for row in detail.answers %}<li>
+    <h4>{{ row.question.label }}{% if row.question.required %} — required before sealing{% endif %}</h4>
+    <p>{{ row.question.help_text }}</p><p>{% if row.value == None %}Not answered{% else %}{{ row.value }}{% endif %}</p>
+    {% if row.question.field_type in reference_types %}<p>An authorized reference or file chooser is still needed for this field; raw identifiers are not accepted here.</p>{% elif can_answer %}<a href="{{ work_url }}answer/{{ row.question.question_id }}/">Revise {{ row.question.label }}</a>{% endif %}
+  </li>{% empty %}<li>No currently applicable shared questions.</li>{% endfor %}</ul>{% endif %}
+
+  {% if detail.contributors != None %}<h3>Proposal contributors</h3><p>Other people's private profile fields are not shown.</p><ul class="call-cards">{% for row in detail.contributors %}<li><strong>{{ row.display_label }}</strong> · {{ row.role }} · {{ row.state }}{% if row.invitation_expired %} (invitation expired){% endif %}
+    {% if can_remove and row.collaborator_id %}<p><a href="{{ work_url }}remove/{{ row.collaborator_id }}/">Review removal of {{ row.display_label }}</a></p>{% endif %}
+  </li>{% endfor %}</ul>{% endif %}
+
+  {% if detail.responses != None %}<h3>Exact revision responses</h3><ul>{% for row in detail.responses %}<li>Revision {{ row.revision_id }} · Contributor {{ row.contributor_id }} · {{ row.response|default:"Awaiting their response" }}</li>{% empty %}<li>No sealed collaborator response evidence yet.</li>{% endfor %}</ul>{% endif %}
+
+  {% if frozen %}<section aria-labelledby="frozen-heading"><h3 id="frozen-heading">The exact sealed contribution you are reviewing</h3>
+    <p>Revision {{ frozen.revision.sequence }} · {{ frozen.revision.revision_id }} · sealed {% timezone "UTC" %}{{ frozen.revision.sealed_at|date:"c" }}{% endtimezone %} (UTC).</p>
+    <p>Content digest: {{ frozen.revision.digest }}.</p>
+    <h4>Frozen selection</h4><p>{{ frozen.selection.track_label }} · {{ frozen.selection.format_label }} · {{ frozen.selection.requested_duration_minutes }} minutes.</p>
+    <h4>Frozen shared applicant answers</h4><dl>{% for row in frozen.answers %}<dt>{{ row.question.label }}</dt><dd>{% if row.value == None %}Not answered{% else %}{{ row.value }}{% endif %}</dd>{% empty %}<dt>Questions</dt><dd>No applicable shared questions in this seal.</dd>{% endfor %}</dl>
+    <h4>My included frozen profile</h4><p>Profile revision {{ frozen.own_profile.profile_revision_id }} · Policy {{ frozen.own_profile.consent_policy_code }} · Proposed for later publication: {{ frozen.own_profile.proposed_for_publication|yesno:"Yes,No" }} · Policy acknowledged: {{ frozen.own_profile.consent_acknowledged|yesno:"Yes,No" }}.</p>
+    <dl>{% for code, value in frozen.own_profile.values %}<dt>{{ code }}</dt><dd>{{ value|default:"Not provided" }}</dd>{% endfor %}</dl>
+    <p>Your response binds this exact shared content and your included profile, not a mutable draft or other people's private profile fields. It does not create a host relationship or publish these values.</p>
+  </section>{% endif %}
+
+  {% if form %}<section aria-labelledby="task-heading"><h3 id="task-heading">{{ action_title }}{% if selection_label %}: {{ selection_label }}{% endif %}</h3>
+    <p class="call-consequence">{{ consequence }}</p>
+    {% if action == "profile" %}<p>Only your configured fields are collected. Review organizer-supplied policy {{ detail.contributor_consent_policy_code }}; its text is not supplied here. Consent is never preselected for a new revision. To decline proposed publication, deliberately clear these values; Maru will not erase them for you.</p>{% endif %}
+    {% if not action_available %}<p role="status">This task is not currently available. Bound input is retained for inspection; it cannot be applied in the current state.</p>{% endif %}
+    <form method="post" data-call-command data-call-pending="{% if form.is_bound %}true{% else %}false{% endif %}">
+      {% csrf_token %}
+      {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h4>Review this request</h4>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+      {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+      <p data-call-dirty role="status" hidden>Input is not confirmed as saved. Check proposal history after an uncertain attempt before starting a fresh request.</p>
+      <button type="submit"{% if not action_available %} disabled{% endif %}>{{ action_title }}</button>
+    </form>
+  </section>{% endif %}
+</section>

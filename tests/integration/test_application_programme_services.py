@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
+from decimal import Decimal
 from time import monotonic, sleep
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
@@ -13,6 +14,7 @@ from django.core.exceptions import ValidationError
 from django.db import connection
 from django.utils import timezone
 
+from maru.applications import answer_values
 from maru.applications import programme_commands as programme_command_services
 from maru.applications import programme_queries as programme_query_services
 from maru.applications.models import (
@@ -91,6 +93,10 @@ from maru.applications.programme_inputs import (
     ProgrammeProposalRevisionResponseDecision,
     ProgrammeProposalRevisionResponseInput,
     ProgrammeProposalSelectionInput,
+)
+from maru.applications.programme_personal_queries import (
+    get_self_programme_frozen_revision,
+    get_self_programme_workflow,
 )
 from maru.applications.programme_proposal_forms import ProgrammeProposalStartForm
 from maru.applications.programme_queries import (
@@ -457,6 +463,96 @@ def _start_proposal(
         proposal_id=started.target_id,
         version=started.resulting_version,
     )
+
+
+@pytest.mark.parametrize("invalid", [9, 16])
+def test_integer_limits_and_retained_invalid_answer_require_new_revision(
+    monkeypatch: pytest.MonkeyPatch, invalid: int
+) -> None:
+    """Maintain native integer/seal repair debt without rewriting historic answers."""
+    original = _definition
+
+    def bounded(now: object, *, code: str) -> ProgrammeCallDefinitionInput:
+        definition = original(now, code=code)
+        section = definition.sections[0]
+        question = replace(
+            section.questions[0],
+            field_type=ProgrammeCallQuestionType.INTEGER,
+            minimum_length=None,
+            maximum_length=None,
+            minimum_value=Decimal(10),
+            maximum_value=Decimal(15),
+        )
+        return replace(definition, sections=(replace(section, questions=(question,)),))
+
+    monkeypatch.setitem(globals(), "_definition", bounded)
+    world = _start_proposal(_active_call(code="guided-integer-limits"))
+    call = world.call
+    common = {
+        "actor_id": world.lead.id,
+        "organization_id": call.edition.organization_id,
+        "edition_id": call.edition.id,
+        "proposal_id": world.proposal_id,
+        "source_channel": "test",
+        "now": call.now,
+        "authorizer": _AUTHORIZER,
+        "reason": "Check exact bounded integer answer.",
+    }
+    with pytest.raises(ValidationError):
+        append_programme_proposal_answer(
+            **common,
+            question_id=call.question_id,
+            value=invalid,
+            expected_version=world.version,
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+        )
+    # Reproduce the previous normalizer's behavior through the existing command,
+    # not a direct row rewrite or disabled database integrity guard.
+    with monkeypatch.context() as historic:
+        historic.setattr(
+            answer_values, "normalize_integer_answer", lambda value, **_: value
+        )
+        retained = append_programme_proposal_answer(
+            **common,
+            question_id=call.question_id,
+            value=invalid,
+            expected_version=world.version,
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+        )
+    with pytest.raises(ApplicationsProgrammeCompletenessError):
+        seal_programme_proposal(
+            **common,
+            expected_version=retained.resulting_version,
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+        )
+    assert not ProgrammeProposalRevision.objects.filter(
+        proposal_id=world.proposal_id
+    ).exists()
+    repaired = append_programme_proposal_answer(
+        **common,
+        question_id=call.question_id,
+        value=15,
+        expected_version=retained.resulting_version,
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    sealed = seal_programme_proposal(
+        **common,
+        expected_version=repaired.resulting_version,
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    assert sealed.resulting_version == repaired.resulting_version + 1
+    detail = get_self_programme_frozen_revision(
+        **{key: value for key, value in common.items() if key != "reason"},
+        revision_id=sealed.target_id,
+        correlation_id=uuid4(),
+    )
+    assert detail.answers[0].value == 15
+    assert detail.answers[0].answer_revision_id == repaired.target_id
 
 
 def test_programme_call_protects_its_owner_department_from_hard_delete() -> None:
@@ -1598,6 +1694,29 @@ def test_complete_collaborative_lifecycle_and_disclosure_boundaries() -> None:  
         now=call.now,
         authorizer=_AUTHORIZER,
     )
+    for subject in (lead, collaborator_a, collaborator_b):
+        frozen = get_self_programme_frozen_revision(
+            actor_id=subject.id,
+            organization_id=call.edition.organization_id,
+            edition_id=call.edition.id,
+            proposal_id=world.proposal_id,
+            revision_id=second_seal.target_id,
+            correlation_id=uuid4(),
+            source_channel="test",
+            now=call.now,
+            authorizer=_AUTHORIZER,
+        )
+        included = ProgrammeProposalRevisionContributor.objects.get(
+            revision_id=second_seal.target_id, account_id=subject.id
+        )
+        assert frozen.own_contributor_id == included.id
+        assert frozen.own_profile.profile_revision_id == included.profile_revision_id
+        assert (
+            dict(frozen.own_profile.values)["public_name"]
+            == included.profile_revision.public_name
+        )
+        assert frozen.answers[0].value == "A complete collaborative session"
+        assert frozen.summary.aggregate_version == second_seal.resulting_version
     version = _respond(
         world=world,
         actor=collaborator_a,
@@ -2442,6 +2561,13 @@ def test_guided_personal_intake_native_owner_and_exact_replay(publication: str) 
     assert detail.own_profile is not None
     assert detail.own_profile.proposed_for_publication is (publication == "yes")
     assert detail.own_profile.consent_acknowledged is (publication == "yes")
+    workflow = get_self_programme_workflow(
+        **common, proposal_id=started.target_id, correlation_id=uuid4()
+    )
+    assert workflow.summary == detail.summary
+    assert workflow.tracks == call.tracks
+    assert workflow.formats == call.formats
+    assert workflow.planning
     assert AuditEvent.objects.filter(
         correlation_id=read_correlation,
         operation="applications.programme.query.self_proposal_detail",

@@ -138,21 +138,33 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 ## Active bounded outcome: guided departmental journey (#108)
 
 Branch: `codex/programme-proposal-collaboration`, from protected PR #118.
-The personal intake/overview increment is merged. Next implement shared editing,
-own profile revisions, invitations/roster and exact sealing/acknowledgement/
-submission as a coherent continuation. Those controls remain unfinished, not
-implied by creating a Draft. Extend the accepted personal page/field contract
-before source changes. Existing self history must not depend on new-call
-availability. Editing, acknowledgement/submission and withdrawal have different
-owner windows; preserve them and the sole original submission cursor.
+The personal intake/overview increment is merged. The next coherent local
+candidate now implements shared editing, own-profile revisions, invitations/
+roster and exact sealing/acknowledgement/submission/withdrawal. Separate owner
+windows and the original sole submission cursor are preserved. New self workflow
+and frozen queries minimize role fields and load only the actor's included profile.
+Submission confirms an explicit seal ID; collaborator responses also confirm
+exact inclusion and own-profile IDs. No domain writer, schema, current profile or
+production route is added. Reference/file choosers, organizer review/conversion,
+ordinary owner connections and accountable setup remain #108 work.
 
-Read-only preparation identified an integer-limit defect: configured min/max
-are ignored by both the shared INTEGER normalizer and form field. Fix with the
-editing increment, including boundary regressions and retained-answer/sealing
-review without rewriting immutable history. Meaningful authorized reference/file
-choices and minimized exact frozen revision/own-profile evidence are also
-explicit obligations recorded under #108. Do not invent a directory or claim raw
-UUID input completes those tasks. No new source implementation is certified yet.
+The confirmed shared INTEGER min/max defect is repaired in normalization, HTML
+whole-number bounds and new-seal validation of retained answers. Immutable past
+answers/seals are not rewritten. Maintained native intake/lifecycle/query cases
+and two integer-history repair cases remain unexecuted #102 debt.
+
+Final database-free preflight passed 6,575 units in 40.32s with three existing
+URLField warnings; the focused HTTP group passes 77 cases in 1.88s, including
+completed-response navigation. Nine actual-asset guard tests
+pass in 79ms; strict three-module typing and NumPy checks pass. The initial full
+unit run caught a new included-template shell assumption, now explicitly tested;
+pnpm's initial non-interactive refusal was corrected with the documented CI setting.
+The 1280-pixel synthetic browser rehearsed lead editing, exact-own frozen review/
+acknowledgement, invitation acceptance, stale focused retention, closed history
+and denial, with all database access forbidden. This is not native authority or
+human accessibility acceptance. Exact clean-candidate certification and protected
+delivery are pending. Manual/native debt is recorded under #92 and #102; the
+owned fixture server and both tabs are closed. See the [workflow checkpoint](../checkpoints/2026-09-14-programme-personal-workflow.md).
 
 The Department-selection/reassignment increment is merged. The complete
 chooser independently admits each current Department before ID/code/name

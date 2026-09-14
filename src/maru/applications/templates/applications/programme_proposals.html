@@ -46,15 +46,17 @@
   {% elif task == "detail" %}
   <section aria-labelledby="proposal-detail"><h2 id="proposal-detail">{{ detail.summary.call_name }}</h2><p>My relationship: {{ detail.summary.relationship }} · {{ detail.summary.state }} · Proposal version {{ detail.summary.aggregate_version }}</p><p>Proposal reference: {{ detail.summary.proposal_id }}</p>
     {% if detail.selection %}<h3>Current selection</h3><p>{{ detail.selection.track_label }} ({{ detail.selection.track_code }}) · {{ detail.selection.format_label }} ({{ detail.selection.format_code }}) · {{ detail.selection.requested_duration_minutes }} minutes</p>{% endif %}
-    {% if detail.own_invitation %}<h3>My invitation</h3><p>{{ detail.own_invitation.state }} · Invitation {{ detail.own_invitation.generation }} · Expires {% timezone "UTC" %}{{ detail.own_invitation.expires_at|date:"c" }}{% endtimezone %} (UTC). Invitation response controls are not yet connected here.</p>{% endif %}
+    {% if detail.own_invitation %}<h3>My invitation</h3><p>{{ detail.own_invitation.state }} · Invitation {{ detail.own_invitation.generation }} · Expires {% timezone "UTC" %}{{ detail.own_invitation.expires_at|date:"c" }}{% endtimezone %} (UTC).</p>{% endif %}
     {% if detail.own_profile_requirements != None %}<h3>My proposed public profile</h3><p>Private proposal input only. Policy: {{ detail.contributor_consent_policy_code }}.</p>
       {% if detail.own_profile %}<p>Proposed for later publication: {{ detail.own_profile.proposed_for_publication|yesno:"Yes,No" }} · Exact policy acknowledged: {{ detail.own_profile.consent_acknowledged|yesno:"Yes,No" }}</p><dl>{% for code, value in detail.own_profile.values %}<dt>{{ code }}</dt><dd>{{ value|default:"Not provided" }}</dd>{% endfor %}</dl>{% else %}<p>You have not recorded a profile revision for this proposal.</p>{% endif %}
     {% endif %}
     {% if detail.summary.sealed_revision_id %}<p>Current sealed revision reference: {{ detail.summary.sealed_revision_id }}.</p>{% endif %}
     {% if detail.summary.submitted_revision_id %}<p>Submitted revision reference: {{ detail.summary.submitted_revision_id }}. Submission is not acceptance.</p>{% endif %}
     <p>This overview is read-only. The displayed state comes from the proposal owner, not from the availability of new calls.</p>
+    <p><a href="{{ root_url }}{{ detail.summary.proposal_id }}/work/">Work on this proposal</a></p>
   </section>
+  {% elif task == "work" %}{% include "applications/programme_personal_work.html" %}
   {% endif %}
-  <section aria-labelledby="proposal-next"><h2 id="proposal-next">What remains in this rehearsal</h2><p>Shared-answer editing, changes to selection or your profile, invitations and responses, exact sealing and acknowledgement, submission and withdrawal are not yet connected to this personal surface. Starting a draft does not complete the proposal journey. Review and accepted-item conversion remain separate organizer tasks.</p></section>
+  <section aria-labelledby="proposal-next"><h2 id="proposal-next">What remains in this rehearsal</h2><p>Authorized person, domain-reference and safe-file choosers are not yet connected. Review and accepted-item conversion remain separate organizer tasks. Starting or submitting a proposal does not complete the Programme journey or publish anything.</p></section>
 </div>
 {% endblock %}

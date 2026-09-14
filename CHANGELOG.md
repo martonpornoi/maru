@@ -15,6 +15,14 @@ rather than replace the curated summary.
 
 ### Added
 
+- Extended the dormant personal Programme workspace with shared-answer and own-
+  profile editing, labelled selection changes, invitations/roster decisions,
+  sealing, exact-contribution acknowledgement, explicit reopening, submission and
+  withdrawal. Each person reviews their own included frozen profile, not another
+  person's private fields. Stale forms retain their input and original proof;
+  no Programme profile or production route is activated. Reference/file choosers
+  and organizer review/conversion remain separate #108 work.
+
 - Added dormant personal Programme intake: find an available call, choose a
   labelled track/format and duration, deliberately supply your own profile and
   consent, and start a private draft. Personal history remains separate from
@@ -181,6 +189,11 @@ rather than replace the curated summary.
   ([#38](https://github.com/martonpornoi/maru/issues/38)).
 
 ### Changed
+
+- Applications integer answers now enforce configured numeric limits in both
+  forms and owner validation. New Programme seals refuse retained out-of-range
+  integers until a corrected answer revision is supplied; existing immutable
+  evidence is not rewritten (#108).
 
 - Aligned routine PR documentation builds with the parallel Sphinx invocation
   already used by full CI and local certification. Required source coverage,

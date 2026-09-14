@@ -148,8 +148,40 @@ creation cursor/retry key fence the input. Existing proposal history never depen
 on new-call availability or current owner Department membership. Invitees receive
 only the minimal field ceiling; leads and accepted collaborators may additionally
 read only their own configured profile. Reauthorization surrounds rendered release.
-This intake increment does not supply the remaining editing/collaboration/seal/
-submission/review/conversion tasks or activate the Programme profile.
+The personal continuation adds separate editing/collaboration/seal/submission
+tasks below; organizer review/conversion remains separate unfinished #108 work.
+Neither increment activates the Programme profile.
+
+The personal continuation has explicit non-persisted self-view fields
+`workflow_context` and `frozen_revision`. The former supplies existing-proposal
+lifecycle/source versions and role-minimized task choices without new-call entry
+or current Department checks. Only leads receive track/format catalogs and the
+collaborator limit; invitees receive no answer, roster or profile content.
+The latter requires current relationship and exact seal inclusion, returns frozen
+selection/shared answer revisions and only the actor's included frozen profile,
+and never substitutes latest mutable values. Both queries revalidate scope and
+audit atomically; bounded overflows or incomplete safe joins return no partial
+projection. Personal forms and dedicated unmounted action routes preserve original
+proof fields, explicit consent and offset-aware invitation input. Selection,
+typed shared answers, own profiles, invitations/roster, sealing, reopening, exact
+acknowledgement/decline, submission and withdrawal call only existing owner
+commands. Submission carries an explicit seal identity, while responses also
+carry exact included contributor and own-profile identities. Editing uses the
+inclusive edit deadline; responses/submission use the exclusive close; withdrawal
+does not require a current call/edit window. Each task proves independent read
+and mutation authority and revalidates prepared content around rendering.
+Forms retain stale original proofs, distinguish incomplete readiness from stale
+state, and never infer that a lost response means a failed write. Leaving or
+declining returns to own inventory; other commands return to the original
+proposal, not a child revision returned by the command. Authorized reference/file
+choices and later organizer review/conversion remain unfinished #108 work.
+
+The shared integer normalizer enforces configured inclusive numeric limits and
+signed-32-bit shape. HTML bounds use the corresponding whole-number limits,
+including fractional source bounds. Before a new Programme seal, retained
+non-null integer answers are checked against that same normalizer; invalid
+answers require a new answer revision. Existing immutable seals/history are not
+rewritten or retrospectively invalidated by this correction.
 
 `programme_call_editor` reconstructs every typed question, condition, option,
 policy, catalog and duration bound without querying or writing. It refuses stale
