@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant guided accepted-Programme conversion: labelled exact source
+  selection, deliberate private copy and confirmation, preserved two-version
+  retry intent and independently authorized item continuation. Original receipts
+  remain recoverable without fresh source or item reads; no production route or
+  profile is activated and initial readiness remains unresolved.
+
 - Added dormant independent Programme decisions: deliberate outcomes, all-stage
   readiness, exact recipient-message preview separated from private rationale,
   signed confirmation and retained outgoing history. Original receipts remain

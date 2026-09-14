@@ -11,6 +11,21 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's independent decision composition is delivered through
+[PR #126](https://github.com/martonpornoi/maru/pull/126), protected squash
+`2722dab90155527dbf6fdd02837530255ebc970a` at 2026-09-14 20:37:35 UTC.
+Its tree equals certified head `15e00d8a5488a413e9dd31ef53dced523eb427e0`;
+clean local main and origin/main match. All eight retained local gates passed
+in 26m30s (7,175 units in 63.99s and 85 frontend tests). Hosted units passed in
+54.92s, quality in 23m37s, documentation in 21m44s and workflow in 24m05s.
+Exact-head PR gate and CodeQL passed without canonical or hosted repair/rerun.
+The observed 6m23s quality margin is not guaranteed; #113 retains the risk.
+One native scenario remains unexecuted #102 debt; genuine human acceptance
+remains #92. No writer, schema, profile or production route changed. See the
+[protected decision checkpoint](../checkpoints/2026-09-14-programme-decision-composition-protected-delivery.md).
+
+### Preceding moderation delivery
+
 #108's independent moderation workspace is delivered through
 [PR #125](https://github.com/martonpornoi/maru/pull/125), protected squash
 `cb36b8eee6d7f4919fa3254f7fb543711c3a14ed` at 2026-09-14 19:05:32 UTC.
@@ -244,8 +259,32 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-decision-composition`, from protected PR #125.
-The local candidate implements independent final/wait-list composition with
+Branch: `codex/programme-accepted-conversion`, from protected PR #126.
+Candidate: exact effective accepted-item conversion and independently admitted
+Programme-item continuation. Minimal scoped acceptance labels and canonical
+eligibility are separate from Programme's manage-only creation cursor. Deliberate
+private title/summary, reason and confirmation preserve original decision/seal/
+review/control/retry intent. Confirmed POST reaches canonical original receipt
+recovery before fresh source/cursor reads. Optional private-item continuation
+has independent read/field/audit admission; losing it preserves a minimal receipt.
+Decision overview offers a separately admitted conversion task. No answer copy,
+schema, writer, production route, profile or CI policy changed.
+
+Focused DB-free and full unit preflight evidence is recorded in the
+[guided conversion checkpoint](../checkpoints/2026-09-14-programme-guided-accepted-conversion.md).
+Actual-form synthetic browser inspection observed blank deliberate input,
+focused stale recovery with both original versions, minimal replay without item
+read authority, closed/ineligible/consumed states and generic denial at 1280 CSS
+pixels with one H1/main and no document overflow. Native source/cursor/form/
+commit/replay maintenance remains unexecuted #102 debt; human acceptance is #92.
+Clean-commit certification and exact-head protected delivery are still pending.
+Next after delivery: remaining #108 connections, safe structured viewers,
+documented host retry recovery and accountable setup. #102/#97/#109/#92 remain
+final gates; this candidate does not close #108 or #48.
+
+### Preceding decision candidate evidence
+
+The protected candidate implements independent final/wait-list composition with
 all-stage readiness, exact pinned recipient-message preview, separate private
 rationale, signed confirmation and retained decider-only outgoing history.
 Original confirmed receipts precede private reads; templates and history retain
@@ -255,7 +294,7 @@ production route, recipient directory or PostgreSQL-policy change.
 Inexpensive preflight: 7,175 units passed in 64.80s with three existing URLField
 warnings; 223 focused decision/moderation/containment tests passed in 3.03s.
 Focused typing, NumPy and semantic documentation checks passed; final clean-head
-certification and hosted acceptance are pending, not claimed by this preflight.
+certification and hosted protected acceptance subsequently passed as recorded above.
 Synthetic actual-form/signature browser evidence observed discovery, blank
 outcome, exact preview, tamper rejection/re-preview, minimal receipt, focused
 stale-input recovery, read-only/final and generic denial at 1280 CSS pixels.
@@ -263,7 +302,7 @@ One H1/main and no document overflow were observed. Native wait-list successor,
 history and original receipt scenario is maintained but unexecuted #102 debt;
 human acceptance remains #92. See the
 [decision composition checkpoint](../checkpoints/2026-09-14-programme-decision-composition.md).
-Next: exact protected delivery, then accepted conversion and remaining #108
+Next: accepted conversion and remaining #108
 connections, safe structured viewers, host retry recovery and guided setup.
 #102/#97/#109/#92 remain final gates before promotion or closing #48/#108.
 

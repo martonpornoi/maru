@@ -10,6 +10,7 @@
   <h1>Programme decisions</h1>
   <details class="maru-access-summary"><summary><strong>Access</strong> · Independent exact-Department decisions</summary><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}.</p><p>A decider must not be a contributor, retained reviewer or prior moderator of this case. Each content section authorizes independently. A decision does not create a Programme item, host, publication or volunteer assignment.</p></details>
   <nav aria-label="Decision tasks"><a href="{{ root_url }}">Choose a case for decision</a>{% if source %} · <a href="{{ root_url }}{{ source.case.case_id }}/">Case overview</a>{% endif %}</nav>
+  {% if conversion_url %}<p><a href="{{ conversion_url }}">Inspect accepted-source conversion eligibility</a> · Separate current conversion and Programme item-management authority is required; a decision alone grants neither.</p>{% endif %}
   {% if result %}
     <div role="status"><h2>Decision confirmed</h2><p>{% if result.replayed %}The original receipt was recovered; no second decision was made.{% else %}The exact decision and recipient message were recorded.{% endif %}</p><p>Receipt {{ result.receipt_id }} · Confirmed case version {{ result.version }}</p><p>This minimal receipt grants no private content or conversion authority. It is not proof of message delivery, contributor agreement or hosting consent.</p></div>
   {% elif page %}

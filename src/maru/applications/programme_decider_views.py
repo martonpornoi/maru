@@ -24,6 +24,10 @@ from .programme_authorization import (
 )
 from .programme_call_forms import _apply_errors
 from .programme_call_views import _secure
+from .programme_conversion_queries import (
+    ProgrammeConversionReadRequest,
+    can_use_programme_conversion,
+)
 from .programme_decider_forms import (
     OUTCOME_LABELS,
     DecisionConfirmForm,
@@ -75,6 +79,21 @@ def _authorize(scope: ProgrammeReviewReadRequest) -> None:
         capability_code=DECIDE,
         requested_fields=scope.requested_fields,
     )
+
+
+def _conversion_link(scope: ProgrammeReviewReadRequest) -> str | None:
+    if scope.department_id is None:
+        return None
+    request = ProgrammeConversionReadRequest(
+        scope.actor_id,
+        scope.organization_id,
+        scope.edition_id,
+        scope.department_id,
+        scope.correlation_id,
+    )
+    if not can_use_programme_conversion(request):
+        return None
+    return _root(scope).removesuffix("decisions/") + "conversion/"
 
 
 def _transport(request: HttpRequest, task: str, *, queue: bool) -> dict[str, Any]:
@@ -313,11 +332,13 @@ def _inspect(
 
     source = preview.work if preview else load()
     links = _links(scope)
+    conversion = _conversion_link(scope) if task == "overview" else None
     context: dict[str, Any] = {
         "source": source,
         "task": task,
         "content_links": links,
         "can_decide": _available(source) and "evidence" in links,
+        "conversion_url": conversion,
     }
     facts = preview.evidence if preview else None
     detail = facts.detail if facts else None
@@ -382,6 +403,8 @@ def _inspect(
 
     def verify() -> None:
         if load() != source or _links(scope) != links:
+            raise Denied
+        if conversion and _conversion_link(scope) != conversion:
             raise Denied
         if facts is not None and read() != facts:
             raise Denied
