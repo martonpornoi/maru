@@ -330,6 +330,13 @@ Shift, schedule, or publication.
 
 ## Dormant Programme review and decisions
 
+The [independent decision composer](../product/page-contracts/programme-decision-composition.md)
+adds decider-only discovery, all-stage readiness, pinned recipient-message
+preview separated from private rationale and exact signed confirmation. Retained
+outgoing history is independently protected without exposing recipient lists or
+others' receipt state. Original receipt recovery precedes private reads. This
+does not activate Programme, grant conversion or create host/publication state.
+
 The [review setup workspace](../product/page-contracts/programme-review-setup.md)
 adds reserved manager call discovery, explicit structured policy composition and
 immutable policy history. Its independent `review_setup` field ceiling exposes

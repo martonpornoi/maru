@@ -25,6 +25,16 @@ from maru.applications.programme_commands import (
     submit_programme_proposal,
     withdraw_programme_proposal,
 )
+from maru.applications.programme_decider_preview import (
+    DecisionIntent,
+    prepare_programme_decision_preview,
+    verify_programme_decision_preview,
+)
+from maru.applications.programme_decider_queries import (
+    get_programme_decision_work,
+    list_programme_decision_cases,
+    list_programme_decision_messages,
+)
 from maru.applications.programme_inputs import ProgrammeProposalInvitationInput
 from maru.applications.programme_moderation_queries import (
     get_programme_moderation_case,
@@ -32,11 +42,13 @@ from maru.applications.programme_moderation_queries import (
     list_programme_moderation_cases,
 )
 from maru.applications.programme_review_authorization import (
+    DECIDE,
     MANAGE_REVIEW,
     MODERATE,
     REVIEW,
     VIEW_DECISION_SELF,
 )
+from maru.applications.programme_review_commands import apply_programme_review_command
 from maru.applications.programme_review_inputs import ProgrammeReviewCommandInput
 from maru.applications.programme_review_intake_queries import (
     get_programme_review_intake_seal,
@@ -82,6 +94,122 @@ pytestmark = [
     pytest.mark.integration,
     pytest.mark.usefixtures(_admit_future_programme_effects.__name__),
 ]
+
+
+def test_independent_decision_preview_waitlist_history_and_original_receipt():
+    """Maintain native exact-message acceptance as unexecuted ADR 0100 debt."""
+    world = create_review_world(with_collaborator=True)
+    assign_and_score(world, world.reviewer.id)
+    assign_and_score(world, world.peer.id)
+    request = world.read(world.decider.id, DECIDE, fields=frozenset({"review_context"}))
+    lookup = {"request": request, "authorizer": _AUTHORIZER}
+    original = DecisionIntent(
+        world.version,
+        uuid4(),
+        "waitlisted",
+        "Exact recipient text.",
+        "Private decider rationale.",
+    )
+    with pytest.raises(ProgrammeReviewConflictError):
+        prepare_programme_decision_preview(
+            **lookup, case_id=world.case_id, intent=original
+        )
+    world.command(
+        world.moderator.id,
+        ProgrammeReviewCommandInput(ProgrammeReviewAction.MODERATED, world.case_id),
+    )
+    original = replace(original, expected_version=world.version)
+    assert [row.case_id for row in list_programme_decision_cases(**lookup).items] == [
+        world.case_id
+    ]
+    for actor in (world.lead, world.collaborator, world.reviewer, world.moderator):
+        excluded = lookup | {"request": replace(request, actor_id=actor.id)}
+        assert not list_programme_decision_cases(**excluded).items
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_decision_work(**excluded, case_id=world.case_id)
+    preview = prepare_programme_decision_preview(
+        **lookup, case_id=world.case_id, intent=original
+    )
+    assert world.version == original.expected_version
+    assert preview.message == "Programme decision: waitlisted.\n\nExact recipient text."
+    confirmed = verify_programme_decision_preview(
+        request=request, case_id=world.case_id, intent=original, proof=preview.proof
+    )
+    common = {
+        "actor_id": request.actor_id,
+        "organization_id": request.organization_id,
+        "edition_id": request.edition_id,
+        "department_id": request.department_id,
+        "command": ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.DECIDED,
+            world.case_id,
+            outcome=confirmed.outcome,
+            text=confirmed.text,
+        ),
+        "expected_version": confirmed.expected_version,
+        "retry_key": confirmed.retry_key,
+        "reason": confirmed.reason,
+        "source_channel": "programme-decision-compose",
+        "correlation_id": uuid4(),
+        "authorizer": _AUTHORIZER,
+    }
+    receipt = apply_programme_review_command(**common)
+    history = lookup | {
+        "request": replace(request, requested_fields=frozenset({"review_evidence"})),
+        "case_id": world.case_id,
+    }
+    stored = list_programme_decision_messages(**history).items
+    assert len(stored) == 1
+    assert stored[0].decision_id == receipt.target_id
+    assert stored[0].message == preview.message
+    assert original.reason not in stored[0].message
+    with pytest.raises(ProgrammeReviewConflictError):
+        prepare_programme_decision_preview(
+            **lookup,
+            case_id=world.case_id,
+            intent=replace(original, expected_version=world.version),
+        )
+    successor = replace(
+        original,
+        expected_version=world.version,
+        retry_key=uuid4(),
+        outcome="accepted",
+        text="Accepted after waitlisting.",
+    )
+    accepted = prepare_programme_decision_preview(
+        **lookup, case_id=world.case_id, intent=successor
+    )
+    apply_programme_review_command(
+        **(
+            common
+            | {
+                "command": ProgrammeReviewCommandInput(
+                    ProgrammeReviewAction.DECIDED,
+                    world.case_id,
+                    outcome=successor.outcome,
+                    text=successor.text,
+                ),
+                "expected_version": successor.expected_version,
+                "retry_key": successor.retry_key,
+                "correlation_id": uuid4(),
+            }
+        )
+    )
+    page = list_programme_decision_messages(**history, limit=1)
+    assert page.items[0].message == preview.message
+    assert (
+        list_programme_decision_messages(**history, after_version=page.next_version)
+        .items[0]
+        .message
+        == accepted.message
+    )
+    replay = apply_programme_review_command(**(common | {"correlation_id": uuid4()}))
+    assert replay.replayed
+    assert replay.receipt_id == receipt.receipt_id
+    assert (
+        get_programme_decision_work(**lookup, case_id=world.case_id).case.state
+        == "accepted"
+    )
 
 
 def test_moderation_discovery_readiness_reopening_and_original_receipt():

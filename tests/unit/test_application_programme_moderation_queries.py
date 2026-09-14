@@ -64,7 +64,7 @@ def test_exact_retained_metadata_checks_independence_before_disclosure(world):
     [
         "applications.manage_programme_review",
         "applications.review_programme",
-        "applications.decide_programme_review",
+        "applications.decide_programme",
     ],
 )
 def test_other_roles_never_inherit_moderator_metadata(world, capability):

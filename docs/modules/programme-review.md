@@ -12,6 +12,22 @@ exclude Programme.
 
 ## Policy and source of truth
 
+The dormant [independent decision workspace](../product/page-contracts/programme-decision-composition.md)
+reserves labelled decider-only discovery, all-stage readiness, exact pinned
+template/message preview and explicit signed confirmation. Leads, all retained
+collaborators/reviewers and prior moderators are excluded before pagination.
+`get_programme_decision_work` reads templates through the existing protected
+context; `get_programme_decision_evidence` retains separate evidence authority.
+`list_programme_decision_messages` is a decider-only, audited and sensitive-checked
+outgoing history with no recipient directory/counts or acknowledgement states.
+It does not widen moderator/reviewer projections. Preview signs only an exact
+actor/scope/case/version/retry/outcome/text/rationale digest; it creates no decision.
+Confirmation uses the unchanged canonical writer before any fresh private read,
+preserving old receipt recovery. All-stage readiness, final-stage position and
+independent decision authority remain canonical owner checks. Wait-list can be
+followed by an explicit final decision but cannot repeat itself. No schema,
+current manifest, production route, conversion or delivery effect is introduced.
+
 The dormant [moderation workspace](../product/page-contracts/programme-moderation.md)
 adds independently authorized exact-Department case discovery, protected
 version-bound evidence and separate reasoned moderation, advance and reopen
@@ -25,7 +41,8 @@ moves. Fresh reopening remains limited to open/waitlisted current-or-earlier
 stages. Original POST receipt recovery precedes private metadata/content reads;
 current route authority and canonical replay admission remain mandatory. No
 Identity directory, schema change, production mount or profile activation is
-introduced. Final decisions and conversion remain separate #108 tasks.
+introduced. Final decisions use their separate independent task; conversion
+remains a separately authorized #108 continuation.
 
 The dormant [review setup workspace](../product/page-contracts/programme-review-setup.md)
 now reserves Department-scoped call discovery, one-stage-at-a-time policy

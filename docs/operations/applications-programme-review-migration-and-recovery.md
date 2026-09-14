@@ -1,5 +1,29 @@
 # Programme review migration and recovery
 
+## Original decision preview and confirmation
+
+Keep the exact original case version, retry UUID, outcome, recipient text,
+private rationale, signed preview and confirmation after an uncertain response.
+The proof binds a digest only, not a copy of private text or authority. Never
+copy raw proofs or private input into logs, issue reports or support screenshots.
+Changed intent requires a new explicit preview; do not replace a failed intent's
+version or retry silently. Canonical receipt recovery precedes private-content
+reads and still requires current route and owner replay authority. A recovered
+receipt is not current acceptance, conversion, delivery or contributor consent.
+
+Proofs have no arbitrary expiry that would break old receipt recovery. Retain
+the normal Django signing-key fallback during rotation; unavailable historical
+keys make the proof unusable and must not be bypassed or replaced with a fresh
+decision. Inspect the retained owner receipt through independently authorized
+support before deciding on any new intent. A declined private read never releases
+cached preview text. Outgoing decider history retains exact immutable messages
+but no recipient directory or other person's acknowledgement state.
+
+This adapter changes no schema or rollback fence. Native preview, wait-list
+successor, retained-message paging and old receipt cases are maintained but not
+collected/executed during ADR 0100 deferral; #102 owns restoration and native
+evidence. #97/#109/#92 remain separate recovery, integration and human gates.
+
 ## Original moderation intent and evidence snapshots
 
 Keep the original case/version/retry key, explicit reopen target, rationale and
