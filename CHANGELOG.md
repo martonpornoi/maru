@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant independent Programme moderation: labelled case discovery,
+  protected version-bound history, reasoned moderation, one-stage progression
+  and deliberate reopening. Original receipts remain recoverable without a
+  new private-content read; final decisions and production activation remain
+  separate gates.
+
 - Added dormant own Programme review tasks: conflict declarations and recusal,
   complete independent rubric scoring, permitted discussion and field-scoped
   sealed answers/history. Original assignment-stage intent survives uncertain

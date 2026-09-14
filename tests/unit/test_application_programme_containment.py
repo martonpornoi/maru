@@ -89,6 +89,9 @@ _FORBIDDEN_SURFACE_MARKERS = (
 )
 _DORMANT_TEMPLATE_MARKERS = {
     (
+        "src/maru/applications/templates/applications/programme_moderation.html"
+    ): frozenset({"programme-call", "programme_call"}),
+    (
         "src/maru/applications/templates/applications/programme_reviewer_work.html"
     ): frozenset({"programme-call", "programme_call"}),
     (

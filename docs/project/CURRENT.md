@@ -11,6 +11,22 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's own reviewer workspace is delivered through
+[PR #124](https://github.com/martonpornoi/maru/pull/124), protected squash
+`95ed7b847bf942be4ffcc07438d864fdb1b53961` at 2026-09-14 17:39:24 UTC.
+Its tree equals certified head `9f058a3f26972c5ba3987c4e6cf358b3dfbf45d2`;
+clean local main and origin/main match. All eight retained local gates passed
+in 17m55s (6,975 units in 43.71s and 85 frontend tests). Hosted units passed in
+55.56s, quality in 24m30s, documentation in 22m43s and workflow in 25m04s.
+Exact-head PR gate and CodeQL passed without canonical or hosted repair/rerun.
+The observed 5m30s quality margin is not guaranteed; #113 remains open. One
+native scenario remains unexecuted #102 debt, full human acceptance remains
+#92 and dedicated safe structured-answer/reference viewers remain #108. No
+schema, profile or production route changed. See the
+[protected reviewer checkpoint](../checkpoints/2026-09-14-programme-reviewer-workspace-protected-delivery.md).
+
+### Preceding named-manager delivery
+
 #108's named reviewer management is delivered through
 [PR #123](https://github.com/martonpornoi/maru/pull/123), protected squash
 `d8fc19bae95ba683f90ed0d9422791400ac186e6` at 2026-09-14 16:21:52 UTC.
@@ -213,8 +229,29 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-reviewer-workspace`, from protected PR #123.
-Candidate: independently authorized own assignment discovery, conflict clearance/
+Branch: `codex/programme-moderation-workspace`, from protected PR #124.
+The candidate adds independent moderator discovery, inspectable protected
+evidence and deliberate moderation/stage movement/reopening. Original inspected
+version/retry intent and separate reviewer/manager/decider authority are retained.
+Fresh reopening follows existing OPEN/WAITLISTED rules, never widened final-case
+editing. Original POSTs reach canonical receipts before private reads. No owner
+writer, schema, profile, production route or PostgreSQL policy changes.
+
+Focused database-free acceptance: 98 tests passed in 1.92s. Full inexpensive
+unit preflight: 7,050 passed in 46.22s with three existing URLField warnings.
+Static and NumPy/semantic docstrings passed. Synthetic browser evidence at 1280
+CSS pixels covers discovery, exact evidence/moderation, minimal receipt,
+labelled reopening and focused stale input retention, with one H1/main and no
+page overflow. Final, readonly and denied states were inspected. It does not
+claim native persistence or genuine human acceptance. One native scenario is
+maintained without execution or invented weights (#102); full human matrix
+remains #92. Exact clean-commit certification and hosted protected acceptance
+remain pending. See the
+[moderation checkpoint](../checkpoints/2026-09-14-programme-moderation-workspace.md).
+
+### Preceding own reviewer candidate evidence
+
+The protected candidate supplies independently authorized own assignment discovery, conflict clearance/
 recusal, complete explicit rubric scoring, permitted discussion and separately
 field-scoped exact-seal context/answers/history. Retained own metadata carries
 the original immutable assignment-stage rubric and no submission content, so
@@ -230,8 +267,8 @@ Synthetic browser evidence covers pending clearance, blank rubric/confirmation,
 separate discussion, permitted answers, focused stale-input recovery, readonly
 and denial at 1280 CSS pixels; genuine full human acceptance remains #92.
 One maintained native scenario extends existing tests without execution or
-invented weights (#102 debt). Exact clean-commit certification and hosted
-protected acceptance are still required. See the
+invented weights (#102 debt). Subsequent exact clean-commit and hosted protected
+acceptance passed as recorded above. See the
 [reviewer workspace checkpoint](../checkpoints/2026-09-14-programme-reviewer-workspace.md).
 Next: protected delivery, then independently admitted moderation/decision/
 conversion tasks and remaining #108 connections. Dedicated safe structured

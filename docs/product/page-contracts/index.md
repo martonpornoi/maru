@@ -53,6 +53,7 @@ contract for the surface being changed, and compare its status with the
 - [Programme review setup](programme-review-setup.md)
 - [Named Programme reviewer management](programme-review-management.md)
 - [My Programme reviews](programme-reviewer-work.md)
+- [Programme moderation](programme-moderation.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -85,4 +86,5 @@ programme-decision-receipts
 programme-review-setup
 programme-review-management
 programme-reviewer-work
+programme-moderation
 ```

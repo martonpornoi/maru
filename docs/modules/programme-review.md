@@ -12,6 +12,21 @@ exclude Programme.
 
 ## Policy and source of truth
 
+The dormant [moderation workspace](../product/page-contracts/programme-moderation.md)
+adds independently authorized exact-Department case discovery, protected
+version-bound evidence and separate reasoned moderation, advance and reopen
+tasks. Discovery excludes leads, every retained collaborator and every retained
+reviewer assignment before pagination. Content-free metadata never grants
+answers, attribution or sensitive content. `get_programme_moderation_evidence`
+uses the existing protected detail query and canonical current-stage readiness
+rule under the owner lock; it does not average scores or change quorum semantics.
+History pages pin the inspected version and fail with conflict guidance if it
+moves. Fresh reopening remains limited to open/waitlisted current-or-earlier
+stages. Original POST receipt recovery precedes private metadata/content reads;
+current route authority and canonical replay admission remain mandatory. No
+Identity directory, schema change, production mount or profile activation is
+introduced. Final decisions and conversion remain separate #108 tasks.
+
 The dormant [review setup workspace](../product/page-contracts/programme-review-setup.md)
 now reserves Department-scoped call discovery, one-stage-at-a-time policy
 composition and exact immutable policy history. It uses independent
