@@ -1260,6 +1260,12 @@ architecture documents, implementation issues, tests, and release notes.
   to read answers, contributor profiles or private evidence. Original score
   requests remain bound to that assignment's original rubric, version and retry
   proof; successful receipt replay must not depend on a now-denied content read.
+  Independent moderator discovery must exclude contributors and every retained
+  reviewer assignment before pagination. Evidence navigation and reasoned
+  moderation bind the inspected case version; changed history must not silently
+  replace that intent. Advancement and labelled stage reopening remain separate
+  canonical actions, never final decisions. Original uncertain POSTs must reach
+  minimal receipt replay before a private read whose eligibility may have changed.
 - **PRG-004 — Decision communication:** Accept, reject, wait-list, and revision
   decisions must use templates while preserving a canonical conversation and
   any required acknowledgement.

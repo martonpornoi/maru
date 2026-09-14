@@ -1,5 +1,21 @@
 # Applications API contract
 
+The dormant [moderation tasks](../product/page-contracts/programme-moderation.md)
+reserve `moderation/` under the exact-Department review root. The queue and
+`{case}/` overview use `list_programme_moderation_cases` and
+`get_programme_moderation_case` with exactly moderator `review_context` purpose.
+`moderate/`, `advance/` and `reopen/` POST the existing typed review command;
+reopen additionally requires an explicit strict stage index presented with its
+pinned policy label. All keep original version/retry/rationale/confirmation.
+Successful original POSTs need no private case preflight and return only the
+minimal owner receipt. Separate `context/`, `answers/` and `evidence/` GETs retain
+independent field and sensitive authority. Evidence and moderation GETs accept
+only positive canonical `after`/`version` values; any continuation requires its
+snapshot version. Changed snapshots return 409 without mixed history or a fresh
+form. `get_programme_moderation_evidence` returns the protected bounded page,
+current valid review count, configured quorum and existing canonical readiness.
+These are dormant HTML adapters, not new active API or OpenAPI routes.
+
 The dormant [own reviewer workspace](../product/page-contracts/programme-reviewer-work.md)
 reserves `mine/` and `mine/{case_id}/{assignment_id}/` beneath the same exact
 Department review root. Separate `clear/`, `recuse/`, `score/`, `discuss/` tasks

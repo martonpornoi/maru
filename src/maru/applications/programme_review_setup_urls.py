@@ -2,6 +2,7 @@
 
 from django.urls import path
 
+from .programme_moderation_views import programme_moderation
 from .programme_review_intake_views import programme_review_intake
 from .programme_review_management_views import programme_review_management
 from .programme_review_setup_views import programme_review_setup
@@ -12,6 +13,21 @@ _ROOT = (
     "<uuid:edition_id>/<uuid:department_id>/"
 )
 urlpatterns = [
+    path(_ROOT + "moderation/", programme_moderation, name="programme-moderation"),
+    path(
+        _ROOT + "moderation/<uuid:case_id>/",
+        programme_moderation,
+        name="programme-moderation-case",
+    ),
+    *[
+        path(
+            _ROOT + "moderation/<uuid:case_id>/" + task + "/",
+            programme_moderation,
+            {"task": task},
+            name="programme-moderation-" + task,
+        )
+        for task in ("moderate", "advance", "reopen", "context", "answers", "evidence")
+    ],
     path(_ROOT + "mine/", programme_reviewer_work, name="programme-review-mine"),
     path(
         _ROOT + "mine/<uuid:case_id>/<uuid:assignment_id>/",

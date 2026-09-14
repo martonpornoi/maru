@@ -1,5 +1,22 @@
 # Programme review migration and recovery
 
+## Original moderation intent and evidence snapshots
+
+Keep the original case/version/retry key, explicit reopen target, rationale and
+confirmation after an uncertain moderation response. A canonical original POST
+may recover its minimal receipt before reading private case content whose
+independence has since changed; current route and owner replay admission still
+apply. Do not rebuild the request from a newly loaded evidence page. History
+continuations bind the inspected version; 409 means begin a deliberate new
+inspection, not silently update the old form. A failed scoped read releases no
+cached rationale or evidence. Reopening affects only an open/waitlisted case's
+selected current/earlier stage, invalidates that and later moderation and retains
+history. It cannot undo a final accepted/rejected/revision-requested case.
+
+The dormant moderation surface changes no schema, runtime privilege or recovery
+writer. Leave it unmounted while #102 native acceptance, #97 logical restore,
+#109 integrated evidence and #92 genuine human acceptance remain incomplete.
+
 ## Retained own reviewer intent
 
 Own reviewer pages bind the URL-selected retained assignment's immutable policy

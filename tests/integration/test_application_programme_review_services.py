@@ -26,8 +26,14 @@ from maru.applications.programme_commands import (
     withdraw_programme_proposal,
 )
 from maru.applications.programme_inputs import ProgrammeProposalInvitationInput
+from maru.applications.programme_moderation_queries import (
+    get_programme_moderation_case,
+    get_programme_moderation_evidence,
+    list_programme_moderation_cases,
+)
 from maru.applications.programme_review_authorization import (
     MANAGE_REVIEW,
+    MODERATE,
     REVIEW,
     VIEW_DECISION_SELF,
 )
@@ -46,7 +52,10 @@ from maru.applications.programme_review_queries import (
     list_programme_review_cases,
     list_self_programme_decisions,
 )
-from maru.applications.programme_review_rules import accepted_review_is_effective
+from maru.applications.programme_review_rules import (
+    ProgrammeReviewConflictError,
+    accepted_review_is_effective,
+)
 from maru.applications.programme_review_setup_queries import (
     get_programme_review_setup,
     get_programme_review_setup_policy,
@@ -73,6 +82,113 @@ pytestmark = [
     pytest.mark.integration,
     pytest.mark.usefixtures(_admit_future_programme_effects.__name__),
 ]
+
+
+def test_moderation_discovery_readiness_reopening_and_original_receipt():
+    """Maintain real owner moderation acceptance as unexecuted ADR 0100 debt."""
+    policy = review_policy()
+    first = policy.stages[0]
+    world = create_review_world(
+        policy=replace(policy, stages=(first, replace(first, code="technical"))),
+        with_collaborator=True,
+    )
+    reviewer_assignment = assign_and_score(world, world.reviewer.id)
+    assign_and_score(world, world.peer.id)
+    request = world.read(
+        world.moderator.id, MODERATE, fields=frozenset({"review_context"})
+    )
+    lookup = {"request": request, "authorizer": _AUTHORIZER}
+    page = list_programme_moderation_cases(**lookup, limit=1)
+    assert [row.case_id for row in page.items] == [world.case_id]
+    assert not list_programme_moderation_cases(**lookup, after_id=world.case_id).items
+    for actor in (world.lead, world.collaborator, world.reviewer, world.peer):
+        excluded = lookup | {"request": replace(request, actor_id=actor.id)}
+        assert not list_programme_moderation_cases(**excluded).items
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_moderation_case(**excluded, case_id=world.case_id)
+    for changes in (
+        {"organization_id": uuid4()},
+        {"edition_id": uuid4()},
+        {"department_id": uuid4()},
+        {"capability_code": MANAGE_REVIEW},
+    ):
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_moderation_case(
+                **(lookup | {"request": replace(request, **changes)}),
+                case_id=world.case_id,
+            )
+    protected = lookup | {
+        "request": replace(request, requested_fields=frozenset({"review_evidence"})),
+        "case_id": world.case_id,
+    }
+    evidence = get_programme_moderation_evidence(**protected)
+    assert evidence.valid_scores == evidence.required_reviews == 2
+    assert not evidence.ready
+    moderate = ProgrammeReviewCommandInput(
+        ProgrammeReviewAction.MODERATED, world.case_id
+    )
+    original_version, retry = world.version, uuid4()
+    confirmed = world.command(
+        world.moderator.id, moderate, expected_version=original_version, retry_key=retry
+    )
+    assert get_programme_moderation_evidence(**protected).ready
+    world.command(
+        world.reviewer.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.DISCUSSED,
+            world.case_id,
+            reference_id=reviewer_assignment,
+            text="Later independent discussion.",
+        ),
+    )
+    assert not get_programme_moderation_evidence(**protected).ready
+    replay = world.command(
+        world.moderator.id, moderate, expected_version=original_version, retry_key=retry
+    )
+    assert replay.replayed
+    assert replay.receipt_id == confirmed.receipt_id
+    world.command(world.moderator.id, moderate)
+    world.command(
+        world.moderator.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.STAGE_ADVANCED,
+            world.case_id,
+        ),
+    )
+    assert (
+        get_programme_moderation_case(**lookup, case_id=world.case_id).case.stage == 1
+    )
+    world.command(
+        world.moderator.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.STAGE_REOPENED,
+            world.case_id,
+            stage=0,
+        ),
+    )
+    reopened = get_programme_moderation_evidence(**protected)
+    assert reopened.valid_scores == 2
+    assert not reopened.ready
+    with pytest.raises(ProgrammeReviewConflictError):
+        world.command(
+            world.moderator.id,
+            ProgrammeReviewCommandInput(
+                ProgrammeReviewAction.STAGE_ADVANCED,
+                world.case_id,
+            ),
+        )
+    world.command(
+        world.reviewer.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.REVIEWER_RECUSED,
+            world.case_id,
+            reference_id=reviewer_assignment,
+        ),
+    )
+    assert get_programme_moderation_evidence(**protected).valid_scores == 1
+    assert not list_programme_moderation_cases(
+        **(lookup | {"request": replace(request, actor_id=world.reviewer.id)})
+    ).items
 
 
 def test_own_reviewer_metadata_retains_original_rubric_after_progress_and_recusal():

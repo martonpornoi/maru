@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Programme moderation · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Programme / Review / Moderation</div>{% endblock %}
+{% block content %}
+<div class="programme-calls">
+  <h1>Programme moderation</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Independent exact-Department moderation</summary><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}.</p><p>Contributors and anyone ever assigned to review a case cannot moderate it. Each protected content section requires separate authority. Moderation does not grant reviewer management or final-decision authority.</p></details>
+  <nav aria-label="Moderation tasks"><a href="{{ root_url }}">Choose a case to moderate</a>{% if source %} · <a href="{{ root_url }}{{ source.case.case_id }}/">Case overview</a>{% endif %}</nav>
+  {% if result %}
+    <div role="status"><h2>Moderation action confirmed</h2><p>{% if result.replayed %}The original receipt was recovered; no second change was made.{% else %}Your exact moderation action was recorded.{% endif %}</p><p>Receipt {{ result.receipt_id }} · Confirmed case version {{ result.version }}</p><p>This receipt grants no access to private case content and makes no final decision.</p></div>
+  {% elif page %}
+    <h2>Independent moderation cases</h2><p>Call and seal labels do not disclose private proposal titles. Retained final and source-stale cases remain inspectable where independently authorized.</p>
+    <ul class="call-cards">{% for row in page.items %}<li><h3><a href="{{ root_url }}{{ row.case_id }}/">{{ row.call_name }} · Revision {{ row.sequence }} · {{ row.stage_code }}</a></h3><p>{{ row.state }} · Policy {{ row.policy_version }} · Version {{ row.version }}</p>{% if not row.current_revision %}<p>The pinned seal is no longer current; no fresh moderation is offered.</p>{% endif %}</li>{% empty %}<li>No cases are available for independent moderation in this Department.</li>{% endfor %}</ul>
+    {% if page.next_cursor %}<p><a href="{{ root_url }}?after={{ page.next_cursor }}">Next page of moderation cases</a></p>{% endif %}
+  {% elif source %}
+    <h2>{{ source.case.call_name }} · Submitted revision {{ source.case.sequence }}</h2><p>Case {{ source.case.state }} · Stage {{ source.case.stage_code }} · Policy {{ source.case.policy_version }} · Current version {{ source.case.version }}.</p>
+    <details><summary>Exact retained references</summary><p>Case {{ source.case.case_id }} · Seal {{ source.case.revision_id }} · Sealed {{ source.case.sealed_at }}</p></details>
+    {% if not source.writable %}<p>Planning is closed; no fresh moderation action is offered.</p>{% endif %}
+    {% if not source.case.current_revision %}<p>This is no longer the current submitted seal. Retained permitted history does not authorize fresh work.</p>{% endif %}
+    {% if source.case.state != "open" and source.case.state != "waitlisted" %}<p>This final case cannot be reopened. New source work requires a new submitted seal and a separate review case.</p>{% endif %}
+    {% if task == "overview" %}
+      <h2>Next moderation task</h2><ul>
+      {% if "moderate" in actions %}<li><a href="moderate/">Inspect evidence and record moderation</a></li>{% endif %}
+      {% if "advance" in actions %}<li><a href="advance/">Advance to the next configured stage</a></li>{% endif %}
+      {% if "reopen" in actions %}<li><a href="reopen/">Reopen a configured stage</a></li>{% endif %}
+      {% for section in content_links %}<li><a href="{{ section }}/">Read permitted {{ section }}</a></li>{% endfor %}</ul>
+      <h2>Pinned review stages</h2><ol>{% for stage in source.stages %}<li><h3>{{ stage.code }}</h3><p>Independent reviews required: {{ stage.required_reviews }}. {% if stage.anonymous %}Structured contributor profiles are withheld; free text may still identify people.{% endif %}</p><ul>{% for criterion in stage.criteria %}<li>{{ criterion.label }} ({{ criterion.code }}): {{ criterion.minimum }} through {{ criterion.maximum }}.</li>{% endfor %}</ul></li>{% endfor %}</ol>
+    {% endif %}
+    {% if snapshot_stale %}<div role="alert" tabindex="-1" autofocus><h2>Evidence changed</h2><p>This case has changed since the selected evidence version. No history pages or moderation form were silently refreshed.</p><p><a href="{{ root_url }}{{ source.case.case_id }}/evidence/">Start a new inspection of current evidence</a></p></div>{% endif %}
+    {% if facts %}<h2>Current stage readiness</h2><p>Valid independent scores: {{ facts.valid_scores }} of {{ facts.required_reviews }} required.</p>{% if facts.ready %}<p>The current stage satisfies the existing score-count and fresh-moderation rule. Every command rechecks it.</p>{% else %}<p>The stage is not ready: the configured review count and fresh independent moderation are both required. Later assignment, conflict, score or discussion changes, or relevant reopening, require fresh moderation.</p>{% endif %}<p>No average, ranking or automatic acceptance is inferred.</p>{% endif %}
+    {% if evidence != None %}
+      <h2>Protected review history</h2><p>Append-only history in ascending case-version order, inspected at version {{ snapshot }}. This page is not necessarily the whole history; use its continuation when present. These are private review records, not recipient messages.</p>
+      <ul class="call-cards">{% for row in evidence %}<li><h3>Version {{ row.version }} · {{ row.action }}</h3><p>Stage {{ row.stage }}</p>{% if row.scores %}<dl>{% for code, value in row.scores %}<dt>{{ code }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>{% endif %}{% if row.facts %}<dl>{% for label, value in row.facts %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>{% endif %}{% if row.text %}<p>{{ row.text|linebreaksbr }}</p>{% endif %}{% if row.reason %}<h4>Private rationale</h4><p>{{ row.reason|linebreaksbr }}</p>{% endif %}<details><summary>Attribution references</summary><p>Actor {{ row.actor }}{% if row.assignment %} · Assignment {{ row.assignment }}{% endif %}{% if row.reviewer %} · Assigned person {{ row.reviewer }}{% endif %}</p><p>These already-authorized references do not grant an identifying lookup.</p></details></li>{% empty %}<li>No evidence is available on this permitted page.</li>{% endfor %}</ul>
+      {% if next_evidence %}<p><a href="?after={{ next_evidence }}&amp;version={{ snapshot }}">Next page of this evidence version</a></p>{% endif %}
+    {% endif %}
+    {% if task == "context" %}<h2>Permitted exact-revision context</h2><p>Track {{ review_context.selection.track_code }} · Format {{ review_context.selection.format_code }} · Requested duration {{ review_context.selection.requested_duration_minutes }} minutes.</p><ul class="call-cards">{% for contributor in review_context.contributors %}<li><h3>{{ contributor.public_name }}</h3><p>{{ contributor.biography|linebreaksbr }}</p></li>{% empty %}<li>No contributor profile is included in this projection; structured identity may be withheld by policy.</li>{% endfor %}</ul>{% endif %}
+    {% if task == "answers" %}<h2>Permitted exact-revision answers</h2><p>Only this stage's authorized question allowlist is shown. Files and references remain independently protected.</p><ul class="call-cards">{% for row in answers %}<li><h3>{{ row.label }}</h3><p>Classification {{ row.classification }}</p><p>{{ row.text|linebreaksbr }}</p></li>{% empty %}<li>No answers are available in this permitted projection.</li>{% endfor %}</ul>{% endif %}
+    {% if form %}
+      <h2>{% if task == "moderate" %}Record independent moderation{% elif task == "advance" %}Advance one configured stage{% else %}Reopen a configured stage{% endif %}</h2>
+      {% if task == "moderate" %}<p>Record your own rationale for the exact inspected version. Moderation alone does not advance the stage or decide the proposal.</p>{% elif task == "advance" %}<p>The owner will require the configured review count and fresh moderation before moving one stage. This is not an accept or reject decision.</p>{% else %}<p>Reopening preserves history and invalidates moderation for the selected and every subsequent stage. Still-valid reviewer scores remain retained. Final accepted, rejected and revision-requested cases cannot be reopened.</p>{% endif %}
+      <form method="post" action="{{ root_url }}{{ source.case.case_id }}/{{ task }}/" data-call-command data-call-pending="{% if form.is_bound %}true{% else %}false{% endif %}">{% csrf_token %}<input type="hidden" name="action" value="{{ task }}">
+        {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+        {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+        <p>Original case version: {{ form.expected_version.value }}. Version, retry proof and selected stage are never silently refreshed after an uncertain attempt.</p><p data-call-dirty role="status" hidden>This action is not confirmed. Keep this exact request and inspect current state before starting another intent.</p><button type="submit">Confirm exact moderation action</button>
+      </form>
+    {% elif not snapshot_stale and task == "moderate" or task == "advance" or task == "reopen" %}<p>No fresh action is available in the current state. Existing evidence remains retained.</p>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}
