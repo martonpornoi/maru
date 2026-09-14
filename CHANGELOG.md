@@ -15,6 +15,10 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant, independently scoped Programme review-case intake: labelled
+  exact submitted-seal selection from a saved policy, deliberate case opening
+  and retained original-intent recovery without exposing proposal answers.
+
 - Added dormant Programme review policy setup for Department review managers:
   labelled call/question choices, explicit staged rubrics and decision templates,
   recoverable unsaved composition and immutable reasoned policy history. There

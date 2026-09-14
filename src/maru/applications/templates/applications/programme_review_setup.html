@@ -17,6 +17,7 @@
     {% if policy %}
       <h2>Saved immutable policy version {{ policy.version }}</h2><p>Created {% timezone "UTC" %}{{ policy.created_at|date:"c" }}{% endtimezone %} (UTC).</p><h3>Creation reason</h3><p>{{ policy.reason|linebreaksbr }}</p>
       {% include "applications/programme_review_policy_summary.html" with definition=summary %}
+      <p><a href="{{ root_url }}{{ source.call.call_id }}/policies/{{ policy.version }}/cases/">Choose a submitted revision for this policy</a></p>
       <nav aria-label="Policy history">{% if policy.version > 1 %}<a href="{{ root_url }}{{ source.call.call_id }}/policies/{{ policy.version|add:'-1' }}/">Previous policy version</a>{% endif %}{% if policy.version < source.policy_version %} · <a href="{{ root_url }}{{ source.call.call_id }}/policies/{{ policy.version|add:'1' }}/">Next policy version</a>{% endif %}</nav>
     {% elif source.call.status == 'draft' %}<p>Review setup is pending. Finish and freeze this call's question configuration with its owner first. Activation may precede the call's future opening date; it does not publish or activate a Programme profile.</p>
     {% elif form %}

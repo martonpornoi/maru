@@ -8,10 +8,10 @@ and the [review module](../../modules/programme-review.md).
 
 ## Purpose and independent scope
 
-Delivery is incremental: this first adapter implements policy configuration and
-immutable history, plus the canonical selected-seal guard. The case chooser and
-case-opening browser task described below remain the next #108 increment; no
-nonfunctional case-opening control is shown.
+Delivery is incremental: policy configuration/history, the labelled exact-seal
+chooser and confirmed case opening are implemented. Named assignment and
+reviewer/moderator/decision/conversion remain the next #108 increments; no
+nonfunctional management control is shown.
 
 An exact Department review manager selects an owning call, deliberately defines
 ordered review policy, inspects immutable policy versions and opens a case for
@@ -70,6 +70,23 @@ retains the proposed policy and creates a new explicit version/retry proof.
 
 ## Exact case opening and retained retries
 
+The immutable policy page links to
+`{call_id}/policies/{version}/cases/` beneath the reserved root. Its bounded
+ascending UUID cursor lists current submitted seals for that exact call and
+Department. Lead, every retained collaborator (including pending/removed),
+noncurrent sources and already-opened seals are excluded before pagination.
+One lookahead produces a complete page of at most 100, default 50; no hidden
+total, truncated option list or private answer-derived title is exposed.
+
+Selecting `{revision_id}/` retains that exact route-bound source and policy.
+Its audited metadata getter requires current Department setup authority but
+does not require fresh-opening eligibility: changed/withdrawn/previously opened
+seals remain identifiable for uncertain-response retry. It returns only seal
+and proposal references, sequence/sealing time, advisory eligibility, existing
+case presence and planning status, never case evidence or a reviewer roster.
+Fresh writes still pass the canonical owner transaction and independence checks.
+No call window or active-call requirement is added to review.
+
 Select from independently authorized eligible submitted seals and explicit
 immutable policy versions for the same call. Use call labels, seal sequence/time
 and a stable disambiguating reference, never a guessed UUID or private answer
@@ -86,6 +103,16 @@ old same-intent retry digests remain unchanged. Other actions retain their close
 required reference meaning. Unknown/foreign/wrong-call policy, stale seal,
 contributor opener and duplicate seal-case remain denied/conflicting through the
 owning command; no browser preflight substitutes for transaction checks.
+
+The creation form requires canonical version zero, original retry key, explicit
+reason and confirmation. Duplicate, unknown, oversized and uploaded controls are
+rejected. Original POSTs still reach the writer after source/planning changes;
+same-intent replay can return the original receipt. A successful response shows
+only the owner's case/opening-version/receipt references. Conflict and recovered
+dependency errors retain bound controls when the protected source can still be
+reauthorized. A persistent read/audit failure returns generic unavailability,
+not cached private data. A different source or policy requires deliberately
+returning to its chooser; reload never silently substitutes a newer revision.
 
 ## States, safety and interaction
 

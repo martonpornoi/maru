@@ -53,8 +53,10 @@ operation. No generic review, decision, target or profile exclusion changes.
 The [review setup companion](../product/page-contracts/programme-review-setup.md)
 reserves `/admin/applications/programme-review/{organization_id}/{edition_id}/{department_id}/`,
 its `{call_id}/` composer and `{call_id}/policies/{version}/` immutable history.
-Its `review_setup` manager field and three audited owner queries are not mounted
-API operations. Proposed form state is closed, bounded and non-authoritative;
+That history's `cases/` chooser and `cases/{revision_id}/` confirmation pin one
+policy and exact seal without UUID discovery or proposal-content access.
+Its `review_setup` manager field, configuration and two case-intake owner queries
+are not mounted API operations. Proposed form state is closed, bounded and non-authoritative;
 only final confirmation calls the existing review writer. The optional exact
 seal in `CASE_OPENED.reference_id` is an owner-command contract, not a generic
 API field. Legacy absent-reference retry shapes remain compatible. No OpenAPI,

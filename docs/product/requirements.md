@@ -1239,6 +1239,11 @@ architecture documents, implementation issues, tests, and release notes.
   selection in retry identity. Trusted current-state callers may still request
   the current seal explicitly through their existing command contract; adding
   browser proof must not silently invalidate historical retry receipts.
+  Eligible source choices must be labelled without inferring private titles or
+  exposing contributors, and must exclude source/independence conflicts before
+  complete bounded pagination. Exact retained source metadata must remain
+  independently authorized after eligibility changes so an original uncertain
+  case-opening intent can reach canonical receipt replay without rebasing.
 - **PRG-004 — Decision communication:** Accept, reject, wait-list, and revision
   decisions must use templates while preserving a canonical conversation and
   any required acknowledgement.

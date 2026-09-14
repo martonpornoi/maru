@@ -1,0 +1,36 @@
+{% extends "admin/base_site.html" %}
+{% load static tz %}
+{% block title %}Open a Programme review case · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Programme / Review / Open case</div>{% endblock %}
+{% block content %}
+<div class="programme-calls">
+  <h1>Open a Programme review case</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Exact Department review manager</summary><p>Only source references and configured policy are shown. No answers, contributor identities, scores or private case evidence are disclosed. Review, moderation, decision and assignment tasks require their own authority.</p><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}.</p></details>
+  <nav aria-label="Review tasks"><a href="{{ root_url }}">Choose a call</a> · <a href="{{ root_url }}{{ source.call.call_id }}/policies/{{ policy.version }}/">Inspect policy version {{ policy.version }}</a> · <a href="{{ intake_url }}">Choose a submitted revision</a></nav>
+  <h2>{{ source.call.name }}</h2><p>{{ source.call.code }} · Policy version {{ policy.version }} · Definition version {{ source.call.definition_version }}</p>
+  {% if not source.writable %}<p>Planning is closed. Existing source metadata remains readable; no fresh case may be opened.</p>{% endif %}
+  {% if page %}
+    <p>Choose one currently submitted revision. Your own proposals, retained collaborations and revisions already in review are excluded. Titles and people are deliberately not inferred from private answers.</p>
+    <ul class="call-cards">{% for seal in page.items %}<li><h3><a href="{{ intake_url }}{{ seal.revision_id }}/">Submitted revision {{ seal.sequence }}</a></h3><p>Sealed {% timezone "UTC" %}{{ seal.sealed_at|date:"c" }}{% endtimezone %} (UTC).</p><p>Proposal reference {{ seal.proposal_id }} · Seal reference {{ seal.revision_id }}</p></li>{% empty %}<li>No currently eligible submitted revisions are available. This is not a count of all proposals. Return after a new eligible submission or ask the accountable call owner about setup.</li>{% endfor %}</ul>
+    {% if page.next_cursor %}<p><a href="{{ intake_url }}?after={{ page.next_cursor }}">Next page of submitted revisions</a></p>{% endif %}
+  {% elif selected %}
+    <h2>Selected revision {{ selected.seal.sequence }}</h2><p>Sealed {% timezone "UTC" %}{{ selected.seal.sealed_at|date:"c" }}{% endtimezone %} (UTC).</p><p>Proposal reference {{ selected.seal.proposal_id }} · Seal reference {{ selected.seal.revision_id }}</p>
+    {% if selected.opened %}<p>This exact revision already has a review case.</p>{% elif not selected.eligible %}<p>This retained selection is no longer eligible for fresh case opening. No replacement revision has been selected.</p>{% endif %}
+    <details><summary>Inspect the complete pinned policy version {{ policy.version }}</summary>{% include "applications/programme_review_policy_summary.html" with definition=summary %}</details>
+    {% if result %}<div role="status"><h2>Case opening confirmed</h2><p>{% if result.replayed %}The original receipt was recovered; no second case was created.{% else %}One review case was opened for the selected revision and policy.{% endif %}</p><p>Case reference {{ result.case_id }} · Opening version {{ result.version }} · Receipt {{ result.receipt_id }}</p><p>Reviewer assignment is a separate management task. This receipt does not assign a reviewer, grant answer access or record a decision.</p></div>
+    {% elif form %}
+      <form method="post" data-call-command data-call-pending="{% if form.is_bound %}true{% else %}false{% endif %}">{% csrf_token %}
+        {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this case request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+        {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+        <p>Original case creation version: {{ form.expected_version.value }}. This request remains bound to the exact revision and policy above, even if a newer source appears.</p>
+        <p data-call-dirty role="status" hidden>This case opening is not confirmed. Keep this page after an uncertain attempt; retrying the same intent can recover its receipt.</p>
+        <button type="submit">Confirm exact case opening</button>
+      </form>
+      <p>To change the selected revision or policy, deliberately return to its chooser and start a new request. Do not replace the source after an uncertain attempt.</p>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

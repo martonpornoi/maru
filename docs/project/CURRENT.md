@@ -11,6 +11,21 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's explicit review-policy composition/history is delivered through
+[PR #121](https://github.com/martonpornoi/maru/pull/121), protected squash
+`848f1246a8663e84a8799e5e7b4edbd695ff7efc` at 2026-09-14 13:32:40 UTC.
+Its tree equals certified head `a94be56067205c029c9aa94195f418bcd63d3e8f`;
+clean local main and origin/main match the squash. All eight retained local
+gates passed in 16m38s, including 6,733 units in 40.26s. Hosted units passed in
+67.25s, quality in 27m41s, documentation in 25m42s and workflow in 28m09s;
+exact-head PR gate and CodeQL passed without repair/rerun. The observed 2m19s
+quality margin is not guaranteed future headroom; #113 remains open. Native
+cases remain unexecuted #102 debt and human checks remain #92. No schema,
+production route or profile changed. See the
+[protected setup checkpoint](../checkpoints/2026-09-14-programme-review-setup-protected-delivery.md).
+
+### Preceding personal decision delivery
+
 #108's exact personal decision history/receipt is delivered through
 [PR #120](https://github.com/martonpornoi/maru/pull/120), protected squash
 `75e2f37b1e7f8cc5b42470373b68304c4440977c` at 2026-09-14 11:54:37 UTC.
@@ -168,32 +183,28 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-review-setup`, from protected PR #120.
-This candidate implements independently authorized review-setup metadata queries,
-explicit one-stage-at-a-time policy composition, deliberate final save and
-immutable history. Proposed stages/templates are closed bounded request state,
-not persisted drafts; original optimistic/retry proof survives conflicts and
-only explicit refresh creates new intent. Optional criterion rows are compact
-native disclosures; populated/error rows stay open. Complete summaries use a
-single question-label map, not repeated scans. No quorum, score or outcome default.
+Branch: `codex/programme-review-cases`, from protected PR #121.
+This candidate connects immutable review policies to labelled eligible-seal
+selection and deliberate case opening. Discovery filters source, contributor
+and existing-case conflicts before pagination. Exact retained metadata remains
+readable under current Department setup authority when eligibility changes;
+original POSTs reach canonical receipt replay without silently choosing a newer
+seal/policy. Confirmation requires reason, version zero and original retry proof.
+No answer, contributor directory or case evidence is disclosed. Named assignment
+and separately authorized review/moderation/decision/conversion remain next.
 
-The selected-seal guard is implemented in the existing canonical case writer
-without changing legacy absent-reference retry shapes. The labelled case chooser
-and case-opening browser task are the next increment; no dead control is shown.
-No schema, production route, profile, dependency or PostgreSQL execution changes.
-All 6,733 database-free units pass in 41.35s, with three existing URLField warnings;
-the first full preflight exposed an unregistered shared-shell partial and was
-repaired with an exact parent/include assertion. Earlier focused fixtures needed
-isolated Windows temporary storage; no old files or permissions were changed.
-Ruff, focused mypy/NumPy documentation and documentation validation pass.
-Synthetic browser rehearsal observed discovery, explicit composition, confirmed
-save/history, compact criteria, read-only and generic detail denial at 1280 CSS
-pixels, with one H1/main and no document overflow. All database connections were
-forbidden; task-owned tabs and servers are stopped. Stale/invalid input recovery
-is HTTP-test evidence, not a claimed human/browser rehearsal. Native setup and
-selected-seal/replay acceptance are maintained but unexecuted under #102; full
-human evidence remains #92. Exact clean-commit and hosted certification are pending.
-See the [review setup checkpoint](../checkpoints/2026-09-14-programme-review-setup.md).
+All 6,788 database-free units pass in 40.65s with three existing URLField warnings;
+focused fast acceptance passes 53 cases. Typing, Ruff, NumPy and semantic Python
+documentation pass. An initial new native file exposed a timing-inventory
+mismatch. Its scenario now extends the existing review-services file: no invented
+weights or timing-map changes. An initial certification was intentionally stopped
+before completion to correct that ADR 0100 policy conflict; it issued no receipt.
+No PostgreSQL suite was collected or run. Synthetic actual-form browser rehearsal observed policy/source
+selection, explicit confirmation/receipt, read-only and generic denial at 1280
+CSS pixels, with one H1/main and no overflow. Task-owned tabs/server are stopped.
+Full human checks remain #92; exact clean-commit and hosted acceptance are pending.
+No schema, production route, profile, dependency or writer-policy change.
+See the [case intake checkpoint](../checkpoints/2026-09-14-programme-review-case-intake.md).
 
 Readable retained proposal/call context and independently admitted decision-source
 navigation remain an explicit #108 connection obligation, without importing
