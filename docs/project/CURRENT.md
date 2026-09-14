@@ -11,6 +11,21 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's personal call discovery, explicit Draft intake and own inventory/overview
+are delivered through [PR #118](https://github.com/martonpornoi/maru/pull/118),
+protected squash `4f82f01d045d142c5c9c60eeda4524a438c8722b` at
+2026-09-14 08:43:52 UTC. Its tree equals certified head
+`616cc493aca5f4c9a6ce8759019a9e578e343a23`; clean local main and origin/main
+match the squash. All eight retained local gates passed in 16m34s, including
+6,417 units in 38.95s. Hosted units passed in 75.97s; all 83 frontend tests,
+CodeQL and PR gate passed. Hosted quality took 28m18s, documentation 26m13s
+and workflow latency 28m45s without repair/rerun. The 1m42s quality margin is
+not guaranteed future headroom; #113 remains open. Native cases remain #102
+debt and human acceptance remains #92. No schema, production route or profile
+changed. See the [protected intake checkpoint](../checkpoints/2026-09-14-programme-personal-intake-protected-delivery.md).
+
+### Preceding Department delivery
+
 #108's independently authorized Department chooser and confirmed Draft-call
 transfer are delivered through [PR #117](https://github.com/martonpornoi/maru/pull/117),
 protected squash `8634dad64927ed968c725404988745178a585df2` at
@@ -122,24 +137,34 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-proposal-workspace`, from protected PR #117.
-The personal intake/overview increment is implemented locally, pending exact-head
-certification and protected delivery. Its accepted page contract precedes the
-adapter: labelled available calls, explicit selection/duration, contributor-owned
-profile/consent and private Draft creation through the existing command, plus
-independently authorized personal inventory/detail. Existing history does not
-depend on new-call discovery; invitees never request profile fields. It adds no
-schema, production route, profile member or domain writer.
-Focused feedback passes 54 cases in 1.56s; full unit preflight passes 6,417 in
-39.56s after isolating an unrelated Windows pytest-temp permission failure.
-Seven actual-asset input-guard cases, strict typing, NumPy and Ruff pass. The
-1280-by-720 synthetic browser confirms invalid/stale retention, labelled navigation
-and closed/empty/invitee/denied states, not persistent domain behavior. Two new
-native cases remain unexecuted #102 debt and full human acceptance remains #92.
-See the [personal-intake checkpoint](../checkpoints/2026-09-14-programme-personal-intake.md).
-After protected delivery, continue shared editing, own profile revisions,
-invitations/roster and exact sealing/acknowledgement/submission; those controls are
-explicitly unfinished, not implied by creation of a private draft.
+Branch: `codex/programme-proposal-collaboration`, from protected PR #118.
+The personal intake/overview increment is merged. The next coherent local
+candidate now implements shared editing, own-profile revisions, invitations/
+roster and exact sealing/acknowledgement/submission/withdrawal. Separate owner
+windows and the original sole submission cursor are preserved. New self workflow
+and frozen queries minimize role fields and load only the actor's included profile.
+Submission confirms an explicit seal ID; collaborator responses also confirm
+exact inclusion and own-profile IDs. No domain writer, schema, current profile or
+production route is added. Reference/file choosers, organizer review/conversion,
+ordinary owner connections and accountable setup remain #108 work.
+
+The confirmed shared INTEGER min/max defect is repaired in normalization, HTML
+whole-number bounds and new-seal validation of retained answers. Immutable past
+answers/seals are not rewritten. Maintained native intake/lifecycle/query cases
+and two integer-history repair cases remain unexecuted #102 debt.
+
+Final database-free preflight passed 6,575 units in 40.32s with three existing
+URLField warnings; the focused HTTP group passes 77 cases in 1.88s, including
+completed-response navigation. Nine actual-asset guard tests
+pass in 79ms; strict three-module typing and NumPy checks pass. The initial full
+unit run caught a new included-template shell assumption, now explicitly tested;
+pnpm's initial non-interactive refusal was corrected with the documented CI setting.
+The 1280-pixel synthetic browser rehearsed lead editing, exact-own frozen review/
+acknowledgement, invitation acceptance, stale focused retention, closed history
+and denial, with all database access forbidden. This is not native authority or
+human accessibility acceptance. Exact clean-candidate certification and protected
+delivery are pending. Manual/native debt is recorded under #92 and #102; the
+owned fixture server and both tabs are closed. See the [workflow checkpoint](../checkpoints/2026-09-14-programme-personal-workflow.md).
 
 The Department-selection/reassignment increment is merged. The complete
 chooser independently admits each current Department before ID/code/name

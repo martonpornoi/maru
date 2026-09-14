@@ -22,7 +22,11 @@ from django.db import transaction
 from django.db.models import F, Max, Q
 from django.utils import timezone
 
-from maru.applications.answer_values import condition_matches, normalize_answer_value
+from maru.applications.answer_values import (
+    condition_matches,
+    normalize_answer_value,
+    normalize_integer_answer,
+)
 from maru.applications.models import (
     AnswerSource,
     ApplicationAnswerRevision,
@@ -31,6 +35,7 @@ from maru.applications.models import (
     ApplicationDefinitionStatus,
     ApplicationOwnerDepartment,
     ApplicationQuestion,
+    ApplicationQuestionType,
     ApplicationSection,
     ApplicationState,
     ApplicationSubmission,
@@ -4810,7 +4815,7 @@ def remove_programme_proposal_collaborator(
     proposal_id : UUID
         Exact draft proposal identifier.
     collaborator_id : UUID
-        Exact invited or accepted collaborator account identifier.
+        Exact invited or accepted collaborator relationship identifier.
     expected_version : int
         Optimistic proposal aggregate version.
     reason : str
@@ -4980,6 +4985,19 @@ def _applicable_questions(
             answer is None or answer.value is None or answer.value in ("", [], {})
         ):
             raise ApplicationsProgrammeCompletenessError
+        if (
+            answer is not None
+            and answer.value is not None
+            and (question.field_type == ApplicationQuestionType.INTEGER)
+        ):
+            try:
+                normalize_integer_answer(
+                    answer.value,
+                    minimum=question.minimum_value,
+                    maximum=question.maximum_value,
+                )
+            except ValidationError as error:
+                raise ApplicationsProgrammeCompletenessError from error
         rows.append((question, answer))
     return tuple(rows)
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
+from math import ceil, floor
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -693,7 +694,15 @@ def _answer_field(  # noqa: PLR0911, PLR0912
             max_length=question.maximum_length,
         )
     if question.field_type == ApplicationQuestionType.INTEGER:
-        return forms.IntegerField(**common)
+        return forms.IntegerField(
+            **common,
+            min_value=max(-(2**31), ceil(question.minimum_value))
+            if question.minimum_value is not None
+            else -(2**31),
+            max_value=min(2**31 - 1, floor(question.maximum_value))
+            if question.maximum_value is not None
+            else 2**31 - 1,
+        )
     if question.field_type == ApplicationQuestionType.DECIMAL:
         return forms.DecimalField(
             **common,

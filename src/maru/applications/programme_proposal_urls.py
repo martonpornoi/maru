@@ -2,6 +2,7 @@
 
 from django.urls import path
 
+from .programme_personal_views import programme_personal_tasks
 from .programme_proposal_views import programme_proposals
 
 _ROOT = "my/applications/programme/<uuid:organization_id>/<uuid:edition_id>/"
@@ -26,3 +27,39 @@ urlpatterns = [
         name="my-programme-proposal",
     ),
 ]
+
+_WORK = _ROOT + "<uuid:proposal_id>/work/"
+urlpatterns += [path(_WORK, programme_personal_tasks, name="my-programme-work")]
+for _action in (
+    "selection",
+    "profile",
+    "invite",
+    "reinvite",
+    "accept-invitation",
+    "decline-invitation",
+    "leave",
+    "seal",
+    "reopen",
+    "frozen",
+    "acknowledge",
+    "decline-revision",
+    "submit",
+    "withdraw",
+):
+    urlpatterns.append(
+        path(
+            _WORK + _action + "/",
+            programme_personal_tasks,
+            {"action": _action},
+            name=f"my-programme-{_action}",
+        )
+    )
+for _action in ("answer", "remove"):
+    urlpatterns.append(
+        path(
+            _WORK + _action + "/<uuid:selected_id>/",
+            programme_personal_tasks,
+            {"action": _action},
+            name=f"my-programme-{_action}",
+        )
+    )

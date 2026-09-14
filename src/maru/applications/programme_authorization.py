@@ -93,10 +93,12 @@ _FULL_PROPOSAL_VIEW_FIELDS: Final = frozenset(
         "revision_history",
         "revision_responses",
         "own_invitation",
+        "workflow_context",
+        "frozen_revision",
     }
 )
 _INVITEE_PROPOSAL_VIEW_FIELDS: Final = frozenset(
-    {"proposal_summary", "selection", "own_invitation"}
+    {"proposal_summary", "selection", "own_invitation", "workflow_context"}
 )
 
 

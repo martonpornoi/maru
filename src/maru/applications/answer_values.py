@@ -94,6 +94,47 @@ def _address(value: object) -> dict[str, str]:
     return {key: item.strip() for key, item in value.items()}
 
 
+def normalize_integer_answer(
+    value: object,
+    *,
+    minimum: Decimal | None,
+    maximum: Decimal | None,
+) -> int:
+    """Enforce integer shape and inclusive configured bounds without I/O.
+
+    Parameters
+    ----------
+    value : object
+        Untrusted current or retained answer value; booleans are not integers.
+    minimum : Decimal | None
+        Inclusive configured lower bound, possibly fractional.
+    maximum : Decimal | None
+        Inclusive configured upper bound, possibly fractional.
+
+    Returns
+    -------
+    int
+        Unchanged signed-32-bit whole number inside both configured bounds.
+
+    Raises
+    ------
+    ValidationError
+        If shape, storage range or either configured limit is violated.
+    """
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or not -(2**31) <= value < 2**31
+        or (minimum is not None and value < minimum)
+        or (maximum is not None and value > maximum)
+    ):
+        raise ValidationError(
+            "Enter a whole number within the configured bounds.",
+            code="invalid_application_integer",
+        )
+    return value
+
+
 def normalize_answer_value(
     *,
     question: ApplicationQuestion,
@@ -139,15 +180,9 @@ def normalize_answer_value(
     }:
         normalized: object = _bounded_string(question, value)
     elif field_type == ApplicationQuestionType.INTEGER:
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, int)
-            or not -(2**31) <= value < 2**31
-        ):
-            raise ValidationError(
-                "Enter a bounded whole number.", code="invalid_application_integer"
-            )
-        normalized = value
+        normalized = normalize_integer_answer(
+            value, minimum=question.minimum_value, maximum=question.maximum_value
+        )
     elif field_type == ApplicationQuestionType.DECIMAL:
         if isinstance(value, bool) or not isinstance(value, (str, int, float)):
             raise ValidationError(

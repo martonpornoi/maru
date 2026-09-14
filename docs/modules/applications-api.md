@@ -31,9 +31,16 @@ and confirmed Draft ownership transfer. See its
 adapters do not make Programme available through the mounted API below.
 The [personal intake companion](../product/page-contracts/programme-proposal-workspace.md)
 likewise reserves unmounted HTML routes for own inventory, available calls,
-private draft creation and role-bounded overview. It adds no API operation or
-generic Programme discriminator access; collaborative editing and submission
-remain unfinished personal-surface work.
+private draft creation, role-bounded overview and separate exact-proposal personal
+editing, collaboration, sealing, acknowledgement, submission and withdrawal tasks.
+These HTML adapters add no API operation or generic Programme discriminator access.
+Read and mutation authority remain independent; original version and exact seal/
+subject-profile proof fields are not accepted through the mounted API below.
+The new `workflow_context` and `frozen_revision` self-view fields are dedicated
+owner-query contracts, not new mounted API fields or grants. The former is
+role-minimized existing-proposal context; the latter projects exact sealed shared
+content and only the current actor's included frozen profile. Generic API
+serializers/discriminator exclusions remain unchanged.
 
 The routes below omit Programme definitions from starter and definition
 discovery and deny Programme submissions in generic applicant, answer, submit,

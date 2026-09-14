@@ -8,7 +8,7 @@ const source = readFileSync(
   `${cwd()}/../../src/maru/applications/static/applications/programme_calls.js`, "utf8"
 );
 
-function boot(pending = false, personal = false) {
+function boot(pending = false, personal = false, workflow = false) {
   document.body.innerHTML = `<p data-call-dirty hidden></p>
     <form data-call-command data-call-pending="${pending}">
       <input name="expected_version" value="7" type="hidden">
@@ -16,6 +16,7 @@ function boot(pending = false, personal = false) {
       <input name="csrfmiddlewaretoken" value="csrf" type="hidden">
       <textarea name="reason">Original reason</textarea>
       ${personal ? `<select name="publication_choice"><option value="">Choose</option><option value="no">No</option><option value="yes">Yes</option></select><input type="checkbox" name="consent_acknowledged"><input name="public_name" value="">` : ""}
+      ${workflow ? `<input name="revision_id" value="exact-seal" type="hidden"><input name="contributor_id" value="own-inclusion" type="hidden"><input name="profile_revision_id" value="own-frozen-profile" type="hidden"><select name="value" multiple><option value="talk" selected>Talk</option><option value="panel">Panel</option></select><input type="checkbox" name="confirm">` : ""}
       <button>Save</button>
     </form>`;
   new Function("window", "document", source)(window, document);
@@ -91,5 +92,32 @@ describe("Programme call original-intent navigation guard", () => {
     expect(new FormData(form).get("public_name")).toBe("Synthetic private proposal name");
     expect(new FormData(form).get("retry_key")).toBe("same-retry");
     expect(new FormData(form).get("expected_version")).toBe("7");
+  });
+  it("protects multiple-choice changes without rebinding exact frozen proofs", () => {
+    const form = boot(false, false, true);
+    const choices = form.elements.namedItem("value") as HTMLSelectElement;
+    expect(unload()).toBe(false);
+    choices.options[1].selected = true;
+    choices.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(unload()).toBe(true);
+    const data = new FormData(form);
+    expect(data.getAll("value")).toEqual(["talk", "panel"]);
+    expect(data.get("revision_id")).toBe("exact-seal");
+    expect(data.get("contributor_id")).toBe("own-inclusion");
+    expect(data.get("profile_revision_id")).toBe("own-frozen-profile");
+    expect(data.get("retry_key")).toBe("same-retry");
+  });
+  it("requires a deliberate revision confirmation and retains pending recovery", () => {
+    const form = boot(true, false, true);
+    const confirm = form.elements.namedItem("confirm") as HTMLInputElement;
+    expect(confirm.checked).toBe(false);
+    expect(unload()).toBe(true);
+    confirm.checked = true;
+    confirm.dispatchEvent(new Event("change", { bubbles: true }));
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+    expect(unload()).toBe(false);
+    window.dispatchEvent(new Event("pageshow"));
+    expect(unload()).toBe(true);
+    expect(new FormData(form).get("profile_revision_id")).toBe("own-frozen-profile");
   });
 });

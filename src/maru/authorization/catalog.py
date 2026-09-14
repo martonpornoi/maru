@@ -1208,6 +1208,8 @@ CAPABILITY_DEFINITIONS = (
                 "own_invitation",
                 "available_calls",
                 "programme_import_claim",
+                "workflow_context",
+                "frozen_revision",
             }
         ),
         obligations=frozenset({"audit_sensitive_read"}),
