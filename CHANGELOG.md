@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant Department reviewer management: complete retained case rosters,
+  known-person preview, deliberate exact-person assignment and reasoned removal.
+  Original selections survive uncertain retries without re-resolving changed
+  email addresses. Assignment grants no review permission or answer access and
+  sends no invitation; no production route or profile is activated.
+
 - Added dormant, independently scoped Programme review-case intake: labelled
   exact submitted-seal selection from a saved policy, deliberate case opening
   and retained original-intent recovery without exposing proposal answers.

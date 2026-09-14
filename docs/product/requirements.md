@@ -1244,6 +1244,15 @@ architecture documents, implementation issues, tests, and release notes.
   complete bounded pagination. Exact retained source metadata must remain
   independently authorized after eligibility changes so an original uncertain
   case-opening intent can reach canonical receipt replay without rebasing.
+  Named reviewer management must separately authorize exact Department context
+  before showing a complete retained assignment roster or resolving one known
+  email. It is not an identity directory or review-permission grant. Preview
+  must pin the selected person and original case/version/retry intent without
+  retaining contact details; confirmation and uncertain retry must not resolve
+  a changed email into a different person. Current authority and canonical
+  contributor/opener/moderator/decider exclusions remain mandatory. Removed and
+  recused assignments remain inspectable, and late reasoned removal preserves
+  scores and decisions without silently reactivating anyone.
 - **PRG-004 — Decision communication:** Accept, reject, wait-list, and revision
   decisions must use templates while preserving a canonical conversation and
   any required acknowledgement.

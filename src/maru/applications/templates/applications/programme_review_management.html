@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+{% load static tz %}
+{% block title %}Manage Programme reviewers · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Programme / Review / Named reviewers</div>{% endblock %}
+{% block content %}
+<div class="programme-calls">
+  <h1>Manage Programme reviewers</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Exact Department review manager</summary><p>You may inspect case references and the complete named assignment roster, not proposal answers, peer scores or private rationale. Assignment grants no review permission, conflict clearance or contact access and sends no email or invitation.</p><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}.</p></details>
+  <nav aria-label="Review tasks"><a href="{{ root_url }}">Choose a review case</a>{% if can_setup %} · <a href="{{ setup_url }}">Review policy setup</a>{% endif %}{% if source %} · <a href="{{ root_url }}{{ source.case.case_id }}/">Case overview and roster</a>{% endif %}</nav>
+  {% if page %}
+    <h2>Review cases</h2><p>Each case retains one exact submitted revision and immutable policy. Labels below describe the owning call, not private proposal answers.</p>
+    <ul class="call-cards">{% for case in page.items %}<li><h3><a href="{{ root_url }}{{ case.case_id }}/">{{ case.call_name }} · Revision {{ case.sequence }}</a></h3><p>Stage {{ case.stage_code }} · {{ case.state }} · Policy {{ case.policy_version }} · Case version {{ case.version }}</p><p>Case reference {{ case.case_id }}</p>{% if not case.current_revision %}<p>The pinned seal is no longer the current submitted revision.</p>{% endif %}</li>{% empty %}<li>No review cases are available in this Department. An independently authorized manager must first open a case for an eligible submitted revision.</li>{% endfor %}</ul>
+    {% if page.next_cursor %}<p><a href="{{ root_url }}?after={{ page.next_cursor }}">Next page of review cases</a></p>{% endif %}
+  {% elif source %}
+    <h2>{{ source.case.call_name }} · Submitted revision {{ source.case.sequence }}</h2>
+    <p>Sealed {% timezone "UTC" %}{{ source.case.sealed_at|date:"c" }}{% endtimezone %} (UTC). Policy version {{ source.case.policy_version }} · Stage {{ source.case.stage_code }} · {{ source.case.state }} · Current case version {{ source.case.version }}.</p>
+    <p>Case reference {{ source.case.case_id }} · Seal reference {{ source.case.revision_id }}</p>
+    {% if not source.writable %}<p>Planning is closed. Retained case and roster remain readable, but no fresh assignment change is offered.</p>{% endif %}
+    {% if not source.case.current_revision %}<p>This pinned seal is no longer the current submitted revision. No newer source is silently selected; inspect the source before starting a fresh intent.</p>{% endif %}
+    {% if task == "overview" %}
+      <h2>Complete reviewer roster</h2><p>Previous stages and removed or recused assignments remain visible. Removal does not erase evidence or reactivate a person. Named people still require independent review authority and their own conflict clearance.</p>
+      {% if fresh and source.case.state == "open" %}<p><a href="{{ root_url }}{{ source.case.case_id }}/assign/">Select a named reviewer</a></p>{% endif %}
+      <ul class="call-cards">{% for row in source.assignments %}<li><h3>{{ row.display_label }}</h3><p>Stage {{ row.stage_code }} · {{ row.state }}</p><p>Person reference {{ row.account_id }} · Assignment reference {{ row.assignment_id }}</p>{% if fresh %}{% if row.state == "pending" or row.state == "active" %}<p><a href="{{ root_url }}{{ source.case.case_id }}/assignments/{{ row.assignment_id }}/remove/">Review removal of {{ row.display_label }}</a></p>{% endif %}{% endif %}</li>{% empty %}<li>No named reviewers have been assigned to this case.</li>{% endfor %}</ul>
+    {% else %}
+      {% if assignment %}<h2>Selected assignment</h2><p>{{ assignment.display_label }} · Stage {{ assignment.stage_code }} · {{ assignment.state }}</p><p>Person reference {{ assignment.account_id }} · Assignment reference {{ assignment.assignment_id }}</p>{% endif %}
+      {% if selected %}<h2>Selected reviewer</h2><p>{{ selected.display_label }} · Person reference {{ selected.account_id }}</p>{% if not selected.person_current %}<p>This retained person is not currently available for fresh assignment. Keep the original intent to recover an uncertain receipt; no replacement person has been selected.</p>{% endif %}{% endif %}
+      {% if result %}<div role="status"><h2>Reviewer change confirmed</h2><p>{% if result.replayed %}The original receipt was recovered; no second change was made.{% else %}The exact requested reviewer change was recorded.{% endif %}</p><p>Receipt {{ result.receipt_id }} · Confirmed version {{ result.version }} · Assignment reference {{ result.target_id }}</p><p><a href="{{ root_url }}{{ source.case.case_id }}/">Inspect the current case roster</a></p></div>
+      {% elif form %}
+        {% if mode == "preview" %}<h2>Choose one known reviewer</h2><p>Enter one known exact email to preview an eligible existing person. This step does not assign anyone. Unknown, unusable and unsuitable people have the same result.</p>{% elif mode == "assign" %}<h2>Confirm this exact reviewer</h2><p>The selected person is pinned to this original request. Their email is not looked up again when you confirm or retry.</p>{% else %}<h2>Confirm this exact removal</h2>{% endif %}
+        <form method="post" data-call-command data-call-pending="{% if form.is_bound or selected %}true{% else %}false{% endif %}">{% csrf_token %}<input type="hidden" name="action" value="{{ mode }}">
+          {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this reviewer request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+          {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+          <p>Original case version: {{ form.expected_version.value }}. This value and the original retry proof are not refreshed after an uncertain attempt.</p>
+          <p data-call-dirty role="status" hidden>This reviewer request is not confirmed. Keep this page after an uncertain attempt; retrying the same intent can recover its receipt.</p>
+          <button type="submit">{% if mode == "preview" %}Preview exact reviewer{% elif mode == "assign" %}Confirm exact reviewer assignment{% else %}Confirm exact assignment removal{% endif %}</button>
+        </form>
+        <p>To change the selected person, deliberately return to the case roster and start a new selection. After an uncertain attempt, inspect the roster before creating a different intent.</p>
+      {% else %}<p>No fresh reviewer change is available for this case and assignment state. Existing evidence is retained.</p>{% endif %}
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

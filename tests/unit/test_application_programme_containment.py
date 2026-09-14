@@ -92,6 +92,9 @@ _DORMANT_TEMPLATE_MARKERS = {
         "src/maru/applications/templates/applications/programme_review_intake.html"
     ): frozenset({"programme-call", "programme_call"}),
     (
+        "src/maru/applications/templates/applications/programme_review_management.html"
+    ): frozenset({"programme-call", "programme_call"}),
+    (
         "src/maru/applications/templates/applications/programme_review_setup.html"
     ): frozenset({"programme-call", "programme_call"}),
     "src/maru/applications/templates/applications/programme_decisions.html": frozenset(

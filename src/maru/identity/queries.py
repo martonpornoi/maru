@@ -280,12 +280,14 @@ def resolve_active_verified_person_reference_by_email(
 
     Invalid input, an unknown address, and every unusable account state all
     return the same empty result so callers cannot turn this purpose-limited
-    invitation seam into a richer account-enumeration oracle.
+    invitation or independently governed named-assignment seam into a richer
+    account-enumeration oracle. Callers must authorize their exact purpose and
+    resource before resolving an address; this function grants no directory access.
 
     Parameters
     ----------
     email : object
-        Untrusted invitation address to normalize with Identity's login rules.
+        Untrusted exact address to normalize with Identity's login rules.
     lock : bool, default=False
         Whether to acquire a PostgreSQL row lock on the selected account.
 

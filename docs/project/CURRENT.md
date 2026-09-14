@@ -11,6 +11,21 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's labelled exact-revision case opening is delivered through
+[PR #122](https://github.com/martonpornoi/maru/pull/122), protected squash
+`91e02f4633b497b7bd00f93aeb609cb344ccfb0e` at 2026-09-14 14:52:14 UTC.
+Its tree equals certified head `b80e9e5751f35dfb5eebf7ced40f83d706944853`;
+clean local main and origin/main match. All eight retained local gates passed
+in 16m37s (6,788 units in 40.69s, 85 frontend tests). Hosted units passed in
+87.20s, quality in 22m44s, documentation in 21m07s and workflow in 23m12s;
+exact-head PR gate and CodeQL passed without hosted repair/rerun. The observed
+7m16s quality margin is not a guarantee; #113 remains open. One maintained
+native scenario extends existing tests without invented timing weights and
+remains unexecuted #102 debt; human acceptance remains #92. No production route,
+profile or schema changed. See the [protected intake checkpoint](../checkpoints/2026-09-14-programme-review-case-intake-protected-delivery.md).
+
+### Preceding review-policy delivery
+
 #108's explicit review-policy composition/history is delivered through
 [PR #121](https://github.com/martonpornoi/maru/pull/121), protected squash
 `848f1246a8663e84a8799e5e7b4edbd695ff7efc` at 2026-09-14 13:32:40 UTC.
@@ -183,8 +198,36 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-review-cases`, from protected PR #121.
-This candidate connects immutable review policies to labelled eligible-seal
+Branch: `codex/programme-review-management`, from protected PR #122.
+Candidate: independently authorized case overview, complete retained roster,
+known-email preview, exact-person confirmation and reasoned assignment removal.
+Purpose-signed selection preserves original actor/scope/person/version/retry;
+confirmation never re-resolves a changed email. Current permissions, contributor/
+opener/moderator/decider exclusions and writer guards remain authoritative.
+Assignment grants no review access, invitation, host or volunteer relationship.
+Setup and case-opening receipts independently admit manager destinations.
+
+All 6,887 database-free units pass in 42.24s with three existing URLField warnings;
+Ruff, focused strict typing, NumPy and semantic documentation pass. Actual-form
+synthetic browser rehearsal at 1280 CSS pixels observed discovery, full roster,
+known-person preview/confirmation, stale prior-stage removal with focused error
+and retained reason/confirmation, read-only and generic denial. One H1/main and
+no document overflow were observed; task-owned browser/server resources stopped.
+One maintained native scenario extends existing review services without new
+timing weights; it remains unexecuted #102 debt. Full human checks remain #92.
+The first exact-commit certification stopped at documentation reachability before
+Sphinx because the new page lacked its hidden toctree entry; the catalog is now
+corrected. That failed attempt issued no receipt. Fresh clean-commit
+certification and protected delivery are pending. No schema,
+production route/profile, dependency, writer or PostgreSQL policy changed.
+See the [reviewer management checkpoint](../checkpoints/2026-09-14-programme-reviewer-management.md).
+Next: separately authorized reviewer conflict/scoring, moderation, final decision
+and accepted conversion, then remaining #108 connections/setup. #48, #108,
+#102/#97/#109 and human #92 remain open.
+
+### Preceding exact case-intake evidence
+
+The preceding protected candidate connects immutable review policies to labelled eligible-seal
 selection and deliberate case opening. Discovery filters source, contributor
 and existing-case conflicts before pagination. Exact retained metadata remains
 readable under current Department setup authority when eligibility changes;
@@ -202,7 +245,7 @@ before completion to correct that ADR 0100 policy conflict; it issued no receipt
 No PostgreSQL suite was collected or run. Synthetic actual-form browser rehearsal observed policy/source
 selection, explicit confirmation/receipt, read-only and generic denial at 1280
 CSS pixels, with one H1/main and no overflow. Task-owned tabs/server are stopped.
-Full human checks remain #92; exact clean-commit and hosted acceptance are pending.
+Full human checks remain #92; exact clean-commit and hosted acceptance passed as recorded above.
 No schema, production route, profile, dependency or writer-policy change.
 See the [case intake checkpoint](../checkpoints/2026-09-14-programme-review-case-intake.md).
 
