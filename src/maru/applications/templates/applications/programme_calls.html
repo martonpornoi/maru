@@ -1,0 +1,61 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Programme calls · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Administration / {{ department.label }} / Programme calls{% if source %} / {{ task_label }}{% endif %}</div>{% endblock %}
+{% block content %}
+<div class="programme-calls">
+  <h1>{% if source %}{{ source.summary.name }}{% else %}Programme calls{% endif %}</h1>
+  <p>Department: {{ department.label }}. This workspace is a dormant rehearsal surface, not a published call.</p>
+  <details><summary>Access · Exact-Department call management</summary><p>Each query and command checks your current verified identity and this exact Department. This grants no proposal answers, contributor profiles, review data, Workforce holders or Programme item authority.</p></details>
+  {% if source %}
+  <nav aria-label="Call tasks"><ul class="call-links">
+    <li><a href="{{ root_url }}">Department calls</a></li><li><a href="{{ call_url }}overview/"{% if task == "overview" %} aria-current="page"{% endif %}>Complete configuration</a></li>
+    {% if can_edit %}<li><a href="{{ call_url }}details/"{% if task == "details" %} aria-current="page"{% endif %}>Details and policy</a></li><li><a href="{{ call_url }}window/"{% if task == "window" %} aria-current="page"{% endif %}>Replace deadlines</a></li><li><a href="{{ call_url }}activate/"{% if task == "activate" %} aria-current="page"{% endif %}>Activate domain call</a></li>{% endif %}
+    {% if can_retire %}<li><a href="{{ call_url }}retire/"{% if task == "retire" %} aria-current="page"{% endif %}>Retire call</a></li>{% endif %}
+    {% if can_successor %}<li><a href="{{ call_url }}successor/"{% if task == "successor" %} aria-current="page"{% endif %}>Create successor draft</a></li>{% endif %}
+  </ul></nav>
+  <p>Call lineage version {{ source.summary.version }} · Current aggregate version {{ source.summary.aggregate_version }} · <strong>{{ source.summary.status }}</strong></p>
+  {% if form %}
+  <section aria-labelledby="call-task-heading"><h2 id="call-task-heading">{{ task_label }}</h2>
+    {% if selected_row %}<p>Selected current entry: {{ selected_row_label }} · Position {{ selected_row.position }}</p>{% endif %}
+    {% if consequence %}<p class="call-consequence">{{ consequence }}</p>{% endif %}
+    {% if task == "window" %}<p>Current edition time zone: {{ zone_name }}. Opening is inclusive; closing is exclusive. The edit deadline must fall within that window. On a stale edition, reconcile original local times before replacing them.</p>{% endif %}
+    <form method="post" data-call-command data-call-pending="{% if pending %}true{% else %}false{% endif %}">
+      {% csrf_token %}
+      {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+      {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+      <p data-call-dirty role="status" hidden>Changes are not yet confirmed as saved. Review the current call before leaving a failed or uncertain attempt.</p>
+      <button type="submit">{{ button_label }}</button>
+    </form>
+  </section>
+  {% elif task != "overview" %}<p>This task is read-only in the current call or edition state. Active and retired configuration cannot be edited.</p>{% endif %}
+  {% if task == "overview" %}
+  <section aria-labelledby="call-policy"><h2 id="call-policy">Metadata, collection policy and deadlines</h2>
+    <dl><dt>Stable call code</dt><dd>{{ source.summary.code }}</dd><dt>Guidance</dt><dd>{{ source.summary.description|default:"No additional guidance." }}</dd><dt>Collection purpose</dt><dd>{{ source.purpose }}</dd><dt>Classification</dt><dd>{{ source.classification }}</dd><dt>Eligibility</dt><dd>Authenticated verified person; no attendance or registration requirement.</dd><dt>Proposals per person</dt><dd>{{ source.maximum_submissions_per_person }}</dd><dt>Maximum collaborators</dt><dd>{{ source.maximum_collaborators }}</dd><dt>Audience policy</dt><dd>{{ source.audience_policy_code|default:"Not configured" }}</dd><dt>Proposal retention policy</dt><dd>{{ source.retention_policy_code|default:"Not configured" }}</dd><dt>Content policy</dt><dd>{{ source.content_policy_code }}</dd><dt>Contributor consent policy</dt><dd>{{ source.contributor_consent_policy_code }}</dd><dt>Collaboration evidence retention</dt><dd>{{ source.collaboration_retention_policy_code }}</dd><dt>Opens, inclusive</dt><dd>{{ source.summary.opens_at|date:"c" }}</dd><dt>Applicant edit deadline, inclusive</dt><dd>{{ source.summary.applicant_edit_until|date:"c" }}</dd><dt>Closes, exclusive</dt><dd>{{ source.summary.closes_at|date:"c" }}</dd></dl>
+    <p>Deadline instants above include their explicit offset. Replacement uses the edition zone {{ zone_name }}. Editing metadata preserves exact stored instants.</p>
+  </section>
+  <section aria-labelledby="call-tracks"><h2 id="call-tracks">Tracks</h2>{% if can_edit %}<p><a href="{{ call_url }}track/">Add track</a></p>{% endif %}
+    <ol class="call-cards">{% for row in source.tracks %}<li><h3>{{ row.position }}. {{ row.label }}</h3><p>Stable code: {{ row.code }}</p><p>{{ row.description }}</p>{% if can_edit %}<a href="{{ call_url }}track/{{ forloop.counter0 }}/">Edit or reorder {{ row.label }}</a> · <a href="{{ call_url }}remove-track/{{ forloop.counter0 }}/">Remove {{ row.label }}</a>{% endif %}</li>{% endfor %}</ol>
+  </section>
+  <section aria-labelledby="call-formats"><h2 id="call-formats">Formats and duration</h2>{% if can_edit %}<p><a href="{{ call_url }}format/">Add format</a></p>{% endif %}
+    <ol class="call-cards">{% for row in source.formats %}<li><h3>{{ row.position }}. {{ row.label }}</h3><p>Stable code: {{ row.code }}</p><p>{{ row.description }}</p><p>Minutes: minimum {{ row.minimum_duration_minutes }}, default {{ row.default_duration_minutes }}, maximum {{ row.maximum_duration_minutes }}.</p>{% if can_edit %}<a href="{{ call_url }}format/{{ forloop.counter0 }}/">Edit or reorder {{ row.label }}</a> · <a href="{{ call_url }}remove-format/{{ forloop.counter0 }}/">Remove {{ row.label }}</a>{% endif %}</li>{% endfor %}</ol>
+  </section>
+  <section aria-labelledby="call-contributors"><h2 id="call-contributors">Proposed-public contributor fields</h2><p>Collection policy only: each person owns their profile and consent. Contributors are not Programme hosts.</p>{% if can_edit %}<p><a href="{{ call_url }}contributor-field/">Add contributor field</a></p>{% endif %}
+    <ol class="call-cards">{% for row in source.contributor_fields %}<li><h3>{{ row.position }}. {{ row.field_code }}</h3><p>Lead: {{ row.lead_requirement }} · Collaborator: {{ row.collaborator_requirement }}</p>{% if can_edit %}<a href="{{ call_url }}contributor-field/{{ forloop.counter0 }}/">Edit or reorder {{ row.field_code }}</a> · <a href="{{ call_url }}remove-contributor-field/{{ forloop.counter0 }}/">Remove {{ row.field_code }}</a>{% endif %}</li>{% endfor %}</ol>
+  </section>
+  <section aria-labelledby="call-questions"><h2 id="call-questions">Complete configured questions</h2><p>Manager configuration, not an applicant preview or public copy. Dedicated section and question editing is still upcoming.</p>
+    {% for section in source.sections %}<section><h3>{{ section.position }}. {{ section.title }}</h3><p>Stable key: {{ section.key }}</p><p>{{ section.help_text }}</p><ol class="call-cards">{% for question in section.questions %}<li><h4>{{ question.position }}. {{ question.label }}</h4><p>Stable key: {{ question.key }} · Type: {{ question.field_type }} · {% if question.required %}Required{% else %}Optional{% endif %}</p><p>{{ question.help_text }}</p><p>Purpose: {{ question.purpose }} · Classification: {{ question.classification }} · Retention: {{ question.retention_policy_code|default:"Call default" }}</p><dl><dt>Text length, minimum / maximum</dt><dd>{{ question.minimum_length|default_if_none:"Not configured" }} / {{ question.maximum_length|default_if_none:"Not configured" }}</dd><dt>Numeric minimum / maximum</dt><dd>{{ question.minimum_value|default_if_none:"Not configured" }} / {{ question.maximum_value|default_if_none:"Not configured" }}</dd><dt>Maximum choices</dt><dd>{{ question.maximum_choices|default_if_none:"Not configured" }}</dd><dt>Reference kind</dt><dd>{{ question.reference_kind|default:"Not configured" }}</dd></dl>{% if question.options %}<ul>{% for option in question.options %}<li>{{ option.label }} ({{ option.code }})</li>{% endfor %}</ul>{% endif %}{% if question.condition %}<p>Earlier-answer condition:</p><dl>{% for key, value in question.condition %}<dt>{{ key }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>{% else %}<p>No earlier-answer condition.</p>{% endif %}</li>{% endfor %}</ol></section>{% endfor %}
+  </section>
+  {% endif %}
+  {% else %}
+    <p>Complete bounded call inventory for this Department. Selecting a call does not grant access to its proposals.</p>
+    <ul class="call-cards">{% for call in calls %}<li><h2><a href="{{ root_url }}{{ call.call_id }}/overview/">{{ call.name }}</a></h2><p>Lineage version {{ call.version }} · Aggregate version {{ call.aggregate_version }} · {{ call.status }}</p><p>{{ call.description }}</p></li>{% empty %}<li>No calls are available in this Department.</li>{% endfor %}</ul>
+  {% endif %}
+  <p class="call-consequence">Call creation, dedicated question editing, cross-Department selection, proposal collaboration, review and conversion continue under #108. No production profile or route is enabled by this workspace.</p>
+</div>
+{% endblock %}

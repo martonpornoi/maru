@@ -11,18 +11,33 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+The second #108 decision/hosting increment is delivered through
+[PR #114](https://github.com/martonpornoi/maru/pull/114), protected squash
+`bf990ff66714b568c9c59dbb6768ea0cc5ddf708` at 2026-09-14 01:16:20 UTC.
+Its tree equals certified head `41e189177f7ce4ddeb1b0c2374387dbfd8bb6173`;
+clean local main and origin/main match that squash. All eight local retained
+gates passed in 16m19s, including 6,020 units in 38.39s. Hosted units passed in
+65.61s; 76 frontend cases, CodeQL and the exact-head PR gate passed. Hosted quality
+took 25m34s and overall workflow 26m11s, without hosted repair or rerun.
+Four maintained native cases remain #102 debt; new human tasks are unchecked
+under #92. No profile, production route, schema, privilege or email delivery was
+activated. See the
+[protected decision/hosting checkpoint](../checkpoints/2026-09-14-programme-decisions-hosting-protected-delivery.md).
+
+### Preceding item-workspace delivery
+
 The first #108 guided item-workspace increment is delivered through
 [PR #112](https://github.com/martonpornoi/maru/pull/112), protected squash
 `f64c96ed7e1912121de476d6ad4332b4c330b448` at 2026-09-13 23:20:08 UTC.
 Its tree equals certified head `191488a13f955c798bf846fe4f50fd73e1966247`;
-clean local main and origin/main match the squash. All eight retained local
+clean local main and origin/main were synchronized to the squash. All eight retained local
 gates passed in 15m46s, including 5,879 units in 37.39s. Hosted units passed in
 64.59s, frontend acceptance passed 69 cases, quality took 28m07s and the overall
 workflow 28m38s. Exact-head PR gate and CodeQL passed without hosted repair.
 PostgreSQL remains deferred, with two new maintained native cases under #102;
 full human/browser evidence remains #92. See the
 [protected workspace checkpoint](../checkpoints/2026-09-14-programme-item-workspace-protected-delivery.md).
-The 30-minute quality limit has only 1m53s measured margin: #113 records the
+That run had only 1m53s margin to the 30-minute quality limit: #113 records the
 documentation/quality follow-up risk, not PostgreSQL evidence or guaranteed future
 headroom. It does not displace #48 unless it becomes a delivery blocker.
 
@@ -58,19 +73,48 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-item-decisions`, from protected PR #112.
-The second increment is local: independently authorized Department discussion,
+Branch: `codex/programme-call-workspace`, from protected PR #114.
+The first dedicated Applications call-workspace increment is implemented locally:
+exact-Department named inventory, complete manager configuration, metadata/policy,
+explicit edition-zone deadline replacement, ordered track/format/contributor-field
+tasks and confirmed activation/retirement/successor commands. A lossless adapter
+preserves every untouched question type, policy and source cursor. No new writer,
+schema, generic discriminator access, profile or production route is added.
+Focused database-free feedback passes 225 tests in 1.70s, and all 81 frontend
+cases pass. Final six-module typing, NumPy documentation and the 495-page
+documentation validator pass; exact-head certification and protected delivery
+are pending.
+The first exact run stopped on the historical no-template containment assertion:
+6,165 units passed and one failed. The guard now permits only this exact dormant
+template's two identifiers, retains every generic-surface scan and additionally
+walks the entire production URL tree. Its 58 focused HTTP/containment cases pass,
+and fresh full-unit preflight passes all 6,171 cases in 37.28s. Exact-head
+certification remains required. No success receipt was created for the failed
+candidate.
+The synthetic 1280-by-720 rehearsal corrected task order and action labels and
+verified stale-input retention, error focus, immutable, empty and denied states.
+Two maintained native cases remain unexecuted #102 debt; full human matrix is
+#92. See the [call-workspace checkpoint](../checkpoints/2026-09-14-programme-call-workspace.md).
+
+Next: certify and deliver this bounded increment, then call creation and complete
+section/question/condition editing, authorized Department selection/reassignment,
+proposal/collaboration/review/conversion tasks and ordinary task connections.
+Keep contributor-owned profiles/acknowledgements, the single submission cursor
+and closed generic seams. Accountable setup and integrated proof follow those
+surfaces; #108 and #48 remain open.
+
+The second increment is merged: independently authorized Department discussion,
 typed readiness sources, exact public-copy withdrawal and separate organizer /
 genuine-person hosting tasks. The existing owner commands remain authoritative;
 there are no new writers, migrations, profile pins or production routes.
 Final focused database-free HTTP/query/form feedback passed 218 cases in 2.13s;
 seven actual-asset frontend cases passed. Browser feedback corrected edition-zone
 display, made evidence outcomes explicit and clarified pending
-period removal. Final retained certification and the next protected PR remain
-pending; this is not PostgreSQL or full human acceptance. The first exact-head
+period removal. Exact-head certification and protected delivery passed;
+this is not PostgreSQL or full human acceptance. The first exact-head
 certification stopped at full mypy: the new closed read-purpose parameter exposed
 five UUID-dictionary caller typing conflicts. Existing timetable callers now name
-their unchanged purpose explicitly; a fresh full certification is required.
+their unchanged purpose explicitly; fresh full typing and certification passed.
 Four maintained native source/withdrawal and form-to-host-owner cases remain
 unexecuted #102 debt. See the
 [decision/hosting checkpoint](../checkpoints/2026-09-14-programme-decisions-and-hosting.md).
@@ -106,9 +150,9 @@ Current-profile manifests, production routing, writers and authority remain
 unchanged while these surfaces and the isolated fixture are developed.
 
 The inherited setup contract now acknowledges installed dormant Scheduling and
-accepted-item conversion. The local second increment completes the remaining item
+accepted-item conversion. The merged second increment completes the remaining item
 controls; guided intake/review/conversion, task continuations and setup are next
-in #108 after protected delivery. Keep #108 open
+in #108. Keep #108 open
 through final gated promotion: its dormant fixture enables #109/#92 acceptance,
 not the other way around. #102 database restoration and #97 logical recovery
 remain prerequisites for final integrated acceptance and activation.
@@ -192,7 +236,7 @@ activation and a director pilot, not further dormant in-scope development.
 
 ## Smallest sensible next actions
 
-1. Finish exact-head certification and protected delivery of the item workspace.
+1. Continue #108's dedicated Applications call/proposal/review/conversion surfaces.
 2. Preserve archived evidence and keep parent issues open; follow ADR 0100.
 3. Continue #108's documented remaining owner-task increments and connections.
 4. Complete #102 PostgreSQL restoration, #97 logical recovery and #92 human

@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a dormant Programme call-management workspace with labelled call
+  selection, complete configuration review, policy/catalog tasks and deliberate
+  lifecycle actions. Small edits preserve the full typed form; deadline changes
+  are a separate edition-zone, version-fenced action. Creation and question
+  editing remain subsequent #108 work. No production route or profile is enabled.
+
 - Extended the dormant Programme workspace with Department discussion, typed
   readiness evidence, exact public-copy withdrawal and separate organizer/host
   tasks. People can respond to their own invitations and draft, share or withdraw

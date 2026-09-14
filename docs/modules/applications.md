@@ -4,7 +4,7 @@ Status: mounted generic application portfolio plus implemented dormant
 Programme-call, acknowledged-proposal, Programme-import, and Department-
 ownership-continuity, staged-review and accepted-conversion kernels;
 production remains gated
-Last updated: 2026-09-06
+Last updated: 2026-09-14
 
 ## Purpose and boundary
 
@@ -117,6 +117,38 @@ reviewers remain a separate purpose relationship and still require the normal
 edition capability decision before any submission is disclosed or changed.
 
 ## Dormant Programme calls
+
+The [guided call workspace](../product/page-contracts/programme-call-workspace.md)
+adds a dedicated, unmounted #108 manager adapter over the existing Programme
+commands and complete managed projections. It provides exact-Department call
+selection and configuration review, metadata/policy editing, separately confirmed
+deadline replacement, explicit catalog ordering/removal and lifecycle actions.
+Call creation, section/question/condition controls and the separate proposal,
+review and conversion journeys remain unfinished #108 work. The generic studio
+and discriminator exclusions are unchanged.
+
+`programme_call_editor` reconstructs every typed question, condition, option,
+policy, catalog and duration bound without querying or writing. It refuses stale
+or non-draft source cursors and validates the complete resulting graph after a
+small task edit. Its inputs are not authorization: `configure_programme_call`
+still checks the exact current actor, Department, lifecycle, version and receipt
+under the existing canonical locks. The HTTP adapter retains the original cursor
+and retry key after refusal, including the possibility that an earlier request
+committed before its response was lost; it never silently rebases an edit.
+
+Metadata edits do not parse or round the existing deadline instants. The separate
+window form deliberately replaces all three dates with whole-minute edition-local
+input. It refuses ambiguous/nonexistent daylight-saving minutes and checks the
+displayed Events aggregate version again under the shared canonical edition lock
+through owner-command completion, preventing a concurrent zone change from
+reinterpreting the editor's original local-time intent.
+
+`get_managed_programme_call_department` uses Workforce's exact current name-only
+reference after call-management authorization, then reauthorizes and appends
+required protected-read audit before returning. It lists no other Departments,
+holders, proposal counts or contributor values and does not require broader
+Workforce structure permission. Ordinary ownership reassignment remains a
+different dual-Department command; no orphan discovery or recovery UI is added.
 
 A `ProgrammeCall` is a one-to-one facet over an `ApplicationDefinition` whose
 target kind is `programme_item`. It reuses the existing definition sections,

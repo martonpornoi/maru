@@ -53,7 +53,11 @@ from maru.applications.programme_inputs import (
 )
 from maru.audit.services import AuditRecord, append_audit
 from maru.identity.queries import active_verified_person_account_display_labels
-from maru.workforce.queries import resolve_current_department_set_reference
+from maru.workforce.queries import (
+    CurrentDepartmentLabelReference,
+    resolve_current_department_label_reference,
+    resolve_current_department_set_reference,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -1029,6 +1033,110 @@ def _require_managed_call(call: ProgrammeCall | None) -> ProgrammeCall:
     if call is None:
         raise ApplicationsProgrammeAuthorizationDeniedError
     return call
+
+
+def _require_managed_department_label(
+    label: CurrentDepartmentLabelReference | None, department_id: UUID
+) -> CurrentDepartmentLabelReference:
+    if label is None or label.department_id != department_id:
+        raise ApplicationsProgrammeAuthorizationDeniedError
+    return label
+
+
+def get_managed_programme_call_department(
+    *,
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_id: UUID,
+    correlation_id: UUID,
+    source_channel: str,
+    authorizer: ApplicationsProgrammeAuthorizer = _DEFAULT_AUTHORIZER,
+) -> CurrentDepartmentLabelReference:
+    """Name one admitted call-management scope without opening Workforce data.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Exact current verified person-account identifier.
+    organization_id : UUID
+        Organization expected to own the selected Department.
+    edition_id : UUID
+        Exact current event edition.
+    department_id : UUID
+        Selected Department, authorized independently of navigation context.
+    correlation_id : UUID
+        Request identifier for required protected-read audit.
+    source_channel : str
+        Registered request channel.
+    authorizer : ApplicationsProgrammeAuthorizer, default=_DEFAULT_AUTHORIZER
+        Sealed complete-decision adapter.
+
+    Returns
+    -------
+    CurrentDepartmentLabelReference
+        Exact current Department label, with no proposals, counts or holders.
+
+    Raises
+    ------
+    ApplicationsProgrammeAuthorizationDeniedError
+        If exact scope, current authority or required evidence is unavailable.
+    """
+    actor_id = require_programme_uuid(actor_id, field="actor_id")
+    organization_id = require_programme_uuid(organization_id, field="organization_id")
+    edition_id = require_programme_uuid(edition_id, field="edition_id")
+    department_id = require_programme_uuid(department_id, field="department_id")
+    correlation_id, source_channel = _audit_inputs(
+        correlation_id=correlation_id, source_channel=source_channel
+    )
+    occurred_at = timezone.now()
+    operation = "applications.programme.query.managed_department_label"
+    try:
+        authorize_programme_call_scope(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            authorizer=authorizer,
+        )
+        with transaction.atomic():
+            label = _require_managed_department_label(
+                resolve_current_department_label_reference(
+                    organization_id=organization_id,
+                    edition_id=edition_id,
+                    department_id=department_id,
+                ),
+                department_id,
+            )
+            scope = authorize_programme_call_scope(
+                actor_id=actor_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                department_id=department_id,
+                authorizer=authorizer,
+            )
+            _append_managed_call_sensitive_read(
+                scope=scope,
+                operation=operation,
+                target_type="workforce.department",
+                target_id=department_id,
+                target_count=1,
+                correlation_id=correlation_id,
+                source_channel=source_channel,
+                occurred_at=occurred_at,
+            )
+            return label
+    except ApplicationsProgrammeAuthorizationDeniedError:
+        _append_managed_call_read_denial(
+            actor_id=actor_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            operation=operation,
+            correlation_id=correlation_id,
+            source_channel=source_channel,
+            occurred_at=occurred_at,
+        )
+        raise
 
 
 def list_managed_programme_calls(
@@ -2250,6 +2358,7 @@ __all__ = [
     "ProgrammeTrackProjection",
     "available_programme_calls",
     "get_managed_programme_call_configuration",
+    "get_managed_programme_call_department",
     "get_self_programme_proposal_detail",
     "list_managed_programme_calls",
     "list_self_programme_proposals",
