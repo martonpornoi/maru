@@ -12,6 +12,7 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.test import override_settings
+from django.urls import URLPattern, URLResolver, get_resolver
 
 from maru.applications import programme_authorization, programme_commands
 from maru.applications.models import (
@@ -86,6 +87,22 @@ _FORBIDDEN_SURFACE_MARKERS = (
     "programmecommandreceipt",
     "programmeproposal",
 )
+_DORMANT_TEMPLATE_MARKERS = {
+    "src/maru/applications/templates/applications/programme_calls.html": frozenset(
+        {"programme-call", "programme_call"}
+    ),
+}
+
+
+def _surface_markers(path: Path, content: str) -> tuple[str, ...]:
+    allowed = _DORMANT_TEMPLATE_MARKERS.get(
+        path.relative_to(_REPOSITORY_ROOT).as_posix(), frozenset()
+    )
+    return tuple(
+        marker
+        for marker in _FORBIDDEN_SURFACE_MARKERS
+        if marker in content.lower() and marker not in allowed
+    )
 
 
 def _execution_surface_paths() -> tuple[Path, ...]:
@@ -123,18 +140,19 @@ def _locked_manager(*, first: object | None = None, exists: bool = False) -> Mag
 
 
 def test_programme_kernel_has_no_mounted_or_scheduled_surface() -> None:
-    """Keep the dormant kernel out of routes, schemas, UI, workers, and jobs."""
+    """Keep dormant calls out of production and every generic execution surface."""
     violations: dict[str, tuple[str, ...]] = {}
     surface_paths = _execution_surface_paths()
     for path in surface_paths:
         content = path.read_text(encoding="utf-8").lower()
-        matched = tuple(
-            marker for marker in _FORBIDDEN_SURFACE_MARKERS if marker in content
-        )
+        matched = _surface_markers(path, content)
         if matched:
             violations[path.relative_to(_REPOSITORY_ROOT).as_posix()] = matched
 
     assert violations == {}
+    assert set(_DORMANT_TEMPLATE_MARKERS) <= {
+        path.relative_to(_REPOSITORY_ROOT).as_posix() for path in surface_paths
+    }
     assert tuple(
         path.relative_to(_REPOSITORY_ROOT).as_posix()
         for path in surface_paths
@@ -143,6 +161,50 @@ def test_programme_kernel_has_no_mounted_or_scheduled_surface() -> None:
         "src/maru/applications/apps.py",
         "src/maru/programme/apps.py",
     )
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        "src/maru/applications/templates/applications/definition_detail.html",
+        "src/maru/programme/templates/programme/programme_calls.html",
+        "src/maru/applications/urls.py",
+    ],
+)
+def test_dormant_template_allowance_cannot_spread_to_other_surfaces(
+    relative_path: str,
+) -> None:
+    """An exact template exception does not admit generic links or mounting."""
+    assert _surface_markers(
+        _REPOSITORY_ROOT / relative_path, "programme-call programme_call"
+    ) == ("programme-call", "programme_call")
+
+
+def test_dormant_template_does_not_admit_other_kernel_markers() -> None:
+    """Allow only the two accepted call-template identifiers, not a wildcard."""
+    path = _REPOSITORY_ROOT / next(iter(_DORMANT_TEMPLATE_MARKERS))
+    assert _surface_markers(path, "programme-call programme_call") == ()
+    assert _surface_markers(path, "applications.manage_programme_calls") == (
+        "applications.manage_programme_",
+    )
+
+
+def test_dormant_call_workspace_is_absent_from_entire_production_url_tree() -> None:
+    """Reject accidental mounting even through a different parent URL prefix."""
+    pending: list[URLPattern | URLResolver] = [get_resolver()]
+    visited: set[int] = set()
+    while pending:
+        entry = pending.pop()
+        if id(entry) in visited:
+            continue
+        visited.add(id(entry))
+        assert "programme-calls" not in str(entry.pattern)
+        if isinstance(entry, URLResolver):
+            pending.extend(entry.url_patterns)
+        else:
+            assert not entry.callback.__module__.startswith(
+                "maru.applications.programme_call"
+            )
 
 
 def test_programme_models_have_no_django_admin_registration() -> None:

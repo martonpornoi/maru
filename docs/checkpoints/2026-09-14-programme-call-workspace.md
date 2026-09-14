@@ -69,6 +69,22 @@ remain unchecked #92 tasks. No broad accessibility claim is made.
 
 ## Delivery and remaining work
 
+The first exact candidate, `06fca34fb38dc02e2ec26d1cc8083daeb449956c`, stopped
+on the older kernel containment assertion that prohibited any Programme
+template. Its full unit run passed 6,165 cases and failed one in 37.54s; it
+created no success receipt. The failed JUnit report is hash-verified in the
+ignored `issue108-06fca34-failed` evidence archive. This was a previously valid
+kernel-only assumption, not a production mounting or authorization failure.
+
+The revised containment guard permits only the exact new dormant template's
+two identifier markers. Other templates, generic execution surfaces, schedules,
+schemas and forbidden markers remain checked. Additional regression cases prove
+the allowance cannot spread and walk the entire production URL tree to reject
+mounting even under a different parent prefix. All 58 focused HTTP/containment
+cases pass. Fresh full-unit preflight passes all 6,171 tests in 37.28s before
+repeating exact-head certification; no
+earlier failed run or newly relaxed acceptance policy substitutes for it.
+
 At this checkpoint, exact-head certification and protected PR delivery are still
 pending. There is no database acceptance, combined coverage or timing-headroom
 claim. No profile, runtime privilege, production route or real notification was

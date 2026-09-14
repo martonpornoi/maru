@@ -84,6 +84,13 @@ Focused database-free feedback passes 225 tests in 1.70s, and all 81 frontend
 cases pass. Final six-module typing, NumPy documentation and the 495-page
 documentation validator pass; exact-head certification and protected delivery
 are pending.
+The first exact run stopped on the historical no-template containment assertion:
+6,165 units passed and one failed. The guard now permits only this exact dormant
+template's two identifiers, retains every generic-surface scan and additionally
+walks the entire production URL tree. Its 58 focused HTTP/containment cases pass,
+and fresh full-unit preflight passes all 6,171 cases in 37.28s. Exact-head
+certification remains required. No success receipt was created for the failed
+candidate.
 The synthetic 1280-by-720 rehearsal corrected task order and action labels and
 verified stale-input retention, error focus, immutable, empty and denied states.
 Two maintained native cases remain unexecuted #102 debt; full human matrix is
