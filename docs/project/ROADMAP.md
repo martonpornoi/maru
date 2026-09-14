@@ -167,7 +167,7 @@ separate organizer/person-owned hosting tasks. Applications intake/review/conver
 starting with the dedicated call workspace delivered through PR #115 and the
 creation/section/question/condition composer delivered through PR #116,
 now includes protected Department selection/reassignment through PR #117.
-Personal proposal intake/overview now has a local dormant increment; collaboration
+Personal proposal intake/overview is protected through PR #118; collaboration
 and review/conversion,
 ordinary task continuations and accountable setup remain required increments;
 none is replaced by specialist records or closure of a supporting PR. #113 records

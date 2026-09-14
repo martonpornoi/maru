@@ -11,6 +11,21 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's personal call discovery, explicit Draft intake and own inventory/overview
+are delivered through [PR #118](https://github.com/martonpornoi/maru/pull/118),
+protected squash `4f82f01d045d142c5c9c60eeda4524a438c8722b` at
+2026-09-14 08:43:52 UTC. Its tree equals certified head
+`616cc493aca5f4c9a6ce8759019a9e578e343a23`; clean local main and origin/main
+match the squash. All eight retained local gates passed in 16m34s, including
+6,417 units in 38.95s. Hosted units passed in 75.97s; all 83 frontend tests,
+CodeQL and PR gate passed. Hosted quality took 28m18s, documentation 26m13s
+and workflow latency 28m45s without repair/rerun. The 1m42s quality margin is
+not guaranteed future headroom; #113 remains open. Native cases remain #102
+debt and human acceptance remains #92. No schema, production route or profile
+changed. See the [protected intake checkpoint](../checkpoints/2026-09-14-programme-personal-intake-protected-delivery.md).
+
+### Preceding Department delivery
+
 #108's independently authorized Department chooser and confirmed Draft-call
 transfer are delivered through [PR #117](https://github.com/martonpornoi/maru/pull/117),
 protected squash `8634dad64927ed968c725404988745178a585df2` at
@@ -122,24 +137,22 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-proposal-workspace`, from protected PR #117.
-The personal intake/overview increment is implemented locally, pending exact-head
-certification and protected delivery. Its accepted page contract precedes the
-adapter: labelled available calls, explicit selection/duration, contributor-owned
-profile/consent and private Draft creation through the existing command, plus
-independently authorized personal inventory/detail. Existing history does not
-depend on new-call discovery; invitees never request profile fields. It adds no
-schema, production route, profile member or domain writer.
-Focused feedback passes 54 cases in 1.56s; full unit preflight passes 6,417 in
-39.56s after isolating an unrelated Windows pytest-temp permission failure.
-Seven actual-asset input-guard cases, strict typing, NumPy and Ruff pass. The
-1280-by-720 synthetic browser confirms invalid/stale retention, labelled navigation
-and closed/empty/invitee/denied states, not persistent domain behavior. Two new
-native cases remain unexecuted #102 debt and full human acceptance remains #92.
-See the [personal-intake checkpoint](../checkpoints/2026-09-14-programme-personal-intake.md).
-After protected delivery, continue shared editing, own profile revisions,
-invitations/roster and exact sealing/acknowledgement/submission; those controls are
-explicitly unfinished, not implied by creation of a private draft.
+Branch: `codex/programme-proposal-collaboration`, from protected PR #118.
+The personal intake/overview increment is merged. Next implement shared editing,
+own profile revisions, invitations/roster and exact sealing/acknowledgement/
+submission as a coherent continuation. Those controls remain unfinished, not
+implied by creating a Draft. Extend the accepted personal page/field contract
+before source changes. Existing self history must not depend on new-call
+availability. Editing, acknowledgement/submission and withdrawal have different
+owner windows; preserve them and the sole original submission cursor.
+
+Read-only preparation identified an integer-limit defect: configured min/max
+are ignored by both the shared INTEGER normalizer and form field. Fix with the
+editing increment, including boundary regressions and retained-answer/sealing
+review without rewriting immutable history. Meaningful authorized reference/file
+choices and minimized exact frozen revision/own-profile evidence are also
+explicit obligations recorded under #108. Do not invent a directory or claim raw
+UUID input completes those tasks. No new source implementation is certified yet.
 
 The Department-selection/reassignment increment is merged. The complete
 chooser independently admits each current Department before ID/code/name
