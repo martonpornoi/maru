@@ -19,8 +19,9 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
 from maru.events.scheduling_queries import resolve_scheduling_edition_reference
+from maru.identity.queries import resolve_active_verified_person_reference
 
-from . import commands, queries
+from . import commands, public_copy_commands, queries
 from .authorization import (
     ProgrammeAuthorizationDeniedError,
     authorize_programme_scope,
@@ -28,8 +29,11 @@ from .authorization import (
 from .workbench_forms import (
     ProgrammeCoreForm,
     ProgrammeDeliveryForm,
+    ProgrammeDiscussionForm,
+    ProgrammeEvidenceForm,
     ProgrammePublicCopyForm,
     ProgrammeReadinessForm,
+    ProgrammeWithdrawalForm,
     ProgrammeWorkbenchForm,
     ProgrammeWorkingForm,
 )
@@ -38,6 +42,11 @@ from .workbench_queries import (
     ProgrammeWorkbenchRequest,
     load_programme_workbench_inventory,
     load_programme_workbench_item,
+)
+from .workbench_sources import (
+    SOURCE_READS,
+    list_programme_withdrawal_choices,
+    load_programme_evidence_source,
 )
 
 if TYPE_CHECKING:
@@ -61,6 +70,9 @@ _READS = {
         "programme.view_private",
         frozenset({"public_copy_review_history"}),
     ),
+    "discussion": ("programme.view_discussion", frozenset({"discussion_entries"})),
+    "evidence": ("programme.view_readiness", frozenset({"readiness_summary"})),
+    "withdrawal": ("programme.view_private", frozenset({"public_copy_review_history"})),
 }
 _WRITES = {
     "create": "programme.manage_items",
@@ -68,13 +80,19 @@ _WRITES = {
     "delivery": "programme.manage_delivery",
     "readiness": "programme.manage_readiness",
     "public-copy": "programme.approve_public_copy",
+    "discussion": "programme.manage_items",
+    "evidence": "programme.manage_readiness",
+    "withdrawal": "programme.approve_public_copy",
 }
-_FORMS = {
+_FORMS: dict[str, type[ProgrammeWorkbenchForm]] = {
     "create": ProgrammeCoreForm,
     "working": ProgrammeWorkingForm,
     "delivery": ProgrammeDeliveryForm,
     "readiness": ProgrammeReadinessForm,
     "public-copy": ProgrammePublicCopyForm,
+    "discussion": ProgrammeDiscussionForm,
+    "evidence": ProgrammeEvidenceForm,
+    "withdrawal": ProgrammeWithdrawalForm,
 }
 _LABELS = {
     "working": "Working copy",
@@ -85,6 +103,9 @@ _LABELS = {
     "delivery-history": "Delivery history",
     "readiness-history": "Readiness history",
     "public-copy-history": "Public-copy review history",
+    "discussion": "Department discussion",
+    "evidence": "Record readiness evidence",
+    "withdrawal": "Withdraw public copy",
 }
 _BUTTONS = {
     "create": "Create private item",
@@ -92,6 +113,9 @@ _BUTTONS = {
     "delivery": "Save delivery revision",
     "readiness": "Save applicability decision",
     "public-copy": "Approve this public copy",
+    "discussion": "Append Department entry",
+    "evidence": "Record this evidence",
+    "withdrawal": "Withdraw this exact rendition",
 }
 _CONFLICTS = (
     commands.ProgrammeVersionConflictError,
@@ -125,13 +149,19 @@ def _authorize(
         requested_fields=fields,
     )
     if write:
+        if (
+            task == "withdrawal"
+            and resolve_active_verified_person_reference(account_id=scope.actor_id)
+            is None
+        ):
+            raise ProgrammeAuthorizationDeniedError
         if task == "public-copy":
             edition = resolve_scheduling_edition_reference(
                 organization_id=scope.organization_id, edition_id=scope.edition_id
             )
             if edition is None or not edition.accepts_scheduling_writes:
                 raise ProgrammeAuthorizationDeniedError
-        elif not admitted.accepts_private_planning_writes:
+        elif task != "withdrawal" and not admitted.accepts_private_planning_writes:
             raise ProgrammeAuthorizationDeniedError
 
 
@@ -222,6 +252,9 @@ def _submit(
         "delivery": commands.revise_programme_delivery,
         "readiness": commands.configure_programme_readiness,
         "public-copy": commands.approve_programme_public_rendition,
+        "discussion": commands.append_programme_discussion,
+        "evidence": commands.record_programme_readiness_evidence,
+        "withdrawal": public_copy_commands.withdraw_programme_public_rendition,
     }
     kwargs = {
         **asdict(scope),
@@ -279,14 +312,32 @@ def _layer(
     if task == "public-copy":
         return {"public_copy": queries.load_programme_public_copy(**kwargs)}
     kwargs["reason"] = f"Review selected Programme {_LABELS[task].lower()}"
-    if task == "readiness":
-        return {
+    if task in {"readiness", "evidence"}:
+        result: dict[str, Any] = {
             "readiness_cards": tuple(
                 (row, row.concern.replace("_", " ").capitalize())
                 for row in queries.load_programme_readiness(**kwargs)
             )
         }
+        if task == "evidence":
+            sources = []
+            for layer in SOURCE_READS:
+                if _allowed(scope, layer):
+                    source = load_programme_evidence_source(
+                        scope, item_id=item_id, layer=layer
+                    )
+                    if source is not None:
+                        sources.append(source)
+            result["evidence_sources"] = tuple(sources)
+        return result
+    if task == "withdrawal":
+        return {
+            "withdrawal_choices": list_programme_withdrawal_choices(
+                scope, item_id=item_id
+            )
+        }
     loaders: dict[str, Callable[..., object]] = {
+        "discussion": queries.list_programme_discussion,
         "delivery": queries.load_programme_delivery,
         "working-history": queries.list_programme_working_history,
         "delivery-history": queries.list_programme_delivery_history,
@@ -298,6 +349,8 @@ def _layer(
     if task.endswith("-history"):
         kwargs["limit"] = 200
         return {"history": loaders[task](**kwargs), "history_selected": True}
+    if task == "discussion":
+        kwargs["limit"] = 200
     return {task: loaders[task](**kwargs)}
 
 
@@ -313,11 +366,28 @@ def _item_context(
         "selected": item,
         "task": task,
         "task_label": _LABELS[task],
+        "host_url": _host_link(scope, item_id),
         "button_label": _BUTTONS.get(task),
         "links": tuple(
             (name, label) for name, label in _LABELS.items() if _allowed(scope, name)
         ),
     }
+
+
+def _host_link(scope: ProgrammeWorkbenchRequest, item_id: UUID) -> str | None:
+    try:
+        authorize_programme_scope(
+            actor_id=scope.actor_id,
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+            capability_code="programme.view_hosts",
+            requested_fields=frozenset({"host_roster"}),
+        )
+    except ProgrammeAuthorizationDeniedError:
+        return None
+    return (
+        f"/admin/programme/hosts/{scope.organization_id}/{scope.edition_id}/{item_id}/"
+    )
 
 
 def _initial(context: dict[str, Any], task: str) -> dict[str, Any]:
@@ -341,6 +411,19 @@ def _initial(context: dict[str, Any], task: str) -> dict[str, Any]:
     if task == "public-copy":
         initial["source_working_revision_id"] = item.working_revision_id
     return initial
+
+
+def _form(
+    context: dict[str, Any], task: str, data: Any = None
+) -> ProgrammeWorkbenchForm:
+    kwargs: dict[str, Any] = (
+        {"initial": _initial(context, task)} if data is None else {}
+    )
+    if task == "evidence":
+        kwargs["sources"] = context["evidence_sources"]
+    elif task == "withdrawal":
+        kwargs["choices"] = context["withdrawal_choices"]
+    return _FORMS[task](data=data, **kwargs)
 
 
 @never_cache
@@ -446,12 +529,15 @@ def programme_item(
         if request.method == "POST":
             _authorize(scope, task, write=True)
             _input(request, _FORMS[task])
-            form = _FORMS[task](request.POST)
+            form = _form(context, task, request.POST)
             response, status = _post(scope, task, form, item_id)
             if response is not None:
                 messages.success(
                     request,
-                    "Programme decision saved; publication is separate.",
+                    "Public-copy disclosure withdrawn; "
+                    "timetable replacement is separate."
+                    if task == "withdrawal"
+                    else "Programme decision saved; publication is separate.",
                     fail_silently=True,
                 )
                 return response
@@ -464,9 +550,13 @@ def programme_item(
             return _html(request, context, status)
         if (
             _allowed(scope, task, write=True)
-            and context["selected"].private.item.lifecycle == "active"
+            and (
+                task == "withdrawal"
+                or context["selected"].private.item.lifecycle == "active"
+            )
+            and (task != "withdrawal" or context["withdrawal_choices"])
         ):
-            context["form"] = _FORMS[task](initial=_initial(context, task))
+            context["form"] = _form(context, task)
         return _html(request, context)
     except ProgrammeAuthorizationDeniedError:
         return _secure(HttpResponse("Programme page not found.", status=404))

@@ -15,6 +15,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- Extended the dormant Programme workspace with Department discussion, typed
+  readiness evidence, exact public-copy withdrawal and separate organizer/host
+  tasks. People can respond to their own invitations and draft, share or withdraw
+  purpose-owned availability using explicit edition-local times. No organizer
+  can impersonate a host; these adapters activate no profile or production route
+  and do not send invitation email (#108).
+
 - Added a dormant guided Programme item workspace with labelled item selection,
   organizer core creation, separated working/delivery/readiness/public-copy
   tasks and permission-scoped history. Forms retain original version and retry

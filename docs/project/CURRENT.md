@@ -59,6 +59,19 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 ## Active bounded outcome: guided departmental journey (#108)
 
 Branch: `codex/programme-item-decisions`, from protected PR #112.
+The second increment is local: independently authorized Department discussion,
+typed readiness sources, exact public-copy withdrawal and separate organizer /
+genuine-person hosting tasks. The existing owner commands remain authoritative;
+there are no new writers, migrations, profile pins or production routes.
+Final focused database-free HTTP/query/form feedback passed 218 cases in 2.13s;
+seven actual-asset frontend cases passed. Browser feedback corrected edition-zone
+display, made evidence outcomes explicit and clarified pending
+period removal. Final retained certification and the next protected PR remain
+pending; this is not PostgreSQL or full human acceptance.
+Four maintained native source/withdrawal and form-to-host-owner cases remain
+unexecuted #102 debt. See the
+[decision/hosting checkpoint](../checkpoints/2026-09-14-programme-decisions-and-hosting.md).
+
 The first dormant item-workspace increment is merged: complete
 labelled private inventory, organizer core creation, separate working/delivery/
 readiness applicability/public-copy forms, selected protected histories and
@@ -90,9 +103,9 @@ Current-profile manifests, production routing, writers and authority remain
 unchanged while these surfaces and the isolated fixture are developed.
 
 The inherited setup contract now acknowledges installed dormant Scheduling and
-accepted-item conversion. Remaining item controls (typed readiness evidence,
-discussion, withdrawal and hosting), guided intake/review/conversion, task
-continuations and setup are explicitly sequenced in #108. Keep #108 open
+accepted-item conversion. The local second increment completes the remaining item
+controls; guided intake/review/conversion, task continuations and setup are next
+in #108 after protected delivery. Keep #108 open
 through final gated promotion: its dormant fixture enables #109/#92 acceptance,
 not the other way around. #102 database restoration and #97 logical recovery
 remain prerequisites for final integrated acceptance and activation.

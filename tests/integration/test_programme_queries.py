@@ -38,6 +38,7 @@ from maru.programme.commands import (
     revise_programme_working,
 )
 from maru.programme.models import ProgrammeItem
+from maru.programme.public_copy_commands import withdraw_programme_public_rendition
 from maru.programme.queries import (
     PROGRAMME_QUERY_DELIVERY_HISTORY_FIELD_CEILING,
     PROGRAMME_QUERY_FIELD_CEILINGS,
@@ -73,6 +74,10 @@ from maru.programme.workbench_queries import (
     ProgrammeWorkbenchRequest,
     load_programme_workbench_inventory,
     load_programme_workbench_item,
+)
+from maru.programme.workbench_sources import (
+    list_programme_withdrawal_choices,
+    load_programme_evidence_source,
 )
 from tests.factories import AccountFactory, EventEditionFactory
 
@@ -1196,4 +1201,116 @@ def test_workbench_native_scope_and_audit_failure_release_no_partial_projection(
             operation="programme.query.workbench_item", outcome="allow"
         ).count()
         == before
+    )
+
+
+def test_workbench_typed_source_and_exact_withdrawal_use_real_owner_commands(
+    timetable_inventory,
+):
+    """Maintain native decision-source/withdrawal evidence as unexecuted #102 debt."""
+    common, item, _ = timetable_inventory
+    policy = common["authorizer"]
+    scope = ProgrammeWorkbenchRequest(
+        **{key: value for key, value in common.items() if key != "authorizer"}
+    )
+    references = {
+        layer: load_programme_evidence_source(
+            scope, item_id=item.id, layer=layer, authorizer=policy
+        )
+        for layer in ("working", "delivery", "public-copy")
+    }
+    assert all(references.values())
+    assert "PRIVATE" not in repr(references)
+    assert "Public Announcement" not in repr(references)
+    working = references["working"]
+    assert working.object_id == item.working_revisions.get(sequence=1).id
+    evidence = record_programme_readiness_evidence(
+        **common,
+        item_id=item.id,
+        concern="public_copy",
+        state="blocked",
+        source_code=working.code,
+        source_object_id=working.object_id,
+        source_version=working.version,
+        expected_version=item.aggregate_version,
+        evidence_note="Synthetic exact-source review remains blocked",
+        reason="Retain an attributable source decision",
+        idempotency_key=uuid4(),
+        source_channel="programme-workbench",
+    )
+    choices = list_programme_withdrawal_choices(
+        scope, item_id=item.id, authorizer=policy
+    )
+    assert len(choices) == 1
+    assert choices[0].title == "Public Announcement"
+    withdrawn = withdraw_programme_public_rendition(
+        **common,
+        item_id=item.id,
+        rendition_id=choices[0].rendition_id,
+        expected_version=evidence.resulting_item_version,
+        reason="Synthetic exact disclosure withdrawal",
+        idempotency_key=uuid4(),
+        source_channel="programme-workbench",
+    )
+    assert withdrawn.resulting_item_version == evidence.resulting_item_version
+    assert (
+        list_programme_withdrawal_choices(scope, item_id=item.id, authorizer=policy)
+        == ()
+    )
+    assert (
+        load_programme_evidence_source(
+            scope, item_id=item.id, layer="public-copy", authorizer=policy
+        )
+        is None
+    )
+    assert load_programme_public_copy(**common, item_id=item.id) is None
+    assert (
+        list_programme_public_copy_review_history(
+            **common, item_id=item.id, reason="Review retained synthetic withdrawal"
+        )[0].withdrawal_reason
+        == "Synthetic exact disclosure withdrawal"
+    )
+
+
+@pytest.mark.parametrize("kind", ["evidence", "withdrawal"])
+def test_workbench_decision_sources_deny_foreign_scope_and_failed_audit(
+    timetable_inventory, monkeypatch, kind
+):
+    """Maintain exact-scope/audit rollback for the added selection queries; not run."""
+    common, item, edition = timetable_inventory
+    policy = common["authorizer"]
+    scope = ProgrammeWorkbenchRequest(
+        **{key: value for key, value in common.items() if key != "authorizer"}
+    )
+
+    def read(request, **kwargs):
+        if kind == "withdrawal":
+            return list_programme_withdrawal_choices(request, item_id=item.id, **kwargs)
+        return load_programme_evidence_source(
+            request, item_id=item.id, layer="working", **kwargs
+        )
+
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        read(scope)
+    foreign_edition = EventEditionFactory(series=edition.series)
+    foreign = ProgrammeWorkbenchRequest(
+        scope.actor_id, scope.organization_id, foreign_edition.id, uuid4()
+    )
+    with pytest.raises(ProgrammeQueryUnavailableError):
+        read(foreign, authorizer=policy)
+    count = AuditEvent.objects.filter(
+        operation__startswith="programme.query.workbench_", outcome="allow"
+    ).count()
+
+    def unavailable(_record):
+        raise DatabaseError("Synthetic source-choice audit failure")
+
+    monkeypatch.setattr(programme_queries, "append_audit", unavailable)
+    with pytest.raises(DatabaseError):
+        read(scope, authorizer=policy)
+    assert (
+        AuditEvent.objects.filter(
+            operation__startswith="programme.query.workbench_", outcome="allow"
+        ).count()
+        == count
     )

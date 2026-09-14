@@ -36,6 +36,11 @@ from maru.programme.host_commands import (
     replace_programme_host_availability,
     respond_to_programme_host_invitation,
 )
+from maru.programme.host_forms import (
+    ProgrammeHostAvailabilityFormSet,
+    ProgrammeHostInvitationForm,
+    ProgrammeHostResponseForm,
+)
 from maru.programme.host_inputs import (
     ProgrammeHostAvailabilityInput,
     ProgrammeHostAvailabilityPeriod,
@@ -176,6 +181,110 @@ def test_explicit_invitation_confirmation_sharing_withdrawal(world):
     assert list(
         ProgrammeHostRevision.objects.values_list("period_count", flat=True)
     ) == [0, 0, 1, 0]
+
+
+def test_guided_forms_preserve_real_host_versions_and_local_minute_intent(world):
+    """Maintain native form-to-owner proof; execution remains deferred under #102."""
+    manager, person, common = world
+    form = ProgrammeHostInvitationForm(
+        data={
+            "expected_version": "1",
+            "idempotency_key": str(uuid4()),
+            "recipient_email": person.email,
+            "role": "host",
+            "title": "Explicit copy",
+            "briefing": "Deliberate host copy",
+            "reason": "Organizer retained reason",
+        }
+    )
+    assert form.is_valid(), form.errors
+    values = form.cleaned_data
+    invited = invite_programme_host(
+        **common,
+        actor_id=manager.id,
+        correlation_id=uuid4(),
+        idempotency_key=values["idempotency_key"],
+        reason=values["reason"],
+        invitation=ProgrammeHostInvitationInput(
+            person.id,
+            values["role"],
+            values["title"],
+            values["briefing"],
+            values["expected_version"],
+            0,
+        ),
+    )
+    response = ProgrammeHostResponseForm(
+        data={
+            "expected_item_version": str(invited.resulting_item_version),
+            "expected_host_version": str(invited.resulting_host_version),
+            "invitation_sequence": str(invited.invitation_sequence),
+            "idempotency_key": str(uuid4()),
+            "response": "confirm",
+        }
+    )
+    assert response.is_valid(), response.errors
+    values = response.cleaned_data
+    confirmed = respond_to_programme_host_invitation(
+        **common,
+        actor_id=person.id,
+        correlation_id=uuid4(),
+        idempotency_key=values["idempotency_key"],
+        response=ProgrammeHostResponseInput(
+            invited.host_id,
+            values["response"],
+            values["expected_item_version"],
+            values["expected_host_version"],
+            values["invitation_sequence"],
+        ),
+    )
+    periods = ProgrammeHostAvailabilityFormSet(
+        data={
+            "periods-TOTAL_FORMS": "2",
+            "periods-INITIAL_FORMS": "0",
+            "periods-0-starts_at": "2030-08-02T10:00",
+            "periods-0-ends_at": "2030-08-02T12:00",
+            "periods-0-kind": "preferred",
+            "periods-1-starts_at": "",
+            "periods-1-ends_at": "",
+            "periods-1-kind": "available",
+        },
+        prefix="periods",
+        form_kwargs={"zone_name": "Europe/Budapest"},
+    )
+    assert periods.is_valid(), periods.errors
+    intent = ProgrammeHostAvailabilityInput(
+        invited.host_id,
+        "shared",
+        tuple(
+            ProgrammeHostAvailabilityPeriod(
+                row["starts_at"], row["ends_at"], row["kind"]
+            )
+            for row in periods.cleaned_data
+            if row and not row.get("DELETE")
+        ),
+        confirmed.resulting_item_version,
+        confirmed.resulting_host_version,
+    )
+    replace_programme_host_availability(
+        **common,
+        actor_id=person.id,
+        correlation_id=uuid4(),
+        idempotency_key=uuid4(),
+        availability=intent,
+    )
+    window = ProgrammeHostAvailabilityWindow.objects.get(host_id=invited.host_id)
+    assert window.starts_at == datetime(2030, 8, 2, 8, tzinfo=UTC)
+    assert window.ends_at == datetime(2030, 8, 2, 10, tzinfo=UTC)
+    assert window.kind == "preferred"
+    with pytest.raises(ProgrammeVersionConflictError):
+        replace_programme_host_availability(
+            **common,
+            actor_id=person.id,
+            correlation_id=uuid4(),
+            idempotency_key=uuid4(),
+            availability=intent,
+        )
 
 
 def test_host_invitation_retry_returns_only_original_identifiers(world):

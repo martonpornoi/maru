@@ -19,7 +19,7 @@
   <p class="programme-boundary">Private preparation, readiness evidence, public-copy approval and timetable publication are separate decisions. None creates a host invitation or volunteer commitment.</p>
   {% if selected %}
   <p><a href="{{ root_url }}">Back to Programme items</a></p>
-  <nav aria-label="Selected item tasks"><ul class="programme-task-links">{% for code, label in links %}<li><a href="{{ root_url }}{{ selected.private.item.id }}/{{ code }}/"{% if code == task %} aria-current="page"{% endif %}>{{ label }}</a></li>{% endfor %}</ul></nav>
+  <nav aria-label="Selected item tasks"><ul class="programme-task-links">{% for code, label in links %}<li><a href="{{ root_url }}{{ selected.private.item.id }}/{{ code }}/"{% if code == task %} aria-current="page"{% endif %}>{{ label }}</a></li>{% endfor %}{% if host_url %}<li><a href="{{ host_url }}">Hosts</a></li>{% endif %}</ul></nav>
   <p>Item state: {{ selected.private.item.lifecycle }} · Version {{ selected.private.item.aggregate_version }} · {{ task_label }}</p>
   {% if task == "working" or task == "public-copy" %}
   <section class="baseline-panel" aria-labelledby="programme-working-heading"><h2 id="programme-working-heading">Current private working copy</h2>
@@ -33,12 +33,31 @@
     {% else %}<p>No delivery revision recorded. Absence is not confirmation that requirements are satisfied.</p>{% endif %}
   </section>
   {% endif %}
-  {% if task == "readiness" %}
+  {% if task == "readiness" or task == "evidence" %}
   <section aria-labelledby="programme-readiness-heading"><h2 id="programme-readiness-heading">Explainable readiness</h2>
     <p>Each concern stands alone. Required, stale, blocked and unavailable are not ready. Applicability decisions do not record satisfaction, confirm hosts or approve a release.</p>
     <ul class="programme-cards">{% for concern, label in readiness_cards %}<li><h3>{{ label }}</h3><p><strong>{{ concern.state }}</strong></p><p>Requirement version {{ concern.requirement_version }} · Dependency version {{ concern.dependency_version }}</p>
       {% if concern.source_code %}<p>Evidence source {{ concern.source_code }} · Source version {{ concern.source_version|default_if_none:"Not recorded" }}</p>{% endif %}
     </li>{% empty %}<li>No readiness concerns returned. This is not release approval.</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% if task == "evidence" %}
+  <section class="baseline-panel" aria-labelledby="programme-evidence-heading"><h2 id="programme-evidence-heading">Make an attributable evidence decision</h2>
+    <p>Select the concern, outcome and exact source deliberately. Source references are offered only for independently readable layers. Operator attestation is an explicit human statement, not an attached file, another person's consent or proof of availability.</p>
+    <p>The owner checks the configured requirement, dependency and source versions. New working, delivery, hosting or availability changes can make evidence stale. No readiness score or release approval is implied.</p>
+  </section>
+  {% endif %}
+  {% if task == "discussion" %}
+  <section aria-labelledby="programme-discussion-heading"><h2 id="programme-discussion-heading">Retained Department discussion</h2>
+    <p>The latest 200 entries are shown, newest first. This is bounded decision history, not a complete export or general chat. Entries and reasons stay private to this independently authorized layer.</p>
+    <ol class="programme-cards">{% for entry in discussion %}<li><h3>Entry {{ entry.sequence }}</h3><p class="programme-text">{{ entry.body }}</p><p><strong>Retained reason:</strong> {{ entry.reason }}</p><p>{{ entry.occurred_at }} · Item version {{ entry.item_version }} · Actor reference {{ entry.actor_id }}</p></li>{% empty %}<li>No Department discussion entries yet.</li>{% endfor %}</ol>
+  </section>
+  {% endif %}
+  {% if task == "withdrawal" %}
+  <section class="baseline-panel" aria-labelledby="programme-withdrawal-heading"><h2 id="programme-withdrawal-heading">Withdraw exact public-copy disclosure</h2>
+    <p>Choose one retained rendition, including older copy if necessary. Its title is historical review evidence, not proof of current publication. Withdrawal suppresses that exact copy wherever retained releases rely on it. This does not replace the timetable and does not restore earlier copy.</p>
+    <p>This privacy action remains available after planning closes and for retired items. An exact reason and confirmation are required; the owner checks current person, authority, source, item version and retry identity.</p>
+    {% if not withdrawal_choices %}<p>No not-yet-withdrawn renditions are available. No new withdrawal can be submitted.</p>{% endif %}
   </section>
   {% endif %}
   {% if task == "public-copy" %}

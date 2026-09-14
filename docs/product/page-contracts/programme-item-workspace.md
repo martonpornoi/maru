@@ -50,8 +50,31 @@ is explicit; private copy is never automatically copied into public fields.
 Readiness configuration is not evidence of satisfaction. Public-copy approval
 is not timetable publication; Ready/Live approval retains the existing independent
 reviewer rule. Historical withdrawals must not expose an older rendition as current.
-Readiness evidence, discussion and withdrawal controls remain subsequent connected
-work, not implied by these forms.
+The next #108 increment adds three independently selected decisions. Department
+discussion requires `programme.view_discussion`/`discussion_entries`, lists the
+latest 200 retained entries and appends through `programme.manage_items`; it is
+not general chat. Evidence requires readiness read/write authority and an explicit
+concern, state, note and source choice. Operator attestation has no object source;
+working, delivery and available public-rendition references are offered only after
+their independent source-layer read authorization. Choices name exact sequences,
+not raw UUID-entry tasks. Sources are never silently advanced on a refused POST;
+an expired choice remains a rejected original intent, not a newly bound command.
+Existing dependency/version validation and actual host facts remain authoritative.
+
+Public-copy withdrawal uses separately authorized private review-history labels
+and an exact retained rendition, never an implicit latest selection. It requires
+`programme.approve_public_copy`, a current genuine person and retained reason.
+Explain that disclosure of the selected rendition, including retained releases,
+is withdrawn without replacing the timetable or falling back to older copy.
+This privacy exit remains available for retained/retired items and Closing/Archived
+editions; ordinary planning lifecycle checks must not hide or block it. The owner
+still fences exact item version, scope, idempotency and existing withdrawal state.
+Do not offer already withdrawn renditions as new withdrawal targets.
+
+Organizer hosting and genuine-person hosting/availability use the separate
+[hosting page contract](programme-host-workspace.md) in the same #108 increment, not private-item permission
+as a substitute for person-owned authority. These decisions are not yet delivered
+by PR #112; their implementation and evidence must be recorded separately.
 
 CSRF-protected POST carries one closed form, the originally displayed version,
 one retry key and a retained reason. Reject unknown/duplicate fields, files and
