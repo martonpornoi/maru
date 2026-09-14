@@ -62,6 +62,9 @@ def shell():
 
 @pytest.fixture
 def page(monkeypatch):
+    monkeypatch.setattr(
+        views, "can_manage_programme_review_cases", Mock(return_value=False)
+    )
     source = Mock(return_value=context())
     calls = Mock(
         return_value=queries.ReviewSetupCallPage((context().call,), UUID(int=20))
@@ -115,11 +118,26 @@ def hidden(response):
     }
 
 
+def test_case_manager_navigation_is_separate_and_revocation_discards_setup(
+    page, monkeypatch
+):
+    admission = Mock(return_value=True)
+    monkeypatch.setattr(views, "can_manage_programme_review_cases", admission)
+    assert soup(request(call=False)).find(
+        "a", string="Manage review cases and named reviewers"
+    )
+    admission.side_effect = [True, False]
+    response = request(call=False)
+    assert response.status_code == 404
+    assert b"Synthetic" not in response.content
+
+
 def test_call_discovery_is_labelled_bounded_and_independently_authorized(page):
     response = request(call=False)
     assert response.status_code == 200
     html = soup(response)
     assert len(html.find_all("h1")) == len(html.find_all("main")) == 1
+    assert not html.find("a", string="Manage review cases and named reviewers")
     assert html.find("script", string="attack") is None
     assert html.find("a", string="Next page of calls")["href"].endswith(
         f"?after={UUID(int=20)}"

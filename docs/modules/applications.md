@@ -335,8 +335,11 @@ adds reserved manager call discovery, explicit structured policy composition and
 immutable policy history. Its independent `review_setup` field ceiling exposes
 configuration only, never submission answers or private review evidence. Unsaved
 stage/template changes make no database record; final confirmation uses the
-existing append-only owner command. The selected-seal case guard is maintained
-now; case-opening and independent organizer review/conversion tasks remain #108.
+existing append-only owner command. Exact-seal selection and case opening now
+connect to separately authorized [named-reviewer management](../product/page-contracts/programme-review-management.md):
+complete retained rosters, known-email preview and exact-person confirmation or
+reasoned removal. Assignment grants no review capability or content access.
+Independent reviewer/moderator/decision/conversion tasks remain #108.
 
 The [personal decision workspace](../product/page-contracts/programme-decision-receipts.md)
 adds reserved unmounted history and exact-message tasks with explicit own receipt.

@@ -10,6 +10,7 @@
   <h1>Open a Programme review case</h1>
   <details class="maru-access-summary"><summary><strong>Access</strong> · Exact Department review manager</summary><p>Only source references and configured policy are shown. No answers, contributor identities, scores or private case evidence are disclosed. Review, moderation, decision and assignment tasks require their own authority.</p><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}.</p></details>
   <nav aria-label="Review tasks"><a href="{{ root_url }}">Choose a call</a> · <a href="{{ root_url }}{{ source.call.call_id }}/policies/{{ policy.version }}/">Inspect policy version {{ policy.version }}</a> · <a href="{{ intake_url }}">Choose a submitted revision</a></nav>
+  {% if can_manage %}<p><a href="{{ root_url }}cases/">Manage review cases and named reviewers</a>{% if result %} · <a href="{{ root_url }}cases/{{ result.case_id }}/">Inspect this case and assign reviewers</a>{% endif %}</p>{% endif %}
   <h2>{{ source.call.name }}</h2><p>{{ source.call.code }} · Policy version {{ policy.version }} · Definition version {{ source.call.definition_version }}</p>
   {% if not source.writable %}<p>Planning is closed. Existing source metadata remains readable; no fresh case may be opened.</p>{% endif %}
   {% if page %}

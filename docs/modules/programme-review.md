@@ -67,11 +67,38 @@ Policy changes affect only deliberately opened future cases.
 canonical writer checks it under existing locks and includes it in the existing
 command digest. A newer seal conflicts instead of being silently substituted.
 Trusted current-seal callers may retain None; command fields and absent-reference
-digest shape remain unchanged for historical retry receipts. The next browser
-case-opening increment must require this proof. Case selection, named assignment,
-reviewer/moderator/decider work and accepted conversion remain #108 continuations.
+digest shape remain unchanged for historical retry receipts. The dormant browser
+case-opening task requires this proof and connects to separate named assignment
+management. Reviewer/moderator/decider work and accepted conversion remain #108
+continuations.
 
 ## Roles and transitions
+
+The dormant [named-reviewer management task](../product/page-contracts/programme-review-management.md)
+connects setup and case-opening receipts to independently admitted manager
+context. `list_programme_review_management_cases` supplies content-free call,
+seal, policy and stage labels with an exclusive UUID cursor; the exact getter
+returns every retained assignment across up to eight stages and sixteen people
+per stage, including removed/recused rows. Overflow fails closed instead of
+silently dropping history. Only already-scoped person IDs reach Identity's
+active-verified-person label projection; unavailable people use a neutral label.
+Neither API returns answers, scores, contact details or private rationale.
+
+Known-email preview uses `prepare_programme_reviewer_selection`, after exact
+`review_context` manager and case admission. Identity owns normalization; all
+unusable/unsuitable selections share one empty response and audit precedes label
+release. The purpose-signed identifier-only selection binds actor, tenant,
+edition, Department, case, person, original case version and retry key. It grants
+no authority. `read_programme_reviewer_selection` reauthorizes the retained case
+and refreshes only its minimized label, never the email lookup or original intent.
+Its neutral inactive-person result does not preempt canonical receipt replay.
+Ordinary confirmed forms call the unchanged assignment/removal owner command;
+they send no invitation/email and grant no review access. Pending/active historical
+stage assignments may be removed late where the canonical source/planning guards
+allow it. Navigation checks `review_setup` and `review_context` independently and
+checks projection/admission again before and after rendering. See the recovery
+runbook for signing-key rotation and uncertain-intent handling. Content review,
+moderation, final decisions and accepted conversion remain separate #108 tasks.
 
 Every staff purpose also requires an active verified person, exact organization
 and edition, current owner Department, and current policy/field proof.

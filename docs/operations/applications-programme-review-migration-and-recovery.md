@@ -1,5 +1,25 @@
 # Programme review migration and recovery
 
+## Retained named-reviewer selections
+
+The dormant manager forms use Django purpose signing for identifier-only named
+selection integrity, not authority or a new credential. Preserve configured
+`SECRET_KEY_FALLBACKS` during ordinary key rotation when in-flight selections
+must remain recoverable. The original selection has no arbitrary age cutoff:
+current manager/object/field authority and canonical writer rules still apply.
+Do not log or copy raw selections into issue reports, analytics or support logs.
+They contain scoped person IDs, not email addresses or cached names.
+
+After an uncertain assignment/removal response, retain the original page and
+inspect the independently authorized roster. Retry the exact original intent
+to recover its canonical receipt; never silently refresh the case version, person
+or retry key. Changed email or an unusable selected person does not rebase the
+request. If signing keys are lost, validation must remain closed: a failed
+signature is not evidence that the mutation failed. Inspect current relationships
+and owner receipts before deliberately creating a different intent. No database
+migration or privilege change accompanies this surface; it can remain unmounted
+without deleting retained assignment evidence. Full native recovery remains #102.
+
 Owner: Applications; [ADR 0085](../architecture/decisions/0085-exact-revision-programme-review-and-decisions.md),
 PRG-003/PRG-004, issue [#71](https://github.com/martonpornoi/maru/issues/71).
 This is dormant infrastructure, not a production rollout or profile activation.

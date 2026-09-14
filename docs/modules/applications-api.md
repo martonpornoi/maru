@@ -1,5 +1,19 @@
 # Applications API contract
 
+The dormant [named-reviewer management forms](../product/page-contracts/programme-review-management.md)
+reserve `cases/`, `cases/{case_id}/`, `cases/{case_id}/assign/` and
+`cases/{case_id}/assignments/{assignment_id}/remove/` beneath the exact Department
+review root. They are not mounted production or generic REST endpoints. Every
+request requires `applications.manage_programme_review` with only `review_context`;
+setup links independently require `review_setup`. GET is read-only. Closed POST
+actions preview one known email, confirm one signed original person selection,
+or remove one URL-bound assignment. Final changes require original strict case
+version, retry UUID, bounded reason and explicit confirmation, using unchanged
+`REVIEWER_ASSIGNED`/`REVIEWER_REMOVED` owner commands. Unknown/duplicate inputs and
+files fail closed. Conflict/service failures preserve intent when fresh reads
+remain safe; read/audit failure releases no cached roster or selected-person label.
+No invitation, permission grant, new schema or JSON adapter is added.
+
 Status: mounted versioned adapter contract
 Last updated: 2026-09-14
 

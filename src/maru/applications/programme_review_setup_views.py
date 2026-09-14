@@ -32,6 +32,7 @@ from .programme_review_authorization import (
 )
 from .programme_review_commands import apply_programme_review_command
 from .programme_review_inputs import MAX_REVIEW_STAGES, ProgrammeReviewCommandInput
+from .programme_review_management_views import can_manage_programme_review_cases
 from .programme_review_queries import ProgrammeReviewReadRequest
 from .programme_review_rules import ProgrammeReviewUnavailableError
 from .programme_review_setup_forms import (
@@ -115,6 +116,7 @@ def _html(
     status: int = 200,
 ) -> HttpResponse:
     verify()
+    can_manage = can_manage_programme_review_cases(scope)
     nonce = token_urlsafe(32)
     shell = dict(admin.site.each_context(request))
     shell.update(
@@ -122,6 +124,7 @@ def _html(
         maru_csp_nonce=nonce,
         title="Programme review setup",
         root_url=_root(scope),
+        can_manage=can_manage,
         organization_id=scope.organization_id,
         edition_id=scope.edition_id,
         department_id=scope.department_id,
@@ -133,6 +136,8 @@ def _html(
     if len(content.encode("utf-8")) > 8 * 1024 * 1024:
         raise ProgrammeReviewUnavailableError
     verify()
+    if can_manage_programme_review_cases(scope) != can_manage:
+        raise Denied
     return _secure(HttpResponse(content, status=status), nonce)
 
 

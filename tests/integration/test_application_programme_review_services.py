@@ -36,6 +36,10 @@ from maru.applications.programme_review_intake_queries import (
     get_programme_review_intake_seal,
     list_programme_review_intake_seals,
 )
+from maru.applications.programme_review_management_queries import (
+    get_programme_review_management,
+    list_programme_review_management_cases,
+)
 from maru.applications.programme_review_queries import (
     get_programme_review_detail,
     get_self_programme_decision,
@@ -47,6 +51,10 @@ from maru.applications.programme_review_setup_queries import (
     get_programme_review_setup,
     get_programme_review_setup_policy,
     list_programme_review_setup_calls,
+)
+from maru.applications.programme_reviewer_selection import (
+    prepare_programme_reviewer_selection,
+    read_programme_reviewer_selection,
 )
 from tests.integration.test_application_programme_services import (
     _AUTHORIZER,
@@ -60,6 +68,141 @@ pytestmark = [
     pytest.mark.integration,
     pytest.mark.usefixtures(_admit_future_programme_effects.__name__),
 ]
+
+
+def test_named_manager_selection_preserves_person_after_email_change_and_late_removal():
+    """Maintain native exact-person, complete roster and old-receipt acceptance debt."""
+    world = create_review_world(with_collaborator=True)
+    request = world.read(
+        world.call.manager.id, MANAGE_REVIEW, fields=frozenset({"review_context"})
+    )
+    common = {"request": request, "case_id": world.case_id, "authorizer": _AUTHORIZER}
+    for person in (world.call.manager, world.lead, world.collaborator):
+        assert person is not None
+        assert (
+            prepare_programme_reviewer_selection(
+                **common,
+                email=person.email,
+                expected_version=world.version,
+                retry_key=uuid4(),
+            )
+            is None
+        )
+    original_version, retry = world.version, uuid4()
+    selected = prepare_programme_reviewer_selection(
+        **common,
+        email=world.reviewer.email,
+        expected_version=original_version,
+        retry_key=retry,
+    )
+    assert selected is not None
+    world.reviewer.email = "changed-reviewer@maru.invalid"
+    world.reviewer.save(update_fields=("email",))
+    retained = read_programme_reviewer_selection(
+        **common,
+        token=selected.token,
+        expected_version=original_version,
+        retry_key=retry,
+    )
+    assert retained.account_id == world.reviewer.id
+    command = ProgrammeReviewCommandInput(
+        ProgrammeReviewAction.REVIEWER_ASSIGNED,
+        world.case_id,
+        reference_id=retained.account_id,
+    )
+    assigned = world.command(
+        world.call.manager.id,
+        command,
+        expected_version=original_version,
+        retry_key=retry,
+    )
+    assert (
+        list_programme_review_management_cases(
+            request=request, authorizer=_AUTHORIZER, limit=1
+        )
+        .items[0]
+        .case_id
+        == world.case_id
+    )
+    context = get_programme_review_management(**common)
+    assert [(row.account_id, row.state) for row in context.assignments] == [
+        (world.reviewer.id, "pending")
+    ]
+    assert not hasattr(context, "answers")
+    world.command(
+        world.reviewer.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.CONFLICT_CLEARED,
+            world.case_id,
+            reference_id=assigned.target_id,
+        ),
+    )
+    world.command(
+        world.reviewer.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.SCORED,
+            world.case_id,
+            reference_id=assigned.target_id,
+            scores=(("fit", 4),),
+        ),
+    )
+    assign_and_score(world, world.peer.id)
+    world.command(
+        world.moderator.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.MODERATED,
+            world.case_id,
+        ),
+    )
+    world.command(
+        world.decider.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.DECIDED,
+            world.case_id,
+            outcome="accepted",
+            text="Synthetic accepted decision for late removal evidence.",
+        ),
+    )
+    removal = world.command(
+        world.call.manager.id,
+        ProgrammeReviewCommandInput(
+            ProgrammeReviewAction.REVIEWER_REMOVED,
+            world.case_id,
+            reference_id=assigned.target_id,
+        ),
+    )
+    context = get_programme_review_management(**common)
+    assert len(context.assignments) == 2
+    assert (
+        next(
+            row for row in context.assignments if row.account_id == world.reviewer.id
+        ).state
+        == "removed"
+    )
+    world.reviewer.is_active = False
+    world.reviewer.save(update_fields=("is_active",))
+    retained = read_programme_reviewer_selection(
+        **common,
+        token=selected.token,
+        expected_version=original_version,
+        retry_key=retry,
+    )
+    assert retained.account_id == world.reviewer.id
+    assert not retained.person_current
+    assert retained.display_label == "Unavailable person"
+    replay = world.command(
+        world.call.manager.id,
+        command,
+        expected_version=original_version,
+        retry_key=retry,
+    )
+    assert replay.replayed
+    assert replay.receipt_id == assigned.receipt_id
+    assert world.version == removal.version
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        get_programme_review_management(
+            **(common | {"request": replace(request, department_id=uuid4())})
+        )
 
 
 def test_case_intake_filters_conflicts_and_retains_original_opening_replay():

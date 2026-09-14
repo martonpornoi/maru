@@ -51,6 +51,7 @@ contract for the surface being changed, and compare its status with the
 - [Programme host workspace](programme-host-workspace.md)
 - [My Programme decisions and receipts](programme-decision-receipts.md)
 - [Programme review setup](programme-review-setup.md)
+- [Named Programme reviewer management](programme-review-management.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}

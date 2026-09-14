@@ -49,6 +49,9 @@ def selection(**changes):
 
 @pytest.fixture
 def page(monkeypatch):
+    monkeypatch.setattr(
+        views, "can_manage_programme_review_cases", Mock(return_value=False)
+    )
     setup_page = _setup_page.__wrapped__(monkeypatch)
     selected = Mock(return_value=selection())
     seals = Mock(
@@ -95,6 +98,7 @@ def test_source_chooser_is_labelled_paged_audited_and_content_free(page):
     assert response.status_code == 200
     html = soup(response)
     assert len(html.find_all("h1")) == len(html.find_all("main")) == 1
+    assert not html.find("a", string="Manage review cases and named reviewers")
     assert html.find("script", string="attack") is None
     assert html.find("a", string="Submitted revision 3")["href"].endswith(
         f"/policies/3/cases/{UUID(int=40)}/"
@@ -132,6 +136,24 @@ def test_explicit_selection_confirms_only_canonical_exact_source_and_policy(page
     assert kwargs["reason"] == proof()["reason"]
     assert kwargs["department_id"] == UUID(int=4)
     assert kwargs["source_channel"] == "programme-review-intake"
+
+
+def test_case_receipt_links_to_independently_admitted_manager_and_rechecks(
+    page, monkeypatch
+):
+    admission = Mock(return_value=True)
+    monkeypatch.setattr(views, "can_manage_programme_review_cases", admission)
+    response = request("post", proof())
+    assert response.status_code == 200
+    assert (
+        soup(response)
+        .find("a", string="Inspect this case and assign reviewers")["href"]
+        .endswith(f"/cases/{UUID(int=51)}/")
+    )
+    admission.side_effect = [True, False]
+    response = request()
+    assert response.status_code == 404
+    assert b"Synthetic" not in response.content
 
 
 @pytest.mark.parametrize(

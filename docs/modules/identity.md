@@ -89,7 +89,12 @@ registrants, volunteers, onboarding subjects, or workforce assignees.
 - `resolve_active_verified_person_reference_by_email(email, lock=False)`, the
   purpose-limited exact-email resolver that returns only an identifier reference
   for an active, verified person and collapses invalid input, unknown addresses,
-  and unusable account states to the same empty result;
+  and unusable account states to the same empty result. In addition to existing
+  invitation callers, independently authorized Programme review managers may
+  use it for one known-email named-assignment preview after exact case/field
+  admission. Applications audits the selection and binds final confirmation to
+  the original person, not a fresh mutable-email lookup. This permits no prefix
+  search, directory, contact disclosure or implicit reviewer capability;
 - `create_platform_account_invitation(...)`,
   `reissue_platform_account_invitation(...)`,
   `revoke_platform_account_invitation(...)`, and
