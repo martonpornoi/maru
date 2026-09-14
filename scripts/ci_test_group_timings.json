@@ -27,7 +27,6 @@
   "tests/integration/test_application_programme_import_services.py::current": 71.615,
   "tests/integration/test_application_programme_integrity_migrations.py::current": 105.026,
   "tests/integration/test_application_programme_legacy_seams.py::current": 53.191,
-  "tests/integration/test_application_programme_review_intake.py::current": 300.0,
   "tests/integration/test_application_programme_review_integrity.py::current": 76.78,
   "tests/integration/test_application_programme_review_migrations.py::current": 5.489,
   "tests/integration/test_application_programme_review_migrations.py::test_empty_review_schema_reverses_and_installs_the_actual_final_guards": 304.366,

@@ -193,13 +193,13 @@ seal/policy. Confirmation requires reason, version zero and original retry proof
 No answer, contributor directory or case evidence is disclosed. Named assignment
 and separately authorized review/moderation/decision/conversion remain next.
 
-All 6,788 database-free units pass in 40.78s with three existing URLField warnings;
+All 6,788 database-free units pass in 40.65s with three existing URLField warnings;
 focused fast acceptance passes 53 cases. Typing, Ruff, NumPy and semantic Python
-documentation pass. The first full preflight passed 6,787 with one timing-inventory mismatch for the new
-maintained native file. The file/group maps now record a provisional 300-second
-scheduling estimate, not measured runtime, acceptance or guaranteed headroom;
-#102 must calibrate it when native execution resumes. No PostgreSQL suite was
-collected or run. Synthetic actual-form browser rehearsal observed policy/source
+documentation pass. An initial new native file exposed a timing-inventory
+mismatch. Its scenario now extends the existing review-services file: no invented
+weights or timing-map changes. An initial certification was intentionally stopped
+before completion to correct that ADR 0100 policy conflict; it issued no receipt.
+No PostgreSQL suite was collected or run. Synthetic actual-form browser rehearsal observed policy/source
 selection, explicit confirmation/receipt, read-only and generic denial at 1280
 CSS pixels, with one H1/main and no overflow. Task-owned tabs/server are stopped.
 Full human checks remain #92; exact clean-commit and hosted acceptance are pending.

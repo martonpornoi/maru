@@ -41,14 +41,17 @@ existing immutable owner receipts and recovery rules remain mandatory.
   including exact scope, pre-pagination filters, canonical proof, unchanged
   retry after lifecycle changes, validation, duplicate/unknown/file input,
   CSRF, safe errors, read-only states and before/after-render revocation.
-- Complete Ruff and formatting checks pass (1,187 Python files); focused strict
+- Complete Ruff and formatting checks pass (1,186 Python files); focused strict
   typing passes for both new source modules. Documentation validation passes
   513 Markdown files/four repository skills/215 stable requirement IDs; semantic
   Python documentation passes 639 sources.
 - First full unit preflight: 6,787 passed and one timing-inventory mismatch for
-  the new native file. Registered its file/current-schema group with a provisional
-  300-second scheduling weight. This is not a measurement or guaranteed upper
-  bound; #102 must calibrate it. Existing measured weights were not reduced.
+  a new native file. An initial provisional weight conflicted with ADR 0100's
+  prohibition on invented unexecuted timings. Certification was intentionally
+  stopped during Sphinx, without a receipt. The entire native scenario now
+  extends the existing review-services file; both timing maps are unchanged.
+  No test was removed and no prior timing was altered. #102 retains measurement
+  and exhaustive acceptance debt.
 - Early focused tests corrected an imported fixture registration, HTML textarea
   newline expectation and production admin catch-all/header assumptions. The
   source behavior was not weakened to satisfy these tests.
@@ -65,7 +68,7 @@ existing immutable owner receipts and recovery rules remain mandatory.
   Full widths, native zoom, keyboard, screen reader, reduced motion, independent
   real roles and integrated recovery remain unchecked #92 acceptance.
 
-Final inexpensive preflight passes all 6,788 units in 40.78s, with three existing
+Final corrected inexpensive preflight passes all 6,788 units in 40.65s, with three existing
 URLField warnings. Focused NumPy documentation also passes. Exact clean-commit
 certification and protected hosted delivery are pending at this implementation checkpoint. No earlier
 receipt certifies this candidate. PostgreSQL was neither collected nor executed.
