@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant exact-person host invitation previews and recoverable confirmation.
+  Original retries keep their selected person after email changes and can return
+  an original receipt without private roster access. No invitation email, account,
+  hosting consent, production route or profile activation is inferred.
+
 - Added dormant guided accepted-Programme conversion: labelled exact source
   selection, deliberate private copy and confirmation, preserved two-version
   retry intent and independently authorized item continuation. Original receipts

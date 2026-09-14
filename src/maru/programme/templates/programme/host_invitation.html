@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Exact Programme host invitation · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'programme/workbench.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Administration / Programme / Exact host invitation</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench">
+  <h1>Exact Programme host invitation</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Separate hosting and private-read authority</summary><p>Organization {{ organization_id }} · Edition {{ edition_id }}.</p><p>Fresh selection requires current private-item, roster and host-management authority. An original receipt requires current actor, tenant and adoption admission, and grants no roster content or hosting agreement.</p></details>
+  {% if receipt %}
+    <div role="status"><h2>Invitation recording confirmed</h2><p>{% if receipt.replayed %}The original invitation receipt was recovered; no new invitation was created.{% else %}The invitation was recorded for the exact selected person.{% endif %}</p><p>Original item version {{ receipt.resulting_item_version }} · Original hosting version {{ receipt.resulting_host_version }} · Invitation sequence {{ receipt.invitation_sequence }}.</p><p>These are original result versions, not current hosting state. Recording is not email delivery or the person's confirmation.</p><details><summary>Original receipt references</summary><p>Receipt {{ receipt.receipt_id }} · Item {{ receipt.item_id }} · Hosting {{ receipt.host_id }} · Revision {{ receipt.revision_id }}.</p></details></div>
+    {% if roster_link %}<p><a href="{{ roster_link }}">Open the independently authorized host roster</a></p>{% else %}<p>No private roster continuation is currently available under your independent read authority. Keep the receipt; do not create another invitation to obtain access.</p>{% endif %}
+  {% else %}
+    <h2>{{ item_title }}</h2><p>Current item version {{ roster.item_version }} · {{ item_state }}.</p><p><a href="{{ root_url }}">Back to the host roster</a></p>
+    <p>Use one known person's exact verified login address and deliberate host-visible copy. Preview selects a person; it creates no account, invitation or email. Private working or review prose is not copied.</p>
+    {% if preview %}<section class="baseline-panel"><h2>Exact selected-person preview</h2><p>Supplied address: {{ preview.intent.recipient_email }}. An existing active verified person was resolved when this preview was prepared. Later address changes do not retarget this original confirmation.</p><details><summary>Exact selected person reference</summary><p>{{ preview.person_id }}</p></details><h3>Host-visible invitation</h3><p>{{ preview.intent.role }} · {{ preview.intent.title }}</p><p class="programme-text">{{ preview.intent.briefing|default:"No additional briefing." }}</p><h3>Private organizer rationale — not shown to the invitee</h3><p class="programme-text">{{ preview.intent.reason }}</p><p>Review the exact selection and copy, then confirm below. Editing any intent requires a new preview.</p></section>{% endif %}
+    {% if form %}
+      <section class="baseline-panel"><h2>{% if confirmation %}Confirm the exact original selection{% else %}Prepare a known person selection{% endif %}</h2>
+      {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this invitation request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+      {% if pending %}<p>Keep the original selection proof, version, retry and entered values after uncertainty. Missing proof is not permission to rebuild the old person from email or invent a successful receipt.</p>{% endif %}
+      <p data-programme-dirty role="status" hidden>Unsaved hosting input. Leaving discards it; nothing is saved automatically.</p>
+      <form method="post" action="{{ request.path }}" data-programme-command{% if pending %} data-programme-pending="true"{% endif %}>{% csrf_token %}{{ form.as_div }}
+        <p>Original item version {{ form.expected_version.value }}. Neither version nor retry is refreshed automatically after refusal.</p>
+        {% if confirmation %}<button type="submit" name="action" value="confirm">Confirm exact person and invitation</button><button type="submit" name="action" value="preview" formnovalidate>Prepare a new selection preview</button>{% else %}<button type="submit" name="action" value="preview">Preview exact person and invitation</button>{% endif %}
+      </form></section>
+    {% else %}<p>No fresh invitation controls are available for this item and current state.</p>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

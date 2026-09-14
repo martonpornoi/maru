@@ -2,6 +2,7 @@
 
 from django.urls import path
 
+from .host_invitation_views import programme_host_invitation
 from .host_personal_views import personal_programme_hosts
 from .host_views import programme_hosts
 
@@ -12,6 +13,11 @@ _PERSONAL = "my/programme/hosting/<uuid:organization_id>/<uuid:edition_id>/"
 
 urlpatterns = [
     path(_ORGANIZER, programme_hosts, name="programme-hosts"),
+    path(
+        _ORGANIZER + "invite/",
+        programme_host_invitation,
+        name="programme-host-invitation",
+    ),
     path(_ORGANIZER + "<slug:task>/", programme_hosts, name="programme-host-task"),
     path(
         _ORGANIZER + "host/<uuid:host_id>/<slug:task>/",

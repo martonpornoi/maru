@@ -1330,6 +1330,13 @@ architecture documents, implementation issues, tests, and release notes.
   after failure, and historical acceptance never implies current eligibility.
   Programme hosting requires an explicit reasoned invitation to one exact
   item/person as host or co-host, followed by that person's own confirmation.
+  Guided invitation preparation resolves a known address once, pins the exact
+  selected person and original normalized intent before explicit confirmation,
+  and never resolves a mutable address again to reconstruct an original retry.
+  Retained receipt recovery precedes fresh private roster/person reads and
+  grants no new content access; any continuation independently proves its
+  current authority. Missing selection proof cannot justify silent retargeting,
+  a replaced retry key or a fabricated success.
   Organizer-created items use the same relationship without invented proposal
   evidence. Only the invitee responds; a confirmed host may withdraw without a
   private explanation, and an authorized organizer may remove with a retained

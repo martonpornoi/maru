@@ -34,6 +34,23 @@ field grants; version-coherent compositions fail unavailable rather than combine
 stale labels with a newer relationship. The personal inventory and invitation
 pages never query organizer working copy, roster or rationale.
 
+The initial invitation adapter prepares an exact-person preview before any
+invitation command. `host_invitation_preview` uses current manager admission,
+an edition lock and a minimized required query audit. A positive selection
+is returned only after that audit; an empty address match is also reauthorized
+and audited before validation guidance, without retaining the entered address.
+The purpose-signed proof contains only the selected person identifier and a
+digest binding actor, tenant,
+item, original item version/retry, supplied selector and deliberate copy/reason.
+The confirmation adapter verifies that proof without resolving email again and
+calls the unchanged owner command before fresh private/roster reads. A changed
+or reassigned address therefore cannot retarget the original confirmation.
+Original receipt recovery needs current actor/tenant/adoption admission, not
+renewed manager authority; optional roster navigation requires an independent
+current audited read and can disappear without hiding the receipt. Preview is
+neither permission nor invitation, and confirmation is not the person's consent.
+Reinvitation continues to use its exact retained roster person.
+
 Native date/minute fields explicitly use the Events edition zone, rejecting
 missing/repeated DST minutes. A bounded formset replaces up to 128 periods for
 one purpose. Original item/host/invitation/edition versions and retry identity

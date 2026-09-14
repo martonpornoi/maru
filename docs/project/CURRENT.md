@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-14
+Last updated: 2026-09-15
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -10,6 +10,20 @@ the [production ledger](PRODUCTION_CONSOLIDATION.md) retains the baseline,
 and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
+
+#108's guided exact accepted-item conversion is delivered through
+[PR #127](https://github.com/martonpornoi/maru/pull/127), protected squash
+`33d8391315dbbf8cdacd1daac557c55b9f901c33` at 2026-09-14 21:59:11 UTC.
+Its tree equals certified head `63d3d5d32285564cc4b5cc654db6bdcf46a5699b`;
+clean main and origin/main match. All eight retained local gates passed in
+17m39s (7,229 units in 43.83s). Hosted units passed in 68.87s, 85 frontend cases
+passed, quality took 27m30s, documentation 25m28s and workflow 28m02s. Exact-head
+PR gate and CodeQL passed without canonical/hosted repair or rerun. The observed
+2m30s quality margin is not guaranteed; #113 retains the risk. No schema, writer,
+profile, production route or CI policy changed. Native #102 and human #92 debt
+remain explicit. See the [protected conversion checkpoint](../checkpoints/2026-09-14-programme-guided-conversion-protected-delivery.md).
+
+### Preceding decision delivery
 
 #108's independent decision composition is delivered through
 [PR #126](https://github.com/martonpornoi/maru/pull/126), protected squash
@@ -259,8 +273,38 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-accepted-conversion`, from protected PR #126.
-Candidate: exact effective accepted-item conversion and independently admitted
+Branch: `codex/programme-host-invitation-recovery`, from protected PR #127.
+Candidate implemented: exact-person invitation preview and explicit confirmation
+preserve the original signed selection across email changes. Canonical recovery
+precedes fresh private/roster reads; optional navigation has independent current
+read admission. Missing proof requires safe history inspection/new selection,
+not silent retargeting. Reinvitation, canonical writers, schema, profiles and
+production routes are unchanged.
+
+Preflight: 7,279 units passed in 56.50s with three existing URLField warnings.
+After two final render-revocation cases, 135 focused host tests passed in 1.81s.
+Focused typing, Ruff, NumPy and semantic docstrings passed. Actual-form synthetic
+browser rehearsal covered blank input, exact preview, focused stale recovery,
+minimal replay without roster authority and denial at 1280 CSS pixels, with one
+H1/main and no overflow. The existing native host scenario is maintained but
+unexecuted #102 debt; genuine human acceptance remains #92. Clean exact-commit
+certification for the original `145d46d` candidate passed all eight gates in
+18m31s (7,281 units in 44.12s, 85 frontend tests). PR #128 was opened; hosted
+units and CodeQL passed, but its quality run was deliberately cancelled during
+review repair, not accepted or merged. Final review found empty address matches
+needed the same required audit as positive selection. The repair returns only
+audited empty results, adds negative-audit regression cases, and requires a new
+clean exact-commit certification and fresh hosted acceptance. Original evidence
+is preserved separately and does not certify the repair. The repair preflight
+passed 7,284 units in 44.35s and 138 focused cases in 1.86s; static and document
+checks passed. See the [empty-selection audit repair](../checkpoints/2026-09-15-programme-host-empty-selection-audit.md) and the
+[host recovery checkpoint](../checkpoints/2026-09-15-programme-host-invitation-recovery.md).
+Next: protected delivery, then remaining #108 structured selectors/viewers,
+workflow connections and accountable setup. #102/#97/#109/#92 remain final gates.
+
+### Preceding conversion candidate evidence
+
+Delivered: exact effective accepted-item conversion and independently admitted
 Programme-item continuation. Minimal scoped acceptance labels and canonical
 eligibility are separate from Programme's manage-only creation cursor. Deliberate
 private title/summary, reason and confirmation preserve original decision/seal/
@@ -277,7 +321,7 @@ focused stale recovery with both original versions, minimal replay without item
 read authority, closed/ineligible/consumed states and generic denial at 1280 CSS
 pixels with one H1/main and no document overflow. Native source/cursor/form/
 commit/replay maintenance remains unexecuted #102 debt; human acceptance is #92.
-Clean-commit certification and exact-head protected delivery are still pending.
+Clean-commit certification and exact-head protected delivery passed as recorded above.
 Next after delivery: remaining #108 connections, safe structured viewers,
 documented host retry recovery and accountable setup. #102/#97/#109/#92 remain
 final gates; this candidate does not close #108 or #48.
