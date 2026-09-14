@@ -32,7 +32,16 @@ from maru.applications.models import (
 from maru.applications.programme_authorization import (
     ApplicationsProgrammeAuthorizationDeniedError,
 )
-from maru.applications.programme_call_editor import programme_call_editor_inputs
+from maru.applications.programme_call_composer_forms import (
+    ProgrammeCallCreationForm,
+    ProgrammeQuestionForm,
+)
+from maru.applications.programme_call_editor import (
+    edit_programme_call_question,
+    edit_programme_call_section,
+    move_programme_call_question,
+    programme_call_editor_inputs,
+)
 from maru.applications.programme_call_forms import ProgrammeCallDetailsForm
 from maru.applications.programme_commands import (
     ApplicationsProgrammeCompletenessError,
@@ -1143,6 +1152,139 @@ def test_guided_call_details_preserve_native_graph_and_exact_retry() -> None:
         ApplicationQuestion.objects.filter(definition_id=created.definition_id).count()
         == 1
     )
+
+
+@pytest.mark.parametrize(
+    "operation", ["creation", "conditional-edit", "cross-section-move"]
+)
+def test_guided_call_composer_native_graph_and_exact_replay(operation: str) -> None:
+    """Maintain native creation/edit/move receipts; deferred under ADR 0100."""
+    edition = EventEditionFactory()
+    actor = AccountFactory(display_name="Synthetic call composer")
+    department = create_department_for_test(
+        edition=edition, name="Programme", expected_code="programme"
+    )
+    now = timezone.now()
+    definition = _definition(now, code="programme-guided-composer")
+    configuration = _configuration(department.id)
+    data = {}
+    for name in ProgrammeCallCreationForm.base_fields:
+        for source in (definition, configuration):
+            if hasattr(source, name):
+                data[name] = str(getattr(source, name))
+    data.update(
+        {
+            "expected_version": "0",
+            "expected_edition_version": "1",
+            "retry_key": str(uuid4()),
+            "reason": "Create reviewed synthetic starting configuration.",
+            "confirm": "on",
+            "opens_at": definition.opens_at.strftime("%Y-%m-%dT%H:%M"),
+            "applicant_edit_until": definition.applicant_edit_until.strftime(
+                "%Y-%m-%dT%H:%M"
+            ),
+            "closes_at": definition.closes_at.strftime("%Y-%m-%dT%H:%M"),
+            "track_code": "general",
+            "track_label": "General Programme",
+            "format_code": "session",
+            "format_label": "Session",
+            "minimum_duration_minutes": "30",
+            "default_duration_minutes": "60",
+            "maximum_duration_minutes": "90",
+        }
+    )
+    form = ProgrammeCallCreationForm(data, edition_time_zone="UTC")
+    assert form.is_valid(), form.errors
+    graph = form.call_inputs(owner_department_id=department.id)
+    common = {
+        "actor_id": actor.id,
+        "organization_id": edition.organization_id,
+        "edition_id": edition.id,
+        "source_channel": "test",
+        "authorizer": _AUTHORIZER,
+    }
+    creation = {
+        **common,
+        "definition_input": graph.definition,
+        "configuration": graph.configuration,
+        "expected_version": 0,
+        "retry_key": form.cleaned_data["retry_key"],
+        "reason": form.cleaned_data["reason"],
+        "correlation_id": uuid4(),
+        "now": now,
+    }
+    created = create_programme_call(**creation)
+    replay = create_programme_call(**creation)
+    assert replay.replayed
+    assert replay.receipt_id == created.receipt_id
+    result = created
+    if operation == "conditional-edit":
+        first, second = graph.definition.sections[0].questions
+        question_data = {
+            name: getattr(second, name)
+            for name in ProgrammeQuestionForm.base_fields
+            if hasattr(second, name)
+        }
+        question_data.update(
+            {
+                "condition_question": first.key,
+                "condition_operator": "equals",
+                "condition_value": "Synthetic proposed title",
+                "position": "2",
+            }
+        )
+        question_form = ProgrammeQuestionForm(question_data, earlier_questions=(first,))
+        assert question_form.is_valid(), question_form.errors
+        graph = edit_programme_call_question(
+            graph, section_index=0, index=1, value=question_form.question_input(())
+        )
+    elif operation == "cross-section-move":
+        first = graph.definition.sections[0]
+        section = replace(
+            first,
+            key="additional",
+            title="Additional",
+            position=2,
+            questions=(replace(first.questions[0], key="additional-title"),),
+        )
+        graph = edit_programme_call_section(graph, index=None, value=section)
+        graph = move_programme_call_question(
+            graph,
+            section_index=0,
+            index=0,
+            destination_index=1,
+            value=replace(first.questions[0], position=2),
+        )
+    if operation != "creation":
+        command = {
+            **common,
+            "call_id": created.target_id,
+            "owner_department_id": department.id,
+            "definition_input": graph.definition,
+            "configuration": graph.configuration,
+            "expected_version": created.resulting_version,
+            "reason": "Review the complete edited graph.",
+            "retry_key": uuid4(),
+            "correlation_id": uuid4(),
+            "now": now,
+        }
+        result = configure_programme_call(**command)
+        replay = configure_programme_call(**command)
+        assert replay.replayed
+        assert replay.receipt_id == result.receipt_id
+    source = get_managed_programme_call_configuration(
+        **common,
+        department_id=department.id,
+        call_id=created.target_id,
+        correlation_id=uuid4(),
+    )
+    assert (
+        programme_call_editor_inputs(source, expected_version=result.resulting_version)
+        == graph
+    )
+    assert source.summary.status == "draft"
+    assert source.summary.owner_department_id == department.id
+    assert not ProgrammeProposal.objects.filter(call_id=created.target_id).exists()
 
 
 def test_guided_call_department_label_is_native_exact_and_audited() -> None:

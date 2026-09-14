@@ -110,8 +110,8 @@ class ProgrammeCallTaskForm(RetryForm):
             raise ValidationError(error.error_dict["reason"]) from error
 
 
-class ProgrammeCallDetailsForm(ProgrammeCallTaskForm):
-    """Edit metadata and policy while retaining the entire authorized form graph."""
+class ProgrammeCallMetadataForm(ProgrammeCallTaskForm):
+    """Collect the shared explicit metadata and policy of a Programme call."""
 
     name = forms.CharField(label="Call name", max_length=160)
     description = forms.CharField(
@@ -133,6 +133,10 @@ class ProgrammeCallDetailsForm(ProgrammeCallTaskForm):
     collaboration_retention_policy_code = _policy(
         "Collaboration evidence retention policy"
     )
+
+
+class ProgrammeCallDetailsForm(ProgrammeCallMetadataForm):
+    """Edit metadata and policy while retaining the entire authorized form graph."""
 
     def __init__(
         self,

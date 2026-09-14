@@ -2,6 +2,7 @@
 
 from django.urls import path
 
+from .programme_call_composer_views import programme_call_composer
 from .programme_call_views import programme_calls
 
 _ROOT = (
@@ -10,6 +11,43 @@ _ROOT = (
 )
 urlpatterns = [
     path(_ROOT, programme_calls, name="programme-calls"),
+    path(_ROOT + "new/", programme_call_composer, name="programme-call-create"),
+    path(
+        _ROOT + "<uuid:call_id>/compose/section/",
+        programme_call_composer,
+        {"task": "section"},
+        name="programme-call-add-section",
+    ),
+    path(
+        _ROOT + "<uuid:call_id>/compose/section/<int:section>/",
+        programme_call_composer,
+        {"task": "section"},
+        name="programme-call-edit-section",
+    ),
+    path(
+        _ROOT + "<uuid:call_id>/compose/question/<int:section>/",
+        programme_call_composer,
+        {"task": "question"},
+        name="programme-call-add-question",
+    ),
+    path(
+        _ROOT + "<uuid:call_id>/compose/question/<int:section>/<int:row>/",
+        programme_call_composer,
+        {"task": "question"},
+        name="programme-call-edit-question",
+    ),
+    path(
+        _ROOT + "<uuid:call_id>/compose/remove-section/<int:section>/",
+        programme_call_composer,
+        {"task": "remove-section"},
+        name="programme-call-remove-section",
+    ),
+    path(
+        _ROOT + "<uuid:call_id>/compose/remove-question/<int:section>/<int:row>/",
+        programme_call_composer,
+        {"task": "remove-question"},
+        name="programme-call-remove-question",
+    ),
     path(
         _ROOT + "<uuid:call_id>/<slug:task>/",
         programme_calls,

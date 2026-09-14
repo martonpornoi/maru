@@ -29,8 +29,10 @@ contributor values, invitation data, review counts or decision history are loade
 The initial workspace increment provides selection among the complete bounded
 Department call list, read-only complete configuration, metadata/policy edits,
 explicit deadline replacement, track/format/contributor-field catalog tasks,
-and deliberate lifecycle actions. Creation, section/question/condition controls,
-cross-Department selection and reassignment, contributor self-service, reviews
+and deliberate lifecycle actions. The next implemented increment adds explicit
+creation and structured section/question/condition controls, including atomic
+same-call cross-section moves. Cross-Department selection and reassignment,
+contributor self-service, reviews
 and conversion remain #108 work until individually implemented and verified.
 Unavailable future tasks have no executable-looking links. The preceding setup
 task will supply the admitted Department context; a URL never grants permission.
@@ -47,6 +49,46 @@ Metadata edits preserve stored deadlines, including sub-minute precision.
 Changing the window is a separate confirmed replacement of all three instants
 with whole-minute values in the edition's own displayed IANA zone. Nonexistent
 or ambiguous daylight-saving times are refused, never guessed or rounded.
+
+## Create and compose a draft
+
+Creation belongs beside the exact Department's inventory. The operator explicitly
+supplies call metadata, collection policies, edition-local deadlines, one initial
+track and one initial format with duration bounds. A displayed starting form has
+one "Programme proposal" section with required title and description questions;
+both use the chosen call classification and default retention. The operator must
+confirm this starting configuration and the required lead public-display-name
+collection policy (optional for collaborators). This creates one editable Draft
+through `create_programme_call`, expected call version zero. It creates no person,
+policy, proposal, review, public copy or profile activation. Policy codes are
+explicit references, never invented defaults. The displayed edition version and
+zone remain fenced under the canonical edition lock through creation completion.
+
+Section and question tasks use labelled exact source rows. Section metadata edits
+preserve all questions; adding a section collects its first question in the same
+operation. Question controls cover all seventeen owner-supported answer types,
+stable keys, purpose, classification, retention, length/numeric/choice bounds and
+reference-kind codes. Choice options are bounded labelled code/label rows, not
+operator-authored JSON or delimiter syntax. Blank rows collect nothing; partial
+rows and duplicates are errors. Adding an option row changes only the unsaved
+form, not the call, and has an ordinary form alternative without JavaScript.
+
+Conditional questions select an earlier labelled source from the same exact
+graph, with the owner's closed operators and typed comparison value. Unsupported
+source types, out-of-order dependencies, cross-call references and inappropriate
+bounds are refused. No generic source binding, public/reviewer/staff visibility,
+eligibility override or arbitrary field type can be submitted. Reorder and
+confirmed removal validate the entire resulting graph and never silently remove
+dependent questions or rewrite conditions. An explicit same-call destination
+selection can move a question across sections atomically; its source section
+must remain nonempty and every final dependency must remain valid.
+Original source versions and retry keys survive validation errors, option-row
+additions and stale refusals. Added option rows receive focus; validation summaries
+link to the exact offending controls and receive focus after refused saves.
+
+These controls remain dormant and are accepted only after their implementation,
+focused and exact-head checks, and honestly scoped browser evidence. They do not
+complete the still-separate collaboration, review, conversion or activation gates.
 
 ## Lifecycle and outcomes
 

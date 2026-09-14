@@ -408,3 +408,59 @@ def edit_programme_call_question(
         section, questions=_edit_rows(section.questions, index=index, value=value)
     )
     return edit_programme_call_section(inputs, index=section_index, value=updated)
+
+
+def move_programme_call_question(
+    inputs: ProgrammeCallEditorInputs,
+    *,
+    section_index: int,
+    index: int,
+    destination_index: int,
+    value: ProgrammeCallQuestionInput,
+) -> ProgrammeCallEditorInputs:
+    """Move one question across sections with one final graph validation.
+
+    Parameters
+    ----------
+    inputs : ProgrammeCallEditorInputs
+        Complete graph already fenced to the original call version.
+    section_index : int
+        Exact original section offset.
+    index : int
+        Exact original question offset.
+    destination_index : int
+        Exact destination section in the same call.
+    value : ProgrammeCallQuestionInput
+        Complete edited question with its desired destination position.
+
+    Returns
+    -------
+    ProgrammeCallEditorInputs
+        One complete graph retaining every unrelated value and condition.
+
+    Raises
+    ------
+    ValidationError
+        If an offset is invalid, a section becomes empty, or dependencies break.
+    """
+    sections = list(inputs.definition.sections)
+    if any(
+        type(offset) is not int or not 0 <= offset < len(sections)
+        for offset in (section_index, destination_index)
+    ):
+        raise ValidationError("Choose current source and destination sections.")
+    if section_index == destination_index:
+        return edit_programme_call_question(
+            inputs, section_index=section_index, index=index, value=value
+        )
+    source, destination = sections[section_index], sections[destination_index]
+    sections[section_index] = replace(
+        source, questions=_edit_rows(source.questions, index=index, value=None)
+    )
+    sections[destination_index] = replace(
+        destination,
+        questions=_edit_rows(destination.questions, index=None, value=value),
+    )
+    return replace(
+        inputs, definition=replace(inputs.definition, sections=tuple(sections))
+    )

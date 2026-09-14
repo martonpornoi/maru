@@ -130,7 +130,14 @@ def test_application_templates_are_same_shell_and_free_of_mojibake() -> None:
 
     for template_path in template_root.glob("*.html"):
         source = template_path.read_text(encoding="utf-8")
-        assert '{% extends "admin/base_site.html" %}' in source
+        if template_path.name == "programme_call_composer.html":
+            assert '{% extends "applications/programme_calls.html" %}' in source
+            parent = (template_root / "programme_calls.html").read_text(
+                encoding="utf-8"
+            )
+            assert '{% extends "admin/base_site.html" %}' in parent
+        else:
+            assert '{% extends "admin/base_site.html" %}' in source
         assert "\ufffd" not in source
         assert "\u00c2" not in source
         assert "\u00e2" not in source

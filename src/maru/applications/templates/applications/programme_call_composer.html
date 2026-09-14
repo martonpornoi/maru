@@ -1,0 +1,43 @@
+{% extends "applications/programme_calls.html" %}
+{% block call_body %}
+<nav aria-label="Call composition"><a href="{{ root_url }}">Department calls</a>{% if source %} · <a href="{{ call_url }}overview/">Complete call configuration</a>{% endif %}</nav>
+<h2>{{ task_label }}</h2>
+{% if selected_label %}<p>Current entry at this position: {{ selected_label }}</p>{% endif %}
+{% if source %}<p>Current call aggregate version {{ source.summary.aggregate_version }} · {{ source.summary.status }}</p>{% endif %}
+{% if creating %}
+<section aria-labelledby="starting-call"><h3 id="starting-call">Starting configuration to review</h3>
+  <p>This creates an editable draft, not an open or published call. No policy or person is created.</p>
+  <ul><li>One Programme proposal section with required Proposed title (short text) and Proposal description (long text) questions.</li><li>Both answers use your chosen call classification and default retention, for understanding and reviewing the proposed Programme item.</li><li>Public display name is required for the lead and optional for collaborators. Each person still owns their profile and consent; no Programme host relationship follows.</li><li>One initial track and format, supplied below. All draft sections, questions and catalogs can be edited afterward.</li></ul>
+  <p>Deadline zone: {{ zone_name }}. Opening is inclusive and closing exclusive; the edit deadline is within that window. Ambiguous or nonexistent local minutes are refused.</p>
+</section>
+{% endif %}
+{% if removing %}<p class="call-consequence">Remove this exact draft entry{% if task == "remove-section" %} and all its questions{% endif %}. The resulting form must remain complete. Dependent conditions are not silently rewritten or removed. Active and historical configurations are not changed.</p>{% endif %}
+{% if composer_forms %}
+<form method="post" data-call-command data-call-pending="{% if pending %}true{% else %}false{% endif %}">
+  {% csrf_token %}
+  {% if pending and not option_added %}<div role="alert" tabindex="-1" autofocus><h3>Review this request</h3><p>Your original input and command evidence are retained.</p>
+    <ul>{% for group in composer_forms %}{% for error in group.form.non_field_errors %}<li>{{ error }}</li>{% endfor %}{% for field in group.fields %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}{% endfor %}
+    {% if options %}{% for error in options.non_form_errors %}<li>{{ error }}</li>{% endfor %}{% for option in options %}{% for error in option.non_field_errors %}<li>Option {{ forloop.parentloop.counter }}: {{ error }}</li>{% endfor %}{% for field in option %}{% for error in field.errors %}<li>Option {{ forloop.parentloop.parentloop.counter }}: <a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {{ error }}</li>{% endfor %}{% endfor %}{% endfor %}{% endif %}</ul>
+  </div>{% endif %}
+  {% if option_added %}<p role="status">Another unsaved option row is available. No call change has been saved.</p>{% endif %}
+  {% for group in composer_forms %}
+  {% if not forloop.last %}
+  <fieldset><legend>{{ group.legend }}</legend>{{ group.form.non_field_errors }}
+  {% for field in group.fields %}{% if field.is_hidden %}{{ field }}{{ field.errors }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}</fieldset>
+  {% endif %}{% endfor %}
+  {% if options %}
+  <fieldset><legend>Choice options</legend><p>For single or multiple choice only. Keep at least two distinct code/label pairs. Leave an unused row completely blank; mark an existing row for removal deliberately. Maximum 100 rows.</p>
+    {{ options.management_form }}{{ options.non_form_errors }}
+    {% for option in options %}<fieldset><legend>Option {{ forloop.counter }}</legend>{{ option.non_field_errors }}{% for field in option %}<div>{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}</fieldset>{% endfor %}
+    <button type="submit" name="intent" value="add-option" formnovalidate>Add another unsaved option row</button>
+  </fieldset>
+  {% endif %}
+  {% for group in composer_forms %}{% if forloop.last %}
+  <fieldset><legend>{{ group.legend }}</legend>{{ group.form.non_field_errors }}
+  {% for field in group.fields %}{% if field.is_hidden %}{{ field }}{{ field.errors }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}</fieldset>
+  {% endif %}{% endfor %}
+  <p data-call-dirty role="status" hidden>Changes are not yet confirmed as saved. Review the current call before leaving a failed or uncertain attempt.</p>
+  <button type="submit" name="intent" value="save">{% if creating %}Create this call draft{% elif removing %}Confirm removal{% else %}Save this draft change{% endif %}</button>
+</form>
+{% else %}<p>This form is read-only in the current call or edition state.</p>{% endif %}
+{% endblock %}

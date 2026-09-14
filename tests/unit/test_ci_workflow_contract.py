@@ -540,8 +540,11 @@ def test_dependabot_creates_only_grouped_security_updates() -> None:
         }
 
 
-def test_documentation_contract_matches_local_and_full_acceptance() -> None:
-    workflow = _workflow(FULL_WORKFLOW)
+@pytest.mark.parametrize("workflow_path", [PR_WORKFLOW, FULL_WORKFLOW])
+def test_documentation_contract_matches_local_and_hosted_acceptance(
+    workflow_path: Path,
+) -> None:
+    workflow = _workflow(workflow_path)
     local_check = LOCAL_CHECK_PATH.read_text(encoding="utf-8")
 
     for workflow_command, local_fragment in (
@@ -566,6 +569,34 @@ def test_documentation_contract_matches_local_and_full_acceptance() -> None:
     assert "retention-days: 7" in workflow
     assert '"build", "--out-dir", $PackageDistributionDirectory' in local_check
     assert '"scripts/verify_package_artifacts.py"' in local_check
+
+
+def test_parallel_pr_documentation_keeps_required_quality_and_timeout() -> None:
+    jobs = yaml.safe_load(_workflow(PR_WORKFLOW))["jobs"]
+    quality = jobs["quality"]
+    assert quality["timeout-minutes"] == 30
+    assert not quality.get("continue-on-error", False)
+    build = next(
+        step
+        for step in quality["steps"]
+        if step.get("name") == "Build contributor documentation"
+    )
+    assert build["if"] == "${{ needs.changes.outputs.documentation == 'true' }}"
+    assert not build.get("continue-on-error", False)
+    assert build["run"].splitlines() == [
+        "uv run pydoclint src scripts",
+        "uv run python scripts/validate_python_docstrings.py src scripts",
+        "uv run sphinx-build -W --keep-going --fresh-env -j auto "
+        "-d docs/_build/doctrees -b html docs docs/_build/html",
+    ]
+    upload = next(
+        step
+        for step in quality["steps"]
+        if step.get("name") == "Upload contributor documentation"
+    )
+    assert upload["with"]["path"] == "docs/_build/html"
+    assert upload["with"]["if-no-files-found"] == "error"
+    assert not upload.get("continue-on-error", False)
 
 
 def test_pages_workflow_is_main_only_locked_and_least_privilege() -> None:

@@ -15,11 +15,18 @@ rather than replace the curated summary.
 
 ### Added
 
+- Extended the dormant Programme call workspace with guided draft creation and
+  structured section/question editing for all supported answer types. Editors can
+  add labelled choice options, set typed conditions, reorder or move questions
+  between sections and confirm removal. Invalid dependencies are explained
+  without silently rewriting the form. The starting collection policy is explicit;
+  no production route, profile or public call is enabled (#108).
+
 - Added a dormant Programme call-management workspace with labelled call
   selection, complete configuration review, policy/catalog tasks and deliberate
   lifecycle actions. Small edits preserve the full typed form; deadline changes
-  are a separate edition-zone, version-fenced action. Creation and question
-  editing remain subsequent #108 work. No production route or profile is enabled.
+  are a separate edition-zone, version-fenced action. No production route or
+  profile is enabled.
 
 - Extended the dormant Programme workspace with Department discussion, typed
   readiness evidence, exact public-copy withdrawal and separate organizer/host
@@ -161,6 +168,11 @@ rather than replace the curated summary.
   ([#38](https://github.com/martonpornoi/maru/issues/38)).
 
 ### Changed
+
+- Aligned routine PR documentation builds with the parallel Sphinx invocation
+  already used by full CI and local certification. Required source coverage,
+  fatal warnings and the protected gate remain unchanged; hosted runtime still
+  needs measured acceptance (#113, blocking Programme PR #116).
 
 - PostgreSQL acceptance now plans smaller jobs from measured group costs and
   conservative runtime budgets. Local certification executes the same exact

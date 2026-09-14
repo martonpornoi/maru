@@ -385,13 +385,23 @@ def test_dependency_failure_never_releases_partial_content(page, reader: str) ->
     assert b"Programme proposals" not in response.content
 
 
-def test_empty_inventory_is_truthful_without_executable_creation(page) -> None:
+def test_empty_inventory_offers_explicit_authorized_draft_creation(page) -> None:
     page.readers["list_managed_programme_calls"].return_value = ()
     response = call(page, inventory=True)
     assert response.status_code == 200
     assert b"No calls are available" in response.content
-    assert b"Call creation" in response.content
-    assert b"/create/" not in response.content
+    soup = BeautifulSoup(response.content, "html.parser")
+    create = soup.find("a", string="Create a call draft")
+    assert create is not None
+    assert create["href"].endswith(f"/{page.department}/new/")
+    assert all(not writer.called for writer in page.writers.values())
+
+
+def test_closed_planning_inventory_has_no_creation_link(page) -> None:
+    page.auth.return_value.accepts_private_planning_writes = False
+    response = call(page, inventory=True)
+    assert response.status_code == 200
+    assert b"Create a call draft" not in response.content
 
 
 def test_route_is_reserved_but_not_production_mounted(page) -> None:

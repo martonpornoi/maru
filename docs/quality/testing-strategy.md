@@ -1,10 +1,21 @@
 # Testing strategy
 
 Status: Active
-Last updated: 2026-09-08
+Last updated: 2026-09-14
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
+
+## Fast feedback and retained documentation acceptance
+
+Run inexpensive complete unit feedback before expensive exact-head certification.
+Routine PR documentation uses the same `-j auto`, warning-fatal and fresh Sphinx
+HTML invocation as full CI and local certification. Parallelism changes execution,
+not source coverage, NumPy/semantic documentation, warnings, generated contracts
+or the protected gate. Do not turn a timeout into a successful receipt or reuse
+earlier-head evidence for a repaired candidate. Measure hosted quality latency
+separately from Python-test duration; the unchanged 30-minute quality limit is
+not evidence that future builds are guaranteed to fit.
 
 ## Temporary Programme development exception
 

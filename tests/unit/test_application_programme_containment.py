@@ -91,6 +91,9 @@ _DORMANT_TEMPLATE_MARKERS = {
     "src/maru/applications/templates/applications/programme_calls.html": frozenset(
         {"programme-call", "programme_call"}
     ),
+    (
+        "src/maru/applications/templates/applications/programme_call_composer.html"
+    ): frozenset({"programme_call"}),
 }
 
 
@@ -180,10 +183,13 @@ def test_dormant_template_allowance_cannot_spread_to_other_surfaces(
     ) == ("programme-call", "programme_call")
 
 
-def test_dormant_template_does_not_admit_other_kernel_markers() -> None:
+@pytest.mark.parametrize("relative_path", _DORMANT_TEMPLATE_MARKERS)
+def test_dormant_template_does_not_admit_other_kernel_markers(relative_path) -> None:
     """Allow only the two accepted call-template identifiers, not a wildcard."""
-    path = _REPOSITORY_ROOT / next(iter(_DORMANT_TEMPLATE_MARKERS))
-    assert _surface_markers(path, "programme-call programme_call") == ()
+    path = _REPOSITORY_ROOT / relative_path
+    assert (
+        _surface_markers(path, " ".join(_DORMANT_TEMPLATE_MARKERS[relative_path])) == ()
+    )
     assert _surface_markers(path, "applications.manage_programme_calls") == (
         "applications.manage_programme_",
     )
