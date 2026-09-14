@@ -55,6 +55,7 @@ contract for the surface being changed, and compare its status with the
 - [My Programme reviews](programme-reviewer-work.md)
 - [Programme moderation](programme-moderation.md)
 - [Programme decision composition](programme-decision-composition.md)
+- [Accepted Programme conversion](programme-accepted-conversion.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -89,4 +90,5 @@ programme-review-management
 programme-reviewer-work
 programme-moderation
 programme-decision-composition
+programme-accepted-conversion
 ```

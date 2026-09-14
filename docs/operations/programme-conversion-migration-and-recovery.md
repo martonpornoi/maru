@@ -67,6 +67,24 @@ that Programme Operations is usable or that production data is approved.
 
 ## Failure and recovery
 
+The dormant [guided conversion adapter](../product/page-contracts/programme-accepted-conversion.md)
+introduces no migration or rollback fence. Keep the original decision, revision,
+review version, Programme control version, retry, deliberate copy and reason
+after uncertainty. Confirmed original POST reaches canonical receipt recovery
+before fresh source or item reads. A stale/consumed source is not permission to
+replace versions or retry automatically; a new key cannot recreate a consumed
+revision. Inspect current state before a deliberately new intent. No query or
+form performs compensating deletion or rewrites a retained acceptance.
+
+Conversion authority grants no private-item read. If the optional continuation
+is denied, unavailable or disappears during rendering, retain the minimal
+creation receipt and omit the link. It proves original versions only; do not
+reconvert to obtain access. Current identity, tenant and both adapter admissions
+are still required even for original recovery. Fresh source/cursor queries
+remain separately authorized, locked and audited; an unavailable dependency is
+not silently reported as a valid current source. Native restoration remains
+#102 debt under ADR 0100, not a success claim from synthetic HTTP/browser tests.
+
 A failed command is safe to retry with its exact original actor, key and
 normalized intent. First refresh source and control versions for a *new*
 intent; do not substitute a new key to bypass a consumed revision. A retained

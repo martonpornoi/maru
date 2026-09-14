@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Accepted Programme conversion · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Programme / Accepted conversion</div>{% endblock %}
+{% block content %}
+<div class="programme-calls">
+  <h1>Accepted Programme conversion</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Exact source and separate item authority</summary><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}.</p><p>Fresh conversion requires current Department conversion authority and independent Programme item-management authority. Neither grants proposal/review content or private-item reads. Historical receipts prove only original creation.</p></details>
+  <nav aria-label="Conversion tasks"><a href="{{ root_url }}">Choose an accepted source</a></nav>
+  {% if result %}
+    <div role="status"><h2>Private item creation confirmed</h2><p>{% if result.replayed %}The original conversion receipt was recovered; no second item was created.{% else %}The exact accepted revision was converted to one private Programme item.{% endif %}</p><p>Receipt {{ result.transition_id }} · Item {{ result.programme_item_id }} · Creation item version {{ result.programme_item_version }} · Creation control version {{ result.programme_control_version }}.</p><p>These are original creation versions, not current item state. Initial readiness is unresolved; no host, public copy, placement or volunteer assignment was inferred.</p></div>
+    {% if item_link %}<p><a href="{{ item_link }}">Open the independently authorized Programme item</a></p>{% else %}<p>No private-item continuation is currently available under your independent read authority. The receipt remains valid; do not create another item to obtain access.</p>{% endif %}
+  {% elif page %}
+    <h2>Exact accepted sources</h2><p>These are historical acceptance labels. Select one to inspect current source, review eligibility and whether it was already converted. No private answer is used as a title.</p>
+    <ul class="call-cards">{% for row in page.items %}<li><h3><a href="{{ root_url }}{{ row.decision_id }}/">{{ row.call_name }} · Revision {{ row.sequence }} · Decision version {{ row.decision_version }}</a></h3><p>Accepted {{ row.decided_at }} · Inspected review version {{ row.review_version }}.</p></li>{% empty %}<li>No accepted sources are available in this exact Department.</li>{% endfor %}</ul>
+    {% if page.next_cursor %}<p><a href="{{ root_url }}?after={{ page.next_cursor }}">Next page of accepted sources</a></p>{% endif %}
+  {% elif source %}
+    <h2>{{ source.choice.call_name }} · Accepted revision {{ source.choice.sequence }}</h2><p>Decision version {{ source.choice.decision_version }} · Current review version {{ source.choice.review_version }} · Current Programme creation version {{ creation.control_version }}.</p>
+    <details><summary>Exact retained source references</summary><p>Decision {{ source.choice.decision_id }} · Seal {{ source.choice.revision_id }} · Case {{ source.choice.case_id }}.</p></details>
+    {% if source.consumed %}<p>This exact revision is already converted. A new retry key cannot create another item from it. Keep any original request for receipt recovery.</p>{% endif %}
+    {% if not source.eligible %}<p>This historical acceptance does not currently satisfy conversion eligibility. The current submitted seal, effective review evidence and open planning are required.</p>{% endif %}
+    {% if not source.writable or not creation.writable %}<p>Private planning is closed; no fresh conversion is offered.</p>{% endif %}
+    {% if form %}
+      <h2>Deliberate private item creation</h2><p>Enter the private working title and optional summary. Nothing is copied from proposal answers, contributor profiles or review messages. All seven readiness concerns start required and unsatisfied. Acceptance is not hosting consent, public approval, scheduling or staffing.</p>
+      <form method="post" action="{{ root_url }}{{ source.choice.decision_id }}/" data-call-command data-call-pending="{% if form.is_bound %}true{% else %}false{% endif %}">{% csrf_token %}<input type="hidden" name="action" value="convert">
+        {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this conversion request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+        {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+        <p>Original review version {{ form.expected_review_version.value }} · Original Programme creation version {{ form.expected_programme_version.value }}. Both versions, exact source, retry and entered input remain unchanged after failure.</p>
+        <p data-call-dirty role="status" hidden>This conversion is not confirmed. Keep the original request after uncertainty; inspect current state before deliberately starting a new intent.</p><button type="submit">Confirm exact accepted conversion</button>
+      </form>
+    {% else %}<p>No fresh conversion form is available for this inspected state.</p>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

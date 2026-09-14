@@ -120,6 +120,15 @@ seal in `CASE_OPENED.reference_id` is an owner-command contract, not a generic
 API field. Legacy absent-reference retry shapes remain compatible. No OpenAPI,
 serializer, generic discriminator or production profile is widened.
 
+The [accepted conversion companion](../product/page-contracts/programme-accepted-conversion.md)
+reserves the same review root's `conversion/` and `conversion/{decision_id}/`.
+Its minimal source queries require both owner admissions but no review-content
+fields; its closed deliberate form calls the existing atomic conversion command.
+Original receipt recovery precedes fresh source and item reads. The optional
+Programme-item continuation has independent private-read/field/audit checks.
+Neither these HTML adapters nor Programme's creation-cursor query adds a mounted
+API operation, serializer, OpenAPI component or generic acceptance/target access.
+
 The routes below omit Programme definitions from starter and definition
 discovery and deny Programme submissions in generic applicant, answer, submit,
 review, decision, acceptance, target-record, and target-result paths. The

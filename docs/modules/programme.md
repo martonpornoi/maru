@@ -616,6 +616,19 @@ needs the remaining #108 intake/review/conversion/notice/setup connections,
 #109 integrated proof and #92
 human acceptance. It does not justify final activation or closing #48/#108.
 
+### Conversion creation cursor without private inventory
+
+`creation_queries.load_programme_creation_state` is a public Programme-owned
+preparation query for explicit accepted-item creation. It requires current
+`programme.manage_items`, no private fields, exact tenant/edition locking and
+minimized `programme.query.creation_state` audit. It returns only the original
+edition-control version and planning hint. It reads no title or working revision;
+absent control is zero only when no item exists, otherwise unavailable. It does
+not replace canonical capacity, version or lifecycle checks. The Applications
+[conversion adapter](programme-conversion.md) uses this query instead of requiring
+private inventory access simply to prepare a write. Opening the created item is
+still a separately authorized/audited private-item read after receipt recovery.
+
 ### Exact-person timetable purposes
 
 `timetable_queries.load_personal_host_purposes` reads up to 2,000 complete

@@ -1319,6 +1319,15 @@ architecture documents, implementation issues, tests, and release notes.
   transition without deleting or silently rewriting the independent Programme
   item. It grants no host access, public approval, schedule, or release; those
   successors must separately establish their current evidence.
+  The guided conversion task discovers exact accepted decision/seal references
+  through current conversion authority, using only call/revision labels and
+  eligibility/consumption facts, never review messages, answers or people.
+  Programme separately provides the creation cursor under item-management
+  authority without requiring a private-item inventory read. Original confirmed
+  requests reach retained receipt recovery before fresh source or capability
+  checks; any result-item continuation independently proves item-read authority.
+  Entered private title/summary and both original versions/retry remain unchanged
+  after failure, and historical acceptance never implies current eligibility.
   Programme hosting requires an explicit reasoned invitation to one exact
   item/person as host or co-host, followed by that person's own confirmation.
   Organizer-created items use the same relationship without invented proposal

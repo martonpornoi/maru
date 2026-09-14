@@ -34,6 +34,8 @@ pytestmark = pytest.mark.usefixtures(shell.__name__)
 
 @pytest.fixture
 def page(monkeypatch):
+    conversion = Mock(return_value=False)
+    monkeypatch.setattr(views, "can_use_programme_conversion", conversion)
     source, facts = Mock(return_value=work()), Mock(return_value=evidence())
     queue = Mock(return_value=queries.ReviewManagerPage((work().case,), UUID(int=20)))
     messages = Mock(return_value=queries.DecisionMessages(5, (), None))
@@ -59,6 +61,7 @@ def page(monkeypatch):
     monkeypatch.setattr(views, "get_programme_review_detail", detail)
     monkeypatch.setattr(views, "apply_programme_review_command", command)
     return SimpleNamespace(
+        conversion=conversion,
         source=source,
         facts=facts,
         queue=queue,
@@ -108,6 +111,15 @@ def test_discovery_and_overview_have_labels_without_reading_evidence(page):
     page.detail.assert_not_called()
     page.messages.assert_not_called()
     page.command.assert_not_called()
+
+
+def test_conversion_navigation_is_independent_and_rechecked(page):
+    label = "Inspect accepted-source conversion eligibility"
+    assert not soup(request()).find("a", string=label)
+    page.conversion.return_value = True
+    assert soup(request()).find("a", string=label)["href"].endswith("/conversion/")
+    page.conversion.side_effect = [True, True, False]
+    assert request().status_code == 404
 
 
 def test_blank_deliberate_form_shows_all_stage_facts_with_no_default_outcome(page):

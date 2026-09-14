@@ -1,8 +1,8 @@
 # Accepted Programme conversion
 
-Status: implemented dormant command boundary; no profile, UI, API, or runtime writer
+Status: dormant commands and guided HTML adapter; no production route or profile
 
-Last updated: 2026-09-06
+Last updated: 2026-09-14
 
 ## Outcome and ownership
 
@@ -25,6 +25,37 @@ private title and summary. There is no implicit latest decision, answer-sheet
 copy, source-system lookup, import match, or automatic public content.
 
 ## Authority and freshness
+
+### Guided exact-source adapter
+
+The [accepted conversion page contract](../product/page-contracts/programme-accepted-conversion.md)
+reserves `conversion/` and `conversion/{decision_id}/` beneath the dormant exact
+organization/edition/Department review root. `programme_conversion_queries`
+provides bounded historical acceptance labels and a separately inspected source
+with canonical effective eligibility and retained consumption state. Both current
+Applications conversion and Programme item-management admissions precede source
+reads, locking and minimized audit; no review/answer fields or private titles are
+disclosed. `can_use_programme_conversion` is a no-content navigation hint, not a
+source or command grant. Decision overview offers it only under those independent
+current admissions and rechecks it before disclosure.
+
+Programme's public `load_programme_creation_state` provides the edition-control
+cursor under `programme.manage_items` with no private fields or inventory. The
+form deliberately collects private title/optional summary, reason and explicit
+confirmation, retaining exact decision/seal, review/control versions and retry.
+The unchanged canonical conversion command runs before any fresh source/cursor
+read on confirmed POST. Its original replay therefore keeps the established
+identity/tenant/adapter admission without adding fresh Department, source or
+write-grant prerequisites. A minimal receipt describes original creation, not
+current item state. The optional item continuation separately calls the public
+private-item query with its own field/read/audit authority after the receipt;
+losing that optional read grant removes the link without hiding the receipt.
+
+No auto-copy, review authority inheritance, schema/runtime grant, public API,
+production mounting or profile activation is added. #102 retains unexecuted
+native source/cursor/form/commit/replay coverage, and #92 genuine human acceptance.
+
+### Canonical command admission
 
 Fresh work requires all of the following independently:
 

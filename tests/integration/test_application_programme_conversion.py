@@ -30,7 +30,13 @@ from maru.applications.programme_commands import (
 from maru.applications.programme_conversion_commands import (
     convert_accepted_programme_proposal,
 )
+from maru.applications.programme_conversion_forms import ProgrammeConversionForm
 from maru.applications.programme_conversion_inputs import ProgrammeConversionInput
+from maru.applications.programme_conversion_queries import (
+    ProgrammeConversionReadRequest,
+    get_programme_conversion_source,
+    list_programme_conversion_choices,
+)
 from maru.applications.programme_conversion_sources import (
     ProgrammeConversionConflictError,
     ProgrammeConversionUnavailableError,
@@ -44,6 +50,7 @@ from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
 from maru.programme.commands import ProgrammeVersionConflictError
+from maru.programme.creation_queries import load_programme_creation_state
 from maru.programme.host_commands import (
     invite_programme_host,
     respond_to_programme_host_invitation,
@@ -64,6 +71,7 @@ from maru.programme.models import (
     ProgrammeReadinessRequirementRevision,
     ProgrammeWorkingRevision,
 )
+from maru.programme.workbench_queries import ProgrammeWorkbenchRequest
 from tests.factories import EventEditionFactory
 from tests.integration.test_application_programme_services import (
     _AUTHORIZER,
@@ -253,6 +261,82 @@ def test_same_intent_retries_are_minimal_and_duplicate_source_is_rejected(accept
         == ProgrammeItem.objects.count()
         == 1
     )
+
+
+def test_guided_conversion_queries_and_form_keep_original_owner_cursors(accepted):
+    """Native deferred scenario: labels, deliberate copy, real commit and replay."""
+    _, _, kwargs = accepted
+    source_request = ProgrammeConversionReadRequest(
+        **{
+            name: kwargs[name]
+            for name in (
+                "actor_id",
+                "organization_id",
+                "edition_id",
+                "department_id",
+                "correlation_id",
+            )
+        }
+    )
+    policies = {name: kwargs[name] for name in ("authorizer", "programme_authorizer")}
+    page = list_programme_conversion_choices(request=source_request, **policies)
+    assert len(page.items) == 1
+    choice = page.items[0]
+    assert choice.decision_id == kwargs["command"].decision_id
+    source = get_programme_conversion_source(
+        request=source_request, decision_id=choice.decision_id, **policies
+    )
+    assert source.eligible
+    assert not source.consumed
+    creation_request = ProgrammeWorkbenchRequest(
+        **{
+            name: kwargs[name]
+            for name in ("actor_id", "organization_id", "edition_id", "correlation_id")
+        }
+    )
+    creation = load_programme_creation_state(
+        creation_request, authorizer=kwargs["programme_authorizer"]
+    )
+    assert creation.control_version == 0
+    data = {
+        "action": "convert",
+        "revision_id": str(choice.revision_id),
+        "expected_review_version": str(choice.review_version),
+        "expected_programme_version": str(creation.control_version),
+        "retry_key": str(kwargs["retry_key"]),
+        "internal_title": "Deliberate UI copy",
+        "working_summary": "",
+        "reason": kwargs["reason"],
+        "confirm": "on",
+    }
+    form = ProgrammeConversionForm(data)
+    assert form.is_valid(), form.errors
+    command = form.to_command(choice.decision_id)
+    original = kwargs | {"command": command}
+    result = convert_accepted_programme_proposal(**original)
+    current = get_programme_conversion_source(
+        request=source_request, decision_id=choice.decision_id, **policies
+    )
+    assert current.consumed
+    assert (
+        load_programme_creation_state(
+            creation_request, authorizer=kwargs["programme_authorizer"]
+        ).control_version
+        == result.programme_control_version
+    )
+    assert command.expected_programme_version == 0
+    assert convert_accepted_programme_proposal(**original) == replace(
+        result, replayed=True
+    )
+    assert ProgrammeItem.objects.count() == 1
+    assert not ProgrammeHostRelationship.objects.exists()
+    assert not ProgrammePublicRendition.objects.exists()
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        get_programme_conversion_source(
+            request=replace(source_request, department_id=uuid4()),
+            decision_id=choice.decision_id,
+            **policies,
+        )
 
 
 def test_late_recusal_blocks_fresh_conversion_but_preserves_completed_retry(accepted):

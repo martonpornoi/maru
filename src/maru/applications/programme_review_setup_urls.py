@@ -2,6 +2,7 @@
 
 from django.urls import path
 
+from .programme_conversion_views import programme_conversion
 from .programme_decider_views import programme_decider
 from .programme_moderation_views import programme_moderation
 from .programme_review_intake_views import programme_review_intake
@@ -14,6 +15,14 @@ _ROOT = (
     "<uuid:edition_id>/<uuid:department_id>/"
 )
 urlpatterns = [
+    path(
+        _ROOT + "conversion/", programme_conversion, name="programme-conversion-sources"
+    ),
+    path(
+        _ROOT + "conversion/<uuid:decision_id>/",
+        programme_conversion,
+        name="programme-conversion",
+    ),
     path(_ROOT + "decisions/", programme_decider, name="programme-decision-cases"),
     path(
         _ROOT + "decisions/<uuid:case_id>/",
