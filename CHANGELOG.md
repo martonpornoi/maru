@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant labelled Department navigation and a confirmed Draft-call transfer
+  task. Choices require independent call-management authority; duplicate names
+  are distinguished by stable codes. Transfers preserve configuration and history
+  and use the existing dual-Department command. No broad Workforce directory,
+  orphan recovery, production route or Programme profile is enabled (#108).
+
 - Extended the dormant Programme call workspace with guided draft creation and
   structured section/question editing for all supported answer types. Editors can
   add labelled choice options, set typed conditions, reorder or move questions
@@ -171,8 +177,9 @@ rather than replace the curated summary.
 
 - Aligned routine PR documentation builds with the parallel Sphinx invocation
   already used by full CI and local certification. Required source coverage,
-  fatal warnings and the protected gate remain unchanged; hosted runtime still
-  needs measured acceptance (#113, blocking Programme PR #116).
+  fatal warnings and the protected gate remain unchanged. PR #116 passed hosted
+  quality in 26m35s after the earlier timeout; #113 remains open for more robust
+  future headroom.
 
 - PostgreSQL acceptance now plans smaller jobs from measured group costs and
   conservative runtime budgets. Local certification executes the same exact

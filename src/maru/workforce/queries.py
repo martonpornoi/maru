@@ -168,6 +168,65 @@ def resolve_current_department_label_reference(
 
 
 @dataclass(frozen=True, slots=True)
+class CurrentDepartmentChoiceReference:
+    """Label one authorized current Department without exposing its structure.
+
+    Attributes
+    ----------
+    department_id : UUID
+        Exact current Department identifier.
+    code : str
+        Stable edition-unique code that distinguishes duplicate display names.
+    label : str
+        Department's own display name, without holders or hierarchy.
+    """
+
+    department_id: UUID
+    code: str
+    label: str
+
+
+def resolve_current_department_choice_reference(
+    *, organization_id: UUID, edition_id: UUID, department_id: UUID
+) -> CurrentDepartmentChoiceReference | None:
+    """Resolve one minimal choice after independent exact-purpose authority.
+
+    Consumers authorize before this lookup, recheck before disclosure and fulfill
+    their own protected-read audit contract. This seam grants no authority.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Exact expected organization owner.
+    edition_id : UUID
+        Exact expected edition owner.
+    department_id : UUID
+        Independently admitted current Department identifier.
+
+    Returns
+    -------
+    CurrentDepartmentChoiceReference | None
+        ID, stable code and name only, or the shared unavailable result.
+    """
+    try:
+        row = (
+            Department.objects.filter(
+                id=department_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                retired_at__isnull=True,
+            )
+            .values("id", "code", "name")
+            .first()
+        )
+    except (TypeError, ValueError, ValidationError):
+        return None
+    if row is None:
+        return None
+    return CurrentDepartmentChoiceReference(row["id"], row["code"], row["name"])
+
+
+@dataclass(frozen=True, slots=True)
 class RetainedDepartmentReference:
     """Identify an exact retained Department without granting content authority.
 

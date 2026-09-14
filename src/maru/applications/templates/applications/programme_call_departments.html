@@ -1,0 +1,24 @@
+{% extends "applications/programme_calls.html" %}
+{% block call_body %}
+<nav aria-label="Department task"><a href="{{ root_url }}">Current Department calls</a>{% if source %} · <a href="{{ call_url }}overview/">Current call configuration</a>{% endif %}</nav>
+<section aria-labelledby="department-task-heading">
+  <h2 id="department-task-heading">{{ task_label }}</h2>
+  {% if source %}
+    <p class="call-consequence">This action transfers an editable Draft from {{ department.label }}{% if source_department_code %} ({{ source_department_code }}){% endif %} to the selected Department. Only current ownership changes. Configuration, proposals, import evidence and retained history are not rewritten. This is not orphan recovery and does not grant new authority.</p>
+    {% if read_only %}<p>This task is read-only. Transfer requires a Draft call and open private planning.</p>
+    {% elif no_destination %}<p>No other current Department is available for your call-management authority. Nothing can be transferred from this screen. Accountable setup manages access separately.</p>
+    {% else %}
+    <form method="post" data-call-command data-call-pending="{% if pending %}true{% else %}false{% endif %}">
+      {% csrf_token %}
+      {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this transfer</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+      {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+      <p data-call-dirty role="status" hidden>Changes are not yet confirmed as saved. Inspect the current authorized Department inventories after an uncertain attempt.</p>
+      <button type="submit">Transfer this Draft call</button>
+    </form>
+    {% endif %}
+  {% else %}
+    <p>These are the complete current Departments independently available for your call-management authority in this edition. Names and stable codes identify the choices; this grants no access to Workforce structure, holders or proposal content. Each destination checks access again.</p>
+    <ul class="call-cards">{% for choice in department_choices %}<li><h3><a href="{{ choice.url }}"{% if choice.current %} aria-current="true"{% endif %}>{{ choice.label }} ({{ choice.code }})</a></h3>{% if choice.current %}<p>Current Department</p>{% endif %}</li>{% empty %}<li>No current Department choices are available. Accountable setup manages access separately.</li>{% endfor %}</ul>
+  {% endif %}
+</section>
+{% endblock %}
