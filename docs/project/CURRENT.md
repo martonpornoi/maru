@@ -74,11 +74,27 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 ## Active bounded outcome: guided departmental journey (#108)
 
 Branch: `codex/programme-call-workspace`, from protected PR #114.
-Next: dedicated Applications call/proposal/collaboration/review/conversion tasks,
-preserving the existing form engine, exact Department ownership, contributor-owned
-profiles/acknowledgements, single submission cursor and closed generic seams.
-The owner/page/ADR map is in progress; no new Applications implementation is
-claimed yet. Continue task connections and accountable setup after those surfaces.
+The first dedicated Applications call-workspace increment is implemented locally:
+exact-Department named inventory, complete manager configuration, metadata/policy,
+explicit edition-zone deadline replacement, ordered track/format/contributor-field
+tasks and confirmed activation/retirement/successor commands. A lossless adapter
+preserves every untouched question type, policy and source cursor. No new writer,
+schema, generic discriminator access, profile or production route is added.
+Focused database-free feedback passes 225 tests in 1.70s, and all 81 frontend
+cases pass. Final six-module typing, NumPy documentation and the 495-page
+documentation validator pass; exact-head certification and protected delivery
+are pending.
+The synthetic 1280-by-720 rehearsal corrected task order and action labels and
+verified stale-input retention, error focus, immutable, empty and denied states.
+Two maintained native cases remain unexecuted #102 debt; full human matrix is
+#92. See the [call-workspace checkpoint](../checkpoints/2026-09-14-programme-call-workspace.md).
+
+Next: certify and deliver this bounded increment, then call creation and complete
+section/question/condition editing, authorized Department selection/reassignment,
+proposal/collaboration/review/conversion tasks and ordinary task connections.
+Keep contributor-owned profiles/acknowledgements, the single submission cursor
+and closed generic seams. Accountable setup and integrated proof follow those
+surfaces; #108 and #48 remain open.
 
 The second increment is merged: independently authorized Department discussion,
 typed readiness sources, exact public-copy withdrawal and separate organizer /

@@ -1,8 +1,8 @@
 # Programme calls and acknowledged proposals contract
 
-- Status: Dormant domain contract; no mounted route, API, template, navigation,
-  or Django admin writer
-- Route: none reserved by issue #63
+- Status: Dormant domain contract; no production route, API or generic admin
+  writer; #108's manager surface has a separate companion contract
+- Route: none reserved by issue #63; see the dedicated call-workspace contract
 - Requirements: IDN-014, PRG-001, PRG-002, PRG-006, PRG-008, PRG-009,
   PRG-011,
   AUD-001, AUD-003, AUD-005, PRI-001, UX-005 through UX-008, UX-019,
@@ -11,6 +11,12 @@
 - Decisions: ADRs 0041, 0051, 0081, 0082, 0084, and 0085
 
 ## Purpose and current boundary
+
+The separate [guided call-workspace contract](programme-call-workspace.md) now
+defines #108's dedicated dormant manager routes and forms. It does not mount
+production routes, activate a profile, open generic definition writers or supply
+the still-unfinished proposal self-service/review journey below. This original
+#63 document remains the domain and contributor-disclosure contract.
 
 Let a Programme Department define a call and let one proposal lead collaborate
 with invited contributors on one exact, attributable proposal revision. The
@@ -26,15 +32,16 @@ Generic review/target seams remain closed. Any future UI must expose those
 dedicated projections and versioned commands through an accepted page contract,
 not infer authority from proposal collaboration or acceptance.
 
-Issue #63 installs only the Applications command/query and database kernel.
-This contract does not name a canonical URL because no route is mounted or
-reserved. It adds no API operation, serializer, OpenAPI component, template,
+Issue #63 installed only the Applications command/query and database kernel.
+This domain contract does not name a canonical URL; #108's companion reserves
+dedicated manager routes without production mounting. The kernel added no API
+operation, serializer, OpenAPI component, template,
 navigation destination, search result, dashboard card, Django admin writer,
 job, worker, effect handler, notification, or delivery. The current
 `full_convention@1` and `workforce_only@1` manifests omit the capabilities,
 purpose, target, and event declarations and retain their exact fingerprints.
 
-No page or generic Applications route may expose the dormant rows. Every
+No production page or generic Applications route may expose the dormant rows. Every
 legacy starter, definition, submission, answer, review, decision, acceptance,
 target, and target-result seam denies or omits the `programme_item` kind. A
 future mounted surface requires a separate accepted page/API contract and an

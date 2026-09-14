@@ -1,0 +1,16 @@
+.programme-calls { max-width: 76rem; min-width: 0; overflow-wrap: anywhere; }
+.programme-calls .call-cards,
+.programme-calls .call-links { display: flex; flex-wrap: wrap; gap: 1rem; padding: 0; list-style: none; }
+.programme-calls .call-cards > li { flex: 1 1 20rem; min-width: 0; padding: 1rem; border: 1px solid var(--hairline-color); border-radius: 0.4rem; list-style: none; }
+.programme-calls .call-links > li { list-style: none; padding-block: 0.3rem; }
+.programme-calls h3, .programme-calls h4 { color: var(--body-fg); background: transparent; }
+.programme-calls input:not([type="hidden"]),
+.programme-calls textarea,
+.programme-calls select { box-sizing: border-box; max-width: 100%; width: 100%; }
+.programme-calls input[type="checkbox"] { width: auto; }
+.programme-calls form > div { margin-block: 1rem; }
+.programme-calls label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
+.programme-calls dd { white-space: pre-wrap; margin-inline: 0; }
+.programme-calls :focus-visible { outline: 3px solid var(--link-fg); outline-offset: 3px; }
+.programme-calls [aria-current="page"] { font-weight: 700; text-decoration-thickness: 0.15em; }
+.programme-calls .call-consequence { border-inline-start: 0.25rem solid var(--link-fg); padding-inline-start: 1rem; }

@@ -107,6 +107,67 @@ class CurrentDepartmentSetReference:
 
 
 @dataclass(frozen=True, slots=True)
+class CurrentDepartmentLabelReference:
+    """Name one exact current Department for an independently authorized purpose.
+
+    Attributes
+    ----------
+    department_id : UUID
+        Exact current Department within the requested organization and edition.
+    label : str
+        Department's own display name, without holders or structure information.
+    """
+
+    department_id: UUID
+    label: str
+
+
+def resolve_current_department_label_reference(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    department_id: UUID,
+) -> CurrentDepartmentLabelReference | None:
+    """Return one exact name after the caller authorizes its own Department task.
+
+    This internal owner seam performs no discovery and grants no authority.
+    Consumers must independently authorize the exact Department before calling,
+    recheck before disclosure and fulfill their protected-read audit contract.
+    It intentionally does not expose the Workforce structure or its holders.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Organization expected to own the Department.
+    edition_id : UUID
+        Exact edition expected to own the Department.
+    department_id : UUID
+        Exact identifier already admitted for the consumer's purpose.
+
+    Returns
+    -------
+    CurrentDepartmentLabelReference | None
+        Minimized current name, or ``None`` for malformed, absent or foreign scope.
+    """
+    try:
+        row = (
+            Department.objects.filter(
+                id=department_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                retired_at__isnull=True,
+            )
+            .values("id", "name")
+            .first()
+        )
+    except (TypeError, ValueError, ValidationError):
+        return None
+    if row is None:
+        return None
+    return CurrentDepartmentLabelReference(row["id"], row["name"])
+
+
+@dataclass(frozen=True, slots=True)
 class RetainedDepartmentReference:
     """Identify an exact retained Department without granting content authority.
 

@@ -32,6 +32,8 @@ from maru.applications.models import (
 from maru.applications.programme_authorization import (
     ApplicationsProgrammeAuthorizationDeniedError,
 )
+from maru.applications.programme_call_editor import programme_call_editor_inputs
+from maru.applications.programme_call_forms import ProgrammeCallDetailsForm
 from maru.applications.programme_commands import (
     ApplicationsProgrammeCompletenessError,
     ApplicationsProgrammeIdempotencyConflictError,
@@ -1056,6 +1058,123 @@ def test_managed_call_reads_append_complete_sensitive_read_audit() -> None:
     assert detail_audit.target_type == "applications.programme_call"
     assert detail_audit.target_id == world.call_id
     assert detail_audit.safe_metadata == {"target_count": 1}
+
+
+def test_guided_call_details_preserve_native_graph_and_exact_retry() -> None:
+    """Keep full owner configuration and sub-minute dates through a human task."""
+    edition = EventEditionFactory()
+    actor = AccountFactory(display_name="Synthetic Programme editor")
+    department = create_department_for_test(
+        edition=edition, name="Programme", expected_code="programme"
+    )
+    now = timezone.now()
+    definition = _definition(now, code="programme-guided-details")
+    configuration = _configuration(department.id)
+    common = {
+        "actor_id": actor.id,
+        "organization_id": edition.organization_id,
+        "edition_id": edition.id,
+        "source_channel": "test",
+        "authorizer": _AUTHORIZER,
+    }
+    created = create_programme_call(
+        **common,
+        definition_input=definition,
+        configuration=configuration,
+        expected_version=0,
+        reason="Create complete synthetic call.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        now=now,
+    )
+    source = get_managed_programme_call_configuration(
+        **common,
+        department_id=department.id,
+        call_id=created.target_id,
+        correlation_id=uuid4(),
+    )
+    graph = programme_call_editor_inputs(
+        source, expected_version=created.resulting_version
+    )
+    initial = ProgrammeCallDetailsForm(inputs=graph).initial
+    retry = uuid4()
+    form = ProgrammeCallDetailsForm(
+        {
+            **{name: str(value) for name, value in initial.items()},
+            "name": "Revised synthetic call",
+            "expected_version": str(created.resulting_version),
+            "retry_key": str(retry),
+            "reason": "Clarify the applicant-facing call name.",
+        },
+        inputs=graph,
+    )
+    assert form.is_valid(), form.errors
+    assert form.result is not None
+    command = {
+        **common,
+        "call_id": created.target_id,
+        "owner_department_id": department.id,
+        "definition_input": form.result.definition,
+        "configuration": form.result.configuration,
+        "expected_version": form.cleaned_data["expected_version"],
+        "reason": form.cleaned_data["reason"],
+        "retry_key": form.cleaned_data["retry_key"],
+        "correlation_id": uuid4(),
+        "now": now,
+    }
+    result = configure_programme_call(**command)
+    replay = configure_programme_call(**command)
+    assert result.resulting_version == created.resulting_version + 1
+    assert replay.replayed is True
+    assert replay.receipt_id == result.receipt_id
+    updated = get_managed_programme_call_configuration(
+        **common,
+        department_id=department.id,
+        call_id=created.target_id,
+        correlation_id=uuid4(),
+    )
+    assert (
+        programme_call_editor_inputs(updated, expected_version=result.resulting_version)
+        == form.result
+    )
+    assert updated.summary.opens_at == definition.opens_at
+    assert updated.summary.owner_department_id == department.id
+    assert (
+        ApplicationQuestion.objects.filter(definition_id=created.definition_id).count()
+        == 1
+    )
+
+
+def test_guided_call_department_label_is_native_exact_and_audited() -> None:
+    """Name only the admitted current Department and retain minimized evidence."""
+    world = _active_call(code="programme-guided-department")
+    correlation = uuid4()
+    query = {
+        "actor_id": world.manager.id,
+        "organization_id": world.edition.organization_id,
+        "edition_id": world.edition.id,
+        "department_id": world.department_id,
+        "correlation_id": correlation,
+        "source_channel": "test",
+        "authorizer": _AUTHORIZER,
+    }
+    label = programme_query_services.get_managed_programme_call_department(**query)
+    assert label.label == "Programme"
+    assert label.department_id == world.department_id
+    audit = AuditEvent.objects.get(correlation_id=correlation)
+    assert audit.safe_metadata == {"target_count": 1}
+    assert audit.obligations == ["audit", "audit_sensitive_read"]
+    assert audit.target_id == world.department_id
+    assert audit.operation == "applications.programme.query.managed_department_label"
+    for overrides in (
+        {"organization_id": uuid4()},
+        {"edition_id": uuid4()},
+        {"department_id": uuid4()},
+    ):
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            programme_query_services.get_managed_programme_call_department(
+                **{**query, **overrides, "correlation_id": uuid4()}
+            )
 
 
 def test_managed_call_read_rejects_invalid_audit_input_before_scope_or_load(

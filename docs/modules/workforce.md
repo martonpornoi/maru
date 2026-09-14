@@ -5,6 +5,14 @@ through `resolve_retained_department_reference`, a public internal query that
 returns only the exact ID and retired flag. It grants no authority or discovery;
 mutation callers acquire the edition mutex before its optional row lock.
 
+The dedicated Applications call workspace may request one current Department
+name through `resolve_current_department_label_reference` after independently
+authorizing exact Department call management. This public internal seam selects
+only ID/name within the exact organization, edition and non-retired predicate.
+It conveys no holder, structure, discovery or authority information. Applications
+reauthorizes and audits before releasing the label; broader Workforce structure
+permission is neither granted nor required by this limited purpose.
+
 Status: Position, hierarchy, opportunity, agreement, authority onboarding,
 ADR 0041 containment, version-fenced Department and Position management, and
 the owner-safe Position assignment lifecycle with shared strict HTML/API
@@ -14,7 +22,7 @@ are implemented in the canonical current tree; Workforce-only assignment no
 longer manufactures attendee Participation evidence; complete rendered
 accessibility, portability, post-edition Availability disposal, recovery,
 deployment, and production acceptance remain gated
-Last updated: 2026-09-02
+Last updated: 2026-09-14
 
 ## Purpose and requirements
 
