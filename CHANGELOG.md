@@ -169,6 +169,11 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Aligned routine PR documentation builds with the parallel Sphinx invocation
+  already used by full CI and local certification. Required source coverage,
+  fatal warnings and the protected gate remain unchanged; hosted runtime still
+  needs measured acceptance (#113, blocking Programme PR #116).
+
 - PostgreSQL acceptance now plans smaller jobs from measured group costs and
   conservative runtime budgets. Local certification executes the same exact
   assignments as GitHub with at most eight disposable databases, retains

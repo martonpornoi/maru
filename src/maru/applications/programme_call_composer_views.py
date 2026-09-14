@@ -598,6 +598,7 @@ def _create(
             status = 409
         except ValidationError as error:
             _error(bundle, error)
+            status = 400
     context.update(composer_forms=bundle.displayed_forms(), creating=True)
     return _render(
         request,

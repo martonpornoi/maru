@@ -1,7 +1,18 @@
 # Local exact-commit certification
 
 Status: Required contributor evidence; GitHub independently verifies pull requests
-Last updated: 2026-09-12
+Last updated: 2026-09-14
+
+Routine PR, full CI and local documentation acceptance use the same warning-fatal,
+fresh-environment Sphinx HTML build with `-j auto`. This requests platform-supported
+CPU parallelism without changing sources, warnings, output or failure propagation;
+it does not permit stale artifact reuse. The PR quality timeout remains 30 minutes.
+Record actual hosted timings, not guaranteed headroom inferred from local speed.
+See the [documentation parity repair](../checkpoints/2026-09-14-pr-quality-documentation-parity.md).
+
+During iteration, run complete inexpensive database-free unit feedback before
+slower exact-commit certification. This catches repository-wide assumptions early;
+it does not replace fresh certification of the clean candidate.
 
 ## What the gate proves
 

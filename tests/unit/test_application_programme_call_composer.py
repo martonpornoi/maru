@@ -222,6 +222,27 @@ def test_condition_type_is_derived_from_earlier_source(kind, value, expected):
     assert type(result.condition.value) is type(expected)
 
 
+@pytest.mark.parametrize("original", [None, "", "0", "03", "invalid"])
+def test_creation_malformed_original_edition_version_is_bound_400_without_write(
+    page, original
+):
+    data = _new_data()
+    if original is None:
+        data.pop("expected_edition_version")
+    else:
+        data["expected_edition_version"] = original
+    response = _request(page, data=data)
+    assert response.status_code == 400
+    assert b"Review this request" in response.content
+    assert all(not writer.called for writer in page.writers.values())
+    soup = BeautifulSoup(response.content, "html.parser")
+    assert soup.select_one('[name="code"]')["value"] == data["code"]
+    assert soup.select_one('[name="retry_key"]')["value"] == data["retry_key"]
+    assert soup.select_one('[name="expected_edition_version"]').get("value", "") == (
+        original or ""
+    )
+
+
 def test_creation_get_has_explicit_starting_policy_and_no_mutation(page):
     response = _request(page)
     assert response.status_code == 200

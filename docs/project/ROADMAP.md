@@ -169,8 +169,10 @@ locally implemented creation/section/question/condition increment awaiting
 exact-head protected delivery, plus Department selection/reassignment,
 ordinary task continuations and accountable setup remain required increments;
 none is replaced by specialist records or closure of a supporting PR. #113 records
-the measured non-database quality-runtime margin as follow-up work, without
-displacing this decomposition unless it becomes an actual delivery blocker.
+the measured non-database quality-runtime margin. PR #116's original quality job
+now exceeded 30 minutes, making #113 an actual protected-delivery blocker. A
+bounded repair aligns routine Sphinx parallelism with existing full/local checks;
+fresh exact-head and hosted evidence must pass before resuming this decomposition.
 Delivered with #99, ADR 0098 adds budgeted CI assignments and measured
 headroom to address recurring historical-test timeouts without weakening safety
 selection or coverage. Its complete hosted run passed all 39 jobs below 50

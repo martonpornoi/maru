@@ -88,6 +88,21 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 ## Active bounded outcome: guided departmental journey (#108)
 
 Branch: `codex/programme-call-composer`, from protected PR #115.
+PR #116 is open, not merged. Its first head
+`814393a2f9bd4fc3173e324f242afbb9d13648e8` passed all eight retained local gates
+in 16m10s (6,274 units in 38.43s), but hosted quality exceeded 30 minutes during
+Sphinx source highlighting. Hosted units and CodeQL passed; the PR gate failed.
+Its archived local receipt is not certification of the repair now in progress.
+#113 is therefore an actual delivery blocker: routine PR Sphinx now requests the
+same `-j auto` parallelism already used by full CI and local certification, keeping
+all warnings/sources/checks and the 30-minute timeout. The previously recorded
+malformed-creation-version status follow-up is also fixed locally: five cases
+verify bound HTTP 400 with no writer and retained input/evidence. All 132 focused
+CI/composer tests pass in 2.17s; fresh full preflight passes 6,281 cases in 39.03s
+and all 498 documentation pages validate. Exact-head certification and hosted
+acceptance of this repair are still pending. See the
+[quality parity checkpoint](../checkpoints/2026-09-14-pr-quality-documentation-parity.md).
+
 The next bounded increment is locally implemented: explicit call creation and
 complete structured section/question/condition editing through the existing owner
 commands, including atomic cross-section moves. Fresh full-unit preflight passes
