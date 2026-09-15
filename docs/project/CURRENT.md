@@ -11,69 +11,69 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's guided release workspace is delivered through
-[PR #131](https://github.com/martonpornoi/maru/pull/131), protected squash
-`6c1d437e7e9935f5716397aede13b59a2609f4c2` at 2026-09-15 04:11:07 UTC.
-Its tree equals certified head `bd247c8dc99978184e0c5ba16e87da24001812e1`;
+#108's item/timetable/release connections are delivered through
+[PR #132](https://github.com/martonpornoi/maru/pull/132), protected squash
+`0ccd7866aa3965f527b3d8a28fcf5a2e4eebcb27` at 2026-09-15 05:32:33 UTC.
+Its tree equals certified head `b7c3d26d3ff83959d992be1b9952259c4ba70726`;
 clean local main and origin/main were synchronized to the protected result.
 
-All eight retained local gates passed in 18m02s: 7,544 units in 44.69s and
-90 frontend tests. Hosted units passed in 85.02s, quality took 28m32s,
-documentation 26m27s and workflow latency 29m36s. Exact-head PR gate and CodeQL
-passed; there was no hosted repair/rerun. The first local candidate failed
-formatting only; the corrected clean head passed fresh complete certification.
-The observed 1m28s quality margin is not guaranteed; #113 retains this risk
+All eight retained local gates passed in 18m12s: 7,591 units in 44.67s and
+92 frontend tests. Hosted units passed in 80.52s, quality took 26m54s,
+documentation 24m50s and workflow latency 27m22s. Exact-head PR gate and CodeQL
+passed; there was no canonical or hosted repair/rerun or acceptance exception.
+The observed 3m06s quality margin is not guaranteed; #113 retains this risk
 without displacing unblocked #48 work.
 
-The dormant workspace supplies labelled candidates, complete release checks,
-retained warning evidence, independent approval/publication, pointer-only
-withdrawal and explicit history. Original retries reach canonical receipt
-recovery before private source refresh. No writer, schema, profile, production
-route or CI policy changed. Four maintained native scenarios remain unexecuted
-#102 debt; component browser observations do not replace #92/#109 acceptance.
-See the [implementation](../checkpoints/2026-09-15-programme-guided-release-workspace.md),
-[formatting repair](../checkpoints/2026-09-15-programme-release-workspace-certification-repair.md)
-and [protected delivery](../checkpoints/2026-09-15-programme-release-workspace-protected-delivery.md).
+The canonical dormant timetable wraps the original native editor in the shared
+shell, dispatches once, and rechecks protected owner facts after rendering.
+Independently admitted fixed-label links connect items, planning and release;
+missing or moved optional links are omitted without obscuring authorized results.
+No writer, schema, profile, production route or CI policy changed. One maintained
+native scenario and further real-owner revalidation remain unexecuted #102 debt.
+New human checks are recorded under #92; component browser observations do not
+replace #92/#109 acceptance. See the
+[implementation](../checkpoints/2026-09-15-programme-workspace-connections.md) and
+[protected delivery](../checkpoints/2026-09-15-programme-connections-protected-delivery.md).
 
-Earlier deliveries, including [PR #130 typed answers](../checkpoints/2026-09-15-programme-typed-answers-protected-delivery.md),
+Earlier deliveries, including [PR #131 release workspace](../checkpoints/2026-09-15-programme-release-workspace-protected-delivery.md),
 remain complete. Do not restart them or reuse their evidence for a new head.
 
-## Active bounded outcome: Programme workspace connections (#108)
+## Active bounded outcome: Programme staffing-to-Shift connections (#108)
 
-Branch: `codex/programme-workspace-connections`, from protected PR #131.
-Connect private Programme items, the canonical dormant timetable editor and
-release workspace through independently admitted, resolvable task links.
-This next increment is recorded beneath #108's existing owner-connections
-checkbox. Workforce, notices and continuity remain unfinished continuations;
-a navigation increment does not complete the whole guided journey.
+Branch: `codex/programme-shift-connections`, from protected PR #132.
+Connect a current Programme staffing requirement to its exact existing Workforce
+Shift, with a safe Programme return continuation. This next increment is recorded
+beneath #108's existing owner-connections checkbox before implementation.
+Notice/continuity connections and final setup remain separate unfinished work.
 
-Reuse the existing native planner, owner commands/queries and shared shell.
-Verify exact organization/series/edition coherence without treating route or
-selected context as authority. Require each destination's own capabilities and
-field ceilings; do not emit executable-looking links to an unmounted route.
-Preserve original pending input and retry behavior. Optional navigation must
-not obscure a completed command or load private owner data just to offer a link.
+Reuse Workforce's existing read fields and sole Shift lifecycle. A minimized
+Programme coverage grant is not the complete organizer Shift permission.
+Resolve real organization/series/edition slugs through an explicit Events owner
+seam; do not invent a UUID-shaped Workforce route or import private owner models.
+Do not copy personnel into Scheduling, follow a successor silently, open work,
+confirm claims or change accepted commitments through navigation.
 
-The local increment now implements the canonical wrapper, final read-only
-disclosure checks and optional fixed-label links across all three workspaces.
-All 7,591 database-free units passed in 46.15s; 92 frontend tests passed in 9.43s.
-The first full-unit attempt was interrupted after Windows temp-directory setup
-errors; a first-error run isolated WinError 5, and the complete fresh local-temp
-rerun passed. Focused Ruff/format, mypy and NumPy checks passed after correcting
-test fixtures and one propagated-exception docstring. No tests were weakened.
+Preserve original pending input and retry behavior. Optional destination changes
+must not obscure a completed command. Account for the existing Shift pages' lazy
+template rendering when adding return links; final checks must not redispatch a
+POST. Keep current versus historical binding/predecessor meaning explicit.
 
-The actual-template, database-forbidden browser fixture traversed all three
-workspaces at 1,280 CSS pixels and checked draft selection, missing-reason input
-retention and restricted-link omission. Server logs confirmed restricted and
-anonymous direct-route 403; the browser retained the preceding page, so visible
-denial rendering is not claimed. Human discard/zoom/screen-reader and full-width
-acceptance remain #92 work. Both fixture tabs and its server are closed.
+Implemented locally: Events exact-chain route metadata, Workforce full-field
+destination admission, current-bound-Shift card links and lazy-render-safe
+Programme return navigation on organizer Shift pages. No personnel inventory is
+loaded for navigation and no source rows or command forms are replaced.
 
-No schema, runtime grant, current profile, production URL mount or CI policy
-changed. One existing native scenario is extended but neither collected nor run;
-#102 also retains admitted real-owner canonical rendering/recovery revalidation.
-See the [connection checkpoint](../checkpoints/2026-09-15-programme-workspace-connections.md).
-Fresh clean exact-head certification and protected delivery are still pending.
+Iteration: 7,624 units passed in 45.36s, 93 frontend tests passed; focused checks,
+Ruff, mypy and NumPy docstrings passed. A full-unit attempt first caught a missing
+empty-panel template fallback; repaired before the passing run. Synthetic browser
+handoff and coverage-only omission were observed with database access forbidden.
+The exact-commit canonical certification and hosted protected delivery are next;
+these iteration results are not a certification receipt.
+
+No schema, runtime grant, profile, production route or CI policy changed. One
+existing native Shift scenario was extended without collecting/running PostgreSQL.
+Human checks remain #92, integrated proof #109 and native restoration #102. See
+the [staffing connection checkpoint](../checkpoints/2026-09-15-programme-shift-connections.md).
 
 ## Remaining #48 delivery decomposition
 
@@ -85,8 +85,8 @@ outcome by themselves. #108 and #48 remain open.
   guided departmental journey and final gated promotion:
   - independently authorized person/domain-reference selection and safe-file
     intake/selection/viewers; typed text presentation alone does not finish these;
-  - authorized labelled connections to timetable planning, Workforce Shift work,
-    the delivered release workspace, #104 notices and #107 continuity;
+  - authorized labelled connections from the delivered item/timetable/release
+    workspaces to Workforce Shift work, #104 notices and #107 continuity;
   - accountable blank-organization setup, coherent shared navigation and an isolated
     complete synthetic fixture without changing current profiles;
   - final separately verified promotion only after all gates below pass.

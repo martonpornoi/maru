@@ -39,6 +39,7 @@ from maru.workforce.models import (
     Position,
     ShiftDemand,
 )
+from maru.workforce.programme_response import organizer_programme_response
 from maru.workforce.shift_audit import append_shift_read_audit
 from maru.workforce.shift_commands import (
     ShiftAuthorizationDeniedError,
@@ -516,7 +517,9 @@ def organization_workforce_shifts(
     ):
         logger.exception("Unable to load organizer Shift planning")
         return _organizer_failure(request)
-    return TemplateResponse(request, "workforce/shift_management.html", context)
+    return organizer_programme_response(
+        request, "workforce/shift_management.html", context
+    )
 
 
 @never_cache
@@ -592,7 +595,7 @@ def organization_workforce_shift(
     ):
         logger.exception("Unable to load organizer Shift detail")
         return _organizer_failure(request)
-    return TemplateResponse(request, "workforce/shift_detail.html", context)
+    return organizer_programme_response(request, "workforce/shift_detail.html", context)
 
 
 def _organizer_route_page_before_parse(
@@ -674,7 +677,7 @@ def create_organization_workforce_shift(
         return _organizer_failure(request)
     form = _demand_form(page=page, data=request.POST)
     if request.GET or not form.is_valid():
-        return TemplateResponse(
+        return organizer_programme_response(
             request,
             "workforce/shift_management.html",
             _organizer_list_context(
@@ -712,7 +715,7 @@ def create_organization_workforce_shift(
         raise PermissionDenied from error
     except (ValidationError, ShiftCommandError) as error:
         form.add_error(None, _shift_conflict_message(error))
-        return TemplateResponse(
+        return organizer_programme_response(
             request,
             "workforce/shift_management.html",
             _organizer_list_context(
@@ -793,7 +796,7 @@ def update_organization_workforce_shift(
         raise PermissionDenied from error
     form = _demand_form(page=page, data=request.POST, demand=item.demand)
     if request.GET or not form.is_valid():
-        return TemplateResponse(
+        return organizer_programme_response(
             request,
             "workforce/shift_detail.html",
             _organizer_detail_context(
@@ -834,7 +837,7 @@ def update_organization_workforce_shift(
         raise PermissionDenied from error
     except (ValidationError, ShiftCommandError) as error:
         form.add_error(None, _shift_conflict_message(error))
-        return TemplateResponse(
+        return organizer_programme_response(
             request,
             "workforce/shift_detail.html",
             _organizer_detail_context(

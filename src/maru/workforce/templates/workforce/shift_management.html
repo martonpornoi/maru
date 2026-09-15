@@ -16,6 +16,7 @@
 {% endblock %}
 
 {% block baseline_content %}
+  {% include "workforce/_programme_navigation.html" %}
   {% timezone edition.time_zone %}
   <a class="baseline-back-link" href="{% url 'organization-workforce-availability' organization.slug convention_series.slug edition.slug %}">← Workforce availability</a>
 

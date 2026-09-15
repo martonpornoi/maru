@@ -73,6 +73,68 @@ def resolve_edition_series_identity(
         return None
 
 
+@dataclass(frozen=True, slots=True)
+class EditionRouteIdentity:
+    """Exact owner route locators, not labels, source content or authority.
+
+    Attributes
+    ----------
+    organization_slug
+        Current organization route locator.
+    series_slug
+        Current coherent series route locator.
+    edition_slug
+        Current exact edition route locator.
+    """
+
+    organization_slug: str
+    series_slug: str
+    edition_slug: str
+
+
+def resolve_edition_route_identity(
+    *, organization_id: UUID, series_id: UUID, edition_id: UUID
+) -> EditionRouteIdentity | None:
+    """Resolve a coherent slug chain for an independently admitted destination.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Expected owner of both edition and series.
+    series_id : UUID
+        Exact expected parent, never inferred from selected shell context.
+    edition_id : UUID
+        Exact edition admitted by the caller's owning task policy.
+
+    Returns
+    -------
+    EditionRouteIdentity | None
+        Only the three current locators, or no coherent exact chain.
+
+    Notes
+    -----
+    Internal metadata seam, not a directory or browser authorization API. Callers
+    admit their complete destination policy before and after lookup, validate the
+    resolved route, and repeat after rendering. No owner inventory is read.
+    """
+    if any(
+        not isinstance(value, UUID)
+        for value in (organization_id, series_id, edition_id)
+    ):
+        return None
+    row = (
+        EventEdition.objects.filter(
+            id=edition_id,
+            organization_id=organization_id,
+            series_id=series_id,
+            series__organization_id=organization_id,
+        )
+        .values_list("organization__slug", "series__slug", "slug")
+        .first()
+    )
+    return EditionRouteIdentity(*row) if row is not None else None
+
+
 def resolve_private_planning_edition_reference(
     *,
     organization_id: UUID,

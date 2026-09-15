@@ -731,6 +731,21 @@ Restricted actor references and rationale appear only in that historical purpose
 they confer no personnel directory, private commitment or Scheduling authority.
 Both reads retain canonical scope, reauthorize and audit before disclosure.
 
+`programme_navigation.programme_shift_links` constructs only optional exact-demand
+destinations from current bindings already admitted and audited by their owner.
+It requires all `SHIFT_ORGANIZER_REQUIRED_FIELDS`, including holder labels;
+minimized Programme coverage is insufficient. Events resolves the exact slug
+chain, then reverse/resolve must identify the existing native detail route and
+exact arguments. No demand, personnel or history inventory is queried, and no
+successor is inferred. Source final checks retain binding lineage responsibility.
+This metadata check makes no lifecycle, existence or coverage assertion.
+
+`programme_response.organizer_programme_response` retains lazy native list/detail
+rendering and original validation/conflict forms. Independently authorized
+Programme links are rechecked after rendering, with changed links omitted using
+the same context, status and headers. No command is redispatched. Personal Shift
+pages, native audit purposes, lifecycle commands and current profiles are unchanged.
+
 `programme_impact.evaluate_programme_staffing_impact` describes closed
 create/link/reconcile/successor consequences without granting authority. Linking
 an existing demand requires an uncommitted draft with identical explicit terms;

@@ -10,6 +10,15 @@
 
 ## Purpose and outcome
 
+The #108 Programme connection adds optional fixed-label item, timetable and
+release links to organizer list/detail pages and their validation responses.
+Each destination independently admits its own complete fields and exact scope;
+current profiles still mount none of these dormant Programme routes. The lazy
+response rechecks links after rendering and removes moved links without changing
+native form data, retry keys, errors or status. No query-string return target or
+previous private candidate is restored. My shifts and all Shift lifecycle commands
+are unchanged. See [Programme staffing](programme-staffing.md#exact-shift-continuation-under-108).
+
 **Shift planning** lets an authorized organizer state what work is needed,
 publish it to suitable people, review claims, lock accountable coverage, and
 retain completion or cancellation evidence. **My shifts** lets one person see

@@ -1,7 +1,7 @@
 # Programme staffing
 
-- Status: Accepted continuation contract; native implementation and focused
-  synthetic rehearsal complete locally, issue-level certification pending.
+- Status: Dormant native staffing foundation with #108's exact Shift continuation;
+  final integrated, PostgreSQL and human acceptance remain separate gates.
 - Child: [Staffing #88](https://github.com/martonpornoi/maru/issues/88).
 - Parent: [Programme Operations #48](https://github.com/martonpornoi/maru/issues/48).
 - Requirements: HR-009, HR-014, HR-015, SCH-003, SCH-007, SCH-009, SCH-010,
@@ -54,6 +54,28 @@ opaque identifiers or a selected context cannot authorize labels. The UI must
 not substitute a personnel-bearing organizer overview for minimized coverage.
 
 ## Native requirement workflow
+
+### Exact Shift continuation under #108
+
+The canonical timetable may offer **Open this bound Shift** beside a current,
+owner-verified binding. Workforce independently admits all four organizer Shift
+fields, including holder display labels, before Events resolves the exact current
+organization/series/edition slug chain. Reverse and resolve the existing demand
+route; do not invent a UUID-shaped route, infer a successor, or read a personnel
+overview to construct navigation. A link is not a current coverage assertion.
+
+Recheck optional destinations after rendering; omit changed or unavailable links
+without changing pending input, retry keys, command outcomes or HTTP status.
+Final timetable source checks still verify the current binding. Retained history
+does not receive a current-Shift shortcut. Missing links leave explicit reference
+and permission guidance, never an empty-coverage claim.
+
+Existing organizer Shift list/detail and their validation responses may offer
+independently admitted fixed-label Programme continuations. Lazy rendering must
+finish the optional link checks before response bytes are released, without
+redispatching a command. Return navigation restores no implicit candidate or
+staffing selection, and accepts no caller-supplied redirect target. It grants no
+Programme, Venue or release authority. My shifts is unchanged.
 
 Select the exact item and occurrence before editing. Show retained needs as
 labelled cards with work title, reporting place, explicit work interval in the

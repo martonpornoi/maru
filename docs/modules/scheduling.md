@@ -466,10 +466,19 @@ and form-choice comparison. It independently checks base field ceilings and the
 Events-owned parent relation before dispatch and after rendering. It introduces
 no outer cross-owner transaction, mutation, schema or profile grant.
 `workspace_navigation.programme_workspace_links` is the public metadata-only
-navigation seam consumed by Programme and Scheduling. Fixed task labels require
+navigation seam consumed by Programme, Scheduling and organizer Workforce pages.
+The closed external source `shifts` may receive all three independent task links;
+ordinary Programme sources still omit their own task. Fixed task labels require
 independent owner admission and exact reverse/resolve identity; optional denied,
 unmounted or moved links are omitted without obscuring an otherwise authorized
 result. See the [canonical connection contract](../product/page-contracts/programme-timetable-planning.md#canonical-connections-under-108).
+
+The canonical wrapper also adds optional **Open this bound Shift** links to
+current staffing cards through Workforce's public navigation seam. Decorated
+cards are separate from protected source rows: final owner-fact checks still
+compare the original binding, while moved destination metadata is omitted without
+invalidating the otherwise authorized result. Historical binding pages gain no
+current-demand shortcut. The native unsaved-input guard applies to these links.
 
 `planning_record_forms.PlanningRecordForm` and
 `planning_record_actions.submit_planning_record` provide the remaining explicit

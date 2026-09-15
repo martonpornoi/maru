@@ -105,6 +105,11 @@ def test_three_tasks_have_exact_resolvable_links_and_independent_fields(links_wo
     }
     assert [row.code for row in links(world, "timetable")] == ["items", "release"]
     assert [row.code for row in links(world, "release")] == ["items", "timetable"]
+    assert [row.code for row in links(world, "shifts")] == [
+        "items",
+        "timetable",
+        "release",
+    ]
 
 
 @pytest.mark.parametrize("owner", ["programme", "scheduling", "venue"])

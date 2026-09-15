@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Connected dormant Programme staffing cards to their exact existing Shift,
+  subject to full independent Workforce permission. Shift organizers receive
+  independently authorized Programme return links; navigation changes neither
+  staffing commitments nor pending input, and activates no Programme profile.
+
 - Connected the dormant Programme item, timetable and release workspaces with
   independently authorized task links. The canonical timetable uses the shared
   shell, preserves pending input and rechecks protected sources before display;
