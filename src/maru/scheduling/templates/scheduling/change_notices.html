@@ -21,7 +21,24 @@
   <p class="notice-warning">Manual communication only: no delivery provider is configured here. Preparation, approval, manual handoff and acknowledgement are different facts. None changes accepted work or attendance.</p>
   {% endif %}
   <p><a href="{{ request.path }}">Refresh notice inventory</a></p>
-  {% if not personal and not unavailable %}<p><a href="?task=hosts">Choose a Programme occurrence and confirmed host</a></p><p><a href="?task=work">Choose a Programme occurrence and accepted work</a></p>{% endif %}
+  {% if not personal and not unavailable %}<p><a href="?task=hosts">Choose a Programme occurrence and confirmed host</a></p><p><a href="?task=work">Choose a Programme occurrence and accepted work</a></p><p><a href="?task=operators">Choose an operator purpose and known person</a></p>{% endif %}
+  {% if operator_selection %}
+  <section class="baseline-panel" aria-labelledby="notice-operator-heading">
+    <h2 id="notice-operator-heading">Notify a known operator</h2>
+    <p>Choose a current occurrence and a room, Department or edition purpose, then a labelled scope. Knowing a person or seeing a scope does not grant recipient eligibility. This does not invite anyone or search a directory.</p>
+    {% if operator_choices.occurrence_id %}{% for row in operator_choices.source.occurrences %}{% if row.occurrence.id == operator_choices.occurrence_id %}<p>Selected current occurrence: <strong>{{ row.label }}</strong>.</p>{% endif %}{% endfor %}{% endif %}
+    {% if operator_choices.target_id %}{% for row in operator_choices.targets %}{% if row.id == operator_choices.target_id %}<p>Selected operator scope: <strong>{{ row.label }}</strong> · {{ operator_choices.kind }} purpose.</p>{% endif %}{% endfor %}{% endif %}
+    {% if operator_choices and not operator_choices.source.release_id %}<p>No publication or withdrawal is available yet. Release a timetable before preparing a change notice.</p>{% endif %}
+    {% if operator_source_form %}
+      {% if operator_choices.source.occurrences %}<form method="get" action="{{ request.path }}">{{ operator_source_form.as_div }}<button type="submit">Show operator scopes</button></form>{% else %}<p>No current Programme occurrences are available.</p>{% endif %}
+    {% endif %}
+    {% if operator_choices.kind and not operator_choices.targets %}<p>No current scopes are available for this operator purpose. No partial or historical list is shown.</p>{% endif %}
+    {% if operator_target_form %}<form method="get" action="{{ request.path }}">{{ operator_target_form.as_div }}<button type="submit">Use this operator scope</button></form>{% endif %}
+    {% if operator_lookup_form %}<form method="post" action="{{ request.path }}">{% csrf_token %}{{ operator_lookup_form.as_div }}<button type="submit">Check this known operator</button></form>{% endif %}
+    {% if operator_person %}<p>Selected operator: <strong>{{ operator_person.recipient.display_label }}</strong> · {{ operator_person.intent.kind }} purpose. This selection retains the original person; a changed email does not select a replacement. Preview rechecks current eligibility and the original source.</p>{% endif %}
+    {% if operator_preview_form %}<form method="post" action="{{ request.path }}">{% csrf_token %}{{ operator_preview_form.as_div }}<button type="submit">Preview this operator change</button></form>{% endif %}
+  </section>
+  {% endif %}
   {% if guided_source_form %}
   <section class="baseline-panel" aria-labelledby="notice-recipient-heading">
     <h2 id="notice-recipient-heading">{% if work_selection %}Notify a work holder{% else %}Notify a confirmed host{% endif %}</h2>

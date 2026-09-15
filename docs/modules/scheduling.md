@@ -106,8 +106,9 @@ The notice transport compares freshly read selection, preview, detail or invento
 facts after actual rendering and repeats action admission before releasing bytes.
 It never dispatches a command twice. Moved optional workflow links are omitted
 using the same original forms; failed source checks suppress the entire private
-result. Operator selectors remain unfinished #108 increments, as do integrated
-human and native database acceptance. No schema, profile or runtime role changes.
+result. Guided operator selectors now use the separate purpose-bound connection
+below; integrated human and native database acceptance remain incomplete. No
+schema, profile or runtime role changes.
 
 `load_notice_source_selection` now shares source discovery between hosts and Work;
 `load_notice_work_selection` does not require host-roster authority. The exact
@@ -118,6 +119,37 @@ The selected value is the commitment, never a substitute person or successor.
 Ordinary preview/preparation uses the existing exact references and purpose proof.
 Empty choices do not imply notification completeness. Source/Work overflow has
 specific 503 recovery guidance, not an ineffective notice-release filter suggestion.
+
+`operator_notice_choices.load_notice_operator_choices` independently requires the
+actual sender's recipient field before current source or target discovery. The
+closed room/Department/edition purpose uses Venue's workspace-authorized complete
+room labels, Workforce's separately authorized current Department labels, or the
+exact current edition. Current occurrence membership precedes target disclosure;
+an unknown/retired target fails before Identity lookup. Owner overflow is explicit
+and complete-or-unavailable. Each single-person owner transaction finishes before
+multi-person recipient reads; composing inside an outer transaction is rejected.
+
+`operator_notice_person_selection.prepare_operator_notice_person_selection`
+resolves only an exact known login email after source/purpose admission. Complete
+sorted sender/person locks precede repeated Identity observation and the existing
+independent operator-recipient proof. Unknown/inactive/unverified/ineligible people
+share a mandatory actual-sender audited empty result; dependency, moved evidence
+and audit failures never become empty success. The narrow recipient-ineligibility
+subclass preserves existing unavailable semantics for older callers; eligibility
+lost during the repeated observation remains genuine unavailable evidence.
+
+The bounded uncompressed signature carries only original actor/organization/
+edition/release/occurrence/pointer/purpose/target/person/lookup-intent identifiers.
+`load_operator_notice_person_selection` admits the current sender before decoding,
+rejects wrong scope or malformed shape, and never resolves a mutable email again.
+It rechecks the original person and source, not a replacement or rebased pointer.
+The separate native known-person and signed-preview forms retain visible source
+and scope labels; no account override, invitation or message writer is added.
+Ordinary preparation still holds its original exact account, digest, pointer and
+native command retry key. Final rendering repeats recipient-field admission even
+for invalid/empty lookup forms and compares current labels, person and preview.
+New native three-purpose composition scenarios remain unexecuted #102 debt, and
+human acceptance remains #92. Partial delivery; #108 and #48 remain incomplete.
 
 `load_programme_change_notice_inventory` bounds exact-edition candidates at 256,
 optionally filtered to a release. Personal candidates are recipient-filtered and

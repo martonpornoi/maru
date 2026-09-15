@@ -1,5 +1,19 @@
 # Workforce module
 
+`operator_target_choices.list_programme_operator_department_choices` is the public
+internal minimized current-Department label query for Programme operator notices.
+The actual sender independently needs exact-edition `workforce.view_structure`
+and `departments`; opaque operator scope links do not imply label permission.
+It selects only ID/code/name, exact organization/edition and non-retired state,
+bounded by `MAX_STRUCTURE_DEPARTMENTS`. Canonical shared scope then current actor
+locks, repeated labels/policy and mandatory actual-sender positive/empty audit
+precede disclosure (`workforce.programme_operator_department_choices.read`,
+existing `workforce-restricted` retention). No hierarchy, positions, holders,
+availability or qualifications are loaded. A complete overflow is unavailable,
+never a truncated chooser. This owner transaction finishes before the composing
+Scheduling query locks a complete sender/recipient set. No schema or capability
+is added; current operator eligibility and final label disclosure remain separate.
+
 The dormant Programme notice picker uses the public internal
 `notice_recipient_choices.list_programme_work_notice_choices` query for one
 deliberately selected occurrence. Its actual sender independently needs

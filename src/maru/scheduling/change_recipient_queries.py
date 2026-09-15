@@ -29,6 +29,10 @@ if TYPE_CHECKING:
     from maru.authorization.policy import PolicyDecision
 
 
+class OperatorChangeRecipientIneligibleError(SchedulingUnavailableError):
+    """One current person/purpose is ineligible, unlike an unavailable dependency."""
+
+
 @dataclass(frozen=True, slots=True)
 class OperatorChangeRecipientRequest:
     """Deliberately select one recipient and scope under authenticated sender authority.
@@ -110,7 +114,7 @@ def _eligibility(
         return staffing, tuple(decisions)
     except SchedulingAuthorizationDeniedError as error:
         # Missing, foreign, inactive and ineligible selections share one result.
-        raise SchedulingUnavailableError from error
+        raise OperatorChangeRecipientIneligibleError from error
 
 
 def _load(request: OperatorChangeRecipientRequest) -> OperatorChangeRecipient:
@@ -122,7 +126,7 @@ def _load(request: OperatorChangeRecipientRequest) -> OperatorChangeRecipient:
         ):
             if account_id == sender.actor_id:
                 raise SchedulingAuthorizationDeniedError
-            raise SchedulingUnavailableError
+            raise OperatorChangeRecipientIneligibleError
     subject = OperatorReadRequest(
         request.account_id,
         sender.organization_id,
@@ -133,7 +137,11 @@ def _load(request: OperatorChangeRecipientRequest) -> OperatorChangeRecipient:
     )
     eligibility = _eligibility(subject)
     labels = active_verified_person_account_display_labels({request.account_id})
-    if set(labels) != {request.account_id} or _eligibility(subject) != eligibility:
+    try:
+        current_eligibility = _eligibility(subject)
+    except OperatorChangeRecipientIneligibleError as error:
+        raise SchedulingUnavailableError from error
+    if set(labels) != {request.account_id} or current_eligibility != eligibility:
         raise SchedulingUnavailableError
     return OperatorChangeRecipient(
         request.account_id,

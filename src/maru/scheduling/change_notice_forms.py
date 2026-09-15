@@ -16,6 +16,7 @@ from .catalogs import MAX_REASON_LENGTH
 from .change_catalogs import ChangeRecipientPurpose
 from .change_inputs import ChangeRecipientSelection
 from .inputs import normalized_text
+from .operator_scope import OperatorScopeKind
 
 
 class NoticeSelectionForm(StrictInputForm):
@@ -25,9 +26,55 @@ class NoticeSelectionForm(StrictInputForm):
     release = CanonicalUUIDField(required=False, label="Filter by exact release")
     task = forms.ChoiceField(
         required=False,
-        choices=(("hosts", "Notify a host"), ("work", "Notify a work holder")),
+        choices=(
+            ("hosts", "Notify a host"),
+            ("work", "Notify a work holder"),
+            ("operators", "Notify an operator"),
+        ),
     )
     occurrence = CanonicalUUIDField(required=False, widget=forms.HiddenInput)
+    operator_kind = forms.ChoiceField(
+        required=False,
+        choices=tuple((kind.value, kind.value.title()) for kind in OperatorScopeKind),
+    )
+    operator_target = CanonicalUUIDField(required=False, widget=forms.HiddenInput)
+
+
+class OperatorNoticeLookupForm(StrictInputForm):
+    """One deliberate source/purpose and exact known email, without a directory."""
+
+    action = forms.ChoiceField(
+        choices=(("operator_lookup", "Find known operator"),), widget=forms.HiddenInput
+    )
+    release_id = CanonicalUUIDField(widget=forms.HiddenInput)
+    occurrence_id = CanonicalUUIDField(widget=forms.HiddenInput)
+    pointer_version = StrictBase10IntegerField(
+        min_value=1, max_value=2**63 - 2, widget=forms.HiddenInput
+    )
+    kind = forms.ChoiceField(
+        choices=tuple((kind.value, kind.value.title()) for kind in OperatorScopeKind),
+        widget=forms.HiddenInput,
+    )
+    target_id = CanonicalUUIDField(widget=forms.HiddenInput)
+    lookup_retry_key = CanonicalUUIDField(widget=forms.HiddenInput)
+    email = forms.EmailField(
+        max_length=254,
+        label="Known operator's exact email",
+        help_text=(
+            "Use an email you already know. This does not search a directory, "
+            "invite anyone or send a message."
+        ),
+    )
+
+
+class OperatorNoticePreviewForm(StrictInputForm):
+    """Retain the original resolved person; never accept an account override."""
+
+    action = forms.ChoiceField(
+        choices=(("operator_preview", "Preview operator change"),),
+        widget=forms.HiddenInput,
+    )
+    token = forms.CharField(max_length=2048, strip=False, widget=forms.HiddenInput)
 
 
 class NoticePreviewForm(StrictInputForm):

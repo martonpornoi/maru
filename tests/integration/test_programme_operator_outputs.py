@@ -65,6 +65,12 @@ from maru.scheduling.models import (
     SchedulingChangeNotice,
     SchedulingChangeNoticeEvidence,
 )
+from maru.scheduling.operator_notice_choices import load_notice_operator_choices
+from maru.scheduling.operator_notice_person_selection import (
+    OperatorNoticeIntent,
+    load_operator_notice_person_selection,
+    prepare_operator_notice_person_selection,
+)
 from maru.scheduling.operator_output_queries import load_operator_run_sheet
 from maru.scheduling.operator_release_impact import load_operator_release_impact
 from maru.scheduling.operator_release_references import load_operator_release_reference
@@ -305,6 +311,69 @@ def test_real_owner_scopes_return_exact_approved_phases_and_reviewed_copy(
     )
 
 
+def _assert_guided_operator_selection(attribution, sender, request, occurrence_id):
+    for capability in (
+        "scheduling.view_planning",
+        "programme.view_private",
+        "venues.view_workspace",
+        "workforce.view_structure",
+    ):
+        CapabilityGrantFactory(
+            organization_id=request.organization_id,
+            edition_id=request.edition_id,
+            principal=sender,
+            capability_code=capability,
+        )
+    choices = load_notice_operator_choices(
+        attribution,
+        occurrence_id=occurrence_id,
+        kind=request.kind,
+        target_id=request.target_id,
+    )
+    assert any(row.id == request.target_id for row in choices.targets)
+    intent = OperatorNoticeIntent(
+        choices.source.release_id,
+        occurrence_id,
+        choices.source.pointer_version,
+        request.kind,
+        request.target_id,
+        uuid4(),
+    )
+    from maru.identity.models import Account  # noqa: PLC0415 - native synthetic fixture
+
+    email = Account.objects.get(id=request.actor_id).email
+    selected = prepare_operator_notice_person_selection(
+        attribution, intent=intent, email=email
+    )
+    assert selected is not None
+    assert selected.recipient.account_id == request.actor_id
+    assert (
+        load_operator_notice_person_selection(attribution, token=selected.token)
+        == selected
+    )
+    assert (
+        prepare_operator_notice_person_selection(
+            attribution,
+            intent=replace(intent, lookup_retry_key=uuid4()),
+            email="unknown-operator@example.invalid",
+        )
+        is None
+    )
+    assert (
+        AuditEvent.objects.filter(
+            principal_id=sender.id,
+            event_edition_id=request.edition_id,
+            operation="scheduling.query.operator_notice_known_person",
+            outcome="allow",
+        ).count()
+        == 2
+    )
+    assert not AuditEvent.objects.filter(
+        principal_id=request.actor_id,
+        operation="scheduling.query.operator_notice_known_person",
+    ).exists()
+
+
 def _assert_operator_change_recipient(
     request, monkeypatch, *, release_id, occurrence_id, release_scope
 ):
@@ -322,6 +391,10 @@ def _assert_operator_change_recipient(
                 "scheduling.handoff_change_notices",
                 "scheduling.view_change_self",
                 "scheduling.acknowledge_change_self",
+                "scheduling.view_planning",
+                "programme.view_private",
+                "venues.view_workspace",
+                "workforce.view_structure",
             }
             or original(code, version, capability)
         ),
@@ -364,6 +437,7 @@ def _assert_operator_change_recipient(
     ):
         with pytest.raises(SchedulingUnavailableError):
             load_operator_change_recipient(changed)
+    _assert_guided_operator_selection(attribution, sender, request, occurrence_id)
     _assert_exact_notice_preview(
         attribution,
         request,

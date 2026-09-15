@@ -11,58 +11,60 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's guided host-notice connection is delivered through
-[PR #134](https://github.com/martonpornoi/maru/pull/134), protected squash
-`bdb0fe356285580663c936c3a18b666e499403d9` at 2026-09-15 08:07:16 UTC.
-Its tree equals certified head `e8c3b627b6e6ca00e6245a82204ce64ff1dcfa52`;
+#108's guided Work-notice connection is delivered through
+[PR #135](https://github.com/martonpornoi/maru/pull/135), protected squash
+`47019037f1b64cf7007bbee1c2061ad6f964f9cd` at 2026-09-15 09:29:19 UTC.
+Its tree equals certified head `ebfc53fc2fda60eb88f1d69185de8c691b469888`;
 clean local main and origin/main were synchronized to the protected result.
 
-All eight retained local gates passed in 18m10s: 7,661 units in 45.77s.
-Hosted units passed in 84.51s and all 93 frontend cases passed; quality took
-28m40s, documentation 26m43s and workflow latency 29m10s. Exact-head PR gate and CodeQL
-passed; there was no canonical or hosted repair/rerun or acceptance exception.
-The observed 1m20s quality margin is not guaranteed; #113 retains this risk
-without displacing unblocked #48 work.
+All eight retained local gates passed in 18m20s: 7,717 units in 45.85s.
+Hosted units passed in 85.06s and all 93 frontend cases passed; quality took
+25m24s, documentation 23m22s and workflow latency 25m55s. Exact-head PR gate and
+CodeQL passed, with no canonical/hosted repair or acceptance exception. Merge API
+errors were state-checked before ordinary SHA-conditional protected REST squash
+succeeded; no bypass or direct-main push. The observed 4m36s quality margin is
+not guaranteed or attributable to a CI change; #113 retains the runtime risk.
 
 The notice workspace now connects current labelled occurrences and confirmed hosts
-to the existing exact preview/command workflow. It independently admits task links
-and rechecks rendered private source facts without dispatching writers twice.
-No historical geometry, person directory, schema, runtime role, profile or CI
-change was added. One maintained native host scenario remains unexecuted #102 debt;
-#92 human tasks are recorded. See the
-[implementation](../checkpoints/2026-09-15-programme-host-notice-selection.md) and
-[protected delivery](../checkpoints/2026-09-15-programme-host-notices-protected-delivery.md).
+or operative current/retained Work to existing exact preview/commands. Work choices
+have independent title/coverage/holder fields, complete lineage and person locks,
+actual-sender positive/empty audit and final rendered source/field checks. No
+historical geometry, directory, accepted-work mutation, schema, profile or CI
+change. One maintained native Work scenario remains unexecuted #102 debt and #92
+human tasks are recorded. See the
+[implementation](../checkpoints/2026-09-15-programme-work-notice-selection.md) and
+[protected delivery](../checkpoints/2026-09-15-programme-work-notices-protected-delivery.md).
 
 Earlier deliveries, including [PR #132 workspace connections](../checkpoints/2026-09-15-programme-connections-protected-delivery.md),
 remain complete. Do not restart them or reuse their evidence for a new head.
 
-## Active bounded outcome: guided Work-recipient notices (#108)
+## Active bounded outcome: guided operator notices (#108)
 
-Branch: `codex/programme-work-notices`, from protected PR #134. The dormant Work
-selector is implemented and awaiting fresh exact-head protected delivery. It shares
-current source discovery without host-roster authority and uses a bounded
-exact-occurrence Workforce query for operative current and retained commitments.
-Choices independently require `shift_demands`,
-`coverage_states` and `holder_display_labels` for readable work choices, without
-suitability/availability or broad personnel discovery. Keep the existing exact
-recipient preview's two-field contract and sole Workforce lifecycle unchanged.
+Branch: `codex/programme-operator-notices`, from protected PR #135. The recorded
+room/Department/edition target and known-person connection is implemented locally:
+independent current owner labels, original-person/source signed selection,
+actual-sender positive/empty audit and fresh recipient eligibility. Native preview
+and command references remain unchanged. No impersonation, directory, invitation,
+schema, profile or CI-policy change.
 
-Complete lineage, canonical full-person lock order, current verified people,
-actual-sender positive/empty audit and final source/field checks are retained.
-No successor is substituted. Source and Work overflow have specific recovery
-guidance with no partial list. Explicit operator selections follow inside the
-same recorded notice checklist.
+Iteration: all 7,774 database-free units passed in 47.56s (three existing URLField
+warnings); after the browser-discovered duplicate form-ID correction, 169 focused
+notice cases passed in 2.12s. Changed-source strict mypy, Ruff and NumPy docstrings
+passed. Bounded synthetic browser discovery, three purpose choices, room
+known-person/signed preview, unknown-person empty, read-only and denied states
+were rehearsed at 1,280 CSS pixels. Source/scope labels stay visible through
+preview. No persistent writer was invoked; this is not native or human acceptance.
+The three-purpose native scenario is maintained but uncollected/unexecuted #102
+debt; new human obligations remain #92. Exact-commit certification, hosted gate
+and protected merge are next delivery steps, not yet claimed. See the
+[implementation checkpoint](../checkpoints/2026-09-15-programme-operator-notice-selection.md).
+
+Keep owner label queries separate from multi-person lookup transactions. Resolve a
+known email only for fresh deliberate selection; retain original person identifiers
+through preview and command retry instead of rebasing a mutable address. Existing
+preparation/review/handoff/acknowledgement commands and their authority remain sole
+writers. The accepted page/module contracts document the independent fields.
 The overall #108 connection and #48 remain incomplete.
-
-Focused feedback: 126 cases passed; full database-free units **7,717 passed in
-46.69s**, three existing URLField warnings. Strict mypy, NumPy docstrings and
-repository Ruff/format/documentation checks passed. Synthetic browser at 1,280px
-followed inventory/occurrence/retained-work/preview for organizer and read-only
-roles and verified non-disclosing denial. SQL was forbidden; no command persisted.
-One existing native Work scenario is maintained but uncollected/unexecuted #102
-debt; full human/zoom/keyboard/screen-reader acceptance remains #92. See the
-[Work implementation checkpoint](../checkpoints/2026-09-15-programme-work-notice-selection.md).
-Do not treat these iteration checks as an exact-commit certification receipt.
 
 Preserve exact release/purpose/source checks, original pending digest/version/key,
 source suppression and final disclosure checks without dispatching commands twice.
