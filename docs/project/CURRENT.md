@@ -35,10 +35,14 @@ through connection close and one absolute connect/send/read deadline are require
 Disabled, unscanned, malformed, unknown and partial states fail closed. A PDF
 envelope/clean scan is not a benign-document guarantee or permission.
 
-Focused mocked-transport tests pass 80 cases in 0.51s; complete database-free
-feedback passes 8,642 in 53.50s with three existing URLField warnings. Whole
-lint/format, strict types, NumPy and semantic docstrings pass. Fresh clean
-exact-commit certification is next. No real scanner, ORM, storage, authorization, audit, event, receipt,
+The initial local certification passed all eight retained gates in 5m13s, but
+PR #146's hosted unit run failed one mapped-IPv6 classification case (Python
+3.12.14 versus local 3.12.0). The local reproduction now protects explicit rejection
+regardless of library classification, including both address spellings. See the
+[repair checkpoint](../checkpoints/2026-09-16-programme-scanner-endpoint-repair.md).
+Corrected focused feedback passes 83 cases in 0.56s and full database-free feedback
+passes 8,645 in 54.54s. Fresh exact-commit certification is next; the initial receipt
+cannot certify this candidate. No real scanner, ORM, storage, authorization, audit, event, receipt,
 answer, profile or production route is changed. No native suite is collected/run.
 No new visible UI means no new browser acceptance claim. Real scanner/signature,
 storage/provenance and recovery acceptance remain #109/#102.

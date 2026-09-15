@@ -230,6 +230,7 @@ def test_no_unscanned_or_unknown_adapter_can_succeed(scanner, settings, mode):
         "169.254.169.254",
         "8.8.8.8",
         "::ffff:127.0.0.1",
+        "::ffff:7f00:1",
         "::1%lo",
         "http://127.0.0.1",
         127001,
@@ -247,6 +248,19 @@ def test_literal_ipv6_loopback_uses_ipv6_socket(scanner, settings):
     files.prepare_programme_pdf(data=PDF)
     scanner.factory.assert_called_once_with(socket.AF_INET6, socket.SOCK_STREAM)
     scanner.connection.connect.assert_called_once_with(("::1", 3310))
+
+
+@pytest.mark.parametrize("host", ["::ffff:127.0.0.1", "::ffff:7f00:1"])
+def test_mapped_ipv6_is_rejected_even_when_classified_as_loopback(
+    scanner, settings, monkeypatch, host
+):
+    settings.MARU_PROGRAMME_FILE_SCANNER_HOST = host
+    monkeypatch.setattr(
+        files.ipaddress.IPv6Address, "is_loopback", property(lambda _: True)
+    )
+    with pytest.raises(files.ProgrammeFileUnavailableError):
+        files.prepare_programme_pdf(data=PDF)
+    scanner.factory.assert_not_called()
 
 
 @pytest.mark.parametrize(

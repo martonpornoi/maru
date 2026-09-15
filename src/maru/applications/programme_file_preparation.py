@@ -90,7 +90,9 @@ def _configuration() -> _Endpoint:
         raise ProgrammeFileUnavailableError(
             "Use a literal loopback scanner address."
         ) from error
-    if not address.is_loopback:
+    if not address.is_loopback or (
+        isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None
+    ):
         raise ProgrammeFileUnavailableError("Use a literal loopback scanner address.")
     return _Endpoint(
         str(address),

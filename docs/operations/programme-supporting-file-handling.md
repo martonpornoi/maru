@@ -37,6 +37,9 @@ is unchanged; no registration or Workforce document adapter is called.
 These are separate from the existing Registration/Workforce `MARU_MEDIA_SCANNER`
 settings. Their compatibility/test modes do not authorize Programme scanning.
 Enabling the adapter is not enabling the Programme workflow.
+IPv4-mapped IPv6 addresses are explicitly unsupported, including alternate textual
+spellings; this policy does not depend on a Python patch version's loopback
+classification. Use a literal IPv4 loopback address or native IPv6 `::1`.
 
 Before a future deployment, the operator must establish trusted local scanner
 custody, appropriately maintained signatures, sufficient daemon stream limits and
