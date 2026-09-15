@@ -1,6 +1,7 @@
 # Programme timetable planning
 
-- Status: Accepted contract; implementation in progress, not activated.
+- Status: Dormant editor delivered; canonical connections are a bounded #108
+  continuation, not activation.
 - Child: [Accessible editor #85](https://github.com/martonpornoi/maru/issues/85).
 - Parent: [Programme Operations #48](https://github.com/martonpornoi/maru/issues/48).
 - Predecessor: [Scheduling #81](https://github.com/martonpornoi/maru/issues/81),
@@ -33,6 +34,42 @@ must distinguish synthetic component/domain evidence from genuine provisioned
 runtime evidence. A test authorizer or database owner is never runtime proof.
 
 ## Authority and field boundaries
+
+### Canonical connections under #108
+
+The reserved route now wraps the existing editor in the actual shared shell.
+It checks the authenticated UUID principal, Scheduling planning fields,
+Programme item-summary/working-information fields and Venue selected-room fields
+before dispatch. Events resolves the exact organization/series/edition relation.
+Route identifiers are correlation references, never grants or human names; the
+page does not change an unrelated selected shell context.
+
+**Programme workflow** offers fixed-label links between Programme items,
+Timetable planning and Release timetable only when each destination is
+independently admitted and reverses and resolves in the current URL configuration.
+Unmounted, shadowed, foreign-parent, denied and unavailable targets are omitted.
+No destination inventory, history, people or public-copy source is read merely
+to offer navigation. Release discovery needs any independently allowed task,
+not all planner/reviewer/publisher powers. Each destination reauthorizes.
+
+The native editor dispatches exactly once. After actual template rendering the
+wrapper repeats protected read-only composition and compares displayed owner
+facts and control choices, then repeats base admission and parent coherence.
+Changed sources or lost authority withhold the entire private result; a submitted
+command is not described as failed merely because disclosure became unavailable.
+There is no outer cross-owner transaction and no second command dispatch.
+Original bound values, optimistic versions and retry keys remain unchanged.
+Placement/staffing previews remain transient observations, not persisted facts.
+The existing source-read-dependent editor recovery is not a new source-free
+receipt API. Optional link movement only removes navigation; it does not erase
+an otherwise authorized successful command result.
+
+Existing pending-input guards cover these ordinary links. Following one never
+places an item, approves copy, publishes a timetable, or transfers form contents
+through URLs or browser storage. Workforce, notices, continuity and coherent
+blank-organization setup remain unfinished #108 continuations. Production routes,
+profiles and runtime grants remain closed. #102 retains native revalidation,
+#109 integrated acceptance and #92 human keyboard/zoom/discard acceptance.
 
 Resolve authenticated actor and exact trusted organization/edition before
 loading labels or binding private input. Scheduling planning, history,

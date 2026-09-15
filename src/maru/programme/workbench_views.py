@@ -20,6 +20,8 @@ from django.views.decorators.http import require_http_methods
 
 from maru.events.scheduling_queries import resolve_scheduling_edition_reference
 from maru.identity.queries import resolve_active_verified_person_reference
+from maru.scheduling.planning_queries import SchedulingReadRequest
+from maru.scheduling.workspace_navigation import programme_workspace_links
 
 from . import commands, public_copy_commands, queries
 from .authorization import (
@@ -197,7 +199,22 @@ def _html(
     shell = dict(admin.site.each_context(request))
     shell.update(has_permission=True, maru_csp_nonce=nonce, title="Programme items")
     shell.update(context)
+    actor_id = request.user.pk
+    if not isinstance(actor_id, UUID):
+        raise ProgrammeAuthorizationDeniedError
+    scope = SchedulingReadRequest(
+        actor_id, context["organization_id"], context["edition_id"], uuid4()
+    )
+    urlconf = getattr(request, "urlconf", None)
+    shell["workspace_links"] = programme_workspace_links(
+        scope, current="items", urlconf=urlconf
+    )
     content = render_to_string("programme/workbench.html", shell, request=request)
+    if shell["workspace_links"] != programme_workspace_links(
+        scope, current="items", urlconf=urlconf
+    ):
+        shell["workspace_links"] = ()
+        content = render_to_string("programme/workbench.html", shell, request=request)
     if len(content.encode("utf-8")) > 8 * 1024 * 1024:
         return _secure(
             HttpResponse("Programme output is unavailable.", status=503), nonce

@@ -578,6 +578,13 @@ configure readiness applicability, deliberately approve public copy and inspect
 separately authorized histories. These are adapters over existing commands, not
 new writers, profile activation, evidence of satisfied readiness or publication.
 
+The workspace now consumes Scheduling's public, metadata-only
+`workspace_navigation.programme_workspace_links` seam to offer independently
+admitted canonical timetable and release tasks. Exact reverse/resolve identity
+and post-render rechecking omit unavailable or moved links; no destination
+inventory is required to save Programme input. These optional connections do not
+mount production routes or complete #108's remaining owner/setup journey.
+
 The second #108 increment adds Department discussion, explicit readiness
 attestations or independently authorized typed sources, and exact reasoned
 public-copy withdrawal. `workbench_sources` reads only identifiers, versions and

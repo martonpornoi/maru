@@ -1,6 +1,6 @@
 # Programme release workspace
 
-Status: dormant implementation under #108/#48; exact protected delivery pending.
+Status: dormant implementation delivered through PR #131 under #108/#48.
 No current profile, production route or production acceptance is added.
 
 ## Purpose and scope
@@ -20,6 +20,13 @@ The adapter verifies the server-resolved organization/series/edition relationshi
 It is not included in production URLs. Links are conveniences, never admission.
 
 ## Owner reads and disclosure
+
+The bounded #108 connection increment offers independently admitted Programme
+items and canonical timetable links according to the
+[connection contract](programme-timetable-planning.md#canonical-connections-under-108).
+Optional link changes never convert a retained command receipt into a private
+source refresh requirement. Current release admission and final disclosure checks
+remain authoritative; navigation grants no additional task.
 
 - Labelled current candidate discovery requires `scheduling.view_planning` /
   `candidates`, is complete and bounded by Scheduling's candidate limit, and

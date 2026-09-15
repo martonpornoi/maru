@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Connected the dormant Programme item, timetable and release workspaces with
+  independently authorized task links. The canonical timetable uses the shared
+  shell, preserves pending input and rechecks protected sources before display;
+  unmounted or unavailable destinations are omitted. This is not profile activation.
+
 - Added a dormant guided Programme release workspace: labelled exact candidate
   review, complete release checks, reasoned warning acknowledgement, independent
   approval, distinct-publisher publication and explicit withdrawal. Original

@@ -17,6 +17,7 @@
   </details>
   {% if message %}<div class="baseline-notice" role="alert" tabindex="-1" autofocus id="programme-message"><p>{{ message }}</p></div>{% endif %}
   <p class="programme-boundary">Private preparation, readiness evidence, public-copy approval and timetable publication are separate decisions. None creates a host invitation or volunteer commitment.</p>
+  {% if workspace_links %}<nav aria-label="Programme workflow"><ul class="programme-task-links">{% for link in workspace_links %}<li><a href="{{ link.url }}">{{ link.label }}</a></li>{% endfor %}</ul><p>Continue in the same edition. Each destination checks its own permissions; navigation neither places an item nor publishes a timetable.</p></nav>{% endif %}
   {% if selected %}
   <p><a href="{{ root_url }}">Back to Programme items</a></p>
   <nav aria-label="Selected item tasks"><ul class="programme-task-links">{% for code, label in links %}<li><a href="{{ root_url }}{{ selected.private.item.id }}/{{ code }}/"{% if code == task %} aria-current="page"{% endif %}>{{ label }}</a></li>{% endfor %}{% if host_url %}<li><a href="{{ host_url }}">Hosts</a></li>{% endif %}</ul></nav>

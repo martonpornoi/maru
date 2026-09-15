@@ -458,6 +458,19 @@ command semantics. Invalid/recoverable input remains in the same bound form.
 These adapters do not mount a route or reserve, approve, publish or confirm a
 host.
 
+`planning_urls` declares the dormant canonical timetable route; production URLs
+do not include it. `planning_workspace_views.programme_timetable_workspace`
+dispatches the existing native editor once in the shared shell and uses
+`planning_disclosure.verify_planning_workspace` for a final read-only owner-fact
+and form-choice comparison. It independently checks base field ceilings and the
+Events-owned parent relation before dispatch and after rendering. It introduces
+no outer cross-owner transaction, mutation, schema or profile grant.
+`workspace_navigation.programme_workspace_links` is the public metadata-only
+navigation seam consumed by Programme and Scheduling. Fixed task labels require
+independent owner admission and exact reverse/resolve identity; optional denied,
+unmounted or moved links are omitted without obscuring an otherwise authorized
+result. See the [canonical connection contract](../product/page-contracts/programme-timetable-planning.md#canonical-connections-under-108).
+
 `planning_record_forms.PlanningRecordForm` and
 `planning_record_actions.submit_planning_record` provide the remaining explicit
 record operations through the same owner commands: candidate creation, exact

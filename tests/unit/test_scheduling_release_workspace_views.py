@@ -39,6 +39,7 @@ from maru.scheduling.release_workspace_queries import (
     ReleasePointerObservation,
     ReleaseWarningChoice,
 )
+from maru.scheduling.workspace_navigation import ProgrammeWorkspaceLink
 from tests.unit.test_scheduling_release_workspace_forms import release_post
 
 
@@ -255,9 +256,15 @@ def test_exact_warning_reason_is_required_before_approval(release_http):
     ],
 )
 def test_original_command_reaches_receipt_without_any_fresh_private_source(
-    release_http, action, task
+    release_http, action, task, monkeypatch
 ):
     world = release_http
+    links = (ProgrammeWorkspaceLink("items", "Programme items", "/optional-items/"),)
+    monkeypatch.setattr(
+        views,
+        "programme_workspace_links",
+        Mock(side_effect=[links, (), links, ()]),
+    )
     for source in world.sources.values():
         source.side_effect = AssertionError("No private source refresh before receipt")
     world.denied.update(
@@ -289,6 +296,7 @@ def test_original_command_reaches_receipt_without_any_fresh_private_source(
         assert intent.expected_release_version == 0
         assert intent.expected_active_release_id is None
     assert str(world.result.receipt_id).encode() in response.content
+    assert b"/optional-items/" not in response.content
     for source in world.sources.values():
         source.assert_not_called()
     command.return_value = replace(world.result, replayed=True)
