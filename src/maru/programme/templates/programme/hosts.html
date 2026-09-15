@@ -8,6 +8,7 @@
 {% block content %}
 <div class="programme-workbench">
   <h1>{{ page_title }}</h1>
+  {% if personal %}{% include "scheduling/_personal_task_links.html" %}{% endif %}
   <details class="maru-access-summary"><summary><strong>Access</strong> · {% if personal %}My exact hosting purposes{% else %}Exact-edition Programme hosting{% endif %}</summary>
     {% if personal %}<p>Only your retained invitations, responses and purpose-owned availability are shown. Your hosting role grants no access to organizer working copy, discussion, review, other people or private delivery instructions.</p>
     {% else %}<p>Private item labels, roster, history, shared availability and host management each require independent authority. An organizer cannot confirm, decline or share availability on another person's behalf.</p>{% endif %}

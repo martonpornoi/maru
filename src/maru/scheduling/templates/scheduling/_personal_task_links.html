@@ -1,0 +1,6 @@
+{% if personal_task_links %}
+<nav aria-label="My Programme connections">
+  <ul>{% for link in personal_task_links %}<li><a href="{{ link.url }}">{{ link.label }}</a></li>{% endfor %}</ul>
+  <p>Each task checks your own access again. Proposals, hosting invitations and accepted work are separate purposes; a link does not create or confirm any of them.</p>
+</nav>
+{% endif %}

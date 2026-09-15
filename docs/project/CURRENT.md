@@ -11,37 +11,36 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's shared Applications/Programme workspace entry is delivered through
-[PR #142](https://github.com/martonpornoi/maru/pull/142), protected squash
-`144ed2325e97a2ae432d470bf5b10ec912b6e6a9` at 2026-09-15 19:41:11 UTC.
-Its tree equals certified head `09aa37aa594af754a1c9cb75240eb4f1a36ce7ea`;
-clean local main and origin/main were synchronized. All eight local retained gates
-passed in 6m18s (8,341 units, 93 frontend cases). Hosted quality took 11m22s,
-documentation 9m17s and units 66.96s; exact-head PR gate/CodeQL passed and reviews
-were clear. See the [protected evidence](../checkpoints/2026-09-15-programme-operator-entry.md).
-PostgreSQL remained skipped. No schema, profile or route activation; do not
-restart PR #139's domain selection or #113's delivered documentation runtime fix.
+#108's ordinary operator-purpose entry is delivered through
+[PR #143](https://github.com/martonpornoi/maru/pull/143), protected squash
+`fc9a370656d08ce4a6cd2c9ff335dcfe802ca7bf` at 2026-09-15 20:40:31 UTC.
+Its tree equals certified head `a04aa3e8f4c9ad9500f8cfe35d040b4e7abdd042`;
+clean local main and origin/main were synchronized. All eight local retained
+gates passed in 6m36s, including 8,428 units in 65.74s. Hosted quality took
+11m06s, documentation 9m00s and units 67.08s; exact-head PR gate/CodeQL passed
+and reviews were clear. See the [protected evidence](../checkpoints/2026-09-15-programme-personal-connections.md).
+PostgreSQL stayed skipped. Four maintained native operator cases and representative
+cardinality costs remain #102 debt. No schema, profile or production route was
+activated. Do not restart this, shared workspace entry, domain selection or #113.
 
-## Active bounded outcome: operator-purpose entry (#108)
+## Active bounded outcome: personal task connections (#108)
 
-Branch: `codex/programme-operator-entry`, from protected PR #142.
-Implement the recorded same-edition operator entry: authorized labelled current
-rooms, Departments and whole-edition purposes, leading to existing run sheets and
-now/next. Require independent default owner fields and adopted Department work
-membership; never substitute planner, public or Workforce-directory permission.
-Extra delivery/staffing fields remain explicitly unrequested. Use complete owner
-references, required audit and final-render/source checks; current profiles/routes
-remain closed. The selector, owner references, strict policy metadata, shared
-entry/return links and final-render guards are implemented. Final complete database-free
-feedback passed 8,428 tests in 65.40s after strengthening the notice three-link
-sender/replay checks. Focused checks, strict types, NumPy/semantic docs, whole
-lint/format and documentation validation pass. A synthetic
-browser journey verified room → run sheet → now/next → selector, isolated
-Department/edition choices, ungranted empty state, one H1/main/Access and visible
-keyboard disclosure at 1280px. No native data, writes or signing were used.
-Fresh clean exact-commit certification and hosted acceptance remain
-pending. Four maintained native entry cases and representative-cardinality costs
-remain unexecuted #102 debt; human/AT acceptance remains #92.
+Branch: `codex/programme-personal-connections`, from protected PR #143.
+Connect same-person, same-edition proposals, hosting and personal timetable using
+independent public owner metadata admission and current resolved routes. Navigation
+loads no private content or purpose inventory and infers no relationship.
+Optional-link changes preserve original input/command results; personal hosting
+now compares its complete protected source after the final render.
+No schema, current profile, production route or cross-edition discovery change.
+
+Database-free feedback passed 8,480 tests in 63.99s with three existing warnings.
+Focused denial/source/recovery coverage, strict types, whole lint/format, NumPy
+and semantic docs and documentation validation pass. Synthetic proposals → hosting
+→ timetable → proposals, proposal-only omission and visible keyboard Access
+disclosure pass; SQL and writes were disabled. Fresh clean exact-commit
+certification and hosted protected acceptance remain pending.
+Four maintained native navigation cases remain uncollected/unexecuted #102 debt.
+Genuine human/AT and integrated evidence remain #92/#109.
 
 Applications reciprocal navigation is delivered, including original input/receipt
 preservation and synthetic role/keyboard observations. Four maintained native

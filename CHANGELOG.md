@@ -22,6 +22,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Connected dormant personal Programme proposals, hosting invitations and
+  availability, and hosting/work timetables with independently permitted links.
+  Changed optional navigation preserves entered values; personal hosting rechecks
+  its source after rendering so changed private information is not disclosed.
+
 - Dormant on-site Programme entry now offers independently permitted room,
   Department and edition scopes by name, with links to canonical run sheets and
   now/next. Changing scope starts without extra private layers; planner or review

@@ -30,6 +30,7 @@ from .operator_scope import (
     OperatorScopeKind,
     authorize_operator_scope,
 )
+from .personal_navigation import personal_programme_task_links
 from .personal_output_queries import authorize_personal_timetable_scope
 from .planning_queries import SchedulingReadRequest
 
@@ -180,7 +181,9 @@ def programme_output_links(
     Returns
     -------
     tuple[ProgrammeOutputLink, ...]
-        At most three fixed-label links; public/personal scopes have at most two.
+        At most four fixed-label links; public scopes have at most two and
+        operator scopes at most three. Personal output may additionally connect
+        to independently admitted proposal and hosting tasks.
         Denied, unavailable, unmounted or shadowed
         destinations are omitted without a partial-output completeness claim.
 
@@ -231,6 +234,17 @@ def programme_output_links(
         links.append(
             ProgrammeOutputLink(
                 code, label, url + ("?" + urlencode(parameters) if parameters else "")
+            )
+        )
+    if scope.audience == "exact_person" and scope.actor_id is not None:
+        links.extend(
+            ProgrammeOutputLink(link.code, link.label, link.url)
+            for link in personal_programme_task_links(
+                actor_id=scope.actor_id,
+                organization_id=scope.organization_id,
+                edition_id=scope.edition_id,
+                current="timetable",
+                urlconf=urlconf,
             )
         )
     return tuple(links)

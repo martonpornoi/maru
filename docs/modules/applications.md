@@ -666,6 +666,15 @@ minimized sensitive-read audit evidence before response release.
 
 ## HTTP contracts
 
+The dedicated dormant Programme proposal adapters additionally use the public
+Scheduling `personal_programme_task_links` seam for fixed-label, same-person,
+same-edition hosting and timetable continuations. Each owner admits its own fields;
+no relationship or content is loaded for navigation, and no purpose is inferred.
+Current route resolution and final optional-link observation can omit links without
+repeating a command or replacing original inputs. Existing proposal source guards
+run after the final render, including link recovery. This does not change the
+mounted generic Applications routes or either current adoption profile.
+
 The Programme-call and proposal kernel adds no HTTP contract. No browser route,
 v1 API operation, serializer, OpenAPI schema, template, navigation destination,
 Django admin writer, job, worker, or delivery handler exposes it. The mounted
