@@ -45,8 +45,9 @@ or latest withdrawal, never an arbitrary old release. Absence, overflow or moved
 sources produce an explicit empty/unavailable state, not a partial selector.
 The normal preview then proves affected membership and repeats recipient authority.
 Original hidden release and relationship references are not replaced on submission.
-Work and operator selection remain subsequent increments of the same #108 item;
-the specialist exact-reference controls remain available during this transition.
+Guided Work and operator selection are now implemented as further connections
+of the same #108 item. Specialist exact-reference controls remain available during
+this transition.
 
 The Work selection continuation reuses current occurrence labels without requiring
 host-roster authority. Workforce independently requires `shift_demands`,
@@ -68,6 +69,36 @@ An eligible-choice inventory is neither all retained work history nor notificati
 completeness. Selecting work, previewing or acknowledging never changes its state.
 Source-choice overflow uses source-specific recovery advice, not a notice-inventory
 release filter that cannot narrow occurrence choices. No bound is weakened.
+
+The operator continuation selects one current occurrence, a closed room/Department/
+edition purpose, a labelled current target and one deliberately known person.
+Actual sender `view_change_recipients` / `operator_recipients` authority is separate
+from notice access and precedes identity discovery. Room choices independently
+require Venue workspace `venue_selections` and `space_selections`; Department
+choices independently require Workforce `view_structure` / `departments`, without
+positions, holders or hierarchy. The edition target is the exact current edition.
+Complete owner bounds remain 256 room selections and `MAX_STRUCTURE_DEPARTMENTS`
+current Departments. No historical released geometry populates a picker.
+
+Exact known-email lookup is not search, a directory, invitation or account creation.
+Missing, inactive, unverified and currently ineligible people share one audited
+empty selection. Database, audit or incoherent-source failures remain unavailable,
+not empty success. Every eligible person is independently proven through the
+existing operator-recipient owner query, under actual-sender audit; no personal or
+operator output is read or audited as the recipient. Owner label/source reads
+finish before the complete sorted sender/recipient lock transaction.
+
+An identifier-only purpose-signed selection retains the original actor, tenant,
+edition, release, occurrence, pointer version, kind, target, person and lookup
+intent key. It is bounded, not sending permission, and carries no email or labels.
+Explicit person preview and retries recheck this exact person and source without
+resolving a mutable email again. Native preparation retains its existing original
+account/digest/pointer/command key; no new signed field enters the command API.
+Changed sources require deliberate fresh selection, never silent rebasing. Empty
+or invalid lookup forms still require final recipient-field admission, and all
+rendered target/person facts are checked again before disclosure. Native controls,
+non-disclosing denial, current-source conflict and complete-or-unavailable recovery
+follow the same shared page grammar; #92 retains broader human acceptance.
 
 Recheck rendered source facts and current permissions before releasing private
 bytes. This is a read-only verification, never a second command dispatch or a

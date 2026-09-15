@@ -194,8 +194,10 @@ def test_inactive_identity_never_returns_a_recipient(world, subject):
         if subject == "sender"
         else SchedulingUnavailableError
     )
-    with pytest.raises(error):
+    with pytest.raises(error) as raised:
         queries.load_operator_change_recipient(world.request)
+    if subject != "sender":
+        assert type(raised.value) is queries.OperatorChangeRecipientIneligibleError
     world.policy.assert_not_called()
     world.labels.assert_not_called()
 
@@ -233,8 +235,10 @@ def test_moving_or_unavailable_evidence_cannot_escape_final_boundary(world, faul
         if fault == "final_sender"
         else SchedulingUnavailableError
     )
-    with pytest.raises(error):
+    with pytest.raises(error) as raised:
         queries.load_operator_change_recipient(world.request)
+    if fault == "policy":
+        assert type(raised.value) is SchedulingUnavailableError
 
 
 @pytest.mark.parametrize("field", ["account_id", "target_id"])

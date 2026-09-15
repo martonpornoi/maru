@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added labelled room, Department and edition operator-purpose selection to
+  dormant Programme change notices, followed by an exact known-person eligibility
+  check. Retry keeps the original person and source; no contact directory,
+  invitation, automatic sending or Programme profile activation is introduced.
+  Independent preview, review and manual handoff remain separate.
+
 - Added current-occurrence and accepted-work selection to dormant Programme
   change notices. Owner-authorized Shift titles, offset-labelled work times and
   current holders distinguish retained work without cancelling it or accepting

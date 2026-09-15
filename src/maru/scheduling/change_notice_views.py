@@ -23,7 +23,12 @@ from maru.programme.queries import (
     ProgrammeQueryUnavailableError,
     ProgrammeTimetableInventoryLimitError,
 )
+from maru.venues.timetable_queries import (
+    VenueTimetableInventoryLimitError,
+    VenueTimetableQueryDeniedError,
+)
 from maru.workforce.notice_recipient_choices import ProgrammeWorkNoticeLimitError
+from maru.workforce.operator_target_choices import ProgrammeOperatorDepartmentLimitError
 from maru.workforce.programme_staffing_queries import ProgrammeStaffingDeniedError
 
 from .authorization import (
@@ -58,6 +63,8 @@ from .change_notice_forms import (
     NoticePrepareForm,
     NoticePreviewForm,
     NoticeSelectionForm,
+    OperatorNoticeLookupForm,
+    OperatorNoticePreviewForm,
 )
 from .change_notice_inventory import (
     NoticeDetail,
@@ -86,6 +93,19 @@ from .command_support import (
     SchedulingVersionConflictError,
 )
 from .inputs import SchedulingCommandRequest
+from .operator_notice_choices import admit_notice_operator_selection
+from .operator_notice_controls import (
+    operator_notice_controls,
+    operator_notice_selected_controls,
+    verify_operator_notice_choices,
+)
+from .operator_notice_person_selection import (
+    OperatorNoticeIntent,
+    OperatorNoticePersonSelection,
+    load_operator_notice_person_selection,
+    prepare_operator_notice_person_selection,
+)
+from .operator_scope import OperatorScopeKind
 from .output_rendering import MAX_TIMETABLE_OUTPUT_BYTES
 from .planning_queries import SchedulingReadRequest
 from .workspace_navigation import ProgrammeWorkspaceLink, programme_workspace_links
@@ -204,6 +224,17 @@ def _verify_rendered_context(
     _authorize(
         scope, VIEW_CHANGE_SELF if personal else VIEW_CHANGE_NOTICES, personal=personal
     )
+    verify_operator_notice_choices(scope, context)
+    operator_person = context.get("operator_person")
+    if (
+        isinstance(operator_person, OperatorNoticePersonSelection)
+        and load_operator_notice_person_selection(
+            scope,
+            token=operator_person.token,
+        )
+        != operator_person
+    ):
+        raise SchedulingVersionConflictError
     guided = context.get("guided_selection")
     if (
         isinstance(guided, NoticeHostSelection)
@@ -493,6 +524,8 @@ def _post(
         if personal
         else {
             "preview": NoticePreviewForm,
+            "operator_lookup": OperatorNoticeLookupForm,
+            "operator_preview": OperatorNoticePreviewForm,
             "prepare": NoticePrepareForm,
             "approve": NoticeDecisionForm,
             "reject": NoticeDecisionForm,
@@ -501,7 +534,10 @@ def _post(
     )
     if action not in form_types:
         raise ValueError
-    if action != "preview":
+    operator = action in {"operator_lookup", "operator_preview"}
+    if operator:
+        admit_notice_operator_selection(scope)
+    elif action != "preview":
         _authorize(scope, _CAPABILITIES[action])
     form_type = form_types[action]
     _form_input(request.POST, form_type)
@@ -509,8 +545,11 @@ def _post(
     if not form.is_valid():
         return {
             "invalid_form": form,
+            "operator_selection": operator,
             "message": "Check the labelled fields. No action was recorded.",
         }, 400
+    if operator:
+        return _operator_post(scope, form), 200
     if action == "preview":
         preview = _preview(scope, cast("NoticePreviewForm", form))
         return {
@@ -522,12 +561,66 @@ def _post(
     return _submit(scope, form)
 
 
+def _operator_post(scope: SchedulingReadRequest, form: forms.Form) -> dict[str, object]:
+    data = form.cleaned_data
+    if isinstance(form, OperatorNoticeLookupForm):
+        selection = prepare_operator_notice_person_selection(
+            scope,
+            intent=OperatorNoticeIntent(
+                data["release_id"],
+                data["occurrence_id"],
+                data["pointer_version"],
+                OperatorScopeKind(data["kind"]),
+                data["target_id"],
+                data["lookup_retry_key"],
+            ),
+            email=data["email"],
+        )
+        if selection is None:
+            return {
+                "operator_selection": True,
+                "message": (
+                    "No currently eligible operator is available for that exact "
+                    "selection. No message was sent. Choose the purpose again "
+                    "to make a new selection."
+                ),
+            }
+        return operator_notice_selected_controls(selection)
+    selection = load_operator_notice_person_selection(scope, token=data["token"])
+    intent = selection.intent
+    preview = preview_programme_change_notice(
+        scope,
+        release_id=intent.release_id,
+        occurrence_id=intent.occurrence_id,
+        recipient=ChangeRecipientSelection(
+            ChangeRecipientPurpose(intent.kind.value),
+            intent.target_id,
+            selection.recipient.account_id,
+        ),
+    )
+    if preview.pointer_version != intent.pointer_version:
+        raise SchedulingVersionConflictError
+    return {
+        "operator_selection": True,
+        "operator_person": selection,
+        "operator_choices": selection.choices,
+        "preview": preview,
+        "prepare_form": _prepare_form(preview) if _allowed(scope, "prepare") else None,
+    }
+
+
 def _get(
     scope: SchedulingReadRequest, request: HttpRequest, *, personal: bool
 ) -> dict[str, object]:
     _form_input(request.GET, NoticeSelectionForm)
     selection = NoticeSelectionForm(request.GET)
     if not selection.is_valid():
+        raise ValueError
+    kind_value = selection.cleaned_data["operator_kind"]
+    target_id = selection.cleaned_data["operator_target"]
+    if selection.cleaned_data["task"] != "operators" and (
+        kind_value or target_id is not None
+    ):
         raise ValueError
     if selection.cleaned_data["task"]:
         if (
@@ -536,6 +629,13 @@ def _get(
             or selection.cleaned_data["release"]
         ):
             raise ValueError
+        if selection.cleaned_data["task"] == "operators":
+            return operator_notice_controls(
+                scope,
+                occurrence_id=selection.cleaned_data["occurrence"],
+                kind=OperatorScopeKind(kind_value) if kind_value else None,
+                target_id=target_id,
+            )
         return _recipient_selection(
             scope,
             selection.cleaned_data["occurrence"],
@@ -546,6 +646,8 @@ def _get(
     # Guided source selection is separate from specialist exact-reference search.
     selection.fields.pop("task")
     selection.fields.pop("occurrence")
+    selection.fields.pop("operator_kind")
+    selection.fields.pop("operator_target")
     notice_id = selection.cleaned_data["notice"]
     if notice_id is not None:
         detail: NoticeDetail = (
@@ -608,6 +710,7 @@ def _page(
         SchedulingAuthorizationDeniedError,
         ProgrammeAuthorizationDeniedError,
         ProgrammeStaffingDeniedError,
+        VenueTimetableQueryDeniedError,
     ):
         status, message = 404, "Programme changes are not available at this address."
     except (
@@ -632,6 +735,13 @@ def _page(
             503,
             "The complete accepted-work choices for this occurrence are too large. "
             "Ask the organizer to review its work bindings. No partial list is shown.",
+        )
+    except (ProgrammeOperatorDepartmentLimitError, VenueTimetableInventoryLimitError):
+        status, message = (
+            503,
+            "The complete current operator scopes are too large. "
+            "Ask the organizer to review the room or Department inventory. "
+            "No partial list is shown.",
         )
     except (SchedulingLimitError, ProgrammeTimetableInventoryLimitError):
         status, message = (
