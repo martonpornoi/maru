@@ -46,6 +46,7 @@ from maru.workforce.models import (
     ShiftDemand,
     ShiftDemandCommandReceipt,
 )
+from maru.workforce.programme_navigation import programme_shift_links
 from maru.workforce.shift_commands import (
     ShiftAvailabilityConflictError,
     ShiftCapacityConflictError,
@@ -662,6 +663,30 @@ def test_browser_and_api_keep_personal_and_organizer_shift_views_separate() -> N
     assert "Shift planning" in organizer_text
     assert "Taylor Shift Example" in organizer_text
     assert "Morning operations desk" in organizer_text
+    # #108: native full Shift authority resolves the exact existing slug route.
+    # Programme routes remain unmounted; no return link grants dormant access.
+    assert "Programme workflow" not in organizer_page.content.decode()
+    assert programme_shift_links(
+        actor_id=world.planner.id,
+        organization_id=world.edition.organization_id,
+        series_id=world.edition.series_id,
+        edition_id=world.edition.id,
+        demand_ids=(demand.id,),
+    ) == {
+        demand.id: _organizer_url(
+            world, "organization-workforce-shift", demand_id=demand.id
+        )
+    }
+    assert (
+        programme_shift_links(
+            actor_id=world.person.id,
+            organization_id=world.edition.organization_id,
+            series_id=world.edition.series_id,
+            edition_id=world.edition.id,
+            demand_ids=(demand.id,),
+        )
+        == {}
+    )
 
     person = Client()
     person.force_login(world.person)

@@ -9,6 +9,14 @@ Last updated: 2026-09-09
 
 ## Purpose and requirements
 
+`queries.resolve_edition_route_identity` is an internal exact-chain metadata seam
+for independently admitted owner navigation. It returns only organization,
+series and edition slugs after matching both tenant relationships and the supplied
+parent. It is not a directory or authority grant. Workforce admits the complete
+organizer Shift policy before and after this lookup; the source rechecks links
+after rendering and the actual destination reauthorizes its native read. No
+models, names, inventory, profile mutation or new sensitive-read purpose is exposed.
+
 The #96 native release integration joins changes to the edition's dates/time
 zone and operational ending (cancelled, closing or archived) to Scheduling's
 existing tracked source generation in the same transaction. Ordinary

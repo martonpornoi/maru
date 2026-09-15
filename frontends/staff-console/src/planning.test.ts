@@ -21,6 +21,7 @@ function markup(pending = false) {
     <p data-planning-status hidden role="status"></p><p data-planning-dirty hidden></p>
     <h2 id="selected" tabindex="-1" data-maru-focus-on-load>Selected occurrence</h2>
     <a href="/another-edition/" id="leave">Other edition</a>
+    <a href="/synthetic-bound-shift/" id="shift">Open this bound Shift</a>
     <nav aria-label="Programme workflow"><a href="/programme/items/" id="items">Programme items</a><a href="/programme/release/" id="release">Release timetable</a></nav>
     <a href="#selected" id="anchor">Selected item</a>
     <form data-planning-navigation id="filters"><input name="ui_candidate_id" value="draft-b"><button>Change view</button></form>
@@ -153,7 +154,7 @@ describe("page-local pending intent", () => {
     expect(unload().defaultPrevented).toBe(false);
   });
 
-  it.each(["leave", "items", "release"])("guards the %s task link but not same-page anchors", (target) => {
+  it.each(["leave", "items", "release", "shift"])("guards the %s task link but not same-page anchors", (target) => {
     boot(markup(true));
     const leave = new MouseEvent("click", { bubbles: true, cancelable: true });
     document.getElementById(target)!.dispatchEvent(leave);

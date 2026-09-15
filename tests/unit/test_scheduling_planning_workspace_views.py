@@ -197,6 +197,66 @@ def test_moving_optional_navigation_is_omitted_without_losing_workspace(
     assert "/synthetic-items/" not in response.content.decode()
 
 
+@pytest.mark.parametrize("navigation", ["available", "denied", "moved"])
+def test_current_binding_link_is_optional_and_does_not_mutate_source_rows(
+    canonical_world, monkeypatch, navigation
+):
+    world = canonical_world
+    demand_id = uuid4()
+    requirement = SimpleNamespace(
+        requirement_id=uuid4(),
+        occurrence_id=uuid4(),
+        version=2,
+        lifecycle="active",
+        expectation=SimpleNamespace(
+            title="Synthetic staffing need", required_headcount=2
+        ),
+    )
+    row = {
+        "requirement": requirement,
+        "binding": SimpleNamespace(
+            demand_id=demand_id,
+            version=3,
+            demand_version=1,
+            source=SimpleNamespace(requirement_version=2),
+        ),
+        "actions": (),
+        "state": {},
+    }
+    original = views.scheduling_planning_view
+
+    def native(*args, **kwargs):
+        result = original(*args, **kwargs)
+        result.context_data.update(staffing_active=True, staffing_rows=(row,))
+        return result
+
+    dispatcher = Mock(side_effect=native)
+    monkeypatch.setattr(views, "scheduling_planning_view", dispatcher)
+    # This test isolates the optional renderer. Real source movement has separate
+    # verify_planning_workspace tests and remains mandatory in native #102 proof.
+    verify = Mock()
+    monkeypatch.setattr(views, "verify_planning_workspace", verify)
+    links = {demand_id: f"/synthetic-shift/{demand_id}/"}
+    admitted = Mock(
+        side_effect=[links, {}] if navigation == "moved" else None,
+        return_value=links if navigation == "available" else {},
+    )
+    monkeypatch.setattr(views, "programme_shift_links", admitted)
+    response = request_workspace(world)
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert "Synthetic staffing need" in html
+    assert str(demand_id) in html
+    assert ("Open this bound Shift" in html) is (navigation == "available")
+    assert response.context_data["staffing_rows"] == (row,)
+    assert "shift_url" not in row
+    assert admitted.call_count == 2
+    assert admitted.call_args.kwargs["demand_ids"] == (demand_id,)
+    assert admitted.call_args.kwargs["series_id"] == world["series_id"]
+    dispatcher.assert_called_once()
+    verify.assert_called_once()
+
+
 def test_stale_native_command_keeps_original_input_and_runs_only_once(
     canonical_world, monkeypatch
 ):

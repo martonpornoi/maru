@@ -5,7 +5,8 @@
   {% if staffing_guidance %}<p>{{ staffing_guidance }}</p>{% endif %}
   {% if staffing_bindings_withheld %}<p class="planning-warning">Work binding information is withheld. Programme permission does not grant Workforce access; this is not an empty work request.</p>{% endif %}
   {% if staffing_can_create %}<form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=staffing_create_state %}<button type="submit" name="action" value="select">Create requirement for the selected occurrence</button></form>{% endif %}
-  {% for row in staffing_rows %}
+  {% with source_rows=staffing_rows|default:"" %}
+  {% for row in workforce_staffing_cards|default:source_rows %}
   <article class="planning-staffing-card" aria-labelledby="staffing-need-{{ row.requirement.requirement_id }}">
     <h3 id="staffing-need-{{ row.requirement.requirement_id }}">{{ row.requirement.expectation.title }}</h3>
     <p>Requirement version {{ row.requirement.version }} · {{ row.requirement.lifecycle }}{% if selection.requirement_id == row.requirement.requirement_id %} · Selected requirement{% endif %}</p>
@@ -18,7 +19,8 @@
       <dt>Supervision instructions</dt><dd class="planning-prose">{{ row.requirement.expectation.supervision_note|default:'Not recorded' }}</dd>
     </dl>
     <details><summary>Exact requirement and Position references</summary><p>Requirement {{ row.requirement.requirement_id }} · Occurrence {{ row.requirement.occurrence_id }} · Position {{ row.requirement.expectation.position_id }}. These references grant no person or directory access.</p></details>
-    {% if row.binding %}<p>Retained work binding version {{ row.binding.version }} · Bound requirement version {{ row.binding.source.requirement_version }}. Demand was version {{ row.binding.demand_version }} at that decision; this is not its current lifecycle version.</p><p>Continue in the edition's Shift planning to open, confirm, lock or recover this work. That workspace checks its own permissions; this staffing panel performs none of those lifecycle actions. Exact demand reference: {{ row.binding.demand_id }}.</p>{% endif %}
+    {% if row.binding %}<p>Retained work binding version {{ row.binding.version }} · Bound requirement version {{ row.binding.source.requirement_version }}. Demand was version {{ row.binding.demand_version }} at that decision; this is not its current lifecycle version.</p>
+    <p>{% if row.shift_url %}<a href="{{ row.shift_url }}">Open this bound Shift</a>{% else %}A direct Shift link is not available in this workspace. Use independently authorized Shift planning with the exact reference below.{% endif %} That workspace checks its own permissions to open, confirm, lock or recover work; this staffing panel performs none of those lifecycle actions. Exact demand reference: {{ row.binding.demand_id }}.</p>{% endif %}
     {% if row.coverage %}
       <p>Staffing source: <strong>{{ row.coverage.source_state|title }}</strong>.</p>
       {% include 'scheduling/_staffing_coverage.html' with coverage=row.coverage.coverage %}
@@ -27,6 +29,7 @@
     {% for action in row.actions %}<form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=action.state %}<button type="submit" name="action" value="select">{{ action.label }}</button></form>{% endfor %}
   </article>
   {% empty %}{% if not staffing_history and not staffing_guidance %}<p>No requirements were returned for this authorized item. Define the work explicitly; missing requirements do not prove adequate coverage.</p>{% endif %}{% endfor %}
+  {% endwith %}
   {% if staffing_demand_choices != None %}
   <form method="post" class="baseline-form" data-planning-navigation>{% csrf_token %}{% include 'scheduling/_planning_state.html' with state=staffing_demand_state %}
     <label for="staffing-existing-demand">Identical uncommitted draft work</label>

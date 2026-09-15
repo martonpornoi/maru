@@ -1,0 +1,6 @@
+{% if programme_workspace_links %}
+<nav aria-label="Programme workflow">
+  <ul>{% for link in programme_workspace_links %}<li><a href="{{ link.url }}">{{ link.label }}</a></li>{% endfor %}</ul>
+  <p>Continue in Programme without changing this Shift. Choose the item and private alternative again; no previous selection is restored automatically.</p>
+</nav>
+{% endif %}

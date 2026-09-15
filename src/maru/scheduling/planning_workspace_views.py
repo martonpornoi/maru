@@ -15,6 +15,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
 from maru.events.queries import resolve_edition_series_identity
+from maru.workforce.programme_navigation import programme_shift_links
 
 from .authorization import SchedulingAuthorizationDeniedError
 from .planning_disclosure import verify_planning_workspace
@@ -90,12 +91,41 @@ def _render(
     context["workspace_links"] = programme_workspace_links(
         scope, current="timetable", series_id=series_id, urlconf=urlconf
     )
+    demand_ids = tuple(
+        row["binding"].demand_id
+        for row in context.get("staffing_rows", ())
+        if row.get("binding") is not None
+    )
+
+    def current_shift_links() -> dict[UUID, str]:
+        return programme_shift_links(
+            actor_id=scope.actor_id,
+            organization_id=scope.organization_id,
+            series_id=series_id,
+            edition_id=scope.edition_id,
+            demand_ids=demand_ids,
+            urlconf=urlconf,
+        )
+
+    shift_links = current_shift_links()
+    context["workforce_staffing_cards"] = tuple(
+        row | {"shift_url": shift_links.get(row["binding"].demand_id)}
+        if row.get("binding") is not None
+        else row
+        for row in context.get("staffing_rows", ())
+    )
     response.render()
-    if context["workspace_links"] != programme_workspace_links(
+    fresh_workspace_links = programme_workspace_links(
         scope, current="timetable", series_id=series_id, urlconf=urlconf
+    )
+    fresh_shift_links = current_shift_links()
+    if (
+        context["workspace_links"] != fresh_workspace_links
+        or shift_links != fresh_shift_links
     ):
         # Optional navigation movement must not become a command failure.
         context["workspace_links"] = ()
+        context["workforce_staffing_cards"] = ()
         response = TemplateResponse(
             request, response.template_name, context, status=response.status_code
         )

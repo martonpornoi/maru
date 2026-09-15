@@ -151,7 +151,8 @@ def programme_workspace_links(
     Returns
     -------
     tuple[ProgrammeWorkspaceLink, ...]
-        At most two fixed-label links. Denied, unavailable, unmounted or shadowed
+        At most two fixed-label links, or three from the external Shift workspace.
+        Denied, unavailable, unmounted or shadowed
         destinations are omitted. Absence makes no source-completeness claim.
 
     Notes
@@ -161,7 +162,7 @@ def programme_workspace_links(
     in a query string. Callers must repeat this observation after rendering and omit
     moved links before releasing bytes. Destinations independently authorize again.
     """
-    if current not in _TASKS:
+    if current not in {*_TASKS, "shifts"}:
         return ()
     links = []
     for code, (label, name) in _TASKS.items():
