@@ -636,6 +636,19 @@ not replace canonical capacity, version or lifecycle checks. The Applications
 private inventory access simply to prepare a write. Opening the created item is
 still a separately authorized/audited private-item read after receipt recovery.
 
+### Item-management entry proof
+
+The public `entry_references.resolve_programme_item_entry_reference` supplies
+identifier-only current actor/edition/lifecycle facts and a complete independent
+`programme.manage_items` decision. It uses only Programme's real default policy
+adapter, with no public substitute-authorizer argument. Ordinary absent permission
+remains distinct from malformed policy, owner mismatch and dependency failure.
+No inventory, title, creation cursor or mutation is read or granted. Applications'
+dormant [entry](../product/page-contracts/programme-applications-entry.md) combines
+this proof with its own Department conversion capability and both adapter pins
+before any conversion-only Department label. Its required audit and final complete
+source checks precede disclosure; the conversion destination authorizes again.
+
 ### Exact-person timetable purposes
 
 `timetable_queries.load_personal_host_purposes` reads up to 2,000 complete

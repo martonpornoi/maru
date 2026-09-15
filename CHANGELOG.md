@@ -22,6 +22,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Programme's dormant Applications entry now offers direct accepted-proposal
+  conversion without requiring review or decision access. The link independently
+  requires both Applications and Programme permissions plus exact adapter pins;
+  it explains both permission sources and grants no private-content access.
+
 - Added a dormant Programme calls-and-review entry page with readable Department
   choices. Call managers, review managers, reviewers, moderators and decision
   makers see only independently permitted tasks, without entering Department IDs

@@ -64,6 +64,21 @@ def entry(monkeypatch):
         return_value=EditionAdoptionProfileReference("programme_operations", 1)
     )
     adopted = Mock(return_value=True)
+    adapters = Mock(return_value=True)
+    conversion = Mock(
+        return_value=tasks.ProgrammeItemEntryReference(
+            values["actor_id"],
+            values["organization_id"],
+            values["edition_id"],
+            accepts_private_planning_writes=True,
+            decision=PolicyDecision(
+                allowed=True,
+                fields=frozenset(),
+                obligations=frozenset({"reason", "audit"}),
+                reason_code="role_assignment",
+            ),
+        )
+    )
     members = CurrentDepartmentSetReference(
         values["organization_id"], values["edition_id"], ids
     )
@@ -91,6 +106,8 @@ def entry(monkeypatch):
     monkeypatch.setattr(tasks, "resolve_private_planning_edition_reference", edition)
     monkeypatch.setattr(tasks, "edition_adoption_profile_reference", profile)
     monkeypatch.setattr(tasks, "profile_allows_application_target", adopted)
+    monkeypatch.setattr(tasks, "profile_allows_adapter", adapters)
+    monkeypatch.setattr(tasks, "resolve_programme_item_entry_reference", conversion)
     monkeypatch.setattr(tasks, "resolve_current_department_set_reference", listing)
     monkeypatch.setattr(
         departments, "resolve_current_department_choice_reference", lookup
@@ -107,6 +124,8 @@ def entry(monkeypatch):
         edition=edition,
         profile=profile,
         adopted=adopted,
+        adapters=adapters,
+        conversion=conversion,
         members=members,
         listing=listing,
         labels=labels,
@@ -137,7 +156,11 @@ def test_each_purpose_has_only_its_exact_destination_fields_and_audit(entry, tas
     assert choice.task_code == task.code
     assert choice.department_id == entry.ids[0]
     assert choice.department_label == "Programme"
-    assert choice.policy_label == "Direct permission"
+    assert choice.policy_label == (
+        "Direct permission (Applications); Assigned role (Programme)"
+        if task.code == "conversion"
+        else "Direct permission"
+    )
     assert choice.url.endswith(f"/{entry.ids[0]}/{task.suffix}")
     assert len(result.source_fingerprint) == 64
     assert result.source_fingerprint not in repr(result)
@@ -201,6 +224,144 @@ def test_readonly_keeps_admitted_inspection(entry):
     result = tasks.list_programme_department_tasks(**entry.values)
     assert not result.accepts_private_planning_writes
     assert len(result.tasks) == 1
+
+
+def test_conversion_only_needs_no_review_or_workforce_permission(entry):
+    _allow(entry, tasks._TASKS[-1])
+    result = tasks.list_programme_department_tasks(**entry.values)
+    assert [item.task_code for item in result.tasks] == ["conversion"]
+    assert result.tasks[0].url.endswith(f"/{entry.ids[0]}/conversion/")
+    assert entry.conversion.call_count == 2
+    entry.conversion.assert_called_with(
+        **{
+            key: entry.values[key]
+            for key in ("actor_id", "organization_id", "edition_id")
+        }
+    )
+
+
+@pytest.mark.parametrize("missing", ["applications", "programme", "target", "source"])
+def test_either_permission_or_adapter_missing_omits_only_conversion(entry, missing):
+    _allow(entry, tasks._TASKS[3], index=1)
+    if missing != "applications":
+        _allow(entry, tasks._TASKS[-1])
+    if missing == "programme":
+        entry.conversion.return_value = replace(
+            entry.conversion.return_value, decision=_DENY
+        )
+    if missing in {"target", "source"}:
+        excluded = (
+            tasks.APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER
+            if missing == "target"
+            else tasks.PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER
+        )
+        entry.adapters.side_effect = lambda _code, _version, adapter: (
+            adapter != excluded
+        )
+    result = tasks.list_programme_department_tasks(**entry.values)
+    assert [(item.department_id, item.task_code) for item in result.tasks] == [
+        (entry.ids[1], "mine")
+    ]
+    assert {call.kwargs["department_id"] for call in entry.lookup.call_args_list} == {
+        entry.ids[1]
+    }
+    if missing != "programme":
+        entry.conversion.assert_not_called()
+    assert any(
+        call.args[0].operation.endswith(".conversion")
+        and call.args[0].outcome == "deny"
+        and call.args[0].target_id is None
+        for call in entry.audit.call_args_list
+    )
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"actor_id": UUID(int=999)},
+        {"organization_id": UUID(int=999)},
+        {"edition_id": UUID(int=999)},
+        {"accepts_private_planning_writes": False},
+        {"accepts_private_planning_writes": 1},
+        {"decision": True},
+        {"decision": replace(_DENY, reason_code="profile_excluded")},
+        {"decision": replace(_DENY, fields=frozenset({"working"}))},
+    ],
+)
+def test_incoherent_conversion_owner_withholds_even_other_tasks_before_names(
+    entry, changes
+):
+    _allow(entry, tasks._TASKS[-1])
+    _allow(entry, tasks._TASKS[0], index=1)
+    entry.conversion.return_value = replace(entry.conversion.return_value, **changes)
+    with pytest.raises(tasks.Denied):
+        tasks.list_programme_department_tasks(**entry.values)
+    entry.lookup.assert_not_called()
+
+
+@pytest.mark.parametrize("source", ["adapters", "conversion"])
+def test_conversion_dependency_failure_cannot_release_partial_catalog(entry, source):
+    _allow(entry, tasks._TASKS[-1])
+    _allow(entry, tasks._TASKS[0], index=1)
+    getattr(entry, source).side_effect = DatabaseError("Synthetic unavailable owner")
+    with pytest.raises(DatabaseError):
+        tasks.list_programme_department_tasks(**entry.values)
+    entry.lookup.assert_not_called()
+
+
+def test_programme_denial_is_translated_and_value_minimized(entry):
+    _allow(entry, tasks._TASKS[-1])
+    entry.conversion.side_effect = tasks.ProgrammeAuthorizationDeniedError
+    with pytest.raises(tasks.Denied):
+        tasks.list_programme_department_tasks(**entry.values)
+    entry.lookup.assert_not_called()
+    assert all(call.args[0].target_id is None for call in entry.audit.call_args_list)
+
+
+@pytest.mark.parametrize(
+    "source", ["adapter", "permission", "policy-source", "lifecycle"]
+)
+def test_conversion_source_change_during_audit_withholds_result(entry, source):
+    _allow(entry, tasks._TASKS[-1])
+
+    def change(_record, **_kw):
+        if source == "adapter":
+            entry.adapters.return_value = False
+        elif source == "permission":
+            entry.conversion.return_value = replace(
+                entry.conversion.return_value, decision=_DENY
+            )
+        elif source == "policy-source":
+            proof = entry.conversion.return_value
+            entry.conversion.return_value = replace(
+                proof, decision=replace(proof.decision, reason_code="direct_grant")
+            )
+        else:
+            entry.conversion.return_value = replace(
+                entry.conversion.return_value, accepts_private_planning_writes=False
+            )
+
+    entry.audit.side_effect = change
+    with pytest.raises(tasks.Denied):
+        tasks.list_programme_department_tasks(**entry.values)
+
+
+def test_adapter_change_fingerprint_tracks_even_unchanged_visible_tasks(entry):
+    _allow(entry, tasks._TASKS[0])
+    first = tasks.list_programme_department_tasks(**entry.values)
+    entry.adapters.return_value = False
+    second = tasks.list_programme_department_tasks(**entry.values)
+    assert first.tasks == second.tasks
+    assert first.source_fingerprint != second.source_fingerprint
+
+
+@pytest.mark.parametrize("source", ["adapters", "conversion"])
+def test_untyped_conversion_proof_is_not_permission_absence(entry, source):
+    _allow(entry, tasks._TASKS[-1])
+    getattr(entry, source).return_value = None
+    with pytest.raises(tasks.Denied):
+        tasks.list_programme_department_tasks(**entry.values)
+    entry.lookup.assert_not_called()
 
 
 @pytest.mark.parametrize(

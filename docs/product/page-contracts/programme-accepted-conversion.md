@@ -10,6 +10,10 @@ No current manifest, production route, schema or canonical writer change.
 The exact-Department review root reserves `conversion/` for operators with
 nondelegable `applications.convert_programme_acceptance` and independent edition
 `programme.manage_items`. Neither grants review or private-item content access.
+The dormant [edition entry](programme-applications-entry.md) offers a direct
+labelled Department conversion task after both current owner policies and exact
+adapter pins pass, without requiring review/decision authority. Its complete
+source revalidation is navigation evidence, never acceptance or a command grant.
 The complete bounded queue lists exact accepted decision/seal references using
 call name, revision sequence, decision version and current review version. It
 does not interpret an answer as a title or show scores, messages, rationale,
