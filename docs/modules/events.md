@@ -455,6 +455,12 @@ single/bulk rollback on validation or effect failure.
 
 ## Limitations
 
+`resolve_personal_timetable_edition_choice` supplies exact edition/series
+attribution and the stable edition code, name and aggregate version for own-purpose
+choice. The consumer must hold canonical parents and prove a real authorized
+retained purpose first; final source checks and disclosure audit remain mandatory.
+It is not a general edition directory.
+
 The internal `resolve_personal_timetable_edition_label` reference supplies only
 the current edition name and aggregate version. The personal timetable compositor
 must already hold canonical parents and independently authorized actual own

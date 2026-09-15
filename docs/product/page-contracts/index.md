@@ -45,6 +45,7 @@ contract for the surface being changed, and compare its status with the
 - [Programme release workspace](programme-release-workspace.md)
 - [Programme staffing](programme-staffing.md)
 - [Released Programme timetable](programme-released-timetable.md)
+- [My Programme timetable editions](personal-programme-discovery.md)
 - [Programme operator run sheets](programme-operator-run-sheets.md)
 - [Programme change notices](programme-change-notices.md)
 - [Programme now and continuity](programme-onsite-continuity.md)
@@ -82,6 +83,7 @@ programme-release-workspace
 programme-staffing
 programme-released-timetable
 personal-programme-timetable
+personal-programme-discovery
 programme-operator-run-sheets
 programme-change-notices
 programme-onsite-continuity

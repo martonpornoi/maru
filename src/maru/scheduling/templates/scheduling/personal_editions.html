@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}My Programme timetable editions - My Maru{% endblock %}
+{% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'scheduling/personal_timetable.css' %}">{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-maru-home' %}">My Maru</a> / My Programme timetable editions</div>{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block content %}
+<div id="content-main" class="maru-personal-home personal-timetable">
+  <h1>My Programme timetable editions</h1>
+  <details><summary>Access · your own retained hosting and work</summary>
+    <p>Each edition below has one of your own retained hosting or Shift records and current permission for every adopted timetable layer. This is not a general edition directory. Proposal authorship, an Assignment alone or account membership does not qualify.</p>
+    <p>Ended records may remain available as your own history. A link is not confirmation of work, attendance or a current release. Every timetable checks its sources and your access again.</p>
+  </details>
+  <p>Choose the edition whose hosting and work timetable you want to open. Organization, series and edition codes distinguish similar names.</p>
+  <ul class="personal-agenda">
+    {% for row in rows %}<li><article>
+      <h2><a href="{{ row.url }}">{{ row.choice.edition.name }}</a></h2>
+      <p>{{ row.choice.organizer.organization_name }} / {{ row.choice.organizer.series_name }}</p>
+      <p>Codes: {{ row.choice.organizer.organization_code }} / {{ row.choice.organizer.series_code }} / {{ row.choice.edition.code }}</p>
+    </article></li>{% empty %}<li>No retained timetable purposes are currently available to you. This is not a count of editions or other people's work. Contact an accountable organizer if you expected hosting or a Shift here.</li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}

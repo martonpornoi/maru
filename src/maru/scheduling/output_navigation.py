@@ -181,9 +181,9 @@ def programme_output_links(
     Returns
     -------
     tuple[ProgrammeOutputLink, ...]
-        At most four fixed-label links; public scopes have at most two and
+        At most five fixed-label links; public scopes have at most two and
         operator scopes at most three. Personal output may additionally connect
-        to independently admitted proposal and hosting tasks.
+        to independently admitted proposal/hosting tasks and own-edition discovery.
         Denied, unavailable, unmounted or shadowed
         destinations are omitted without a partial-output completeness claim.
 

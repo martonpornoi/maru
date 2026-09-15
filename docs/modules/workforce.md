@@ -1451,6 +1451,15 @@ distinct. Owner-source/adoption rechecks and mandatory
 
 ### Personal timetable owner input
 
+`personal_scope_references` supplies opaque own retained Shift candidate scopes
+under exact self-adapter profile filters, bounded at 256 with an overflow probe.
+Its separate current proof requires verified exact self, `shifts` field authority,
+canonical parent/person locks and coherent demand/Position/Department ownership.
+It loads no work text, suitability, unclaimed demand or other people; Assignment
+alone cannot establish a timetable purpose. Ended retained records establish own
+history. Scheduling owns independent adopted-layer admission, minimized labels,
+required disclosure audit, complete source comparisons and final rendering.
+
 `timetable_queries.load_personal_shift_timetable` is the minimized cross-owner
 input for #99, independent of Programme, Scheduling and Participation reads.
 The trusted authenticated actor is also the only possible work owner: there is

@@ -10,6 +10,12 @@ Last updated: 2026-08-26
 
 ## Purpose and requirements
 
+`personal_timetable_references.resolve_personal_timetable_organizer_labels` is an
+internal minimized reference for independently authorized actual own hosting/Shift
+purposes. The consumer holds canonical parents, supplies Events' exact owner chain
+and owns final comparison and audit. Only organization/series names and stable
+codes are returned, never contacts, legal/governance data or directory authority.
+
 `maru.organizations` owns tenant structure, truthful accountable
 representation, and recurring-series continuity for IDN-002, IDN-004, IDN-005,
 IDN-009, IDN-011, IDN-012, IDN-014, EVT-001, EVT-003, EVT-005, HR-011,
