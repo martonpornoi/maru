@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added readable exact-seal choice labels and labelled addresses across dormant
+  Programme review, moderation and decision pages. False, zero, empty selections
+  and absent answers stay distinct; submitted links and protected references do
+  not gain navigation or download access.
+
 - Added original call, proposal and sealed-revision context to dormant personal
   Programme decision history. Current proposal links require separate access;
   former contributors retain their addressed messages without gaining current

@@ -374,7 +374,7 @@ def test_answers_are_escaped_and_protected_references_do_not_become_links(page):
                 {
                     "label": "Abstract",
                     "classification": "C2",
-                    "type": "text",
+                    "type": "short_text",
                     "value": "<script>attack</script>",
                 },
                 {

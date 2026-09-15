@@ -164,6 +164,15 @@ evidence where possible; infrastructure failure must not be represented as a
 successful decision or acknowledgement. Sensitive-read audit failure prevents
 the projection from being returned.
 
+Typed review presentation uses the exact retained question's selected choice
+labels and canonical answer shape. Incoherent choice metadata, unknown types or
+malformed structured values make the whole prepared answer page unavailable;
+they must not fall back to raw payloads, current question labels or identifying
+lookups. Inspect the exact sealed source and its immutable question under the
+existing privileged diagnostic procedure. Do not rewrite a seal or synthesize
+labels to force display. This presentation increment has no schema or writer
+change; protected reference/file viewers still require their own admission.
+
 Retry a `40001` failure as a whole authenticated command, reusing the same retry
 key for that logical intent. An exact committed retry returns retained result
 identifiers; changed intent under the same key is a conflict. Do not increment

@@ -67,6 +67,11 @@ denied and overflow states. Reauthorize and compare protected projections before
 and after rendering. Each history/content/continuation link authorizes again;
 recipient self receipt and accepted-item conversion remain distinct tasks.
 
+Permitted answers reuse the [typed review presentation contract](programme-reviewer-work.md#readable-typed-answers):
+immutable selected choice labels, labelled address components, explicit absence
+and escaped plain values. No identifying lookup or unsafe file/reference viewer
+is introduced; independent decider and sensitive-read admission remain mandatory.
+
 Database-free tests cover purpose/field/independence, complete filtered paging,
 all-stage readiness, exact template/message separation, proof tampering and
 scope reuse, fallback keys, stale original intent, replay before private reads,

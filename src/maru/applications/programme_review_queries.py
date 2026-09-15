@@ -22,6 +22,7 @@ from maru.applications.models import (
     ProgrammeReviewDecision,
     ProgrammeReviewEntry,
 )
+from maru.applications.programme_answer_display import programme_choice_display_options
 from maru.applications.programme_authorization import (
     DEFAULT_APPLICATIONS_PROGRAMME_AUTHORIZER,
     ApplicationsProgrammeAuthorizationDeniedError,
@@ -520,6 +521,24 @@ def _detail_assignment(
     return assignment
 
 
+def _answer_row(row: ProgrammeProposalRevisionAnswer) -> dict[str, object]:
+    value = row.answer_revision.value if row.answer_revision is not None else None
+    result: dict[str, object] = {
+        "key": row.question_key,
+        "label": row.question.label,
+        "type": row.question_type,
+        "classification": row.classification,
+        "value": value,
+    }
+    if row.question_type in {"single_choice", "multiple_choice"} and value is not None:
+        if row.question.field_type != row.question_type:
+            raise ProgrammeReviewUnavailableError
+        result["selected_options"] = programme_choice_display_options(
+            row.question_type, value, row.question.options
+        )
+    return result
+
+
 def _answers(
     request: ProgrammeReviewReadRequest,
     scope: AuthorizedProgrammeReviewScope,
@@ -551,20 +570,7 @@ def _answers(
             requested_fields=request.requested_fields,
             authorizer=authorizer,
         )
-    return _json(
-        [
-            {
-                "key": row.question_key,
-                "label": row.question.label,
-                "type": row.question_type,
-                "classification": row.classification,
-                "value": row.answer_revision.value
-                if row.answer_revision is not None
-                else None,
-            }
-            for row in rows
-        ]
-    )
+    return _json([_answer_row(row) for row in rows])
 
 
 def _context(case: ProgrammeReviewCase, request: ProgrammeReviewReadRequest) -> str:

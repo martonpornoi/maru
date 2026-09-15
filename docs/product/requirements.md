@@ -1266,6 +1266,12 @@ architecture documents, implementation issues, tests, and release notes.
   replace that intent. Advancement and labelled stage reopening remain separate
   canonical actions, never final decisions. Original uncertain POSTs must reach
   minimal receipt replay before a private read whose eligibility may have changed.
+  Permitted sealed answers must be readable consistently across reviewer,
+  moderator and decider tasks: selected choices use the exact immutable question's
+  labels, addresses use labelled components and false/empty/absent values remain
+  distinct. Presentation must not broaden anonymity, sensitive-read or field
+  ceilings, turn submitted links into navigation grants, or resolve protected
+  person/domain/file references without their separately authorized viewers.
 - **PRG-004 — Decision communication:** Accept, reject, wait-list, and revision
   decisions must use templates while preserving a canonical conversation and
   any required acknowledgement.

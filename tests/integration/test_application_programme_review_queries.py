@@ -13,7 +13,11 @@ from maru.applications.models import ProgrammeReviewAction as Action
 from maru.applications.programme_authorization import (
     ApplicationsProgrammeAuthorizationDeniedError,
 )
-from maru.applications.programme_inputs import ProgrammeCallClassification
+from maru.applications.programme_inputs import (
+    ProgrammeCallClassification,
+    ProgrammeCallQuestionOptionInput,
+    ProgrammeCallQuestionType,
+)
 from maru.applications.programme_review_authorization import (
     MANAGE_REVIEW,
     REVIEW,
@@ -36,6 +40,7 @@ from tests.integration.test_application_programme_services import (
     _admit_future_programme_effects,
     _AllowExactProgrammeAuthorizer,
 )
+from tests.support import programme_review as review_worlds
 from tests.support.programme_review import assign_and_score, create_review_world
 from tests.unit.test_application_programme_review_inputs import review_policy
 
@@ -169,7 +174,35 @@ def test_management_context_does_not_imply_any_review_content():
 @pytest.mark.parametrize("anonymous", [True, False])
 def test_structured_contributor_projection_follows_the_pinned_anonymity_policy(
     anonymous,
+    monkeypatch,
 ):
+    original_definition = source_worlds._definition
+    original_answer = review_worlds.append_programme_proposal_answer
+
+    def choices_definition(now, *, code):
+        definition = original_definition(now, code=code)
+        section = definition.sections[0]
+        question = replace(
+            section.questions[0],
+            field_type=ProgrammeCallQuestionType.MULTIPLE_CHOICE,
+            minimum_length=None,
+            maximum_length=None,
+            maximum_choices=2,
+            options=(
+                ProgrammeCallQuestionOptionInput("talk", "Original talk label"),
+                ProgrammeCallQuestionOptionInput("panel", "Original panel label"),
+                ProgrammeCallQuestionOptionInput("other", "Unselected option label"),
+            ),
+        )
+        return replace(definition, sections=(replace(section, questions=(question,)),))
+
+    def selected_answer(**values):
+        return original_answer(**(values | {"value": ["panel", "talk"]}))
+
+    monkeypatch.setattr(source_worlds, "_definition", choices_definition)
+    monkeypatch.setattr(
+        review_worlds, "append_programme_proposal_answer", selected_answer
+    )
     policy = review_policy()
     world = create_review_world(
         policy=replace(policy, stages=(replace(policy.stages[0], anonymous=anonymous),))
@@ -190,6 +223,13 @@ def test_structured_contributor_projection_follows_the_pinned_anonymity_policy(
     assert str(world.lead.id) not in detail.context_json
     if not anonymous:
         assert context["contributors"][0]["public_name"] == "Programme lead"
+    answers = json.loads(detail.answers_json)
+    assert answers[0]["value"] == ["panel", "talk"]
+    assert answers[0]["selected_options"] == [
+        {"code": "panel", "label": "Original panel label"},
+        {"code": "talk", "label": "Original talk label"},
+    ]
+    assert "Unselected option label" not in detail.answers_json
 
 
 class _DenySensitive(_AllowExactProgrammeAuthorizer):
