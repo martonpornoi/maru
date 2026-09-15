@@ -52,6 +52,7 @@ contract for the surface being changed, and compare its status with the
 - [Programme host workspace](programme-host-workspace.md)
 - [My Programme decisions and receipts](programme-decision-receipts.md)
 - [Programme person references](programme-person-references.md)
+- [Programme same-call domain references](programme-domain-references.md)
 - [Programme review setup](programme-review-setup.md)
 - [Named Programme reviewer management](programme-review-management.md)
 - [My Programme reviews](programme-reviewer-work.md)
@@ -88,6 +89,7 @@ programme-host-workspace
 programme-call-workspace
 programme-proposal-workspace
 programme-person-references
+programme-domain-references
 programme-decision-receipts
 programme-review-setup
 programme-review-management

@@ -91,9 +91,12 @@ may remain blank while drafting but block sealing. The separate
 [Programme person-reference task](programme-person-references.md) supplies known-person
 selection, deliberate clearing and current/exact-seal viewers for the registered
 `person_reference` / `programme.person` pair. It creates no collaboration or host
-relationship. Domain-reference, safe-file and unknown-kind tasks still require
-authorized owner choices: raw UUID input is not a substitute. Until their boundary
-exists, show an honest unavailable explanation instead of an unsafe editor.
+relationship. The [same-call domain task](programme-domain-references.md) supplies
+complete labelled track/format choices for registered extra private answers, with
+original-target confirmation and exact current/sealed viewers; it never changes
+the lead-owned selection. Safe-file and unknown-kind tasks still require authorized
+owner choices: raw UUID input is not a substitute. Until their boundary exists,
+show an honest unavailable explanation instead of an unsafe editor.
 
 Invitation and reinvitation take a deliberately entered exact known login email
 and explicit expiry, not a browsable account directory. Display labelled existing

@@ -28,6 +28,7 @@ from .programme_authorization import (
 )
 from .programme_call_forms import _apply_errors
 from .programme_call_views import _secure
+from .programme_domain_targets import DOMAIN_REFERENCE_KINDS
 from .programme_inputs import ProgrammeProposalRevisionResponseInput
 from .programme_personal_forms import (
     _ADDRESS_FIELDS,
@@ -550,6 +551,7 @@ def _page(
             "can_answer": "answer" in available,
             "can_remove": "remove" in available,
             "reference_types": _REFERENCE_TYPES,
+            "domain_reference_kinds": DOMAIN_REFERENCE_KINDS,
             "action_available": action in available,
         },
         verify,

@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .programme_decision_views import programme_decisions
+from .programme_domain_reference_views import programme_domain_reference
 from .programme_person_reference_views import programme_person_reference
 from .programme_personal_views import programme_personal_tasks
 from .programme_proposal_views import programme_proposals
@@ -37,6 +38,26 @@ urlpatterns = [
 ]
 
 _WORK = _ROOT + "<uuid:proposal_id>/work/"
+urlpatterns += [
+    path(
+        _WORK + "answer/<uuid:question_id>/domain/",
+        programme_domain_reference,
+        {"edit": True},
+        name="my-programme-domain-select",
+    ),
+    path(
+        _ROOT + "<uuid:proposal_id>/references/domain/<uuid:question_id>/",
+        programme_domain_reference,
+        name="my-programme-domain-reference",
+    ),
+    path(
+        _ROOT
+        + "<uuid:proposal_id>/revisions/<uuid:revision_id>/"
+        + "references/domain/<uuid:question_id>/",
+        programme_domain_reference,
+        name="my-programme-frozen-domain-reference",
+    ),
+]
 urlpatterns += [
     path(
         _WORK + "answer/<uuid:question_id>/person/",

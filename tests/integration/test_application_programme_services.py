@@ -76,6 +76,12 @@ from maru.applications.programme_commands import (
     submit_programme_proposal,
     withdraw_programme_proposal,
 )
+from maru.applications.programme_domain_references import (
+    get_programme_domain_choices,
+    get_self_programme_domain_reference,
+    prepare_programme_domain_selection,
+    read_programme_domain_selection,
+)
 from maru.applications.programme_inputs import (
     ProgrammeCallClassification,
     ProgrammeCallConfigurationInput,
@@ -112,6 +118,10 @@ from maru.applications.programme_queries import (
     get_self_programme_proposal_detail,
     list_managed_programme_calls,
     list_self_programme_proposals,
+)
+from maru.applications.programme_reference_sources import (
+    ProgrammeAnswerReferenceIntent,
+    ProgrammeAnswerReferenceRequest,
 )
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
@@ -663,6 +673,106 @@ def test_native_person_reference_selection_exact_seal_and_retained_retry(
     assert unavailable.present
     with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
         get_self_programme_person_reference(
+            request=replace(request, actor_id=AccountFactory().id),
+            revision_id=sealed.target_id,
+            authorizer=_AUTHORIZER,
+        )
+    assert not ProgrammeProposalCollaborator.objects.filter(
+        proposal_id=world.proposal_id
+    ).exists()
+
+
+@pytest.mark.parametrize("kind", ["programme.call-track", "programme.call-format"])
+def test_native_domain_reference_same_call_seal_and_retained_retry(monkeypatch, kind):
+    """Maintain native same-call reference debt; ADR0100 execution remains deferred."""
+    original = _definition
+
+    def domain_definition(now, *, code):
+        definition = original(now, code=code)
+        section = definition.sections[0]
+        question = replace(
+            section.questions[0],
+            field_type=ProgrammeCallQuestionType.DOMAIN_REFERENCE,
+            minimum_length=None,
+            maximum_length=None,
+            reference_kind=kind,
+        )
+        return replace(definition, sections=(replace(section, questions=(question,)),))
+
+    monkeypatch.setitem(globals(), "_definition", domain_definition)
+    world = _start_proposal(_active_call(code="guided-domain-reference"))
+    call = world.call
+    target = call.track_id if kind == "programme.call-track" else call.format_id
+    wrong_kind_target = (
+        call.format_id if kind == "programme.call-track" else call.track_id
+    )
+    definition = ApplicationDefinition.objects.get(id=call.definition_id)
+    request = ProgrammeAnswerReferenceRequest(
+        world.lead.id,
+        call.edition.organization_id,
+        call.edition.id,
+        world.proposal_id,
+        call.question_id,
+        uuid4(),
+        "test",
+    )
+    intent = ProgrammeAnswerReferenceIntent(
+        world.version, definition.aggregate_version, definition.version, uuid4()
+    )
+    choices = get_programme_domain_choices(
+        request=request, intent=intent, authorizer=_AUTHORIZER
+    )
+    assert target in {row.target_id for row in choices.options}
+    assert wrong_kind_target not in {row.target_id for row in choices.options}
+    selected = prepare_programme_domain_selection(
+        request=request, intent=intent, target_id=target, authorizer=_AUTHORIZER
+    )
+    common = {
+        "actor_id": world.lead.id,
+        "organization_id": call.edition.organization_id,
+        "edition_id": call.edition.id,
+        "proposal_id": world.proposal_id,
+        "source_channel": "test",
+        "authorizer": _AUTHORIZER,
+        "reason": "Retain an additional private call reference",
+    }
+    command = common | {
+        "question_id": call.question_id,
+        "value": str(target),
+        "expected_version": intent.expected_version,
+        "expected_call_version": intent.expected_call_version,
+        "expected_definition_version": intent.expected_definition_version,
+        "retry_key": intent.retry_key,
+        "correlation_id": uuid4(),
+    }
+    with pytest.raises(ApplicationsProgrammeUnavailableError):
+        append_programme_proposal_answer(
+            **(command | {"value": str(wrong_kind_target), "retry_key": uuid4()})
+        )
+    saved = append_programme_proposal_answer(**command)
+    current = get_self_programme_domain_reference(
+        request=request, authorizer=_AUTHORIZER
+    )
+    assert current.option.target_id == target
+    sealed = seal_programme_proposal(
+        **common,
+        expected_version=saved.resulting_version,
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    frozen = get_self_programme_domain_reference(
+        request=request, revision_id=sealed.target_id, authorizer=_AUTHORIZER
+    )
+    assert frozen.option == current.option
+    assert frozen.source.selection.track_id == call.track_id
+    assert frozen.source.selection.format_id == call.format_id
+    retained = read_programme_domain_selection(
+        request=request, intent=intent, token=selected.token, authorizer=_AUTHORIZER
+    )
+    assert retained.target_id == target
+    assert append_programme_proposal_answer(**command) == replace(saved, replayed=True)
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        get_self_programme_domain_reference(
             request=replace(request, actor_id=AccountFactory().id),
             revision_id=sealed.target_id,
             authorizer=_AUTHORIZER,

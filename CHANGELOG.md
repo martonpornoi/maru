@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant Programme same-call reference tasks: choose or clear an additional
+  private track/format answer using labelled choices, then confirm the original
+  selection. Personal and independently authorized review viewers show the exact
+  call label and guidance. These answers do not change the proposal's main
+  selection, routing or timetable; anonymous reviews never resolve their targets.
+
 - Added dormant Programme person-reference tasks: prepare an exact known person
   or explicit clear, confirm the original selection, and inspect a protected
   current or sealed answer. Reviewers, moderators and deciders use their own

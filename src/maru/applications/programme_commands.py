@@ -88,6 +88,7 @@ from maru.applications.programme_authorization import (
     authorize_programme_retry_scope,
     authorize_programme_self_entry_scope,
 )
+from maru.applications.programme_domain_targets import _valid_domain_answer
 from maru.applications.programme_events import (
     APPLICATIONS_PROGRAMME_CALL_CHANGED_EVENT,
     APPLICATIONS_PROGRAMME_EVENT_SCHEMA_VERSION,
@@ -3343,6 +3344,33 @@ def _question_is_applicable(
     return condition_matches(question.condition, values)
 
 
+def _require_registered_reference(
+    *,
+    question: ApplicationQuestion,
+    proposal: ProgrammeProposal,
+    organization_id: UUID,
+    edition_id: UUID,
+    value: object,
+) -> None:
+    if question.field_type == "person_reference":
+        if question.reference_kind != "programme.person":
+            raise ApplicationsProgrammeUnavailableError
+        if (
+            value is not None
+            and resolve_active_verified_person_reference(account_id=UUID(str(value)))
+            is None
+        ):
+            raise ApplicationsProgrammeUnavailableError
+    if question.field_type == "domain_reference" and not _valid_domain_answer(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        call_id=proposal.call_id,
+        kind=question.reference_kind,
+        value=value,
+    ):
+        raise ApplicationsProgrammeUnavailableError
+
+
 @_audit_command_errors(
     capability_code=APPLICATIONS_EDIT_PROGRAMME_PROPOSAL_SELF,
     operation=ProgrammeCommandAction.PROPOSAL_ANSWER_REVISED,
@@ -3543,17 +3571,13 @@ def append_programme_proposal_answer(
             unicodedata.normalize("NFC", value) if isinstance(value, str) else value
         ),
     )
-    if question.field_type == "person_reference":
-        if question.reference_kind != "programme.person":
-            raise ApplicationsProgrammeUnavailableError
-        if (
-            normalized_value is not None
-            and resolve_active_verified_person_reference(
-                account_id=UUID(str(normalized_value))
-            )
-            is None
-        ):
-            raise ApplicationsProgrammeUnavailableError
+    _require_registered_reference(
+        question=question,
+        proposal=proposal,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        value=normalized_value,
+    )
     previous_sequence = (
         ApplicationAnswerRevision.objects.filter(
             submission=proposal.submission,

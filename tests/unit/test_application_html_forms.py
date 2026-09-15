@@ -133,6 +133,7 @@ def test_application_templates_are_same_shell_and_free_of_mojibake() -> None:
         if template_path.name in {
             "programme_personal_work.html",
             "programme_person_reference.html",
+            "programme_domain_reference.html",
         }:
             parent = (template_root / "programme_proposals.html").read_text(
                 encoding="utf-8"

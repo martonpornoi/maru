@@ -5,6 +5,7 @@ from django.urls import path
 from .programme_conversion_views import programme_conversion
 from .programme_decider_views import programme_decider
 from .programme_moderation_views import programme_moderation
+from .programme_review_domain_views import programme_review_domain_reference
 from .programme_review_intake_views import programme_review_intake
 from .programme_review_management_views import programme_review_management
 from .programme_review_person_views import programme_review_person_reference
@@ -16,6 +17,25 @@ _ROOT = (
     "<uuid:edition_id>/<uuid:department_id>/"
 )
 urlpatterns = [
+    path(
+        _ROOT
+        + "mine/<uuid:case_id>/<uuid:assignment_id>/answers/domain/<str:question_key>/",
+        programme_review_domain_reference,
+        {"purpose": "reviewer"},
+        name="programme-review-own-domain-reference",
+    ),
+    path(
+        _ROOT + "moderation/<uuid:case_id>/answers/domain/<str:question_key>/",
+        programme_review_domain_reference,
+        {"purpose": "moderator"},
+        name="programme-moderation-domain-reference",
+    ),
+    path(
+        _ROOT + "decisions/<uuid:case_id>/answers/domain/<str:question_key>/",
+        programme_review_domain_reference,
+        {"purpose": "decider"},
+        name="programme-decision-domain-reference",
+    ),
     path(
         _ROOT
         + "mine/<uuid:case_id>/<uuid:assignment_id>/answers/person/<str:question_key>/",
