@@ -40,6 +40,8 @@ or permission to use production personal data.
 - [Observability and readiness](observability-and-readiness.md)
 - [Applications Programme calls/proposals migration and recovery](applications-programme-calls-and-proposals-migration-and-recovery.md)
 - [Programme Department ownership continuity and recovery](applications-programme-department-ownership-recovery.md)
+- [Programme supporting-file handling](programme-supporting-file-handling.md)
+  defines the dormant PDF/scanner boundary and remaining private-intake gates.
 - [Applications Programme import migration and recovery](applications-programme-import-migration-and-recovery.md)
   covers the server-clock/test-seam boundary, exact source and nested-command
   integrity, delegable continuity disposal, downgrade refusal, and fix-forward
@@ -87,6 +89,7 @@ deployment-and-service-objectives
 observability-and-readiness
 applications-programme-calls-and-proposals-migration-and-recovery
 applications-programme-department-ownership-recovery
+programme-supporting-file-handling
 applications-programme-import-migration-and-recovery
 applications-programme-review-migration-and-recovery
 programme-conversion-migration-and-recovery

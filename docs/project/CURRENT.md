@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-15
+Last updated: 2026-09-16
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -11,39 +11,47 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's personal task connections are delivered through
-[PR #144](https://github.com/martonpornoi/maru/pull/144), protected squash
-`8bdae527e349e23ba4808557f8e2dd19064a2244` at 2026-09-15 21:22:59 UTC.
-Its tree equals certified head `849df0de991f28d949c45cf9cdb7042c73125122`;
+#108's own-purpose timetable edition discovery is delivered through
+[PR #145](https://github.com/martonpornoi/maru/pull/145), protected squash
+`dd74df6760fa3b6768e018f9fdc16d777cdaab76` at 2026-09-15 22:12:36 UTC.
+Its tree equals certified head `0e74e2e81762896f952f8283c4804fc580aa070a`;
 clean local main and origin/main were synchronized. All eight local retained
-gates passed in 6m26s, including 8,480 units in 66.71s and 93 frontend tests.
-Hosted quality took 10m10s, documentation 8m12s and units 102.40s; exact-head
+gates passed in 5m14s, including 8,562 units in 53.68s and 93 frontend tests.
+Hosted quality took 9m35s, documentation 7m40s and units 80.98s; exact-head
 PR gate/CodeQL passed with clear reviews. See the
-[protected evidence](../checkpoints/2026-09-15-programme-personal-discovery.md).
-PostgreSQL stayed skipped. Four maintained native navigation cases remain #102
+[protected evidence](../checkpoints/2026-09-16-programme-file-preparation.md).
+PostgreSQL stayed skipped. Four added native discovery and four adjusted navigation
+cases remain #102
 debt. No schema, profile or production route was activated. Do not restart this,
 operator/shared workspace entry, domain selection or #113.
 
-## Active bounded outcome: own-purpose edition discovery (#108)
+## Active bounded outcome: supporting-file byte preparation (#108)
 
-Branch: `codex/programme-personal-discovery`, from protected PR #144.
-Dormant ordinary edition choice derives only from own retained hosting or Shift
-purposes, with independent adopted-owner self fields, bounded opaque candidates,
-canonical all-parents-before-person locks, minimized labels and mandatory audit.
-Complete candidate/policy/proof/label comparisons precede disclosure and repeat
-after final rendering. No timetable contents, general directory, Participation,
-suitability or proposal-derived purpose is loaded. Verified-person return links
-load no inventory. No schema, current profile or production route change.
+Branch: `codex/programme-file-intake`, from protected PR #145.
+ADR 0104 records purpose-bound Applications file intake. This first increment only
+prepares exact immutable PDF bytes, capped at 10 MiB, with a separately configured
+literal-loopback ClamAV INSTREAM adapter. Exact bounded NUL-framed clean evidence
+through connection close and one absolute connect/send/read deadline are required.
+Disabled, unscanned, malformed, unknown and partial states fail closed. A PDF
+envelope/clean scan is not a benign-document guarantee or permission.
 
-Database-free feedback passed 8,562 tests in 54.49s with three existing warnings;
-focused owner/compositor/view tests passed 115 in 1.65s. Synthetic chooser →
-timetable → chooser, empty purposes, one H1/main, visible keyboard Access and
-1280px no-overflow checks passed with SQL/writes disabled. Whole lint/format,
-changed-source strict types and NumPy docs, semantic docs and documentation
-validation pass. Fresh clean exact-commit certification/hosted acceptance is next.
-Four added native discovery cases and four adjusted navigation cases remain
-uncollected/unexecuted #102 debt. Real combined-owner/race/cardinality, genuine
-human/AT and integrated evidence remain #102/#92/#109.
+The initial local certification passed all eight retained gates in 5m13s, but
+PR #146's hosted unit run failed one mapped-IPv6 classification case (Python
+3.12.14 versus local 3.12.0). The local reproduction now protects explicit rejection
+regardless of library classification, including both address spellings. See the
+[repair checkpoint](../checkpoints/2026-09-16-programme-scanner-endpoint-repair.md).
+Corrected focused feedback passes 83 cases in 0.56s and full database-free feedback
+passes 8,645 in 54.54s. Fresh exact-commit certification is next; the initial receipt
+cannot certify this candidate. No real scanner, ORM, storage, authorization, audit, event, receipt,
+answer, profile or production route is changed. No native suite is collected/run.
+No new visible UI means no new browser acceptance claim. Real scanner/signature,
+storage/provenance and recovery acceptance remain #109/#102.
+
+Prepared bytes are ephemeral, not durable intake. Next implement governed exact
+proposal/question/uploader provenance, retry, private storage/custody and independently
+authorized selection/attachment viewers. Anonymous omission precedes file lookup.
+The fresh schema-only exception is still unanswered and not assumed. Complete
+accountable setup, isolated fixture and final #102/#97/#92/#109 gates remain open.
 
 Applications reciprocal navigation is delivered, including original input/receipt
 preservation and synthetic role/keyboard observations. Four maintained native
@@ -56,10 +64,9 @@ human/integrated evidence remains #92/#109. Do not restart delivered increments.
 
 Person and same-call domain selection/viewers are delivered; do not restart them.
 Six domain native cases remain unexecuted #102 debt and browser/human follow-up
-remains #92. Safe-file intake needs governed upload/receipt handling. A fresh bounded
-schema-only exception is unanswered and is not assumed. Existing
-decision-to-conversion continuations remain intact. Other owner launchers, safe
-files, accountable setup and #109/#102/#97/#92 acceptance remain incomplete.
+remains #92. Existing decision-to-conversion continuations and all ordinary owner
+launchers remain delivered. Safe files, accountable setup and #109/#102/#97/#92
+acceptance remain incomplete.
 
 ## Remaining #48 delivery decomposition
 
