@@ -15,8 +15,8 @@
       <a href="{{ refresh_url }}">Refresh now and next</a>
       <a href="{{ print_url }}">Print-friendly complete copy</a>
       <a href="{{ pack_url }}">Download signed snapshot</a>
-      {% if notice_url %}<a href="{{ notice_url }}">Reviewed Programme change notices</a>{% endif %}
     </nav>
+    {% include "scheduling/_output_links.html" %}
   {% else %}
     <p>Use your browser's Print command. Keep the scope, source, expiry and warnings on every complete copy.</p>
   {% endif %}

@@ -25,6 +25,7 @@
     <p><strong>Hosting:</strong> {{ hosting_state }}.</p>
     {% if snapshot.shifts is None %}<p><strong>Workforce:</strong> Not adopted for this edition.</p>
     {% elif not snapshot.shifts %}<p><strong>Workforce:</strong> No retained work records.</p>{% endif %}
+    {% if not print_view %}{% include "scheduling/_output_links.html" %}{% endif %}
     <details class="personal-source"><summary>Scope, source and saved-copy limits</summary>{% include "scheduling/personal_timetable_source.html" %}</details>
     <div class="personal-print-source">{% include "scheduling/personal_timetable_source.html" %}</div>
     {% if print_view %}<p class="personal-controls">Use your browser's Print command. This page contains private hosting and work information.</p>

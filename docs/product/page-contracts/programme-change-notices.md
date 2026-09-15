@@ -24,6 +24,19 @@ an action button nor a hidden digest grants authority. The personal form accepts
 no other person or private explanation. Organizer reasons never enter personal
 output or its form state.
 
+## Output continuations
+
+Current notice details connect to the genuine viewer's independently admitted
+hosting/work timetable or exact operator-purpose run sheet and now/next. Sender
+recipient-field authority does not grant viewer output authority. Never invoke an
+output read as the selected recipient or build an other-person timetable link.
+Use code-owned labels and reverse/resolve the exact mounted route in the current
+request configuration; omit denied, missing, shadowed or unavailable destinations.
+A notice selects no optional operator instruction layers; the viewer chooses
+those explicitly in their own output view. Repeat navigation after rendering;
+changed links are removed without altering native command references, saved form
+meaning, redirects or writer dispatch. Every destination authorizes its data again.
+
 ## Workflow and discovery
 
 Provide a bounded retained-notice inventory for an exact edition, optionally

@@ -18,6 +18,7 @@ from django.views.decorators.http import require_safe
 
 from .authorization import SchedulingAuthorizationDeniedError
 from .command_support import SchedulingUnavailableError
+from .continuity_protocol import ContinuityScope
 from .operator_output_queries import (
     OPERATOR_OPTIONAL_LAYERS,
     OperatorRunSheet,
@@ -33,6 +34,8 @@ from .operator_scope import (
     OperatorScopeKind,
     authorize_operator_scope,
 )
+from .output_navigation import ProgrammeOutputLink, programme_output_links
+from .output_observation import verify_timetable_observation
 from .output_rendering import (
     MAX_TIMETABLE_OUTPUT_BYTES,
     TimetableOutputInvalidError,
@@ -184,7 +187,11 @@ def _html(
 
 
 def _render(
-    request: HttpRequest, snapshot: OperatorRunSheet, output_format: str
+    request: HttpRequest,
+    snapshot: OperatorRunSheet,
+    output_format: str,
+    *,
+    links: tuple[ProgrammeOutputLink, ...] = (),
 ) -> HttpResponse:
     # The same closed graph and byte bound govern visible pages and all exports.
     encoded = render_operator_run_sheet_json(snapshot)
@@ -201,7 +208,11 @@ def _render(
             f'attachment; filename="programme-operator-run-sheet.{extension}"'
         )
         return _secure(response)
-    return _html(request, _context(snapshot, print_view=output_format == "print"))
+    return _html(
+        request,
+        _context(snapshot, print_view=output_format == "print")
+        | {"output_links": links},
+    )
 
 
 @never_cache
@@ -264,7 +275,28 @@ def operator_run_sheet(
         )
         output_format, layers = _options(request)
         snapshot = load_operator_run_sheet(scope, layers=layers)
-        return _render(request, snapshot, output_format)
+        navigation = ContinuityScope(
+            organization_id,
+            edition_id,
+            "private_operator",
+            actor_id,
+            kind.value,
+            target_id,
+            tuple(sorted(layers)),
+        )
+        urlconf = getattr(request, "urlconf", None)
+        links = (
+            programme_output_links(navigation, current="timetable", urlconf=urlconf)
+            if output_format == "html"
+            else ()
+        )
+        response = _render(request, snapshot, output_format, links=links)
+        if links and links != programme_output_links(
+            navigation, current="timetable", urlconf=urlconf
+        ):
+            response = _render(request, snapshot, output_format)
+        fresh = load_operator_run_sheet(scope, layers=layers)
+        verify_timetable_observation(snapshot, fresh)
     except SchedulingAuthorizationDeniedError:
         status, message = (
             404,
@@ -294,4 +326,6 @@ def operator_run_sheet(
             400,
             "Use the run-sheet format and layer controls without extra options.",
         )
+    else:
+        return response
     return _html(request, {"state_message": message}, status=status)

@@ -88,12 +88,8 @@
       </div>
     {% else %}<p>Comparison is suppressed. Earlier content and room geometry are not available here. Recheck the current timetable and coordinate with the Programme organizer; do not infer that work was cancelled.</p>{% endif %}
     <details><summary>Exact source fingerprint</summary><p>{{ preview.snapshot_digest }}</p><p>Every action recomposes current sources. This fingerprint is not permission to disclose or send.</p></details>
-    {% if personal %}
-      {% if preview.recipient.purpose == "host" or preview.recipient.purpose == "work" %}<p><a href="/my/{{ organization_id }}/{{ edition_id }}/timetable/">Open my current hosting and work timetable</a></p>
-      {% else %}<p><a href="/admin/programme/run-sheets/{{ organization_id }}/{{ edition_id }}/{{ preview.recipient.purpose }}/{{ preview.recipient.target_id }}/">Open my currently authorized operator run sheet</a></p>{% endif %}
-    {% else %}
-      {% if preview.recipient.purpose == "room" or preview.recipient.purpose == "department" or preview.recipient.purpose == "edition" %}<p><a href="/admin/programme/run-sheets/{{ organization_id }}/{{ edition_id }}/{{ preview.recipient.purpose }}/{{ preview.recipient.target_id }}/">Open the currently authorized operator run sheet</a></p>{% endif %}
-    {% endif %}
+    {% include "scheduling/_output_links.html" %}
+    {% if output_links %}<p>A notice does not select optional operator instruction layers. Choose them deliberately in your own output view.</p>{% endif %}
   </section>
   {% endif %}
   {% if detail %}

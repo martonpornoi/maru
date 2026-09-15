@@ -104,11 +104,21 @@ def test_native_public_continuity_rechecks_withdrawal_without_visitor_effects(
     assert result.entries[0].title == "Synthetic public opening"
     assert result.entries[0].context is None
     assert (
+        continuity.load_continuity_projection(
+            scope, correlation_id=uuid4(), expected=result
+        )
+        == result
+    )
+    assert (
         AuditEvent.objects.count(),
         DomainEvent.objects.count(),
         OutboxMessage.objects.count(),
     ) == before
     withdraw(public_scope, published)
+    with pytest.raises(SchedulingUnavailableError):
+        continuity.load_continuity_projection(
+            scope, correlation_id=uuid4(), expected=result
+        )
     ended = continuity.load_continuity_projection(scope, correlation_id=uuid4())
     assert ended.release_state == "withdrawn"
     assert ended.pointer_version > result.pointer_version

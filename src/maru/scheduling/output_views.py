@@ -15,6 +15,9 @@ from django.views.decorators.http import require_safe
 
 from .authorization import SchedulingAuthorizationDeniedError
 from .command_support import SchedulingUnavailableError
+from .continuity_protocol import ContinuityScope
+from .output_navigation import ProgrammeOutputLink, programme_output_links
+from .output_observation import verify_timetable_observation
 from .output_queries import PublicProgrammeTimetable, load_public_programme_timetable
 from .output_rendering import (
     MAX_TIMETABLE_OUTPUT_BYTES,
@@ -134,7 +137,11 @@ def _page_context(
 
 
 def _render_snapshot(
-    request: HttpRequest, snapshot: PublicProgrammeTimetable, options: _Options
+    request: HttpRequest,
+    snapshot: PublicProgrammeTimetable,
+    options: _Options,
+    *,
+    links: tuple[ProgrammeOutputLink, ...] = (),
 ) -> HttpResponse:
     # The same closed DTO and byte bounds govern HTML as well as JSON.
     encoded_json = render_public_timetable_json(snapshot)
@@ -155,7 +162,7 @@ def _render_snapshot(
             'attachment; filename="programme-timetable.ics"'
         )
         return _secure(response)
-    context = _page_context(snapshot, options)
+    context = _page_context(snapshot, options) | {"output_links": links}
     content = render_to_string(
         "scheduling/public_timetable.html", context, request=request
     ).encode("utf-8")
@@ -191,7 +198,22 @@ def public_programme_timetable(
         snapshot = load_public_programme_timetable(
             organization_id=organization_id, edition_id=edition_id
         )
-        return _render_snapshot(request, snapshot, options)
+        navigation = ContinuityScope(organization_id, edition_id, "public")
+        urlconf = getattr(request, "urlconf", None)
+        links = (
+            programme_output_links(navigation, current="timetable", urlconf=urlconf)
+            if options.format == "html"
+            else ()
+        )
+        response = _render_snapshot(request, snapshot, options, links=links)
+        if links and links != programme_output_links(
+            navigation, current="timetable", urlconf=urlconf
+        ):
+            response = _render_snapshot(request, snapshot, options)
+        fresh = load_public_programme_timetable(
+            organization_id=organization_id, edition_id=edition_id
+        )
+        verify_timetable_observation(snapshot, fresh)
     except (SchedulingAuthorizationDeniedError, ValidationError):
         return _state(
             request,
@@ -229,3 +251,5 @@ def public_programme_timetable(
                 "or reload the complete timetable."
             ),
         )
+    else:
+        return response

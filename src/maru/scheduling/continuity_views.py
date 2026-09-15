@@ -15,7 +15,6 @@ from django.core.exceptions import ValidationError
 from django.db import DatabaseError
 from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
@@ -24,7 +23,11 @@ from django.views.decorators.http import require_safe
 from .authorization import SchedulingAuthorizationDeniedError
 from .command_support import SchedulingUnavailableError
 from .continuity_presentation import MAX_CONTINUITY_HTML_BYTES, render_continuity_body
-from .continuity_protocol import ContinuityInvalidError, ContinuityScope
+from .continuity_protocol import (
+    ContinuityInvalidError,
+    ContinuityScope,
+    verify_continuity_package,
+)
 from .continuity_queries import load_continuity_projection
 from .continuity_signing import (
     DEFAULT_CONTINUITY_LIFETIME_SECONDS,
@@ -33,6 +36,7 @@ from .continuity_signing import (
     sign_continuity_projection,
 )
 from .operator_output_queries import OPERATOR_OPTIONAL_LAYERS
+from .output_navigation import ProgrammeOutputLink, programme_output_links
 from .output_rendering import TimetableOutputInvalidError
 
 if TYPE_CHECKING:
@@ -114,19 +118,13 @@ def _html(
 
 
 def _page_context(
-    projection: ContinuityProjection, output_format: str
+    projection: ContinuityProjection,
+    output_format: str,
+    *,
+    links: tuple[ProgrammeOutputLink, ...] = (),
 ) -> dict[str, object]:
     scope = projection.scope
     parameters = dict.fromkeys(scope.layers, "1")
-    source = {"organization_id": scope.organization_id, "edition_id": scope.edition_id}
-    notice_url = None
-    if scope.audience != "public":
-        notice_url = reverse(
-            "my-programme-changes"
-            if scope.audience == "exact_person"
-            else "programme-change-notices",
-            kwargs=source,
-        )
     body = render_continuity_body(
         projection,
         at=projection.observed_at,
@@ -141,7 +139,7 @@ def _page_context(
         "refresh_url": "?" + urlencode(parameters),
         "print_url": "?" + urlencode(parameters | {"format": "print"}),
         "pack_url": "?" + urlencode(parameters | {"format": "pack"}),
-        "notice_url": notice_url,
+        "output_links": links,
         "access_audience": scope.audience.replace("_", " "),
         "access_purpose": scope.kind,
         "access_layers": ", ".join(_LAYERS[layer] for layer in scope.layers)
@@ -165,9 +163,9 @@ def _serve(request: HttpRequest, scope: ContinuityScope) -> HttpResponse:
         except ValueError:
             # Do not disclose scope existence with a format error before admission.
             output_format, layers, invalid_options = "html", (), True
-        projection = load_continuity_projection(
-            replace(scope, layers=layers), correlation_id=uuid4()
-        )
+        scope = replace(scope, layers=layers)
+        correlation_id = uuid4()
+        projection = load_continuity_projection(scope, correlation_id=correlation_id)
         if invalid_options:
             return _html(
                 request,
@@ -181,9 +179,10 @@ def _serve(request: HttpRequest, scope: ContinuityScope) -> HttpResponse:
                 status=400,
             )
         if output_format == "pack":
+            policy = load_continuity_signing_policy()
             package = sign_continuity_projection(
                 projection,
-                policy=load_continuity_signing_policy(),
+                policy=policy,
                 issued_at=timezone.now(),
             )
             response = HttpResponse(
@@ -192,8 +191,33 @@ def _serve(request: HttpRequest, scope: ContinuityScope) -> HttpResponse:
             response["Content-Disposition"] = (
                 'attachment; filename="programme-continuity.maru.json"'
             )
-            return _secure(response)
-        return _html(request, scope, _page_context(projection, output_format))
+            response = _secure(response)
+        else:
+            urlconf = getattr(request, "urlconf", None)
+            links = (
+                programme_output_links(scope, current="now", urlconf=urlconf)
+                if output_format == "html"
+                else ()
+            )
+            response = _html(
+                request, scope, _page_context(projection, output_format, links=links)
+            )
+            if links and links != programme_output_links(
+                scope, current="now", urlconf=urlconf
+            ):
+                response = _html(
+                    request, scope, _page_context(projection, output_format)
+                )
+        load_continuity_projection(
+            scope, correlation_id=correlation_id, expected=projection
+        )
+        if output_format == "pack":
+            verify_continuity_package(
+                package,
+                expected_scope=scope,
+                trust=tuple(key.trust for key in policy.keys),
+                now=timezone.now(),
+            )
     except (SchedulingAuthorizationDeniedError, ValidationError):
         status, message = (
             404,
@@ -229,6 +253,8 @@ def _serve(request: HttpRequest, scope: ContinuityScope) -> HttpResponse:
             400,
             "Use the format and layer controls without extra or repeated options.",
         )
+    else:
+        return response
     return _html(request, scope, {"state_message": message}, status=status)
 
 

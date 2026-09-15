@@ -1197,6 +1197,39 @@ ACLs. It creates no grant, role or domain record. Reverse is refused after any
 retained grant or role references the vocabulary, including revoked history;
 retain evidence and fix forward instead. No other runtime privilege changes.
 
+### Guided output connections and final disclosure
+
+`output_navigation.programme_output_links` provides closed fixed-label timetable,
+now/next and notice links for the actual source viewer and exact scope. It verifies
+reverse/resolve identity in the current request URL configuration, then independently
+admits each destination's metadata/fields. It reads no output body or directory.
+Operator fields include Scheduling geometry, Programme copy, Venue membership/
+wayfinding, requested delivery/work fields and adopted Department work membership.
+`personal_output_queries.authorize_personal_timetable_scope` checks only adopted
+own-person layer pairs and fields; Workforce-only performs no Programme/hosting
+admission. Notice read permission remains separate from output permission.
+
+Links preserve explicit output layers, never select another actor and are omitted
+when unavailable or changed after rendering. Public now/next is explicitly the
+complete public Programme, not an implied day/room-filter continuation. Print and
+downloads omit workflow controls. Existing command redirects and sole writers
+remain unchanged; rerendering cannot redispatch them.
+
+Public, personal and operator output views re-read their complete owner snapshot
+after the final render. `output_observation` aligns only the new check timestamp
+before complete equality comparison and rejects backwards/invalid observations.
+Original bytes, source versions and check time remain unchanged; denial, audit
+failure or a moved owner fact withholds them without a partial fallback.
+
+Continuity's optional `expected` query argument binds the original in-request
+projection to the current trusted scope before owner access. The complete fresh
+owner result is aligned to the original observation before canonical serialization,
+so its full source digest must match, including facts not displayed as cards.
+Only then may already rendered or once-signed bytes escape. The signed package's
+trusted clock/expiry is rechecked after source proof without loading a key from the
+package, renewing freshness or signing again. Protocol and key provisioning remain
+unchanged. Extra owner-read cost and native races remain #102 acceptance debt.
+
 ### Read-only on-site continuity
 
 ADR 0103 adds the dormant `scheduling.programme-continuity@1` adapter without a

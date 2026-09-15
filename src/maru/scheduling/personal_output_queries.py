@@ -8,6 +8,10 @@ from typing import TYPE_CHECKING
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
+from maru.authorization.policy import (
+    PolicyDecision,
+    decide_verified_principal_exact_self,
+)
 from maru.events.adoption import profile_allows_adapter, profile_allows_capability
 from maru.events.personal_timetable_queries import (
     PersonalTimetableEditionLabel,
@@ -17,7 +21,10 @@ from maru.events.queries import edition_adoption_profile_reference
 from maru.events.scheduling_queries import resolve_scheduling_edition_reference
 from maru.events.write_references import lock_edition_ownership
 from maru.identity.queries import resolve_active_verified_person_reference
-from maru.programme.authorization import ProgrammeAuthorizationDeniedError
+from maru.programme.authorization import (
+    ProgrammeAuthorizationDeniedError,
+    authorize_programme_scope,
+)
 from maru.programme.queries import ProgrammeQueryUnavailableError
 from maru.venues.personal_programme_queries import load_personal_host_room_wayfinding
 from maru.venues.scheduling_queries import VenueSchedulingSourceUnavailableError
@@ -32,7 +39,11 @@ from maru.workforce.timetable_queries import (
     load_personal_shift_timetable,
 )
 
-from .authorization import VIEW_HOST_SELF, SchedulingAuthorizationDeniedError
+from .authorization import (
+    VIEW_HOST_SELF,
+    SchedulingAuthorizationDeniedError,
+    authorize_scheduling_scope,
+)
 from .command_support import SchedulingUnavailableError
 from .inputs import require_identifier
 from .personal_release_references import (
@@ -118,6 +129,76 @@ def _adopted_layers(organization_id: UUID, edition_id: UUID) -> tuple[bool, bool
     if not any((*hosting, *workforce)):
         raise SchedulingAuthorizationDeniedError
     return all(hosting), all(workforce)
+
+
+def authorize_personal_timetable_scope(
+    *, actor_id: UUID, organization_id: UUID, edition_id: UUID
+) -> None:
+    """Admit own-timetable navigation without reading relationships or work records.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Genuine authenticated viewer, never a notice recipient being impersonated.
+    organization_id : UUID
+        Exact trusted organization of the source page.
+    edition_id : UUID
+        Exact edition whose adopted layer pairs and fields must all authorize.
+
+    Raises
+    ------
+    SchedulingAuthorizationDeniedError
+        If any adopted owner's own-person field authority is unavailable or denied.
+    SchedulingUnavailableError
+        If the adopted layer set is incomplete or changes during admission.
+
+    Notes
+    -----
+    No source labels, directory, release or mandatory sensitive-read audit is loaded.
+    The destination repeats complete owner queries and audits. Workforce-only does
+    not invoke Programme or Scheduling hosting authorization.
+    """
+    for value in (actor_id, organization_id, edition_id):
+        require_identifier(value)
+    adopted = _adopted_layers(organization_id, edition_id)
+    try:
+        if adopted[0]:
+            authorize_scheduling_scope(
+                actor_id=actor_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                capability_code=VIEW_HOST_SELF,
+                requested_fields=frozenset({"own_host_schedule"}),
+            )
+            authorize_programme_scope(
+                actor_id=actor_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                capability_code="programme.view_host_self",
+                requested_fields=frozenset(
+                    {"own_host_relationship", "own_host_invitation"}
+                ),
+            )
+        if adopted[1]:
+            fields = frozenset({"shifts"})
+            decision = decide_verified_principal_exact_self(
+                principal_id=actor_id,
+                owner_account_id=actor_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                capability_code="workforce.view_self",
+                requested_fields=fields,
+            )
+            if (
+                not isinstance(decision, PolicyDecision)
+                or not decision.allowed
+                or not fields <= decision.fields
+            ):
+                raise SchedulingAuthorizationDeniedError
+        if _adopted_layers(organization_id, edition_id) != adopted:
+            raise SchedulingUnavailableError
+    except ProgrammeAuthorizationDeniedError as error:
+        raise SchedulingAuthorizationDeniedError from error
 
 
 def load_personal_timetable(
