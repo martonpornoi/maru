@@ -1,9 +1,9 @@
 # Find Programme calls and review tasks
 
 Status: dormant #108 implementation contract. Owner: Applications.
-Requirements: PRG-001, PRG-003, PRG-006, NFR-013, AUD-001, AUD-003,
+Requirements: PRG-001, PRG-003, PRG-006, PRG-008, NFR-013, AUD-001, AUD-003,
 UX-006, UX-007, UX-019, UX-020, UX-027 and UX-029.
-ADRs 0082, 0085 and 0100 remain unchanged.
+ADRs 0082, 0085, 0086 and 0100 remain unchanged.
 
 ## Purpose, route and independent authority
 
@@ -22,14 +22,22 @@ Final shared-shell registration and accountable setup remain separate #108 work.
 | My assigned reviews | `review_programme` | `review_context` |
 | Moderate reviews | `moderate_programme_review` | `review_context` |
 | Make decisions | `decide_programme` | `review_context` |
+| Convert accepted proposals | `convert_programme_acceptance` | None; also independent edition `programme.manage_items` |
 
 No sibling capability, broad staff flag or Workforce structure permission grants
 entry to another task. Review setup and manager context are separate field
 ceilings. Own assignments, conflict clearance, independent moderator/decider
 eligibility and sensitive-answer authority remain destination-owned checks.
 This catalog reads no proposals, answers, people, assignments, decisions or totals.
-Direct conversion-only entry is still separate: its existing continuation needs
-both Applications conversion authority/adapters and Programme item management.
+Conversion-only entry needs no review or decision grant. Both exact Applications
+target and Programme inbound adapter pins and independent Programme item-management
+authority are required before resolving a conversion-only Department label.
+Programme supplies a minimized complete item-entry policy reference, not a boolean
+that conflates absent permission with failed dependencies. Both current policy
+sources appear on the conversion link; no private item title or accepted source is
+loaded here. Missing adapters or an ordinary absent permission omit conversion
+only. Incoherent owner/policy evidence withholds the complete response. Retain the
+adapter and Programme proof in the server-only repeated source comparison.
 
 ## Complete protected discovery
 

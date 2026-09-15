@@ -122,15 +122,21 @@ The [edition task entry](../product/page-contracts/programme-applications-entry.
 adds a dormant read-only chooser without requiring a selected Department anchor.
 `list_programme_department_tasks` in `programme_department_tasks` uses exact
 active-person, edition and profile proof, Workforce's bounded current ID-only set,
-and six independently evaluated code-owned capability/field combinations before
+and seven independently evaluated code-owned capability/field combinations before
 resolving any label. The shared-shell route groups labelled calls, review setup,
-reviewer management, own reviews, moderation and decisions by Department/code.
+reviewer management, own reviews, moderation, decisions and accepted conversion
+by Department/code. Conversion additionally proves both exact adapter pins and
+Programme's public `resolve_programme_item_entry_reference`: exact independent
+edition item-management policy without inventory or source-content access.
+Both policy sources are explained. Missing conversion permission/adapters omit
+only that task; invalid owner/policy evidence withholds the complete catalog.
+The source comparison includes adapter state and the Programme owner decision.
 It borrows no Workforce structure or sibling-purpose authority, loads no private
 application content, and revalidates the complete source around audit and rendering.
 Empty results contain no hidden count or invented grant. Profile/owner/policy
 incoherence, overflow and required audit failure release no partial catalog.
 Current profiles/menus and production routing remain unchanged. Accountable setup,
-other owner launchers and direct conversion-only entry remain #108 work.
+other owner launchers and integrated acceptance remain #108 work.
 
 The [guided call workspace](../product/page-contracts/programme-call-workspace.md)
 adds a dedicated, unmounted #108 manager adapter over the existing Programme

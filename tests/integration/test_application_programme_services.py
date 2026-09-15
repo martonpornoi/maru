@@ -125,6 +125,7 @@ from maru.applications.programme_reference_sources import (
     ProgrammeAnswerReferenceRequest,
 )
 from maru.audit.models import AuditEvent
+from maru.authorization import policy as authorization_policy
 from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.workforce.models import Department, EditionStructureControl
@@ -132,7 +133,7 @@ from maru.workforce.structure_commands import (
     StructureDependencyConflictError,
     delete_unused_department,
 )
-from tests.factories import AccountFactory, EventEditionFactory
+from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.workforce_helpers import create_department_for_test
 
 if TYPE_CHECKING:
@@ -2671,11 +2672,84 @@ def test_native_programme_department_entry_owner_and_audit(
         assert hidden.id not in {item.department_id for item in result.tasks}
         assert foreign.id not in {item.department_id for item in result.tasks}
         audits = AuditEvent.objects.filter(correlation_id=correlation)
-        assert audits.count() == 6
+        assert audits.count() == 7
         assert set(
             audits.filter(outcome="allow").values_list("target_id", flat=True)
         ) == ({admitted.id} if case == "visible" else set())
         assert not audits.filter(outcome="deny", target_id__isnull=False).exists()
+    assert not ProgrammeCall.objects.filter(edition_id=edition.id).exists()
+    assert not ProgrammeProposal.objects.filter(edition_id=edition.id).exists()
+    assert DomainEvent.objects.count() == events_before
+    assert OutboxMessage.objects.count() == outbox_before
+
+
+@pytest.mark.parametrize("missing", [None, "applications", "programme", "adapter"])
+def test_native_conversion_entry_real_grants_and_owner_audit(
+    monkeypatch: pytest.MonkeyPatch, missing: str | None
+) -> None:
+    """Maintain actual persisted dual-grant policy under isolated future pins."""
+    edition = EventEditionFactory()
+    actor = AccountFactory(display_name="Synthetic converter")
+    department = create_department_for_test(
+        edition=edition, name="Programme", expected_code="programme"
+    )
+    create_department_for_test(edition=edition, name="Private", expected_code="private")
+    original_policy = authorization_policy.profile_allows_capability
+    future_codes = {task.capability for task in department_task_services._TASKS} | {
+        "programme.manage_items"
+    }
+    monkeypatch.setattr(
+        authorization_policy,
+        "profile_allows_capability",
+        lambda code, version, capability: (
+            capability in future_codes or original_policy(code, version, capability)
+        ),
+    )
+    monkeypatch.setattr(
+        department_task_services, "profile_allows_application_target", lambda *_: True
+    )
+    source_adapter = (
+        department_task_services.PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER
+    )
+    monkeypatch.setattr(
+        department_task_services,
+        "profile_allows_adapter",
+        lambda _code, _version, adapter: (
+            not (missing == "adapter" and adapter == source_adapter)
+        ),
+    )
+    if missing != "applications":
+        CapabilityGrantFactory(
+            organization_id=edition.organization_id,
+            edition=edition,
+            department_id=department.id,
+            principal=actor,
+            capability_code="applications.convert_programme_acceptance",
+        )
+    if missing != "programme":
+        CapabilityGrantFactory(
+            organization_id=edition.organization_id,
+            edition=edition,
+            principal=actor,
+            capability_code="programme.manage_items",
+        )
+    events_before = DomainEvent.objects.count()
+    outbox_before = OutboxMessage.objects.count()
+    correlation = uuid4()
+    result = department_task_services.list_programme_department_tasks(
+        actor_id=actor.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        correlation_id=correlation,
+        source_channel="test",
+    )
+    assert [(item.department_id, item.task_code) for item in result.tasks] == (
+        [(department.id, "conversion")] if missing is None else []
+    )
+    evidence = AuditEvent.objects.filter(correlation_id=correlation)
+    assert evidence.count() == 7
+    assert evidence.filter(outcome="allow").count() == (1 if missing is None else 0)
+    assert not evidence.filter(outcome="deny", target_id__isnull=False).exists()
     assert not ProgrammeCall.objects.filter(edition_id=edition.id).exists()
     assert not ProgrammeProposal.objects.filter(edition_id=edition.id).exists()
     assert DomainEvent.objects.count() == events_before

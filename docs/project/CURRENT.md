@@ -11,50 +11,43 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's registered same-call domain-reference tasks are delivered through
-[PR #139](https://github.com/martonpornoi/maru/pull/139), protected squash
-`f4f8630a33681f1ca0fd5db9c6910d59868423cf` at 2026-09-15 17:12:52 UTC.
-Its tree equals certified head `d9be9153e0a0de18fc269d8131c23bc9b234c0e7`;
-clean local main and origin/main were synchronized to the protected result.
+#108's six independent calls/review entry tasks are delivered through
+[PR #140](https://github.com/martonpornoi/maru/pull/140), protected squash
+`a1881e0a77a03c87c754c3a5fe6e596b8033bfeb` at 2026-09-15 18:13:07 UTC.
+Its tree equals certified head `41cfbd837169b949de9b60fe9940c9045a361ccd`;
+clean local main and origin/main were synchronized. All eight local retained gates
+passed in 6m04s (8,239 units, 93 frontend cases). Hosted quality took 11m28s,
+documentation 9m28s and units 62.02s; exact-head PR gate/CodeQL passed and reviews
+were clear. See the [protected evidence](../checkpoints/2026-09-15-programme-entry-protected-delivery.md).
+PostgreSQL remained skipped. No schema, profile or route activation; do not
+restart PR #139's domain selection or #113's delivered documentation runtime fix.
 
-All eight retained local gates and exact-head hosted PR gate/CodeQL passed.
-Local certification took 5m48s (8,169 units and 93 frontend cases).
-Hosted quality took 12m07s with 17m53s margin; documentation took 10m01s,
-down from the failed candidate's 28m01s. The #113 navigation repair retains all
-sources, gates and timeouts. See the
-[protected evidence](../checkpoints/2026-09-15-programme-domain-protected-delivery.md).
-No schema, profile or route activation. Earlier deliveries remain complete.
+## Active bounded outcome: direct conversion entry (#108)
 
-## Active bounded outcome: Applications entry tasks (#108)
+Branch: `codex/programme-conversion-entry`, from protected PR #140.
+The recorded direct conversion-only entry now proves independent Department
+Applications capability, both exact adapters and Programme edition item-management
+policy before labels. Programme owns a complete minimized public entry reference;
+ordinary absent authority differs from failed/incoherent owner evidence.
+Both policy sources are explained, and complete source revalidation includes the
+adapter/Programme facts. The six existing entry tasks stay independently available.
+No review grant, directory, content read, schema or activation is added.
 
-Branch: `codex/programme-applications-entry`, from protected PR #139.
-Next is an Applications-owned dormant edition entry with labelled current-Department
-links for calls, review setup, named-reviewer management, own reviewing, moderation
-and decisions. Each destination keeps its independent capability and field ceiling;
-no Workforce structure grant substitutes for Applications authority. Preserve
-complete bounded discovery, no hidden labels/counts, required audit and final
-rendered-source checks. Current profiles and production routes remain unchanged.
-The dormant query, shared-shell entry, six scoped task links and whole-source
-render checks are implemented. Complete database-free feedback passes 8,239 tests
-in 64.68s; strict types, NumPy/semantic docs and whole Ruff/format pass. A synthetic
-browser journey verifies manager/reviewer/mixed/empty/read-only/denied/unavailable
-entry and keyboard call continuation at 1280px. Its duplicate Access disclosure
-was fixed and regression-tested. See the
-[checkpoint](../checkpoints/2026-09-15-programme-applications-entry.md).
-Fresh clean exact-commit certification and protected hosted acceptance are pending.
-The first full feedback attempt hit an exact shared-asset marker update and an
-inaccessible old Windows pytest temp root; neither failed run was accepted and
-no old cache was deleted. Fresh task-owned temporary directories pass the reruns.
-Three maintained native cases remain unexecuted
-[#102 debt](https://github.com/martonpornoi/maru/issues/102#issuecomment-5685179217);
-full human/width/AT work remains
-[#92](https://github.com/martonpornoi/maru/issues/92#issuecomment-5685179628).
+Final complete database-free feedback passed 8,303 tests in 64.59s; strict types,
+NumPy/semantic docs, whole formatting/lint and documentation validation passed.
+A synthetic browser journey verified conversion-only
+entry through the accepted-source queue to the explicit blank conversion form,
+missing Programme/adapter empty states, keyboard focus and no 1280px overflow.
+Fresh exact-commit certification and protected acceptance are pending.
+Four maintained real dual-grant native scenarios and three updated entry cases
+remain uncollected/unexecuted under #102. See the
+[checkpoint](../checkpoints/2026-09-15-programme-conversion-entry.md) for exact
+evidence, corrected test-assertion scope and remaining human/integrated gaps.
 
 Person and same-call domain selection/viewers are delivered; do not restart them.
 Six domain native cases remain unexecuted #102 debt and browser/human follow-up
 remains #92. Safe-file intake needs governed upload/receipt handling. A fresh bounded
-schema-only exception is unanswered and is not assumed. Direct conversion-only
-entry additionally needs Programme item authority and exact adapters; existing
+schema-only exception is unanswered and is not assumed. Existing
 decision-to-conversion continuations remain intact. Other owner launchers, safe
 files, accountable setup and #109/#102/#97/#92 acceptance remain incomplete.
 

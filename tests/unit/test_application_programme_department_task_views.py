@@ -14,9 +14,62 @@ from django.urls import Resolver404, resolve
 
 from maru.applications import programme_department_task_views as views
 from maru.applications import programme_department_tasks as tasks
+from maru.applications.programme_department_tasks import (
+    list_programme_department_tasks as read_real_entry,
+)
+from tests.unit import test_application_programme_department_tasks as entry_tests
 from tests.unit.test_application_programme_call_views import shell
 
 __all__ = ["shell"]
+
+
+@pytest.mark.parametrize("change", [None, "adapter", "programme"])
+def test_real_conversion_entry_and_final_owner_revocation(monkeypatch, change):
+    world = entry_tests.entry.__wrapped__(monkeypatch)
+    entry_tests._allow(world, tasks._TASKS[-1])
+    monkeypatch.setattr(
+        tasks,
+        "list_programme_department_tasks",
+        lambda **values: read_real_entry(**values, authorizer=world.authorizer),
+    )
+    original_render = views.render_to_string
+
+    def render(*args, **kwargs):
+        content = original_render(*args, **kwargs)
+        if change == "adapter":
+            world.adapters.return_value = False
+        elif change == "programme":
+            world.conversion.return_value = replace(
+                world.conversion.return_value, decision=entry_tests._DENY
+            )
+        return content
+
+    monkeypatch.setattr(views, "render_to_string", render)
+    organization = world.values["organization_id"]
+    edition = world.values["edition_id"]
+    page = SimpleNamespace(
+        actor=world.values["actor_id"],
+        organization=organization,
+        edition=edition,
+        root=f"/admin/applications/programme-calls/{organization}/{edition}/",
+    )
+    response = _request(page)
+    html = BeautifulSoup(response.content, "html.parser")
+    if change is not None:
+        assert response.status_code == 404
+        assert "Convert accepted proposals" not in html.get_text()
+        assert "Assigned role" not in html.get_text()
+        return
+    assert response.status_code == 200
+    link = html.find("a", string="Convert accepted proposals")
+    assert link["href"].endswith(f"/{world.ids[0]}/conversion/")
+    assert (
+        "Direct permission (Applications); Assigned role (Programme)" in html.get_text()
+    )
+    assert not html.find("a", string="Make decisions")
+    assert len(html.select("h1")) == len(html.select("main")) == 1
+    assert len(html.select("main details summary")) == 1
+    assert not html.select("main form")
 
 
 @pytest.fixture
@@ -95,7 +148,9 @@ def test_empty_and_readonly_are_truthful_without_hidden_counts(page):
     response = _request(page)
     assert response.status_code == 200
     text = BeautifulSoup(response.content, "html.parser").get_text()
-    assert "No Programme call or review tasks are currently available" in text
+    assert (
+        "No Programme call, review or conversion tasks are currently available" in text
+    )
     assert "Private planning is read-only" in text
     assert "Programme <synthetic>" not in text
 

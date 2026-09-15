@@ -15,6 +15,7 @@ from django.utils import timezone
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import PolicyDecision
+from maru.events.adoption import profile_allows_adapter
 from maru.events.queries import (
     EditionAdoptionProfileReference,
     PrivatePlanningEditionReference,
@@ -25,6 +26,12 @@ from maru.identity.queries import (
     ActiveVerifiedPersonReference,
     resolve_active_verified_person_reference,
 )
+from maru.programme.adoption import PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER
+from maru.programme.authorization import ProgrammeAuthorizationDeniedError
+from maru.programme.entry_references import (
+    ProgrammeItemEntryReference,
+    resolve_programme_item_entry_reference,
+)
 from maru.workforce.queries import (
     MAX_STRUCTURE_DEPARTMENTS,
     CurrentDepartmentChoiceReference,
@@ -33,7 +40,10 @@ from maru.workforce.queries import (
 )
 
 from .adoption import profile_allows_application_target
-from .programme_adoption import APPLICATION_PROGRAMME_ITEM_TARGET_KIND
+from .programme_adoption import (
+    APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER,
+    APPLICATION_PROGRAMME_ITEM_TARGET_KIND,
+)
 from .programme_authorization import (
     APPLICATIONS_MANAGE_PROGRAMME_CALLS,
     DEFAULT_APPLICATIONS_PROGRAMME_AUTHORIZER,
@@ -43,6 +53,7 @@ from .programme_authorization import (
     ApplicationsProgrammeAuthorizationDeniedError as Denied,
 )
 from .programme_call_departments import _choice
+from .programme_conversion_authorization import CONVERT_PROGRAMME_ACCEPTANCE
 from .programme_inputs import require_programme_uuid
 from .programme_queries import _audit_inputs
 from .programme_review_authorization import DECIDE, MANAGE_REVIEW, MODERATE, REVIEW
@@ -105,6 +116,13 @@ _TASKS = (
         frozenset({"review_context"}),
         "decisions/",
     ),
+    _Task(
+        "conversion",
+        "Convert accepted proposals",
+        CONVERT_PROGRAMME_ACCEPTANCE,
+        frozenset(),
+        "conversion/",
+    ),
 )
 
 type _Snapshot = tuple[
@@ -113,6 +131,8 @@ type _Snapshot = tuple[
     tuple[tuple[PolicyDecision, ...], ...],
     tuple[CurrentDepartmentChoiceReference, ...],
     EditionAdoptionProfileReference,
+    tuple[bool, ...],
+    ProgrammeItemEntryReference | None,
 ]
 
 
@@ -198,8 +218,70 @@ def _decision(value: object, task: _Task) -> PolicyDecision:
     return value
 
 
-def _admitted(decision: PolicyDecision, task: _Task) -> bool:
-    return decision.allowed and decision.fields == task.fields
+def _admitted(
+    decision: PolicyDecision,
+    task: _Task,
+    conversion: ProgrammeItemEntryReference | None,
+) -> bool:
+    return (
+        decision.allowed
+        and decision.fields == task.fields
+        and (
+            task.code != "conversion"
+            or (conversion is not None and conversion.decision.allowed)
+        )
+    )
+
+
+def _policy_state(value: PolicyDecision) -> tuple[object, ...]:
+    return (
+        value.allowed,
+        sorted(value.fields),
+        sorted(value.obligations),
+        value.reason_code,
+        value.policy_version,
+    )
+
+
+def _conversion_reference(
+    actor_id: UUID,
+    edition: PrivatePlanningEditionReference,
+    profile: EditionAdoptionProfileReference,
+    *,
+    needed: bool,
+) -> tuple[tuple[bool, ...], ProgrammeItemEntryReference | None]:
+    adapters = tuple(
+        profile_allows_adapter(profile.code, profile.version, code)
+        for code in (
+            APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER,
+            PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER,
+        )
+    )
+    _require(condition=all(type(value) is bool for value in adapters))
+    if not all(adapters) or not needed:
+        return adapters, None
+    try:
+        conversion = resolve_programme_item_entry_reference(
+            actor_id=actor_id,
+            organization_id=edition.organization_id,
+            edition_id=edition.edition_id,
+        )
+    except ProgrammeAuthorizationDeniedError as exc:
+        raise Denied from exc
+    _require(
+        condition=isinstance(conversion, ProgrammeItemEntryReference)
+        and conversion.actor_id == actor_id
+        and conversion.organization_id == edition.organization_id
+        and conversion.edition_id == edition.edition_id
+        and type(conversion.accepts_private_planning_writes) is bool
+        and conversion.accepts_private_planning_writes
+        == edition.accepts_private_planning_writes
+    )
+    if not isinstance(conversion, ProgrammeItemEntryReference):
+        raise Denied
+    # Both entry purposes have exactly no fields and reason/audit duties.
+    _decision(conversion.decision, _TASKS[-1])
+    return adapters, conversion
 
 
 def _audit(
@@ -350,15 +432,19 @@ def list_programme_department_tasks(  # noqa: DOC502 -- Delegated source proofs 
             )
             for identifier in ids
         )
+        adapters, conversion = _conversion_reference(
+            actor_id, edition, profile, needed=any(row[-1].allowed for row in decisions)
+        )
         labels = tuple(
             _choice(organization_id, edition_id, identifier)
             for identifier, row in zip(ids, decisions, strict=True)
             if any(
-                _admitted(value, task) for value, task in zip(row, _TASKS, strict=True)
+                _admitted(value, task, conversion)
+                for value, task in zip(row, _TASKS, strict=True)
             )
         )
         _require(condition=len({item.code for item in labels}) == len(labels))
-        return edition, ids, decisions, labels, profile
+        return edition, ids, decisions, labels, profile, adapters, conversion
 
     values: dict[str, UUID | str] = {
         "actor_id": actor_id,
@@ -369,14 +455,14 @@ def list_programme_department_tasks(  # noqa: DOC502 -- Delegated source proofs 
     }
     with _denial_audit(values), transaction.atomic():
         initial = snapshot()
-        edition, ids, decisions, labels, profile = initial
+        edition, ids, decisions, labels, profile, adapters, conversion = initial
         by_id = {label.department_id: label for label in labels}
         choices: list[ProgrammeDepartmentTask] = []
         for task_index, task in enumerate(_TASKS):
             available = False
             for identifier, row in zip(ids, decisions, strict=True):
                 decision = row[task_index]
-                if not _admitted(decision, task):
+                if not _admitted(decision, task, conversion):
                     continue
                 available = True
                 label = by_id[identifier]
@@ -385,6 +471,13 @@ def list_programme_department_tasks(  # noqa: DOC502 -- Delegated source proofs 
                     f"/admin/applications/{root}/{organization_id}/"
                     f"{edition_id}/{identifier}/"
                 )
+                policy_label = _POLICY_LABELS[decision.reason_code]
+                if task.code == "conversion" and conversion is not None:
+                    policy_label += (
+                        " (Applications); "
+                        + _POLICY_LABELS[conversion.decision.reason_code]
+                        + " (Programme)"
+                    )
                 choices.append(
                     ProgrammeDepartmentTask(
                         identifier,
@@ -393,7 +486,7 @@ def list_programme_department_tasks(  # noqa: DOC502 -- Delegated source proofs 
                         task.code,
                         task.label,
                         url + task.suffix,
-                        _POLICY_LABELS[decision.reason_code],
+                        policy_label,
                     )
                 )
                 _audit(values, task, identifier, decision)
@@ -409,19 +502,21 @@ def list_programme_department_tasks(  # noqa: DOC502 -- Delegated source proofs 
                     "edition": str(edition_id),
                     "planning": edition.accepts_private_planning_writes,
                     "profile": (profile.code, profile.version),
+                    "conversion_adapters": adapters,
+                    "conversion_owner": (
+                        (
+                            str(conversion.actor_id),
+                            str(conversion.organization_id),
+                            str(conversion.edition_id),
+                            conversion.accepts_private_planning_writes,
+                            _policy_state(conversion.decision),
+                        )
+                        if conversion is not None
+                        else None
+                    ),
                     "departments": [str(identifier) for identifier in ids],
                     "decisions": [
-                        [
-                            (
-                                value.allowed,
-                                sorted(value.fields),
-                                sorted(value.obligations),
-                                value.reason_code,
-                                value.policy_version,
-                            )
-                            for value in row
-                        ]
-                        for row in decisions
+                        [_policy_state(value) for value in row] for row in decisions
                     ],
                     "labels": [
                         (str(value.department_id), value.code, value.label)
