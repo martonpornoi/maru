@@ -24,12 +24,14 @@ from .authorization import (
 )
 from .command_support import SchedulingUnavailableError
 from .continuity_protocol import ContinuityScope, _scope_document
+from .operator_entry_queries import can_enter_operator_tasks
 from .operator_scope import (
     OperatorReadRequest,
     OperatorScopeKind,
     authorize_operator_scope,
 )
 from .personal_output_queries import authorize_personal_timetable_scope
+from .planning_queries import SchedulingReadRequest
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -69,6 +71,7 @@ _DESTINATIONS = {
         "notices": ("My reviewed Programme change notices", "my-programme-changes"),
     },
     "private_operator": {
+        "entry": ("Choose another operator scope", "programme-operator-entry"),
         "timetable": ("Current operator run sheet", "programme-operator-run-sheet"),
         "now": ("Operator now and next", "programme-operator-now"),
         "notices": ("Programme change notices", "programme-change-notices"),
@@ -118,6 +121,18 @@ def _operator(scope: ContinuityScope) -> None:
 
 
 def _admit(scope: ContinuityScope, destination: str) -> None:
+    if destination == "entry":
+        if (
+            scope.actor_id is None
+            or can_enter_operator_tasks(
+                SchedulingReadRequest(
+                    scope.actor_id, scope.organization_id, scope.edition_id, uuid4()
+                )
+            )
+            is not True
+        ):
+            raise SchedulingAuthorizationDeniedError
+        return
     if destination == "notices":
         if scope.actor_id is None:
             raise SchedulingAuthorizationDeniedError
@@ -158,14 +173,15 @@ def programme_output_links(
     scope : ContinuityScope
         Trusted same-person or same-operator purpose, never a selected other account.
     current : str
-        Closed source task: timetable, now or notices; omit its own link.
+        Closed source task: timetable, now, notices or entry; omit its own link.
     urlconf : Any, default=None
         Current request URL configuration or the ordinary configured root.
 
     Returns
     -------
     tuple[ProgrammeOutputLink, ...]
-        At most two fixed-label links. Denied, unavailable, unmounted or shadowed
+        At most three fixed-label links; public/personal scopes have at most two.
+        Denied, unavailable, unmounted or shadowed
         destinations are omitted without a partial-output completeness claim.
 
     Notes
@@ -176,7 +192,7 @@ def programme_output_links(
     Repeat after rendering and omit changed optional links without redispatching
     writers or signers. Every destination independently authorizes its actual data.
     """
-    if current not in {"timetable", "now", "notices"}:
+    if current not in {"timetable", "now", "notices", "entry"}:
         return ()
     try:
         _scope_document(scope)
@@ -184,14 +200,14 @@ def programme_output_links(
         return ()
     links = []
     for code, (label, name) in _DESTINATIONS[scope.audience].items():
-        if code == current:
+        if code == current or (current == "entry" and code == "notices"):
             continue
         kwargs: dict[str, UUID | str] = {
             "organization_id": scope.organization_id,
             "edition_id": scope.edition_id,
         }
         parameters = {}
-        if scope.audience == "private_operator" and code != "notices":
+        if scope.audience == "private_operator" and code not in {"notices", "entry"}:
             if scope.target_id is None:
                 return ()
             kwargs.update(scope_kind=scope.kind, target_id=scope.target_id)

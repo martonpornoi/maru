@@ -11,35 +11,42 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's direct dual-owner conversion entry is delivered through
-[PR #141](https://github.com/martonpornoi/maru/pull/141), protected squash
-`1caf776eb0067f5fef11251a942c261b534d26cc` at 2026-09-15 18:59:51 UTC.
-Its tree equals certified head `07ad81ed7ebd05c2d6386384fe56be69286bc3ff`;
+#108's shared Applications/Programme workspace entry is delivered through
+[PR #142](https://github.com/martonpornoi/maru/pull/142), protected squash
+`144ed2325e97a2ae432d470bf5b10ec912b6e6a9` at 2026-09-15 19:41:11 UTC.
+Its tree equals certified head `09aa37aa594af754a1c9cb75240eb4f1a36ce7ea`;
 clean local main and origin/main were synchronized. All eight local retained gates
-passed in 6m15s (8,303 units, 93 frontend cases). Hosted quality took 18m33s,
-documentation 16m01s and units 99.60s; exact-head PR gate/CodeQL passed and reviews
-were clear. See the [protected evidence](../checkpoints/2026-09-15-programme-workspace-entry-links.md).
+passed in 6m18s (8,341 units, 93 frontend cases). Hosted quality took 11m22s,
+documentation 9m17s and units 66.96s; exact-head PR gate/CodeQL passed and reviews
+were clear. See the [protected evidence](../checkpoints/2026-09-15-programme-operator-entry.md).
 PostgreSQL remained skipped. No schema, profile or route activation; do not
 restart PR #139's domain selection or #113's delivered documentation runtime fix.
 
-## Active bounded outcome: shared workspace entry connections (#108)
+## Active bounded outcome: operator-purpose entry (#108)
 
-Branch: `codex/programme-workspace-entry-links`, from protected PR #141.
-Connect Applications entry and the existing item/timetable/release/notice workspaces
-through shared fixed-label navigation. Reuse seven-purpose Applications owner
-proofs for metadata-only admission without reading private labels or inventories.
-Preserve exact reverse/resolve, scope and final-render checks, independent field
-ceilings, pending input and completed commands. Current profiles/routes stay closed.
-The shared metadata snapshot, independently admitted reciprocal links and final
-render guards are implemented. Full database-free feedback passed 8,341 tests in
-65.85s; focused entry/navigation and strengthened item/release receipt/input tests
-pass. Strict types, NumPy/semantic docs, formatting/lint and docs validation pass.
-A synthetic browser journey verified Applications ↔ items/timetable/release,
-reviewer/converter isolation, item-only omission and keyboard focus at 1280px.
-The new zero-UUID metadata regression was repaired before these passes.
-See the [checkpoint](../checkpoints/2026-09-15-programme-workspace-entry-links.md)
-for actual evidence and unexecuted native/human debt. Fresh exact-commit
-certification and protected hosted acceptance remain pending.
+Branch: `codex/programme-operator-entry`, from protected PR #142.
+Implement the recorded same-edition operator entry: authorized labelled current
+rooms, Departments and whole-edition purposes, leading to existing run sheets and
+now/next. Require independent default owner fields and adopted Department work
+membership; never substitute planner, public or Workforce-directory permission.
+Extra delivery/staffing fields remain explicitly unrequested. Use complete owner
+references, required audit and final-render/source checks; current profiles/routes
+remain closed. The selector, owner references, strict policy metadata, shared
+entry/return links and final-render guards are implemented. Final complete database-free
+feedback passed 8,428 tests in 65.40s after strengthening the notice three-link
+sender/replay checks. Focused checks, strict types, NumPy/semantic docs, whole
+lint/format and documentation validation pass. A synthetic
+browser journey verified room → run sheet → now/next → selector, isolated
+Department/edition choices, ungranted empty state, one H1/main/Access and visible
+keyboard disclosure at 1280px. No native data, writes or signing were used.
+Fresh clean exact-commit certification and hosted acceptance remain
+pending. Four maintained native entry cases and representative-cardinality costs
+remain unexecuted #102 debt; human/AT acceptance remains #92.
+
+Applications reciprocal navigation is delivered, including original input/receipt
+preservation and synthetic role/keyboard observations. Four maintained native
+entry scenarios remain unexecuted #102 debt, with human acceptance under #92.
+Do not restart that increment or the preceding conversion entry.
 
 Conversion entry and the six preceding entry tasks remain delivered. Four new and
 three changed native cases from PR #141 remain uncollected/unexecuted #102 debt;

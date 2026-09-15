@@ -85,7 +85,7 @@ class OperatorReadRequest:
     target_id: UUID
 
 
-def authorize_operator_scope(
+def _operator_scope_decision(
     request: OperatorReadRequest, *, capability: str, fields: frozenset[str]
 ) -> PolicyDecision:
     """Independently authorize one owner's fields against the exact purpose.
@@ -176,10 +176,107 @@ def authorize_operator_scope(
             capability_code=capability,
             requested_fields=fields,
         )
+    return decision
+
+
+def authorize_operator_scope(
+    request: OperatorReadRequest, *, capability: str, fields: frozenset[str]
+) -> PolicyDecision:
+    """Require the owner's complete fields at the exact persisted operator target.
+
+    Parameters
+    ----------
+    request : OperatorReadRequest
+        Exact target and authenticated attribution, never a permission token.
+    capability : str
+        One of the five code-owned operator capabilities.
+    fields : frozenset[str]
+        Nonempty fixed owner fields required even for empty output.
+
+    Returns
+    -------
+    PolicyDecision
+        Current complete permission, not reusable by another owner or request.
+
+    Raises
+    ------
+    SchedulingAuthorizationDeniedError
+        If scope or any required owner field is unavailable or denied.
+    """
+    decision = _operator_scope_decision(request, capability=capability, fields=fields)
     if (
         not isinstance(decision, PolicyDecision)
         or not decision.allowed
         or not fields <= decision.fields
+    ):
+        raise SchedulingAuthorizationDeniedError
+    return decision
+
+
+def resolve_operator_entry_decision(
+    request: OperatorReadRequest, *, capability: str, fields: frozenset[str]
+) -> PolicyDecision:
+    """Distinguish ordinary permission absence from unavailable entry evidence.
+
+    Parameters
+    ----------
+    request : OperatorReadRequest
+        Actual viewer and exact current target, independently resolved here.
+    capability : str
+        Code-owned operator capability, never a planner or directory substitute.
+    fields : frozenset[str]
+        Fixed owner-selected fields required for the prospective destination.
+
+    Returns
+    -------
+    PolicyDecision
+        Strict current policy evidence, possibly ordinarily denied or partial.
+
+    Raises
+    ------
+    SchedulingAuthorizationDeniedError
+        If target, attribution, profile or complete policy evidence is unavailable.
+
+    Notes
+    -----
+    Shares the actual output's policy dispatch; accepts no authorizer or portable
+    decision. This reads no labels or output and grants no disclosure. The caller
+    must require every field, recheck sources and audit its actual protected read.
+    """
+    if not isinstance(request, OperatorReadRequest) or any(
+        type(value) is not UUID or not value.int
+        for value in (
+            request.actor_id,
+            request.organization_id,
+            request.edition_id,
+            request.correlation_id,
+            request.target_id,
+        )
+    ):
+        raise SchedulingAuthorizationDeniedError
+    decision = _operator_scope_decision(request, capability=capability, fields=fields)
+    if (
+        not isinstance(decision, PolicyDecision)
+        or type(decision.allowed) is not bool
+        or decision.policy_version != POLICY_VERSION
+        or type(decision.fields) is not frozenset
+        or not decision.fields <= fields
+        or type(decision.obligations) is not frozenset
+        or type(decision.reason_code) is not str
+        or not (
+            (
+                decision.allowed
+                and decision.reason_code
+                in {"direct_grant", "role_assignment", "platform_administration"}
+                and decision.obligations == frozenset({"audit_sensitive_read"})
+            )
+            or (
+                not decision.allowed
+                and decision.reason_code == "permission_absent"
+                and not decision.fields
+                and not decision.obligations
+            )
+        )
     ):
         raise SchedulingAuthorizationDeniedError
     return decision

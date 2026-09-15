@@ -273,6 +273,17 @@ The common owner read boundary appends mandatory `venues.operator_output.read`
 audit with `programme-restricted` retention. Neither query uses public admission
 or fetches private restrictions, contacts or equipment/access documents.
 
+For ordinary on-site entry, `operator_entry_references` exposes a complete bounded
+`OperatorRoomSetReference` of active same-edition room/venue source IDs, versions
+and current responsible Departments without selecting names. A count mismatch
+against the coherent owner set or overflow returns unavailable, not a partial
+directory. `resolve_operator_room_choice_reference` resolves only one exact
+current room/venue name pair after the consumer independently admits that operator
+purpose. These internal references are not permission tokens or user-facing
+directories. Scheduling compares complete sources and performs its required
+`scheduling.operator_entry.read` audit before releasing choices. No configuration,
+layout, contact, personnel, availability or instruction content is selected.
+
 Remaining work includes integrated editor acceptance,
 Programme release-output reconciliation, equipment/qualification checks,
 calendar/signage/print exports, accommodation blocks/assignment/allocation,

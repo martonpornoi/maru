@@ -47,6 +47,27 @@ containment and focus return must work under the actual response policy.
 
 ## Guided continuations and final disclosure
 
+The dormant edition entry at `/admin/programme/run-sheets/{organization}/{edition}/`
+offers complete bounded current room, Department and whole-edition purposes by
+owner-supplied labels. Every purpose independently requires Scheduling geometry,
+Programme reviewed-copy and Venue membership/wayfinding fields before its label is
+read. Department purposes also require Workforce membership when that adapter is
+adopted; no detailed staffing or delivery layer is preselected. Planner, public,
+Applications and Workforce-directory permissions are not substitutes. Entry does
+not read a release, working item, personnel directory or instructions.
+
+Ordinary missing permission omits that purpose. Incoherent, oversized, moving or
+unauditable sources withhold the complete catalog without hidden labels/counts.
+Current owner names and policy/source facts are rechecked after rendering. Room
+names include their local venue context; indistinguishable permitted choices need
+organizer clarification, never silent deduplication or a guessed target. Empty
+entry is not a claim that the edition has no rooms, Departments or approved work.
+Links must reverse and resolve to the exact current scope and have no optional
+layer parameters. Destinations reauthorize independently. The shared shell keeps
+one H1/main, visible keyboard focus, explicit Access and no write controls.
+An independently admitted return from run-sheet/now-next allows a deliberate new
+scope choice without carrying extra layers to that different purpose.
+
 The interactive run sheet offers independently admitted same-purpose now/next
 and notice continuations without listing other rooms or Departments. Same-purpose
 output links preserve all explicitly requested layers; fixed labels and URLs grant

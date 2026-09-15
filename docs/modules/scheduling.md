@@ -527,7 +527,7 @@ Events-owned parent relation before dispatch and after rendering. It introduces
 no outer cross-owner transaction, mutation, schema or profile grant.
 `workspace_navigation.programme_workspace_links` is the public metadata-only
 navigation seam consumed by Applications, Programme, Scheduling and organizer
-Workforce pages. The closed external source `shifts` may receive all five independent task links;
+Workforce pages. The closed external source `shifts` may receive all six independent task links;
 ordinary Programme sources still omit their own task. Fixed task labels require
 independent owner admission and exact reverse/resolve identity; optional denied,
 unmounted or moved links are omitted without obscuring an otherwise authorized
@@ -1204,10 +1204,37 @@ retain evidence and fix forward instead. No other runtime privilege changes.
 
 ### Guided output connections and final disclosure
 
+`operator_entry_queries.load_operator_entry` supplies ordinary dormant room,
+Department and edition discovery at
+`/admin/programme/run-sheets/<organization>/<edition>/`. It uses the same exact
+operator target-policy dispatch as output reads. Default Scheduling geometry,
+Programme reviewed-copy and Venue membership/wayfinding permissions are independent;
+adopted Department work also requires Workforce `scope_links`. No detailed layer,
+release or content inventory is loaded. Ordinary absence/partial fields omit that
+purpose; malformed policy or incomplete/moving source evidence withholds the whole
+catalog. Policy checks precede every owner-supplied room/venue or Department label.
+Identical permitted room labels are not silently deduplicated. Current profiles
+and production routes remain closed.
+
+The complete source/policy/label snapshot is compared inside the read transaction,
+audited before release and compared again after HTML rendering. Entry audit uses
+`scheduling.operator_entry.read`, minimized exact permitted targets and each owner's
+capability. Empty admission records no target or hidden count. Retention is
+`programme-restricted`, or `workforce-personal` for the adopted membership owner.
+The metadata-only `can_enter_operator_tasks` supplies optional shared-navigation
+hints without selecting names or producing new sensitive-read/activity audit.
+Neither reference nor link grants access; every destination authorizes again.
+The current source bounds remain 256 Departments and 256 selected rooms; native
+representative-cardinality timings/query costs remain unmeasured #102 debt.
+
 `output_navigation.programme_output_links` provides closed fixed-label timetable,
 now/next and notice links for the actual source viewer and exact scope. It verifies
 reverse/resolve identity in the current request URL configuration, then independently
 admits each destination's metadata/fields. It reads no output body or directory.
+Operator output also offers a separately admitted return to the scope selector.
+This deliberate new selection starts without extra layer parameters; same-purpose
+run-sheet/now-next links retain the explicitly selected layers. Missing, denied,
+shadowed or unavailable routes never become executable-looking dead links.
 Operator fields include Scheduling geometry, Programme copy, Venue membership/
 wayfinding, requested delivery/work fields and adopted Department work membership.
 `personal_output_queries.authorize_personal_timetable_scope` checks only adopted

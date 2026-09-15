@@ -27,6 +27,7 @@ from maru.programme.staffing_inputs import (
 )
 from maru.programme.staffing_queries import ProgrammeStaffingReadRequest
 from maru.scheduling import continuity_queries as continuity
+from maru.scheduling import operator_entry_queries as operator_entry
 from maru.scheduling import operator_scope
 from maru.scheduling.adoption import SCHEDULING_CONTINUITY_ADAPTER
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
@@ -264,6 +265,84 @@ def operator_request(
         kind,
         target,
     )
+
+
+@pytest.mark.parametrize("kind", list(OperatorScopeKind))
+def test_native_operator_entry_names_exact_real_grant_purposes(
+    operator_world, monkeypatch, kind
+):
+    # Maintained #102 acceptance debt. Only future adapter pins are substituted;
+    # real owner rows, identity, policy, grants and audit remain mandatory.
+    monkeypatch.setattr(
+        operator_entry,
+        "profile_allows_adapter",
+        lambda _code, _version, adapter: (
+            adapter == "scheduling.operator-release-output@1"
+        ),
+    )
+    request = operator_request(operator_world, kind=kind)
+    scope = SchedulingReadRequest(
+        request.actor_id,
+        request.organization_id,
+        request.edition_id,
+        request.correlation_id,
+    )
+    before = AuditEvent.objects.count()
+    assert operator_entry.can_enter_operator_tasks(scope) is True
+    assert AuditEvent.objects.count() == before
+    with CaptureQueriesContext(connection) as captured:
+        catalog = operator_entry.load_operator_entry(scope)
+    assert (kind, request.target_id) in {
+        (row.kind, row.target_id) for row in catalog.choices
+    }
+    for capability in BASE_CAPABILITIES:
+        assert AuditEvent.objects.filter(
+            principal_id=request.actor_id,
+            operation="scheduling.operator_entry.read",
+            capability_code=capability,
+            target_id=request.target_id,
+            outcome="allow",
+        ).exists()
+    statements = "\n".join(row["sql"] for row in captured)
+    for excluded in (
+        'FROM "programme_programme',
+        'FROM "scheduling_schedulingrelease',
+        'FROM "workforce_shift',
+        'FROM "applications_',
+        'FROM "registration_',
+        'FROM "participation_',
+    ):
+        assert excluded not in statements
+
+
+def test_native_operator_entry_missing_independent_owner_never_names_room(
+    operator_world, monkeypatch
+):
+    monkeypatch.setattr(
+        operator_entry,
+        "profile_allows_adapter",
+        lambda _code, _version, adapter: (
+            adapter == "scheduling.operator-release-output@1"
+        ),
+    )
+    for missing in BASE_CAPABILITIES:
+        request = operator_request(
+            operator_world,
+            kind=OperatorScopeKind.ROOM,
+            capabilities=tuple(code for code in BASE_CAPABILITIES if code != missing),
+        )
+        scope = SchedulingReadRequest(
+            request.actor_id,
+            request.organization_id,
+            request.edition_id,
+            request.correlation_id,
+        )
+        assert operator_entry.load_operator_entry(scope).choices == ()
+        assert not AuditEvent.objects.filter(
+            principal_id=request.actor_id,
+            operation="scheduling.operator_entry.read",
+            outcome="allow",
+        ).exists()
 
 
 @pytest.mark.parametrize("kind", list(OperatorScopeKind))
