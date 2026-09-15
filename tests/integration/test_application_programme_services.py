@@ -11,11 +11,12 @@ from uuid import UUID, uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import connection
+from django.db import DatabaseError, connection
 from django.utils import timezone
 
 from maru.applications import answer_values
 from maru.applications import programme_commands as programme_command_services
+from maru.applications import programme_department_tasks as department_task_services
 from maru.applications import programme_queries as programme_query_services
 from maru.applications.models import (
     ApplicationDefinition,
@@ -2593,6 +2594,92 @@ def test_foreign_and_missing_calls_have_indistinguishable_failure_evidence() -> 
         edition_id=local_edition.id
     ).exists()
     assert not DomainEvent.objects.filter(event_edition_id=local_edition.id).exists()
+
+
+@pytest.mark.parametrize("case", ["visible", "empty", "audit-failure"])
+def test_native_programme_department_entry_owner_and_audit(
+    monkeypatch: pytest.MonkeyPatch, case: str
+) -> None:
+    """Maintain real owner/scope/audit evidence under isolated future admission."""
+    edition = EventEditionFactory()
+    other_edition = EventEditionFactory()
+    actor = AccountFactory(display_name="Synthetic task reader")
+    admitted = create_department_for_test(
+        edition=edition, name="Programme", expected_code="programme"
+    )
+    hidden = create_department_for_test(
+        edition=edition, name="Private", expected_code="private"
+    )
+    foreign = create_department_for_test(
+        edition=other_edition, name="Foreign", expected_code="foreign"
+    )
+    correlation = uuid4()
+    events_before = DomainEvent.objects.count()
+    outbox_before = OutboxMessage.objects.count()
+    monkeypatch.setattr(
+        department_task_services,
+        "profile_allows_application_target",
+        lambda *_args: True,
+    )
+
+    class EntryAuthorizer(_AllowExactProgrammeAuthorizer):
+        def authorize_department(self, **kwargs: object) -> PolicyDecision:
+            if (
+                case != "empty"
+                and kwargs["department_id"] == admitted.id
+                and kwargs["capability_code"] == "applications.review_programme"
+            ):
+                return PolicyDecision(
+                    allowed=True,
+                    fields=frozenset({"review_context"}),
+                    obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+                    reason_code="direct_grant",
+                )
+            return PolicyDecision(
+                allowed=False,
+                fields=frozenset(),
+                obligations=frozenset(),
+                reason_code="permission_absent",
+            )
+
+    arguments = {
+        "actor_id": actor.id,
+        "organization_id": edition.organization_id,
+        "edition_id": edition.id,
+        "correlation_id": correlation,
+        "source_channel": "test",
+        "authorizer": EntryAuthorizer(),
+    }
+    if case == "audit-failure":
+        original_audit = department_task_services.append_audit
+
+        def fail_last(record: AuditRecord, **kwargs: object) -> None:
+            original_audit(record, **kwargs)
+            if record.operation.endswith(".decisions"):
+                raise DatabaseError("Synthetic final audit failure")
+
+        monkeypatch.setattr(department_task_services, "append_audit", fail_last)
+        with pytest.raises(DatabaseError):
+            department_task_services.list_programme_department_tasks(**arguments)
+        assert not AuditEvent.objects.filter(correlation_id=correlation).exists()
+    else:
+        result = department_task_services.list_programme_department_tasks(**arguments)
+        expected = {(admitted.id, "mine")} if case == "visible" else set()
+        assert {
+            (item.department_id, item.task_code) for item in result.tasks
+        } == expected
+        assert hidden.id not in {item.department_id for item in result.tasks}
+        assert foreign.id not in {item.department_id for item in result.tasks}
+        audits = AuditEvent.objects.filter(correlation_id=correlation)
+        assert audits.count() == 6
+        assert set(
+            audits.filter(outcome="allow").values_list("target_id", flat=True)
+        ) == ({admitted.id} if case == "visible" else set())
+        assert not audits.filter(outcome="deny", target_id__isnull=False).exists()
+    assert not ProgrammeCall.objects.filter(edition_id=edition.id).exists()
+    assert not ProgrammeProposal.objects.filter(edition_id=edition.id).exists()
+    assert DomainEvent.objects.count() == events_before
+    assert OutboxMessage.objects.count() == outbox_before
 
 
 @pytest.mark.parametrize("case", ["transfer", "destination-denied"])

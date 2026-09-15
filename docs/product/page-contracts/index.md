@@ -54,6 +54,7 @@ contract for the surface being changed, and compare its status with the
 - [Programme person references](programme-person-references.md)
 - [Programme same-call domain references](programme-domain-references.md)
 - [Programme review setup](programme-review-setup.md)
+- [Programme calls and review entry](programme-applications-entry.md)
 - [Named Programme reviewer management](programme-review-management.md)
 - [My Programme reviews](programme-reviewer-work.md)
 - [Programme moderation](programme-moderation.md)
@@ -92,6 +93,7 @@ programme-person-references
 programme-domain-references
 programme-decision-receipts
 programme-review-setup
+programme-applications-entry
 programme-review-management
 programme-reviewer-work
 programme-moderation

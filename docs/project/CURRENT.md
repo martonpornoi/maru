@@ -11,50 +11,52 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's registered private person-reference tasks are delivered through
-[PR #138](https://github.com/martonpornoi/maru/pull/138), protected squash
-`5dd497fea1c683623034cd803146864120be1e75` at 2026-09-15 14:47:01 UTC.
-Its tree equals certified head `396f16bcc8e5c77d9da43818e758e0b6d08a79a8`;
+#108's registered same-call domain-reference tasks are delivered through
+[PR #139](https://github.com/martonpornoi/maru/pull/139), protected squash
+`f4f8630a33681f1ca0fd5db9c6910d59868423cf` at 2026-09-15 17:12:52 UTC.
+Its tree equals certified head `d9be9153e0a0de18fc269d8131c23bc9b234c0e7`;
 clean local main and origin/main were synchronized to the protected result.
 
 All eight retained local gates and exact-head hosted PR gate/CodeQL passed.
-Hosted quality took 29m17s, leaving only 43s; #113 retained that risk.
-See [implementation](../checkpoints/2026-09-15-programme-person-references.md) and
-[protected evidence](../checkpoints/2026-09-15-programme-person-protected-delivery.md).
+Local certification took 5m48s (8,169 units and 93 frontend cases).
+Hosted quality took 12m07s with 17m53s margin; documentation took 10m01s,
+down from the failed candidate's 28m01s. The #113 navigation repair retains all
+sources, gates and timeouts. See the
+[protected evidence](../checkpoints/2026-09-15-programme-domain-protected-delivery.md).
 No schema, profile or route activation. Earlier deliveries remain complete.
 
-## Active bounded outcome: same-call domain references (#108)
+## Active bounded outcome: Applications entry tasks (#108)
 
-Branch: `codex/programme-domain-references`, from protected PR #138.
-The candidate implements registered same-call track/format extra-answer selection,
-clear and independent current/sealed/review viewers under PRG-009. Original intent,
-canonical replay, same-call membership and anonymous no-lookup remain enforced;
-main selection/routing/timetable and current profiles are unchanged. See the
-[page contract](../product/page-contracts/programme-domain-references.md) and
-[implementation/browser evidence](../checkpoints/2026-09-15-programme-domain-references.md).
-The earlier implicit-import certification failure was repaired without changing
-person-reference contracts or legacy digests.
-The corrected head `383ca2dab488232e97897f853c0f6a3031386e5e` passed all eight
-retained local gates in 18m51s (8,160 units in 52.38s). Its hosted units/CodeQL
-passed, but [PR #139](https://github.com/martonpornoi/maru/pull/139) remains unmerged:
-quality exhausted its 30-minute budget after a successful 28m01s documentation
-build, cancelling frontend acceptance. Existing #113 owns this active blocker.
+Branch: `codex/programme-applications-entry`, from protected PR #139.
+Next is an Applications-owned dormant edition entry with labelled current-Department
+links for calls, review setup, named-reviewer management, own reviewing, moderation
+and decisions. Each destination keeps its independent capability and field ceiling;
+no Workforce structure grant substitutes for Applications authority. Preserve
+complete bounded discovery, no hidden labels/counts, required audit and final
+rendered-source checks. Current profiles and production routes remain unchanged.
+The dormant query, shared-shell entry, six scoped task links and whole-source
+render checks are implemented. Complete database-free feedback passes 8,239 tests
+in 64.68s; strict types, NumPy/semantic docs and whole Ruff/format pass. A synthetic
+browser journey verifies manager/reviewer/mixed/empty/read-only/denied/unavailable
+entry and keyboard call continuation at 1280px. Its duplicate Access disclosure
+was fixed and regression-tested. See the
+[checkpoint](../checkpoints/2026-09-15-programme-applications-entry.md).
+Fresh clean exact-commit certification and protected hosted acceptance are pending.
+The first full feedback attempt hit an exact shared-asset marker update and an
+inaccessible old Windows pytest temp root; neither failed run was accepted and
+no old cache was deleted. Fresh task-owned temporary directories pass the reruns.
+Three maintained native cases remain unexecuted
+[#102 debt](https://github.com/martonpornoi/maru/issues/102#issuecomment-5685179217);
+full human/width/AT work remains
+[#92](https://github.com/martonpornoi/maru/issues/92#issuecomment-5685179628).
 
-The in-PR repair applies ADR 0074's current-section navigation before Furo renders
-the sidebar, retaining every source, catalog, search index, warning and timeout.
-A real miniature Sphinx/Furo build passes discovery/search regressions; all 8,169
-database-free units pass in 55.27s (three existing URLField warnings), along with
-Ruff/format and 558-document validation. New exact-head certification, rendered-site
-browser verification and protected hosted acceptance remain pending. See the
-[repair checkpoint](../checkpoints/2026-09-15-pr139-documentation-navigation-repair.md).
-
-Six maintained, unexecuted native cases and human follow-up are recorded in
-[#102](https://github.com/martonpornoi/maru/issues/102#issuecomment-5683156776) and
-[#92](https://github.com/martonpornoi/maru/issues/92#issuecomment-5683157180);
-integrated proof remains #109. No profile, production route or CI-policy change.
-Safe-file intake needs governed upload/receipt handling. A fresh bounded schema-only
-exception was requested; no answer has arrived and no such check is authorized yet.
-Independent scoped launchers can proceed after this PR if the exception is pending.
+Person and same-call domain selection/viewers are delivered; do not restart them.
+Six domain native cases remain unexecuted #102 debt and browser/human follow-up
+remains #92. Safe-file intake needs governed upload/receipt handling. A fresh bounded
+schema-only exception is unanswered and is not assumed. Direct conversion-only
+entry additionally needs Programme item authority and exact adapters; existing
+decision-to-conversion continuations remain intact. Other owner launchers, safe
+files, accountable setup and #109/#102/#97/#92 acceptance remain incomplete.
 
 ## Remaining #48 delivery decomposition
 

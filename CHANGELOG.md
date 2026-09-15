@@ -22,6 +22,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a dormant Programme calls-and-review entry page with readable Department
+  choices. Call managers, review managers, reviewers, moderators and decision
+  makers see only independently permitted tasks, without entering Department IDs
+  or receiving unrelated Workforce access. Current profiles remain unchanged.
+
 - Added dormant Programme same-call reference tasks: choose or clear an additional
   private track/format answer using labelled choices, then confirm the original
   selection. Personal and independently authorized review viewers show the exact

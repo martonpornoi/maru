@@ -118,6 +118,20 @@ edition capability decision before any submission is disclosed or changed.
 
 ## Dormant Programme calls
 
+The [edition task entry](../product/page-contracts/programme-applications-entry.md)
+adds a dormant read-only chooser without requiring a selected Department anchor.
+`list_programme_department_tasks` in `programme_department_tasks` uses exact
+active-person, edition and profile proof, Workforce's bounded current ID-only set,
+and six independently evaluated code-owned capability/field combinations before
+resolving any label. The shared-shell route groups labelled calls, review setup,
+reviewer management, own reviews, moderation and decisions by Department/code.
+It borrows no Workforce structure or sibling-purpose authority, loads no private
+application content, and revalidates the complete source around audit and rendering.
+Empty results contain no hidden count or invented grant. Profile/owner/policy
+incoherence, overflow and required audit failure release no partial catalog.
+Current profiles/menus and production routing remain unchanged. Accountable setup,
+other owner launchers and direct conversion-only entry remain #108 work.
+
 The [guided call workspace](../product/page-contracts/programme-call-workspace.md)
 adds a dedicated, unmounted #108 manager adapter over the existing Programme
 commands and complete managed projections. It provides exact-Department call

@@ -104,6 +104,14 @@ case-opening task requires this proof and connects to separate named assignment
 management. Moderator/decider work and accepted conversion remain #108
 continuations.
 
+The dormant [edition task entry](../product/page-contracts/programme-applications-entry.md)
+provides readable Department choices without a known anchor ID. Review setup,
+case/assignment management, own reviewing, moderation and final decisions each
+require their own exact capability and destination field ceiling. A valid but
+insufficient field grant omits that task only; invalid policy or changed complete
+source suppresses the whole response. Entry lists no assignments, answers or
+decisions, and no visible link replaces destination-specific independence checks.
+
 ## Roles and transitions
 
 The dormant [named-reviewer management task](../product/page-contracts/programme-review-management.md)

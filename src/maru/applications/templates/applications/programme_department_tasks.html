@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block content_title %}<h1>Programme calls and review</h1>{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block content %}
+<div class="programme-calls">
+  <details class="call-access"><summary>Access · independently authorized tasks for this edition</summary>
+    <p>Each task below has its own current Department permission and field limits. Choosing a task grants no additional access; its destination checks again. This page exposes no proposal answers or reviewer directory.</p>
+    <p>Organization reference: {{ organization_id }} · Edition reference: {{ edition_id }}</p>
+  </details>
+  <p>Choose your Department and the work you need to do. Labels and stable codes distinguish Departments with the same name.</p>
+  {% if read_only %}<p role="status">Private planning is read-only. These links retain independently permitted inspection; each task explains which actions are currently available.</p>{% endif %}
+  {% regroup department_tasks by department_id as departments %}
+  <ul class="call-cards">
+    {% for department in departments %}
+    <li><h2>{{ department.list.0.department_label }} ({{ department.list.0.department_code }})</h2>
+      <ul>{% for task in department.list %}<li><a href="{{ task.url }}">{{ task.task_label }}</a> <span>· {{ task.policy_label }}</span></li>{% endfor %}</ul>
+    </li>
+    {% empty %}<li>No Programme call or review tasks are currently available to you in this edition. Accountable setup manages access separately; this is not a count of Departments or proposals.</li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}

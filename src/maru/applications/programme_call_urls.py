@@ -5,12 +5,18 @@ from django.urls import path
 from .programme_call_composer_views import programme_call_composer
 from .programme_call_department_views import programme_call_departments
 from .programme_call_views import programme_calls
+from .programme_department_task_views import programme_department_tasks
 
 _ROOT = (
     "admin/applications/programme-calls/<uuid:organization_id>/"
     "<uuid:edition_id>/<uuid:department_id>/"
 )
 urlpatterns = [
+    path(
+        "admin/applications/programme-calls/<uuid:organization_id>/<uuid:edition_id>/",
+        programme_department_tasks,
+        name="programme-department-tasks",
+    ),
     path(_ROOT, programme_calls, name="programme-calls"),
     path(
         _ROOT + "departments/",

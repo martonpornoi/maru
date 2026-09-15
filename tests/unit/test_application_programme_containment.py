@@ -125,6 +125,9 @@ _DORMANT_TEMPLATE_MARKERS = {
         {"programme-call", "programme_call"}
     ),
     (
+        "src/maru/applications/templates/applications/programme_department_tasks.html"
+    ): frozenset({"programme-call", "programme_call"}),
+    (
         "src/maru/applications/templates/applications/programme_call_composer.html"
     ): frozenset({"programme_call"}),
     (
@@ -177,6 +180,7 @@ def _execution_surface_paths() -> tuple[Path, ...]:
         "programme_review_intake",
         "programme_review_person_reference",
         "programme_review_domain_reference",
+        "programme_department_tasks",
     ],
 )
 def test_dormant_decision_template_admits_only_existing_shared_asset_markers(name):
