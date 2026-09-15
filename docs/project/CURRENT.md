@@ -43,6 +43,12 @@ The dormant release workspace is implemented locally; clean exact-commit
 certification, protected PR delivery and merge bookkeeping are next. No hosted
 acceptance, profile activation or completion of #108/#48 is claimed yet.
 
+The first canonical attempt on `576f19c6f1a865a4061a3c260fb01e91c8e76f9e`
+stopped at repository-wide Ruff formatting of two expanded native-test assertions;
+no receipt was created and no PostgreSQL was started. The formatting-only repair
+passed the whole-repository formatter check. Fresh exact-head certification is
+required; see the [repair record](../checkpoints/2026-09-15-programme-release-workspace-certification-repair.md).
+
 The planner's saved conflict review is not a release approval. #108 now explicitly
 nests dedicated release warning/approval/publication/withdrawal controls beneath
 its existing release/review connection outcome. This names a required continuation,

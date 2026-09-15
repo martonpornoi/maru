@@ -124,12 +124,8 @@ def test_current_manifest_is_complete_audited_and_minimized(review_scope):
     assert pointer.active_release_id == published.object_id
     assert pointer.version == 1
     history = workspace_queries.list_release_history(request, **authority)
-    assert (
-        len(history.entries) == 1
-    )
-    assert (
-        history.entries[0].release_id == published.object_id
-    )
+    assert len(history.entries) == 1
+    assert history.entries[0].release_id == published.object_id
 
 
 def test_historical_manifest_uses_independent_history_authority(review_scope):
