@@ -1225,6 +1225,16 @@ architecture documents, implementation issues, tests, and release notes.
   information is proposed for publication. Proposal collaboration does not
   create a Programme host or co-host relationship; those relationships begin
   only after an accepted transition into Programme.
+  Supporting-file intake must bind the exact proposal, question and uploader,
+  retain immutable byte-digest and trusted scanner evidence, and preserve the
+  existing answer/seal lifecycle. The initial supported transport is a bounded
+  PDF attachment of at most 10 MiB, never an inline active-document preview.
+  Unknown types, unscanned/test assertions, uncertain scanner/storage outcomes
+  and unavailable dependencies must fail closed. A prepared/scanned value is not
+  a receipt or permission: selection and current/sealed/review downloads require
+  independent exact-answer authority, with anonymous omission before lookup.
+  Private custody, retention holds, uncertain retries and orphan recovery must
+  be documented before durable intake or download is activated.
 - **PRG-003 — Structured review:** Review stages must support configurable
   rubrics, conflicts of interest, optional anonymization, independent scoring,
   discussion, moderation, and accountable decisions.

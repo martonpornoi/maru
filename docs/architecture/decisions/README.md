@@ -108,6 +108,7 @@ the system.
 | [0101](0101-exact-purpose-release-change-comparisons.md) | Accepted | Compare exact release transitions and own confirmed host presence under independent authority without widening planner history or changing work |
 | [0102](0102-governed-programme-change-communication.md) | Accepted | Separate sender recipient selection, reviewed change communication, manual handoff and exact-recipient acknowledgement without adopting general messaging |
 | [0103](0103-read-only-programme-continuity.md) | Accepted | Derive bounded read-only now/next and signed expiring continuity packs from independently authorized outputs, with separate trust and known-state suppression |
+| [0104](0104-purpose-bound-programme-file-intake.md) | Accepted | Bound Programme supporting-file preparation and trusted scanning separately from exact proposal provenance, private custody and independently authorized download |
 
 New ADRs use the next four-digit number and contain:
 

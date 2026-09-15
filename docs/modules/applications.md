@@ -580,6 +580,19 @@ activation. Only separately reviewed C1 renditions may be marked public.
 Safety-checked files reference an immutable clean scanner receipt; arbitrary
 paths, unscanned uploads, and client-declared scan status are rejected.
 
+ADR 0104 defines the Programme supporting-file boundary. The first dormant
+`programme_file_preparation.prepare_programme_pdf` seam supports exact PDF bytes
+up to 10 MiB, preserving them through an exact framed ClamAV INSTREAM exchange.
+A dedicated disabled-by-default loopback-only scanner configuration has no
+unscanned test/rehearsal override. One whole-operation deadline, bounded chunks
+and reply bytes, and reading through connection close prevent partial or extra
+responses from becoming clean evidence. No ORM, storage, authorization, receipt,
+answer or profile write is performed; the prepared value is never a permission
+token or caller-supplied proof. This does not activate the safe-file editor.
+Exact proposal/question provenance, storage/retry/custody, selection and independent
+current/sealed/anonymous-safe review viewers remain #108 work. See the
+[file-handling contract](../operations/programme-supporting-file-handling.md).
+
 ## Applications, revisions, and review
 
 Eligible people create bounded ordinal drafts during the configured window.

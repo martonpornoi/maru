@@ -75,6 +75,16 @@ Data supplied for one purpose is not a platform-wide profile:
 Cross-partition reuse requires documented compatibility, notice, and policy.
 Convenience alone is not sufficient.
 
+Programme supporting-file bytes inherit their exact Applications question and
+proposal purpose/classification; scanning does not reduce that classification or
+make a file public. ADR 0104's preparation-only seam retains bytes in memory,
+does not log original names/bytes/findings and adds no persistent record or user
+activity collection. Durable intake still requires explicit private custody,
+retention/hold/disposal and provenance implementation. Identifying attachment
+lookups are omitted before anonymous review, not merely hidden afterward. The
+[file-handling contract](../operations/programme-supporting-file-handling.md)
+does not constitute storage provisioning or retention activation.
+
 ### Applications-owned Programme import staging
 
 - The source package is temporary Applications input, not a platform profile or
