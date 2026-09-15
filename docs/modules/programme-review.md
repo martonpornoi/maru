@@ -233,6 +233,17 @@ nonempty field ceiling, and audit correlation:
   recipient/field/audit boundary, selected without scanning history pages.
   Foreign and unknown identifiers are denied alike.
 
+The `decision_message` ceiling additionally projects `ProgrammeDecisionSource`:
+the immutable activated call name/definition version, original proposal creation
+time, exact reviewed seal sequence/time and their opaque references. A bounded
+eager join follows `decision.revision.proposal.call.definition`; today's submitted
+revision, arbitrary answers, profiles and other recipients are not label sources.
+The projection verifies tenant, case/proposal/seal and pinned definition coherence.
+Absent/incoherent context is `None`, not a fabricated current label; the retained
+addressed message remains available. Acknowledgement-only reads neither join nor
+project these source labels. The existing locked reauthorization and minimized
+required read audit also protect this context, without recording its content.
+
 Pages contain one to 100 results. Case queues use an exclusive UUID cursor;
 evidence uses exclusive case versions; recipient history uses the prior
 addressed decision's opaque ID in `(decision time, ID)` order. A foreign or
@@ -275,6 +286,18 @@ escaped immutable messages and their own receipt, never staff evidence or other
 recipients' responses. Independent mutation authority permits an explicit
 receipt; no private rationale is requested. The form retains the original case
 version and retry key, including after a conflict or uncertain attempt.
+
+History/detail identify the original call and seal with progressively disclosed
+technical references. Detail may offer a current proposal overview only after
+separate self-proposal authorization for the destination's complete field ceiling
+(`proposal_summary`, `selection`, `own_invitation`, plus `contributor_profiles`
+for a lead/accepted collaborator). This navigation check fetches no answer/profile
+projection and performs no broad discovery. Admission is checked before/after
+render; losing it removes the link and rerenders with renewed message authority,
+not a denied retained message. A historical contributor's message and source
+context survive removal even when current proposal navigation is denied. The
+destination still authorizes independently; navigation proves no current result,
+edit permission or effective acceptance.
 
 These tasks do not depend on current proposal membership, an active call,
 current Department or open planning. Addressed history and own receipt retain

@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added original call, proposal and sealed-revision context to dormant personal
+  Programme decision history. Current proposal links require separate access;
+  former contributors retain their addressed messages without gaining current
+  proposal, answer, profile or staff-review access. No profile is activated.
+
 - Added dormant exact-person host invitation previews and recoverable confirmation.
   Original retries keep their selected person after email changes and can return
   an original receipt without private roster access. No invitation email, account,

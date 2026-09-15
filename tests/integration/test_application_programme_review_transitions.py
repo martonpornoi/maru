@@ -20,7 +20,9 @@ from maru.applications.models import (
 )
 from maru.applications.models import ProgrammeReviewAction as Action
 from maru.applications.programme_authorization import (
+    APPLICATIONS_VIEW_PROGRAMME_PROPOSAL_SELF,
     ApplicationsProgrammeAuthorizationDeniedError,
+    authorize_programme_proposal_scope,
 )
 from maru.applications.programme_commands import (
     ApplicationsProgrammeIdempotencyConflictError,
@@ -435,13 +437,17 @@ def test_exact_included_collaborator_keeps_own_message_after_later_removal():
     collaborator_request = world.read(
         collaborator.id, VIEW_DECISION_SELF, fields=fields, self_access=True
     )
+    original_message = get_self_programme_decision(
+        request=collaborator_request,
+        decision_id=decision.target_id,
+        authorizer=_AUTHORIZER,
+    )
+    assert original_message.source is not None
+    assert original_message.source.proposal_id == world.proposal_id
+    assert original_message.source.call_id == world.call.call_id
     assert (
-        list_self_programme_decisions(
-            request=collaborator_request, authorizer=_AUTHORIZER
-        )
-        .items[0]
-        .decision_id
-        == decision.target_id
+        original_message.source.revision_id
+        == ProgrammeReviewCase.objects.get(id=world.case_id).revision_id
     )
     proposal = ProgrammeProposal.objects.select_related("submission").get(
         id=world.proposal_id
@@ -470,6 +476,33 @@ def test_exact_included_collaborator_keeps_own_message_after_later_removal():
         retry_key=uuid4(),
         correlation_id=uuid4(),
     )
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        authorize_programme_proposal_scope(
+            actor_id=collaborator.id,
+            organization_id=world.call.edition.organization_id,
+            edition_id=world.call.edition.id,
+            proposal_id=world.proposal_id,
+            capability_code=APPLICATIONS_VIEW_PROGRAMME_PROPOSAL_SELF,
+            requested_fields=frozenset(
+                {"proposal_summary", "selection", "own_invitation"}
+            ),
+            authorizer=_AUTHORIZER,
+        )
+    retained_message = get_self_programme_decision(
+        request=collaborator_request,
+        decision_id=decision.target_id,
+        authorizer=_AUTHORIZER,
+    )
+    assert retained_message.source == original_message.source
+    assert retained_message.message == original_message.message
+    acknowledgement_only = get_self_programme_decision(
+        request=replace(
+            collaborator_request, requested_fields=frozenset({"own_acknowledgement"})
+        ),
+        decision_id=decision.target_id,
+        authorizer=_AUTHORIZER,
+    )
+    assert acknowledgement_only.source is None
     world.command(
         collaborator.id,
         Intent(Action.ACKNOWLEDGED, world.case_id, reference_id=decision.target_id),

@@ -17,8 +17,17 @@ read. No raw UUID entry or current proposal membership is required.
 
 The bounded chronological history uses the owner query's exclusive opaque
 cursor. Detail uses a dedicated exact-recipient getter, not unbounded scanning.
-Only outcome, canonical message, decision date/version, current case version
-and the caller's own acknowledgement state/time are projected. No staff
+Only outcome, canonical message, decision date/version, current case version,
+minimized exact source context and the caller's own acknowledgement state/time
+are projected. Source context belongs to `decision_message`, never to
+`own_acknowledgement` alone. It contains the original immutable activated call
+name/definition version, proposal creation time, exact seal sequence/time and
+call/proposal/seal references. It follows the decision's revision, never a newer
+submitted revision, and contains no answer-derived title or contributor profile.
+History cards and detail show readable call/proposal/seal labels; full references
+are progressively available for otherwise identical labels. Missing or incoherent
+source context is explicitly unavailable without suppressing the addressed message.
+No staff
 rationale, reviewer identity, score, other recipient or response is exposed.
 The message is historical: acceptance here is not proof of currently effective
 review, conversion, hosting consent, publication or a timetable slot.
@@ -67,7 +76,15 @@ and its retained replay logic; the view does not substitute newer version proof.
 
 Use the shared personal shell, one H1 and one main landmark. History/detail
 navigation stays in this independently authorized purpose; the wider #108
-navigation must authorize connections separately. Current generic Programme
+navigation must authorize connections separately. Detail alone offers a current
+proposal overview link after independent current self-proposal admission for the
+destination's complete relationship-specific field ceiling. No broad discovery,
+answer or profile query is performed to produce the link. Before/after-render
+revocation or unavailability removes this optional link and rerenders the retained
+message; receipt and message admission are still checked. A former contributor
+keeps the original context and message without current proposal access. The link
+is neither a current acceptance claim nor permission to edit; the destination
+authorizes again. Current generic Programme
 API and adoption exclusions remain unchanged. No schema or new domain writer.
 
 ## Interaction and verification

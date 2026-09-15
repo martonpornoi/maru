@@ -1,0 +1,8 @@
+{% load tz %}
+{% if source %}
+<div class="decision-source">
+  <p><strong>{{ source.call_name }}</strong> · Call version {{ source.definition_version }}</p>
+  <p>Proposal created {% timezone "UTC" %}{{ source.proposal_created_at|date:"c" }}{% endtimezone %} (UTC). Seal {{ source.revision_sequence }} · {% timezone "UTC" %}{{ source.sealed_at|date:"c" }}{% endtimezone %} (UTC).</p>
+  <details><summary>Original source references</summary><dl><dt>Call</dt><dd>{{ source.call_id }}</dd><dt>Proposal</dt><dd>{{ source.proposal_id }}</dd><dt>Reviewed seal</dt><dd>{{ source.revision_id }}</dd></dl></details>
+</div>
+{% else %}<p>Original proposal context is unavailable. This does not change the retained decision message.</p>{% endif %}

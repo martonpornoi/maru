@@ -12,10 +12,12 @@
   <nav aria-label="My decision tasks"><a href="{{ root_url }}">My decision history</a></nav>
   <p>These are historical decisions. Acceptance alone does not confirm a current Programme item, hosting consent, publication or a timetable slot.</p>
   {% if page %}
-  <ul class="call-cards">{% for row, label in rows %}<li><h2><a href="{{ root_url }}{{ row.decision_id }}/">{{ label }} · {% timezone "UTC" %}{{ row.decided_at|date:"c" }}{% endtimezone %} (UTC)</a></h2><p>{% if row.own_acknowledged %}My receipt recorded.{% elif row.acknowledgement_required %}My receipt is requested.{% else %}No receipt requested.{% endif %}</p></li>{% empty %}<li>No addressed decisions are available to you in this edition.</li>{% endfor %}</ul>
+  <ul class="call-cards">{% for row, label in rows %}<li><h2><a href="{{ root_url }}{{ row.decision_id }}/">{{ label }} · {% timezone "UTC" %}{{ row.decided_at|date:"c" }}{% endtimezone %} (UTC)</a></h2>{% include "applications/programme_decision_source.html" with source=row.source only %}<p>{% if row.own_acknowledged %}My receipt recorded.{% elif row.acknowledgement_required %}My receipt is requested.{% else %}No receipt requested.{% endif %}</p></li>{% empty %}<li>No addressed decisions are available to you in this edition.</li>{% endfor %}</ul>
   {% if page.next_cursor %}<p><a href="{{ root_url }}?after={{ page.next_cursor }}">Next page of decisions</a></p>{% endif %}
   {% elif message %}
   <section aria-labelledby="decision-message"><h2 id="decision-message">{{ outcome_label }}</h2><p>Decided {% timezone "UTC" %}{{ message.decided_at|date:"c" }}{% endtimezone %} (UTC) · Decision version {{ message.decision_version }}</p>
+    {% include "applications/programme_decision_source.html" with source=message.source only %}
+    {% if source_url %}<p><a href="{{ source_url }}">Open my current proposal overview</a> · Current access is checked separately; this is not the historical seal.</p>{% else %}<p>Current proposal navigation is not available with this message. Your retained message and receipt remain separate.</p>{% endif %}
     <div class="decision-message">{{ message.message|linebreaksbr }}</div>
     {% if message.own_acknowledged %}<p>My receipt recorded {% timezone "UTC" %}{{ message.own_acknowledged_at|date:"c" }}{% endtimezone %} (UTC).</p>{% elif message.acknowledgement_required %}<p>My receipt is requested.</p>{% else %}<p>No receipt was requested for this decision.</p>{% endif %}
     <p>Receipt means that you received this message, not agreement with it or consent to host or publish.</p>

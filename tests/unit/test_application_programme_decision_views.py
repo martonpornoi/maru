@@ -36,6 +36,16 @@ def message():
         acknowledgement_required=True,
         own_acknowledged=False,
         own_acknowledged_at=None,
+        source=queries.ProgrammeDecisionSource(
+            UUID(int=40),
+            "Synthetic call <script>unsafe</script>",
+            2,
+            UUID(int=50),
+            datetime(2026, 8, 30, tzinfo=UTC),
+            UUID(int=60),
+            3,
+            datetime(2026, 8, 31, tzinfo=UTC),
+        ),
     )
 
 
@@ -73,12 +83,24 @@ def page(monkeypatch):
         return_value=SimpleNamespace(accepts_private_planning_writes=False)
     )
     command = create_autospec(apply_programme_review_command)
+    proposal = Mock(
+        return_value=SimpleNamespace(
+            relationship="collaborator",
+            proposal_id=UUID(int=50),
+            call_id=UUID(int=40),
+        )
+    )
     monkeypatch.setattr(queries, "get_self_programme_decision", detail)
     monkeypatch.setattr(queries, "list_self_programme_decisions", history)
     monkeypatch.setattr(views, "authorize_programme_review_scope", authorize)
     monkeypatch.setattr(views, "apply_programme_review_command", command)
+    monkeypatch.setattr(views, "authorize_programme_proposal_scope", proposal)
     return SimpleNamespace(
-        detail=detail, history=history, authorize=authorize, command=command
+        detail=detail,
+        history=history,
+        authorize=authorize,
+        command=command,
+        proposal=proposal,
     )
 
 
@@ -399,3 +421,130 @@ def test_anonymous_and_missing_person_are_denied_before_projection(page):
 def test_invalid_owner_outcome_is_unavailable_not_fabricated(page):
     page.detail.return_value = replace(message(), outcome=None)
     assert request().status_code == 503
+
+
+def test_retained_labels_are_escaped_and_references_are_progressive(page):
+    for detail in (False, True):
+        html = soup(request(detail=detail))
+        context = html.select_one(".decision-source")
+        assert "Synthetic call <script>unsafe</script>" in context.get_text()
+        assert context.find("script") is None
+        assert "Call version 2" in context.get_text()
+        assert "Proposal created 2026-08-30" in context.get_text()
+        assert "Seal 3" in context.get_text()
+        assert str(UUID(int=60)) in context.find("details").get_text()
+        assert str(UUID(int=50)) in context.find("details").get_text()
+
+
+def test_history_never_discovers_current_proposals(page):
+    request(detail=False)
+    page.proposal.assert_not_called()
+
+
+@pytest.mark.parametrize("relationship", ["lead", "collaborator", "invited"])
+def test_source_navigation_requires_complete_independent_destination_ceiling(
+    page, relationship
+):
+    page.proposal.return_value.relationship = relationship
+    response = request()
+    html = soup(response)
+    assert html.find("a", string="Open my current proposal overview")["href"] == (
+        f"/my/applications/programme/{UUID(int=2)}/{UUID(int=3)}/{UUID(int=50)}/"
+    )
+    assert page.proposal.call_count == 4
+    for index, invocation in enumerate(page.proposal.call_args_list):
+        values = invocation.kwargs
+        assert values["actor_id"] == UUID(int=1)
+        assert values["organization_id"] == UUID(int=2)
+        assert values["edition_id"] == UUID(int=3)
+        assert values["proposal_id"] == UUID(int=50)
+        assert values["capability_code"] == "applications.view_programme_proposal_self"
+        expected = {"proposal_summary", "selection", "own_invitation"}
+        if index % 2 == 1 and relationship != "invited":
+            expected.add("contributor_profiles")
+        assert values["requested_fields"] == frozenset(expected)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [Denied, DatabaseError, views.ApplicationsProgrammeWriteScopeUnavailableError],
+)
+@pytest.mark.parametrize("failure_call", [0, 1, 2, 3])
+def test_missing_revoked_or_unavailable_source_link_never_erases_retained_message(
+    page, error, failure_call
+):
+    page.proposal.side_effect = [page.proposal.return_value] * failure_call + [error()]
+    response = request()
+    html = soup(response)
+    assert response.status_code == 200
+    assert "Exact recipient text" in html.get_text()
+    assert "Synthetic call" in html.get_text()
+    assert html.find("a", string="Open my current proposal overview") is None
+    assert html.find("input", {"name": "expected_version"})["value"] == "12"
+    assert page.detail.call_count == 3
+    page.command.assert_not_called()
+
+
+@pytest.mark.parametrize("field", ["proposal_id", "call_id", "relationship"])
+def test_moved_or_wrong_destination_admission_never_creates_a_link(page, field):
+    changed = SimpleNamespace(
+        **(
+            vars(page.proposal.return_value)
+            | {
+                field: "lead" if field == "relationship" else UUID(int=999),
+            }
+        )
+    )
+    page.proposal.side_effect = [page.proposal.return_value, changed]
+    assert soup(request()).find("a", string="Open my current proposal overview") is None
+
+
+def test_missing_source_is_truthful_without_current_lookup_or_lost_receipt(page):
+    page.detail.return_value = replace(message(), source=None)
+    html = soup(request())
+    assert "Original proposal context is unavailable" in html.get_text()
+    assert "Exact recipient text" in html.get_text()
+    assert html.find("input", {"name": "confirm"}) is not None
+    page.proposal.assert_not_called()
+
+
+def test_optional_navigation_never_precedes_or_blocks_receipt_writer(page):
+    page.proposal.side_effect = AssertionError("No navigation needed for redirect")
+    assert request("post", data()).status_code == 302
+    page.command.assert_called_once()
+    page.proposal.assert_not_called()
+
+
+def test_message_revocation_during_link_free_rerender_still_discards_content(page):
+    page.proposal.side_effect = [page.proposal.return_value] * 2 + [Denied()]
+    page.detail.side_effect = [message()] * 2 + [Denied()]
+    response = request()
+    assert response.status_code == 404
+    assert b"Exact recipient text" not in response.content
+
+
+def test_changed_retained_context_during_render_is_not_disclosed(page):
+    changed = replace(message(), source=replace(message().source, revision_sequence=4))
+    page.detail.side_effect = [message(), message(), changed]
+    assert request().status_code == 404
+
+
+def test_unknown_current_relationship_cannot_offer_proposal_navigation(page):
+    page.proposal.return_value.relationship = "removed"
+    assert soup(request()).find("a", string="Open my current proposal overview") is None
+
+
+def test_message_authority_is_checked_after_final_navigation_admission(page):
+    count = 0
+
+    def navigation(**_values):
+        nonlocal count
+        count += 1
+        if count == 4:
+            page.detail.side_effect = Denied
+        return page.proposal.return_value
+
+    page.proposal.side_effect = navigation
+    response = request()
+    assert response.status_code == 404
+    assert b"Exact recipient text" not in response.content

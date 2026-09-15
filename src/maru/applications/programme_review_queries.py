@@ -6,6 +6,7 @@ import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -199,6 +200,40 @@ class ProgrammeReviewDetail:
 
 
 @dataclass(frozen=True, slots=True)
+class ProgrammeDecisionSource:
+    """Identify retained message context without proposal answers or profiles.
+
+    Attributes
+    ----------
+    call_id : UUID
+        Original immutable call reference, not current call discovery authority.
+    call_name : str
+        Name of the original immutable activated definition.
+    definition_version : int
+        Definition version pinned by the exact seal.
+    proposal_id : UUID
+        Original proposal reference, not current proposal access.
+    proposal_created_at : datetime
+        Original proposal creation timestamp for readable disambiguation.
+    revision_id : UUID
+        Exact reviewed seal identifier, never today's submitted revision.
+    revision_sequence : int
+        Original proposal-local seal number.
+    sealed_at : datetime
+        Exact immutable sealing timestamp.
+    """
+
+    call_id: UUID
+    call_name: str
+    definition_version: int
+    proposal_id: UUID
+    proposal_created_at: datetime
+    revision_id: UUID
+    revision_sequence: int
+    sealed_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class ProgrammeDecisionMessage:
     """Project an exact addressed decision without another recipient's state.
 
@@ -225,6 +260,9 @@ class ProgrammeDecisionMessage:
     own_acknowledged_at : datetime | None
         Caller's retained acknowledgement time, absent when unacknowledged or
         when own-acknowledgement access was not requested.
+    source : ProgrammeDecisionSource | None, default=None
+        Minimized original source only with message access and coherent retained
+        references; absence does not remove an otherwise addressed message.
     """
 
     decision_id: UUID
@@ -237,6 +275,7 @@ class ProgrammeDecisionMessage:
     acknowledgement_required: bool | None
     own_acknowledged: bool | None
     own_acknowledged_at: datetime | None
+    source: ProgrammeDecisionSource | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -788,6 +827,43 @@ def get_self_programme_decision(
     return page.items[0]
 
 
+def _decision_source(
+    row: ProgrammeReviewDecision, request: ProgrammeReviewReadRequest
+) -> ProgrammeDecisionSource | None:
+    if "decision_message" not in request.requested_fields:
+        return None
+    try:
+        revision = row.revision
+        proposal = revision.proposal
+        call = proposal.call
+        definition = call.definition
+    except ObjectDoesNotExist:
+        return None
+    if (
+        any(
+            source.organization_id != request.organization_id
+            or source.edition_id != request.edition_id
+            for source in (revision, proposal, call, definition)
+        )
+        or row.entry.case.revision_id != revision.id
+        or row.entry.case.proposal_id != proposal.id
+        or revision.definition_version != definition.version
+        or definition.activated_at is None
+        or not definition.name.strip()
+    ):
+        return None
+    return ProgrammeDecisionSource(
+        call.id,
+        definition.name,
+        revision.definition_version,
+        proposal.id,
+        proposal.created_at,
+        revision.id,
+        revision.sequence,
+        revision.sealed_at,
+    )
+
+
 def _self_decision_page(
     request: ProgrammeReviewReadRequest,
     after_id: UUID | None,
@@ -807,7 +883,10 @@ def _self_decision_page(
         edition_id=request.edition_id,
         account_id=request.actor_id,
     ).values("revision_id")
-    query = ProgrammeReviewDecision.objects.select_related("entry__case").filter(
+    related = ["entry__case"]
+    if "decision_message" in request.requested_fields:
+        related.append("revision__proposal__call__definition")
+    query = ProgrammeReviewDecision.objects.select_related(*related).filter(
         revision_id__in=recipients,
         revision__organization_id=request.organization_id,
         revision__edition_id=request.edition_id,
@@ -849,6 +928,7 @@ def _self_decision_page(
             acknowledgement_required=row.acknowledgement_required if own_ack else None,
             own_acknowledged=row.id in acknowledged if own_ack else None,
             own_acknowledged_at=acknowledged.get(row.id) if own_ack else None,
+            source=_decision_source(row, request),
         )
         for row in rows[:limit]
     )
