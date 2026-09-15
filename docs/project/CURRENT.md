@@ -11,6 +11,21 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's retained decision source context is delivered through
+[PR #129](https://github.com/martonpornoi/maru/pull/129), protected squash
+`9f7aed18bf26bd62883fe2502e6fead210b60ca6` at 2026-09-15 01:05:40 UTC.
+Its tree equals certified head `c3d9fc231d320db9d957e2d7bbfe308cb2d5fa42`;
+clean main and origin/main match. All eight retained local gates passed in
+17m52s (7,326 units in 44.67s and 85 frontend tests). Hosted units passed in
+70.16s, quality took 27m21s, documentation 25m23s and workflow 27m49s.
+Exact-head PR gate and CodeQL passed without canonical or hosted repair/rerun.
+The observed 2m39s quality margin is not guaranteed; #113 retains the risk.
+Native #102 and human #92 debt remain explicit. No schema, canonical writer,
+profile, production route or CI policy changed. See the
+[protected source-context checkpoint](../checkpoints/2026-09-15-programme-decision-source-protected-delivery.md).
+
+### Preceding host recovery delivery
+
 #108's exact-person host invitation recovery is delivered through
 [PR #128](https://github.com/martonpornoi/maru/pull/128), protected squash
 `d29628e6ee81c492f15085b6910f052636b7944c` at 2026-09-14 23:56:11 UTC.
@@ -289,25 +304,19 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-decision-source-context`, from protected PR #128.
-Implemented recorded #108 increment: readable retained decision-to-proposal/call context
-and independently admitted source navigation. Follow the immutable decision's
-exact seal, not today's submitted revision. Addressed-message access survives
-loss of current proposal membership; a source link must authorize separately.
-No arbitrary answer, contributor profile or staff review becomes a label.
-Independent current source-link admission includes the destination's complete
-relationship-specific field ceiling. Link loss rerenders message-only and final
-message admission remains last. The existing receipt writer is unchanged.
-Preflight passed 7,326 database-free units in 44.71s (three existing URLField
-warnings); focused typing, Ruff and NumPy/semantic docstrings passed. The first
-full unit run caught the new fragment's shell-containment assumption; its explicit
-two-parent inclusion contract was corrected before the passing run. Synthetic
-browser evidence covered history labels, exact detail, escaped text, progressive
-references, former-contributor link absence, missing context and focused stale
-receipt recovery at 1280 CSS pixels with one H1/main and no overflow. Native
-collaborator-removal assertions are maintained but unexecuted #102 debt; full
-human checks remain #92. Exact clean-commit certification and protected delivery
-are next. See the [source-context checkpoint](../checkpoints/2026-09-15-programme-decision-source-context.md).
+Branch: `codex/programme-typed-review-answers`, from protected PR #129.
+Implemented locally: readable typed choice/address and other structured review
+answers, using exact sealed selected-option metadata and the shared reviewer/
+moderator/decider presenter. Stage allowlists, anonymity, sensitive-read admission,
+mandatory audit and plain escaped content remain intact. Preflight passed 7,454
+units in 45.48s; focused typing, Ruff and NumPy/semantic docstrings passed. Synthetic
+browser checks covered all three role pages, labelled choices/address components,
+distinct absence/false/zero, escaped content and whole-page unavailable handling
+at 1280 CSS pixels. Exact-commit certification and hosted acceptance are pending.
+See the [typed-answer checkpoint](../checkpoints/2026-09-15-programme-readable-typed-review-answers.md).
+Independently authorized
+person/domain-reference and safe-file selectors/viewers remain a separate part of
+the same unfinished checklist outcome; text formatting alone cannot finish it.
 Then continue the existing structured selectors/viewers, workflow connections
 and accountable setup. #102/#97/#109/#92 remain final gates; no current profile
 or production route is activated by these dormant surface increments.

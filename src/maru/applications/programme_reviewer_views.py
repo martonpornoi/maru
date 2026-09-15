@@ -20,6 +20,7 @@ from django.views.decorators.http import require_http_methods
 
 from . import programme_reviewer_queries as queries
 from .models import ProgrammeReviewAction
+from .programme_answer_display import programme_review_answer_text
 from .programme_authorization import (
     ApplicationsProgrammeAuthorizationDeniedError as Denied,
 )
@@ -242,23 +243,7 @@ def _submit(
 
 
 def _answer_text(row: dict[str, Any]) -> str:
-    value = row["value"]
-    if value is None:
-        return "No answer in this exact revision."
-    if row["type"] in {"safe_file", "person_reference", "domain_reference"}:
-        return (
-            "Protected file/reference: dedicated safe viewer remains tracked in "
-            "#108; no download or person lookup is offered here."
-        )
-    if isinstance(value, bool):
-        return "Yes" if value else "No"
-    if isinstance(value, (str, int, float)):
-        return str(value)
-    if isinstance(value, list) and all(
-        isinstance(item, (str, int, float)) for item in value
-    ):
-        return "; ".join(str(item) for item in value)
-    return "Structured answer: its dedicated viewer remains tracked in #108."
+    return programme_review_answer_text(row)
 
 
 def _projection(detail: Any) -> dict[str, Any]:

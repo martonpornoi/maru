@@ -56,6 +56,11 @@ dependency-failure, denied and receipt states. Revalidate protected projections
 before and after rendering; audit failure or overflow releases no partial data.
 No read-tracking or claim that a person actually read every history entry is added.
 
+Permitted answers reuse the [typed review presentation contract](programme-reviewer-work.md#readable-typed-answers):
+immutable selected choice labels, labelled address components, explicit absence
+and plain escaped values. It adds no reference/file access or permission beyond
+the existing exact moderator field, classification and source boundary.
+
 Database-free tests cover purpose and field separation, independence before
 pagination, snapshot binding, original-intent recovery, closed transport, CSRF,
 readonly and final-case restrictions, evidence attribution and render-time

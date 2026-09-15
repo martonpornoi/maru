@@ -258,6 +258,19 @@ immutable serialized **projections**, not raw model dictionaries:
   context exposes effective review-side acceptance after current owner proof.
 - Answers contain only allowlisted sealed question key, label, type,
   classification, and value/explicit absence; no mutable current answer lookup.
+  Non-null choice answers additionally contain `selected_options`: only the
+  selected code/label pairs from the exact sealed question, in retained answer
+  order. No unselected option directory or current schema lookup is returned.
+  Incoherent option metadata is unavailable, not a guessed label. The shared
+  pure `programme_review_answer_text` presenter renders these labels, labelled
+  address components, explicit false/zero/empty/absent values and offset-preserving
+  dates/times. Consumers escape plain output; submitted URLs/contact values are
+  not automatically actionable. Unknown kinds and malformed value shapes fail
+  unavailable instead of dumping an object or returning partial answer pages.
+  Protected person/domain/file values remain placeholders until independently
+  authorized viewers exist. This presentation contract does not change any
+  reviewer/moderator/decider field, anonymity, classification, currency or audit
+  boundary, and adds no writer or database relation.
 - Evidence contains a complete page of permitted entries. Reviewers see their
   own score/rationale and allowed peer discussion text, not peer scores,
   account IDs, assignment IDs, or manager rationale. Independent moderators

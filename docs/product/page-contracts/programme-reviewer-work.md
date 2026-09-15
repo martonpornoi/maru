@@ -29,6 +29,26 @@ Answers respect the pinned question allowlist and structured anonymity. Plain
 free text can identify people; this is not a guarantee of anonymous authorship.
 No unsafe file download, identity resolution or reference chooser is invented.
 
+## Readable typed answers
+
+The shared reviewer/moderator/decider presenter uses only the permitted exact-seal
+answer projection. For choice answers, the owner additionally projects the selected
+code/label pairs from that same immutable question, never the current call's schema
+or an unselected option directory. Selection order is preserved; absent answers,
+explicit empty multiple selections, false and zero have distinct truthful output.
+Addresses show labelled components in a stable order, with empty optional components
+omitted; country codes remain codes, without external lookup or inferred geography.
+Dates, times and instants retain their explicit meaning/offset without assuming a
+viewer timezone. Text, email, phone and HTTPS values remain escaped plain text,
+not automatically actionable links. Unknown types, malformed selected metadata or
+incoherent value shapes produce an unavailable projection, never a raw object dump
+or silently wrong label. Protected person/domain/file values remain non-disclosing
+placeholders pending their independently authorized viewers under #108.
+
+This is presentation only: stage allowlists, structured anonymity, sensitive-read
+admission, mandatory audit, source currency and before/after-render checks remain
+unchanged. It does not authorize answer editing or new read purposes.
+
 ## Scoring, discussion and recovery
 
 Each score is an explicit complete integer rubric with configured inclusive
