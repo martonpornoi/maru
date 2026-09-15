@@ -21,17 +21,18 @@
   <p class="notice-warning">Manual communication only: no delivery provider is configured here. Preparation, approval, manual handoff and acknowledgement are different facts. None changes accepted work or attendance.</p>
   {% endif %}
   <p><a href="{{ request.path }}">Refresh notice inventory</a></p>
-  {% if not personal and not unavailable %}<p><a href="?task=hosts">Choose a Programme occurrence and confirmed host</a></p>{% endif %}
-  {% if host_source_form %}
-  <section class="baseline-panel" aria-labelledby="notice-host-heading">
-    <h2 id="notice-host-heading">Notify a confirmed host</h2>
-    <p>Choose a current Programme occurrence, then its confirmed host. These are current private working labels, not old released content. Preview verifies whether the latest publication or withdrawal affects this exact relationship.</p>
-    {% if not host_selection.release_id %}<p>No publication or withdrawal is available yet. Release a timetable before preparing a change notice.</p>{% endif %}
-    {% if not host_selection.occurrences %}<p>No current Programme occurrences are available.</p>{% else %}
-    <form method="get" action="{{ request.path }}">{{ host_source_form.as_div }}<button type="submit">Show confirmed hosts</button></form>
+  {% if not personal and not unavailable %}<p><a href="?task=hosts">Choose a Programme occurrence and confirmed host</a></p><p><a href="?task=work">Choose a Programme occurrence and accepted work</a></p>{% endif %}
+  {% if guided_source_form %}
+  <section class="baseline-panel" aria-labelledby="notice-recipient-heading">
+    <h2 id="notice-recipient-heading">{% if work_selection %}Notify a work holder{% else %}Notify a confirmed host{% endif %}</h2>
+    <p>Choose a current Programme occurrence, then {% if work_selection %}its accepted work and current holder{% else %}its confirmed host{% endif %}. These are current private working labels, not old released content. Preview verifies whether the latest publication or withdrawal affects this exact relationship.</p>
+    {% if work_selection %}<p>Times show accepted work with explicit UTC offsets, not audience timetable boundaries. Retained work is still accepted work; it does not mean cancellation or acceptance of a replacement.</p>{% endif %}
+    {% if not guided_selection.release_id %}<p>No publication or withdrawal is available yet. Release a timetable before preparing a change notice.</p>{% endif %}
+    {% if not guided_selection.occurrences %}<p>No current Programme occurrences are available.</p>{% else %}
+    <form method="get" action="{{ request.path }}">{{ guided_source_form.as_div }}<button type="submit">{% if work_selection %}Show accepted work{% else %}Show confirmed hosts{% endif %}</button></form>
     {% endif %}
-    {% if selected_occurrence and not host_selection.hosts %}<p>No currently confirmed, available host is eligible for this occurrence. This is not evidence that anyone was notified.</p>{% endif %}
-    {% if host_preview_form %}<form method="post" action="{{ request.path }}">{% csrf_token %}{{ host_preview_form.as_div }}<button type="submit">Preview this host's change</button></form>{% endif %}
+    {% if selected_occurrence and not has_recipients %}<p>{% if work_selection %}No operative work with a currently eligible holder is available for this occurrence.{% else %}No currently confirmed, available host is eligible for this occurrence.{% endif %} This is not evidence that anyone was notified.</p>{% endif %}
+    {% if guided_preview_form %}<form method="post" action="{{ request.path }}">{% csrf_token %}{{ guided_preview_form.as_div }}<button type="submit">{% if work_selection %}Preview this work change{% else %}Preview this host's change{% endif %}</button></form>{% endif %}
   </section>
   {% endif %}
   {% if invalid_form %}<form method="post" action="{{ request.path }}" class="baseline-panel">{% csrf_token %}{{ invalid_form.as_div }}<button type="submit">Retry this action</button></form>{% endif %}

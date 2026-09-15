@@ -106,8 +106,18 @@ The notice transport compares freshly read selection, preview, detail or invento
 facts after actual rendering and repeats action admission before releasing bytes.
 It never dispatches a command twice. Moved optional workflow links are omitted
 using the same original forms; failed source checks suppress the entire private
-result. Work/operator selectors remain unfinished #108 increments, as do integrated
+result. Operator selectors remain unfinished #108 increments, as do integrated
 human and native database acceptance. No schema, profile or runtime role changes.
+
+`load_notice_source_selection` now shares source discovery between hosts and Work;
+`load_notice_work_selection` does not require host-roster authority. The exact
+selected current occurrence precedes Workforce's separately admitted bounded
+operative-work query. Work choices show its owner-authorized title, accepted
+interval with explicit offsets, current holder, status and current/retained lineage.
+The selected value is the commitment, never a substitute person or successor.
+Ordinary preview/preparation uses the existing exact references and purpose proof.
+Empty choices do not imply notification completeness. Source/Work overflow has
+specific 503 recovery guidance, not an ineffective notice-release filter suggestion.
 
 `load_programme_change_notice_inventory` bounds exact-edition candidates at 256,
 optionally filtered to a release. Personal candidates are recipient-filtered and

@@ -23,6 +23,8 @@ from maru.programme.queries import (
     ProgrammeQueryUnavailableError,
     ProgrammeTimetableInventoryLimitError,
 )
+from maru.workforce.notice_recipient_choices import ProgrammeWorkNoticeLimitError
+from maru.workforce.programme_staffing_queries import ProgrammeStaffingDeniedError
 
 from .authorization import (
     ACKNOWLEDGE_CHANGE_SELF,
@@ -68,7 +70,13 @@ from .change_notice_queries import (
     load_programme_change_notice,
     preview_programme_change_notice,
 )
-from .change_notice_selection import NoticeHostSelection, load_notice_host_selection
+from .change_notice_selection import (
+    NoticeHostSelection,
+    NoticeSourceSelectionLimitError,
+    NoticeWorkSelection,
+    load_notice_host_selection,
+    load_notice_work_selection,
+)
 from .change_notice_sources import ProgrammeChangeNoticePreview
 from .command_support import (
     SchedulingCommandError,
@@ -196,10 +204,19 @@ def _verify_rendered_context(
     _authorize(
         scope, VIEW_CHANGE_SELF if personal else VIEW_CHANGE_NOTICES, personal=personal
     )
-    guided = context.get("host_selection")
+    guided = context.get("guided_selection")
     if (
         isinstance(guided, NoticeHostSelection)
         and load_notice_host_selection(
+            scope,
+            occurrence_id=cast("UUID | None", context.get("selected_occurrence")),
+        )
+        != guided
+    ):
+        raise SchedulingVersionConflictError
+    if (
+        isinstance(guided, NoticeWorkSelection)
+        and load_notice_work_selection(
             scope,
             occurrence_id=cast("UUID | None", context.get("selected_occurrence")),
         )
@@ -246,12 +263,34 @@ def _verify_rendered_context(
         _authorize(scope, PREPARE_CHANGE_NOTICES)
 
 
-def _host_selection(
+def _recipient_selection(
     scope: SchedulingReadRequest,
     occurrence_id: UUID | None,
+    *,
+    work: bool,
 ) -> dict[str, object]:
-    observation = load_notice_host_selection(scope, occurrence_id=occurrence_id)
-    form = forms.Form(initial={"task": "hosts", "occurrence": occurrence_id})
+    observation = (
+        load_notice_work_selection(scope, occurrence_id=occurrence_id)
+        if work
+        else load_notice_host_selection(scope, occurrence_id=occurrence_id)
+    )
+    if isinstance(observation, NoticeWorkSelection):
+        recipients = tuple(
+            (
+                str(row.recipient.work.commitment_id),
+                f"{row.title} · {row.recipient.display_label} · "
+                f"{row.recipient.work.status} · "
+                f"{'current' if row.recipient.work.current else 'retained'} work · "
+                f"{row.starts_at.isoformat(sep=' ', timespec='minutes')} — "
+                f"{row.ends_at.isoformat(sep=' ', timespec='minutes')}",
+            )
+            for row in observation.commitments
+        )
+    else:
+        recipients = tuple((str(row.host_id), row.label) for row in observation.hosts)
+    form = forms.Form(
+        initial={"task": "work" if work else "hosts", "occurrence": occurrence_id}
+    )
     form.fields["task"] = forms.CharField(widget=forms.HiddenInput)
     form.fields["occurrence"] = forms.ChoiceField(
         label="Current Programme occurrence",
@@ -261,33 +300,31 @@ def _host_selection(
         ],
     )
     preview_form = None
-    if (
-        occurrence_id is not None
-        and observation.release_id is not None
-        and observation.hosts
-    ):
+    if occurrence_id is not None and observation.release_id is not None and recipients:
         preview_form = NoticePreviewForm(
             initial={
                 "action": "preview",
                 "release_id": observation.release_id,
                 "occurrence_id": occurrence_id,
-                "purpose": "host",
+                "purpose": "work" if work else "host",
             }
         )
         for field in preview_form.fields.values():
             field.widget = forms.HiddenInput()
         preview_form.fields["target_id"] = forms.ChoiceField(
-            label="Confirmed host",
+            label="Accepted work and current holder" if work else "Confirmed host",
             choices=[
-                ("", "Choose a confirmed host"),
-                *((str(row.host_id), row.label) for row in observation.hosts),
+                ("", "Choose accepted work" if work else "Choose a confirmed host"),
+                *recipients,
             ],
         )
     return {
-        "host_selection": observation,
+        "guided_selection": observation,
+        "work_selection": work,
+        "has_recipients": bool(recipients),
         "selected_occurrence": occurrence_id,
-        "host_source_form": form,
-        "host_preview_form": preview_form,
+        "guided_source_form": form,
+        "guided_preview_form": preview_form,
     }
 
 
@@ -499,7 +536,11 @@ def _get(
             or selection.cleaned_data["release"]
         ):
             raise ValueError
-        return _host_selection(scope, selection.cleaned_data["occurrence"])
+        return _recipient_selection(
+            scope,
+            selection.cleaned_data["occurrence"],
+            work=selection.cleaned_data["task"] == "work",
+        )
     if selection.cleaned_data["occurrence"] is not None:
         raise ValueError
     # Guided source selection is separate from specialist exact-reference search.
@@ -563,7 +604,11 @@ def _page(
             organization_id=organization_id, edition_id=edition_id, notice_scope=scope
         )
         return _html(request, context, personal=personal, status=status)
-    except (SchedulingAuthorizationDeniedError, ProgrammeAuthorizationDeniedError):
+    except (
+        SchedulingAuthorizationDeniedError,
+        ProgrammeAuthorizationDeniedError,
+        ProgrammeStaffingDeniedError,
+    ):
         status, message = 404, "Programme changes are not available at this address."
     except (
         SchedulingVersionConflictError,
@@ -574,6 +619,19 @@ def _page(
             409,
             "This exact package or decision is no longer current. "
             "Refresh and review before trying again. No old content is shown.",
+        )
+    except NoticeSourceSelectionLimitError:
+        status, message = (
+            503,
+            "The complete current Programme source choices are too large. "
+            "Ask the organizer to review the occurrence inventory. "
+            "No partial list is shown.",
+        )
+    except ProgrammeWorkNoticeLimitError:
+        status, message = (
+            503,
+            "The complete accepted-work choices for this occurrence are too large. "
+            "Ask the organizer to review its work bindings. No partial list is shown.",
         )
     except (SchedulingLimitError, ProgrammeTimetableInventoryLimitError):
         status, message = (

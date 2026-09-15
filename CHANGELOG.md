@@ -15,10 +15,16 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added current-occurrence and accepted-work selection to dormant Programme
+  change notices. Owner-authorized Shift titles, offset-labelled work times and
+  current holders distinguish retained work without cancelling it or accepting
+  replacements. Exact preview, independent review and manual handoff stay separate;
+  no Programme profile or delivery provider is activated.
+
 - Connected dormant Programme change notices to the shared workflow and added
   labelled current-occurrence and confirmed-host selection. Preview, independent
   review, manual handoff and acknowledgement remain separate; stale or revoked
-  content is withheld after rendering. Work/operator selectors and final Programme
+  content is withheld after rendering. Operator selectors and final Programme
   acceptance remain pending, with no profile activation or delivery provider.
 
 - Connected dormant Programme staffing cards to their exact existing Shift,

@@ -11,52 +11,58 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's staffing-to-Shift connection is delivered through
-[PR #133](https://github.com/martonpornoi/maru/pull/133), protected squash
-`13a51848c78330b636cf35d9f65e3916eb2a136a` at 2026-09-15 06:48:09 UTC.
-Its tree equals certified head `eeee0af9646ebf4db3884b432fba98e1a285b0b5`;
+#108's guided host-notice connection is delivered through
+[PR #134](https://github.com/martonpornoi/maru/pull/134), protected squash
+`bdb0fe356285580663c936c3a18b666e499403d9` at 2026-09-15 08:07:16 UTC.
+Its tree equals certified head `e8c3b627b6e6ca00e6245a82204ce64ff1dcfa52`;
 clean local main and origin/main were synchronized to the protected result.
 
-All eight retained local gates passed in 18m07s: 7,624 units in 45.13s and
-93 frontend tests. Hosted units passed in 69.53s, quality took 27m44s,
-documentation 25m36s and workflow latency 28m09s. Exact-head PR gate and CodeQL
+All eight retained local gates passed in 18m10s: 7,661 units in 45.77s.
+Hosted units passed in 84.51s and all 93 frontend cases passed; quality took
+28m40s, documentation 26m43s and workflow latency 29m10s. Exact-head PR gate and CodeQL
 passed; there was no canonical or hosted repair/rerun or acceptance exception.
-The observed 2m16s quality margin is not guaranteed; #113 retains this risk
+The observed 1m20s quality margin is not guaranteed; #113 retains this risk
 without displacing unblocked #48 work.
 
-The canonical planner now connects current staffing bindings to their exact
-existing Shift through independently admitted full Workforce fields and real
-Events-owned slug metadata. Native organizer Shift pages provide separately
-authorized Programme continuations with lazy-render checks and original forms.
-No personnel inventory, successor inference, lifecycle, schema, profile or CI
-change was added. One maintained native scenario and further real-owner proof
-remain unexecuted #102 debt; #92 human tasks are recorded. See the
-[implementation](../checkpoints/2026-09-15-programme-shift-connections.md) and
-[protected delivery](../checkpoints/2026-09-15-programme-shift-connections-protected-delivery.md).
+The notice workspace now connects current labelled occurrences and confirmed hosts
+to the existing exact preview/command workflow. It independently admits task links
+and rechecks rendered private source facts without dispatching writers twice.
+No historical geometry, person directory, schema, runtime role, profile or CI
+change was added. One maintained native host scenario remains unexecuted #102 debt;
+#92 human tasks are recorded. See the
+[implementation](../checkpoints/2026-09-15-programme-host-notice-selection.md) and
+[protected delivery](../checkpoints/2026-09-15-programme-host-notices-protected-delivery.md).
 
 Earlier deliveries, including [PR #132 workspace connections](../checkpoints/2026-09-15-programme-connections-protected-delivery.md),
 remain complete. Do not restart them or reuse their evidence for a new head.
 
-## Active bounded outcome: guided host notices (#108)
+## Active bounded outcome: guided Work-recipient notices (#108)
 
-Branch: `codex/programme-notice-connections`, from protected PR #133.
-The first owner-specific increment replaces host-notice UUID discovery with current
-independently labelled occurrences and the selected item's confirmed host roster.
-It connects to #104's existing preview and unchanged governed commands, adds
-independently admitted workflow links, and checks protected source facts after
-rendering without dispatching writers twice. Work/operator selectors remain next;
-the overall #108 notice connection and #48 remain incomplete.
+Branch: `codex/programme-work-notices`, from protected PR #134. The dormant Work
+selector is implemented and awaiting fresh exact-head protected delivery. It shares
+current source discovery without host-roster authority and uses a bounded
+exact-occurrence Workforce query for operative current and retained commitments.
+Choices independently require `shift_demands`,
+`coverage_states` and `holder_display_labels` for readable work choices, without
+suitability/availability or broad personnel discovery. Keep the existing exact
+recipient preview's two-field contract and sole Workforce lifecycle unchanged.
 
-Iteration: 7,661 database-free units passed in 46.54s with three existing URLField
-warnings; targeted Ruff, mypy and NumPy docstring checks passed. Actual HTTP/forms
-browser rehearsal at 1,280 CSS pixels covered organizer and read-only host selection
-to suppressed preview, separate preparation controls and non-disclosing denied
-state. One H1/main, unique IDs and no horizontal overflow were observed on preview.
-Owner data/policy were substituted, SQL forbidden; no persistence or native
-authority proof is claimed. The task-owned fixture and tab are stopped/closed.
-One existing native host scenario was extended but not collected or executed.
-Fresh clean exact-head certification and protected delivery remain pending.
-See the [implementation checkpoint](../checkpoints/2026-09-15-programme-host-notice-selection.md).
+Complete lineage, canonical full-person lock order, current verified people,
+actual-sender positive/empty audit and final source/field checks are retained.
+No successor is substituted. Source and Work overflow have specific recovery
+guidance with no partial list. Explicit operator selections follow inside the
+same recorded notice checklist.
+The overall #108 connection and #48 remain incomplete.
+
+Focused feedback: 126 cases passed; full database-free units **7,717 passed in
+46.69s**, three existing URLField warnings. Strict mypy, NumPy docstrings and
+repository Ruff/format/documentation checks passed. Synthetic browser at 1,280px
+followed inventory/occurrence/retained-work/preview for organizer and read-only
+roles and verified non-disclosing denial. SQL was forbidden; no command persisted.
+One existing native Work scenario is maintained but uncollected/unexecuted #102
+debt; full human/zoom/keyboard/screen-reader acceptance remains #92. See the
+[Work implementation checkpoint](../checkpoints/2026-09-15-programme-work-notice-selection.md).
+Do not treat these iteration checks as an exact-commit certification receipt.
 
 Preserve exact release/purpose/source checks, original pending digest/version/key,
 source suppression and final disclosure checks without dispatching commands twice.

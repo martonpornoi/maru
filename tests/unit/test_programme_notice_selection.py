@@ -246,3 +246,39 @@ def test_missing_revision_or_overflow_never_returns_partial_sources(
         SchedulingLimitError if overflow else SchedulingUnavailableError
     ):
         selection._sources(release_query_world.request)
+
+
+def test_work_selection_needs_deliberate_occurrence_but_never_host_authority(
+    choices, monkeypatch
+):
+    work = Mock(return_value=())
+    monkeypatch.setattr(selection, "list_programme_work_notice_choices", work)
+    assert selection.load_notice_work_selection(choices.request).commitments == ()
+    work.assert_not_called()
+    with pytest.raises(SchedulingVersionConflictError):
+        selection.load_notice_work_selection(choices.request, occurrence_id=uuid4())
+    work.assert_not_called()
+    result = selection.load_notice_work_selection(
+        choices.request, occurrence_id=choices.occurrence.id
+    )
+    assert result.occurrences[0].label.startswith("Opening <ceremony>")
+    assert work.call_args.args[0] == selection.ProgrammeWorkNoticeRequest(
+        choices.request.actor_id,
+        choices.request.organization_id,
+        choices.request.edition_id,
+        choices.request.correlation_id,
+        choices.occurrence.id,
+    )
+    choices.roster.assert_not_called()
+
+
+@pytest.mark.parametrize("boundary", ["sources", "items"])
+def test_source_bounds_have_distinct_recovery_semantics(choices, boundary):
+    getattr(choices, boundary).side_effect = (
+        SchedulingLimitError
+        if boundary == "sources"
+        else selection.ProgrammeTimetableInventoryLimitError
+    )
+    with pytest.raises(selection.NoticeSourceSelectionLimitError):
+        selection.load_notice_source_selection(choices.request)
+    choices.roster.assert_not_called()

@@ -1,4 +1,4 @@
-"""Current owner-admitted host choices, without historical timetable disclosure."""
+"""Current owner-admitted recipient choices, without old timetable disclosure."""
 
 from __future__ import annotations
 
@@ -11,11 +11,23 @@ from maru.programme.host_queries import (
     ProgrammeHostReadRequest,
     load_programme_host_roster,
 )
-from maru.programme.queries import list_programme_timetable_items
+from maru.programme.queries import (
+    ProgrammeTimetableInventoryLimitError,
+    list_programme_timetable_items,
+)
+from maru.workforce.notice_recipient_choices import (
+    ProgrammeWorkNoticeChoice,
+    ProgrammeWorkNoticeRequest,
+    list_programme_work_notice_choices,
+)
 
 from .authorization import DEFAULT_SCHEDULING_AUTHORIZER, VIEW_PLANNING
 from .catalogs import MAX_OCCURRENCES
-from .command_support import SchedulingUnavailableError, SchedulingVersionConflictError
+from .command_support import (
+    SchedulingLimitError,
+    SchedulingUnavailableError,
+    SchedulingVersionConflictError,
+)
 from .models import (
     SchedulingOccurrence,
     SchedulingOccurrenceRevision,
@@ -78,8 +90,12 @@ class NoticeHostChoice:
     invitation_sequence: int
 
 
+class NoticeSourceSelectionLimitError(SchedulingLimitError):
+    """Complete current source choices exceed an owning module's bound."""
+
+
 @dataclass(frozen=True, slots=True)
-class NoticeHostSelection:
+class NoticeSourceSelection:
     """Complete guided-source observation, never portable command authority.
 
     Attributes
@@ -90,14 +106,37 @@ class NoticeHostSelection:
         Exact current source pointer, zero only before first publication.
     occurrences
         Complete bounded independently labelled current occurrence choices.
-    hosts
-        Current confirmed hosts for the deliberately selected occurrence only.
     """
 
     release_id: UUID | None
     pointer_version: int
     occurrences: tuple[NoticeOccurrenceChoice, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class NoticeHostSelection(NoticeSourceSelection):
+    """Current sources and confirmed hosts for one deliberate occurrence.
+
+    Attributes
+    ----------
+    hosts
+        Current independently admitted confirmed relationships, without contacts.
+    """
+
     hosts: tuple[NoticeHostChoice, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class NoticeWorkSelection(NoticeSourceSelection):
+    """Current sources and accepted work for one deliberate occurrence.
+
+    Attributes
+    ----------
+    commitments
+        Independently admitted operative work, including retained predecessors.
+    """
+
+    commitments: tuple[ProgrammeWorkNoticeChoice, ...]
 
 
 def _sources(
@@ -174,31 +213,27 @@ def _sources(
     )
 
 
-def load_notice_host_selection(
+def load_notice_source_selection(
     request: SchedulingReadRequest,
-    *,
-    occurrence_id: UUID | None = None,
-) -> NoticeHostSelection:
-    """Compose current owner choices without searching people or old geometry.
+) -> NoticeSourceSelection:
+    """Compose complete current source choices without recipient discovery.
 
     Parameters
     ----------
     request : SchedulingReadRequest
         Already notice-admitted actor and exact scope; each owner admits again.
-    occurrence_id : UUID | None, default=None
-        Deliberate current occurrence selection, never authority to read a roster.
 
     Returns
     -------
-    NoticeHostSelection
-        Complete current source identities and optional exact-item host choices.
+    NoticeSourceSelection
+        Complete current source identities with independently admitted item labels.
 
     Raises
     ------
     SchedulingUnavailableError
         If a current occurrence has no independently readable current item.
-    SchedulingVersionConflictError
-        If the deliberate occurrence or its item-to-roster version has moved.
+    NoticeSourceSelectionLimitError
+        If either owner's complete current inventory exceeds its bound.
 
     Notes
     -----
@@ -206,16 +241,19 @@ def load_notice_host_selection(
     disclosure. The caller must compare a fresh observation after rendering.
     Preview and every command independently prove affected source membership.
     """
-    release_id, pointer_version, occurrences = _sources(request)
-    items = {
-        row.item.id: row
-        for row in list_programme_timetable_items(
-            actor_id=request.actor_id,
-            organization_id=request.organization_id,
-            edition_id=request.edition_id,
-            correlation_id=request.correlation_id,
-        )
-    }
+    try:
+        release_id, pointer_version, occurrences = _sources(request)
+        items = {
+            row.item.id: row
+            for row in list_programme_timetable_items(
+                actor_id=request.actor_id,
+                organization_id=request.organization_id,
+                edition_id=request.edition_id,
+                correlation_id=request.correlation_id,
+            )
+        }
+    except (SchedulingLimitError, ProgrammeTimetableInventoryLimitError) as error:
+        raise NoticeSourceSelectionLimitError from error
     if any(row.item_id not in items for row in occurrences):
         raise SchedulingUnavailableError
     choices = tuple(
@@ -228,13 +266,51 @@ def load_notice_host_selection(
         )
         for index, row in enumerate(occurrences)
     )
+    return NoticeSourceSelection(release_id, pointer_version, choices)
+
+
+def _selected(
+    source: NoticeSourceSelection, occurrence_id: UUID
+) -> NoticeOccurrenceChoice:
+    selected = next(
+        (row for row in source.occurrences if row.occurrence.id == occurrence_id), None
+    )
+    if selected is None:
+        raise SchedulingVersionConflictError
+    return selected
+
+
+def load_notice_host_selection(
+    request: SchedulingReadRequest, *, occurrence_id: UUID | None = None
+) -> NoticeHostSelection:
+    """Compose current host choices without searching people or old geometry.
+
+    Parameters
+    ----------
+    request : SchedulingReadRequest
+        Notice-admitted sender and exact scope; each owner independently admits.
+    occurrence_id : UUID | None, default=None
+        Deliberate current occurrence, never authority to read a roster.
+
+    Returns
+    -------
+    NoticeHostSelection
+        Complete current sources and optionally exact-item confirmed hosts.
+
+    Raises
+    ------
+    SchedulingVersionConflictError
+        If the deliberate source or item-to-roster version has moved.
+
+    Notes
+    -----
+    Owner denial, overflow and audit failure propagate without partial disclosure.
+    Callers repeat this observation before releasing rendered content.
+    """
+    source = load_notice_source_selection(request)
     hosts: tuple[NoticeHostChoice, ...] = ()
     if occurrence_id is not None:
-        selected = next(
-            (row for row in choices if row.occurrence.id == occurrence_id), None
-        )
-        if selected is None:
-            raise SchedulingVersionConflictError
+        selected = _selected(source, occurrence_id)
         roster = load_programme_host_roster(
             ProgrammeHostReadRequest(
                 request.actor_id,
@@ -257,4 +333,47 @@ def load_notice_host_selection(
             for row in roster.entries
             if row.person_current and row.relationship.state == "confirmed"
         )
-    return NoticeHostSelection(release_id, pointer_version, choices, hosts)
+    return NoticeHostSelection(
+        source.release_id, source.pointer_version, source.occurrences, hosts
+    )
+
+
+def load_notice_work_selection(
+    request: SchedulingReadRequest, *, occurrence_id: UUID | None = None
+) -> NoticeWorkSelection:
+    """Compose current accepted-work choices without requiring host-roster access.
+
+    Parameters
+    ----------
+    request : SchedulingReadRequest
+        Notice-admitted sender and exact scope; each owner independently admits.
+    occurrence_id : UUID | None, default=None
+        Deliberate current occurrence before any work-recipient query.
+
+    Returns
+    -------
+    NoticeWorkSelection
+        Complete sources and optionally operative current or retained work.
+
+    Notes
+    -----
+    Unknown occurrences fail before Workforce disclosure. Owner denial, overflow
+    and audit failures propagate without a partial list. Callers repeat the
+    observation before disclosure; native preview independently proves recipients.
+    """
+    source = load_notice_source_selection(request)
+    commitments: tuple[ProgrammeWorkNoticeChoice, ...] = ()
+    if occurrence_id is not None:
+        _selected(source, occurrence_id)
+        commitments = list_programme_work_notice_choices(
+            ProgrammeWorkNoticeRequest(
+                request.actor_id,
+                request.organization_id,
+                request.edition_id,
+                request.correlation_id,
+                occurrence_id,
+            )
+        )
+    return NoticeWorkSelection(
+        source.release_id, source.pointer_version, source.occurrences, commitments
+    )
