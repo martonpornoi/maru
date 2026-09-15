@@ -1,5 +1,28 @@
 # Workforce module
 
+The dormant Programme notice picker uses the public internal
+`notice_recipient_choices.list_programme_work_notice_choices` query for one
+deliberately selected occurrence. Its actual sender independently needs
+`workforce.view_shifts` fields `shift_demands`, `coverage_states` and
+`holder_display_labels`, plus exact Programme staffing adoption. The existing
+exact `load_work_change_recipient` retains its narrower two-field proof contract.
+The picker returns current Shift titles, accepted intervals with explicit offsets,
+current eligible person labels and exact operative commitment/binding versions.
+Current and retained work remain distinct; neither selection nor notice cancels
+work or accepts a successor. No availability, qualifications, briefing, contact
+directory or personal-output impersonation is involved.
+
+Complete current/retained lineage and all scoped parent references precede a
+maximum of 1,024 operative commitments; overflow fails without a partial list.
+Canonical scope precedes the complete sorted sender/holder lock union. Missing
+Identity records or incoherent sources fail closed; inactive/unverified/non-person
+holders are omitted without hidden identifiers or counts. Fresh lineage, work,
+labels and final policy are checked before mandatory actual-sender audit, including
+empty results (`workforce.programme_change_recipient_choices.read`, existing
+`workforce-personal` retention). The composing page repeats the observation before
+rendered disclosure; native preview independently re-proves exact membership.
+No schema, runtime role, lifecycle or profile activation changes accompany this seam.
+
 Programme ownership continuity resolves current or historical Departments
 through `resolve_retained_department_reference`, a public internal query that
 returns only the exact ID and retired flag. It grants no authority or discovery;

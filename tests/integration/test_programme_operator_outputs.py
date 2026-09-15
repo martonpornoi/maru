@@ -77,6 +77,7 @@ from maru.scheduling.release_inputs import ReleaseCandidateSelection
 from maru.venues.models import EditionSpaceSelection
 from maru.venues.operator_queries import load_operator_wayfinding
 from maru.workforce import change_recipient_queries as recipient_queries
+from maru.workforce import notice_recipient_choices as notice_choices
 from maru.workforce import operator_links as work_links
 from maru.workforce import personal_programme_links as personal_links
 from maru.workforce.models import ShiftCommitment, ShiftDemand
@@ -1029,6 +1030,38 @@ def _assert_selected_work_recipient(
         outcome="allow",
         target_id=recipient_request.commitment_id,
     ).exists()
+    # Maintained under ADR 0100; this native extension is not unit-only proof.
+    monkeypatch.setattr(notice_choices, "profile_allows_adapter", lambda *_args: True)
+    choice_request = notice_choices.ProgrammeWorkNoticeRequest(
+        request.actor_id,
+        request.organization_id,
+        request.edition_id,
+        uuid4(),
+        occurrence_id,
+    )
+    with CaptureQueriesContext(connection) as choice_queries:
+        guided = notice_choices.list_programme_work_notice_choices(choice_request)
+    assert len(guided) == 1
+    assert guided[0].recipient == recipient
+    assert guided[0].recipient.work.current
+    assert guided[0].starts_at.utcoffset() is not None
+    assert AuditEvent.objects.filter(
+        operation="workforce.programme_change_recipient_choices.read",
+        principal_id=request.actor_id,
+        correlation_id=choice_request.correlation_id,
+        target_id=request.edition_id,
+        outcome="allow",
+    ).exists()
+    for query in choice_queries:
+        assert not any(
+            name in query["sql"].lower()
+            for name in (
+                'from "workforce_availability',
+                'from "registration_',
+                'from "participation_',
+                '"confirmation_reason"',
+            )
+        )
     with pytest.raises(recipient_queries.ProgrammeStaffingUnavailableError):
         recipient_queries.load_work_change_recipient(
             replace(

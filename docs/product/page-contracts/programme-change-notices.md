@@ -48,6 +48,27 @@ Original hidden release and relationship references are not replaced on submissi
 Work and operator selection remain subsequent increments of the same #108 item;
 the specialist exact-reference controls remain available during this transition.
 
+The Work selection continuation reuses current occurrence labels without requiring
+host-roster authority. Workforce independently requires `shift_demands`,
+`coverage_states` and `holder_display_labels` before returning readable exact-work
+choices. The existing single-recipient proof still requires only its original
+coverage/holder fields. Complete current and retained binding lineage determines
+which operative claimed/confirmed commitments belong to the selected occurrence;
+no successor is substituted. Show current Shift title, accepted work interval and
+current-versus-retained relationship, not private briefing or suitability data.
+
+The Work selector is complete-or-unavailable at 1,024 operative commitments for
+one deliberate occurrence. Current verified people alone are eligible choices;
+inactive/unverified people are omitted without identifiers or hidden counts.
+Missing or moving lineage, records, required identities or audit evidence cannot
+be advertised as a partial complete result. Canonical shared scope precedes the
+complete sorted person lock set, including the actor. Recheck source, people and
+field admission before actual-sender audit and again at final page disclosure.
+An eligible-choice inventory is neither all retained work history nor notification
+completeness. Selecting work, previewing or acknowledging never changes its state.
+Source-choice overflow uses source-specific recovery advice, not a notice-inventory
+release filter that cannot narrow occurrence choices. No bound is weakened.
+
 Recheck rendered source facts and current permissions before releasing private
 bytes. This is a read-only verification, never a second command dispatch or a
 replacement of submitted versions, digests, reasons or retry keys.
