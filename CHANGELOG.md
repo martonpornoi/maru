@@ -13,7 +13,20 @@ rather than replace the curated summary.
 
 ## [Unreleased]
 
+### Fixed
+
+- Contributor documentation now keeps sidebar navigation within the current
+  section, with other sections available through their complete catalogs and
+  search. All reference/history pages and stable URLs remain published; this
+  avoids repeatedly rendering the entire archive in every page's sidebar.
+
 ### Added
+
+- Added dormant Programme same-call reference tasks: choose or clear an additional
+  private track/format answer using labelled choices, then confirm the original
+  selection. Personal and independently authorized review viewers show the exact
+  call label and guidance. These answers do not change the proposal's main
+  selection, routing or timetable; anonymous reviews never resolve their targets.
 
 - Added dormant Programme person-reference tasks: prepare an exact known person
   or explicit clear, confirm the original selection, and inspect a protected

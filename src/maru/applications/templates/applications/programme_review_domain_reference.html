@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Programme call reference · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Programme / {{ purpose }} / Call reference</div>{% endblock %}
+{% block content %}<div class="programme-calls">
+  <h1>Programme call reference</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Exact {{ purpose }} answer</summary><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}. Current role, exact seal, allowed question and sensitive-field authority are checked independently. Anonymous references are unavailable.</p></details>
+  <p>Exact {{ purpose }} answer task. This additional private reference does not change the proposal's main selection, duration, review routing or timetable.</p>
+  <section aria-labelledby="domain-question"><h2 id="domain-question">{{ domain_view.question_label }}</h2>
+    {% if domain_view.option %}<h3>{{ domain_view.option.label }} ({{ domain_view.option.code }})</h3><p>{{ domain_view.option.description|default:"No additional catalog guidance."|linebreaksbr }}</p>{% elif domain_view.present %}<p>Unavailable entry; the original reference is retained.</p>{% else %}<p>No entry selected.</p>{% endif %}
+    <p>Labels and guidance belong to this exact immutable call, not a global catalog or successor call.</p>
+  </section>
+  {% if return_url %}<p><a href="{{ return_url }}">Back to permitted answers</a></p>{% endif %}
+</div>{% endblock %}

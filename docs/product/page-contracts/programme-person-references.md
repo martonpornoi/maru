@@ -1,6 +1,6 @@
 # Programme person references
 
-- Status: Dormant bounded #108 implementation; protected delivery and final gates pending
+- Status: Dormant bounded #108 implementation delivered through PR #138; final gates pending
 - Requirements: PRG-001, PRG-002, PRG-003, PRG-009, IDN-014, AUD-001, AUD-003,
   PRI-001, UX-005 through UX-008, UX-019, UX-020, UX-027, UX-029 and NFR-013
 - Decisions: ADRs 0051, 0082, 0085 and 0100 remain authoritative; no ownership,

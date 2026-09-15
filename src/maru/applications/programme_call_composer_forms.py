@@ -293,6 +293,8 @@ class ProgrammeQuestionForm(forms.Form):
             "Exact registered kind for a reference answer only; "
             "use programme.person for a person reference. This private mention "
             "creates no contributor, host or public-profile relationship. "
+            "Use programme.call-track or programme.call-format for an additional "
+            "private same-call reference; neither changes the main selection. "
             "Other kinds require their own registered selection and viewer."
         ),
     )

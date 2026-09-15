@@ -46,8 +46,12 @@ or silently wrong label. Registered `person_reference` / `programme.person` answ
 link to the independently admitted [person viewer](programme-person-references.md)
 below the exact own assignment's `answers/person/<question-key>/` route. It requires
 the current submitted seal and nonanonymous allowed answer before Identity lookup;
-current account labels are not frozen proposed-public contributor names. Domain,
-file and unregistered-reference values remain non-disclosing placeholders.
+current account labels are not frozen proposed-public contributor names. Registered
+same-call domain answers link to their [dedicated viewer](programme-domain-references.md)
+at `answers/domain/<question-key>/`, with the same exact answer and assignment
+admission before immutable call label/guidance lookup. Anonymous omission precedes
+either target lookup. File and unregistered-reference values remain non-disclosing
+placeholders; the pure presenter resolves neither kind itself.
 
 This is presentation only: stage allowlists, structured anonymity, sensitive-read
 admission, mandatory audit, source currency and before/after-render checks remain

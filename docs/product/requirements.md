@@ -1402,6 +1402,20 @@ architecture documents, implementation issues, tests, and release notes.
   role, field and sensitive-content authority. Unknown kind/type pairs never
   fall through to generic model or identity resolution. Labels are current
   presentation, not a rewrite of the sealed answer or proposed-public profile.
+  Registered `domain_reference` kinds `programme.call-track` and
+  `programme.call-format` name an additional private entry from the proposal's
+  own immutable call catalog. They do not change the lead-owned track/format
+  selection, duration, review routing or timetable. Actual shared-answer editors
+  select from a complete bounded labelled catalog for that exact question;
+  no global catalog, raw identifier entry or arbitrary model resolver is exposed.
+  Original target, kind, question, source versions and retry identity remain
+  fixed through confirmation. Fresh canonical writes validate exact-call target
+  membership under the existing source locks; replay retains original evidence.
+  Current/frozen and nonanonymous review viewers independently authorize the
+  exact answer before resolving its same-call label. Unknown kinds, cross-call
+  targets and malformed historical values never resolve by code or successor.
+  Anonymous review omits domain references before target lookup. Active call
+  catalog labels belong to the immutable source, not mutable global presentation.
 - **PRG-010 — Preview-first Programme import staging:** An organization may
   deliberately pin one Applications-owned
   `applications.import.programme_call_proposal@1` adapter to stage a bounded

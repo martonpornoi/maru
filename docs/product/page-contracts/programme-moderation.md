@@ -61,8 +61,10 @@ immutable selected choice labels, labelled address components, explicit absence
 and plain escaped values. Registered Programme person answers additionally link to
 the [dedicated person viewer](programme-person-references.md), independently requiring
 this exact moderator purpose, current seal, nonanonymous allowed question and
-sensitive-field authority. The pure presenter performs no Identity lookup; other
-reference/file viewers remain unfinished.
+sensitive-field authority. Registered same-call domain answers also link to their
+[dedicated viewer](programme-domain-references.md), independently admitted for this
+moderator and exact answer before resolving call labels and guidance. The pure
+presenter performs no target lookup; file and unknown-kind viewers remain unfinished.
 
 Database-free tests cover purpose and field separation, independence before
 pagination, snapshot binding, original-intent recovery, closed transport, CSRF,

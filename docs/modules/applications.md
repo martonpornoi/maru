@@ -521,8 +521,16 @@ before explicit confirmation; the existing answer command revalidates fresh pers
 eligibility after canonical replay. Its optional paired call/schema fences are
 included in new intent digests and checked under the existing source locks; omitted
 fences preserve legacy digests. No migration or generic reference resolver is added.
-Native, integrated and human acceptance remain gated; domain-reference and safe-file
-controls are separate unfinished work.
+The [same-call domain-reference contract](../product/page-contracts/programme-domain-references.md)
+adds closed `programme.call-track` and `programme.call-format` questions with
+complete bounded native choices, original-target confirmation and independently
+admitted current, sealed and nonanonymous review viewers. These additional private
+answers never change the lead-owned selection or review routing. Shared source
+admission is target-neutral; person eligibility remains owned by Identity and domain
+membership by Applications. Fresh canonical writes validate same-call membership;
+successful retained replay precedes fresh checks. No schema or generic resolver is
+introduced. Native, integrated and human acceptance remain gated; safe-file controls
+and unknown reference kinds are separate unfinished work.
 
 Sections contain ordered questions using a closed vocabulary: short and long
 text, integer, decimal, boolean, single and multiple choice, date, time,

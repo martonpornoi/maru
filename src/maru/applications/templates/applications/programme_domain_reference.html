@@ -1,0 +1,15 @@
+<section aria-labelledby="domain-reference-heading">
+  <h2 id="domain-reference-heading">Additional call reference: {{ question_label }}</h2>
+  {% if question %}<dl><dt>Question guidance</dt><dd>{{ question.help_text|default:"No additional guidance." }}</dd><dt>Collection purpose</dt><dd>{{ question.purpose }}</dd><dt>Information classification</dt><dd>{{ question.classification }}</dd><dt>Required before sealing</dt><dd>{{ question.required|yesno:"Yes,No" }}</dd></dl>{% endif %}
+  <p>This is an additional private reference within this proposal's call. It does not change the main track, format, duration, review routing or timetable. Labels and guidance belong to this immutable call, not a successor or a global catalog.</p>
+  {% if domain_view %}{% if domain_view.option %}<h3>{{ domain_view.option.label }} ({{ domain_view.option.code }})</h3><p>{{ domain_view.option.description|default:"No additional catalog guidance."|linebreaksbr }}</p>{% elif domain_view.present %}<p>Unavailable entry; the original reference is retained.</p>{% else %}<p>No entry selected.</p>{% endif %}{% endif %}
+  {% if selection %}<div role="status"><h3>Prepared change</h3>{% if selection.option %}<p>{{ selection.option.label }} ({{ selection.option.code }})</p><p>{{ selection.option.description|default:"No additional catalog guidance."|linebreaksbr }}</p>{% elif selection.target_id %}<p>Unavailable entry; the original reference is retained.</p>{% else %}<p>Clear this answer.</p>{% endif %}<p>The answer has not been confirmed as saved. This confirmation keeps the original target, call, source versions and retry key.</p></div>{% endif %}
+  {% if form %}<p>Original proposal version {{ form.expected_version.value }} · Call version {{ form.expected_call_version.value }} · Schema {{ form.expected_definition_version.value }}.</p><form method="post" data-call-command data-call-pending="{% if form.is_bound or selection %}true{% else %}false{% endif %}">
+    {% csrf_token %}<input type="hidden" name="phase" value="{{ phase }}">
+    {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+    {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+    <p data-call-dirty role="status" hidden>Input is not confirmed as saved. Check proposal history after an uncertain attempt before preparing a new selection.</p>
+    <button type="submit">{% if phase == "confirm" %}Confirm this exact call-reference change{% else %}Preview selection or clear{% endif %}</button>
+  </form>{% endif %}
+  <p><a href="{{ proposal_url }}">Back to proposal tasks</a></p>
+</section>

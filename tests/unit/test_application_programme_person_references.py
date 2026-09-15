@@ -10,6 +10,7 @@ from django.core import signing
 from django.db import DatabaseError
 
 from maru.applications import programme_person_references as refs
+from maru.applications import programme_reference_sources as sources
 from maru.applications.programme_authorization import (
     APPLICATIONS_EDIT_PROGRAMME_PROPOSAL_SELF,
 )
@@ -51,7 +52,7 @@ def world(work, monkeypatch):
     work.person = Mock(return_value=SimpleNamespace(account_id=UUID(int=40)))
     work.labels = Mock(return_value={UUID(int=40): "Synthetic referenced person"})
     work.audit = Mock()
-    monkeypatch.setattr(refs, "authorize_programme_proposal_scope", work.write_auth)
+    monkeypatch.setattr(sources, "authorize_programme_proposal_scope", work.write_auth)
     monkeypatch.setattr(
         refs, "resolve_active_verified_person_reference_by_email", work.person
     )

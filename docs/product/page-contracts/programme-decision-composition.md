@@ -73,7 +73,10 @@ and escaped plain values. Registered Programme person answers additionally link 
 the [dedicated person viewer](programme-person-references.md), which requires the
 exact independent decider, current seal, nonanonymous allowed question and sensitive
 field authority before minimized Identity labels. No lookup occurs in the pure
-presenter; domain-reference and file viewing remain separately unfinished.
+presenter. Registered same-call domain answers use a separate
+[dedicated viewer](programme-domain-references.md), independently admitted for the
+exact decider and allowed current-seal answer before immutable call label/guidance
+lookup. File and unknown-kind viewing remain separately unfinished.
 
 Database-free tests cover purpose/field/independence, complete filtered paging,
 all-stage readiness, exact template/message separation, proof tampering and

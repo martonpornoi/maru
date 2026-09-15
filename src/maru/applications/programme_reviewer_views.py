@@ -27,6 +27,7 @@ from .programme_authorization import (
 from .programme_call_forms import _apply_errors
 from .programme_call_views import _secure
 from .programme_decision_views import _CONFLICTS, _UNAVAILABLE
+from .programme_domain_targets import DOMAIN_REFERENCE_KINDS
 from .programme_review_authorization import REVIEW, authorize_programme_review_scope
 from .programme_review_commands import apply_programme_review_command
 from .programme_review_inputs import ProgrammeReviewCommandInput
@@ -262,6 +263,10 @@ def _projection(detail: Any) -> dict[str, Any]:
                 "label": row["label"],
                 "classification": row["classification"],
                 "text": _answer_text(row),
+                "domain_key": row["key"]
+                if row.get("type") == "domain_reference"
+                and row.get("reference_kind") in DOMAIN_REFERENCE_KINDS
+                else None,
                 "person_key": row["key"]
                 if (row.get("type"), row.get("reference_kind"))
                 == ("person_reference", "programme.person")

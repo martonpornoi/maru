@@ -152,8 +152,11 @@ original rubric/version/retry across stage or source changes. Successful old
 receipt/late recusal renders no now-denied submission content. The dormant
 [Programme person viewer](../product/page-contracts/programme-person-references.md)
 resolves only the registered person kind after exact current-seal answer admission;
-anonymous SQL omission precedes target lookup, including direct URLs. Domain and
-safe-file viewers remain explicit #108 work; no generic resolver is introduced.
+anonymous SQL omission precedes target lookup, including direct URLs. The dedicated
+[same-call domain viewer](../product/page-contracts/programme-domain-references.md)
+uses the same independent role and answer boundaries for registered call-track and
+call-format references, resolving immutable same-call labels and guidance only.
+Safe-file viewers remain explicit #108 work; no generic resolver is introduced.
 
 Every staff purpose also requires an active verified person, exact organization
 and edition, current owner Department, and current policy/field proof.

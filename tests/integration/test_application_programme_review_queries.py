@@ -8,8 +8,10 @@ from uuid import uuid4
 
 import pytest
 
+from maru.applications import programme_domain_references as domain_references
 from maru.applications import programme_person_references as person_references
 from maru.applications import programme_review_queries as queries
+from maru.applications.models import ProgrammeProposal
 from maru.applications.models import ProgrammeReviewAction as Action
 from maru.applications.programme_authorization import (
     ApplicationsProgrammeAuthorizationDeniedError,
@@ -24,6 +26,9 @@ from maru.applications.programme_review_authorization import (
     REVIEW,
     SENSITIVE_REVIEW,
     VIEW_DECISION_SELF,
+)
+from maru.applications.programme_review_domain_references import (
+    get_programme_review_domain_reference,
 )
 from maru.applications.programme_review_inputs import (
     ProgrammeReviewCommandInput as Intent,
@@ -319,6 +324,89 @@ def test_native_registered_person_viewer_preserves_exact_assignment_and_anonymit
                         "request": replace(request, actor_id=world.peer.id),
                     }
                 )
+            )
+
+
+@pytest.mark.parametrize("kind", ["programme.call-track", "programme.call-format"])
+@pytest.mark.parametrize("anonymous", [False, True])
+def test_native_same_call_domain_viewer_assignment_and_anonymity(
+    monkeypatch, kind, anonymous
+):
+    """Maintain exact-source native viewer debt without executing during ADR0100."""
+    original_definition = source_worlds._definition
+    original_answer = review_worlds.append_programme_proposal_answer
+    selected_targets = []
+
+    def domain_definition(now, *, code):
+        definition = original_definition(now, code=code)
+        section = definition.sections[0]
+        question = replace(
+            section.questions[0],
+            field_type=ProgrammeCallQuestionType.DOMAIN_REFERENCE,
+            minimum_length=None,
+            maximum_length=None,
+            reference_kind=kind,
+        )
+        return replace(definition, sections=(replace(section, questions=(question,)),))
+
+    def selected_answer(**values):
+        proposal = ProgrammeProposal.objects.select_related("call").get(
+            id=values["proposal_id"]
+        )
+        catalog = (
+            proposal.call.tracks
+            if kind == "programme.call-track"
+            else proposal.call.formats
+        )
+        target = catalog.order_by("position").values_list("id", flat=True).first()
+        selected_targets.append(target)
+        return original_answer(**(values | {"value": str(target)}))
+
+    monkeypatch.setattr(source_worlds, "_definition", domain_definition)
+    monkeypatch.setattr(
+        review_worlds, "append_programme_proposal_answer", selected_answer
+    )
+    policy = review_policy()
+    world = create_review_world(
+        policy=replace(policy, stages=(replace(policy.stages[0], anonymous=anonymous),))
+    )
+    assignment = assign_and_score(world, world.reviewer.id)
+    request = world.read(
+        world.reviewer.id, REVIEW, fields=frozenset({"review_answers"})
+    )
+    arguments = {
+        "request": request,
+        "case_id": world.case_id,
+        "assignment_id": assignment,
+        "question_key": "session-title",
+        "authorizer": _AUTHORIZER,
+    }
+    if anonymous:
+
+        def forbidden(**_values):
+            raise AssertionError("Anonymous review must not resolve domain targets")
+
+        monkeypatch.setattr(domain_references, "_domain_target", forbidden)
+        assert (
+            json.loads(
+                get_programme_review_detail(
+                    request=request, case_id=world.case_id, authorizer=_AUTHORIZER
+                ).answers_json
+            )
+            == []
+        )
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_review_domain_reference(**arguments)
+    else:
+        result = get_programme_review_domain_reference(**arguments)
+        assert result.option.target_id == selected_targets[-1]
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_review_domain_reference(
+                **(arguments | {"assignment_id": uuid4()})
+            )
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_review_domain_reference(
+                **(arguments | {"request": replace(request, actor_id=world.peer.id)})
             )
 
 
