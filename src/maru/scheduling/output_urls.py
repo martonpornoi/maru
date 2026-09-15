@@ -8,11 +8,17 @@ from .continuity_views import (
     personal_programme_now,
     public_programme_now,
 )
+from .operator_entry_views import operator_entry
 from .operator_output_views import operator_run_sheet
 from .output_views import public_programme_timetable
 from .personal_output_views import personal_timetable
 
 urlpatterns = [
+    path(
+        "admin/programme/run-sheets/<uuid:organization_id>/<uuid:edition_id>/",
+        operator_entry,
+        name="programme-operator-entry",
+    ),
     path(
         "programme/<uuid:organization_id>/<uuid:edition_id>/now/",
         public_programme_now,

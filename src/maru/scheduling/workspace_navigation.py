@@ -27,6 +27,7 @@ from .authorization import (
     SchedulingAuthorizationDeniedError,
     authorize_scheduling_scope,
 )
+from .operator_entry_queries import can_enter_operator_tasks
 from .planning_queries import PLANNING_FIELDS, SchedulingReadRequest
 from .release_workspace import TASK_LABELS, authorize_release_task
 
@@ -62,6 +63,7 @@ _TASKS = {
     "timetable": ("Timetable planning", "programme-timetable-workspace"),
     "release": ("Release timetable", "programme-release-workspace"),
     "notices": ("Programme change notices", "programme-change-notices"),
+    "operators": ("On-site Programme run sheets", "programme-operator-entry"),
 }
 _ITEM_FIELDS = frozenset({"item_summaries", "working_information"})
 
@@ -129,6 +131,9 @@ def _authorize(scope: SchedulingReadRequest, code: str) -> None:
             is not True
         ):
             raise SchedulingAuthorizationDeniedError
+    elif code == "operators":
+        if can_enter_operator_tasks(scope) is not True:
+            raise SchedulingAuthorizationDeniedError
     elif code == "items":
         _authorize_items(scope)
     elif code == "timetable":
@@ -176,7 +181,7 @@ def programme_workspace_links(
     Returns
     -------
     tuple[ProgrammeWorkspaceLink, ...]
-        At most four fixed-label links, or five from the external Shift workspace.
+        At most five fixed-label links, or six from the external Shift workspace.
         Denied, unavailable, unmounted or shadowed
         destinations are omitted. Absence makes no source-completeness claim.
 

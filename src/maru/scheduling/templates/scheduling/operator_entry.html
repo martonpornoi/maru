@@ -1,0 +1,22 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'scheduling/operator_run_sheet.css' %}">{% endblock %}
+{% block content_title %}<h1>On-site Programme run sheets</h1>{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block content %}
+<div class="operator-run-sheet">
+  <details><summary>Access · independently authorized operator purposes</summary>
+    <p>Each choice requires its own Scheduling, Programme and Venue permissions. Department-linked work also requires Workforce membership permission when adopted. Planning or review access alone is not enough. Each destination checks again.</p>
+    <p>Organization reference: {{ organization_id }} · Edition reference: {{ edition_id }}</p>
+  </details>
+  {% if workspace_links %}<nav aria-label="Programme workflow"><ul>{% for link in workspace_links %}<li><a href="{{ link.url }}">{{ link.label }}</a></li>{% endfor %}</ul></nav>{% endif %}
+  <p>Choose the room, Department or edition you are operating. Department scope follows current room responsibility and explicitly linked work, not proposal ownership or reporting-tree descendants.</p>
+  <p>No extra delivery or staffing detail is selected here. Request those layers deliberately on the run sheet. A link is not proof of a current release, assignment, attendance or completed handoff.</p>
+  <ul>
+    {% for row in rows %}<li>
+      <h2>{{ row.choice.label }}</h2><p>{{ row.choice.kind|capfirst }} · {{ row.choice.detail }}</p>
+      <ul>{% for link in row.links %}<li><a href="{{ link.url }}">{{ link.label }}</a></li>{% empty %}<li>The output links are currently unavailable. Reload this entry to check again.</li>{% endfor %}</ul>
+    </li>{% empty %}<li>No on-site Programme purposes are currently available to you in this edition. Contact an accountable organizer about access; this is not a count of rooms, Departments or approved work.</li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}

@@ -21,6 +21,40 @@ def destination(request, **kwargs):
     return HttpResponse("Synthetic destination, not an owner read")
 
 
+@pytest.mark.parametrize("admitted", [True, False, None, 1])
+def test_operator_entry_link_requires_exact_true_metadata(
+    links_world, monkeypatch, admitted
+):
+    world = links_world
+    world.urlconf.urlpatterns.append(
+        path(
+            "admin/programme/run-sheets/<uuid:organization_id>/<uuid:edition_id>/",
+            destination,
+            name="programme-operator-entry",
+        )
+    )
+    check = Mock(return_value=admitted)
+    monkeypatch.setattr(navigation, "can_enter_operator_tasks", check)
+    offered = links(world)
+    assert any(row.code == "operators" for row in offered) is (admitted is True)
+    check.assert_called_once_with(world.scope)
+    for row in offered:
+        if row.code == "operators":
+            assert resolve(row.url, urlconf=world.urlconf).kwargs == {
+                "organization_id": world.scope.organization_id,
+                "edition_id": world.scope.edition_id,
+            }
+
+
+def test_unmounted_operator_entry_does_no_optional_metadata_read(
+    links_world, monkeypatch
+):
+    check = Mock(side_effect=AssertionError("unmounted entry must not query"))
+    monkeypatch.setattr(navigation, "can_enter_operator_tasks", check)
+    assert all(row.code != "operators" for row in links(links_world))
+    check.assert_not_called()
+
+
 def routes(*, shadow=False):
     config = ModuleType(f"synthetic_programme_links_{uuid4().hex}")
     base = (

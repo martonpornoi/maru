@@ -22,6 +22,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Dormant on-site Programme entry now offers independently permitted room,
+  Department and edition scopes by name, with links to canonical run sheets and
+  now/next. Changing scope starts without extra private layers; planner or review
+  access does not substitute for operator permissions.
+
 - Connected the dormant Programme Applications entry with item, timetable, release
   and notice workspaces through independently permitted same-edition links.
   Reviewer-only and conversion-only entry remains separate from planning access;

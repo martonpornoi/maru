@@ -45,7 +45,13 @@ def test_sender_preview_links_use_sender_not_selected_recipient(page, monkeypatc
     assert response.status_code == 200
     assert b"Current operator run sheet" in response.content
     assert b"Operator now and next" in response.content
-    assert admit.call_count == 4  # two destinations, before and after real rendering
+    assert b"Choose another operator scope" in response.content
+    assert admit.call_count == 6  # three destinations, before and after rendering
+    assert {args.args[1] for args in admit.call_args_list} == {
+        "entry",
+        "timetable",
+        "now",
+    }
     for args in admit.call_args_list:
         scope = args.args[0]
         assert scope.actor_id == page.world.request.actor_id
@@ -76,6 +82,8 @@ def test_late_navigation_loss_does_not_redispatch_notice_preparation(page, monke
         side_effect=[
             None,
             None,
+            None,
+            SchedulingAuthorizationDeniedError,
             SchedulingAuthorizationDeniedError,
             SchedulingAuthorizationDeniedError,
         ]

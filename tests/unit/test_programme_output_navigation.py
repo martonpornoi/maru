@@ -45,18 +45,62 @@ def test_real_reverse_resolve_and_explicit_layer_ceiling(scope, monkeypatch):
         links = navigation.programme_output_links(
             scope, current="notices", urlconf="tests.support.programme_output_urls"
         )
-    assert {link.code for link in links} == {"timetable", "now"}
+    expected_codes = {"timetable", "now"}
+    if scope.audience == "private_operator":
+        expected_codes.add("entry")
+    assert {link.code for link in links} == expected_codes
     for link in links:
         parsed = urlsplit(link.url)
         target = resolve(parsed.path, urlconf="tests.support.programme_output_urls")
         assert target.kwargs["organization_id"] == scope.organization_id
         assert target.kwargs["edition_id"] == scope.edition_id
         assert str(scope.actor_id) not in link.url
-        assert parse_qs(parsed.query) == {layer: ["1"] for layer in scope.layers}
-        if scope.audience == "private_operator":
+        assert parse_qs(parsed.query) == (
+            {} if link.code == "entry" else {layer: ["1"] for layer in scope.layers}
+        )
+        if scope.audience == "private_operator" and link.code != "entry":
             assert target.kwargs["target_id"] == scope.target_id
             assert target.kwargs["scope_kind"] == scope.kind
-    assert admit.call_count == 2
+    assert admit.call_count == len(expected_codes)
+
+
+@pytest.mark.parametrize("allowed", [True, False, None, 1])
+def test_operator_return_selector_has_independent_default_metadata(
+    monkeypatch, allowed
+):
+    scope = ContinuityScope(
+        UUID(int=1),
+        UUID(int=2),
+        "private_operator",
+        UUID(int=3),
+        "room",
+        UUID(int=4),
+        ("technical",),
+    )
+    check = Mock(return_value=allowed)
+    monkeypatch.setattr(navigation, "can_enter_operator_tasks", check)
+    if allowed is True:
+        navigation._admit(scope, "entry")
+    else:
+        with pytest.raises(SchedulingAuthorizationDeniedError):
+            navigation._admit(scope, "entry")
+    actual = check.call_args.args[0]
+    assert actual.actor_id == scope.actor_id
+    assert actual.organization_id == scope.organization_id
+    assert actual.edition_id == scope.edition_id
+
+
+def test_entry_admits_only_output_links_without_unrelated_notice_work(monkeypatch):
+    scope = ContinuityScope(
+        UUID(int=1), UUID(int=2), "private_operator", UUID(int=3), "room", UUID(int=4)
+    )
+    admit = Mock()
+    monkeypatch.setattr(navigation, "_admit", admit)
+    links = navigation.programme_output_links(
+        scope, current="entry", urlconf="tests.support.programme_output_urls"
+    )
+    assert {link.code for link in links} == {"timetable", "now"}
+    assert [call.args[1] for call in admit.call_args_list] == ["timetable", "now"]
 
 
 def test_missing_current_configuration_omits_links_before_any_owner_admission(
