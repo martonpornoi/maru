@@ -8,6 +8,7 @@
 {% block content %}
 <div class="programme-calls">
   <h1>My Programme proposals</h1>
+  {% include "scheduling/_personal_task_links.html" %}
   <details class="maru-access-summary"><summary><strong>Access</strong> · My exact proposal relationships</summary>
     <p>Only your own proposals, accepted collaborations and live invitations in this edition are shown. This grants no organizer, review, hosting or other-person profile access.</p>
     <p>Organization {{ organization_id }} · Edition {{ edition_id }}. Each destination checks authority again.</p>

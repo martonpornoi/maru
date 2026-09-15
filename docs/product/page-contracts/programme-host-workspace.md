@@ -101,6 +101,22 @@ constraints. No screen bypasses those commands or fabricates success.
 
 ## Interaction and acceptance
 
+Same-person connections link to independently admitted proposal and timetable
+tasks in this exact edition, using only fixed labels and public owner metadata
+authorization. No proposal, hosting or Workforce purpose implies another. No
+cross-edition discovery, inventory, private names or new sensitive-read audit is
+performed for links; actual destinations authorize and audit their own content.
+Missing/denied/unavailable/shadowed connections are omitted. Recheck optional
+links after rendering, dropping moved links without dispatching a command again.
+
+Personal hosting repeats its complete protected source read after the final
+render, including an optional-link recovery render. Compare the retained purposes
+or exact invitation/history/availability snapshot and current action/date context.
+Changed source or required-audit failure withholds all old bytes. Preserve bound
+input and its original retry/version values; never rebuild them from the fresh
+source. A successful command still redirects once to its independently authorized
+destination and is not replayed merely to obtain navigation.
+
 Use labelled roster cards, ordinary links, explicit forms and one H1/main.
 High-impact removal and withdrawal explain consequences and require deliberate
 confirmation. Versions, invitation sequence and retry keys are hidden immutable

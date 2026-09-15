@@ -106,6 +106,16 @@ precedes each roster mutation, sealing, acknowledgement, submission or withdrawa
 
 ## Ownership and disclosure
 
+Same-edition fixed-label connections lead to independently admitted own hosting
+and personal timetable tasks. They use the actual viewer and current mounted
+routes, not a selected collaborator, staff context or Participation. Navigation
+loads no relationships, names, proposal content, work or timetable data and creates
+no new purpose. Missing, denied, unavailable or shadowed optional destinations
+are omitted. Recheck after rendering; on movement rerender without the optional
+connections and repeat the original source authorization before releasing bytes.
+Do not repeat a command or replace original bound values/cursors to recover links.
+This is not cross-edition discovery or profile activation.
+
 Use the shared personal shell, not staff membership or a second account portal.
 Applications owns every projection and the existing `start_programme_proposal`
 command. No direct model save, new writer, schema, current-profile member, generic

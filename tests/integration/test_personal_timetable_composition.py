@@ -8,6 +8,7 @@ import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
+from maru.audit.models import AuditEvent
 from maru.scheduling import continuity_queries as continuity
 from maru.scheduling import personal_output_queries as outputs
 from maru.scheduling import personal_output_rendering as formats
@@ -15,6 +16,7 @@ from maru.scheduling.adoption import SCHEDULING_CONTINUITY_ADAPTER
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
 from maru.scheduling.command_support import SchedulingUnavailableError
 from maru.scheduling.continuity_protocol import ContinuityScope
+from maru.scheduling.personal_navigation import personal_programme_task_links
 from maru.workforce.shift_commands import (
     ShiftAuthorizationDeniedError,
     ShiftUnavailableError,
@@ -183,3 +185,56 @@ def test_partial_host_adoption_is_unavailable_not_a_silently_missing_layer(
     )
     with pytest.raises(SchedulingUnavailableError):
         outputs.load_personal_timetable(**arguments(scope))
+
+
+@pytest.mark.parametrize("with_work", [False, True])
+def test_native_personal_connections_are_metadata_only_and_keep_workforce_isolation(
+    scope, with_work
+):
+    if with_work:
+        accepted_work(scope)
+    before = excluded_counts()
+    audits = AuditEvent.objects.count()
+    with CaptureQueriesContext(connection) as captured:
+        links = personal_programme_task_links(
+            actor_id=scope.person.id,
+            organization_id=scope.edition.organization_id,
+            edition_id=scope.edition.id,
+            current="proposals",
+            urlconf="tests.support.programme_personal_urls",
+        )
+    assert [link.code for link in links] == ["timetable"]
+    assert AuditEvent.objects.count() == audits
+    assert excluded_counts() == before
+    statements = "\n".join(row["sql"] for row in captured)
+    for excluded in (
+        'FROM "programme_',
+        'FROM "scheduling_',
+        'FROM "applications_',
+        'FROM "workforce_shift',
+        'FROM "participation_',
+        'FROM "registration_',
+    ):
+        assert excluded not in statements
+
+
+@pytest.mark.parametrize("invalid", ["inactive", "foreign_organization"])
+def test_native_personal_connections_do_not_admit_inactive_or_foreign_scope(
+    scope, invalid
+):
+    organization_id = scope.edition.organization_id
+    if invalid == "inactive":
+        scope.person.is_active = False
+        scope.person.save(update_fields=("is_active",))
+    else:
+        organization_id = uuid4()
+    assert (
+        personal_programme_task_links(
+            actor_id=scope.person.id,
+            organization_id=organization_id,
+            edition_id=scope.edition.id,
+            current="proposals",
+            urlconf="tests.support.programme_personal_urls",
+        )
+        == ()
+    )

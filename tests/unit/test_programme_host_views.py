@@ -32,6 +32,7 @@ from maru.programme.queries import (
 )
 from maru.programme.timetable_queries import PersonalHostPurpose
 from maru.programme.workbench_queries import ProgrammeWorkbenchItem
+from maru.scheduling.personal_navigation import PersonalProgrammeTaskLink
 
 
 @pytest.fixture(autouse=True)
@@ -918,3 +919,110 @@ def test_explicit_destructive_confirmation_is_required(hosting, own):
     assert response.status_code == 400
     for writer in hosting.writers.values():
         writer.assert_not_called()
+
+
+def test_personal_connections_use_actual_host_not_organizer(hosting, monkeypatch):
+    links = Mock(
+        return_value=(
+            PersonalProgrammeTaskLink(
+                "proposals", "My Programme proposals", "/synthetic-proposals/"
+            ),
+        )
+    )
+    monkeypatch.setattr(personal, "personal_programme_task_links", links)
+    response = call(hosting, "inventory", own=True)
+    assert response.status_code == 200
+    assert b"My Programme connections" in response.content
+    assert links.call_count == 2
+    for invocation in links.call_args_list:
+        assert invocation.kwargs["actor_id"] == hosting.person_id
+        assert invocation.kwargs["organization_id"] == hosting.organization
+        assert invocation.kwargs["edition_id"] == hosting.edition
+        assert invocation.kwargs["current"] == "hosting"
+
+
+def test_changed_optional_links_keep_original_bound_host_input_without_rewrite(
+    hosting, monkeypatch
+):
+    links = Mock(
+        side_effect=[
+            (
+                PersonalProgrammeTaskLink(
+                    "proposals", "My Programme proposals", "/synthetic-proposals/"
+                ),
+            ),
+            (),
+        ]
+    )
+    monkeypatch.setattr(personal, "personal_programme_task_links", links)
+    writer = hosting.writers["respond_to_programme_host_invitation"]
+    writer.side_effect = ProgrammeVersionConflictError
+    payload = own_data() | {"expected_item_version": "6"}
+    response = call(hosting, "invitation", payload, own=True)
+    assert response.status_code == 409
+    writer.assert_called_once()
+    soup = BeautifulSoup(response.content, "html.parser")
+    assert soup.select_one('[name="expected_item_version"]')["value"] == "6"
+    assert (
+        soup.select_one('[name="idempotency_key"]')["value"]
+        == payload["idempotency_key"]
+    )
+    assert b"My Programme connections" not in response.content
+
+
+@pytest.mark.parametrize("task", ["inventory", "invitation", "availability", "history"])
+@pytest.mark.parametrize("rerender", [False, True])
+def test_changed_host_source_after_final_render_never_releases_old_content(
+    hosting, monkeypatch, task, rerender
+):
+    confirmed(hosting)
+    links = (
+        PersonalProgrammeTaskLink(
+            "proposals", "My Programme proposals", "/synthetic-proposals/"
+        ),
+    )
+    monkeypatch.setattr(
+        personal,
+        "personal_programme_task_links",
+        Mock(side_effect=[links, ()] if rerender else [(), ()]),
+    )
+    original = personal._html
+    renders = 0
+
+    def render(*args, **kwargs):
+        nonlocal renders
+        renders += 1
+        response = original(*args, **kwargs)
+        if renders == (2 if rerender else 1):
+            if task == "inventory":
+                hosting.purposes.return_value = ()
+            else:
+                reader = hosting.readers["load_programme_host_self"]
+                reader.return_value = replace(
+                    reader.return_value, availability_version=2
+                )
+        return response
+
+    monkeypatch.setattr(personal, "_html", render)
+    response = call(hosting, task, own=True)
+    assert response.status_code == 503
+    assert b"Your ceremony invitation" not in response.content
+    assert b"Deliberate host-only briefing" not in response.content
+    assert renders == (2 if rerender else 1)
+
+
+@pytest.mark.parametrize(
+    ("error", "status"),
+    [
+        (ProgrammeAuthorizationDeniedError, 404),
+        (DatabaseError, 503),
+        (ProgrammeQueryUnavailableError, 503),
+    ],
+)
+def test_final_host_authority_or_required_audit_failure_withholds_prepared_bytes(
+    hosting, error, status
+):
+    hosting.purposes.side_effect = [hosting.purposes.return_value, error]
+    response = call(hosting, "inventory", own=True)
+    assert response.status_code == status
+    assert b"Your ceremony invitation" not in response.content

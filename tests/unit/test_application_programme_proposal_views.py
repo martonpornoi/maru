@@ -19,6 +19,7 @@ from maru.applications.programme_authorization import (
     ApplicationsProgrammeAuthorizationDeniedError,
 )
 from maru.applications.programme_proposal_forms import ProgrammeProposalStartForm
+from maru.scheduling.personal_navigation import PersonalProgrammeTaskLink
 from tests.unit.test_application_programme_call_editor import _graph, _projection
 
 
@@ -446,3 +447,88 @@ def test_reserved_urls_resolve_but_production_does_not_mount_adapter(page):
         except Resolver404:
             continue
         assert production.func is not views.programme_proposals
+
+
+@pytest.mark.parametrize("task", ["inventory", "calls", "start", "detail"])
+def test_personal_task_connections_use_actual_proposal_viewer(page, monkeypatch, task):
+    links = Mock(
+        return_value=(
+            PersonalProgrammeTaskLink(
+                "hosting",
+                "My hosting invitations and availability",
+                "/synthetic-hosting/",
+            ),
+        )
+    )
+    monkeypatch.setattr(views, "personal_programme_task_links", links)
+    response = request(page, task)
+    assert response.status_code == 200
+    assert b"My Programme connections" in response.content
+    assert links.call_count == 2
+    for invocation in links.call_args_list:
+        assert invocation.kwargs["actor_id"] == page.actor
+        assert invocation.kwargs["organization_id"] == page.organization
+        assert invocation.kwargs["edition_id"] == page.edition
+        assert invocation.kwargs["current"] == "proposals"
+
+
+def test_optional_link_loss_does_not_repeat_start_or_replace_bound_input(
+    page, monkeypatch
+):
+    links = Mock(
+        side_effect=[
+            (
+                PersonalProgrammeTaskLink(
+                    "hosting",
+                    "My hosting invitations and availability",
+                    "/synthetic-hosting/",
+                ),
+            ),
+            (),
+        ]
+    )
+    monkeypatch.setattr(views, "personal_programme_task_links", links)
+    page.writer.side_effect = views.commands.ApplicationsProgrammeVersionConflictError
+    payload = data(page.call)
+    response = request(page, "start", payload)
+    assert response.status_code == 409
+    page.writer.assert_called_once()
+    soup = BeautifulSoup(response.content, "html.parser")
+    for key in ("retry_key", "expected_version", "expected_call_version", "reason"):
+        field = soup.select_one(f'[name="{key}"]')
+        assert field.get("value", field.get_text().removeprefix("\n")) == payload[key]
+    assert b"My Programme connections" not in response.content
+
+
+def test_proposal_authority_loss_after_link_recovery_render_withholds_source(
+    page, monkeypatch
+):
+    links = Mock(
+        side_effect=[
+            (
+                PersonalProgrammeTaskLink(
+                    "hosting",
+                    "My hosting invitations and availability",
+                    "/synthetic-hosting/",
+                ),
+            ),
+            (),
+        ]
+    )
+    monkeypatch.setattr(views, "personal_programme_task_links", links)
+    original = views.render_to_string
+    renders = 0
+
+    def render(*args, **kwargs):
+        nonlocal renders
+        renders += 1
+        response = original(*args, **kwargs)
+        if renders == 2:
+            page.entry.side_effect = ApplicationsProgrammeAuthorizationDeniedError
+        return response
+
+    monkeypatch.setattr(views, "render_to_string", render)
+    response = request(page)
+    assert response.status_code == 404
+    assert page.call.summary.name.encode() not in response.content
+    assert renders == 2

@@ -59,6 +59,14 @@ confirmation but no period entry, private reason or live edition-date lookup.
 All authoritative state and lifecycle checks remain in the existing commands.
 The dormant `host_urls` routes are not included in production URL configuration.
 
+Personal adapters use Scheduling's documented `personal_programme_task_links`
+for independent same-edition proposal/timetable continuations without reading
+those owners' private content. After the last render, personal hosting repeats
+its complete protected source query and compares all snapshot/action/date facts.
+Changed authority, availability, invitation/history or required-audit failure
+withholds prepared bytes. Optional-link loss rerenders without links, retaining
+the original bound form and command attempt; no writer is redispatched.
+
 ### Command catalog
 
 `maru.programme.host_commands` exposes:

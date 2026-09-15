@@ -1241,6 +1241,17 @@ wayfinding, requested delivery/work fields and adopted Department work membershi
 own-person layer pairs and fields; Workforce-only performs no Programme/hosting
 admission. Notice read permission remains separate from output permission.
 
+`personal_navigation.personal_programme_task_links` connects same-person proposal,
+hosting and timetable tasks. It uses Applications' default self-entry capability
+with summary/selection/own-invitation fields, Programme's default host-self
+relationship/invitation fields, and the independently adopted timetable owners.
+These metadata checks read no private content or purpose inventories and add no
+sensitive-read audit. They do not discover editions, prove a real relationship or
+enable production routes. Scope and policy are reloaded; current reverse/resolve
+and final-render checks omit unavailable or moving optional links. Personal
+output adds reciprocal proposal/hosting links without modifying public/operator
+audiences, formats, source revalidation or signer/command behavior.
+
 Links preserve explicit output layers, never select another actor and are omitted
 when unavailable or changed after rendering. Public now/next is explicitly the
 complete public Programme, not an implied day/room-filter continuation. Print and

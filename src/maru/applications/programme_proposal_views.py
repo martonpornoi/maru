@@ -18,6 +18,11 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
+from maru.scheduling.personal_navigation import (
+    PersonalProgrammeTaskLink,
+    personal_programme_task_links,
+)
+
 from . import programme_commands as commands
 from . import programme_queries as queries
 from .programme_authorization import (
@@ -130,7 +135,24 @@ def _html(
         edition_id=scope.edition_id,
     )
     shell.update(context)
+
+    def links() -> tuple[PersonalProgrammeTaskLink, ...]:
+        return personal_programme_task_links(
+            actor_id=scope.actor_id,
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+            current="proposals",
+            urlconf=getattr(request, "urlconf", None),
+        )
+
+    navigation = links()
+    shell["personal_task_links"] = navigation
     content = render_to_string("applications/programme_proposals.html", shell, request)
+    if navigation and navigation != links():
+        shell["personal_task_links"] = ()
+        content = render_to_string(
+            "applications/programme_proposals.html", shell, request
+        )
     if len(content.encode("utf-8")) > 8 * 1024 * 1024:
         raise queries.ApplicationsProgrammeProjectionOverflowError
     verify()

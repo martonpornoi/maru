@@ -52,6 +52,14 @@ types. Saved copies are private snapshots, not offline continuity guarantees.
 
 ## Guided continuations and final disclosure
 
+The same-person output navigation also offers independently admitted proposal and
+hosting tasks in this edition, with fixed code-owned labels. These connections
+load no proposals, relationships, names or work and create no purpose. They are
+not an edition directory or proof of hosting/attendance; the selected destination
+performs its own current complete protected read. No other-person selector or
+organizer permission is introduced. The same final-navigation recheck below
+applies, and print/downloads still contain no workflow controls.
+
 Fixed-label continuations connect to the genuine person's now/next and separately
 authorized notices. Each adopted hosting/work owner admits its exact-self fields
 without loading labels or a directory for navigation; Workforce-only calls no

@@ -21,6 +21,10 @@ from django.views.decorators.http import require_http_methods
 from maru.core.forms import StrictBase10IntegerField
 from maru.events.queries import resolve_edition_time_envelope_reference
 from maru.events.scheduling_queries import resolve_scheduling_edition_reference
+from maru.scheduling.personal_navigation import (
+    PersonalProgrammeTaskLink,
+    personal_programme_task_links,
+)
 
 from . import commands, host_commands, host_queries, queries
 from .authorization import ProgrammeAuthorizationDeniedError
@@ -160,6 +164,33 @@ def _initial(context: dict[str, Any]) -> dict[str, Any]:
         "expected_host_version": snapshot.relationship.version,
         "idempotency_key": uuid4(),
     }
+
+
+def _personal_html(
+    request: HttpRequest,
+    scope: ProgrammeWorkbenchRequest,
+    context: dict[str, Any],
+    status: int = 200,
+) -> HttpResponse:
+    def links() -> tuple[PersonalProgrammeTaskLink, ...]:
+        return personal_programme_task_links(
+            actor_id=scope.actor_id,
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+            current="hosting",
+            urlconf=getattr(request, "urlconf", None),
+        )
+
+    navigation = links()
+    response = _html(request, context | {"personal_task_links": navigation}, status)
+    if navigation and navigation != links():
+        response = _html(request, context | {"personal_task_links": ()}, status)
+    # Re-read after the final render, including after optional-link recovery.
+    # Bound forms are deliberately not rebuilt from the fresh source versions.
+    fresh = _context(scope, context["item_id"], context["task"])
+    if any(context.get(key) != value for key, value in fresh.items()):
+        raise queries.ProgrammeQueryUnavailableError
+    return response
 
 
 def _forms(context: dict[str, Any], task: str, data: Any = None) -> dict[str, Any]:
@@ -343,7 +374,7 @@ def _post(
         ),
         pending=True,
     )
-    return _html(request, context, status)
+    return _personal_html(request, scope, context, status)
 
 
 @never_cache
@@ -386,7 +417,7 @@ def personal_programme_hosts(
             return _post(scope, request, item_id, task, context)
         if item_id is not None and task in _FORMS and _can_edit(context, task):
             context.update(_forms(context, task))
-        return _html(request, context)
+        return _personal_html(request, scope, context)
     except ProgrammeAuthorizationDeniedError:
         return _secure(HttpResponse("Hosting page not found.", status=404))
     except ValueError:
