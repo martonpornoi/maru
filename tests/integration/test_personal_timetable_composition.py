@@ -48,6 +48,17 @@ def test_native_continuity_preserves_workforce_only_isolation_and_exact_person(
     before = excluded_counts()
     with CaptureQueriesContext(connection) as captured:
         result = continuity.load_continuity_projection(request, correlation_id=uuid4())
+        assert (
+            continuity.load_continuity_projection(
+                request, correlation_id=uuid4(), expected=result
+            )
+            == result
+        )
+        outputs.authorize_personal_timetable_scope(
+            actor_id=scope.person.id,
+            organization_id=scope.edition.organization_id,
+            edition_id=scope.edition.id,
+        )
     assert result.release_state == "unadopted"
     assert result.entries[0].key == f"work:{commitment.id}"
     assert result.entries[0].starts_at == commitment.starts_at

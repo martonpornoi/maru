@@ -1,6 +1,7 @@
 # Released Programme timetable
 
-- Status: Accepted dormant component contract; #99 implementation in progress.
+- Status: Delivered dormant through PR #101; #108 connections retain separate
+  development verification and final acceptance gates.
 - Parent: [Programme Operations #48](https://github.com/martonpornoi/maru/issues/48).
 - Requirements: SCH-006, SCH-008, SCH-010, SCH-012, UX-007, UX-008, UX-013,
   UX-029, NFR-001, NFR-002, NFR-013.
@@ -85,6 +86,19 @@ remain tracked under #92 when unavailable unattended. Automation is evidence
 for the synthetic component, not a substitute for those human gates.
 
 ## Continuations and remaining layers
+
+The interactive public page links only to the explicitly complete public now/next
+view when both adapters and the exact current-configuration route are admitted.
+This link does not claim to preserve a selected day/room filter or introduce a
+private audience. Missing, denied or shadowed destinations are omitted without
+reading private metadata. Print and downloads contain no workflow controls.
+
+Every format repeats the complete owner query after rendering and compares all
+facts while aligning only the new observation clock to the original check time.
+Late withdrawal, changed copy/wayfinding, adapter denial or backwards observation
+withholds the original bytes; no cached fallback or visitor audit is introduced.
+Changed optional links are omitted before the final source proof, without renewing
+source age or regenerating a different timetable as an apparently identical copy.
 
 Private personal host/work views belong to #99, not toggles on this public payload.
 Independently authorized room/department operational layers are retained in

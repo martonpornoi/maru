@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Connected dormant Programme notices, same-person timetables, exact-purpose
+  operator run sheets and now/next views with independently authorized links.
+  Explicit instruction layers stay selected between output views. Final source
+  checks withhold pages and downloads if facts or permission change during
+  rendering; signed copies retain their original source age and expiry.
+
 - Added labelled room, Department and edition operator-purpose selection to
   dormant Programme change notices, followed by an exact known-person eligibility
   check. Retry keeps the original person and source; no contact directory,

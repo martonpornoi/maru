@@ -15,6 +15,7 @@
   <p class="baseline-notice" role="status">{{ state_message }}</p>
   <p><a href="?">Reload the base run sheet without optional layers</a></p>
 {% else %}
+  {% if not print_view %}{% include "scheduling/_output_links.html" %}{% endif %}
   <details class="maru-access-summary operator-controls">
     <summary><strong>Access</strong> · Authorized {{ snapshot.kind }} run sheet</summary>
     <p>Scheduling geometry, Programme reviewed copy and Venue wayfinding were independently authorized for this exact target. Every requested extra layer passed its own field checks. This output grants no editing, publication, person-directory or attendance authority.</p>

@@ -92,6 +92,7 @@ from .command_support import (
     SchedulingLimitError,
     SchedulingVersionConflictError,
 )
+from .continuity_protocol import ContinuityScope
 from .inputs import SchedulingCommandRequest
 from .operator_notice_choices import admit_notice_operator_selection
 from .operator_notice_controls import (
@@ -106,6 +107,7 @@ from .operator_notice_person_selection import (
     prepare_operator_notice_person_selection,
 )
 from .operator_scope import OperatorScopeKind
+from .output_navigation import ProgrammeOutputLink, programme_output_links
 from .output_rendering import MAX_TIMETABLE_OUTPUT_BYTES
 from .planning_queries import SchedulingReadRequest
 from .workspace_navigation import ProgrammeWorkspaceLink, programme_workspace_links
@@ -171,6 +173,13 @@ def _html(
             f"programme-changes/?notice={detail.notice_id}"
         )
     preview = context.get("preview")
+    output_scope = _output_scope(scope, preview, personal=personal)
+    output_links: tuple[ProgrammeOutputLink, ...] = ()
+    if output_scope is not None:
+        output_links = programme_output_links(
+            output_scope, current="notices", urlconf=getattr(request, "urlconf", None)
+        )
+    shell["output_links"] = output_links
     if isinstance(preview, ProgrammeChangeNoticePreview):
         shell["source_label"] = preview.source_state.value.replace(
             "_", " "
@@ -195,12 +204,26 @@ def _html(
     content = render_to_string("scheduling/change_notices.html", shell, request=request)
     if isinstance(scope, SchedulingReadRequest):
         _verify_rendered_context(scope, context, personal=personal)
-        if not personal and links != programme_workspace_links(
-            scope,
-            current="notices",
-            urlconf=getattr(request, "urlconf", None),
+        if (
+            not personal
+            and links
+            != programme_workspace_links(
+                scope,
+                current="notices",
+                urlconf=getattr(request, "urlconf", None),
+            )
+        ) or (
+            output_scope is not None
+            and output_links
+            and output_links
+            != programme_output_links(
+                output_scope,
+                current="notices",
+                urlconf=getattr(request, "urlconf", None),
+            )
         ):
             shell["workspace_links"] = ()
+            shell["output_links"] = ()
             content = render_to_string(
                 "scheduling/change_notices.html", shell, request=request
             )
@@ -213,6 +236,37 @@ def _html(
             nonce,
         )
     return _secure(HttpResponse(content, status=status), nonce)
+
+
+def _output_scope(
+    scope: object, preview: object, *, personal: bool
+) -> ContinuityScope | None:
+    if not isinstance(scope, SchedulingReadRequest) or not isinstance(
+        preview, ProgrammeChangeNoticePreview
+    ):
+        return None
+    if preview.recipient.purpose in {
+        ChangeRecipientPurpose.ROOM,
+        ChangeRecipientPurpose.DEPARTMENT,
+        ChangeRecipientPurpose.EDITION,
+    }:
+        return ContinuityScope(
+            scope.organization_id,
+            scope.edition_id,
+            "private_operator",
+            scope.actor_id,
+            preview.recipient.purpose.value,
+            preview.recipient.target_id,
+        )
+    if personal:
+        return ContinuityScope(
+            scope.organization_id,
+            scope.edition_id,
+            "exact_person",
+            scope.actor_id,
+            "personal",
+        )
+    return None
 
 
 def _verify_rendered_context(

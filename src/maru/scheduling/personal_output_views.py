@@ -16,6 +16,9 @@ from django.views.decorators.http import require_safe
 
 from .authorization import SchedulingAuthorizationDeniedError
 from .command_support import SchedulingUnavailableError
+from .continuity_protocol import ContinuityScope
+from .output_navigation import ProgrammeOutputLink, programme_output_links
+from .output_observation import verify_timetable_observation
 from .output_rendering import MAX_TIMETABLE_OUTPUT_BYTES, TimetableOutputInvalidError
 from .personal_output_queries import PersonalTimetable, load_personal_timetable
 from .personal_output_rendering import (
@@ -147,7 +150,11 @@ def _context(snapshot: PersonalTimetable, *, print_view: bool) -> dict[str, obje
 
 
 def _render(
-    request: HttpRequest, snapshot: PersonalTimetable, output_format: str
+    request: HttpRequest,
+    snapshot: PersonalTimetable,
+    output_format: str,
+    *,
+    links: tuple[ProgrammeOutputLink, ...] = (),
 ) -> HttpResponse:
     # Validate the entire closed DTO before HTML traversal or any serialization.
     encoded = render_personal_timetable_json(snapshot)
@@ -166,7 +173,11 @@ def _render(
             f'attachment; filename="my-hosting-and-work.{suffix}"'
         )
         return _secure(response)
-    return _html(request, _context(snapshot, print_view=output_format == "print"))
+    return _html(
+        request,
+        _context(snapshot, print_view=output_format == "print")
+        | {"output_links": links},
+    )
 
 
 def _format(request: HttpRequest) -> str:
@@ -205,13 +216,33 @@ def personal_timetable(
     """
     try:
         output_format = _format(request)
-        snapshot = load_personal_timetable(
-            actor_id=UUID(str(request.user.pk)),
-            organization_id=organization_id,
-            edition_id=edition_id,
-            correlation_id=UUID(str(request.correlation_id)),  # type: ignore[attr-defined]
+        ownership = {
+            "actor_id": UUID(str(request.user.pk)),
+            "organization_id": organization_id,
+            "edition_id": edition_id,
+            "correlation_id": UUID(str(request.correlation_id)),  # type: ignore[attr-defined]
+        }
+        snapshot = load_personal_timetable(**ownership)
+        navigation = ContinuityScope(
+            organization_id,
+            edition_id,
+            "exact_person",
+            ownership["actor_id"],
+            "personal",
         )
-        return _render(request, snapshot, output_format)
+        urlconf = getattr(request, "urlconf", None)
+        links = (
+            programme_output_links(navigation, current="timetable", urlconf=urlconf)
+            if output_format == "html"
+            else ()
+        )
+        response = _render(request, snapshot, output_format, links=links)
+        if links and links != programme_output_links(
+            navigation, current="timetable", urlconf=urlconf
+        ):
+            response = _render(request, snapshot, output_format)
+        fresh = load_personal_timetable(**ownership)
+        verify_timetable_observation(snapshot, fresh)
     except (SchedulingAuthorizationDeniedError, ValidationError):
         status, title, message = (
             404,
@@ -239,6 +270,8 @@ def personal_timetable(
             "Check the timetable address",
             "Reload the timetable without extra options, then choose a copy format.",
         )
+    else:
+        return response
     return _html(
         request, {"state_title": title, "state_message": message}, status=status
     )

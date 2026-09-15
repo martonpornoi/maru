@@ -35,7 +35,8 @@ def test_all_formats_obtain_a_fresh_complete_projection_and_disable_cache(
         views, "load_public_programme_timetable", return_value=snapshot
     ) as load:
         result = request_view(f"?format={output_format}")
-    load.assert_called_once()
+    assert load.call_count == 2
+    assert load.call_args_list[0] == load.call_args_list[1]
     assert result.status_code == 200
     assert "no-store" in result["Cache-Control"]
     assert result["X-Content-Type-Options"] == "nosniff"
@@ -187,7 +188,9 @@ def test_each_request_observes_source_withdrawal_without_reusing_a_previous_resu
         pointer_version=2,
     )
     with patch.object(
-        views, "load_public_programme_timetable", side_effect=(snapshot, withdrawn)
+        views,
+        "load_public_programme_timetable",
+        side_effect=(snapshot, snapshot, withdrawn, withdrawn),
     ):
         first = request_view()
         second = request_view()

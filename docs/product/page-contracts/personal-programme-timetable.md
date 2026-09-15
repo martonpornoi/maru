@@ -1,6 +1,7 @@
 # My hosting and work timetable
 
-- Status: Accepted dormant component contract; #99 implementation in progress.
+- Status: Delivered dormant through PR #101; #108 connections retain separate
+  development verification and final acceptance gates.
 - Requirements: SCH-006, SCH-010, SCH-012, HR-014, HR-015, UX-007, UX-008,
   UX-013, UX-029, NFR-001, NFR-002, NFR-013.
 - Decision: [ADR 0097](../../architecture/decisions/0097-release-derived-programme-output-boundaries.md).
@@ -48,6 +49,22 @@ Anonymous requests use the existing sign-in flow; no source query precedes login
 Only GET/HEAD is accepted. Every format is complete, freshly authorized, bounded,
 no-store and safely escaped. Downloads have fixed filenames and explicit MIME
 types. Saved copies are private snapshots, not offline continuity guarantees.
+
+## Guided continuations and final disclosure
+
+Fixed-label continuations connect to the genuine person's now/next and separately
+authorized notices. Each adopted hosting/work owner admits its exact-self fields
+without loading labels or a directory for navigation; Workforce-only calls no
+Programme or hosting authorization. Missing/denied/shadowed destinations are
+omitted using the current route configuration. No notice recipient can replace
+the actual viewer. Output destinations repeat complete owner queries and audits.
+
+After rendering any complete format, repeat the same trusted owner query and
+compare all facts, including current edition labels and retained work. Align only
+the fresh check timestamp, retaining the original response and source age. Late
+field denial, changed evidence, audit failure or clock rollback returns no old
+bytes. If optional links change, remove them and recheck after the final HTML
+render; print and downloads contain no continuation controls.
 
 ## Interaction and acceptance
 

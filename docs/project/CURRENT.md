@@ -11,75 +11,60 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's guided Work-notice connection is delivered through
-[PR #135](https://github.com/martonpornoi/maru/pull/135), protected squash
-`47019037f1b64cf7007bbee1c2061ad6f964f9cd` at 2026-09-15 09:29:19 UTC.
-Its tree equals certified head `ebfc53fc2fda60eb88f1d69185de8c691b469888`;
+#108's operator-purpose and known-person notice selection is delivered through
+[PR #136](https://github.com/martonpornoi/maru/pull/136), protected squash
+`984b4ed1a0f83923f98f5a4e1e37e66d435fa653` at 2026-09-15 11:00:12 UTC.
+Its tree equals certified head `342833311ae1f003abd045d19f14c139243b8316`;
 clean local main and origin/main were synchronized to the protected result.
 
-All eight retained local gates passed in 18m20s: 7,717 units in 45.85s.
-Hosted units passed in 85.06s and all 93 frontend cases passed; quality took
-25m24s, documentation 23m22s and workflow latency 25m55s. Exact-head PR gate and
-CodeQL passed, with no canonical/hosted repair or acceptance exception. Merge API
-errors were state-checked before ordinary SHA-conditional protected REST squash
-succeeded; no bypass or direct-main push. The observed 4m36s quality margin is
-not guaranteed or attributable to a CI change; #113 retains the runtime risk.
+All eight retained local gates passed in 18m54s: 7,774 units in 46.99s and
+93 frontend cases. Hosted units passed in 91.04s, quality in 27m56s,
+documentation in 25m42s and workflow in 28m27s. Exact-head PR gate/CodeQL and
+resolved conversations passed; ordinary match-head squash needed no repair or
+exception. The observed 2m04s quality margin is not guaranteed; #113 retains it.
 
-The notice workspace now connects current labelled occurrences and confirmed hosts
-or operative current/retained Work to existing exact preview/commands. Work choices
-have independent title/coverage/holder fields, complete lineage and person locks,
-actual-sender positive/empty audit and final rendered source/field checks. No
-historical geometry, directory, accepted-work mutation, schema, profile or CI
-change. One maintained native Work scenario remains unexecuted #102 debt and #92
-human tasks are recorded. See the
-[implementation](../checkpoints/2026-09-15-programme-work-notice-selection.md) and
-[protected delivery](../checkpoints/2026-09-15-programme-work-notices-protected-delivery.md).
+Independent source/room/Department labels, original-person signed selection,
+actual-sender positive/empty audit and current recipient eligibility now guide
+the existing native preview and commands. No directory, impersonation, schema,
+profile or CI change. Maintained native cases remain #102 debt and human tasks
+remain #92. See the [implementation](../checkpoints/2026-09-15-programme-operator-notice-selection.md)
+and [protected delivery](../checkpoints/2026-09-15-programme-operator-notices-protected-delivery.md).
+Earlier deliveries remain complete; do not restart or reuse their certification.
 
-Earlier deliveries, including [PR #132 workspace connections](../checkpoints/2026-09-15-programme-connections-protected-delivery.md),
-remain complete. Do not restart them or reuse their evidence for a new head.
+## Active bounded outcome: output and continuity connections (#108)
 
-## Active bounded outcome: guided operator notices (#108)
+Branch: `codex/programme-output-continuations`, from protected PR #136.
+The recorded notice/timetable/run-sheet and #107 continuity connection is implemented
+locally. Complete database-free feedback passed 7,928 units in 50.72s, with three
+existing URLField warnings; strict mypy passed nine changed source modules, and
+changed Ruff/NumPy checks passed. An initial run hit the inaccessible Windows pytest
+temporary directory; a fresh repository-local test directory resolved that fixture
+failure. Clean exact-commit certification and protected hosted delivery are next.
 
-Branch: `codex/programme-operator-notices`, from protected PR #135. The recorded
-room/Department/edition target and known-person connection is implemented locally:
-independent current owner labels, original-person/source signed selection,
-actual-sender positive/empty audit and fresh recipient eligibility. Native preview
-and command references remain unchanged. No impersonation, directory, invitation,
-schema, profile or CI-policy change.
+Connect only the genuine person or exact room/Department/edition operator,
+preserving explicitly selected output layers. Resolve and independently admit
+optional destinations in the current URL configuration; navigation grants no
+authority and reads no directory. Keep sender permission separate from viewer
+output permission. Source changes or late field revocation withhold old bytes.
 
-Iteration: all 7,774 database-free units passed in 47.56s (three existing URLField
-warnings); after the browser-discovered duplicate form-ID correction, 169 focused
-notice cases passed in 2.12s. Changed-source strict mypy, Ruff and NumPy docstrings
-passed. Bounded synthetic browser discovery, three purpose choices, room
-known-person/signed preview, unknown-person empty, read-only and denied states
-were rehearsed at 1,280 CSS pixels. Source/scope labels stay visible through
-preview. No persistent writer was invoked; this is not native or human acceptance.
-The three-purpose native scenario is maintained but uncollected/unexecuted #102
-debt; new human obligations remain #92. Exact-commit certification, hosted gate
-and protected merge are next delivery steps, not yet claimed. See the
-[implementation checkpoint](../checkpoints/2026-09-15-programme-operator-notice-selection.md).
+Fresh owner comparisons must retain the original observation, complete source
+digest and signed expiry. Normalize only the code-owned check timestamp before
+comparison, never ignore the source digest or renew saved content. Render/sign
+once unless changed optional links require a content-preserving HTML rerender;
+never dispatch a command or signer twice. Public output remains public only.
+No profile, signing-key provisioning, schema or CI-policy change was made.
 
-Keep owner label queries separate from multi-person lookup transactions. Resolve a
-known email only for fresh deliberate selection; retain original person identifiers
-through preview and command retry instead of rebasing a mutable address. Existing
-preparation/review/handoff/acknowledgement commands and their authority remain sole
-writers. The accepted page/module contracts document the independent fields.
-The overall #108 connection and #48 remain incomplete.
+At 1,280 CSS pixels, a synthetic real-HTTP browser rehearsal confirmed output round
+trips, retained private layers, print-friendly HTML, removed optional links, source
+movement/denial/unavailability and recovery. It is not native policy, printing, zoom
+or assistive-technology acceptance. See the [bounded implementation evidence](../checkpoints/2026-09-15-programme-output-continuations.md).
 
-Preserve exact release/purpose/source checks, original pending digest/version/key,
-source suppression and final disclosure checks without dispatching commands twice.
-Withdrawn or invalidated releases must not disclose old geometry just to populate
-a selector. Current authorized Programme item/occurrence choices may precede the
-exact owner preview. Keep sender read authority distinct from recipient eligibility.
-No general recipient directory, impersonated personal reader, provider delivery
-claim, attendance or accepted-work mutation. Existing output routes remain dormant.
-
-Use bounded public owner seams for host/work relationships and the separately
-admitted operator purpose. Consider the established exact-known-email selection
-pattern only with current eligibility, positive/empty audit and original-person
-retry binding; do not re-resolve a mutable address on retry. No schema-only
-authority is standing. Keep PostgreSQL uncollected/unexecuted and record native
-debt under #102; human checks remain #92 and integrated proof #109.
+Maintain meaningful database-free regressions and native cases without collecting
+or executing PostgreSQL. Record new native debt in #102 and human work in #92;
+integrated proof remains #109. Extra final owner reads still need native cost
+measurement. The overall #108 connection and #48 remain open. After this protected
+increment, continue authorized reference/file controls and viewers, followed by
+accountable setup, ordinary scoped launchers and the complete isolated fixture.
 
 ## Remaining #48 delivery decomposition
 

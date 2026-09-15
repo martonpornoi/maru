@@ -67,6 +67,30 @@ audit. Private issuance retains the actual actor's required sensitive-read audit
 Closed inputs reject extra subjects, substituted scope, duplicate parameters,
 unknown formats, unrequested private fields and malformed identifiers.
 
+## Guided output continuations
+
+Offer fixed-label links to the same audience's complete timetable/run sheet and
+independently admitted notice workflow. Resolve the exact route and scope in the
+current request configuration before metadata-only admission; absent, shadowed,
+denied or unavailable destinations are omitted. No directory, body or recipient
+output is loaded just to offer navigation. The actual viewer remains the actor.
+Output-to-output links preserve every explicitly selected operator layer; a
+notice is a separate governed task, not an instruction-layer filter.
+
+After rendering HTML/print or signing a pack once, repeat the complete source-owner
+query and profile admission. Compare the complete original source digest as well
+as the on-site projection, aligning only the fresh owner's check timestamp to the
+original observation before canonical encoding. A changed source, field ceiling,
+purpose or backwards clock withholds the original bytes. Do not ignore digest
+differences for facts absent from cards or renew the source time, expiry or content.
+Recheck the already signed package's trusted time validity after the source proof;
+expiry or clock rollback during that proof returns no download, never a re-sign.
+
+Changed optional links are omitted in a content-preserving HTML rerender, followed
+by the final source proof. Print and downloads contain no workflow controls. These
+extra owner reads require native timing/authorization acceptance under #102;
+database-free evidence does not establish their native performance.
+
 ## Offline operator boundary
 
 Provision the offline verifier and independently trusted public key/scope before

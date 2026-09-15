@@ -28,6 +28,7 @@
         <p><a href="?">Reload the complete timetable</a></p>
       </section>
     {% else %}
+      {% if not print_view %}{% include "scheduling/_output_links.html" %}{% endif %}
       <section class="source" aria-labelledby="source-heading">
         <h2 id="source-heading">Release sequence {{ snapshot.pointer_version }} · {{ snapshot.state|capfirst }}</h2>
         <p>Time zone: {{ snapshot.zone_name }}. Checked: {{ checked_label }}.</p>

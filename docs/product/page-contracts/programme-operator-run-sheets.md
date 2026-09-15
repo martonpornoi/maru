@@ -1,6 +1,7 @@
 # Programme operator run sheets
 
-- Status: Dormant implementation under ADR 0099; protected acceptance pending.
+- Status: Delivered dormant under ADR 0099 through PR #103; #108 connections
+  retain separate development verification and final acceptance gates.
 - Audience: Independently authorized room, Department and edition operators.
 - Route family: Dormant `/admin/programme/run-sheets/`; no current profile or
   production URL is activated by #100.
@@ -43,6 +44,20 @@ draft. All transports are private/no-store and escape their own text format.
 HTML gives only the shared navigation script a fresh per-response CSP nonce;
 it does not permit arbitrary inline scripts. Mobile menu dismissal, focus
 containment and focus return must work under the actual response policy.
+
+## Guided continuations and final disclosure
+
+The interactive run sheet offers independently admitted same-purpose now/next
+and notice continuations without listing other rooms or Departments. Same-purpose
+output links preserve all explicitly requested layers; fixed labels and URLs grant
+no authority. Missing, denied or shadowed routes in the current URL configuration
+are omitted. Optional link changes cause a link-free rerender, never a command.
+
+All four formats re-read the complete same-actor owner projection after rendering
+and compare every source fact while aligning only the fresh observation timestamp.
+The original check time and bytes are retained, not renewed. Late purpose/field
+loss, changed instructions, geometry or retained work, audit failure or backwards
+time withholds the response. This adds no public fallback or remote-copy erasure.
 
 ## States and recovery
 

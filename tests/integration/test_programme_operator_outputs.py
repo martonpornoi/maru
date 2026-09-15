@@ -186,6 +186,12 @@ def test_native_continuity_retains_exact_operator_fields_and_required_audits(
     )
     assert result.scope == scope
     assert (
+        continuity.load_continuity_projection(
+            scope, correlation_id=request.correlation_id, expected=result
+        )
+        == result
+    )
+    assert (
         result.entries[0].context[0]
         == operator_world.world.placement.envelope.setup_starts_at
     )
@@ -214,7 +220,9 @@ def test_native_continuity_retains_exact_operator_fields_and_required_audits(
         ),
         pytest.raises(SchedulingUnavailableError),
     ):
-        continuity.load_continuity_projection(scope, correlation_id=uuid4())
+        continuity.load_continuity_projection(
+            scope, correlation_id=uuid4(), expected=result
+        )
     assert (
         AuditEvent.objects.filter(
             principal_id=request.actor_id, outcome="allow"

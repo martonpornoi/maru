@@ -125,7 +125,7 @@ def test_unavailable_then_fresh_source_does_not_retain_error_context(projection)
     with patch.object(
         views,
         "load_continuity_projection",
-        side_effect=[SchedulingUnavailableError(), projection],
+        side_effect=[SchedulingUnavailableError(), projection, projection],
     ):
         failed = request_view(projection, query(projection, "html"))
         recovered = request_view(projection, query(projection, "html"))
@@ -163,8 +163,8 @@ def test_shared_shells_have_one_heading_landmark_and_exact_current_source(
     assert "not a freshness guarantee" in text
     if output_format == "html":
         assert "Download signed snapshot" in text
-        if projection.scope.audience != "public":
-            assert "Reviewed Programme change notices" in text
+        # Stubbed content alone does not admit a separate destination.
+        assert "Programme output tasks" not in text
     else:
         assert "Download signed snapshot" not in text
     if projection.scope.audience == "public":
@@ -280,3 +280,74 @@ def test_stored_markup_stays_escaped_in_real_shared_template(projection, monkeyp
         "untrusted" in script.get_text() for script in soup.find_all("script")
     )
     assert b"&lt;script&gt;" in response.content
+
+
+@pytest.mark.parametrize("output_format", ["html", "print", "pack"])
+@pytest.mark.parametrize(
+    ("failure", "status"),
+    [(SchedulingAuthorizationDeniedError, 404), (SchedulingUnavailableError, 503)],
+)
+def test_final_source_failure_discards_rendered_page_or_once_signed_pack(
+    projection, monkeypatch, output_format, failure, status
+):
+    load = Mock(side_effect=[projection, failure])
+    monkeypatch.setattr(views, "load_continuity_projection", load)
+    monkeypatch.setattr(views, "programme_output_links", Mock(return_value=()))
+    signer = Mock(return_value=b"synthetic signed bytes must be withheld")
+    monkeypatch.setattr(views, "sign_continuity_projection", signer)
+    monkeypatch.setattr(views, "load_continuity_signing_policy", Mock())
+    response = request_view(projection, query(projection, output_format))
+    assert response.status_code == status
+    assert load.call_count == 2
+    assert load.call_args.kwargs["expected"] is projection
+    assert load.call_args.args[0] == projection.scope
+    assert (
+        load.call_args_list[0].kwargs["correlation_id"]
+        == load.call_args.kwargs["correlation_id"]
+    )
+    assert signer.call_count == (1 if output_format == "pack" else 0)
+    assert "Content-Disposition" not in response
+    assert b"synthetic signed bytes" not in response.content
+    assert b"continuity-agenda" not in response.content
+    assert projection.source_sha256.encode() not in response.content
+
+
+@pytest.mark.parametrize("elapsed", [-1, 2])
+def test_pack_expiry_and_clock_rollback_after_source_recheck_withhold_file(
+    projection, monkeypatch, elapsed
+):
+    key = Ed25519PrivateKey.generate()
+    trust = ContinuityTrustKey(
+        projection.scope.organization_id,
+        projection.scope.edition_id,
+        "ephemeral",
+        key.public_key().public_bytes_raw(),
+        projection.observed_at - timedelta(days=1),
+        projection.observed_at + timedelta(days=1),
+    )
+    monkeypatch.setattr(
+        views, "load_continuity_projection", Mock(return_value=projection)
+    )
+    monkeypatch.setattr(
+        views,
+        "load_continuity_signing_policy",
+        lambda: ContinuitySigningPolicy(
+            (ContinuitySigningKey(trust, key),), lifetime_seconds=1
+        ),
+    )
+    signer = Mock(wraps=views.sign_continuity_projection)
+    monkeypatch.setattr(views, "sign_continuity_projection", signer)
+    monkeypatch.setattr(
+        views.timezone,
+        "now",
+        Mock(
+            side_effect=[
+                projection.observed_at,
+                projection.observed_at + timedelta(seconds=elapsed),
+            ]
+        ),
+    )
+    response = request_view(projection, query(projection, "pack"))
+    assert response.status_code == 503
+    assert "Content-Disposition" not in response
+    signer.assert_called_once()
