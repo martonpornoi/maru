@@ -58,7 +58,9 @@ all three review viewers, anonymous denial and unavailable-target history. A sta
 footer was corrected and rechecked in a fresh fixture. Final editor at 1280px had
 one H1/main and no horizontal page overflow. No native or human acceptance implied.
 See the [implementation checkpoint](../checkpoints/2026-09-15-programme-domain-references.md).
-Exact-commit local certification and independent protected delivery remain pending.
+Initial exact-commit certification stopped on legacy person-view implicit imports;
+direct owner imports and explicit public aliases repair that strict-type boundary.
+Complete new exact-commit certification and protected delivery remain pending.
 
 Maintain database-free regressions and native cases without collecting or running
 PostgreSQL. Six maintained native cases and human follow-up are recorded in

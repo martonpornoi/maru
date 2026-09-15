@@ -26,12 +26,8 @@ from .programme_authorization import (
 from .programme_personal_queries import _same_scope
 from .programme_queries import _append_sensitive_read, _audit_inputs
 from .programme_reference_sources import (
-    ProgrammeAnswerReferenceIntent as ProgrammePersonReferenceIntent,
-)
-from .programme_reference_sources import (
-    ProgrammeAnswerReferenceRequest as ProgrammePersonReferenceRequest,
-)
-from .programme_reference_sources import (
+    ProgrammeAnswerReferenceIntent,
+    ProgrammeAnswerReferenceRequest,
     _binding,
     _fresh,
     _intent,
@@ -50,6 +46,9 @@ MAX_PERSON_SELECTION_BYTES = 2048
 _SALT = "applications.programme-person-answer.v1"
 _FIELDS = frozenset({"proposal_summary", "answers"})
 _DEFAULT = DEFAULT_APPLICATIONS_PROGRAMME_AUTHORIZER
+
+ProgrammePersonReferenceIntent = ProgrammeAnswerReferenceIntent
+ProgrammePersonReferenceRequest = ProgrammeAnswerReferenceRequest
 
 
 @dataclass(frozen=True, slots=True)

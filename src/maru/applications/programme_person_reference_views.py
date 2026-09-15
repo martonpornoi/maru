@@ -26,8 +26,9 @@ from .programme_person_reference_forms import (
     ProgrammePersonLookupForm,
     ProgrammePersonReferenceForm,
 )
-from .programme_person_references import _DEFAULT, _answer, _fresh, _source
+from .programme_person_references import _DEFAULT, _answer
 from .programme_proposal_views import _CONFLICTS, _UNAVAILABLE, _html, _root, _Scope
+from .programme_reference_sources import _fresh, _source
 
 _SOURCE = "programme-person-reference"
 _MAX_INPUT_BYTES = 6000

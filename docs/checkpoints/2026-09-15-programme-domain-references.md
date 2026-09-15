@@ -55,6 +55,13 @@ responses. Return destinations independently authorize access.
   double service unwrapping; test seams were corrected, not production authority.
   A strict mypy implicit-reexport error was resolved by direct owner imports.
   Existing lint branch bounds were retained through small private helpers.
+- The first exact-commit certification (`90a30c7`) stopped at whole-source mypy:
+  the legacy person view still depended on implicit helper/type reexports after
+  source extraction. Direct helper imports and explicit public type aliases repair
+  that integration without changing behavior. No success receipt was produced;
+  whole-source mypy then passed all 669 sources, all 188 affected person/domain
+  reference tests passed in 3.01s, and Ruff/format checks passed. The corrected
+  clean commit requires a complete new certification.
 
 ## Bounded browser evidence
 
