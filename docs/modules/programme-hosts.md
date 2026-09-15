@@ -7,6 +7,15 @@ Requirements: PRG-005, PRG-006, PRG-008, IDN-014 and NFR-013. Decision:
 
 ## Human outcome and ownership
 
+`personal_scope_references` supplies opaque own retained host candidate scopes,
+bounded at 256 with an overflow probe and exact profile filtering. Its separate
+current proof requires verified exact self, default own-relationship/invitation
+fields, canonical parents before person, and coherent Programme Item ownership.
+Pending/ended retained purposes establish own history, not confirmation/attendance.
+No invitation text is read. Scheduling owns independent adopted-layer admission,
+minimized labels, complete source comparison and mandatory disclosure audit.
+This reference neither activates profiles nor exposes other people's purposes.
+
 An organizer can deliberately invite an existing active, verified person to
 host or co-host an accepted or organizer-created Programme item. Only that
 person can confirm or decline the invitation, withdraw confirmed hosting, and

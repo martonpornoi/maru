@@ -11,36 +11,39 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's ordinary operator-purpose entry is delivered through
-[PR #143](https://github.com/martonpornoi/maru/pull/143), protected squash
-`fc9a370656d08ce4a6cd2c9ff335dcfe802ca7bf` at 2026-09-15 20:40:31 UTC.
-Its tree equals certified head `a04aa3e8f4c9ad9500f8cfe35d040b4e7abdd042`;
+#108's personal task connections are delivered through
+[PR #144](https://github.com/martonpornoi/maru/pull/144), protected squash
+`8bdae527e349e23ba4808557f8e2dd19064a2244` at 2026-09-15 21:22:59 UTC.
+Its tree equals certified head `849df0de991f28d949c45cf9cdb7042c73125122`;
 clean local main and origin/main were synchronized. All eight local retained
-gates passed in 6m36s, including 8,428 units in 65.74s. Hosted quality took
-11m06s, documentation 9m00s and units 67.08s; exact-head PR gate/CodeQL passed
-and reviews were clear. See the [protected evidence](../checkpoints/2026-09-15-programme-personal-connections.md).
-PostgreSQL stayed skipped. Four maintained native operator cases and representative
-cardinality costs remain #102 debt. No schema, profile or production route was
-activated. Do not restart this, shared workspace entry, domain selection or #113.
+gates passed in 6m26s, including 8,480 units in 66.71s and 93 frontend tests.
+Hosted quality took 10m10s, documentation 8m12s and units 102.40s; exact-head
+PR gate/CodeQL passed with clear reviews. See the
+[protected evidence](../checkpoints/2026-09-15-programme-personal-discovery.md).
+PostgreSQL stayed skipped. Four maintained native navigation cases remain #102
+debt. No schema, profile or production route was activated. Do not restart this,
+operator/shared workspace entry, domain selection or #113.
 
-## Active bounded outcome: personal task connections (#108)
+## Active bounded outcome: own-purpose edition discovery (#108)
 
-Branch: `codex/programme-personal-connections`, from protected PR #143.
-Connect same-person, same-edition proposals, hosting and personal timetable using
-independent public owner metadata admission and current resolved routes. Navigation
-loads no private content or purpose inventory and infers no relationship.
-Optional-link changes preserve original input/command results; personal hosting
-now compares its complete protected source after the final render.
-No schema, current profile, production route or cross-edition discovery change.
+Branch: `codex/programme-personal-discovery`, from protected PR #144.
+Dormant ordinary edition choice derives only from own retained hosting or Shift
+purposes, with independent adopted-owner self fields, bounded opaque candidates,
+canonical all-parents-before-person locks, minimized labels and mandatory audit.
+Complete candidate/policy/proof/label comparisons precede disclosure and repeat
+after final rendering. No timetable contents, general directory, Participation,
+suitability or proposal-derived purpose is loaded. Verified-person return links
+load no inventory. No schema, current profile or production route change.
 
-Database-free feedback passed 8,480 tests in 63.99s with three existing warnings.
-Focused denial/source/recovery coverage, strict types, whole lint/format, NumPy
-and semantic docs and documentation validation pass. Synthetic proposals → hosting
-→ timetable → proposals, proposal-only omission and visible keyboard Access
-disclosure pass; SQL and writes were disabled. Fresh clean exact-commit
-certification and hosted protected acceptance remain pending.
-Four maintained native navigation cases remain uncollected/unexecuted #102 debt.
-Genuine human/AT and integrated evidence remain #92/#109.
+Database-free feedback passed 8,562 tests in 54.49s with three existing warnings;
+focused owner/compositor/view tests passed 115 in 1.65s. Synthetic chooser →
+timetable → chooser, empty purposes, one H1/main, visible keyboard Access and
+1280px no-overflow checks passed with SQL/writes disabled. Whole lint/format,
+changed-source strict types and NumPy docs, semantic docs and documentation
+validation pass. Fresh clean exact-commit certification/hosted acceptance is next.
+Four added native discovery cases and four adjusted navigation cases remain
+uncollected/unexecuted #102 debt. Real combined-owner/race/cardinality, genuine
+human/AT and integrated evidence remain #102/#92/#109.
 
 Applications reciprocal navigation is delivered, including original input/receipt
 preservation and synthetic role/keyboard observations. Four maintained native

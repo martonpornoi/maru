@@ -35,6 +35,9 @@ def boundary(monkeypatch):
     actor, organization, edition = (UUID(int=i) for i in (1, 2, 3))
     scope = {"actor_id": actor, "organization_id": organization, "edition_id": edition}
     person = Mock(return_value=ActiveVerifiedPersonReference(actor))
+    monkeypatch.setattr(
+        navigation, "resolve_active_verified_person_reference", Mock(return_value=None)
+    )
     account = Mock(return_value=ActiveVerifiedAccountReference(actor))
     reference = Mock(
         return_value=PrivatePlanningEditionReference(

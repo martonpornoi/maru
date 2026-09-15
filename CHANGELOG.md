@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Programme's dormant personal journey now offers an own-purpose edition chooser
+  with clear organization/series/edition labels, guarded return navigation and
+  complete revalidation. It never treats proposal authorship or account membership
+  as a hosting/work relationship. Production activation and native acceptance
+  remain deferred.
+
 - Contributor documentation now keeps sidebar navigation within the current
   section, with other sections available through their complete catalogs and
   search. All reference/history pages and stable URLs remain published; this

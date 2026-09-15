@@ -7,6 +7,38 @@ and protected-delivery status; this guide is the owner contract, not a merge cla
 
 ## Ownership and adoption
 
+### Personal edition discovery (#108)
+
+The dormant `/my/programme/timetables/` chooser uses
+`personal_discovery_queries.load_personal_timetable_editions`. Programme and
+Workforce supply independently owned opaque candidate scopes and exact-person
+retained-purpose proofs. No Participation, proposal authorship, Assignment alone,
+unclaimed work, suitability or general directory establishes a timetable purpose.
+Each adopted timetable owner's existing self fields remain independently required.
+
+The complete union is bounded at 256 editions (each owner probes 257). Denied
+scopes expose no name/count; overflow, corrupt attribution, missing audit or
+moving sources release no partial choices. All admitted canonical parents are
+locked in stable order before the person. Subsequent candidate/admission changes
+fail without locking a new scope. Events and Organizations supply only current
+human labels/codes after actual-purpose proof. Complete source comparison runs
+before and after required audit and again after the final HTML render.
+
+`scheduling.personal_editions.read` records only actual admitted owner purposes,
+under that owner's `programme.view_host_self` or `workforce.view_self` capability
+and existing `programme-restricted` / `workforce-personal` retention. Metadata is
+policy version plus `own_retained_timetable_edition`, never labels or source counts.
+This is mandatory sensitive-context disclosure evidence, not visitor analytics;
+it follows the existing owner audit purpose, visibility and retention obligations.
+
+The chooser reads no timetable/invitation/work content. A selected timetable
+repeats its independent complete reads/audits. The fixed-label return link only
+checks the actual verified person and current mounted route, loads no inventory,
+and cannot authorize any particular edition. Same-person navigation has at most
+three links; personal output at most five. Current profiles and production routes
+remain unchanged. See the [page contract](../product/page-contracts/personal-programme-discovery.md),
+#102 native debt and #92 human acceptance before promotion.
+
 ### Governed change communication (#104)
 
 `change_inputs` closes preparation to one exact release, occurrence, observed

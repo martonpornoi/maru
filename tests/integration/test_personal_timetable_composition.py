@@ -10,6 +10,7 @@ from django.test.utils import CaptureQueriesContext
 
 from maru.audit.models import AuditEvent
 from maru.scheduling import continuity_queries as continuity
+from maru.scheduling import personal_discovery_queries as discovery
 from maru.scheduling import personal_output_queries as outputs
 from maru.scheduling import personal_output_rendering as formats
 from maru.scheduling.adoption import SCHEDULING_CONTINUITY_ADAPTER
@@ -203,7 +204,7 @@ def test_native_personal_connections_are_metadata_only_and_keep_workforce_isolat
             current="proposals",
             urlconf="tests.support.programme_personal_urls",
         )
-    assert [link.code for link in links] == ["timetable"]
+    assert [link.code for link in links] == ["editions", "timetable"]
     assert AuditEvent.objects.count() == audits
     assert excluded_counts() == before
     statements = "\n".join(row["sql"] for row in captured)
@@ -228,13 +229,71 @@ def test_native_personal_connections_do_not_admit_inactive_or_foreign_scope(
         scope.person.save(update_fields=("is_active",))
     else:
         organization_id = uuid4()
-    assert (
-        personal_programme_task_links(
-            actor_id=scope.person.id,
-            organization_id=organization_id,
-            edition_id=scope.edition.id,
-            current="proposals",
-            urlconf="tests.support.programme_personal_urls",
-        )
-        == ()
+    links = personal_programme_task_links(
+        actor_id=scope.person.id,
+        organization_id=organization_id,
+        edition_id=scope.edition.id,
+        current="proposals",
+        urlconf="tests.support.programme_personal_urls",
     )
+    # Global own-edition choice is independent of this invalid route scope. It
+    # discovers nothing here and cannot authorize that foreign destination.
+    assert [link.code for link in links] == (
+        [] if invalid == "inactive" else ["editions"]
+    )
+
+
+@pytest.mark.parametrize("with_work", [False, True])
+def test_native_discovery_requires_retained_work_without_excluded_modules(
+    scope, with_work
+):
+    if with_work:
+        accepted_work(scope)
+    before = excluded_counts()
+    audits = AuditEvent.objects.count()
+    with CaptureQueriesContext(connection) as captured:
+        result = discovery.load_personal_timetable_editions(
+            actor_id=scope.person.id, correlation_id=uuid4()
+        )
+    assert len(result.choices) == int(with_work)
+    if with_work:
+        choice = result.choices[0]
+        assert choice.edition.edition_id == scope.edition.id
+        assert choice.edition.name == scope.edition.name
+        assert choice.organizer.organization_id == scope.edition.organization_id
+    assert excluded_counts() == before
+    assert AuditEvent.objects.count() == audits + int(with_work)
+    statements = "\n".join(row["sql"] for row in captured)
+    for excluded in (
+        'FROM "programme_',
+        'FROM "scheduling_',
+        'FROM "participation_',
+        'FROM "registration_',
+        'FROM "applications_',
+    ):
+        assert excluded not in statements
+
+
+def test_native_personal_discovery_inactive_identity_discloses_nothing(scope):
+    accepted_work(scope)
+    scope.person.is_active = False
+    scope.person.save(update_fields=("is_active",))
+    with pytest.raises(SchedulingAuthorizationDeniedError):
+        discovery.load_personal_timetable_editions(
+            actor_id=scope.person.id, correlation_id=uuid4()
+        )
+
+
+def test_native_personal_discovery_required_audit_failure_rolls_back(scope):
+    accepted_work(scope)
+    audits = AuditEvent.objects.count()
+    with (
+        patch.object(
+            discovery, "append_audit", side_effect=RuntimeError("audit unavailable")
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        discovery.load_personal_timetable_editions(
+            actor_id=scope.person.id, correlation_id=uuid4()
+        )
+    assert AuditEvent.objects.count() == audits
