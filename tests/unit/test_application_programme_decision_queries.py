@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, Mock
 from uuid import UUID
 
 import pytest
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from maru.applications import programme_review_queries as queries
 from maru.applications.programme_authorization import (
@@ -33,11 +33,34 @@ def request(**changes):
 @pytest.fixture
 def source(monkeypatch):
     now = datetime(2026, 9, 1, tzinfo=UTC)
+    tenant = {"organization_id": UUID(int=2), "edition_id": UUID(int=3)}
+    definition = SimpleNamespace(
+        **tenant, name="Original call", version=2, activated_at=now
+    )
+    call = SimpleNamespace(**tenant, id=UUID(int=40), definition=definition)
+    proposal = SimpleNamespace(
+        **tenant,
+        id=UUID(int=50),
+        call=call,
+        created_at=now,
+        submitted_revision_id=UUID(int=999),
+    )
+    revision = SimpleNamespace(
+        **tenant,
+        id=UUID(int=60),
+        proposal=proposal,
+        definition_version=2,
+        sequence=3,
+        sealed_at=now,
+    )
     row = SimpleNamespace(
         id=UUID(int=20),
+        revision=revision,
         entry=SimpleNamespace(
             case_id=UUID(int=30),
-            case=SimpleNamespace(version=12),
+            case=SimpleNamespace(
+                version=12, proposal_id=proposal.id, revision_id=revision.id
+            ),
             version=10,
             created_at=now,
         ),
@@ -71,6 +94,10 @@ def source(monkeypatch):
         receipts=receipts,
         locked=locked,
         audit=audit,
+        revision=revision,
+        proposal=proposal,
+        call=call,
+        definition=definition,
     )
 
 
@@ -87,6 +114,19 @@ def test_exact_getter_scopes_before_loading_one_target_and_audits(source):
     assert result.decision_version == 10
     assert result.message == "Exact message"
     assert result.own_acknowledged
+    assert result.source == queries.ProgrammeDecisionSource(
+        UUID(int=40),
+        "Original call",
+        2,
+        UUID(int=50),
+        source.proposal.created_at,
+        UUID(int=60),
+        3,
+        source.revision.sealed_at,
+    )
+    source.decisions.select_related.assert_called_once_with(
+        "entry__case", "revision__proposal__call__definition"
+    )
     source.recipients.filter.assert_called_once_with(
         organization_id=UUID(int=2), edition_id=UUID(int=3), account_id=UUID(int=1)
     )
@@ -121,6 +161,8 @@ def test_exact_getter_retains_independent_field_ceiling(source, fields):
         )
     else:
         assert result.message is result.outcome is None
+        assert result.source is None
+        source.decisions.select_related.assert_called_once_with("entry__case")
         assert result.own_acknowledged
 
 
@@ -193,3 +235,108 @@ def test_history_bounds_stay_strict(source, limit):
             request=request(), limit=limit
         )
     source.recipients.filter.assert_not_called()
+
+
+@pytest.mark.parametrize("relation", ["revision", "proposal", "call", "definition"])
+@pytest.mark.parametrize("field", ["organization_id", "edition_id"])
+def test_foreign_source_context_does_not_leak_labels_or_erase_message(
+    source, relation, field
+):
+    setattr(getattr(source, relation), field, UUID(int=999))
+    result = read()
+    assert result.source is None
+    assert result.message == "Exact message"
+    assert source.audit.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("relation", "field", "value"),
+    [
+        ("definition", "version", 99),
+        ("definition", "activated_at", None),
+        ("definition", "name", "  "),
+        ("case", "proposal_id", UUID(int=999)),
+        ("case", "revision_id", UUID(int=999)),
+    ],
+)
+def test_incoherent_context_is_explicitly_absent(source, relation, field, value):
+    target = source.row.entry.case if relation == "case" else getattr(source, relation)
+    setattr(target, field, value)
+    result = read()
+    assert result.source is None
+    assert result.message == "Exact message"
+
+
+def test_unavailable_retained_relation_keeps_message_without_fabricated_context(source):
+    class MissingRevision:
+        @property
+        def proposal(self):
+            raise ObjectDoesNotExist
+
+    source.row.revision = MissingRevision()
+    assert read().source is None
+
+
+def test_ack_only_never_touches_retained_source_relations(source):
+    del source.row.revision
+    result = read(request=request(requested_fields=frozenset({"own_acknowledgement"})))
+    assert result.source is None
+    assert result.own_acknowledged
+
+
+def test_multiple_proposals_and_successive_seals_remain_distinct(source):
+    later_revision = SimpleNamespace(
+        **(
+            vars(source.revision)
+            | {
+                "id": UUID(int=61),
+                "sequence": 4,
+            }
+        )
+    )
+    other_proposal = SimpleNamespace(**(vars(source.proposal) | {"id": UUID(int=51)}))
+    other_revision = SimpleNamespace(
+        **(
+            vars(source.revision)
+            | {
+                "id": UUID(int=62),
+                "proposal": other_proposal,
+            }
+        )
+    )
+    rows = [source.row]
+    for index, revision in enumerate((later_revision, other_revision), start=21):
+        entry = SimpleNamespace(
+            **(
+                vars(source.row.entry)
+                | {
+                    "case": SimpleNamespace(
+                        version=12,
+                        proposal_id=revision.proposal.id,
+                        revision_id=revision.id,
+                    ),
+                }
+            )
+        )
+        rows.append(
+            SimpleNamespace(
+                **(
+                    vars(source.row)
+                    | {
+                        "id": UUID(int=index),
+                        "entry": entry,
+                        "revision": revision,
+                    }
+                )
+            )
+        )
+    source.query.__getitem__.side_effect = lambda bounds: rows[bounds]
+    result = queries.list_self_programme_decisions.__wrapped__(request=request())
+    assert [
+        (row.source.proposal_id, row.source.revision_sequence) for row in result.items
+    ] == [
+        (UUID(int=50), 3),
+        (UUID(int=50), 4),
+        (UUID(int=51), 3),
+    ]
+    source.decisions.select_related.assert_called_once()

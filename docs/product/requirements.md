@@ -1275,6 +1275,10 @@ architecture documents, implementation issues, tests, and release notes.
   to the exact recipient, means receipt rather than consent, and remains
   available with retained message history after withdrawal or owner retirement.
   Review data and other recipients' responses must not leak through that history.
+  Addressed history must identify its original call, proposal and exact sealed
+  revision through minimized retained context, without selecting private answers
+  as labels. Current proposal navigation requires separate destination admission;
+  unavailable context or lost proposal access must not erase a retained message.
   An accept decision does not itself create a Programme item or host: the later
   typed adapter must independently verify the still-effective exact decision.
   Guided decision composition must preview the exact pinned template and

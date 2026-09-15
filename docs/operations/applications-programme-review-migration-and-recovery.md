@@ -1,5 +1,21 @@
 # Programme review migration and recovery
 
+## Retained personal source context
+
+An addressed decision's context follows its immutable reviewed seal and original
+activated call definition, not the latest proposal submission. A missing context
+label is not evidence that the message or receipt was lost. Investigate the exact
+source references under independently authorized support; do not substitute a
+newer seal, rewrite a decision or infer effective acceptance. Call names are
+immutable after activation, including retirement. No migration is required.
+
+Current proposal navigation is optional and separately admitted. Former
+contributors may retain their message and original context while losing access
+to the proposal overview. Do not restore membership or broaden fields just to
+make the link appear. Required message audits remain fail-closed. The existing
+receipt version/retry semantics are unchanged; PostgreSQL evidence remains #102
+debt and integrated/human acceptance remains #109/#92.
+
 ## Original decision preview and confirmation
 
 Keep the exact original case version, retry UUID, outcome, recipient text,

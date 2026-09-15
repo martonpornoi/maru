@@ -11,6 +11,22 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+#108's exact-person host invitation recovery is delivered through
+[PR #128](https://github.com/martonpornoi/maru/pull/128), protected squash
+`d29628e6ee81c492f15085b6910f052636b7944c` at 2026-09-14 23:56:11 UTC.
+Its tree equals certified head `c6fa583a6133e550876e168da2603d34890fbfcc`;
+clean main and origin/main match. All eight retained local gates passed in
+17m43s (7,284 units in 44.23s and 85 frontend tests). Hosted units passed in
+78.83s, quality took 29m16s, documentation 27m18s and workflow 29m43s.
+Exact-head PR gate and CodeQL passed. The original hosted candidate was
+deliberately cancelled for an empty-lookup audit repair; the repaired head
+received fresh local and hosted acceptance. The observed 44-second quality
+margin is not guaranteed; #113 retains the risk. Native #102 and human #92 debt
+remain explicit. No schema, canonical writer, profile, production route or CI
+policy changed. See the [protected host recovery checkpoint](../checkpoints/2026-09-15-programme-host-recovery-protected-delivery.md).
+
+### Preceding conversion delivery
+
 #108's guided exact accepted-item conversion is delivered through
 [PR #127](https://github.com/martonpornoi/maru/pull/127), protected squash
 `33d8391315dbbf8cdacd1daac557c55b9f901c33` at 2026-09-14 21:59:11 UTC.
@@ -273,34 +289,28 @@ unchecked under #92; see the [surface checkpoint](../checkpoints/2026-09-13-prog
 
 ## Active bounded outcome: guided departmental journey (#108)
 
-Branch: `codex/programme-host-invitation-recovery`, from protected PR #127.
-Candidate implemented: exact-person invitation preview and explicit confirmation
-preserve the original signed selection across email changes. Canonical recovery
-precedes fresh private/roster reads; optional navigation has independent current
-read admission. Missing proof requires safe history inspection/new selection,
-not silent retargeting. Reinvitation, canonical writers, schema, profiles and
-production routes are unchanged.
-
-Preflight: 7,279 units passed in 56.50s with three existing URLField warnings.
-After two final render-revocation cases, 135 focused host tests passed in 1.81s.
-Focused typing, Ruff, NumPy and semantic docstrings passed. Actual-form synthetic
-browser rehearsal covered blank input, exact preview, focused stale recovery,
-minimal replay without roster authority and denial at 1280 CSS pixels, with one
-H1/main and no overflow. The existing native host scenario is maintained but
-unexecuted #102 debt; genuine human acceptance remains #92. Clean exact-commit
-certification for the original `145d46d` candidate passed all eight gates in
-18m31s (7,281 units in 44.12s, 85 frontend tests). PR #128 was opened; hosted
-units and CodeQL passed, but its quality run was deliberately cancelled during
-review repair, not accepted or merged. Final review found empty address matches
-needed the same required audit as positive selection. The repair returns only
-audited empty results, adds negative-audit regression cases, and requires a new
-clean exact-commit certification and fresh hosted acceptance. Original evidence
-is preserved separately and does not certify the repair. The repair preflight
-passed 7,284 units in 44.35s and 138 focused cases in 1.86s; static and document
-checks passed. See the [empty-selection audit repair](../checkpoints/2026-09-15-programme-host-empty-selection-audit.md) and the
-[host recovery checkpoint](../checkpoints/2026-09-15-programme-host-invitation-recovery.md).
-Next: protected delivery, then remaining #108 structured selectors/viewers,
-workflow connections and accountable setup. #102/#97/#109/#92 remain final gates.
+Branch: `codex/programme-decision-source-context`, from protected PR #128.
+Implemented recorded #108 increment: readable retained decision-to-proposal/call context
+and independently admitted source navigation. Follow the immutable decision's
+exact seal, not today's submitted revision. Addressed-message access survives
+loss of current proposal membership; a source link must authorize separately.
+No arbitrary answer, contributor profile or staff review becomes a label.
+Independent current source-link admission includes the destination's complete
+relationship-specific field ceiling. Link loss rerenders message-only and final
+message admission remains last. The existing receipt writer is unchanged.
+Preflight passed 7,326 database-free units in 44.71s (three existing URLField
+warnings); focused typing, Ruff and NumPy/semantic docstrings passed. The first
+full unit run caught the new fragment's shell-containment assumption; its explicit
+two-parent inclusion contract was corrected before the passing run. Synthetic
+browser evidence covered history labels, exact detail, escaped text, progressive
+references, former-contributor link absence, missing context and focused stale
+receipt recovery at 1280 CSS pixels with one H1/main and no overflow. Native
+collaborator-removal assertions are maintained but unexecuted #102 debt; full
+human checks remain #92. Exact clean-commit certification and protected delivery
+are next. See the [source-context checkpoint](../checkpoints/2026-09-15-programme-decision-source-context.md).
+Then continue the existing structured selectors/viewers, workflow connections
+and accountable setup. #102/#97/#109/#92 remain final gates; no current profile
+or production route is activated by these dormant surface increments.
 
 ### Preceding conversion candidate evidence
 

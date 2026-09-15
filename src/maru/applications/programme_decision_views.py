@@ -23,7 +23,11 @@ from maru.core.forms import StrictBase10IntegerField
 from . import programme_review_queries as queries
 from .forms import RetryForm
 from .models import ProgrammeReviewAction
-from .programme_authorization import ApplicationsProgrammeAuthorizationDeniedError
+from .programme_authorization import (
+    APPLICATIONS_VIEW_PROGRAMME_PROPOSAL_SELF,
+    ApplicationsProgrammeAuthorizationDeniedError,
+    authorize_programme_proposal_scope,
+)
 from .programme_call_forms import _apply_errors
 from .programme_call_views import _secure
 from .programme_commands import ApplicationsProgrammeIdempotencyConflictError
@@ -44,6 +48,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 _FIELDS = frozenset({"decision_message", "own_acknowledgement"})
+_PROPOSAL_FIELDS = frozenset({"proposal_summary", "selection", "own_invitation"})
 _SOURCE = "programme-decision-receipts"
 _MAX_INPUT_LENGTH = 200
 _UUID_LENGTH = 36
@@ -139,6 +144,7 @@ def _html(
     context: dict[str, Any],
     verify: Callable[[], None],
     status: int = 200,
+    continuation: Callable[[], str | None] | None = None,
 ) -> HttpResponse:
     verify()
     nonce = token_urlsafe(32)
@@ -153,10 +159,20 @@ def _html(
         edition_id=scope.edition_id,
     )
     shell.update(context)
+    shell["source_url"] = continuation() if continuation is not None else None
     content = render_to_string("applications/programme_decisions.html", shell, request)
+    if (
+        shell["source_url"]
+        and continuation is not None
+        and continuation() != shell["source_url"]
+    ):
+        shell["source_url"] = None
+        content = render_to_string(
+            "applications/programme_decisions.html", shell, request
+        )
+    verify()
     if len(content.encode("utf-8")) > 8 * 1024 * 1024:
         raise ProgrammeReviewUnavailableError
-    verify()
     return _secure(HttpResponse(content, status=status), nonce)
 
 
@@ -184,6 +200,46 @@ def _label(outcome: str | None) -> str:
     if outcome not in _OUTCOMES:
         raise ProgrammeReviewUnavailableError
     return _OUTCOMES[outcome]
+
+
+def _source_url(
+    scope: queries.ProgrammeReviewReadRequest,
+    source: queries.ProgrammeDecisionSource | None,
+) -> str | None:
+    if source is None:
+        return None
+    values: dict[str, Any] = {
+        "actor_id": scope.actor_id,
+        "organization_id": scope.organization_id,
+        "edition_id": scope.edition_id,
+        "proposal_id": source.proposal_id,
+        "capability_code": APPLICATIONS_VIEW_PROGRAMME_PROPOSAL_SELF,
+    }
+    try:
+        admitted = authorize_programme_proposal_scope(
+            **values, requested_fields=_PROPOSAL_FIELDS
+        )
+        fields = (
+            _PROPOSAL_FIELDS
+            if admitted.relationship == "invited"
+            else _PROPOSAL_FIELDS | {"contributor_profiles"}
+        )
+        current = authorize_programme_proposal_scope(**values, requested_fields=fields)
+        if (
+            current.relationship != admitted.relationship
+            or current.relationship not in {"lead", "collaborator", "invited"}
+            or any(
+                row.proposal_id != source.proposal_id or row.call_id != source.call_id
+                for row in (admitted, current)
+            )
+        ):
+            return None
+    except (ApplicationsProgrammeAuthorizationDeniedError, *_UNAVAILABLE):
+        return None
+    return (
+        f"/my/applications/programme/{scope.organization_id}/{scope.edition_id}/"
+        f"{source.proposal_id}/"
+    )
 
 
 def _detail(
@@ -258,6 +314,7 @@ def _detail(
         },
         verify,
         status,
+        continuation=lambda: _source_url(scope, message.source),
     )
 
 
