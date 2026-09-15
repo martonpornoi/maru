@@ -1,6 +1,6 @@
 # Programme change notices
 
-- Status: Accepted dormant component contract; #104 implementation in progress.
+- Status: #104 delivered dormant; #108 guided connections in progress.
 - Requirements: OPS-009, SCH-010/012, AUD-001, PRI-001/008, UX-007/008/029,
   NFR-001/002/013; ADR 0102.
 - Organizer route: `/admin/programme/changes/<organization_id>/<edition_id>/`.
@@ -35,6 +35,22 @@ or identifiers; the inventory explicitly is not a delivery-completeness report.
 An oversized inventory fails closed and asks for an exact release filter. No
 partial first-page list is advertised as complete, and no recipient directory is
 created. Each detail and action authorizes again.
+
+The first guided connection selects a current, independently authorized Programme
+occurrence and then one of that item's current confirmed hosts. Scheduling admits
+only occurrence identities and release-pointer metadata; Programme separately
+admits current working labels and the exact item's host roster. No historical
+geometry is loaded to populate these choices. The source is the current publication
+or latest withdrawal, never an arbitrary old release. Absence, overflow or moved
+sources produce an explicit empty/unavailable state, not a partial selector.
+The normal preview then proves affected membership and repeats recipient authority.
+Original hidden release and relationship references are not replaced on submission.
+Work and operator selection remain subsequent increments of the same #108 item;
+the specialist exact-reference controls remain available during this transition.
+
+Recheck rendered source facts and current permissions before releasing private
+bytes. This is a read-only verification, never a second command dispatch or a
+replacement of submitted versions, digests, reasons or retry keys.
 
 Preparation accepts exact release/occurrence and host/work relationship or
 operator scope references, with an explicit operator account only for operator

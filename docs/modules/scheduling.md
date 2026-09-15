@@ -91,6 +91,24 @@ organizer rationale or a provider delivery claim. Hidden versions/digests are
 rechecked by commands, not refreshed behind a submitted action. Ordinary control
 authority is computed independently; read access never grants mutation.
 
+`change_notice_selection.load_notice_host_selection` supplies the first guided
+connection: current labelled occurrences and a deliberately selected item's
+confirmed current hosts. Its Scheduling read requests only `occurrences` and
+`release_manifest`, authenticates the current pointer and latest withdrawal, and
+checks complete current-revision membership. Programme independently admits and
+audits working labels and the exact host roster; item versions must agree.
+The selector reads no historical geometry, public copy, availability, invitations
+or contact directory. Current working labels and ordinal occurrence distinctions
+are not released-content claims. Normal preview repeats exact affected membership
+and recipient checks; original hidden references survive submission unchanged.
+
+The notice transport compares freshly read selection, preview, detail or inventory
+facts after actual rendering and repeats action admission before releasing bytes.
+It never dispatches a command twice. Moved optional workflow links are omitted
+using the same original forms; failed source checks suppress the entire private
+result. Work/operator selectors remain unfinished #108 increments, as do integrated
+human and native database acceptance. No schema, profile or runtime role changes.
+
 `load_programme_change_notice_inventory` bounds exact-edition candidates at 256,
 optionally filtered to a release. Personal candidates are recipient-filtered and
 approved in SQL before detail reads. Each detail recomposes its own current
@@ -104,7 +122,7 @@ is needed for these read/transport adapters.
 Maintained real operator cases include forged review/acknowledgement evidence,
 pre-approval handoff rejection and separate-connection competing reviews, with
 15-second lock and 30-second statement timeouts. PostgreSQL workflow cases remain
-unexecuted #102 debt. Protected delivery remains pending. #108 owns connecting
+unexecuted #102 debt. #104's component is delivered; #108 owns connecting
 the labelled exact-reference controls to ordinary authorized task selections;
 #92 retains genuine human/screen-reader acceptance. Neither these components nor
 a green development PR activates Programme Operations.
@@ -467,11 +485,14 @@ Events-owned parent relation before dispatch and after rendering. It introduces
 no outer cross-owner transaction, mutation, schema or profile grant.
 `workspace_navigation.programme_workspace_links` is the public metadata-only
 navigation seam consumed by Programme, Scheduling and organizer Workforce pages.
-The closed external source `shifts` may receive all three independent task links;
+The closed external source `shifts` may receive all four independent task links;
 ordinary Programme sources still omit their own task. Fixed task labels require
 independent owner admission and exact reverse/resolve identity; optional denied,
 unmounted or moved links are omitted without obscuring an otherwise authorized
 result. See the [canonical connection contract](../product/page-contracts/programme-timetable-planning.md#canonical-connections-under-108).
+The notice task uses its own `view_change_notices`/`change_notices` admission and
+exact organization/edition route; it does not require a series lookup or grant
+host selection, operator-recipient discovery, preparation or review authority.
 
 The canonical wrapper also adds optional **Open this bound Shift** links to
 current staffing cards through Workforce's public navigation seam. Decorated

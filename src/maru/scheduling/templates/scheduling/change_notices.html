@@ -11,6 +11,7 @@
   <header><h1>{{ title }}</h1>
     <p>{% if personal %}Review your own approved Programme change and acknowledge that exact package.{% else %}Prepare an exact change, obtain independent review, and record deliberate manual handoff.{% endif %}</p>
   </header>
+  {% if workspace_links %}<nav aria-label="Programme workflow"><ul>{% for link in workspace_links %}<li><a href="{{ link.url }}">{{ link.label }}</a></li>{% endfor %}</ul><p>Each task checks its own current access. Returning does not change a saved notice.</p></nav>{% endif %}
   {% if message %}<div class="baseline-notice" role="alert" tabindex="-1" autofocus id="notice-message"><p>{{ message }}</p></div>{% endif %}
   {% if not unavailable %}
   <details class="maru-access-summary"><summary><strong>Access</strong> · {% if personal %}Your own Programme notices{% else %}Exact-edition Programme change notices{% endif %}</summary>
@@ -20,6 +21,19 @@
   <p class="notice-warning">Manual communication only: no delivery provider is configured here. Preparation, approval, manual handoff and acknowledgement are different facts. None changes accepted work or attendance.</p>
   {% endif %}
   <p><a href="{{ request.path }}">Refresh notice inventory</a></p>
+  {% if not personal and not unavailable %}<p><a href="?task=hosts">Choose a Programme occurrence and confirmed host</a></p>{% endif %}
+  {% if host_source_form %}
+  <section class="baseline-panel" aria-labelledby="notice-host-heading">
+    <h2 id="notice-host-heading">Notify a confirmed host</h2>
+    <p>Choose a current Programme occurrence, then its confirmed host. These are current private working labels, not old released content. Preview verifies whether the latest publication or withdrawal affects this exact relationship.</p>
+    {% if not host_selection.release_id %}<p>No publication or withdrawal is available yet. Release a timetable before preparing a change notice.</p>{% endif %}
+    {% if not host_selection.occurrences %}<p>No current Programme occurrences are available.</p>{% else %}
+    <form method="get" action="{{ request.path }}">{{ host_source_form.as_div }}<button type="submit">Show confirmed hosts</button></form>
+    {% endif %}
+    {% if selected_occurrence and not host_selection.hosts %}<p>No currently confirmed, available host is eligible for this occurrence. This is not evidence that anyone was notified.</p>{% endif %}
+    {% if host_preview_form %}<form method="post" action="{{ request.path }}">{% csrf_token %}{{ host_preview_form.as_div }}<button type="submit">Preview this host's change</button></form>{% endif %}
+  </section>
+  {% endif %}
   {% if invalid_form %}<form method="post" action="{{ request.path }}" class="baseline-panel">{% csrf_token %}{{ invalid_form.as_div }}<button type="submit">Retry this action</button></form>{% endif %}
   {% if selection_form %}
   <form method="get" class="baseline-panel" aria-labelledby="notice-filter-heading">

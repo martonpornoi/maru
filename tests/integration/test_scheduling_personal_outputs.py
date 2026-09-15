@@ -24,6 +24,7 @@ from maru.scheduling import personal_release_impact as impact
 from maru.scheduling import personal_release_references as outputs
 from maru.scheduling import planning_queries
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
+from maru.scheduling.change_notice_selection import load_notice_host_selection
 from maru.scheduling.command_support import SchedulingUnavailableError
 from maru.venues.personal_programme_queries import load_personal_host_room_wayfinding
 from maru.venues.scheduling_queries import VenueSchedulingSourceUnavailableError
@@ -96,6 +97,58 @@ def arguments(scope):
         "edition_id": scope.request.edition_id,
         "correlation_id": uuid4(),
     }
+
+
+def _assert_guided_host_choices(scope, sender, presence, monkeypatch):
+    original = policy.profile_allows_capability
+    capabilities = {"programme.view_private", "scheduling.view_planning"}
+    monkeypatch.setattr(
+        policy,
+        "profile_allows_capability",
+        lambda code, version, capability: (
+            capability in capabilities or original(code, version, capability)
+        ),
+    )
+    for capability in capabilities:
+        CapabilityGrantFactory(
+            organization_id=scope.request.organization_id,
+            edition_id=scope.request.edition_id,
+            principal=sender,
+            capability_code=capability,
+        )
+    request = planning_queries.SchedulingReadRequest(
+        sender.id,
+        scope.request.organization_id,
+        scope.request.edition_id,
+        uuid4(),
+    )
+    with CaptureQueriesContext(connection) as captured:
+        choices = load_notice_host_selection(request)
+        chosen = next(
+            row
+            for row in choices.occurrences
+            if row.occurrence.item_id == scope.selection.item_id
+        )
+        recipients = load_notice_host_selection(
+            request, occurrence_id=chosen.occurrence.id
+        )
+    assert choices.release_id is not None
+    assert choices.hosts == ()
+    assert presence.host_id in {row.host_id for row in recipients.hosts}
+    statements = "\n".join(row["sql"] for row in captured)
+    for excluded in (
+        'FROM "scheduling_schedulingplacementrevision"',
+        'FROM "programme_programmehostavailabilitywindow"',
+        'FROM "participation_',
+        'FROM "registration_',
+    ):
+        assert excluded not in statements
+    assert AuditEvent.objects.filter(
+        principal_id=sender.id,
+        operation="scheduling.query.notice_source_choices",
+        outcome="allow",
+        event_edition_id=request.edition_id,
+    ).exists()
 
 
 def test_personal_presence_is_exact_released_work_not_full_envelope_or_public_copy(
@@ -173,6 +226,8 @@ def test_personal_presence_is_exact_released_work_not_full_envelope_or_public_co
     )
     assert recipient.account_id == inputs["actor_id"] != sender.id
     assert recipient.relationship.state == "confirmed"
+    # Maintained #108/#102 debt only: not collected or run while PostgreSQL is deferred.
+    _assert_guided_host_choices(personal_scope, sender, presence, monkeypatch)
     assert AuditEvent.objects.filter(
         operation="programme.query.host_roster",
         principal_id=sender.id,
