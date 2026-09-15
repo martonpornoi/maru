@@ -16,6 +16,7 @@
     <p>Organization {{ organization_id }} · Edition {{ edition_id }}</p>
   </details>
   <p class="release-boundary">Private planning, complete release checks, independent approval and publication are separate steps. No release action invites a host, confirms a volunteer or sends change notices.</p>
+  {% if workspace_links %}<nav aria-label="Programme workflow"><ul>{% for link in workspace_links %}<li><a href="{{ link.url }}">{{ link.label }}</a></li>{% endfor %}</ul><p>These are separate tasks in the same edition. Returning to preparation does not change this release or a pending command.</p></nav>{% endif %}
   {% if task %}<p><a href="{{ root_url }}">Back to release tasks</a> · <a href="{{ root_url }}{{ task }}/">Start a fresh inspection of this task</a></p>{% endif %}
   {% if message %}<div role="alert" tabindex="-1" class="baseline-notice"><p>{{ message }}</p></div>{% endif %}
   {% if links %}<nav aria-label="Programme release tasks"><ul class="release-cards">{% for code, label in links %}<li><a href="{{ root_url }}{{ code }}/">{{ label }}</a></li>{% endfor %}</ul></nav>{% endif %}

@@ -3,6 +3,7 @@
 {% block baseline_page_title %}Timetable planning · Maru{% endblock %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'scheduling/planning.css' %}">{% endblock %}
 {% block extrahead %}{{ block.super }}{% if selection %}<script src="{% static 'scheduling/planning.js' %}" defer></script>{% endif %}{% endblock %}
+{% block baseline_breadcrumbs %}Programme / Timetable planning{% endblock %}
 
 {% block baseline_content %}
 {% timezone board.zone_name %}
@@ -21,7 +22,9 @@
   <summary><strong>Access</strong> · {{ access_label|default:'Authorized planning read' }}</summary>
   {% if available_actions %}<p>Currently available: {% for label in available_actions %}{{ label }}{% if not forloop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
   <p>Programme titles and room labels require separate owner permission. Host information, delivery instructions, public copy and readiness appear only through their explicitly selected authorized layer. A visible draft does not grant permission to edit or reserve it.</p>
+  {% if organization_id %}<p>Organization {{ organization_id }} · Series {{ series_id }} · Edition {{ edition_id }}. These exact route references do not grant access or change your selected shell context.</p>{% endif %}
 </details>
+{% if workspace_links %}<nav aria-label="Programme workflow"><ul>{% for link in workspace_links %}<li><a href="{{ link.url }}">{{ link.label }}</a></li>{% endfor %}</ul><p>Prepare item information and review a release as separate decisions in this edition. Save or deliberately discard pending input before leaving.</p></nav>{% endif %}
 
 {% if action_error %}<div class="baseline-errors" role="alert" tabindex="-1" data-maru-focus-on-load><h2>Action needs attention</h2><p>{{ action_error }}</p></div>{% endif %}
 {% if status_message %}<p class="baseline-notice" role="status">{{ status_message }}</p>{% endif %}

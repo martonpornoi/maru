@@ -87,6 +87,7 @@ from maru.scheduling.planning_record_actions import submit_planning_record
 from maru.scheduling.planning_record_forms import PlanningRecordForm
 from maru.scheduling.planning_selection import PlanningSelection
 from maru.scheduling.planning_views import scheduling_planning_view
+from maru.scheduling.planning_workspace_views import programme_timetable_workspace
 from maru.venues.models import VenueBooking
 from maru.venues.timetable_queries import list_venue_timetable_spaces
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
@@ -1557,6 +1558,26 @@ def test_native_http_get_audits_owner_reads_without_choosing_a_draft(native_http
         "venues.query.timetable_spaces",
     ):
         assert AuditEvent.objects.filter(operation=operation, outcome="allow").exists()
+
+    # The new canonical wrapper must not turn isolated component admission into
+    # current-profile authority. Kept as unexecuted native debt under ADR 0100.
+    world = native_http_world
+    edition = EventEdition.objects.get(id=world.request.edition_id)
+    request = RequestFactory().get("/synthetic-canonical-timetable/")
+    request.user = Account.objects.get(id=world.request.actor_id)
+    before = AuditEvent.objects.filter(operation="scheduling.query.planning").count()
+    denied = programme_timetable_workspace(
+        request,
+        organization_id=world.request.organization_id,
+        series_id=edition.series_id,
+        edition_id=world.request.edition_id,
+    )
+    assert denied.status_code == 403
+    assert b"No private source content is shown" in denied.content
+    assert (
+        AuditEvent.objects.filter(operation="scheduling.query.planning").count()
+        == before
+    )
 
 
 def test_native_http_history_comparison_copy_and_restore_keep_exact_sources(

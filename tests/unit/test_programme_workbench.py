@@ -55,6 +55,7 @@ from maru.programme.workbench_sources import (
     ProgrammeEvidenceSourceChoice,
     ProgrammeWithdrawalChoice,
 )
+from maru.scheduling.workspace_navigation import ProgrammeWorkspaceLink
 
 
 @pytest.fixture(autouse=True)
@@ -229,6 +230,20 @@ def test_inventory_is_labelled_shared_shell_and_private_layer_minimized(page):
     assert "no-store" in response["Cache-Control"]
     assert "frame-ancestors 'none'" in response["Content-Security-Policy"]
     assert response["X-Content-Type-Options"] == "nosniff"
+
+
+@pytest.mark.parametrize("moved", [False, True])
+def test_optional_workflow_links_do_not_replace_item_workspace(
+    page, monkeypatch, moved
+):
+    links = (ProgrammeWorkspaceLink("timetable", "Timetable planning", "/planner/"),)
+    reader = Mock(side_effect=[links, () if moved else links])
+    monkeypatch.setattr(views, "programme_workspace_links", reader)
+    response = call(page)
+    assert response.status_code == 200
+    assert b"Opening ceremony" in response.content
+    assert (b"/planner/" in response.content) is not moved
+    assert reader.call_count == 2
 
 
 def test_empty_inventory_is_not_readiness_or_acceptance(page):

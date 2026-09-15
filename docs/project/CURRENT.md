@@ -11,78 +11,69 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's readable typed review answers are delivered through
-[PR #130](https://github.com/martonpornoi/maru/pull/130), protected squash
-`d91b0deab81be43aba22e5fed4283cfa5f29aebc` at 2026-09-15 02:19:59 UTC.
-Its tree equals certified head `917b77dc5415d266a7b615033106fcccebbb2e54`;
+#108's guided release workspace is delivered through
+[PR #131](https://github.com/martonpornoi/maru/pull/131), protected squash
+`6c1d437e7e9935f5716397aede13b59a2609f4c2` at 2026-09-15 04:11:07 UTC.
+Its tree equals certified head `bd247c8dc99978184e0c5ba16e87da24001812e1`;
 clean local main and origin/main were synchronized to the protected result.
 
-All eight retained local gates passed in 17m58s: 7,454 units in 44.81s and
-85 frontend tests. Hosted units passed in 69.32s, quality took 27m31s,
-documentation 25m22s and workflow latency 27m57s. Exact-head PR gate and CodeQL
-passed without canonical or hosted repair/rerun. The observed 2m29s quality
-margin is not guaranteed; #113 retains the risk without displacing unblocked #48.
+All eight retained local gates passed in 18m02s: 7,544 units in 44.69s and
+90 frontend tests. Hosted units passed in 85.02s, quality took 28m32s,
+documentation 26m27s and workflow latency 29m36s. Exact-head PR gate and CodeQL
+passed; there was no hosted repair/rerun. The first local candidate failed
+formatting only; the corrected clean head passed fresh complete certification.
+The observed 1m28s quality margin is not guaranteed; #113 retains this risk
+without displacing unblocked #48 work.
 
-Original selected choice labels, labelled address components and distinct typed
-values share one guarded reviewer/moderator/decision-maker presenter. No writer,
-schema, profile, production route or CI policy changed. Two existing native
-parametrizations remain unexecuted #102 debt; the full human matrix remains #92.
-See the [typed-answer implementation](../checkpoints/2026-09-15-programme-readable-typed-review-answers.md)
-and [protected delivery](../checkpoints/2026-09-15-programme-typed-answers-protected-delivery.md).
+The dormant workspace supplies labelled candidates, complete release checks,
+retained warning evidence, independent approval/publication, pointer-only
+withdrawal and explicit history. Original retries reach canonical receipt
+recovery before private source refresh. No writer, schema, profile, production
+route or CI policy changed. Four maintained native scenarios remain unexecuted
+#102 debt; component browser observations do not replace #92/#109 acceptance.
+See the [implementation](../checkpoints/2026-09-15-programme-guided-release-workspace.md),
+[formatting repair](../checkpoints/2026-09-15-programme-release-workspace-certification-repair.md)
+and [protected delivery](../checkpoints/2026-09-15-programme-release-workspace-protected-delivery.md).
 
-Earlier protected delivery and failed-candidate details remain in append-only
-checkpoints, not competing next-step lists here. In particular,
-[PR #129 source context](../checkpoints/2026-09-15-programme-decision-source-protected-delivery.md)
-and [PR #128 host retry recovery](../checkpoints/2026-09-15-programme-host-recovery-protected-delivery.md)
-are complete; do not restart them.
+Earlier deliveries, including [PR #130 typed answers](../checkpoints/2026-09-15-programme-typed-answers-protected-delivery.md),
+remain complete. Do not restart them or reuse their evidence for a new head.
 
-## Active bounded outcome: guided release workspace (#108)
+## Active bounded outcome: Programme workspace connections (#108)
 
-Branch: `codex/programme-release-workspace`, from protected PR #130.
-The dormant release workspace is implemented locally; clean exact-commit
-certification, protected PR delivery and merge bookkeeping are next. No hosted
-acceptance, profile activation or completion of #108/#48 is claimed yet.
+Branch: `codex/programme-workspace-connections`, from protected PR #131.
+Connect private Programme items, the canonical dormant timetable editor and
+release workspace through independently admitted, resolvable task links.
+This next increment is recorded beneath #108's existing owner-connections
+checkbox. Workforce, notices and continuity remain unfinished continuations;
+a navigation increment does not complete the whole guided journey.
 
-The first canonical attempt on `576f19c6f1a865a4061a3c260fb01e91c8e76f9e`
-stopped at repository-wide Ruff formatting of two expanded native-test assertions;
-no receipt was created and no PostgreSQL was started. The formatting-only repair
-passed the whole-repository formatter check. Fresh exact-head certification is
-required; see the [repair record](../checkpoints/2026-09-15-programme-release-workspace-certification-repair.md).
+Reuse the existing native planner, owner commands/queries and shared shell.
+Verify exact organization/series/edition coherence without treating route or
+selected context as authority. Require each destination's own capabilities and
+field ceilings; do not emit executable-looking links to an unmounted route.
+Preserve original pending input and retry behavior. Optional navigation must
+not obscure a completed command or load private owner data just to offer a link.
 
-The planner's saved conflict review is not a release approval. #108 now explicitly
-nests dedicated release warning/approval/publication/withdrawal controls beneath
-its existing release/review connection outcome. This names a required continuation,
-not a detached issue or expansion beyond #48.
+The local increment now implements the canonical wrapper, final read-only
+disclosure checks and optional fixed-label links across all three workspaces.
+All 7,591 database-free units passed in 46.15s; 92 frontend tests passed in 9.43s.
+The first full-unit attempt was interrupted after Windows temp-directory setup
+errors; a first-error run isolated WinError 5, and the complete fresh local-temp
+rerun passed. Focused Ruff/format, mypy and NumPy checks passed after correcting
+test fixtures and one propagated-exception docstring. No tests were weakened.
 
-Reuse Scheduling's exact complete release preflight, retained warning evidence,
-independent approval, distinct-publisher atomic publication, checked manifest
-and reasoned withdrawal commands. Provide bounded labelled owner selections,
-explicit intent, independent field/role/source admission, original version/retry
-recovery, truthful state/history and independently admitted next actions.
-All ten release categories and authored/copy/restore exclusions remain canonical;
-the private planner's partial conflict report is not release eligibility.
+The actual-template, database-forbidden browser fixture traversed all three
+workspaces at 1,280 CSS pixels and checked draft selection, missing-reason input
+retention and restricted-link omission. Server logs confirmed restricted and
+anonymous direct-route 403; the browser retained the preceding page, so visible
+denial rendering is not claimed. Human discard/zoom/screen-reader and full-width
+acceptance remain #92 work. Both fixture tabs and its server are closed.
 
-Database-free preflight passed 7,542 units in 45.77s, with the same three existing
-URLField warnings; the final focused release subset passed 90 tests in 1.44s.
-Five new frontend navigation-guard tests, changed-file Ruff/mypy, NumPy/semantic
-docstrings and documentation validation passed. Synthetic actual-view/template
-rehearsal covered three substituted roles through acknowledgement, approval,
-publication, stale withdrawal/retry and retained history; it is not native or
-two-human acceptance. Four existing native scenarios are maintained, not run.
-See the [release workspace contract](../product/page-contracts/programme-release-workspace.md)
-and [implementation checkpoint](../checkpoints/2026-09-15-programme-guided-release-workspace.md).
-
-After exact protected delivery, update the nested release-workspace checkbox
-only, preserve all parent incompleteness, then continue authorized owner
-connections under #108. Current pointer identity is not content-serving authority;
-reference/file selectors, blank setup and final #109/#102/#97/#92 gates remain.
-
-No canonical writer, schema, current profile, production route or PostgreSQL
-policy change is intended. Map requirements and ADRs 0094–0096, extend the owning
-contracts, test meaningful failures and rehearse synthetic actual views. The
-[release contract](../architecture/decisions/0096-atomic-programme-release-and-invalidation.md)
-and [recovery runbook](../operations/programme-atomic-release-migration-and-recovery.md)
-remain authoritative.
+No schema, runtime grant, current profile, production URL mount or CI policy
+changed. One existing native scenario is extended but neither collected nor run;
+#102 also retains admitted real-owner canonical rendering/recovery revalidation.
+See the [connection checkpoint](../checkpoints/2026-09-15-programme-workspace-connections.md).
+Fresh clean exact-head certification and protected delivery are still pending.
 
 ## Remaining #48 delivery decomposition
 
@@ -94,8 +85,8 @@ outcome by themselves. #108 and #48 remain open.
   guided departmental journey and final gated promotion:
   - independently authorized person/domain-reference selection and safe-file
     intake/selection/viewers; typed text presentation alone does not finish these;
-  - dedicated release workspace, then authorized labelled connections to timetable
-    planning, Workforce Shift work, release/review, #104 notices and #107 continuity;
+  - authorized labelled connections to timetable planning, Workforce Shift work,
+    the delivered release workspace, #104 notices and #107 continuity;
   - accountable blank-organization setup, coherent shared navigation and an isolated
     complete synthetic fixture without changing current profiles;
   - final separately verified promotion only after all gates below pass.

@@ -62,6 +62,7 @@ from .release_workspace_forms import (
     ReleaseWithdrawForm,
     restore_pending_warning_choice,
 )
+from .workspace_navigation import programme_workspace_links
 
 _FORMS: dict[str, type[ReleaseCommandForm]] = {
     "acknowledge": ReleaseWarningForm,
@@ -115,9 +116,26 @@ def _html(
         title="Release Programme timetable", has_permission=True, maru_csp_nonce=nonce
     )
     shell.update(context)
+    actor_id = request.user.pk
+    if not isinstance(actor_id, UUID):
+        raise SchedulingAuthorizationDeniedError
+    scope = SchedulingReadRequest(
+        actor_id, context["organization_id"], context["edition_id"], uuid4()
+    )
+    urlconf = getattr(request, "urlconf", None)
+    shell["workspace_links"] = programme_workspace_links(
+        scope, current="release", urlconf=urlconf
+    )
     content = render_to_string(
         "scheduling/release_workspace.html", shell, request=request
     ).encode("utf-8")
+    if shell["workspace_links"] != programme_workspace_links(
+        scope, current="release", urlconf=urlconf
+    ):
+        shell["workspace_links"] = ()
+        content = render_to_string(
+            "scheduling/release_workspace.html", shell, request=request
+        ).encode("utf-8")
     if len(content) > _MAX_OUTPUT_BYTES:
         raise RuntimeError("Release workspace output exceeds its complete bound.")
     return _secure(HttpResponse(content, status=status), nonce)
