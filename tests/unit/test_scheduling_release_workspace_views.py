@@ -259,7 +259,12 @@ def test_original_command_reaches_receipt_without_any_fresh_private_source(
     release_http, action, task, monkeypatch
 ):
     world = release_http
-    links = (ProgrammeWorkspaceLink("items", "Programme items", "/optional-items/"),)
+    links = (
+        ProgrammeWorkspaceLink("items", "Programme items", "/optional-items/"),
+        ProgrammeWorkspaceLink(
+            "applications", "Programme applications", "/application-entry/"
+        ),
+    )
     monkeypatch.setattr(
         views,
         "programme_workspace_links",
@@ -297,6 +302,7 @@ def test_original_command_reaches_receipt_without_any_fresh_private_source(
         assert intent.expected_active_release_id is None
     assert str(world.result.receipt_id).encode() in response.content
     assert b"/optional-items/" not in response.content
+    assert b"/application-entry/" not in response.content
     for source in world.sources.values():
         source.assert_not_called()
     command.return_value = replace(world.result, replayed=True)
@@ -316,13 +322,22 @@ def test_original_command_reaches_receipt_without_any_fresh_private_source(
     ],
 )
 def test_failure_retains_original_input_without_automatically_rebasing(
-    release_http, error, status
+    release_http, error, status, monkeypatch
 ):
     world = release_http
+    links = (
+        ProgrammeWorkspaceLink(
+            "applications", "Programme applications", "/application-entry/"
+        ),
+    )
+    monkeypatch.setattr(
+        views, "programme_workspace_links", Mock(side_effect=[links, (), links, ()])
+    )
     data = release_post("publish")
     world.commands["publish"].side_effect = error
     response = request_release(world, task="publish", data=data)
     assert response.status_code == status
+    assert b"/application-entry/" not in response.content
     text = response.content.decode()
     for value in (
         data["reason"],

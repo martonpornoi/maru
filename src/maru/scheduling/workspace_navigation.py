@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from django.db import DatabaseError
 from django.urls import NoReverseMatch, Resolver404, resolve, reverse
 
+from maru.applications.programme_department_tasks import can_enter_programme_tasks
 from maru.authorization.policy import (
     PolicyDecision,
     decide_verified_principal_exact_edition,
@@ -53,6 +54,10 @@ class ProgrammeWorkspaceLink:
 
 
 _TASKS = {
+    "applications": (
+        "Programme calls, review and conversion",
+        "programme-department-tasks",
+    ),
     "items": ("Programme items", "programme-items"),
     "timetable": ("Timetable planning", "programme-timetable-workspace"),
     "release": ("Release timetable", "programme-release-workspace"),
@@ -114,7 +119,17 @@ def _authorize_items(scope: SchedulingReadRequest) -> None:
 
 
 def _authorize(scope: SchedulingReadRequest, code: str) -> None:
-    if code == "items":
+    if code == "applications":
+        if (
+            can_enter_programme_tasks(
+                actor_id=scope.actor_id,
+                organization_id=scope.organization_id,
+                edition_id=scope.edition_id,
+            )
+            is not True
+        ):
+            raise SchedulingAuthorizationDeniedError
+    elif code == "items":
         _authorize_items(scope)
     elif code == "timetable":
         authorize_timetable_workspace(scope)
@@ -161,7 +176,7 @@ def programme_workspace_links(
     Returns
     -------
     tuple[ProgrammeWorkspaceLink, ...]
-        At most three fixed-label links, or four from the external Shift workspace.
+        At most four fixed-label links, or five from the external Shift workspace.
         Denied, unavailable, unmounted or shadowed
         destinations are omitted. Absence makes no source-completeness claim.
 

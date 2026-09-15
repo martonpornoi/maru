@@ -11,38 +11,39 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's six independent calls/review entry tasks are delivered through
-[PR #140](https://github.com/martonpornoi/maru/pull/140), protected squash
-`a1881e0a77a03c87c754c3a5fe6e596b8033bfeb` at 2026-09-15 18:13:07 UTC.
-Its tree equals certified head `41cfbd837169b949de9b60fe9940c9045a361ccd`;
+#108's direct dual-owner conversion entry is delivered through
+[PR #141](https://github.com/martonpornoi/maru/pull/141), protected squash
+`1caf776eb0067f5fef11251a942c261b534d26cc` at 2026-09-15 18:59:51 UTC.
+Its tree equals certified head `07ad81ed7ebd05c2d6386384fe56be69286bc3ff`;
 clean local main and origin/main were synchronized. All eight local retained gates
-passed in 6m04s (8,239 units, 93 frontend cases). Hosted quality took 11m28s,
-documentation 9m28s and units 62.02s; exact-head PR gate/CodeQL passed and reviews
-were clear. See the [protected evidence](../checkpoints/2026-09-15-programme-entry-protected-delivery.md).
+passed in 6m15s (8,303 units, 93 frontend cases). Hosted quality took 18m33s,
+documentation 16m01s and units 99.60s; exact-head PR gate/CodeQL passed and reviews
+were clear. See the [protected evidence](../checkpoints/2026-09-15-programme-workspace-entry-links.md).
 PostgreSQL remained skipped. No schema, profile or route activation; do not
 restart PR #139's domain selection or #113's delivered documentation runtime fix.
 
-## Active bounded outcome: direct conversion entry (#108)
+## Active bounded outcome: shared workspace entry connections (#108)
 
-Branch: `codex/programme-conversion-entry`, from protected PR #140.
-The recorded direct conversion-only entry now proves independent Department
-Applications capability, both exact adapters and Programme edition item-management
-policy before labels. Programme owns a complete minimized public entry reference;
-ordinary absent authority differs from failed/incoherent owner evidence.
-Both policy sources are explained, and complete source revalidation includes the
-adapter/Programme facts. The six existing entry tasks stay independently available.
-No review grant, directory, content read, schema or activation is added.
+Branch: `codex/programme-workspace-entry-links`, from protected PR #141.
+Connect Applications entry and the existing item/timetable/release/notice workspaces
+through shared fixed-label navigation. Reuse seven-purpose Applications owner
+proofs for metadata-only admission without reading private labels or inventories.
+Preserve exact reverse/resolve, scope and final-render checks, independent field
+ceilings, pending input and completed commands. Current profiles/routes stay closed.
+The shared metadata snapshot, independently admitted reciprocal links and final
+render guards are implemented. Full database-free feedback passed 8,341 tests in
+65.85s; focused entry/navigation and strengthened item/release receipt/input tests
+pass. Strict types, NumPy/semantic docs, formatting/lint and docs validation pass.
+A synthetic browser journey verified Applications ↔ items/timetable/release,
+reviewer/converter isolation, item-only omission and keyboard focus at 1280px.
+The new zero-UUID metadata regression was repaired before these passes.
+See the [checkpoint](../checkpoints/2026-09-15-programme-workspace-entry-links.md)
+for actual evidence and unexecuted native/human debt. Fresh exact-commit
+certification and protected hosted acceptance remain pending.
 
-Final complete database-free feedback passed 8,303 tests in 64.59s; strict types,
-NumPy/semantic docs, whole formatting/lint and documentation validation passed.
-A synthetic browser journey verified conversion-only
-entry through the accepted-source queue to the explicit blank conversion form,
-missing Programme/adapter empty states, keyboard focus and no 1280px overflow.
-Fresh exact-commit certification and protected acceptance are pending.
-Four maintained real dual-grant native scenarios and three updated entry cases
-remain uncollected/unexecuted under #102. See the
-[checkpoint](../checkpoints/2026-09-15-programme-conversion-entry.md) for exact
-evidence, corrected test-assertion scope and remaining human/integrated gaps.
+Conversion entry and the six preceding entry tasks remain delivered. Four new and
+three changed native cases from PR #141 remain uncollected/unexecuted #102 debt;
+human/integrated evidence remains #92/#109. Do not restart delivered increments.
 
 Person and same-call domain selection/viewers are delivered; do not restart them.
 Six domain native cases remain unexecuted #102 debt and browser/human follow-up

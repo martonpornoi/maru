@@ -44,13 +44,17 @@ before dispatch. Events resolves the exact organization/series/edition relation.
 Route identifiers are correlation references, never grants or human names; the
 page does not change an unrelated selected shell context.
 
-**Programme workflow** offers fixed-label links between Programme items,
-Timetable planning and Release timetable only when each destination is
+**Programme workflow** offers fixed-label links between Applications calls/review/
+conversion entry, Programme items, Timetable planning, Release timetable and
+Programme change notices only when each destination is
 independently admitted and reverses and resolves in the current URL configuration.
 Unmounted, shadowed, foreign-parent, denied and unavailable targets are omitted.
 No destination inventory, history, people or public-copy source is read merely
 to offer navigation. Release discovery needs any independently allowed task,
 not all planner/reviewer/publisher powers. Each destination reauthorizes.
+Applications admission reuses its own complete seven-purpose owner/policy metadata,
+including independent Programme authority for conversion, without reading Department
+labels or private application records. No sibling Programme grant admits it.
 
 The native editor dispatches exactly once. After actual template rendering the
 wrapper repeats protected read-only composition and compares displayed owner
@@ -66,8 +70,9 @@ an otherwise authorized successful command result.
 
 Existing pending-input guards cover these ordinary links. Following one never
 places an item, approves copy, publishes a timetable, or transfers form contents
-through URLs or browser storage. Workforce, notices, continuity and coherent
-blank-organization setup remain unfinished #108 continuations. Production routes,
+through URLs or browser storage. Existing bound-Shift, notice and continuity
+connections retain their own contracts; remaining ordinary scoped launchers and
+coherent blank-organization setup stay incomplete under #108. Production routes,
 profiles and runtime grants remain closed. #102 retains native revalidation,
 #109 integrated acceptance and #92 human keyboard/zoom/discard acceptance.
 

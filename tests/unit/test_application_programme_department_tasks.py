@@ -147,6 +147,109 @@ def _allow(entry, task, index=0, **changes):
     )
 
 
+def _metadata_entry(entry, monkeypatch):
+    monkeypatch.setattr(tasks, "_DEFAULT_AUTHORIZER", entry.authorizer)
+    return tasks.can_enter_programme_tasks(
+        **{
+            key: entry.values[key]
+            for key in ("actor_id", "organization_id", "edition_id")
+        }
+    )
+
+
+@pytest.mark.parametrize("task", tasks._TASKS, ids=lambda task: task.code)
+def test_metadata_navigation_uses_each_independent_purpose_without_labels_or_audit(
+    entry, monkeypatch, task
+):
+    _allow(entry, task)
+    assert _metadata_entry(entry, monkeypatch) is True
+    entry.lookup.assert_not_called()
+    entry.audit.assert_not_called()
+    assert entry.listing.call_count == 2
+    for call in entry.authorizer.authorize_department.call_args_list:
+        assert call.kwargs["principal_id"] == entry.values["actor_id"]
+        assert call.kwargs["organization_id"] == entry.values["organization_id"]
+        assert call.kwargs["edition_id"] == entry.values["edition_id"]
+
+
+@pytest.mark.parametrize(
+    "failure",
+    ["empty", "partial-fields", "adapters", "programme", "policy", "owner", "guard"],
+)
+def test_metadata_omits_empty_denied_or_incoherent_entry_without_label_reads(
+    entry, monkeypatch, failure
+):
+    if failure == "partial-fields":
+        _allow(entry, tasks._TASKS[1], fields=frozenset())
+    elif failure != "empty":
+        _allow(entry, tasks._TASKS[-1])
+    if failure == "adapters":
+        entry.adapters.return_value = False
+    elif failure == "programme":
+        entry.conversion.return_value = replace(
+            entry.conversion.return_value, decision=_DENY
+        )
+    elif failure == "policy":
+        _allow(entry, tasks._TASKS[3], index=1, reason_code="unknown")
+    elif failure == "owner":
+        entry.actor.return_value = None
+    elif failure == "guard":
+        entry.guard.side_effect = tasks.Denied
+    assert _metadata_entry(entry, monkeypatch) is False
+    entry.lookup.assert_not_called()
+    entry.audit.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "dependency", ["actor", "edition", "profile", "listing", "adapters", "conversion"]
+)
+def test_metadata_dependency_failure_only_withholds_optional_entry(
+    entry, monkeypatch, dependency
+):
+    _allow(entry, tasks._TASKS[-1])
+    getattr(entry, dependency).side_effect = DatabaseError(
+        "Synthetic navigation failure"
+    )
+    assert _metadata_entry(entry, monkeypatch) is False
+    entry.lookup.assert_not_called()
+    entry.audit.assert_not_called()
+
+
+def test_metadata_changed_source_is_not_a_stable_link(entry, monkeypatch):
+    _allow(entry, tasks._TASKS[0])
+    entry.listing.side_effect = [
+        entry.members,
+        replace(entry.members, department_ids=entry.members.department_ids[:1]),
+    ]
+    assert _metadata_entry(entry, monkeypatch) is False
+    entry.lookup.assert_not_called()
+    entry.audit.assert_not_called()
+
+
+def test_metadata_invalid_identifiers_do_not_dispatch(entry):
+    assert (
+        tasks.can_enter_programme_tasks(
+            actor_id=UUID(int=0),
+            organization_id=entry.values["organization_id"],
+            edition_id=entry.values["edition_id"],
+        )
+        is False
+    )
+    entry.actor.assert_not_called()
+
+
+def test_metadata_has_no_public_substitute_authorizer_argument(entry):
+    with pytest.raises(TypeError, match="authorizer"):
+        tasks.can_enter_programme_tasks(
+            **{
+                key: entry.values[key]
+                for key in ("actor_id", "organization_id", "edition_id")
+            },
+            authorizer=entry.authorizer,
+        )
+    entry.actor.assert_not_called()
+
+
 @pytest.mark.parametrize("task", tasks._TASKS, ids=lambda task: task.code)
 def test_each_purpose_has_only_its_exact_destination_fields_and_audit(entry, task):
     _allow(entry, task)

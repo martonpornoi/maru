@@ -9,7 +9,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.db import DatabaseError, transaction
 from django.utils import timezone
 
 from maru.audit.services import AuditRecord, append_audit
@@ -326,6 +327,152 @@ def _denial_audit(values: dict[str, UUID | str]) -> Iterator[None]:
         raise
 
 
+def _entry_snapshot(
+    actor_id: UUID,
+    organization_id: UUID,
+    edition_id: UUID,
+    authorizer: ApplicationsProgrammeAuthorizer,
+    *,
+    include_labels: bool,
+) -> _Snapshot:
+    actor = resolve_active_verified_person_reference(account_id=actor_id)
+    edition = resolve_private_planning_edition_reference(
+        organization_id=organization_id, edition_id=edition_id
+    )
+    _require(
+        condition=isinstance(actor, ActiveVerifiedPersonReference)
+        and actor.account_id == actor_id
+    )
+    _require(
+        condition=isinstance(edition, PrivatePlanningEditionReference)
+        and edition.organization_id == organization_id
+        and edition.edition_id == edition_id
+        and type(edition.accepts_private_planning_writes) is bool
+    )
+    if not isinstance(edition, PrivatePlanningEditionReference):
+        raise Denied
+    profile = edition_adoption_profile_reference(
+        organization_id=organization_id, edition_id=edition_id
+    )
+    _require(
+        condition=isinstance(profile, EditionAdoptionProfileReference)
+        and profile_allows_application_target(
+            profile.code, profile.version, APPLICATION_PROGRAMME_ITEM_TARGET_KIND
+        )
+    )
+    if not isinstance(profile, EditionAdoptionProfileReference):
+        raise Denied
+    members = resolve_current_department_set_reference(
+        organization_id=organization_id, edition_id=edition_id
+    )
+    _require(
+        condition=isinstance(members, CurrentDepartmentSetReference)
+        and members.organization_id == organization_id
+        and members.edition_id == edition_id
+        and type(members.department_ids) is tuple
+        and len(members.department_ids) <= MAX_STRUCTURE_DEPARTMENTS
+        and all(isinstance(item, UUID) and item.int for item in members.department_ids)
+        and len(set(members.department_ids)) == len(members.department_ids)
+    )
+    if not isinstance(members, CurrentDepartmentSetReference):
+        raise Denied
+    ids = tuple(sorted(members.department_ids))
+    decisions = tuple(
+        tuple(
+            _decision(
+                authorizer.authorize_department(
+                    principal_id=actor_id,
+                    organization_id=organization_id,
+                    edition_id=edition_id,
+                    department_id=identifier,
+                    capability_code=task.capability,
+                    requested_fields=task.fields or None,
+                ),
+                task,
+            )
+            for task in _TASKS
+        )
+        for identifier in ids
+    )
+    adapters, conversion = _conversion_reference(
+        actor_id, edition, profile, needed=any(row[-1].allowed for row in decisions)
+    )
+    labels = tuple(
+        _choice(organization_id, edition_id, identifier)
+        for identifier, row in zip(ids, decisions, strict=True)
+        if include_labels
+        and any(
+            _admitted(value, task, conversion)
+            for value, task in zip(row, _TASKS, strict=True)
+        )
+    )
+    _require(condition=len({item.code for item in labels}) == len(labels))
+    return edition, ids, decisions, labels, profile, adapters, conversion
+
+
+def can_enter_programme_tasks(
+    *, actor_id: UUID, organization_id: UUID, edition_id: UUID
+) -> bool:
+    """Offer optional fixed-label navigation without reading protected labels.
+
+    Parameters
+    ----------
+    actor_id : UUID
+        Authenticated current person whose independent task authority is inspected.
+    organization_id : UUID
+        Exact expected edition owner, not a directory filter.
+    edition_id : UUID
+        Selected exact edition, not a session-derived grant.
+
+    Returns
+    -------
+    bool
+        Whether a coherent current source admits at least one entry purpose.
+        False also covers unavailable sources; this is no completeness claim.
+
+    Notes
+    -----
+    Uses the real default Applications adapter without a substitute parameter.
+    Only complete identifier/policy/adapter owner proofs are inspected, never
+    Department names, application records or protected values. No new sensitive
+    read or activity audit is manufactured for an optional fixed-label link.
+    Callers recheck after rendering; the actual destination separately authorizes
+    and audits its complete labelled projection before disclosure.
+    """
+    try:
+        actor_id = require_programme_uuid(actor_id, field="actor_id")
+        organization_id = require_programme_uuid(
+            organization_id, field="organization_id"
+        )
+        edition_id = require_programme_uuid(edition_id, field="edition_id")
+        if not all(value.int for value in (actor_id, organization_id, edition_id)):
+            return False
+        _require_test_authorizer(_DEFAULT_AUTHORIZER)
+        with transaction.atomic():
+            initial = _entry_snapshot(
+                actor_id,
+                organization_id,
+                edition_id,
+                _DEFAULT_AUTHORIZER,
+                include_labels=False,
+            )
+            if initial != _entry_snapshot(
+                actor_id,
+                organization_id,
+                edition_id,
+                _DEFAULT_AUTHORIZER,
+                include_labels=False,
+            ):
+                return False
+            return any(
+                _admitted(value, task, initial[-1])
+                for row in initial[2]
+                for value, task in zip(row, _TASKS, strict=True)
+            )
+    except (Denied, DatabaseError, ValidationError):
+        return False
+
+
 def list_programme_department_tasks(  # noqa: DOC502 -- Delegated source proofs deny.
     *,
     actor_id: UUID,
@@ -371,80 +518,9 @@ def list_programme_department_tasks(  # noqa: DOC502 -- Delegated source proofs 
     _require_test_authorizer(authorizer)
 
     def snapshot() -> _Snapshot:
-        actor = resolve_active_verified_person_reference(account_id=actor_id)
-        edition = resolve_private_planning_edition_reference(
-            organization_id=organization_id, edition_id=edition_id
+        return _entry_snapshot(
+            actor_id, organization_id, edition_id, authorizer, include_labels=True
         )
-        _require(
-            condition=isinstance(actor, ActiveVerifiedPersonReference)
-            and actor.account_id == actor_id
-        )
-        _require(
-            condition=isinstance(edition, PrivatePlanningEditionReference)
-            and edition.organization_id == organization_id
-            and edition.edition_id == edition_id
-            and type(edition.accepts_private_planning_writes) is bool
-        )
-        if not isinstance(edition, PrivatePlanningEditionReference):
-            raise Denied
-        profile = edition_adoption_profile_reference(
-            organization_id=organization_id, edition_id=edition_id
-        )
-        _require(
-            condition=isinstance(profile, EditionAdoptionProfileReference)
-            and profile_allows_application_target(
-                profile.code, profile.version, APPLICATION_PROGRAMME_ITEM_TARGET_KIND
-            )
-        )
-        if not isinstance(profile, EditionAdoptionProfileReference):
-            raise Denied
-        members = resolve_current_department_set_reference(
-            organization_id=organization_id, edition_id=edition_id
-        )
-        _require(
-            condition=isinstance(members, CurrentDepartmentSetReference)
-            and members.organization_id == organization_id
-            and members.edition_id == edition_id
-            and type(members.department_ids) is tuple
-            and len(members.department_ids) <= MAX_STRUCTURE_DEPARTMENTS
-            and all(
-                isinstance(item, UUID) and item.int for item in members.department_ids
-            )
-            and len(set(members.department_ids)) == len(members.department_ids)
-        )
-        if not isinstance(members, CurrentDepartmentSetReference):
-            raise Denied
-        ids = tuple(sorted(members.department_ids))
-        decisions = tuple(
-            tuple(
-                _decision(
-                    authorizer.authorize_department(
-                        principal_id=actor_id,
-                        organization_id=organization_id,
-                        edition_id=edition_id,
-                        department_id=identifier,
-                        capability_code=task.capability,
-                        requested_fields=task.fields or None,
-                    ),
-                    task,
-                )
-                for task in _TASKS
-            )
-            for identifier in ids
-        )
-        adapters, conversion = _conversion_reference(
-            actor_id, edition, profile, needed=any(row[-1].allowed for row in decisions)
-        )
-        labels = tuple(
-            _choice(organization_id, edition_id, identifier)
-            for identifier, row in zip(ids, decisions, strict=True)
-            if any(
-                _admitted(value, task, conversion)
-                for value, task in zip(row, _TASKS, strict=True)
-            )
-        )
-        _require(condition=len({item.code for item in labels}) == len(labels))
-        return edition, ids, decisions, labels, profile, adapters, conversion
 
     values: dict[str, UUID | str] = {
         "actor_id": actor_id,

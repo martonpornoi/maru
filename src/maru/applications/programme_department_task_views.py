@@ -15,6 +15,9 @@ from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 
+from maru.scheduling.planning_queries import SchedulingReadRequest
+from maru.scheduling.workspace_navigation import programme_workspace_links
+
 from . import programme_department_tasks as tasks
 from .programme_authorization import (
     ApplicationsProgrammeAuthorizationDeniedError as Denied,
@@ -24,6 +27,8 @@ from .programme_call_views import _secure
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from maru.scheduling.workspace_navigation import ProgrammeWorkspaceLink
+
 
 def _render(
     request: HttpRequest,
@@ -31,6 +36,9 @@ def _render(
     edition_id: UUID,
     read: Callable[[], tasks.ProgrammeDepartmentTaskCatalog],
 ) -> HttpResponse:
+    actor_id = request.user.pk
+    if not isinstance(actor_id, UUID) or not actor_id.int:
+        raise Denied
     initial = read()
     nonce = token_urlsafe(32)
     context = dict(admin.site.each_context(request))
@@ -43,9 +51,22 @@ def _render(
         department_tasks=initial.tasks,
         read_only=not initial.accepts_private_planning_writes,
     )
+    scope = SchedulingReadRequest(actor_id, organization_id, edition_id, uuid4())
+
+    def links() -> tuple[ProgrammeWorkspaceLink, ...]:
+        return programme_workspace_links(
+            scope, current="applications", urlconf=getattr(request, "urlconf", None)
+        )
+
+    context["workspace_links"] = links()
     content = render_to_string(
         "applications/programme_department_tasks.html", context, request
     )
+    if context["workspace_links"] != links():
+        context["workspace_links"] = ()
+        content = render_to_string(
+            "applications/programme_department_tasks.html", context, request
+        )
     if len(content.encode("utf-8")) > 8 * 1024 * 1024:
         return _secure(
             HttpResponse(
