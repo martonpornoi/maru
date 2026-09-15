@@ -13,7 +13,8 @@
     <p>Organization {{ organization_id }} · Edition {{ edition_id }}. Each destination checks authority again.</p>
   </details>
   <nav aria-label="My proposal tasks"><ul class="call-links"><li><a href="{{ root_url }}"{% if task == "inventory" %} aria-current="page"{% endif %}>My proposals</a></li><li><a href="{{ root_url }}calls/"{% if task == "calls" %} aria-current="page"{% endif %}>Find an available call</a></li></ul></nav>
-  {% if task == "inventory" %}
+  {% if task == "person-reference" %}{% include "applications/programme_person_reference.html" %}
+  {% elif task == "inventory" %}
   <p>Choose one of your private proposal records. Drafts are not submitted; collaboration does not make you a Programme host. Retained proposal access is separate from availability for starting a new one.</p>
   <ul class="call-cards">{% for row in proposals %}<li>
     <h2><a href="{{ root_url }}{{ row.summary.proposal_id }}/">{{ row.summary.call_name }}</a></h2>
@@ -57,6 +58,6 @@
   </section>
   {% elif task == "work" %}{% include "applications/programme_personal_work.html" %}
   {% endif %}
-  <section aria-labelledby="proposal-next"><h2 id="proposal-next">What remains in this rehearsal</h2><p>Authorized person, domain-reference and safe-file choosers are not yet connected. Review and accepted-item conversion remain separate organizer tasks. Starting or submitting a proposal does not complete the Programme journey or publish anything.</p></section>
+  <section aria-labelledby="proposal-next"><h2 id="proposal-next">What remains in this rehearsal</h2><p>Registered Programme person references have dedicated selection and viewing tasks. Domain-reference and safe-file choosers are not yet connected. Review and accepted-item conversion remain separate organizer tasks. Starting or submitting a proposal does not complete the Programme journey or publish anything.</p></section>
 </div>
 {% endblock %}

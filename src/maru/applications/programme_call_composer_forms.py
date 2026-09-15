@@ -291,7 +291,9 @@ class ProgrammeQuestionForm(forms.Form):
         required=False,
         help_text=(
             "Exact registered kind for a reference answer only; "
-            "this creates no reference authority."
+            "use programme.person for a person reference. This private mention "
+            "creates no contributor, host or public-profile relationship. "
+            "Other kinds require their own registered selection and viewer."
         ),
     )
     condition_question = forms.ChoiceField(

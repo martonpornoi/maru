@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Programme person reference · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Programme / {{ purpose }} / Person reference</div>{% endblock %}
+{% block content %}<div class="programme-calls">
+  <h1>Programme person reference</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Exact {{ purpose }} answer</summary><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}. Current role, exact seal, allowed question and sensitive-field authority are checked independently. Anonymous references are unavailable.</p></details>
+  <h2>{{ person_view.question_label }}</h2><p>{{ person_view.display_label }}</p>
+  <p>This is the current minimized account label for the exact retained person reference. It is not a contributor's frozen proposed-public name. An unavailable person keeps their original reference.</p>
+  <p>A private mention creates no invitation, contributor or host assignment, consent, public profile or attendance.</p>
+  {% if return_url %}<p><a href="{{ return_url }}">Back to permitted answers</a></p>{% endif %}
+</div>{% endblock %}

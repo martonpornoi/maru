@@ -4,7 +4,7 @@ Status: mounted generic application portfolio plus implemented dormant
 Programme-call, acknowledged-proposal, Programme-import, and Department-
 ownership-continuity, staged-review and accepted-conversion kernels;
 production remains gated
-Last updated: 2026-09-14
+Last updated: 2026-09-15
 
 ## Purpose and boundary
 
@@ -510,6 +510,19 @@ digest. Workforce consumes only that closed result under the shared edition
 mutex.
 
 ## Shared field contract
+
+The [Programme person-reference contract](../product/page-contracts/programme-person-references.md)
+defines #108's dormant `person_reference` / `programme.person` control and viewer.
+It uses exact known-email selection, original-account confirmation/replay and
+independent current/frozen/nonanonymous-review answer authority before minimized
+Identity labels. It creates no collaborator or host relationship. Anonymous review
+continues to omit reference rows before lookup. Selection and clear are previewed
+before explicit confirmation; the existing answer command revalidates fresh person
+eligibility after canonical replay. Its optional paired call/schema fences are
+included in new intent digests and checked under the existing source locks; omitted
+fences preserve legacy digests. No migration or generic reference resolver is added.
+Native, integrated and human acceptance remain gated; domain-reference and safe-file
+controls are separate unfinished work.
 
 Sections contain ordered questions using a closed vocabulary: short and long
 text, integer, decimal, boolean, single and multiple choice, date, time,

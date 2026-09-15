@@ -514,18 +514,20 @@ def test_csrf_and_readonly_gets_cannot_mutate(work):
 
 
 @pytest.mark.parametrize("kind", ["person_reference", "domain_reference", "safe_file"])
-def test_unsupported_reference_question_has_no_identifier_editor(work, kind):
+def test_reference_question_never_uses_a_raw_identifier_editor(work, kind):
     spec = question(kind)
     work.source_detail = replace(
         work.source_detail, answers=(replace(work.answer, question=spec),)
     )
     response = incoming(work)
     assert response.status_code == 200
-    assert (
-        "An authorized reference or file chooser is still needed"
-        in response.content.decode()
-    )
-    assert f"answer/{spec.question_id}/" not in response.content.decode()
+    html = response.content.decode()
+    if kind == "person_reference":
+        assert f"answer/{spec.question_id}/person/" in html
+        assert "Select or clear person" in html
+    else:
+        assert "An authorized reference or file chooser is still needed" in html
+        assert f"answer/{spec.question_id}/" not in html
     assert incoming(work, "answer", selected_id=spec.question_id).status_code == 404
 
 

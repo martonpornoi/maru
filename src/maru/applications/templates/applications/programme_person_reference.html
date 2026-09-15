@@ -1,0 +1,16 @@
+<section aria-labelledby="person-reference-heading">
+  <h2 id="person-reference-heading">Person reference: {{ question_label }}</h2>
+  {% if question %}<dl><dt>Question guidance</dt><dd>{{ question.help_text|default:"No additional guidance." }}</dd><dt>Collection purpose</dt><dd>{{ question.purpose }}</dd><dt>Information classification</dt><dd>{{ question.classification }}</dd><dt>Required before sealing</dt><dd>{{ question.required|yesno:"Yes,No" }}</dd></dl>{% endif %}
+  <p>This private answer names a Maru person. It does not invite them, add a contributor or host, record consent, or publish a profile.</p>
+  <p>Displayed account labels are current, not the contributor names frozen in proposed-public profiles. An unavailable person keeps their original reference.</p>
+  {% if person_view %}<p>{{ person_view.display_label }}</p>{% endif %}
+  {% if selection %}<div role="status"><h3>Prepared change</h3><p>{{ selection.display_label }}</p><p>The answer has not been confirmed as saved. This confirmation keeps the original person, source versions and retry key.</p></div>{% endif %}
+  {% if form %}<p>Original proposal version {{ form.expected_version.value }} · Call version {{ form.expected_call_version.value }} · Schema {{ form.expected_definition_version.value }}.</p><form method="post" data-call-command data-call-pending="{% if form.is_bound or selection %}true{% else %}false{% endif %}">
+    {% csrf_token %}<input type="hidden" name="phase" value="{{ phase }}">
+    {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this request</h3>{{ form.non_field_errors }}<ul>{% for field in form %}{% for error in field.errors %}<li>{% if not field.is_hidden %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {% endif %}{{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+    {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+    <p data-call-dirty role="status" hidden>Input is not confirmed as saved. Check proposal history after an uncertain attempt before preparing a new selection.</p>
+    <button type="submit">{% if phase == "confirm" %}Confirm this exact person-reference change{% else %}Prepare selection or clear{% endif %}</button>
+  </form>{% endif %}
+  <p><a href="{{ proposal_url }}">Back to proposal tasks</a></p>
+</section>
