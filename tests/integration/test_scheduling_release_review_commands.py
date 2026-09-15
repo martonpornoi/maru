@@ -28,7 +28,9 @@ from maru.scheduling.models import (
     SchedulingReleaseDependencyKey,
     SchedulingReleaseWarningAcknowledgement,
 )
+from maru.scheduling.planning_queries import SchedulingReadRequest
 from maru.scheduling.release_inputs import ReleaseApprovalIntent, ReleaseWarningIntent
+from maru.scheduling.release_workspace_queries import list_release_warning_evidence
 from tests.factories import AccountFactory, CapabilityGrantFactory
 from tests.integration.test_programme_placement_decisions import apply, preview
 from tests.integration.test_scheduling_evaluations import availability
@@ -269,6 +271,21 @@ def test_exact_warning_must_be_acknowledged_before_independent_approval(review_s
         id=acknowledgement.object_id
     )
     assert retained.reason == review_scope.review_request.reason
+    # Exact original warning discovery shares this existing native scenario;
+    # execution remains explicitly deferred to #102, not certified by unit fakes.
+    (choice,) = list_release_warning_evidence(
+        SchedulingReadRequest(
+            review_scope.review_request.actor_id,
+            review_scope.review_request.organization_id,
+            review_scope.review_request.edition_id,
+            uuid4(),
+        ),
+        selection=review_scope.release_selection,
+        authorizer=review_scope.world.policy,
+    )
+    assert choice.id == acknowledgement.object_id
+    assert choice.fingerprint == warning.fingerprint
+    assert choice.reason == retained.reason
     approved = approve(
         review_scope,
         request=replace(review_scope.review_request, idempotency_key=uuid4()),

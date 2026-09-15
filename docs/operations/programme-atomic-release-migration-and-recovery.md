@@ -139,6 +139,23 @@ director pilot. Do not waive readiness or accept arbitrary restored hashes.
 
 ## Resume owner behavior and checked reads
 
+The dormant [release workspace](../product/page-contracts/programme-release-workspace.md)
+offers independently admitted exact warning, approval, publication and withdrawal
+controls without a new writer or schema. A publication intent retains its original
+approval/source digest and observed pointer version; a returned stale/unknown form
+must not be automatically rebased or assigned a new retry key. Retry the exact
+intent first to recover its canonical receipt. A successful receipt is historical
+command evidence, not a guarantee that the current timetable remains available.
+
+When content verification itself is unavailable, the separately authorized
+pointer-only owner query can still select deliberate whole-release withdrawal.
+It proves only identity/version and never authorizes serving artifact content.
+Reasoned withdrawal retains history, advances the pointer and does not restore a
+predecessor. Do not use retained approval/history pages as an unsafe-content
+fallback. No database migration, runtime privilege grant or schema-only exception
+is needed for these HTTP/discovery additions. PostgreSQL and recovery acceptance
+remain deferred gates, not replaced by synthetic browser or unit evidence.
+
 Recheck the exact current pointer through the audited release-manifest query.
 Missing artifacts, malformed bytes, incomplete dependency ranges, wrong scope
 or unavailable owner evidence withhold results; old bytes are no fallback.

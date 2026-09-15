@@ -1,0 +1,16 @@
+.programme-release-workspace { max-width: 76rem; min-width: 0; overflow-wrap: anywhere; }
+.programme-release-workspace .release-cards { display: flex; flex-wrap: wrap; gap: 1rem; padding: 0; list-style: none; }
+.programme-release-workspace .release-cards > li { flex: 1 1 20rem; min-width: 0; padding: 1rem; border: 1px solid var(--hairline-color); border-radius: .4rem; list-style: none; }
+.programme-release-workspace h3 { color: var(--body-fg); background: transparent; }
+.programme-release-workspace input:not([type="hidden"]),
+.programme-release-workspace textarea,
+.programme-release-workspace select { box-sizing: border-box; max-width: 100%; width: 100%; }
+.programme-release-workspace input[type="checkbox"] { width: auto; }
+.programme-release-workspace form > div { margin-block: 1rem; }
+.programme-release-workspace label { display: block; font-weight: 600; margin-bottom: .4rem; }
+.programme-release-workspace .release-text { white-space: pre-wrap; }
+.programme-release-workspace :focus-visible { outline: 3px solid var(--link-fg); outline-offset: 3px; }
+.programme-release-workspace .release-boundary { border-inline-start: .25rem solid var(--link-fg); padding-inline-start: 1rem; }
+.programme-release-workspace section { margin-block: 1.5rem; }
+.programme-release-workspace button { white-space: normal; max-width: 100%; }
+@media (max-width: 40rem) { .programme-release-workspace .release-cards > li { flex-basis: 100%; } }

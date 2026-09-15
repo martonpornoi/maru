@@ -659,6 +659,12 @@ architecture documents, implementation issues, tests, and release notes.
   prove a time or room move, and missing/withheld source evidence must never be
   substituted with an empty selection to imply cancellation. Comparison alone
   confers no recipient, serving, delivery or acknowledgement authority.
+  Guided release controls must distinguish complete preflight, exact warning
+  acknowledgement, independent approval, publication and whole-release withdrawal.
+  Labelled retained selections never imply current eligibility. Original command
+  retries must reach canonical receipt recovery before refreshing source choices.
+  An independently admitted pointer-only selection must keep deliberate withdrawal
+  possible without treating invalidated or unavailable content as a serving source.
 
 ### Querying, reporting, and export
 

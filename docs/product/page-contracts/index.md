@@ -42,6 +42,7 @@ contract for the surface being changed, and compare its status with the
   receipt-backed Department ownership continuity and exact-ID orphan recovery;
   no route is mounted.
 - [Programme timetable planning](programme-timetable-planning.md)
+- [Programme release workspace](programme-release-workspace.md)
 - [Programme staffing](programme-staffing.md)
 - [Released Programme timetable](programme-released-timetable.md)
 - [Programme operator run sheets](programme-operator-run-sheets.md)
@@ -74,6 +75,7 @@ programme-operations-adoption-setup
 programme-calls-and-acknowledged-proposals
 programme-call-and-proposal-import
 programme-timetable-planning
+programme-release-workspace
 programme-staffing
 programme-released-timetable
 personal-programme-timetable

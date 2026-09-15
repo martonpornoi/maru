@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a dormant guided Programme release workspace: labelled exact candidate
+  review, complete release checks, reasoned warning acknowledgement, independent
+  approval, distinct-publisher publication and explicit withdrawal. Original
+  retries and retained history stay separate from current timetable safety;
+  this does not activate the Programme profile or send change notices.
+
 - Added readable exact-seal choice labels and labelled addresses across dormant
   Programme review, moderation and decision pages. False, zero, empty selections
   and absent answers stay distinct; submitted links and protected references do
