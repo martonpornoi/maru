@@ -1,0 +1,6 @@
+<form method="post" data-release-command data-release-pending="{{ pending|yesno:'true,false' }}">
+  {% csrf_token %}
+  <p data-release-dirty hidden role="status">Pending input is not saved. Review it before leaving this task.</p>
+  {{ form.as_div }}
+  <button type="submit">{{ button }}</button>
+</form>

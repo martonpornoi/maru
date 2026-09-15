@@ -831,7 +831,7 @@ child must retain independent approval and release-warning evidence and repeat
 collection inside atomic publication/invalidation. See
 [source migration/recovery](../operations/programme-release-sources-migration-and-recovery.md).
 
-### Dormant review and publication commands under development
+### Dormant review and publication commands
 
 Issue #96 adds `acknowledge_programme_release_warning` and
 `approve_programme_release` through the existing Scheduling command boundary.
@@ -897,6 +897,56 @@ shared physical and foreign-publication races exercise both commit and rollback
 orders. Complete source-pinned readiness, genuine-runtime containment and
 same-image physical recovery have focused evidence. See CURRENT for exact
 certification/delivery status; this contract is not production acceptance.
+
+### Guided release workspace
+
+#108 adds a dormant shared-shell release task beside private timetable planning;
+see the [page contract](../product/page-contracts/programme-release-workspace.md).
+`release_workspace_urls` reserves the full organization/series/edition route but
+is not included in production URL configuration. No current profile or writer
+boundary changes. The HTTP adapter verifies the parent series through Events.
+
+`release_workspace_queries` provides bounded owner discovery under existing
+independent field ceilings: current labelled alternatives require `candidates`,
+retained approval/warning reasons require `planning_history`, pointer observation
+requires current `release_manifest`, and publication/withdrawal history requires
+both history fields. Original approval labels come from immutable revisions.
+Receipt-incoherent evidence, missing joins, overflow and gaps in a pointer-history
+window are unavailable rather than silently omitted. Approval pages use exact
+tenant-scoped time/identity anchors; pointer-history pages use exclusive monotonic
+versions. Empty and older-page results have explicit meaning and receive audits.
+
+The current pointer-only projection deliberately avoids artifact validation and
+current Programme/Venue/Workforce collection. It identifies a deliberate withdrawal
+target even when content is invalidated or unavailable; it is **not** a serving
+manifest or permission to expose old content. Checked release outputs remain the
+only content-serving boundary. No actor-name directory or private foreign-owner
+data is loaded by these discovery queries.
+
+The native review task shows the exact complete ten-category preflight and its
+minimized findings. It selects and displays the newest retained acknowledgement
+for each exact warning before deliberate independent approval. No acknowledgement
+is created implicitly, no planner warning is promoted, and the canonical approval
+command reauthenticates the full original selection. A distinct publisher selects
+one retained approval and the observed pointer, with explicit reason/confirmation;
+whole-release withdrawal has its own action and source-independent selection.
+
+Read pages render before repeating source observations and field admission; a
+failed final check discards the whole prepared response. Command POSTs instead
+dispatch their original typed source/version/retry intent before any refreshed
+private source. Canonical receipt recovery remains reachable after source or
+lifecycle changes when current command authority still permits it. Unknown
+completion preserves the pending form; a confirmed minimal receipt does not
+depend on optional navigation/source reads. Final action/scope revocation withholds
+the prepared response without claiming an already committed action rolled back.
+
+Native CSRF-protected forms, escaped bounded content, no-store responses and
+sensitive-input masking remain in force. The optional navigation guard preserves
+pending reasons and confirms discarding another action's unsaved form. No filter
+or rationale is put into a URL, browser store or session. This surface does not
+activate output, send notices, restore prior releases or alter retained work.
+Native scenarios remain maintained but unexecuted under ADR 0100/#102; integrated
+and human acceptance remain #109/#92 before final promotion.
 
 ## Dormant release-derived public output
 

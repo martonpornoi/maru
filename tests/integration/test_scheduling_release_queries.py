@@ -13,6 +13,7 @@ from maru.programme.models import ProgrammeItem
 from maru.programme.public_copy_commands import withdraw_programme_public_rendition
 from maru.scheduling import planning_queries
 from maru.scheduling import release_queries as queries
+from maru.scheduling import release_workspace_queries as workspace_queries
 from maru.scheduling.authorization import (
     DEFAULT_SCHEDULING_AUTHORIZER,
     VIEW_HISTORY,
@@ -94,6 +95,37 @@ def test_current_manifest_is_complete_audited_and_minimized(review_scope):
         ).count()
         == 2
     )
+    # Maintained #102 debt: reuse this existing native world, without adding
+    # another database case or claiming these reads ran during ADR 0100 deferral.
+    request = SchedulingReadRequest(
+        review_scope.request.actor_id,
+        review_scope.request.organization_id,
+        review_scope.request.edition_id,
+        uuid4(),
+    )
+    authority = {"authorizer": review_scope.world.policy}
+    candidates = workspace_queries.list_release_candidates(request, **authority)
+    assert any(
+        row.id == review_scope.release_selection.candidate_id for row in candidates
+    )
+    approvals = workspace_queries.list_release_approvals(request, **authority)
+    assert len(approvals.entries) == 1
+    selected = workspace_queries.load_release_approval(
+        request,
+        approval_id=approvals.entries[0].id,
+        **authority,
+    )
+    assert selected == approvals.entries[0]
+    assert (
+        selected.snapshot_digest
+        == review_scope.release_selection.source_snapshot_digest
+    )
+    pointer = workspace_queries.load_release_pointer(request, **authority)
+    assert pointer.active_release_id == published.object_id
+    assert pointer.version == 1
+    history = workspace_queries.list_release_history(request, **authority)
+    assert len(history.entries) == 1
+    assert history.entries[0].release_id == published.object_id
 
 
 def test_historical_manifest_uses_independent_history_authority(review_scope):
@@ -163,6 +195,25 @@ def test_whole_withdrawal_never_returns_retained_selections(review_scope):
     assert impact.after_state == "withdrawn"
     assert impact.changes is None
     assert not impact.is_active
+    request = SchedulingReadRequest(
+        review_scope.request.actor_id,
+        review_scope.request.organization_id,
+        review_scope.request.edition_id,
+        uuid4(),
+    )
+    pointer = workspace_queries.load_release_pointer(
+        request, authorizer=review_scope.world.policy
+    )
+    assert pointer.active_release_id is None
+    assert pointer.version == 2
+    history = workspace_queries.list_release_history(
+        request, authorizer=review_scope.world.policy
+    )
+    assert [row.version for row in history.entries] == [2, 1]
+    assert [row.operation for row in history.entries] == [
+        "release_withdraw",
+        "release_publish",
+    ]
 
 
 def test_native_copy_withdrawal_invalidates_current_and_historical_manifest(
@@ -203,6 +254,18 @@ def test_native_copy_withdrawal_invalidates_current_and_historical_manifest(
     assert impact.after_state == "invalidated"
     assert impact.changes is None
     assert impact.is_active
+    # Source invalidation must not prevent discovery of a deliberate withdrawal.
+    pointer = workspace_queries.load_release_pointer(
+        SchedulingReadRequest(
+            review_scope.request.actor_id,
+            review_scope.request.organization_id,
+            review_scope.request.edition_id,
+            uuid4(),
+        ),
+        authorizer=review_scope.world.policy,
+    )
+    assert pointer.active_release_id == published.object_id
+    assert pointer.version == 1
 
 
 def test_manifest_fails_closed_if_required_artifact_verification_fails(review_scope):
