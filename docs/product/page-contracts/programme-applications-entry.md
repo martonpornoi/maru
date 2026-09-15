@@ -14,6 +14,16 @@ task without knowing its database identifier. The reserved entry is
 It remains unmounted in production and absent from both current profile menus.
 Final shared-shell registration and accountable setup remain separate #108 work.
 
+The dormant entry also connects to independently admitted item, timetable, release
+and change-notice workspaces through their shared fixed-label navigation contract.
+Those workspaces can offer an independently admitted return here. Applications
+owns metadata-only entry admission using these same seven purposes, exact owner
+facts and conversion proofs; it reads no Department labels or application records
+merely to show a navigation link. Optional link absence is not a completeness claim.
+Unmounted, shadowed, denied or unavailable destinations are omitted. Recheck links
+after rendering and omit moved links without changing pending input or a completed
+command result. The actual labelled entry retains complete source/audit enforcement.
+
 | Task | Exact Department capability after `applications.` | Requested fields |
 | --- | --- | --- |
 | Manage calls | `manage_programme_calls` | None |

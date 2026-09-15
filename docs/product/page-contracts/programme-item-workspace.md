@@ -24,7 +24,9 @@ URL configuration stay unchanged. #102, #97 and #92 precede final promotion.
 ## Scope and disclosure
 
 The bounded #108 connection increment adds a **Programme workflow** region with
-independently admitted, mounted timetable and release task links. The
+independently admitted, mounted Applications entry, timetable, release and notice
+task links. Applications entry needs its own metadata-only purpose admission,
+not private Programme inventory authority. The
 [timetable connection contract](programme-timetable-planning.md#canonical-connections-under-108)
 owns exact-scope resolution, fixed labels, post-render omission and pending-input
 behavior. No optional destination source read is required to save an item.

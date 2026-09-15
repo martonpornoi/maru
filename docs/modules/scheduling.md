@@ -526,12 +526,17 @@ and form-choice comparison. It independently checks base field ceilings and the
 Events-owned parent relation before dispatch and after rendering. It introduces
 no outer cross-owner transaction, mutation, schema or profile grant.
 `workspace_navigation.programme_workspace_links` is the public metadata-only
-navigation seam consumed by Programme, Scheduling and organizer Workforce pages.
-The closed external source `shifts` may receive all four independent task links;
+navigation seam consumed by Applications, Programme, Scheduling and organizer
+Workforce pages. The closed external source `shifts` may receive all five independent task links;
 ordinary Programme sources still omit their own task. Fixed task labels require
 independent owner admission and exact reverse/resolve identity; optional denied,
 unmounted or moved links are omitted without obscuring an otherwise authorized
 result. See the [canonical connection contract](../product/page-contracts/programme-timetable-planning.md#canonical-connections-under-108).
+The Applications entry is admitted through its public metadata-only
+`can_enter_programme_tasks` query, preserving all seven independent purposes,
+including reviewer-only and dual-owner conversion-only entry. No Department label
+or application record is fetched for a fixed-label link. Applications' actual
+labelled entry retains separate required audit and complete source checks.
 The notice task uses its own `view_change_notices`/`change_notices` admission and
 exact organization/edition route; it does not require a series lookup or grant
 host selection, operator-recipient discovery, preparation or review authority.

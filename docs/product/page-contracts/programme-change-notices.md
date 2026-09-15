@@ -26,6 +26,12 @@ output or its form state.
 
 ## Output continuations
 
+The organizer's shared Programme workflow can also return to independently admitted
+Applications entry. Its metadata-only seven-purpose check grants no notice sender,
+recipient or review authority and loads no private Department or proposal labels.
+The ordinary item/timetable/release connections and final optional-link omission
+remain unchanged; a disappeared entry link never replaces a saved notice result.
+
 Current notice details connect to the genuine viewer's independently admitted
 hosting/work timetable or exact operator-purpose run sheet and now/next. Sender
 recipient-field authority does not grant viewer output authority. Never invoke an

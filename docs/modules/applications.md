@@ -138,6 +138,17 @@ incoherence, overflow and required audit failure release no partial catalog.
 Current profiles/menus and production routing remain unchanged. Accountable setup,
 other owner launchers and integrated acceptance remain #108 work.
 
+The public `programme_department_tasks.can_enter_programme_tasks` supplies optional
+metadata-only navigation admission through the same complete seven-purpose owner,
+Department-ID, policy and conversion-adapter snapshot. It uses the default sealed
+adapter with no public substitute parameter and reads no Department label, answers
+or application inventory. False includes denied/unavailable/changed sources and
+does not assert completeness. The shared Programme workspace navigation uses this
+query for independently admitted Applications return links; the entry reciprocates
+with separately admitted item, timetable, release and notice links. Repeated
+post-render observations remove moved links without invalidating saved commands
+or replacing pending input. This never replaces the labelled query's audit.
+
 The [guided call workspace](../product/page-contracts/programme-call-workspace.md)
 adds a dedicated, unmounted #108 manager adapter over the existing Programme
 commands and complete managed projections. It provides exact-Department call

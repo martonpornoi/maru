@@ -2736,6 +2736,13 @@ def test_native_conversion_entry_real_grants_and_owner_audit(
     events_before = DomainEvent.objects.count()
     outbox_before = OutboxMessage.objects.count()
     correlation = uuid4()
+    audit_before = AuditEvent.objects.count()
+    assert department_task_services.can_enter_programme_tasks(
+        actor_id=actor.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+    ) is (missing is None)
+    assert AuditEvent.objects.count() == audit_before
     result = department_task_services.list_programme_department_tasks(
         actor_id=actor.id,
         organization_id=edition.organization_id,

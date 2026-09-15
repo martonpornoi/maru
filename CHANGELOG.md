@@ -22,6 +22,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Connected the dormant Programme Applications entry with item, timetable, release
+  and notice workspaces through independently permitted same-edition links.
+  Reviewer-only and conversion-only entry remains separate from planning access;
+  disappearing links preserve pending input and completed command results.
+
 - Programme's dormant Applications entry now offers direct accepted-proposal
   conversion without requiring review or decision access. The link independently
   requires both Applications and Programme permissions plus exact adapter pins;

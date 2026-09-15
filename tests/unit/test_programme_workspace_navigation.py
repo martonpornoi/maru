@@ -253,3 +253,79 @@ def test_notice_denial_does_not_hide_other_admitted_tasks(links_world):
 
     world.scheduling.side_effect = authorize
     assert [row.code for row in links(world)] == ["timetable", "release"]
+
+
+def _application_route(world):
+    world.urlconf.urlpatterns.append(
+        path(
+            "admin/applications/programme-calls/<uuid:organization_id>/<uuid:edition_id>/",
+            destination,
+            name="programme-department-tasks",
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    "current", ["items", "timetable", "release", "notices", "shifts"]
+)
+def test_applications_return_link_requires_its_own_metadata_admission(
+    links_world, monkeypatch, current
+):
+    world = links_world
+    _application_route(world)
+    admission = Mock(return_value=True)
+    monkeypatch.setattr(navigation, "can_enter_programme_tasks", admission)
+    offered = links(world, current)
+    link = next(item for item in offered if item.code == "applications")
+    assert link.label == "Programme calls, review and conversion"
+    assert resolve(link.url, urlconf=world.urlconf).kwargs == {
+        "organization_id": world.scope.organization_id,
+        "edition_id": world.scope.edition_id,
+    }
+    admission.assert_called_once_with(
+        actor_id=world.scope.actor_id,
+        organization_id=world.scope.organization_id,
+        edition_id=world.scope.edition_id,
+    )
+
+
+@pytest.mark.parametrize("admission", [False, None, 1])
+def test_other_owner_grants_cannot_admit_applications(
+    links_world, monkeypatch, admission
+):
+    world = links_world
+    _application_route(world)
+    monkeypatch.setattr(
+        navigation, "can_enter_programme_tasks", Mock(return_value=admission)
+    )
+    assert [item.code for item in links(world)] == ["timetable", "release"]
+
+
+@pytest.mark.parametrize("cause", ["unmounted", "shadowed", "database"])
+def test_unavailable_applications_entry_never_becomes_a_link(
+    links_world, monkeypatch, cause
+):
+    world = links_world
+    admission = Mock(return_value=True)
+    monkeypatch.setattr(navigation, "can_enter_programme_tasks", admission)
+    if cause != "unmounted":
+        _application_route(world)
+    if cause == "shadowed":
+        world.urlconf.urlpatterns.insert(
+            0, path("<path:rest>", destination, name="shadow")
+        )
+    elif cause == "database":
+        admission.side_effect = DatabaseError
+    assert not any(item.code == "applications" for item in links(world))
+    if cause == "unmounted":
+        admission.assert_not_called()
+
+
+def test_applications_source_uses_existing_independent_destination_proofs(links_world):
+    world = links_world
+    offered = links(world, "applications")
+    assert [item.code for item in offered] == ["items", "timetable", "release"]
+    assert all("applications" not in item.url for item in offered)
+    world.programme.assert_called()
+    world.scheduling.assert_called()
+    world.release.assert_called()

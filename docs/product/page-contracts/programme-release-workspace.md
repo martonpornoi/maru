@@ -22,11 +22,13 @@ It is not included in production URLs. Links are conveniences, never admission.
 ## Owner reads and disclosure
 
 The bounded #108 connection increment offers independently admitted Programme
-items and canonical timetable links according to the
+items, canonical timetable, notices and Applications entry links according to the
 [connection contract](programme-timetable-planning.md#canonical-connections-under-108).
 Optional link changes never convert a retained command receipt into a private
 source refresh requirement. Current release admission and final disclosure checks
 remain authoritative; navigation grants no additional task.
+Applications return admission reads only its own complete purpose metadata, never
+Department labels, proposal answers or a source inventory needed to return a receipt.
 
 - Labelled current candidate discovery requires `scheduling.view_planning` /
   `candidates`, is complete and bounded by Scheduling's candidate limit, and

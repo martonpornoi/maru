@@ -17,6 +17,7 @@ from maru.applications import programme_department_tasks as tasks
 from maru.applications.programme_department_tasks import (
     list_programme_department_tasks as read_real_entry,
 )
+from maru.scheduling.workspace_navigation import ProgrammeWorkspaceLink
 from tests.unit import test_application_programme_department_tasks as entry_tests
 from tests.unit.test_application_programme_call_views import shell
 
@@ -153,6 +154,53 @@ def test_empty_and_readonly_are_truthful_without_hidden_counts(page):
     )
     assert "Private planning is read-only" in text
     assert "Programme <synthetic>" not in text
+
+
+@pytest.mark.parametrize("changed", [False, True])
+def test_optional_workspace_links_are_scoped_and_omitted_if_they_move(
+    page, monkeypatch, changed
+):
+    link = ProgrammeWorkspaceLink(
+        "items",
+        "Programme items",
+        f"/admin/programme/items/{page.organization}/{page.edition}/",
+    )
+    navigation = Mock(side_effect=[(link,), () if changed else (link,)])
+    monkeypatch.setattr(views, "programme_workspace_links", navigation)
+    response = _request(page)
+    assert response.status_code == 200
+    html = BeautifulSoup(response.content, "html.parser")
+    assert html.find("a", string="Manage calls")["href"] == page.choice.url
+    if changed:
+        assert not html.find("nav", {"aria-label": "Programme workflow"})
+        assert link.url not in response.content.decode()
+    else:
+        assert html.find("a", string="Programme items")["href"] == link.url
+    assert page.reader.call_count == 2
+    assert navigation.call_count == 2
+    first, second = navigation.call_args_list
+    assert first == second
+    scope = first.args[0]
+    assert scope.actor_id == page.actor
+    assert scope.organization_id == page.organization
+    assert scope.edition_id == page.edition
+    assert first.kwargs == {"current": "applications", "urlconf": None}
+
+
+def test_navigation_rerender_still_requires_the_final_complete_source(
+    page, monkeypatch
+):
+    link = ProgrammeWorkspaceLink("items", "Programme items", "/synthetic/items/")
+    monkeypatch.setattr(
+        views, "programme_workspace_links", Mock(side_effect=[(link,), ()])
+    )
+    page.reader.side_effect = [
+        page.catalog,
+        replace(page.catalog, source_fingerprint="revoked"),
+    ]
+    response = _request(page)
+    assert response.status_code == 404
+    assert page.choice.url not in response.content.decode()
 
 
 def test_duplicate_department_names_have_stable_codes_and_separate_links(page):
