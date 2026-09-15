@@ -7,6 +7,7 @@ from .programme_decider_views import programme_decider
 from .programme_moderation_views import programme_moderation
 from .programme_review_intake_views import programme_review_intake
 from .programme_review_management_views import programme_review_management
+from .programme_review_person_views import programme_review_person_reference
 from .programme_review_setup_views import programme_review_setup
 from .programme_reviewer_views import programme_reviewer_work
 
@@ -15,6 +16,25 @@ _ROOT = (
     "<uuid:edition_id>/<uuid:department_id>/"
 )
 urlpatterns = [
+    path(
+        _ROOT
+        + "mine/<uuid:case_id>/<uuid:assignment_id>/answers/person/<str:question_key>/",
+        programme_review_person_reference,
+        {"purpose": "reviewer"},
+        name="programme-review-own-person-reference",
+    ),
+    path(
+        _ROOT + "moderation/<uuid:case_id>/answers/person/<str:question_key>/",
+        programme_review_person_reference,
+        {"purpose": "moderator"},
+        name="programme-moderation-person-reference",
+    ),
+    path(
+        _ROOT + "decisions/<uuid:case_id>/answers/person/<str:question_key>/",
+        programme_review_person_reference,
+        {"purpose": "decider"},
+        name="programme-decision-person-reference",
+    ),
     path(
         _ROOT + "conversion/", programme_conversion, name="programme-conversion-sources"
     ),

@@ -262,6 +262,10 @@ def _projection(detail: Any) -> dict[str, Any]:
                 "label": row["label"],
                 "classification": row["classification"],
                 "text": _answer_text(row),
+                "person_key": row["key"]
+                if (row.get("type"), row.get("reference_kind"))
+                == ("person_reference", "programme.person")
+                else None,
             }
             for row in answers
         )

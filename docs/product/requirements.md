@@ -1383,6 +1383,25 @@ architecture documents, implementation issues, tests, and release notes.
   a new seal. Invitation, proposal, acknowledgement, withdrawal, or submission
   creates no Participation, Registration, payment, attendance, volunteer,
   Programme item, review decision, publication, schedule, or host relationship.
+  A `person_reference` question with registered kind `programme.person` names
+  one existing Maru person; it creates none of those relationships and implies
+  no consent or participation. An authorized lead or accepted collaborator
+  selects by a deliberately entered exact known login email, never a directory
+  or raw identifier. Independently authorized question read and edit authority,
+  current applicability and original proposal/call cursors precede lookup.
+  Positive and indistinguishable empty results are audited before disclosure.
+  Confirmation and retry bind the original account, not a later email match;
+  fresh nonempty writes validate the current active verified person through
+  Identity, while canonical successful replay retains its original evidence.
+  Clearing is explicit and remains subject to required-answer sealing rules.
+  Current and frozen answer viewers independently authorize the exact source
+  before loading only a minimized current account label. Unavailable identities
+  retain a neutral historical-reference explanation, not another person or a
+  current-role claim. Anonymous review excludes the reference before any identity
+  lookup, and nonanonymous review requires its existing exact-seal, question,
+  role, field and sensitive-content authority. Unknown kind/type pairs never
+  fall through to generic model or identity resolution. Labels are current
+  presentation, not a rewrite of the sealed answer or proposed-public profile.
 - **PRG-010 — Preview-first Programme import staging:** An organization may
   deliberately pin one Applications-owned
   `applications.import.programme_call_proposal@1` adapter to stage a bounded

@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import pytest
 
+from maru.applications import programme_person_references as person_references
 from maru.applications import programme_review_queries as queries
 from maru.applications.models import ProgrammeReviewAction as Action
 from maru.applications.programme_authorization import (
@@ -27,6 +28,9 @@ from maru.applications.programme_review_authorization import (
 from maru.applications.programme_review_inputs import (
     ProgrammeReviewCommandInput as Intent,
 )
+from maru.applications.programme_review_person_references import (
+    get_programme_review_person_reference,
+)
 from maru.applications.programme_review_queries import (
     get_programme_review_detail,
     get_self_programme_decision,
@@ -34,6 +38,7 @@ from maru.applications.programme_review_queries import (
 )
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
+from tests.factories import AccountFactory
 from tests.integration import test_application_programme_services as source_worlds
 from tests.integration.test_application_programme_services import (
     _AUTHORIZER,
@@ -230,6 +235,91 @@ def test_structured_contributor_projection_follows_the_pinned_anonymity_policy(
         {"code": "talk", "label": "Original talk label"},
     ]
     assert "Unselected option label" not in detail.answers_json
+
+
+@pytest.mark.parametrize("anonymous", [False, True])
+def test_native_registered_person_viewer_preserves_exact_assignment_and_anonymity(
+    anonymous,
+    monkeypatch,
+):
+    """Maintain native reference-viewer debt without bypassing answer SQL exclusion."""
+    target = AccountFactory(display_name="Synthetic retained person")
+    original_definition = source_worlds._definition
+    original_answer = review_worlds.append_programme_proposal_answer
+
+    def person_definition(now, *, code):
+        definition = original_definition(now, code=code)
+        section = definition.sections[0]
+        question = replace(
+            section.questions[0],
+            field_type=ProgrammeCallQuestionType.PERSON_REFERENCE,
+            minimum_length=None,
+            maximum_length=None,
+            reference_kind="programme.person",
+        )
+        return replace(definition, sections=(replace(section, questions=(question,)),))
+
+    def selected_answer(**values):
+        return original_answer(**(values | {"value": str(target.id)}))
+
+    monkeypatch.setattr(source_worlds, "_definition", person_definition)
+    monkeypatch.setattr(
+        review_worlds, "append_programme_proposal_answer", selected_answer
+    )
+    policy = review_policy()
+    world = create_review_world(
+        policy=replace(policy, stages=(replace(policy.stages[0], anonymous=anonymous),))
+    )
+    assignment = assign_and_score(world, world.reviewer.id)
+    request = world.read(
+        world.reviewer.id, REVIEW, fields=frozenset({"review_answers"})
+    )
+    arguments = {
+        "request": request,
+        "case_id": world.case_id,
+        "assignment_id": assignment,
+        "question_key": "session-title",
+        "authorizer": _AUTHORIZER,
+    }
+    if anonymous:
+
+        def forbidden(_ids):
+            raise AssertionError("Anonymous review must not resolve person targets")
+
+        monkeypatch.setattr(
+            person_references,
+            "active_verified_person_account_display_labels",
+            forbidden,
+        )
+        assert (
+            json.loads(
+                get_programme_review_detail(
+                    request=request,
+                    case_id=world.case_id,
+                    authorizer=_AUTHORIZER,
+                ).answers_json
+            )
+            == []
+        )
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_review_person_reference(**arguments)
+    else:
+        result = get_programme_review_person_reference(**arguments)
+        assert result.display_label == target.display_name
+        assert result.person_current
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_review_person_reference(
+                **(arguments | {"assignment_id": uuid4()})
+            )
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            get_programme_review_person_reference(
+                **(
+                    arguments
+                    | {
+                        "request": replace(request, actor_id=world.peer.id),
+                    }
+                )
+            )
 
 
 class _DenySensitive(_AllowExactProgrammeAuthorizer):

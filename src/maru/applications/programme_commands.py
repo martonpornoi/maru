@@ -3361,6 +3361,8 @@ def append_programme_proposal_answer(
     retry_key: UUID,
     correlation_id: UUID,
     source_channel: str,
+    expected_call_version: int | None = None,
+    expected_definition_version: int | None = None,
     now: datetime | None = None,
     authorizer: ApplicationsProgrammeAuthorizer = (_DEFAULT_AUTHORIZER),
 ) -> ProgrammeCommandResult:
@@ -3390,6 +3392,10 @@ def append_programme_proposal_answer(
         Correlation identifier for receipt, audit, and event evidence.
     source_channel : str
         Registered channel that initiated the command.
+    expected_call_version : int | None, default=None
+        Optional original call aggregate fence, paired with the schema fence.
+    expected_definition_version : int | None, default=None
+        Optional original immutable schema fence, paired with the call fence.
     now : datetime | None, default=None
         Optional aware instant used for the applicant edit window.
     authorizer : ApplicationsProgrammeAuthorizer, default=_DEFAULT_AUTHORIZER
@@ -3406,6 +3412,8 @@ def append_programme_proposal_answer(
         If the proposal or question is not currently editable.
     ApplicationsProgrammeUnavailableError
         If the selected answer cannot be normalized for the stored question.
+    ApplicationsProgrammeVersionConflictError
+        If an explicitly fenced immutable schema is no longer the same source.
     """
     (
         actor_id,
@@ -3430,6 +3438,17 @@ def append_programme_proposal_answer(
     )
     question_id = require_programme_uuid(question_id, field="question_id")
     effective_now = _effective_now(now)
+    answer_values: dict[str, object] = {"question_id": question_id, "value": value}
+    if expected_call_version is not None or expected_definition_version is not None:
+        if any(
+            type(cursor) is not int or not 1 <= cursor <= 2**63 - 1
+            for cursor in (expected_call_version, expected_definition_version)
+        ):
+            raise ApplicationsProgrammeUnavailableError
+        answer_values.update(
+            expected_call_version=expected_call_version,
+            expected_definition_version=expected_definition_version,
+        )
     digest = _request_digest(
         action=ProgrammeCommandAction.PROPOSAL_ANSWER_REVISED,
         actor_id=actor_id,
@@ -3439,7 +3458,7 @@ def append_programme_proposal_answer(
         expected_version=expected_version,
         reason=reason,
         source_channel=source_channel,
-        values={"question_id": question_id, "value": value},
+        values=answer_values,
     )
     replay = _replay(
         actor_id=actor_id,
@@ -3486,6 +3505,13 @@ def append_programme_proposal_answer(
         expected=expected_version,
     )
     _require_draft_edit_window(proposal=proposal, effective_now=effective_now)
+    if expected_call_version is not None:
+        _require_version(
+            actual=proposal.call.definition.aggregate_version,
+            expected=expected_call_version,
+        )
+        if proposal.call.definition.version != expected_definition_version:
+            raise ApplicationsProgrammeVersionConflictError
     question = (
         ApplicationQuestion.objects.select_for_update()
         .filter(
@@ -3517,6 +3543,17 @@ def append_programme_proposal_answer(
             unicodedata.normalize("NFC", value) if isinstance(value, str) else value
         ),
     )
+    if question.field_type == "person_reference":
+        if question.reference_kind != "programme.person":
+            raise ApplicationsProgrammeUnavailableError
+        if (
+            normalized_value is not None
+            and resolve_active_verified_person_reference(
+                account_id=UUID(str(normalized_value))
+            )
+            is None
+        ):
+            raise ApplicationsProgrammeUnavailableError
     previous_sequence = (
         ApplicationAnswerRevision.objects.filter(
             submission=proposal.submission,

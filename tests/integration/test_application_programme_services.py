@@ -94,6 +94,13 @@ from maru.applications.programme_inputs import (
     ProgrammeProposalRevisionResponseInput,
     ProgrammeProposalSelectionInput,
 )
+from maru.applications.programme_person_references import (
+    ProgrammePersonReferenceIntent,
+    ProgrammePersonReferenceRequest,
+    get_self_programme_person_reference,
+    prepare_programme_person_selection,
+    read_programme_person_selection,
+)
 from maru.applications.programme_personal_queries import (
     get_self_programme_frozen_revision,
     get_self_programme_workflow,
@@ -553,6 +560,116 @@ def test_integer_limits_and_retained_invalid_answer_require_new_revision(
     )
     assert detail.answers[0].value == 15
     assert detail.answers[0].answer_revision_id == repaired.target_id
+
+
+def test_native_person_reference_selection_exact_seal_and_retained_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Maintain exact-person native acceptance debt; ADR 0100 execution is deferred."""
+    original = _definition
+
+    def person_definition(now: object, *, code: str) -> ProgrammeCallDefinitionInput:
+        definition = original(now, code=code)
+        section = definition.sections[0]
+        question = replace(
+            section.questions[0],
+            field_type=ProgrammeCallQuestionType.PERSON_REFERENCE,
+            minimum_length=None,
+            maximum_length=None,
+            reference_kind="programme.person",
+        )
+        return replace(definition, sections=(replace(section, questions=(question,)),))
+
+    monkeypatch.setitem(globals(), "_definition", person_definition)
+    world = _start_proposal(_active_call(code="guided-person-reference"))
+    call = world.call
+    target = AccountFactory(display_name="Synthetic referenced account")
+    request = ProgrammePersonReferenceRequest(
+        world.lead.id,
+        call.edition.organization_id,
+        call.edition.id,
+        world.proposal_id,
+        call.question_id,
+        uuid4(),
+        "test",
+    )
+    definition = ApplicationDefinition.objects.get(id=call.definition_id)
+    intent = ProgrammePersonReferenceIntent(
+        world.version, definition.aggregate_version, definition.version, uuid4()
+    )
+    selected = prepare_programme_person_selection(
+        request=request,
+        intent=intent,
+        email=target.email,
+        authorizer=_AUTHORIZER,
+    )
+    assert selected is not None
+    assert selected.account_id == target.id
+    common = {
+        "actor_id": world.lead.id,
+        "organization_id": call.edition.organization_id,
+        "edition_id": call.edition.id,
+        "proposal_id": world.proposal_id,
+        "source_channel": "test",
+        "authorizer": _AUTHORIZER,
+        "reason": "Retain an exact known-person reference",
+    }
+    command = {
+        **common,
+        "question_id": call.question_id,
+        "value": str(target.id),
+        "expected_version": intent.expected_version,
+        "expected_call_version": intent.expected_call_version,
+        "expected_definition_version": intent.expected_definition_version,
+        "retry_key": intent.retry_key,
+        "correlation_id": uuid4(),
+    }
+    saved = append_programme_proposal_answer(**command)
+    assert (
+        get_self_programme_person_reference(
+            request=request, authorizer=_AUTHORIZER
+        ).display_label
+        == target.display_name
+    )
+    sealed = seal_programme_proposal(
+        **common,
+        expected_version=saved.resulting_version,
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    frozen = get_self_programme_person_reference(
+        request=request,
+        revision_id=sealed.target_id,
+        authorizer=_AUTHORIZER,
+    )
+    assert frozen.display_label == target.display_name
+    target.is_active = False
+    target.save(update_fields=["is_active"])
+    retained = read_programme_person_selection(
+        request=request,
+        intent=intent,
+        token=selected.token,
+        authorizer=_AUTHORIZER,
+    )
+    assert retained.account_id == target.id
+    assert not retained.person_current
+    assert append_programme_proposal_answer(**command) == replace(saved, replayed=True)
+    unavailable = get_self_programme_person_reference(
+        request=request,
+        revision_id=sealed.target_id,
+        authorizer=_AUTHORIZER,
+    )
+    assert not unavailable.person_current
+    assert unavailable.present
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        get_self_programme_person_reference(
+            request=replace(request, actor_id=AccountFactory().id),
+            revision_id=sealed.target_id,
+            authorizer=_AUTHORIZER,
+        )
+    assert not ProgrammeProposalCollaborator.objects.filter(
+        proposal_id=world.proposal_id
+    ).exists()
 
 
 def test_programme_call_protects_its_owner_department_from_hard_delete() -> None:

@@ -69,8 +69,11 @@ recipient self receipt and accepted-item conversion remain distinct tasks.
 
 Permitted answers reuse the [typed review presentation contract](programme-reviewer-work.md#readable-typed-answers):
 immutable selected choice labels, labelled address components, explicit absence
-and escaped plain values. No identifying lookup or unsafe file/reference viewer
-is introduced; independent decider and sensitive-read admission remain mandatory.
+and escaped plain values. Registered Programme person answers additionally link to
+the [dedicated person viewer](programme-person-references.md), which requires the
+exact independent decider, current seal, nonanonymous allowed question and sensitive
+field authority before minimized Identity labels. No lookup occurs in the pure
+presenter; domain-reference and file viewing remain separately unfinished.
 
 Database-free tests cover purpose/field/independence, complete filtered paging,
 all-stage readiness, exact template/message separation, proof tampering and

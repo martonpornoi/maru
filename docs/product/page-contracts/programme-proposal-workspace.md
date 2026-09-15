@@ -87,8 +87,12 @@ must be corrected through a new revision before a new seal; do not rewrite histo
 or retrospectively invalidate an already immutable seal merely by rendering it.
 Use labelled structured address inputs and explicitly offset-aware instants;
 never silently interpret an unzoned instant as server-local time. Required answers
-may remain blank while drafting but block sealing. Reference/file tasks require
-authorized owner choices: raw UUID input is not a substitute. Until that boundary
+may remain blank while drafting but block sealing. The separate
+[Programme person-reference task](programme-person-references.md) supplies known-person
+selection, deliberate clearing and current/exact-seal viewers for the registered
+`person_reference` / `programme.person` pair. It creates no collaboration or host
+relationship. Domain-reference, safe-file and unknown-kind tasks still require
+authorized owner choices: raw UUID input is not a substitute. Until their boundary
 exists, show an honest unavailable explanation instead of an unsafe editor.
 
 Invitation and reinvitation take a deliberately entered exact known login email

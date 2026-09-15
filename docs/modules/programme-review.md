@@ -149,9 +149,11 @@ authority still apply. Rendered output is compared against reauthorized owner
 projections before and after rendering. Pending assignments never load content.
 Each command POST first reads only scoped retained own metadata, preserving its
 original rubric/version/retry across stage or source changes. Successful old
-receipt/late recusal renders no now-denied submission content. Typed safe file,
-person/domain reference and other dedicated structured-answer viewers remain
-explicit #108 work; no unsafe reference resolution or download is invented.
+receipt/late recusal renders no now-denied submission content. The dormant
+[Programme person viewer](../product/page-contracts/programme-person-references.md)
+resolves only the registered person kind after exact current-seal answer admission;
+anonymous SQL omission precedes target lookup, including direct URLs. Domain and
+safe-file viewers remain explicit #108 work; no generic resolver is introduced.
 
 Every staff purpose also requires an active verified person, exact organization
 and edition, current owner Department, and current policy/field proof.
@@ -267,8 +269,11 @@ immutable serialized **projections**, not raw model dictionaries:
   dates/times. Consumers escape plain output; submitted URLs/contact values are
   not automatically actionable. Unknown kinds and malformed value shapes fail
   unavailable instead of dumping an object or returning partial answer pages.
-  Protected person/domain/file values remain placeholders until independently
-  authorized viewers exist. This presentation contract does not change any
+  Registered Programme person answers offer a separately authorized viewer using
+  the exact question key, not a URL account identifier. Current account labels are
+  not frozen contributor names, and unavailable people retain neutral history.
+  Domain/file/unknown-kind values remain placeholders. This presentation contract
+  does not change any
   reviewer/moderator/decider field, anonymity, classification, currency or audit
   boundary, and adds no writer or database relation.
 - Evidence contains a complete page of permitted entries. Reviewers see their

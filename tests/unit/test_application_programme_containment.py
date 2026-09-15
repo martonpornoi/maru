@@ -89,6 +89,9 @@ _FORBIDDEN_SURFACE_MARKERS = (
 )
 _DORMANT_TEMPLATE_MARKERS = {
     (
+        "src/maru/applications/templates/applications/programme_review_person_reference.html"
+    ): frozenset({"programme-call", "programme_call"}),
+    (
         "src/maru/applications/templates/applications/programme_conversion.html"
     ): frozenset({"programme-call", "programme_call", "programme_item"}),
     ("src/maru/applications/templates/applications/programme_decider.html"): frozenset(
@@ -164,7 +167,13 @@ def _execution_surface_paths() -> tuple[Path, ...]:
 
 
 @pytest.mark.parametrize(
-    "name", ["programme_decisions", "programme_review_setup", "programme_review_intake"]
+    "name",
+    [
+        "programme_decisions",
+        "programme_review_setup",
+        "programme_review_intake",
+        "programme_review_person_reference",
+    ],
 )
 def test_dormant_decision_template_admits_only_existing_shared_asset_markers(name):
     path = (

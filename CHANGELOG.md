@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added dormant Programme person-reference tasks: prepare an exact known person
+  or explicit clear, confirm the original selection, and inspect a protected
+  current or sealed answer. Reviewers, moderators and deciders use their own
+  independently authorized viewers; anonymous reviews never resolve the person.
+  A reference creates no invitation, contributor, host or public-profile grant.
+
 - Connected dormant Programme notices, same-person timetables, exact-purpose
   operator run sheets and now/next views with independently authorized links.
   Explicit instruction layers stay selected between output views. Final source

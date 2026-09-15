@@ -19,8 +19,12 @@
 
   {% if detail.answers != None %}<h3>Shared applicant answers</h3><ul class="call-cards">{% for row in detail.answers %}<li>
     <h4>{{ row.question.label }}{% if row.question.required %} — required before sealing{% endif %}</h4>
-    <p>{{ row.question.help_text }}</p><p>{% if row.value == None %}Not answered{% else %}{{ row.value }}{% endif %}</p>
-    {% if row.question.field_type in reference_types %}<p>An authorized reference or file chooser is still needed for this field; raw identifiers are not accepted here.</p>{% elif can_answer %}<a href="{{ work_url }}answer/{{ row.question.question_id }}/">Revise {{ row.question.label }}</a>{% endif %}
+    <p>{{ row.question.help_text }}</p>
+    {% if row.question.field_type == "person_reference" and row.question.reference_kind == "programme.person" %}
+      <p><a href="{{ root_url }}{{ workflow.summary.proposal_id }}/references/person/{{ row.question.question_id }}/">View person reference for {{ row.question.label }}</a></p>
+      {% if can_answer %}<p><a href="{{ work_url }}answer/{{ row.question.question_id }}/person/">Select or clear person for {{ row.question.label }}</a></p>{% endif %}
+    {% elif row.question.field_type in reference_types %}<p>An authorized reference or file chooser is still needed for this field; raw identifiers are not accepted here.</p>
+    {% else %}<p>{% if row.value == None %}Not answered{% else %}{{ row.value }}{% endif %}</p>{% if can_answer %}<a href="{{ work_url }}answer/{{ row.question.question_id }}/">Revise {{ row.question.label }}</a>{% endif %}{% endif %}
   </li>{% empty %}<li>No currently applicable shared questions.</li>{% endfor %}</ul>{% endif %}
 
   {% if detail.contributors != None %}<h3>Proposal contributors</h3><p>Other people's private profile fields are not shown.</p><ul class="call-cards">{% for row in detail.contributors %}<li><strong>{{ row.display_label }}</strong> · {{ row.role }} · {{ row.state }}{% if row.invitation_expired %} (invitation expired){% endif %}
@@ -33,7 +37,7 @@
     <p>Revision {{ frozen.revision.sequence }} · {{ frozen.revision.revision_id }} · sealed {% timezone "UTC" %}{{ frozen.revision.sealed_at|date:"c" }}{% endtimezone %} (UTC).</p>
     <p>Content digest: {{ frozen.revision.digest }}.</p>
     <h4>Frozen selection</h4><p>{{ frozen.selection.track_label }} · {{ frozen.selection.format_label }} · {{ frozen.selection.requested_duration_minutes }} minutes.</p>
-    <h4>Frozen shared applicant answers</h4><dl>{% for row in frozen.answers %}<dt>{{ row.question.label }}</dt><dd>{% if row.value == None %}Not answered{% else %}{{ row.value }}{% endif %}</dd>{% empty %}<dt>Questions</dt><dd>No applicable shared questions in this seal.</dd>{% endfor %}</dl>
+    <h4>Frozen shared applicant answers</h4><dl>{% for row in frozen.answers %}<dt>{{ row.question.label }}</dt><dd>{% if row.question.field_type == "person_reference" and row.question.reference_kind == "programme.person" %}<a href="{{ root_url }}{{ workflow.summary.proposal_id }}/revisions/{{ frozen.revision.revision_id }}/references/person/{{ row.question.question_id }}/">View exact sealed person reference for {{ row.question.label }}</a>{% elif row.question.field_type in reference_types %}A dedicated protected viewer is still needed for this reference or file.{% elif row.value == None %}Not answered{% else %}{{ row.value }}{% endif %}</dd>{% empty %}<dt>Questions</dt><dd>No applicable shared questions in this seal.</dd>{% endfor %}</dl>
     <h4>My included frozen profile</h4><p>Profile revision {{ frozen.own_profile.profile_revision_id }} · Policy {{ frozen.own_profile.consent_policy_code }} · Proposed for later publication: {{ frozen.own_profile.proposed_for_publication|yesno:"Yes,No" }} · Policy acknowledged: {{ frozen.own_profile.consent_acknowledged|yesno:"Yes,No" }}.</p>
     <dl>{% for code, value in frozen.own_profile.values %}<dt>{{ code }}</dt><dd>{{ value|default:"Not provided" }}</dd>{% endfor %}</dl>
     <p>Your response binds this exact shared content and your included profile, not a mutable draft or other people's private profile fields. It does not create a host relationship or publish these values.</p>

@@ -42,8 +42,12 @@ Dates, times and instants retain their explicit meaning/offset without assuming 
 viewer timezone. Text, email, phone and HTTPS values remain escaped plain text,
 not automatically actionable links. Unknown types, malformed selected metadata or
 incoherent value shapes produce an unavailable projection, never a raw object dump
-or silently wrong label. Protected person/domain/file values remain non-disclosing
-placeholders pending their independently authorized viewers under #108.
+or silently wrong label. Registered `person_reference` / `programme.person` answers
+link to the independently admitted [person viewer](programme-person-references.md)
+below the exact own assignment's `answers/person/<question-key>/` route. It requires
+the current submitted seal and nonanonymous allowed answer before Identity lookup;
+current account labels are not frozen proposed-public contributor names. Domain,
+file and unregistered-reference values remain non-disclosing placeholders.
 
 This is presentation only: stage allowlists, structured anonymity, sensitive-read
 admission, mandatory audit, source currency and before/after-render checks remain

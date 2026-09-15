@@ -530,6 +530,10 @@ def _answer_row(row: ProgrammeProposalRevisionAnswer) -> dict[str, object]:
         "classification": row.classification,
         "value": value,
     }
+    if row.question_type == "person_reference":
+        if row.question.field_type != row.question_type:
+            raise ProgrammeReviewUnavailableError
+        result["reference_kind"] = row.question.reference_kind
     if row.question_type in {"single_choice", "multiple_choice"} and value is not None:
         if row.question.field_type != row.question_type:
             raise ProgrammeReviewUnavailableError

@@ -11,60 +11,55 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's operator-purpose and known-person notice selection is delivered through
-[PR #136](https://github.com/martonpornoi/maru/pull/136), protected squash
-`984b4ed1a0f83923f98f5a4e1e37e66d435fa653` at 2026-09-15 11:00:12 UTC.
-Its tree equals certified head `342833311ae1f003abd045d19f14c139243b8316`;
+#108's actual-viewer output and continuity connection is delivered through
+[PR #137](https://github.com/martonpornoi/maru/pull/137), protected squash
+`0e5f2f21b9d297788b83ac6cc813804a1e82a361` at 2026-09-15 12:40:00 UTC.
+Its tree equals certified head `091e3dbe2b7ced337d2a732f72d885273571d3f5`;
 clean local main and origin/main were synchronized to the protected result.
 
-All eight retained local gates passed in 18m54s: 7,774 units in 46.99s and
-93 frontend cases. Hosted units passed in 91.04s, quality in 27m56s,
-documentation in 25m42s and workflow in 28m27s. Exact-head PR gate/CodeQL and
+All eight retained local gates passed in 19m16s: 7,928 units in 50.75s and
+93 frontend cases. Hosted units passed in 94.45s, quality in 27m24s,
+documentation in 25m18s and workflow in 28m24s. Exact-head PR gate/CodeQL and
 resolved conversations passed; ordinary match-head squash needed no repair or
-exception. The observed 2m04s quality margin is not guaranteed; #113 retains it.
+exception. The observed 2m36s quality margin is not guaranteed; #113 retains it.
 
-Independent source/room/Department labels, original-person signed selection,
-actual-sender positive/empty audit and current recipient eligibility now guide
-the existing native preview and commands. No directory, impersonation, schema,
-profile or CI change. Maintained native cases remain #102 debt and human tasks
-remain #92. See the [implementation](../checkpoints/2026-09-15-programme-operator-notice-selection.md)
-and [protected delivery](../checkpoints/2026-09-15-programme-operator-notices-protected-delivery.md).
+Public, genuine-person and exact-operator outputs offer independently admitted
+continuations while retaining selected private layers. Final complete owner reads
+withhold changed rendered/downloaded bytes; original source digest/age/expiry remain
+fixed and signed packs are signed once. No directory, impersonation, schema,
+profile or CI change. Maintained native cases and additional owner-read cost remain
+#102 debt; human tasks remain #92. See the [implementation](../checkpoints/2026-09-15-programme-output-continuations.md)
+and [protected delivery](../checkpoints/2026-09-15-programme-output-protected-delivery.md).
 Earlier deliveries remain complete; do not restart or reuse their certification.
 
-## Active bounded outcome: output and continuity connections (#108)
+## Active bounded outcome: Programme person references (#108)
 
-Branch: `codex/programme-output-continuations`, from protected PR #136.
-The recorded notice/timetable/run-sheet and #107 continuity connection is implemented
-locally. Complete database-free feedback passed 7,928 units in 50.72s, with three
-existing URLField warnings; strict mypy passed nine changed source modules, and
-changed Ruff/NumPy checks passed. An initial run hit the inaccessible Windows pytest
-temporary directory; a fresh repository-local test directory resolved that fixture
-failure. Clean exact-commit certification and protected hosted delivery are next.
+Branch: `codex/programme-person-references`, from protected PR #137.
+The recorded authorized person/domain-reference and safe-file gap is next.
+The registered `person_reference` / `programme.person` meaning now has dormant
+selection/clear, signed original-person confirmation and personal current/frozen
+plus independent reviewer/moderator/decider viewers. No directory or relationship
+grant. The existing answer writer retains replay first, validates fresh Identity
+eligibility and optionally fences original call/schema versions under its locks.
+Anonymous review excludes references before target lookup. Full owner/label
+comparisons withhold changed rendered bytes; raw IDs are not answer editors.
 
-Connect only the genuine person or exact room/Department/edition operator,
-preserving explicitly selected output layers. Resolve and independently admit
-optional destinations in the current URL configuration; navigation grants no
-authority and reads no directory. Keep sender permission separate from viewer
-output permission. Source changes or late field revocation withhold old bytes.
-
-Fresh owner comparisons must retain the original observation, complete source
-digest and signed expiry. Normalize only the code-owned check timestamp before
-comparison, never ignore the source digest or renew saved content. Render/sign
-once unless changed optional links require a content-preserving HTML rerender;
-never dispatch a command or signer twice. Public output remains public only.
-No profile, signing-key provisioning, schema or CI-policy change was made.
-
-At 1,280 CSS pixels, a synthetic real-HTTP browser rehearsal confirmed output round
-trips, retained private layers, print-friendly HTML, removed optional links, source
-movement/denial/unavailability and recovery. It is not native policy, printing, zoom
-or assistive-technology acceptance. See the [bounded implementation evidence](../checkpoints/2026-09-15-programme-output-continuations.md).
+Iteration passed 8,031 database-free units in 51.52s before the final browser-found
+hidden-False/checked-checkbox correction; a new five-case regression covers that
+correction. Strict typing, NumPy/semantic documentation and documentation links
+passed during iteration. All 272 final directly affected tests passed in 3.55s.
+Exact-commit development certification and protected GitHub delivery are pending; no PR is open for
+this increment yet. The synthetic browser has exercised selection, confirmation,
+current viewing, reviewer viewing, unavailable-person and anonymous refusal.
+The corrected preview remained unchecked until deliberate confirmation; the
+simulated clear returned to the workspace and its viewer showed no person selected.
+This database-forbidden fixture is not native or human acceptance.
 
 Maintain meaningful database-free regressions and native cases without collecting
 or executing PostgreSQL. Record new native debt in #102 and human work in #92;
-integrated proof remains #109. Extra final owner reads still need native cost
-measurement. The overall #108 connection and #48 remain open. After this protected
-increment, continue authorized reference/file controls and viewers, followed by
+integrated proof remains #109. After reference/file controls and viewers, continue
 accountable setup, ordinary scoped launchers and the complete isolated fixture.
+No profile, production route or CI-policy change is authorized by this increment.
 
 ## Remaining #48 delivery decomposition
 
@@ -76,8 +71,8 @@ outcome by themselves. #108 and #48 remain open.
   guided departmental journey and final gated promotion:
   - independently authorized person/domain-reference selection and safe-file
     intake/selection/viewers; typed text presentation alone does not finish these;
-  - authorized labelled connections from the delivered item/timetable/release
-    workspaces to #104 notices and #107 continuity; staffing-to-Shift is delivered;
+  - complete ordinary scoped entry/navigation over the delivered item, timetable,
+    release, staffing-to-Shift, #104 notice and #107 output connections;
   - accountable blank-organization setup, coherent shared navigation and an isolated
     complete synthetic fixture without changing current profiles;
   - final separately verified promotion only after all gates below pass.

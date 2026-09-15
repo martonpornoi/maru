@@ -130,13 +130,18 @@ def test_application_templates_are_same_shell_and_free_of_mojibake() -> None:
 
     for template_path in template_root.glob("*.html"):
         source = template_path.read_text(encoding="utf-8")
-        if template_path.name == "programme_personal_work.html":
+        if template_path.name in {
+            "programme_personal_work.html",
+            "programme_person_reference.html",
+        }:
             parent = (template_root / "programme_proposals.html").read_text(
                 encoding="utf-8"
             )
-            assert '{% include "applications/programme_personal_work.html" %}' in parent
+            assert ('{% include "applications/' + template_path.name + '" %}') in parent
             assert '{% extends "admin/base_site.html" %}' in parent
             assert "{% extends" not in source
+            assert "<h1" not in source
+            assert "<main" not in source
         elif template_path.name == "programme_decision_source.html":
             parent = (template_root / "programme_decisions.html").read_text(
                 encoding="utf-8"

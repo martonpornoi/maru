@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .programme_decision_views import programme_decisions
+from .programme_person_reference_views import programme_person_reference
 from .programme_personal_views import programme_personal_tasks
 from .programme_proposal_views import programme_proposals
 
@@ -36,6 +37,26 @@ urlpatterns = [
 ]
 
 _WORK = _ROOT + "<uuid:proposal_id>/work/"
+urlpatterns += [
+    path(
+        _WORK + "answer/<uuid:question_id>/person/",
+        programme_person_reference,
+        {"edit": True},
+        name="my-programme-person-select",
+    ),
+    path(
+        _ROOT + "<uuid:proposal_id>/references/person/<uuid:question_id>/",
+        programme_person_reference,
+        name="my-programme-person-reference",
+    ),
+    path(
+        _ROOT
+        + "<uuid:proposal_id>/revisions/<uuid:revision_id>/"
+        + "references/person/<uuid:question_id>/",
+        programme_person_reference,
+        name="my-programme-frozen-person-reference",
+    ),
+]
 urlpatterns += [path(_WORK, programme_personal_tasks, name="my-programme-work")]
 for _action in (
     "selection",
