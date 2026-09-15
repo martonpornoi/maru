@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from sphinx.application import Sphinx
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -76,3 +80,36 @@ autoapi_ignore = [
 mermaid_version = "11.16.1"
 mermaid_include_elk = ""
 d3_version = "7.9.0"
+
+
+def _section_navigation(
+    app: Sphinx,
+    pagename: str,
+    templatename: str,
+    context: dict[str, Any],
+    doctree: Any,
+) -> None:
+    """Keep all documents available without rendering every branch on each page."""
+    del app, pagename, templatename, doctree
+    original = context.get("toctree")
+    if not callable(original):
+        return
+
+    def current_section(**options: Any) -> Any:
+        # Furo explicitly requests collapse=False. Apply the owning ADR 0074
+        # policy before its navigation transformation, not after expensive HTML.
+        return original(**(options | {"collapse": True}))
+
+    context["toctree"] = current_section
+
+
+def setup(app: Sphinx) -> None:
+    """Apply section navigation before Furo builds its per-page sidebar.
+
+    Parameters
+    ----------
+    app : Sphinx
+        Current documentation application, with no global theme monkeypatch.
+    """
+    # Furo's html-page-context listener uses Sphinx's default priority of 500.
+    app.connect("html-page-context", _section_navigation, priority=400)

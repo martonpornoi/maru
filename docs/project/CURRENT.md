@@ -17,59 +17,44 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 Its tree equals certified head `396f16bcc8e5c77d9da43818e758e0b6d08a79a8`;
 clean local main and origin/main were synchronized to the protected result.
 
-All eight retained local gates passed in 18m49s: 8,036 units in 51.30s and
-93 frontend cases. Hosted units passed in 96.30s, quality in 29m17s,
-documentation in 27m14s and workflow in 29m47s. Exact-head PR gate/CodeQL and
-resolved conversations passed; ordinary match-head squash needed no repair or
-exception. Quality's remaining 43-second margin is narrow and not guaranteed;
-[#113](https://github.com/martonpornoi/maru/issues/113#issuecomment-5682371591)
-records the observation without changing the current acceptance policy.
-
-Known-person selection/clear, original-person confirmation and independently
-admitted personal/current-seal/review viewers create no directory or relationship.
-Fresh canonical writes validate Identity eligibility and original source fences;
-successful replay retains its original evidence. Anonymous review excludes target
-lookup. Browser-found hidden-False confirmation preselection was corrected and
-regression-tested before certification. No schema, profile or route activation.
-See the [implementation](../checkpoints/2026-09-15-programme-person-references.md)
-and [protected delivery](../checkpoints/2026-09-15-programme-person-protected-delivery.md).
-Earlier deliveries, including PR #137's output connections, remain complete.
+All eight retained local gates and exact-head hosted PR gate/CodeQL passed.
+Hosted quality took 29m17s, leaving only 43s; #113 retained that risk.
+See [implementation](../checkpoints/2026-09-15-programme-person-references.md) and
+[protected evidence](../checkpoints/2026-09-15-programme-person-protected-delivery.md).
+No schema, profile or route activation. Earlier deliveries remain complete.
 
 ## Active bounded outcome: same-call domain references (#108)
 
 Branch: `codex/programme-domain-references`, from protected PR #138.
-The existing compound reference/file obligation remains open; only its person
-substep is delivered. The local candidate implements closed `programme.call-track` and
-`programme.call-format` private extra-answer references using the proposal's own
-immutable call catalog. These must not change lead-owned selection, duration,
-routing or timetable, or grant a global/manager catalog. PRG-009 and the
-[page contract](../product/page-contracts/programme-domain-references.md) define
-exact question-scoped choice, original intent and independent exact-answer viewers.
-The existing answer writer now validates fresh same-call membership after retained
-replay. Personal and exact reviewer/moderator/decider viewers independently admit
-the actual answer before label/guidance lookup; anonymous SQL omission precedes
-target reads. Target-neutral source admission is shared with person references
-without changing their public contracts, proof purpose or legacy digests.
+The candidate implements registered same-call track/format extra-answer selection,
+clear and independent current/sealed/review viewers under PRG-009. Original intent,
+canonical replay, same-call membership and anonymous no-lookup remain enforced;
+main selection/routing/timetable and current profiles are unchanged. See the
+[page contract](../product/page-contracts/programme-domain-references.md) and
+[implementation/browser evidence](../checkpoints/2026-09-15-programme-domain-references.md).
+The earlier implicit-import certification failure was repaired without changing
+person-reference contracts or legacy digests.
+The corrected head `383ca2dab488232e97897f853c0f6a3031386e5e` passed all eight
+retained local gates in 18m51s (8,160 units in 52.38s). Its hosted units/CodeQL
+passed, but [PR #139](https://github.com/martonpornoi/maru/pull/139) remains unmerged:
+quality exhausted its 30-minute budget after a successful 28m01s documentation
+build, cancelling frontend acceptance. Existing #113 owns this active blocker.
 
-All 8,160 database-free units passed in 53.03s (three existing URLField warnings).
-The bounded browser fixture exercised discovery, selection, unchecked confirmation,
-required-checkbox blocking with retained reason, simulated save/clear, current and
-all three review viewers, anonymous denial and unavailable-target history. A stale
-footer was corrected and rechecked in a fresh fixture. Final editor at 1280px had
-one H1/main and no horizontal page overflow. No native or human acceptance implied.
-See the [implementation checkpoint](../checkpoints/2026-09-15-programme-domain-references.md).
-Initial exact-commit certification stopped on legacy person-view implicit imports;
-direct owner imports and explicit public aliases repair that strict-type boundary.
-Complete new exact-commit certification and protected delivery remain pending.
+The in-PR repair applies ADR 0074's current-section navigation before Furo renders
+the sidebar, retaining every source, catalog, search index, warning and timeout.
+A real miniature Sphinx/Furo build passes discovery/search regressions; all 8,169
+database-free units pass in 55.27s (three existing URLField warnings), along with
+Ruff/format and 558-document validation. New exact-head certification, rendered-site
+browser verification and protected hosted acceptance remain pending. See the
+[repair checkpoint](../checkpoints/2026-09-15-pr139-documentation-navigation-repair.md).
 
-Maintain database-free regressions and native cases without collecting or running
-PostgreSQL. Six maintained native cases and human follow-up are recorded in
+Six maintained, unexecuted native cases and human follow-up are recorded in
 [#102](https://github.com/martonpornoi/maru/issues/102#issuecomment-5683156776) and
 [#92](https://github.com/martonpornoi/maru/issues/92#issuecomment-5683157180);
-integrated proof remains #109. After domain references and safe-file controls,
-continue ordinary scoped launchers, accountable setup and the complete isolated
-synthetic fixture. No profile, production route or CI-policy change is part of
-this increment. Do not reuse prior exact-head certification for a new candidate.
+integrated proof remains #109. No profile, production route or CI-policy change.
+Safe-file intake needs governed upload/receipt handling. A fresh bounded schema-only
+exception was requested; no answer has arrived and no such check is authorized yet.
+Independent scoped launchers can proceed after this PR if the exception is pending.
 
 ## Remaining #48 delivery decomposition
 
@@ -102,10 +87,8 @@ Unrelated ideas stay in their own backlog without displacing this decomposition.
 
 Programme children #57, #59, #61, #63, #66, #64, #71, #77, #79, #81, #85,
 #88, #91, #94, #96, #99, #100, #104, #105 and #107 are delivered dormant.
-#108 has additionally delivered item/readiness/public-copy/hosting workspaces,
-call composition/Department transfer, personal proposal collaboration and exact
-sealing/submission, review-policy/case/assignment/reviewer/moderation/decision
-tasks, recipient history, accepted conversion and the two latest continuations.
+#108's recorded item, call/proposal/review, release, staffing and continuity
+increments remain delivered; do not restart them or equate them with activation.
 
 Use the [Programme Operations contract](../product/page-contracts/programme-operations-adoption-setup.md)
 and owning [Programme](../modules/programme.md),

@@ -10,6 +10,12 @@ it does not permit stale artifact reuse. The PR quality timeout remains 30 minut
 Record actual hosted timings, not guaranteed headroom inferred from local speed.
 See the [documentation parity repair](../checkpoints/2026-09-14-pr-quality-documentation-parity.md).
 
+The shared Sphinx configuration renders current-section sidebar navigation under
+ADR 0074 instead of rebuilding every archive branch into every page. Complete
+content, indexes/search, warning-fatal fresh builds and the 30-minute quality
+timeout remain mandatory. Navigation component timings are diagnostic only;
+measure complete exact-head local and hosted acceptance before claiming headroom.
+
 During iteration, run complete inexpensive database-free unit feedback before
 slower exact-commit certification. This catches repository-wide assumptions early;
 it does not replace fresh certification of the clean candidate.

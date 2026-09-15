@@ -1,7 +1,7 @@
 # Documentation standards
 
 Status: Baseline  
-Last updated: 2026-09-05
+Last updated: 2026-09-15
 
 Documentation is maintained with the implementation.
 
@@ -146,6 +146,14 @@ The root toctree never uses `:glob:`. It does not directly enumerate backlogs,
 page contracts, module files, research, ADRs, checkpoints, or AutoAPI children.
 Those sources remain published behind their owning hubs rather than becoming a
 second exhaustive listing on the homepage or global sidebar.
+
+The rendered Furo sidebar expands only the current document's section. Other
+sections remain ordinary links to their complete owning catalogs; search, direct
+URLs, source pages and local tables of contents are unchanged. A per-page Sphinx
+hook applies `collapse=True` before Furo transforms navigation HTML, avoiding an
+exhaustive tree render followed by cosmetic hiding. It changes neither the six
+root hubs nor document inclusion, warning handling or build freshness. Regression
+tests exercise the real theme with cross-section catalogs and searchable pages.
 
 The visible homepage leads with Maru's purpose, accurate active-development and
 synthetic-data boundaries, and goal-based routes to understand, run, or

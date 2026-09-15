@@ -13,6 +13,13 @@ rather than replace the curated summary.
 
 ## [Unreleased]
 
+### Fixed
+
+- Contributor documentation now keeps sidebar navigation within the current
+  section, with other sections available through their complete catalogs and
+  search. All reference/history pages and stable URLs remain published; this
+  avoids repeatedly rendering the entire archive in every page's sidebar.
+
 ### Added
 
 - Added dormant Programme same-call reference tasks: choose or clear an additional
