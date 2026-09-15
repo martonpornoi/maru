@@ -23,6 +23,8 @@ class NoticeSelectionForm(StrictInputForm):
 
     notice = CanonicalUUIDField(required=False, label="Exact notice reference")
     release = CanonicalUUIDField(required=False, label="Filter by exact release")
+    task = forms.ChoiceField(required=False, choices=(("hosts", "Notify a host"),))
+    occurrence = CanonicalUUIDField(required=False, widget=forms.HiddenInput)
 
 
 class NoticePreviewForm(StrictInputForm):

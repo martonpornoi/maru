@@ -11,69 +11,67 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's item/timetable/release connections are delivered through
-[PR #132](https://github.com/martonpornoi/maru/pull/132), protected squash
-`0ccd7866aa3965f527b3d8a28fcf5a2e4eebcb27` at 2026-09-15 05:32:33 UTC.
-Its tree equals certified head `b7c3d26d3ff83959d992be1b9952259c4ba70726`;
+#108's staffing-to-Shift connection is delivered through
+[PR #133](https://github.com/martonpornoi/maru/pull/133), protected squash
+`13a51848c78330b636cf35d9f65e3916eb2a136a` at 2026-09-15 06:48:09 UTC.
+Its tree equals certified head `eeee0af9646ebf4db3884b432fba98e1a285b0b5`;
 clean local main and origin/main were synchronized to the protected result.
 
-All eight retained local gates passed in 18m12s: 7,591 units in 44.67s and
-92 frontend tests. Hosted units passed in 80.52s, quality took 26m54s,
-documentation 24m50s and workflow latency 27m22s. Exact-head PR gate and CodeQL
+All eight retained local gates passed in 18m07s: 7,624 units in 45.13s and
+93 frontend tests. Hosted units passed in 69.53s, quality took 27m44s,
+documentation 25m36s and workflow latency 28m09s. Exact-head PR gate and CodeQL
 passed; there was no canonical or hosted repair/rerun or acceptance exception.
-The observed 3m06s quality margin is not guaranteed; #113 retains this risk
+The observed 2m16s quality margin is not guaranteed; #113 retains this risk
 without displacing unblocked #48 work.
 
-The canonical dormant timetable wraps the original native editor in the shared
-shell, dispatches once, and rechecks protected owner facts after rendering.
-Independently admitted fixed-label links connect items, planning and release;
-missing or moved optional links are omitted without obscuring authorized results.
-No writer, schema, profile, production route or CI policy changed. One maintained
-native scenario and further real-owner revalidation remain unexecuted #102 debt.
-New human checks are recorded under #92; component browser observations do not
-replace #92/#109 acceptance. See the
-[implementation](../checkpoints/2026-09-15-programme-workspace-connections.md) and
-[protected delivery](../checkpoints/2026-09-15-programme-connections-protected-delivery.md).
+The canonical planner now connects current staffing bindings to their exact
+existing Shift through independently admitted full Workforce fields and real
+Events-owned slug metadata. Native organizer Shift pages provide separately
+authorized Programme continuations with lazy-render checks and original forms.
+No personnel inventory, successor inference, lifecycle, schema, profile or CI
+change was added. One maintained native scenario and further real-owner proof
+remain unexecuted #102 debt; #92 human tasks are recorded. See the
+[implementation](../checkpoints/2026-09-15-programme-shift-connections.md) and
+[protected delivery](../checkpoints/2026-09-15-programme-shift-connections-protected-delivery.md).
 
-Earlier deliveries, including [PR #131 release workspace](../checkpoints/2026-09-15-programme-release-workspace-protected-delivery.md),
+Earlier deliveries, including [PR #132 workspace connections](../checkpoints/2026-09-15-programme-connections-protected-delivery.md),
 remain complete. Do not restart them or reuse their evidence for a new head.
 
-## Active bounded outcome: Programme staffing-to-Shift connections (#108)
+## Active bounded outcome: guided host notices (#108)
 
-Branch: `codex/programme-shift-connections`, from protected PR #132.
-Connect a current Programme staffing requirement to its exact existing Workforce
-Shift, with a safe Programme return continuation. This next increment is recorded
-beneath #108's existing owner-connections checkbox before implementation.
-Notice/continuity connections and final setup remain separate unfinished work.
+Branch: `codex/programme-notice-connections`, from protected PR #133.
+The first owner-specific increment replaces host-notice UUID discovery with current
+independently labelled occurrences and the selected item's confirmed host roster.
+It connects to #104's existing preview and unchanged governed commands, adds
+independently admitted workflow links, and checks protected source facts after
+rendering without dispatching writers twice. Work/operator selectors remain next;
+the overall #108 notice connection and #48 remain incomplete.
 
-Reuse Workforce's existing read fields and sole Shift lifecycle. A minimized
-Programme coverage grant is not the complete organizer Shift permission.
-Resolve real organization/series/edition slugs through an explicit Events owner
-seam; do not invent a UUID-shaped Workforce route or import private owner models.
-Do not copy personnel into Scheduling, follow a successor silently, open work,
-confirm claims or change accepted commitments through navigation.
+Iteration: 7,661 database-free units passed in 46.54s with three existing URLField
+warnings; targeted Ruff, mypy and NumPy docstring checks passed. Actual HTTP/forms
+browser rehearsal at 1,280 CSS pixels covered organizer and read-only host selection
+to suppressed preview, separate preparation controls and non-disclosing denied
+state. One H1/main, unique IDs and no horizontal overflow were observed on preview.
+Owner data/policy were substituted, SQL forbidden; no persistence or native
+authority proof is claimed. The task-owned fixture and tab are stopped/closed.
+One existing native host scenario was extended but not collected or executed.
+Fresh clean exact-head certification and protected delivery remain pending.
+See the [implementation checkpoint](../checkpoints/2026-09-15-programme-host-notice-selection.md).
 
-Preserve original pending input and retry behavior. Optional destination changes
-must not obscure a completed command. Account for the existing Shift pages' lazy
-template rendering when adding return links; final checks must not redispatch a
-POST. Keep current versus historical binding/predecessor meaning explicit.
+Preserve exact release/purpose/source checks, original pending digest/version/key,
+source suppression and final disclosure checks without dispatching commands twice.
+Withdrawn or invalidated releases must not disclose old geometry just to populate
+a selector. Current authorized Programme item/occurrence choices may precede the
+exact owner preview. Keep sender read authority distinct from recipient eligibility.
+No general recipient directory, impersonated personal reader, provider delivery
+claim, attendance or accepted-work mutation. Existing output routes remain dormant.
 
-Implemented locally: Events exact-chain route metadata, Workforce full-field
-destination admission, current-bound-Shift card links and lazy-render-safe
-Programme return navigation on organizer Shift pages. No personnel inventory is
-loaded for navigation and no source rows or command forms are replaced.
-
-Iteration: 7,624 units passed in 45.36s, 93 frontend tests passed; focused checks,
-Ruff, mypy and NumPy docstrings passed. A full-unit attempt first caught a missing
-empty-panel template fallback; repaired before the passing run. Synthetic browser
-handoff and coverage-only omission were observed with database access forbidden.
-The exact-commit canonical certification and hosted protected delivery are next;
-these iteration results are not a certification receipt.
-
-No schema, runtime grant, profile, production route or CI policy changed. One
-existing native Shift scenario was extended without collecting/running PostgreSQL.
-Human checks remain #92, integrated proof #109 and native restoration #102. See
-the [staffing connection checkpoint](../checkpoints/2026-09-15-programme-shift-connections.md).
+Use bounded public owner seams for host/work relationships and the separately
+admitted operator purpose. Consider the established exact-known-email selection
+pattern only with current eligibility, positive/empty audit and original-person
+retry binding; do not re-resolve a mutable address on retry. No schema-only
+authority is standing. Keep PostgreSQL uncollected/unexecuted and record native
+debt under #102; human checks remain #92 and integrated proof #109.
 
 ## Remaining #48 delivery decomposition
 
@@ -86,7 +84,7 @@ outcome by themselves. #108 and #48 remain open.
   - independently authorized person/domain-reference selection and safe-file
     intake/selection/viewers; typed text presentation alone does not finish these;
   - authorized labelled connections from the delivered item/timetable/release
-    workspaces to Workforce Shift work, #104 notices and #107 continuity;
+    workspaces to #104 notices and #107 continuity; staffing-to-Shift is delivered;
   - accountable blank-organization setup, coherent shared navigation and an isolated
     complete synthetic fixture without changing current profiles;
   - final separately verified promotion only after all gates below pass.

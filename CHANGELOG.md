@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Connected dormant Programme change notices to the shared workflow and added
+  labelled current-occurrence and confirmed-host selection. Preview, independent
+  review, manual handoff and acknowledgement remain separate; stale or revoked
+  content is withheld after rendering. Work/operator selectors and final Programme
+  acceptance remain pending, with no profile activation or delivery provider.
+
 - Connected dormant Programme staffing cards to their exact existing Shift,
   subject to full independent Workforce permission. Shift organizers receive
   independently authorized Programme return links; navigation changes neither

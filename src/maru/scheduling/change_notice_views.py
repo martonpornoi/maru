@@ -18,6 +18,12 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
+from maru.programme.authorization import ProgrammeAuthorizationDeniedError
+from maru.programme.queries import (
+    ProgrammeQueryUnavailableError,
+    ProgrammeTimetableInventoryLimitError,
+)
+
 from .authorization import (
     ACKNOWLEDGE_CHANGE_SELF,
     HANDOFF_CHANGE_NOTICES,
@@ -62,6 +68,7 @@ from .change_notice_queries import (
     load_programme_change_notice,
     preview_programme_change_notice,
 )
+from .change_notice_selection import NoticeHostSelection, load_notice_host_selection
 from .change_notice_sources import ProgrammeChangeNoticePreview
 from .command_support import (
     SchedulingCommandError,
@@ -73,6 +80,7 @@ from .command_support import (
 from .inputs import SchedulingCommandRequest
 from .output_rendering import MAX_TIMETABLE_OUTPUT_BYTES
 from .planning_queries import SchedulingReadRequest
+from .workspace_navigation import ProgrammeWorkspaceLink, programme_workspace_links
 
 if TYPE_CHECKING:
     from django.http import QueryDict
@@ -116,6 +124,15 @@ def _html(
         personal=personal,
     )
     shell.update(context)
+    scope = context.get("notice_scope")
+    links: tuple[ProgrammeWorkspaceLink, ...] = ()
+    if isinstance(scope, SchedulingReadRequest) and not personal:
+        links = programme_workspace_links(
+            scope,
+            current="notices",
+            urlconf=getattr(request, "urlconf", None),
+        )
+        shell["workspace_links"] = links
     detail = context.get("detail")
     if (
         isinstance(detail, ProgrammeChangeNotice)
@@ -148,6 +165,18 @@ def _html(
             else ()
         )
     content = render_to_string("scheduling/change_notices.html", shell, request=request)
+    if isinstance(scope, SchedulingReadRequest):
+        _verify_rendered_context(scope, context, personal=personal)
+        if not personal and links != programme_workspace_links(
+            scope,
+            current="notices",
+            urlconf=getattr(request, "urlconf", None),
+        ):
+            shell["workspace_links"] = ()
+            content = render_to_string(
+                "scheduling/change_notices.html", shell, request=request
+            )
+            _verify_rendered_context(scope, context, personal=personal)
     if len(content.encode("utf-8")) > MAX_TIMETABLE_OUTPUT_BYTES:
         return _secure(
             HttpResponse(
@@ -156,6 +185,110 @@ def _html(
             nonce,
         )
     return _secure(HttpResponse(content, status=status), nonce)
+
+
+def _verify_rendered_context(
+    scope: SchedulingReadRequest,
+    context: dict[str, object],
+    *,
+    personal: bool,
+) -> None:
+    _authorize(
+        scope, VIEW_CHANGE_SELF if personal else VIEW_CHANGE_NOTICES, personal=personal
+    )
+    guided = context.get("host_selection")
+    if (
+        isinstance(guided, NoticeHostSelection)
+        and load_notice_host_selection(
+            scope,
+            occurrence_id=cast("UUID | None", context.get("selected_occurrence")),
+        )
+        != guided
+    ):
+        raise SchedulingVersionConflictError
+    detail = context.get("detail")
+    if isinstance(detail, (ProgrammeChangeNotice, PersonalProgrammeChangeNotice)):
+        fresh = (
+            load_personal_programme_change_notice(scope, notice_id=detail.notice_id)
+            if personal
+            else load_programme_change_notice(scope, notice_id=detail.notice_id)
+        )
+        if fresh != detail:
+            raise SchedulingVersionConflictError
+    elif isinstance(context.get("preview"), ProgrammeChangeNoticePreview):
+        preview = cast("ProgrammeChangeNoticePreview", context["preview"])
+        if (
+            preview_programme_change_notice(
+                scope,
+                release_id=preview.release_id,
+                occurrence_id=preview.occurrence_id,
+                recipient=preview.recipient,
+            )
+            != preview
+        ):
+            raise SchedulingVersionConflictError
+    if "inventory" in context:
+        selection = cast("NoticeSelectionForm", context["selection_form"])
+        if (
+            load_programme_change_notice_inventory(
+                scope,
+                personal=personal,
+                release_id=selection.cleaned_data["release"],
+            )
+            != context["inventory"]
+        ):
+            raise SchedulingVersionConflictError
+    for action, _form in cast(
+        "tuple[tuple[str, forms.Form], ...]", context.get("actions", ())
+    ):
+        _authorize(scope, _CAPABILITIES[action])
+    if context.get("prepare_form") is not None:
+        _authorize(scope, PREPARE_CHANGE_NOTICES)
+
+
+def _host_selection(
+    scope: SchedulingReadRequest,
+    occurrence_id: UUID | None,
+) -> dict[str, object]:
+    observation = load_notice_host_selection(scope, occurrence_id=occurrence_id)
+    form = forms.Form(initial={"task": "hosts", "occurrence": occurrence_id})
+    form.fields["task"] = forms.CharField(widget=forms.HiddenInput)
+    form.fields["occurrence"] = forms.ChoiceField(
+        label="Current Programme occurrence",
+        choices=[
+            ("", "Choose an occurrence"),
+            *((str(row.occurrence.id), row.label) for row in observation.occurrences),
+        ],
+    )
+    preview_form = None
+    if (
+        occurrence_id is not None
+        and observation.release_id is not None
+        and observation.hosts
+    ):
+        preview_form = NoticePreviewForm(
+            initial={
+                "action": "preview",
+                "release_id": observation.release_id,
+                "occurrence_id": occurrence_id,
+                "purpose": "host",
+            }
+        )
+        for field in preview_form.fields.values():
+            field.widget = forms.HiddenInput()
+        preview_form.fields["target_id"] = forms.ChoiceField(
+            label="Confirmed host",
+            choices=[
+                ("", "Choose a confirmed host"),
+                *((str(row.host_id), row.label) for row in observation.hosts),
+            ],
+        )
+    return {
+        "host_selection": observation,
+        "selected_occurrence": occurrence_id,
+        "host_source_form": form,
+        "host_preview_form": preview_form,
+    }
 
 
 def _authorize(
@@ -359,6 +492,19 @@ def _get(
     selection = NoticeSelectionForm(request.GET)
     if not selection.is_valid():
         raise ValueError
+    if selection.cleaned_data["task"]:
+        if (
+            personal
+            or selection.cleaned_data["notice"]
+            or selection.cleaned_data["release"]
+        ):
+            raise ValueError
+        return _host_selection(scope, selection.cleaned_data["occurrence"])
+    if selection.cleaned_data["occurrence"] is not None:
+        raise ValueError
+    # Guided source selection is separate from specialist exact-reference search.
+    selection.fields.pop("task")
+    selection.fields.pop("occurrence")
     notice_id = selection.cleaned_data["notice"]
     if notice_id is not None:
         detail: NoticeDetail = (
@@ -413,9 +559,11 @@ def _page(
                 token_urlsafe(32),
             )
         context, status = result
-        context.update(organization_id=organization_id, edition_id=edition_id)
+        context.update(
+            organization_id=organization_id, edition_id=edition_id, notice_scope=scope
+        )
         return _html(request, context, personal=personal, status=status)
-    except SchedulingAuthorizationDeniedError:
+    except (SchedulingAuthorizationDeniedError, ProgrammeAuthorizationDeniedError):
         status, message = 404, "Programme changes are not available at this address."
     except (
         SchedulingVersionConflictError,
@@ -427,13 +575,18 @@ def _page(
             "This exact package or decision is no longer current. "
             "Refresh and review before trying again. No old content is shown.",
         )
-    except SchedulingLimitError:
+    except (SchedulingLimitError, ProgrammeTimetableInventoryLimitError):
         status, message = (
             503,
             "The complete notice inventory is too large. Select an exact release "
             "or open a known notice reference. No partial list is shown.",
         )
-    except (SchedulingCommandError, DatabaseError, RuntimeError):
+    except (
+        SchedulingCommandError,
+        ProgrammeQueryUnavailableError,
+        DatabaseError,
+        RuntimeError,
+    ):
         status, message = (
             503,
             "Programme changes could not be fully verified. No cached or partial "

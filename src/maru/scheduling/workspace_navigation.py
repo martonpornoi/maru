@@ -21,6 +21,7 @@ from maru.programme.authorization import (
 from maru.venues.timetable_queries import TIMETABLE_SPACE_FIELDS
 
 from .authorization import (
+    VIEW_CHANGE_NOTICES,
     VIEW_PLANNING,
     SchedulingAuthorizationDeniedError,
     authorize_scheduling_scope,
@@ -55,6 +56,7 @@ _TASKS = {
     "items": ("Programme items", "programme-items"),
     "timetable": ("Timetable planning", "programme-timetable-workspace"),
     "release": ("Release timetable", "programme-release-workspace"),
+    "notices": ("Programme change notices", "programme-change-notices"),
 }
 _ITEM_FIELDS = frozenset({"item_summaries", "working_information"})
 
@@ -116,6 +118,14 @@ def _authorize(scope: SchedulingReadRequest, code: str) -> None:
         _authorize_items(scope)
     elif code == "timetable":
         authorize_timetable_workspace(scope)
+    elif code == "notices":
+        authorize_scheduling_scope(
+            actor_id=scope.actor_id,
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+            capability_code=VIEW_CHANGE_NOTICES,
+            requested_fields=frozenset({"change_notices"}),
+        )
     else:
         # The chooser needs at least one independently admitted release task,
         # not all release read/write roles and never a fresh private source load.
@@ -151,7 +161,7 @@ def programme_workspace_links(
     Returns
     -------
     tuple[ProgrammeWorkspaceLink, ...]
-        At most two fixed-label links, or three from the external Shift workspace.
+        At most three fixed-label links, or four from the external Shift workspace.
         Denied, unavailable, unmounted or shadowed
         destinations are omitted. Absence makes no source-completeness claim.
 
@@ -175,13 +185,13 @@ def programme_workspace_links(
         try:
             # Check declaration before any optional authorization/database work.
             # For canonical paths a supplied parent is verified, never trusted.
-            if code != "items":
+            if code in {"timetable", "release"}:
                 parent = series_id or scope.edition_id  # Shape-only reverse probe.
                 reverse(name, kwargs=kwargs | {"series_id": parent}, urlconf=urlconf)
             else:
                 reverse(name, kwargs=kwargs, urlconf=urlconf)
             _authorize(scope, code)
-            if code != "items":
+            if code in {"timetable", "release"}:
                 actual = resolve_edition_series_identity(
                     organization_id=scope.organization_id, edition_id=scope.edition_id
                 )

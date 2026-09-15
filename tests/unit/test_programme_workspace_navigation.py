@@ -205,3 +205,51 @@ def test_read_only_scope_still_has_read_task_links(links_world):
         "write" not in call.kwargs["capability_code"]
         for call in world.scheduling.call_args_list
     )
+
+
+def test_notice_connection_needs_its_own_field_without_a_parent_lookup(links_world):
+    world = links_world
+    world.urlconf.urlpatterns.append(
+        path(
+            "admin/programme/changes/<uuid:organization_id>/<uuid:edition_id>/",
+            destination,
+            name="programme-change-notices",
+        )
+    )
+    offered = links(world, "release")
+    assert [row.code for row in offered] == ["items", "timetable", "notices"]
+    target = resolve(offered[-1].url, urlconf=world.urlconf)
+    assert target.kwargs == {
+        "organization_id": world.scope.organization_id,
+        "edition_id": world.scope.edition_id,
+    }
+    assert (
+        world.scheduling.call_args.kwargs["capability_code"]
+        == "scheduling.view_change_notices"
+    )
+    assert world.scheduling.call_args.kwargs["requested_fields"] == frozenset(
+        {"change_notices"}
+    )
+    assert [row.code for row in links(world, "notices")] == [
+        "items",
+        "timetable",
+        "release",
+    ]
+
+
+def test_notice_denial_does_not_hide_other_admitted_tasks(links_world):
+    world = links_world
+    world.urlconf.urlpatterns.append(
+        path(
+            "admin/programme/changes/<uuid:organization_id>/<uuid:edition_id>/",
+            destination,
+            name="programme-change-notices",
+        )
+    )
+
+    def authorize(**kwargs):
+        if kwargs["capability_code"] == "scheduling.view_change_notices":
+            raise SchedulingAuthorizationDeniedError
+
+    world.scheduling.side_effect = authorize
+    assert [row.code for row in links(world)] == ["timetable", "release"]
