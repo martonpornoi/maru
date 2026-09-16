@@ -83,6 +83,7 @@ def test_provisioning_sql_covers_every_dormant_programme_read_only_relation() ->
 def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
     assert RUNTIME_DATABASE_SELECT_ONLY_RELATIONS == (
         "public.django_migrations",
+        "public.events_programmeadoptionsetupreceipt",
         "public.authorization_authorityprovenanceactivation",
         "public.authorization_provenanceactivationlatch",
         "public.identity_platforminvitationretentionpolicycontrol",

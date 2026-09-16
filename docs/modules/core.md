@@ -43,6 +43,17 @@ UX-029, INT-001, NFR-001, NFR-002, NFR-004, NFR-006, NFR-008, and NFR-009.
 It does not own tenant context, business rules, permissions, audit, or a generic
 `utils` collection.
 
+Native integrity catalogs default to the complete owning Django app. A
+purpose-specific contract may declare an explicit, nonempty `owned_relations`
+tuple: every name must be a real relation owned by that app and the set must
+exactly match its primary trigger attachments. Duplicate/foreign/missing names,
+omitted primary guards or omitted same-owner supporting attachments fail before
+catalog access. Exact trigger equality, function definitions, ownership and
+privileges remain required; other owners' explicit supporting triggers remain
+checked. This narrower result does not certify omitted tables or the whole app.
+Events uses it for dormant Programme setup receipts and independently pins the
+complete relation shape and migration/fence sources.
+
 The platform identity is defined in
 [`../product/platform-brand.md`](../product/platform-brand.md) under ADR 0021.
 It supports Maru's stable operational shell; convention-owned seasonal

@@ -24,6 +24,9 @@ from maru.events.adoption import (
     adoption_profile,
 )
 from maru.events.adoption_persistence import PERSISTED_ADOPTION_PROFILE_KEYS
+from maru.events.programme_setup_models import (
+    ProgrammeAdoptionSetupReceipt as ProgrammeAdoptionSetupReceipt,  # noqa: PLC0414 - explicit typed re-export and Django discovery
+)
 
 ARCHIVE_AMENDMENT_LABEL_LENGTH = 60
 ARCHIVE_AMENDMENT_CONTENT_LENGTH = ARCHIVE_AMENDMENT_LABEL_LENGTH - 3

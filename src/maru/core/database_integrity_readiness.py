@@ -224,6 +224,10 @@ class DatabaseIntegrityContract:
         Additional exact migration recorders required by composed owner guards.
     supporting_triggers
         Exact native attachments on other owners participating in this contract.
+    owned_relations
+        Optional explicit nonempty owned-relation subset for a purpose-specific
+        contract. None retains the whole-app boundary. Every selected relation
+        must have a primary trigger contract; this never certifies omitted tables.
     """
 
     status_key: str
@@ -237,6 +241,7 @@ class DatabaseIntegrityContract:
     runtime_executable_functions: frozenset[str] = frozenset()
     supporting_migrations: tuple[tuple[str, str], ...] = ()
     supporting_triggers: Mapping[str, TriggerContract] = field(default_factory=dict)
+    owned_relations: tuple[str, ...] | None = None
 
     @property
     def required_migrations(self) -> tuple[tuple[str, str], ...]:
@@ -700,6 +705,27 @@ def bounded_context_relation_names(app_label: str) -> tuple[str, ...]:
     return relations
 
 
+def _contract_relation_names(contract: DatabaseIntegrityContract) -> tuple[str, ...]:
+    owned = bounded_context_relation_names(contract.app_label)
+    selected = contract.owned_relations
+    if selected is None:
+        return owned
+    if (
+        not isinstance(selected, tuple)
+        or not selected
+        or any(not isinstance(name, str) for name in selected)
+        or len(selected) != len(set(selected))
+        or not set(selected) <= set(owned)
+        or set(selected) != {trigger.table for trigger in contract.triggers.values()}
+        or any(
+            trigger.table in owned and trigger.table not in selected
+            for trigger in contract.supporting_triggers.values()
+        )
+    ):
+        raise ValueError("purpose-specific integrity relation scope is invalid")
+    return tuple(sorted(selected))
+
+
 def _trigger_rows_are_current(
     rows: Sequence[Sequence[object]],
     contracts: Mapping[str, TriggerContract],
@@ -778,7 +804,7 @@ def inspect_database_integrity_catalog(
         The DatabaseIntegrityCatalog produced by inspect database integrity
         catalog.
     """
-    relations = bounded_context_relation_names(contract.app_label)
+    relations = _contract_relation_names(contract)
     required_migrations = set(contract.required_migrations)
     with connection.cursor() as cursor:
         cursor.execute(
