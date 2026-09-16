@@ -11,73 +11,59 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's dormant supporting-file controls are delivered through
-[PR #150](https://github.com/martonpornoi/maru/pull/150), protected squash
-`e6f9687cabb7e077e8fcc8b6f6763641fc4f3a13` at 2026-09-16 17:04:05 UTC.
-Its tree equals certified head `73a5468b563261141307c9302d4b33ab88cd1a2c`;
-clean local main and origin/main were synchronized. All eight retained local
-gates passed in 5m38s, including **8,948 units in 54.77s** and **103 frontend tests**.
-Hosted quality took 9m41s and units 89.21s; exact-head PR gate/CodeQL passed with
-clear reviews. See the
-[protected evidence](../checkpoints/2026-09-16-programme-file-controls-protected-delivery.md).
-
-Ordinary labelled tasks now support local PDF selection, explicit upload-and-use,
-body-free original-result recovery, deliberate clear and independently authorized
-current/sealed/review attachments. Normal CSRF protects raw PUT; owning admission
-precedes bounded body reading. Attempted uploads never silently resend or rebase,
-and reload is recovery-only. Clear retains custody/history. Attachment preparation
-is followed by independent final source/authority checks. Anonymous review omits
-lookup. No receipt directory, inline PDF, schema/runtime grant or production
-activation was introduced.
-
-The browser-found missing same-origin CSP allowance and outdated guidance were
-corrected. Synthetic upload/recovery/clear/view and anonymous denial passed;
-seven widths had no upload-page overflow. Six rendered pages had zero reported
-axe/jsdom violations, with its contrast/incomplete rules and human checks explicitly
-unproven. The custody file maintains **39 unexecuted native cases**, including two
-new HTTP/custody scenarios. No PostgreSQL suite was collected/run and no schema
-observation occurred. Evidence is not real-scanner, native custody or production
-acceptance.
-
-## Prepared integrated rehearsal protocol (#108/#109/#92)
+The integrated rehearsal preparation is delivered through
+[PR #151](https://github.com/martonpornoi/maru/pull/151), protected squash
+`ad4ccc1bda8e5b1dcf80e7fb10a8b92fd6db0dd0` at 2026-09-16 19:34:49 UTC.
+Its tree equals certified head `f643d6b278d3e702c49b95ccbcb2f4c4588c38e7`;
+clean local main matched origin/main and that result. All eight retained local
+gates passed in 5m54s, including 8,948 units in 68.54s and 103 frontend tests.
+Hosted documentation quality took 11m00s; PR gate and CodeQL passed. Hosted
+unit/database jobs were skipped by documentation-only classification. See the
+[protected evidence](../checkpoints/2026-09-16-programme-rehearsal-plan-protected-delivery.md).
 
 The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
-now defines twelve setup-to-on-site checkpoints, distinct role/session purposes,
-isolation and excluded-effect assertions, failure/recovery/stop-use scenarios,
-human/accessibility tasks, evidence provenance and safe cleanup. It is preparation,
-not a complete fixture, launch command or accepted journey. Stale setup/roadmap
-descriptions no longer say the Scheduling namespace or continuity is absent.
-This documentation increment does not change code, schema, authority or CI policy.
-Documentation validation passed (585 Markdown files); corrected database-free
-feedback passed 8,948 units in 57.20s. Fresh exact-commit certification and hosted
-protected delivery remain pending for this increment, not inherited from PR #150.
+defines twelve checkpoints, distinct sessions, isolation/excluded-effect proof,
+failure/recovery/stop-use, human/accessibility tasks and exact-source evidence.
+It is preparation, not an executable integrated fixture or accepted journey.
+Earlier [PR #150](https://github.com/martonpornoi/maru/pull/150) delivered supporting-file
+controls; its [checkpoint](../checkpoints/2026-09-16-programme-file-controls-protected-delivery.md)
+retains exact native-deferred and synthetic-browser limits. Do not restart it.
 
-## Next bounded outcome: accountable setup and integrated fixture (#108)
+## Current candidate: Programme setup foundation contracts (#108)
 
-Prepared on `codex/programme-integrated-rehearsal-plan`, from protected PR #150.
-The separate request for bounded disposable setup receipt/authority schema-only
-observation is unanswered. The completed file-only exception does not cover it.
-Keep PostgreSQL suites skipped. No setup implementation, migration, runtime grant
-or profile change has started.
+Branch: `codex/programme-setup-foundation`, from protected PR #151.
+Events now has closed setup inputs and exact-request digest validation;
+Organizations supplies a minimized same-parent foundation reference rather than
+cross-owner private-model imports. These are prerequisites, not a setup writer,
+authority grant, HTML surface or complete fixture. Preview reads are not locked
+snapshots: future commands must admit, lock/reload and compare owner facts before
+writing; consumers own independent disclosure/audit boundaries.
 
-The latest instruction is to finish safe preparation/implementation before the
-database acceptance phase. It is not treated as the separately requested schema
-observation approval. The rehearsal protocol can be delivered independently;
-new setup schema observation and genuine human acceptance still require their
-respective authority/participants. Do not substitute documentation for either.
+Focused feedback passed 156 database-free cases; Ruff, strict mypy and NumPy
+docstrings passed. Complete unit feedback passed 9,104 cases in 54.35s after adding
+the documented diagnostic median estimate for the new native file; no observed
+PostgreSQL duration is claimed. Semantic documentation validation passed. Six native
+owner-reference cases are maintained but uncollected/unexecuted. Clean exact-commit
+certification and protected hosted delivery remain pending. See the
+[implementation checkpoint](../checkpoints/2026-09-16-programme-setup-foundation-contracts.md).
+No schema changes or schema-only observation have occurred in this increment.
 
-Map the exact new setup receipt/authority contract before implementation. Preserve
-truthful existing representation, immutable `maru-operators@1`, non-participating
-platform administrators and two distinct genuine-person acceptances. Reuse owning
-public commands/queries; do not bypass foundation/Department lifecycle guards or
-claim the future profile is executable. Build an isolated fixture without activating
-current profiles; final promotion still waits for #102/#97/#92/#109.
+The maintainer has explicitly approved a bounded disposable setup schema-only
+migration/metadata check. This supersedes the earlier pending-approval checkpoint,
+not PostgreSQL deferral: do not collect/run database suites, activate Programme,
+add runtime grants or touch production data. Maintain debt under #102.
 
-Do not restart scanner/custody/upload/readers/controls (#146–#150), person/domain
-references, personal discovery, shared navigation or #113. Notice children
-#134–#137 and operator entry #143 are also already delivered. #108's implementation
-rollups were clarified and checked against their delivered children; its overall
-outcome and #48 remain open for setup and all final acceptance gates.
+Next complete durable setup/authority contracts, owner receipts and transactional
+orchestration, genuine-person continuation, guided UI and the actual isolated
+fixture. Preserve existing truthful representation and immutable `maru-operators@1`,
+two distinct eligible people's own acceptances, Department-scoped call/review
+versus edition-scoped planning, and independently approved additional authority.
+Do not infer authority from a source fingerprint or an earlier invitation.
+
+Keep current profiles unchanged; final promotion waits for #102/#97/#92/#109.
+Delivered item, Applications, reference/file, timetable/release/staffing, notice
+and continuity connections remain implemented. #108's overall outcome and #48
+stay open for setup and all final acceptance gates.
 
 Non-blocking tooling follow-up after #48: the semantic docstring validator's
 no-argument defaults are strings rather than `Path` objects; its maintained explicit
