@@ -15,6 +15,7 @@ from uuid import uuid4
 
 import pytest
 from django.apps import apps
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, connection, models, transaction
 from django.db.migrations.executor import MigrationExecutor
 
@@ -22,17 +23,22 @@ from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
 from maru.events import adoption
+from maru.events import programme_setup as setup_command
 from maru.events.models import (
     EditionCreationReceipt,
     EventEdition,
     ProgrammeAdoptionSetupReceipt,
 )
+from maru.events.programme_setup_inputs import ProgrammeSetupInput, ProgrammeSetupMode
 from maru.events.programme_setup_readiness import (
     PROGRAMME_SETUP_RELATION,
     PROGRAMME_SETUP_SCHEMA_SHA256,
     programme_setup_database_integrity_is_ready,
 )
 from maru.events.services import EventEditionDetails, create_event_edition
+from maru.organizations.programme_setup_references import (
+    resolve_programme_setup_foundation,
+)
 from maru.organizations.representation import provision_maru_operators
 from maru.organizations.services import (
     ConventionSeriesCreationDetails,
@@ -44,6 +50,198 @@ from maru.workforce.structure_commands import create_department
 from tests.factories import AccountFactory
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+
+@pytest.fixture
+def command_request(monkeypatch):
+    _admit_transaction_local_schema_candidate(monkeypatch)
+    return {
+        "actor": AccountFactory(is_staff=True, is_superuser=True),
+        "idempotency_key": uuid4(),
+        "correlation_id": uuid4(),
+        "source_channel": "test",
+        "details": ProgrammeSetupInput(
+            mode=ProgrammeSetupMode.NEW_FOUNDATION,
+            organization_name="Synthetic atomic organizers",
+            series_name="Synthetic atomic series",
+            edition_name="Synthetic atomic edition",
+            department_name="Programme",
+            starts_on=date(2030, 9, 6),
+            ends_on=date(2030, 9, 8),
+            time_zone="UTC",
+            reason="Prepare one synthetic Programme foundation.",
+        ),
+    }
+
+
+@pytest.mark.parametrize("mode", list(ProgrammeSetupMode))
+def test_atomic_command_retains_one_complete_result_and_exact_retry(
+    command_request, mode
+):
+    values = command_request
+    if mode != ProgrammeSetupMode.NEW_FOUNDATION:
+        context = {
+            name: values[name] for name in ("actor", "correlation_id", "source_channel")
+        }
+        organization = create_draft_organization(
+            details=OrganizationCreationDetails(name="Synthetic reused parent"),
+            **context,
+        )
+        representation = provision_maru_operators(
+            organization_id=organization.id,
+            reason="Synthetic accountable foundation.",
+            **context,
+        )
+        series = (
+            create_convention_series(
+                organization_id=organization.id,
+                details=ConventionSeriesCreationDetails(name="Synthetic reused series"),
+                **context,
+            )
+            if mode == ProgrammeSetupMode.EXISTING_SERIES
+            else None
+        )
+        reference = resolve_programme_setup_foundation(
+            organization_id=organization.id,
+            series_id=series.id if series else None,
+        )
+        values["details"] = replace(
+            values["details"],
+            mode=mode,
+            organization_name="",
+            organization_id=organization.id,
+            series_id=series.id if series else None,
+            series_name="" if series else values["details"].series_name,
+            foundation_fingerprint=reference.fingerprint,
+        )
+    result = setup_command.setup_programme_foundation(**values)
+    replay = setup_command.setup_programme_foundation(
+        **{**values, "correlation_id": uuid4()}
+    )
+    assert replay == replace(result, replayed=True)
+    receipt = ProgrammeAdoptionSetupReceipt.objects.get(id=result.receipt_id)
+    assert receipt.actor_id == values["actor"].id
+    assert receipt.department_creation.resulting_version == 1
+    assert receipt.edition_creation.idempotency_key == values["idempotency_key"]
+    assert receipt.source_audit.operation == "events.programme_adoption.setup"
+    assert receipt.edition.adoption_profile_code == "programme_operations"
+    assert receipt.edition.lifecycle == "draft"
+    if mode != ProgrammeSetupMode.NEW_FOUNDATION:
+        assert receipt.representation_id == representation.id
+    receipt.representation.refresh_from_db()
+    assert receipt.representation.state == "provisioning"
+    assert (
+        ProgrammeAdoptionSetupReceipt.objects.filter(
+            actor_id=values["actor"].id
+        ).count()
+        == 1
+    )
+    with pytest.raises(ValidationError, match="different details"):
+        setup_command.setup_programme_foundation(
+            **{
+                **values,
+                "details": replace(
+                    values["details"], department_name="Other Department"
+                ),
+            }
+        )
+
+
+@pytest.mark.parametrize("failure", ["department", "audit", "receipt"])
+def test_atomic_command_failure_leaves_no_partial_owner_state(
+    command_request, monkeypatch, failure
+):
+    labels = (
+        "organizations.Organization",
+        "organizations.ConventionSeries",
+        "organizations.OrganizationRepresentation",
+        "events.EventEdition",
+        "events.EditionCreationReceipt",
+        "workforce.Department",
+        "workforce.EditionStructureCommandReceipt",
+        "events.ProgrammeAdoptionSetupReceipt",
+        "audit.AuditEvent",
+        "effects.DomainEvent",
+        "effects.OutboxMessage",
+    )
+    counts = {label: apps.get_model(label).objects.count() for label in labels}
+
+    def reject(*_args, **_kwargs):
+        raise RuntimeError("Synthetic final-write failure")
+
+    if failure == "department":
+        monkeypatch.setattr(setup_command, "create_department", reject)
+    elif failure == "audit":
+        monkeypatch.setattr(setup_command, "append_audit", reject)
+    else:
+        monkeypatch.setattr(ProgrammeAdoptionSetupReceipt, "save", reject)
+    with pytest.raises(RuntimeError, match="Synthetic final-write failure"):
+        setup_command.setup_programme_foundation(**command_request)
+    assert {label: apps.get_model(label).objects.count() for label in labels} == counts
+
+
+def test_atomic_command_rechecks_real_revocation_on_retained_retry(command_request):
+    result = setup_command.setup_programme_foundation(**command_request)
+    actor = command_request["actor"]
+    actor.__class__.objects.filter(id=actor.id).update(is_active=False)
+    # Deliberately keep the original Python principal stale and apparently active.
+    assert actor.is_active
+    with pytest.raises(PermissionDenied):
+        setup_command.setup_programme_foundation(**command_request)
+    assert ProgrammeAdoptionSetupReceipt.objects.filter(id=result.receipt_id).exists()
+
+
+def test_atomic_command_rejects_reused_foundation_changed_after_preview(
+    command_request,
+):
+    context = {
+        name: command_request[name]
+        for name in ("actor", "correlation_id", "source_channel")
+    }
+    organization = create_draft_organization(
+        details=OrganizationCreationDetails(name="Synthetic stale parent"),
+        **context,
+    )
+    reference = resolve_programme_setup_foundation(organization_id=organization.id)
+    provision_maru_operators(
+        organization_id=organization.id, reason="New source state.", **context
+    )
+    submitted = replace(
+        command_request["details"],
+        mode=ProgrammeSetupMode.EXISTING_ORGANIZATION,
+        organization_name="",
+        organization_id=organization.id,
+        foundation_fingerprint=reference.fingerprint,
+    )
+    with pytest.raises(ValidationError, match="original foundation"):
+        setup_command.setup_programme_foundation(
+            **{**command_request, "details": submitted}
+        )
+    assert not EventEdition.objects.filter(organization_id=organization.id).exists()
+
+
+def test_atomic_command_default_profile_is_zero_query_denial(django_assert_num_queries):
+    actor = AccountFactory(is_staff=True, is_superuser=True)
+    with (
+        django_assert_num_queries(0),
+        pytest.raises(ValidationError, match="not available"),
+    ):
+        setup_command.setup_programme_foundation(
+            actor=actor,
+            idempotency_key=uuid4(),
+            correlation_id=uuid4(),
+            details=ProgrammeSetupInput(
+                mode=ProgrammeSetupMode.NEW_FOUNDATION,
+                organization_name="Synthetic organizers",
+                series_name="Synthetic series",
+                edition_name="Synthetic edition",
+                department_name="Programme",
+                starts_on=date(2030, 9, 6),
+                ends_on=date(2030, 9, 8),
+                time_zone="UTC",
+                reason="Synthetic setup.",
+            ),
+        )
 
 
 class _SchemaCandidateCode(StrEnum):

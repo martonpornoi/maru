@@ -29,10 +29,18 @@ appointment, contact or authority identities. Active organizations without a
 coherent active representation, suspended/unknown roots and unavailable/foreign
 series yield no partial context. The complete original fingerprint binds current
 setup labels/defaults and representation/series versions. This preview uses two
-ordinary reads, not a locked snapshot: the future setup command must lock/reload
+ordinary reads, not a locked snapshot: the setup command must lock/reload
 owner facts and compare again before writing, and the consumer must independently
 admit/audit/revalidate before identifying disclosure. No root is created, upgraded,
 activated or authorized by the reference itself.
+
+`lock_programme_setup_foundation` requires an existing atomic scope, independently
+admitted exact IDs, shared authority fences and the original fingerprint. It locks
+the previewed representation before Organization and optional same-parent series,
+then resolves and compares the complete source again. If a root appeared meanwhile,
+the fingerprint fails stale; the function never locks that new root after the parent
+and reverses lock order. Changed/unavailable sources release no partial reference.
+The lock is transaction-local and grants no authority or lifecycle exception.
 
 ## Owned data and invariants
 

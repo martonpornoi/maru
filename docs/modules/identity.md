@@ -18,6 +18,14 @@ or conduct cases. ADR 0013 defines verified identity and scoped restrictions.
 
 ## Owned data and invariants
 
+`queries.current_platform_administrator_is_available` is an internal exact-ID
+current-state admission seam. It returns only whether an active platform-kind
+account exists, never identity labels or contact fields. Optional row locking
+requires the caller's existing transaction and comes after its canonical owner
+locks. Malformed/nil IDs and invalid lock requests fail closed. The seam does not
+grant profile, tenant, lifecycle or ordinary operational authority; Programme's
+dormant setup command uses it to reject stale principal objects and revoked retries.
+
 The #96 release-invalidation draft joins the existing native emergency account
 deactivation to Scheduling through live Audit mutation evidence. If the account
 is tracked, its eligibility change must retain a current same-transaction journal
