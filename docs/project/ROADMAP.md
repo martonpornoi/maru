@@ -854,11 +854,15 @@ governed staffing. Issues #91/#94/#96 deliver release preparation, review and
 atomic publication/invalidation. Issue #99 delivers public and exact-person
 output; #100 adds independently authorized room, Department and edition operator
 run sheets under ADR 0099. #104 adds governed change communication and exact-self
-acknowledgement under ADR 0102. These remain dormant components, not an activated
-departmental workflow. Next are on-site continuity, #97 logical recovery,
-guided setup and integrated acceptance
-in dependency order. Human-only #92 checks remain an activation gate. Each
-child is separately verified and delivered.
+acknowledgement under ADR 0102. #107 delivers on-site continuity; #108's dormant
+guided item, Applications, review, file and owner-task connections are delivered.
+These remain components, not an activated departmental workflow. Next are
+accountable setup and a complete isolated fixture, followed by #102 restored
+database acceptance, #97 logical recovery, #92 human acceptance and #109 joined
+proof before #108's final profile promotion. The
+[integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
+defines the evidence sequence without claiming execution. Each child remains
+separately verified and delivered.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme

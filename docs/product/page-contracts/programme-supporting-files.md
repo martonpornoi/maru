@@ -1,6 +1,7 @@
 # Programme supporting-file tasks
 
-- Status: Dormant #108 controls implemented; protected delivery pending.
+- Status: Dormant #108 controls delivered through protected PR #150; final
+  integrated/native/human acceptance and activation remain gated.
 - Requirements: PRG-001/002/003/006, AUD-001/003, PRI-001/003, NFR-003/008/010/013,
   UX-003/005/006/007/008/012/013/020/027/029.
 - Decisions: ADRs 0051, 0082, 0085, 0100, 0104 and 0105; no new ownership,

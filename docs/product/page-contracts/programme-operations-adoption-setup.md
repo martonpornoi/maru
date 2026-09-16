@@ -1,11 +1,10 @@
 # Set up Programme Operations contract
 
-- Status: Accepted contract, runtime inactive; dormant Applications-owned
-  Programme call/proposal, import, and Department-continuity plus Programme-
-  owned item/readiness foundations are
-  installed, while the profile, route, destinations, current-profile
-  writers/effects, adapter implementation, and Scheduling namespace remain
-  absent
+- Status: Accepted contract, runtime inactive. Dormant Applications, Programme,
+  Scheduling, staffing, release, notice, continuity and guided task components
+  are installed. Accountable setup, the complete isolated fixture, final
+  acceptance and profile promotion remain incomplete; the production setup
+  route and current-profile authority remain absent.
 - Reserved route: `/admin/platform/setup/programme-operations/` (deliberately
   non-routable until the complete integrated profile is implemented and
   accepted)
@@ -344,12 +343,12 @@ or relocation-pending overlay before degraded display.
 
 ## States and safe failure
 
-- **Dormant foundations:** Applications call/proposal and private Programme
-  item/readiness tables, exact-edition capability declarations, dormant event
-  schemas, purpose/target descriptors, and one reserved inbound adapter
-  descriptor exist, but no route, link, profile option, current-profile
-  writer/effect route, destination, review/target transition, or Scheduling
-  continuation exists.
+- **Dormant components:** Applications, Programme and Scheduling owner commands,
+  review/conversion, connected reserved task routes and continuity components
+  exist. Neither current profile admits the complete workflow; production
+  mounting, accountable setup and final promotion remain gated. A reserved
+  route exercised in a synthetic fixture is not an activated destination.
+  No current-profile writer/effect route is enabled by these dormant components.
 - **Empty setup:** explain the composite boundary, excluded modules, and
   existing-authority requirements before collecting foundation facts.
 - **Existing foundation:** show only authorized reusable organizations,
@@ -398,3 +397,7 @@ setup-to-on-site acceptance. Passing this contract or either dormant domain
 child does not activate the profile, expose a usable Programme workflow,
 approve production data, or certify
 deployment, owner acceptance, recovery, or production readiness.
+
+The [integrated rehearsal protocol](../../operations/programme-integrated-rehearsal.md)
+maps preparation, native, recovery, human and joined evidence to #108/#102/#97/#92/#109.
+Its checkpoint list is not an executable fixture or evidence that a gate passed.
