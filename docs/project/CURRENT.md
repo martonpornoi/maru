@@ -11,86 +11,60 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's dormant file-custody schema prerequisite is delivered through
-[PR #147](https://github.com/martonpornoi/maru/pull/147), protected squash
-`9324dade5ca25b69f084fa55c242716642164b26` at 2026-09-16 07:32:08 UTC.
-Its tree equals certified head `410ff2a3e960cee71aad38122b59d638b56ab386`;
+#108's dormant owning file upload/result commands are delivered through
+[PR #148](https://github.com/martonpornoi/maru/pull/148), protected squash
+`9f27d707a021e7f5dbe2bc826c97352301cc7d6b` at 2026-09-16 08:23:47 UTC.
+Its tree equals certified head `b0f9be0e66bb54dbb769af3b76258225978fd32d`;
 clean local main and origin/main were synchronized. All eight local retained
-gates passed in 5m57s, including 8,681 units in 53.86s. Hosted quality took 9m53s
-and units 104.26s; exact-head PR gate/CodeQL passed with clear reviews. See the
-[protected evidence](../checkpoints/2026-09-16-programme-file-custody-protected-delivery.md).
+gates passed in 5m20s, including 8,751 units in 54.54s and 93 frontend tests.
+Hosted quality took 12m15s and units 80.82s; exact-head PR gate/CodeQL passed with
+clear reviews. See the
+[protected evidence](../checkpoints/2026-09-16-programme-file-upload-protected-delivery.md).
 PostgreSQL suites stayed skipped; the separately approved schema-only observation
 is not native behavioral acceptance. No profile or production route was activated.
 Do not restart this schema or PR #146's scanner prerequisite, personal discovery/
 connections, operator/shared workspace entry, domain selection or #113.
 
-## Next bounded outcome: governed file upload-and-use (#108)
+## Next bounded outcome: independent private file readers (#108)
 
-Branch: `codex/programme-file-upload-command`, from protected PR #147.
-ADR 0104 records purpose-bound Applications file intake. This first increment only
-prepares exact immutable PDF bytes, capped at 10 MiB, with a separately configured
-literal-loopback ClamAV INSTREAM adapter. Exact bounded NUL-framed clean evidence
-through connection close and one absolute connect/send/read deadline are required.
-Disabled, unscanned, malformed, unknown and partial states fail closed. A PDF
-envelope/clean scan is not a benign-document guarantee or permission.
+Branch: `codex/programme-private-file-readers`, from protected PR #148.
+The active candidate adds dormant independent current/sealed contributor and
+reviewer/moderator/decider file queries. Exact answer, relationship, field/stage,
+assignment/conflict and sensitive-content authority precede custody lookup;
+anonymous review omits identifying lookup altogether. Minimized metadata never
+loads bytes. Explicit downloads verify bounded exact length/digest, repeat source
+admission and require protected-read audit before returning. No receipt/storage
+identifier is accepted as caller permission, and shared read access does not
+relax uploader selection restrictions.
 
-The completed preparer has 83 focused mocked-socket cases; actual scanner/signature
-health and storage/provenance/recovery acceptance remain #109/#102. No real scanner,
-ORM, storage, authorization, audit, event, receipt, answer, profile or production
-route was changed. No native suite was collected/run and no new visible UI/browser
-acceptance is claimed. The local Python 3.12.0 / hosted 3.12.14 distinction remains
-explicit; do not infer environment parity from local success.
+Complete database-free feedback passed **8,851 units in 53.33s**, including 100
+new reader/admission cases. Strict typing, Ruff and configured docstrings passed.
+Clean exact-commit retained certification and protected GitHub delivery are still
+required. The custody native file maintains **37 unexecuted cases**, four added
+for current/sealed reads, cross-scope denial and shared/review roles with both
+anonymity policies. No PostgreSQL suite was collected/run, no additional schema
+observation occurred, and no browser/real-scanner/production acceptance is claimed.
+See the [reader checkpoint](../checkpoints/2026-09-16-programme-private-file-readers.md).
 
-Prepared bytes are ephemeral, not durable intake. Protected PR #147 adds
-ADR 0105's private transactional custody schema: exact proposal/question/uploader,
-original versions/retry, separate bytes, canonical first-answer evidence and
-64-intake/64-MiB proposal quotas. Migrations 0019–0021 keep runtime relations
-SELECT-only, refuse unproven legacy Programme file values, and fence populated
-contraction. It does not yet provide an upload command or attachment reader.
+Do not restart the delivered scanner (#146), transactional custody schema (#147),
+owning upload/result commands (#148), person/domain references, personal discovery,
+ordinary owner entry, shared navigation or #113. Their detailed historical evidence
+remains in owning module/operations documentation and checkpoints. PR #147's approved
+schema-only observation is not native acceptance, and its temporary container/data
+were removed without touching older Docker resources.
 
-The explicitly approved disposable schema-only observation completed in 150.437s.
-All three new migrations installed; empty reverse/reapply and every Applications
-readiness facet passed. All pre-existing constraint/index fingerprints remained
-exact; new catalog fingerprints were observed, not invented. The task-owned
-temporary container/data were removed; older containers were untouched. No native
-test was collected/run. See the
-[custody checkpoint](../checkpoints/2026-09-16-programme-file-custody-schema.md).
-Complete feedback and clean exact-commit eight-gate certification passed as above.
-Twenty-eight maintained native cases remain unexecuted #102 debt;
-quotas/concurrency, real scanner and integrated recovery still need final proof.
+Next finish safe upload, selection/clear and attachment-only viewer adapters, with
+CSRF/pre-body admission, bounded transport and final response checks. Then complete
+accountable blank-organization setup and the isolated integrated fixture.
+Accountable setup needs its own durable receipt/authority schema; the file-only
+schema observation approval does not authorize that separate observation.
+Current profiles/routes/writers remain unchanged. #108/#48 and final
+#102/#97/#92/#109 gates remain open.
 
-The active candidate adds the owning upload-and-use and body-free result commands:
-admission before reading, scanning outside transactions, locked repeated view/write
-authority and source/quota checks, then atomic custody plus one canonical answer.
-Used-key submission refuses a new body; explicit result lookup preserves original
-intent and never creates a missing answer. Concurrent different bytes conflict.
-Fresh canonical file selection also checks exact intake before the native guard.
-Complete database-free feedback passed 8,751 units in 53.79s, including 70 new
-command cases; strict type, Ruff and configured docstring checks passed. Exact
-clean-commit retained certification is still required before delivery. The native
-custody file now maintains 33 unexecuted cases (five added variants/cases); no
-PostgreSQL suite or further schema observation ran. No route/profile was activated.
-
-Next finish the independent exact-answer private reader and selection/attachment
-viewers, with anonymous omission before file lookup. Accountable setup requires
-its own durable receipt/authority schema;
-this bounded exception does not authorize that schema observation. Complete setup,
-isolated fixture and final #102/#97/#92/#109 gates remain open.
-
-Applications reciprocal navigation is delivered, including original input/receipt
-preservation and synthetic role/keyboard observations. Four maintained native
-entry scenarios remain unexecuted #102 debt, with human acceptance under #92.
-Do not restart that increment or the preceding conversion entry.
-
-Conversion entry and the six preceding entry tasks remain delivered. Four new and
-three changed native cases from PR #141 remain uncollected/unexecuted #102 debt;
-human/integrated evidence remains #92/#109. Do not restart delivered increments.
-
-Person and same-call domain selection/viewers are delivered; do not restart them.
-Six domain native cases remain unexecuted #102 debt and browser/human follow-up
-remains #92. Existing decision-to-conversion continuations and all ordinary owner
-launchers remain delivered. Safe files, accountable setup and #109/#102/#97/#92
-acceptance remain incomplete.
+Non-blocking tooling follow-up after #48: the semantic docstring validator's
+no-argument defaults are strings rather than `Path` objects; its maintained explicit
+`src scripts` invocation passes. The reader checkpoint records the failed diagnostic
+and correct rerun; do not expand this delivery into unrelated tooling cleanup.
 
 ## Remaining #48 delivery decomposition
 

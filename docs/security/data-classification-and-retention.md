@@ -84,8 +84,13 @@ separate private database bytes, atomically tied to the first answer and its
 existing canonical evidence. No original filename, public URL, quarantine copy
 or new activity stream is retained. A proposal retains at most 64 intakes and
 64 MiB including history; bytes inherit backup access/expiry controls. Clearing
-an answer never deletes history or overrides a hold. Owning upload/read commands,
-retention/hold/disposal execution and final recovery remain activation gates;
+an answer never deletes history or overrides a hold. Dormant owning upload/result
+and independently authorized exact-answer readers do not activate any route.
+Readers omit identifying lookup during anonymous review and audit admitted metadata
+or explicit integrity-checked byte reads; minimized projections expose no digest,
+storage key or filename. Private bytes and source proof are excluded from repr.
+Transport/viewer acceptance, retention/hold/disposal execution and final recovery
+remain activation gates;
 the schema is not permission to retain production documents indefinitely.
 Identifying attachment
 lookups are omitted before anonymous review, not merely hidden afterward. The

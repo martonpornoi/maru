@@ -1,7 +1,8 @@
 # Programme supporting-file handling
 
 Status: dormant byte/scanner preparation, private custody schema and owning
-upload/result commands under #108 / ADRs 0104–0105. No Programme upload, selection
+upload/result commands and independent exact-answer readers under #108 / ADRs
+0104–0105. No Programme upload, selection
 or download route is enabled.
 Use synthetic data only. This is not a deployment or production-scanner approval.
 
@@ -103,8 +104,8 @@ success evidence. The visible routine intent "Upload and use this supporting fil
 is the canonical rationale; no extra private explanation is collected. Failure
 uses existing minimized command audit, with no bytes/filename/findings in metadata.
 
-The exact-answer private read boundary and transport/viewer surfaces still need
-implementation. Database custody removes split external-object commit/orphan
+Transport and viewer surfaces still need implementation. Database custody removes
+split external-object commit/orphan
 handling from this first workflow; failed transactions retain no bytes, and failed
 scans retain no quarantine copy. Privacy holds, authorized disposal and mutually
 consistent recovery still require final acceptance. Do not delete referenced bytes
@@ -118,11 +119,37 @@ before one wins compare exact bytes and intent before replay. Missing canonical
 evidence is unavailable, never permission to recreate an answer. A result receipt
 is not download permission. No endpoint or current runtime write grant is enabled.
 
-Future personal/sealed/reviewer/moderator/decider downloads require independent
-exact-answer authority before any file lookup. Anonymous review must omit identifying
-file lookup entirely. Delivery is attachment-only with no public object URL, no-store,
-type-sniffing protection and final source/authority checks; none is implemented by
-the preparer alone. Source keys, filenames and scanner findings are not a directory.
+## Dormant independently authorized private readers
+
+`programme_file_queries.get_self_programme_file` admits a current shared answer or
+the exact current seal including the genuine contributor. It independently requires
+the existing summary/answer or summary/frozen field ceiling; upload, retry or edit
+authority is not sufficient. Another included contributor can read the same admitted
+answer without becoming its uploader or acquiring permission to select their file.
+
+`programme_review_file_queries.get_programme_review_file` independently admits
+reviewer, moderator or decider scope, exact current seal, stage allowlist, assignment/
+conflict and required sensitive-content authority. Anonymous omission occurs in the
+canonical answer query, and direct file-reader access is refused before sealed-file
+binding, intake metadata or bytes are queried. Management-only review context is not
+content access.
+
+Both query inputs identify an answer, never a receipt or storage key. Metadata binds
+the exact organization, edition, proposal, immutable question, answer version and
+clean receipt. The default minimized projection contains presence and size, not bytes,
+digest, filename, storage reference or public URL. Only explicit `include_bytes=True`
+loads the separate bounded byte relation and checks exact length and SHA-256. Missing
+or inconsistent custody is unavailable with no generic-media fallback. Empty metadata
+is an audited absence without file lookup; an empty-answer download is unavailable.
+Required final source/authority comparison and sensitive-read audit must succeed
+before any projection or bytes return. Private source and bytes are excluded from repr.
+
+These are dormant owner queries, not an HTTP download implementation. Future adapters
+must deliberately request bytes, prepare a fixed-filename attachment-only response
+with no-store/nosniff, then repeat source/authority checks before release. No inline
+PDF rendering, public URL, activation or new runtime grant is implied. Source keys,
+filenames and scanner findings are not a directory. Selection and upload adapters
+still need their own original-intent, CSRF and pre-body/bounded-reading acceptance.
 
 Unit tests use mocked sockets, not a real ClamAV scan. Real daemon/signature and
 private-storage failure/recovery evidence remains #109 and deployment acceptance.

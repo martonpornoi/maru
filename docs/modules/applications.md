@@ -624,9 +624,22 @@ different bytes conflict. Result lookup is not attachment-read authority and nev
 creates a missing answer. Fresh canonical file-answer selection also validates
 exact intake scope before its native guard. Clearing an answer needs no file lookup.
 
-No byte reader, selection control, transport route, scanner deployment or current
-profile activation is provided by these dormant commands. Those plus independently
-authorized current/sealed/anonymous-safe review viewers remain #108 work. See the
+`programme_file_queries.get_self_programme_file` and
+`programme_review_file_queries.get_programme_review_file` independently authorize
+an exact current/sealed or stage-allowed review answer before custody lookup. The
+former requires genuine shared/included-contributor view fields; the latter retains
+separate reviewer/moderator/decider, assignment, conflict and sensitive-content
+ceilings. Anonymous review omits file lookup entirely. Neither accepts a receipt
+identifier as caller authority or infers permission from upload/result recovery.
+Metadata returns only presence/size alongside authorized question text; explicit
+`include_bytes=True` verifies exact bounded length and digest before final source
+comparison and required protected-read audit. Bytes and source proof are hidden
+from diagnostic repr. Shared access does not relax uploader selection restrictions.
+
+No selection control, transport route, scanner deployment or current profile
+activation is provided. Safe upload, selection and attachment-only viewer adapters
+remain #108 work and must enforce pre-body admission/CSRF, original intent, bounded
+reading and no-store/nosniff/final source checks. See the
 [file-handling contract](../operations/programme-supporting-file-handling.md).
 
 ## Applications, revisions, and review
