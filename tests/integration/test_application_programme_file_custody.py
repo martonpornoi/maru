@@ -18,6 +18,8 @@ from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 
 from maru.applications import programme_file_commands as file_commands
+from maru.applications import programme_file_queries as file_queries
+from maru.applications import programme_review_file_queries as review_files
 from maru.applications.models import (
     ApplicationAnswerRevision,
     ApplicationDefinition,
@@ -26,6 +28,7 @@ from maru.applications.models import (
     ProgrammeFileContent,
     ProgrammeFileIntake,
     ProgrammeProposal,
+    ProgrammeReviewCase,
 )
 from maru.applications.programme_authorization import (
     ApplicationsProgrammeAuthorizationDeniedError,
@@ -36,6 +39,7 @@ from maru.applications.programme_commands import (
     ApplicationsProgrammeVersionConflictError,
     append_programme_proposal_answer,
     revise_programme_proposal_selection,
+    seal_programme_proposal,
 )
 from maru.applications.programme_inputs import (
     ProgrammeCallQuestionType,
@@ -45,6 +49,7 @@ from maru.applications.programme_reference_sources import (
     ProgrammeAnswerReferenceIntent,
     ProgrammeAnswerReferenceRequest,
 )
+from maru.applications.programme_review_authorization import DECIDE, MODERATE, REVIEW
 from maru.applications.programme_writer_boundary import (
     programme_application_database_writer,
 )
@@ -53,6 +58,8 @@ from tests.integration import test_application_programme_services as fixtures
 from tests.integration.test_application_programme_services import (
     _admit_future_programme_effects,
 )
+from tests.support import programme_review as review_fixtures
+from tests.unit.test_application_programme_review_inputs import review_policy
 
 pytestmark = [
     pytest.mark.integration,
@@ -63,7 +70,7 @@ PDF = b"%PDF-1.7\nSynthetic file-custody fixture only.\n%%EOF\n"
 
 
 @pytest.fixture
-def world(monkeypatch):
+def file_definition(monkeypatch):
     original = fixtures._definition
 
     def definition(now, *, code):
@@ -78,6 +85,10 @@ def world(monkeypatch):
         return replace(result, sections=(replace(section, questions=(question,)),))
 
     monkeypatch.setattr(fixtures, "_definition", definition)
+
+
+@pytest.fixture
+def world(file_definition):
     return fixtures._start_proposal(fixtures._active_call(code="private-file-custody"))
 
 
@@ -487,3 +498,156 @@ def test_native_first_answer_failure_rolls_back_all_private_bytes_and_evidence(
         ProgrammeProposal.objects.get(id=world.proposal_id).submission.aggregate_version
         == world.version
     )
+
+
+def test_native_file_current_and_exact_seal_readers_preserve_same_bytes(
+    world, command_scanner
+):
+    request, intent = _command_context(world)
+    saved = file_commands.upload_and_use_programme_file(
+        request=request,
+        intent=intent,
+        read_bytes=lambda: PDF,
+        authorizer=fixtures._AUTHORIZER,
+    )
+    metadata = file_queries.get_self_programme_file(
+        request=request, authorizer=fixtures._AUTHORIZER
+    )
+    assert metadata.present
+    assert metadata.data is None
+    assert metadata.size_bytes == len(PDF)
+    assert (
+        file_queries.get_self_programme_file(
+            request=request, include_bytes=True, authorizer=fixtures._AUTHORIZER
+        ).data
+        == PDF
+    )
+    sealed = seal_programme_proposal(
+        actor_id=request.actor_id,
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        proposal_id=request.proposal_id,
+        expected_version=saved.resulting_version,
+        reason="Review synthetic file seal.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+        authorizer=fixtures._AUTHORIZER,
+    )
+    assert (
+        file_queries.get_self_programme_file(
+            request=request,
+            revision_id=sealed.target_id,
+            include_bytes=True,
+            authorizer=fixtures._AUTHORIZER,
+        ).data
+        == PDF
+    )
+
+
+def test_native_file_foreign_scope_and_unknown_question_deny_before_custody(
+    monkeypatch, world, command_scanner
+):
+    request, intent = _command_context(world)
+    file_commands.upload_and_use_programme_file(
+        request=request,
+        intent=intent,
+        read_bytes=lambda: PDF,
+        authorizer=fixtures._AUTHORIZER,
+    )
+    metadata = Mock(
+        side_effect=AssertionError("Denied requests must not query custody")
+    )
+    monkeypatch.setattr(file_queries, "_metadata", metadata)
+    for changes in (
+        {"organization_id": uuid4()},
+        {"edition_id": uuid4()},
+        {"question_id": uuid4()},
+        {"actor_id": world.call.manager.id},
+    ):
+        with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+            file_queries.get_self_programme_file(
+                request=replace(request, **changes),
+                include_bytes=True,
+                authorizer=fixtures._AUTHORIZER,
+            )
+    metadata.assert_not_called()
+
+
+@pytest.mark.parametrize("anonymous", [False, True])
+def test_native_shared_and_review_file_reads_keep_role_and_anonymity_boundaries(
+    monkeypatch, file_definition, command_scanner, anonymous
+):
+    # Adapt only fixture construction to the real upload command; all source,
+    # review, answer, custody and audit boundaries remain real database work.
+    def upload_fixture_answer(**values):
+        return file_commands.upload_and_use_programme_file(
+            request=ProgrammeAnswerReferenceRequest(
+                values["actor_id"],
+                values["organization_id"],
+                values["edition_id"],
+                values["proposal_id"],
+                values["question_id"],
+                values["correlation_id"],
+                "test",
+            ),
+            intent=ProgrammeAnswerReferenceIntent(
+                values["expected_version"], 2, 1, values["retry_key"]
+            ),
+            read_bytes=lambda: PDF,
+            authorizer=fixtures._AUTHORIZER,
+        )
+
+    monkeypatch.setattr(
+        review_fixtures, "append_programme_proposal_answer", upload_fixture_answer
+    )
+    policy = review_policy()
+    policy = replace(policy, stages=(replace(policy.stages[0], anonymous=anonymous),))
+    reviewed = review_fixtures.create_review_world(
+        policy=policy, with_collaborator=True
+    )
+    case = ProgrammeReviewCase.objects.get(id=reviewed.case_id)
+    assert reviewed.collaborator is not None
+    shared = ProgrammeAnswerReferenceRequest(
+        reviewed.collaborator.id,
+        reviewed.call.edition.organization_id,
+        reviewed.call.edition.id,
+        reviewed.proposal_id,
+        reviewed.call.question_id,
+        uuid4(),
+        "test",
+    )
+    for revision_id in (None, case.revision_id):
+        assert (
+            file_queries.get_self_programme_file(
+                request=shared,
+                revision_id=revision_id,
+                include_bytes=True,
+                authorizer=fixtures._AUTHORIZER,
+            ).data
+            == PDF
+        )
+    assignment_id = review_fixtures.assign_and_score(reviewed, reviewed.reviewer.id)
+    metadata = Mock(wraps=file_queries._metadata)
+    monkeypatch.setattr(file_queries, "_metadata", metadata)
+    for actor, role, assignment in (
+        (reviewed.reviewer, REVIEW, assignment_id),
+        (reviewed.moderator, MODERATE, None),
+        (reviewed.decider, DECIDE, None),
+    ):
+        args = {
+            "request": reviewed.read(
+                actor.id, role, fields=frozenset({"review_answers"})
+            ),
+            "case_id": reviewed.case_id,
+            "question_key": "session-title",
+            "assignment_id": assignment,
+            "include_bytes": True,
+            "authorizer": fixtures._AUTHORIZER,
+        }
+        if anonymous:
+            with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+                review_files.get_programme_review_file(**args)
+        else:
+            assert review_files.get_programme_review_file(**args).data == PDF
+    assert metadata.call_count == (0 if anonymous else 3)
