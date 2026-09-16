@@ -2,7 +2,7 @@
 {% load static tz %}
 {% block title %}My Programme proposals · Maru{% endblock %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
-{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'applications/programme_calls.js' %}" defer></script>{% if task == "file" %}<script src="{% static 'applications/programme_files.js' %}" defer></script>{% endif %}{% endblock %}
 {% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs">My Maru / Programme proposals</div>{% endblock %}
 {% block content %}
@@ -16,6 +16,7 @@
   <nav aria-label="My proposal tasks"><ul class="call-links"><li><a href="{{ root_url }}"{% if task == "inventory" %} aria-current="page"{% endif %}>My proposals</a></li><li><a href="{{ root_url }}calls/"{% if task == "calls" %} aria-current="page"{% endif %}>Find an available call</a></li></ul></nav>
   {% if task == "person-reference" %}{% include "applications/programme_person_reference.html" %}
   {% elif task == "domain-reference" %}{% include "applications/programme_domain_reference.html" %}
+  {% elif task == "file" %}{% include "applications/programme_file.html" %}
   {% elif task == "inventory" %}
   <p>Choose one of your private proposal records. Drafts are not submitted; collaboration does not make you a Programme host. Retained proposal access is separate from availability for starting a new one.</p>
   <ul class="call-cards">{% for row in proposals %}<li>
@@ -60,6 +61,6 @@
   </section>
   {% elif task == "work" %}{% include "applications/programme_personal_work.html" %}
   {% endif %}
-  <section aria-labelledby="proposal-next"><h2 id="proposal-next">What remains in this rehearsal</h2><p>Registered Programme person and same-call track/format references have dedicated selection and viewing tasks. Safe-file choosers and unknown reference kinds are not yet connected. Review and accepted-item conversion remain separate organizer tasks. Starting or submitting a proposal does not complete the Programme journey or publish anything.</p></section>
+  <section aria-labelledby="proposal-next"><h2 id="proposal-next">What remains in this rehearsal</h2><p>Registered Programme person, same-call track/format references and private supporting PDFs have dedicated tasks. Unknown reference kinds remain unavailable. Review and accepted-item conversion remain separate organizer tasks. Starting or submitting a proposal does not complete the Programme journey or publish anything.</p></section>
 </div>
 {% endblock %}

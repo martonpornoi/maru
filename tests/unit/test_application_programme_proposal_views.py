@@ -180,7 +180,8 @@ def test_real_personal_shell_one_heading_and_protected_headers(page, task):
     assert "no-store" in response["Cache-Control"]
     assert response["X-Content-Type-Options"] == "nosniff"
     assert "form-action 'self'" in response["Content-Security-Policy"]
-    assert "not yet connected" in soup.get_text()
+    assert "Unknown reference kinds remain unavailable" in soup.get_text()
+    assert "private supporting PDFs have dedicated tasks" in soup.get_text()
     assert not soup.select('a[href*="/admin/applications/"]')
 
 

@@ -6,6 +6,7 @@ from .programme_conversion_views import programme_conversion
 from .programme_decider_views import programme_decider
 from .programme_moderation_views import programme_moderation
 from .programme_review_domain_views import programme_review_domain_reference
+from .programme_review_file_views import programme_review_file
 from .programme_review_intake_views import programme_review_intake
 from .programme_review_management_views import programme_review_management
 from .programme_review_person_views import programme_review_person_reference
@@ -156,3 +157,24 @@ urlpatterns = [
         name="programme-review-policy",
     ),
 ]
+
+for _segment, _purpose, _name in (
+    ("mine/<uuid:case_id>/<uuid:assignment_id>/", "reviewer", "review-own"),
+    ("moderation/<uuid:case_id>/", "moderator", "moderation"),
+    ("decisions/<uuid:case_id>/", "decider", "decision"),
+):
+    _file_root = _ROOT + _segment + "answers/file/<str:question_key>/"
+    urlpatterns += [
+        path(
+            _file_root,
+            programme_review_file,
+            {"purpose": _purpose},
+            name=f"programme-{_name}-file",
+        ),
+        path(
+            _file_root + "download/",
+            programme_review_file,
+            {"purpose": _purpose, "download": True},
+            name=f"programme-{_name}-file-download",
+        ),
+    ]

@@ -11,50 +11,52 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's dormant owning file upload/result commands are delivered through
-[PR #148](https://github.com/martonpornoi/maru/pull/148), protected squash
-`9f27d707a021e7f5dbe2bc826c97352301cc7d6b` at 2026-09-16 08:23:47 UTC.
-Its tree equals certified head `b0f9be0e66bb54dbb769af3b76258225978fd32d`;
+#108's dormant independent private-file readers are delivered through
+[PR #149](https://github.com/martonpornoi/maru/pull/149), protected squash
+`597f80351aad79da923b4eb9730a056b6e042762` at 2026-09-16 09:06:01 UTC.
+Its tree equals certified head `19daba843c9a81d908a00ba6a94521ad83ef75cc`;
 clean local main and origin/main were synchronized. All eight local retained
-gates passed in 5m20s, including 8,751 units in 54.54s and 93 frontend tests.
-Hosted quality took 12m15s and units 80.82s; exact-head PR gate/CodeQL passed with
+gates passed in 5m18s, including 8,851 units in 53.51s.
+Hosted quality took 11m50s and units 103.03s; exact-head PR gate/CodeQL passed with
 clear reviews. See the
-[protected evidence](../checkpoints/2026-09-16-programme-file-upload-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-16-programme-file-readers-protected-delivery.md).
 PostgreSQL suites stayed skipped; the separately approved schema-only observation
 is not native behavioral acceptance. No profile or production route was activated.
 Do not restart this schema or PR #146's scanner prerequisite, personal discovery/
 connections, operator/shared workspace entry, domain selection or #113.
 
-## Next bounded outcome: independent private file readers (#108)
+## Current candidate: safe file controls and attachment viewers (#108)
 
-Branch: `codex/programme-private-file-readers`, from protected PR #148.
-The active candidate adds dormant independent current/sealed contributor and
-reviewer/moderator/decider file queries. Exact answer, relationship, field/stage,
-assignment/conflict and sensitive-content authority precede custody lookup;
-anonymous review omits identifying lookup altogether. Minimized metadata never
-loads bytes. Explicit downloads verify bounded exact length/digest, repeat source
-admission and require protected-read audit before returning. No receipt/storage
-identifier is accepted as caller permission, and shared read access does not
-relax uploader selection restrictions.
+Branch: `codex/programme-file-controls`, from protected PR #149.
+Dormant personal upload/recovery/clear and current/sealed/review attachment controls
+are implemented with ordinary labelled entry. Normal CSRF protects raw-PDF PUT;
+the owner admits original scope/versions before reading. Attempted uploads never
+automatically resend or rebase; reload retains a recovery-only proof. Clear preserves
+custody/history. Attachments repeat independent source/authority after preparation.
+No raw receipt directory, inline PDF, schema/runtime grant or production activation.
 
-Complete database-free feedback passed **8,851 units in 53.33s**, including 100
-new reader/admission cases. Strict typing, Ruff and configured docstrings passed.
-Clean exact-commit retained certification and protected GitHub delivery are still
-required. The custody native file maintains **37 unexecuted cases**, four added
-for current/sealed reads, cross-scope denial and shared/review roles with both
-anonymity policies. No PostgreSQL suite was collected/run, no additional schema
-observation occurred, and no browser/real-scanner/production acceptance is claimed.
-See the [reader checkpoint](../checkpoints/2026-09-16-programme-private-file-readers.md).
+Complete database-free feedback passed **8,948 units in 66.94s**; ten focused
+JavaScript cases passed. Real synthetic browser feedback found and corrected the
+upload page's missing same-origin CSP allowance and outdated guidance. Ordinary
+upload, original-result recovery, clear, empty/view states and anonymous review
+denial were observed. Seven target widths had no page overflow. Six rendered
+pages had zero reported axe/jsdom violations, with contrast and human checks
+explicitly unproven. See the
+[controls checkpoint](../checkpoints/2026-09-16-programme-file-controls.md).
+Final clean exact-commit retained certification and protected delivery are pending;
+feedback from another commit is not certification.
 
-Do not restart the delivered scanner (#146), transactional custody schema (#147),
-owning upload/result commands (#148), person/domain references, personal discovery,
-ordinary owner entry, shared navigation or #113. Their detailed historical evidence
-remains in owning module/operations documentation and checkpoints. PR #147's approved
-schema-only observation is not native acceptance, and its temporary container/data
-were removed without touching older Docker resources.
+The custody native file maintains **39 unexecuted cases**, including two new
+HTTP-to-custody/recovery and attachment/clear cases. No PostgreSQL suite was
+collected/run, no schema observation occurred, and no real-scanner, native custody
+or production acceptance is claimed. #102 debt and #92 human checks remain open.
 
-Next finish safe upload, selection/clear and attachment-only viewer adapters, with
-CSRF/pre-body admission, bounded transport and final response checks. Then complete
+Do not restart delivered scanner (#146), custody schema (#147), upload/result
+commands (#148), independent readers (#149), person/domain references, personal
+discovery, ordinary owner entry, shared navigation or #113. Preserve their owning
+documentation and historical checkpoints.
+
+Next certify and deliver these controls through the protected flow. Then continue
 accountable blank-organization setup and the isolated integrated fixture.
 Accountable setup needs its own durable receipt/authority schema; the file-only
 schema observation approval does not authorize that separate observation.

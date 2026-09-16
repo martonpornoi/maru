@@ -1,0 +1,12 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Programme supporting file · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Programme / {{ purpose }} / Supporting file</div>{% endblock %}
+{% block content %}<div class="programme-calls">
+  <h1>Programme supporting file</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Exact {{ purpose }} answer</summary><p>Organization {{ organization_id }} · Edition {{ edition_id }} · Department {{ department_id }}. Current role, exact seal, stage, allowed question and sensitive-field authority are checked independently. Anonymous files are unavailable.</p></details>
+  <section aria-labelledby="file-question"><h2 id="file-question">{{ file_view.question_label }}</h2>{% include "applications/_programme_file_metadata.html" %}</section>
+  {% if return_url %}<p><a href="{{ return_url }}">Back to permitted answers</a></p>{% endif %}
+</div>{% endblock %}

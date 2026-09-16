@@ -263,6 +263,7 @@ def _projection(detail: Any) -> dict[str, Any]:
                 "label": row["label"],
                 "classification": row["classification"],
                 "text": _answer_text(row),
+                "file_key": row["key"] if row.get("type") == "safe_file" else None,
                 "domain_key": row["key"]
                 if row.get("type") == "domain_reference"
                 and row.get("reference_kind") in DOMAIN_REFERENCE_KINDS
