@@ -604,10 +604,29 @@ Migrations 0019–0021 install schema, integrity and a populated downgrade fence
 The preflight refuses unproven legacy Programme file answers or reserved
 `programme-db/` receipts rather than inventing custody for old data. Exact metadata
 was observed in an approved disposable schema-only check; native behavioral
-acceptance remains unexecuted #102 debt. No owning upload command, byte reader,
-selection control, route, scanner deployment or current-profile activation is
-provided by this persistence prerequisite. Those plus independently authorized
-current/sealed/anonymous-safe review viewers remain #108 work. See the
+acceptance remains unexecuted #102 debt.
+
+`programme_file_commands.upload_and_use_programme_file` now owns dormant intake:
+it admits the exact contributor, applicable private question, original versions,
+lifecycle and capacity before invoking a bounded transport reader. Scanner settings
+must be valid before reading; scan occurs outside an enclosing transaction.
+Afterward, canonical retry/edition/proposal locks protect repeated read and write
+authority, source/version/applicability and exact quota checks. Receipt, intake,
+bytes and the existing answer command commit together; only that command advances
+the submission. Its routine rationale is the explicit upload-and-use intent, not
+an additional collected private explanation. Failure retains no partial custody
+and uses the existing minimized answer-command failure audit.
+
+`get_programme_file_upload_result` accepts no body and resolves only the original
+canonical outcome. A used key rejects another upload before body reading. A
+concurrent winner may be replayed only with matching bytes and original intent;
+different bytes conflict. Result lookup is not attachment-read authority and never
+creates a missing answer. Fresh canonical file-answer selection also validates
+exact intake scope before its native guard. Clearing an answer needs no file lookup.
+
+No byte reader, selection control, transport route, scanner deployment or current
+profile activation is provided by these dormant commands. Those plus independently
+authorized current/sealed/anonymous-safe review viewers remain #108 work. See the
 [file-handling contract](../operations/programme-supporting-file-handling.md).
 
 ## Applications, revisions, and review

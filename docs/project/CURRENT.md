@@ -11,23 +11,22 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's bounded file-scanner prerequisite is delivered through
-[PR #146](https://github.com/martonpornoi/maru/pull/146), protected squash
-`4faef0f75979e61427f829ee4342cd24ad1593c3` at 2026-09-15 23:07:18 UTC.
-Its tree equals certified head `04665bead54c27da8c2b4b6c03aa89e3bd89a382`;
+#108's dormant file-custody schema prerequisite is delivered through
+[PR #147](https://github.com/martonpornoi/maru/pull/147), protected squash
+`9324dade5ca25b69f084fa55c242716642164b26` at 2026-09-16 07:32:08 UTC.
+Its tree equals certified head `410ff2a3e960cee71aad38122b59d638b56ab386`;
 clean local main and origin/main were synchronized. All eight local retained
-gates passed in 5m04s, including 8,645 units in 53.59s and 93 frontend tests.
-Hosted quality took 12m11s, documentation 9m59s and units 100.59s; exact-head
-PR gate/CodeQL passed with clear reviews. See the
-[protected evidence](../checkpoints/2026-09-16-programme-file-preparation-protected-delivery.md).
-The initial hosted mapped-IPv6 failure was reproduced and fixed without weakening
-tests or endpoint policy. PostgreSQL stayed skipped. No schema, profile or
-production route was activated. Do not restart this prerequisite, personal
-discovery/connections, operator/shared workspace entry, domain selection or #113.
+gates passed in 5m57s, including 8,681 units in 53.86s. Hosted quality took 9m53s
+and units 104.26s; exact-head PR gate/CodeQL passed with clear reviews. See the
+[protected evidence](../checkpoints/2026-09-16-programme-file-custody-protected-delivery.md).
+PostgreSQL suites stayed skipped; the separately approved schema-only observation
+is not native behavioral acceptance. No profile or production route was activated.
+Do not restart this schema or PR #146's scanner prerequisite, personal discovery/
+connections, operator/shared workspace entry, domain selection or #113.
 
-## Next bounded outcome: exact file provenance and custody (#108)
+## Next bounded outcome: governed file upload-and-use (#108)
 
-Branch: `codex/programme-file-provenance`, from protected PR #146.
+Branch: `codex/programme-file-upload-command`, from protected PR #147.
 ADR 0104 records purpose-bound Applications file intake. This first increment only
 prepares exact immutable PDF bytes, capped at 10 MiB, with a separately configured
 literal-loopback ClamAV INSTREAM adapter. Exact bounded NUL-framed clean evidence
@@ -42,7 +41,7 @@ route was changed. No native suite was collected/run and no new visible UI/brows
 acceptance is claimed. The local Python 3.12.0 / hosted 3.12.14 distinction remains
 explicit; do not infer environment parity from local success.
 
-Prepared bytes are ephemeral, not durable intake. The active candidate adds
+Prepared bytes are ephemeral, not durable intake. Protected PR #147 adds
 ADR 0105's private transactional custody schema: exact proposal/question/uploader,
 original versions/retry, separate bytes, canonical first-answer evidence and
 64-intake/64-MiB proposal quotas. Migrations 0019–0021 keep runtime relations
@@ -56,15 +55,25 @@ exact; new catalog fingerprints were observed, not invented. The task-owned
 temporary container/data were removed; older containers were untouched. No native
 test was collected/run. See the
 [custody checkpoint](../checkpoints/2026-09-16-programme-file-custody-schema.md).
-Complete database-free feedback passed: 8,681 units in 53.69s; Ruff/format and
-configured NumPy/semantic docstring checks passed. Clean exact-commit retained
-certification remains required before delivery. Twenty-eight maintained native
-cases remain unexecuted #102 debt;
+Complete feedback and clean exact-commit eight-gate certification passed as above.
+Twenty-eight maintained native cases remain unexecuted #102 debt;
 quotas/concurrency, real scanner and integrated recovery still need final proof.
 
-Next implement the owning upload-and-use command and independent exact-answer
-private reader, then selection/attachment viewers with anonymous omission before
-file lookup. Accountable setup requires its own durable receipt/authority schema;
+The active candidate adds the owning upload-and-use and body-free result commands:
+admission before reading, scanning outside transactions, locked repeated view/write
+authority and source/quota checks, then atomic custody plus one canonical answer.
+Used-key submission refuses a new body; explicit result lookup preserves original
+intent and never creates a missing answer. Concurrent different bytes conflict.
+Fresh canonical file selection also checks exact intake before the native guard.
+Complete database-free feedback passed 8,751 units in 53.79s, including 70 new
+command cases; strict type, Ruff and configured docstring checks passed. Exact
+clean-commit retained certification is still required before delivery. The native
+custody file now maintains 33 unexecuted cases (five added variants/cases); no
+PostgreSQL suite or further schema observation ran. No route/profile was activated.
+
+Next finish the independent exact-answer private reader and selection/attachment
+viewers, with anonymous omission before file lookup. Accountable setup requires
+its own durable receipt/authority schema;
 this bounded exception does not authorize that schema observation. Complete setup,
 isolated fixture and final #102/#97/#92/#109 gates remain open.
 
