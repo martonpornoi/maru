@@ -1,7 +1,8 @@
 # Programme supporting-file handling
 
-Status: dormant byte/scanner preparation and private custody schema under #108 /
-ADRs 0104–0105. No Programme upload, selection or download route is enabled.
+Status: dormant byte/scanner preparation, private custody schema and owning
+upload/result commands under #108 / ADRs 0104–0105. No Programme upload, selection
+or download route is enabled.
 Use synthetic data only. This is not a deployment or production-scanner approval.
 
 ## Current technical boundary
@@ -84,20 +85,38 @@ backup-expiry, storage growth and recovery-time acceptance are activation gates.
 Logical dump/restore readiness remains blocked by #97; this schema-only check does
 not resolve it. Use synthetic data only.
 
-## Remaining intake and recovery work
+## Dormant owning upload and result commands
 
-The later Applications command must independently admit the exact contributor,
-proposal/question and current version/lifecycle before reading an upload. It must
-reauthorize under canonical locks after slow scan/storage, bind exact bytes and
-original retry intent, and atomically retain provenance without replacing the
-existing answer/seal command. No caller can supply a prepared result as permission.
+`programme_file_commands.upload_and_use_programme_file` admits the exact contributor,
+applicable private question and original proposal/call/schema versions before it
+calls a bounded transport reader. The caller cannot supply a prepared scan, MIME
+type, filename, digest or receipt. Scanner configuration must be valid before body
+reading. Enclosing transactions are refused before admission and after transport
+reading; scanning holds no database transaction/locks. The trusted transport must
+bound bytes while reading, not merely trust an uploaded size declaration.
 
-The owning command, retry/resumption and exact-answer private read boundary still
-need implementation. Database custody removes split external-object commit/orphan
+After scanning, the command acquires canonical retry and edition/proposal locks,
+reauthorizes both view fields and mutation, rechecks source/lifecycle/question/
+versions and quotas, then creates exact receipt/intake/bytes and invokes the existing
+answer command in one transaction. The answer command remains the sole cursor and
+success evidence. The visible routine intent "Upload and use this supporting file."
+is the canonical rationale; no extra private explanation is collected. Failure
+uses existing minimized command audit, with no bytes/filename/findings in metadata.
+
+The exact-answer private read boundary and transport/viewer surfaces still need
+implementation. Database custody removes split external-object commit/orphan
 handling from this first workflow; failed transactions retain no bytes, and failed
 scans retain no quarantine copy. Privacy holds, authorized disposal and mutually
 consistent recovery still require final acceptance. Do not delete referenced bytes
 or discard history to recover an upload.
+
+Preserve original intent through uncertainty. A consumed retry key rejects a fresh
+upload before body reading. **Check previous upload result**, implemented by
+`get_programme_file_upload_result`, accepts no file and retrieves only the original
+canonical receipt under existing retry authority. Concurrent uploads admitted
+before one wins compare exact bytes and intent before replay. Missing canonical
+evidence is unavailable, never permission to recreate an answer. A result receipt
+is not download permission. No endpoint or current runtime write grant is enabled.
 
 Future personal/sealed/reviewer/moderator/decider downloads require independent
 exact-answer authority before any file lookup. Anonymous review must omit identifying
@@ -107,6 +126,8 @@ the preparer alone. Source keys, filenames and scanner findings are not a direct
 
 Unit tests use mocked sockets, not a real ClamAV scan. Real daemon/signature and
 private-storage failure/recovery evidence remains #109 and deployment acceptance.
+Maintained command-native cases mock only scanner transport to exercise database
+behavior later; they do not claim a real malware scan or signature health.
 The separately approved schema-only process observed exact fingerprints, unchanged
 pre-existing constraints/indexes, empty reverse/reapply and all Applications
 catalog/readiness facets. It neither collected nor ran native tests. Maintained

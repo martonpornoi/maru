@@ -1518,7 +1518,7 @@ class ApplicationSubmission(UUIDTimeStampedModel):
 
 
 class ApplicationFileReceipt(UUIDTimeStampedModel):
-    """Trusted evidence for an object-storage upload that passed safety checks."""
+    """Trusted evidence for exact private upload bytes that passed safety checks."""
 
     class Status(models.TextChoices):
         """Enumerate supported status values."""

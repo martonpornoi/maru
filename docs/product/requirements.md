@@ -1240,6 +1240,9 @@ architecture documents, implementation issues, tests, and release notes.
   Limit each proposal to 64 retained intakes and 64 MiB, including history;
   overflow must never delete or replace retained evidence. Bytes stay outside
   ordinary metadata projections and share whole-database recovery boundaries.
+  Admit the exact current purpose before reading bytes, scan outside database
+  transactions, and reauthorize under locks. An explicit body-free result check
+  preserves original retry intent; concurrent retries with different bytes conflict.
 - **PRG-003 — Structured review:** Review stages must support configurable
   rubrics, conflicts of interest, optional anonymization, independent scoring,
   discussion, moderation, and accountable decisions.

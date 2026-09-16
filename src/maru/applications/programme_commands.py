@@ -53,6 +53,7 @@ from maru.applications.models import (
     ProgrammeContributorFieldCode,
     ProgrammeContributorRequirement,
     ProgrammeContributorRole,
+    ProgrammeFileIntake,
     ProgrammeImportCommandReceipt,
     ProgrammeProposal,
     ProgrammeProposalCollaborator,
@@ -3352,6 +3353,18 @@ def _require_registered_reference(
     edition_id: UUID,
     value: object,
 ) -> None:
+    if (
+        question.field_type == "safe_file"
+        and value is not None
+        and not ProgrammeFileIntake.objects.filter(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            proposal_id=proposal.id,
+            question_id=question.id,
+            file_receipt_id=UUID(str(value)),
+        ).exists()
+    ):
+        raise ApplicationsProgrammeUnavailableError
     if question.field_type == "person_reference":
         if question.reference_kind != "programme.person":
             raise ApplicationsProgrammeUnavailableError

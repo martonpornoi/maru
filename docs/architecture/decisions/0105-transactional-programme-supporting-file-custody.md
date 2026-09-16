@@ -36,6 +36,17 @@ existing submission cursor, once; no new proposal cursor or parallel file-answer
 lifecycle is introduced. Uncertain retries retain the original intent and use the
 canonical answer receipt, never new bytes or freshly substituted source versions.
 
+The owning command accepts a bounded transport reader, not already trusted scan
+evidence. It refuses an enclosing transaction so body reading/scanning cannot keep
+database locks open. A consumed retry key rejects a new upload before body reading;
+an explicit **Check previous upload result** operation accepts no body and resolves
+only the original minimized canonical receipt. If concurrent admitted uploads race,
+the later locked attempt compares exact digest/length and original intent before
+replaying the winner. Different bytes or altered scope/versions never silently use
+the earlier file. A result check does not grant attachment-read authority.
+The routine personal action uses the visible intent "Upload and use this supporting
+file." as its canonical rationale; it does not collect an extra private explanation.
+
 The intake binds proposal, immutable question, uploader through its generic
 receipt, original proposal/call/schema versions, retry identity and scan time.
 Deferred guards require the exact first answer and canonical success evidence in

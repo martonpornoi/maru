@@ -59,9 +59,21 @@ Complete feedback and clean exact-commit eight-gate certification passed as abov
 Twenty-eight maintained native cases remain unexecuted #102 debt;
 quotas/concurrency, real scanner and integrated recovery still need final proof.
 
-Next implement the owning upload-and-use command and independent exact-answer
-private reader, then selection/attachment viewers with anonymous omission before
-file lookup. Accountable setup requires its own durable receipt/authority schema;
+The active candidate adds the owning upload-and-use and body-free result commands:
+admission before reading, scanning outside transactions, locked repeated view/write
+authority and source/quota checks, then atomic custody plus one canonical answer.
+Used-key submission refuses a new body; explicit result lookup preserves original
+intent and never creates a missing answer. Concurrent different bytes conflict.
+Fresh canonical file selection also checks exact intake before the native guard.
+Complete database-free feedback passed 8,751 units in 53.79s, including 70 new
+command cases; strict type, Ruff and configured docstring checks passed. Exact
+clean-commit retained certification is still required before delivery. The native
+custody file now maintains 33 unexecuted cases (five added variants/cases); no
+PostgreSQL suite or further schema observation ran. No route/profile was activated.
+
+Next finish the independent exact-answer private reader and selection/attachment
+viewers, with anonymous omission before file lookup. Accountable setup requires
+its own durable receipt/authority schema;
 this bounded exception does not authorize that schema observation. Complete setup,
 isolated fixture and final #102/#97/#92/#109 gates remain open.
 

@@ -7,14 +7,17 @@ upload route, a trusted scanner deployment or runtime upload permission.
 import hashlib
 from dataclasses import replace
 from importlib import import_module
+from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
 from django.apps import apps
+from django.conf import settings
 from django.db import DatabaseError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 
+from maru.applications import programme_file_commands as file_commands
 from maru.applications.models import (
     ApplicationAnswerRevision,
     ApplicationDefinition,
@@ -24,8 +27,24 @@ from maru.applications.models import (
     ProgrammeFileIntake,
     ProgrammeProposal,
 )
-from maru.applications.programme_commands import append_programme_proposal_answer
-from maru.applications.programme_inputs import ProgrammeCallQuestionType
+from maru.applications.programme_authorization import (
+    ApplicationsProgrammeAuthorizationDeniedError,
+)
+from maru.applications.programme_commands import (
+    ApplicationsProgrammeIdempotencyConflictError,
+    ApplicationsProgrammeUnavailableError,
+    ApplicationsProgrammeVersionConflictError,
+    append_programme_proposal_answer,
+    revise_programme_proposal_selection,
+)
+from maru.applications.programme_inputs import (
+    ProgrammeCallQuestionType,
+    ProgrammeProposalSelectionInput,
+)
+from maru.applications.programme_reference_sources import (
+    ProgrammeAnswerReferenceIntent,
+    ProgrammeAnswerReferenceRequest,
+)
 from maru.applications.programme_writer_boundary import (
     programme_application_database_writer,
 )
@@ -230,10 +249,23 @@ def test_native_reserved_receipt_cannot_commit_without_intake(world):
     assert not ApplicationFileReceipt.objects.exists()
 
 
-def test_native_file_cannot_be_reused_for_another_proposal_by_the_same_uploader(world):
+@pytest.mark.parametrize("native_guard", [False, True])
+def test_native_file_cannot_be_reused_for_another_proposal_by_the_same_uploader(
+    monkeypatch,
+    world,
+    native_guard,
+):
     _, receipt = _persist(world)
     other = fixtures._start_proposal(world.call, lead=world.lead)
-    with pytest.raises(DatabaseError, match="exact proposal, question and uploader"):
+    if native_guard:
+        # Bypass only the Python convenience check to retain native guard proof.
+        # Never disable a database trigger or runtime permission boundary.
+        monkeypatch.setattr(
+            file_commands.commands, "_require_registered_reference", Mock()
+        )
+    with pytest.raises(
+        DatabaseError if native_guard else ApplicationsProgrammeUnavailableError
+    ):
         _answer(other, receipt.id, uuid4())
     assert (
         ProgrammeProposal.objects.get(id=other.proposal_id).submission.aggregate_version
@@ -291,3 +323,167 @@ def test_unused_file_schema_reverses_and_reinstalls_exact_readiness():
     assert not applications_database_integrity_is_ready()
     MigrationExecutor(connection).migrate(current)
     assert applications_database_integrity_is_ready()
+
+
+@pytest.fixture
+def command_scanner(monkeypatch):
+    """Mock transport only; never claim a real scanner or deployment proof."""
+    monkeypatch.setattr(settings, "MARU_PROGRAMME_FILE_SCANNER", "clamav")
+    monkeypatch.setattr(settings, "MARU_PROGRAMME_FILE_SCANNER_HOST", "127.0.0.1")
+
+    def scan(data, _endpoint):
+        assert data == PDF
+        assert not connection.in_atomic_block
+
+    scanner = Mock(side_effect=scan)
+    monkeypatch.setattr(file_commands.preparation, "_scan", scanner)
+    return scanner
+
+
+def _command_context(world):
+    return (
+        ProgrammeAnswerReferenceRequest(
+            world.lead.id,
+            world.call.edition.organization_id,
+            world.call.edition.id,
+            world.proposal_id,
+            world.call.question_id,
+            uuid4(),
+            "test",
+        ),
+        ProgrammeAnswerReferenceIntent(world.version, 2, 1, uuid4()),
+    )
+
+
+def test_native_upload_command_and_body_free_result_preserve_one_canonical_answer(
+    world, command_scanner
+):
+    request, intent = _command_context(world)
+    reader = Mock(return_value=PDF)
+    result = file_commands.upload_and_use_programme_file(
+        request=request,
+        intent=intent,
+        read_bytes=reader,
+        authorizer=fixtures._AUTHORIZER,
+    )
+    assert not result.replayed
+    assert result.resulting_version == world.version + 1
+    intake = ProgrammeFileIntake.objects.get(proposal_id=world.proposal_id)
+    assert bytes(ProgrammeFileContent.objects.get(intake=intake).payload) == PDF
+    replay = file_commands.get_programme_file_upload_result(
+        request=request,
+        intent=intent,
+        authorizer=fixtures._AUTHORIZER,
+    )
+    assert replay.replayed
+    assert replay.receipt_id == result.receipt_id
+    assert (
+        ApplicationAnswerRevision.objects.filter(
+            value=str(intake.file_receipt_id)
+        ).count()
+        == 1
+    )
+    reader.assert_called_once_with()
+    command_scanner.assert_called_once()
+    replacement = Mock(return_value=b"different file must not be read")
+    with pytest.raises(ApplicationsProgrammeIdempotencyConflictError):
+        file_commands.upload_and_use_programme_file(
+            request=request,
+            intent=intent,
+            read_bytes=replacement,
+            authorizer=fixtures._AUTHORIZER,
+        )
+    replacement.assert_not_called()
+    assert ProgrammeFileIntake.objects.count() == 1
+    with pytest.raises(ApplicationsProgrammeIdempotencyConflictError):
+        file_commands.get_programme_file_upload_result(
+            request=request,
+            intent=replace(intent, expected_version=result.resulting_version),
+            authorizer=fixtures._AUTHORIZER,
+        )
+
+
+def test_native_upload_cross_scope_denial_happens_before_body_and_scanner(
+    world, command_scanner
+):
+    request, intent = _command_context(world)
+    reader = Mock(return_value=PDF)
+    with pytest.raises(ApplicationsProgrammeAuthorizationDeniedError):
+        file_commands.upload_and_use_programme_file(
+            request=replace(request, organization_id=uuid4()),
+            intent=intent,
+            read_bytes=reader,
+            authorizer=fixtures._AUTHORIZER,
+        )
+    reader.assert_not_called()
+    command_scanner.assert_not_called()
+    assert not ApplicationFileReceipt.objects.exists()
+
+
+def test_native_scan_does_not_hold_transaction_and_changed_source_leaves_no_custody(
+    world, command_scanner
+):
+    request, intent = _command_context(world)
+
+    def competing_edit(_data, _endpoint):
+        assert not connection.in_atomic_block
+        revise_programme_proposal_selection(
+            actor_id=world.lead.id,
+            organization_id=world.call.edition.organization_id,
+            edition_id=world.call.edition.id,
+            proposal_id=world.proposal_id,
+            selection=ProgrammeProposalSelectionInput(
+                track_id=world.call.track_id,
+                format_id=world.call.format_id,
+                requested_duration_minutes=90,
+            ),
+            expected_version=world.version,
+            reason="Concurrent synthetic edit.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+            authorizer=fixtures._AUTHORIZER,
+        )
+
+    command_scanner.side_effect = competing_edit
+    with pytest.raises(ApplicationsProgrammeVersionConflictError):
+        file_commands.upload_and_use_programme_file(
+            request=request,
+            intent=intent,
+            read_bytes=lambda: PDF,
+            authorizer=fixtures._AUTHORIZER,
+        )
+    assert not ProgrammeFileIntake.objects.exists()
+    assert not ProgrammeFileContent.objects.exists()
+    assert not ApplicationFileReceipt.objects.exists()
+    assert (
+        ProgrammeProposal.objects.get(id=world.proposal_id).submission.aggregate_version
+        == world.version + 1
+    )
+
+
+def test_native_first_answer_failure_rolls_back_all_private_bytes_and_evidence(
+    monkeypatch, world, command_scanner
+):
+    request, intent = _command_context(world)
+    before = ProgrammeCommandReceipt.objects.count()
+    monkeypatch.setattr(
+        file_commands.commands,
+        "append_programme_proposal_answer",
+        Mock(side_effect=RuntimeError("Synthetic canonical answer failure")),
+    )
+    with pytest.raises(RuntimeError, match="Synthetic canonical answer failure"):
+        file_commands.upload_and_use_programme_file(
+            request=request,
+            intent=intent,
+            read_bytes=lambda: PDF,
+            authorizer=fixtures._AUTHORIZER,
+        )
+    assert not ProgrammeFileIntake.objects.exists()
+    assert not ProgrammeFileContent.objects.exists()
+    assert not ApplicationFileReceipt.objects.exists()
+    assert ProgrammeCommandReceipt.objects.count() == before
+    assert (
+        ProgrammeProposal.objects.get(id=world.proposal_id).submission.aggregate_version
+        == world.version
+    )
