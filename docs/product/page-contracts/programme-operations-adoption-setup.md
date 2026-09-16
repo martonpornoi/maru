@@ -145,6 +145,24 @@ must accept their own invitations before activation. Existing
 Scheduling, Venue, or additional Workforce capabilities; a separately
 accepted, independently approved, immutable role version is required.
 
+[ADR 0106](../../architecture/decisions/0106-scoped-programme-operational-approval.md)
+defines that continuation: an ordinary current controller proposes exact scoped
+access and a named independent controller approves or declines in their own
+session. Selecting an approver's email is not their decision; representation
+acceptance is not approval of supplemental access. The author can cancel pending
+intent; after seven days it expires without a grant. Approval must not backdate
+authority or exceed either controller's current horizon.
+
+The dormant Authorization catalog provides 27 optional task recipes, not another
+root or a single all-powerful Programme role. Present their exact consequences:
+Department call/review tasks, Edition Programme/planning/Workforce tasks, separately
+requested Organization-wide Venue facts and exact selected-room powers. On-site
+run sheets and additional delivery layers remain separate choices. The request
+binds all scope identities and exact versioned contents; labels and fingerprints
+never establish authority. These pure definitions/inputs are implemented, but the
+persisted actual-person decision workflow and guided controls are not yet mounted.
+See the [owning contract](../../modules/authorization.md#dormant-programme-operational-role-contracts).
+
 ### Original setup intent
 
 The dormant Events input contract distinguishes all three modes explicitly.

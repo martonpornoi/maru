@@ -6,7 +6,7 @@ Maru-operator roots, provenance writing, profile-compatible access management,
 and guarded exact-lineage policy/runtime activation; dormant Applications
 Programme capabilities remain unadopted and production legacy reconciliation
 and cutover remain gates
-Last updated: 2026-09-02
+Last updated: 2026-09-17
 
 ## Purpose and requirements
 
@@ -16,6 +16,46 @@ UX-020, UX-024, UX-028, UX-030, NFR-013, ADR 0003, ADR 0023, ADR 0040,
 ADR 0041, ADR 0044, ADR 0080, ADR 0081, ADR 0082, ADR 0083, and ADR 0084. A membership,
 account, familiar role name, or visible destination never grants broad access
 by itself.
+
+## Dormant Programme operational-role contracts
+
+[ADR 0106](../architecture/decisions/0106-scoped-programme-operational-approval.md)
+preserves both accountable representation roots and adds optional, independently
+approved operational definitions. `programme_role_recipes` owns 27 immutable v1
+recipes with readable consequences, literal capabilities, exact allowed scope
+and complete definition digests. Their owner catalog entries are registered for
+future exact-manifest validation; neither current profile admits them. Registration
+is not a grant, role-bundle insertion, route or Programme activation.
+
+The scopes are deliberately different: Department call/review/conversion;
+Edition content, hosting, staffing, Workforce and timetable/release/notices;
+Organization shared Venue facts; and exact `venue.edition_space` physical powers.
+On-site recipes permit explicit Edition, Department or selected-room purpose,
+with private delivery layers separately requested. Broader consequences such as
+Workforce holder labels or organization-wide Venue contacts remain explicit.
+Capabilities from excluded products, self relationships, authority administration
+and Department-recovery break-glass are not included. A recipe cannot replace
+separate source access, named review assignment or owner separation of duties.
+
+`programme_role_inputs` owns immutable `ProgrammeRoleScope` and
+`ProgrammeRoleIntent`, normalization and complete request/terminal-action digests.
+Identifiers are typed and non-empty; scopes reject missing or inapplicable facts;
+recipient and named approver differ. Reasons are normalized, bounded and control
+free; timestamps are aware UTC values, with explicit optional start/end semantics.
+Digest identity binds exact Programme context, target chain, recipe contents,
+people, requested interval and rationale. It never proves authority, existence,
+actual approval or eligibility. The future command must bind author/retry key,
+resolve canonical owners, check both current controller horizons, and ensure the
+named approver personally acts before any assignment. Seven-day pending expiry
+and non-backdated start are the accepted workflow contract, not implemented timers.
+
+The persisted request/decision schema, native guards, public workflow commands,
+own-person approval workspace and complete setup fixture remain unfinished. No new
+tables, runtime rights, audit effects or grants accompany these pure contracts.
+Native acceptance, logical recovery, human acceptance and integrated proof remain
+#102, #97, #92 and #109 gates before profile promotion.
+
+## Authority and profile boundaries
 
 Platform administration is a separate principal purpose under ADR 0031.
 Capability grants and role assignments reject a platform administrator as
