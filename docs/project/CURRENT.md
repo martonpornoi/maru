@@ -11,57 +11,73 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's dormant independent private-file readers are delivered through
-[PR #149](https://github.com/martonpornoi/maru/pull/149), protected squash
-`597f80351aad79da923b4eb9730a056b6e042762` at 2026-09-16 09:06:01 UTC.
-Its tree equals certified head `19daba843c9a81d908a00ba6a94521ad83ef75cc`;
-clean local main and origin/main were synchronized. All eight local retained
-gates passed in 5m18s, including 8,851 units in 53.51s.
-Hosted quality took 11m50s and units 103.03s; exact-head PR gate/CodeQL passed with
+#108's dormant supporting-file controls are delivered through
+[PR #150](https://github.com/martonpornoi/maru/pull/150), protected squash
+`e6f9687cabb7e077e8fcc8b6f6763641fc4f3a13` at 2026-09-16 17:04:05 UTC.
+Its tree equals certified head `73a5468b563261141307c9302d4b33ab88cd1a2c`;
+clean local main and origin/main were synchronized. All eight retained local
+gates passed in 5m38s, including **8,948 units in 54.77s** and **103 frontend tests**.
+Hosted quality took 9m41s and units 89.21s; exact-head PR gate/CodeQL passed with
 clear reviews. See the
-[protected evidence](../checkpoints/2026-09-16-programme-file-readers-protected-delivery.md).
-PostgreSQL suites stayed skipped; the separately approved schema-only observation
-is not native behavioral acceptance. No profile or production route was activated.
-Do not restart this schema or PR #146's scanner prerequisite, personal discovery/
-connections, operator/shared workspace entry, domain selection or #113.
+[protected evidence](../checkpoints/2026-09-16-programme-file-controls-protected-delivery.md).
 
-## Current candidate: safe file controls and attachment viewers (#108)
+Ordinary labelled tasks now support local PDF selection, explicit upload-and-use,
+body-free original-result recovery, deliberate clear and independently authorized
+current/sealed/review attachments. Normal CSRF protects raw PUT; owning admission
+precedes bounded body reading. Attempted uploads never silently resend or rebase,
+and reload is recovery-only. Clear retains custody/history. Attachment preparation
+is followed by independent final source/authority checks. Anonymous review omits
+lookup. No receipt directory, inline PDF, schema/runtime grant or production
+activation was introduced.
 
-Branch: `codex/programme-file-controls`, from protected PR #149.
-Dormant personal upload/recovery/clear and current/sealed/review attachment controls
-are implemented with ordinary labelled entry. Normal CSRF protects raw-PDF PUT;
-the owner admits original scope/versions before reading. Attempted uploads never
-automatically resend or rebase; reload retains a recovery-only proof. Clear preserves
-custody/history. Attachments repeat independent source/authority after preparation.
-No raw receipt directory, inline PDF, schema/runtime grant or production activation.
+The browser-found missing same-origin CSP allowance and outdated guidance were
+corrected. Synthetic upload/recovery/clear/view and anonymous denial passed;
+seven widths had no upload-page overflow. Six rendered pages had zero reported
+axe/jsdom violations, with its contrast/incomplete rules and human checks explicitly
+unproven. The custody file maintains **39 unexecuted native cases**, including two
+new HTTP/custody scenarios. No PostgreSQL suite was collected/run and no schema
+observation occurred. Evidence is not real-scanner, native custody or production
+acceptance.
 
-Complete database-free feedback passed **8,948 units in 66.94s**; ten focused
-JavaScript cases passed. Real synthetic browser feedback found and corrected the
-upload page's missing same-origin CSP allowance and outdated guidance. Ordinary
-upload, original-result recovery, clear, empty/view states and anonymous review
-denial were observed. Seven target widths had no page overflow. Six rendered
-pages had zero reported axe/jsdom violations, with contrast and human checks
-explicitly unproven. See the
-[controls checkpoint](../checkpoints/2026-09-16-programme-file-controls.md).
-Final clean exact-commit retained certification and protected delivery are pending;
-feedback from another commit is not certification.
+## Prepared integrated rehearsal protocol (#108/#109/#92)
 
-The custody native file maintains **39 unexecuted cases**, including two new
-HTTP-to-custody/recovery and attachment/clear cases. No PostgreSQL suite was
-collected/run, no schema observation occurred, and no real-scanner, native custody
-or production acceptance is claimed. #102 debt and #92 human checks remain open.
+The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
+now defines twelve setup-to-on-site checkpoints, distinct role/session purposes,
+isolation and excluded-effect assertions, failure/recovery/stop-use scenarios,
+human/accessibility tasks, evidence provenance and safe cleanup. It is preparation,
+not a complete fixture, launch command or accepted journey. Stale setup/roadmap
+descriptions no longer say the Scheduling namespace or continuity is absent.
+This documentation increment does not change code, schema, authority or CI policy.
+Documentation validation passed (585 Markdown files); corrected database-free
+feedback passed 8,948 units in 57.20s. Fresh exact-commit certification and hosted
+protected delivery remain pending for this increment, not inherited from PR #150.
 
-Do not restart delivered scanner (#146), custody schema (#147), upload/result
-commands (#148), independent readers (#149), person/domain references, personal
-discovery, ordinary owner entry, shared navigation or #113. Preserve their owning
-documentation and historical checkpoints.
+## Next bounded outcome: accountable setup and integrated fixture (#108)
 
-Next certify and deliver these controls through the protected flow. Then continue
-accountable blank-organization setup and the isolated integrated fixture.
-Accountable setup needs its own durable receipt/authority schema; the file-only
-schema observation approval does not authorize that separate observation.
-Current profiles/routes/writers remain unchanged. #108/#48 and final
-#102/#97/#92/#109 gates remain open.
+Prepared on `codex/programme-integrated-rehearsal-plan`, from protected PR #150.
+The separate request for bounded disposable setup receipt/authority schema-only
+observation is unanswered. The completed file-only exception does not cover it.
+Keep PostgreSQL suites skipped. No setup implementation, migration, runtime grant
+or profile change has started.
+
+The latest instruction is to finish safe preparation/implementation before the
+database acceptance phase. It is not treated as the separately requested schema
+observation approval. The rehearsal protocol can be delivered independently;
+new setup schema observation and genuine human acceptance still require their
+respective authority/participants. Do not substitute documentation for either.
+
+Map the exact new setup receipt/authority contract before implementation. Preserve
+truthful existing representation, immutable `maru-operators@1`, non-participating
+platform administrators and two distinct genuine-person acceptances. Reuse owning
+public commands/queries; do not bypass foundation/Department lifecycle guards or
+claim the future profile is executable. Build an isolated fixture without activating
+current profiles; final promotion still waits for #102/#97/#92/#109.
+
+Do not restart scanner/custody/upload/readers/controls (#146–#150), person/domain
+references, personal discovery, shared navigation or #113. Notice children
+#134–#137 and operator entry #143 are also already delivered. #108's implementation
+rollups were clarified and checked against their delivered children; its overall
+outcome and #48 remain open for setup and all final acceptance gates.
 
 Non-blocking tooling follow-up after #48: the semantic docstring validator's
 no-argument defaults are strings rather than `Path` objects; its maintained explicit
@@ -76,10 +92,9 @@ outcome by themselves. #108 and #48 remain open.
 
 - [#108](https://github.com/martonpornoi/maru/issues/108): finish the recorded
   guided departmental journey and final gated promotion:
-  - independently authorized person/domain-reference selection and safe-file
-    intake/selection/viewers; typed text presentation alone does not finish these;
-  - complete ordinary scoped entry/navigation over the delivered item, timetable,
-    release, staffing-to-Shift, #104 notice and #107 output connections;
+  - preserve the delivered dormant Applications/reference/file tasks and ordinary
+    item/timetable/release/staffing/notice/continuity connections in one integrated
+    acceptance journey;
   - accountable blank-organization setup, coherent shared navigation and an isolated
     complete synthetic fixture without changing current profiles;
   - final separately verified promotion only after all gates below pass.
