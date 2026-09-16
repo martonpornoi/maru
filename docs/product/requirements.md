@@ -198,6 +198,15 @@ architecture documents, implementation issues, tests, and release notes.
   Logistics state. Host, co-host, reviewer, planner, venue-operator, publisher,
   and volunteer relationships remain purpose-bounded and imply no attendance
   or broader participation.
+  Supplemental operational access must use separately approved immutable role
+  versions at each owner's actual scope. Retain the original request and the
+  distinct approver's own decision; representation acceptance or a supplied
+  approver identity is not consent to a later grant. Current controller sources,
+  exact profile, scope and validity are rechecked at approval. Pending, expired,
+  declined or cancelled intent grants nothing; replay cannot repeat issuance or
+  change the original terms. Stop-use accounts for the exact resulting assignments,
+  including any explicitly broader shared Venue authority. Existing root roles
+  remain unchanged (ADR 0106).
 
 ### Archival history
 

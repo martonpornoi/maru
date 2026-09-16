@@ -259,8 +259,13 @@ def current_adoption_catalog_snapshot() -> AdoptionCatalogSnapshot:
         registered_modules=module_codes,
         registry_kind="conflict-source",
     )
+    from maru.authorization.programme_role_recipes import (  # noqa: PLC0415
+        PROGRAMME_ROLE_CATALOG_ENTRIES,
+    )
+
     catalog_entry_codes, catalog_problems = _collect_catalog_entry_codes(
         sources=(
+            ("authorization", PROGRAMME_ROLE_CATALOG_ENTRIES),
             (
                 "applications",
                 tuple(
