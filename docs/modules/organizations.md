@@ -21,6 +21,19 @@ representation, and recurring-series continuity for IDN-002, IDN-004, IDN-005,
 IDN-009, IDN-011, IDN-012, IDN-014, EVT-001, EVT-003, EVT-005, HR-011,
 UX-014 through UX-021, UX-024, UX-025, UX-029, UX-030, and NFR-013.
 
+`programme_setup_references.resolve_programme_setup_foundation` is an internal
+minimized reference for an independently admitted platform setup consumer. It
+reads one exact Draft/Active organization and optionally one active same-parent
+series, retaining truthful representation code/state/version but no controller,
+appointment, contact or authority identities. Active organizations without a
+coherent active representation, suspended/unknown roots and unavailable/foreign
+series yield no partial context. The complete original fingerprint binds current
+setup labels/defaults and representation/series versions. This preview uses two
+ordinary reads, not a locked snapshot: the future setup command must lock/reload
+owner facts and compare again before writing, and the consumer must independently
+admit/audit/revalidate before identifying disclosure. No root is created, upgraded,
+activated or authorized by the reference itself.
+
 ## Owned data and invariants
 
 `write_references.lock_organization_ownership` and `lock_series_ownership`

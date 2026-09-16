@@ -145,6 +145,26 @@ must accept their own invitations before activation. Existing
 Scheduling, Venue, or additional Workforce capabilities; a separately
 accepted, independently approved, immutable role version is required.
 
+### Original setup intent
+
+The dormant Events input contract distinguishes all three modes explicitly.
+New-foundation setup supplies organization and series names and no reused IDs.
+Existing-organization setup supplies its exact ID, a new series name and the
+original Organizations source fingerprint. Existing-series setup supplies both
+exact parent IDs and that fingerprint, with no rename fields. The future platform
+surface must present independently authorized labels rather than asking the
+operator to discover IDs. Inapplicable names/IDs, an unknown mode or a changed
+original request must not silently select another foundation or retry intent.
+
+All modes require edition and first-Department names, actual calendar dates
+within Events' supported interval, an IANA time zone and a bounded setup reason.
+Control characters and oversized input are rejected; canonical Unicode/spacing
+normalization defines exact retry comparison. The digest includes all normalized
+facts and the exact v1 Programme setup purpose. Actor and retry-key binding,
+current admission, canonical owner locking, durable receipts and atomic writes
+remain the future command's responsibility. A source fingerprint is not a grant,
+locked snapshot, invitation acceptance or profile activation.
+
 On successful activation, the accepted owner sequence is:
 
 ```text

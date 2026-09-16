@@ -105,6 +105,19 @@ Registration, payment, attendance, or unrelated module record. An Active
 organization without accountable representation fails before partial child
 creation.
 
+`programme_setup_inputs` supplies only the dormant Programme setup request
+contract, not a setup command. Its three exact modes bind newly created names
+or typed reused organization/series identities and the original owner snapshot.
+It validates bounded normalized text, genuine calendar dates and Events' date
+span, IANA time zone, the first Department name through Workforce's public
+normalizer, and a required rationale. Mode-inapplicable names/IDs are rejected
+rather than silently ignored. The canonical request digest includes every
+normalized fact plus exact `programme_operations@1` intent; the eventual receipt
+must additionally bind actor/key and compare the source under owner locks.
+No validation result or digest grants access, creates data, registers a profile
+or establishes concurrency/replay correctness. Those commands and receipts remain
+unfinished under #108, with native execution deferred to #102.
+
 `update_event_edition(...)` requires `events.change_profile` at exact edition
 scope. It locks organization, series, and edition, compares the expected
 aggregate version, permits only Draft/Preparing beneath a non-Closed
