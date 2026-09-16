@@ -5,7 +5,7 @@ Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
 profile-scoped unified-shell context, and dormant Programme and Applications
 reference seams; Programme Operations remains inactive
-Last updated: 2026-09-09
+Last updated: 2026-09-16
 
 ## Purpose and requirements
 
@@ -115,8 +115,43 @@ rather than silently ignored. The canonical request digest includes every
 normalized fact plus exact `programme_operations@1` intent; the eventual receipt
 must additionally bind actor/key and compare the source under owner locks.
 No validation result or digest grants access, creates data, registers a profile
-or establishes concurrency/replay correctness. Those commands and receipts remain
-unfinished under #108, with native execution deferred to #102.
+or establishes concurrency/replay correctness. Atomic commands remain unfinished
+under #108, with native execution deferred to #102.
+
+### Dormant Programme setup receipt
+
+`ProgrammeAdoptionSetupReceipt` retains an exact actor/key/request digest, setup
+mode and original source fingerprint, organization/series/new edition/first
+Department, truthful representation and captured version, accountable reason,
+both original owner-creation receipts and one matching setup audit. The mode
+records which foundation levels the future command creates or reuses; it does
+not infer authority or invitation acceptance. Owner commands must prove original
+intent and commit all creation/evidence atomically. A digest is not a grant.
+
+Events migrations 0012–0014 add this storage without changing either supported
+adoption profile. Foreign references are retained; edition, owner receipts and
+setup audit cannot be reused by another setup receipt. Native insertion requires
+the exact Draft version-one Programme edition, same-scope first root Department,
+current platform actor, coherent organization/representation state and original
+representation version, plus exact same-actor/key edition and Department receipts
+and matching audit scope, actor, target, correlation and channel. Existing-profile
+editions cannot receive these receipts. Updates, deletes and ordinary truncation
+are refused. The application login remains SELECT-only; the dormant model refuses
+ORM save/delete. No writer, invitation, operational grant or setup page is added.
+
+`programme_setup_database_integrity_is_ready()` checks only this explicit owned
+relation, its complete observed schema fingerprint, exact native attachments,
+function body/ownership/privilege boundary and pinned migration/fence sources.
+It does not certify the whole Events app, enable a profile or authorize a command.
+The approved disposable schema-only observation confirmed forward installation
+and metadata, not transaction, concurrency, rollback or workflow correctness.
+
+Unused contraction is guarded by an exclusive receipt-table lock before checking
+for evidence. Once any receipt exists, preserve the schema and guards, fix forward
+or restore a mutually consistent database; do not remove or fabricate the receipt
+to enable downgrade. Retained foreign references protect the original foundation
+and first Department. Future setup continuation must show this retained history
+without claiming that it represents current operator approval or access.
 
 `update_event_edition(...)` requires `events.change_profile` at exact edition
 scope. It locks organization, series, and edition, compares the expected

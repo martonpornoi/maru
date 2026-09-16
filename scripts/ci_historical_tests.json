@@ -1,4 +1,9 @@
 {
+  "tests/integration/test_programme_setup_schema.py": {
+    "owners": ["audit", "events", "identity", "organizations", "workforce"],
+    "shared_baseline": false,
+    "tests": ["test_unused_setup_boundary_reverses_and_reapplies"]
+  },
   "tests/integration/test_application_programme_conversion_migrations.py": {
     "owners": [
       "applications",

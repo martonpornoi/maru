@@ -104,6 +104,7 @@ RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4: Final[tuple[str, ...]] = (
 # migration must deliberately reclassify only the relations its writer needs.
 RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.django_migrations",
+    "public.events_programmeadoptionsetupreceipt",
     "public.authorization_authorityprovenanceactivation",
     "public.authorization_provenanceactivationlatch",
     "public.identity_platforminvitationretentionpolicycontrol",

@@ -11,15 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-The integrated rehearsal preparation is delivered through
-[PR #151](https://github.com/martonpornoi/maru/pull/151), protected squash
-`ad4ccc1bda8e5b1dcf80e7fb10a8b92fd6db0dd0` at 2026-09-16 19:34:49 UTC.
-Its tree equals certified head `f643d6b278d3e702c49b95ccbcb2f4c4588c38e7`;
+Setup input and minimized foundation-reference contracts are delivered through
+[PR #152](https://github.com/martonpornoi/maru/pull/152), protected squash
+`6e34e35be129033ac0254c4b99680d21dbbc858d` at 2026-09-16 20:23:36 UTC.
+Its tree equals certified head `288fff6164c20001229f72ea8c8fc3873f294f5b`;
 clean local main matched origin/main and that result. All eight retained local
-gates passed in 5m54s, including 8,948 units in 68.54s and 103 frontend tests.
-Hosted documentation quality took 11m00s; PR gate and CodeQL passed. Hosted
-unit/database jobs were skipped by documentation-only classification. See the
-[protected evidence](../checkpoints/2026-09-16-programme-rehearsal-plan-protected-delivery.md).
+gates passed in 5m21s, including 9,104 units in 53.96s and 103 frontend tests.
+Hosted quality took 11m34s and units 2m11s; PR gate and CodeQL passed. PostgreSQL
+was explicitly deferred, not certified. Six maintained native reference cases
+remain #102 debt. See the
+[protected evidence](../checkpoints/2026-09-16-programme-setup-foundation-protected-delivery.md).
 
 The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
 defines twelve checkpoints, distinct sessions, isolation/excluded-effect proof,
@@ -29,32 +30,32 @@ Earlier [PR #150](https://github.com/martonpornoi/maru/pull/150) delivered suppo
 controls; its [checkpoint](../checkpoints/2026-09-16-programme-file-controls-protected-delivery.md)
 retains exact native-deferred and synthetic-browser limits. Do not restart it.
 
-## Current candidate: Programme setup foundation contracts (#108)
+## Current candidate: Programme setup receipt schema (#108)
 
-Branch: `codex/programme-setup-foundation`, from protected PR #151.
-Events now has closed setup inputs and exact-request digest validation;
-Organizations supplies a minimized same-parent foundation reference rather than
-cross-owner private-model imports. These are prerequisites, not a setup writer,
-authority grant, HTML surface or complete fixture. Preview reads are not locked
-snapshots: future commands must admit, lock/reload and compare owner facts before
-writing; consumers own independent disclosure/audit boundaries.
+Branch: `codex/programme-setup-receipt`, from protected PR #152.
+Events migrations 0012–0014 add dormant immutable setup evidence linking the exact
+foundation, first Department, representation, actor/key/intent, both original owner
+creation receipts and setup audit. Native scope/provenance and retained-history
+guards, purpose-specific metadata readiness and used-evidence downgrade fences are
+implemented. Runtime SELECT-only and ORM-write denial remain; no current profile,
+writer, invitation, operational grant, setup route or integrated fixture is enabled.
 
-Focused feedback passed 156 database-free cases; Ruff, strict mypy and NumPy
-docstrings passed. Complete unit feedback passed 9,104 cases in 54.35s after adding
-the documented diagnostic median estimate for the new native file; no observed
-PostgreSQL duration is claimed. Semantic documentation validation passed. Six native
-owner-reference cases are maintained but uncollected/unexecuted. Clean exact-commit
-certification and protected hosted delivery remain pending. See the
-[implementation checkpoint](../checkpoints/2026-09-16-programme-setup-foundation-contracts.md).
-No schema changes or schema-only observation have occurred in this increment.
+Complete database-free feedback passed 9,141 tests in 70.25s. Ruff, strict types,
+NumPy and semantic Python documentation passed. Twenty-seven maintained native
+schema/integrity/recovery scenarios remain uncollected and unexecuted under #102.
+Clean exact-commit certification and protected delivery remain pending. See the
+[schema checkpoint](../checkpoints/2026-09-16-programme-setup-receipt-schema.md).
 
-The maintainer has explicitly approved a bounded disposable setup schema-only
-migration/metadata check. This supersedes the earlier pending-approval checkpoint,
-not PostgreSQL deferral: do not collect/run database suites, activate Programme,
-add runtime grants or touch production data. Maintain debt under #102.
+The explicitly approved disposable schema-only observation completed in 3m22s:
+forward migration and exact native metadata passed; the pinned readiness wrapper
+returned true. This is not native test, reverse/rollback, runtime-role or workflow
+acceptance. The exact task container and temporary database were removed, with
+logs retained; no user container or persistent volume was touched. PostgreSQL
+suites remain deferred and all final acceptance gates remain open.
 
-Next complete durable setup/authority contracts, owner receipts and transactional
-orchestration, genuine-person continuation, guided UI and the actual isolated
+Next complete transactional setup using public owner locks/commands and exact
+actor/key replay, independently approved authority, genuine-person continuation,
+guided UI and the actual isolated
 fixture. Preserve existing truthful representation and immutable `maru-operators@1`,
 two distinct eligible people's own acceptances, Department-scoped call/review
 versus edition-scoped planning, and independently approved additional authority.
