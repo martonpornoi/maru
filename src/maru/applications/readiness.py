@@ -64,6 +64,37 @@ _CONVERSION_DOWNGRADE_MIGRATION = import_module(
 _CONVERSION_DOWNGRADE_FENCE_SOURCE_SHA256: Final = (
     "aa49e392bed9fa0dbd19acde027ec4bef0a960f247812dfaa469f3e381c60dbb"
 )
+_FILE_MIGRATION = import_module(
+    "maru.applications.migrations.0020_programme_file_integrity"
+)
+_FILE_DOWNGRADE_MIGRATION = import_module(
+    "maru.applications.migrations.0021_programme_file_downgrade_fence"
+)
+_FILE_DOWNGRADE_FENCE_SOURCE_SHA256: Final = (
+    "56092af6faace484dd5c823d8324c1fc96f0bbb11388eea20c898333910e91dd"
+)
+
+
+def _file_migration_contract_is_current() -> bool:
+    operations = tuple(_FILE_MIGRATION.Migration.operations)
+    fences = tuple(_FILE_DOWNGRADE_MIGRATION.Migration.operations)
+    reverse = _FILE_DOWNGRADE_MIGRATION.refuse_populated_programme_file_downgrade
+    source = inspect.getsource(reverse).replace("\r\n", "\n")
+    return (
+        len(operations) == len(fences) == 1
+        and isinstance(operations[0], migrations.RunSQL)
+        and operations[0].sql == _FILE_MIGRATION.FORWARD_SQL
+        and operations[0].reverse_sql == _FILE_MIGRATION.REVERSE_SQL
+        and tuple(_FILE_MIGRATION.Migration.dependencies)
+        == (("applications", "0019_programme_file_custody"),)
+        and isinstance(fences[0], migrations.RunPython)
+        and fences[0].code is migrations.RunPython.noop
+        and fences[0].reverse_code is reverse
+        and tuple(_FILE_DOWNGRADE_MIGRATION.Migration.dependencies)
+        == (("applications", "0020_programme_file_integrity"),)
+        and hashlib.sha256(source.encode()).hexdigest()
+        == _FILE_DOWNGRADE_FENCE_SOURCE_SHA256
+    )
 
 
 def _conversion_migration_contract_is_current() -> bool:
@@ -217,24 +248,29 @@ _IDENTITY_FUNCTION_CONTRACTS = {
 _CONVERSION_TRIGGERS, _CONVERSION_FUNCTIONS = parse_database_integrity_sql_contracts(
     _CONVERSION_MIGRATION.FORWARD_SQL
 )
+_FILE_TRIGGERS, _FILE_FUNCTIONS = parse_database_integrity_sql_contracts(
+    _FILE_MIGRATION.FORWARD_SQL
+)
 APPLICATIONS_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
     _REVIEW_INTEGRITY_CONTRACT,
-    source_migration=("applications", "0017_programme_conversion_integrity"),
+    source_migration=("applications", "0020_programme_file_integrity"),
     source_migration_module=(
-        "maru.applications.migrations.0017_programme_conversion_integrity"
+        "maru.applications.migrations.0020_programme_file_integrity"
     ),
-    terminal_migration=("applications", "0018_programme_conversion_downgrade_fence"),
+    terminal_migration=("applications", "0021_programme_file_downgrade_fence"),
     triggers={
         **_DERIVED_APPLICATIONS_INTEGRITY_CONTRACT.triggers,
         **_IDENTITY_TRIGGER_CONTRACTS,
         **_REVIEW_INTEGRITY_CONTRACT.triggers,
         **_CONVERSION_TRIGGERS,
+        **_FILE_TRIGGERS,
     },
     functions={
         **_DERIVED_APPLICATIONS_INTEGRITY_CONTRACT.functions,
         **_IDENTITY_FUNCTION_CONTRACTS,
         **_REVIEW_INTEGRITY_CONTRACT.functions,
         **_CONVERSION_FUNCTIONS,
+        **_FILE_FUNCTIONS,
     },
     source_contract_current=(
         _DERIVED_APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
@@ -242,6 +278,7 @@ APPLICATIONS_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
         and _REVIEW_INTEGRITY_CONTRACT.source_contract_current
         and _review_downgrade_contract_is_current()
         and _conversion_migration_contract_is_current()
+        and _file_migration_contract_is_current()
     ),
 )
 
@@ -352,6 +389,8 @@ APPLICATIONS_RELATION_SEMANTICS: Final[
     ),
     "applications_programmereviewreceipt": ("r", "p", False, False, False, "d"),
     "applications_programmeacceptedtransition": ("r", "p", False, False, False, "d"),
+    "applications_programmefileintake": ("r", "p", False, False, False, "d"),
+    "applications_programmefilecontent": ("r", "p", False, False, False, "d"),
     "applications_programmecall": ("r", "p", False, False, False, "d"),
     "applications_programmecallcontributorfield": (
         "r",
@@ -501,12 +540,12 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # deliberately keeps Applications readiness blocked.
 APPLICATIONS_SCHEMA_CATALOG_SHA256: Final[Mapping[str, tuple[int, str]]] = {
     "constraint:": (
-        455,
-        "c70983cffd80c85b5871ba6322c4494d2b9271401cfa6e073f9fdf18bfa30189",
+        474,
+        "9e65c723d031f87274dc574bb0eb5cee1aeb8741dce5f18d23873ef3c5f82b76",
     ),
     "index:": (
-        313,
-        "aab3b5d0d1ae0e79d1e583583032a1ebf1cff943870ad120303e9949d21977dc",
+        324,
+        "bb8f85fea9ef260d808431f319329271fbd9aab82ab1ca17ae546152e24d35d0",
     ),
 }
 

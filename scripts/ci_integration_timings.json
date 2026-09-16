@@ -13,6 +13,7 @@
   "tests/integration/test_application_programme_conversion_migrations.py": 1477.093,
   "tests/integration/test_application_programme_conversion_races.py": 75.212,
   "tests/integration/test_application_programme_department_dependencies.py": 3.859,
+  "tests/integration/test_application_programme_file_custody.py": 29.955,
   "tests/integration/test_application_programme_import_historical_retirement.py": 150.513,
   "tests/integration/test_application_programme_import_integrity_migrations.py": 16.053,
   "tests/integration/test_application_programme_import_migration_executor.py": 1261.597,

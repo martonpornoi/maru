@@ -28,6 +28,8 @@ MAX_QUESTION_OPTIONS = 100
 MAX_SECTIONS = 100
 MAX_QUESTIONS = 500
 MAX_ANSWER_BYTES = 65_536
+MAX_PROGRAMME_FILE_INTAKES = 64
+MAX_PROGRAMME_PROPOSAL_FILE_BYTES = 64 * 1024 * 1024
 
 POLICY_CODE_VALIDATOR = RegexValidator(
     regex=r"^[a-z][a-z0-9_.:-]{2,119}$",
@@ -4239,6 +4241,61 @@ class ProgrammeReviewReceipt(_AppendOnlyProgrammeApplicationModel):
                 name="app_prg_review_receipt_shape",
             ),
         ]
+
+
+class ProgrammeFileIntake(_AppendOnlyProgrammeApplicationModel):
+    """Bind private file custody to one explicit first shared-answer intent.
+
+    The first answer and its canonical command evidence are required by deferred
+    guards. This record does not introduce a second proposal version or grant
+    download authority. Byte content belongs to the separate protected relation.
+    """
+
+    organization = models.ForeignKey(
+        "organizations.Organization", on_delete=models.PROTECT
+    )
+    edition = models.ForeignKey("events.EventEdition", on_delete=models.PROTECT)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    proposal = models.ForeignKey(ProgrammeProposal, on_delete=models.PROTECT)
+    question = models.ForeignKey(ApplicationQuestion, on_delete=models.PROTECT)
+    file_receipt = models.OneToOneField(
+        ApplicationFileReceipt, on_delete=models.PROTECT
+    )
+    source_version = models.PositiveBigIntegerField()
+    call_version = models.PositiveBigIntegerField()
+    definition_version = models.PositiveBigIntegerField()
+    retry_key = models.UUIDField()
+    scanned_at = models.DateTimeField()
+
+    class Meta:
+        """Fence one intake per original answer transition and actor retry."""
+
+        ordering = ("proposal_id", "source_version")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("proposal", "source_version"), name="app_prg_file_source_uq"
+            ),
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"), name="app_prg_file_retry_uq"
+            ),
+            models.CheckConstraint(
+                condition=Q(source_version__gte=1, source_version__lte=2**63 - 2)
+                & Q(call_version__gte=1)
+                & Q(definition_version__gte=1),
+                name="app_prg_file_versions",
+            ),
+        ]
+
+
+class ProgrammeFileContent(_AppendOnlyProgrammeApplicationModel):
+    """Keep bounded private bytes outside ordinary metadata projections.
+
+    No model admin, generic serializer, public media URL or independent deletion
+    path is provided. Native guards verify exact immutable receipt digest/length.
+    """
+
+    intake = models.OneToOneField(ProgrammeFileIntake, on_delete=models.PROTECT)
+    payload = models.BinaryField(max_length=10 * 1024 * 1024)
 
 
 class ProgrammeAcceptedTransition(_AppendOnlyProgrammeApplicationModel):

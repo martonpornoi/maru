@@ -42,17 +42,31 @@ route was changed. No native suite was collected/run and no new visible UI/brows
 acceptance is claimed. The local Python 3.12.0 / hosted 3.12.14 distinction remains
 explicit; do not infer environment parity from local success.
 
-Prepared bytes are ephemeral, not durable intake. Next implement governed exact
-proposal/question/uploader provenance, retry, private storage/custody and independently
-authorized selection/attachment viewers. Anonymous omission precedes file lookup.
-The next task is mapped, not implemented. Its new immutable provenance/guard schema
-requires observed PostgreSQL catalog fingerprints: the Applications readiness
-contract cannot be finalized by inventing them. The fresh bounded disposable
-schema-only exception is still unanswered and not assumed. Stop at that authority
-boundary; do not repeat #104's exception or collect/run PostgreSQL suites. Accountable
-setup also needs its own durable receipt/authority schema and cannot avoid the same
-evidence boundary. Continue once the schema-only question is answered. Complete
-accountable setup, isolated fixture and final #102/#97/#92/#109 gates remain open.
+Prepared bytes are ephemeral, not durable intake. The active candidate adds
+ADR 0105's private transactional custody schema: exact proposal/question/uploader,
+original versions/retry, separate bytes, canonical first-answer evidence and
+64-intake/64-MiB proposal quotas. Migrations 0019–0021 keep runtime relations
+SELECT-only, refuse unproven legacy Programme file values, and fence populated
+contraction. It does not yet provide an upload command or attachment reader.
+
+The explicitly approved disposable schema-only observation completed in 150.437s.
+All three new migrations installed; empty reverse/reapply and every Applications
+readiness facet passed. All pre-existing constraint/index fingerprints remained
+exact; new catalog fingerprints were observed, not invented. The task-owned
+temporary container/data were removed; older containers were untouched. No native
+test was collected/run. See the
+[custody checkpoint](../checkpoints/2026-09-16-programme-file-custody-schema.md).
+Complete database-free feedback passed: 8,681 units in 53.69s; Ruff/format and
+configured NumPy/semantic docstring checks passed. Clean exact-commit retained
+certification remains required before delivery. Twenty-eight maintained native
+cases remain unexecuted #102 debt;
+quotas/concurrency, real scanner and integrated recovery still need final proof.
+
+Next implement the owning upload-and-use command and independent exact-answer
+private reader, then selection/attachment viewers with anonymous omission before
+file lookup. Accountable setup requires its own durable receipt/authority schema;
+this bounded exception does not authorize that schema observation. Complete setup,
+isolated fixture and final #102/#97/#92/#109 gates remain open.
 
 Applications reciprocal navigation is delivered, including original input/receipt
 preservation and synthetic role/keyboard observations. Four maintained native

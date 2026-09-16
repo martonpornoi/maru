@@ -589,7 +589,24 @@ and reply bytes, and reading through connection close prevent partial or extra
 responses from becoming clean evidence. No ORM, storage, authorization, receipt,
 answer or profile write is performed; the prepared value is never a permission
 token or caller-supplied proof. This does not activate the safe-file editor.
-Exact proposal/question provenance, storage/retry/custody, selection and independent
+ADR 0105 adds dormant private database custody: `ProgrammeFileIntake` binds exact
+proposal/question/uploader, scan time, original proposal/call/schema versions and
+the canonical first-answer retry; separate `ProgrammeFileContent` holds bytes.
+There is no second answer cursor or receipt namespace. Deferred integrity requires
+content plus the first existing answer and its canonical success receipt in one
+transaction. New non-null Programme file answers require same-purpose custody;
+generic receipts alone no longer suffice. A proposal retains at most 64 intakes
+and 64 MiB including historical versions; each PDF remains capped at 10 MiB.
+These limits serialize on the existing edition/proposal boundary. Both new
+relations remain runtime SELECT-only, with owner-only guard functions.
+
+Migrations 0019–0021 install schema, integrity and a populated downgrade fence.
+The preflight refuses unproven legacy Programme file answers or reserved
+`programme-db/` receipts rather than inventing custody for old data. Exact metadata
+was observed in an approved disposable schema-only check; native behavioral
+acceptance remains unexecuted #102 debt. No owning upload command, byte reader,
+selection control, route, scanner deployment or current-profile activation is
+provided by this persistence prerequisite. Those plus independently authorized
 current/sealed/anonymous-safe review viewers remain #108 work. See the
 [file-handling contract](../operations/programme-supporting-file-handling.md).
 
