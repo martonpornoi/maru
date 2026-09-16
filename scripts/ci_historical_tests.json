@@ -18,6 +18,15 @@
       "test_organizer_item_native_evidence_fences_conversion_downgrade"
     ]
   },
+  "tests/integration/test_application_programme_file_custody.py": {
+    "owners": [
+      "applications"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_unused_file_schema_reverses_and_reinstalls_exact_readiness"
+    ]
+  },
   "tests/integration/test_application_programme_import_historical_retirement.py": {
     "owners": [
       "applications",

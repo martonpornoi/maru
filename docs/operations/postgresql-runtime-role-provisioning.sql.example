@@ -335,7 +335,9 @@ REVOKE ALL ON TABLE
     public.applications_programmereviewdecision,
     public.applications_programmedecisionacknowledgement,
     public.applications_programmereviewreceipt,
-    public.applications_programmeacceptedtransition
+    public.applications_programmeacceptedtransition,
+    public.applications_programmefileintake,
+    public.applications_programmefilecontent
     FROM PUBLIC, maru_runtime;
 GRANT SELECT ON TABLE
     public.applications_programmereviewpolicy,
@@ -345,7 +347,9 @@ GRANT SELECT ON TABLE
     public.applications_programmereviewdecision,
     public.applications_programmedecisionacknowledgement,
     public.applications_programmereviewreceipt,
-    public.applications_programmeacceptedtransition
+    public.applications_programmeacceptedtransition,
+    public.applications_programmefileintake,
+    public.applications_programmefilecontent
     TO maru_runtime;
 
 -- Workforce adoption setup and Organization structure receipts are append-only

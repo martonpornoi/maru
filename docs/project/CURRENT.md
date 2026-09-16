@@ -11,23 +11,23 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-#108's own-purpose timetable edition discovery is delivered through
-[PR #145](https://github.com/martonpornoi/maru/pull/145), protected squash
-`dd74df6760fa3b6768e018f9fdc16d777cdaab76` at 2026-09-15 22:12:36 UTC.
-Its tree equals certified head `0e74e2e81762896f952f8283c4804fc580aa070a`;
+#108's bounded file-scanner prerequisite is delivered through
+[PR #146](https://github.com/martonpornoi/maru/pull/146), protected squash
+`4faef0f75979e61427f829ee4342cd24ad1593c3` at 2026-09-15 23:07:18 UTC.
+Its tree equals certified head `04665bead54c27da8c2b4b6c03aa89e3bd89a382`;
 clean local main and origin/main were synchronized. All eight local retained
-gates passed in 5m14s, including 8,562 units in 53.68s and 93 frontend tests.
-Hosted quality took 9m35s, documentation 7m40s and units 80.98s; exact-head
+gates passed in 5m04s, including 8,645 units in 53.59s and 93 frontend tests.
+Hosted quality took 12m11s, documentation 9m59s and units 100.59s; exact-head
 PR gate/CodeQL passed with clear reviews. See the
-[protected evidence](../checkpoints/2026-09-16-programme-file-preparation.md).
-PostgreSQL stayed skipped. Four added native discovery and four adjusted navigation
-cases remain #102
-debt. No schema, profile or production route was activated. Do not restart this,
-operator/shared workspace entry, domain selection or #113.
+[protected evidence](../checkpoints/2026-09-16-programme-file-preparation-protected-delivery.md).
+The initial hosted mapped-IPv6 failure was reproduced and fixed without weakening
+tests or endpoint policy. PostgreSQL stayed skipped. No schema, profile or
+production route was activated. Do not restart this prerequisite, personal
+discovery/connections, operator/shared workspace entry, domain selection or #113.
 
-## Active bounded outcome: supporting-file byte preparation (#108)
+## Next bounded outcome: exact file provenance and custody (#108)
 
-Branch: `codex/programme-file-intake`, from protected PR #145.
+Branch: `codex/programme-file-provenance`, from protected PR #146.
 ADR 0104 records purpose-bound Applications file intake. This first increment only
 prepares exact immutable PDF bytes, capped at 10 MiB, with a separately configured
 literal-loopback ClamAV INSTREAM adapter. Exact bounded NUL-framed clean evidence
@@ -35,23 +35,38 @@ through connection close and one absolute connect/send/read deadline are require
 Disabled, unscanned, malformed, unknown and partial states fail closed. A PDF
 envelope/clean scan is not a benign-document guarantee or permission.
 
-The initial local certification passed all eight retained gates in 5m13s, but
-PR #146's hosted unit run failed one mapped-IPv6 classification case (Python
-3.12.14 versus local 3.12.0). The local reproduction now protects explicit rejection
-regardless of library classification, including both address spellings. See the
-[repair checkpoint](../checkpoints/2026-09-16-programme-scanner-endpoint-repair.md).
-Corrected focused feedback passes 83 cases in 0.56s and full database-free feedback
-passes 8,645 in 54.54s. Fresh exact-commit certification is next; the initial receipt
-cannot certify this candidate. No real scanner, ORM, storage, authorization, audit, event, receipt,
-answer, profile or production route is changed. No native suite is collected/run.
-No new visible UI means no new browser acceptance claim. Real scanner/signature,
-storage/provenance and recovery acceptance remain #109/#102.
+The completed preparer has 83 focused mocked-socket cases; actual scanner/signature
+health and storage/provenance/recovery acceptance remain #109/#102. No real scanner,
+ORM, storage, authorization, audit, event, receipt, answer, profile or production
+route was changed. No native suite was collected/run and no new visible UI/browser
+acceptance is claimed. The local Python 3.12.0 / hosted 3.12.14 distinction remains
+explicit; do not infer environment parity from local success.
 
-Prepared bytes are ephemeral, not durable intake. Next implement governed exact
-proposal/question/uploader provenance, retry, private storage/custody and independently
-authorized selection/attachment viewers. Anonymous omission precedes file lookup.
-The fresh schema-only exception is still unanswered and not assumed. Complete
-accountable setup, isolated fixture and final #102/#97/#92/#109 gates remain open.
+Prepared bytes are ephemeral, not durable intake. The active candidate adds
+ADR 0105's private transactional custody schema: exact proposal/question/uploader,
+original versions/retry, separate bytes, canonical first-answer evidence and
+64-intake/64-MiB proposal quotas. Migrations 0019–0021 keep runtime relations
+SELECT-only, refuse unproven legacy Programme file values, and fence populated
+contraction. It does not yet provide an upload command or attachment reader.
+
+The explicitly approved disposable schema-only observation completed in 150.437s.
+All three new migrations installed; empty reverse/reapply and every Applications
+readiness facet passed. All pre-existing constraint/index fingerprints remained
+exact; new catalog fingerprints were observed, not invented. The task-owned
+temporary container/data were removed; older containers were untouched. No native
+test was collected/run. See the
+[custody checkpoint](../checkpoints/2026-09-16-programme-file-custody-schema.md).
+Complete database-free feedback passed: 8,681 units in 53.69s; Ruff/format and
+configured NumPy/semantic docstring checks passed. Clean exact-commit retained
+certification remains required before delivery. Twenty-eight maintained native
+cases remain unexecuted #102 debt;
+quotas/concurrency, real scanner and integrated recovery still need final proof.
+
+Next implement the owning upload-and-use command and independent exact-answer
+private reader, then selection/attachment viewers with anonymous omission before
+file lookup. Accountable setup requires its own durable receipt/authority schema;
+this bounded exception does not authorize that schema observation. Complete setup,
+isolated fixture and final #102/#97/#92/#109 gates remain open.
 
 Applications reciprocal navigation is delivered, including original input/receipt
 preservation and synthetic role/keyboard observations. Four maintained native

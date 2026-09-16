@@ -138,6 +138,8 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.applications_programmedecisionacknowledgement",
     "public.applications_programmereviewreceipt",
     "public.applications_programmeacceptedtransition",
+    "public.applications_programmefileintake",
+    "public.applications_programmefilecontent",
     "public.programme_programmeeditioncontrol",
     "public.programme_programmeitem",
     "public.programme_programmeitemsourcebinding",

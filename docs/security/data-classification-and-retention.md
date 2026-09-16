@@ -79,8 +79,15 @@ Programme supporting-file bytes inherit their exact Applications question and
 proposal purpose/classification; scanning does not reduce that classification or
 make a file public. ADR 0104's preparation-only seam retains bytes in memory,
 does not log original names/bytes/findings and adds no persistent record or user
-activity collection. Durable intake still requires explicit private custody,
-retention/hold/disposal and provenance implementation. Identifying attachment
+activity collection. ADR 0105 adds dormant exact-purpose intake metadata and
+separate private database bytes, atomically tied to the first answer and its
+existing canonical evidence. No original filename, public URL, quarantine copy
+or new activity stream is retained. A proposal retains at most 64 intakes and
+64 MiB including history; bytes inherit backup access/expiry controls. Clearing
+an answer never deletes history or overrides a hold. Owning upload/read commands,
+retention/hold/disposal execution and final recovery remain activation gates;
+the schema is not permission to retain production documents indefinitely.
+Identifying attachment
 lookups are omitted before anonymous review, not merely hidden afterward. The
 [file-handling contract](../operations/programme-supporting-file-handling.md)
 does not constitute storage provisioning or retention activation.

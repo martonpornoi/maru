@@ -1235,6 +1235,11 @@ architecture documents, implementation issues, tests, and release notes.
   independent exact-answer authority, with anonymous omission before lookup.
   Private custody, retention holds, uncertain retries and orphan recovery must
   be documented before durable intake or download is activated.
+  The initial private database-custody path must commit bytes, exact intake and
+  the explicitly selected first answer with canonical evidence atomically.
+  Limit each proposal to 64 retained intakes and 64 MiB, including history;
+  overflow must never delete or replace retained evidence. Bytes stay outside
+  ordinary metadata projections and share whole-database recovery boundaries.
 - **PRG-003 — Structured review:** Review stages must support configurable
   rubrics, conflicts of interest, optional anonymization, independent scoring,
   discussion, moderation, and accountable decisions.
