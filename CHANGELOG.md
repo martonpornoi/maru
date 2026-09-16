@@ -28,6 +28,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- Dormant Programme supporting-file tasks now offer explicit private PDF upload,
+  original-result recovery, deliberate answer clearing and independently authorized
+  attachment downloads. Attempts never automatically resend a file; clearing keeps
+  retained history. Production activation, native acceptance and real-scanner
+  deployment remain gated.
+
 - Connected dormant personal Programme proposals, hosting invitations and
   availability, and hosting/work timetables with independently permitted links.
   Changed optional navigation preserves entered values; personal hosting rechecks

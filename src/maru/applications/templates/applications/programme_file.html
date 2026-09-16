@@ -1,0 +1,30 @@
+<section aria-labelledby="file-question">
+  <h2 id="file-question">{{ question_label }}</h2>
+  {% if question %}<p>{{ question.help_text|linebreaksbr }}</p><dl><dt>Collection purpose</dt><dd>{{ question.purpose }}</dd><dt>Classification</dt><dd>{{ question.classification }}</dd></dl>{% endif %}
+  {% if file_view %}
+    {% include "applications/_programme_file_metadata.html" %}
+  {% elif file_task == "upload" %}
+    <p>Choose one PDF, at most 10 MiB. Choosing it does not upload it. Your original filename is not sent as metadata. Files remain private; scanning does not guarantee that a document is harmless.</p>
+    <p>Uploading and using this file changes this answer once. Retained files and sealed history count toward the proposal's limit of 64 uploads and 64 MiB; replacing or clearing an answer does not delete them.</p>
+    <div data-file-upload data-file-intent="{{ token }}" data-file-endpoint="{{ file_intake_url }}" data-file-recovery="{{ recovery|yesno:'true,false' }}">
+      {% csrf_token %}
+      {% if not recovery %}<p><label for="supporting-pdf">Supporting PDF</label><input id="supporting-pdf" type="file" accept="application/pdf,.pdf" aria-describedby="file-status" disabled></p>
+      <button type="button" data-file-send disabled>Upload and use this PDF</button>{% endif %}
+      <button type="button" data-file-check disabled>Check previous upload result</button>
+      <p id="file-status" role="status" aria-live="polite" tabindex="-1">{% if recovery %}This is the retained original intent. No file will be resent. Check the previous result; a missing result may still be running.{% else %}No file selected or uploaded.{% endif %}</p>
+      <p data-file-dirty hidden>Input is not confirmed as saved. Keep this page to check the original outcome before starting another upload.</p>
+      <noscript><p>Uploading and checking an original upload result need JavaScript. Viewing, downloading and clearing an authorized answer remain available without JavaScript. Inspect proposal history after an uncertain attempt.</p></noscript>
+    </div>
+    {% if recovery %}<p><a href="{{ file_upload_url }}">Start a new upload task after checking the previous outcome</a></p>{% endif %}
+  {% elif file_task == "clear" %}
+    <p>Clear only this current answer. This does not delete retained files, sealed history, holds or backups. A required answer must be supplied again before sealing.</p>
+    <form method="post" data-call-command data-call-pending="{{ form.is_bound|yesno:'true,false' }}">
+      {% csrf_token %}
+      {% if form.errors %}<div role="alert" tabindex="-1" autofocus><h3>Review this request</h3>{{ form.non_field_errors }}{% for field in form %}{{ field.errors }}{% endfor %}</div>{% endif %}
+      {{ form.token }}<p>{{ form.confirm }} {{ form.confirm.label_tag }}</p>
+      <p data-call-dirty role="status" hidden>Clearing is not confirmed. Preserve this original request and check proposal history after an uncertain attempt.</p>
+      <button type="submit">Clear this answer</button>
+    </form>
+  {% endif %}
+  <p><a href="{{ proposal_url }}">Back to this proposal</a></p>
+</section>

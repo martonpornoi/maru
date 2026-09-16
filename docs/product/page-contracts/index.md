@@ -54,6 +54,7 @@ contract for the surface being changed, and compare its status with the
 - [My Programme decisions and receipts](programme-decision-receipts.md)
 - [Programme person references](programme-person-references.md)
 - [Programme same-call domain references](programme-domain-references.md)
+- [Programme supporting-file tasks](programme-supporting-files.md)
 - [Programme review setup](programme-review-setup.md)
 - [Programme calls and review entry](programme-applications-entry.md)
 - [Named Programme reviewer management](programme-review-management.md)
@@ -93,6 +94,7 @@ programme-call-workspace
 programme-proposal-workspace
 programme-person-references
 programme-domain-references
+programme-supporting-files
 programme-decision-receipts
 programme-review-setup
 programme-applications-entry

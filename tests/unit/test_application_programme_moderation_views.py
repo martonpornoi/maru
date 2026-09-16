@@ -379,6 +379,7 @@ def test_answers_are_escaped_and_protected_references_do_not_become_links(page):
                 },
                 {
                     "label": "Upload",
+                    "key": "supporting_file",
                     "classification": "C2",
                     "type": "safe_file",
                     "value": "https://unsafe.invalid/file",
@@ -389,7 +390,8 @@ def test_answers_are_escaped_and_protected_references_do_not_become_links(page):
     html = soup(request(task="answers"))
     assert not html.find("script", string="attack")
     assert not html.find("a", href="https://unsafe.invalid/file")
-    assert "dedicated safe viewer remains tracked" in html.get_text()
+    assert html.select_one('a[href$="answers/file/supporting_file/"]')
+    assert "View protected supporting file" in html.get_text()
     assert page.detail.call_args.kwargs["request"].requested_fields == frozenset(
         {"review_answers"}
     )

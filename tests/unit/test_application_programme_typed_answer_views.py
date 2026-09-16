@@ -27,6 +27,7 @@ def role(request, monkeypatch):
 
 def row(kind, value, **extra):
     return {
+        "key": "synthetic_answer",
         "label": "Synthetic answer",
         "classification": "C2",
         "type": kind,
@@ -43,7 +44,7 @@ def response(role, rows):
     return adapter.request(task="answers")
 
 
-def test_three_roles_read_human_labels_and_components_without_new_links(role):
+def test_three_roles_read_labels_and_only_protected_file_task_links(role):
     result = response(
         role,
         [
@@ -78,6 +79,7 @@ def test_three_roles_read_human_labels_and_components_without_new_links(role):
     assert "<script>attack</script>" in text
     assert html.find("script", string="attack") is None
     assert "PRIVATE-REFERENCE" not in text
+    assert html.select_one('a[href$="answers/file/synthetic_answer/"]')
     assert "Unselected private option" not in text
     assert html.find("a", href="https://example.invalid/untrusted") is None
     assert html.find("a", href="mailto:synthetic@example.invalid") is None

@@ -636,10 +636,21 @@ Metadata returns only presence/size alongside authorized question text; explicit
 comparison and required protected-read audit. Bytes and source proof are hidden
 from diagnostic repr. Shared access does not relax uploader selection restrictions.
 
-No selection control, transport route, scanner deployment or current profile
-activation is provided. Safe upload, selection and attachment-only viewer adapters
-remain #108 work and must enforce pre-body admission/CSRF, original intent, bounded
-reading and no-store/nosniff/final source checks. See the
+The dormant [supporting-file tasks](../product/page-contracts/programme-supporting-files.md)
+now provide native local-PDF selection, explicit upload-and-use, original-result
+recovery, deliberate clear and independently authorized personal/review viewers.
+`programme_file_transport` accepts bounded raw-PDF PUT with normal CSRF header
+protection; no multipart upload or exemption is introduced. Signed original intent
+binds actual actor/scope, all three versions and retry identity, not authority.
+Only the upload/recovery page permits same-origin fetch in its otherwise default-deny
+CSP. An attempted file cannot be silently replaced or resent; a retained page reload
+offers body-free recovery only. Ordinary clear uses the canonical answer command,
+fixed routine rationale and explicit confirmation; retained bytes/history survive.
+Attachment responses have fixed code-owned filenames, no inline preview, no-store
+and nosniff; after response preparation the adapter repeats independent source and
+authority admission before releasing bytes. Anonymous review exposes no file link
+or custody lookup. Reserved routes remain absent from production. No scanner
+deployment, runtime grant or current profile activation is provided. See the
 [file-handling contract](../operations/programme-supporting-file-handling.md).
 
 ## Applications, revisions, and review

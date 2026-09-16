@@ -104,8 +104,8 @@ success evidence. The visible routine intent "Upload and use this supporting fil
 is the canonical rationale; no extra private explanation is collected. Failure
 uses existing minimized command audit, with no bytes/filename/findings in metadata.
 
-Transport and viewer surfaces still need implementation. Database custody removes
-split external-object commit/orphan
+Dormant transport and viewer surfaces use the owning commands below. Database custody
+removes split external-object commit/orphan
 handling from this first workflow; failed transactions retain no bytes, and failed
 scans retain no quarantine copy. Privacy holds, authorized disposal and mutually
 consistent recovery still require final acceptance. Do not delete referenced bytes
@@ -117,7 +117,7 @@ upload before body reading. **Check previous upload result**, implemented by
 canonical receipt under existing retry authority. Concurrent uploads admitted
 before one wins compare exact bytes and intent before replay. Missing canonical
 evidence is unavailable, never permission to recreate an answer. A result receipt
-is not download permission. No endpoint or current runtime write grant is enabled.
+is not download permission. No production endpoint or current runtime write grant is enabled.
 
 ## Dormant independently authorized private readers
 
@@ -144,12 +144,38 @@ is an audited absence without file lookup; an empty-answer download is unavailab
 Required final source/authority comparison and sensitive-read audit must succeed
 before any projection or bytes return. Private source and bytes are excluded from repr.
 
-These are dormant owner queries, not an HTTP download implementation. Future adapters
-must deliberately request bytes, prepare a fixed-filename attachment-only response
-with no-store/nosniff, then repeat source/authority checks before release. No inline
-PDF rendering, public URL, activation or new runtime grant is implied. Source keys,
-filenames and scanner findings are not a directory. Selection and upload adapters
-still need their own original-intent, CSRF and pre-body/bounded-reading acceptance.
+The dormant HTTP viewers deliberately request bytes only for an explicit download,
+prepare a fixed-filename attachment-only response with no-store/nosniff, then repeat
+source/authority checks before release. No inline PDF rendering, public URL, activation
+or new runtime grant is implied. Source keys, filenames and scanner findings are not
+a directory. The [supporting-file page contract](../product/page-contracts/programme-supporting-files.md)
+owns local selection, original-intent recovery, deliberate clearing and viewer behavior.
+
+## Dormant browser transport and recovery
+
+Use a native local PDF choice and explicit upload-and-use action. The raw-PDF PUT
+endpoint requires the normal CSRF header, a bounded purpose-signed original intent,
+no query override/content encoding and an exact declared length up to 10 MiB. The
+owner independently admits the source and scanner before calling a trusted bounded
+reader. PUT avoids Django's POST multipart parsing during CSRF inspection; this does
+not prevent proxy, server or ASGI buffering and is not deployment resource acceptance.
+The upload/recovery page alone allows same-origin connections in its default-deny CSP.
+Keep the existing framing, script and no-store restrictions.
+
+After any attempted upload the browser retains its original intent and selected file,
+disables resending and offers **Check previous upload result** without a body. Page
+history stores only the bounded signed scope/version/retry proof, never bytes or a
+filename. Reload is recovery-only. No result yet may mean a request is still running;
+never treat it as permission to regenerate intent automatically. Start another upload
+only through an explicit new task after checking the prior outcome and proposal history.
+No-JavaScript viewing, attachment downloads and deliberate clear remain available;
+upload and original-result checks explain their scripting requirement.
+
+Original intent is not a bearer permission: every result, answer, clear and download
+checks its own live authority. Clearing uses the existing answer command with a
+routine fixed reason and original versions/key; it clears only the current answer,
+not retained custody, seals, holds or backups. No receipt-directory or raw-ID editor
+is exposed. Follow the organizer's safe-document guidance for downloaded attachments.
 
 Unit tests use mocked sockets, not a real ClamAV scan. Real daemon/signature and
 private-storage failure/recovery evidence remains #109 and deployment acceptance.
@@ -159,4 +185,4 @@ The separately approved schema-only process observed exact fingerprints, unchang
 pre-existing constraints/indexes, empty reverse/reapply and all Applications
 catalog/readiness facets. It neither collected nor ran native tests. Maintained
 provenance/guard cases remain #102 debt; PostgreSQL suites stay skipped under ADR 0100.
-#108/#48 remain incomplete until intake, selection, viewers and all final gates pass.
+#108/#48 remain incomplete until the integrated journey and all final gates pass.

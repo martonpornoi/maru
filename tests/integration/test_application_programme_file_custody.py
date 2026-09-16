@@ -6,7 +6,9 @@ upload route, a trusted scanner deployment or runtime upload permission.
 
 import hashlib
 from dataclasses import replace
+from functools import partial
 from importlib import import_module
+from types import SimpleNamespace
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -15,10 +17,14 @@ from django.apps import apps
 from django.conf import settings
 from django.db import DatabaseError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
+from django.middleware.csrf import get_token
+from django.test import RequestFactory
 from django.utils import timezone
 
 from maru.applications import programme_file_commands as file_commands
 from maru.applications import programme_file_queries as file_queries
+from maru.applications import programme_file_transport as file_transport
+from maru.applications import programme_file_views as file_views
 from maru.applications import programme_review_file_queries as review_files
 from maru.applications.models import (
     ApplicationAnswerRevision,
@@ -41,6 +47,7 @@ from maru.applications.programme_commands import (
     revise_programme_proposal_selection,
     seal_programme_proposal,
 )
+from maru.applications.programme_file_forms import _encode
 from maru.applications.programme_inputs import (
     ProgrammeCallQuestionType,
     ProgrammeProposalSelectionInput,
@@ -651,3 +658,119 @@ def test_native_shared_and_review_file_reads_keep_role_and_anonymity_boundaries(
         else:
             assert review_files.get_programme_review_file(**args).data == PDF
     assert metadata.call_count == (0 if anonymous else 3)
+
+
+def test_native_raw_upload_csrf_recovery_and_consumed_key_before_body(
+    monkeypatch, world, command_scanner
+):
+    """Maintain real HTTP-to-custody proof; scanner transport alone is synthetic."""
+    source, intent = _command_context(world)
+    source = replace(source, source_channel="programme-file-upload")
+    token = _encode(source, intent, purpose="upload")
+    for name in ("upload_and_use_programme_file", "get_programme_file_upload_result"):
+        monkeypatch.setattr(
+            file_commands,
+            name,
+            partial(getattr(file_commands, name), authorizer=fixtures._AUTHORIZER),
+        )
+
+    def invoke(method, *, csrf=True):
+        incoming = RequestFactory().generic(
+            method,
+            "/synthetic-intake/",
+            data=PDF if method == "PUT" else b"",
+            content_type="application/pdf",
+        )
+        incoming.user = SimpleNamespace(pk=source.actor_id, is_authenticated=True)
+        incoming.META["HTTP_X_MARU_FILE_INTENT"] = token
+        if csrf:
+            incoming.META["HTTP_X_CSRFTOKEN"] = get_token(incoming)
+            incoming.COOKIES["csrftoken"] = incoming.META["CSRF_COOKIE"]
+        reader = Mock(wraps=incoming.read)
+        incoming.read = reader
+        response = file_transport.programme_file_intake(
+            incoming,
+            source.organization_id,
+            source.edition_id,
+            source.proposal_id,
+            source.question_id,
+        )
+        return response, reader
+
+    refused, reader = invoke("PUT", csrf=False)
+    assert refused.status_code == 403
+    reader.assert_not_called()
+    saved, reader = invoke("PUT")
+    assert saved.status_code == 200
+    reader.assert_called_once()
+    repeated, reader = invoke("PUT")
+    assert repeated.status_code == 409
+    reader.assert_not_called()
+    result, reader = invoke("GET")
+    assert result.status_code == 200
+    assert b'"saved"' in result.content
+    reader.assert_not_called()
+    assert (
+        ProgrammeFileIntake.objects.filter(proposal_id=source.proposal_id).count() == 1
+    )
+    assert (
+        ProgrammeFileContent.objects.filter(
+            intake__proposal_id=source.proposal_id
+        ).count()
+        == 1
+    )
+
+
+def test_native_attachment_final_recheck_and_clear_preserve_custody(
+    monkeypatch, world, command_scanner
+):
+    source, intent = _command_context(world)
+    result = file_commands.upload_and_use_programme_file(
+        request=source,
+        intent=intent,
+        read_bytes=lambda: PDF,
+        authorizer=fixtures._AUTHORIZER,
+    )
+    monkeypatch.setattr(
+        file_views,
+        "get_self_programme_file",
+        partial(file_queries.get_self_programme_file, authorizer=fixtures._AUTHORIZER),
+    )
+    incoming = RequestFactory().get("/synthetic-file/download/")
+    incoming.user = SimpleNamespace(pk=source.actor_id, is_authenticated=True)
+    response = file_views.programme_file_view(
+        incoming,
+        source.organization_id,
+        source.edition_id,
+        source.proposal_id,
+        source.question_id,
+        download=True,
+    )
+    assert response.status_code == 200
+    assert response.content == PDF
+    assert response["Content-Disposition"].startswith("attachment;")
+    append_programme_proposal_answer(
+        actor_id=source.actor_id,
+        organization_id=source.organization_id,
+        edition_id=source.edition_id,
+        proposal_id=source.proposal_id,
+        question_id=source.question_id,
+        value=None,
+        expected_version=result.resulting_version,
+        expected_call_version=2,
+        expected_definition_version=1,
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        reason="Clear this supporting-file answer.",
+        source_channel="test",
+        authorizer=fixtures._AUTHORIZER,
+    )
+    assert (
+        ProgrammeFileContent.objects.filter(
+            intake__proposal_id=source.proposal_id
+        ).count()
+        == 1
+    )
+    assert not file_queries.get_self_programme_file(
+        request=source, authorizer=fixtures._AUTHORIZER
+    ).present

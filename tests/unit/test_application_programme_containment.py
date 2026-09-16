@@ -89,6 +89,9 @@ _FORBIDDEN_SURFACE_MARKERS = (
 )
 _DORMANT_TEMPLATE_MARKERS = {
     (
+        "src/maru/applications/templates/applications/programme_review_file.html"
+    ): frozenset({"programme-call", "programme_call"}),
+    (
         "src/maru/applications/templates/applications/programme_review_domain_reference.html"
     ): frozenset({"programme-call", "programme_call"}),
     (
@@ -180,6 +183,7 @@ def _execution_surface_paths() -> tuple[Path, ...]:
         "programme_review_intake",
         "programme_review_person_reference",
         "programme_review_domain_reference",
+        "programme_review_file",
         "programme_department_tasks",
     ],
 )

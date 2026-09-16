@@ -4,6 +4,9 @@ from django.urls import path
 
 from .programme_decision_views import programme_decisions
 from .programme_domain_reference_views import programme_domain_reference
+from .programme_file_task_views import programme_file_task
+from .programme_file_transport import programme_file_intake
+from .programme_file_views import programme_file_view
 from .programme_person_reference_views import programme_person_reference
 from .programme_personal_views import programme_personal_tasks
 from .programme_proposal_views import programme_proposals
@@ -38,6 +41,35 @@ urlpatterns = [
 ]
 
 _WORK = _ROOT + "<uuid:proposal_id>/work/"
+_FILE = _WORK + "answer/<uuid:question_id>/file/"
+urlpatterns += [
+    path(_FILE, programme_file_task, name="my-programme-file-upload"),
+    path(
+        _FILE + "clear/",
+        programme_file_task,
+        {"task": "clear"},
+        name="my-programme-file-clear",
+    ),
+    path(_FILE + "intake/", programme_file_intake, name="my-programme-file-intake"),
+]
+for _prefix, _name in (
+    (_ROOT + "<uuid:proposal_id>/references/file/<uuid:question_id>/", "file"),
+    (
+        _ROOT
+        + "<uuid:proposal_id>/revisions/<uuid:revision_id>/"
+        + "references/file/<uuid:question_id>/",
+        "frozen-file",
+    ),
+):
+    urlpatterns += [
+        path(_prefix, programme_file_view, name=f"my-programme-{_name}"),
+        path(
+            _prefix + "download/",
+            programme_file_view,
+            {"download": True},
+            name=f"my-programme-{_name}-download",
+        ),
+    ]
 urlpatterns += [
     path(
         _WORK + "answer/<uuid:question_id>/domain/",

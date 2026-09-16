@@ -525,6 +525,10 @@ def test_reference_question_never_uses_a_raw_identifier_editor(work, kind):
     if kind == "person_reference":
         assert f"answer/{spec.question_id}/person/" in html
         assert "Select or clear person" in html
+    elif kind == "safe_file":
+        assert f"answer/{spec.question_id}/file/" in html
+        assert "Upload and use a PDF" in html
+        assert "Clear supporting-file answer" in html
     else:
         assert "An authorized reference or file chooser is still needed" in html
         assert f"answer/{spec.question_id}/" not in html

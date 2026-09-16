@@ -89,8 +89,12 @@ and independently authorized exact-answer readers do not activate any route.
 Readers omit identifying lookup during anonymous review and audit admitted metadata
 or explicit integrity-checked byte reads; minimized projections expose no digest,
 storage key or filename. Private bytes and source proof are excluded from repr.
-Transport/viewer acceptance, retention/hold/disposal execution and final recovery
-remain activation gates;
+Dormant transport retains only the signed scope/version/retry proof in page history,
+never bytes or filenames. It binds the genuine actor and is not bearer read or write
+authority. Normal CSRF protects raw intake and deliberate clear; explicit attachments
+repeat current admission after preparation and use a fixed filename/no-store/nosniff.
+Integrated transport/viewer acceptance, retention/hold/disposal execution and final
+recovery remain activation gates;
 the schema is not permission to retain production documents indefinitely.
 Identifying attachment
 lookups are omitted before anonymous review, not merely hidden afterward. The
