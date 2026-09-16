@@ -10,6 +10,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 
 from maru.core.models import UUIDTimeStampedModel
+from maru.events.programme_setup_writer import _require_programme_setup_writer
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -20,7 +21,7 @@ class ProgrammeAdoptionSetupReceipt(UUIDTimeStampedModel):
 
     Cross-owner foreign keys preserve evidence identity. Owning commands and
     native guards, not ORM traversal, establish scope and current admission.
-    No current command or runtime database writer can create this dormant row.
+    Current profiles and runtime database grants still deny this dormant workflow.
     """
 
     edition = models.OneToOneField(
@@ -154,24 +155,25 @@ class ProgrammeAdoptionSetupReceipt(UUIDTimeStampedModel):
         )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        """Reject ORM writes until an accepted setup command owns persistence.
+        """Allow only first insertion inside the owning setup command scope.
 
         Parameters
         ----------
         *args : Any
-            Unused Django arguments; no current writer is mounted.
+            Django persistence arguments forwarded after admission.
         **kwargs : Any
-            Unused Django options; no current writer is mounted.
+            Django persistence options forwarded after admission.
 
         Raises
         ------
         ValidationError
-            Always, because setup persistence is dormant and receipts are retained.
+            Outside the command scope or when attempting to rewrite retained history.
         """
-        del args, kwargs
-        raise ValidationError(
-            "Programme setup receipts require an accepted setup command."
-        )
+        _require_programme_setup_writer()
+        if not self._state.adding:
+            raise ValidationError("Programme setup receipts are immutable.")
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         """Refuse deletion of accountable setup history.

@@ -1,6 +1,7 @@
 """Minimized owner-source contract for future accountable setup."""
 
-from dataclasses import fields
+from dataclasses import fields, replace
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 from uuid import UUID
 
@@ -8,6 +9,106 @@ import pytest
 
 from maru.organizations import programme_setup_references as source
 from maru.organizations.representation_catalog import EXECUTIVE_BOARD, MARU_OPERATORS
+
+
+@pytest.mark.parametrize("reuse_series", [False, True])
+@pytest.mark.parametrize("representation", [False, True])
+def test_locked_foundation_observes_canonical_order_and_rechecks_snapshot(
+    world, monkeypatch, reuse_series, representation
+):
+    organization, *_ = world
+    if representation:
+        represent(organization)
+    selected_series = UUID(int=2) if reuse_series else None
+    reference = load(series_id=selected_series)
+    order = []
+    monkeypatch.setattr(source, "connection", SimpleNamespace(in_atomic_block=True))
+    resolver = MagicMock(side_effect=lambda **_: (order.append("read"), reference)[1])
+    monkeypatch.setattr(source, "resolve_programme_setup_foundation", resolver)
+    organization_lock = MagicMock(
+        side_effect=lambda **_: (order.append("organization"), True)[1]
+    )
+    series_lock = MagicMock(
+        side_effect=lambda **_: (order.append("organization-series"), True)[1]
+    )
+    monkeypatch.setattr(source, "lock_organization_ownership", organization_lock)
+    monkeypatch.setattr(source, "lock_series_ownership", series_lock)
+    representations = MagicMock()
+    representations.select_for_update.side_effect = lambda **_: (
+        order.append("representation"),
+        representations,
+    )[1]
+    selected = representations.filter.return_value.order_by.return_value.values_list
+    selected.return_value.first.return_value = UUID(int=3)
+    monkeypatch.setattr(source.OrganizationRepresentation, "objects", representations)
+    result = source.lock_programme_setup_foundation(
+        organization_id=UUID(int=1),
+        series_id=selected_series,
+        expected_fingerprint=reference.fingerprint,
+    )
+    assert result is reference
+    assert order == [
+        "read",
+        *(["representation"] if representation else []),
+        "organization-series" if reuse_series else "organization",
+        "read",
+    ]
+    if reuse_series:
+        series_lock.assert_called_once_with(
+            organization_id=UUID(int=1), series_id=UUID(int=2)
+        )
+        organization_lock.assert_not_called()
+    else:
+        organization_lock.assert_called_once_with(organization_id=UUID(int=1))
+
+
+@pytest.mark.parametrize("changed", ["initial", "locked", "missing", "parent"])
+def test_locked_foundation_never_accepts_stale_or_missing_sources(
+    world, monkeypatch, changed
+):
+    reference = load()
+    altered = replace(reference, fingerprint="f" * 64)
+    monkeypatch.setattr(source, "connection", SimpleNamespace(in_atomic_block=True))
+    resolver = MagicMock(
+        side_effect={
+            "initial": [altered],
+            "locked": [reference, altered],
+            "missing": [None],
+            "parent": [reference],
+        }[changed]
+    )
+    monkeypatch.setattr(source, "resolve_programme_setup_foundation", resolver)
+    locker = MagicMock(return_value=changed != "parent")
+    monkeypatch.setattr(source, "lock_organization_ownership", locker)
+    assert (
+        source.lock_programme_setup_foundation(
+            organization_id=UUID(int=1),
+            expected_fingerprint=reference.fingerprint,
+        )
+        is None
+    )
+    if changed in {"initial", "missing"}:
+        locker.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("atomic", "fingerprint"),
+    [(False, "a" * 64), (True, ""), (True, None), (True, "A" * 64), (True, "a" * 63)],
+)
+def test_lock_request_is_rejected_before_source_discovery(
+    monkeypatch, atomic, fingerprint
+):
+    monkeypatch.setattr(source, "connection", SimpleNamespace(in_atomic_block=atomic))
+    resolver = MagicMock()
+    monkeypatch.setattr(source, "resolve_programme_setup_foundation", resolver)
+    assert (
+        source.lock_programme_setup_foundation(
+            organization_id=UUID(int=1),
+            expected_fingerprint=fingerprint,
+        )
+        is None
+    )
+    resolver.assert_not_called()
 
 
 def query_row(manager, row):

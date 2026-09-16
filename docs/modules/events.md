@@ -105,18 +105,44 @@ Registration, payment, attendance, or unrelated module record. An Active
 organization without accountable representation fails before partial child
 creation.
 
-`programme_setup_inputs` supplies only the dormant Programme setup request
-contract, not a setup command. Its three exact modes bind newly created names
+`programme_setup_inputs` supplies the dormant Programme setup request
+contract. Its three exact modes bind newly created names
 or typed reused organization/series identities and the original owner snapshot.
 It validates bounded normalized text, genuine calendar dates and Events' date
 span, IANA time zone, the first Department name through Workforce's public
 normalizer, and a required rationale. Mode-inapplicable names/IDs are rejected
 rather than silently ignored. The canonical request digest includes every
-normalized fact plus exact `programme_operations@1` intent; the eventual receipt
-must additionally bind actor/key and compare the source under owner locks.
+normalized fact plus exact `programme_operations@1` intent; the command receipt
+additionally binds actor/key and compares the source under owner locks.
 No validation result or digest grants access, creates data, registers a profile
-or establishes concurrency/replay correctness. Atomic commands remain unfinished
-under #108, with native execution deferred to #102.
+or establishes concurrency/replay correctness. Native execution remains deferred
+to #102.
+
+`programme_setup.setup_programme_foundation` is the dormant Events-owned atomic
+orchestrator. Both current profiles deny it before any database query or transaction.
+It requires an exact supported Programme v1 manifest and current active platform
+principal; a new result additionally requires exact selectable v1 and pinned setup
+integrity. Actor/key advisory serialization protects the complete receipt lookup.
+Exact retries reauthorize current Identity and return original opaque IDs without
+consulting changed foundation labels, rerunning child writes or requiring the
+retained profile still be selectable. Changed normalized intent conflicts.
+
+New work joins shared structure/authority fences before parent locks, then uses
+Organizations' locked complete source comparison. The owning public commands create
+only the selected missing foundation levels, provision a truthful Maru-operator
+root only when absent, create a new Draft edition and its first root Department,
+and retain their registered effects. Existing representation is never upgraded or
+activated. A replayed child edition without the complete setup receipt is rejected.
+A final locked Identity admission, exact child-receipt references, setup audit and
+immutable receipt all commit with the owner writes or roll back together.
+
+The private Events writer scope permits only first receipt insertion; it is not
+native authority and does not replace guards or runtime grants. Results do not
+include people, current permissions or related models. No invitation, acceptance,
+activation or operational grant is inferred. There is no mounted route/API yet;
+future adapters must independently admit requests, audit identifying previews and
+hide raw dependency errors. Early invalid/unsupported requests create no success
+audit, and a failed transaction retains no partial success evidence.
 
 ### Dormant Programme setup receipt
 
@@ -124,7 +150,7 @@ under #108, with native execution deferred to #102.
 mode and original source fingerprint, organization/series/new edition/first
 Department, truthful representation and captured version, accountable reason,
 both original owner-creation receipts and one matching setup audit. The mode
-records which foundation levels the future command creates or reuses; it does
+records which foundation levels the command creates or reuses; it does
 not infer authority or invitation acceptance. Owner commands must prove original
 intent and commit all creation/evidence atomically. A digest is not a grant.
 
@@ -136,8 +162,9 @@ current platform actor, coherent organization/representation state and original
 representation version, plus exact same-actor/key edition and Department receipts
 and matching audit scope, actor, target, correlation and channel. Existing-profile
 editions cannot receive these receipts. Updates, deletes and ordinary truncation
-are refused. The application login remains SELECT-only; the dormant model refuses
-ORM save/delete. No writer, invitation, operational grant or setup page is added.
+are refused. The application login remains SELECT-only; the model refuses ordinary
+ORM writes and all deletion. Only the private atomic-command scope can insert.
+No invitation, operational grant or setup page is added.
 
 `programme_setup_database_integrity_is_ready()` checks only this explicit owned
 relation, its complete observed schema fingerprint, exact native attachments,
@@ -518,7 +545,7 @@ dependency, a profile activation or permission to expose other edition settings.
 
 Cancellation closeout, template/configuration cloning, archive-amendment API,
 computed effective-access management, date-format preference, richer edition-
-local policy, and Programme Operations setup are not implemented. Edition
+local policy, and the guided Programme Operations setup surface are not implemented. Edition
 creation inherits only visible locale
 defaults; it does not create or publish registration or any operational
 configuration. Dormant Programme capability declarations, dormant

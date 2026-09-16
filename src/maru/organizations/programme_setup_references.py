@@ -9,12 +9,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from typing import TypedDict, cast
 from uuid import UUID
 
+from django.db import connection
+
 from .models import ConventionSeries, Organization, OrganizationRepresentation
 from .representation_catalog import representation_definition
+from .write_references import lock_organization_ownership, lock_series_ownership
 
 
 class _OrganizationRow(TypedDict):
@@ -202,3 +206,62 @@ def resolve_programme_setup_foundation(
         series_version=series["profile_version"] if series else None,
         fingerprint=fingerprint,
     )
+
+
+def lock_programme_setup_foundation(
+    *,
+    organization_id: UUID,
+    expected_fingerprint: str,
+    series_id: UUID | None = None,
+) -> ProgrammeSetupFoundationReference | None:
+    """Lock and recheck a previously admitted complete foundation snapshot.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Independently admitted exact organization.
+    expected_fingerprint : str
+        Original complete preview fingerprint, never permission.
+    series_id : UUID | None, default=None
+        Exact same-parent series when that level is reused.
+
+    Returns
+    -------
+    ProgrammeSetupFoundationReference | None
+        Current matching facts under representation, organization and series locks,
+        or unavailable. The caller must already hold shared authority fences.
+        A representation appearing after preview fails stale, without acquiring
+        its row after the parent and reversing the canonical lock order.
+    """
+    if (
+        not connection.in_atomic_block
+        or not isinstance(expected_fingerprint, str)
+        or re.fullmatch(r"[0-9a-f]{64}", expected_fingerprint) is None
+    ):
+        return None
+    initial = resolve_programme_setup_foundation(
+        organization_id=organization_id, series_id=series_id
+    )
+    if initial is None or initial.fingerprint != expected_fingerprint:
+        return None
+    if initial.representation_id is not None:
+        representation_id = (
+            OrganizationRepresentation.objects.select_for_update(of=("self",))
+            .filter(id=initial.representation_id, organization_id=organization_id)
+            .order_by()
+            .values_list("id", flat=True)
+            .first()
+        )
+        if representation_id != initial.representation_id:
+            return None
+    locked = (
+        lock_organization_ownership(organization_id=organization_id)
+        if series_id is None
+        else lock_series_ownership(organization_id=organization_id, series_id=series_id)
+    )
+    if not locked:
+        return None
+    current = resolve_programme_setup_foundation(
+        organization_id=organization_id, series_id=series_id
+    )
+    return current if current and current.fingerprint == expected_fingerprint else None

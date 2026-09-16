@@ -9,6 +9,7 @@ from uuid import UUID, uuid5
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.db import connection
 
 from maru.identity.managers import AccountManager
 from maru.identity.models import Account
@@ -18,6 +19,45 @@ if TYPE_CHECKING:
 
 MAX_LOGIN_EMAIL_LENGTH = 254
 MAX_PERSON_REFERENCE_BATCH = 2_000
+
+
+def current_platform_administrator_is_available(
+    *,
+    account_id: UUID,
+    lock: bool = False,
+) -> bool:
+    """Recheck an exact active platform principal without exposing identity fields.
+
+    Parameters
+    ----------
+    account_id : UUID
+        Opaque current principal identity, never an email or directory search.
+    lock : bool, default=False
+        Lock that principal in the caller's existing transaction after owner locks.
+
+    Returns
+    -------
+    bool
+        Whether the exact active platform account exists. This is not profile,
+        tenant-resource, lifecycle or operational-role authorization. A lock request
+        outside an atomic transaction, malformed ID or unavailable principal fails
+        closed without disclosing labels or contact information.
+    """
+    if (
+        not isinstance(account_id, UUID)
+        or account_id.int == 0
+        or not isinstance(lock, bool)
+        or (lock and not connection.in_atomic_block)
+    ):
+        return False
+    query = Account.objects.filter(
+        id=account_id,
+        is_active=True,
+        account_kind=Account.Kind.PLATFORM_ADMINISTRATOR,
+    )
+    if lock:
+        query = query.select_for_update(of=("self",))
+    return query.order_by("id").values_list("id", flat=True).first() == account_id
 
 
 def normalized_exact_login_email(value: object) -> str | None:

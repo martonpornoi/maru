@@ -162,8 +162,16 @@ Control characters and oversized input are rejected; canonical Unicode/spacing
 normalization defines exact retry comparison. The digest includes all normalized
 facts and the exact v1 Programme setup purpose. Actor and retry-key binding,
 current admission, canonical owner locking, durable receipts and atomic writes
-remain the future command's responsibility. A source fingerprint is not a grant,
+belong to Events' dormant `setup_programme_foundation` command. A source fingerprint is not a grant,
 locked snapshot, invitation acceptance or profile activation.
+
+The command denies both current profiles before database work. Its future supported
+path atomically creates the selected missing foundations, retains truthful
+representation, creates one edition and its first Department, and binds owner
+receipts/audit to the complete setup result. Exact replay requires current platform
+admission but does not repeat writes or grant access. Independently approved
+operational authority, two people's own continuation, the guided surface and the
+complete isolated fixture remain separate unfinished acceptance checkpoints.
 
 On successful activation, the accepted owner sequence is:
 
