@@ -1,7 +1,7 @@
 # Data classification and retention
 
 Status: Baseline requiring jurisdiction-specific review  
-Last updated: 2026-09-02
+Last updated: 2026-09-17
 
 This is a product and engineering control model, not legal advice. Each
 deploying organization must document its roles, purposes, lawful bases,
@@ -100,6 +100,37 @@ Identifying attachment
 lookups are omitted before anonymous review, not merely hidden afterward. The
 [file-handling contract](../operations/programme-supporting-file-handling.md)
 does not constitute storage provisioning or retention activation.
+
+### Programme operational-approval evidence
+
+Authorization owns dormant `ProgrammeRoleRequest` and `ProgrammeRoleDecisionRecord`
+under ADR 0106. Organization/edition/Department/resource IDs, recipe facts, requested
+interval, retry/digest/correlation/source facts and output links are restricted
+security decision evidence. Author, named approver, recipient and actual decision
+actor are C2 personal data; free-text rationale can raise classification and must
+contain only the bounded operational reason, never sensitive case narratives.
+No names, email copies, documents, tokens or activity stream are added.
+
+Purpose is independently accountable access administration and retained evidence
+of original intent, decision and exact granted output. Future visibility is limited
+to independently authorized scoped access administration and each exact person's
+own eligible action; neither recipient status nor visible navigation grants a
+history export. Digests and internal links are not UI labels, telemetry dimensions,
+public output or cross-purpose profiles. There is currently no mounted reader,
+writer or event/outbox producer for these records. Source audit must use the
+existing `security-extended` retention class.
+
+The organizer must establish its access-administration lawful basis and approved
+security-evidence retention/hold schedule before production collection. Seven-day
+pending expiry ends approval eligibility, not evidence retention. Decline/cancel
+append one terminal decision; later grant revocation uses canonical Authorization
+history. Corrections retain the original intent; ordinary deletion, mutation,
+truncate and populated downgrade are denied. Subject-rights export/restriction and
+eventual approved disposal need independently authorized, scoped handling without
+destroying canonical authority proof; this dormant schema grants no indefinite
+production retention or disposal permission. Restricted backups inherit the same
+purpose, access, hold and eventual expiry controls. Only synthetic test data is
+permitted until the final native/recovery/human/integrated gates are satisfied.
 
 ### Applications-owned Programme import staging
 

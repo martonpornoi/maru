@@ -141,6 +141,7 @@
   "tests/integration/test_programme_release_work_references.py": 29.955,
   "tests/integration/test_programme_setup_foundations.py": 29.955,
   "tests/integration/test_programme_setup_schema.py": 29.955,
+  "tests/integration/test_programme_role_schema.py": 29.955,
   "tests/integration/test_programme_staffing_commands.py": 120.285,
   "tests/integration/test_programme_staffing_selection.py": 60.548,
   "tests/integration/test_programme_timetable_outputs.py": 29.955,

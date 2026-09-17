@@ -113,6 +113,14 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.events_programmeadoptionsetupreceipt FROM maru_runtime, PUBLIC;
 GRANT SELECT ON TABLE public.events_programmeadoptionsetupreceipt TO maru_runtime;
 
+-- Programme operational approval evidence remains dormant under #108.
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.authorization_programmerolerequest,
+    public.authorization_programmeroledecisionrecord FROM maru_runtime, PUBLIC;
+GRANT SELECT ON TABLE
+    public.authorization_programmerolerequest,
+    public.authorization_programmeroledecisionrecord TO maru_runtime;
+
 -- Programme issue #61 installs a dormant private aggregate and its evidence
 -- schema without activating an exact adoption profile or mounting a caller.
 -- Keep every Programme relation read-only for the runtime login. The tested

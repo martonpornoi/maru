@@ -49,11 +49,51 @@ resolve canonical owners, check both current controller horizons, and ensure the
 named approver personally acts before any assignment. Seven-day pending expiry
 and non-backdated start are the accepted workflow contract, not implemented timers.
 
-The persisted request/decision schema, native guards, public workflow commands,
-own-person approval workspace and complete setup fixture remain unfinished. No new
-tables, runtime rights, audit effects or grants accompany these pure contracts.
-Native acceptance, logical recovery, human acceptance and integrated proof remain
-#102, #97, #92 and #109 gates before profile promotion.
+### Retained approval storage
+
+`ProgrammeRoleRequest` now retains immutable organization/Programme context and
+the exact target scope, recipe version/digest, author, named approver, recipient,
+optional start/end, seven-day deadline, rationale, actor/key retry identity and
+source audit. The Programme context remains mandatory even for Organization-level
+Venue authority; its actual assignment target has no edition in that case.
+`ProgrammeRoleDecisionRecord` retains one approve/decline/cancel outcome, its actual
+actor, decision/retry facts, source audit and, only for approval, the exact new role
+assignment and immutable bundle. Neither relation is a grant or invitation.
+
+Authorization migrations 0032–0034 add these relations, frozen v1 recipe guards
+and an unused-only downgrade fence. Native checks require exact current canonical
+scope and active verified people, independent approver identity, an exact seven-day
+request deadline, matching privileged audit attribution, and no approval after
+expiry, including expiry while waiting for locks. Approved output must match all
+request facts, the non-backdated effective start, original end and reason, and
+the separately attributed assignment audit. Existing authority issuance guards
+retain dual-controller lineage; these tables do not replace that mechanism.
+
+Requests and terminal decisions reject update, delete and ordinary truncate.
+Source audits and all owner references are protected. `save()`/`delete()` deny
+direct ORM persistence; no owning writer or read projection is mounted yet.
+Both tables remain runtime SELECT-only, with no new executable function allowance.
+`programme_role_readiness` checks exact relation fingerprints, source-pinned
+storage/fence migrations, native function/trigger definitions and permissions
+without querying private rows. It is purpose-scoped readiness, not authorization.
+
+For migration/recovery, stop writers and apply normal owning migrations, then
+reconcile the [runtime example](../operations/postgresql-runtime-role-provisioning.sql.example)
+before resuming any runtime login: blanket default grants must not expose these
+dormant tables. Reverse is permitted only while both relations are empty; an
+ACCESS EXCLUSIVE lock serializes that check before guards or tables are removed.
+Once either contains evidence, retain it and fix forward. Recovery must preserve
+both records, referenced audits, owner scope and canonical authority lineage.
+Never fake a recorder row, disable guards, delete intent or rebaseline changed
+metadata to make readiness pass. Logical recovery remains #97 work.
+
+The approved PostgreSQL 17.11 empty-schema observation passed exact metadata and
+pinned readiness. This is not native behavior, reverse, runtime-role, concurrency
+or workflow acceptance. Maintained native tests remain uncollected/unexecuted.
+Public workflow commands, current source/horizon checks, genuine-person approval
+workspace and the complete fixture are still unfinished. No route, API, automatic
+notification, domain event, grant or profile activation is introduced here.
+Native, logical recovery, human and integrated proof remain #102/#97/#92/#109 gates.
 
 ## Authority and profile boundaries
 
