@@ -48,6 +48,7 @@ from maru.authorization.programme_role_inputs import (
     ProgrammeRoleIntent,
     ProgrammeRoleScope,
 )
+from maru.authorization.programme_role_queries import load_programme_role_workspace
 from maru.authorization.programme_role_readiness import (
     PROGRAMME_ROLE_RELATIONS,
     PROGRAMME_ROLE_SCHEMA_SHA256,
@@ -132,6 +133,112 @@ def _command_decision(world, original, **changes):
             "source_channel": "test",
             **changes,
         }
+    )
+
+
+@pytest.mark.parametrize("person_index", [2, 3])
+def test_actual_own_request_reader_is_audited_and_ceilinged(
+    command_world, person_index
+):
+    original = _command_request(command_world)
+    trace = uuid4()
+    result = load_programme_role_workspace(
+        actor=command_world[person_index],
+        scope=_command_scope(command_world),
+        request_id=original.request_id,
+        correlation_id=trace,
+    )
+    assert len(result.requests) == 1
+    row = result.requests[0]
+    assert row.request_id == original.request_id
+    assert row.recipient_id == command_world[4].id
+    assert row.state == "pending"
+    assert row.can_cancel == (person_index == 2)
+    assert row.can_approve == (person_index == 3)
+    assert not hasattr(row, "idempotency_key")
+    assert not hasattr(row, "source_audit_id")
+    audit = AuditEvent.objects.get(
+        correlation_id=trace, operation="authorization.programme_role.review"
+    )
+    assert audit.principal_id == command_world[person_index].id
+    assert audit.safe_metadata["target_count"] == 1
+
+
+def test_actual_recipient_with_controller_authority_cannot_read_someone_elses_intent(
+    command_world,
+):
+    original = _command_request(command_world)
+    grant_capability_direct(
+        actor=command_world[2],
+        approver=command_world[3],
+        recipient=command_world[4],
+        capability_code="authorization.manage_roles",
+        target=resolve_edition_target(
+            organization_id=command_world[0].id,
+            edition_id=command_world[1].id,
+        ),
+        effective_from=timezone.now(),
+        expires_at=None,
+        reason="Synthetic unrelated controller.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    assert (
+        load_programme_role_workspace(
+            actor=command_world[4],
+            scope=_command_scope(command_world),
+            correlation_id=uuid4(),
+        ).requests
+        == ()
+    )
+    with pytest.raises(AuthorizationDenied):
+        load_programme_role_workspace(
+            actor=command_world[4],
+            scope=_command_scope(command_world),
+            request_id=original.request_id,
+            correlation_id=uuid4(),
+        )
+
+
+def test_actual_foreign_scope_reader_cannot_release_known_request(command_world):
+    original = _command_request(command_world)
+    foreign = _foundation("programme_operations")
+    with pytest.raises(AuthorizationDenied):
+        load_programme_role_workspace(
+            actor=foreign[2],
+            scope=_command_scope(foreign),
+            request_id=original.request_id,
+            correlation_id=uuid4(),
+        )
+
+
+def test_actual_read_of_revoked_approved_output_is_historical_only(command_world):
+    original = _command_request(command_world)
+    approved = _command_decision(command_world, original)
+    revoke_role_assignment(
+        actor=command_world[2],
+        target=resolve_edition_target(
+            organization_id=command_world[0].id,
+            edition_id=command_world[1].id,
+        ),
+        assignment_id=approved.role_assignment_id,
+        reason="Synthetic ended output.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    before = RoleAssignment.objects.count()
+    result = load_programme_role_workspace(
+        actor=command_world[3],
+        scope=_command_scope(command_world),
+        request_id=original.request_id,
+        correlation_id=uuid4(),
+    ).requests[0]
+    assert result.state == "approve"
+    assert result.role_assignment_id == approved.role_assignment_id
+    assert not result.can_approve
+    assert RoleAssignment.objects.count() == before
+    assert (
+        RoleAssignment.objects.get(id=result.role_assignment_id).revoked_at is not None
     )
 
 

@@ -1,0 +1,49 @@
+{% extends "admin/base_site.html" %}
+{% load static tz %}
+{% block title %}Programme access review · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}"><link rel="stylesheet" href="{% static 'authorization/programme_role.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'programme/workbench.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Administration / Programme access review</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench programme-access">
+  <h1>Programme access review</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Own requests · {{ workspace.scope_label }}</summary>
+    <p>Your current persistent controller authority permits this exact scope. Only requests you authored or were named to decide are shown. Recipient status, platform administration and a link do not grant this access.</p>
+    <p>Each decision checks current people, scope, role and both controllers' authority again. A visible control is not a promise of approval.</p>
+  </details>
+  <p><strong>Programme context:</strong> {{ workspace.context_label }}</p>
+  <p><strong>Actual grant scope:</strong> {{ workspace.scope_label }} · {{ scope_level|title }}</p>
+  {% if scope_level == "organization" %}<p class="baseline-notice">This request concerns shared organization-wide Venue facts, not just this edition. Ending an edition does not itself revoke this broader access.</p>{% endif %}
+  <p>A request grants nothing. An approver must make their own decision; accepting a representation invitation is not approval of this access. All times below are UTC.</p>
+  {% if message %}<div class="baseline-notice" role="alert" tabindex="-1" autofocus><p>{{ message }}</p></div>{% endif %}
+  {% if selected %}<p><a href="{{ root_url }}">Back to my open requests in this scope</a></p>{% else %}
+  <p>Complete open inventory for this scope, up to 100 unexpired undecided requests. This is not a history export. Keep original request links to revisit expired or decided requests while you remain authorized.</p>{% endif %}
+  {% timezone "UTC" %}
+  <ul class="programme-cards">{% for row in workspace.requests %}<li>
+    <h2>{% if not selected %}<a href="{{ root_url }}{{ row.request_id }}/">{{ row.recipe.name }} for {{ row.recipient_name }}</a>{% else %}{{ row.recipe.name }} for {{ row.recipient_name }}{% endif %}</h2>
+    <p><strong>State:</strong> {{ row.state_label }} · Exact role version {{ row.recipe.version }}</p>
+    <p>{{ row.recipe.purpose }}</p>
+    <dl><dt>Requested by</dt><dd>{{ row.author_name }}</dd><dt>Independent approver</dt><dd>{{ row.approver_name }}</dd><dt>Recipient</dt><dd>{{ row.recipient_name }}</dd>
+    <dt>Requested</dt><dd>{{ row.requested_at|date:"Y-m-d H:i:s" }} UTC</dd><dt>Approval deadline</dt><dd>{{ row.approval_deadline|date:"Y-m-d H:i:s" }} UTC</dd>
+    <dt>Earliest start</dt><dd>{% if row.not_before %}{{ row.not_before|date:"Y-m-d H:i:s" }} UTC, or actual approval if later{% else %}Actual approval time; never backdated{% endif %}</dd>
+    <dt>Requested end</dt><dd>{% if row.expires_at %}{{ row.expires_at|date:"Y-m-d H:i:s" }} UTC{% else %}Unbounded only if both current controllers' horizons permit it{% endif %}</dd>
+    <dt>Access rationale</dt><dd class="programme-text">{{ row.reason }}</dd></dl>
+    {% if selected %}
+    <details><summary>Exact capabilities and person references</summary><ul>{% for code in row.recipe.capability_codes %}<li><code>{{ code }}</code></li>{% endfor %}</ul><p>Author {{ row.author_id }} · Approver {{ row.approver_id }} · Recipient {{ row.recipient_id }}</p><p>These references distinguish people with identical names. They do not grant access or form a directory.</p></details>
+    {% endif %}
+    {% if row.state == "expired" %}<p>This request can no longer be approved. No grant was made by expiry; a new request is required for new intent.</p>{% endif %}
+    {% if row.decided_at %}<p><strong>Retained decision:</strong> {{ row.state_label }} at {{ row.decided_at|date:"Y-m-d H:i:s" }} UTC.</p><p class="programme-text">{{ row.decision_reason }}</p>
+    {% if row.role_assignment_id %}<p>Historical assignment reference: {{ row.role_assignment_id }}. This does not establish current effective access; it may have expired or been revoked. Reloading never regrants it.</p>{% else %}<p>This decision granted no access.</p>{% endif %}{% endif %}
+  </li>{% empty %}<li>No open requests you authored or were assigned to decide in this exact scope. This does not imply there are no requests elsewhere.</li>{% endfor %}</ul>
+  {% endtimezone %}
+  {% if form %}<section class="baseline-panel" aria-labelledby="programme-access-decision"><h2 id="programme-access-decision">Record your own decision</h2>
+    {% if selected.can_cancel %}<p>You can cancel your own request, not approve it for the named person.</p>{% else %}<p>Approve only after checking the exact recipient, scope, capabilities and interval. Declining creates no grant. Approval commits the owner assignment and retained decision together.</p>{% endif %}
+    {% if selected.state == "expired" %}<p>Only cancellation or decline remains available. An approval attempt will be refused.</p>{% endif %}
+    <p data-programme-dirty hidden role="status">Unsaved decision input. Leaving this page discards it; nothing is submitted automatically.</p>
+    <form method="post" action="{{ request.path }}" data-programme-command{% if form.errors %} data-programme-pending="true"{% endif %}>{% csrf_token %}{{ form.as_div }}<button type="submit">Submit my decision</button></form>
+  </section>{% elif selected %}<p>No new decision controls are available for this retained state.</p>{% endif %}
+</div>
+{% endblock %}

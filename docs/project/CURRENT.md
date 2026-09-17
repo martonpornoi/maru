@@ -11,132 +11,61 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme approval storage's canonical audit correction is delivered through
-[PR #157](https://github.com/martonpornoi/maru/pull/157), protected squash
-`6fe0c3131635ddf183e1df9ccd2147d2f8aaa1b4` at 2026-09-17 17:42:12 UTC.
-Its tree equals certified head `f890f27993298d7482df8a87c15ed6390d591fe5`;
-clean local main matched origin/main and that result. All eight retained local
-gates passed in 6m38s, including 9,323 units in 68.53s and 103 frontend tests.
-Hosted quality took 11m54s and units 2m01s; exact-head PR gate and CodeQL passed.
-PostgreSQL suites were explicitly deferred, not certified. No grant, command,
-route or profile was activated. See the
-[protected evidence](../checkpoints/2026-09-17-programme-approval-audit-protected-delivery.md).
-The retained storage foundation itself remains delivered through PR #156;
-do not restart either increment.
+Dormant actual-person Programme approval commands are delivered through
+[PR #158](https://github.com/martonpornoi/maru/pull/158), protected squash
+`bea4d9460d8acc41c9e82990c568a3348ad3a6b2` at 2026-09-17 20:55:01 UTC.
+Its tree equals certified head `04e65726b07e9eabf43762c1d6f1f576aa6d43a6`;
+clean local main matched origin/main and the protected result. All eight
+retained local gates passed in 6m27s, including 9,423 units in 68.22s and
+103 frontend cases. Hosted quality took 11m45s and units 2m08s; exact-head PR
+gate and CodeQL passed. PostgreSQL was deferred, not certified. See the
+[protected evidence](../checkpoints/2026-09-17-programme-approval-commands-protected-delivery.md).
 
-Atomic Programme foundation setup remains delivered through PR #154, squash
-`7441d35243321bd5adbe4b015db01a7c93c07aa9`. Its schema file maintains 36
-uncollected/unexecuted cases, alongside PR #152's six reference cases. Preserve the
-[setup evidence](../checkpoints/2026-09-17-programme-atomic-setup-protected-delivery.md).
+Preserve the delivered chain: #152/#153 setup inputs/references/storage,
+#154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
+approval storage, #157 canonical independent-audit correction and #158 actual
+request/decision commands. These do not activate either current profile.
+The [setup evidence](../checkpoints/2026-09-17-programme-atomic-setup-protected-delivery.md)
+and [approval schema evidence](../checkpoints/2026-09-17-programme-operational-approval-schema.md)
+retain the separately approved schema-only observations and native debt.
+No prerequisite in that chain needs restarting.
 
+## Current work: own-person approval review (#108)
+
+Branch: `codex/programme-operational-approval-workspace`, from protected PR #158.
+The local implementation adds a bounded, audited own-request reader and reserved
+shared-shell approval/decline/cancel controls. Current persistent controller
+authority and the full tenant/context/target chain precede disclosure; being a
+recipient or platform administrator is insufficient. Exact recipe consequences,
+scope, verified display labels, interval, rationale and historical decisions are
+visible without a contact directory, retry keys or source evidence. Post-render
+source/authority changes suppress the prepared private page. No schema, runtime
+privilege, current-profile or production-route change.
+
+Complete database-free feedback passed 9,509 tests in 69.65s; strict mypy passed
+all 707 source files. Ruff and documentation checks passed. Synthetic
+database-prohibited browser rehearsal
+covered inventory/detail, approval/decline/cancel, expiry/history, conflict input
+and retry retention, denial and dependency failure. All seven required widths
+had no page overflow; decision controls are 44 pixels after a browser-found fix.
+Keyboard confirmation kept focus visible. This is mocked component evidence,
+not native independent approval, actual 200% zoom, screen-reader or two-human
+acceptance. Five new maintained native reader cases remain uncollected/unexecuted.
+See the [workspace checkpoint](../checkpoints/2026-09-17-programme-operational-approval-workspace.md).
+
+Next: finish exact-commit/protected delivery, then guided
+foundation/representation continuation and creation of operational requests through
+the existing commands. Preserve truthful roots and two people's own acceptances.
+A selected approver email is never their decision; no catch-all role may replace
+Department, Edition, Organization Venue or exact-room scope. ADR 0106 is unchanged.
+Then finish coherent navigation and the complete isolated synthetic fixture.
 The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
-defines twelve checkpoints, distinct sessions, isolation/excluded-effect proof,
-failure/recovery/stop-use, human/accessibility tasks and exact-source evidence.
-It is preparation, not an executable integrated fixture or accepted journey.
-Earlier [PR #150](https://github.com/martonpornoi/maru/pull/150) delivered supporting-file
-controls; its [checkpoint](../checkpoints/2026-09-16-programme-file-controls-protected-delivery.md)
-retains exact native-deferred and synthetic-browser limits. Do not restart it.
+defines twelve checkpoints; it is not an executable or accepted complete fixture.
+#108/#48 remain open and final promotion waits for #102/#97/#92/#109.
 
-## Current work: scoped operational authority and setup continuation (#108)
-
-Branch: `codex/programme-operational-approval-commands`, from protected PR #157.
-Delivered Events setup composes public owner commands in one atomic transaction, with exact-profile
-denial before database work, fresh Identity admission, actor/key serialization,
-canonical locked foundation comparison, complete-receipt replay and final locked
-authority recheck. One new edition/first Department, truthful representation and
-all owner/setup evidence commit together. Child replay cannot substitute for a
-complete setup receipt. Current profiles and runtime SELECT-only remain unchanged;
-the private receipt writer grants no invitation, authority, route or activation.
-
-The next implementation must preserve the fixed accountable representation root
-and use separately approved immutable operational roles. Department call/review,
-edition Programme/planning, organization Venue facts and exact-resource physical
-approval have different scope ceilings; no catch-all role can substitute for them.
-Actual distinct controllers must submit their own intent/approval after genuine
-representation acceptance and activation. Existing generic approver-email selection
-is not proof of that person's own action. Ordinary authority requires persistent
-current controller sources, not generic platform policy or an accepted invitation.
-ADR 0106 records this design. Delivered PR #155 adds 27 immutable optional
-role recipes and closed normalized request/decision inputs with exact digests.
-The owned catalog registers definitions without admitting them to either current
-profile. PR #155's exact-commit retained certification and protected delivery passed.
-
-Delivered PR #156 adds Authorization-owned immutable request/terminal-decision
-storage, native guards, source/schema-pinned data-free readiness, runtime SELECT-only
-provisioning, and maintained native tests. Both current profiles remain unchanged;
-direct ORM writes are refused and no command, route, API or grant is introduced.
-After review, the finalized empty-schema metadata observation passed in 2m33s,
-including pinned readiness. Both exact task-owned disposable containers were removed;
-logs remain and no user container or persistent volume was touched. This is not
-native behavior, reverse/rollback, runtime-role or workflow acceptance. See the
-[schema checkpoint](../checkpoints/2026-09-17-programme-operational-approval-schema.md).
-
-The maintainer approved necessary bounded disposable schema-only checks within #48.
-That does not advance PostgreSQL suites ahead of final #102 or authorize profile
-activation, production changes or unrelated resources. Keep additions limited to
-accepted necessities and existing owner mechanisms. Full database-free feedback
-passed 9,321 units in 55.00s; final schema/provisioning feedback passed 36 cases.
-Types, documentation and static migration drift passed. Fresh exact-commit and
-protected delivery evidence is recorded above; no schema work needs restarting.
-
-Next complete independently approved atomic authority commands, genuine-person
-continuation, guided UI and the actual isolated
-fixture. Preserve existing truthful representation and immutable `maru-operators@1`,
-two distinct eligible people's own acceptances, Department-scoped call/review
-versus edition-scoped planning, and independently approved additional authority.
-Do not infer authority from a source fingerprint or an earlier invitation.
-
-Owner-command integration review found a fail-closed prerequisite defect before
-that implementation: the native decision guard expects the author's unsuffixed
-assignment operation for independent-approver evidence, but the canonical owner
-correctly emits `authorization.role.assign.approve`. PR #157 fixed this forward
-in migration 0035 without editing published migrations or accepting an author's
-audit as approval. It adds source-pinned readiness composition, a producer/consumer unit
-regression and retained migration/reverse debt. No public command or route is
-activated. Full database-free feedback passed 9,323 tests in 66.35s; the approved
-empty-schema observation passed composed readiness in 191.313s, with no table-shape
-change. Its exact disposable container was removed. See the
-[repair evidence](../checkpoints/2026-09-17-programme-approval-audit-repair.md).
-Fresh exact-commit/protected delivery passed as recorded above. Continue the actual
-approval writer, not another schema rewrite: join shared authority fences, lock
-canonical owners/request/people, check current persistent controller horizons,
-reuse or create the exact historical role through the existing owner command,
-and commit assignment/provenance/effects/decision/audit atomically. Current profiles
-and runtime SELECT-only remain unchanged; preserve genuine own-person action and
-exact retained replay. The continuation now implements `request_programme_role`
-and `decide_programme_role`: original intent grants nothing; the actual named
-approver commits a reviewed exact owner assignment and retained decision atomically.
-Decline/cancel grants nothing. Exact retries require current persistent actor
-authority and return only original IDs, never renewed or regranted access.
-The branch leaves profiles, runtime privileges and published migrations unchanged.
-Complete inexpensive unit feedback passed 9,408 cases in 66.86s; the final two
-typed-resource negatives and command/boundary focus passed 87 cases in 0.50s.
-The first full attempt hit pytest's inaccessible shared Windows temp folder;
-the successful complete rerun used a fresh repository-owned temp directory with
-no skipped cases or permission changes. Types and documentation checks passed.
-Twelve maintained native command cases remain uncollected/unexecuted. No schema or
-Docker work was needed. See the [command checkpoint](../checkpoints/2026-09-17-programme-operational-approval-commands.md).
-Next finish clean exact-commit certification/protected delivery, then protected
-approval readers, genuine-person guided setup and the isolated integrated fixture.
-
-PR #158 is draft for final retry-query hardening. Its earlier exact head `c402066`
-passed all eight retained local gates in 6m19s (9,410 units, 103 frontend), but that
-receipt does not certify the follow-up. Retained-row lookups now pin the full
-tenant/context/target chain; global key collisions are classified from the native
-unique constraint without reading another scope's receipt. Focused feedback passed
-100 command/boundary cases; complete feedback passed 9,423 units in 67.12s, along
-with types and documentation checks. Fresh exact certification remains required
-before the new head is marked ready. No schema or policy change.
-
-Keep current profiles unchanged; final promotion waits for #102/#97/#92/#109.
-Delivered item, Applications, reference/file, timetable/release/staffing, notice
-and continuity connections remain implemented. #108's overall outcome and #48
-stay open for setup and all final acceptance gates.
-
-Non-blocking tooling follow-up after #48: the semantic docstring validator's
-no-argument defaults are strings rather than `Path` objects; its maintained explicit
-`src scripts` invocation passes. The reader checkpoint records the failed diagnostic
-and correct rerun; do not expand this delivery into unrelated tooling cleanup.
+Non-blocking follow-up after #48: the semantic docstring validator's no-argument
+defaults are strings rather than Paths; its maintained explicit `src scripts`
+invocation passes. Keep this separate from Programme delivery.
 
 ## Remaining #48 delivery decomposition
 

@@ -162,10 +162,55 @@ binds all scope identities and exact versioned contents; labels and fingerprints
 never establish authority. Definitions/inputs and dormant immutable request/terminal
 decision storage with native integrity/readiness are implemented. The dormant
 owning request and actual-person decision commands now compose the existing
-dual-control role commands atomically. Protected projections and guided controls
-remain unfinished; current profiles are unchanged. Storage alone cannot prove a
+dual-control role commands atomically. Protected own-request projections and
+decision controls are implemented dormant; guided request creation and foundation
+continuation remain unfinished. Current profiles are unchanged. Storage alone cannot prove a
 person's action or grant access.
 See the [owning contract](../../modules/authorization.md#dormant-programme-operational-role-contracts).
+
+### Scoped operational approval workspace
+
+The reserved `/admin/programme/access/` route family is isolated-fixture-only
+until final promotion. Its route carries the exact organization, Programme
+edition and explicit Organization, Edition, Department or selected-room target.
+The shared Administration shell labels both the Programme context and actual
+grant scope. Organization-wide Venue access is explicitly broader than one
+edition. Route identifiers are locators, never grants or primary task labels.
+
+Only a current ordinary persistent controller with `authorization.manage_roles`
+may read their own authored or named-approver requests in that exact scope.
+Platform fallback, being the recipient, or knowing a request ID is insufficient.
+The read ceiling contains independently authorized scope labels; active verified
+person display labels (otherwise a neutral unavailable-person label); the exact
+recipe, capabilities, interval and reason; and retained decision facts. It
+excludes email/contact directories, other requests, retry keys, source audits,
+controller provenance and unrelated product content. Sensitive reads, including
+an authorized empty inventory, are audited before disclosure.
+
+The inventory is the complete bounded set of up to 100 currently unexpired,
+undecided requests authored by or assigned to this person in this scope. It is
+not a history export. Overflow releases no partial list. Original receipt links
+remain the route to exact expired or terminal requests while current authority
+continues to permit them. Request detail never claims a retained approved
+assignment is still effective. Every request grants nothing until its own
+independent approval; representation acceptance is not that approval.
+
+The named approver can personally approve or decline; the original author can
+cancel. An expired request cannot be approved. Reason, explicit confirmation and
+the original retry identity bind a submitted action. Changed intent and competing
+decisions conflict; retries recover the original result, never regrant access.
+Strict input and CSRF protect POSTs. Validation/conflict/dependency failures keep
+safe original input and retry identity while fresh protected reads still permit
+disclosure, without automatic resubmission. A loss of
+authority or changed rendered source suppresses private output. Empty, expired,
+terminal, denied, unavailable and overflow states explain the next safe action.
+
+The screen uses one H1/main, the shared Access explanation, ordinary labelled
+forms, keyboard-visible focus, stacked narrow cards and pending-input protection.
+Synthetic component rehearsal is not native independent-approval proof or human
+acceptance; #102/#92/#109 retain those gates. Foundation creation, invitation
+acceptance and the guided creation of new operational requests remain subsequent
+continuations, not implied by this review screen.
 
 ### Original setup intent
 
