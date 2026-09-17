@@ -11,6 +11,12 @@ from django.db import models
 from django.utils import timezone
 
 from maru.authorization.catalog import ScopeLevel, capability
+from maru.authorization.programme_role_models import (
+    ProgrammeRoleDecisionRecord as ProgrammeRoleDecisionRecord,  # noqa: PLC0414 - Django discovery and typed public model
+)
+from maru.authorization.programme_role_models import (
+    ProgrammeRoleRequest as ProgrammeRoleRequest,  # noqa: PLC0414 - Django discovery and typed public model
+)
 from maru.core.models import UUIDTimeStampedModel
 from maru.identity.policies import validate_convention_subject
 from maru.organizations.representation_catalog import (

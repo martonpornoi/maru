@@ -11,16 +11,20 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Atomic Programme foundation setup is delivered through
-[PR #154](https://github.com/martonpornoi/maru/pull/154), protected squash
-`7441d35243321bd5adbe4b015db01a7c93c07aa9` at 2026-09-16 22:03:02 UTC.
-Its tree equals certified head `e531f074a3776e32fc951122d7065d8b0c038055`;
+Scoped Programme role definitions and closed approval intents are delivered through
+[PR #155](https://github.com/martonpornoi/maru/pull/155), protected squash
+`86c287fef80080ad69eb4f1cd3023f7b2fcdea7c` at 2026-09-16 22:53:39 UTC.
+Its tree equals certified head `b8cb5de1ec359dc40138ddf52439b208462e613f`;
 clean local main matched origin/main and that result. All eight retained local
-gates passed in 6m41s, including 9,197 units in 73.56s and 103 frontend tests.
-Hosted quality took 12m22s and units 1m59s; PR gate and CodeQL passed. PostgreSQL
-was explicitly deferred, not certified. The setup schema file now maintains 36
-uncollected/unexecuted cases, alongside PR #152's six reference cases. See the
-[protected evidence](../checkpoints/2026-09-17-programme-atomic-setup-protected-delivery.md).
+gates passed in 5m22s, including 9,298 units in 55.36s and 103 frontend tests.
+Hosted quality took 11m42s and units 2m04s; PR gate and CodeQL passed. PostgreSQL
+was explicitly deferred, not certified. No grant, table, route or profile was added.
+See the [protected evidence](../checkpoints/2026-09-17-programme-operational-role-protected-delivery.md).
+
+Atomic Programme foundation setup remains delivered through PR #154, squash
+`7441d35243321bd5adbe4b015db01a7c93c07aa9`. Its schema file maintains 36
+uncollected/unexecuted cases, alongside PR #152's six reference cases. Preserve the
+[setup evidence](../checkpoints/2026-09-17-programme-atomic-setup-protected-delivery.md).
 
 The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
 defines twelve checkpoints, distinct sessions, isolation/excluded-effect proof,
@@ -32,7 +36,7 @@ retains exact native-deferred and synthetic-browser limits. Do not restart it.
 
 ## Current work: scoped operational authority and setup continuation (#108)
 
-Branch: `codex/programme-operational-authority`, from protected PR #154.
+Branch: `codex/programme-operational-approval-schema`, from protected PR #155.
 Delivered Events setup composes public owner commands in one atomic transaction, with exact-profile
 denial before database work, fresh Identity admission, actor/key serialization,
 canonical locked foundation comparison, complete-receipt replay and final locked
@@ -49,23 +53,31 @@ Actual distinct controllers must submit their own intent/approval after genuine
 representation acceptance and activation. Existing generic approver-email selection
 is not proof of that person's own action. Ordinary authority requires persistent
 current controller sources, not generic platform policy or an accepted invitation.
-ADR 0106 records this design. The current candidate adds 27 immutable optional
+ADR 0106 records this design. Delivered PR #155 adds 27 immutable optional
 role recipes and closed normalized request/decision inputs with exact digests.
 The owned catalog registers definitions without admitting them to either current
-profile. This is not an implemented grant, request schema, surface or fixture.
-Database-free iteration passed 9,297 units in 55.41s and strict types for 698 files;
-focused recipe/input/adoption checks passed 117 cases. Fresh exact-commit retained
-certification and protected delivery are still pending for this candidate.
+profile. PR #155's exact-commit retained certification and protected delivery passed.
 
-The explicitly approved disposable schema-only observation completed in 3m22s:
-forward migration and exact native metadata passed; the pinned readiness wrapper
-returned true. This is not native test, reverse/rollback, runtime-role or workflow
-acceptance. The exact task container and temporary database were removed, with
-logs retained; no user container or persistent volume was touched. PostgreSQL
-suites remain deferred and all final acceptance gates remain open.
+The current candidate adds Authorization-owned immutable request/terminal-decision
+storage, native guards, source/schema-pinned data-free readiness, runtime SELECT-only
+provisioning, and maintained native tests. Both current profiles remain unchanged;
+direct ORM writes are refused and no command, route, API or grant is introduced.
+After review, the finalized empty-schema metadata observation passed in 2m33s,
+including pinned readiness. Both exact task-owned disposable containers were removed;
+logs remain and no user container or persistent volume was touched. This is not
+native behavior, reverse/rollback, runtime-role or workflow acceptance. See the
+[schema checkpoint](../checkpoints/2026-09-17-programme-operational-approval-schema.md).
 
-Next complete independently approved authority, genuine-person continuation,
-guided UI and the actual isolated
+The maintainer approved necessary bounded disposable schema-only checks within #48.
+That does not advance PostgreSQL suites ahead of final #102 or authorize profile
+activation, production changes or unrelated resources. Keep additions limited to
+accepted necessities and existing owner mechanisms. Full database-free feedback
+passed 9,321 units in 55.00s; final schema/provisioning feedback passed 36 cases.
+Types, documentation and static migration drift passed. Fresh clean exact-commit
+certification and protected delivery of this schema increment remain pending.
+
+Next complete independently approved atomic authority commands, genuine-person
+continuation, guided UI and the actual isolated
 fixture. Preserve existing truthful representation and immutable `maru-operators@1`,
 two distinct eligible people's own acceptances, Department-scoped call/review
 versus edition-scoped planning, and independently approved additional authority.
@@ -127,7 +139,8 @@ Maintain PostgreSQL tests, historical inventories and migration/recovery fixture
 as features change, but neither collect nor execute PostgreSQL suites during
 this dormant development phase. Record changed unexecuted scenarios as #102 debt;
 do not invent native weights, timings, coverage or success. The completed #104
-schema-only exception is not standing authority for another schema check.
+schema-only exception was scoped to #104; the maintainer's later #48 approval now
+permits necessary bounded disposable schema-only checks, never suite execution.
 
 Run complete inexpensive database-free unit feedback during iteration, then fresh
 clean exact-commit development certification before each protected PR. Follow

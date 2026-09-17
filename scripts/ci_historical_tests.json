@@ -1,4 +1,9 @@
 {
+  "tests/integration/test_programme_role_schema.py": {
+    "owners": ["audit", "authorization", "events", "identity", "organizations", "venues", "workforce"],
+    "shared_baseline": false,
+    "tests": ["test_unused_approval_schema_reverses_and_reapplies"]
+  },
   "tests/integration/test_programme_setup_schema.py": {
     "owners": ["audit", "events", "identity", "organizations", "workforce"],
     "shared_baseline": false,

@@ -9,20 +9,18 @@ and no native guard is disabled. Pytest rolls back the DDL and rows together.
 
 from dataclasses import replace
 from datetime import date
-from enum import StrEnum
 from importlib import import_module
 from uuid import uuid4
 
 import pytest
 from django.apps import apps
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import IntegrityError, connection, models, transaction
+from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
-from maru.events import adoption
 from maru.events import programme_setup as setup_command
 from maru.events.models import (
     EditionCreationReceipt,
@@ -48,13 +46,16 @@ from maru.organizations.services import (
 )
 from maru.workforce.structure_commands import create_department
 from tests.factories import AccountFactory
+from tests.support.programme_schema import (
+    admit_transaction_local_schema_candidate,
+)
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
 @pytest.fixture
 def command_request(monkeypatch):
-    _admit_transaction_local_schema_candidate(monkeypatch)
+    admit_transaction_local_schema_candidate(monkeypatch)
     return {
         "actor": AccountFactory(is_staff=True, is_superuser=True),
         "idempotency_key": uuid4(),
@@ -244,72 +245,11 @@ def test_atomic_command_default_profile_is_zero_query_denial(django_assert_num_q
         )
 
 
-class _SchemaCandidateCode(StrEnum):
-    FULL_CONVENTION = "full_convention"
-    WORKFORCE_ONLY = "workforce_only"
-    PROGRAMME_OPERATIONS = "programme_operations"
-
-
-def _admit_transaction_local_schema_candidate(monkeypatch):
-    candidate = replace(
-        adoption.ADOPTION_PROFILES[("workforce_only", 1)],
-        code=_SchemaCandidateCode.PROGRAMME_OPERATIONS,
-    )
-    monkeypatch.setattr(adoption, "AdoptionProfileCode", _SchemaCandidateCode)
-    monkeypatch.setattr(
-        adoption,
-        "ADOPTION_PROFILES",
-        {
-            **adoption.ADOPTION_PROFILES,
-            ("programme_operations", 1): candidate,
-        },
-    )
-    monkeypatch.setattr(
-        adoption,
-        "SELECTABLE_ADOPTION_PROFILE_KEYS",
-        {
-            **adoption.SELECTABLE_ADOPTION_PROFILE_KEYS,
-            _SchemaCandidateCode.PROGRAMME_OPERATIONS: ("programme_operations", 1),
-        },
-    )
-    field = EventEdition._meta.get_field("adoption_profile_code")
-    monkeypatch.setattr(
-        field,
-        "choices",
-        [*field.choices, ("programme_operations", "Schema candidate only")],
-    )
-    constraint = next(
-        value
-        for value in EventEdition._meta.constraints
-        if value.name == "edition_adoption_profile_supported"
-    )
-    monkeypatch.setattr(
-        constraint,
-        "condition",
-        constraint.condition
-        | models.Q(
-            adoption_profile_code="programme_operations",
-            adoption_profile_version=1,
-        ),
-    )
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "ALTER TABLE events_eventedition "
-            "DROP CONSTRAINT edition_adoption_profile_supported"
-        )
-        cursor.execute("""
-            ALTER TABLE events_eventedition
-            ADD CONSTRAINT edition_adoption_profile_supported
-            CHECK (adoption_profile_version = 1 AND adoption_profile_code IN
-                   ('full_convention', 'workforce_only', 'programme_operations'))
-        """)
-
-
 @pytest.fixture
 def receipt_world(monkeypatch, request):
     profile_code = getattr(request, "param", "programme_operations")
     if profile_code == "programme_operations":
-        _admit_transaction_local_schema_candidate(monkeypatch)
+        admit_transaction_local_schema_candidate(monkeypatch)
     actor = AccountFactory(is_staff=True, is_superuser=True)
     key, correlation, receipt_id = uuid4(), uuid4(), uuid4()
     reason = "Prepare a synthetic first Programme Department."

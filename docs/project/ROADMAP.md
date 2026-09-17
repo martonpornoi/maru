@@ -856,6 +856,9 @@ output; #100 adds independently authorized room, Department and edition operator
 run sheets under ADR 0099. #104 adds governed change communication and exact-self
 acknowledgement under ADR 0102. #107 delivers on-site continuity; #108's dormant
 guided item, Applications, review, file and owner-task connections are delivered.
+Atomic setup, optional scoped role definitions and retained independent-approval
+storage are dormant foundations. Actual-person approval commands, guided setup
+continuation and the complete isolated fixture remain unfinished.
 These remain components, not an activated departmental workflow. Next are
 accountable setup and a complete isolated fixture, followed by #102 restored
 database acceptance, #97 logical recovery, #92 human acceptance and #109 joined
