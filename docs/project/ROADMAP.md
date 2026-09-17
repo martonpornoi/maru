@@ -860,8 +860,10 @@ Atomic setup, optional scoped role definitions and retained independent-approval
 storage are dormant foundations. Actual-person request/decision commands now
 compose exact existing authority owners; their native acceptance is deferred.
 Protected own-request readers and actual-person review controls are implemented
-dormant. Guided setup/request creation and the complete isolated fixture remain
-unfinished; component browser evidence does not replace native/human acceptance.
+dormant. The guided foundation creation/reuse screen and original-actor receipt
+now hand off to existing truthful representation controls. Guided operational
+request creation and the complete isolated fixture remain unfinished; component
+browser evidence does not replace native/human acceptance.
 These remain components, not an activated departmental workflow. Next are
 accountable setup and a complete isolated fixture, followed by #102 restored
 database acceptance, #97 logical recovery, #92 human acceptance and #109 joined

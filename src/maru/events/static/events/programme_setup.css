@@ -1,0 +1,38 @@
+.programme-setup button,
+.programme-setup select,
+.programme-setup input:not([type="hidden"]):not([type="checkbox"]) {
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  max-width: 100%;
+}
+
+.programme-setup button {
+  font: inherit;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: var(--button-bg);
+  color: var(--button-fg);
+  cursor: pointer;
+}
+
+.programme-setup input[type="date"] {
+  background: var(--body-bg);
+  color: var(--body-fg);
+  border: 1px solid var(--hairline-color);
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.programme-setup summary,
+.programme-setup label[for="id_confirmed"] {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.programme-setup input[type="checkbox"] {
+  width: 1.375rem;
+  height: 1.375rem;
+}

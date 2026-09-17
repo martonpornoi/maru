@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Set up Programme foundations · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}"><link rel="stylesheet" href="{% static 'events/programme_setup.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'programme/workbench.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Platform administration / Programme foundations</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench programme-setup">
+  <h1>Set up Programme foundations</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Current platform administration</summary><p>Current platform Identity permits this setup task, not ordinary Programme work or another person's acceptance. Foundation choices and receipt reads are audited. Every continuation checks its own authority.</p></details>
+  <p>Create or reuse the organizing foundation, then hand off responsibility to genuine people. Creating a foundation does not approve operational access, publish a timetable or establish production readiness.</p>
+  {% if receipt %}
+  <section class="baseline-panel" aria-labelledby="setup-result"><h2 id="setup-result">Original setup completed</h2>
+    <p>This retained setup result is not a new command. Reloading does not recreate anything or grant access.</p>
+    <p>{% if receipt.mode == "new_foundation" %}The original request created the organization and convention.{% elif receipt.mode == "existing_organization" %}The original request reused the organization and created a convention.{% else %}The original request reused the organization and convention.{% endif %} It created one edition and its first Department.</p>
+    <dl><dt>Organization</dt><dd>{{ receipt.foundation.organization_name }}</dd><dt>Convention</dt><dd>{{ receipt.foundation.series_name }}</dd><dt>Edition</dt><dd>{{ receipt.edition_name }}</dd><dt>Dates</dt><dd>{{ receipt.starts_on|date:"Y-m-d" }} – {{ receipt.ends_on|date:"Y-m-d" }}</dd><dt>Time zone</dt><dd>{{ receipt.time_zone }}</dd><dt>First Department</dt><dd>{{ receipt.department_name }}</dd></dl>
+    <details><summary>Original receipt reference</summary><p>{{ receipt.receipt_id }}</p></details>
+  </section>
+  <section class="baseline-panel" aria-labelledby="setup-next"><h2 id="setup-next">Continue accountable representation</h2>
+    {% if receipt.foundation.representation_code == "executive_board" %}<p>The existing Executive Board remains the accountable root. It is not renamed or upgraded by Programme setup.</p>{% else %}<p>Maru operators describes responsibility for operating this deployment, not a constitutional office.</p>{% endif %}
+    {% if receipt.foundation.representation_state == "active" %}<p>The representation is currently active. This does not mean supplemental Programme access has been approved.</p>{% else %}<p>The representation is still provisioning. Invite at least two distinct verified people; each must accept their own invitation before activation. A name or email entered by someone else is not acceptance.</p>{% endif %}
+    <p><a href="{{ representation_url }}">Open Representation &amp; access for {{ receipt.foundation.organization_name }}</a></p>
+    <p>Each invitee opens My representation invitations in their own session. The existing representation workflow owns invitation, acceptance and activation.</p>
+    <p>After activation, ordinary controllers must separately request and independently approve exact Programme task access. Platform administration cannot approve it for them. Guided operational-request creation is a separate continuation still being completed; no operational grant is implied here.</p>
+  </section>
+  {% else %}
+    {% if choices.foundation %}<section class="baseline-panel"><h2>Selected foundation</h2><p><strong>Organization:</strong> {{ choices.foundation.organization_name }}</p>{% if choices.foundation.series_name %}<p><strong>Convention:</strong> {{ choices.foundation.series_name }}</p>{% endif %}<p>The selected foundation is reused, not renamed. Existing truthful representation is preserved; Maru operators is provisioned only if no root exists.</p></section>{% endif %}
+    {% if not mode %}<h2>What already exists?</h2><p><a href="{{ new_url }}">Start a new organization and convention</a></p><h3>Reuse an existing organization</h3><p>Complete eligible organization choices, up to 100. Select a parent before choosing one of its convention series.</p><ul class="programme-cards">{% for item, url in organization_links %}<li><a href="{{ url }}">{{ item.name }} · {{ item.code }}</a></li>{% empty %}<li>No reusable organization is available. You can explicitly create a new foundation above.</li>{% endfor %}</ul>{% else %}<p><a href="{{ root_url }}">Choose a different foundation</a></p>{% endif %}
+    {% if mode == "existing_organization" %}<h2>Reuse a convention in this organization</h2><p>Complete active same-organization choices, up to 100. To create a new convention instead, use the form below.</p><ul class="programme-cards">{% for item, url in series_links %}<li><a href="{{ url }}">{{ item.name }} · {{ item.code }}</a></li>{% empty %}<li>No active convention series is available here. Create a new convention below.</li>{% endfor %}</ul>{% endif %}
+    {% if form %}<section class="baseline-panel" aria-labelledby="setup-confirm"><h2 id="setup-confirm">{% if mode == "new_foundation" %}Create a new foundation{% elif mode == "existing_organization" %}Create a convention and edition in this organization{% else %}Create an edition in this convention{% endif %}</h2>
+      <p>This creates only the missing organizing foundation, one Draft edition and its first Department. No call, proposal, item, timetable, Shift, attendee, payment or public page is created.</p>
+      {% if pending %}<div class="baseline-notice" role="alert" tabindex="-1" autofocus><p>Your original input, source snapshot and retry identity are retained. Review the errors; nothing is resubmitted automatically. Do not start another setup while the outcome is uncertain.</p></div>{% endif %}
+      {% if source_changed %}<p class="baseline-notice">The current foundation differs from your original snapshot. That snapshot has not been replaced. The original creation will conflict unless it already completed; only an exact retry can recover its result. Deliberately discard before starting new intent.</p>{% endif %}
+      <p data-programme-dirty hidden role="status">Unsaved setup input. Leaving this page discards it; nothing is submitted automatically.</p>
+      <form method="post" action="{{ request.path }}" data-programme-command{% if pending %} data-programme-pending="true"{% endif %}>{% csrf_token %}{{ form.as_div }}<button type="submit">Create this Programme foundation</button></form>
+    </section>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -28,6 +28,10 @@ from maru.events.models import (
     ProgrammeAdoptionSetupReceipt,
 )
 from maru.events.programme_setup_inputs import ProgrammeSetupInput, ProgrammeSetupMode
+from maru.events.programme_setup_queries import (
+    load_programme_setup_choices,
+    load_programme_setup_receipt,
+)
 from maru.events.programme_setup_readiness import (
     PROGRAMME_SETUP_RELATION,
     PROGRAMME_SETUP_SCHEMA_SHA256,
@@ -73,6 +77,78 @@ def command_request(monkeypatch):
             reason="Prepare one synthetic Programme foundation.",
         ),
     }
+
+
+def test_native_guided_setup_choices_and_original_receipt_are_audited(command_request):
+    result = setup_command.setup_programme_foundation(**command_request)
+    trace = uuid4()
+    projection = load_programme_setup_receipt(
+        actor=command_request["actor"],
+        organization_id=result.organization_id,
+        series_id=result.series_id,
+        edition_id=result.edition_id,
+        receipt_id=result.receipt_id,
+        correlation_id=trace,
+    )
+    assert projection.edition_name == command_request["details"].edition_name
+    assert projection.department_name == "Programme"
+    assert projection.foundation.representation_state == "provisioning"
+    assert AuditEvent.objects.get(correlation_id=trace).target_id == result.receipt_id
+    choices = load_programme_setup_choices(
+        actor=command_request["actor"],
+        correlation_id=uuid4(),
+        mode=ProgrammeSetupMode.EXISTING_ORGANIZATION,
+        organization_id=result.organization_id,
+    )
+    assert {row.id for row in choices.series} == {result.series_id}
+    assert ProgrammeAdoptionSetupReceipt.objects.count() == 1
+
+
+def test_native_other_platform_actor_cannot_read_original_setup_receipt(
+    command_request,
+):
+    result = setup_command.setup_programme_foundation(**command_request)
+    other = AccountFactory(is_staff=True, is_superuser=True)
+    with pytest.raises(PermissionDenied):
+        load_programme_setup_receipt(
+            actor=other,
+            organization_id=result.organization_id,
+            series_id=result.series_id,
+            edition_id=result.edition_id,
+            receipt_id=result.receipt_id,
+            correlation_id=uuid4(),
+        )
+
+
+def test_native_guided_setup_never_reuses_a_foreign_series(command_request):
+    result = setup_command.setup_programme_foundation(**command_request)
+    other = setup_command.setup_programme_foundation(
+        **{
+            **command_request,
+            "idempotency_key": uuid4(),
+            "correlation_id": uuid4(),
+            "details": replace(
+                command_request["details"],
+                organization_name="Other synthetic organizers",
+                series_name="Other convention",
+            ),
+        }
+    )
+    choices = load_programme_setup_choices(
+        actor=command_request["actor"],
+        correlation_id=uuid4(),
+        mode=ProgrammeSetupMode.EXISTING_ORGANIZATION,
+        organization_id=result.organization_id,
+    )
+    assert other.series_id not in {row.id for row in choices.series}
+    with pytest.raises(PermissionDenied):
+        load_programme_setup_choices(
+            actor=command_request["actor"],
+            correlation_id=uuid4(),
+            mode=ProgrammeSetupMode.EXISTING_SERIES,
+            organization_id=result.organization_id,
+            series_id=other.series_id,
+        )
 
 
 @pytest.mark.parametrize("mode", list(ProgrammeSetupMode))

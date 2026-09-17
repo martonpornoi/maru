@@ -34,6 +34,15 @@ owner facts and compare again before writing, and the consumer must independentl
 admit/audit/revalidate before identifying disclosure. No root is created, upgraded,
 activated or authorized by the reference itself.
 
+The internal `programme_setup_organization_choices` and
+`programme_setup_series_choices` references supply complete bounded (maximum 100)
+name/stable-code candidates to that currently admitted platform consumer. Organization
+choices require a coherent Draft/provisioning or Active/active truthful root, with
+an absent root permitted only in Draft. Series choices are active and exact-parent
+only. Overflow returns unavailable rather than a truncated directory. The consumer
+still owns current admission, identifying-read audit, exact selected-source lookup
+and final rendered revalidation. No contacts, appointments or people are projected.
+
 `lock_programme_setup_foundation` requires an existing atomic scope, independently
 admitted exact IDs, shared authority fences and the original fingerprint. It locks
 the previewed representation before Organization and optional same-parent series,
