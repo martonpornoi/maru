@@ -11,16 +11,18 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Retained Programme operational-approval storage is delivered through
-[PR #156](https://github.com/martonpornoi/maru/pull/156), protected squash
-`d1703f60f9cc15f1d85777819b682e2ad90b3b6f` at 2026-09-17 17:06:27 UTC.
-Its tree equals certified head `8ec91f607f5c82e75bf53619584bb2b1f303a94e`;
+Programme approval storage's canonical audit correction is delivered through
+[PR #157](https://github.com/martonpornoi/maru/pull/157), protected squash
+`6fe0c3131635ddf183e1df9ccd2147d2f8aaa1b4` at 2026-09-17 17:42:12 UTC.
+Its tree equals certified head `f890f27993298d7482df8a87c15ed6390d591fe5`;
 clean local main matched origin/main and that result. All eight retained local
-gates passed in 6m06s, including 9,321 units in 55.36s and 103 frontend tests.
-Hosted quality took 11m44s and units 2m15s; exact-head PR gate and CodeQL passed.
+gates passed in 6m38s, including 9,323 units in 68.53s and 103 frontend tests.
+Hosted quality took 11m54s and units 2m01s; exact-head PR gate and CodeQL passed.
 PostgreSQL suites were explicitly deferred, not certified. No grant, command,
 route or profile was activated. See the
-[protected evidence](../checkpoints/2026-09-17-programme-approval-schema-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-17-programme-approval-audit-protected-delivery.md).
+The retained storage foundation itself remains delivered through PR #156;
+do not restart either increment.
 
 Atomic Programme foundation setup remains delivered through PR #154, squash
 `7441d35243321bd5adbe4b015db01a7c93c07aa9`. Its schema file maintains 36
@@ -37,7 +39,7 @@ retains exact native-deferred and synthetic-browser limits. Do not restart it.
 
 ## Current work: scoped operational authority and setup continuation (#108)
 
-Branch: `codex/programme-approval-audit-repair`, from protected PR #156.
+Branch: `codex/programme-operational-approval-commands`, from protected PR #157.
 Delivered Events setup composes public owner commands in one atomic transaction, with exact-profile
 denial before database work, fresh Identity admission, actor/key serialization,
 canonical locked foundation comparison, complete-receipt replay and final locked
@@ -87,16 +89,35 @@ Do not infer authority from a source fingerprint or an earlier invitation.
 Owner-command integration review found a fail-closed prerequisite defect before
 that implementation: the native decision guard expects the author's unsuffixed
 assignment operation for independent-approver evidence, but the canonical owner
-correctly emits `authorization.role.assign.approve`. Fix forward in migration 0035;
-do not edit protected migrations or accept an author's audit as approval. The
-candidate adds source-pinned readiness composition, a producer/consumer unit
+correctly emits `authorization.role.assign.approve`. PR #157 fixed this forward
+in migration 0035 without editing published migrations or accepting an author's
+audit as approval. It adds source-pinned readiness composition, a producer/consumer unit
 regression and retained migration/reverse debt. No public command or route is
 activated. Full database-free feedback passed 9,323 tests in 66.35s; the approved
 empty-schema observation passed composed readiness in 191.313s, with no table-shape
 change. Its exact disposable container was removed. See the
 [repair evidence](../checkpoints/2026-09-17-programme-approval-audit-repair.md).
-Fresh exact-commit/protected delivery remains pending. Finish this necessary
-compatibility repair before the approval writer.
+Fresh exact-commit/protected delivery passed as recorded above. Continue the actual
+approval writer, not another schema rewrite: join shared authority fences, lock
+canonical owners/request/people, check current persistent controller horizons,
+reuse or create the exact historical role through the existing owner command,
+and commit assignment/provenance/effects/decision/audit atomically. Current profiles
+and runtime SELECT-only remain unchanged; preserve genuine own-person action and
+exact retained replay. The continuation now implements `request_programme_role`
+and `decide_programme_role`: original intent grants nothing; the actual named
+approver commits a reviewed exact owner assignment and retained decision atomically.
+Decline/cancel grants nothing. Exact retries require current persistent actor
+authority and return only original IDs, never renewed or regranted access.
+The branch leaves profiles, runtime privileges and published migrations unchanged.
+Complete inexpensive unit feedback passed 9,408 cases in 66.86s; the final two
+typed-resource negatives and command/boundary focus passed 87 cases in 0.50s.
+The first full attempt hit pytest's inaccessible shared Windows temp folder;
+the successful complete rerun used a fresh repository-owned temp directory with
+no skipped cases or permission changes. Types and documentation checks passed.
+Ten maintained native command cases remain uncollected/unexecuted. No schema or
+Docker work was needed. See the [command checkpoint](../checkpoints/2026-09-17-programme-operational-approval-commands.md).
+Next finish clean exact-commit certification/protected delivery, then protected
+approval readers, genuine-person guided setup and the isolated integrated fixture.
 
 Keep current profiles unchanged; final promotion waits for #102/#97/#92/#109.
 Delivered item, Applications, reference/file, timetable/release/staffing, notice
