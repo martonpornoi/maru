@@ -1,0 +1,23 @@
+.programme-access select,
+.programme-access button[type="submit"] {
+  min-block-size: 2.75rem;
+  font: inherit;
+}
+.programme-access button[type="submit"] {
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: var(--button-bg);
+  color: var(--button-fg);
+  cursor: pointer;
+}
+.programme-access summary,
+.programme-access label[for="id_confirmed"] {
+  min-block-size: 2.75rem;
+  align-content: center;
+  cursor: pointer;
+}
+.programme-access input[type="checkbox"] {
+  inline-size: 1.4rem;
+  block-size: 1.4rem;
+}

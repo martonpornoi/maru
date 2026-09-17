@@ -101,9 +101,9 @@ metadata to make readiness pass. Logical recovery remains #97 work.
 The approved PostgreSQL 17.11 empty-schema observation passed exact metadata and
 pinned readiness. This is not native behavior, reverse, runtime-role, concurrency
 or workflow acceptance. Maintained native tests remain uncollected/unexecuted.
-The command continuation below is implemented, but its genuine-person approval
-workspace and complete integrated fixture remain unfinished. No route, API,
-automatic notification or profile activation is introduced here.
+The command and own-person review continuations below are implemented dormant.
+The complete integrated fixture and guided setup remain unfinished. No production
+route, API, automatic notification or profile activation is introduced here.
 Native, logical recovery, human and integrated proof remain #102/#97/#92/#109 gates.
 
 ### Actual-person operational approval commands
@@ -113,6 +113,39 @@ implement the dormant application boundary. Both deny before database work while
 the exact Programme profile is absent. Every selected recipe and capability must
 be pinned, including an edition context for organization-wide Venue authority.
 The caller supplies its authenticated person, never an alleged approving email.
+
+The reserved own-person workspace is implemented by `programme_role_queries`,
+`programme_role_forms`, `programme_role_views` and the unmounted
+`programme_role_urls`. `load_programme_role_workspace` requires current persistent
+ordinary `authorization.manage_roles` authority, canonical owner locks, active
+representation and native integrity. Every request/decision lookup pins the full
+organization, Programme context and target chain. Only the caller's authored or
+named-approver rows qualify; recipient or platform status does not substitute.
+The open inventory is complete up to 100 unexpired undecided requests; overflow
+returns no partial list. Exact receipt links retain authorized access to expired
+or terminal intent without pretending to provide a complete history export.
+
+The projection reuses the existing purpose-authorized scope-label query and
+Identity's active-verified-person display-label seam. It releases no emails,
+contact directory, retry keys, source audit or controller lineage. Inactive people
+receive a neutral label, not retained contact information. Exact immutable recipe
+and intent digests must still agree. Sensitive reads, including empty inventories,
+append `authorization.programme_role.review` security-extended audit evidence with
+only a bounded result count before release. An approved assignment reference is
+historical, not proof of current effective access or a command to renew it.
+
+The browser adapter uses the shared shell, strict single-valued fields, ordinary
+CSRF, explicit confirmation and the actual signed-in person. The named approver
+can approve/decline and the author can cancel; expired approval is not offered.
+Original input/key survives command validation or dependency failure while a fresh
+protected read remains possible. The final rendered projection is compared with
+a newly admitted source; changed or denied output is suppressed, never sent with
+stale names or controls. A successful command redirects to its original receipt
+and is never repeated by rendering. Pending-input protection reuses the existing
+Programme script; new decision controls have 44-pixel minimum touch targets.
+See the [workspace contract](../product/page-contracts/programme-operations-adoption-setup.md#scoped-operational-approval-workspace).
+Guided creation of requests, full setup continuation and integrated/native/human
+acceptance remain separate. Neither current profile mounts these routes.
 
 Requests retain exact normalized intent without creating a bundle or assignment.
 Shared structure/provenance/retirement fences precede the actor/key mutex,
