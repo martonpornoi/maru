@@ -144,6 +144,40 @@ future adapters must independently admit requests, audit identifying previews an
 hide raw dependency errors. Early invalid/unsupported requests create no success
 audit, and a failed transaction retains no partial success evidence.
 
+### Dormant guided foundation setup
+
+`programme_setup_queries`, forms, views and reserved URL patterns implement the
+platform-side foundation journey without mounting it in current profiles. Current
+Identity and exact `programme_operations@1` admission precede owner reads. A bounded
+Organizations-owned selector offers at most 100 coherent organizations, then at most
+100 active series in the selected parent, with names and stable codes. Overflow
+releases no partial inventory. The original selected foundation fingerprint is
+retained through errors; current labels never replace an original retry snapshot.
+
+The route owns create/reuse mode and parent identities. Strict CSRF-protected forms
+require explicit confirmation, accountable reason, dates, time zone, edition and
+first-Department labels. Nil or malformed retry keys and inapplicable rename fields
+are rejected. The adapter invokes the atomic owner command once, then redirects to
+an exact organization/series/edition/receipt URL containing no retry secret.
+
+Receipt reads require the original actor's current platform authority, exact full
+scope and coherent current owner metadata. They explicitly distinguish originally
+created and reused foundation levels. Current representation state is not an
+acceptance count or operational grant. Retired Department labels are not replaced
+with another Department. The next action reuses the existing Representation & access
+page; each invitee still accepts in their own session. No invitation/activation
+command runs here and no platform actor receives ordinary Programme authority.
+
+Empty, invalid, stale, unavailable, denied and historical states retain safe
+guidance. Sensitive reads, including empty selections, are audited; a fresh
+post-render projection and current Identity check suppress changed private output.
+Pending-input protection never automatically retries. Scoped CSS uses the shared
+theme and 44-pixel controls. Real-template database-free tests and synthetic browser
+observations are component evidence only. Three native projection/isolation cases
+remain uncollected/unexecuted under #102; genuine two-human and joined journey
+acceptance remain #92/#109. Operational request creation, the complete isolated
+fixture and final gated profile promotion remain unfinished.
+
 ### Dormant Programme setup receipt
 
 `ProgrammeAdoptionSetupReceipt` retains an exact actor/key/request digest, setup
@@ -545,7 +579,8 @@ dependency, a profile activation or permission to expose other edition settings.
 
 Cancellation closeout, template/configuration cloning, archive-amendment API,
 computed effective-access management, date-format preference, richer edition-
-local policy, and the guided Programme Operations setup surface are not implemented. Edition
+local policy and the complete integrated Programme Operations setup remain unfinished.
+The dormant foundation screen above is a component, not activated adoption. Edition
 creation inherits only visible locale
 defaults; it does not create or publish registration or any operational
 configuration. Dormant Programme capability declarations, dormant

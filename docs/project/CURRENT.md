@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-17
+Last updated: 2026-09-18
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -11,51 +11,51 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Dormant actual-person Programme approval commands are delivered through
-[PR #158](https://github.com/martonpornoi/maru/pull/158), protected squash
-`bea4d9460d8acc41c9e82990c568a3348ad3a6b2` at 2026-09-17 20:55:01 UTC.
-Its tree equals certified head `04e65726b07e9eabf43762c1d6f1f576aa6d43a6`;
+Dormant own-person Programme approval review is delivered through
+[PR #159](https://github.com/martonpornoi/maru/pull/159), protected squash
+`fab1f1bff140d9a69c0c21427ccc75f8609bf336` at 2026-09-17 21:50:38 UTC.
+Its tree equals certified head `b991521870fda69c6e54de6ec950e0103e696df9`;
 clean local main matched origin/main and the protected result. All eight
-retained local gates passed in 6m27s, including 9,423 units in 68.22s and
-103 frontend cases. Hosted quality took 11m45s and units 2m08s; exact-head PR
+retained local gates passed in 6m46s, including 9,509 units in 71.87s and
+103 frontend cases. Hosted quality took 11m21s and units 2m03s; exact-head PR
 gate and CodeQL passed. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-17-programme-approval-commands-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-17-programme-approval-workspace-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
 approval storage, #157 canonical independent-audit correction and #158 actual
-request/decision commands. These do not activate either current profile.
+request/decision commands, followed by #159's protected reader and genuine-person
+review screen. These do not activate either current profile.
 The [setup evidence](../checkpoints/2026-09-17-programme-atomic-setup-protected-delivery.md)
 and [approval schema evidence](../checkpoints/2026-09-17-programme-operational-approval-schema.md)
 retain the separately approved schema-only observations and native debt.
 No prerequisite in that chain needs restarting.
 
-## Current work: own-person approval review (#108)
+## Current work: guided foundation setup (#108)
 
-Branch: `codex/programme-operational-approval-workspace`, from protected PR #158.
-The local implementation adds a bounded, audited own-request reader and reserved
-shared-shell approval/decline/cancel controls. Current persistent controller
-authority and the full tenant/context/target chain precede disclosure; being a
-recipient or platform administrator is insufficient. Exact recipe consequences,
-scope, verified display labels, interval, rationale and historical decisions are
-visible without a contact directory, retry keys or source evidence. Post-render
-source/authority changes suppress the prepared private page. No schema, runtime
-privilege, current-profile or production-route change.
+Branch: `codex/programme-guided-foundation-setup`, from protected PR #159.
+Implemented labelled new/existing foundation choices, original-intent confirmation,
+an exact original-actor receipt and truthful continuation to the existing
+Representation & access workflow. Current platform Identity and exact-profile
+admission precede reads; final source checks precede identifying disclosure.
+No schema, runtime privilege, current-profile or production-route change.
+The final complete database-free suite passed 9,601 tests in 55.61s; strict mypy
+passed 711 source files. All 92 new projection/form/view cases passed. Synthetic
+database-prohibited browser rehearsal covered all three modes, keyboard confirmation,
+original input/source recovery, honest receipt creation/reuse and representation
+states, denial/overflow, seven widths and shared-theme 44-pixel controls. Three new
+maintained native cases remain uncollected/unexecuted. Exact-commit certification
+and protected delivery remain pending; see the
+[setup checkpoint](../checkpoints/2026-09-18-programme-guided-foundation-setup.md).
 
-Complete database-free feedback passed 9,509 tests in 69.65s; strict mypy passed
-all 707 source files. Ruff and documentation checks passed. Synthetic
-database-prohibited browser rehearsal
-covered inventory/detail, approval/decline/cancel, expiry/history, conflict input
-and retry retention, denial and dependency failure. All seven required widths
-had no page overflow; decision controls are 44 pixels after a browser-found fix.
-Keyboard confirmation kept focus visible. This is mocked component evidence,
-not native independent approval, actual 200% zoom, screen-reader or two-human
-acceptance. Five new maintained native reader cases remain uncollected/unexecuted.
-See the [workspace checkpoint](../checkpoints/2026-09-17-programme-operational-approval-workspace.md).
+The prior approval review's five maintained native cases remain uncollected and
+unexecuted under #102. Its database-prohibited browser observations are component
+evidence, not actual zoom, native independent approval or two-human acceptance.
+Those remaining human checks are recorded in #92.
 
-Next: finish exact-commit/protected delivery, then guided
-foundation/representation continuation and creation of operational requests through
-the existing commands. Preserve truthful roots and two people's own acceptances.
+Next: finish this increment's protected delivery, then guided creation of
+operational requests through the existing commands. Preserve truthful roots and
+two people's own acceptances.
 A selected approver email is never their decision; no catch-all role may replace
 Department, Edition, Organization Venue or exact-room scope. ADR 0106 is unchanged.
 Then finish coherent navigation and the complete isolated synthetic fixture.

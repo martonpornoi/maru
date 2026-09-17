@@ -15,10 +15,102 @@ from typing import TypedDict, cast
 from uuid import UUID
 
 from django.db import connection
+from django.db.models import Q
 
 from .models import ConventionSeries, Organization, OrganizationRepresentation
-from .representation_catalog import representation_definition
+from .representation_catalog import (
+    REPRESENTATION_DEFINITIONS,
+    representation_definition,
+)
 from .write_references import lock_organization_ownership, lock_series_ownership
+
+MAX_PROGRAMME_FOUNDATION_CHOICES = 100
+
+
+@dataclass(frozen=True, slots=True)
+class ProgrammeFoundationChoice:
+    """Label a foundation candidate without contacts or controller information.
+
+    Attributes
+    ----------
+    id
+        Exact owner locator, never a grant or a source snapshot.
+    name, code
+        Human name and stable code distinguishing duplicate names.
+    """
+
+    id: UUID
+    name: str
+    code: str
+
+
+def programme_setup_organization_choices() -> (
+    tuple[ProgrammeFoundationChoice, ...] | None
+):
+    """List bounded coherent roots for an independently admitted platform consumer.
+
+    Returns
+    -------
+    tuple[ProgrammeFoundationChoice, ...] | None
+        Complete eligible choices, or unavailable on overflow without partial data.
+
+    Notes
+    -----
+    The consumer must admit current platform Identity before this internal read,
+    audit disclosure and revalidate its projection after rendering. Selection must
+    resolve the exact full foundation again; this inventory is not a snapshot.
+    """
+    roots = Q(pk__in=[])
+    for definition in REPRESENTATION_DEFINITIONS.values():
+        roots |= Q(
+            representation__code=definition.code,
+            representation__name=definition.name,
+        )
+    eligible = Q(lifecycle="draft") & (
+        Q(representation__isnull=True)
+        | (roots & Q(representation__state="provisioning"))
+    )
+    eligible |= Q(lifecycle="active", representation__state="active") & roots
+    rows = tuple(
+        Organization.objects.filter(eligible)
+        .order_by("name", "slug", "id")
+        .values_list("id", "name", "slug")[: MAX_PROGRAMME_FOUNDATION_CHOICES + 1]
+    )
+    if len(rows) > MAX_PROGRAMME_FOUNDATION_CHOICES:
+        return None
+    return tuple(ProgrammeFoundationChoice(*row) for row in rows)
+
+
+def programme_setup_series_choices(
+    *, organization_id: UUID
+) -> tuple[ProgrammeFoundationChoice, ...] | None:
+    """List only active series in one independently admitted exact parent.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Exact owner whose complete foundation the consumer has already admitted.
+
+    Returns
+    -------
+    tuple[ProgrammeFoundationChoice, ...] | None
+        Complete bounded choices, or unavailable for malformed scope or overflow.
+
+    Notes
+    -----
+    No cross-organization series inventory or permission is supplied. The consumer
+    owns current admission, final source comparison and disclosure audit.
+    """
+    if not isinstance(organization_id, UUID) or organization_id.int == 0:
+        return None
+    rows = tuple(
+        ConventionSeries.objects.filter(organization_id=organization_id, is_active=True)
+        .order_by("name", "slug", "id")
+        .values_list("id", "name", "slug")[: MAX_PROGRAMME_FOUNDATION_CHOICES + 1]
+    )
+    if len(rows) > MAX_PROGRAMME_FOUNDATION_CHOICES:
+        return None
+    return tuple(ProgrammeFoundationChoice(*row) for row in rows)
 
 
 class _OrganizationRow(TypedDict):

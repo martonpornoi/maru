@@ -163,8 +163,9 @@ never establish authority. Definitions/inputs and dormant immutable request/term
 decision storage with native integrity/readiness are implemented. The dormant
 owning request and actual-person decision commands now compose the existing
 dual-control role commands atomically. Protected own-request projections and
-decision controls are implemented dormant; guided request creation and foundation
-continuation remain unfinished. Current profiles are unchanged. Storage alone cannot prove a
+decision controls and guided foundation creation/reuse are implemented dormant;
+guided operational request creation remains unfinished. Current profiles are
+unchanged. Storage alone cannot prove a
 person's action or grant access.
 See the [owning contract](../../modules/authorization.md#dormant-programme-operational-role-contracts).
 
@@ -208,11 +209,32 @@ terminal, denied, unavailable and overflow states explain the next safe action.
 The screen uses one H1/main, the shared Access explanation, ordinary labelled
 forms, keyboard-visible focus, stacked narrow cards and pending-input protection.
 Synthetic component rehearsal is not native independent-approval proof or human
-acceptance; #102/#92/#109 retain those gates. Foundation creation, invitation
-acceptance and the guided creation of new operational requests remain subsequent
-continuations, not implied by this review screen.
+acceptance; #102/#92/#109 retain those gates. The separate foundation screen below
+reuses existing invitation/acceptance controls. Guided creation of new operational
+requests remains unfinished and is not implied by this review screen.
 
 ### Original setup intent
+
+The dormant guided foundation screen uses the reserved base route as a labelled
+organization selector, a separate `new/` creation page, an exact organization
+page for new-series setup and same-parent series selection, and an exact series
+page for reuse. Each inventory is bounded to 100 complete choices; overflow is
+unavailable, never a truncated directory. Names and stable human codes identify
+choices; route UUIDs are only locators. Current platform Identity admission and
+exact supported Programme profile precede reads, and final rendered source and
+authority checks precede disclosure. Current profiles still deny every route.
+
+Creation requires dates, time zone, edition and first-Department labels, bounded
+rationale and explicit confirmation. The route owns mode and reused identities;
+the form retains the original source fingerprint and retry key. Errors preserve
+that original input while current read authority permits it. A changed foundation
+cannot silently replace the snapshot or turn an old request into a new one.
+Success redirects to the original actor's exact scoped receipt, explicitly
+distinguishing originally created and reused foundation levels. It never repeats
+the command while rendering, and reports foundation creation separately from
+representation activation and operational access. Its continuation reuses the
+existing Representation & access screen; each invitee uses their own personal
+invitation screen. No acceptance count, decision or supplemental grant is inferred.
 
 The dormant Events input contract distinguishes all three modes explicitly.
 New-foundation setup supplies organization and series names and no reused IDs.
@@ -237,8 +259,9 @@ path atomically creates the selected missing foundations, retains truthful
 representation, creates one edition and its first Department, and binds owner
 receipts/audit to the complete setup result. Exact replay requires current platform
 admission but does not repeat writes or grant access. Independently approved
-operational authority, two people's own continuation, the guided surface and the
-complete isolated fixture remain separate unfinished acceptance checkpoints.
+operational authority and two people's own continuation still require native and
+human acceptance. The guided foundation surface is implemented dormant; guided
+operational request creation and the complete isolated fixture remain unfinished.
 
 On successful activation, the accepted owner sequence is:
 
