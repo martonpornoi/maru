@@ -44,10 +44,10 @@ recipient and named approver differ. Reasons are normalized, bounded and control
 free; timestamps are aware UTC values, with explicit optional start/end semantics.
 Digest identity binds exact Programme context, target chain, recipe contents,
 people, requested interval and rationale. It never proves authority, existence,
-actual approval or eligibility. The future command must bind author/retry key,
-resolve canonical owners, check both current controller horizons, and ensure the
+actual approval or eligibility. The owning command binds author/retry key,
+resolves canonical owners, checks both current controller horizons, and ensures the
 named approver personally acts before any assignment. Seven-day pending expiry
-and non-backdated start are the accepted workflow contract, not implemented timers.
+and non-backdated start are evaluated during approval without automatic mutation.
 
 ### Retained approval storage
 
@@ -81,7 +81,8 @@ the maintained native positive and new populated repair/reverse cases.
 
 Requests and terminal decisions reject update, delete and ordinary truncate.
 Source audits and all owner references are protected. `save()`/`delete()` deny
-direct ORM persistence; no owning writer or read projection is mounted yet.
+direct ORM persistence; the private owning command scope permits append only.
+No protected read projection or browser adapter is mounted yet.
 Both tables remain runtime SELECT-only, with no new executable function allowance.
 `programme_role_readiness` checks exact relation fingerprints, source-pinned
 storage/fence migrations, native function/trigger definitions and permissions
@@ -100,10 +101,61 @@ metadata to make readiness pass. Logical recovery remains #97 work.
 The approved PostgreSQL 17.11 empty-schema observation passed exact metadata and
 pinned readiness. This is not native behavior, reverse, runtime-role, concurrency
 or workflow acceptance. Maintained native tests remain uncollected/unexecuted.
-Public workflow commands, current source/horizon checks, genuine-person approval
-workspace and the complete fixture are still unfinished. No route, API, automatic
-notification, domain event, grant or profile activation is introduced here.
+The command continuation below is implemented, but its genuine-person approval
+workspace and complete integrated fixture remain unfinished. No route, API,
+automatic notification or profile activation is introduced here.
 Native, logical recovery, human and integrated proof remain #102/#97/#92/#109 gates.
+
+### Actual-person operational approval commands
+
+`programme_role_commands.request_programme_role` and `decide_programme_role`
+implement the dormant application boundary. Both deny before database work while
+the exact Programme profile is absent. Every selected recipe and capability must
+be pinned, including an edition context for organization-wide Venue authority.
+The caller supplies its authenticated person, never an alleged approving email.
+
+Requests retain exact normalized intent without creating a bundle or assignment.
+Shared structure/provenance/retirement fences precede the actor/key mutex,
+representation, organization, series, edition, narrower target, retained request,
+UUID-ordered people and persistent source locks. Current active representation,
+owner lifecycle, exact scope and native integrity are checked under those locks.
+Both verified ordinary controllers must cover the requested assignment horizon.
+
+Only the named approver can approve/decline; only the author can cancel. Approval
+rechecks both controllers and the recipient, refuses the seven-day deadline or
+ended interval, and starts at the later of actual decision and requested start.
+It reuses the exact historically proven recipe bundle or creates its exact first
+version through `create_role_bundle_version`, then invokes `assign_role`. Missing
+versions in existing role history, changed names/capabilities or invalid provenance
+fail closed; nothing upgrades an existing role implicitly. Creating a definition
+still requires both controllers' organization-level role authority; narrower
+controllers may reuse an already-proven exact definition, not bypass that ceiling.
+
+Assignment/provenance, canonical owner events/audits and the actual-person decision
+commit atomically. A decision failure rolls back new bundles and grants as well.
+The assignment retains the original request reason; the terminal record retains
+the separate decision reason. Decline/cancel creates no authority or owner event.
+There is no invitation, delivery provider or unrelated product effect.
+
+Exact retries require the actual actor's current persistent controller source and
+return only original minimized result IDs; they do not renew deadlines, replace
+terminal outcomes or regrant revoked/expired assignments. Another key or changed
+intent conflicts. No result is evidence of currently effective access. Current
+scope/recipe admission also applies to cancellation and retries: retired or
+unavailable scope preserves evidence instead of writing through a stale boundary.
+Every retained request and decision lookup pins organization, Programme context
+and the complete target chain, including null narrower scope. Global actor/key
+uniqueness remains a database constraint, not permission to load a receipt from
+another scope. A collision outside the admitted target rolls back the whole
+transaction and becomes a safe retry conflict; unrelated integrity failures are
+not relabelled as collisions.
+
+No migration, runtime privilege, root role, capability or current profile changes.
+The isolated native command scenarios extend the existing schema-test candidate
+with one literal recipe, not the complete Programme manifest. They are maintained
+but neither collected nor executed during ADR 0100 deferral. Multi-session races,
+runtime-role operation and complete scope/fixture acceptance remain final #102/#109
+work; database-free ordering tests cannot establish those properties.
 
 ## Authority and profile boundaries
 

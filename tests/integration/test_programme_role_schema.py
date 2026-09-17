@@ -2,32 +2,51 @@
 
 The shared transaction-local candidate is not the complete Programme manifest.
 Foundation and grant fixtures use real controller ceremonies and public commands.
-Deliberate bulk inserts probe native evidence guards, not runtime write permission
-or the future owning approval workflow. Never treat these tests as collected or
-executed until the final #102 gate restores PostgreSQL testing.
+Deliberate bulk inserts probe native evidence guards, not runtime write permission.
+The command cases exercise actual public request/decision writers with one exact
+recipe admitted only to that rolled-back candidate. Never treat these tests as
+collected or executed until the final #102 gate restores PostgreSQL testing.
 """
 
+from dataclasses import replace
 from datetime import date, timedelta
+from functools import partial
 from importlib import import_module
 from uuid import UUID, uuid4
 
 import pytest
 from django.apps import apps
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 from psycopg import sql
 
+from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
-from maru.authorization.commands import assign_role, create_role_bundle_version
+from maru.authorization import programme_role_commands as role_commands
+from maru.authorization.catalog import ScopeLevel
+from maru.authorization.commands import (
+    assign_role,
+    create_role_bundle_version,
+    grant_capability_direct,
+    revoke_capability_grant,
+    revoke_role_assignment,
+)
 from maru.authorization.models import (
     ProgrammeRoleDecisionRecord,
     ProgrammeRoleRequest,
     RoleAssignment,
+    RoleBundle,
 )
 from maru.authorization.policy import (
     resolve_edition_target,
     resolve_organization_target,
+)
+from maru.authorization.programme_role_inputs import (
+    ProgrammeRoleDecision,
+    ProgrammeRoleIntent,
+    ProgrammeRoleScope,
 )
 from maru.authorization.programme_role_readiness import (
     PROGRAMME_ROLE_RELATIONS,
@@ -35,7 +54,10 @@ from maru.authorization.programme_role_readiness import (
     programme_role_database_integrity_is_ready,
 )
 from maru.authorization.programme_role_recipes import PROGRAMME_ROLE_RECIPES
+from maru.authorization.services import AuthorizationDenied
 from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events import adoption
 from maru.events.services import EventEditionDetails, create_event_edition
 from maru.organizations.services import (
     ConventionSeriesCreationDetails,
@@ -48,6 +70,286 @@ from tests.support.authority import activate_synthetic_board
 from tests.support.programme_schema import admit_transaction_local_schema_candidate
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+
+@pytest.fixture
+def command_world(world, monkeypatch):
+    """Admit one exact recipe to the isolated native candidate, never runtime."""
+    candidate = adoption.ADOPTION_PROFILES[("programme_operations", 1)]
+    recipe = PROGRAMME_ROLE_RECIPES[("coverage-reader", 1)]
+    monkeypatch.setattr(
+        adoption,
+        "ADOPTION_PROFILES",
+        {
+            **adoption.ADOPTION_PROFILES,
+            ("programme_operations", 1): replace(
+                candidate,
+                catalog_entries=candidate.catalog_entries | {recipe.catalog_entry},
+                capability_codes=candidate.capability_codes
+                | set(recipe.capability_codes),
+            ),
+        },
+    )
+    return world
+
+
+def _command_scope(world):
+    return ProgrammeRoleScope(world[0].id, world[1].id, ScopeLevel.EDITION)
+
+
+def _command_request(world, **changes):
+    return role_commands.request_programme_role(
+        **{
+            "actor": world[2],
+            "scope": _command_scope(world),
+            "details": ProgrammeRoleIntent(
+                "coverage-reader",
+                1,
+                world[4].id,
+                world[3].id,
+                None,
+                None,
+                "Synthetic independently reviewed access.",
+            ),
+            "idempotency_key": uuid4(),
+            "correlation_id": uuid4(),
+            "source_channel": "test",
+            **changes,
+        }
+    )
+
+
+def _command_decision(world, original, **changes):
+    return role_commands.decide_programme_role(
+        **{
+            "actor": world[3],
+            "scope": _command_scope(world),
+            "request_id": original.request_id,
+            "action": ProgrammeRoleDecision.APPROVE,
+            "reason": "Reviewed the exact synthetic request.",
+            "idempotency_key": uuid4(),
+            "correlation_id": uuid4(),
+            "source_channel": "test",
+            **changes,
+        }
+    )
+
+
+def test_actual_request_and_approval_atomically_use_canonical_owner_evidence(
+    command_world,
+):
+    before = RoleAssignment.objects.count()
+    request_key, decision_key = uuid4(), uuid4()
+    original = _command_request(command_world, idempotency_key=request_key)
+    assert RoleAssignment.objects.count() == before
+    assert _command_request(command_world, idempotency_key=request_key).replayed
+    decision = _command_decision(command_world, original, idempotency_key=decision_key)
+    assignment = RoleAssignment.objects.get(id=decision.role_assignment_id)
+    record = ProgrammeRoleDecisionRecord.objects.get(id=decision.decision_id)
+    assert assignment.granted_by_id == command_world[2].id
+    assert assignment.approved_by_id == command_world[3].id
+    assert assignment.principal_id == command_world[4].id
+    assert assignment.edition_id == command_world[1].id
+    assert assignment.effective_from == record.decided_at
+    assert (
+        assignment.reason
+        == ProgrammeRoleRequest.objects.get(id=original.request_id).reason
+    )
+    assert RoleAssignment.objects.count() == before + 1
+    replay = _command_decision(command_world, original, idempotency_key=decision_key)
+    assert replay.replayed
+    assert replay.role_assignment_id == assignment.id
+    assert RoleAssignment.objects.count() == before + 1
+
+
+@pytest.mark.parametrize(
+    "action", [ProgrammeRoleDecision.DECLINE, ProgrammeRoleDecision.CANCEL]
+)
+def test_actual_nonapproval_retains_one_terminal_outcome_without_authority(
+    command_world, action
+):
+    original = _command_request(command_world)
+    before = RoleAssignment.objects.count()
+    actor = (
+        command_world[2] if action is ProgrammeRoleDecision.CANCEL else command_world[3]
+    )
+    result = _command_decision(command_world, original, action=action, actor=actor)
+    assert result.role_assignment_id is None
+    assert RoleAssignment.objects.count() == before
+    with pytest.raises(ValidationError, match="terminal decision"):
+        _command_decision(command_world, original)
+    assert (
+        ProgrammeRoleDecisionRecord.objects.filter(
+            request_id=original.request_id
+        ).count()
+        == 1
+    )
+
+
+def test_actual_approval_failure_rolls_back_new_bundle_assignment_audit_and_effects(
+    command_world, monkeypatch
+):
+    original = _command_request(command_world)
+    observed = (
+        RoleBundle,
+        RoleAssignment,
+        ProgrammeRoleDecisionRecord,
+        AuditEvent,
+        DomainEvent,
+        OutboxMessage,
+    )
+    before = [model.objects.count() for model in observed]
+
+    def refuse(_record, **_kwargs):
+        raise ValidationError("Synthetic final evidence failure.")
+
+    monkeypatch.setattr(ProgrammeRoleDecisionRecord, "save", refuse)
+    with pytest.raises(ValidationError, match="final evidence failure"):
+        _command_decision(command_world, original)
+    assert [model.objects.count() for model in observed] == before
+
+
+@pytest.mark.parametrize("person_index", [2, 4])
+def test_actual_known_request_does_not_authorize_another_person(
+    command_world, person_index
+):
+    original = _command_request(command_world)
+    with pytest.raises(AuthorizationDenied):
+        _command_decision(command_world, original, actor=command_world[person_index])
+    assert not ProgrammeRoleDecisionRecord.objects.filter(
+        request_id=original.request_id
+    ).exists()
+
+
+def test_actual_existing_foreign_scope_cannot_select_request(command_world):
+    original = _command_request(command_world)
+    foreign = _foundation("programme_operations")
+    with pytest.raises(AuthorizationDenied):
+        _command_decision(foreign, original)
+    assert not ProgrammeRoleDecisionRecord.objects.filter(
+        request_id=original.request_id
+    ).exists()
+
+
+@pytest.mark.parametrize("revoked_index", [0, 1])
+def test_actual_revoked_controller_cannot_approve_pending_request(
+    command_world, revoked_index
+):
+    target = resolve_edition_target(
+        organization_id=command_world[0].id, edition_id=command_world[1].id
+    )
+    controllers = [AccountFactory(), AccountFactory()]
+    grants = [
+        grant_capability_direct(
+            actor=command_world[2],
+            approver=command_world[3],
+            recipient=person,
+            capability_code="authorization.manage_roles",
+            target=target,
+            effective_from=timezone.now(),
+            expires_at=None,
+            reason="Synthetic scoped controller.",
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+        for person in controllers
+    ]
+    scoped_world = (*command_world[:2], *controllers, command_world[4])
+    original = _command_request(scoped_world)
+    revoke_capability_grant(
+        actor=command_world[2],
+        target=target,
+        grant_id=grants[revoked_index].id,
+        reason="Synthetic immediate revocation.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    with pytest.raises(AuthorizationDenied):
+        _command_decision(scoped_world, original)
+    assert not ProgrammeRoleDecisionRecord.objects.filter(
+        request_id=original.request_id
+    ).exists()
+
+
+def test_actual_approved_retry_does_not_regrant_revoked_output(command_world):
+    original = _command_request(command_world)
+    key = uuid4()
+    approved = _command_decision(command_world, original, idempotency_key=key)
+    revoke_role_assignment(
+        actor=command_world[2],
+        target=resolve_edition_target(
+            organization_id=command_world[0].id,
+            edition_id=command_world[1].id,
+        ),
+        assignment_id=approved.role_assignment_id,
+        reason="Synthetic ended access.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    before = RoleAssignment.objects.count()
+    replay = _command_decision(command_world, original, idempotency_key=key)
+    assert replay.replayed
+    assert replay.role_assignment_id == approved.role_assignment_id
+    assert RoleAssignment.objects.count() == before
+    assert (
+        RoleAssignment.objects.get(id=replay.role_assignment_id).revoked_at is not None
+    )
+
+
+@pytest.mark.parametrize("operation", ["request", "decision"])
+def test_actual_cross_edition_key_conflict_retains_no_foreign_receipt(
+    command_world, operation
+):
+    organization, edition, author, approver, recipient = command_world
+    other_edition = create_event_edition(
+        actor=AccountFactory(is_staff=True, is_superuser=True),
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        details=EventEditionDetails(
+            name="Synthetic alternate approval edition",
+            time_zone="UTC",
+            language_codes=("en",),
+            currency_codes=("XXX",),
+            starts_on=date(2031, 9, 6),
+            ends_on=date(2031, 9, 8),
+        ),
+        idempotency_key=uuid4(),
+        adoption_profile_code="programme_operations",
+        correlation_id=uuid4(),
+        source_channel="test",
+    ).edition
+    other = (organization, other_edition, author, approver, recipient)
+    key = uuid4()
+    first = _command_request(command_world, idempotency_key=key)
+    if operation == "decision":
+        second = _command_request(other)
+        _command_decision(
+            command_world,
+            first,
+            idempotency_key=key,
+            action=ProgrammeRoleDecision.DECLINE,
+        )
+        invoke = partial(
+            _command_decision,
+            other,
+            second,
+            idempotency_key=key,
+            action=ProgrammeRoleDecision.DECLINE,
+        )
+    else:
+        invoke = partial(_command_request, other, idempotency_key=key)
+    observed = (
+        ProgrammeRoleRequest,
+        ProgrammeRoleDecisionRecord,
+        RoleBundle,
+        RoleAssignment,
+        AuditEvent,
+    )
+    before = [model.objects.count() for model in observed]
+    with pytest.raises(ValidationError, match="different intent") as caught:
+        invoke()
+    assert caught.value.code == "programme_role_retry_conflict"
+    assert [model.objects.count() for model in observed] == before
 
 
 @pytest.fixture

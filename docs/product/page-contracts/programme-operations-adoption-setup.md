@@ -160,9 +160,11 @@ requested Organization-wide Venue facts and exact selected-room powers. On-site
 run sheets and additional delivery layers remain separate choices. The request
 binds all scope identities and exact versioned contents; labels and fingerprints
 never establish authority. Definitions/inputs and dormant immutable request/terminal
-decision storage with native integrity/readiness are implemented. Actual-person
-commands, protected projections and guided controls are not yet mounted; storage
-alone cannot prove a person's action or grant access. Current profiles are unchanged.
+decision storage with native integrity/readiness are implemented. The dormant
+owning request and actual-person decision commands now compose the existing
+dual-control role commands atomically. Protected projections and guided controls
+remain unfinished; current profiles are unchanged. Storage alone cannot prove a
+person's action or grant access.
 See the [owning contract](../../modules/authorization.md#dormant-programme-operational-role-contracts).
 
 ### Original setup intent

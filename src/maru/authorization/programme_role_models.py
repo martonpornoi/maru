@@ -10,6 +10,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 
 from maru.authorization.catalog import ScopeLevel
+from maru.authorization.programme_role_writer import _require_programme_role_writer
 from maru.core.models import UUIDTimeStampedModel
 
 if TYPE_CHECKING:
@@ -64,22 +65,25 @@ class _ProgrammeRoleEvidence(UUIDTimeStampedModel):
         )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        """Refuse direct ORM persistence of dormant approval evidence.
+        """Append only inside the owning atomic command, never update evidence.
 
         Parameters
         ----------
         *args : Any
-            Unused Django persistence arguments.
+            Django insertion arguments forwarded after the writer check.
         **kwargs : Any
-            Unused Django persistence options.
+            Django insertion options forwarded after the writer check.
 
         Raises
         ------
         ValidationError
-            Always until the owning atomic approval commands are installed.
+            Outside the owning writer or when attempting to update evidence.
         """
-        del args, kwargs
-        raise ValidationError("Programme role evidence requires its owning command.")
+        _require_programme_role_writer()
+        if not self._state.adding:
+            raise ValidationError("Programme role evidence is retained.")
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         """Retain original requests and decisions, including rejected proposals.

@@ -857,8 +857,10 @@ run sheets under ADR 0099. #104 adds governed change communication and exact-sel
 acknowledgement under ADR 0102. #107 delivers on-site continuity; #108's dormant
 guided item, Applications, review, file and owner-task connections are delivered.
 Atomic setup, optional scoped role definitions and retained independent-approval
-storage are dormant foundations. Actual-person approval commands, guided setup
-continuation and the complete isolated fixture remain unfinished.
+storage are dormant foundations. Actual-person request/decision commands now
+compose exact existing authority owners; their native acceptance is deferred.
+Protected approval readers, guided setup continuation and the complete isolated
+fixture remain unfinished.
 These remain components, not an activated departmental workflow. Next are
 accountable setup and a complete isolated fixture, followed by #102 restored
 database acceptance, #97 logical recovery, #92 human acceptance and #109 joined
