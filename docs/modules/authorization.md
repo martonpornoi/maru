@@ -69,6 +69,16 @@ request facts, the non-backdated effective start, original end and reason, and
 the separately attributed assignment audit. Existing authority issuance guards
 retain dual-controller lineage; these tables do not replace that mechanism.
 
+Migration 0035 corrects the guard's independent-assignment audit operation to the
+canonical `authorization.role.assign.approve`, rather than the author's unsuffixed
+operation. This fail-closed compatibility defect was found while connecting the
+next owner workflow, before any command or route was mounted. Published migrations
+are unchanged. The additive source-pinned readiness layer retains every other
+guard and permission. Under locks, upgrade refuses retained approvals lacking the
+canonical approver audit instead of fabricating evidence; reverse is empty-only.
+The producer/consumer audit contract now has a database-free regression, alongside
+the maintained native positive and new populated repair/reverse cases.
+
 Requests and terminal decisions reject update, delete and ordinary truncate.
 Source audits and all owner references are protected. `save()`/`delete()` deny
 direct ORM persistence; no owning writer or read projection is mounted yet.

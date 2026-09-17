@@ -401,6 +401,26 @@ def test_retained_request_fences_guard_and_schema_downgrade(world):
             getattr(migration, operation)(apps, editor)
 
 
+def test_retained_approval_audit_repair_refuses_reverse(world):
+    original = _insert_request(_request_values(world))
+    decision = _insert_decision(_decision_values(world, original))
+    repair = import_module(
+        "maru.authorization.migrations.0035_programme_role_approval_audit"
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(repair.FORWARD_SQL)
+    assert programme_role_database_integrity_is_ready()
+    with (
+        pytest.raises(IntegrityError, match="fix forward"),
+        transaction.atomic(),
+        connection.cursor() as cursor,
+    ):
+        cursor.execute(repair.REVERSE_SQL)
+    assert ProgrammeRoleRequest.objects.filter(pk=original.id).exists()
+    assert ProgrammeRoleDecisionRecord.objects.filter(pk=decision.id).exists()
+    assert programme_role_database_integrity_is_ready()
+
+
 @pytest.mark.parametrize("weakening", ["check", "function_acl", "trigger"])
 def test_metadata_readiness_rejects_weakened_database_contract(weakening):
     assert programme_role_database_integrity_is_ready()

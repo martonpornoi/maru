@@ -11,15 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Scoped Programme role definitions and closed approval intents are delivered through
-[PR #155](https://github.com/martonpornoi/maru/pull/155), protected squash
-`86c287fef80080ad69eb4f1cd3023f7b2fcdea7c` at 2026-09-16 22:53:39 UTC.
-Its tree equals certified head `b8cb5de1ec359dc40138ddf52439b208462e613f`;
+Retained Programme operational-approval storage is delivered through
+[PR #156](https://github.com/martonpornoi/maru/pull/156), protected squash
+`d1703f60f9cc15f1d85777819b682e2ad90b3b6f` at 2026-09-17 17:06:27 UTC.
+Its tree equals certified head `8ec91f607f5c82e75bf53619584bb2b1f303a94e`;
 clean local main matched origin/main and that result. All eight retained local
-gates passed in 5m22s, including 9,298 units in 55.36s and 103 frontend tests.
-Hosted quality took 11m42s and units 2m04s; PR gate and CodeQL passed. PostgreSQL
-was explicitly deferred, not certified. No grant, table, route or profile was added.
-See the [protected evidence](../checkpoints/2026-09-17-programme-operational-role-protected-delivery.md).
+gates passed in 6m06s, including 9,321 units in 55.36s and 103 frontend tests.
+Hosted quality took 11m44s and units 2m15s; exact-head PR gate and CodeQL passed.
+PostgreSQL suites were explicitly deferred, not certified. No grant, command,
+route or profile was activated. See the
+[protected evidence](../checkpoints/2026-09-17-programme-approval-schema-protected-delivery.md).
 
 Atomic Programme foundation setup remains delivered through PR #154, squash
 `7441d35243321bd5adbe4b015db01a7c93c07aa9`. Its schema file maintains 36
@@ -36,7 +37,7 @@ retains exact native-deferred and synthetic-browser limits. Do not restart it.
 
 ## Current work: scoped operational authority and setup continuation (#108)
 
-Branch: `codex/programme-operational-approval-schema`, from protected PR #155.
+Branch: `codex/programme-approval-audit-repair`, from protected PR #156.
 Delivered Events setup composes public owner commands in one atomic transaction, with exact-profile
 denial before database work, fresh Identity admission, actor/key serialization,
 canonical locked foundation comparison, complete-receipt replay and final locked
@@ -58,7 +59,7 @@ role recipes and closed normalized request/decision inputs with exact digests.
 The owned catalog registers definitions without admitting them to either current
 profile. PR #155's exact-commit retained certification and protected delivery passed.
 
-The current candidate adds Authorization-owned immutable request/terminal-decision
+Delivered PR #156 adds Authorization-owned immutable request/terminal-decision
 storage, native guards, source/schema-pinned data-free readiness, runtime SELECT-only
 provisioning, and maintained native tests. Both current profiles remain unchanged;
 direct ORM writes are refused and no command, route, API or grant is introduced.
@@ -73,8 +74,8 @@ That does not advance PostgreSQL suites ahead of final #102 or authorize profile
 activation, production changes or unrelated resources. Keep additions limited to
 accepted necessities and existing owner mechanisms. Full database-free feedback
 passed 9,321 units in 55.00s; final schema/provisioning feedback passed 36 cases.
-Types, documentation and static migration drift passed. Fresh clean exact-commit
-certification and protected delivery of this schema increment remain pending.
+Types, documentation and static migration drift passed. Fresh exact-commit and
+protected delivery evidence is recorded above; no schema work needs restarting.
 
 Next complete independently approved atomic authority commands, genuine-person
 continuation, guided UI and the actual isolated
@@ -82,6 +83,20 @@ fixture. Preserve existing truthful representation and immutable `maru-operators
 two distinct eligible people's own acceptances, Department-scoped call/review
 versus edition-scoped planning, and independently approved additional authority.
 Do not infer authority from a source fingerprint or an earlier invitation.
+
+Owner-command integration review found a fail-closed prerequisite defect before
+that implementation: the native decision guard expects the author's unsuffixed
+assignment operation for independent-approver evidence, but the canonical owner
+correctly emits `authorization.role.assign.approve`. Fix forward in migration 0035;
+do not edit protected migrations or accept an author's audit as approval. The
+candidate adds source-pinned readiness composition, a producer/consumer unit
+regression and retained migration/reverse debt. No public command or route is
+activated. Full database-free feedback passed 9,323 tests in 66.35s; the approved
+empty-schema observation passed composed readiness in 191.313s, with no table-shape
+change. Its exact disposable container was removed. See the
+[repair evidence](../checkpoints/2026-09-17-programme-approval-audit-repair.md).
+Fresh exact-commit/protected delivery remains pending. Finish this necessary
+compatibility repair before the approval writer.
 
 Keep current profiles unchanged; final promotion waits for #102/#97/#92/#109.
 Delivered item, Applications, reference/file, timetable/release/staffing, notice
