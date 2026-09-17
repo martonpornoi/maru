@@ -1,13 +1,16 @@
 """Database-free approval storage contracts, never native acceptance."""
 
 import json
+from dataclasses import replace
 from importlib import import_module
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, models
 
+from maru.authorization import commands
 from maru.authorization import programme_role_readiness as readiness
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
@@ -93,6 +96,7 @@ def test_native_boundary_is_source_derived_and_complete_not_authorization_wide()
         ("authorization", "0032_programme_role_approval_records"),
         ("authorization", "0033_programme_role_approval_integrity"),
         ("authorization", "0034_programme_role_approval_downgrade_fence"),
+        ("authorization", "0035_programme_role_approval_audit"),
     }
     assert len(CONTRACT.triggers) == 4
     assert set(CONTRACT.functions) == {
@@ -186,3 +190,58 @@ def test_storage_and_downgrade_sources_are_pinned(monkeypatch, migration):
     assert readiness._retained_migration_sources_current()
     monkeypatch.setitem(readiness._MIGRATION_SOURCE_SHA256, migration, "0" * 64)
     assert not readiness._retained_migration_sources_current()
+
+
+def test_native_approval_requires_the_actual_owner_approval_audit(monkeypatch):
+    append = MagicMock()
+    monkeypatch.setattr(commands, "append_audit", append)
+    context = commands._CommandAudit(
+        capability_code="authorization.manage_roles",
+        operation="authorization.role.assign",
+        target_type="authorization.role_assignment",
+        target_id=uuid4(),
+        organization_id=uuid4(),
+        edition_id=uuid4(),
+        correlation_id=uuid4(),
+        request_id=None,
+        source_channel="test",
+        obligations=(),
+        changed_fields=("role_assignment",),
+    )
+    commands._append_command_audit(
+        principal=MagicMock(id=uuid4()),
+        command=context,
+        outcome="allow",
+        reason_code="independent_approval",
+        approval=True,
+    )
+    record = append.call_args.args[0]
+    assert record.operation == "authorization.role.assign.approve"
+    source = CONTRACT.functions["maru_programme_role_decision_guard()"].source
+    assert f"audit.operation = '{record.operation}'" in source
+    assert "audit.operation = 'authorization.role.assign'" not in source
+
+
+def test_audit_fix_forward_preserves_every_other_guard_and_retains_reverse_fence():
+    repair = import_module(
+        "maru.authorization.migrations.0035_programme_role_approval_audit"
+    )
+    _, original = integrity.parse_database_integrity_sql_contracts(GUARDS.FORWARD_SQL)
+    decision = "maru_programme_role_decision_guard()"
+    for name, function in original.items():
+        expected = (
+            function
+            if name != decision
+            else replace(
+                function,
+                source=function.source.replace(
+                    "audit.operation = 'authorization.role.assign'",
+                    "audit.operation = 'authorization.role.assign.approve'",
+                ),
+            )
+        )
+        assert CONTRACT.functions[name] == expected
+    assert repair.FORWARD_SQL.startswith(repair._LOCKS + repair._PREFLIGHT)
+    assert repair.REVERSE_SQL.startswith(repair._LOCKS + repair._UNUSED_ONLY)
+    assert "canonical audit review" in repair._PREFLIGHT
+    assert "retain it and fix forward" in repair._UNUSED_ONLY

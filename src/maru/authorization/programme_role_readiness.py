@@ -13,6 +13,7 @@ from django.db import DatabaseError
 from maru.core.database_integrity_readiness import (
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
 )
 from maru.core.relation_schema_readiness import relation_schema_is_current
 
@@ -58,6 +59,11 @@ PROGRAMME_ROLE_INTEGRITY_CONTRACT = replace(
     and _retained_migration_sources_current(),
     supporting_migrations=(("authorization", "0032_programme_role_approval_records"),),
     owned_relations=PROGRAMME_ROLE_RELATIONS,
+)
+PROGRAMME_ROLE_INTEGRITY_CONTRACT = extend_database_integrity_contract(
+    PROGRAMME_ROLE_INTEGRITY_CONTRACT,
+    migration_module="maru.authorization.migrations.0035_programme_role_approval_audit",
+    source_sha256="11820f6d59b46fe9eeb59ae22e9b14a2ae14bd8f34abd10a534874dc5d24d54e",
 )
 # Observed on PostgreSQL 17.11 by the approved disposable schema-only migration.
 # Relation/catalog evidence is not native workflow or migration-test acceptance.
