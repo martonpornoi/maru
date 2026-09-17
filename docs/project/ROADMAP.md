@@ -862,7 +862,9 @@ compose exact existing authority owners; their native acceptance is deferred.
 Protected own-request readers and actual-person review controls are implemented
 dormant. The guided foundation creation/reuse screen and original-actor receipt
 now hand off to existing truthful representation controls. Guided operational
-request creation and the complete isolated fixture remain unfinished; component
+request creation previews exact known people and scope before retaining original
+intent for the named approver's own decision. Shared navigation and the complete
+isolated fixture remain unfinished; component
 browser evidence does not replace native/human acceptance.
 These remain components, not an activated departmental workflow. Next are
 accountable setup and a complete isolated fixture, followed by #102 restored
