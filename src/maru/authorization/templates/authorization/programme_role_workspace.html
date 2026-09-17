@@ -18,6 +18,7 @@
   <p><strong>Actual grant scope:</strong> {{ workspace.scope_label }} · {{ scope_level|title }}</p>
   {% if scope_level == "organization" %}<p class="baseline-notice">This request concerns shared organization-wide Venue facts, not just this edition. Ending an edition does not itself revoke this broader access.</p>{% endif %}
   <p>A request grants nothing. An approver must make their own decision; accepting a representation invitation is not approval of this access. All times below are UTC.</p>
+  <p><a href="{{ root_url }}new/">Prepare a new access request in this exact scope</a></p>
   {% if message %}<div class="baseline-notice" role="alert" tabindex="-1" autofocus><p>{{ message }}</p></div>{% endif %}
   {% if selected %}<p><a href="{{ root_url }}">Back to my open requests in this scope</a></p>{% else %}
   <p>Complete open inventory for this scope, up to 100 unexpired undecided requests. This is not a history export. Keep original request links to revisit expired or decided requests while you remain authorized.</p>{% endif %}

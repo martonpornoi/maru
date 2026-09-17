@@ -164,10 +164,40 @@ decision storage with native integrity/readiness are implemented. The dormant
 owning request and actual-person decision commands now compose the existing
 dual-control role commands atomically. Protected own-request projections and
 decision controls and guided foundation creation/reuse are implemented dormant;
-guided operational request creation remains unfinished. Current profiles are
+guided operational request creation is also implemented dormant. Current profiles are
 unchanged. Storage alone cannot prove a
 person's action or grant access.
 See the [owning contract](../../modules/authorization.md#dormant-programme-operational-role-contracts).
+
+### Guided operational request creation
+
+Beside the exact-scope approval inventory, a current ordinary persistent controller
+may prepare one role request. The reserved `new/` continuation uses the same full
+organization, Programme edition and actual target chain. It offers only the
+code-owned recipes admitted by the exact profile at that target level. No scope
+or authenticated actor comes from a form field. Broader Organization Venue
+consequences remain explicit; a room request requires an existing canonical binding.
+
+The controller supplies two known exact addresses, an optional earliest start and
+end explicitly in UTC, and a bounded reason. A protected preview resolves only
+those eligible people, presents their display labels and exact capabilities, and
+binds the selection to the full original intent and retry key. No account directory
+or retained contact list is created. Approver differs from author and recipient;
+recipient may be author. A preview is neither a request nor approval or authority.
+
+Confirmation verifies the purpose-signed original selection without resolving a
+mutable email again, then calls the existing request command once. The original
+key and intent survive uncertainty. Changed terms require a deliberate new preview,
+not silent retargeting or automatic submission. Success redirects to the retained
+own-request review screen; the named approver must still act in their own session.
+The request sends no invitation or message and creates no grant.
+
+Empty recipe choices, unavailable exact matches, malformed input, denied access,
+stale source and dependency failure show bounded recovery without a partial people
+directory. Fresh controller admission, sensitive-read audit and final rendered-source
+comparison protect labels. Shared shell, CSRF, strict bounded fields, no-store,
+visible keyboard focus, narrow layouts and pending-input protection apply. Actual
+native and human acceptance remains #102/#92/#109; production routes stay unmounted.
 
 ### Scoped operational approval workspace
 
@@ -210,8 +240,8 @@ The screen uses one H1/main, the shared Access explanation, ordinary labelled
 forms, keyboard-visible focus, stacked narrow cards and pending-input protection.
 Synthetic component rehearsal is not native independent-approval proof or human
 acceptance; #102/#92/#109 retain those gates. The separate foundation screen below
-reuses existing invitation/acceptance controls. Guided creation of new operational
-requests remains unfinished and is not implied by this review screen.
+reuses existing invitation/acceptance controls. The separate guided creation
+continuation above prepares exact original intent without impersonating approval.
 
 ### Original setup intent
 
@@ -261,7 +291,7 @@ receipts/audit to the complete setup result. Exact replay requires current platf
 admission but does not repeat writes or grant access. Independently approved
 operational authority and two people's own continuation still require native and
 human acceptance. The guided foundation surface is implemented dormant; guided
-operational request creation and the complete isolated fixture remain unfinished.
+shared navigation and the complete isolated fixture remain unfinished.
 
 On successful activation, the accepted owner sequence is:
 

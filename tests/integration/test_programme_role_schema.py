@@ -43,6 +43,10 @@ from maru.authorization.policy import (
     resolve_edition_target,
     resolve_organization_target,
 )
+from maru.authorization.programme_role_creation import (
+    load_programme_role_creation,
+    prepare_programme_role_creation,
+)
 from maru.authorization.programme_role_inputs import (
     ProgrammeRoleDecision,
     ProgrammeRoleIntent,
@@ -55,6 +59,10 @@ from maru.authorization.programme_role_readiness import (
     programme_role_database_integrity_is_ready,
 )
 from maru.authorization.programme_role_recipes import PROGRAMME_ROLE_RECIPES
+from maru.authorization.programme_role_selection import (
+    ProgrammeRoleRequestDraft,
+    verify_programme_role_selection,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
 from maru.effects.models import DomainEvent, OutboxMessage
@@ -134,6 +142,92 @@ def _command_decision(world, original, **changes):
             **changes,
         }
     )
+
+
+def _creation_draft(world):
+    return ProgrammeRoleRequestDraft(
+        "coverage-reader",
+        1,
+        world[4].email,
+        world[3].email,
+        None,
+        None,
+        "Synthetic original request preview.",
+        uuid4(),
+    )
+
+
+def test_native_creation_previews_exact_people_without_request_or_grant(command_world):
+    world = command_world
+    trace = uuid4()
+    before = (ProgrammeRoleRequest.objects.count(), RoleAssignment.objects.count())
+    result = prepare_programme_role_creation(
+        actor=world[2],
+        scope=_command_scope(world),
+        draft=_creation_draft(world),
+        correlation_id=trace,
+    )
+    assert result.selection.details.recipient_id == world[4].id
+    assert result.selection.details.approver_id == world[3].id
+    assert (
+        ProgrammeRoleRequest.objects.count(),
+        RoleAssignment.objects.count(),
+    ) == before
+    audit = AuditEvent.objects.get(
+        correlation_id=trace, operation="authorization.programme_role.prepare"
+    )
+    assert audit.safe_metadata["target_count"] == 2
+    assert audit.principal_id == world[2].id
+    assert world[4].email not in str(audit.safe_metadata)
+
+
+def test_native_original_selection_replay_never_retargets_changed_email(command_world):
+    world = command_world
+    draft = _creation_draft(world)
+    scope = _command_scope(world)
+    preview = prepare_programme_role_creation(
+        actor=world[2],
+        scope=scope,
+        draft=draft,
+        correlation_id=uuid4(),
+    )
+    selected = verify_programme_role_selection(
+        actor_id=world[2].id,
+        scope=scope,
+        draft=draft,
+        proof=preview.selection.proof,
+    )
+    original = _command_request(
+        world, details=selected.details, idempotency_key=draft.idempotency_key
+    )
+    world[4].email = f"changed-{world[4].id}@example.invalid"
+    world[4].save(update_fields=["email"])
+    refreshed = load_programme_role_creation(
+        actor=world[2],
+        scope=scope,
+        original=(draft, selected.proof),
+        correlation_id=uuid4(),
+    )
+    assert refreshed.selection.details.recipient_id == world[4].id
+    replay = _command_request(
+        world,
+        details=refreshed.selection.details,
+        idempotency_key=draft.idempotency_key,
+    )
+    assert replay.replayed
+    assert replay.request_id == original.request_id
+
+
+def test_native_creation_cannot_prepare_people_in_foreign_scope(command_world):
+    world = command_world
+    other = _foundation(("programme_operations", 1))
+    with pytest.raises(AuthorizationDenied):
+        prepare_programme_role_creation(
+            actor=world[2],
+            scope=_command_scope(other),
+            draft=_creation_draft(world),
+            correlation_id=uuid4(),
+        )
 
 
 @pytest.mark.parametrize("person_index", [2, 3])

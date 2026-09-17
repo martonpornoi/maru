@@ -1,7 +1,13 @@
 .programme-access select,
+.programme-access input:not([type="hidden"]):not([type="checkbox"]),
 .programme-access button[type="submit"] {
   min-block-size: 2.75rem;
   font: inherit;
+}
+.programme-access input[type="datetime-local"] {
+  color: var(--body-fg);
+  background: var(--body-bg);
+  border: 1px solid var(--hairline-color);
 }
 .programme-access button[type="submit"] {
   padding: 0.65rem 1rem;
@@ -20,4 +26,9 @@
 .programme-access input[type="checkbox"] {
   inline-size: 1.4rem;
   block-size: 1.4rem;
+}
+.programme-access .errorlist {
+  color: var(--body-fg);
+  border-inline-start: 0.2rem solid var(--error-fg);
+  padding-inline-start: 0.75rem;
 }

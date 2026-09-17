@@ -11,54 +11,58 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Dormant own-person Programme approval review is delivered through
-[PR #159](https://github.com/martonpornoi/maru/pull/159), protected squash
-`fab1f1bff140d9a69c0c21427ccc75f8609bf336` at 2026-09-17 21:50:38 UTC.
-Its tree equals certified head `b991521870fda69c6e54de6ec950e0103e696df9`;
+Dormant guided Programme foundation setup is delivered through
+[PR #160](https://github.com/martonpornoi/maru/pull/160), protected squash
+`dc5623999ee261802e8b25d2d7226923d801f977` at 2026-09-17 22:46:50 UTC.
+Its tree equals certified head `fcd12e22a1871615011589281fc2536e09df0988`;
 clean local main matched origin/main and the protected result. All eight
-retained local gates passed in 6m46s, including 9,509 units in 71.87s and
-103 frontend cases. Hosted quality took 11m21s and units 2m03s; exact-head PR
+retained local gates passed in 5m28s, including 9,601 units in 56.59s and
+103 frontend cases. Hosted quality took 11m56s and units 1m24s; exact-head PR
 gate and CodeQL passed. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-17-programme-approval-workspace-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-18-programme-guided-setup-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
 approval storage, #157 canonical independent-audit correction and #158 actual
 request/decision commands, followed by #159's protected reader and genuine-person
-review screen. These do not activate either current profile.
+review screen and #160's guided foundation/representation handoff.
+These do not activate either current profile.
 The [setup evidence](../checkpoints/2026-09-17-programme-atomic-setup-protected-delivery.md)
 and [approval schema evidence](../checkpoints/2026-09-17-programme-operational-approval-schema.md)
 retain the separately approved schema-only observations and native debt.
 No prerequisite in that chain needs restarting.
 
-## Current work: guided foundation setup (#108)
+## Current work: guided operational requests (#108)
 
-Branch: `codex/programme-guided-foundation-setup`, from protected PR #159.
-Implemented labelled new/existing foundation choices, original-intent confirmation,
-an exact original-actor receipt and truthful continuation to the existing
-Representation & access workflow. Current platform Identity and exact-profile
-admission precede reads; final source checks precede identifying disclosure.
-No schema, runtime privilege, current-profile or production-route change.
-The final complete database-free suite passed 9,601 tests in 55.61s; strict mypy
-passed 711 source files. All 92 new projection/form/view cases passed. Synthetic
-database-prohibited browser rehearsal covered all three modes, keyboard confirmation,
-original input/source recovery, honest receipt creation/reuse and representation
-states, denial/overflow, seven widths and shared-theme 44-pixel controls. Three new
-maintained native cases remain uncollected/unexecuted. Exact-commit certification
+Branch: `codex/programme-guided-access-requests`, from protected PR #160.
+Implemented exact-scope task choices, known-recipient/independent-approver preview,
+purpose-signed original selection and explicit confirmation through the existing
+request command. No mutable email lookup occurs on confirmation/retry; no grant
+or message is created. The retained receipt reuses the genuine-person review screen.
+Current ordinary controller admission, native integrity and final source/audit
+checks protect disclosure. No schema, runtime privilege, current-profile or
+production-route change.
+Final complete database-free feedback passed 9,713 tests in 55.88s, including
+112 new signature/query/form/view cases. Strict mypy passed 715 source files;
+Ruff and strict documentation checks passed. Database-prohibited browser rehearsal
+covered ordinary preview/keyboard confirmation/receipt, all four scope choice
+surfaces, conflict/uncertain retry, empty/no-match/denied/unavailable states and
+seven widths. Error-text contrast was corrected and observed in the browser.
+Three new maintained native cases remain uncollected/unexecuted under #102;
+native/two-person/assistive acceptance remains #92/#109. Exact-commit certification
 and protected delivery remain pending; see the
-[setup checkpoint](../checkpoints/2026-09-18-programme-guided-foundation-setup.md).
+[request-creation checkpoint](../checkpoints/2026-09-18-programme-guided-access-requests.md).
 
 The prior approval review's five maintained native cases remain uncollected and
 unexecuted under #102. Its database-prohibited browser observations are component
 evidence, not actual zoom, native independent approval or two-human acceptance.
 Those remaining human checks are recorded in #92.
 
-Next: finish this increment's protected delivery, then guided creation of
-operational requests through the existing commands. Preserve truthful roots and
-two people's own acceptances.
+Next: finish this increment's protected delivery, then shared navigation and
+the complete isolated synthetic fixture. Preserve truthful roots and two people's
+own acceptances.
 A selected approver email is never their decision; no catch-all role may replace
 Department, Edition, Organization Venue or exact-room scope. ADR 0106 is unchanged.
-Then finish coherent navigation and the complete isolated synthetic fixture.
 The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
 defines twelve checkpoints; it is not an executable or accepted complete fixture.
 #108/#48 remain open and final promotion waits for #102/#97/#92/#109.

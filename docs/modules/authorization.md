@@ -6,7 +6,7 @@ Maru-operator roots, provenance writing, profile-compatible access management,
 and guarded exact-lineage policy/runtime activation; dormant Applications
 Programme capabilities remain unadopted and production legacy reconciliation
 and cutover remain gates
-Last updated: 2026-09-17
+Last updated: 2026-09-18
 
 ## Purpose and requirements
 
@@ -103,8 +103,8 @@ pinned readiness. This is not native behavior, reverse, runtime-role, concurrenc
 or workflow acceptance. Maintained native tests remain uncollected/unexecuted.
 The command and own-person review continuations below are implemented dormant.
 The foundation creation/reuse screen now hands off to existing representation
-controls; guided operational request creation and the complete fixture remain
-unfinished. No production
+controls. Guided operational request creation is also implemented dormant;
+shared navigation and the complete fixture remain unfinished. No production
 route, API, automatic notification or profile activation is introduced here.
 Native, logical recovery, human and integrated proof remain #102/#97/#92/#109 gates.
 
@@ -146,8 +146,35 @@ stale names or controls. A successful command redirects to its original receipt
 and is never repeated by rendering. Pending-input protection reuses the existing
 Programme script; new decision controls have 44-pixel minimum touch targets.
 See the [workspace contract](../product/page-contracts/programme-operations-adoption-setup.md#scoped-operational-approval-workspace).
-Guided creation of requests, full setup continuation and integrated/native/human
-acceptance remain separate. Neither current profile mounts these routes.
+The same exact-scope inventory now links to reserved `new/` request creation.
+`programme_role_creation` requires the same current persistent ordinary controller,
+canonical scope locks, integrity and exact-profile admission before releasing scope
+labels or selecting people. Recipe choices contain only exact profile-admitted
+definitions valid for the actual target level; multi-scope on-site recipes remain
+available at their explicitly allowed Edition, Department and room scopes.
+
+The creator supplies only two known exact addresses, one recipe, explicitly UTC
+optional interval and rationale. Identity resolves those addresses once during
+fresh preparation, never as a directory. `programme_role_selection` binds exact
+people, authenticated author, complete scope/definition digest, original selectors,
+interval/reason and retry key in a purpose signature. The signed payload contains
+only person references and an intent digest, not addresses. It grants nothing.
+Refresh/confirmation verifies original selection without re-resolving mutable
+emails. Missing current people get neutral labels; original retry still reaches
+the existing receipt-aware owner command, which distinguishes replay from a new
+request and rechecks its own current eligibility and horizons.
+
+Preparation and refresh append `authorization.programme_role.prepare` sensitive-read
+evidence under security-extended retention, including empty matches. Metadata is
+only the bounded selected-reference count; no contacts, retry keys or proof are
+copied into audit. Strict forms/CSRF, visible exact consequences, separate deliberate
+confirmation, final post-render projection comparison and pending-input recovery
+protect the adapter. Confirmation calls `request_programme_role` once and redirects
+before rendering to the original request receipt. A selected approver is not a
+decision; there is no automatic invitation, message, bundle or assignment.
+Request/decision form errors use high-contrast shared body text with an error border,
+not low-contrast red text alone. Native and integrated/human acceptance remain
+separate; neither current profile mounts these routes.
 
 Requests retain exact normalized intent without creating a bundle or assignment.
 Shared structure/provenance/retirement fences precede the actor/key mutex,
