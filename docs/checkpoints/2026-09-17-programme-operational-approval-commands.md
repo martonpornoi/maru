@@ -81,3 +81,28 @@ Next deliver this command increment through protected checks, then add protected
 approval readers and genuine-person guided setup continuation. Complete the isolated
 setup-to-on-site fixture before restoring final database acceptance. Neither this
 increment nor a green development PR closes #108 or #48 or activates Programme.
+
+## Pre-merge retry-query review
+
+The initial clean head `c4020669e51014146e3f8cf3843803dc3da032f6` passed all eight
+retained gates in 378.798s, including 9,410 units in 68.91s and 103 frontend tests.
+Its `postgresql_deferred` receipt and four associated artifacts were hash-verified
+and preserved outside `.local-ci/`. PR #158 was opened; hosted units and CodeQL
+passed while quality remained running.
+
+Final review tightened retained-row retry queries to include the full authorized
+tenant/context/target chain instead of relying on author/key plus digest rejection.
+Global actor/key collisions now fail through the existing native unique constraint
+and become safe retry conflicts without loading another scope's receipt. Only those
+two exact SQLSTATE/constraint combinations are classified; unrelated native failures
+still propagate and roll back. Thirteen additional database-free scenarios and two
+maintained native cross-edition collision cases cover the change. The new command/
+boundary focus passed 100 cases in 0.54s; native scenarios remain unexecuted.
+
+PR #158 was returned to draft, cancelling obsolete acceptance. The earlier receipt
+does not certify this follow-up; fresh complete feedback, clean exact-commit
+certification and hosted ready-state acceptance are required before merge.
+
+Corrected complete feedback passed **9,423 units in 67.12s**, with the same three
+existing URL warnings. Types (703 source files), strict NumPy contracts and semantic
+documentation (724 files) passed. The native suite remained uncollected/unexecuted.

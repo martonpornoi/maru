@@ -114,10 +114,19 @@ typed-resource negatives and command/boundary focus passed 87 cases in 0.50s.
 The first full attempt hit pytest's inaccessible shared Windows temp folder;
 the successful complete rerun used a fresh repository-owned temp directory with
 no skipped cases or permission changes. Types and documentation checks passed.
-Ten maintained native command cases remain uncollected/unexecuted. No schema or
+Twelve maintained native command cases remain uncollected/unexecuted. No schema or
 Docker work was needed. See the [command checkpoint](../checkpoints/2026-09-17-programme-operational-approval-commands.md).
 Next finish clean exact-commit certification/protected delivery, then protected
 approval readers, genuine-person guided setup and the isolated integrated fixture.
+
+PR #158 is draft for final retry-query hardening. Its earlier exact head `c402066`
+passed all eight retained local gates in 6m19s (9,410 units, 103 frontend), but that
+receipt does not certify the follow-up. Retained-row lookups now pin the full
+tenant/context/target chain; global key collisions are classified from the native
+unique constraint without reading another scope's receipt. Focused feedback passed
+100 command/boundary cases; complete feedback passed 9,423 units in 67.12s, along
+with types and documentation checks. Fresh exact certification remains required
+before the new head is marked ready. No schema or policy change.
 
 Keep current profiles unchanged; final promotion waits for #102/#97/#92/#109.
 Delivered item, Applications, reference/file, timetable/release/staffing, notice

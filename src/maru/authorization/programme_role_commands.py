@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from maru.audit.services import AuditRecord, append_audit
@@ -156,6 +157,40 @@ def _effective_start(details: ProgrammeRoleIntent, now: datetime) -> datetime:
     return start
 
 
+def _scope_filter(scope: ProgrammeRoleScope, *, prefix: str = "") -> Q:
+    return Q(
+        **{
+            f"{prefix}organization_id": scope.organization_id,
+            f"{prefix}programme_edition_id": scope.programme_edition_id,
+            f"{prefix}edition_id": None
+            if scope.level is ScopeLevel.ORGANIZATION
+            else scope.programme_edition_id,
+            f"{prefix}scope_level": scope.level.value,
+            f"{prefix}department_id": scope.department_id,
+            f"{prefix}resource_binding_id": scope.resource_binding_id,
+        }
+    )
+
+
+def _append_evidence(
+    record: ProgrammeRoleRequest | ProgrammeRoleDecisionRecord,
+) -> None:
+    try:
+        with _programme_role_writer():
+            record.save(force_insert=True)
+    except IntegrityError as error:
+        cause = error.__cause__
+        if getattr(cause, "sqlstate", None) == "23505" and getattr(
+            getattr(cause, "diag", None), "constraint_name", None
+        ) in {"programme_role_request_author_key", "programme_role_decision_actor_key"}:
+            # Actor/key uniqueness is global, but no other tenant/target row is read.
+            # The outer transaction rolls back every audit and owner write.
+            raise _conflict(
+                "This key belongs to different intent.", "retry_conflict"
+            ) from error
+        raise
+
+
 def request_programme_role(
     *,
     actor: Account,
@@ -223,7 +258,11 @@ def request_programme_role(
         _require_integrity()
         original = (
             ProgrammeRoleRequest.objects.select_for_update()
-            .filter(author_id=actor.id, idempotency_key=idempotency_key)
+            .filter(
+                _scope_filter(scope),
+                author_id=actor.id,
+                idempotency_key=idempotency_key,
+            )
             .first()
         )
         if original is not None:
@@ -281,8 +320,7 @@ def request_programme_role(
             correlation_id=correlation_id,
             source_channel=source_channel,
         )
-        with _programme_role_writer():
-            original.save(force_insert=True)
+        _append_evidence(original)
         return _request_result(original, replayed=False)
 
 
@@ -350,19 +388,14 @@ def decide_programme_role(
         target = _lock_scope(scope)
         _require_profile()
         _require_integrity()
-        requests = ProgrammeRoleRequest.objects.select_for_update().filter(
-            id=request_id,
-            organization_id=scope.organization_id,
-            programme_edition_id=scope.programme_edition_id,
-            scope_level=scope.level.value,
-            resource_binding_id=scope.resource_binding_id,
+        original = (
+            ProgrammeRoleRequest.objects.select_for_update()
+            .filter(
+                _scope_filter(scope),
+                id=request_id,
+            )
+            .first()
         )
-        requests = (
-            requests.filter(department__isnull=True)
-            if scope.department_id is None
-            else requests.filter(department_id=scope.department_id)
-        )
-        original = requests.first()
         if original is None or actor.id != (
             original.author_id
             if action is ProgrammeRoleDecision.CANCEL
@@ -388,7 +421,7 @@ def decide_programme_role(
             )
         _require_profile(recipe)
         terminal = ProgrammeRoleDecisionRecord.objects.filter(
-            request_id=original.id
+            _scope_filter(scope, prefix="request__"), request_id=original.id
         ).first()
         if terminal is not None:
             people = _lock_people({actor.id})
@@ -411,7 +444,9 @@ def decide_programme_role(
         people = _lock_people(identities)
         _require_current_controller(people[actor.id], target)
         if ProgrammeRoleDecisionRecord.objects.filter(
-            actor_id=actor.id, idempotency_key=idempotency_key
+            _scope_filter(scope, prefix="request__"),
+            actor_id=actor.id,
+            idempotency_key=idempotency_key,
         ).exists():
             raise ValidationError(
                 "This key belongs to another decision.",
@@ -477,6 +512,5 @@ def decide_programme_role(
             correlation_id=correlation_id,
             source_channel=source_channel,
         )
-        with _programme_role_writer():
-            terminal.save(force_insert=True)
+        _append_evidence(terminal)
         return _decision_result(terminal, replayed=False)

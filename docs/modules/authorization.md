@@ -143,6 +143,12 @@ terminal outcomes or regrant revoked/expired assignments. Another key or changed
 intent conflicts. No result is evidence of currently effective access. Current
 scope/recipe admission also applies to cancellation and retries: retired or
 unavailable scope preserves evidence instead of writing through a stale boundary.
+Every retained request and decision lookup pins organization, Programme context
+and the complete target chain, including null narrower scope. Global actor/key
+uniqueness remains a database constraint, not permission to load a receipt from
+another scope. A collision outside the admitted target rolls back the whole
+transaction and becomes a safe retry conflict; unrelated integrity failures are
+not relabelled as collisions.
 
 No migration, runtime privilege, root role, capability or current profile changes.
 The isolated native command scenarios extend the existing schema-test candidate

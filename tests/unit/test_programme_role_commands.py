@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import IntegrityError, models
 
 from maru.authorization import programme_role_boundary as boundary
 from maru.authorization import programme_role_commands as commands
@@ -353,10 +353,79 @@ def test_unknown_or_foreign_request_has_same_denial(world):
         decision(world, original)
     filters = world.requests.filter.call_args_list[0].kwargs
     assert filters["author_id"] == world.actor.id  # first call was request creation
-    decision_filters = world.requests.filter.call_args_list[-2].kwargs
+    decision_filters = dict(world.requests.filter.call_args.args[0].children)
     assert decision_filters["organization_id"] == world.scope.organization_id
     assert decision_filters["programme_edition_id"] == world.scope.programme_edition_id
-    assert world.requests.filter.call_args.kwargs == {"department__isnull": True}
+    assert decision_filters["department_id"] is None
+    assert decision_filters["resource_binding_id"] is None
+    assert world.requests.filter.call_args.kwargs == {"id": original.id}
+
+
+@pytest.mark.parametrize("level", list(ScopeLevel))
+@pytest.mark.parametrize("prefix", ["", "request__"])
+def test_every_retained_lookup_pins_tenant_context_and_full_target(level, prefix):
+    scoped = ProgrammeRoleScope(
+        uuid4(),
+        uuid4(),
+        level,
+        uuid4() if level in {ScopeLevel.DEPARTMENT, ScopeLevel.RESOURCE} else None,
+        uuid4() if level is ScopeLevel.RESOURCE else None,
+        "venue.edition_space" if level is ScopeLevel.RESOURCE else "",
+    )
+    values = dict(commands._scope_filter(scoped, prefix=prefix).children)
+    assert values == {
+        prefix + "organization_id": scoped.organization_id,
+        prefix + "programme_edition_id": scoped.programme_edition_id,
+        prefix + "edition_id": None
+        if level is ScopeLevel.ORGANIZATION
+        else scoped.programme_edition_id,
+        prefix + "scope_level": level.value,
+        prefix + "department_id": scoped.department_id,
+        prefix + "resource_binding_id": scoped.resource_binding_id,
+    }
+
+
+@pytest.mark.parametrize(
+    "constraint",
+    ["programme_role_request_author_key", "programme_role_decision_actor_key"],
+)
+def test_cross_scope_global_key_conflict_is_classified_without_foreign_row_read(
+    constraint,
+):
+    cause = Exception("Synthetic unique violation")
+    cause.sqlstate = "23505"
+    cause.diag = SimpleNamespace(constraint_name=constraint)
+    error = IntegrityError("Synthetic global key collision")
+    error.__cause__ = cause
+    record = MagicMock()
+    record.save.side_effect = error
+    with pytest.raises(ValidationError, match="different intent") as caught:
+        commands._append_evidence(record)
+    assert caught.value.code == "programme_role_retry_conflict"
+    with pytest.raises(ValidationError):
+        _require_programme_role_writer()
+
+
+@pytest.mark.parametrize(
+    ("state", "constraint"),
+    [
+        ("23514", "programme_role_request_author_key"),
+        ("23505", "unexpected_constraint"),
+        (None, None),
+    ],
+)
+def test_unrelated_native_failure_is_not_misreported_as_retry_conflict(
+    state, constraint
+):
+    cause = Exception("Synthetic native failure")
+    cause.sqlstate = state
+    cause.diag = SimpleNamespace(constraint_name=constraint)
+    error = IntegrityError("Unrelated invariant failed")
+    error.__cause__ = cause
+    record = MagicMock()
+    record.save.side_effect = error
+    with pytest.raises(IntegrityError, match="Unrelated invariant"):
+        commands._append_evidence(record)
 
 
 def test_expired_approval_does_not_create_role_or_audit(world):

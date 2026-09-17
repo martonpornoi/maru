@@ -10,6 +10,7 @@ collected or executed until the final #102 gate restores PostgreSQL testing.
 
 from dataclasses import replace
 from datetime import date, timedelta
+from functools import partial
 from importlib import import_module
 from uuid import UUID, uuid4
 
@@ -293,6 +294,62 @@ def test_actual_approved_retry_does_not_regrant_revoked_output(command_world):
     assert (
         RoleAssignment.objects.get(id=replay.role_assignment_id).revoked_at is not None
     )
+
+
+@pytest.mark.parametrize("operation", ["request", "decision"])
+def test_actual_cross_edition_key_conflict_retains_no_foreign_receipt(
+    command_world, operation
+):
+    organization, edition, author, approver, recipient = command_world
+    other_edition = create_event_edition(
+        actor=AccountFactory(is_staff=True, is_superuser=True),
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        details=EventEditionDetails(
+            name="Synthetic alternate approval edition",
+            time_zone="UTC",
+            language_codes=("en",),
+            currency_codes=("XXX",),
+            starts_on=date(2031, 9, 6),
+            ends_on=date(2031, 9, 8),
+        ),
+        idempotency_key=uuid4(),
+        adoption_profile_code="programme_operations",
+        correlation_id=uuid4(),
+        source_channel="test",
+    ).edition
+    other = (organization, other_edition, author, approver, recipient)
+    key = uuid4()
+    first = _command_request(command_world, idempotency_key=key)
+    if operation == "decision":
+        second = _command_request(other)
+        _command_decision(
+            command_world,
+            first,
+            idempotency_key=key,
+            action=ProgrammeRoleDecision.DECLINE,
+        )
+        invoke = partial(
+            _command_decision,
+            other,
+            second,
+            idempotency_key=key,
+            action=ProgrammeRoleDecision.DECLINE,
+        )
+    else:
+        invoke = partial(_command_request, other, idempotency_key=key)
+    observed = (
+        ProgrammeRoleRequest,
+        ProgrammeRoleDecisionRecord,
+        RoleBundle,
+        RoleAssignment,
+        AuditEvent,
+    )
+    before = [model.objects.count() for model in observed]
+    with pytest.raises(ValidationError, match="different intent") as caught:
+        invoke()
+    assert caught.value.code == "programme_role_retry_conflict"
+    assert [model.objects.count() for model in observed] == before
 
 
 @pytest.fixture
