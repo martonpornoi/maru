@@ -1,7 +1,7 @@
 """Prepare genuine migration/runtime planes inside an owned rehearsal database.
 
 Native execution remains fenced by tracked policy. This installs the current
-schema and runtime ACLs, not the Programme candidate or any domain records.
+schema and runtime ACLs, optionally the isolated candidate schema, never domain records.
 """
 
 from __future__ import annotations
@@ -197,6 +197,8 @@ def _child(arguments, environment, *, timeout, expected_output=None):
 
 def provision_programme_runtime(
     lease: ProgrammeDatabaseLease,
+    *,
+    candidate_schema: bool = False,
 ) -> ProgrammeRuntimeEnvironment:
     """Install current schema and verify a genuine restricted runtime connection.
 
@@ -205,6 +207,10 @@ def provision_programme_runtime(
     lease : ProgrammeDatabaseLease
         Still-live exact resource yielded by ``isolated_programme_database``.
         This function must finish within that context; it never extends its lease.
+    candidate_schema : bool, optional
+        Explicitly install the closed fixture-only Events overlay before ACLs.
+        Default false preserves current-schema provisioning. This registers no
+        application profile and supplies no joined-startup acceptance.
 
     Returns
     -------
@@ -227,6 +233,8 @@ def provision_programme_runtime(
     used. Native execution and role/ACL evidence remain deferred under #102.
     """
     request = require_programme_rehearsal_request()
+    if not isinstance(candidate_schema, bool):
+        raise ProgrammeProvisioningError("invalid_candidate_schema_option")
     _verify_lease(lease, request)
     source = runtime_provisioning_sql(request.run_id)
     migration_password = secrets.token_urlsafe(32)
@@ -290,6 +298,25 @@ def provision_programme_runtime(
                 timeout=min(1800, request.lease_seconds),
             )
             _verify_lease(lease, request)
+            if candidate_schema:
+                candidate_environment = _child_environment(
+                    lease,
+                    request,
+                    role="maru_migration",
+                    password=migration_password,
+                    secret_key=secret_key,
+                ) | {
+                    "DJANGO_SETTINGS_MODULE": (
+                        "tests.rehearsals.programme_candidate_schema_settings"
+                    ),
+                    "MARU_PROGRAMME_REHEARSAL_SCHEMA": "candidate-v1",
+                }
+                _child(
+                    ["-m", "django", "migrate", "--noinput"],
+                    candidate_environment,
+                    timeout=min(1800, request.lease_seconds),
+                )
+                _verify_lease(lease, request)
             connection.execute(source, prepare=False)
             connection.execute(
                 sql.SQL("ALTER ROLE maru_runtime PASSWORD {}").format(

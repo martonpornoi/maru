@@ -43,8 +43,9 @@ handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
 pins, excluded scope, every owner route's round trip and unchanged production
 registration. This is preparation, not the complete fixture: native verification
-of the prepared database/runtime provisioner, candidate schema installation,
-truthful setup/role seeding and P01–P12 execution are still unfinished. Existing component rehearsals
+of the prepared database/runtime provisioner and candidate installation,
+guarded joined startup, truthful setup/role seeding and P01–P12 execution
+are still unfinished. Existing component rehearsals
 use authority/profile substitutions and cannot be relabelled as native or joined
 acceptance. No database fixture was launched or collected; both current profiles
 remain unchanged.
@@ -79,16 +80,25 @@ One additional host-only native provisioning case is maintained but uncollected/
 No Docker command, database, migration or server has been started. Candidate
 installation/startup, real setup/roles and the complete P01–P12 journey remain next.
 
-Next implementation boundary: explicit test-only candidate registration and real
-isolated schema installation, followed by guarded joined startup. Preserve both
-current profiles; do not treat the abbreviated transaction-local schema fixture,
-silenced deployment errors or relaxed test settings as native acceptance. The
-current three owner dormancy checks correctly reject profile adoption, so the
-isolated candidate needs an explicit, independently validated compatibility
-contract while preserving production checks and all native authorization/DDL
-guards. This boundary is not implemented yet. Keep native execution deferred.
-The new branch currently holds only this delivery handoff, not candidate code;
-the prior receipt certifies PR #166's exact head, not subsequent checkpoint edits.
+Prepared explicit pre-model candidate registration and an Events-only real
+migration overlay on this branch. Provisioning's closed opt-in mode installs
+current schema then the candidate overlay before unchanged ACLs. Empty-table,
+actual migration-login and server-parsed physical-constraint guards fence forward
+and reverse; any edition blocks reversal. Production migrations, profiles, routes
+and checks are unchanged. Registration preserves both existing manifest objects
+and does not itself mount routes, install handlers or suppress dormancy errors.
+The native provisioning file now maintains four cases (three added), all
+uncollected/unexecuted under #102. No Docker/database/schema-only check was run.
+
+Next: independently validated isolated compatibility and guarded joined startup,
+then genuine setup/roles and P01–P12. The three owner dormancy checks intentionally
+still reject adoption; a blanket ignored-error list or relaxed test settings must
+not substitute for that contract. Current implementation evidence is recorded in
+the [candidate installation checkpoint](../checkpoints/2026-09-18-programme-candidate-installation.md).
+Focused feedback passed 81 cases in 0.84s; complete database-free feedback passed
+10,464 cases in 60.40s after isolating pytest's temporary directory from a Windows
+permission failure. Exact-head certification/protected delivery is still pending;
+the previous receipt does not certify these changes.
 
 Non-blocking follow-up after #48: the semantic docstring validator's no-argument
 defaults are strings rather than Paths; its maintained explicit `src scripts`

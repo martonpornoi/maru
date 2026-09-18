@@ -127,7 +127,9 @@ database-name references become the exact run-scoped database; the reviewed ACLs
 are otherwise unchanged. When that source changes, review and deliberately update
 the fixture pin rather than silently consuming new grants. Runtime verification
 uses its own real login and the existing owner role-safety probe before returning
-a credential-bearing endpoint. Neither mock execution nor configuration validation
+a credential-bearing endpoint. Its explicit `candidate_schema=True` option adds
+the fixture-only migration below between current migrations and unchanged ACLs.
+The default remains current-schema-only. Neither mock execution nor configuration validation
 is proof that this native check has passed.
 
 Dedicated child settings inherit `maru.settings.base`, never local/test settings;
@@ -137,13 +139,56 @@ credentials and Python/settings overrides. Their in-memory email backend prevent
 external delivery and supplies no invitation acceptance evidence. These are
 non-serving migration/verification processes, not a candidate application server.
 
-`programme_provisioning_native.py` maintains one additional host-only #102 case:
-actual current-schema migrations and runtime safety, independent genuine-user and
-DDL-owner observations, denied runtime DDL and refusal to re-provision existing
-roles. It remains uncollected/unexecuted during deferral and must be run separately
-after policy restoration. Candidate schema/profile installation, guarded joined
-application startup, real setup/roles and P01–P12 still require implementation and
-their own acceptance; no complete launcher command is available yet.
+`programme_provisioning_native.py` maintains four host-only #102 cases: current
+and candidate-schema provisioning, empty candidate forward/reverse/reapply, and
+physical-constraint drift refusal. Both provisioning variants inspect genuine
+runtime/DDL-owner identities, denied runtime DDL, actual constraint/history and
+refusal to re-provision existing roles. The candidate variant additionally
+checks fresh-child registration, owner catalogs and the continued production
+dormancy rejection. All remain uncollected/unexecuted during deferral and must
+be run separately after policy restoration. No complete launcher command is
+available yet.
+
+### Prepared candidate installation boundary
+
+`programme_candidate_schema_settings.py` is a non-serving, explicit migration
+child. It inherits the guarded provisioning settings and uses an Events-only
+migration overlay in `programme_event_migrations/`. The overlay discovers every
+unchanged owner migration, then appends `0015_isolated_programme_candidate` after
+the current `0014` leaf. It registers no application profile, so normal owner
+checks still run against the unchanged current profiles; no check is skipped or
+silenced. Production migration files/settings remain unchanged.
+
+The atomic overlay extends only the exact profile constraint and field choices
+with `programme_operations@1`. Its guard requires tracked required policy,
+explicit synthetic scope, actual PostgreSQL 17 database identity and genuine
+`maru_migration` session/current user. An exclusive edition-table lock serializes
+the empty-database check against writes. Before any forward or reverse schema
+mutation it compares the actual validated constraint to a separately literal
+reference parsed by the same server, using a transaction-local temporary table;
+missing, weakened or unvalidated definitions fail closed. Lock and statement
+timeouts bound the guard. Any edition, regardless of profile, fences both
+installation and reversal. Once used, dispose the owned synthetic fixture or
+fix forward; never fake a migration or rewrite history. Partial provisioning
+still requires exact owned-resource cleanup, not a retry/adoption path.
+
+`programme_registration.py` separately prepares explicit pre-model registration
+for a fresh runtime child. Import alone is pure; calling it first checks the
+tracked policy and isolated runtime environment, rejects previously loaded Events
+consumers/models and changed baseline keys/choices/selectors, and preserves both
+current manifest objects while extending immutable mappings with the closed
+candidate. No route, handler, authority, role or check is changed by this function.
+There is deliberately no settings/server entrypoint invoking it yet. The three
+owner dormancy checks remain intact: registration alone is **not** successful
+startup, schema proof or acceptance. Independently validated joined compatibility
+and guarded startup, genuine setup/role scenarios and P01–P12 are still required.
+
+Database-free checks compare the entire migration graph and canonical historical
+model state, preserve every unrelated model/constraint, and exercise installation,
+reversal, scope, drift, import-order and failure fences with doubles. They do not
+prove PostgreSQL DDL or runtime behavior. The four maintained native cases above
+remain #102 debt, including three added cases relative to PR #166; populated
+owner-command/recovery acceptance also remains mandatory in the complete fixture.
 
 Use repository-owned fictional convention names, synthetic people and reserved
 example domains. Do not copy an actual convention roster. Provide one primary

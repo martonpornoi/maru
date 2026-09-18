@@ -162,6 +162,42 @@ def test_real_login_planes_ordered_source_and_final_role_probe(prepared):
     assert prepared.inspector.call_count == 4
 
 
+def test_explicit_candidate_overlay_runs_after_current_migrations_before_acl(prepared):
+    provisioning.provision_programme_runtime(LEASE, candidate_schema=True)
+    current, candidate, probe = prepared.child.call_args_list
+    assert "MARU_PROGRAMME_REHEARSAL_SCHEMA" not in current.args[1]
+    assert candidate.args[0] == ["-m", "django", "migrate", "--noinput"]
+    assert candidate.args[1]["DJANGO_SETTINGS_MODULE"].endswith(
+        "programme_candidate_schema_settings"
+    )
+    assert candidate.args[1]["MARU_PROGRAMME_REHEARSAL_SCHEMA"] == "candidate-v1"
+    assert (
+        candidate.args[1]["MARU_DATABASE_URL"] == current.args[1]["MARU_DATABASE_URL"]
+    )
+    assert "MARU_PROGRAMME_REHEARSAL_SCHEMA" not in probe.args[1]
+    assert prepared.inspector.call_count == 5
+
+
+def test_candidate_migration_failure_never_grants_runtime_acl(prepared):
+    prepared.child.side_effect = [
+        None,
+        provisioning.ProgrammeProvisioningError("overlay_failed"),
+    ]
+    with pytest.raises(provisioning.ProgrammeProvisioningError, match="overlay_failed"):
+        provisioning.provision_programme_runtime(LEASE, candidate_schema=True)
+    assert len(prepared.connection.statements) == 5
+
+
+@pytest.mark.parametrize("value", [1, "candidate-v1", None])
+def test_candidate_option_is_closed_boolean(value, prepared):
+    with pytest.raises(
+        provisioning.ProgrammeProvisioningError, match="invalid_candidate_schema_option"
+    ):
+        provisioning.provision_programme_runtime(LEASE, candidate_schema=value)
+    prepared.docker.assert_not_called()
+    prepared.connect.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "changes",
     [
