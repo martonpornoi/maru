@@ -12,7 +12,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import NoReverseMatch, Resolver404, resolve, reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
@@ -97,6 +97,31 @@ def _root(request: HttpRequest, scope: ProgrammeRoleScope) -> str:
     )
 
 
+def _scope_choices_url(request: HttpRequest, scope: ProgrammeRoleScope) -> str:
+    # The chooser uses this module's existing shared-shell response boundary.
+    from maru.authorization.programme_role_scope_views import (  # noqa: PLC0415
+        programme_role_scopes,
+    )
+
+    values = {
+        "organization_id": scope.organization_id,
+        "edition_id": scope.programme_edition_id,
+    }
+    urlconf = getattr(request, "urlconf", None)
+    try:
+        url = reverse("programme-access-scopes", kwargs=values, urlconf=urlconf)
+        match = resolve(url, urlconf=urlconf)
+    except (NoReverseMatch, Resolver404):
+        return ""
+    if (
+        match.url_name != "programme-access-scopes"
+        or match.func is not programme_role_scopes
+        or match.kwargs != values
+    ):
+        return ""
+    return url
+
+
 def _render(
     request: HttpRequest,
     actor: Account,
@@ -117,6 +142,7 @@ def _render(
         selected=workspace.requests[0] if request_id else None,
         scope_level=scope.level.value,
         root_url=_root(request, scope),
+        scope_choices_url=_scope_choices_url(request, scope),
         form=form,
         message=message,
     )

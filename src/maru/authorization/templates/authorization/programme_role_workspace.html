@@ -10,6 +10,7 @@
 {% block content %}
 <div class="programme-workbench programme-access">
   <h1>Programme access review</h1>
+  {% if scope_choices_url %}<p><a href="{{ scope_choices_url }}">Choose another access scope</a></p>{% endif %}
   <details class="maru-access-summary"><summary><strong>Access</strong> · Own requests · {{ workspace.scope_label }}</summary>
     <p>Your current persistent controller authority permits this exact scope. Only requests you authored or were named to decide are shown. Recipient status, platform administration and a link do not grant this access.</p>
     <p>Each decision checks current people, scope, role and both controllers' authority again. A visible control is not a promise of approval.</p>

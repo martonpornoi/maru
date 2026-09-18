@@ -59,6 +59,10 @@ from maru.authorization.programme_role_readiness import (
     programme_role_database_integrity_is_ready,
 )
 from maru.authorization.programme_role_recipes import PROGRAMME_ROLE_RECIPES
+from maru.authorization.programme_role_scope_choices import (
+    can_enter_programme_role_scopes,
+    load_programme_role_scope_choices,
+)
 from maru.authorization.programme_role_selection import (
     ProgrammeRoleRequestDraft,
     verify_programme_role_selection,
@@ -155,6 +159,97 @@ def _creation_draft(world):
         "Synthetic original request preview.",
         uuid4(),
     )
+
+
+def test_native_scope_choices_audit_labels_without_creating_access(command_world):
+    organization, edition, author, _, _ = command_world
+    trace = uuid4()
+    before = (ProgrammeRoleRequest.objects.count(), RoleAssignment.objects.count())
+    result = load_programme_role_scope_choices(
+        actor=author,
+        organization_id=organization.id,
+        edition_id=edition.id,
+        correlation_id=trace,
+        source_channel="test",
+    )
+    assert {row.scope.level for row in result.choices} == {
+        ScopeLevel.ORGANIZATION,
+        ScopeLevel.EDITION,
+    }
+    assert all(row.label for row in result.choices)
+    assert (
+        ProgrammeRoleRequest.objects.count(),
+        RoleAssignment.objects.count(),
+    ) == before
+    audit = AuditEvent.objects.get(
+        correlation_id=trace, operation="authorization.programme_role.scopes.read"
+    )
+    assert audit.safe_metadata == {"target_count": 2}
+    assert audit.principal_id == author.id
+
+
+def test_native_scope_choices_do_not_discover_foreign_organization(command_world):
+    other = _foundation("programme_operations")
+    with pytest.raises(AuthorizationDenied):
+        load_programme_role_scope_choices(
+            actor=command_world[2],
+            organization_id=other[0].id,
+            edition_id=other[1].id,
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+
+
+def test_native_scoped_controller_entry_disappears_after_revocation(command_world):
+    organization, edition, author, approver, _ = command_world
+    controller = AccountFactory()
+    target = resolve_edition_target(
+        organization_id=organization.id, edition_id=edition.id
+    )
+    grant = grant_capability_direct(
+        actor=author,
+        approver=approver,
+        recipient=controller,
+        capability_code="authorization.manage_roles",
+        target=target,
+        effective_from=timezone.now(),
+        expires_at=None,
+        reason="Synthetic chooser-only controller.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    scope = {
+        "actor": controller,
+        "organization_id": organization.id,
+        "edition_id": edition.id,
+    }
+    before = AuditEvent.objects.filter(
+        operation="authorization.programme_role.scopes.read"
+    ).count()
+    assert can_enter_programme_role_scopes(**scope)
+    assert (
+        AuditEvent.objects.filter(
+            operation="authorization.programme_role.scopes.read"
+        ).count()
+        == before
+    )
+    result = load_programme_role_scope_choices(
+        **scope, correlation_id=uuid4(), source_channel="test"
+    )
+    assert [row.scope.level for row in result.choices] == [ScopeLevel.EDITION]
+    revoke_capability_grant(
+        actor=author,
+        target=target,
+        grant_id=grant.id,
+        reason="Synthetic chooser revocation.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    assert not can_enter_programme_role_scopes(**scope)
+    with pytest.raises(AuthorizationDenied):
+        load_programme_role_scope_choices(
+            **scope, correlation_id=uuid4(), source_channel="test"
+        )
 
 
 def test_native_creation_previews_exact_people_without_request_or_grant(command_world):

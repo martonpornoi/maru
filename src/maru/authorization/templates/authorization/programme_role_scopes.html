@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Choose Programme access scope · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}"><link rel="stylesheet" href="{% static 'authorization/programme_role.css' %}">{% endblock %}
+{% block content_title %}{% endblock %}{% block maru_page_access %}{% endblock %}{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Administration / Programme access</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench programme-access programme-access-scopes">
+  <h1>Choose Programme access scope</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Current controller scopes</summary><p>Only scopes where you have current persistent controller authority are shown. Platform status, recipient status and links grant no access. Each destination checks your authority again.</p></details>
+  <p><strong>Programme context:</strong> {{ catalog.context_label }}</p>
+  <p>Choose the exact scope for a request or an independent decision. Department and room choices do not grant control over siblings. A request grants nothing; its named approver must decide in their own session.</p>
+  <ul class="programme-cards">{% for row in rows %}<li>
+    <h2>{{ row.choice.label }}</h2><p><strong>{{ row.choice.purpose }}</strong></p>
+    {% if row.choice.scope.level.value == "organization" %}<p class="baseline-notice">Shared organization-wide Venue facts are broader than this edition. Ending an edition does not itself revoke this access.</p>{% endif %}
+    <p><a href="{{ row.review_url }}" aria-label="Review my open requests: {{ row.choice.purpose }} — {{ row.choice.label }}">Review my open requests</a></p>
+    <p><a href="{{ row.create_url }}" aria-label="Prepare an access request: {{ row.choice.purpose }} — {{ row.choice.label }}">Prepare an access request</a></p>
+  </li>{% endfor %}</ul>
+  <p>No invitations, messages, assignments or other operational records are created by choosing a scope.</p>
+</div>
+{% endblock %}

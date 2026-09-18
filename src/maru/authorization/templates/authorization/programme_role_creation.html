@@ -8,6 +8,7 @@
 {% block content %}
 <div class="programme-workbench programme-access">
   <h1>Request Programme access</h1>
+  {% if scope_choices_url %}<p><a href="{{ scope_choices_url }}">Choose another access scope</a></p>{% endif %}
   <details class="maru-access-summary"><summary><strong>Access</strong> · Request preparation · {{ workspace.scope_label }}</summary><p>Your current persistent controller authority permits preparing this exact scope. Platform administration, recipient status and links do not grant this access. The owning command independently rechecks both controllers and the requested interval.</p></details>
   <p><strong>Programme context:</strong> {{ workspace.context_label }}</p>
   <p><strong>Actual grant scope:</strong> {{ workspace.scope_label }} · {{ scope_level|title }}</p>

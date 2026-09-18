@@ -30,7 +30,12 @@ from maru.authorization.programme_role_selection import (
     ProgrammeRoleRequestDraft,
     verify_programme_role_selection,
 )
-from maru.authorization.programme_role_views import _actor, _root, _secure
+from maru.authorization.programme_role_views import (
+    _actor,
+    _root,
+    _scope_choices_url,
+    _secure,
+)
 
 if TYPE_CHECKING:
     from maru.identity.models import Account
@@ -95,6 +100,7 @@ def _render(
         selected_recipe=selected_recipe,
         scope_level=scope.level.value,
         root_url=_root(request, scope),
+        scope_choices_url=_scope_choices_url(request, scope),
         confirming=form["action"].value() == "confirm",
     )
     content = render_to_string(
