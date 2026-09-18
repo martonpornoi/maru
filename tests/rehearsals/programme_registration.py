@@ -18,6 +18,10 @@ from tests.rehearsals.programme_runtime_environment import (
 )
 
 _CURRENT_KEYS = (("full_convention", 1), ("workforce_only", 1))
+# Capture the real immutable objects before explicit child registration. The
+# startup verifier must compare installed baseline entries by identity as well
+# as validate their owner contracts; it must not infer safety from candidate errors.
+BASELINE_PROFILES = MappingProxyType(dict(adoption.ADOPTION_PROFILES))
 
 
 class IsolatedAdoptionProfileCode(StrEnum):

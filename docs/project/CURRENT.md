@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme migration/runtime provisioning preparation is delivered through
-[PR #166](https://github.com/martonpornoi/maru/pull/166), protected squash
-`1f493acc47d121768adf0f5d3b0724e8479914e6` at 2026-09-18 07:20:44 UTC.
-Its tree equals certified head `1dbb93b824d9e321a86fa1b94583f98a24e38813`;
+Isolated Programme candidate installation preparation is delivered through
+[PR #167](https://github.com/martonpornoi/maru/pull/167), protected squash
+`1bcf84a405b099c0becd299c2533c0ac85fffebc` at 2026-09-18 11:54:56 UTC.
+Its tree equals certified head `298039bc179e8b3731c9bd0e6250c74bca99cf16`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m31s, including 10,430 units in 59.60s and 103 frontend
-cases. Hosted quality took 12m00s and units 2m21s; exact-head PR gate and all
+local gates passed in 5m36s, including 10,464 units in 60.19s and 103 frontend
+cases. Hosted quality took 11m57s and units 2m19s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-provisioning-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-18-programme-candidate-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-fixture-candidate`, from protected PR #166.
+Branch: `codex/programme-fixture-startup`, from protected PR #167.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -80,8 +80,8 @@ One additional host-only native provisioning case is maintained but uncollected/
 No Docker command, database, migration or server has been started. Candidate
 installation/startup, real setup/roles and the complete P01–P12 journey remain next.
 
-Prepared explicit pre-model candidate registration and an Events-only real
-migration overlay on this branch. Provisioning's closed opt-in mode installs
+PR #167 delivers explicit pre-model candidate registration and an Events-only real
+migration overlay preparation. Provisioning's closed opt-in mode installs
 current schema then the candidate overlay before unchanged ACLs. Empty-table,
 actual migration-login and server-parsed physical-constraint guards fence forward
 and reverse; any edition blocks reversal. Production migrations, profiles, routes
@@ -90,15 +90,26 @@ and does not itself mount routes, install handlers or suppress dormancy errors.
 The native provisioning file now maintains four cases (three added), all
 uncollected/unexecuted under #102. No Docker/database/schema-only check was run.
 
-Next: independently validated isolated compatibility and guarded joined startup,
-then genuine setup/roles and P01–P12. The three owner dormancy checks intentionally
-still reject adoption; a blanket ignored-error list or relaxed test settings must
-not substitute for that contract. Current implementation evidence is recorded in
-the [candidate installation checkpoint](../checkpoints/2026-09-18-programme-candidate-installation.md).
-Focused feedback passed 81 cases in 0.84s; complete database-free feedback passed
-10,464 cases in 60.40s after isolating pytest's temporary directory from a Windows
-permission failure. Exact-head certification/protected delivery is still pending;
-the previous receipt does not certify these changes.
+Prepared independent isolated compatibility and guarded WSGI construction. The
+three actual owner dormancy functions still report production errors; the isolated
+contract independently validates unchanged baseline manifests and the literal
+candidate, invokes every ordinary registered check, and rejects unknown results.
+Real joined Effects handlers preserve existing routes. Strict base-derived settings
+and actual schema/runtime/provenance/setup/role readiness must pass before WSGI
+construction. There is no serving launcher or genuine setup seed yet. No native
+execution or successful startup is claimed. See the
+[startup preparation checkpoint](../checkpoints/2026-09-18-programme-guarded-startup-preparation.md).
+Focused database-free feedback passed 130 cases in 0.62s; complete unit feedback
+passed 10,513 cases in 59.79s. Exact-head certification and protected delivery of
+this increment remain pending; PR #167's receipt does not certify later changes.
+
+Next: deliver this construction boundary, then prepare genuine setup/roles and
+the owned serving runner/P01–P12. The maintainer authorized the full sequence:
+finish preparation first, restore tracked PostgreSQL acceptance through protected
+delivery, then collect #102/#97/#92/#109 evidence and only finally promote the
+supported profile. PostgreSQL remains deferred until that policy restoration;
+representative human acceptance still needs real participants. Preserve the
+accepted #164–#167 preparation rather than restarting it.
 
 Non-blocking follow-up after #48: the semantic docstring validator's no-argument
 defaults are strings rather than Paths; its maintained explicit `src scripts`

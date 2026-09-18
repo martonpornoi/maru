@@ -44,6 +44,8 @@ if TYPE_CHECKING:
 
     from django.apps import AppConfig
 
+    from maru.events.adoption import AdoptionProfile
+
 _PROGRAMME_APPLICATION_EVENTS = frozenset(
     {
         APPLICATIONS_PROGRAMME_CALL_CHANGED_EVENT,
@@ -71,8 +73,16 @@ _ALL_PROGRAMME_APPLICATION_CAPABILITIES = (
 )
 
 
-def applications_programme_dormancy_problem_codes() -> tuple[str, ...]:
+def applications_programme_dormancy_problem_codes(
+    *, profiles: Iterable[AdoptionProfile] | None = None
+) -> tuple[str, ...]:
     """Return deterministic defects in the registered dormant contract.
+
+    Parameters
+    ----------
+    profiles : Iterable[AdoptionProfile] | None, default=None
+        Explicit immutable manifests to inspect, or the installed registry.
+        Inspection neither grants authority nor changes the deployment check.
 
     Returns
     -------
@@ -122,7 +132,7 @@ def applications_programme_dormancy_problem_codes() -> tuple[str, ...]:
     ):
         problems.add("dormancy.non-edition-effect-route")
 
-    for profile in ADOPTION_PROFILES.values():
+    for profile in ADOPTION_PROFILES.values() if profiles is None else profiles:
         if profile.capability_codes & _ALL_PROGRAMME_APPLICATION_CAPABILITIES:
             problems.add("dormancy.capability-adopted")
         if profile.adapter_codes & _PROGRAMME_APPLICATION_ADAPTERS:

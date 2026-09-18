@@ -103,6 +103,20 @@ assert not adoption_manifest_catalog_problem_codes(
 )
 # Registration is deliberately not startup acceptance.
 assert programme_dormancy_problem_codes()
+from tests.rehearsals.programme_runtime import (
+    ProgrammeStartupError, _require_native_readiness,
+)
+from tests.rehearsals.programme_runtime_environment import (
+    require_programme_runtime_environment,
+)
+try:
+    _require_native_readiness(require_programme_runtime_environment())
+except ProgrammeStartupError as error:
+    # Real identity, installed migration and physical profile constraint must
+    # pass before the genuinely inactive authority boundary refuses readiness.
+    assert str(error) == "candidate_native_readiness_unavailable"
+else:
+    raise AssertionError("Unactivated native authority unexpectedly ready")
 print("programme-candidate-registration-verified")
 """,
                 ],
