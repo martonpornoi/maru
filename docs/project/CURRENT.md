@@ -11,15 +11,15 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme rooms/private timetable composition is delivered through
-[PR #176](https://github.com/martonpornoi/maru/pull/176), protected squash
-`f8b57c27960c3691b15bf6158c2c66a9f9b56ad9` at 2026-09-18 18:52:23 UTC.
-Its tree equals certified head `92eb5e0d57ad30c8fe23cc859bfe161e34c5513a`;
+Programme exact-room authority correction (#177) is delivered through
+[PR #178](https://github.com/martonpornoi/maru/pull/178), protected squash
+`8d4dc2a3ea7fb419d5a3207cddf540da562336de` at 2026-09-18 19:14:31 UTC.
+Its tree equals certified head `82a037f9526321aed7d8e9491ad1e13d7669fdc4`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m35s, including 10,839 units in 61.22s and 103 frontend
-cases. Hosted quality took 12m06s and units 2m15s; exact-head PR gate and all
+local gates passed in 5m40s, including 10,847 units in 61.19s and 103 frontend
+cases. Hosted quality took 12m15s and units 1m54s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was deferred, not certified.
-See the [protected evidence](../checkpoints/2026-09-18-programme-private-timetable-preparation.md).
+See the [protected evidence](../checkpoints/2026-09-18-programme-room-operations-authority.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -36,17 +36,23 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-room-operations-authority`, from protected PR #176.
-Essential prerequisites are tracked under #108/#48: #177 corrects the exact-room
-recipe/physical-approval mismatch without rewriting historical definitions;
-#175 supplies an accountable minimal Volunteer starter before blank-setup staffing.
-Neither broadens the delivery decomposition. The room correction adds one literal
-resource-only recipe and a source-pinned native function migration, preserving
-both current profiles, table fingerprints and owner separation of duties.
-Focused database-free checks passed 188 cases in 1.21s; complete feedback passed
-10,847 cases in 61.39s. Exact-head certification is pending. Two native regressions remain
-uncollected/unexecuted #102 debt. See the
-[room authority checkpoint](../checkpoints/2026-09-18-programme-room-operations-authority.md).
+Branch: `codex/programme-physical-approval-preparation`, from protected PR #178.
+#177 is closed after its bounded authority correction: one truthful resource-only
+recipe and frozen native-function extension, without rewriting the 27 historical
+definitions or changing current profiles, table fingerprints or owner duties.
+Its two native migration regressions remain uncollected/unexecuted #102 debt.
+#175 remains the necessary accountable minimal Volunteer starter prerequisite
+before genuine blank-setup staffing, explicitly inside #108/#48.
+
+Prepared actual reciprocal reservations and independent physical approval for
+three placements, self/stale denial, exact retries and unchanged candidate proof.
+Actual source previews and explicit blocked-to-satisfied synthetic accessibility
+decisions retain every assessment; no no-staffing shortcut, publication or release.
+The fixed private child preserves the same source chain, guarded startup and
+original lease. Focused database-free feedback passed 101 cases in 1.17s; complete
+feedback passed 10,888 in 60.27s. Exact-head certification is pending. The composed
+native case is maintained but uncollected/unexecuted. See the
+[physical checkpoint](../checkpoints/2026-09-18-programme-physical-approval-preparation.md).
 
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules

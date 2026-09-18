@@ -9,6 +9,10 @@ from uuid import UUID, uuid4
 from tests.rehearsals.programme_setup_scenarios import approve_synthetic_role
 
 REASON = "Synthetic room planning only; no real venue safety or release approval."
+ACCESS_FEATURES = (
+    "Fictional level entry, clear wheelchair aisle, quiet exit and checked seating."
+)
+ACCESS_BARRIERS = "No barriers in this fictional level-entry configuration."
 
 
 class ProgrammeRoomPreparationError(RuntimeError):
@@ -179,9 +183,8 @@ def prepare_rooms(setup, items, catalog_person, planner):
                 100,
                 40,
                 100,
-                accessibility_features=(
-                    "Fictional level entry and clear wheelchair aisle."
-                ),
+                accessibility_features=ACCESS_FEATURES,
+                known_barriers=ACCESS_BARRIERS,
                 equipment_facts="Fictional handheld microphone and projector.",
             ),
         )

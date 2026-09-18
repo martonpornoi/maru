@@ -47,3 +47,23 @@ schema-only check or native suite ran for this correction.
 Next finish physical reservations/fit and the accountable minimal Volunteer starter
 (#175) needed before actual blank-setup staffing. Neither this correction nor its
 development merge completes P05, #108, #48 or supported-profile promotion.
+
+## Protected delivery
+
+PR #178 merged at 2026-09-18 19:14:31 UTC as
+`8d4dc2a3ea7fb419d5a3207cddf540da562336de`, closing only #177. Its tree
+`bf15bfaa81d0644e238277dc8c17230c5dc6f7b3` equals certified head
+`82a037f9526321aed7d8e9491ad1e13d7669fdc4`. All eight retained local gates passed
+in 339.506s, including 10,847 units in 61.19s and 103 frontend cases. Receipt v4
+remains `postgresql_deferred`, zero database instances and null combined
+coverage/headroom. Five artifacts were hash-verified under
+`.tools/certification-evidence/issue177-82a037f-deferred/`; receipt SHA-256 is
+`604271c081e3a84ba3a55ee3f068db373f618f5d221a03edd7130f699a20bb5b`.
+
+Hosted run 35383535169 passed quality in 12m15s, units in 1m54s and PR gate in 4s.
+All three exact-head CodeQL configurations were processed without error. Complete
+review/thread pages were empty; the sole closing reference was #177. CLEAN and
+MERGEABLE were verified before exact-head squash. Clean main, origin/main and
+the protected result matched after fast-forward; repair worktree `aa1ede69` was
+preserved. Later physical-fixture edits were not included in this PR. Native,
+browser, human and parent acceptance remain separate open gates.

@@ -15,7 +15,9 @@ require_programme_rehearsal_request()
 pytestmark = pytest.mark.integration
 
 
-def test_native_real_proposal_items_hosting_and_private_planning(monkeypatch):
+def test_native_real_proposal_items_planning_and_independent_physical_approval(
+    monkeypatch,
+):
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_RUN_ID", uuid4().hex)
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS", "3600")
     with isolated_programme_application(
@@ -126,5 +128,52 @@ def test_native_real_proposal_items_hosting_and_private_planning(monkeypatch):
                     ).format(sql.Identifier(table)),
                     (planning.organization_id, planning.edition_id),
                 ).fetchone() == (0,)
-    # This proves no actual HTTPS/browser journey, physical approval, representative
+        physical = fixture.prepare_physical(result, reviewed, items, planning)
+        with psycopg.connect(
+            fixture.runtime.database_url, connect_timeout=5
+        ) as connection:
+            for booking, version in zip(
+                physical.booking_ids, physical.booking_versions, strict=True
+            ):
+                assert connection.execute(
+                    "SELECT aggregate_version, review_state, publication_state, "
+                    "approved_by_id FROM public.venues_venuebooking "
+                    "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                    (booking, physical.organization_id, physical.edition_id),
+                ).fetchone() == (
+                    version,
+                    "approved",
+                    "unpublished",
+                    physical.reviewer.account_id,
+                )
+            for placement, blocked, accepted, digest in zip(
+                physical.placement_ids,
+                physical.blocked_decision_ids,
+                physical.fit_decision_ids,
+                physical.fit_source_digests,
+                strict=True,
+            ):
+                assert connection.execute(
+                    "SELECT id, sequence, state, source_digest, actor_id "
+                    "FROM public.programme_programmeplacementdecision "
+                    "WHERE placement_id = %s AND organization_id = %s "
+                    "AND edition_id = %s AND kind = 'accessibility_fit' "
+                    "ORDER BY sequence",
+                    (placement, physical.organization_id, physical.edition_id),
+                ).fetchall() == [
+                    (blocked, 1, "blocked", digest, planning.planner.account_id),
+                    (accepted, 2, "satisfied", digest, planning.planner.account_id),
+                ]
+            for table in (
+                "scheduling_schedulingreleaseapproval",
+                "scheduling_schedulingrelease",
+            ):
+                assert connection.execute(
+                    sql.SQL(
+                        "SELECT count(*) FROM public.{} "
+                        "WHERE organization_id = %s AND edition_id = %s"
+                    ).format(sql.Identifier(table)),
+                    (physical.organization_id, physical.edition_id),
+                ).fetchone() == (0,)
+    # This proves no actual HTTPS/browser journey, real venue fitness, representative
     # human, complete cross-tenant inventory or P06-P12 acceptance. Those stay open.
