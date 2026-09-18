@@ -21,6 +21,11 @@ from tests.rehearsals.programme_database import (
     POSTGRES_IMAGE,
     ProgrammeDatabaseLease,
 )
+from tests.rehearsals.programme_fixture_material import (
+    ADMIN_PASSWORD_ENV,
+    PRIVATE_KEYS_ENV,
+    ProgrammeFixtureMaterial,
+)
 
 RUN = "1234567890abcdef1234567890abcdef"
 DATABASE = f"maru_programme_{RUN}"
@@ -259,6 +264,104 @@ def test_candidate_option_is_closed_boolean(value, prepared):
         provisioning.provision_programme_runtime(LEASE, candidate_schema=value)
     prepared.docker.assert_not_called()
     prepared.connect.assert_not_called()
+
+
+@pytest.fixture
+def fixture_material():
+    return ProgrammeFixtureMaterial(
+        RUN,
+        55443,
+        "S" * 86,
+        "A" * 43,
+        {"MARU_PUBLIC_BASE_URL": "https://127.0.0.1:55443"},
+        "private-worker-only",
+    )
+
+
+@pytest.mark.parametrize("defect", ["wrong_run", "wrong_type", "no_writes"])
+def test_bootstrap_option_requires_exact_run_and_candidate_writes(
+    prepared, fixture_material, defect
+):
+    if defect == "wrong_run":
+        fixture_material = replace(fixture_material, run_id="b" * 32)
+    elif defect == "wrong_type":
+        fixture_material = object()
+    with pytest.raises(
+        provisioning.ProgrammeProvisioningError, match="bootstrap_option"
+    ):
+        provisioning.provision_programme_runtime(
+            LEASE,
+            candidate_schema=True,
+            candidate_writes=defect != "no_writes",
+            fixture_material=fixture_material,
+        )
+    prepared.docker.assert_not_called()
+    prepared.connect.assert_not_called()
+
+
+def test_bootstrap_owner_runs_after_baseline_probe_before_candidate_grants(
+    prepared, fixture_material, monkeypatch
+):
+    grants = Mock()
+    monkeypatch.setattr(candidate_acl, "install_candidate_table_privileges", grants)
+    ordered = Mock()
+    ordered.attach_mock(prepared.child, "child")
+    ordered.attach_mock(grants, "grants")
+    provisioning.provision_programme_runtime(
+        LEASE,
+        candidate_schema=True,
+        candidate_writes=True,
+        fixture_material=fixture_material,
+    )
+    assert [call[0] for call in ordered.mock_calls] == [
+        "child",
+        "child",
+        "child",
+        "child",
+        "grants",
+        "child",
+    ]
+    current, candidate, baseline, bootstrap, final = prepared.child.call_args_list
+    assert baseline.args[0] == ["-c", provisioning._PROBE]
+    assert bootstrap.args[0] == ["-c", provisioning._FOUNDATION_BOOTSTRAP]
+    assert bootstrap.args[1]["MARU_PROGRAMME_REHEARSAL_PROCESS"] == "maru_migration"
+    assert (
+        bootstrap.args[1]["MARU_DATABASE_URL"] == current.args[1]["MARU_DATABASE_URL"]
+    )
+    assert (
+        bootstrap.args[1][ADMIN_PASSWORD_ENV] == fixture_material.administrator_password
+    )
+    assert final.args[0] == ["-c", provisioning._CANDIDATE_PROBE]
+    for call in (current, candidate, baseline, final):
+        assert ADMIN_PASSWORD_ENV not in call.args[1]
+        assert call.args[1]["MARU_SECRET_KEY"] == fixture_material.secret_key
+    assert all(
+        PRIVATE_KEYS_ENV not in call.args[1] for call in prepared.child.call_args_list
+    )
+
+
+def test_failed_stopped_bootstrap_cannot_grant_candidate_or_return_endpoint(
+    prepared, fixture_material, monkeypatch
+):
+    grants = Mock()
+    monkeypatch.setattr(candidate_acl, "install_candidate_table_privileges", grants)
+    prepared.child.side_effect = [
+        None,
+        None,
+        None,
+        provisioning.ProgrammeProvisioningError("bootstrap_refused"),
+    ]
+    with pytest.raises(
+        provisioning.ProgrammeProvisioningError, match="bootstrap_refused"
+    ):
+        provisioning.provision_programme_runtime(
+            LEASE,
+            candidate_schema=True,
+            candidate_writes=True,
+            fixture_material=fixture_material,
+        )
+    grants.assert_not_called()
+    assert prepared.child.call_count == 4
 
 
 @pytest.mark.parametrize(

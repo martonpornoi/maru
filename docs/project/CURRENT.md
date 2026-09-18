@@ -11,16 +11,17 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme guarded startup preparation is delivered through
-[PR #168](https://github.com/martonpornoi/maru/pull/168), protected squash
-`cc4cb08077ba4cc7b167fa798abb1050c28915db` at 2026-09-18 15:07:43 UTC.
-Its tree equals certified head `6a5767eea6ba17dbbc104c71b0933a8277580232`;
+Isolated Programme runtime-permission preparation and immutable retry-read repair
+are delivered through [PR #169](https://github.com/martonpornoi/maru/pull/169),
+protected squash `e5d78b149a162dba5456aa56b64a0d58d878ca3f` at
+2026-09-18 15:58:03 UTC.
+Its tree equals certified head `c8ff7275233a24ba453a2b73ccd1cfd44af6a564`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m25s, including 10,513 units in 60.21s and 103 frontend
-cases. Hosted quality took 11m57s and units 1m50s; exact-head PR gate and all
+local gates passed in 6m16s, including 10,561 units in 61.60s and 103 frontend
+cases. Hosted quality took 12m15s and units 2m13s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-guarded-startup-preparation.md).
+[protected evidence](../checkpoints/2026-09-18-programme-candidate-runtime-permissions.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +38,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-fixture-foundations`, from protected PR #168.
+Branch: `codex/programme-fixture-bootstrap`, from protected PR #169.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -111,15 +112,29 @@ SQL and function allowlist remain unchanged. Applications retry reads now use
 their existing shared transaction lock without requiring UPDATE on immutable
 cross-family receipts. Complete database-free feedback passed 10,561 tests in
 69.85s; Ruff passed. Exact-head certification and hosted delivery of this increment
-are pending. Five host-only provisioning cases and the added runtime receipt
+passed as above. Five host-only provisioning cases and the added runtime receipt
 permission regression remain uncollected/unexecuted under #102. See the
 [permission preparation checkpoint](../checkpoints/2026-09-18-programme-candidate-runtime-permissions.md).
 
 Next: genuine setup/roles and the owned serving runner/P01–P12. Verify real runtime
 writes/locks/native guards after policy restoration; preparation is not acceptance.
 Do not use an owner login for application work or replace readiness with a stub.
-Genuine provenance activation, invitation worker/retention readiness and loopback
-HTTPS also precede serving; no production trust/configuration changes are needed.
+Prepared ephemeral separated fixture material, stopped genuine provenance and
+retention bootstrap, and actual invitation-worker command dispatch. Explicit
+same-run provisioning uses the migration login before candidate grants; later
+worker activity uses genuine runtime identity/probe checks. No account verification,
+role acceptance, heartbeat or readiness result is substituted. Web construction
+rejects owner/worker secret contamination. Six host-only provisioning cases now
+include genuine bootstrap/worker/application construction; all remain uncollected
+and unexecuted. Iterative complete feedback passed 10,611 units in 59.75s before
+the final web/origin guards; the final combined focused set passed 166 in 1.06s.
+Fresh exact-head retained certification and hosted delivery of this increment
+remain pending. See the
+[bootstrap preparation checkpoint](../checkpoints/2026-09-18-programme-stopped-foundation-bootstrap.md).
+
+Next implement the owned HTTPS runner, truthful person creation/setup/role actions
+and P01–P12. No full launcher or successful native startup is claimed; no production
+trust/configuration changes are needed.
 The maintainer authorized the full sequence:
 finish preparation first, restore tracked PostgreSQL acceptance through protected
 delivery, then collect #102/#97/#92/#109 evidence and only finally promote the

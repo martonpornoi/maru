@@ -8,6 +8,7 @@ import pytest
 
 from tests.rehearsals import programme_provisioning as provisioning
 from tests.rehearsals.programme_database import isolated_programme_database
+from tests.rehearsals.programme_fixture_material import generate_fixture_material
 from tests.rehearsals.programme_provisioning import (
     ProgrammeProvisioningError,
     provision_programme_runtime,
@@ -49,7 +50,8 @@ def test_native_migration_runtime_separation_and_reprovision_refusal(
                 actual = connection.execute(
                     "SELECT pg_catalog.has_table_privilege("
                     "current_user, %s, permission) "
-                    "FROM unnest(%s::text[]) AS permission",
+                    "FROM unnest(%s::text[]) WITH ORDINALITY "
+                    "AS requested(permission, position) ORDER BY position",
                     [
                         table,
                         [
@@ -165,6 +167,106 @@ print("programme-candidate-registration-verified")
                 timeout=60,
                 expected_output="programme-candidate-registration-verified",
             )
+
+
+def test_native_stopped_foundation_has_real_activation_and_no_person_or_edition(
+    monkeypatch,
+):
+    monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_RUN_ID", uuid4().hex)
+    monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS", "3600")
+    material = generate_fixture_material(web_port=55443)  # Configuration, not a socket.
+    with isolated_programme_database() as lease:
+        runtime = provision_programme_runtime(
+            lease,
+            candidate_schema=True,
+            candidate_writes=True,
+            fixture_material=material,
+        )
+        environment = (
+            provisioning._child_environment(
+                lease,
+                require_programme_rehearsal_request(),
+                role="maru_runtime",
+                password="",
+                secret_key=material.secret_key,
+            )
+            | dict(material.runtime_configuration)
+            | {"MARU_DATABASE_URL": runtime.database_url}
+        )
+        provisioning._child(
+            [
+                "-c",
+                """
+from tests.rehearsals.programme_registration import (
+    register_isolated_programme_candidate,
+)
+register_isolated_programme_candidate()
+import django
+django.setup()
+from tests.rehearsals.programme_runtime_privileges import (
+    install_isolated_candidate_privilege_contract,
+)
+install_isolated_candidate_privilege_contract()
+from maru.authorization.provenance_readiness import (
+    build_authority_provenance_readiness_report,
+)
+from maru.identity.invitation_retention import (
+    invitation_retention_policy_control_is_ready,
+)
+from maru.identity.models import Account
+from maru.events.models import EventEdition
+from maru.organizations.models import Organization
+from django.db import connection
+assert build_authority_provenance_readiness_report()["production_status"] == "ready"
+assert invitation_retention_policy_control_is_ready()
+assert Account.objects.count() == 1
+assert Account.objects.get().is_platform_administrator
+assert not Organization.objects.exists()
+assert not EventEdition.objects.exists()
+with connection.cursor() as cursor:
+    cursor.execute("SELECT session_user, current_user")
+    assert cursor.fetchone() == ("maru_runtime", "maru_runtime")
+print("programme-native-foundation-verified")
+""",
+            ],
+            environment,
+            timeout=180,
+            expected_output="programme-native-foundation-verified",
+        )
+        candidate_environment = environment | {
+            "DJANGO_SETTINGS_MODULE": "tests.rehearsals.programme_runtime_settings"
+        }
+        provisioning._child(
+            [
+                "-c",
+                """
+from tests.rehearsals.programme_invitation_worker import run_invitation_worker_cycle
+assert len(run_invitation_worker_cycle()) == 3
+print("programme-native-worker-verified")
+""",
+            ],
+            candidate_environment | material.worker_environment(),
+            timeout=180,
+            expected_output="programme-native-worker-verified",
+        )
+        provisioning._child(
+            [
+                "-c",
+                """
+import os
+assert "MARU_IDENTITY_INVITATION_PRIVATE_KEYS_JSON" not in os.environ
+assert "MARU_PROGRAMME_REHEARSAL_ADMIN_PASSWORD" not in os.environ
+from tests.rehearsals.programme_runtime import build_candidate_application
+application, accounted = build_candidate_application()
+assert callable(application)
+assert len(accounted) == 3
+print("programme-native-application-constructed")
+""",
+            ],
+            candidate_environment,
+            timeout=180,
+            expected_output="programme-native-application-constructed",
+        )
 
 
 @pytest.mark.parametrize("drift", [False, True])

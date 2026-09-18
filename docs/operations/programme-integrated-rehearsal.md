@@ -139,9 +139,10 @@ credentials and Python/settings overrides. Their in-memory email backend prevent
 external delivery and supplies no invitation acceptance evidence. These are
 non-serving migration/verification processes, not a candidate application server.
 
-`programme_provisioning_native.py` maintains five host-only #102 cases: current,
+`programme_provisioning_native.py` maintains six host-only #102 cases: current,
 candidate-schema and candidate-write provisioning, empty candidate
-forward/reverse/reapply, and physical-constraint drift refusal. Provisioning variants inspect genuine
+forward/reverse/reapply, physical-constraint drift refusal and stopped foundation/
+worker/application construction. Provisioning variants inspect genuine
 runtime/DDL-owner identities, denied runtime DDL, actual constraint/history and
 refusal to re-provision existing roles. The candidate variant additionally
 checks fresh-child registration, owner catalogs and the continued production
@@ -186,8 +187,8 @@ and P01–P12 are still required.
 Database-free checks compare the entire migration graph and canonical historical
 model state, preserve every unrelated model/constraint, and exercise installation,
 reversal, scope, drift, import-order and failure fences with doubles. They do not
-prove PostgreSQL DDL or runtime behavior. The five maintained native cases above
-remain #102 debt, including four added cases relative to PR #166; populated
+prove PostgreSQL DDL or runtime behavior. The six maintained native cases above
+remain #102 debt, including five added cases relative to PR #166; populated
 owner-command/recovery acceptance also remains mandatory in the complete fixture.
 
 ### Prepared guarded application construction
@@ -264,12 +265,13 @@ relations remain SELECT-only: migration history, provenance activation and latch
 invitation retention policy, native audit witnesses and Scheduling's native
 dependency change journal. Production classes remain unchanged outside this child.
 
-Five host-only provisioning cases now include the write-enabled variant. All
+Six host-only provisioning cases include the write-enabled variant and the
+stopped-bootstrap/worker/construction path described below. All
 three provisioning variants inspect all 82 actual table privilege matrices, real
 runtime identity and denied DDL. They remain uncollected/unexecuted under #102.
 The installed privilege matrix is necessary, not proof of a working user journey.
-The complete fixture still needs genuine provenance/invitation setup, real-person
-role actions, owned HTTPS serving and P01–P12 execution. No successful native
+The complete fixture still needs native proof of provenance/invitation setup,
+real-person role actions, owned HTTPS serving and P01–P12 execution. No successful native
 startup or production promotion follows from database-free preparation tests.
 
 Applications retry inspection also retains its shared transaction advisory lock
@@ -278,6 +280,62 @@ on read-only cross-family receipts; admission and retry collision semantics rema
 unchanged. A maintained case in `test_database_role_safety.py` will verify genuine
 runtime receipt permissions and the denied old lookup after #102 restoration.
 It too remains uncollected/unexecuted, and does not replace full workflow acceptance.
+
+### Prepared stopped foundation and invitation worker
+
+`programme_fixture_material.py` generates ephemeral material only after the tracked
+policy/explicit run fence: independent session secret, random bootstrap credential,
+RSA-3072 invitation keys and versioned HMAC key. It opens no socket or database.
+The frozen configuration declares a future literal loopback HTTPS origin, not
+proof of a served/trusted certificate. Web configuration contains only the public
+invitation key and required HMAC material. The owner receives the bootstrap
+password but no delivery private key; only the separate worker receives that key.
+Secret fields are excluded from representation and must never be logged/serialized.
+Web construction rejects even empty owner/worker secret variables.
+
+An explicitly fictional one-day retention policy uses jurisdiction `SYNTHETIC`
+and approver reference `isolated-fixture-only`. This is not a real controller's
+legal retention decision or evidence of human approval. Real policy activation
+and worker evidence retain the native database clock. A clock/configuration
+mismatch fails rather than backdating native evidence.
+
+The provisioner's optional same-run `fixture_material` requires candidate schema
+and writes. After canonical runtime verification, before candidate grants and
+before any serving/worker process, a fixed migration-login child invokes
+`programme_foundation_bootstrap.bootstrap_stopped_foundation()`. It requires the
+exact provisioning settings, isolated run identity, PG17, autocommit and genuine
+migration user; rejects private worker keys, weakened controls, invalid loopback
+origin, absent candidate history, any account/organization/edition, prior
+provenance activation or retained invitation policy. Real key/policy parsers
+validate configuration before account creation.
+
+It then calls `AccountManager.create_superuser`, public
+`activate_authority_provenance` with the genuine stopped-fixture acknowledgement,
+and public `activate_configured_invitation_retention_policy`. Both actual owner
+postconditions must pass. It creates no person, Department, edition, role,
+representation acceptance or privileged approval on someone else's behalf.
+Owners keep their own transaction boundaries; partial failure requires disposal
+of the whole owned fixture, never clearing or rewriting evidence to retry.
+
+`programme_invitation_worker.run_invitation_worker_cycle()` prepares one fresh
+runtime child. It rejects owner credentials, validates strict candidate settings,
+installs candidate declarations/real handlers, and runs complete isolated system
+checks. Actual database/session identity, the unchanged runtime-role safety probe
+and REFERENCES denial precede any write. It invokes the existing bounded delivery,
+expiry and retention commands, which own their real transactions, native-clock
+heartbeats and backlog checks; the fixture writes no substitute scheduler rows.
+Then genuine full native readiness must pass. In-memory email is explicitly
+synthetic transport and provides no external delivery/recipient acceptance proof.
+
+The sixth host-only provisioning case maintains real bootstrap and owner
+postconditions, one actual worker cycle and separate secret-free WSGI construction.
+It starts no web socket. It and all other native cases remain uncollected/unexecuted
+during deferral. Database-free tests exercise real ephemeral cryptographic parsers
+and mocked control flow, not native activation or successful startup. The complete
+owned HTTPS runner, verified people, three setup modes, own representation/role
+actions and P01–P12 remain unfinished; there is still no complete launch command.
+
+### Scenario people and sessions
 
 Use repository-owned fictional convention names, synthetic people and reserved
 example domains. Do not copy an actual convention roster. Provide one primary

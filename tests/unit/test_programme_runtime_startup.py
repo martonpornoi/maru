@@ -342,6 +342,29 @@ def test_builder_refuses_deferred_policy_before_django(monkeypatch):
 
 
 @pytest.mark.parametrize(
+    "secret",
+    [
+        "MARU_IDENTITY_INVITATION_PRIVATE_KEYS_JSON",
+        "MARU_PROGRAMME_REHEARSAL_ADMIN_PASSWORD",
+        "MARU_PROGRAMME_REHEARSAL_BOOTSTRAP",
+    ],
+)
+def test_web_builder_refuses_owner_or_worker_secret_even_when_empty(
+    monkeypatch, secret
+):
+    monkeypatch.setattr(runtime, "require_programme_runtime_environment", Mock())
+    monkeypatch.setenv(
+        "DJANGO_SETTINGS_MODULE", "tests.rehearsals.programme_runtime_settings"
+    )
+    monkeypatch.setenv(secret, "")
+    setup = Mock()
+    monkeypatch.setattr(django, "setup", setup)
+    with pytest.raises(runtime.ProgrammeStartupError, match="secret_contamination"):
+        runtime.build_candidate_application()
+    setup.assert_not_called()
+
+
+@pytest.mark.parametrize(
     ("name", "value"),
     [
         ("DEBUG", True),
