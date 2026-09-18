@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme candidate installation preparation is delivered through
-[PR #167](https://github.com/martonpornoi/maru/pull/167), protected squash
-`1bcf84a405b099c0becd299c2533c0ac85fffebc` at 2026-09-18 11:54:56 UTC.
-Its tree equals certified head `298039bc179e8b3731c9bd0e6250c74bca99cf16`;
+Isolated Programme guarded startup preparation is delivered through
+[PR #168](https://github.com/martonpornoi/maru/pull/168), protected squash
+`cc4cb08077ba4cc7b167fa798abb1050c28915db` at 2026-09-18 15:07:43 UTC.
+Its tree equals certified head `6a5767eea6ba17dbbc104c71b0933a8277580232`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m36s, including 10,464 units in 60.19s and 103 frontend
-cases. Hosted quality took 11m57s and units 2m19s; exact-head PR gate and all
+local gates passed in 5m25s, including 10,513 units in 60.21s and 103 frontend
+cases. Hosted quality took 11m57s and units 1m50s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-candidate-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-18-programme-guarded-startup-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-fixture-startup`, from protected PR #167.
+Branch: `codex/programme-fixture-foundations`, from protected PR #168.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -100,11 +100,17 @@ construction. There is no serving launcher or genuine setup seed yet. No native
 execution or successful startup is claimed. See the
 [startup preparation checkpoint](../checkpoints/2026-09-18-programme-guarded-startup-preparation.md).
 Focused database-free feedback passed 130 cases in 0.62s; complete unit feedback
-passed 10,513 cases in 59.79s. Exact-head certification and protected delivery of
-this increment remain pending; PR #167's receipt does not certify later changes.
+passed 10,513 cases in 59.79s. Corrected exact-head certification and protected
+delivery passed as above; no prior receipt certifies later handoff/source edits.
 
-Next: deliver this construction boundary, then prepare genuine setup/roles and
-the owned serving runner/P01–P12. The maintainer authorized the full sequence:
+Next: candidate-only minimum runtime table privileges, genuine setup/roles and
+the owned serving runner/P01–P12. Canonical production ACLs intentionally leave
+these dormant tables SELECT-only; preserve that baseline, declare the isolated
+candidate contract explicitly and verify real runtime writes/locks/native guards.
+Do not use an owner login for application work or replace readiness with a stub.
+Genuine provenance activation, invitation worker/retention readiness and loopback
+HTTPS also precede serving; no production trust/configuration changes are needed.
+The maintainer authorized the full sequence:
 finish preparation first, restore tracked PostgreSQL acceptance through protected
 delivery, then collect #102/#97/#92/#109 evidence and only finally promote the
 supported profile. PostgreSQL remains deferred until that policy restoration;
