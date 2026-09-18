@@ -19,6 +19,7 @@ from maru.events import adoption, programme_setup_readiness
 from maru.events.checks import current_adoption_catalog_snapshot
 from tests.rehearsals import programme_compatibility as compatibility
 from tests.rehearsals import programme_effects as effects
+from tests.rehearsals import programme_function_acl as helper_acl
 from tests.rehearsals import programme_runtime as runtime
 from tests.rehearsals import programme_runtime_privileges as privileges
 from tests.rehearsals.programme_candidate import PROGRAMME_REHEARSAL_PROFILE as PROFILE
@@ -283,6 +284,8 @@ def native_readiness(monkeypatch):
     )
     setup = Mock(return_value=True)
     roles = Mock(return_value=True)
+    helpers = Mock()
+    monkeypatch.setattr(helper_acl, "require_helper_catalog", helpers)
     monkeypatch.setattr(views, "readiness", health)
     monkeypatch.setattr(
         programme_setup_readiness, "programme_setup_database_integrity_is_ready", setup
@@ -290,7 +293,9 @@ def native_readiness(monkeypatch):
     monkeypatch.setattr(
         programme_role_readiness, "programme_role_database_integrity_is_ready", roles
     )
-    return SimpleNamespace(cursor=cursor, health=health, setup=setup, roles=roles)
+    return SimpleNamespace(
+        cursor=cursor, health=health, setup=setup, roles=roles, helpers=helpers
+    )
 
 
 def test_native_readiness_uses_real_owner_entrypoints_in_sequence(native_readiness):
@@ -298,6 +303,22 @@ def test_native_readiness_uses_real_owner_entrypoints_in_sequence(native_readine
     native_readiness.health.assert_called_once()
     native_readiness.setup.assert_called_once()
     native_readiness.roles.assert_called_once()
+    native_readiness.helpers.assert_called_once_with(
+        connection.connection, runtime_granted=True
+    )
+
+
+def test_native_helper_failure_prevents_health_and_application_acceptance(
+    native_readiness,
+):
+    native_readiness.helpers.side_effect = helper_acl.ProgrammeFunctionError("private")
+    with pytest.raises(
+        runtime.ProgrammeStartupError, match="native_helper_unavailable"
+    ):
+        runtime._require_native_readiness(SimpleNamespace(database_name="synthetic"))
+    native_readiness.health.assert_not_called()
+    native_readiness.setup.assert_not_called()
+    native_readiness.roles.assert_not_called()
 
 
 @pytest.mark.parametrize(

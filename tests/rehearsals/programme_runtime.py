@@ -64,6 +64,12 @@ def _require_native_readiness(environment):
     from maru.events.programme_setup_readiness import (  # noqa: PLC0415
         programme_setup_database_integrity_is_ready,
     )
+    from tests.rehearsals.programme_function_acl import (  # noqa: PLC0415
+        require_helper_catalog,
+    )
+    from tests.rehearsals.programme_function_contract import (  # noqa: PLC0415
+        ProgrammeFunctionError,
+    )
     from tests.rehearsals.programme_runtime_privileges import (  # noqa: PLC0415
         require_candidate_reference_boundary,
     )
@@ -92,6 +98,10 @@ def _require_native_readiness(environment):
         if cursor.fetchall() != [(_PROFILE_CHECK, True, True, 0, False)]:
             raise ProgrammeStartupError("candidate_profile_constraint_changed")
         require_candidate_reference_boundary(cursor)
+    try:
+        require_helper_catalog(connection.connection, runtime_granted=True)
+    except ProgrammeFunctionError:
+        raise ProgrammeStartupError("candidate_native_helper_unavailable") from None
     response = readiness(RequestFactory().get("/health/ready", HTTP_HOST="127.0.0.1"))
     if (
         response.status_code != 200

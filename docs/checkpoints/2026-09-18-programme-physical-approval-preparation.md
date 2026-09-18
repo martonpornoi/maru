@@ -65,3 +65,26 @@ logical recovery/stop, combinations and connected editor/browser failures plus
 per-checkpoint cross-scope/excluded-effect evidence. Restore PostgreSQL through
 the tracked protected policy change only after preparation, then require
 #102/#97/#92/#109 before supported-profile promotion or closing #108/#48.
+
+## Protected delivery appendix
+
+PR #179 merged at 2026-09-18 19:38:34 UTC as protected squash
+`a22332826ed1feab6c01439c03eb28d90a643c79`. Its tree
+`563ad79fabb6c16b17d347fd4a51251f8707222a` equals certified head
+`effafcc8760e2db9e9c2eb34575b34c4c825420f`. All eight retained local gates
+passed in 337.998s, with 10,888 units in 61.02s and 103 frontend cases.
+Receipt v4 records `postgresql_deferred`, zero databases and no coverage/headroom
+claim; five evidence artifacts were hash-verified into the ignored exact-head
+archive. Receipt SHA256:
+`ba68d663f838e6f19a9bf14ed7c13df1a9634dc745af266e293995a0d91d09e2`.
+
+Hosted run 35385745183 passed quality in 12m19s, units in 2m17s and PR gate
+in 4s. All three processed exact-head CodeQL configurations had no error.
+Complete review/thread/closing-reference pages were empty, with no pagination;
+the head was CLEAN/MERGEABLE and merged using the exact-head guard. Clean local
+main equalled origin/main and the protected squash, while the detached repair
+worktree remained at `aa1ede69fb880dcb12d627bbfc049fba23166e68`.
+
+No PostgreSQL, browser, human or integrated acceptance is implied. Static helper
+permission gaps discovered during composition are separately tracked in #180
+before the already-recorded #175 staffing prerequisite. #108/#48 remain open.

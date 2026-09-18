@@ -66,6 +66,8 @@ if not report.current_session_is_safe:
     raise SystemExit(2)
 with connection.cursor() as cursor:
     require_candidate_reference_boundary(cursor)
+from tests.rehearsals.programme_function_acl import require_helper_catalog
+require_helper_catalog(connection.connection, runtime_granted=True)
 print("programme-candidate-runtime-role-verified")
 """
 _FOUNDATION_BOOTSTRAP = """

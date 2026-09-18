@@ -11,15 +11,15 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme exact-room authority correction (#177) is delivered through
-[PR #178](https://github.com/martonpornoi/maru/pull/178), protected squash
-`8d4dc2a3ea7fb419d5a3207cddf540da562336de` at 2026-09-18 19:14:31 UTC.
-Its tree equals certified head `82a037f9526321aed7d8e9491ad1e13d7669fdc4`;
+Programme independent physical-approval preparation is delivered through
+[PR #179](https://github.com/martonpornoi/maru/pull/179), protected squash
+`a22332826ed1feab6c01439c03eb28d90a643c79` at 2026-09-18 19:38:34 UTC.
+Its tree equals certified head `effafcc8760e2db9e9c2eb34575b34c4c825420f`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m40s, including 10,847 units in 61.19s and 103 frontend
-cases. Hosted quality took 12m15s and units 1m54s; exact-head PR gate and all
+local gates passed in 5m38s, including 10,888 units in 61.02s and 103 frontend
+cases. Hosted quality took 12m19s and units 2m17s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was deferred, not certified.
-See the [protected evidence](../checkpoints/2026-09-18-programme-room-operations-authority.md).
+See the [protected evidence](../checkpoints/2026-09-18-programme-physical-approval-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -36,11 +36,23 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-physical-approval-preparation`, from protected PR #178.
+Branch: `codex/programme-runtime-helper-permissions`, from protected PR #179.
 #177 is closed after its bounded authority correction: one truthful resource-only
 recipe and frozen native-function extension, without rewriting the 27 historical
 definitions or changing current profiles, table fingerprints or owner duties.
 Its two native migration regressions remain uncollected/unexecuted #102 debt.
+#180 fixes a necessary isolated native-helper permission gap before #175.
+The candidate now prepares fourteen literal signatures: thirteen invoker validators
+and one existing definer whose pinned body only attempts an advisory transaction
+lock. Complete baseline owner contracts are verified before ACL-only expectation
+overlays; actual native role-safety SQL, full source/metadata readiness, canonical
+production ACLs and both current profiles remain unchanged. Before/after-grant
+and genuine-runtime metadata checks deny drift, PUBLIC and grant options.
+Focused database-free checks passed 194 cases in 1.02s; complete feedback passed
+10,943 cases in 61.70s. Exact-head certification is pending. One native drift case and expanded
+provisioning matrices remain uncollected/unexecuted #102 debt. See the
+[helper checkpoint](../checkpoints/2026-09-18-programme-runtime-helper-permissions.md).
+
 #175 remains the necessary accountable minimal Volunteer starter prerequisite
 before genuine blank-setup staffing, explicitly inside #108/#48.
 
@@ -49,8 +61,7 @@ three placements, self/stale denial, exact retries and unchanged candidate proof
 Actual source previews and explicit blocked-to-satisfied synthetic accessibility
 decisions retain every assessment; no no-staffing shortcut, publication or release.
 The fixed private child preserves the same source chain, guarded startup and
-original lease. Focused database-free feedback passed 101 cases in 1.17s; complete
-feedback passed 10,888 in 60.27s. Exact-head certification is pending. The composed
+original lease. Protected PR #179's verification is retained above. The composed
 native case is maintained but uncollected/unexecuted. See the
 [physical checkpoint](../checkpoints/2026-09-18-programme-physical-approval-preparation.md).
 

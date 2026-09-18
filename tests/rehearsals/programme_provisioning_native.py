@@ -9,6 +9,8 @@ import pytest
 from tests.rehearsals import programme_provisioning as provisioning
 from tests.rehearsals.programme_database import isolated_programme_database
 from tests.rehearsals.programme_fixture_material import generate_fixture_material
+from tests.rehearsals.programme_function_acl import require_helper_catalog
+from tests.rehearsals.programme_function_contract import HELPERS
 from tests.rehearsals.programme_provisioning import (
     ProgrammeProvisioningError,
     provision_programme_runtime,
@@ -79,6 +81,23 @@ def test_native_migration_runtime_separation_and_reprovision_refusal(
                     )
                 ]
                 assert actual == expected
+            for identity in HELPERS:
+                assert connection.execute(
+                    "SELECT pg_catalog.has_function_privilege("
+                    "current_user, %s, 'EXECUTE')",
+                    ["public." + identity],
+                ).fetchone() == (candidate_writes,)
+            require_helper_catalog(connection, runtime_granted=candidate_writes)
+            if candidate_writes:
+                assert (
+                    connection.execute(
+                        "SELECT public.maru_programme_role_recipe('room-operations', 1)"
+                    ).fetchone()[0]
+                    is not None
+                )
+                connection.execute(
+                    "SELECT public.maru_workforce_page9_try_scope_mutex(180)"
+                )
             assert connection.execute(
                 "SELECT pg_catalog.pg_get_userbyid(datdba) "
                 "FROM pg_catalog.pg_database WHERE datname = current_database()"
@@ -167,6 +186,80 @@ print("programme-candidate-registration-verified")
                 timeout=60,
                 expected_output="programme-candidate-registration-verified",
             )
+
+
+def test_native_candidate_helper_drift_refuses_genuine_runtime_probe(monkeypatch):
+    monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_RUN_ID", uuid4().hex)
+    monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS", "3600")
+    with isolated_programme_database() as lease:
+        runtime = provision_programme_runtime(
+            lease, candidate_schema=True, candidate_writes=True
+        )
+        environment = provisioning._child_environment(
+            lease,
+            require_programme_rehearsal_request(),
+            role="maru_runtime",
+            password="",
+            secret_key=secrets.token_urlsafe(64),
+        ) | {"MARU_DATABASE_URL": runtime.database_url}
+        with psycopg.connect(
+            host="127.0.0.1",
+            port=lease.port,
+            dbname=lease.database_name,
+            user="postgres",
+            password=lease.admin_password,
+            connect_timeout=5,
+            options="-c search_path=pg_catalog -c statement_timeout=30000",
+        ) as admin:
+            definition = admin.execute(
+                "SELECT pg_catalog.pg_get_functiondef("
+                "'public.maru_programme_role_recipe(text, integer)'::regprocedure)"
+            ).fetchone()[0]
+            admin.commit()
+            for defect in (
+                "REVOKE EXECUTE ON FUNCTION public.maru_programme_role_recipe"
+                "(text, integer) FROM maru_runtime",
+                "GRANT EXECUTE ON FUNCTION public.maru_programme_role_recipe"
+                "(text, integer) TO PUBLIC",
+                "GRANT EXECUTE ON FUNCTION public.maru_programme_role_recipe"
+                "(text, integer) TO maru_runtime WITH GRANT OPTION",
+                "ALTER FUNCTION public.maru_programme_role_recipe"
+                "(text, integer) SECURITY DEFINER",
+                "CREATE OR REPLACE FUNCTION public.maru_programme_role_recipe"
+                "(definition_code text, definition_version integer) RETURNS jsonb "
+                "AS 'BEGIN RETURN NULL; END;' LANGUAGE plpgsql IMMUTABLE "
+                "SET search_path = pg_catalog, public, pg_temp",
+            ):
+                try:
+                    admin.execute(defect)
+                    admin.commit()
+                    with pytest.raises(
+                        ProgrammeProvisioningError, match="process_failed"
+                    ):
+                        provisioning._child(
+                            ["-c", provisioning._CANDIDATE_PROBE],
+                            environment,
+                            timeout=60,
+                            expected_output="programme-candidate-runtime-role-verified",
+                        )
+                finally:
+                    admin.rollback()
+                    admin.execute(definition)
+                    admin.execute(
+                        "REVOKE ALL ON FUNCTION public.maru_programme_role_recipe"
+                        "(text, integer) FROM PUBLIC, maru_runtime"
+                    )
+                    admin.execute(
+                        "GRANT EXECUTE ON FUNCTION public.maru_programme_role_recipe"
+                        "(text, integer) TO maru_runtime"
+                    )
+                    admin.commit()
+                provisioning._child(
+                    ["-c", provisioning._CANDIDATE_PROBE],
+                    environment,
+                    timeout=60,
+                    expected_output="programme-candidate-runtime-role-verified",
+                )
 
 
 def test_native_stopped_foundation_has_real_activation_and_no_person_or_edition(

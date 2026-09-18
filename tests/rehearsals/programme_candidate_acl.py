@@ -1,8 +1,13 @@
-"""Grant only declared candidate table operations in the owned empty fixture."""
+"""Grant declared candidate table/helper operations in the owned empty fixture."""
 
 import psycopg
 from psycopg import sql
 
+from tests.rehearsals.programme_function_acl import (
+    grant_candidate_helpers,
+    require_helper_catalog,
+)
+from tests.rehearsals.programme_function_contract import ProgrammeFunctionError
 from tests.rehearsals.programme_provisioning import (
     ProgrammeProvisioningError,
     _verify_lease,
@@ -79,6 +84,7 @@ def install_candidate_table_privileges(lease):
                 [len(PRIVILEGES), sorted(PRIVILEGES)],
             ).fetchone() != (True,):
                 raise ProgrammeProvisioningError("candidate_acl_baseline_changed")
+            require_helper_catalog(connection, runtime_granted=False)
             for privileges in sorted(set(PRIVILEGES.values())):
                 tables = sorted(
                     table for table, value in PRIVILEGES.items() if value == privileges
@@ -91,6 +97,11 @@ def install_candidate_table_privileges(lease):
                         ),
                     )
                 )
+            grant_candidate_helpers(connection)
             _verify_lease(lease, request)
+    except ProgrammeFunctionError:
+        raise ProgrammeProvisioningError(
+            "candidate_helper_contract_unavailable"
+        ) from None
     except psycopg.Error:
         raise ProgrammeProvisioningError("candidate_acl_installation_failed") from None

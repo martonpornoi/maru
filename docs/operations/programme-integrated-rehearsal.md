@@ -250,9 +250,10 @@ installation. After the canonical ACL and genuine baseline role probe, the grant
 plane rechecks the exact live lease, database/admin identity, PostgreSQL major,
 candidate migration history, empty edition table and initially read-only targets.
 An exclusive edition-table lock prevents racing first use. It grants only the
-literal table operations in one transaction, then rechecks resource ownership.
+literal table operations and reviewed helper signatures described below in one
+transaction, then rechecks resource ownership.
 Any partial failure requires disposal of the owned fixture, never adoption/retry.
-It changes no production SQL, owner, DDL, function allowlist or grant option.
+It changes no production SQL, owner, DDL, production allowlist or grant option.
 
 A fresh runtime child installs five explicit relation-class declarations for the
 candidate and calls the **unchanged real native role-safety query** through its
@@ -265,10 +266,38 @@ relations remain SELECT-only: migration history, provenance activation and latch
 invitation retention policy, native audit witnesses and Scheduling's native
 dependency change journal. Production classes remain unchanged outside this child.
 
-Six host-only provisioning cases include the write-enabled variant and the
+Issue #180 also declares fourteen literal helper signatures, with independent
+source digests and full native metadata. Thirteen SECURITY INVOKER helpers validate
+review stages, exact role definitions/scopes, conflict evidence, release dependency
+membership, independent approval, artifacts, personal obligations and change notices.
+The sole additional SECURITY DEFINER helper is the existing
+`maru_workforce_page9_try_scope_mutex(bigint)`: its entire pinned body only attempts
+a transaction-scoped advisory lock and raises SQLSTATE 40001 on contention. It
+cannot write a row or acquire a session-lifetime lock. Trigger entrypoints and
+all other owner-only functions remain denied; no broad function grant is allowed.
+
+Before any grant the same empty-fixture transaction verifies every helper's body,
+language, volatility, parallel/security/strict/set-returning flags, kind, search
+path, result, migration ownership and exact owner-only ACL. After exact EXECUTE
+grants it verifies owner plus non-grantable runtime ACLs with no PUBLIC/third-party
+access. The fresh genuine runtime probe and every guarded startup repeat the
+full helper metadata/ACL check. The native role-safety SQL itself is unchanged.
+
+The opted-in child first validates complete pinned baseline contracts for
+Applications, Programme-role approval, Scheduling, Programme and Venues. Only
+their expected runtime-executable helper sets are extended; every original
+source, trigger, migration, relation and checker is retained. Shared release
+helpers occur in multiple owner contracts, so all affected probes must agree.
+Canonical authority/provenance fingerprint checking, including the legacy mutex,
+is unchanged. Drift refuses installation before any contract is mutated.
+
+Seven host-only provisioning cases include the write-enabled variant and the
 stopped-bootstrap/worker/construction path described below. All
-three provisioning variants inspect all 82 actual table privilege matrices, real
-runtime identity and denied DDL. They remain uncollected/unexecuted under #102.
+three provisioning variants inspect all 82 actual table privilege matrices and
+fourteen helper execution expectations, real runtime identity and denied DDL.
+One isolated native case retains missing-grant, PUBLIC, grant-option, definer and
+body-drift refusals with genuine runtime reprobes and exact restoration. These
+cases remain uncollected/unexecuted under #102.
 The installed privilege matrix is necessary, not proof of a working user journey.
 The complete fixture still needs native proof of provenance/invitation setup,
 real-person role actions, owned HTTPS serving and P01–P12 execution. No successful native
