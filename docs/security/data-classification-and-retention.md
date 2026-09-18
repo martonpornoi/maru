@@ -62,8 +62,12 @@ audit links and exact template/RoleBundle output. Their purpose is accountable
 shared template publication and historical recovery, not volunteer profiling.
 Use the existing `security-extended` authority-evidence review/hold schedule.
 Only the two named people with current controller admission may access the
-forthcoming audited task; no directory, general search, analytics, public export,
-email or notification is introduced by the backend. Cancellation, decline and
+audited task; no directory, general search, analytics, public export,
+email or notification is introduced. Preview signs the original selected identity,
+scope, rationale and retry key; the known address is transient form input, not
+stored intent or audit metadata. Read/preview audits use `security-extended`;
+private no-store pages expose only current eligible labels or neutral fallback.
+Cancellation, decline and
 expiry neither delete history nor grant authority. Corrections append evidence;
 reviewed disposal/recovery must preserve mutually consistent source/audit/output
 links. No new disposal executor or legal retention period is invented here.

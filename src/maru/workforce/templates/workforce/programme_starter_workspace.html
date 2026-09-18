@@ -1,0 +1,39 @@
+{% extends "admin/base_site.html" %}
+{% load static tz %}
+{% block title %}Volunteer starter review · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}"><link rel="stylesheet" href="{% static 'authorization/programme_role.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'programme/workbench.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Administration / Volunteer starter</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench programme-access">
+  <h1>Volunteer starter review</h1>
+  <p><strong>Shared definition owner:</strong> {{ workspace.organization_label }}<br><strong>Programme context:</strong> {{ workspace.edition_label }}</p>
+  <p>Only your authored or assigned requests appear here. Current accountable role-management and Edition structure authority are required; context and links grant no access.</p>
+  <p><a href="{{ root_url }}">My open starter requests</a>{% if new_url %} · <a href="{{ new_url }}">Request the Volunteer starter</a>{% endif %}</p>
+  <section class="baseline-panel" aria-labelledby="starter-meaning"><h2 id="starter-meaning">One fixed shared meaning</h2>
+    <p>{{ workspace.definition.name }} ({{ workspace.definition.code }}@{{ workspace.definition.version }}): {{ workspace.definition.description }}</p>
+    <ul>{% for capability in workspace.definition.capability_codes %}<li>{{ capability }}</li>{% endfor %}</ul>
+    <p>Volunteer capacity; default headcount {{ workspace.definition.default_headcount }}. This Organization-owned definition can be reused where another exact profile admits it. Approval may reuse an exact compatible existing definition.</p>
+    <p><strong>Approval grants nobody access.</strong> It creates no Position, assignment, Shift, Participation, Registration, payment or attendance. Those later tasks require separate decisions.</p>
+    {% if not workspace.can_request %}<p>The private planning phase has ended. No new starter request or approval can create planning state; authorized historical review and nonapproval remain separate.</p>{% endif %}
+  </section>
+  {% timezone "UTC" %}
+  {% if selected %}<section class="baseline-panel" aria-labelledby="starter-original"><h2 id="starter-original">Original request — {{ selected.state_label }}</h2>
+    <dl><dt>Author</dt><dd>{{ selected.author_name }}</dd><dt>Named independent approver</dt><dd>{{ selected.approver_name }}</dd><dt>Requested (UTC)</dt><dd>{{ selected.requested_at|date:"Y-m-d H:i:s" }}</dd><dt>Approval deadline (UTC)</dt><dd>{{ selected.approval_deadline|date:"Y-m-d H:i:s" }}</dd><dt>Original rationale</dt><dd>{{ selected.reason|linebreaksbr }}</dd></dl>
+    {% if selected.decided_at %}<h3>Retained own-person decision</h3><p>{{ selected.state_label }} at {{ selected.decided_at|date:"Y-m-d H:i:s" }} UTC.</p><p>{{ selected.decision_reason|linebreaksbr }}</p>
+      {% if selected.template_id %}<p>{% if selected.created_output %}Published{% else %}Reused{% endif %} exact template {{ selected.template_id }} and role meaning {{ selected.role_bundle_id }}. This is historical output, not a current authority grant.</p>{% else %}<p>No template or access was created by this decision.</p>{% endif %}
+    {% endif %}
+  </section>{% else %}<section class="baseline-panel" aria-labelledby="starter-open"><h2 id="starter-open">My open requests</h2><ul>{% for row, url in rows %}<li><a href="{{ url }}">{{ row.author_name }} → {{ row.approver_name }}</a> — {{ row.state_label }}, deadline {{ row.approval_deadline|date:"Y-m-d H:i" }} UTC</li>{% empty %}<li>No pending unexpired requests in this exact context. Request the starter if needed, or use an original request link for retained history. This does not describe other people's requests.</li>{% endfor %}</ul></section>{% endif %}
+  {% endtimezone %}
+  {% if form %}<section class="baseline-panel" aria-labelledby="starter-decision"><h2 id="starter-decision">Record your own decision</h2>
+    {% if selected.author_id == request.user.id %}<p>You may cancel your request, never approve it for the named person.</p>{% else %}<p>Approval publishes or reuses only the exact shared meaning. Decline creates nothing. The original author cannot approve on your behalf.</p>{% endif %}
+    {% if not selected.can_approve %}<p>New approval is unavailable in this observed state; an exact original retry is independently checked by the command.</p>{% endif %}
+    <p>Decisions require recent authentication. If asked, <a href="{{ step_up_url }}" target="_blank" rel="noopener">complete the extra sign-in check in a new tab</a>, then return to this form. Keep the original input and retry key after uncertainty.</p>
+    <p data-programme-dirty hidden role="status">Unsaved decision input. Leaving discards it; nothing is submitted automatically.</p>
+    <form method="post" action="{{ request.path }}" data-programme-command{% if form.errors %} data-programme-pending="true"{% endif %}>{% csrf_token %}{{ form.as_div }}<button type="submit">Submit my decision</button></form>
+  </section>{% elif selected %}<p>No new decision controls are available for this retained state.</p>{% endif %}
+</div>
+{% endblock %}

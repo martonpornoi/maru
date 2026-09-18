@@ -34,6 +34,7 @@ contract for the surface being changed, and compare its status with the
 - [Shift planning and My shifts](shift-planning-and-my-shifts.md)
 - [Set up Workforce](workforce-only-adoption-setup.md)
 - [Set up Programme Operations](programme-operations-adoption-setup.md)
+- [Request and approve the Volunteer starter](programme-volunteer-starter.md)
 - [Programme calls and acknowledged proposals](programme-calls-and-acknowledged-proposals.md)
 - [Programme call and proposal import staging](programme-call-and-proposal-import.md)
   defines the dormant minimized preview, exact-self claim, sealed command
@@ -77,6 +78,7 @@ availability-management
 shift-planning-and-my-shifts
 workforce-only-adoption-setup
 programme-operations-adoption-setup
+programme-volunteer-starter
 programme-calls-and-acknowledged-proposals
 programme-call-and-proposal-import
 programme-timetable-planning

@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Request the Volunteer starter · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}"><link rel="stylesheet" href="{% static 'authorization/programme_role.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'programme/workbench.js' %}" defer></script>{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Administration / Volunteer starter / Request</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench programme-access">
+  <h1>Request the Volunteer starter</h1>
+  <p><strong>Shared definition owner:</strong> {{ workspace.organization_label }}<br><strong>Programme context:</strong> {{ workspace.edition_label }}</p>
+  <p>Current accountable Organization role-management and Edition structure authority are required. This context and the selected email do not grant access or represent anybody else's decision.</p>
+  <p><a href="{{ root_url }}">My open starter requests</a></p>
+  <section class="baseline-panel" aria-labelledby="starter-fixed"><h2 id="starter-fixed">Preview the shared definition</h2>
+    <p>{{ workspace.definition.name }} ({{ workspace.definition.code }}@{{ workspace.definition.version }}): {{ workspace.definition.description }}</p>
+    <ul>{% for capability in workspace.definition.capability_codes %}<li>{{ capability }}</li>{% endfor %}</ul>
+    <p>Volunteer capacity, default headcount {{ workspace.definition.default_headcount }}. This reusable Organization-owned meaning may serve other editions whose exact profile admits it. Approval can reuse an exact compatible existing starter; conflicting meaning is never overwritten.</p>
+    <p><strong>Submitting creates a request only.</strong> The named different controller must personally approve within seven days. Approval publishes/reuses the fixed template and immutable role meaning but grants nobody access. It creates no Position, assignment, Shift, Participation, Registration, payment or attendance.</p>
+    {% if workspace.selection %}<h3>Original selected approver</h3><p>{{ workspace.approver_name }}</p><p>{{ workspace.selection.details.reason|linebreaksbr }}</p><p>The signed original selection will not be re-resolved from an email on confirmation. The command checks current authority again.</p>{% endif %}
+  </section>
+  {% if workspace.can_request or confirming %}<section class="baseline-panel" aria-labelledby="starter-input"><h2 id="starter-input">{% if confirming %}Confirm the original request{% else %}Choose a known independent approver{% endif %}</h2>
+    {% if form.errors %}<div role="alert" tabindex="-1" data-maru-focus-on-load><h3>Review the input</h3><p>No new request outcome is claimed here. Keep this original input and retry identity after uncertainty.</p>{{ form.non_field_errors }}</div>{% endif %}
+    <p data-programme-dirty hidden role="status">Unsaved request input. Leaving discards it; nothing is submitted automatically.</p>
+    <form method="post" action="{{ request.path }}" data-programme-command{% if form.errors %} data-programme-pending="true"{% endif %}>{% csrf_token %}
+      {{ form.action }}{{ form.idempotency_key }}{{ form.selection_proof }}
+      {{ form.idempotency_key.errors }}{{ form.action.errors }}{{ form.selection_proof.errors }}
+      <div>{{ form.approver_email.label_tag }}{{ form.approver_email }}{{ form.approver_email.errors }}</div>
+      <div>{{ form.reason.label_tag }}{{ form.reason }}<p>{{ form.reason.help_text }}</p>{{ form.reason.errors }}</div>
+      {% if confirming %}<div>{{ form.confirmed }}{{ form.confirmed.label_tag }}{{ form.confirmed.errors }}</div>{% endif %}
+      <button type="submit">{% if confirming %}Submit this request only{% else %}Preview exact approver and meaning{% endif %}</button>
+    </form>
+    {% if confirming %}<p>Changing the selector or rationale invalidates this original preview. After resolving any uncertain submission, <a href="{{ new_url }}">deliberately start a new preview</a> for changed intent. No replacement is automatic.</p>{% endif %}
+  </section>{% else %}<p>The private planning phase has ended. No new starter request can be created. Use an original request link for historical review.</p>{% endif %}
+</div>
+{% endblock %}

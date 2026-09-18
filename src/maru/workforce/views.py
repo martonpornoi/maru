@@ -140,6 +140,8 @@ from maru.workforce.models import (
     VolunteerApplication,
     VolunteerOpportunity,
 )
+from maru.workforce.programme_starter_inputs import ProgrammeStarterScope
+from maru.workforce.programme_starter_navigation import programme_starter_entry_url
 from maru.workforce.queries import (
     WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
     DepartmentNode,
@@ -2743,6 +2745,23 @@ def _render_position_management(
             "has_position_templates": bool(template_choices),
             "has_position_departments": bool(department_choices),
             "workforce_only_profile": workforce_only,
+            "programme_starter_url": (
+                programme_starter_entry_url(
+                    request=request,
+                    actor=actor,
+                    scope=ProgrammeStarterScope(
+                        snapshot.organization.id,
+                        snapshot.series.id,
+                        snapshot.edition.id,
+                    ),
+                )
+                if (
+                    snapshot.edition.adoption_profile_code,
+                    snapshot.edition.adoption_profile_version,
+                )
+                == ("programme_operations", 1)
+                else ""
+            ),
             "starter_template_available": starter_template_available,
             "starter_template_form": starter_template_form,
             "action_error": action_error,
