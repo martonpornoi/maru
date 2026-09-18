@@ -122,6 +122,15 @@ def build_candidate_application():
         != "tests.rehearsals.programme_runtime_settings"
     ):
         raise ProgrammeStartupError("candidate_settings_required")
+    if any(
+        name in os.environ
+        for name in (
+            "MARU_IDENTITY_INVITATION_PRIVATE_KEYS_JSON",
+            "MARU_PROGRAMME_REHEARSAL_ADMIN_PASSWORD",
+            "MARU_PROGRAMME_REHEARSAL_BOOTSTRAP",
+        )
+    ):
+        raise ProgrammeStartupError("candidate_web_secret_contamination")
     import django  # noqa: PLC0415
     from django.conf import settings  # noqa: PLC0415
 

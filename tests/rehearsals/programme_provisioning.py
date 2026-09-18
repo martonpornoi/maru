@@ -1,7 +1,7 @@
 """Prepare genuine migration/runtime planes inside an owned rehearsal database.
 
-Native execution remains fenced by tracked policy. This installs the current
-schema and runtime ACLs, optionally the isolated candidate schema, never domain records.
+Native execution remains fenced by tracked policy. Explicit closed options prepare
+candidate schema/ACLs and stopped platform foundations, never editions or roles.
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ from tests.rehearsals.programme_database import (
     _owned,
     _port,
 )
+from tests.rehearsals.programme_fixture_material import ProgrammeFixtureMaterial
 from tests.rehearsals.programme_runtime_environment import (
     ProgrammeRuntimeEnvironment,
     require_programme_rehearsal_request,
@@ -66,6 +67,11 @@ if not report.current_session_is_safe:
 with connection.cursor() as cursor:
     require_candidate_reference_boundary(cursor)
 print("programme-candidate-runtime-role-verified")
+"""
+_FOUNDATION_BOOTSTRAP = """
+from tests.rehearsals.programme_foundation_bootstrap import bootstrap_stopped_foundation
+bootstrap_stopped_foundation()
+print("programme-foundation-bootstrap-verified")
 """
 
 
@@ -220,6 +226,7 @@ def provision_programme_runtime(
     *,
     candidate_schema: bool = False,
     candidate_writes: bool = False,
+    fixture_material: ProgrammeFixtureMaterial | None = None,
 ) -> ProgrammeRuntimeEnvironment:
     """Install current schema and verify a genuine restricted runtime connection.
 
@@ -235,6 +242,10 @@ def provision_programme_runtime(
     candidate_writes : bool, optional
         Explicit candidate-only table DML after canonical runtime verification.
         Requires candidate_schema; defaults leave every dormant relation read-only.
+    fixture_material : ProgrammeFixtureMaterial | None, default=None
+        Explicit same-run ephemeral configuration for stopped genuine provenance
+        and invitation retention bootstrap. Requires candidate writes. Default
+        None preserves schema/ACL-only preparation without creating any account.
 
     Returns
     -------
@@ -263,6 +274,12 @@ def provision_programme_runtime(
         candidate_writes and not candidate_schema
     ):
         raise ProgrammeProvisioningError("invalid_candidate_write_option")
+    if fixture_material is not None and (
+        not isinstance(fixture_material, ProgrammeFixtureMaterial)
+        or fixture_material.run_id != request.run_id
+        or not candidate_writes
+    ):
+        raise ProgrammeProvisioningError("invalid_fixture_bootstrap_option")
     _verify_lease(lease, request)
     source = runtime_provisioning_sql(request.run_id)
     migration_password = secrets.token_urlsafe(32)
@@ -273,7 +290,9 @@ def provision_programme_runtime(
         or len({lease.admin_password, migration_password, runtime_password}) != 3
     ):
         raise ProgrammeProvisioningError("credential_generation_failed")
-    secret_key = secrets.token_urlsafe(64)
+    secret_key = (
+        fixture_material.secret_key if fixture_material else secrets.token_urlsafe(64)
+    )
     try:
         with psycopg.connect(
             host="127.0.0.1",
@@ -367,6 +386,22 @@ def provision_programme_runtime(
         timeout=min(60, request.lease_seconds),
         expected_output="programme-runtime-role-verified",
     )
+    if fixture_material is not None:
+        _verify_lease(lease, request)
+        _child(
+            ["-c", _FOUNDATION_BOOTSTRAP],
+            _child_environment(
+                lease,
+                request,
+                role="maru_migration",
+                password=migration_password,
+                secret_key=secret_key,
+            )
+            | fixture_material.owner_environment(),
+            timeout=min(180, request.lease_seconds),
+            expected_output="programme-foundation-bootstrap-verified",
+        )
+        _verify_lease(lease, request)
     if candidate_writes:
         from tests.rehearsals.programme_candidate_acl import (  # noqa: PLC0415
             install_candidate_table_privileges,
