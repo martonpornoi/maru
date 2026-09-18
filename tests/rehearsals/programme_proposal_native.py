@@ -240,5 +240,62 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
                         sql.Identifier(table)
                     )
                 ).fetchone() == (0,)
-    # This proves no actual HTTPS/browser journey, real venue fitness, representative
-    # human, complete cross-tenant inventory or P07-P12 acceptance. Those stay open.
+        released = fixture.prepare_release(
+            result, reviewed, items, planning, physical, staffing
+        )
+        with psycopg.connect(
+            fixture.runtime.database_url, connect_timeout=5
+        ) as connection:
+            assert connection.execute(
+                "SELECT a.actor_id, a.candidate_revision_id, a.source_snapshot_digest, "
+                "a.placement_count, r.actor_id, r.previous_release_id, "
+                "r.pointer_version "
+                "FROM public.scheduling_schedulingrelease r "
+                "JOIN public.scheduling_schedulingreleaseapproval a "
+                "ON a.id = r.approval_id "
+                "WHERE r.id = %s AND a.id = %s "
+                "AND r.organization_id = %s AND r.edition_id = %s",
+                (
+                    released.release_id,
+                    released.approval_id,
+                    released.organization_id,
+                    released.edition_id,
+                ),
+            ).fetchone() == (
+                released.reviewer.account_id,
+                planning.candidate_revision_id,
+                released.source_digest,
+                3,
+                planning.planner.account_id,
+                None,
+                1,
+            )
+            assert connection.execute(
+                "SELECT active_release_id, version "
+                "FROM public.scheduling_schedulingreleasepointer "
+                "WHERE organization_id = %s AND edition_id = %s",
+                (released.organization_id, released.edition_id),
+            ).fetchone() == (released.release_id, 1)
+            assert connection.execute(
+                "SELECT count(*) FROM public.scheduling_schedulingreleaseartifact "
+                "WHERE release_id = %s AND organization_id = %s AND edition_id = %s",
+                (released.release_id, released.organization_id, released.edition_id),
+            ).fetchone() == (1,)
+            for work in staffing.work:
+                assert connection.execute(
+                    "SELECT status, command_version "
+                    "FROM public.workforce_shiftcommitment "
+                    "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                    (work.commitment_id, released.organization_id, released.edition_id),
+                ).fetchone() == ("confirmed", work.commitment_version)
+            for table in (
+                "participation_participation",
+                "participation_participationcapacity",
+            ):
+                assert connection.execute(
+                    sql.SQL("SELECT count(*) FROM public.{}").format(
+                        sql.Identifier(table)
+                    )
+                ).fetchone() == (0,)
+    # This proves no actual HTTP/browser/print journey, real venue fitness,
+    # representative human, complete cross-tenant inventory or P08-P12 acceptance.

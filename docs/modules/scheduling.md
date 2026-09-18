@@ -306,6 +306,16 @@ Registration, Participation, payment or attendance record is created.
 
 ## Owned state and commands
 
+The isolated #108 fixture now prepares first publication through actual owner
+preflight, independent approval and separate publication commands, exact retries
+and author/approver/stale-pointer denials. It composes current public, own-host,
+own-volunteer and exact operator queries with actual JSON/calendar serializers,
+preserving reviewed selections and retained volunteer work. This test-only
+composition adds no production behavior or authority. Its native case remains
+uncollected/unexecuted under #102; rendered/print/browser and full integrated
+acceptance remain separate. See the
+[integrated protocol](../operations/programme-integrated-rehearsal.md#actual-owner-first-release-preparation).
+
 The #96 release work is delivered but remains dormant. Its contracts
 are `release_inputs` (exact versioned intent), `release_dependency_rules`
 (complete journal temporal consequences), `release_artifacts` (one mandatory
