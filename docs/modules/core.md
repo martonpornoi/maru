@@ -129,6 +129,24 @@ therefore updates Core's navigation declaration and the Events catalog
 together; assigning that kind to an edition remains a separate new or reviewed
 exact-profile-version change.
 
+The dormant `programme_navigation` composition declares seven literal future
+`edition.programme-*` kinds for Applications, accepted items, timetable planning,
+release, notices, on-site operators and access requests. Its closed declaration
+is included in the catalog contract test. The shared registry consumes fixed-label
+links only after exact `programme_operations@1` membership, independent owner
+admission and actual mounted handler/scope checks. No current manifest receives
+these kinds. Search and saved pins consume the same live projection; revocation
+removes the destination without treating a preference as permission. Management
+links remain separate from My Maru. The optional platform setup entry additionally
+requires the existing Identity-backed setup admission and actual setup handler.
+See the [setup navigation contract](../product/page-contracts/programme-operations-adoption-setup.md#shared-task-navigation-and-edition-discovery).
+
+The public `programme_shell_links` composition loads no private source inventory,
+creates no command, grant or sensitive-read audit, and omits unavailable optional
+destinations. Actual pages independently enforce fields, current authority and
+required audit. `programme_setup_navigation_url` is similarly optional metadata,
+not a setup operation or profile activation.
+
 The shared page frame mounts one compact **Access** disclosure after the page
 heading. Server-rendered workflows use the common template mount; the embedded
 Convention work page declares that its active React view owns the disclosure,

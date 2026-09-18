@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError
 from django.urls import NoReverseMatch, Resolver404, resolve, reverse
 
@@ -164,6 +165,7 @@ def programme_workspace_links(
     current: str,
     series_id: UUID | None = None,
     urlconf: Any = None,
+    allowed_codes: frozenset[str] | None = None,
 ) -> tuple[ProgrammeWorkspaceLink, ...]:
     """Offer independently admitted mounted destinations without reading their data.
 
@@ -177,11 +179,14 @@ def programme_workspace_links(
         Expected canonical parent when the source route already supplies it.
     urlconf : Any, default=None
         Current request URL configuration, or Django's ordinary configured root.
+    allowed_codes : frozenset[str] | None, default=None
+        Optional closed subset admitted by a caller's exact navigation manifest.
+        None retains all existing task choices; invalid subsets fail closed.
 
     Returns
     -------
     tuple[ProgrammeWorkspaceLink, ...]
-        At most five fixed-label links, or six from the external Shift workspace.
+        At most five fixed-label links, or six from Shift/shared navigation.
         Denied, unavailable, unmounted or shadowed
         destinations are omitted. Absence makes no source-completeness claim.
 
@@ -192,11 +197,14 @@ def programme_workspace_links(
     in a query string. Callers must repeat this observation after rendering and omit
     moved links before releasing bytes. Destinations independently authorize again.
     """
-    if current not in {*_TASKS, "shifts"}:
+    if current not in {*_TASKS, "shifts", "navigation"} or (
+        allowed_codes is not None
+        and (type(allowed_codes) is not frozenset or not allowed_codes <= _TASKS.keys())
+    ):
         return ()
     links = []
     for code, (label, name) in _TASKS.items():
-        if code == current:
+        if code == current or (allowed_codes is not None and code not in allowed_codes):
             continue
         kwargs: dict[str, UUID] = {
             "organization_id": scope.organization_id,
@@ -225,6 +233,8 @@ def programme_workspace_links(
         except (
             NoReverseMatch,
             Resolver404,
+            PermissionDenied,
+            ValidationError,
             ProgrammeAuthorizationDeniedError,
             SchedulingAuthorizationDeniedError,
             DatabaseError,
