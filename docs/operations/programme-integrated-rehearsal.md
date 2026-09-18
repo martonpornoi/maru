@@ -534,6 +534,37 @@ pointer/keyboard/forms, remaining failure paths, staffing/accessibility-fit/rest
 P06–P12 and human acceptance stay separate. See the
 [private timetable checkpoint](../checkpoints/2026-09-18-programme-private-timetable-preparation.md).
 
+### Physical holds and explicit accessibility decisions
+
+`ProgrammeRunningFixture.prepare_physical(proposal, review, items, planning)`
+continues the exact private chain through guarded startup. Original controllers
+separately approve two exact-room operations grants for a new physical reviewer
+and explicit Programme delivery authority for the planner. No scope inference,
+shared login, fabricated approver decision or current-profile activation.
+
+Each exact candidate placement receives a deliberate reciprocal reservation via
+the actual Scheduling/Venue commands, with exact retry and authorized readback.
+The booking/source author must fail self-approval without changing the hold;
+the independent reviewer approves its exact current physical version. Stale
+approval must fail. The final hold proof must match the original candidate,
+placement, room and envelope; making a hold never edits the draft or publishes it.
+
+Actual owner previews expose current private accessibility needs and complete
+selected-room facts. The fixed fictional rooms explicitly declare the level entry,
+wheelchair aisle, quiet exit and checked seating used in this synthetic assessment.
+The planner retains a blocked assessment, then a separate reasoned satisfied
+decision after inspecting those exact facts. Stale decision sequences fail;
+accepted retries and fresh previews must agree. Unexpected facts or withheld
+sources fail, rather than being interpreted as a generic fitness rule. This
+neither verifies a real venue nor substitutes for human judgement or staffing.
+
+The maintained native composition independently reads approved-but-unpublished
+bookings, retained blocked/accepted decisions and zero Programme releases. It is
+still uncollected/unexecuted under #102. P05 combinations and connected browser
+behavior, P06 staffing and P07–P12 remain separate; #175 is required for genuine
+blank-setup Volunteer Positions. See the
+[physical checkpoint](../checkpoints/2026-09-18-programme-physical-approval-preparation.md).
+
 ### Scenario people and sessions
 
 Use repository-owned fictional convention names, synthetic people and reserved

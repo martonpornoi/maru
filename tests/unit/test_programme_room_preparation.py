@@ -215,6 +215,8 @@ def test_rooms_use_owned_configuration_active_property_and_exact_room_roles(
         )
         if name == "create_venue_space_catalog_path":
             assert values["catalog"].space_kind in VenueSpace.Kind.values
+            assert values["catalog"].accessibility_features == rooms.ACCESS_FEATURES
+            assert values["catalog"].known_barriers == rooms.ACCESS_BARRIERS
         if name == "set_edition_space_availability":
             assert values["intervals"][0].starts_at == items.availability_starts_at
             assert values["intervals"][0].ends_at == items.availability_ends_at

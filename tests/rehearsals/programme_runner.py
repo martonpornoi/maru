@@ -369,6 +369,56 @@ class ProgrammeRunningFixture:
         except (OSError, subprocess.TimeoutExpired, ValueError):
             raise ProgrammeHttpsError("fixture_planning_process_failed") from None
 
+    def prepare_physical(self, proposal, review, items, planning):
+        """Prepare reciprocal approved holds and explicit fit, never a release."""
+        require_programme_rehearsal_request()
+        if self.scenario is None or not self._application_environment:
+            raise ProgrammeHttpsError("fixture_physical_dependencies_required")
+        from tests.rehearsals.programme_physical_scenario import (  # noqa: PLC0415
+            physical_from_document,
+            physical_sources,
+        )
+
+        documents = json.loads(
+            json.dumps(
+                {
+                    "setup": asdict(self.scenario),
+                    "proposal": asdict(proposal),
+                    "review": asdict(review),
+                    "items": asdict(items),
+                    "planning": asdict(planning),
+                },
+                default=str,
+            )
+        )
+        setup, proposal, review, items, planning = physical_sources(documents)
+        self.refresh_workers()
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "tests.rehearsals.programme_physical_scenario"],
+                cwd=ROOT,
+                env=self._application_environment,
+                input=json.dumps(documents),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=min(180, remaining_lease(self.deadline)),
+                check=False,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            if result.returncode != 0 or len(result.stdout) > 16_384:
+                raise ProgrammeHttpsError("fixture_physical_process_failed")
+            return physical_from_document(
+                json.loads(result.stdout),
+                setup=setup,
+                proposal=proposal,
+                review=review,
+                items=items,
+                planning=planning,
+            )
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            raise ProgrammeHttpsError("fixture_physical_process_failed") from None
+
 
 @contextmanager
 def isolated_programme_application(*, setup_mode=None, with_scanner=False):
