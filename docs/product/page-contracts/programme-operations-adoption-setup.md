@@ -179,6 +179,10 @@ Department/resource authority does not require a broader Workforce directory gra
 and never implies control over siblings or other tenants. Platform status alone
 does not admit this task.
 
+Before resolving the requested foundation or inventory, Authorization's name-free
+current-authority projection must contain controller authority in the exact context
+or its Organization. This precheck prevents unauthorized callers from distinguishing
+missing, overflowing or unavailable inventories; it never replaces per-target proof.
 Authorization consumes Workforce's complete bounded current-Department identifier
 reference and its own exact typed room-binding references. It independently resolves
 and authorizes each actual scope before reading its display label. The inventory

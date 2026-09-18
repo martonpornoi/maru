@@ -25,6 +25,7 @@ from psycopg import sql
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization import programme_role_commands as role_commands
+from maru.authorization import programme_role_scope_choices as scope_choices
 from maru.authorization.catalog import ScopeLevel
 from maru.authorization.commands import (
     assign_role,
@@ -188,8 +189,15 @@ def test_native_scope_choices_audit_labels_without_creating_access(command_world
     assert audit.principal_id == author.id
 
 
-def test_native_scope_choices_do_not_discover_foreign_organization(command_world):
+def test_native_scope_choices_do_not_discover_foreign_organization(
+    command_world, monkeypatch
+):
     other = _foundation("programme_operations")
+
+    def forbidden_inventory(_context):
+        raise AssertionError("Foreign caller reached inventory discovery")
+
+    monkeypatch.setattr(scope_choices, "_candidate_scopes", forbidden_inventory)
     with pytest.raises(AuthorizationDenied):
         load_programme_role_scope_choices(
             actor=command_world[2],

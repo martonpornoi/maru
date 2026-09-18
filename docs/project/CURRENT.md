@@ -43,15 +43,18 @@ shared-shell cards link to the actual reserved request/review handlers and provi
 a validated return path. No broader directory grant, hidden count, command, schema,
 runtime privilege, current-profile or production-route change.
 
-Final complete database-free feedback passed 9,782 cases in 57.18s, including 69
+Final complete database-free feedback passed 9,789 cases in 56.61s, including 76
 new scope-query/view cases. Strict mypy passed
 717 source files; Ruff and strict documentation checks passed. Browser component
 rehearsal observed Department keyboard creation and exact-room review round trips,
 narrow control and denial/unavailable/overflow/source-change states. All seven
 widths fit, with one H1/main; small link targets were corrected to 44 pixels and
 rechecked. Task-owned server/tabs were cleaned up and viewport reset. Three new
-maintained native cases remain uncollected/unexecuted #102 debt. Final exact-commit
-certification and hosted delivery are pending. See the
+maintained native cases remain uncollected/unexecuted #102 debt. PR #162 was returned
+to draft after review found an unauthorized overflow-status distinction. Name-free
+current-authority preflight now denies unrelated callers before foundation/inventory
+probing without denying narrow controllers. The previous head's complete receipt is
+preserved; corrected-head certification and hosted delivery are pending. See the
 [scope-choice checkpoint](../checkpoints/2026-09-18-programme-access-scope-choices.md).
 
 Next: protected delivery, shared-shell Programme entry integration, then the complete

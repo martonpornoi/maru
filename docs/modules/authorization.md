@@ -187,6 +187,11 @@ No broad platform fallback, sibling grant, hidden count or partial overflow list
 is introduced. Limits are 256 Departments and 256 room bindings plus Organization
 and Edition; no admitted target is a non-disclosing denial.
 
+Before foundation/inventory discovery, name-free current controller-scope projection
+denies unrelated or foreign authority uniformly, even when a hidden inventory is
+overflowing/unavailable. This preflight is not a grant or a substitute for the actual
+per-target controller checks. Narrow source scopes remain admissible.
+
 Current foundation/person locks, exact profile, integrity, repeated source checks
 and `authorization.programme_role.scopes.read` security-extended audit protect
 disclosure. Metadata contains only the admitted target count. The optional

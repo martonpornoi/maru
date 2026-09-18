@@ -13,6 +13,7 @@ from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import ScopeLevel
 from maru.authorization.models import ScopedResourceBinding
 from maru.authorization.page_access_workspace import page_access_scope_label
+from maru.authorization.policy import project_active_authority_scopes
 from maru.authorization.programme_role_boundary import (
     _lock_people,
     _lock_scope,
@@ -205,6 +206,16 @@ def _query(
         or not actor.is_active
         or actor.account_kind != Account.Kind.PERSON
         or actor.email_verified_at is None
+    ):
+        raise _unavailable()
+    # A foreign caller must not distinguish an overflowing inventory from an
+    # absent scope. This name-free owner projection only admits discovery;
+    # every actual candidate still needs its own current controller proof.
+    if not any(
+        value.organization_id == context.organization_id
+        and value.edition_id in {None, context.programme_edition_id}
+        and "authorization.manage_roles" in value.capability_codes
+        for value in project_active_authority_scopes(principal=actor)
     ):
         raise _unavailable()
     with transaction.atomic():

@@ -1,6 +1,7 @@
 """Database-free complete-scope discovery and disclosure-boundary regressions."""
 
 from contextlib import nullcontext
+from dataclasses import replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -12,6 +13,7 @@ from django.db import DatabaseError
 
 from maru.authorization import programme_role_scope_choices as query
 from maru.authorization.catalog import ScopeLevel
+from maru.authorization.policy import AuthorizedScopeProjection
 from maru.authorization.programme_role_inputs import ProgrammeRoleScope
 from maru.authorization.services import AuthorizationDenied
 from maru.identity.models import Account
@@ -21,6 +23,16 @@ ORG, EDITION, ACTOR, DEPARTMENT, ROOM = (UUID(int=i) for i in range(1, 6))
 CONTEXT = ProgrammeRoleScope(ORG, EDITION, ScopeLevel.EDITION)
 PERSON = Account(
     id=ACTOR, is_active=True, email_verified_at=datetime(2026, 9, 18, tzinfo=UTC)
+)
+PROJECTION = AuthorizedScopeProjection(
+    ORG,
+    EDITION,
+    None,
+    None,
+    frozenset({"authorization.manage_roles"}),
+    frozenset({"authorization.manage_roles"}),
+    (),
+    (),
 )
 
 
@@ -40,6 +52,7 @@ def world(monkeypatch):
         "lock_retired_department_authority_boundaries": None,
         "_require_current_controller": None,
         "append_audit": None,
+        "project_active_authority_scopes": (PROJECTION,),
         "resolve_current_department_set_reference": CurrentDepartmentSetReference(
             ORG, EDITION, (DEPARTMENT,)
         ),
@@ -292,3 +305,48 @@ def test_optional_entry_fails_closed(world, error):
     assert not query.can_enter_programme_role_scopes(
         actor=PERSON, organization_id=ORG, edition_id=EDITION
     )
+
+
+@pytest.mark.parametrize(
+    "projections",
+    [
+        (),
+        (replace(PROJECTION, organization_id=uuid4()),),
+        (replace(PROJECTION, edition_id=uuid4()),),
+        (
+            replace(
+                PROJECTION, capability_codes=frozenset({"workforce.view_structure"})
+            ),
+        ),
+    ],
+)
+def test_unrelated_authority_cannot_probe_owner_existence_or_overflow(
+    world, projections
+):
+    world.mocks["project_active_authority_scopes"].return_value = projections
+    world.mocks[
+        "resolve_current_department_set_reference"
+    ].side_effect = AssertionError("Forbidden inventory probe")
+    world.mocks["_require_integrity"].side_effect = AssertionError(
+        "Forbidden readiness probe"
+    )
+    with pytest.raises(AuthorizationDenied):
+        read()
+    world.mocks["_lock_scope"].assert_not_called()
+    world.manager.filter.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "projection",
+    [
+        replace(PROJECTION, edition_id=None),
+        replace(PROJECTION, department_id=DEPARTMENT),
+        replace(PROJECTION, department_id=DEPARTMENT, resource_binding_id=ROOM),
+    ],
+)
+def test_name_free_preflight_does_not_require_broad_edition_authority(
+    world, projection
+):
+    world.mocks["project_active_authority_scopes"].return_value = (projection,)
+    assert read().choices
+    assert world.mocks["_require_current_controller"].call_count == 8

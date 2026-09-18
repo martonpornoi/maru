@@ -60,6 +60,21 @@ comprehension, native/two-human independent decisions and complete workflow acce
 remain #92/#109. This component introduces no motion, modal or mutation; it does not
 re-certify the existing request editor's native discard behavior.
 
+## Pre-merge disclosure correction
+
+Final review identified a status distinction before authority admission: an unrelated
+caller could receive unavailable rather than denial when inventory discovery overflowed.
+Name-free current-authority projection now rejects foreign/unrelated contexts before
+foundation, integrity or inventory probing. It accepts genuine narrow controller
+sources without substituting for exact per-target checks. Seven further regressions
+cover unrelated/foreign sources and narrow or Organization-level admission. The native
+cross-organization case now also forbids reaching candidate discovery; it remains
+unexecuted. PR #162 was returned to draft for fresh exact-head certification and hosted
+acceptance. The earlier `971283d` development receipt is preserved, not reused.
+Corrected complete database-free feedback passed 9,789 cases in 56.61 seconds;
+all 76 focused query/view cases passed, strict mypy passed 717 source files and
+documentation validation retained 608 Markdown files/four skills/215 requirements.
+
 ## Remaining sequence
 
 Finish this increment's protected delivery, connect fixed authorized Programme entries
