@@ -52,7 +52,15 @@ and the current controller passes audited admission. The platform setup receipt
 explains the ordinary-person continuation without an operational shortcut. Only
 the isolated rehearsal URLconf joins these routes; current production URLs and
 both supported profiles remain unchanged. This is **not completion of #175**:
-the real blank-setup/P06 fixture connection remains to deliver.
+the guarded fixture now prepares the real blank-setup/P06 command connection,
+but native execution and genuine-human acceptance remain separate gates.
+The fixture obtains the two controllers' own starter decisions, publishes one
+Department Position opportunity, lets a separately verified synthetic person
+apply, then independently assigns that applicant. The person submits their own
+availability and claims each explicit Shift; a different organizer confirms and
+locks full coverage. It uses actual owner commands, not direct fixture writes,
+authority substitutions or inferred Participation. See the
+[staffing preparation checkpoint](../checkpoints/2026-09-19-programme-staffing-fixture-preparation.md).
 Schema-only observations do not certify actual command rollback, races or runtime
 permissions. Maintained PostgreSQL cases remain uncollected/unexecuted under #102;
 human comprehension remains #92 and promotion still requires #97/#109.

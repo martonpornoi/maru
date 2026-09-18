@@ -419,6 +419,63 @@ class ProgrammeRunningFixture:
         except (OSError, subprocess.TimeoutExpired, ValueError):
             raise ProgrammeHttpsError("fixture_physical_process_failed") from None
 
+    def prepare_staffing(self, proposal, review, items, planning, physical):
+        """Connect actual own approvals, personal availability and locked coverage."""
+        require_programme_rehearsal_request()
+        if self.scenario is None or not self._application_environment:
+            raise ProgrammeHttpsError("fixture_staffing_dependencies_required")
+        from tests.rehearsals.programme_staffing_scenario import (  # noqa: PLC0415
+            SOURCE_KEYS,
+            staffing_from_document,
+            staffing_sources,
+        )
+
+        documents = json.loads(
+            json.dumps(
+                dict(
+                    zip(
+                        SOURCE_KEYS,
+                        map(
+                            asdict,
+                            (
+                                self.scenario,
+                                proposal,
+                                review,
+                                items,
+                                planning,
+                                physical,
+                            ),
+                        ),
+                        strict=True,
+                    )
+                ),
+                default=str,
+            )
+        )
+        sources = staffing_sources(documents)
+        self.refresh_workers()
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "tests.rehearsals.programme_staffing_scenario"],
+                cwd=ROOT,
+                env=self._application_environment,
+                input=json.dumps(documents),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=min(180, remaining_lease(self.deadline)),
+                check=False,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            if result.returncode != 0 or len(result.stdout) > 16_384:
+                raise ProgrammeHttpsError("fixture_staffing_process_failed")
+            return staffing_from_document(
+                json.loads(result.stdout),
+                **dict(zip(SOURCE_KEYS, sources, strict=True)),
+            )
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            raise ProgrammeHttpsError("fixture_staffing_process_failed") from None
+
 
 @contextmanager
 def isolated_programme_application(*, setup_mode=None, with_scanner=False):

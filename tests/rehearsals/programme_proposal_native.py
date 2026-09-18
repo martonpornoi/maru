@@ -175,5 +175,70 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
                     ).format(sql.Identifier(table)),
                     (physical.organization_id, physical.edition_id),
                 ).fetchone() == (0,)
+        staffing = fixture.prepare_staffing(result, reviewed, items, planning, physical)
+        with psycopg.connect(
+            fixture.runtime.database_url, connect_timeout=5
+        ) as connection:
+            assert connection.execute(
+                "SELECT r.author_id, r.approver_id, d.actor_id, "
+                "d.action, d.template_id "
+                "FROM public.workforce_programmestarterrequest r "
+                "JOIN public.workforce_programmestarterdecision d "
+                "ON d.request_id = r.id "
+                "WHERE r.id = %s AND r.organization_id = %s AND r.edition_id = %s",
+                (
+                    staffing.starter_request_id,
+                    staffing.organization_id,
+                    staffing.edition_id,
+                ),
+            ).fetchone() == (
+                fixture.scenario.controllers[0].account_id,
+                fixture.scenario.controllers[1].account_id,
+                fixture.scenario.controllers[1].account_id,
+                "approve",
+                staffing.template_id,
+            )
+            assert connection.execute(
+                "SELECT account_id, position_id, status, participation_capacity_id "
+                "FROM public.workforce_positionassignment "
+                "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                (staffing.assignment_id, staffing.organization_id, staffing.edition_id),
+            ).fetchone() == (
+                staffing.volunteer.account_id,
+                staffing.position_id,
+                "active",
+                None,
+            )
+            for work in staffing.work:
+                assert connection.execute(
+                    "SELECT status, command_version, required_headcount "
+                    "FROM public.workforce_shiftdemand "
+                    "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                    (work.demand_id, staffing.organization_id, staffing.edition_id),
+                ).fetchone() == ("locked", work.demand_version, 1)
+                assert connection.execute(
+                    "SELECT account_id, demand_id, status, "
+                    "command_version, confirmed_by_id "
+                    "FROM public.workforce_shiftcommitment "
+                    "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                    (work.commitment_id, staffing.organization_id, staffing.edition_id),
+                ).fetchone() == (
+                    staffing.volunteer.account_id,
+                    work.demand_id,
+                    "confirmed",
+                    work.commitment_version,
+                    planning.planner.account_id,
+                )
+            for table in (
+                "participation_participation",
+                "participation_participationcapacity",
+                "scheduling_schedulingreleaseapproval",
+                "scheduling_schedulingrelease",
+            ):
+                assert connection.execute(
+                    sql.SQL("SELECT count(*) FROM public.{}").format(
+                        sql.Identifier(table)
+                    )
+                ).fetchone() == (0,)
     # This proves no actual HTTPS/browser journey, real venue fitness, representative
-    # human, complete cross-tenant inventory or P06-P12 acceptance. Those stay open.
+    # human, complete cross-tenant inventory or P07-P12 acceptance. Those stay open.
