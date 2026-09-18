@@ -396,6 +396,29 @@ provisioning and four transport cases, they remain uncollected and unexecuted
 while PostgreSQL is deferred. Policy restoration, measured native budget evidence,
 logical recovery #97, integrated #109 and representative humans #92 remain required.
 
+### Real scanner prerequisite
+
+The optional `with_scanner=True` runner preparation supplies the real dependency
+required by P02/ADR 0104. It uses a cached immutable official ClamAV 1.5.4 image,
+an owned internal bridge, loopback publication and an independently expiring,
+non-root/read-only resource-bounded daemon. There is no test-clean implementation,
+external endpoint, persistent host data or automatic image/signature download.
+Actual bounded PING/VERSION evidence requires the pinned engine and signatures no
+older than seven days; every PDF still passes through the unchanged owner scanner.
+An old pin must be deliberately refreshed and verified, not accepted through a
+stale-signature exception. Budget 4 GiB for the daemon plus the database/application.
+Normal cleanup verifies exact nonce/IDs and empty network; controller-crash recovery
+may need removal of that exact labelled empty network after auto-expiry, not pruning.
+
+Both fixture transports now require a recognized stable Docker engine version 28
+or newer and pin commands to the inspected local endpoint. This prevents the older
+localhost-publication exposure and a concurrent default-context switch. These
+preconditions change no Docker configuration or unrelated resources. One host-only
+`programme_scanner_native.py` actual daemon/public-preparer case is maintained but
+uncollected/unexecuted. See the
+[scanner checkpoint](../checkpoints/2026-09-18-programme-real-scanner-preparation.md)
+for source metadata, limits and unverified native debt.
+
 ### Scenario people and sessions
 
 Use repository-owned fictional convention names, synthetic people and reserved
