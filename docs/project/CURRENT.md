@@ -48,10 +48,17 @@ use authority/profile substitutions and cannot be relabelled as native or joined
 acceptance. No database fixture was launched or collected; both current profiles
 remain unchanged.
 
-Preparation feedback: 448 focused candidate/routing cases in 1.50s and all
-10,285 database-free units in 59.47s passed. No browser/native execution is
-claimed. Fresh exact-commit certification and protected delivery remain pending;
-see the [preparation checkpoint](../checkpoints/2026-09-18-programme-rehearsal-composition-preparation.md).
+Preparation is in [PR #164](https://github.com/martonpornoi/maru/pull/164).
+Head `21758543e0a2558f3b8b0cfef18cea3e6f93f495` passed all eight retained local
+gates in 5m33s (10,285 units in 59.80s, 103 frontend cases); its receipt and
+package evidence are archived. Hosted units, quality and PR gate passed, but
+GitHub did not process the JavaScript CodeQL upload. Its analysis job passed
+with an upload-processing timeout; the missing configuration still blocks merge.
+Managed-workflow retries were refused. No merge, bypass, PostgreSQL execution or
+browser acceptance is claimed. A documentation-only checkpoint update requests
+fresh exact-head certification and hosted analysis; earlier evidence does not
+certify that new head. See the [delivery retry checkpoint](../checkpoints/2026-09-18-programme-rehearsal-delivery-retry.md)
+and [preparation checkpoint](../checkpoints/2026-09-18-programme-rehearsal-composition-preparation.md).
 
 Preserve truthful roots and two people's own acceptances.
 A selected approver email is never their decision; no catch-all role may replace
