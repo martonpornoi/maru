@@ -94,3 +94,22 @@ shared-shell own-approval task, Positions/setup entry points and actual fixture 
 composition. Keep #175 open until those complete. Human comprehension belongs to
 #92; PostgreSQL restoration/#102, recovery #97, integrated #109 and supported
 promotion remain required before #108/#48 closure. No production activation.
+
+## Protected delivery appendix
+
+PR #182 merged at 2026-09-18 21:13:48 UTC as
+`8a7efe7c72f255e2663f8fa01cb319adf0d35805`. Its tree
+`ab048ccd45945cbef6fef6dbebf3c9807512109e` equals certified head
+`b5c74915f0d55c2660e6472a3be59632423df5ac`. All eight local development gates
+passed in 338.098 seconds, including 11,057 units in 62.03s and 103 frontend
+cases. The v4 receipt remains `postgresql_deferred`, zero database instances
+and null combined coverage/headroom, not native success. Its SHA-256 is
+`c4a31c16629db2f1948d76496f2fb13ee775d53d01ed891809e7695f9bef25ff`.
+The five original artifacts were hash-verified into the ignored exact-head archive.
+
+Hosted run 35394336454 passed quality in 10m47s, units in 2m14s and PR gate in
+3s. All three processed exact-head CodeQL configurations had no error/warning;
+complete review/thread pagination was empty, with no automatic closing references.
+The exact-head squash used no bypass. Clean separate local main, origin/main and
+protected result matched; unrelated repair worktree remained untouched. #175,
+#108 and #48 remain open for the continuations above.

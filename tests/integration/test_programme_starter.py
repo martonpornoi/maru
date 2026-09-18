@@ -35,16 +35,19 @@ from maru.workforce.models import (
     ProgrammeStarterDecision,
     ProgrammeStarterRequest,
 )
+from maru.workforce.programme_starter_creation import prepare_programme_starter_creation
 from maru.workforce.programme_starter_inputs import ProgrammeStarterAction as Action
 from maru.workforce.programme_starter_inputs import (
     ProgrammeStarterIntent,
     ProgrammeStarterScope,
 )
+from maru.workforce.programme_starter_queries import load_programme_starter_workspace
 from maru.workforce.programme_starter_readiness import (
     PROGRAMME_STARTER_RELATIONS,
     PROGRAMME_STARTER_SCHEMA_SHA256,
     programme_starter_database_integrity_is_ready,
 )
+from maru.workforce.programme_starter_selection import ProgrammeStarterDraft
 from tests.factories import AccountFactory
 from tests.support.authority import activate_synthetic_board
 from tests.support.programme_schema import admit_transaction_local_schema_candidate
@@ -152,6 +155,48 @@ def test_native_schema_exact_metadata_and_guard_readiness():
         == PROGRAMME_STARTER_SCHEMA_SHA256
     )
     assert programme_starter_database_integrity_is_ready()
+
+
+def test_actual_selected_people_review_own_intent_and_terminal_history(world):
+    draft = ProgrammeStarterDraft(
+        world.approver.email, "Synthetic original selection.", uuid4()
+    )
+    preview = prepare_programme_starter_creation(
+        actor=world.author, scope=world.scope, draft=draft, correlation_id=uuid4()
+    )
+    assert preview.selection is not None
+    original = request(
+        world, details=preview.selection.details, idempotency_key=draft.idempotency_key
+    )
+    for person in (world.author, world.approver):
+        result = load_programme_starter_workspace(
+            actor=person,
+            scope=world.scope,
+            correlation_id=uuid4(),
+            request_id=original.request_id,
+        )
+        assert result.requests[0].author_id == world.author.id
+        assert result.requests[0].approver_id == world.approver.id
+    unrelated = AccountFactory()
+    with pytest.raises(AuthorizationDenied):
+        load_programme_starter_workspace(
+            actor=unrelated,
+            scope=world.scope,
+            correlation_id=uuid4(),
+            request_id=original.request_id,
+        )
+    decide(world, original)
+    result = load_programme_starter_workspace(
+        actor=world.approver,
+        scope=world.scope,
+        correlation_id=uuid4(),
+        request_id=original.request_id,
+    )
+    assert result.requests[0].state == "approve"
+    assert not result.requests[0].can_approve
+    assert not load_programme_starter_workspace(
+        actor=world.author, scope=world.scope, correlation_id=uuid4()
+    ).requests
 
 
 def test_actual_two_people_approve_only_fixed_shared_definition_and_retry(world):

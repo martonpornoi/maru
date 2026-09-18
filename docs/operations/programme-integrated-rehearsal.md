@@ -1,7 +1,9 @@
 # Programme setup-to-on-site rehearsal
 
-The #175 backend now prepares real own-person approval of the fixed Volunteer
-starter; its reader/screen and actual blank-setup/P06 connection remain unfinished.
+The #175 backend and dormant audited own-person starter screen prepare the fixed
+Volunteer definition. Positions has a separately admitted contextual entry and
+platform setup explains the ordinary-controller handoff. The actual blank-setup/
+P06 connection remains unfinished; no screen/unit result is native acceptance.
 Do not seed a PositionTemplate directly or treat a selected approver as a decision.
 The candidate table inventory grows from 82 to **84**: starter request INSERT/UPDATE
 for canonical row locking, terminal decision INSERT only. Both tables are

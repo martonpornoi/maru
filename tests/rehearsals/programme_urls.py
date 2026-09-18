@@ -12,6 +12,7 @@ from django.urls import include, path
 OWNER_URLCONFS = (
     "maru.events.programme_setup_urls",
     "maru.authorization.programme_role_urls",
+    "maru.workforce.programme_starter_urls",
     "maru.applications.programme_call_urls",
     "maru.applications.programme_proposal_urls",
     "maru.applications.programme_review_setup_urls",

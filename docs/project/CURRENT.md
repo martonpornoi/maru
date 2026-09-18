@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme isolated runtime-helper permissions are delivered through
-[PR #181](https://github.com/martonpornoi/maru/pull/181), protected squash
-`bed5b3a7c029aaf24e2ef2888f4f489aa4cc3f1d` at 2026-09-18 20:26:17 UTC.
-Its tree equals certified head `cb28378c41f0fb0ddef7e8254f0bf61a0382d213`;
+Programme's accountable Volunteer starter backend is delivered through
+[PR #182](https://github.com/martonpornoi/maru/pull/182), protected squash
+`8a7efe7c72f255e2663f8fa01cb319adf0d35805` at 2026-09-18 21:13:48 UTC.
+Its tree equals certified head `b5c74915f0d55c2660e6472a3be59632423df5ac`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m42s, including 10,943 units in 61.96s and 103 frontend
-cases. Hosted quality took 12m43s and units 2m19s; exact-head PR gate and all
-processed CodeQL configurations passed. #180 is closed and checked in both
-parents. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-runtime-helper-permissions.md).
+local gates passed in 5m38s, including 11,057 units in 62.03s and 103 frontend
+cases. Hosted quality took 10m47s and units 2m14s; exact-head PR gate and all
+three processed CodeQL configurations passed. No parent or #175 was closed.
+PostgreSQL was deferred, not certified. See the
+[protected evidence](../checkpoints/2026-09-18-programme-volunteer-starter-backend.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-volunteer-starter`, from protected PR #181.
+Branch: `codex/programme-volunteer-starter-review`, from protected PR #182.
 #177 is closed after its bounded authority correction: one truthful resource-only
 recipe and frozen native-function extension, without rewriting the 27 historical
 definitions or changing current profiles, table fingerprints or owner duties.
@@ -70,11 +70,24 @@ pin-based readiness passed; its verified tmpfs container was removed. This ran n
 PostgreSQL test and proves no actual workflow, runtime permissions or concurrency.
 Complete database-free feedback passed 11,057 tests in 62.98s; strict mypy passed
 724 sources, semantic documentation passed 745, and repository documentation
-validation passed. Exact certification remains pending; see the
+validation passed. Exact certification and protected delivery are retained above; see the
 [starter backend checkpoint](../checkpoints/2026-09-18-programme-volunteer-starter-backend.md).
 
-Next within #175: audited own-person reader, signed preview/confirm and actual
-approval screen, Positions/setup links, then genuine blank-setup/P06 composition.
+Prepared the audited own-person reader, signed preview/confirm and actual-person
+approval screen. The bounded complete inventory and known history expose only
+one's own requests; every final render revalidates owner authority, labels and
+terms. Own decisions require recent authentication without discarding original
+input/key. Positions shows a contextual link only for the mounted actual owner
+and admitted controller; platform setup explains the separate ordinary-person
+continuation. Only the test-only joined URLconf gains routes. Focused database-free
+feedback passed 704 cases in 4.49s; strict targeted typing and semantic Python
+documentation passed. Complete feedback passed 11,148 units in 61.50s; repository
+documentation passed 635 Markdown files, four skills and 215 requirement IDs.
+Exact certification is pending for this surface. Native reader coverage is maintained but uncollected/unexecuted;
+no browser acceptance is claimed. See the
+[surface checkpoint](../checkpoints/2026-09-18-programme-volunteer-starter-review.md).
+
+Next within #175: genuine blank-setup/P06 composition after protected UI delivery.
 Keep #175 open until these are delivered. Maintain native race, rollback, scope,
 runtime and recovery acceptance under #102; add human-screen acceptance to #92.
 Do not replace missing workflow with direct fixture writes or email-as-approval.
@@ -89,7 +102,7 @@ native case is maintained but uncollected/unexecuted. See the
 [physical checkpoint](../checkpoints/2026-09-18-programme-physical-approval-preparation.md).
 
 Prepared the explicit test-only candidate manifest, independent real internal-fact
-handler registry and joined URLconf covering all ten dormant owner route modules
+handler registry and joined URLconf covering eleven dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
 pins, excluded scope, every owner route's round trip and unchanged production
 registration. This is preparation, not the complete fixture: native verification

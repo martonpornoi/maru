@@ -65,6 +65,15 @@
     </div>
   {% endif %}
 
+  {% if programme_starter_url %}
+    <section class="baseline-panel" aria-labelledby="programme-starter-title">
+      <h2 id="programme-starter-title">Accountable Volunteer starter</h2>
+      <p>Before the first Programme Position, two independent controllers must request and approve the fixed Organization-owned Volunteer definition. Approval grants nobody access and creates no Position or assignment.</p>
+      <p><a href="{{ programme_starter_url }}">Request or review the Volunteer starter</a></p>
+      <p>After approval, return here and create a Position in its Department. Each later assignment and Shift requires its own authorized workflow.</p>
+    </section>
+  {% endif %}
+
   <section class="baseline-panel" aria-labelledby="position-list-title">
     <div class="baseline-panel-heading">
       <div>

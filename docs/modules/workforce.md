@@ -36,9 +36,23 @@ explicitly allows request INSERT/UPDATE for row locking and decision INSERT only
 Actual native and observed table metadata are required by command and candidate
 startup readiness; no readiness substitution or production activation is added.
 
-This increment is the backend prerequisite, **not completion of #175**. The
-audited own-person reader, signed preview/confirm, shared-shell approval screen,
-Positions/setup entry points and real P06 fixture connection remain to deliver.
+The [starter task](../product/page-contracts/programme-volunteer-starter.md)
+adds audited complete own-request review (100 pending requests or unavailable),
+exact original history, signed original-person preview/confirmation and the
+authenticated approver's own decision. Decisions require recent own-session
+authentication; an extra sign-in opens separately so original input and retry
+identity remain in the form. No email is re-resolved on confirmation. Post-render
+owner revalidation suppresses stale labels, scope, authority or meaning. Strict
+forms reject duplicate, unrelated, oversized and file-bearing input. Uncertain
+commands retain original input/proof/key rather than making a replacement.
+These sensitive reads use security-extended audit and private/no-store responses.
+
+Positions offers the review entry only when the actual owner route is mounted
+and the current controller passes audited admission. The platform setup receipt
+explains the ordinary-person continuation without an operational shortcut. Only
+the isolated rehearsal URLconf joins these routes; current production URLs and
+both supported profiles remain unchanged. This is **not completion of #175**:
+the real blank-setup/P06 fixture connection remains to deliver.
 Schema-only observations do not certify actual command rollback, races or runtime
 permissions. Maintained PostgreSQL cases remain uncollected/unexecuted under #102;
 human comprehension remains #92 and promotion still requires #97/#109.
