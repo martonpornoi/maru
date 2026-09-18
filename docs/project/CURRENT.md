@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme call-to-private-item composition is delivered through
-[PR #173](https://github.com/martonpornoi/maru/pull/173), protected squash
-`1108f4146abad236d2e26770ec6f2ffa8274b086` at 2026-09-18 18:03:01 UTC.
-Its tree equals certified head `74883f3c5b11f4fb216d62cbbfce11152e8e780a`;
+Isolated Programme item/readiness/hosting composition is delivered through
+[PR #174](https://github.com/martonpornoi/maru/pull/174), protected squash
+`5bbfa7d4609fdc8b04b0a42c30660980d7def45e` at 2026-09-18 18:27:43 UTC.
+Its tree equals certified head `a0fcb00f845234ddb49ba733ff1d20047080f099`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m36s, including 10,777 units in 61.03s and 103 frontend
-cases. Hosted quality took 10m46s and units 1m54s; exact-head PR gate and all
+local gates passed in 5m38s, including 10,799 units in 61.74s and 103 frontend
+cases. Hosted quality took 11m41s and units 1m42s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-proposal-review-preparation.md).
+[protected evidence](../checkpoints/2026-09-18-programme-items-hosting-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-items-hosting-preparation`, from protected PR #173.
+Branch: `codex/programme-private-timetable-preparation`, from protected PR #174.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -171,8 +171,8 @@ Focused database-free tests passed 110 cases in 0.72s; complete feedback passed
 10,777 units in 60.78s with three existing warnings. Ruff/diff passed; clean
 exact-head certification and delivery passed as recorded above. One composed host-only case
 is maintained but uncollected/unexecuted.
-No actual P02/P03/P04 or browser acceptance is claimed. Finish P04's core items,
-readiness/layers/host consent, then P05–P12 and complete isolation assertions.
+No actual P02/P03/P04 or browser acceptance is claimed. P04's further preparation
+is recorded below; P05–P12 and complete isolation assertions remain open.
 See the [composition checkpoint](../checkpoints/2026-09-18-programme-proposal-review-preparation.md).
 
 Prepared P04 core-item creation, private working/discussion/delivery layers,
@@ -182,10 +182,26 @@ concern is not applicable in this fictional scenario; six other concerns require
 real current source evidence/attestation. Private host draft periods remain hidden
 from organizers, and hosting confers no private-item read. Focused feedback passed
 59 cases in 0.49s; all 10,799 units passed in 60.77s with three existing warnings.
-Ruff passed; exact-head certification/delivery remain pending. The composed native
+Ruff passed; exact-head certification/delivery passed as above. The composed native
 case is maintained but uncollected/unexecuted. Next prepare P05–P12 and actual
 HTTP/browser evidence, then the tracked native/recovery/human gates.
 See the [item/hosting checkpoint](../checkpoints/2026-09-18-programme-items-hosting-preparation.md).
+
+Prepared real-owner two-room/service-day/three-occurrence private planning. Actual
+Venue commands activate the fictional property and select rooms; configuration
+IDs come from the authorized owner form using genuine backend login, not ORM reads.
+Controllers separately approve each exact-room role. A retained conflicting draft
+exposes room/capacity/same-host collisions; a copied alternative moves explicit
+repeated occurrences without changing its source, and rejects stale write cursors.
+Native readback assertions require no reservation, physical approval or release.
+Focused database-free feedback passed 112 tests in 1.12s; all 10,839 unit tests
+passed in 59.96s with three existing warnings. Ruff/diff passed; exact-head
+certification is pending. The maintained native case stays uncollected.
+Next prepare actual physical reservation/approval and P06 staffing, then release,
+successors/notices, outputs, continuity/recovery and complete isolation checks.
+Full P05 pointer/keyboard/forms, combinations and failure journeys still need
+integrated native/browser evidence. See the
+[private timetable checkpoint](../checkpoints/2026-09-18-programme-private-timetable-preparation.md).
 
 The maintainer authorized the full sequence:
 finish preparation first, restore tracked PostgreSQL acceptance through protected
