@@ -50,3 +50,17 @@ pending. Separate migration/runtime provisioning, exact candidate installation,
 guarded application startup, real setup/roles and P01–P12 still need implementation
 and evidence. #108/#48 and #102/#97/#92/#109 remain open; this increment grants no
 production activation or acceptance exception.
+
+## Pre-merge startup refinement
+
+Initial exact head `5e2d000c87e8ff030509b8a8f549e29cc8c2d140` passed all eight
+retained local gates in 335.210 seconds (10,382 units in 59.80s and 103 frontend
+cases). Its five receipt/plan/JUnit/package artifacts are hash-verified under
+`.tools/certification-evidence/issue108-5e2d000-deferred/`; that receipt does not
+certify a later head.
+
+Final review made the startup probe explicitly use TCP on port 5432 rather than
+the default socket, avoiding admission of a temporary initialization server.
+A separate mocked command-vector regression protects that distinction. This
+does not prove native startup or published-port reachability; the maintained
+native connection test is still required. Fresh exact-head certification follows.

@@ -114,6 +114,26 @@ def test_exact_owned_loopback_start_and_cleanup_without_password_arguments(docke
     assert "--volume" not in start
 
 
+def test_readiness_requires_tcp_not_the_temporary_initialization_socket(docker):
+    with database.isolated_programme_database():
+        probes = [call for call in docker.calls if call[0] == "exec"]
+        assert probes == [
+            (
+                "exec",
+                CONTAINER_ID,
+                "pg_isready",
+                "-h",
+                "127.0.0.1",
+                "-p",
+                "5432",
+                "-U",
+                "postgres",
+                "-d",
+                f"maru_programme_{RUN_ID}",
+            )
+        ]
+
+
 def test_expiry_supervisor_uses_fast_shutdown_then_bounded_child_kill():
     assert 'sleep "$MARU_FIXTURE_LEASE_SECONDS"' in database._LEASE_COMMAND
     assert 'kill -INT "$server_pid"' in database._LEASE_COMMAND

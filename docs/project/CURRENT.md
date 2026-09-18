@@ -79,6 +79,12 @@ focused cases in 0.36s; fresh exact-commit certification and protected delivery
 remain pending. Separate migration/runtime
 provisioning, candidate schema/application startup and setup/roles remain next.
 
+PR #165's initial head `5e2d000` passed all eight retained gates in 5m35s
+(10,382 units, 103 frontend cases). Pre-merge review then made readiness explicitly
+TCP rather than the temporary initialization socket and added a regression.
+Fresh certification of the corrected head is required before protected delivery;
+the initial receipt is archived separately and is not reused.
+
 Non-blocking follow-up after #48: the semantic docstring validator's no-argument
 defaults are strings rather than Paths; its maintained explicit `src scripts`
 invocation passes. Keep this separate from Programme delivery.
