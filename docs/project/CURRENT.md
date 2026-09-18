@@ -11,17 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme runtime resource preparation is delivered through
-[PR #165](https://github.com/martonpornoi/maru/pull/165), protected squash
-`4519e5b01469eb236fc524706ad48c31bc631d4e` at 2026-09-18 06:46:30 UTC.
-Its tree equals certified head `f055a74a4792a8a23a221b0968ffc16ac37a3a94`;
+Isolated Programme migration/runtime provisioning preparation is delivered through
+[PR #166](https://github.com/martonpornoi/maru/pull/166), protected squash
+`1f493acc47d121768adf0f5d3b0724e8479914e6` at 2026-09-18 07:20:44 UTC.
+Its tree equals certified head `1dbb93b824d9e321a86fa1b94583f98a24e38813`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m22s, including 10,383 units in 60.42s and 103 frontend
-cases. Hosted quality took 12m13s and units 1m29s; exact-head PR gate and all
-processed CodeQL configurations passed. Final review corrected the readiness
-probe to TCP and the revised head was independently recertified. PostgreSQL was
+local gates passed in 5m31s, including 10,430 units in 59.60s and 103 frontend
+cases. Hosted quality took 12m00s and units 2m21s; exact-head PR gate and all
+processed CodeQL configurations passed. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-runtime-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-18-programme-provisioning-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -38,14 +37,14 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-fixture-provisioning`, from protected PR #165.
+Branch: `codex/programme-fixture-candidate`, from protected PR #166.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
 pins, excluded scope, every owner route's round trip and unchanged production
-registration. This is composition preparation, not the complete fixture: disposable
-database/runtime provisioning, candidate schema installation, truthful setup/role
-seeding and P01–P12 execution are still unfinished. Existing component rehearsals
+registration. This is preparation, not the complete fixture: native verification
+of the prepared database/runtime provisioner, candidate schema installation,
+truthful setup/role seeding and P01–P12 execution are still unfinished. Existing component rehearsals
 use authority/profile substitutions and cannot be relabelled as native or joined
 acceptance. No database fixture was launched or collected; both current profiles
 remain unchanged.
@@ -71,15 +70,25 @@ manifest into a claimed complete fixture. Keep all native execution deferred.
 PR #165 delivers strict policy/opt-in/run-scoped inputs and an owned loopback
 transport with unique nonce, tmpfs, bounded expiry and exact-resource cleanup.
 Its four host-only native transport/expiry cases remain uncollected/unexecuted.
-Current local work adds separate migration/runtime provisioning using a pinned
+PR #166 delivers separate migration/runtime provisioning preparation using a pinned
 copy of the existing ACL source, real migration login, sanitized child settings
 and a genuine runtime-role probe. It changes no current profile, schema contract,
 ACL source or authority policy. Focused pure/mocked feedback passed 145 cases
-in 0.49s; complete database-free feedback passed 10,430 in 59.86s. Fresh
-exact-commit certification remains pending. One additional
-host-only native provisioning case is maintained but uncollected/unexecuted.
+in 0.49s; complete feedback and exact-head retained certification passed as above.
+One additional host-only native provisioning case is maintained but uncollected/unexecuted.
 No Docker command, database, migration or server has been started. Candidate
 installation/startup, real setup/roles and the complete P01–P12 journey remain next.
+
+Next implementation boundary: explicit test-only candidate registration and real
+isolated schema installation, followed by guarded joined startup. Preserve both
+current profiles; do not treat the abbreviated transaction-local schema fixture,
+silenced deployment errors or relaxed test settings as native acceptance. The
+current three owner dormancy checks correctly reject profile adoption, so the
+isolated candidate needs an explicit, independently validated compatibility
+contract while preserving production checks and all native authorization/DDL
+guards. This boundary is not implemented yet. Keep native execution deferred.
+The new branch currently holds only this delivery handoff, not candidate code;
+the prior receipt certifies PR #166's exact head, not subsequent checkpoint edits.
 
 Non-blocking follow-up after #48: the semantic docstring validator's no-argument
 defaults are strings rather than Paths; its maintained explicit `src scripts`
