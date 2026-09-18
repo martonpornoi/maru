@@ -47,6 +47,9 @@ def _runtime_configuration_is_strict(settings):
         and settings.DEMO_PAYMENT_ADAPTER_ENABLED is False
         and not settings.SILENCED_SYSTEM_CHECKS
         and settings.EMAIL_BACKEND == "django.core.mail.backends.locmem.EmailBackend"
+        and settings.SESSION_COOKIE_SECURE is True
+        and settings.CSRF_COOKIE_SECURE is True
+        and settings.SECURE_SSL_REDIRECT is True
     )
 
 
