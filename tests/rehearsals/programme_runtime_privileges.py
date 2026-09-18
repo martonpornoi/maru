@@ -58,7 +58,7 @@ INSERT = _tables(
             "programmestaffingrevision",
             "programmeplacementdecision",
         ),
-        "workforce": ("programmeshiftbindingrevision",),
+        "workforce": ("programmeshiftbindingrevision", "programmestarterdecision"),
         "venues": ("venueschedulingbinding",),
         "scheduling": (
             "schedulingservicedayrevision",
@@ -120,7 +120,7 @@ INSERT_UPDATE = _tables(
             "programmehostrelationship",
             "programmestaffingrequirement",
         ),
-        "workforce": ("programmeshiftbinding",),
+        "workforce": ("programmeshiftbinding", "programmestarterrequest"),
         "scheduling": (
             "schedulingeditioncontrol",
             "schedulingserviceday",

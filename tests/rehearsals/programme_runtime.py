@@ -64,6 +64,9 @@ def _require_native_readiness(environment):
     from maru.events.programme_setup_readiness import (  # noqa: PLC0415
         programme_setup_database_integrity_is_ready,
     )
+    from maru.workforce.programme_starter_readiness import (  # noqa: PLC0415
+        programme_starter_database_integrity_is_ready,
+    )
     from tests.rehearsals.programme_function_acl import (  # noqa: PLC0415
         require_helper_catalog,
     )
@@ -110,6 +113,7 @@ def _require_native_readiness(environment):
         or any(value != "ok" for value in response.data["dependencies"].values())
         or not programme_setup_database_integrity_is_ready()
         or not programme_role_database_integrity_is_ready()
+        or not programme_starter_database_integrity_is_ready()
     ):
         raise ProgrammeStartupError("candidate_native_readiness_unavailable")
 

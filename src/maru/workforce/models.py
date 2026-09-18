@@ -26,6 +26,12 @@ from maru.workforce.availability_inputs import (
 )
 from maru.workforce.programme_staffing_inputs import MAX_PROGRAMME_BINDING_REVISIONS
 from maru.workforce.programme_staffing_writer import require_programme_staffing_writer
+from maru.workforce.programme_starter_models import (
+    ProgrammeStarterDecision as ProgrammeStarterDecision,  # noqa: PLC0414 - Django discovery and typed public model
+)
+from maru.workforce.programme_starter_models import (
+    ProgrammeStarterRequest as ProgrammeStarterRequest,  # noqa: PLC0414 - Django discovery and typed public model
+)
 
 MAX_ONBOARDING_DOCUMENT_BYTES = 10 * 1024 * 1024
 MAX_STRUCTURE_CHANGED_FIELDS = 16

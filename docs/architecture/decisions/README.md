@@ -111,6 +111,7 @@ the system.
 | [0104](0104-purpose-bound-programme-file-intake.md) | Accepted | Bound Programme supporting-file preparation and trusted scanning separately from exact proposal provenance, private custody and independently authorized download |
 | [0105](0105-transactional-programme-supporting-file-custody.md) | Accepted | Commit bounded private Programme bytes and exact intake provenance with the first canonical answer, preserving quotas, independent readers and retention gates |
 | [0106](0106-scoped-programme-operational-approval.md) | Accepted; implementation pending | Keep accountable roots unchanged and approve exact scoped Programme operational roles through immutable intent and actual independent-person decisions |
+| [0107](0107-programme-volunteer-starter-approval.md) | Accepted; implementation pending | Retain an independent person's own decision on the one minimal shared Volunteer Position template needed by blank Programme setup |
 
 New ADRs use the next four-digit number and contain:
 

@@ -163,6 +163,8 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.programme_programmeplacementdecision",
     "public.workforce_programmeshiftbinding",
     "public.workforce_programmeshiftbindingrevision",
+    "public.workforce_programmestarterrequest",
+    "public.workforce_programmestarterdecision",
     "public.scheduling_schedulingeditioncontrol",
     "public.scheduling_schedulingserviceday",
     "public.scheduling_schedulingservicedayrevision",

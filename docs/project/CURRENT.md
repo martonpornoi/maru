@@ -11,15 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme independent physical-approval preparation is delivered through
-[PR #179](https://github.com/martonpornoi/maru/pull/179), protected squash
-`a22332826ed1feab6c01439c03eb28d90a643c79` at 2026-09-18 19:38:34 UTC.
-Its tree equals certified head `effafcc8760e2db9e9c2eb34575b34c4c825420f`;
+Programme isolated runtime-helper permissions are delivered through
+[PR #181](https://github.com/martonpornoi/maru/pull/181), protected squash
+`bed5b3a7c029aaf24e2ef2888f4f489aa4cc3f1d` at 2026-09-18 20:26:17 UTC.
+Its tree equals certified head `cb28378c41f0fb0ddef7e8254f0bf61a0382d213`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m38s, including 10,888 units in 61.02s and 103 frontend
-cases. Hosted quality took 12m19s and units 2m17s; exact-head PR gate and all
-processed CodeQL configurations passed. PostgreSQL was deferred, not certified.
-See the [protected evidence](../checkpoints/2026-09-18-programme-physical-approval-preparation.md).
+local gates passed in 5m42s, including 10,943 units in 61.96s and 103 frontend
+cases. Hosted quality took 12m43s and units 2m19s; exact-head PR gate and all
+processed CodeQL configurations passed. #180 is closed and checked in both
+parents. PostgreSQL was deferred, not certified. See the
+[protected evidence](../checkpoints/2026-09-18-programme-runtime-helper-permissions.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -36,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-runtime-helper-permissions`, from protected PR #179.
+Branch: `codex/programme-volunteer-starter`, from protected PR #181.
 #177 is closed after its bounded authority correction: one truthful resource-only
 recipe and frozen native-function extension, without rewriting the 27 historical
 definitions or changing current profiles, table fingerprints or owner duties.
@@ -49,12 +50,34 @@ overlays; actual native role-safety SQL, full source/metadata readiness, canonic
 production ACLs and both current profiles remain unchanged. Before/after-grant
 and genuine-runtime metadata checks deny drift, PUBLIC and grant options.
 Focused database-free checks passed 194 cases in 1.02s; complete feedback passed
-10,943 cases in 61.70s. Exact-head certification is pending. One native drift case and expanded
+10,943 cases in 61.70s. Protected certification passed as above. One native drift case and expanded
 provisioning matrices remain uncollected/unexecuted #102 debt. See the
 [helper checkpoint](../checkpoints/2026-09-18-programme-runtime-helper-permissions.md).
 
 #175 remains the necessary accountable minimal Volunteer starter prerequisite
 before genuine blank-setup staffing, explicitly inside #108/#48.
+
+Prepared its bounded backend under HR-012/ADR 0107: immutable Workforce-owned
+request/terminal decision, seven-day own-person approval, exact definition/retry,
+current real control sources, Draft/Preparing creation and atomic canonical
+RoleBundle/template publication or compatible historical reuse. No assignment or
+unrelated domain state is created. Legacy Workforce-only remains unchanged.
+Three source-pinned migrations add two native-guarded relations, SELECT-only
+production ACLs and exclusive-lock unused-only contraction. The explicit candidate
+inventory is now 84 tables; genuine starter readiness is required at startup.
+Authorized empty PostgreSQL 17.11 schema observation passed in 160.110s and final
+pin-based readiness passed; its verified tmpfs container was removed. This ran no
+PostgreSQL test and proves no actual workflow, runtime permissions or concurrency.
+Complete database-free feedback passed 11,057 tests in 62.98s; strict mypy passed
+724 sources, semantic documentation passed 745, and repository documentation
+validation passed. Exact certification remains pending; see the
+[starter backend checkpoint](../checkpoints/2026-09-18-programme-volunteer-starter-backend.md).
+
+Next within #175: audited own-person reader, signed preview/confirm and actual
+approval screen, Positions/setup links, then genuine blank-setup/P06 composition.
+Keep #175 open until these are delivered. Maintain native race, rollback, scope,
+runtime and recovery acceptance under #102; add human-screen acceptance to #92.
+Do not replace missing workflow with direct fixture writes or email-as-approval.
 
 Prepared actual reciprocal reservations and independent physical approval for
 three placements, self/stale denial, exact retries and unchanged candidate proof.
