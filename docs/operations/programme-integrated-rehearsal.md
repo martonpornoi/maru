@@ -39,6 +39,36 @@ launched during deferral or relabelled as the complete fixture.
 
 ## Prepare the fixture and distinct sessions
 
+Fixture preparation starts with a closed test-only candidate definition: literal
+capabilities, shell destinations, registered effect routes, versioned catalogs,
+adapters, conflict sources and unchanged root-role codes. Do not derive its
+authority by accepting every current or future capability in a module, or inherit
+unrelated full-convention destinations/effects. Importing the candidate must not
+register a runtime/selectable/persisted profile, mount routes, change model choices,
+alter guards, open a database or create records. Validate it independently against
+the owners' declared catalogs and the current manifest containment guards.
+
+Prepared components live in `tests/rehearsals/programme_candidate.py`,
+`programme_effects.py` and `programme_urls.py`. The candidate preserves the
+Workforce/foundation pins and admits the explicit Programme owner adapters and
+role recipes, without assigning those roles to anyone. Its independent Effects
+registry uses the real internal-fact acknowledgement handler, not a notification
+or invitation-delivery substitute. The joined URLconf includes all ten dormant
+owner route modules plus the unchanged shared application routes. It changes
+neither `ROOT_URLCONF` nor either current profile. Existing unrelated routes stay
+available for denial probes; routing alone proves neither admission nor isolation.
+
+Database-free tests check every included owner route for exact name, handler and
+scope round trips, collisions and continued absence from current URLconfs. They
+also validate catalog completeness, explicit exclusions and import purity. These
+are preparation checks, not requests against a running server, native authority,
+schema installation, genuine-person acceptance or P01–P12 results.
+
+The eventual opt-in fixture must separately establish its disposable database and
+actual approved runtime boundary. A test-only candidate object is neither a launcher
+nor a migration, and does not satisfy P01–P12 by itself. Never launch it under the
+deferred policy; retain explicit not-run status until restored acceptance.
+
 Use repository-owned fictional convention names, synthetic people and reserved
 example domains. Do not copy an actual convention roster. Provide one primary
 organization with two editions and a second organization to exercise isolation.

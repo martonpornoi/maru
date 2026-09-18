@@ -868,8 +868,8 @@ connects independently admitted Department, Edition, shared Organization Venue a
 selected-room access requests/reviews without pasted identifiers. Dormant shared-shell
 entry composition now independently admits fixed Programme tasks and discovers
 narrow-role edition contexts; search and pins reuse the same current projection.
-Neither current profile nor production routing changes. Protected delivery of this
-increment and the complete isolated fixture remain unfinished; component
+Neither current profile nor production routing changes. Shared navigation is delivered
+through PR #163. The complete isolated fixture remains unfinished; component
 browser evidence does not replace native/human acceptance.
 These remain components, not an activated departmental workflow. Next are
 accountable setup and a complete isolated fixture, followed by #102 restored
