@@ -186,9 +186,30 @@ def _activate_root(administrator, *, organization_id, representation_id, people)
 
 
 def _approve_initial_roles(result, *, people, intake_person):
+    from maru.authorization.catalog import ScopeLevel  # noqa: PLC0415
+
+    return tuple(
+        approve_synthetic_role(
+            result,
+            people=people,
+            recipient=recipient,
+            code=code,
+            level=level,
+            department_id=department,
+        )
+        for code, level, recipient, department in (
+            ("edition-coordination", ScopeLevel.EDITION, people[0], None),
+            ("intake", ScopeLevel.DEPARTMENT, intake_person, result.department_id),
+        )
+    )
+
+
+def approve_synthetic_role(
+    setup, *, people, recipient, code, level, department_id=None
+):
+    """Request then independently approve one existing immutable scoped recipe."""
     from django.utils import timezone  # noqa: PLC0415
 
-    from maru.authorization.catalog import ScopeLevel  # noqa: PLC0415
     from maru.authorization.programme_role_commands import (  # noqa: PLC0415
         decide_programme_role,
         request_programme_role,
@@ -199,44 +220,38 @@ def _approve_initial_roles(result, *, people, intake_person):
         ProgrammeRoleScope,
     )
 
-    assignments = []
-    for code, level, recipient, department in (
-        ("edition-coordination", ScopeLevel.EDITION, people[0], None),
-        ("intake", ScopeLevel.DEPARTMENT, intake_person, result.department_id),
-    ):
-        scope = ProgrammeRoleScope(
-            result.organization_id, result.edition_id, level, department_id=department
-        )
-        request = request_programme_role(
-            actor=people[0].authenticate(),
-            scope=scope,
-            details=ProgrammeRoleIntent(
-                code,
-                1,
-                recipient.account_id,
-                people[1].account_id,
-                None,
-                timezone.now() + timedelta(hours=1),
-                _REASON,
-            ),
-            idempotency_key=uuid4(),
-            correlation_id=uuid4(),
-            source_channel=_CHANNEL,
-        )
-        decision = decide_programme_role(
-            actor=people[1].authenticate(),
-            scope=scope,
-            request_id=request.request_id,
-            action=ProgrammeRoleDecision.APPROVE,
-            reason=_REASON,
-            idempotency_key=uuid4(),
-            correlation_id=uuid4(),
-            source_channel=_CHANNEL,
-        )
-        if decision.role_assignment_id is None:
-            raise ProgrammeSetupScenarioError("synthetic_role_not_granted")
-        assignments.append(decision.role_assignment_id)
-    return tuple(assignments)
+    scope = ProgrammeRoleScope(
+        setup.organization_id, setup.edition_id, level, department_id=department_id
+    )
+    request = request_programme_role(
+        actor=people[0].authenticate(),
+        scope=scope,
+        details=ProgrammeRoleIntent(
+            code,
+            1,
+            recipient.account_id,
+            people[1].account_id,
+            None,
+            timezone.now() + timedelta(hours=1),
+            _REASON,
+        ),
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel=_CHANNEL,
+    )
+    decision = decide_programme_role(
+        actor=people[1].authenticate(),
+        scope=scope,
+        request_id=request.request_id,
+        action=ProgrammeRoleDecision.APPROVE,
+        reason=_REASON,
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel=_CHANNEL,
+    )
+    if decision.role_assignment_id is None:
+        raise ProgrammeSetupScenarioError("synthetic_role_not_granted")
+    return decision.role_assignment_id
 
 
 def _require_fresh_database():
@@ -440,23 +455,27 @@ def prepare_setup_scenario(*, mode, administrator_password):
     )
 
 
+def person_from_document(value):
+    """Decode the fixed synthetic-person pipe shape, not a credential from a UI."""
+    if (
+        set(value) != {"account_id", "email", "password"}
+        or not value["email"].endswith("@example.invalid")
+        or re.fullmatch(r"[A-Za-z0-9_-]{43}", value["password"]) is None
+    ):
+        raise ValueError
+    return SyntheticProgrammePerson(
+        UUID(value["account_id"]), value["email"], value["password"]
+    )
+
+
 def _decode_scenario(document, mode):
     if document["mode"] != mode or mode not in SETUP_MODES:
         raise ValueError
 
-    def person(value):
-        if (
-            set(value) != {"account_id", "email", "password"}
-            or not value["email"].endswith("@example.invalid")
-            or re.fullmatch(r"[A-Za-z0-9_-]{43}", value["password"]) is None
-        ):
-            raise ValueError
-        return SyntheticProgrammePerson(
-            UUID(value["account_id"]), value["email"], value["password"]
-        )
-
-    controllers = tuple(person(value) for value in document["controllers"])
-    intake = person(document["intake_person"])
+    controllers = tuple(
+        person_from_document(value) for value in document["controllers"]
+    )
+    intake = person_from_document(document["intake_person"])
     if (
         len(controllers) != 2
         or len({value.account_id for value in (*controllers, intake)}) != 3

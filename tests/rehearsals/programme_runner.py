@@ -15,7 +15,7 @@ import time
 import urllib.error
 import urllib.request
 from contextlib import ExitStack, contextmanager
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from tests.rehearsals.programme_database import isolated_programme_database
@@ -171,6 +171,7 @@ class ProgrammeRunningFixture:
     _worker_environment: dict[str, str] = field(repr=False)
     scenario: ProgrammeSetupScenario | None = field(default=None, repr=False)
     scanner: ProgrammeScannerLease | None = None
+    _application_environment: dict[str, str] = field(default_factory=dict, repr=False)
 
     def refresh_workers(self):
         """Run actual workers before each long checkpoint; never renew the lease."""
@@ -180,6 +181,80 @@ class ProgrammeRunningFixture:
             timeout=min(180, remaining_lease(self.deadline)),
             expected_output="programme-invitation-cycle-verified",
         )
+
+    def prepare_proposal(self):
+        """Run genuine P02 commands through a bounded private child, not a browser."""
+        require_programme_rehearsal_request()
+        if (
+            self.scenario is None
+            or self.scanner is None
+            or not self._application_environment
+        ):
+            raise ProgrammeHttpsError("fixture_proposal_dependencies_required")
+        from tests.rehearsals.programme_proposal_scenario import (  # noqa: PLC0415
+            proposal_from_document,
+        )
+
+        self.refresh_workers()
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "tests.rehearsals.programme_proposal_scenario"],
+                cwd=ROOT,
+                env=self._application_environment,
+                input=json.dumps(asdict(self.scenario), default=str),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=min(180, remaining_lease(self.deadline)),
+                check=False,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            if result.returncode != 0 or len(result.stdout) > 16_384:
+                raise ProgrammeHttpsError("fixture_proposal_process_failed")
+            return proposal_from_document(
+                json.loads(result.stdout), setup=self.scenario
+            )
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            raise ProgrammeHttpsError("fixture_proposal_process_failed") from None
+
+    def prepare_review(self, proposal):
+        """Run independent review and private conversion on this exact P02 result."""
+        require_programme_rehearsal_request()
+        if self.scenario is None or not self._application_environment:
+            raise ProgrammeHttpsError("fixture_review_dependencies_required")
+        from tests.rehearsals.programme_proposal_scenario import (  # noqa: PLC0415
+            proposal_from_document,
+        )
+        from tests.rehearsals.programme_review_scenario import (  # noqa: PLC0415
+            review_from_document,
+        )
+
+        proposal_document = json.loads(json.dumps(asdict(proposal), default=str))
+        proposal_from_document(proposal_document, setup=self.scenario)
+        self.refresh_workers()
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "tests.rehearsals.programme_review_scenario"],
+                cwd=ROOT,
+                env=self._application_environment,
+                input=json.dumps(
+                    {"setup": asdict(self.scenario), "proposal": proposal_document},
+                    default=str,
+                ),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=min(180, remaining_lease(self.deadline)),
+                check=False,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            if result.returncode != 0 or len(result.stdout) > 16_384:
+                raise ProgrammeHttpsError("fixture_review_process_failed")
+            return review_from_document(
+                json.loads(result.stdout), setup=self.scenario, proposal=proposal
+            )
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            raise ProgrammeHttpsError("fixture_review_process_failed") from None
 
 
 @contextmanager
@@ -270,6 +345,7 @@ def isolated_programme_application(*, setup_mode=None, with_scanner=False):
                 material,
                 environment | material.worker_environment(),
                 scanner=scanner,
+                _application_environment=environment,
             )
             fixture.refresh_workers()
             if setup_mode is not None:

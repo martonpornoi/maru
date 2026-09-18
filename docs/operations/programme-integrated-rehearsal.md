@@ -419,6 +419,49 @@ uncollected/unexecuted. See the
 [scanner checkpoint](../checkpoints/2026-09-18-programme-real-scanner-preparation.md)
 for source metadata, limits and unverified native debt.
 
+### Call, review and private-conversion composition
+
+The runner's prepared `prepare_proposal()` and `prepare_review(proposal)` methods
+compose real owner commands in separately guarded runtime children, retaining the
+same original fixture deadline. They require the exact owned setup; proposal
+preparation additionally requires the owned real scanner. Private account material
+uses bounded fixed stdin/stdout protocols, not command arguments, logs, files,
+worker signing keys or public health. Each attributed action authenticates its
+own synthetic person through the actual backend. These paths are prepared, not
+native-executed, and do not replace real HTTPS form/browser acceptance.
+
+The proposal scenario creates one complete call through the intake persona,
+discovers it through the lead's actual public query, creates typed private answers
+and scans a small valid synthetic PDF through the unchanged Applications upload
+command. It checks original body-free upload receipt replay without rescanning,
+then independently accepts the collaborator invitation, supplies that person's
+profile/consent, seals, reads each person's own frozen profile, acknowledges the
+same exact revision and submits it. Neither contributor becomes an attendee or
+Programme host through this composition.
+
+Review creates six separately authenticated ordinary staff people. Existing
+Department-scoped review-setup/reviewer/moderator/decision-maker/conversion recipes
+are independently requested and approved by the two original controllers; only
+the converter separately receives the Edition content recipe. No catch-all role,
+factory, direct model write, authorizer replacement or synthetic clock is used.
+An explicit fictional two-stage policy exercises recusal, denial of private reads
+before clearance/after recusal, anonymous file/profile omission, nonanonymous
+allowlisted review, scores, discussion, independent moderation, stage advance and
+separate acceptance. Both exact contributors inspect only their own addressed
+decision/receipt and acknowledge it themselves; private rationale is not recipient
+copy. Acknowledgement does not imply agreement or hosting consent.
+
+Conversion independently inspects the actual effective source and Programme
+creation cursor, deliberately supplies private working text and calls the real
+atomic conversion command. Original retry must return the same item/transition.
+This prepares only the conversion portion of P04: core-item creation, completed
+readiness, reviewed copy, delivery notes and host consent remain further work.
+One composed host-only case in `programme_proposal_native.py` is maintained but
+uncollected/unexecuted under #102. It includes genuine-runtime readback of exact
+submission/conversion and seven initial readiness requirements, not complete
+P12 inventory, browser acceptance or a complete P01–P12 journey. See the
+[composition checkpoint](../checkpoints/2026-09-18-programme-proposal-review-preparation.md).
+
 ### Scenario people and sessions
 
 Use repository-owned fictional convention names, synthetic people and reserved
