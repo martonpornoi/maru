@@ -26,6 +26,10 @@ in runtime code; unit tests use explicitly labelled doubles only.
 Focused database-free feedback passed **130 cases in 0.62s**. Complete feedback
 passed **10,513 cases in 59.79s**, with three existing Django URL-field warnings.
 Exact-head certification and hosted protected delivery are pending separately.
+The first certification attempt stopped at NumPy docstring validation because
+the new optional snapshot parameters used `optional` rather than the required
+exact `default=None` notation. Corrected the docstrings without changing behavior;
+the corrected commit must receive a fresh complete retained certification.
 The maintained candidate native provisioning case additionally tests rejection
 without genuine provenance activation. All four provisioning and four transport
 host-only cases remain uncollected/unexecuted. No Docker, database, schema-only

@@ -30,12 +30,12 @@ def programme_dormancy_problem_codes(
 
     Parameters
     ----------
-    profiles : Iterable[AdoptionProfile] | None, optional
+    profiles : Iterable[AdoptionProfile] | None, default=None
         Explicit immutable manifests to inspect, or the installed registry.
         This read-only projection neither installs nor admits a profile.
-    profile_codes : Iterable[str] | None, optional
+    profile_codes : Iterable[str] | None, default=None
         Explicit declared codes, or the installed profile enumeration.
-    persisted_profile_keys : Iterable[tuple[str, int]] | None, optional
+    persisted_profile_keys : Iterable[tuple[str, int]] | None, default=None
         Explicit persistence pairs, or the installed independent declarations.
 
     Returns

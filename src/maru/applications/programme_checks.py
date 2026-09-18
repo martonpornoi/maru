@@ -80,7 +80,7 @@ def applications_programme_dormancy_problem_codes(
 
     Parameters
     ----------
-    profiles : Iterable[AdoptionProfile] | None, optional
+    profiles : Iterable[AdoptionProfile] | None, default=None
         Explicit immutable manifests to inspect, or the installed registry.
         Inspection neither grants authority nor changes the deployment check.
 

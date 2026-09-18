@@ -29,7 +29,7 @@ def scheduling_dormancy_problem_codes(
 
     Parameters
     ----------
-    profiles : Iterable[AdoptionProfile] | None, optional
+    profiles : Iterable[AdoptionProfile] | None, default=None
         Explicit immutable manifests to inspect, or the installed registry.
         Inspection does not change the default deployment check or adoption.
 
