@@ -68,3 +68,23 @@ Full P05 combinations/pointer/keyboard/forms and other failure paths remain
 integrated native/browser evidence. Restore PostgreSQL only after preparation
 through its tracked protected policy change, then collect #102/#97/#92/#109
 acceptance before final supported-profile promotion. #108/#48 remain open.
+
+## Protected delivery
+
+PR #176 merged at 2026-09-18 18:52:23 UTC as
+`f8b57c27960c3691b15bf6158c2c66a9f9b56ad9`. Its tree
+`213559a94a45fd30b204a2d3a2c325db3ae93e72` equals certified head
+`92eb5e0d57ad30c8fe23cc859bfe161e34c5513a`. All eight retained local gates passed
+in 334.643s, including 10,839 units in 61.22s and 103 frontend cases. Receipt v4
+remains `postgresql_deferred`, with zero database instances and null combined
+coverage/headroom. Five artifacts were hash-verified under
+`.tools/certification-evidence/issue108-92eb5e0-deferred/`; receipt SHA-256 is
+`895dff247a3f1105215e3113fe7d1f7912627cf17f74fb6f5f3ebb0a5de6768f`.
+
+Hosted run 35381423375 passed quality in 12m06s, units in 2m15s and PR gate in 3s.
+All three exact-head CodeQL configurations were processed without error. Complete
+review/thread/closing-reference pages were empty; CLEAN/MERGEABLE was verified
+before exact-head squash. Clean local main, origin/main and the protected result
+matched after fast-forward; unrelated repair worktree `aa1ede69` was preserved.
+The next room-role correction stayed local and was not included in this PR.
+No native, browser, human, complete P05 or parent acceptance is implied.

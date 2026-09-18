@@ -386,6 +386,24 @@ _RECIPES = (
         resource_kind=_ROOM_KIND,
     ),
     _recipe(
+        "room-operations",
+        "Exact room operations and independent physical approval",
+        (
+            "Read constraints, change availability and operational bookings, and "
+            "independently approve physical use of one selected room. This is "
+            "room-management authority, not approval-only access. You cannot "
+            "approve your own booking or source placement. No Venue publication "
+            "or Programme release authority."
+        ),
+        ScopeLevel.RESOURCE,
+        (
+            "venues.view_space_schedule",
+            "venues.manage_space_schedule",
+            "venues.view_scheduling_dependencies",
+        ),
+        resource_kind=_ROOM_KIND,
+    ),
+    _recipe(
         "notice-preparation",
         "Programme notice preparation",
         (

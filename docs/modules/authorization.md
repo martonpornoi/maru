@@ -21,11 +21,25 @@ by itself.
 
 [ADR 0106](../architecture/decisions/0106-scoped-programme-operational-approval.md)
 preserves both accountable representation roots and adds optional, independently
-approved operational definitions. `programme_role_recipes` owns 27 immutable v1
+approved operational definitions. `programme_role_recipes` owns 28 immutable v1
 recipes with readable consequences, literal capabilities, exact allowed scope
 and complete definition digests. Their owner catalog entries are registered for
 future exact-manifest validation; neither current profile admits them. Registration
 is not a grant, role-bundle insertion, route or Programme activation.
+
+`room-operations@1` is the supported isolated-candidate exact-room definition.
+It explicitly includes room availability, operational booking management and
+independent physical approval through `venues.manage_space_schedule`; it is not
+approval-only authority. The Venue owner still rejects the booking creator,
+last modifier and linked source-placement author as approver. It grants no
+`venues.publish_space_schedule` or Scheduling release authority.
+Historical `room-planning@1` and `room-approval@1` definitions/digests remain
+unchanged, but are not pinned in the isolated candidate: their old descriptions
+misstate the owner's approval boundary. Existing evidence is not reinterpreted.
+Migration 0036 extends only the frozen native recipe function and its source-pinned
+readiness contract; relation shapes, capabilities and ACLs remain unchanged.
+Reverse restores the historical function only while no new-code request or role
+bundle exists, under locks. Otherwise retain evidence and fix forward.
 
 The scopes are deliberately different: Department call/review/conversion;
 Edition content, hosting, staffing, Workforce and timetable/release/notices;

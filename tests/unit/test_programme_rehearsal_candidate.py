@@ -104,6 +104,9 @@ def test_candidate_keeps_complete_workforce_without_attendee_or_extra_product_sc
     "recipe", tuple(PROGRAMME_ROLE_RECIPES.values()), ids=lambda r: r.code
 )
 def test_each_optional_role_is_pinned_without_replacing_its_scope_or_approval(recipe):
+    if recipe.code in {"room-planning", "room-approval"}:
+        assert recipe.catalog_entry not in PROFILE.catalog_entries
+        return
     assert recipe.catalog_entry in PROFILE.catalog_entries
     assert set(recipe.capability_codes) <= PROFILE.capability_codes
     assert recipe.role_code not in PROFILE.root_role_codes

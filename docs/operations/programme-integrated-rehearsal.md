@@ -507,8 +507,13 @@ Venue form using a genuine authenticated in-process Django client. This is neith
 an actual TLS transport nor browser acceptance. The client has CSRF enforcement,
 uses secure requests, rejects redirects/non-private responses and closes its
 session; no forced login, private model read or invented configuration is used.
-Original controllers discover and separately approve each exact-room planning
-scope before hard availability is recorded.
+Original controllers discover and separately approve `room-operations@1` at each
+exact-room scope before hard availability is recorded. This includes room
+management and independent physical approval, not approval-only access; it grants
+no Venue publication. A distinct physical reviewer needs their own exact-room
+grant and remains subject to the owner's booking/source-author independence rules.
+The candidate excludes the misleading historical room-planning/room-approval
+recipes without changing their immutable definitions or retained records.
 
 Actual Scheduling commands create one service day inside the existing host window,
 one core ceremony and two explicitly grouped occurrences of the accepted item.

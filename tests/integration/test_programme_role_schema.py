@@ -8,6 +8,7 @@ recipe admitted only to that rolled-back candidate. Never treat these tests as
 collected or executed until the final #102 gate restores PostgreSQL testing.
 """
 
+import json
 from dataclasses import replace
 from datetime import date, timedelta
 from functools import partial
@@ -88,6 +89,53 @@ from tests.support.authority import activate_synthetic_board
 from tests.support.programme_schema import admit_transaction_local_schema_candidate
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+
+def test_native_room_recipe_mirror_and_unused_reverse():
+    migration = import_module(
+        "maru.authorization.migrations.0036_programme_room_operations_recipe"
+    )
+    with connection.cursor() as cursor:
+        for key, expected in json.loads(migration._FROZEN_RECIPES).items():
+            code, version = key.split("@")
+            cursor.execute(
+                "SELECT public.maru_programme_role_recipe(%s, %s)::text",
+                [code, int(version)],
+            )
+            assert json.loads(cursor.fetchone()[0]) == expected
+        cursor.execute(migration.REVERSE_SQL)
+        cursor.execute("SELECT public.maru_programme_role_recipe('room-operations', 1)")
+        assert cursor.fetchone() == (None,)
+        assert not programme_role_database_integrity_is_ready()
+        cursor.execute(migration.FORWARD_SQL)
+    assert programme_role_database_integrity_is_ready()
+
+
+def test_native_room_bundle_fences_recipe_reverse(world):
+    organization, _, author, approver, _ = world
+    recipe = PROGRAMME_ROLE_RECIPES[("room-operations", 1)]
+    role = create_role_bundle_version(
+        actor=author,
+        approver=approver,
+        target=resolve_organization_target(organization_id=organization.id),
+        code=recipe.role_code,
+        name=recipe.name,
+        capability_codes=recipe.capability_codes,
+        reason="Synthetic exact-room authority definition.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    migration = import_module(
+        "maru.authorization.migrations.0036_programme_room_operations_recipe"
+    )
+    with (
+        pytest.raises(IntegrityError, match="fix forward"),
+        transaction.atomic(),
+        connection.cursor() as cursor,
+    ):
+        cursor.execute(migration.REVERSE_SQL)
+    assert RoleBundle.objects.filter(pk=role.id).exists()
+    assert programme_role_database_integrity_is_ready()
 
 
 @pytest.fixture

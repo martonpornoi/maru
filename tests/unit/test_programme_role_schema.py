@@ -30,6 +30,9 @@ GUARDS = import_module(
 FENCE = import_module(
     "maru.authorization.migrations.0034_programme_role_approval_downgrade_fence"
 )
+ROOM = import_module(
+    "maru.authorization.migrations.0036_programme_room_operations_recipe"
+)
 CONTRACT = readiness.PROGRAMME_ROLE_INTEGRITY_CONTRACT
 
 
@@ -73,7 +76,11 @@ def test_local_validation_never_follows_other_owner_relations(model, monkeypatch
 
 
 def test_frozen_native_recipe_contents_match_every_reviewed_definition():
-    frozen = json.loads(GUARDS._FROZEN_RECIPES)
+    historical = json.loads(GUARDS._FROZEN_RECIPES)
+    frozen = json.loads(ROOM._FROZEN_RECIPES)
+    assert json.loads(ROOM._OLD_RECIPES) == historical
+    assert {key: frozen[key] for key in historical} == historical
+    assert set(frozen) - set(historical) == {"room-operations@1"}
     assert set(frozen) == {
         f"{code}@{version}" for code, version in PROGRAMME_ROLE_RECIPES
     }
@@ -97,6 +104,7 @@ def test_native_boundary_is_source_derived_and_complete_not_authorization_wide()
         ("authorization", "0033_programme_role_approval_integrity"),
         ("authorization", "0034_programme_role_approval_downgrade_fence"),
         ("authorization", "0035_programme_role_approval_audit"),
+        ("authorization", "0036_programme_room_operations_recipe"),
     }
     assert len(CONTRACT.triggers) == 4
     assert set(CONTRACT.functions) == {
@@ -229,6 +237,12 @@ def test_audit_fix_forward_preserves_every_other_guard_and_retains_reverse_fence
     _, original = integrity.parse_database_integrity_sql_contracts(GUARDS.FORWARD_SQL)
     decision = "maru_programme_role_decision_guard()"
     for name, function in original.items():
+        if name == "maru_programme_role_recipe(text, integer)":
+            _, room_functions = integrity.parse_database_integrity_sql_contracts(
+                ROOM.FORWARD_SQL
+            )
+            assert CONTRACT.functions[name] == room_functions[name]
+            continue
         expected = (
             function
             if name != decision
@@ -245,3 +259,18 @@ def test_audit_fix_forward_preserves_every_other_guard_and_retains_reverse_fence
     assert repair.REVERSE_SQL.startswith(repair._LOCKS + repair._UNUSED_ONLY)
     assert "canonical audit review" in repair._PREFLIGHT
     assert "retain it and fix forward" in repair._UNUSED_ONLY
+
+
+def test_room_recipe_downgrade_restores_original_only_without_new_evidence():
+    assert ROOM.FORWARD_SQL.startswith(ROOM._LOCKS)
+    assert ROOM.REVERSE_SQL.startswith(ROOM._LOCKS + ROOM._UNUSED_ONLY)
+    assert "authorization_rolebundle" in ROOM._LOCKS
+    assert "authorization_programmerolerequest" in ROOM._LOCKS
+    assert "authorization_programmeroledecisionrecord" in ROOM._LOCKS
+    assert "recipe_code = 'room-operations' AND recipe_version = 1" in ROOM._UNUSED_ONLY
+    assert "code = 'programme-room-operations'" in ROOM._UNUSED_ONLY
+    assert "retain it and fix forward" in ROOM._UNUSED_ONLY
+    _, old = integrity.parse_database_integrity_sql_contracts(GUARDS.FORWARD_SQL)
+    _, restored = integrity.parse_database_integrity_sql_contracts(ROOM.REVERSE_SQL)
+    signature = "maru_programme_role_recipe(text, integer)"
+    assert restored == {signature: old[signature]}

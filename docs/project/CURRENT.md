@@ -11,16 +11,15 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme item/readiness/hosting composition is delivered through
-[PR #174](https://github.com/martonpornoi/maru/pull/174), protected squash
-`5bbfa7d4609fdc8b04b0a42c30660980d7def45e` at 2026-09-18 18:27:43 UTC.
-Its tree equals certified head `a0fcb00f845234ddb49ba733ff1d20047080f099`;
+Isolated Programme rooms/private timetable composition is delivered through
+[PR #176](https://github.com/martonpornoi/maru/pull/176), protected squash
+`f8b57c27960c3691b15bf6158c2c66a9f9b56ad9` at 2026-09-18 18:52:23 UTC.
+Its tree equals certified head `92eb5e0d57ad30c8fe23cc859bfe161e34c5513a`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m38s, including 10,799 units in 61.74s and 103 frontend
-cases. Hosted quality took 11m41s and units 1m42s; exact-head PR gate and all
-processed CodeQL configurations passed. PostgreSQL was
-deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-items-hosting-preparation.md).
+local gates passed in 5m35s, including 10,839 units in 61.22s and 103 frontend
+cases. Hosted quality took 12m06s and units 2m15s; exact-head PR gate and all
+processed CodeQL configurations passed. PostgreSQL was deferred, not certified.
+See the [protected evidence](../checkpoints/2026-09-18-programme-private-timetable-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +36,18 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-private-timetable-preparation`, from protected PR #174.
+Branch: `codex/programme-room-operations-authority`, from protected PR #176.
+Essential prerequisites are tracked under #108/#48: #177 corrects the exact-room
+recipe/physical-approval mismatch without rewriting historical definitions;
+#175 supplies an accountable minimal Volunteer starter before blank-setup staffing.
+Neither broadens the delivery decomposition. The room correction adds one literal
+resource-only recipe and a source-pinned native function migration, preserving
+both current profiles, table fingerprints and owner separation of duties.
+Focused database-free checks passed 188 cases in 1.21s; complete feedback passed
+10,847 cases in 61.39s. Exact-head certification is pending. Two native regressions remain
+uncollected/unexecuted #102 debt. See the
+[room authority checkpoint](../checkpoints/2026-09-18-programme-room-operations-authority.md).
+
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog

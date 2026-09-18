@@ -224,7 +224,7 @@ def prepare_rooms(setup, items, catalog_person, planner):
                 setup,
                 people=setup.controllers,
                 recipient=planner,
-                code="room-planning",
+                code="room-operations",
                 level=scope.level,
                 department_id=scope.department_id,
                 resource_binding_id=scope.resource_binding_id,
