@@ -64,3 +64,26 @@ recovery and complete cross-scope/excluded-side-effect assertions. Only after
 preparation restore tracked required PostgreSQL policy, execute #102/#97/#109,
 obtain genuine #92 human evidence and separately promote the supported profile.
 This increment does not close #108/#48 or mark P02/P03/P04 native-accepted.
+
+## Protected delivery
+
+[PR #173](https://github.com/martonpornoi/maru/pull/173) squash-merged at
+2026-09-18 18:03:01 UTC as `1108f4146abad236d2e26770ec6f2ffa8274b086`.
+Tree `79c7d2113f4253ad2099c9035b35e9e4b09ffc60` exactly equals certified head
+`74883f3c5b11f4fb216d62cbbfce11152e8e780a`. Clean separate local main was
+fast-forwarded to that same origin/main commit; unrelated repair checkout
+`aa1ede69fb880dcb12d627bbfc049fba23166e68` was preserved.
+
+All eight retained exact-head local gates passed in 335.686s (5m36s), including
+10,777 units in 61.03s and 103 frontend cases. The v4 receipt records
+`postgresql_deferred`, zero native/database instances and null combined coverage
+and measured timing headroom. Five artifacts were archived and hash-verified at
+`.tools/certification-evidence/issue108-74883f3-deferred/`; receipt SHA-256 is
+`4748D2758B63957AEAAC516933B871D3DF9FD1B920D70E297DE0E73D670B6F6F`.
+
+Hosted quality passed in 10m46s and units in 1m54s
+([run 35376709971](https://github.com/martonpornoi/maru/actions/runs/35376709971)).
+The exact-head aggregate PR gate passed; all three processed CodeQL configurations
+reported that commit without errors. Complete review/thread/closing-issue pages
+showed no unresolved conversation, blocking review or unintended closure.
+No native, browser, representative-human or full P04 acceptance is claimed.

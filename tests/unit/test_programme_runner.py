@@ -15,6 +15,7 @@ from tests.rehearsals import programme_runner as runner
 from tests.rehearsals.programme_runtime_environment import (
     ProgrammeRehearsalEnvironmentError,
 )
+from tests.unit.test_programme_items_scenario import _result as _items_result
 from tests.unit.test_programme_proposal_scenario import _result, _setup
 from tests.unit.test_programme_review_scenario import _result as _review_result
 from tests.unit.test_programme_setup_scenarios import _document
@@ -462,4 +463,49 @@ def test_review_child_keeps_exact_proposal_private_and_deadline_bounded(
         assert json.loads(options["input"])["proposal"]["revision_id"] == str(
             proposal.revision_id
         )
+        assert launch_seams.worker.call_count == 2
+
+
+@pytest.mark.parametrize("failure", [None, "nonzero", "timeout", "oversize", "source"])
+def test_items_child_retains_sources_secret_pipe_and_original_deadline(
+    launch_seams, monkeypatch, failure
+):
+    setup = _setup()
+    proposal = _result(setup)
+    review = _review_result(setup, proposal)
+    expected = _items_result(setup, review)
+    run = Mock(
+        return_value=SimpleNamespace(
+            returncode=0, stdout=json.dumps(asdict(expected), default=str)
+        )
+    )
+    if failure == "nonzero":
+        run.return_value.returncode = 2
+    elif failure == "timeout":
+        run.side_effect = subprocess.TimeoutExpired("private", 50)
+    elif failure == "oversize":
+        run.return_value.stdout = "private" * 4096
+    elif failure == "source":
+        review = replace(review, proposal_id=_result(setup).proposal_id)
+    monkeypatch.setattr(runner.subprocess, "run", run)
+    with runner.isolated_programme_application() as original:
+        fixture = replace(original, scenario=setup)
+        if failure is None:
+            assert fixture.prepare_items(proposal, review) == expected
+        elif failure == "source":
+            with pytest.raises(RuntimeError, match="result_invalid"):
+                fixture.prepare_items(proposal, review)
+            run.assert_not_called()
+        else:
+            with pytest.raises(
+                runner.ProgrammeHttpsError, match="items_process_failed"
+            ):
+                fixture.prepare_items(proposal, review)
+    if failure != "source":
+        options = run.call_args.kwargs
+        assert options["timeout"] == 50.0
+        assert options["stderr"] == subprocess.DEVNULL
+        assert "PRIVATE_KEY" not in options["env"]
+        assert review.people[-1].password not in repr(options["env"])
+        assert json.loads(options["input"])["review"]["item_id"] == str(review.item_id)
         assert launch_seams.worker.call_count == 2
