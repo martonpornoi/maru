@@ -322,3 +322,34 @@ def test_requested_setup_runs_before_server_and_refreshes_real_workers(
         assert prepare.call_args.kwargs["mode"] == "existing_series"
         assert prepare.call_args.kwargs["deadline"] == fixture.deadline
         assert "PRIVATE_KEY" not in prepare.call_args.kwargs["environment"]
+
+
+def test_optional_real_scanner_configuration_and_owned_teardown_order(
+    launch_seams, monkeypatch
+):
+    lease = SimpleNamespace(
+        runtime_environment=lambda: {"MARU_PROGRAMME_FILE_SCANNER": "clamav"}
+    )
+
+    @contextmanager
+    def scanner(*, deadline):
+        assert deadline == 700.0
+        launch_seams.events.append("scanner-start")
+        try:
+            yield lease
+        finally:
+            launch_seams.events.append("scanner-stop")
+
+    monkeypatch.setattr(runner, "isolated_programme_scanner", scanner)
+    with runner.isolated_programme_application(with_scanner=True) as fixture:
+        assert fixture.scanner is lease
+        assert (
+            launch_seams.popen.call_args.kwargs["env"]["MARU_PROGRAMME_FILE_SCANNER"]
+            == "clamav"
+        )
+    assert launch_seams.events[-4:] == [
+        "server-stop",
+        "scanner-stop",
+        "directory-stop",
+        "database-stop",
+    ]

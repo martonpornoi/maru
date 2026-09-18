@@ -22,6 +22,7 @@ class DockerDouble:
         self.start_error = None
         self.returned_id = CONTAINER_ID
         self.endpoint = "npipe:////./pipe/dockerDesktopLinuxEngine"
+        self.version = "29.0.0"
         self.ready = True
         self.remove = True
         self.value = {
@@ -40,6 +41,8 @@ class DockerDouble:
         self.calls.append(args)
         if args[0] == "context":
             return SimpleNamespace(stdout=self.endpoint, returncode=0)
+        if args[0] == "version":
+            return SimpleNamespace(stdout=self.version, returncode=0)
         if args[0] == "run":
             assert "synthetic-password" not in args
             assert kwargs["environment"]["POSTGRES_PASSWORD"] == "synthetic-password"
@@ -256,6 +259,21 @@ def test_host_override_denied_before_any_docker_call(docker, monkeypatch):
     assert not docker.calls
 
 
+@pytest.mark.parametrize("version", ["27.5.0", "", "unknown", "28", "28.0.0-rc.1"])
+def test_old_or_unknown_loopback_publication_safety_refused_before_creation(
+    docker, version
+):
+    docker.version = version
+    with (
+        pytest.raises(
+            database.ProgrammeDatabaseError, match="loopback_version_unsupported"
+        ),
+        database.isolated_programme_database(),
+    ):
+        pytest.fail("Unsupported loopback publication admitted")
+    assert not any(call[0] in {"run", "inspect"} for call in docker.calls)
+
+
 @pytest.mark.parametrize(
     "ports",
     [
@@ -302,6 +320,27 @@ def test_transport_failures_do_not_disclose_raw_docker_details(error, monkeypatc
         database._Docker().call("version")
     assert str(caught.value) == "docker_operation_unavailable"
     assert "private" not in repr(caught.value)
+
+
+def test_pinned_local_daemon_ignores_later_ambient_context_switch(monkeypatch):
+    monkeypatch.setattr(database.shutil, "which", lambda _name: "verified-docker")
+    execute = Mock(return_value=SimpleNamespace(returncode=0, stdout="", stderr=""))
+    monkeypatch.setattr(database.subprocess, "run", execute)
+    docker = database._Docker()
+    docker._host_endpoint = "npipe:////./pipe/dockerDesktopLinuxEngine"
+    supplied = {
+        "DOCKER_HOST": "ssh://remote",
+        "DOCKER_CONTEXT": "remote",
+        "POSTGRES_PASSWORD": "synthetic",
+    }
+    docker.call("container", "inspect", CONTAINER_ID, environment=supplied)
+    assert execute.call_args.args[0][:3] == [
+        "verified-docker",
+        "--host",
+        docker._host_endpoint,
+    ]
+    assert execute.call_args.kwargs["env"] == {"POSTGRES_PASSWORD": "synthetic"}
+    assert supplied["DOCKER_CONTEXT"] == "remote"
 
 
 def test_missing_executable_never_invokes_subprocess(monkeypatch):

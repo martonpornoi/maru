@@ -70,6 +70,7 @@ class ProgrammeDatabaseLease:
 
 class _Docker:
     def __init__(self):
+        self._host_endpoint = None
         self.executable = shutil.which(
             "docker.exe" if sys.platform == "win32" else "docker"
         )
@@ -77,9 +78,21 @@ class _Docker:
             raise ProgrammeDatabaseError("docker_unavailable")
 
     def call(self, *arguments, environment=None, timeout=30, allow_failure=False):
+        endpoint = self._host_endpoint
+        prefix = ["--host", endpoint] if endpoint is not None else []
+        if endpoint is not None:
+            # Hold the inspected local daemon even if another task changes the
+            # user's default context. Do not let ambient context variables win.
+            environment = {
+                key: value
+                for key, value in (
+                    os.environ if environment is None else environment
+                ).items()
+                if key not in {"DOCKER_HOST", "DOCKER_CONTEXT"}
+            }
         try:
             result = subprocess.run(  # noqa: S603 - fixed executable and argument vector
-                [self.executable, *arguments],
+                [self.executable, *prefix, *arguments],
                 env=environment,
                 capture_output=True,
                 text=True,
@@ -180,6 +193,15 @@ def isolated_programme_database() -> Iterator[ProgrammeDatabaseLease]:
     ).stdout.strip()
     if not endpoint.startswith(("npipe:////./pipe/", "unix:///")):
         raise ProgrammeDatabaseError("nonlocal_docker_context")
+    docker._host_endpoint = endpoint
+    # Docker <28 can expose loopback publications to other same-L2 machines.
+    # Reject unknown/pre-release spellings rather than assuming the fix exists.
+    engine = docker.call("version", "--format", "{{.Server.Version}}").stdout.strip()
+    if (
+        re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:\+[A-Za-z0-9.]+)?", engine) is None
+        or int(engine.split(".")[0]) < 28
+    ):
+        raise ProgrammeDatabaseError("docker_loopback_version_unsupported")
     name = f"maru-programme-{request.run_id}"
     if docker.inspect(name) is not None:
         raise ProgrammeDatabaseError("existing_container_name")

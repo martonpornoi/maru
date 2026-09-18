@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme stopped-foundation and worker preparation are delivered through
-[PR #170](https://github.com/martonpornoi/maru/pull/170), protected squash
-`5a0ffdca794a8ebd723638331fb2e4b826b52de5` at 2026-09-18 16:29:28 UTC.
-Its tree equals certified head `cb32d27ef3051649c6387246dc9b46eb3c74fcaf`;
+Isolated Programme owned HTTPS and genuine setup preparation are delivered through
+[PR #171](https://github.com/martonpornoi/maru/pull/171), protected squash
+`5e85254ac7e9a08460620e8be472a0e1165a46ce` at 2026-09-18 17:05:14 UTC.
+Its tree equals certified head `c8942d284969f67ba8dab13c5bbfb628b0295097`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m34s, including 10,619 units in 60.72s and 103 frontend
-cases. Hosted quality took 11m57s and units 2m20s; exact-head PR gate and all
+local gates passed in 5m39s, including 10,692 units in 60.51s and 103 frontend
+cases. Hosted quality took 11m22s and units 2m10s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-stopped-foundation-bootstrap.md).
+[protected evidence](../checkpoints/2026-09-18-programme-https-setup-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-https-setup`, from protected PR #170.
+Branch: `codex/programme-scanner-preparation`, from protected PR #171.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -144,8 +144,19 @@ no successful native startup or complete journey is claimed. Further P02–P12
 personas, purpose-specific roles, content and isolation scenarios remain next.
 See the [HTTPS/setup checkpoint](../checkpoints/2026-09-18-programme-https-setup-preparation.md).
 Complete iterative database-free feedback passed 10,692 cases in 61.02s; Ruff and
-diff checks passed. Fresh exact-head retained certification and protected delivery
-remain pending for this HTTPS/setup increment.
+diff checks passed. Exact-head retained certification and protected delivery passed
+for this HTTPS/setup increment as recorded above.
+
+Prepared a pinned real ClamAV dependency for the optional private-file fixture path,
+with owned internal network, restricted non-root daemon, exact health/version and
+recent-signature observations required before yielding. Native scanning remains
+unexecuted. Both disposable transports now require safe recognized Docker versions
+and pin the inspected local daemon against a concurrent context switch. One new
+host-only scanner case is maintained but uncollected/unexecuted under #102. Focused
+mocked/pure transport feedback passed 93 cases in 0.48s before the absolute-epoch
+expiry refinement; complete iterative feedback then passed 10,723 units in 59.64s.
+Fresh exact-head retained certification and protected delivery remain pending.
+See the [scanner checkpoint](../checkpoints/2026-09-18-programme-real-scanner-preparation.md).
 The maintainer authorized the full sequence:
 finish preparation first, restore tracked PostgreSQL acceptance through protected
 delivery, then collect #102/#97/#92/#109 evidence and only finally promote the

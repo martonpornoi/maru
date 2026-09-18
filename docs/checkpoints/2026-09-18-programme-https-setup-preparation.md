@@ -62,3 +62,26 @@ restore required PostgreSQL policy through protected delivery and measure actual
 native headroom/coverage, resolve logical restore #97, gather #109 and genuinely
 human #92 evidence, and only finally promote the supported profile. #108/#48 stay
 open; no synthetic person's actions substitute for representative-human approval.
+
+## Protected delivery
+
+PR #171 was normally squash-merged at 2026-09-18 17:05:14 UTC as
+`5e85254ac7e9a08460620e8be472a0e1165a46ce`. Its tree
+`683700ef1f1a2e4e80c6f7e7f02a9316bd0daa9b` equals certified head
+`c8942d284969f67ba8dab13c5bbfb628b0295097`. Clean separate local main, origin/main
+and the protected result were verified equal. The detached repair worktree remained
+at `aa1ede69fb880dcb12d627bbfc049fba23166e68`.
+
+All eight retained exact-head local gates passed in 338.733s, including 10,692 units
+in 60.51s and 103 frontend cases. The v4 receipt records `postgresql_deferred`, zero
+native/database instances and null combined coverage/headroom. Five artifacts were
+archived and hash-verified in `.tools/certification-evidence/issue108-c8942d2-deferred/`;
+receipt SHA256:
+`57a21f8191fe6de5e4d81ffb2ce5b3f8474b5eb373e8711e62347f5b97df59cc`.
+
+Hosted workflow `35370980280` passed: quality 11m22s, units 2m10s and exact-head
+PR gate at 17:03:47 UTC. All three CodeQL configurations were processed for that
+head with no errors. Pre-merge pagination was complete, with no reviews, unresolved
+threads or closing references; CLEAN/MERGEABLE head matched the remote branch.
+The protected result is preparation, not native startup, browser/human acceptance
+or profile activation. Its receipt does not certify the later scanner increment.

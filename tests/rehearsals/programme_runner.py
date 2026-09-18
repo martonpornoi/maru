@@ -14,7 +14,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -40,6 +40,10 @@ from tests.rehearsals.programme_provisioning import (
 from tests.rehearsals.programme_runtime_environment import (
     ProgrammeRuntimeEnvironment,
     require_programme_rehearsal_request,
+)
+from tests.rehearsals.programme_scanner import (
+    ProgrammeScannerLease,
+    isolated_programme_scanner,
 )
 from tests.rehearsals.programme_setup_scenarios import (
     SETUP_MODES,
@@ -166,6 +170,7 @@ class ProgrammeRunningFixture:
     material: ProgrammeFixtureMaterial = field(repr=False)
     _worker_environment: dict[str, str] = field(repr=False)
     scenario: ProgrammeSetupScenario | None = field(default=None, repr=False)
+    scanner: ProgrammeScannerLease | None = None
 
     def refresh_workers(self):
         """Run actual workers before each long checkpoint; never renew the lease."""
@@ -178,7 +183,7 @@ class ProgrammeRunningFixture:
 
 
 @contextmanager
-def isolated_programme_application(*, setup_mode=None):
+def isolated_programme_application(*, setup_mode=None, with_scanner=False):
     """Prepare, verify and temporarily serve one owned native loopback candidate.
 
     Parameters
@@ -186,6 +191,9 @@ def isolated_programme_application(*, setup_mode=None):
     setup_mode
         Optional closed setup scenario. Omit for stopped-foundation/HTTPS checks.
         Credentials travel only through dedicated child pipes and private handles.
+    with_scanner
+        Explicitly own a pinned real ClamAV daemon for the private-file checkpoint.
+        No external endpoint or test-clean adapter can be supplied.
 
     Yields
     ------
@@ -206,6 +214,8 @@ def isolated_programme_application(*, setup_mode=None):
     request = require_programme_rehearsal_request()
     if setup_mode is not None and setup_mode not in SETUP_MODES:
         raise ProgrammeHttpsError("invalid_fixture_setup_mode")
+    if type(with_scanner) is not bool:
+        raise ProgrammeHttpsError("invalid_fixture_scanner_option")
     deadline = time.monotonic() + request.lease_seconds
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as reservation:
         reservation.bind(("127.0.0.1", 0))
@@ -216,9 +226,17 @@ def isolated_programme_application(*, setup_mode=None):
             tempfile.TemporaryDirectory(
                 prefix=f"programme-https-{request.run_id}-", dir=ROOT / ".tools"
             ) as directory,
+            ExitStack() as dependencies,
         ):
             path = Path(directory).resolve()
             fingerprint = create_loopback_certificate(path, deadline=deadline)
+            scanner = (
+                dependencies.enter_context(
+                    isolated_programme_scanner(deadline=deadline)
+                )
+                if with_scanner
+                else None
+            )
             runtime = provision_programme_runtime(
                 lease,
                 candidate_schema=True,
@@ -234,6 +252,7 @@ def isolated_programme_application(*, setup_mode=None):
                     secret_key=material.secret_key,
                 )
                 | dict(material.runtime_configuration)
+                | (scanner.runtime_environment() if scanner is not None else {})
                 | {
                     "MARU_DATABASE_URL": runtime.database_url,
                     "DJANGO_SETTINGS_MODULE": (
@@ -250,6 +269,7 @@ def isolated_programme_application(*, setup_mode=None):
                 runtime,
                 material,
                 environment | material.worker_environment(),
+                scanner=scanner,
             )
             fixture.refresh_workers()
             if setup_mode is not None:
