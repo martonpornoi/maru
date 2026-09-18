@@ -40,7 +40,7 @@ def test_shared_role_helper_preserves_exact_binding_for_both_controllers(monkeyp
             setup,
             people=setup.controllers,
             recipient=recipient,
-            code="room-planning",
+            code="room-operations",
             level=ScopeLevel.RESOURCE,
             department_id=setup.department_id,
             resource_binding_id=binding,

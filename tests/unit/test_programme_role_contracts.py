@@ -64,11 +64,15 @@ def digest(details=None, target=None):
 
 def test_exact_recipe_contents_are_frozen_and_registered_without_profile_activation():
     definitions = tuple(recipes.PROGRAMME_ROLE_RECIPES.values())
-    assert len(definitions) == 27
+    assert len(definitions) == 28
+    original_definitions = tuple(r for r in definitions if r.code != "room-operations")
+    assert len(original_definitions) == 27
     # Updating v1 contents is not a cosmetic edit: retained intent pins this identity.
     assert (
         hashlib.sha256(
-            "\n".join(f"{r.catalog_entry}:{r.digest}" for r in definitions).encode()
+            "\n".join(
+                f"{r.catalog_entry}:{r.digest}" for r in original_definitions
+            ).encode()
         ).hexdigest()
         == "773a3d563ada738ee5f57b4f1061e92772440075f6725764869ffc119ec71017"
     )
