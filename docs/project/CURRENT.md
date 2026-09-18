@@ -11,15 +11,15 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Dormant labelled Programme access scopes are delivered through
-[PR #162](https://github.com/martonpornoi/maru/pull/162), protected squash
-`cf53ccc5c53b645e27d3b76a66425977bf7807e9` at 2026-09-18 00:38:12 UTC.
-Its tree equals certified head `58fa51f13bf94afbd6b98f08e7b8efc995f40952`;
+Dormant shared Programme navigation is delivered through
+[PR #163](https://github.com/martonpornoi/maru/pull/163), protected squash
+`2e3ddb13c06122a7c73a491d17d64e4bc071662e` at 2026-09-18 01:24:24 UTC.
+Its tree equals certified head `00fa0c4db5567ab76bac82415855d8aeb783d1f7`;
 clean local main matched origin/main and the protected result. All eight
-retained local gates passed in 5m21s, including 9,789 units in 56.84s and
-103 frontend cases. Hosted quality took 12m42s and units 2m04s; exact-head PR
+retained local gates passed in 5m29s, including 9,837 units in 59.33s and
+103 frontend cases. Hosted quality took 11m59s and units 2m14s; exact-head PR
 gate and CodeQL passed. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-scope-choices-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-18-programme-shared-navigation-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -27,40 +27,43 @@ approval storage, #157 canonical independent-audit correction and #158 actual
 request/decision commands, followed by #159's protected reader and genuine-person
 review screen, #160's guided foundation/representation handoff and #161's
 preview-and-confirm access requests with original signed person selection.
-These do not activate either current profile.
+PR #162's labelled exact access scopes and PR #163's shared search/pins preserve
+narrow authority and personal/management separation. None activates a current profile.
 The [setup evidence](../checkpoints/2026-09-17-programme-atomic-setup-protected-delivery.md)
 and [approval schema evidence](../checkpoints/2026-09-17-programme-operational-approval-schema.md)
 retain the separately approved schema-only observations and native debt.
 No prerequisite in that chain needs restarting.
 
-## Current work: shared Programme navigation (#108)
+## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-shared-shell-navigation`, from protected PR #162.
-Implemented seven independently admitted Programme task destinations in the existing
-shared registry, plus the separately admitted platform setup entry. Exact future
-profile kinds and actual handler/scope checks gate every task. Name-free bounded
-candidate discovery lets narrow controllers reach their edition without borrowing
-broad Events/Workforce authority. Search, pins and personal/management separation
-reuse the existing registry. Both current v1 manifests, production routes, schema
-and runtime privileges remain unchanged.
+Branch: `codex/programme-integrated-fixture`, from protected PR #163.
+Prepared the explicit test-only candidate manifest, independent real internal-fact
+handler registry and joined URLconf covering all ten dormant owner route modules
+alongside the existing shared shell. Database-free checks validate owner catalog
+pins, excluded scope, every owner route's round trip and unchanged production
+registration. This is composition preparation, not the complete fixture: disposable
+database/runtime provisioning, candidate schema installation, truthful setup/role
+seeding and P01–P12 execution are still unfinished. Existing component rehearsals
+use authority/profile substitutions and cannot be relabelled as native or joined
+acceptance. No database fixture was launched or collected; both current profiles
+remain unchanged.
 
-Complete database-free feedback passed 9,837 cases in 58.73s (48 new cases), strict
-mypy passed 718 source files and Ruff passed. Synthetic database-prohibited browser
-checks exercised the real registry/template/JavaScript for task search, keyboard
-scope entry, narrow/revoked pins, personal separation and mobile drawer behavior.
-All seven widths fit with one H1/main and no browser warnings/errors. Task-owned
-fixture processes/tab are closed and the viewport reset. One added native
-grant/revocation discovery case is maintained but uncollected/unexecuted #102 debt.
-Exact-commit certification and hosted protected delivery are next; see the
-[shared-navigation checkpoint](../checkpoints/2026-09-18-programme-shared-navigation.md).
+Preparation feedback: 448 focused candidate/routing cases in 1.50s and all
+10,285 database-free units in 59.47s passed. No browser/native execution is
+claimed. Fresh exact-commit certification and protected delivery remain pending;
+see the [preparation checkpoint](../checkpoints/2026-09-18-programme-rehearsal-composition-preparation.md).
 
-After this increment, implement the complete isolated synthetic fixture.
 Preserve truthful roots and two people's own acceptances.
 A selected approver email is never their decision; no catch-all role may replace
 Department, Edition, Organization Venue or exact-room scope. ADR 0106 is unchanged.
 The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
 defines twelve checkpoints; it is not an executable or accepted complete fixture.
 #108/#48 remain open and final promotion waits for #102/#97/#92/#109.
+
+Next build the explicit policy-fenced disposable runner and setup scenarios around
+this composition, retaining real owner authorization and native guards. Do not
+copy the transaction-local schema-test candidate or its abbreviated Workforce
+manifest into a claimed complete fixture. Keep all native execution deferred.
 
 Non-blocking follow-up after #48: the semantic docstring validator's no-argument
 defaults are strings rather than Paths; its maintained explicit `src scripts`
