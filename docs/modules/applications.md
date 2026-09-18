@@ -486,6 +486,13 @@ key in sequence before any batch/edition row lock, so direct Programme commands
 cannot form a retry/edition deadlock. A nested or evidence failure rolls back
 the whole outer mutation.
 
+Replay reads those immutable receipt families without `FOR UPDATE`. The shared
+transaction advisory lock (also held by native receipt-insert guards) serializes
+the namespace, including the absence of a row. A row lock would require runtime
+UPDATE permission even for an empty lookup and conflicts with the deliberate
+append-only/read-only receipt ACLs. Aggregate and mutable-input locks remain
+unchanged; this does not widen database grants or weaken retry collision checks.
+
 A source binding must match its applied item's parent batch source system. At
 binding creation, a call target must be owned by the batch's exact Department.
 A later draft-call reassignment never rewrites the batch or binding; a

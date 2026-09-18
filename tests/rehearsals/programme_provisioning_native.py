@@ -20,14 +20,19 @@ require_programme_rehearsal_request()
 pytestmark = pytest.mark.integration
 
 
-@pytest.mark.parametrize("candidate_schema", [False, True])
+@pytest.mark.parametrize(
+    ("candidate_schema", "candidate_writes"),
+    [(False, False), (True, False), (True, True)],
+)
 def test_native_migration_runtime_separation_and_reprovision_refusal(
-    monkeypatch, candidate_schema
+    monkeypatch, candidate_schema, candidate_writes
 ):
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_RUN_ID", uuid4().hex)
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS", "3600")
     with isolated_programme_database() as lease:
-        runtime = provision_programme_runtime(lease, candidate_schema=candidate_schema)
+        runtime = provision_programme_runtime(
+            lease, candidate_schema=candidate_schema, candidate_writes=candidate_writes
+        )
         with psycopg.connect(
             runtime.database_url,
             connect_timeout=5,
@@ -36,6 +41,42 @@ def test_native_migration_runtime_separation_and_reprovision_refusal(
             assert connection.execute(
                 "SELECT current_database(), session_user, current_user"
             ).fetchone() == (lease.database_name, "maru_runtime", "maru_runtime")
+            from tests.rehearsals.programme_runtime_privileges import (  # noqa: PLC0415
+                PRIVILEGES,
+            )
+
+            for table, allowed in PRIVILEGES.items():
+                actual = connection.execute(
+                    "SELECT pg_catalog.has_table_privilege("
+                    "current_user, %s, permission) "
+                    "FROM unnest(%s::text[]) AS permission",
+                    [
+                        table,
+                        [
+                            "SELECT",
+                            "INSERT",
+                            "UPDATE",
+                            "DELETE",
+                            "REFERENCES",
+                            "TRIGGER",
+                            "TRUNCATE",
+                            "MAINTAIN",
+                        ],
+                    ],
+                ).fetchall()
+                expected = [(True,)] + [
+                    (candidate_writes and permission in allowed,)
+                    for permission in (
+                        "INSERT",
+                        "UPDATE",
+                        "DELETE",
+                        "REFERENCES",
+                        "TRIGGER",
+                        "TRUNCATE",
+                        "MAINTAIN",
+                    )
+                ]
+                assert actual == expected
             assert connection.execute(
                 "SELECT pg_catalog.pg_get_userbyid(datdba) "
                 "FROM pg_catalog.pg_database WHERE datname = current_database()"

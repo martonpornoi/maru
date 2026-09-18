@@ -103,10 +103,20 @@ Focused database-free feedback passed 130 cases in 0.62s; complete unit feedback
 passed 10,513 cases in 59.79s. Corrected exact-head certification and protected
 delivery passed as above; no prior receipt certifies later handoff/source edits.
 
-Next: candidate-only minimum runtime table privileges, genuine setup/roles and
-the owned serving runner/P01–P12. Canonical production ACLs intentionally leave
-these dormant tables SELECT-only; preserve that baseline, declare the isolated
-candidate contract explicitly and verify real runtime writes/locks/native guards.
+Prepared candidate-only runtime table privileges and genuine native-probe
+composition: a literal 82-table contract, empty owned-schema grant transaction,
+separate runtime-login verification and startup REFERENCES denial. Six native
+control/history relations remain SELECT-only; canonical production ACLs, probe
+SQL and function allowlist remain unchanged. Applications retry reads now use
+their existing shared transaction lock without requiring UPDATE on immutable
+cross-family receipts. Complete database-free feedback passed 10,561 tests in
+69.85s; Ruff passed. Exact-head certification and hosted delivery of this increment
+are pending. Five host-only provisioning cases and the added runtime receipt
+permission regression remain uncollected/unexecuted under #102. See the
+[permission preparation checkpoint](../checkpoints/2026-09-18-programme-candidate-runtime-permissions.md).
+
+Next: genuine setup/roles and the owned serving runner/P01–P12. Verify real runtime
+writes/locks/native guards after policy restoration; preparation is not acceptance.
 Do not use an owner login for application work or replace readiness with a stub.
 Genuine provenance activation, invitation worker/retention readiness and loopback
 HTTPS also precede serving; no production trust/configuration changes are needed.

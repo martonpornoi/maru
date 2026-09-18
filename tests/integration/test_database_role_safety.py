@@ -12,10 +12,12 @@ from uuid import uuid4
 import pytest
 from django.db import DatabaseError, connection, transaction
 from django.test import override_settings
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 from psycopg import sql
 from rest_framework.test import APIClient
 
+from maru.applications import commands as application_commands
 from maru.authorization.activation import activate_authority_provenance
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
@@ -57,6 +59,74 @@ if TYPE_CHECKING:
     from maru.identity.models import Account
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_real_runtime_can_inspect_all_retry_families_without_receipt_update():
+    actor = AccountFactory()
+    scope = {"edition_id": uuid4(), "retry_key": uuid4()}
+    models = (
+        application_commands.ApplicationCommandReceipt,
+        application_commands.ProgrammeCommandReceipt,
+        application_commands.ProgrammeImportCommandReceipt,
+        application_commands.ProgrammeReviewReceipt,
+        application_commands.ProgrammeAcceptedTransition,
+    )
+    public_snapshot = _public_privilege_snapshot()
+    password = secrets.token_urlsafe(36)
+    role = _create_role(password=password)
+    try:
+        with transaction.atomic():
+            _prepare_least_privilege_boundary()
+            _provision_runtime_role(role)
+        with _password_authenticated_default_database(
+            role_name=role, password=password
+        ):
+            assert probe_runtime_database_role_safety(
+                role_name=role
+            ).current_session_is_safe
+            for model in models:
+                matrix = _table_privilege_matrix(
+                    role_name=role, identity=f"public.{model._meta.db_table}"
+                )
+                assert matrix == (
+                    True,
+                    model is application_commands.ApplicationCommandReceipt,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                )
+                # The original FOR UPDATE lookup is genuinely forbidden even
+                # when no row matches. No owner connection or SET ROLE is used.
+                with pytest.raises(DatabaseError) as denied, transaction.atomic():
+                    model.objects.select_for_update().filter(
+                        actor_id=actor.id, **scope
+                    ).first()
+                assert _sqlstate(denied.value) == "42501"
+            with transaction.atomic(), CaptureQueriesContext(connection) as captured:
+                for _ in range(2):
+                    assert (
+                        application_commands._replay(
+                            actor=actor, **scope, request_digest="synthetic-empty-retry"
+                        )
+                        is None
+                    )
+            statements = [item["sql"] for item in captured]
+            assert sum("pg_advisory_xact_lock" in item for item in statements) == 2
+            assert not any("FOR UPDATE" in item for item in statements)
+            for model in models:
+                assert sum(model._meta.db_table in item for item in statements) == 2
+    finally:
+        # Exact synthetic role owns no objects. Restore original PUBLIC ACLs
+        # after removing only this test's grants/login, including on failure.
+        with transaction.atomic(), connection.cursor() as cursor:
+            cursor.execute(sql.SQL("DROP OWNED BY {}").format(sql.Identifier(role)))
+            cursor.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role)))
+            _restore_public_privileges(public_snapshot)
+
 
 _PAGE9_TRIGGER_HELPER_IDENTITIES = (
     "public.maru_workforce_page9_writer_barrier()",

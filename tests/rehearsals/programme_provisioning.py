@@ -47,6 +47,26 @@ if not result.current_session_is_safe:
     raise SystemExit(2)
 print("programme-runtime-role-verified")
 """
+_CANDIDATE_PROBE = """
+from tests.rehearsals.programme_registration import (
+    register_isolated_programme_candidate,
+)
+register_isolated_programme_candidate()
+import django
+django.setup()
+from tests.rehearsals.programme_runtime_privileges import (
+    install_isolated_candidate_privilege_contract, require_candidate_reference_boundary,
+)
+install_isolated_candidate_privilege_contract()
+from maru.authorization.database_role_safety import probe_runtime_database_role_safety
+from django.db import connection
+report = probe_runtime_database_role_safety(role_name="maru_runtime")
+if not report.current_session_is_safe:
+    raise SystemExit(2)
+with connection.cursor() as cursor:
+    require_candidate_reference_boundary(cursor)
+print("programme-candidate-runtime-role-verified")
+"""
 
 
 class ProgrammeProvisioningError(RuntimeError):
@@ -199,6 +219,7 @@ def provision_programme_runtime(
     lease: ProgrammeDatabaseLease,
     *,
     candidate_schema: bool = False,
+    candidate_writes: bool = False,
 ) -> ProgrammeRuntimeEnvironment:
     """Install current schema and verify a genuine restricted runtime connection.
 
@@ -211,6 +232,9 @@ def provision_programme_runtime(
         Explicitly install the closed fixture-only Events overlay before ACLs.
         Default false preserves current-schema provisioning. This registers no
         application profile and supplies no joined-startup acceptance.
+    candidate_writes : bool, optional
+        Explicit candidate-only table DML after canonical runtime verification.
+        Requires candidate_schema; defaults leave every dormant relation read-only.
 
     Returns
     -------
@@ -235,6 +259,10 @@ def provision_programme_runtime(
     request = require_programme_rehearsal_request()
     if not isinstance(candidate_schema, bool):
         raise ProgrammeProvisioningError("invalid_candidate_schema_option")
+    if not isinstance(candidate_writes, bool) or (
+        candidate_writes and not candidate_schema
+    ):
+        raise ProgrammeProvisioningError("invalid_candidate_write_option")
     _verify_lease(lease, request)
     source = runtime_provisioning_sql(request.run_id)
     migration_password = secrets.token_urlsafe(32)
@@ -339,6 +367,18 @@ def provision_programme_runtime(
         timeout=min(60, request.lease_seconds),
         expected_output="programme-runtime-role-verified",
     )
+    if candidate_writes:
+        from tests.rehearsals.programme_candidate_acl import (  # noqa: PLC0415
+            install_candidate_table_privileges,
+        )
+
+        install_candidate_table_privileges(lease)
+        _child(
+            ["-c", _CANDIDATE_PROBE],
+            runtime_environment,
+            timeout=min(60, request.lease_seconds),
+            expected_output="programme-candidate-runtime-role-verified",
+        )
     return ProgrammeRuntimeEnvironment(
         run_id=request.run_id,
         database_name=lease.database_name,

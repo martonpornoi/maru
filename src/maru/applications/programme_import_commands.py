@@ -769,32 +769,30 @@ def _replay(
         actor_id=actor_id,
         retry_key=retry_key,
     )
-    receipt = (
-        ProgrammeImportCommandReceipt.objects.select_for_update()
-        .filter(
-            edition_id=edition_id,
-            actor_id=actor_id,
-            retry_key=retry_key,
-        )
-        .first()
-    )
+    # Receipt history is immutable; the namespace lock also covers competing inserts.
+    # Do not require runtime UPDATE permission merely to inspect another family.
+    receipt = ProgrammeImportCommandReceipt.objects.filter(
+        edition_id=edition_id,
+        actor_id=actor_id,
+        retry_key=retry_key,
+    ).first()
     if receipt is not None:
         if receipt.request_digest != request_digest:
             raise ApplicationsProgrammeImportIdempotencyConflictError
         return _command_result(receipt, replayed=True)
     if (
-        ApplicationCommandReceipt.objects.select_for_update()
-        .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
-        .exists()
-        or ProgrammeCommandReceipt.objects.select_for_update()
-        .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
-        .exists()
-        or ProgrammeReviewReceipt.objects.select_for_update()
-        .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
-        .exists()
-        or ProgrammeAcceptedTransition.objects.select_for_update()
-        .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
-        .exists()
+        ApplicationCommandReceipt.objects.filter(
+            edition_id=edition_id, actor_id=actor_id, retry_key=retry_key
+        ).exists()
+        or ProgrammeCommandReceipt.objects.filter(
+            edition_id=edition_id, actor_id=actor_id, retry_key=retry_key
+        ).exists()
+        or ProgrammeReviewReceipt.objects.filter(
+            edition_id=edition_id, actor_id=actor_id, retry_key=retry_key
+        ).exists()
+        or ProgrammeAcceptedTransition.objects.filter(
+            edition_id=edition_id, actor_id=actor_id, retry_key=retry_key
+        ).exists()
     ):
         raise ApplicationsProgrammeImportIdempotencyConflictError
     return None

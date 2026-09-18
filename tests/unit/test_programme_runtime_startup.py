@@ -20,6 +20,7 @@ from maru.events.checks import current_adoption_catalog_snapshot
 from tests.rehearsals import programme_compatibility as compatibility
 from tests.rehearsals import programme_effects as effects
 from tests.rehearsals import programme_runtime as runtime
+from tests.rehearsals import programme_runtime_privileges as privileges
 from tests.rehearsals.programme_candidate import PROGRAMME_REHEARSAL_PROFILE as PROFILE
 from tests.rehearsals.programme_registration import IsolatedAdoptionProfileCode
 from tests.rehearsals.programme_runtime_environment import (
@@ -265,6 +266,7 @@ def native_readiness(monkeypatch):
     cursor.fetchone.side_effect = [
         ("synthetic", "maru_runtime", "maru_runtime"),
         (True,),
+        (True,),
     ]
     cursor.fetchall.return_value = [(runtime._PROFILE_CHECK, True, True, 0, False)]
     manager = MagicMock()
@@ -403,6 +405,11 @@ def test_builder_does_not_construct_wsgi_until_all_checks_succeed(
     monkeypatch.setattr(django, "setup", lambda: steps.append("django"))
     monkeypatch.setattr(django.conf, "settings", _strict_settings())
     monkeypatch.setattr(
+        privileges,
+        "install_isolated_candidate_privilege_contract",
+        lambda: steps.append("privileges"),
+    )
+    monkeypatch.setattr(
         effects, "install_isolated_candidate_handlers", lambda: steps.append("handlers")
     )
 
@@ -424,10 +431,10 @@ def test_builder_does_not_construct_wsgi_until_all_checks_succeed(
         with pytest.raises(runtime.ProgrammeStartupError, match="not_ready"):
             runtime.build_candidate_application()
         factory.assert_not_called()
-        assert steps == ["django", "handlers", "checks", "native"]
+        assert steps == ["django", "privileges", "handlers", "checks", "native"]
     else:
         assert runtime.build_candidate_application() == (
             application,
             ("explicit isolated adoption",),
         )
-        assert steps == ["django", "handlers", "checks", "native", "wsgi"]
+        assert steps == ["django", "privileges", "handlers", "checks", "native", "wsgi"]

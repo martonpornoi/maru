@@ -354,6 +354,8 @@ def test_programme_replay_rejects_a_generic_receipt_collision() -> None:
     authorizer = MagicMock(spec=ApplicationsProgrammeAuthorizer)
     programme_receipts = _locked_manager()
     generic_receipts = _locked_manager(exists=True)
+    programme_receipts.filter.return_value.first.return_value = None
+    generic_receipts.filter.return_value.exists.return_value = True
 
     with (
         patch.object(
@@ -396,12 +398,12 @@ def test_programme_replay_rejects_a_generic_receipt_collision() -> None:
         actor_id=actor_id,
         retry_key=retry_key,
     )
-    programme_receipts.select_for_update.return_value.filter.assert_called_once_with(
+    programme_receipts.filter.assert_called_once_with(
         edition_id=edition_id,
         actor_id=actor_id,
         retry_key=retry_key,
     )
-    generic_receipts.select_for_update.return_value.filter.assert_called_once_with(
+    generic_receipts.filter.assert_called_once_with(
         edition_id=edition_id,
         actor_id=actor_id,
         retry_key=retry_key,

@@ -173,33 +173,29 @@ def _replay(
         actor_id=actor.id,
         retry_key=retry_key,
     )
-    receipt = (
-        ApplicationCommandReceipt.objects.select_for_update()
-        .filter(edition_id=edition_id, actor_id=actor.id, retry_key=retry_key)
-        .first()
-    )
+    # The shared transaction lock serializes every family's immutable receipts.
+    # FOR UPDATE would require forbidden runtime writes even for an empty lookup.
+    receipt = ApplicationCommandReceipt.objects.filter(
+        edition_id=edition_id, actor_id=actor.id, retry_key=retry_key
+    ).first()
     if receipt is None:
         if (
-            ProgrammeCommandReceipt.objects.select_for_update()
-            .filter(
+            ProgrammeCommandReceipt.objects.filter(
                 edition_id=edition_id,
                 actor_id=actor.id,
                 retry_key=retry_key,
-            )
-            .exists()
-            or ProgrammeImportCommandReceipt.objects.select_for_update()
-            .filter(
+            ).exists()
+            or ProgrammeImportCommandReceipt.objects.filter(
                 edition_id=edition_id,
                 actor_id=actor.id,
                 retry_key=retry_key,
-            )
-            .exists()
-            or ProgrammeReviewReceipt.objects.select_for_update()
-            .filter(edition_id=edition_id, actor_id=actor.id, retry_key=retry_key)
-            .exists()
-            or ProgrammeAcceptedTransition.objects.select_for_update()
-            .filter(edition_id=edition_id, actor_id=actor.id, retry_key=retry_key)
-            .exists()
+            ).exists()
+            or ProgrammeReviewReceipt.objects.filter(
+                edition_id=edition_id, actor_id=actor.id, retry_key=retry_key
+            ).exists()
+            or ProgrammeAcceptedTransition.objects.filter(
+                edition_id=edition_id, actor_id=actor.id, retry_key=retry_key
+            ).exists()
         ):
             raise ApplicationIdempotencyConflict
         return None

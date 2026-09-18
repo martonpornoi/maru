@@ -561,40 +561,34 @@ def _replay(
         actor_id=actor_id,
         retry_key=retry_key,
     )
-    receipt = (
-        ProgrammeCommandReceipt.objects.select_for_update()
-        .filter(
-            edition_id=edition_id,
-            actor_id=actor_id,
-            retry_key=retry_key,
-        )
-        .first()
-    )
+    # Receipt history is immutable; the namespace lock also covers competing inserts.
+    # Do not require runtime UPDATE permission merely to inspect another family.
+    receipt = ProgrammeCommandReceipt.objects.filter(
+        edition_id=edition_id,
+        actor_id=actor_id,
+        retry_key=retry_key,
+    ).first()
     if receipt is not None:
         if receipt.request_digest != request_digest:
             raise ApplicationsProgrammeIdempotencyConflictError
         return _result(receipt, replayed=True)
     if (
-        ApplicationCommandReceipt.objects.select_for_update()
-        .filter(
+        ApplicationCommandReceipt.objects.filter(
             edition_id=edition_id,
             actor_id=actor_id,
             retry_key=retry_key,
-        )
-        .exists()
-        or ProgrammeImportCommandReceipt.objects.select_for_update()
-        .filter(
+        ).exists()
+        or ProgrammeImportCommandReceipt.objects.filter(
             edition_id=edition_id,
             actor_id=actor_id,
             retry_key=retry_key,
-        )
-        .exists()
-        or ProgrammeReviewReceipt.objects.select_for_update()
-        .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
-        .exists()
-        or ProgrammeAcceptedTransition.objects.select_for_update()
-        .filter(edition_id=edition_id, actor_id=actor_id, retry_key=retry_key)
-        .exists()
+        ).exists()
+        or ProgrammeReviewReceipt.objects.filter(
+            edition_id=edition_id, actor_id=actor_id, retry_key=retry_key
+        ).exists()
+        or ProgrammeAcceptedTransition.objects.filter(
+            edition_id=edition_id, actor_id=actor_id, retry_key=retry_key
+        ).exists()
     ):
         raise ApplicationsProgrammeIdempotencyConflictError
     return None
