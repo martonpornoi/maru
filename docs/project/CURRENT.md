@@ -11,15 +11,15 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Dormant guided Programme access requests are delivered through
-[PR #161](https://github.com/martonpornoi/maru/pull/161), protected squash
-`0aad93595979b31f3b7be6c35961eced63e60f35` at 2026-09-17 23:38:08 UTC.
-Its tree equals certified head `de663717d96d9d49186a8e52f3c4f8c7e7136d9d`;
+Dormant labelled Programme access scopes are delivered through
+[PR #162](https://github.com/martonpornoi/maru/pull/162), protected squash
+`cf53ccc5c53b645e27d3b76a66425977bf7807e9` at 2026-09-18 00:38:12 UTC.
+Its tree equals certified head `58fa51f13bf94afbd6b98f08e7b8efc995f40952`;
 clean local main matched origin/main and the protected result. All eight
-retained local gates passed in 5m26s, including 9,713 units in 56.51s and
-103 frontend cases. Hosted quality took 12m13s and units 2m01s; exact-head PR
+retained local gates passed in 5m21s, including 9,789 units in 56.84s and
+103 frontend cases. Hosted quality took 12m42s and units 2m04s; exact-head PR
 gate and CodeQL passed. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-access-requests-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-18-programme-scope-choices-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -33,32 +33,29 @@ and [approval schema evidence](../checkpoints/2026-09-17-programme-operational-a
 retain the separately approved schema-only observations and native debt.
 No prerequisite in that chain needs restarting.
 
-## Current work: labelled access-scope navigation (#108)
+## Current work: shared Programme navigation (#108)
 
-Branch: `codex/programme-access-scope-navigation`, from protected PR #161.
-Implemented complete bounded labelled Edition/Department/shared Organization Venue/
-exact-room scope choices, with independent current ordinary controller admission,
-native integrity and final source/audit checks before disclosure. Strict read-only
-shared-shell cards link to the actual reserved request/review handlers and provide
-a validated return path. No broader directory grant, hidden count, command, schema,
-runtime privilege, current-profile or production-route change.
+Branch: `codex/programme-shared-shell-navigation`, from protected PR #162.
+Implemented seven independently admitted Programme task destinations in the existing
+shared registry, plus the separately admitted platform setup entry. Exact future
+profile kinds and actual handler/scope checks gate every task. Name-free bounded
+candidate discovery lets narrow controllers reach their edition without borrowing
+broad Events/Workforce authority. Search, pins and personal/management separation
+reuse the existing registry. Both current v1 manifests, production routes, schema
+and runtime privileges remain unchanged.
 
-Final complete database-free feedback passed 9,789 cases in 56.61s, including 76
-new scope-query/view cases. Strict mypy passed
-717 source files; Ruff and strict documentation checks passed. Browser component
-rehearsal observed Department keyboard creation and exact-room review round trips,
-narrow control and denial/unavailable/overflow/source-change states. All seven
-widths fit, with one H1/main; small link targets were corrected to 44 pixels and
-rechecked. Task-owned server/tabs were cleaned up and viewport reset. Three new
-maintained native cases remain uncollected/unexecuted #102 debt. PR #162 was returned
-to draft after review found an unauthorized overflow-status distinction. Name-free
-current-authority preflight now denies unrelated callers before foundation/inventory
-probing without denying narrow controllers. The previous head's complete receipt is
-preserved; corrected-head certification and hosted delivery are pending. See the
-[scope-choice checkpoint](../checkpoints/2026-09-18-programme-access-scope-choices.md).
+Complete database-free feedback passed 9,837 cases in 58.73s (48 new cases), strict
+mypy passed 718 source files and Ruff passed. Synthetic database-prohibited browser
+checks exercised the real registry/template/JavaScript for task search, keyboard
+scope entry, narrow/revoked pins, personal separation and mobile drawer behavior.
+All seven widths fit with one H1/main and no browser warnings/errors. Task-owned
+fixture processes/tab are closed and the viewport reset. One added native
+grant/revocation discovery case is maintained but uncollected/unexecuted #102 debt.
+Exact-commit certification and hosted protected delivery are next; see the
+[shared-navigation checkpoint](../checkpoints/2026-09-18-programme-shared-navigation.md).
 
-Next: protected delivery, shared-shell Programme entry integration, then the complete
-isolated synthetic fixture. Preserve truthful roots and two people's own acceptances.
+After this increment, implement the complete isolated synthetic fixture.
+Preserve truthful roots and two people's own acceptances.
 A selected approver email is never their decision; no catch-all role may replace
 Department, Edition, Organization Venue or exact-room scope. ADR 0106 is unchanged.
 The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)

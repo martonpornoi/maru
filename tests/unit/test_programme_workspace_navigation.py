@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError
 from django.http import HttpResponse
 from django.urls import path, resolve
@@ -112,6 +113,32 @@ def links(world, current="items", **kwargs):
     return navigation.programme_workspace_links(
         world.scope, current=current, urlconf=world.urlconf, **kwargs
     )
+
+
+@pytest.mark.parametrize(
+    "allowed", [frozenset(), frozenset({"items"}), frozenset({"timetable"})]
+)
+def test_existing_owner_helper_honors_closed_navigation_subset(links_world, allowed):
+    result = links(links_world, "navigation", allowed_codes=allowed)
+    assert {row.code for row in result} == allowed
+    if not allowed:
+        links_world.programme.assert_not_called()
+        links_world.scheduling.assert_not_called()
+
+
+@pytest.mark.parametrize("allowed", [frozenset({"foreign"}), {"items"}, ["items"]])
+def test_invalid_navigation_subset_is_not_a_dynamic_task_language(links_world, allowed):
+    assert links(links_world, "navigation", allowed_codes=allowed) == ()
+    links_world.programme.assert_not_called()
+
+
+@pytest.mark.parametrize("error", [PermissionDenied(), ValidationError("hidden")])
+def test_optional_owner_failure_keeps_other_independently_admitted_tasks(
+    links_world, error
+):
+    links_world.programme.side_effect = error
+    # Timetable independently needs item fields; release admission does not.
+    assert {row.code for row in links(links_world, "navigation")} == {"release"}
 
 
 def test_three_tasks_have_exact_resolvable_links_and_independent_fields(links_world):

@@ -865,9 +865,11 @@ now hand off to existing truthful representation controls. Guided operational
 request creation previews exact known people and scope before retaining original
 intent for the named approver's own decision. A dormant labelled scope chooser now
 connects independently admitted Department, Edition, shared Organization Venue and
-selected-room access requests/reviews without pasted identifiers. Shared-shell
-entry integration and the complete
-isolated fixture remain unfinished; component
+selected-room access requests/reviews without pasted identifiers. Dormant shared-shell
+entry composition now independently admits fixed Programme tasks and discovers
+narrow-role edition contexts; search and pins reuse the same current projection.
+Neither current profile nor production routing changes. Protected delivery of this
+increment and the complete isolated fixture remain unfinished; component
 browser evidence does not replace native/human acceptance.
 These remain components, not an activated departmental workflow. Next are
 accountable setup and a complete isolated fixture, followed by #102 restored

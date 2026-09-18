@@ -12,6 +12,7 @@ from dataclasses import replace
 from datetime import date, timedelta
 from functools import partial
 from importlib import import_module
+from types import ModuleType
 from uuid import UUID, uuid4
 
 import pytest
@@ -19,6 +20,8 @@ from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
+from django.test import RequestFactory
+from django.urls import include, path
 from django.utils import timezone
 from psycopg import sql
 
@@ -69,9 +72,10 @@ from maru.authorization.programme_role_selection import (
     verify_programme_role_selection,
 )
 from maru.authorization.services import AuthorizationDenied
+from maru.core.programme_navigation import programme_shell_links
 from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
 from maru.effects.models import DomainEvent, OutboxMessage
-from maru.events import adoption
+from maru.events import admin_context, adoption
 from maru.events.services import EventEditionDetails, create_event_edition
 from maru.organizations.services import (
     ConventionSeriesCreationDetails,
@@ -258,6 +262,75 @@ def test_native_scoped_controller_entry_disappears_after_revocation(command_worl
         load_programme_role_scope_choices(
             **scope, correlation_id=uuid4(), source_channel="test"
         )
+
+
+def test_native_shared_shell_discovery_and_link_follow_actual_grant_revocation(
+    command_world, monkeypatch
+):
+    """Maintain actual policy discovery; unexecuted until PostgreSQL is restored."""
+    organization, edition, author, approver, _ = command_world
+    candidate = adoption.ADOPTION_PROFILES[("programme_operations", 1)]
+    monkeypatch.setattr(
+        adoption,
+        "ADOPTION_PROFILES",
+        {
+            **adoption.ADOPTION_PROFILES,
+            ("programme_operations", 1): replace(
+                candidate,
+                shell_destination_kinds=frozenset({"edition.programme-access"}),
+            ),
+        },
+    )
+    urlconf = ModuleType(f"native_programme_navigation_{uuid4().hex}")
+    urlconf.urlpatterns = [path("", include("maru.authorization.programme_role_urls"))]
+    controller = AccountFactory()
+    target = resolve_edition_target(
+        organization_id=organization.id, edition_id=edition.id
+    )
+    grant = grant_capability_direct(
+        actor=author,
+        approver=approver,
+        recipient=controller,
+        capability_code="authorization.manage_roles",
+        target=target,
+        effective_from=timezone.now(),
+        expires_at=None,
+        reason="Synthetic shared-navigation-only controller.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+
+    def discovery():
+        request = RequestFactory().get("/admin/")
+        request.user = controller
+        request.session = {}
+        request.urlconf = urlconf
+        return tuple(admin_context._authorized_admin_editions(request))
+
+    def links():
+        return programme_shell_links(
+            actor=controller,
+            organization_id=organization.id,
+            edition_id=edition.id,
+            profile_code="programme_operations",
+            profile_version=1,
+            urlconf=urlconf,
+        )
+
+    before = AuditEvent.objects.count()
+    assert [item.id for item in discovery()] == [edition.id]
+    assert [item.code for item in links()] == ["access"]
+    assert AuditEvent.objects.count() == before
+    revoke_capability_grant(
+        actor=author,
+        target=target,
+        grant_id=grant.id,
+        reason="Synthetic navigation revocation.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    assert discovery() == ()
+    assert links() == ()
 
 
 def test_native_creation_previews_exact_people_without_request_or_grant(command_world):

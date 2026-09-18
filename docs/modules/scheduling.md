@@ -559,11 +559,18 @@ Events-owned parent relation before dispatch and after rendering. It introduces
 no outer cross-owner transaction, mutation, schema or profile grant.
 `workspace_navigation.programme_workspace_links` is the public metadata-only
 navigation seam consumed by Applications, Programme, Scheduling and organizer
-Workforce pages. The closed external source `shifts` may receive all six independent task links;
+Workforce pages and the shared Core registry. The closed external sources `shifts`
+and `navigation` may receive all six independent task links;
 ordinary Programme sources still omit their own task. Fixed task labels require
 independent owner admission and exact reverse/resolve identity; optional denied,
 unmounted or moved links are omitted without obscuring an otherwise authorized
 result. See the [canonical connection contract](../product/page-contracts/programme-timetable-planning.md#canonical-connections-under-108).
+An optional immutable `allowed_codes` subset restricts shared-navigation discovery
+to individually pinned future manifest destinations before calling their owners.
+Omission retains existing callers' behavior; invalid types or unknown task codes
+return no links. Each optional owner denial or dependency failure is isolated;
+losing Programme item fields also hides timetable planning, which independently
+requires those fields, but does not hide an independently admitted release task.
 The Applications entry is admitted through its public metadata-only
 `can_enter_programme_tasks` query, preserving all seven independent purposes,
 including reviewer-only and dual-owner conversion-only entry. No Department label

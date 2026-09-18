@@ -6,6 +6,7 @@ import ast
 import re
 from pathlib import Path
 
+from maru.core.programme_navigation import PROGRAMME_SHELL_KINDS
 from maru.events.adoption import (
     SHELL_DESTINATION_KIND_CATALOG,
     STAFF_CONSOLE_DESTINATION_CATALOG,
@@ -16,6 +17,7 @@ _STAFF_CONSOLE_MODEL = (
     _REPOSITORY_ROOT / "frontends" / "staff-console" / "src" / "model.ts"
 )
 _NAVIGATION_SOURCE = _REPOSITORY_ROOT / "src" / "maru" / "core" / "navigation.py"
+_PROGRAMME_NAVIGATION_SOURCE = _NAVIGATION_SOURCE.with_name("programme_navigation.py")
 _STAFF_DESTINATION_DECLARATION = re.compile(
     r"export const staffConsoleDestinations = \[(?P<body>.*?)\] as const;",
     flags=re.DOTALL,
@@ -97,9 +99,12 @@ def _literal_navigation_profile_destinations() -> frozenset[str]:
                     "<missing>" if value is None else ast.unparse(value)
                 )
 
-    assert dynamic_navigation_values == [("_workspace_item", "code")], (
+    assert dynamic_navigation_values == [
+        ("_workspace_item", "code"),
+        ("_programme_destinations", "link.shell_kind"),
+    ], (
         "profile-scoped NavigationItem destinations must remain literal, except for "
-        "the _workspace_item helper's literal call-site code"
+        "the workspace helper's literal code and the closed Programme owner declaration"
     )
     assert not dynamic_workspace_codes, (
         "every _workspace_item call must provide a literal governed code"
@@ -118,3 +123,31 @@ def test_staff_console_typescript_and_python_destination_catalogs_match() -> Non
 def test_navigation_literals_are_registered_shell_destination_kinds() -> None:
     """Require every emitted literal presentation kind to be registered."""
     assert _literal_navigation_profile_destinations() <= SHELL_DESTINATION_KIND_CATALOG
+
+
+def test_programme_navigation_has_one_closed_literal_registered_kind_map() -> None:
+    """Cover the one new composition source rather than exempting dynamic kinds."""
+    tree = ast.parse(_PROGRAMME_NAVIGATION_SOURCE.read_text(encoding="utf-8"))
+    declarations = [
+        node.value
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Name) and target.id == "PROGRAMME_SHELL_KINDS"
+            for target in node.targets
+        )
+    ]
+    assert len(declarations) == 1
+    declared = ast.literal_eval(declarations[0])
+    assert declared == PROGRAMME_SHELL_KINDS
+    assert len(set(declared.values())) == len(declared)
+    assert set(declared.values()) <= SHELL_DESTINATION_KIND_CATALOG
+    assert set(declared) == {
+        "applications",
+        "items",
+        "timetable",
+        "release",
+        "notices",
+        "operators",
+        "access",
+    }

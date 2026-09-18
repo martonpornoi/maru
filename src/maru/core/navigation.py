@@ -12,6 +12,10 @@ from maru.authorization.policy import (
     decide,
     resolve_edition_target,
 )
+from maru.core.programme_navigation import (
+    programme_setup_navigation_url,
+    programme_shell_links,
+)
 from maru.events.admin_context import (
     admin_edition_options,
     admin_organization_navigation,
@@ -542,6 +546,36 @@ def _management_items(
     return items
 
 
+def _programme_destinations(
+    request: HttpRequest,
+    edition: EventEdition,
+    context_label: str,
+) -> list[NavigationItem]:
+    if not isinstance(request.user, Account):
+        return []
+    return [
+        NavigationItem(
+            code=f"edition.{edition.id}.programme-{link.code}",
+            label=link.label,
+            url=link.url,
+            section="Convention tools",
+            context_label=context_label,
+            description="Open this independently authorized Programme task.",
+            keywords=("programme", "program", link.code),
+            profile_destination_kind=link.shell_kind,
+            current=request.path.startswith(link.url),
+        )
+        for link in programme_shell_links(
+            actor=request.user,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            profile_code=edition.adoption_profile_code,
+            profile_version=edition.adoption_profile_version,
+            urlconf=getattr(request, "urlconf", None),
+        )
+    ]
+
+
 def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
     options = admin_edition_options(request)
     selected = options.get("selected")
@@ -814,6 +848,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                 ),
             )
         )
+    items.extend(_programme_destinations(request, edition, context_label))
     return _profile_filtered_items(items=items, edition=edition)
 
 
@@ -1125,6 +1160,27 @@ def _platform_items(request: HttpRequest) -> list[NavigationItem]:
     actor = request.user
     if not isinstance(actor, Account) or not actor.is_platform_administrator:
         return []
+    setup_url = programme_setup_navigation_url(
+        actor=actor,
+        urlconf=getattr(request, "urlconf", None),
+    )
+    programme_setup = (
+        [
+            NavigationItem(
+                code="platform.programme-setup",
+                label="Set up Programme Operations",
+                url=setup_url,
+                section="Platform",
+                description=(
+                    "Create or reuse the accountable foundation for Programme work."
+                ),
+                keywords=("programme", "program", "onboarding", "progressive adoption"),
+                current=request.path.startswith(setup_url),
+            )
+        ]
+        if setup_url
+        else []
+    )
     return [
         NavigationItem(
             code="platform.organizations",
@@ -1171,6 +1227,7 @@ def _platform_items(request: HttpRequest) -> list[NavigationItem]:
             section="Platform",
             current=_route_is(request, "platform-account-invite"),
         ),
+        *programme_setup,
     ]
 
 

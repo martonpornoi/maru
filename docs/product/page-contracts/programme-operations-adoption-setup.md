@@ -169,6 +169,31 @@ unchanged. Storage alone cannot prove a
 person's action or grant access.
 See the [owning contract](../../modules/authorization.md#dormant-programme-operational-role-contracts).
 
+### Shared task navigation and edition discovery
+
+The existing shared navigation registry gains seven code-owned future Programme
+destination kinds: Applications tasks, items, timetable planning, release, change
+notices, on-site run sheets and access scopes. Each exact manifest must explicitly
+pin its kinds; both current v1 manifests remain unchanged. The current URL
+configuration must genuinely mount the owning destination. Every task's existing
+metadata-only owner admission remains independent; search, pins, selected edition
+and another visible task grant nothing. No second dashboard or directory is added.
+
+A narrow Department/room-only Programme operator must be able to select their
+edition without a broad Events/Workforce directory grant. For the exact future
+profile only, name-free current authority constrains candidate edition references;
+independently admitted mounted Programme tasks precede edition labels. At most 256
+candidate editions are inspected, with no partial additional list on overflow.
+Ordinary existing-profile context discovery remains unchanged. Lost authority,
+unmounted routes and unavailable optional owners omit their Programme entries,
+never another owner's otherwise authorized destination.
+
+Platform navigation may offer **Set up Programme Operations** only when the exact
+future profile exists, the real setup route is mounted and the existing current
+Identity-backed platform setup admission succeeds. This entry gives no operational
+role. Programme management entries stay out of the personal navigation projection;
+the already delivered genuine-person task connections remain its continuation.
+
 ### Labelled access-scope discovery
 
 The reserved exact organization/Programme-edition `/admin/programme/access/` entry

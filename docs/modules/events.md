@@ -509,6 +509,18 @@ For Workforce-only, the record presents the immutable adoption boundary,
 suppresses the irrelevant currency editor, and explains that Registration,
 payments, and attendee Participation were not adopted.
 
+Dormant Programme task discovery adds a separate exact-profile path rather than
+widening the legacy selector's capability list. Current name-free authority scopes
+select at most 256 candidate edition/organization ID pairs; overflow omits the
+whole additional set. Each candidate must match the projected tenant and receive
+at least one independently admitted, actually mounted Programme task before its
+edition labels join the selector. This permits narrow Department/room controllers
+without granting unrelated Events or Workforce access. Absent future profile,
+denial or unavailable dependencies add no editions; existing profile discovery
+and request-local cache behavior remain unchanged. A stored context cannot retain
+revoked access on a later request. The native grant/revocation regression is
+maintained but unexecuted until #102; component doubles are not native proof.
+
 ## Failure and concurrency
 
 Creation, profile updates, and transitions use `select_for_update`. Bulk

@@ -7,7 +7,8 @@ from uuid import UUID
 
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import FieldDoesNotExist, PermissionDenied
+from django.core.exceptions import FieldDoesNotExist, PermissionDenied, ValidationError
+from django.db import DatabaseError
 from django.db.models import Q, QuerySet
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect
@@ -22,6 +23,7 @@ from maru.authorization.policy import (
     projected_scope_allows_profile,
 )
 from maru.core.admin import HttpsURLAdminMixin
+from maru.core.programme_navigation import programme_shell_links
 from maru.events.adoption import (
     ADOPTION_MODULE_NAMESPACE_CATALOG,
     adoption_profile,
@@ -43,6 +45,7 @@ _ACTIVE_ADMIN_SCOPE_CACHE_ATTRIBUTE = "_maru_active_admin_scope"
 _AUTHORIZED_ADMIN_SCOPES_CACHE_ATTRIBUTE = "_maru_authorized_admin_scopes"
 _ADMIN_ORGANIZATION_NAVIGATION_CACHE_ATTRIBUTE = "_maru_admin_organization_navigation"
 _NOT_CACHED = object()
+_MAX_PROGRAMME_NAVIGATION_EDITIONS = 256
 
 _ORGANIZATION_NAVIGATION_CAPABILITIES = frozenset(
     {
@@ -402,6 +405,51 @@ def admin_organization_navigation(
     return navigation
 
 
+def _programme_admin_edition_ids(request: HttpRequest) -> frozenset[UUID]:
+    # Current profiles keep their existing selector contract, with no new query.
+    if adoption_profile("programme_operations", 1) is None:
+        return frozenset()
+    actor = _active_account(request)
+    scopes = _authorized_admin_scopes(request)
+    if actor is None or not scopes:
+        return frozenset()
+    organizations = {row.organization_id for row in scopes if row.edition_id is None}
+    editions = {row.edition_id for row in scopes if row.edition_id is not None}
+    try:
+        candidates = tuple(
+            EventEdition.objects.filter(
+                Q(organization_id__in=organizations) | Q(id__in=editions),
+                adoption_profile_code="programme_operations",
+                adoption_profile_version=1,
+            )
+            .order_by("id")
+            .values_list("id", "organization_id")[
+                : _MAX_PROGRAMME_NAVIGATION_EDITIONS + 1
+            ]
+        )
+        if len(candidates) > _MAX_PROGRAMME_NAVIGATION_EDITIONS:
+            return frozenset()
+        return frozenset(
+            identifier
+            for identifier, organization in candidates
+            if any(
+                row.organization_id == organization
+                and row.edition_id in {None, identifier}
+                for row in scopes
+            )
+            and programme_shell_links(
+                actor=actor,
+                organization_id=organization,
+                edition_id=identifier,
+                profile_code="programme_operations",
+                profile_version=1,
+                urlconf=getattr(request, "urlconf", None),
+            )
+        )
+    except (PermissionDenied, ValidationError, DatabaseError, RuntimeError):
+        return frozenset()
+
+
 def _authorized_admin_editions(request: HttpRequest) -> QuerySet[EventEdition]:
     """Scope selector candidates before any edition row is evaluated.
 
@@ -434,6 +482,7 @@ def _authorized_admin_editions(request: HttpRequest) -> QuerySet[EventEdition]:
             request,
             capability_codes=_EDITION_WORKSPACE_NAVIGATION_CAPABILITIES,
         )
+        authorized_ids |= _programme_admin_edition_ids(request)
         authorized_editions = (
             editions.filter(id__in=authorized_ids)
             if authorized_ids
