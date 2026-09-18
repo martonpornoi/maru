@@ -17,6 +17,7 @@ from maru.authorization import programme_role_readiness
 from maru.core import views
 from maru.events import adoption, programme_setup_readiness
 from maru.events.checks import current_adoption_catalog_snapshot
+from maru.workforce import programme_starter_readiness
 from tests.rehearsals import programme_compatibility as compatibility
 from tests.rehearsals import programme_effects as effects
 from tests.rehearsals import programme_function_acl as helper_acl
@@ -284,6 +285,7 @@ def native_readiness(monkeypatch):
     )
     setup = Mock(return_value=True)
     roles = Mock(return_value=True)
+    starter = Mock(return_value=True)
     helpers = Mock()
     monkeypatch.setattr(helper_acl, "require_helper_catalog", helpers)
     monkeypatch.setattr(views, "readiness", health)
@@ -293,8 +295,18 @@ def native_readiness(monkeypatch):
     monkeypatch.setattr(
         programme_role_readiness, "programme_role_database_integrity_is_ready", roles
     )
+    monkeypatch.setattr(
+        programme_starter_readiness,
+        "programme_starter_database_integrity_is_ready",
+        starter,
+    )
     return SimpleNamespace(
-        cursor=cursor, health=health, setup=setup, roles=roles, helpers=helpers
+        cursor=cursor,
+        health=health,
+        setup=setup,
+        roles=roles,
+        helpers=helpers,
+        starter=starter,
     )
 
 
@@ -303,6 +315,7 @@ def test_native_readiness_uses_real_owner_entrypoints_in_sequence(native_readine
     native_readiness.health.assert_called_once()
     native_readiness.setup.assert_called_once()
     native_readiness.roles.assert_called_once()
+    native_readiness.starter.assert_called_once()
     native_readiness.helpers.assert_called_once_with(
         connection.connection, runtime_granted=True
     )
@@ -323,7 +336,16 @@ def test_native_helper_failure_prevents_health_and_application_acceptance(
 
 @pytest.mark.parametrize(
     "defect",
-    ["identity", "migration", "constraint", "health", "dependency", "setup", "roles"],
+    [
+        "identity",
+        "migration",
+        "constraint",
+        "health",
+        "dependency",
+        "setup",
+        "roles",
+        "starter",
+    ],
 )
 def test_native_readiness_fails_closed_on_any_unavailable_boundary(
     defect, native_readiness
@@ -349,8 +371,10 @@ def test_native_readiness_fails_closed_on_any_unavailable_boundary(
         ] = "unavailable"
     elif defect == "setup":
         native_readiness.setup.return_value = False
-    else:
+    elif defect == "roles":
         native_readiness.roles.return_value = False
+    else:
+        native_readiness.starter.return_value = False
     with pytest.raises(runtime.ProgrammeStartupError):
         runtime._require_native_readiness(SimpleNamespace(database_name="synthetic"))
 

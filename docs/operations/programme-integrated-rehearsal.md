@@ -1,5 +1,15 @@
 # Programme setup-to-on-site rehearsal
 
+The #175 backend now prepares real own-person approval of the fixed Volunteer
+starter; its reader/screen and actual blank-setup/P06 connection remain unfinished.
+Do not seed a PositionTemplate directly or treat a selected approver as a decision.
+The candidate table inventory grows from 82 to **84**: starter request INSERT/UPDATE
+for canonical row locking, terminal decision INSERT only. Both tables are
+SELECT-only in the canonical production ACL source, whose candidate checksum is
+updated with the exact new revokes. The fourteen helper grants are unchanged.
+Startup additionally requires actual starter native/table readiness. This remains
+preparation; no PostgreSQL test or complete candidate startup is claimed.
+
 **Audience:** Maintainers preparing #108, independent Programme evaluators and recovery operators\
 **Outcome:** Prepare one reproducible journey and collect evidence for #109/#92 without confusing component delivery with acceptance\
 **Status:** Preparation protocol; the complete fixture and setup are not yet implemented or accepted

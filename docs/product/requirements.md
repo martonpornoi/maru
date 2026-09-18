@@ -403,6 +403,18 @@ architecture documents, implementation issues, tests, and release notes.
   forms remain inspection-only once this workflow is mounted. An internally
   consistent legacy Position may begin governed history at its first real
   change without inventing a creation version, actor, or receipt.
+  A blank exact Programme adoption must offer the one code-owned compatible
+  Volunteer template through retained author intent and a different eligible
+  controller's own authenticated approval, never approval inferred from an email.
+  Both people must see its limited capabilities and shared Organization scope.
+  Pending intent expires after seven days and can be declined by the approver or
+  cancelled by its author; exact authorized retries recover original outcomes.
+  Approval may publish or reuse only the exact historically proven immutable
+  template/role meaning, atomically with decision and audit evidence. It creates
+  no Position, assignment, participation or access grant. Incompatible meaning,
+  lost current authority, foreign scope and concurrent conflicting decisions fail
+  without partial output. Preserve the existing Workforce-only starter contract;
+  this Programme boundary follows ADR 0107, not a generic template builder.
 - **HR-013 — Governed Position assignment lifecycle:** An authorized exact-
   edition manager must be able to propose one active known person for a current
   Position, inspect that person's Position-specific onboarding readiness, and

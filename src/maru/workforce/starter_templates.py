@@ -15,6 +15,7 @@ from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.commands import create_role_bundle_version
 from maru.authorization.models import RoleBundle
 from maru.authorization.policy import (
+    ResolvedAuthorizationTarget,
     decide,
     resolve_edition_target,
     resolve_organization_target,
@@ -350,32 +351,17 @@ def provision_workforce_starter_template(
     if organization_target is None:
         raise PermissionDenied("The accountable organization is unavailable.")
 
-    role_bundle = create_role_bundle_version(
+    created = _create_starter_definition(
         actor=actor,
         approver=approver,
-        target=organization_target,
-        code=WORKFORCE_VOLUNTEER_TEMPLATE_CODE,
-        name=WORKFORCE_VOLUNTEER_TEMPLATE_NAME,
-        capability_codes=WORKFORCE_VOLUNTEER_ROLE_CAPABILITIES,
+        organization_id=scope.organization_id,
+        organization_target=organization_target,
         reason=normalized_reason,
         correlation_id=correlation_id,
         request_id=request_id,
         source_channel=source_channel,
     )
-    template = PositionTemplate.objects.create(
-        organization_id=scope.organization_id,
-        code=WORKFORCE_VOLUNTEER_TEMPLATE_CODE,
-        name=WORKFORCE_VOLUNTEER_TEMPLATE_NAME,
-        version=1,
-        description=(
-            "Contributes to one convention without organizer or attendee authority."
-        ),
-        default_headcount=1,
-        default_capacity_codes=list(WORKFORCE_VOLUNTEER_CAPACITY_CODES),
-        role_bundle=role_bundle,
-        status=PositionTemplate.Status.PUBLISHED,
-        created_by=actor,
-    )
+    template = created.template
     occurred_at = timezone.now()
     actor_audit = append_audit(
         AuditRecord(
@@ -423,6 +409,48 @@ def provision_workforce_starter_template(
             retention_class="workforce-restricted",
         ),
         occurred_at=occurred_at,
+    )
+    return created
+
+
+def _create_starter_definition(
+    *,
+    actor: Account,
+    approver: Account,
+    organization_id: UUID,
+    organization_target: ResolvedAuthorizationTarget,
+    reason: str,
+    correlation_id: UUID,
+    request_id: UUID | None,
+    source_channel: str,
+) -> WorkforceStarterTemplateResult:
+    # Private shared factory, never a new public bypass. Each owner caller holds
+    # canonical locks and independently establishes its own approval contract.
+    role_bundle = create_role_bundle_version(
+        actor=actor,
+        approver=approver,
+        target=organization_target,
+        code=WORKFORCE_VOLUNTEER_TEMPLATE_CODE,
+        name=WORKFORCE_VOLUNTEER_TEMPLATE_NAME,
+        capability_codes=WORKFORCE_VOLUNTEER_ROLE_CAPABILITIES,
+        reason=reason,
+        correlation_id=correlation_id,
+        request_id=request_id,
+        source_channel=source_channel,
+    )
+    template = PositionTemplate.objects.create(
+        organization_id=organization_id,
+        code=WORKFORCE_VOLUNTEER_TEMPLATE_CODE,
+        name=WORKFORCE_VOLUNTEER_TEMPLATE_NAME,
+        version=1,
+        description=(
+            "Contributes to one convention without organizer or attendee authority."
+        ),
+        default_headcount=1,
+        default_capacity_codes=list(WORKFORCE_VOLUNTEER_CAPACITY_CODES),
+        role_bundle=role_bundle,
+        status=PositionTemplate.Status.PUBLISHED,
+        created_by=actor,
     )
     return WorkforceStarterTemplateResult(
         template=template,

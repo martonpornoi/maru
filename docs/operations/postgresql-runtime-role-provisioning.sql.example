@@ -121,6 +121,14 @@ GRANT SELECT ON TABLE
     public.authorization_programmerolerequest,
     public.authorization_programmeroledecisionrecord TO maru_runtime;
 
+-- Own-person Volunteer starter evidence is dormant under #175 / #108.
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.workforce_programmestarterrequest,
+    public.workforce_programmestarterdecision FROM maru_runtime, PUBLIC;
+GRANT SELECT ON TABLE
+    public.workforce_programmestarterrequest,
+    public.workforce_programmestarterdecision TO maru_runtime;
+
 -- Programme issue #61 installs a dormant private aggregate and its evidence
 -- schema without activating an exact adoption profile or mounting a caller.
 -- Keep every Programme relation read-only for the runtime login. The tested

@@ -64,3 +64,23 @@ complete P01–P12 composition. After preparation, restore the tracked PostgreSQ
 policy through protected delivery and require #102, #97, #92 and #109 before
 supported-profile promotion or closure of #108/#48. Do not reuse this candidate
 permission inventory automatically for production activation.
+
+## Protected delivery appendix — 2026-09-18 20:26 UTC
+
+PR #181 merged certified head `cb28378c41f0fb0ddef7e8254f0bf61a0382d213`
+as protected squash `bed5b3a7c029aaf24e2ef2888f4f489aa4cc3f1d`. Both trees
+are `501389e81c22668da8b7ad8ffed161a9b59e57d2`. Clean separate main was
+fast-forwarded to the protected result; the unrelated repair worktree remained
+at `aa1ede69fb880dcb12d627bbfc049fba23166e68`. Uncommitted #175 work was
+preserved on a separate branch from the equal-tree protected result.
+
+All eight local retained gates passed in 341.676 seconds: 10,943 units in
+61.96 seconds and 103 frontend cases. The version-four receipt was
+`postgresql_deferred`, zero database instances and null coverage/headroom;
+SHA-256 `90504fdd5f397771bbd005e558fd151e2a91fcbb52dfc259db0fa5890279de9e`.
+Five artifacts were copied into ignored exact-head evidence and hash-verified.
+Hosted run 35389311346 passed quality in 12m43s, units in 2m19s and aggregate
+PR gate in 3s. All three processed CodeQL analyses matched the head without
+errors/warnings. Complete review/thread pagination was empty; the only closing
+reference was #180. Exact-head squash closed #180; #48/#108 checklists were
+updated without closing either parent. Native cases remain deferred #102 debt.

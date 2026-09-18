@@ -54,6 +54,20 @@ Schema review fails if this metadata is absent.
 
 ## Purpose partitions
 
+ADR 0107's Workforce-owned Programme starter request and terminal decision are
+C2 person-linked governance evidence; free-text rationale is restricted, not
+public timetable content. Retain only exact scope, fixed definition/digest,
+author/named approver, actual terminal actor, bounded reasons, deadline, retries,
+audit links and exact template/RoleBundle output. Their purpose is accountable
+shared template publication and historical recovery, not volunteer profiling.
+Use the existing `security-extended` authority-evidence review/hold schedule.
+Only the two named people with current controller admission may access the
+forthcoming audited task; no directory, general search, analytics, public export,
+email or notification is introduced by the backend. Cancellation, decline and
+expiry neither delete history nor grant authority. Corrections append evidence;
+reviewed disposal/recovery must preserve mutually consistent source/audit/output
+links. No new disposal executor or legal retention period is invented here.
+
 Data supplied for one purpose is not a platform-wide profile:
 
 | Partition | Typical owner | Compatibility rule |

@@ -1,5 +1,50 @@
 # Workforce module
 
+## Dormant Programme Volunteer starter
+
+HR-012 and [ADR 0107](../architecture/decisions/0107-programme-volunteer-starter-approval.md)
+define the fixed `workforce-volunteer@1` prerequisite for blank Programme staffing.
+`programme_starter_commands.request_programme_starter` records one actual verified
+controller's intent for a different named controller; it creates no template or
+authority. `decide_programme_starter` accepts the approver's own approve/decline,
+or the author's cancellation. Inputs bind the exact organization/series/edition,
+fixed definition, original people, reason and principal-bound retry key. Only the
+exact candidate profile is admitted; both current profiles remain excluded.
+
+Both controllers need current Organization role-management and Edition structure
+authority. Approval rechecks both real control sources and the seven-day deadline
+under shared authority, foundation, structure and person locks. New requests and
+approval require Draft/Preparing; authorized exact retry and nonapproval retain
+their existing-evidence purpose without creating later planning state. Replay
+never recreates or regrants anything. Foreign scope and unrelated people cannot
+use a known request ID to act.
+
+The atomic approval reuses the original private Workforce factory and public
+Authorization RoleBundle command. It creates only the immutable shared template
+and role meaning, or reuses the exact compatible historically proven definition.
+Reserved-name conflicts fail closed. The template grants nobody access; there is
+no Position, assignment, Shift, Participation, Registration or payment side effect.
+Legacy Workforce-only admission, selected-approver behavior and audits are unchanged.
+
+`ProgrammeStarterRequest` and its single terminal `ProgrammeStarterDecision`
+protect all references and retain their actual-person audit, retry digest and
+output attribution. Migrations 0025–0027 install two relations, three invoker
+guards/four triggers and an exclusive-lock unused-only contraction fence. Any
+retained intent requires fix-forward or consistent recovery. Production runtime
+permissions remain SELECT-only for these dormant tables; the isolated candidate
+explicitly allows request INSERT/UPDATE for row locking and decision INSERT only.
+Actual native and observed table metadata are required by command and candidate
+startup readiness; no readiness substitution or production activation is added.
+
+This increment is the backend prerequisite, **not completion of #175**. The
+audited own-person reader, signed preview/confirm, shared-shell approval screen,
+Positions/setup entry points and real P06 fixture connection remain to deliver.
+Schema-only observations do not certify actual command rollback, races or runtime
+permissions. Maintained PostgreSQL cases remain uncollected/unexecuted under #102;
+human comprehension remains #92 and promotion still requires #97/#109.
+
+## Existing owner boundaries
+
 `operator_target_choices.list_programme_operator_department_choices` is the public
 internal minimized current-Department label query for Programme operator notices.
 The actual sender independently needs exact-edition `workforce.view_structure`
