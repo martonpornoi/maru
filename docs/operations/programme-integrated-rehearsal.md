@@ -69,6 +69,49 @@ actual approved runtime boundary. A test-only candidate object is neither a laun
 nor a migration, and does not satisfy P01–P12 by itself. Never launch it under the
 deferred policy; retain explicit not-run status until restored acceptance.
 
+### Prepared runtime resource boundary
+
+`tests/rehearsals/programme_runtime_environment.py` checks the tracked PostgreSQL
+policy before reading connection configuration. Native entry requires explicit
+`MARU_PROGRAMME_REHEARSAL=isolated`, a nonzero lowercase 32-hex
+`MARU_PROGRAMME_REHEARSAL_RUN_ID`, and a canonical
+`MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS` value from 60 through 3600. The application
+environment additionally requires a credential-bearing `MARU_DATABASE_URL` for
+`maru_runtime` at `127.0.0.1` on an explicit nonprivileged port, with exact database
+name `maru_programme_<run-id>` and `MARU_RUNTIME_DATABASE_ROLE=maru_runtime`.
+Query/fragment overrides, foreign databases and ambient libpq targeting/options
+are rejected. Error messages and object representations omit connection secrets;
+callers must never log or serialize the credential-bearing field.
+
+`programme_database.py` prepares an owned disposable database transport, not a
+complete runner. It uses the existing pinned PostgreSQL 17 image, a local Docker
+socket/pipe, one loopback-only ephemeral port, tmpfs data and auto-removal. The
+pinned image must already be cached: startup uses `--pull never`, preventing
+creation delayed by an image download. A fresh
+ownership nonce distinguishes even concurrent attempts with the same run identity.
+Startup/teardown recheck name, labels, image and full container ID. Uncertain start
+failure recovers only that exact owned resource; changed ownership or unverified
+cleanup fails closed. No Docker-wide cleanup or existing-container adoption occurs.
+The internal supervisor requests fast shutdown at lease expiry and force-stops
+its database child after ten further seconds. These process/expiry semantics
+remain **unexecuted native debt**, not a guarantee inferred from mocked tests.
+
+The returned `postgres` administrator transport is only for isolated provisioning;
+it must never serve application traffic or count as runtime-role proof. Separate
+migration/runtime roles, candidate schema installation, guarded application startup,
+realistic setup/roles and P01–P12 remain unfinished. No complete launch command is
+available. The current deferred policy refuses native resource startup.
+
+Four maintained host-only cases in `programme_database_native.py` cover real
+database identity/normal cleanup, body-failure cleanup, live-controller expiry and
+abrupt-controller-exit expiry. The last case also cleans its exact resource if
+expiry fails. They are outside routine discovery and the eight-worker application
+pool, and refuse explicit collection without required policy and opt-in. Under
+#102, run them serially on the supported host after restoring policy, record exact
+head/environment/results and add their evidence to fixture acceptance. They have
+not been collected or executed during preparation. Transport checks cannot replace
+native owner-command, schema, runtime-role, recovery or human acceptance.
+
 Use repository-owned fictional convention names, synthetic people and reserved
 example domains. Do not copy an actual convention roster. Provide one primary
 organization with two editions and a second organization to exercise isolation.

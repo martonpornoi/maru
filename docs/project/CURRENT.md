@@ -11,15 +11,17 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Dormant shared Programme navigation is delivered through
-[PR #163](https://github.com/martonpornoi/maru/pull/163), protected squash
-`2e3ddb13c06122a7c73a491d17d64e4bc071662e` at 2026-09-18 01:24:24 UTC.
-Its tree equals certified head `00fa0c4db5567ab76bac82415855d8aeb783d1f7`;
-clean local main matched origin/main and the protected result. All eight
-retained local gates passed in 5m29s, including 9,837 units in 59.33s and
-103 frontend cases. Hosted quality took 11m59s and units 2m14s; exact-head PR
-gate and CodeQL passed. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-shared-navigation-protected-delivery.md).
+Isolated Programme rehearsal composition is delivered through
+[PR #164](https://github.com/martonpornoi/maru/pull/164), protected squash
+`1045fb14745d5ff1b58f417a4cf9d8dd30ac3e5e` at 2026-09-18 05:49:02 UTC.
+Its tree equals certified head `9efb9d224c65d25cc7d822dad1b878f17f17e7a3`;
+clean local main matched origin/main and the protected result. All eight retained
+local gates passed in 6m33s, including 10,285 units in 60.93s and 103 frontend
+cases. Hosted quality took 11m53s and units 2m12s; exact-head PR gate and all
+CodeQL configurations passed. A certified documentation checkpoint retriggered
+the earlier unprocessed upload without changing protections. PostgreSQL was
+deferred, not certified. See the
+[protected evidence](../checkpoints/2026-09-18-programme-rehearsal-composition-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -36,7 +38,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-integrated-fixture`, from protected PR #163.
+Branch: `codex/programme-fixture-runtime`, from protected PR #164.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -48,17 +50,11 @@ use authority/profile substitutions and cannot be relabelled as native or joined
 acceptance. No database fixture was launched or collected; both current profiles
 remain unchanged.
 
-Preparation is in [PR #164](https://github.com/martonpornoi/maru/pull/164).
-Head `21758543e0a2558f3b8b0cfef18cea3e6f93f495` passed all eight retained local
-gates in 5m33s (10,285 units in 59.80s, 103 frontend cases); its receipt and
-package evidence are archived. Hosted units, quality and PR gate passed, but
-GitHub did not process the JavaScript CodeQL upload. Its analysis job passed
-with an upload-processing timeout; the missing configuration still blocks merge.
-Managed-workflow retries were refused. No merge, bypass, PostgreSQL execution or
-browser acceptance is claimed. A documentation-only checkpoint update requests
-fresh exact-head certification and hosted analysis; earlier evidence does not
-certify that new head. See the [delivery retry checkpoint](../checkpoints/2026-09-18-programme-rehearsal-delivery-retry.md)
-and [preparation checkpoint](../checkpoints/2026-09-18-programme-rehearsal-composition-preparation.md).
+Preparation and its protected delivery are complete, not the entire fixture.
+The initial failed upload remains recorded in the
+[delivery retry checkpoint](../checkpoints/2026-09-18-programme-rehearsal-delivery-retry.md).
+Do not restart the accepted manifest/routing preparation or reuse its receipt
+to certify later runtime changes.
 
 Preserve truthful roots and two people's own acceptances.
 A selected approver email is never their decision; no catch-all role may replace
@@ -71,6 +67,23 @@ Next build the explicit policy-fenced disposable runner and setup scenarios arou
 this composition, retaining real owner authorization and native guards. Do not
 copy the transaction-local schema-test candidate or its abbreviated Workforce
 manifest into a claimed complete fixture. Keep all native execution deferred.
+
+Current local preparation adds strict policy/opt-in/run-scoped runtime inputs and
+an owned loopback database transport with unique ownership nonce, tmpfs,
+container-side expiry and verified exact-resource cleanup. Focused pure/mocked
+feedback passed 97 cases in 0.38s; complete database-free feedback passed 10,382
+cases in 58.96s. Four host-only native transport/expiry cases are maintained but
+uncollected/unexecuted. No Docker process or database has been started. A later
+cleanup-receipt refinement adds the returned ownership nonce and passed all 97
+focused cases in 0.36s; fresh exact-commit certification and protected delivery
+remain pending. Separate migration/runtime
+provisioning, candidate schema/application startup and setup/roles remain next.
+
+PR #165's initial head `5e2d000` passed all eight retained gates in 5m35s
+(10,382 units, 103 frontend cases). Pre-merge review then made readiness explicitly
+TCP rather than the temporary initialization socket and added a regression.
+Fresh certification of the corrected head is required before protected delivery;
+the initial receipt is archived separately and is not reused.
 
 Non-blocking follow-up after #48: the semantic docstring validator's no-argument
 defaults are strings rather than Paths; its maintained explicit `src scripts`
