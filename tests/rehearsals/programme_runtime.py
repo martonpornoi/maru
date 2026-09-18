@@ -61,6 +61,9 @@ def _require_native_readiness(environment):
     from maru.events.programme_setup_readiness import (  # noqa: PLC0415
         programme_setup_database_integrity_is_ready,
     )
+    from tests.rehearsals.programme_runtime_privileges import (  # noqa: PLC0415
+        require_candidate_reference_boundary,
+    )
 
     with connection.cursor() as cursor:
         cursor.execute("SELECT current_database(), session_user, current_user")
@@ -85,6 +88,7 @@ def _require_native_readiness(environment):
         )
         if cursor.fetchall() != [(_PROFILE_CHECK, True, True, 0, False)]:
             raise ProgrammeStartupError("candidate_profile_constraint_changed")
+        require_candidate_reference_boundary(cursor)
     response = readiness(RequestFactory().get("/health/ready", HTTP_HOST="127.0.0.1"))
     if (
         response.status_code != 200
@@ -130,7 +134,11 @@ def build_candidate_application():
     from tests.rehearsals.programme_effects import (  # noqa: PLC0415
         install_isolated_candidate_handlers,
     )
+    from tests.rehearsals.programme_runtime_privileges import (  # noqa: PLC0415
+        install_isolated_candidate_privilege_contract,
+    )
 
+    install_isolated_candidate_privilege_contract()
     install_isolated_candidate_handlers()
     accounted = check_isolated_candidate()
     _require_native_readiness(environment)

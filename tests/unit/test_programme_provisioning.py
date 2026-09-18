@@ -12,6 +12,7 @@ from unittest.mock import Mock
 import psycopg
 import pytest
 
+from tests.rehearsals import programme_candidate_acl as candidate_acl
 from tests.rehearsals import programme_provisioning as provisioning
 from tests.rehearsals import programme_runtime_environment as runtime
 from tests.rehearsals.programme_database import (
@@ -186,6 +187,68 @@ def test_candidate_migration_failure_never_grants_runtime_acl(prepared):
     with pytest.raises(provisioning.ProgrammeProvisioningError, match="overlay_failed"):
         provisioning.provision_programme_runtime(LEASE, candidate_schema=True)
     assert len(prepared.connection.statements) == 5
+
+
+@pytest.mark.parametrize(
+    ("schema", "writes"), [(False, True), (True, 1), (True, "true"), (True, None)]
+)
+def test_candidate_write_option_fails_before_resources(prepared, schema, writes):
+    with pytest.raises(
+        provisioning.ProgrammeProvisioningError, match="invalid_candidate_write"
+    ):
+        provisioning.provision_programme_runtime(
+            LEASE, candidate_schema=schema, candidate_writes=writes
+        )
+    prepared.docker.assert_not_called()
+    prepared.connect.assert_not_called()
+    prepared.child.assert_not_called()
+
+
+def test_candidate_grants_follow_baseline_probe_and_require_genuine_probe(
+    prepared, monkeypatch
+):
+    ordered = Mock()
+    grants = Mock()
+    monkeypatch.setattr(candidate_acl, "install_candidate_table_privileges", grants)
+    ordered.attach_mock(prepared.child, "child")
+    ordered.attach_mock(grants, "grants")
+    result = provisioning.provision_programme_runtime(
+        LEASE, candidate_schema=True, candidate_writes=True
+    )
+    assert [call[0] for call in ordered.mock_calls] == [
+        "child",
+        "child",
+        "child",
+        "grants",
+        "child",
+    ]
+    baseline, candidate = prepared.child.call_args_list[-2:]
+    assert baseline.args[0] == ["-c", provisioning._PROBE]
+    grants.assert_called_once_with(LEASE)
+    assert candidate.args[0] == ["-c", provisioning._CANDIDATE_PROBE]
+    assert candidate.args[1] == baseline.args[1]
+    assert candidate.kwargs["expected_output"] == (
+        "programme-candidate-runtime-role-verified"
+    )
+    assert result.database_url == candidate.args[1]["MARU_DATABASE_URL"]
+
+
+@pytest.mark.parametrize("failure", ["grant", "probe"])
+def test_failed_candidate_privileges_never_return_runtime_endpoint(
+    prepared, monkeypatch, failure
+):
+    error = provisioning.ProgrammeProvisioningError("candidate_refused")
+    grants = Mock(side_effect=error if failure == "grant" else None)
+    monkeypatch.setattr(candidate_acl, "install_candidate_table_privileges", grants)
+    if failure == "probe":
+        prepared.child.side_effect = [None, None, None, error]
+    with pytest.raises(
+        provisioning.ProgrammeProvisioningError, match="candidate_refused"
+    ):
+        provisioning.provision_programme_runtime(
+            LEASE, candidate_schema=True, candidate_writes=True
+        )
+    assert prepared.child.call_count == (3 if failure == "grant" else 4)
 
 
 @pytest.mark.parametrize("value", [1, "candidate-v1", None])

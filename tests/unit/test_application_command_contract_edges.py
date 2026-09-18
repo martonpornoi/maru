@@ -101,8 +101,7 @@ def test_replay_absence_conflict_and_exact_result() -> None:
     ):
         assert commands._replay(**values).replayed is True
     programme_objects = _first(None)
-    locked_programme = programme_objects.select_for_update.return_value
-    locked_programme.filter.return_value.exists.return_value = True
+    programme_objects.filter.return_value.exists.return_value = True
     with (
         patch.object(commands, "lock_applications_retry_namespace"),
         patch.object(commands.ApplicationCommandReceipt, "objects", _first(None)),

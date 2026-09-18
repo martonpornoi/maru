@@ -139,9 +139,9 @@ credentials and Python/settings overrides. Their in-memory email backend prevent
 external delivery and supplies no invitation acceptance evidence. These are
 non-serving migration/verification processes, not a candidate application server.
 
-`programme_provisioning_native.py` maintains four host-only #102 cases: current
-and candidate-schema provisioning, empty candidate forward/reverse/reapply, and
-physical-constraint drift refusal. Both provisioning variants inspect genuine
+`programme_provisioning_native.py` maintains five host-only #102 cases: current,
+candidate-schema and candidate-write provisioning, empty candidate
+forward/reverse/reapply, and physical-constraint drift refusal. Provisioning variants inspect genuine
 runtime/DDL-owner identities, denied runtime DDL, actual constraint/history and
 refusal to re-provision existing roles. The candidate variant additionally
 checks fresh-child registration, owner catalogs and the continued production
@@ -186,8 +186,8 @@ and P01–P12 are still required.
 Database-free checks compare the entire migration graph and canonical historical
 model state, preserve every unrelated model/constraint, and exercise installation,
 reversal, scope, drift, import-order and failure fences with doubles. They do not
-prove PostgreSQL DDL or runtime behavior. The four maintained native cases above
-remain #102 debt, including three added cases relative to PR #166; populated
+prove PostgreSQL DDL or runtime behavior. The five maintained native cases above
+remain #102 debt, including four added cases relative to PR #166; populated
 owner-command/recovery acceptance also remains mandatory in the complete fixture.
 
 ### Prepared guarded application construction
@@ -201,7 +201,8 @@ demo payments or silenced system checks are enabled.
 
 `programme_runtime.build_candidate_application()` is the prepared construction
 boundary, not a launcher or a command to run during deferral. Before returning
-WSGI it checks those settings, installs real candidate internal Effects handlers
+WSGI it checks those settings, installs the explicit candidate privilege contract
+below and real candidate internal Effects handlers
 while preserving every existing handler, runs isolated compatibility, and demands
 actual native readiness. It opens no socket and creates no account, authority,
 approval or provenance activation. A future owned runner must call this boundary;
@@ -231,6 +232,52 @@ maintained candidate provisioning case additionally expects unactivated authorit
 to refuse startup. That case and positive startup remain unexecuted #102 debt;
 database-free doubles prove control flow only. Restore the tracked PostgreSQL
 policy through protected delivery after preparation, before any native run.
+
+### Prepared candidate runtime privileges
+
+Canonical production ACLs intentionally leave dormant Programme relations
+read-only. `programme_runtime_privileges.py` declares 82 literal candidate tables
+and their INSERT, UPDATE or DELETE operations. This is a reviewed fixture contract,
+not permissions derived automatically from all installed models or capabilities.
+UPDATE includes the owner's actual row-lock requirements, including joined retained
+sources; native immutable-history guards still forbid rewriting that evidence.
+Only draft call tracks/formats require all three operations. Native execution must
+verify the declared boundary and the complete command journey before acceptance.
+
+The closed `candidate_writes=True` provisioning option requires candidate schema
+installation. After the canonical ACL and genuine baseline role probe, the grant
+plane rechecks the exact live lease, database/admin identity, PostgreSQL major,
+candidate migration history, empty edition table and initially read-only targets.
+An exclusive edition-table lock prevents racing first use. It grants only the
+literal table operations in one transaction, then rechecks resource ownership.
+Any partial failure requires disposal of the owned fixture, never adoption/retry.
+It changes no production SQL, owner, DDL, function allowlist or grant option.
+
+A fresh runtime child installs five explicit relation-class declarations for the
+candidate and calls the **unchanged real native role-safety query** through its
+genuine `maru_runtime` login. Installation requires the exact candidate object,
+unchanged baseline classes/query/function allowlist and the isolated policy fence.
+No probe, result, authorization or native guard is replaced. Startup additionally
+denies table/column REFERENCES across current and SET-reachable roles, including
+the two candidate tables using the probe's ordinary CRUD class. Six protected
+relations remain SELECT-only: migration history, provenance activation and latch,
+invitation retention policy, native audit witnesses and Scheduling's native
+dependency change journal. Production classes remain unchanged outside this child.
+
+Five host-only provisioning cases now include the write-enabled variant. All
+three provisioning variants inspect all 82 actual table privilege matrices, real
+runtime identity and denied DDL. They remain uncollected/unexecuted under #102.
+The installed privilege matrix is necessary, not proof of a working user journey.
+The complete fixture still needs genuine provenance/invitation setup, real-person
+role actions, owned HTTPS serving and P01–P12 execution. No successful native
+startup or production promotion follows from database-free preparation tests.
+
+Applications retry inspection also retains its shared transaction advisory lock
+while reading immutable receipts without FOR UPDATE. This avoids requiring UPDATE
+on read-only cross-family receipts; admission and retry collision semantics remain
+unchanged. A maintained case in `test_database_role_safety.py` will verify genuine
+runtime receipt permissions and the denied old lookup after #102 restoration.
+It too remains uncollected/unexecuted, and does not replace full workflow acceptance.
 
 Use repository-owned fictional convention names, synthetic people and reserved
 example domains. Do not copy an actual convention roster. Provide one primary
