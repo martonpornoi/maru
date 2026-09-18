@@ -63,3 +63,25 @@ assertions. Genuine HTTP/browser and representative-human acceptance remain
 separate. Restore tracked required PostgreSQL policy only after preparation,
 then execute #102/#97/#109 and obtain #92 evidence before final promotion.
 #108/#48 remain open; this preparation is not native or complete-module acceptance.
+
+## Protected delivery
+
+[PR #174](https://github.com/martonpornoi/maru/pull/174) squash-merged at
+2026-09-18 18:27:43 UTC as `5bbfa7d4609fdc8b04b0a42c30660980d7def45e`.
+Its tree `6af78bb1f4040f14b3b5489acbcd8503ff762529` equals certified head
+`a0fcb00f845234ddb49ba733ff1d20047080f099`. All eight retained local gates
+passed in 337.84s, including 10,799 units in 61.74s and 103 frontend cases.
+Five artifacts were archived and hash-verified under
+`.tools/certification-evidence/issue108-a0fcb00-deferred/`; receipt SHA-256:
+`3B2C9F5B7BF00C43035EC8E96EF95B6B22CCA3FCF57E7500C0390A4529254B3C`.
+The v4 receipt records PostgreSQL deferred, zero native database instances,
+and null combined coverage/headroom, not a complete acceptance pass.
+
+Hosted run `35379044459` passed: quality 11m41s, units 1m42s and PR gate 2s.
+CodeQL run `35379040177` completed all three languages; processed analyses
+matched the exact head with no errors. Complete review/thread/closure pages
+contained no blockers or unintended parent closures; mergeability was clean.
+The squash used `--match-head-commit`. Clean separate local main fast-forwarded
+to origin/main and the protected result; the unrelated repair worktree stayed
+at `aa1ede69fb880dcb12d627bbfc049fba23166e68`. #108 records only narrow
+preparation completion; #102 retains native debt. Both #108 and #48 remain open.

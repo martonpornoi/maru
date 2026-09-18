@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import psycopg
 import pytest
+from psycopg import sql
 
 from tests.rehearsals.programme_runner import isolated_programme_application
 from tests.rehearsals.programme_runtime_environment import (
@@ -14,7 +15,7 @@ require_programme_rehearsal_request()
 pytestmark = pytest.mark.integration
 
 
-def test_native_real_call_review_private_items_and_confirmed_hosting(monkeypatch):
+def test_native_real_proposal_items_hosting_and_private_planning(monkeypatch):
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_RUN_ID", uuid4().hex)
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS", "3600")
     with isolated_programme_application(
@@ -86,5 +87,44 @@ def test_native_real_call_review_private_items_and_confirmed_hosting(monkeypatch
                 "WHERE programme_item_id = %s",
                 (items.ceremony.item_id,),
             ).fetchone() == (0,)
-    # This proves no actual HTTPS form, representative human, complete cross-tenant
-    # inventory or P05-P12 outcome. Those remain separate acceptance checkpoints.
+        planning = fixture.prepare_planning(result, reviewed, items)
+        with psycopg.connect(
+            fixture.runtime.database_url, connect_timeout=5
+        ) as connection:
+            assert connection.execute(
+                "SELECT aggregate_version, lifecycle "
+                "FROM public.scheduling_schedulingcandidate "
+                "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                (planning.candidate_id, planning.organization_id, planning.edition_id),
+            ).fetchone() == (planning.candidate_version, "draft")
+            assert connection.execute(
+                "SELECT placement_count "
+                "FROM public.scheduling_schedulingcandidaterevision "
+                "WHERE id = %s AND candidate_id = %s AND sequence = %s",
+                (
+                    planning.candidate_revision_id,
+                    planning.candidate_id,
+                    planning.candidate_version,
+                ),
+            ).fetchone() == (3,)
+            assert connection.execute(
+                "SELECT placement_count "
+                "FROM public.scheduling_schedulingcandidaterevision "
+                "WHERE id = %s AND candidate_id = %s",
+                (planning.conflicted_revision_id, planning.conflicted_candidate_id),
+            ).fetchone() == (3,)
+            for table in (
+                "scheduling_schedulingreservationintent",
+                "scheduling_schedulingreleaseapproval",
+                "scheduling_schedulingrelease",
+                "venues_venuebooking",
+            ):
+                assert connection.execute(
+                    sql.SQL(
+                        "SELECT count(*) FROM public.{} "
+                        "WHERE organization_id = %s AND edition_id = %s"
+                    ).format(sql.Identifier(table)),
+                    (planning.organization_id, planning.edition_id),
+                ).fetchone() == (0,)
+    # This proves no actual HTTPS/browser journey, physical approval, representative
+    # human, complete cross-tenant inventory or P06-P12 acceptance. Those stay open.

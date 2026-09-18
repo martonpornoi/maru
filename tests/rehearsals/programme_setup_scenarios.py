@@ -205,7 +205,15 @@ def _approve_initial_roles(result, *, people, intake_person):
 
 
 def approve_synthetic_role(
-    setup, *, people, recipient, code, level, department_id=None
+    setup,
+    *,
+    people,
+    recipient,
+    code,
+    level,
+    department_id=None,
+    resource_binding_id=None,
+    resource_kind="",
 ):
     """Request then independently approve one existing immutable scoped recipe."""
     from django.utils import timezone  # noqa: PLC0415
@@ -221,7 +229,12 @@ def approve_synthetic_role(
     )
 
     scope = ProgrammeRoleScope(
-        setup.organization_id, setup.edition_id, level, department_id=department_id
+        setup.organization_id,
+        setup.edition_id,
+        level,
+        department_id=department_id,
+        resource_binding_id=resource_binding_id,
+        resource_kind=resource_kind,
     )
     request = request_programme_role(
         actor=people[0].authenticate(),

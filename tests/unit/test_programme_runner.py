@@ -16,11 +16,65 @@ from tests.rehearsals.programme_runtime_environment import (
     ProgrammeRehearsalEnvironmentError,
 )
 from tests.unit.test_programme_items_scenario import _result as _items_result
+from tests.unit.test_programme_planning_scenario import _result as _planning_result
 from tests.unit.test_programme_proposal_scenario import _result, _setup
 from tests.unit.test_programme_review_scenario import _result as _review_result
 from tests.unit.test_programme_setup_scenarios import _document
 
 RUN = "1234567890abcdef1234567890abcdef"
+
+
+@pytest.mark.parametrize("failure", [None, "nonzero", "timeout", "oversize", "source"])
+def test_planning_child_keeps_source_chain_and_original_lease_private(
+    launch_seams, monkeypatch, failure
+):
+    setup = _setup()
+    proposal = _result(setup)
+    review = _review_result(setup, proposal)
+    items = _items_result(setup, review)
+    expected = _planning_result(setup, items)
+    run = Mock(
+        return_value=SimpleNamespace(
+            returncode=0, stdout=json.dumps(asdict(expected), default=str)
+        )
+    )
+    if failure == "nonzero":
+        run.return_value.returncode = 2
+    elif failure == "timeout":
+        run.side_effect = subprocess.TimeoutExpired("private", 50)
+    elif failure == "oversize":
+        run.return_value.stdout = "private" * 4096
+    elif failure == "source":
+        items = replace(items, edition_id=_setup().edition_id)
+    monkeypatch.setattr(runner.subprocess, "run", run)
+    with runner.isolated_programme_application() as original:
+        fixture = replace(original, scenario=setup)
+        if failure is None:
+            assert fixture.prepare_planning(proposal, review, items) == expected
+        elif failure == "source":
+            with pytest.raises(RuntimeError, match="result_invalid"):
+                fixture.prepare_planning(proposal, review, items)
+            run.assert_not_called()
+        else:
+            with pytest.raises(
+                runner.ProgrammeHttpsError, match="planning_process_failed"
+            ):
+                fixture.prepare_planning(proposal, review, items)
+    if failure != "source":
+        assert run.call_args.args[0] == [
+            runner.sys.executable,
+            "-m",
+            "tests.rehearsals.programme_planning_scenario",
+        ]
+        options = run.call_args.kwargs
+        assert options["timeout"] == 50.0
+        assert options["stderr"] == subprocess.DEVNULL
+        assert "PRIVATE_KEY" not in options["env"]
+        assert items.ceremony_host.password not in repr(options["env"])
+        assert json.loads(options["input"])["items"]["ceremony"]["item_id"] == str(
+            items.ceremony.item_id
+        )
+        assert launch_seams.worker.call_count == 2
 
 
 def test_deferred_policy_precedes_every_resource(monkeypatch):

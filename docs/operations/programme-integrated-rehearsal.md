@@ -494,6 +494,41 @@ but remains uncollected/unexecuted. This is not actual HTTP form, browser, human
 P05–P12 or full isolation acceptance. See the
 [item/hosting checkpoint](../checkpoints/2026-09-18-programme-items-hosting-preparation.md).
 
+### Selected rooms and private timetable composition
+
+`ProgrammeRunningFixture.prepare_planning(proposal, review, items)` carries the
+same verified private source chain into a fixed bounded child. Guarded candidate
+startup and original lease remain mandatory. A new synthetic planner receives
+only the Edition planning recipe; another person receives the explicit
+Organization Venue catalog and Edition selection recipes. Ordinary Venue commands
+create and activate the fictional property and select two configured rooms.
+The room configuration identifier is discovered from the authorized existing
+Venue form using a genuine authenticated in-process Django client. This is neither
+an actual TLS transport nor browser acceptance. The client has CSRF enforcement,
+uses secure requests, rejects redirects/non-private responses and closes its
+session; no forced login, private model read or invented configuration is used.
+Original controllers discover and separately approve each exact-room planning
+scope before hard availability is recorded.
+
+Actual Scheduling commands create one service day inside the existing host window,
+one core ceremony and two explicitly grouped occurrences of the accepted item.
+The first retained candidate deliberately has physical overlap, exceeded capacity
+and the same host in two rooms simultaneously. Actual saved evaluation and fresh
+owner-source review must expose all three blockers. Copying its exact immutable
+revision creates a separate alternative. Two movements correct those conflicts;
+an older write cursor must fail. The original candidate and its placements must
+remain unchanged, and the new saved evaluation must have current complete sources
+without hard blockers or unavailable checks. No warning is automatically accepted,
+and declared unimplemented checks are not represented as passed.
+
+This prepares only the owner-command portion of P05. The maintained composed native
+case remains uncollected/unexecuted while #102 is deferred, and requires zero Venue
+bookings, reservation intents, release approvals and releases after draft planning.
+Physical reservation/independent approval, room combinations, the connected editor's
+pointer/keyboard/forms, remaining failure paths, staffing/accessibility-fit/rest,
+P06–P12 and human acceptance stay separate. See the
+[private timetable checkpoint](../checkpoints/2026-09-18-programme-private-timetable-preparation.md).
+
 ### Scenario people and sessions
 
 Use repository-owned fictional convention names, synthetic people and reserved
