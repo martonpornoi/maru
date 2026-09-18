@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme migration/runtime provisioning preparation is delivered through
-[PR #166](https://github.com/martonpornoi/maru/pull/166), protected squash
-`1f493acc47d121768adf0f5d3b0724e8479914e6` at 2026-09-18 07:20:44 UTC.
-Its tree equals certified head `1dbb93b824d9e321a86fa1b94583f98a24e38813`;
+Isolated Programme candidate installation preparation is delivered through
+[PR #167](https://github.com/martonpornoi/maru/pull/167), protected squash
+`1bcf84a405b099c0becd299c2533c0ac85fffebc` at 2026-09-18 11:54:56 UTC.
+Its tree equals certified head `298039bc179e8b3731c9bd0e6250c74bca99cf16`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m31s, including 10,430 units in 59.60s and 103 frontend
-cases. Hosted quality took 12m00s and units 2m21s; exact-head PR gate and all
+local gates passed in 5m36s, including 10,464 units in 60.19s and 103 frontend
+cases. Hosted quality took 11m57s and units 2m19s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-provisioning-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-18-programme-candidate-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-fixture-candidate`, from protected PR #166.
+Branch: `codex/programme-fixture-startup`, from protected PR #167.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -80,8 +80,8 @@ One additional host-only native provisioning case is maintained but uncollected/
 No Docker command, database, migration or server has been started. Candidate
 installation/startup, real setup/roles and the complete P01–P12 journey remain next.
 
-Prepared explicit pre-model candidate registration and an Events-only real
-migration overlay on this branch. Provisioning's closed opt-in mode installs
+PR #167 delivers explicit pre-model candidate registration and an Events-only real
+migration overlay preparation. Provisioning's closed opt-in mode installs
 current schema then the candidate overlay before unchanged ACLs. Empty-table,
 actual migration-login and server-parsed physical-constraint guards fence forward
 and reverse; any edition blocks reversal. Production migrations, profiles, routes
@@ -97,8 +97,13 @@ not substitute for that contract. Current implementation evidence is recorded in
 the [candidate installation checkpoint](../checkpoints/2026-09-18-programme-candidate-installation.md).
 Focused feedback passed 81 cases in 0.84s; complete database-free feedback passed
 10,464 cases in 60.40s after isolating pytest's temporary directory from a Windows
-permission failure. Exact-head certification/protected delivery is still pending;
-the previous receipt does not certify these changes.
+permission failure. Exact-head retained certification and protected delivery
+passed as above. The new startup branch currently holds only this delivery
+handoff, not joined-startup implementation; the receipt does not certify later
+checkpoint edits. Preserve the accepted #164–#167 preparation rather than
+restarting it. The next compatibility boundary must also connect the real
+candidate/internal Effects handlers while preserving existing handlers, then
+verify actual schema/runtime/provenance readiness before any serving process.
 
 Non-blocking follow-up after #48: the semantic docstring validator's no-argument
 defaults are strings rather than Paths; its maintained explicit `src scripts`
