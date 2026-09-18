@@ -90,20 +90,26 @@ and does not itself mount routes, install handlers or suppress dormancy errors.
 The native provisioning file now maintains four cases (three added), all
 uncollected/unexecuted under #102. No Docker/database/schema-only check was run.
 
-Next: independently validated isolated compatibility and guarded joined startup,
-then genuine setup/roles and P01–P12. The three owner dormancy checks intentionally
-still reject adoption; a blanket ignored-error list or relaxed test settings must
-not substitute for that contract. Current implementation evidence is recorded in
-the [candidate installation checkpoint](../checkpoints/2026-09-18-programme-candidate-installation.md).
-Focused feedback passed 81 cases in 0.84s; complete database-free feedback passed
-10,464 cases in 60.40s after isolating pytest's temporary directory from a Windows
-permission failure. Exact-head retained certification and protected delivery
-passed as above. The new startup branch currently holds only this delivery
-handoff, not joined-startup implementation; the receipt does not certify later
-checkpoint edits. Preserve the accepted #164–#167 preparation rather than
-restarting it. The next compatibility boundary must also connect the real
-candidate/internal Effects handlers while preserving existing handlers, then
-verify actual schema/runtime/provenance readiness before any serving process.
+Prepared independent isolated compatibility and guarded WSGI construction. The
+three actual owner dormancy functions still report production errors; the isolated
+contract independently validates unchanged baseline manifests and the literal
+candidate, invokes every ordinary registered check, and rejects unknown results.
+Real joined Effects handlers preserve existing routes. Strict base-derived settings
+and actual schema/runtime/provenance/setup/role readiness must pass before WSGI
+construction. There is no serving launcher or genuine setup seed yet. No native
+execution or successful startup is claimed. See the
+[startup preparation checkpoint](../checkpoints/2026-09-18-programme-guarded-startup-preparation.md).
+Focused database-free feedback passed 130 cases in 0.62s; complete unit feedback
+passed 10,513 cases in 59.79s. Exact-head certification and protected delivery of
+this increment remain pending; PR #167's receipt does not certify later changes.
+
+Next: deliver this construction boundary, then prepare genuine setup/roles and
+the owned serving runner/P01–P12. The maintainer authorized the full sequence:
+finish preparation first, restore tracked PostgreSQL acceptance through protected
+delivery, then collect #102/#97/#92/#109 evidence and only finally promote the
+supported profile. PostgreSQL remains deferred until that policy restoration;
+representative human acceptance still needs real participants. Preserve the
+accepted #164–#167 preparation rather than restarting it.
 
 Non-blocking follow-up after #48: the semantic docstring validator's no-argument
 defaults are strings rather than Paths; its maintained explicit `src scripts`

@@ -19,9 +19,19 @@ if TYPE_CHECKING:
 
     from django.apps import AppConfig
 
+    from maru.events.adoption import AdoptionProfile
 
-def scheduling_dormancy_problem_codes() -> tuple[str, ...]:
+
+def scheduling_dormancy_problem_codes(
+    *, profiles: Iterable[AdoptionProfile] | None = None
+) -> tuple[str, ...]:
     """Check exact declarations without querying a database or activating a profile.
+
+    Parameters
+    ----------
+    profiles : Iterable[AdoptionProfile] | None, optional
+        Explicit immutable manifests to inspect, or the installed registry.
+        Inspection does not change the default deployment check or adoption.
 
     Returns
     -------
@@ -58,7 +68,7 @@ def scheduling_dormancy_problem_codes() -> tuple[str, ...]:
             problems.add("catalog.event-missing-or-mismatched")
     if any(name in event_names for name, _ in NON_EDITION_EFFECT_ROUTES):
         problems.add("dormancy.non-edition-effect-route")
-    for profile in ADOPTION_PROFILES.values():
+    for profile in ADOPTION_PROFILES.values() if profiles is None else profiles:
         if "scheduling" in profile.modules:
             problems.add("dormancy.module-adopted")
         if profile.capability_codes & dormant_capabilities:

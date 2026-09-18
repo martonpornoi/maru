@@ -178,10 +178,10 @@ tracked policy and isolated runtime environment, rejects previously loaded Event
 consumers/models and changed baseline keys/choices/selectors, and preserves both
 current manifest objects while extending immutable mappings with the closed
 candidate. No route, handler, authority, role or check is changed by this function.
-There is deliberately no settings/server entrypoint invoking it yet. The three
-owner dormancy checks remain intact: registration alone is **not** successful
-startup, schema proof or acceptance. Independently validated joined compatibility
-and guarded startup, genuine setup/role scenarios and P01–P12 are still required.
+The isolated runtime settings invoke it before model imports. The three owner
+dormancy checks remain intact: registration alone is **not** successful startup,
+schema proof or acceptance. Genuine setup/role scenarios, native startup evidence
+and P01–P12 are still required.
 
 Database-free checks compare the entire migration graph and canonical historical
 model state, preserve every unrelated model/constraint, and exercise installation,
@@ -189,6 +189,48 @@ reversal, scope, drift, import-order and failure fences with doubles. They do no
 prove PostgreSQL DDL or runtime behavior. The four maintained native cases above
 remain #102 debt, including three added cases relative to PR #166; populated
 owner-command/recovery acceptance also remains mandatory in the complete fixture.
+
+### Prepared guarded application construction
+
+`programme_runtime_settings.py` derives from base settings, never test settings.
+It requires the isolated policy/environment and actual runtime process role,
+keeps exact provenance, privileged step-up, closure and invitation encryption
+required, and admits only the literal loopback host. Synthetic email is retained
+in process; it is not external invitation-delivery evidence. No test tokens,
+demo payments or silenced system checks are enabled.
+
+`programme_runtime.build_candidate_application()` is the prepared construction
+boundary, not a launcher or a command to run during deferral. Before returning
+WSGI it checks those settings, installs real candidate internal Effects handlers
+while preserving every existing handler, runs isolated compatibility, and demands
+actual native readiness. It opens no socket and creates no account, authority,
+approval or provenance activation. A future owned runner must call this boundary;
+ordinary `runserver` is not the supported fixture entrypoint.
+
+`programme_compatibility.py` invokes every ordinary registered Django check without
+changing the registry. Only the exact three known owner functions' exact expected
+dormancy results have an explicit alternative contract: the two original immutable
+manifests are independently checked as dormant, and the literal candidate is
+validated against the real owner catalog. Missing/replaced checks, changed
+problem sets, extra messages and any other warning/error refuse construction.
+The returned three IDs are reported as explicitly accounted-for dormant checks,
+not as passed production checks. Deployment/production transport is not certified.
+
+Programme, Scheduling and Applications' read-only dormancy validators accept
+explicit manifest snapshots for that independent baseline inspection. Programme
+also accepts explicit declared profile codes and persistence pairs. Their default
+arguments and registered production checks still inspect the actual installed
+registries; no production profile gains an exemption or new adoption authority.
+
+Native readiness requires the exact run database and actual `maru_runtime` login,
+candidate migration history and a validated exact physical profile constraint,
+then genuine core health, Programme setup integrity and role integrity. The
+declared PG17 constraint expression is **not an observed fingerprint**: native
+acceptance must confirm it, and any mismatch fails without normalization. The
+maintained candidate provisioning case additionally expects unactivated authority
+to refuse startup. That case and positive startup remain unexecuted #102 debt;
+database-free doubles prove control flow only. Restore the tracked PostgreSQL
+policy through protected delivery after preparation, before any native run.
 
 Use repository-owned fictional convention names, synthetic people and reserved
 example domains. Do not copy an actual convention roster. Provide one primary

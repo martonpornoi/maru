@@ -17,9 +17,26 @@ if TYPE_CHECKING:
 
     from django.apps import AppConfig
 
+    from maru.events.adoption import AdoptionProfile
 
-def programme_dormancy_problem_codes() -> tuple[str, ...]:
+
+def programme_dormancy_problem_codes(
+    *,
+    profiles: Iterable[AdoptionProfile] | None = None,
+    profile_codes: Iterable[str] | None = None,
+    persisted_profile_keys: Iterable[tuple[str, int]] | None = None,
+) -> tuple[str, ...]:
     """Return deterministic defects in registration or profile dormancy.
+
+    Parameters
+    ----------
+    profiles : Iterable[AdoptionProfile] | None, optional
+        Explicit immutable manifests to inspect, or the installed registry.
+        This read-only projection neither installs nor admits a profile.
+    profile_codes : Iterable[str] | None, optional
+        Explicit declared codes, or the installed profile enumeration.
+    persisted_profile_keys : Iterable[tuple[str, int]] | None, optional
+        Explicit persistence pairs, or the installed independent declarations.
 
     Returns
     -------
@@ -57,15 +74,22 @@ def programme_dormancy_problem_codes() -> tuple[str, ...]:
         for event_name, _destination in NON_EDITION_EFFECT_ROUTES
     ):
         problems.add("dormancy.non-edition-effect-route")
-    if any(member.value == "programme_operations" for member in AdoptionProfileCode):
+    declared_codes = (
+        (member.value for member in AdoptionProfileCode)
+        if profile_codes is None
+        else profile_codes
+    )
+    persisted_keys = (
+        PERSISTED_ADOPTION_PROFILE_KEYS
+        if persisted_profile_keys is None
+        else persisted_profile_keys
+    )
+    if "programme_operations" in declared_codes:
         problems.add("dormancy.profile-enum-active")
-    if any(
-        code == "programme_operations"
-        for code, _version in PERSISTED_ADOPTION_PROFILE_KEYS
-    ):
+    if any(code == "programme_operations" for code, _version in persisted_keys):
         problems.add("dormancy.profile-persistence-active")
 
-    for profile in ADOPTION_PROFILES.values():
+    for profile in ADOPTION_PROFILES.values() if profiles is None else profiles:
         if "programme" in profile.modules:
             problems.add("dormancy.module-adopted")
         if profile.capability_codes & PROGRAMME_CAPABILITY_CODES:
