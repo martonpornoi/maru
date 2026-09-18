@@ -64,3 +64,27 @@ the scanner image cache until a deliberate reviewed refresh, and require current
 actual signature evidence before execution. Later restore tracked required policy,
 run #102/#97/#109 and obtain genuinely human #92 evidence before final promotion.
 #108/#48 remain open. No image/container/database/migration/server/browser was run.
+
+## Protected delivery
+
+[PR #172](https://github.com/martonpornoi/maru/pull/172) squash-merged at
+2026-09-18 17:29:28 UTC as `4d380854215995d531c7e5a583f0cb15a5dee403`.
+Its tree `7d9486287d0f8bb99210470e5c37a98786009942` equals certified head
+`f14363907d2eff0e5751a8bde0703feb167c479d` exactly. The separate clean main
+worktree fast-forwarded to the same origin/main commit; unrelated repair checkout
+`aa1ede69fb880dcb12d627bbfc049fba23166e68` was preserved.
+
+All eight exact-head retained local gates passed in 391.06s (6m31s), including
+10,723 units in 63.02s and 103 frontend cases. The v4 receipt explicitly records
+`postgresql_deferred`, zero native/database instances and null combined coverage
+and measured timing headroom. Five artifacts were archived and hash-verified in
+`.tools/certification-evidence/issue108-f143639-deferred/`; receipt SHA-256 is
+`DC5458F9C5A4BD0DA33451004708D3F2C8EFBD9C1BEB94D96CBA3106D0E63043`.
+
+Hosted quality passed in 11m13s and units in 1m42s
+([run 35373424837](https://github.com/martonpornoi/maru/actions/runs/35373424837)).
+The exact-head aggregate PR gate passed, all three processed CodeQL configurations
+reported the same commit without errors, and fully paginated review/closing-issue
+checks showed no unresolved conversation, blocking review or unintended closure.
+Native scanner/P02 acceptance remains unexecuted; this delivery does not close
+#108, #109, #102 or #48.

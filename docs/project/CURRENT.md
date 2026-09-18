@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme owned HTTPS and genuine setup preparation are delivered through
-[PR #171](https://github.com/martonpornoi/maru/pull/171), protected squash
-`5e85254ac7e9a08460620e8be472a0e1165a46ce` at 2026-09-18 17:05:14 UTC.
-Its tree equals certified head `c8942d284969f67ba8dab13c5bbfb628b0295097`;
+Isolated Programme real-scanner preparation is delivered through
+[PR #172](https://github.com/martonpornoi/maru/pull/172), protected squash
+`4d380854215995d531c7e5a583f0cb15a5dee403` at 2026-09-18 17:29:28 UTC.
+Its tree equals certified head `f14363907d2eff0e5751a8bde0703feb167c479d`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m39s, including 10,692 units in 60.51s and 103 frontend
-cases. Hosted quality took 11m22s and units 2m10s; exact-head PR gate and all
+local gates passed in 6m31s, including 10,723 units in 63.02s and 103 frontend
+cases. Hosted quality took 11m13s and units 1m42s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-https-setup-preparation.md).
+[protected evidence](../checkpoints/2026-09-18-programme-real-scanner-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-scanner-preparation`, from protected PR #171.
+Branch: `codex/programme-proposal-review-preparation`, from protected PR #172.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -63,8 +63,8 @@ The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal
 defines twelve checkpoints; it is not an executable or accepted complete fixture.
 #108/#48 remain open and final promotion waits for #102/#97/#92/#109.
 
-Next build the explicit policy-fenced disposable runner and setup scenarios around
-this composition, retaining real owner authorization and native guards. Do not
+Finish the complete journey around the prepared policy-fenced disposable runner
+and setup scenarios, retaining real owner authorization and native guards. Do not
 copy the transaction-local schema-test candidate or its abbreviated Workforce
 manifest into a claimed complete fixture. Keep all native execution deferred.
 
@@ -96,7 +96,8 @@ contract independently validates unchanged baseline manifests and the literal
 candidate, invokes every ordinary registered check, and rejects unknown results.
 Real joined Effects handlers preserve existing routes. Strict base-derived settings
 and actual schema/runtime/provenance/setup/role readiness must pass before WSGI
-construction. There is no serving launcher or genuine setup seed yet. No native
+construction. That increment did not yet supply serving or genuine setup;
+the later preparation below now supplies those paths. No native
 execution or successful startup is claimed. See the
 [startup preparation checkpoint](../checkpoints/2026-09-18-programme-guarded-startup-preparation.md).
 Focused database-free feedback passed 130 cases in 0.62s; complete unit feedback
@@ -145,7 +146,7 @@ personas, purpose-specific roles, content and isolation scenarios remain next.
 See the [HTTPS/setup checkpoint](../checkpoints/2026-09-18-programme-https-setup-preparation.md).
 Complete iterative database-free feedback passed 10,692 cases in 61.02s; Ruff and
 diff checks passed. Exact-head retained certification and protected delivery passed
-for this HTTPS/setup increment as recorded above.
+for this HTTPS/setup increment as recorded in its checkpoint.
 
 Prepared a pinned real ClamAV dependency for the optional private-file fixture path,
 with owned internal network, restricted non-root daemon, exact health/version and
@@ -155,8 +156,25 @@ and pin the inspected local daemon against a concurrent context switch. One new
 host-only scanner case is maintained but uncollected/unexecuted under #102. Focused
 mocked/pure transport feedback passed 93 cases in 0.48s before the absolute-epoch
 expiry refinement; complete iterative feedback then passed 10,723 units in 59.64s.
-Fresh exact-head retained certification and protected delivery remain pending.
+Exact-head retained certification and protected delivery passed as recorded above.
 See the [scanner checkpoint](../checkpoints/2026-09-18-programme-real-scanner-preparation.md).
+
+Prepared genuine call/proposal/private-file/consent/submission and independent
+two-stage review-to-private-item conversion composition. Real owner commands and
+queries retain exact scope, source/version/retry, ordinary authorization and native
+guards. Separate staff personas receive narrow independently approved recipes;
+contributors inspect/acknowledge only their own exact revision and decision.
+Pending/recused review reads must deny; anonymous review must omit profiles/files;
+conversion uses explicit private text and exact retained retry. Fixed bounded
+children preserve original lease and keep credentials away from logs/argv/web.
+Focused database-free tests passed 110 cases in 0.72s; complete feedback passed
+10,777 units in 60.78s with three existing warnings. Ruff/diff passed; clean
+exact-head certification and delivery are pending. One composed host-only case
+is maintained but uncollected/unexecuted.
+No actual P02/P03/P04 or browser acceptance is claimed. Finish P04's core items,
+readiness/layers/host consent, then P05–P12 and complete isolation assertions.
+See the [composition checkpoint](../checkpoints/2026-09-18-programme-proposal-review-preparation.md).
+
 The maintainer authorized the full sequence:
 finish preparation first, restore tracked PostgreSQL acceptance through protected
 delivery, then collect #102/#97/#92/#109 evidence and only finally promote the
