@@ -44,6 +44,9 @@ def _strict_settings():
         DEMO_PAYMENT_ADAPTER_ENABLED=False,
         SILENCED_SYSTEM_CHECKS=[],
         EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        SESSION_COOKIE_SECURE=True,
+        CSRF_COOKIE_SECURE=True,
+        SECURE_SSL_REDIRECT=True,
     )
 
 
@@ -380,6 +383,9 @@ def test_web_builder_refuses_owner_or_worker_secret_even_when_empty(
         ("DEMO_PAYMENT_ADAPTER_ENABLED", True),
         ("SILENCED_SYSTEM_CHECKS", ["programme.E001"]),
         ("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"),
+        ("SESSION_COOKIE_SECURE", False),
+        ("CSRF_COOKIE_SECURE", False),
+        ("SECURE_SSL_REDIRECT", False),
         ("SETTINGS_MODULE", "maru.settings.test"),
     ],
 )

@@ -11,17 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme runtime-permission preparation and immutable retry-read repair
-are delivered through [PR #169](https://github.com/martonpornoi/maru/pull/169),
-protected squash `e5d78b149a162dba5456aa56b64a0d58d878ca3f` at
-2026-09-18 15:58:03 UTC.
-Its tree equals certified head `c8ff7275233a24ba453a2b73ccd1cfd44af6a564`;
+Isolated Programme stopped-foundation and worker preparation are delivered through
+[PR #170](https://github.com/martonpornoi/maru/pull/170), protected squash
+`5a0ffdca794a8ebd723638331fb2e4b826b52de5` at 2026-09-18 16:29:28 UTC.
+Its tree equals certified head `cb32d27ef3051649c6387246dc9b46eb3c74fcaf`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 6m16s, including 10,561 units in 61.60s and 103 frontend
-cases. Hosted quality took 12m15s and units 2m13s; exact-head PR gate and all
+local gates passed in 5m34s, including 10,619 units in 60.72s and 103 frontend
+cases. Hosted quality took 11m57s and units 2m20s; exact-head PR gate and all
 processed CodeQL configurations passed. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-candidate-runtime-permissions.md).
+[protected evidence](../checkpoints/2026-09-18-programme-stopped-foundation-bootstrap.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -38,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-fixture-bootstrap`, from protected PR #169.
+Branch: `codex/programme-https-setup`, from protected PR #170.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -116,7 +115,7 @@ passed as above. Five host-only provisioning cases and the added runtime receipt
 permission regression remain uncollected/unexecuted under #102. See the
 [permission preparation checkpoint](../checkpoints/2026-09-18-programme-candidate-runtime-permissions.md).
 
-Next: genuine setup/roles and the owned serving runner/P01–P12. Verify real runtime
+Next: complete P01–P12 preparation and later native acceptance. Verify real runtime
 writes/locks/native guards after policy restoration; preparation is not acceptance.
 Do not use an owner login for application work or replace readiness with a stub.
 Prepared ephemeral separated fixture material, stopped genuine provenance and
@@ -128,13 +127,25 @@ rejects owner/worker secret contamination. Six host-only provisioning cases now
 include genuine bootstrap/worker/application construction; all remain uncollected
 and unexecuted. Iterative complete feedback passed 10,611 units in 59.75s before
 the final web/origin guards; the final combined focused set passed 166 in 1.06s.
-Fresh exact-head retained certification and hosted delivery of this increment
-remain pending. See the
+Exact-head retained certification and protected delivery passed as recorded above.
+See the
 [bootstrap preparation checkpoint](../checkpoints/2026-09-18-programme-stopped-foundation-bootstrap.md).
 
-Next implement the owned HTTPS runner, truthful person creation/setup/role actions
-and P01–P12. No full launcher or successful native startup is claimed; no production
-trust/configuration changes are needed.
+Prepared the owned HTTPS context and three genuine-owner setup compositions:
+short-lived loopback-only TLS, real dependency health, independent web expiry/parent
+EOF, ordered owned cleanup, secure cookies and no system trust changes. Setup uses
+actual password authentication, delivered single-use Identity verification,
+separate synthetic controllers' own invitation responses and independent exact
+Edition/Department role decisions. Existing Executive Board/Maru-operator roots
+are preserved; no fake verification or broad grant is introduced. Secret setup
+material travels only in dedicated child pipes and redacted in-memory handles.
+Three host-only HTTPS/setup scenarios are maintained but uncollected/unexecuted;
+no successful native startup or complete journey is claimed. Further P02–P12
+personas, purpose-specific roles, content and isolation scenarios remain next.
+See the [HTTPS/setup checkpoint](../checkpoints/2026-09-18-programme-https-setup-preparation.md).
+Complete iterative database-free feedback passed 10,692 cases in 61.02s; Ruff and
+diff checks passed. Fresh exact-head retained certification and protected delivery
+remain pending for this HTTPS/setup increment.
 The maintainer authorized the full sequence:
 finish preparation first, restore tracked PostgreSQL acceptance through protected
 delivery, then collect #102/#97/#92/#109 evidence and only finally promote the

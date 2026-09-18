@@ -332,8 +332,69 @@ postconditions, one actual worker cycle and separate secret-free WSGI constructi
 It starts no web socket. It and all other native cases remain uncollected/unexecuted
 during deferral. Database-free tests exercise real ephemeral cryptographic parsers
 and mocked control flow, not native activation or successful startup. The complete
-owned HTTPS runner, verified people, three setup modes, own representation/role
-actions and P01–P12 remain unfinished; there is still no complete launch command.
+owned HTTPS runner and setup composition are prepared below, but successful native
+startup and P01–P12 remain unfinished. There is still no complete journey launcher.
+
+### Owned HTTPS and genuine setup composition
+
+`programme_runner.isolated_programme_application(setup_mode=...)` is an explicit
+host-only preparation boundary. It first checks tracked required policy and run
+opt-in, reserves a literal loopback port, creates separate ephemeral material, owns
+the disposable database, and provisions real stopped foundations/candidate grants.
+An actual invitation-worker cycle precedes serving. The optional closed modes are
+`new_foundation`, `existing_organization` and `existing_series`; omit the option for
+foundation/transport diagnostics without people or editions. This is not a CLI for
+the complete P01–P12 journey, production hosting or a human acceptance receipt.
+
+The fixed setup child receives its administrator password only through a dedicated
+stdin pipe, not command-line arguments, environment, persistent files or logs.
+It constructs the genuinely guarded application before setup, authenticates the
+actual administrator and requires an empty organization/edition world with only
+the bootstrap account. Partial failure disposes the database; it does not rewrite
+immutable evidence or adopt an existing fixture. Three separate synthetic people
+use real Identity bootstrap, recipient-specific in-memory verification mail,
+single-use challenge consumption and actual password authentication. Verification
+flags and challenge tokens are never manufactured. Synthetic mail is not evidence
+of external delivery, and direct owner calls are not browser/human acceptance.
+
+Two distinct synthetic controllers accept their own representation invitations
+through the owner command before platform activation. New setup creates Maru
+operators; existing-organization setup deliberately preserves a fictional existing
+Executive Board, while existing-series setup preserves Maru operators. The exact
+setup retry recovers the original receipt. Existing root identity, code and version
+must remain unchanged. An independently authenticated second controller then
+approves two explicit initial recipes: Edition coordination for the first controller
+and Department intake for the third ordinary person. No catch-all role, room
+permission, review assignment, volunteer or host relationship is inferred.
+Further purpose-specific people/roles and cross-edition/organization negatives
+remain part of P02–P12 preparation. Separate synthetic accounts do not satisfy #92.
+
+The serving child receives no owner password or worker private key. It binds only
+the reserved `127.0.0.1` port, uses a short-lived self-signed server-only certificate
+for that IP, TLS 1.2 or later, secure session/CSRF cookies and HTTPS redirects.
+Public app static assets are served without exposing media or fixture files.
+No Windows/browser certificate trust store is changed. The parent verifies
+`/health/ready` with only this fixture certificate trusted, no proxy, no redirects,
+bounded response size and every reported dependency healthy before yielding a
+handle. Native browser trust interstitials, cookies and rendered journeys are still
+unverified; do not bypass browser security or describe mocked tests as a rehearsal.
+
+All phases consume the original monotonic deadline. The web child arms expiry and
+parent-pipe EOF self-exit before native readiness, including blocked request/startup
+cases. Normal exit/failure closes the owned keepalive, then bounded terminate/kill
+fallback precedes temporary certificate and verified database disposal. A controller
+crash can leave an expired synthetic certificate directory under `.tools`; remove
+only that exact recorded owned directory after confirming no live process. No
+other container, listener, database or user's file is adopted or cleaned up.
+Explicit `refresh_workers()` runs real delivery/expiry/retention before long
+checkpoints; it neither renews the lease nor fabricates heartbeats.
+
+`programme_https_native.py` maintains three host-only #102 scenarios covering all
+setup modes, actual HTTPS/native readiness, genuine runtime identity, expected
+people/editions and narrow independently attributed decisions. Like the six
+provisioning and four transport cases, they remain uncollected and unexecuted
+while PostgreSQL is deferred. Policy restoration, measured native budget evidence,
+logical recovery #97, integrated #109 and representative humans #92 remain required.
 
 ### Scenario people and sessions
 

@@ -68,3 +68,27 @@ setup modes, separate actual synthetic-person representation/role actions and
 P01–P12. Restore tracked PostgreSQL policy through protected delivery only after
 preparation, then prove #102/#97/#92/#109 before final supported-profile promotion.
 Representative human acceptance remains genuinely human; #108/#48 stay open.
+
+## Protected delivery
+
+PR #170 was normally squash-merged at 2026-09-18 16:29:28 UTC as
+`5a0ffdca794a8ebd723638331fb2e4b826b52de5`. Its tree
+`1939a3fd9d6766a2f9b7b82e6242872cae3b9f87` equals certified head
+`cb32d27ef3051649c6387246dc9b46eb3c74fcaf`. The clean separate main worktree,
+origin/main and protected result were verified equal; the unrelated detached
+repair worktree remained at `aa1ede69fb880dcb12d627bbfc049fba23166e68`.
+
+All eight retained exact-head local gates passed in 333.858s, including 10,619
+unit tests in 60.72s and 103 frontend cases. The v4 receipt truthfully records
+`postgresql_deferred`, zero native executions and null native coverage/headroom.
+Five artifacts were archived and hash-verified under
+`.tools/certification-evidence/issue108-cb32d27-deferred/`; receipt SHA256:
+`ea7d17039be03e23ebb5dd7acb1bb514d747be7534dab8cf652bc8b5d208b8cf`.
+
+Hosted workflow `35367077797` passed: quality 11m57s, units 2m20s and the final
+exact-head PR gate at 16:24:52 UTC. All three CodeQL configurations were processed
+for the same head with no errors. Pre-merge review/closing-reference pagination
+was complete with no reviews, unresolved threads or closing references; the
+current head was CLEAN/MERGEABLE and matched the remote branch. No native run,
+successful fixture startup, human acceptance or supported-profile activation is
+claimed. This receipt does not certify subsequent HTTPS/setup work.
