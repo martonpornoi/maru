@@ -11,56 +11,54 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Dormant guided Programme foundation setup is delivered through
-[PR #160](https://github.com/martonpornoi/maru/pull/160), protected squash
-`dc5623999ee261802e8b25d2d7226923d801f977` at 2026-09-17 22:46:50 UTC.
-Its tree equals certified head `fcd12e22a1871615011589281fc2536e09df0988`;
+Dormant guided Programme access requests are delivered through
+[PR #161](https://github.com/martonpornoi/maru/pull/161), protected squash
+`0aad93595979b31f3b7be6c35961eced63e60f35` at 2026-09-17 23:38:08 UTC.
+Its tree equals certified head `de663717d96d9d49186a8e52f3c4f8c7e7136d9d`;
 clean local main matched origin/main and the protected result. All eight
-retained local gates passed in 5m28s, including 9,601 units in 56.59s and
-103 frontend cases. Hosted quality took 11m56s and units 1m24s; exact-head PR
+retained local gates passed in 5m26s, including 9,713 units in 56.51s and
+103 frontend cases. Hosted quality took 12m13s and units 2m01s; exact-head PR
 gate and CodeQL passed. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-guided-setup-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-18-programme-access-requests-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
 approval storage, #157 canonical independent-audit correction and #158 actual
 request/decision commands, followed by #159's protected reader and genuine-person
-review screen and #160's guided foundation/representation handoff.
+review screen, #160's guided foundation/representation handoff and #161's
+preview-and-confirm access requests with original signed person selection.
 These do not activate either current profile.
 The [setup evidence](../checkpoints/2026-09-17-programme-atomic-setup-protected-delivery.md)
 and [approval schema evidence](../checkpoints/2026-09-17-programme-operational-approval-schema.md)
 retain the separately approved schema-only observations and native debt.
 No prerequisite in that chain needs restarting.
 
-## Current work: guided operational requests (#108)
+## Current work: labelled access-scope navigation (#108)
 
-Branch: `codex/programme-guided-access-requests`, from protected PR #160.
-Implemented exact-scope task choices, known-recipient/independent-approver preview,
-purpose-signed original selection and explicit confirmation through the existing
-request command. No mutable email lookup occurs on confirmation/retry; no grant
-or message is created. The retained receipt reuses the genuine-person review screen.
-Current ordinary controller admission, native integrity and final source/audit
-checks protect disclosure. No schema, runtime privilege, current-profile or
-production-route change.
-Final complete database-free feedback passed 9,713 tests in 55.88s, including
-112 new signature/query/form/view cases. Strict mypy passed 715 source files;
-Ruff and strict documentation checks passed. Database-prohibited browser rehearsal
-covered ordinary preview/keyboard confirmation/receipt, all four scope choice
-surfaces, conflict/uncertain retry, empty/no-match/denied/unavailable states and
-seven widths. Error-text contrast was corrected and observed in the browser.
-Three new maintained native cases remain uncollected/unexecuted under #102;
-native/two-person/assistive acceptance remains #92/#109. Exact-commit certification
-and protected delivery remain pending; see the
-[request-creation checkpoint](../checkpoints/2026-09-18-programme-guided-access-requests.md).
+Branch: `codex/programme-access-scope-navigation`, from protected PR #161.
+Implemented complete bounded labelled Edition/Department/shared Organization Venue/
+exact-room scope choices, with independent current ordinary controller admission,
+native integrity and final source/audit checks before disclosure. Strict read-only
+shared-shell cards link to the actual reserved request/review handlers and provide
+a validated return path. No broader directory grant, hidden count, command, schema,
+runtime privilege, current-profile or production-route change.
 
-The prior approval review's five maintained native cases remain uncollected and
-unexecuted under #102. Its database-prohibited browser observations are component
-evidence, not actual zoom, native independent approval or two-human acceptance.
-Those remaining human checks are recorded in #92.
+Final complete database-free feedback passed 9,789 cases in 56.61s, including 76
+new scope-query/view cases. Strict mypy passed
+717 source files; Ruff and strict documentation checks passed. Browser component
+rehearsal observed Department keyboard creation and exact-room review round trips,
+narrow control and denial/unavailable/overflow/source-change states. All seven
+widths fit, with one H1/main; small link targets were corrected to 44 pixels and
+rechecked. Task-owned server/tabs were cleaned up and viewport reset. Three new
+maintained native cases remain uncollected/unexecuted #102 debt. PR #162 was returned
+to draft after review found an unauthorized overflow-status distinction. Name-free
+current-authority preflight now denies unrelated callers before foundation/inventory
+probing without denying narrow controllers. The previous head's complete receipt is
+preserved; corrected-head certification and hosted delivery are pending. See the
+[scope-choice checkpoint](../checkpoints/2026-09-18-programme-access-scope-choices.md).
 
-Next: finish this increment's protected delivery, then shared navigation and
-the complete isolated synthetic fixture. Preserve truthful roots and two people's
-own acceptances.
+Next: protected delivery, shared-shell Programme entry integration, then the complete
+isolated synthetic fixture. Preserve truthful roots and two people's own acceptances.
 A selected approver email is never their decision; no catch-all role may replace
 Department, Edition, Organization Venue or exact-room scope. ADR 0106 is unchanged.
 The [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)

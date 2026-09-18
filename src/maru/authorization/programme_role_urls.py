@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .programme_role_creation_views import programme_role_creation
+from .programme_role_scope_views import programme_role_scopes
 from .programme_role_views import programme_role_workspace
 
 _BASE = "admin/programme/access/<uuid:organization_id>/<uuid:edition_id>/"
@@ -12,21 +13,27 @@ _TARGETS = (
     ("department", "department/<uuid:department_id>/"),
     ("resource", "room/<uuid:department_id>/<uuid:resource_binding_id>/"),
 )
-urlpatterns = [
-    path(
-        _BASE + suffix + "new/",
-        programme_role_creation,
-        {"level": level},
-        name=f"programme-access-{level}-new",
-    )
-    for level, suffix in _TARGETS
-] + [
-    path(
-        _BASE + suffix + ending,
-        programme_role_workspace,
-        {"level": level},
-        name=f"programme-access-{level}" + ("-request" if ending else ""),
-    )
-    for level, suffix in _TARGETS
-    for ending in ("", "<uuid:request_id>/")
-]
+urlpatterns = (
+    [
+        path(_BASE, programme_role_scopes, name="programme-access-scopes"),
+    ]
+    + [
+        path(
+            _BASE + suffix + "new/",
+            programme_role_creation,
+            {"level": level},
+            name=f"programme-access-{level}-new",
+        )
+        for level, suffix in _TARGETS
+    ]
+    + [
+        path(
+            _BASE + suffix + ending,
+            programme_role_workspace,
+            {"level": level},
+            name=f"programme-access-{level}" + ("-request" if ending else ""),
+        )
+        for level, suffix in _TARGETS
+        for ending in ("", "<uuid:request_id>/")
+    ]
+)

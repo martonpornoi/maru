@@ -32,3 +32,9 @@
   border-inline-start: 0.2rem solid var(--error-fg);
   padding-inline-start: 0.75rem;
 }
+.programme-access-scopes .programme-cards a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  max-inline-size: 100%;
+}

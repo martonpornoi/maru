@@ -176,6 +176,37 @@ Request/decision form errors use high-contrast shared body text with an error bo
 not low-contrast red text alone. Native and integrated/human acceptance remain
 separate; neither current profile mounts these routes.
 
+### Labelled controller scope discovery
+
+`programme_role_scope_choices` provides a bounded complete inventory of independently
+admitted access-management targets for one exact Programme edition. Workforce's
+public current-Department ID reference and Authorization's own typed room bindings
+are candidates only; ordinary persistent-controller proof precedes every label.
+Department or room controllers need no unrelated Workforce directory permission.
+No broad platform fallback, sibling grant, hidden count or partial overflow list
+is introduced. Limits are 256 Departments and 256 room bindings plus Organization
+and Edition; no admitted target is a non-disclosing denial.
+
+Before foundation/inventory discovery, name-free current controller-scope projection
+denies unrelated or foreign authority uniformly, even when a hidden inventory is
+overflowing/unavailable. This preflight is not a grant or a substitute for the actual
+per-target controller checks. Narrow source scopes remain admissible.
+
+Current foundation/person locks, exact profile, integrity, repeated source checks
+and `authorization.programme_role.scopes.read` security-extended audit protect
+disclosure. Metadata contains only the admitted target count. The optional
+`can_enter_programme_role_scopes` query performs metadata-only admission without
+labels or activity audit; it is not yet wired into the shared navigation registry.
+No native latency claim is made for the bounded complete scan.
+
+The reserved scope chooser links to exact existing request/review handlers, verifying
+reverse/resolve name, callable and full scope. Existing screens provide a validated
+backlink. Post-render reauthorization and source comparison suppress changed private
+HTML. Ordinary labelled card links have 44-pixel targets; shared Organization Venue
+consequences are explicit. No schema, runtime privilege, command, current-profile
+or production-route change occurs. Maintained native tests remain deferred under
+#102; shared-shell entry integration and complete fixture remain #108 work.
+
 Requests retain exact normalized intent without creating a bundle or assignment.
 Shared structure/provenance/retirement fences precede the actor/key mutex,
 representation, organization, series, edition, narrower target, retained request,

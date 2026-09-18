@@ -169,6 +169,37 @@ unchanged. Storage alone cannot prove a
 person's action or grant access.
 See the [owning contract](../../modules/authorization.md#dormant-programme-operational-role-contracts).
 
+### Labelled access-scope discovery
+
+The reserved exact organization/Programme-edition `/admin/programme/access/` entry
+offers labelled currently authorized access-management scopes, not a raw identifier
+form. A current ordinary persistent controller may discover their admitted Edition,
+Department, shared Organization Venue and canonical selected-room targets. Narrow
+Department/resource authority does not require a broader Workforce directory grant
+and never implies control over siblings or other tenants. Platform status alone
+does not admit this task.
+
+Before resolving the requested foundation or inventory, Authorization's name-free
+current-authority projection must contain controller authority in the exact context
+or its Organization. This precheck prevents unauthorized callers from distinguishing
+missing, overflowing or unavailable inventories; it never replaces per-target proof.
+Authorization consumes Workforce's complete bounded current-Department identifier
+reference and its own exact typed room-binding references. It independently resolves
+and authorizes each actual scope before reading its display label. The inventory
+is complete-or-unavailable, with at most 256 current Departments and 256 room
+bindings plus the two broader scope candidates; overflow shows no partial list or
+hidden count. No admitted scope means non-disclosing denial, not a labelled empty
+tenant directory. Retired or foreign targets are never substituted.
+
+Each choice leads to the existing own-request inventory or deliberate request
+creator, with the same full route-owned scope. Fixed continuation links must resolve
+to the expected reserved destinations, not the admin catch-all. Source changes,
+lost controller authority, unavailable integrity or failed audit suppress identifying
+output. Sensitive reads are audited and revalidated after rendering. Navigation is
+not permission and does not grant a role, select a scope automatically or activate
+the Programme profile. Shared shell, keyboard-visible ordinary links, narrow cards
+and clear broader-Venue consequences apply; final native/human proof remains separate.
+
 ### Guided operational request creation
 
 Beside the exact-scope approval inventory, a current ordinary persistent controller

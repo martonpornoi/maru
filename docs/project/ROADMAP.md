@@ -863,7 +863,10 @@ Protected own-request readers and actual-person review controls are implemented
 dormant. The guided foundation creation/reuse screen and original-actor receipt
 now hand off to existing truthful representation controls. Guided operational
 request creation previews exact known people and scope before retaining original
-intent for the named approver's own decision. Shared navigation and the complete
+intent for the named approver's own decision. A dormant labelled scope chooser now
+connects independently admitted Department, Edition, shared Organization Venue and
+selected-room access requests/reviews without pasted identifiers. Shared-shell
+entry integration and the complete
 isolated fixture remain unfinished; component
 browser evidence does not replace native/human acceptance.
 These remain components, not an activated departmental workflow. Next are
