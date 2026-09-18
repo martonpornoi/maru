@@ -72,6 +72,14 @@ def isolated_contract(monkeypatch):
     )
     monkeypatch.setattr(contract, "owner", fake_owner)
     monkeypatch.setattr(contract, "require_programme_runtime_environment", Mock())
+    changes = contract.candidate_function_contracts()
+    projected_changes = tuple(
+        (SimpleNamespace(**{attribute: original}), attribute, original, projected)
+        for _module, attribute, original, projected in changes
+    )
+    monkeypatch.setattr(
+        contract, "candidate_function_contracts", Mock(return_value=projected_changes)
+    )
     monkeypatch.setattr(
         contract,
         "adoption",
@@ -99,8 +107,17 @@ def test_installation_changes_only_declared_input_classes_not_probe(isolated_con
         assert getattr(original, name) is baseline
     assert fake_owner._RUNTIME_DATABASE_ROLE_SAFETY_QUERY is contract._QUERY
     assert (
-        fake_owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4 is contract._FUNCTIONS
-    )
+        *contract._FUNCTIONS,
+        *("public." + identity for identity in sorted(contract.HELPERS)),
+    ) == fake_owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4
+    for (
+        module,
+        attribute,
+        original_contract,
+        projected,
+    ) in contract.candidate_function_contracts.return_value:
+        assert getattr(module, attribute) is projected
+        assert projected.functions is original_contract.functions
     with pytest.raises(contract.ProgrammePrivilegeError, match="baseline_changed"):
         contract.install_isolated_candidate_privilege_contract()
 
@@ -170,6 +187,8 @@ def grant_plane(monkeypatch):
     monkeypatch.setattr(acl, "require_programme_rehearsal_request", Mock())
     monkeypatch.setattr(acl, "_verify_lease", verify)
     monkeypatch.setattr(acl.psycopg, "connect", connect)
+    monkeypatch.setattr(acl, "require_helper_catalog", Mock())
+    monkeypatch.setattr(acl, "grant_candidate_helpers", Mock())
     return SimpleNamespace(
         lease=lease, connection=connection, connect=connect, verify=verify
     )
@@ -199,6 +218,10 @@ def test_grant_plane_changes_only_literal_table_operations_after_preflight(grant
         grant_plane.lease, acl.require_programme_rehearsal_request()
     )
     assert grant_plane.verify.call_count == 2
+    acl.require_helper_catalog.assert_called_once_with(
+        grant_plane.connection, runtime_granted=False
+    )
+    acl.grant_candidate_helpers.assert_called_once_with(grant_plane.connection)
 
 
 @pytest.mark.parametrize("stage", ["identity", "schema", "acl"])
@@ -236,3 +259,41 @@ def test_database_failure_is_minimized(grant_plane):
         acl.ProgrammeProvisioningError, match=r"^candidate_acl_installation_failed$"
     ):
         acl.install_candidate_table_privileges(grant_plane.lease)
+
+
+def test_helper_baseline_failure_precedes_all_grants(grant_plane):
+    acl.require_helper_catalog.side_effect = acl.ProgrammeFunctionError(
+        "private detail"
+    )
+    with pytest.raises(
+        acl.ProgrammeProvisioningError, match=r"^candidate_helper_contract_unavailable$"
+    ):
+        acl.install_candidate_table_privileges(grant_plane.lease)
+    acl.grant_candidate_helpers.assert_not_called()
+    assert all(
+        isinstance(call.args[0], str)
+        for call in grant_plane.connection.execute.call_args_list
+    )
+
+
+def test_function_contract_drift_prevents_partial_install(isolated_contract):
+    fake_owner, _original = isolated_contract
+    before = vars(fake_owner).copy()
+    contract.candidate_function_contracts.side_effect = acl.ProgrammeFunctionError(
+        "drift"
+    )
+    with pytest.raises(acl.ProgrammeFunctionError):
+        contract.install_isolated_candidate_privilege_contract()
+    assert vars(fake_owner) == before
+
+
+def test_postgrant_failure_leaves_transaction_exception_not_acceptance(grant_plane):
+    acl.grant_candidate_helpers.side_effect = acl.ProgrammeFunctionError("drift")
+    with pytest.raises(
+        acl.ProgrammeProvisioningError, match="helper_contract_unavailable"
+    ):
+        acl.install_candidate_table_privileges(grant_plane.lease)
+    assert grant_plane.verify.call_count == 1
+    assert (
+        grant_plane.connection.__exit__.call_args.args[0] is acl.ProgrammeFunctionError
+    )

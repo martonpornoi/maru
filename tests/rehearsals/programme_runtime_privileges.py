@@ -2,8 +2,11 @@
 
 The actual native role-safety query remains unchanged. An explicit isolated child
 installs these declared relation classes before calling that real query. The
-fixture provisioner grants the same reviewed table privileges in its owned empty
-database; it never grants ownership, DDL, function execution or grant options.
+fixture provisioner grants the same reviewed table privileges, thirteen literal
+invoker helpers and one reviewed advisory-lock helper in its owned empty database;
+never ownership, DDL,
+unlisted execution or grant options. Native owner readiness still checks every
+source/metadata boundary against an explicitly validated baseline contract.
 """
 
 from types import MappingProxyType
@@ -11,6 +14,10 @@ from types import MappingProxyType
 from maru.authorization import database_role_safety as owner
 from maru.events import adoption
 from tests.rehearsals.programme_candidate import PROGRAMME_REHEARSAL_PROFILE
+from tests.rehearsals.programme_function_contract import (
+    HELPERS,
+    candidate_function_contracts,
+)
 from tests.rehearsals.programme_runtime_environment import (
     require_programme_runtime_environment,
 )
@@ -197,8 +204,13 @@ def install_isolated_candidate_privilege_contract():
     ):
         raise ProgrammePrivilegeError("candidate_privilege_baseline_changed")
     classes = candidate_relation_classes()
+    function_contracts = candidate_function_contracts()
+    functions = (*_FUNCTIONS, *("public." + identity for identity in sorted(HELPERS)))
     for name, relations in zip(_NAMES, classes, strict=True):
         setattr(owner, name, relations)
+    owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4 = functions
+    for module, attribute, _original, projected in function_contracts:
+        setattr(module, attribute, projected)
 
 
 def require_candidate_reference_boundary(cursor):
