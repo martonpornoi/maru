@@ -462,6 +462,38 @@ submission/conversion and seven initial readiness requirements, not complete
 P12 inventory, browser acceptance or a complete P01–P12 journey. See the
 [composition checkpoint](../checkpoints/2026-09-18-programme-proposal-review-preparation.md).
 
+### Item layers, readiness and hosting composition
+
+The prepared `prepare_items(proposal, review)` runner method consumes the exact
+prior source handles. It creates a separate organizer-core ceremony, then gives
+both that item and the converted accepted item deliberate private working copy,
+Department discussion, technical/accessibility/media delivery facts and explicit
+readiness requirements. Actual delivery evidence must become stale after a
+correction and be rebound to its new source version. A separate ordinary person
+reviews public wording; working authors never act as their own release reviewer.
+This is copy approval, not timetable publication.
+
+Only these fictional items' Programme on-site file/handout concern is explicitly
+not applicable; the retained private Applications PDF is not reclassified or
+copied to Programme. Every other concern must end satisfied through the actual
+readiness projection. Typed public/delivery sources and honest fictional operator
+attestations are distinguished; they do not certify a real venue or participant.
+
+Each host begins without a relationship, inspects a separately issued invitation,
+confirms it personally, saves private-draft periods and then deliberately shares
+edition-bounded availability. The organizer projection must hide the draft and
+show only shared periods. Hosting must still deny private-item information; the
+confirmed self projection exposes only the approved copy and its own purpose.
+The accepted proposal lead is explicitly invited; the ceremony has a separate
+ordinary person and no invented Applications transition.
+
+All actions retain real owner policy, native guards, scope/version checks and
+audit. The fixed private child protocol preserves original expiry and credential
+isolation. `programme_proposal_native.py` maintains composed runtime readbacks,
+but remains uncollected/unexecuted. This is not actual HTTP form, browser, human,
+P05–P12 or full isolation acceptance. See the
+[item/hosting checkpoint](../checkpoints/2026-09-18-programme-items-hosting-preparation.md).
+
 ### Scenario people and sessions
 
 Use repository-owned fictional convention names, synthetic people and reserved

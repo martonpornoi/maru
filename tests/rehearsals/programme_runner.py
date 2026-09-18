@@ -256,6 +256,57 @@ class ProgrammeRunningFixture:
         except (OSError, subprocess.TimeoutExpired, ValueError):
             raise ProgrammeHttpsError("fixture_review_process_failed") from None
 
+    def prepare_items(self, proposal, review):
+        """Prepare core/accepted items, reviewed layers and genuine host actions."""
+        require_programme_rehearsal_request()
+        if self.scenario is None or not self._application_environment:
+            raise ProgrammeHttpsError("fixture_items_dependencies_required")
+        from tests.rehearsals.programme_items_scenario import (  # noqa: PLC0415
+            items_from_document,
+        )
+        from tests.rehearsals.programme_proposal_scenario import (  # noqa: PLC0415
+            proposal_from_document,
+        )
+        from tests.rehearsals.programme_review_scenario import (  # noqa: PLC0415
+            review_from_document,
+        )
+
+        proposal_document = json.loads(json.dumps(asdict(proposal), default=str))
+        review_document = json.loads(json.dumps(asdict(review), default=str))
+        proposal_from_document(proposal_document, setup=self.scenario)
+        review_from_document(review_document, setup=self.scenario, proposal=proposal)
+        self.refresh_workers()
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "tests.rehearsals.programme_items_scenario"],
+                cwd=ROOT,
+                env=self._application_environment,
+                input=json.dumps(
+                    {
+                        "setup": asdict(self.scenario),
+                        "proposal": proposal_document,
+                        "review": review_document,
+                    },
+                    default=str,
+                ),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=min(180, remaining_lease(self.deadline)),
+                check=False,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            if result.returncode != 0 or len(result.stdout) > 16_384:
+                raise ProgrammeHttpsError("fixture_items_process_failed")
+            return items_from_document(
+                json.loads(result.stdout),
+                setup=self.scenario,
+                proposal=proposal,
+                review=review,
+            )
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            raise ProgrammeHttpsError("fixture_items_process_failed") from None
+
 
 @contextmanager
 def isolated_programme_application(*, setup_mode=None, with_scanner=False):
