@@ -112,6 +112,39 @@ head/environment/results and add their evidence to fixture acceptance. They have
 not been collected or executed during preparation. Transport checks cannot replace
 native owner-command, schema, runtime-role, recovery or human acceptance.
 
+### Prepared migration/runtime boundary
+
+`programme_provisioning.py` is a test-only current-schema provisioner, not the
+complete application launcher. Within a still-live owned transport context it
+rechecks resource identity and port, validates actual administrator/database/server
+identity, refuses existing migration/runtime roles and generates separate
+credentials. Migrations execute through a genuine non-superuser migration login.
+The containing resource deadline is unchanged; partial failure requires disposal,
+not adoption or automatic repair of an existing installation.
+
+The canonical operations runtime-role SQL is hash-pinned. Only its five example
+database-name references become the exact run-scoped database; the reviewed ACLs
+are otherwise unchanged. When that source changes, review and deliberately update
+the fixture pin rather than silently consuming new grants. Runtime verification
+uses its own real login and the existing owner role-safety probe before returning
+a credential-bearing endpoint. Neither mock execution nor configuration validation
+is proof that this native check has passed.
+
+Dedicated child settings inherit `maru.settings.base`, never local/test settings;
+they preserve exact authority, step-up and closure gates with no test authorizers
+or silenced checks. Child environments exclude ambient libpq targeting, provider
+credentials and Python/settings overrides. Their in-memory email backend prevents
+external delivery and supplies no invitation acceptance evidence. These are
+non-serving migration/verification processes, not a candidate application server.
+
+`programme_provisioning_native.py` maintains one additional host-only #102 case:
+actual current-schema migrations and runtime safety, independent genuine-user and
+DDL-owner observations, denied runtime DDL and refusal to re-provision existing
+roles. It remains uncollected/unexecuted during deferral and must be run separately
+after policy restoration. Candidate schema/profile installation, guarded joined
+application startup, real setup/roles and P01–P12 still require implementation and
+their own acceptance; no complete launcher command is available yet.
+
 Use repository-owned fictional convention names, synthetic people and reserved
 example domains. Do not copy an actual convention roster. Provide one primary
 organization with two editions and a second organization to exercise isolation.

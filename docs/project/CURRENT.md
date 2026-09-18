@@ -11,17 +11,17 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Isolated Programme rehearsal composition is delivered through
-[PR #164](https://github.com/martonpornoi/maru/pull/164), protected squash
-`1045fb14745d5ff1b58f417a4cf9d8dd30ac3e5e` at 2026-09-18 05:49:02 UTC.
-Its tree equals certified head `9efb9d224c65d25cc7d822dad1b878f17f17e7a3`;
+Isolated Programme runtime resource preparation is delivered through
+[PR #165](https://github.com/martonpornoi/maru/pull/165), protected squash
+`4519e5b01469eb236fc524706ad48c31bc631d4e` at 2026-09-18 06:46:30 UTC.
+Its tree equals certified head `f055a74a4792a8a23a221b0968ffc16ac37a3a94`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 6m33s, including 10,285 units in 60.93s and 103 frontend
-cases. Hosted quality took 11m53s and units 2m12s; exact-head PR gate and all
-CodeQL configurations passed. A certified documentation checkpoint retriggered
-the earlier unprocessed upload without changing protections. PostgreSQL was
+local gates passed in 5m22s, including 10,383 units in 60.42s and 103 frontend
+cases. Hosted quality took 12m13s and units 1m29s; exact-head PR gate and all
+processed CodeQL configurations passed. Final review corrected the readiness
+probe to TCP and the revised head was independently recertified. PostgreSQL was
 deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-rehearsal-composition-protected-delivery.md).
+[protected evidence](../checkpoints/2026-09-18-programme-runtime-protected-delivery.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -38,7 +38,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-fixture-runtime`, from protected PR #164.
+Branch: `codex/programme-fixture-provisioning`, from protected PR #165.
 Prepared the explicit test-only candidate manifest, independent real internal-fact
 handler registry and joined URLconf covering all ten dormant owner route modules
 alongside the existing shared shell. Database-free checks validate owner catalog
@@ -68,22 +68,18 @@ this composition, retaining real owner authorization and native guards. Do not
 copy the transaction-local schema-test candidate or its abbreviated Workforce
 manifest into a claimed complete fixture. Keep all native execution deferred.
 
-Current local preparation adds strict policy/opt-in/run-scoped runtime inputs and
-an owned loopback database transport with unique ownership nonce, tmpfs,
-container-side expiry and verified exact-resource cleanup. Focused pure/mocked
-feedback passed 97 cases in 0.38s; complete database-free feedback passed 10,382
-cases in 58.96s. Four host-only native transport/expiry cases are maintained but
-uncollected/unexecuted. No Docker process or database has been started. A later
-cleanup-receipt refinement adds the returned ownership nonce and passed all 97
-focused cases in 0.36s; fresh exact-commit certification and protected delivery
-remain pending. Separate migration/runtime
-provisioning, candidate schema/application startup and setup/roles remain next.
-
-PR #165's initial head `5e2d000` passed all eight retained gates in 5m35s
-(10,382 units, 103 frontend cases). Pre-merge review then made readiness explicitly
-TCP rather than the temporary initialization socket and added a regression.
-Fresh certification of the corrected head is required before protected delivery;
-the initial receipt is archived separately and is not reused.
+PR #165 delivers strict policy/opt-in/run-scoped inputs and an owned loopback
+transport with unique nonce, tmpfs, bounded expiry and exact-resource cleanup.
+Its four host-only native transport/expiry cases remain uncollected/unexecuted.
+Current local work adds separate migration/runtime provisioning using a pinned
+copy of the existing ACL source, real migration login, sanitized child settings
+and a genuine runtime-role probe. It changes no current profile, schema contract,
+ACL source or authority policy. Focused pure/mocked feedback passed 145 cases
+in 0.49s; complete database-free feedback passed 10,430 in 59.86s. Fresh
+exact-commit certification remains pending. One additional
+host-only native provisioning case is maintained but uncollected/unexecuted.
+No Docker command, database, migration or server has been started. Candidate
+installation/startup, real setup/roles and the complete P01–P12 journey remain next.
 
 Non-blocking follow-up after #48: the semantic docstring validator's no-argument
 defaults are strings rather than Paths; its maintained explicit `src scripts`
