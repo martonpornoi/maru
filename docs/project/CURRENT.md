@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme's accountable Volunteer starter backend is delivered through
-[PR #182](https://github.com/martonpornoi/maru/pull/182), protected squash
-`8a7efe7c72f255e2663f8fa01cb319adf0d35805` at 2026-09-18 21:13:48 UTC.
-Its tree equals certified head `b5c74915f0d55c2660e6472a3be59632423df5ac`;
+Programme's accountable Volunteer starter screens are delivered through
+[PR #183](https://github.com/martonpornoi/maru/pull/183), protected squash
+`180d4e84431d31d044d1b9db716c423431ca88f7` at 2026-09-18 21:53:15 UTC.
+Its tree equals certified head `2046e8741b39f65e5c6b75dfa2c396fc8925afb0`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m38s, including 11,057 units in 62.03s and 103 frontend
-cases. Hosted quality took 10m47s and units 2m14s; exact-head PR gate and all
+local gates passed in 5m46s, including 11,148 units in 62.78s and 103 frontend
+cases. Hosted quality took 12m18s and units 1m35s; exact-head PR gate and all
 three processed CodeQL configurations passed. No parent or #175 was closed.
 PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-volunteer-starter-backend.md).
+[protected evidence](../checkpoints/2026-09-18-programme-volunteer-starter-review.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-volunteer-starter-review`, from protected PR #182.
+Branch: `codex/programme-staffing-fixture`, from protected PR #183.
 #177 is closed after its bounded authority correction: one truthful resource-only
 recipe and frozen native-function extension, without rewriting the 27 historical
 definitions or changing current profiles, table fingerprints or owner duties.
@@ -83,13 +83,28 @@ continuation. Only the test-only joined URLconf gains routes. Focused database-f
 feedback passed 704 cases in 4.49s; strict targeted typing and semantic Python
 documentation passed. Complete feedback passed 11,148 units in 61.50s; repository
 documentation passed 635 Markdown files, four skills and 215 requirement IDs.
-Exact certification is pending for this surface. Native reader coverage is maintained but uncollected/unexecuted;
+Exact certification and protected delivery are retained above. Native reader
+coverage is maintained but uncollected/unexecuted;
 no browser acceptance is claimed. See the
 [surface checkpoint](../checkpoints/2026-09-18-programme-volunteer-starter-review.md).
 
-Next within #175: genuine blank-setup/P06 composition after protected UI delivery.
-Keep #175 open until these are delivered. Maintain native race, rollback, scope,
-runtime and recovery acceptance under #102; add human-screen acceptance to #92.
+Prepared actual blank-setup/P06 command composition: own starter preview/request/
+independent approval, Department Position and published opportunity, a distinct
+volunteer's own application, independent assignment, person-owned submitted
+availability, three exact-source Programme requirements and previewed draft
+bindings, personal claims, independent confirmation and fully covered locks.
+No inferred membership, Participation, no-staffing waiver, release or publication.
+The private child validates the complete source chain and keeps the original
+lease/runtime guard. Focused database-free feedback passed 91 cases in 0.74s;
+complete feedback passed 11,186 units in 62.76s. Documentation passed 636 Markdown
+files, four skills and 215 requirement IDs; exact certification is pending. The composed native case
+is maintained but uncollected/unexecuted. See the
+[staffing checkpoint](../checkpoints/2026-09-19-programme-staffing-fixture-preparation.md).
+
+Next: protected staffing-preparation delivery, then P07 current-source evaluation,
+independent release approval and atomic publication before P08–P12. Keep #175 open
+until its implementation delivery is verified; native race, rollback, scope,
+runtime and recovery acceptance stays #102, and human screens remain #92.
 Do not replace missing workflow with direct fixture writes or email-as-approval.
 
 Prepared actual reciprocal reservations and independent physical approval for

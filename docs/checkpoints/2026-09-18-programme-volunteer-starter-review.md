@@ -55,3 +55,23 @@ Keep #175 open for the actual blank-setup/P06 composition. Then finish actual
 P01–P12 preparation, restore #102 exhaustiveness and timing evidence, and complete
 #97 recovery, #92 human and #109 integrated gates before supported promotion and
 #108/#48 closure. No production deployment or user data was touched.
+
+## Protected delivery appendix
+
+PR #183 merged at 2026-09-18 21:53:15 UTC as
+`180d4e84431d31d044d1b9db716c423431ca88f7`. Tree
+`e3ea0f139fb739b70dacbd67dafcd66a0c567234` equals certified head
+`2046e8741b39f65e5c6b75dfa2c396fc8925afb0`. All eight local development gates
+passed in 345.671 seconds: 11,148 units in 62.78s and 103 frontend cases. The
+v4 receipt is `postgresql_deferred`, with zero database instances and null
+combined coverage/headroom, SHA-256
+`286118d7ae976bba37351e2f104e31ab19e295f45d1a81a75c61c2ee7f598735`.
+Five original artifacts were hash-verified into the ignored exact-head archive.
+
+Hosted run 35397854818 passed quality in 12m18s, units in 1m35s and PR gate in
+4s. Three processed exact-head CodeQL configurations had zero findings and no
+errors/warnings. Review/thread/closing-reference pages were complete and empty;
+the merge matched the exact head without bypass. Clean separate main and
+origin/main matched the protected result; the unrelated repair worktree stayed
+at its prior commit. #175/#108/#48 remain open; #92 retains the new actual-person
+and browser checklist. No native, human or production gate was waived.

@@ -3,7 +3,7 @@
 The #175 backend and dormant audited own-person starter screen prepare the fixed
 Volunteer definition. Positions has a separately admitted contextual entry and
 platform setup explains the ordinary-controller handoff. The actual blank-setup/
-P06 connection remains unfinished; no screen/unit result is native acceptance.
+P06 owner-command connection is now prepared; no screen/unit result is native acceptance.
 Do not seed a PositionTemplate directly or treat a selected approver as a decision.
 The candidate table inventory grows from 82 to **84**: starter request INSERT/UPDATE
 for canonical row locking, terminal decision INSERT only. Both tables are
@@ -605,6 +605,47 @@ still uncollected/unexecuted under #102. P05 combinations and connected browser
 behavior, P06 staffing and P07–P12 remain separate; #175 is required for genuine
 blank-setup Volunteer Positions. See the
 [physical checkpoint](../checkpoints/2026-09-18-programme-physical-approval-preparation.md).
+
+### Actual-owner staffing preparation
+
+`ProgrammeRunningFixture.prepare_staffing(proposal, review, items, planning, physical)`
+validates the entire same-source chain, refreshes existing workers and runs a
+fixed private child within the original lease (at most 180 seconds). The child
+requires genuine candidate startup before creating a seventeenth distinct synthetic
+person. Credentials stay out of representations, command lines, logs and public
+responses; only the existing private pipe carries the bounded source document.
+
+The original controllers preview/request and independently approve the fixed
+Volunteer starter. Author self-approval must fail; original request/decision
+retries preserve identity. Actual structure commands create a Department Position
+and publish its separate opportunity. The volunteer personally applies; the
+controllers separately propose and approve that known applicant's assignment.
+There is no invented membership, attendee Participation or automatic availability.
+The volunteer explicitly submits their own current workable window.
+
+The original planner receives only the existing Edition staffing and Workforce
+recipes through the actual two-controller role workflow. Each of three exact
+placements receives explicit preparation-through-teardown work, required
+headcount one, ten-minute planned break and explicitly zero post-work rest.
+These are fictional inputs, not a safe-hours or real-event staffing recommendation.
+Current Programme/occurrence/edition versions and exact private candidate revision
+bind each need; a fresh owner impact preview precedes each draft Shift creation.
+Draft work must have zero commitments. The volunteer personally claims; exact
+retry must preserve that claim. Claims are not confirmation. Their own attempted
+organizer confirmation must fail; a different planner confirms, stale confirmation
+must fail, and current complete coverage locks with `allow_understaffed=False`.
+The selected candidate and placements must remain unchanged.
+
+The host-only native composition additionally retains genuine-runtime observations
+of original starter actors, null assignment Participation capacity, exact locked
+demands/confirmed own commitments and absence of Participation/release records.
+It remains **uncollected/unexecuted #102 debt**. Database-free autospec/DTO tests
+check composition, guard ordering, bounded private processes and failure branches;
+they are not native authorization or runtime evidence. P05/P06 browser combinations,
+fresh downstream source evaluations, P07–P12, isolation inventory, recovery and
+human acceptance remain separate. This is not complete #108/#48 or production
+activation. See the
+[staffing checkpoint](../checkpoints/2026-09-19-programme-staffing-fixture-preparation.md).
 
 ### Scenario people and sessions
 

@@ -21,8 +21,80 @@ from tests.unit.test_programme_planning_scenario import _result as _planning_res
 from tests.unit.test_programme_proposal_scenario import _result, _setup
 from tests.unit.test_programme_review_scenario import _result as _review_result
 from tests.unit.test_programme_setup_scenarios import _document
+from tests.unit.test_programme_staffing_scenario import _result as _staffing_result
 
 RUN = "1234567890abcdef1234567890abcdef"
+
+
+@pytest.mark.parametrize("failure", [None, "nonzero", "timeout", "oversize", "source"])
+def test_staffing_child_retains_exact_physical_chain_private_pipe_and_lease(
+    launch_seams, monkeypatch, failure
+):
+    setup = _setup()
+    proposal = _result(setup)
+    review = _review_result(setup, proposal)
+    items = _items_result(setup, review)
+    planning = _planning_result(setup, items)
+    physical = _physical_result(setup, planning)
+    expected = _staffing_result(setup, planning)
+    run = Mock(
+        return_value=SimpleNamespace(
+            returncode=0, stdout=json.dumps(asdict(expected), default=str)
+        )
+    )
+    if failure == "nonzero":
+        run.return_value.returncode = 2
+    elif failure == "timeout":
+        run.side_effect = subprocess.TimeoutExpired("private", 50)
+    elif failure == "oversize":
+        run.return_value.stdout = "private" * 4096
+    elif failure == "source":
+        physical = replace(physical, edition_id=_setup().edition_id)
+    monkeypatch.setattr(runner.subprocess, "run", run)
+    with runner.isolated_programme_application() as original:
+        fixture = replace(original, scenario=setup)
+        if failure is None:
+            assert (
+                fixture.prepare_staffing(proposal, review, items, planning, physical)
+                == expected
+            )
+        elif failure == "source":
+            with pytest.raises(RuntimeError, match="result_invalid"):
+                fixture.prepare_staffing(proposal, review, items, planning, physical)
+            run.assert_not_called()
+        else:
+            with pytest.raises(
+                runner.ProgrammeHttpsError, match="staffing_process_failed"
+            ):
+                fixture.prepare_staffing(proposal, review, items, planning, physical)
+    if failure != "source":
+        assert (
+            run.call_args.args[0][-1] == "tests.rehearsals.programme_staffing_scenario"
+        )
+        options = run.call_args.kwargs
+        assert options["timeout"] == 50.0
+        assert options["stderr"] == subprocess.DEVNULL
+        assert physical.reviewer.password not in repr(options["env"])
+        assert json.loads(options["input"])["physical"]["candidate_id"] == str(
+            planning.candidate_id
+        )
+        assert launch_seams.worker.call_count == 2
+
+
+def test_staffing_stage_requires_policy_and_prepared_setup(launch_seams, monkeypatch):
+    run = Mock()
+    monkeypatch.setattr(runner.subprocess, "run", run)
+    with runner.isolated_programme_application() as fixture:
+        with pytest.raises(runner.ProgrammeHttpsError, match="dependencies_required"):
+            fixture.prepare_staffing(None, None, None, None, None)
+        monkeypatch.setattr(
+            runner,
+            "require_programme_rehearsal_request",
+            Mock(side_effect=ProgrammeRehearsalEnvironmentError("deferred")),
+        )
+        with pytest.raises(ProgrammeRehearsalEnvironmentError, match="deferred"):
+            fixture.prepare_staffing(None, None, None, None, None)
+    run.assert_not_called()
 
 
 @pytest.mark.parametrize("failure", [None, "nonzero", "timeout", "oversize", "source"])
