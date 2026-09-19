@@ -47,3 +47,33 @@ feedback passed 11,710 cases in 65.96s with three existing Django URL-field
 warnings and a fresh repository-owned temporary directory. Ruff, strict typing,
 NumPy and semantic documentation passed. These remain iteration results, not
 exact certification, PostgreSQL or protected acceptance.
+
+## Exact local certification and submitted PR
+
+PR #193 was opened on clean head `35fedf448f07404fc993e27077bedf143a5cffdd`,
+tree `ec2839b54372fc15493ffbef54f96b178d2090a2`, against protected
+`d4a4f9d37d98688c907ad1a418d19cc0f00e0437`. All eight retained gates passed
+in 425.043s (7m05s), completing 2026-09-19 18:22:45 UTC: 11,710 units/82.93s,
+103 frontend cases and complete static/docs/contracts/security/packaging checks.
+The v4 `postgresql_deferred` receipt reports zero databases and null combined
+coverage/headroom. Receipt, plan, actual unit report, wheel and sdist were
+preserved outside `.local-ci` with matching hashes. Receipt SHA-256:
+`1308b56b7aee6ece439a049818c09f6bcb037ed726d74a8d98a7be7f46d5e17a`.
+Native additions remain uncollected/unexecuted. #189/#108/#48 stay open;
+the submitted PR has no closing reference. Protected acceptance is independent.
+
+## Protected delivery
+
+PR #193 squash-merged as `c13c4185346014c54ce41f943859ce31c56a15f7` at
+2026-09-19 18:37:06 UTC. Exact-head PR gate was green, mergeability clean and
+complete review/conversation/closing-reference lists empty. Hosted run 35461062731
+passed quality in 12m03s, units in 2m26s and aggregate gate in 5s. Processed
+`refs/pull/193/head` CodeQL analyses matched the exact certified head: Python
+1804957457, JavaScript/TypeScript 1804956456 and Actions 1804956075 each reported
+zero findings/errors/warnings.
+
+Clean local main equals origin/main and the protected squash; its tree
+`ec2839b54372fc15493ffbef54f96b178d2090a2` matches the certified tree. The repair
+worktree remained at `aa1ede69fb880dcb12d627bbfc049fba23166e68`. Only the unpublished
+placement-history follow-up was rebased, preserving its exact tree. #189/#108/#48
+remain open, with native and integrated acceptance still outstanding.
