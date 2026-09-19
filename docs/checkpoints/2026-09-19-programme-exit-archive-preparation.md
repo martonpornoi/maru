@@ -78,3 +78,33 @@ listed its helper's exception in a `Raises` section without directly raising it.
 The exception contract now lives in `Notes`, preserving behavior and documenting
 the same stable failure. No exemption or check was weakened; fresh certification
 of the corrected exact commit is required. The earlier attempt is not acceptance.
+
+## Exact certification and hosted outage
+
+Corrected head `5b97bf1a222b07a680870660d650b141087667f2`, tree
+`bc98245eacaeff62497427afc2ea0f75d7622bf4`, passed all eight retained local gates
+in 414.405s, completed 2026-09-19 17:05:12 UTC: 11,594 units in 82.10s and 103
+frontend cases. Receipt v4 is `postgresql_deferred`, zero databases and null
+combined coverage/headroom. Five artifacts were archived and hash-matched in
+`.tools/certification-evidence/programme-exit-5b97bf1-deferred/`; receipt SHA-256
+`123562291198721C219235EDA8E2DC82E939F079ABDA00128C7A85C331F85564`.
+
+PR #191 opened at that head after read-only origin/account/#48 verification
+resolved an initial safety-review destination rejection. Hosted run `35457123554`
+passed units in 1m41s. Exact-head CodeQL analyses `1804807119`, `1804806432` and
+`1804806091` have zero findings, errors and warnings. Quality job `105934321039`
+failed after 13m26s: the final frontend vulnerability audit received repeated
+npm HTTP 503 maintenance responses. Python audit passed. A direct pinned-pnpm
+audit reproduced HTTP 503. The PR gate failed; no merge or main sync occurred.
+
+[npm status](https://status.npmjs.org/) listed 17:00–19:00 UTC maintenance on
+2026-09-19, not a guaranteed recovery time. Its Security Audit badge still read
+operational; actual requests remained unavailable. Resume with a successful direct
+audit, then rerun failed hosted checks and verify exact-head acceptance. No audit,
+dependency, coverage or protection was weakened, and no scheduled watcher exists.
+
+GitHub parsed the initial negated closure phrase as a closing reference. The PR
+body was reworded and the complete GraphQL closing-reference list verified empty;
+reviews and threads are also empty. #189/#108/#48 remain open. The separate tested
+history follow-up is retained on unpublished `codex/programme-exit-history`, not
+part of this certified head. Its named stash has already been applied once.

@@ -46,7 +46,7 @@ volume. Required larger-scope/asynchronous handling under QRY-006 remains #189
 work before any complete exit claim. Memory-only encoding supplies no device
 encryption, retention authority or secure-erasure guarantee.
 
-Working and delivery history readers now accept an exclusive `before_sequence`
+Working, delivery and discussion readers accept an exclusive `before_sequence`
 cursor. Their existing item-unique sequences support newest-first keyset pages
 with the unchanged 1–200 page bound, exact scope, layer field ceiling and audit
 before each page is returned. Omission preserves the current newest-page behavior.
@@ -54,7 +54,19 @@ Continue with the last sequence until a short/empty page; an exact-sized final
 page requires a further empty read. Concurrent appends do not shift older pages,
 but paging alone is **not** a consistent archive snapshot: the collector must
 check owner source versions and current authorization before disclosure. This
-does not yet add paging for other history layers or any complete owner collector.
+does not add a complete owner collector.
+
+Private public-copy review history uses `before_rendition_number` under the
+unchanged private review ceiling, including retained withdrawal evidence. It
+does not republish a withdrawn rendition. Readiness history uses
+`ProgrammeReadinessHistoryCursor(item_version, concern, kind, sequence)` via
+`before`; these four already visible fields uniquely identify the position across
+both concern-local history kinds. Comparison and explicit output order use the
+same compound descending order, preventing omitted ties without exposing private
+row IDs or depending on timestamps. Existing-item empty history still returns an
+audited empty page; an unknown/wrong-scope item remains unavailable. Every page
+retains current authorization and its existing read-purpose audit. No paging
+cursor serves as authorization, a source-version guarantee or an export receipt.
 
 Still required: owner-specific complete collectors and field schemas, authorized
 file linkage, source/change and current-permission rechecks, exact sensitive-read

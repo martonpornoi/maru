@@ -37,7 +37,20 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-exit-archive`, from protected PR #188.
+Branch: `codex/programme-exit-history`, unpublished follow-up based on PR #191's
+exact head. PR #191 remains OPEN, unmerged at
+`5b97bf1a222b07a680870660d650b141087667f2`; local and remote main remain protected
+PR #188. All eight local retained gates passed in 6m54s (11,594 units/82.10s,
+103 frontend cases). Hosted units passed in 1m41s and all three exact-head CodeQL
+analyses have zero findings/errors/warnings. Hosted quality failed after 13m26s
+only because npm's advisory endpoint repeatedly returned HTTP 503 maintenance;
+the required PR gate therefore failed. A direct local audit reproduced HTTP 503.
+No audit was bypassed and no full hosted retry was started while unavailable.
+The npm status page lists 2026-09-19 17:00–19:00 UTC maintenance, not a guaranteed
+recovery time. Restore the advisory service, rerun failed hosted checks and verify
+exact-head PR gate before merge. The review has no outstanding threads or closing
+issue references; GitHub's unintended parsing of a negated closure phrase was
+corrected before merge. #189/#108/#48 remain open.
 P11's accepted ADR 0081/EVT-007/INT-007 exit contract has necessary implementation
 gaps now explicitly listed in #108 and #48: #189 permission-controlled composite
 archive and #190 accountable stop-use. Existing timetable packs are not a whole
@@ -50,8 +63,8 @@ unit cases passed in 0.41s. Complete feedback passed 11,594 units in 81.25s with
 three existing Django warnings after a shared Windows temporary-directory access
 failure was corrected by using a fresh repository-owned test directory.
 Strict typing, semantic Python documentation and repository documentation
-(641 Markdown files, four skills, 215 requirements) passed. Exact certification
-and protected delivery of this foundation remain pending.
+(641 Markdown files, four skills, 215 requirements) passed. Exact foundation
+certification passed as above; protected delivery is blocked by the npm outage.
 Two PostgreSQL paging/append/scope/denial regressions
 are maintained but uncollected/unexecuted. It is not an export service: owner-specific complete
 collectors, schemas, authorization/source rechecks, audit, file linkage, supported
@@ -60,6 +73,22 @@ history readers otherwise still truncate, so cannot establish archive completene
 as-is. Paging retains each read's field ceiling, authorization and audit, but is
 not itself a consistent snapshot. See the
 [archive preparation checkpoint](../checkpoints/2026-09-19-programme-exit-archive-preparation.md).
+Separate unpublished follow-up adds discussion, private copy-review and compound
+readiness paging without changing entry field ceilings or losing tied versions.
+Focused database-free feedback passed 193 cases in 1.77s; targeted Ruff, strict
+typing, NumPy and semantic documentation passed. Complete feedback passed 11,633
+units in 82.16s with three existing Django warnings. Repository documentation
+passed 642 Markdown files, four skills and 215 requirements.
+One additional discussion native case and expanded readiness/withdrawn-review
+cases remain uncollected/unexecuted. This follow-up is not part of PR #191's
+certified head and has no exact certification or protected delivery yet.
+The named recoverable stash `5b6851fb9f5670a257ba9585189bbd780f0c7730` has already
+been applied to this follow-up branch; retain it but do not apply it again.
+After #191 merges, verify its tree equals the certified tree, synchronize the
+clean main worktree, then transplant only this unpublished follow-up onto that
+protected squash before fresh exact certification. No scheduled reminder or
+background merge watcher was created.
+See the [remaining-history checkpoint](../checkpoints/2026-09-19-programme-exit-history-paging.md).
 No new permission, native schema, route, profile or acceptance is claimed.
 P10 signed-continuity preparation is implemented: a web-only ephemeral Ed25519
 key and independent verifier trust, six real-purpose HTTPS downloads, actual

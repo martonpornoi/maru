@@ -29,6 +29,7 @@ from maru.programme.catalogs import (
     PROGRAMME_PUBLIC_COPY_REVIEW_HISTORY_FIELD_CEILING,
     PROGRAMME_READINESS_HISTORY_FIELD_CEILING,
     PROGRAMME_WORKING_HISTORY_FIELD_CEILING,
+    ProgrammeReadinessConcern,
     ProgrammeReadinessDisposition,
     ProgrammeReadinessEvidenceState,
 )
@@ -89,6 +90,25 @@ class ProgrammeTimetableInventoryLimitError(ProgrammeQueryError):
     """Refuse an incomplete timetable inventory without returning a partial list."""
 
     reason_code = "programme_timetable_inventory_limit"
+
+
+@dataclass(frozen=True, slots=True)
+class ProgrammeReadinessHistoryCursor:
+    """Exclusive history position made only from already ceilinged entry fields.
+
+    Attributes
+    ----------
+    item_version
+        Aggregate position, not a claim of current source consistency.
+    concern, kind, sequence
+        Concern, closed history kind and concern-local sequence disambiguate
+        entries sharing an aggregate version without revealing private row IDs.
+    """
+
+    item_version: int
+    concern: str
+    kind: str
+    sequence: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -466,6 +486,24 @@ def _history_cursor(value: int | None) -> int | None:
     ):
         raise ValueError("Programme history cursor must be a positive bigint.")
     return value
+
+
+def _readiness_cursor(
+    value: ProgrammeReadinessHistoryCursor | None,
+) -> tuple[int, str, str, int]:
+    if value is None:
+        return (0, "", "", 0)
+    if (
+        type(value) is not ProgrammeReadinessHistoryCursor
+        or _history_cursor(value.item_version) is None
+        or _history_cursor(value.sequence) is None
+        or not isinstance(value.concern, str)
+        or value.concern not in ProgrammeReadinessConcern
+        or type(value.kind) is not str
+        or value.kind not in {"requirement_revision", "evidence"}
+    ):
+        raise ValueError("Programme readiness history cursor is invalid.")
+    return (value.item_version, value.concern, value.kind, value.sequence)
 
 
 def _item_projection(item: ProgrammeItem) -> ProgrammeItemProjection:
@@ -1201,6 +1239,7 @@ def list_programme_discussion(
     item_id: UUID,
     reason: str,
     limit: int = 100,
+    before_sequence: int | None = None,
     correlation_id: UUID | None = None,
     source_channel: str = "service",
     authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
@@ -1221,6 +1260,10 @@ def list_programme_discussion(
         The retained sensitive-read purpose.
     limit : int, default=100
         The bounded maximum number of discussion entries.
+    before_sequence : int | None, default=None
+        Exclusive sequence cursor from the last returned entry, or newest page.
+        Each page retains independent authorization and audit; complete archive
+        consistency must be checked separately by its collector.
     correlation_id : UUID | None, default=None
         Optional trace identifier; a server UUID is generated when absent.
     source_channel : str, default="service"
@@ -1234,6 +1277,7 @@ def list_programme_discussion(
         Newest-first Department discussion entries with rationale.
     """
     item_id = require_uuid(item_id, field="item_id")
+    cursor = _history_cursor(before_sequence)
 
     def load() -> tuple[ProgrammeDiscussionEntryProjection, ...]:
         if not ProgrammeItem.objects.filter(
@@ -1246,7 +1290,10 @@ def list_programme_discussion(
             item_id=item_id,
             organization_id=organization_id,
             edition_id=edition_id,
-        ).order_by("-sequence", "-id")[: _bounded_limit(limit)]
+        )
+        if cursor is not None:
+            entries = entries.filter(sequence__lt=cursor)
+        entries = entries.order_by("-sequence", "-id")[: _bounded_limit(limit)]
         return tuple(
             ProgrammeDiscussionEntryProjection(
                 sequence=entry.sequence,
@@ -1434,6 +1481,7 @@ def list_programme_readiness_history(
     item_id: UUID,
     reason: str,
     limit: int = 100,
+    before: ProgrammeReadinessHistoryCursor | None = None,
     correlation_id: UUID | None = None,
     source_channel: str = "service",
     authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
@@ -1454,6 +1502,10 @@ def list_programme_readiness_history(
         The retained sensitive-read purpose.
     limit : int, default=100
         The bounded maximum number of history entries.
+    before : ProgrammeReadinessHistoryCursor | None, default=None
+        Exclusive compound cursor from the last entry, or newest page. All four
+        ordering fields preserve ties without adding private row identifiers.
+        Paging retains current authorization/audit, not an archive-wide snapshot.
     correlation_id : UUID | None, default=None
         Optional trace identifier; a server UUID is generated when absent.
     source_channel : str, default="service"
@@ -1467,6 +1519,7 @@ def list_programme_readiness_history(
         Newest-first requirement revisions and evidence with rationale.
     """
     item_id = require_uuid(item_id, field="item_id")
+    position = _readiness_cursor(before)
 
     def load() -> tuple[ProgrammeReadinessHistoryEntryProjection, ...]:
         bounded_limit = _bounded_limit(limit)
@@ -1558,6 +1611,10 @@ def list_programme_readiness_history(
                            AND evidence.organization_id = %s
                            AND evidence.edition_id = %s
                       ) AS combined
+                     WHERE %s::boolean OR (
+                         combined.item_version, combined.concern,
+                         combined.kind, combined.sequence
+                     ) < (%s::bigint, %s::varchar, %s::varchar, %s::bigint)
                      ORDER BY combined.item_version DESC,
                               combined.concern DESC,
                               combined.kind DESC,
@@ -1565,6 +1622,8 @@ def list_programme_readiness_history(
                               combined.stable_id DESC
                      LIMIT %s
                   ) AS history ON TRUE
+                 ORDER BY history.item_version DESC, history.concern DESC,
+                          history.kind DESC, history.sequence DESC
                 """,
                 [
                     item_id,
@@ -1574,6 +1633,8 @@ def list_programme_readiness_history(
                     edition_id,
                     organization_id,
                     edition_id,
+                    before is None,
+                    *position,
                     bounded_limit,
                 ],
             )
@@ -1610,6 +1671,7 @@ def list_programme_public_copy_review_history(
     item_id: UUID,
     reason: str,
     limit: int = 100,
+    before_rendition_number: int | None = None,
     correlation_id: UUID | None = None,
     source_channel: str = "service",
     authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
@@ -1630,6 +1692,10 @@ def list_programme_public_copy_review_history(
         The retained sensitive-read purpose.
     limit : int, default=100
         The bounded maximum number of review entries.
+    before_rendition_number : int | None, default=None
+        Exclusive rendition cursor from the last entry, or newest page. Private
+        withdrawal history retains its existing ceiling; this never republishes
+        withdrawn copy or establishes archive-wide consistency.
     correlation_id : UUID | None, default=None
         Optional trace identifier; a server UUID is generated when absent.
     source_channel : str, default="service"
@@ -1643,6 +1709,7 @@ def list_programme_public_copy_review_history(
         Newest-first private approval records with rationale.
     """
     item_id = require_uuid(item_id, field="item_id")
+    cursor = _history_cursor(before_rendition_number)
 
     def load() -> tuple[ProgrammePublicCopyReviewHistoryEntryProjection, ...]:
         if not ProgrammeItem.objects.filter(
@@ -1651,27 +1718,26 @@ def list_programme_public_copy_review_history(
             edition_id=edition_id,
         ).exists():
             raise ProgrammeQueryUnavailableError
-        renditions = (
-            ProgrammePublicRendition.objects.filter(
-                item_id=item_id,
-                organization_id=organization_id,
-                edition_id=edition_id,
-            )
-            .order_by("-rendition_number", "-id")
-            .values(
-                "rendition_number",
-                "source_item_version",
-                "public_title",
-                "public_summary",
-                "public_content_note",
-                "reviewed_by_id",
-                "review_reason",
-                "reviewed_at",
-                "withdrawal__occurred_at",
-                "withdrawal__actor_id",
-                "withdrawal__reason",
-            )[: _bounded_limit(limit)]
+        scoped = ProgrammePublicRendition.objects.filter(
+            item_id=item_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
         )
+        if cursor is not None:
+            scoped = scoped.filter(rendition_number__lt=cursor)
+        renditions = scoped.order_by("-rendition_number", "-id").values(
+            "rendition_number",
+            "source_item_version",
+            "public_title",
+            "public_summary",
+            "public_content_note",
+            "reviewed_by_id",
+            "review_reason",
+            "reviewed_at",
+            "withdrawal__occurred_at",
+            "withdrawal__actor_id",
+            "withdrawal__reason",
+        )[: _bounded_limit(limit)]
         return tuple(
             ProgrammePublicCopyReviewHistoryEntryProjection(
                 rendition_number=rendition["rendition_number"],
@@ -1814,6 +1880,7 @@ __all__ = [
     "ProgrammeQueryError",
     "ProgrammeQueryUnavailableError",
     "ProgrammeReadinessConcernProjection",
+    "ProgrammeReadinessHistoryCursor",
     "ProgrammeReadinessHistoryEntryProjection",
     "ProgrammeWorkingHistoryEntryProjection",
     "ProgrammeWorkingProjection",
