@@ -30,6 +30,7 @@ from maru.programme.commands import (
     ProgrammeUnavailableError,
     ProgrammeVersionConflictError,
 )
+from maru.programme.exit_item_queries import load_programme_exit_item
 from maru.programme.models import (
     ProgrammeItem,
     ProgrammeStaffingRequirement,
@@ -240,6 +241,46 @@ def test_requirement_lifecycle_retains_terms_without_unrelated_effects(
     assert OutboxMessage.objects.filter(event=event).exists()
     with pytest.raises(ProgrammeLifecycleConflictError):
         execute(world, change=successor(world, terminal))
+
+
+def test_exit_item_includes_retired_staffing_and_requires_audit(world, monkeypatch):
+    """Read actual retained work terms without turning retirement into active work."""
+    first = execute(world)
+    second = execute(world, change=successor(world, first))
+    terminal = execute(world, change=successor(world, second, retire=True))
+    common, change = world
+    args = {
+        "actor_id": common["actor_id"],
+        "organization_id": common["organization_id"],
+        "edition_id": common["edition_id"],
+        "item_id": change.item_id,
+        "correlation_id": uuid4(),
+        "reason": "Inspect retained staffing exit evidence",
+        "authorizer": common["authorizer"],
+    }
+    result = load_programme_exit_item(**args)
+    assert result.staffing.item_version == terminal.resulting_item_version
+    assert result.staffing.requirements[0].lifecycle == "retired"
+    assert [
+        entry.requirement.expectation.required_headcount
+        for entry in result.staffing_histories[0]
+    ] == [2, 3, 3]
+    assert [entry.requirement.version for entry in result.staffing_histories[0]] == [
+        1,
+        2,
+        3,
+    ]
+    assert result.roster.entries == result.host_histories == ()
+    original = programme_queries.append_audit
+
+    def audit(record):
+        if record.operation == "programme.query.exit_item":
+            raise DatabaseError("synthetic exit audit failure")
+        return original(record)
+
+    monkeypatch.setattr(programme_queries, "append_audit", audit)
+    with pytest.raises(DatabaseError, match="synthetic exit audit failure"):
+        load_programme_exit_item(**args)
 
 
 def test_retry_returns_historical_identifiers_after_later_revision(world):

@@ -11,16 +11,19 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme archive packaging and initial history paging are delivered through
-[PR #191](https://github.com/martonpornoi/maru/pull/191), protected squash
-`4f0aae675124beedf77b0b77535094d9a6942222` at 2026-09-19 17:51:10 UTC.
-Its tree equals certified head `5b97bf1a222b07a680870660d650b141087667f2`;
+Programme remaining history paging and authorized core collection are delivered
+through [PR #192](https://github.com/martonpornoi/maru/pull/192), protected squash
+`d4a4f9d37d98688c907ad1a418d19cc0f00e0437` at 2026-09-19 18:13:34 UTC.
+Its tree equals certified head `533d95f1e7ca8ed195d20fb72235375e31a4d8cc`;
 clean local main equals origin/main and the protected result. All eight retained
-local gates passed in 6m54s (11,594 units/82.10s, 103 frontend cases).
-After npm's external audit outage recovered, hosted quality passed in 12m04s,
-units in 1m41s, exact-head PR gate in 4s and all three CodeQL analyses passed.
-#189/#108/#48 remain open. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-19-programme-exit-archive-preparation.md).
+local gates passed in 6m39s (11,661 units/68.50s, 103 frontend cases).
+Hosted quality passed in 11m13s, units in 2m16s, exact-head PR gate in 4s and
+all three CodeQL analyses reported zero findings/errors/warnings. #189/#108/#48
+remain open. PostgreSQL was deferred, not certified. See the
+[protected evidence](../checkpoints/2026-09-19-programme-exit-history-paging.md).
+PR #191's packaging and initial paging remain delivered, with its prior npm
+outage and recovery retained in the
+[foundation checkpoint](../checkpoints/2026-09-19-programme-exit-archive-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,10 +40,10 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-exit-history`, unpublished follow-up transplanted onto
-protected PR #191 with identical content verified. The prior npm outage and
-closing-reference correction are retained in the archive checkpoint, not active
-blockers. Continue #189, then #190/P11 and P12; no unrelated detour.
+Branch: `codex/programme-exit-item`, unpublished component transplanted onto
+protected PR #192 with identical tree verified. Exact certification is next.
+The prior npm outage is historical, not an active blocker. Continue #189, then
+#190/P11 and P12; no unrelated detour or idle wait for hosted delivery.
 P11's accepted ADR 0081/EVT-007/INT-007 exit contract has necessary implementation
 gaps now explicitly listed in #108 and #48: #189 permission-controlled composite
 archive and #190 accountable stop-use. Existing timetable packs are not a whole
@@ -63,30 +66,31 @@ history readers otherwise still truncate, so cannot establish archive completene
 as-is. Paging retains each read's field ceiling, authorization and audit, but is
 not itself a consistent snapshot. See the
 [archive preparation checkpoint](../checkpoints/2026-09-19-programme-exit-archive-preparation.md).
-Separate unpublished follow-up adds discussion, private copy-review and compound
-readiness paging without changing entry field ceilings or losing tied versions.
-Focused database-free feedback passed 193 cases in 1.77s; targeted Ruff, strict
-typing, NumPy and semantic documentation passed. Complete feedback passed 11,633
-units in 82.16s with three existing Django warnings. Repository documentation
-passed 642 Markdown files, four skills and 215 requirements.
-One additional discussion native case and expanded readiness/withdrawn-review
-cases remain uncollected/unexecuted. This follow-up is not part of PR #191's
-certified head and has no exact certification or protected delivery yet.
+PR #192 adds discussion, private copy-review and compound readiness paging plus
+actual one-item core collection through the owner readers and independent layer
+permissions. Exact head `533d95f1e7ca8ed195d20fb72235375e31a4d8cc`, tree
+`4be1b42c9a50f7d5decb55f8174f48399f4af621`, passed all eight retained local gates
+in 399.112s against protected base `4f0aae675124beedf77b0b77535094d9a6942222`.
+Receipt v4 is `postgresql_deferred`: 11,661 units/68.50s, 103 frontend cases,
+zero databases, null combined coverage/headroom. Exact evidence was preserved
+with matching hashes outside `.local-ci`. Native additions remain unexecuted.
 The named recoverable stash `5b6851fb9f5670a257ba9585189bbd780f0c7730` has already
-been applied to this follow-up branch; retain it but do not apply it again.
-The protected tree and clean main were verified; both unpublished follow-up
-commits were transplanted without changing their tree. Fresh exact certification
-is next. No scheduled reminder or background merge watcher was created.
+been applied and committed; retain it but do not apply it again.
+No scheduled reminder or background merge watcher was created.
 See the [remaining-history checkpoint](../checkpoints/2026-09-19-programme-exit-history-paging.md).
-No new permission, native schema, route, profile or acceptance is claimed.
-One-item core collection now composes
-the actual owner readers under canonical scope locks and final per-layer checks.
-Focused tests passed 28 cases in 0.25s; Ruff, typing and both Python documentation
-checks passed. One additional native composition/audit/scope case is maintained
-but uncollected/unexecuted. Hosts/staffing and the complete archive remain open.
-Complete feedback with core collection passed 11,661 units in 80.72s with the
-same three Django warnings; documentation still validates 642 Markdown files,
-four skills and 215 requirements. No exact certification of this follow-up yet.
+
+The unpublished item component composes core, host roster/history/current shared
+availability and complete fixed-ceiling staffing histories. The real roster's
+canonical complete-person locks precede core's actor lock; all six layer field
+sets are checked before collection and return. Source versions/sets and complete
+histories must agree. Focused core/item tests passed 77 cases in 0.37s; Ruff,
+strict typing, NumPy and semantic docs passed. Complete database-free feedback
+passed 11,710 units in 65.96s with three existing Django URL-field warnings.
+Two additional actual-command host/staffing cases are maintained but remain
+uncollected/unexecuted #102 debt. No schema, role, route, profile or native
+acceptance is claimed. Source bindings, placement decisions and complete archive
+composition remain open. See the
+[item checkpoint](../checkpoints/2026-09-19-programme-exit-item-collection.md).
 P10 signed-continuity preparation is implemented: a web-only ephemeral Ed25519
 key and independent verifier trust, six real-purpose HTTPS downloads, actual
 offline CLI with networking/Django denied, retained history and clock/tamper/scope

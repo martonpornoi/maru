@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from .authorization import ProgrammeAuthorizer
 
 MAX_CORE_READINESS_ENTRIES: Final = 21_000
-_FIELDS: Final = (
+PROGRAMME_EXIT_CORE_FIELDS: Final = (
     (
         PROGRAMME_VIEW_PRIVATE,
         frozenset(
@@ -223,7 +223,7 @@ def load_programme_exit_core(
     }
 
     def authorize(*, lock: bool = False) -> None:
-        for capability, fields in _FIELDS:
+        for capability, fields in PROGRAMME_EXIT_CORE_FIELDS:
             authorize_programme_scope(
                 **scope, capability_code=capability, requested_fields=fields, lock=lock
             )
@@ -289,7 +289,7 @@ def load_programme_exit_core(
     return _authorized_query(
         **scope,
         capability_code=PROGRAMME_VIEW_PRIVATE,
-        requested_fields=_FIELDS[0][1],
+        requested_fields=PROGRAMME_EXIT_CORE_FIELDS[0][1],
         operation="programme.query.exit_core",
         loader=load,
         target_type="programme.item",

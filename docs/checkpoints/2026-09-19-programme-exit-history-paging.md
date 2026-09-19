@@ -76,3 +76,34 @@ Complete database-free feedback including core collection passed 11,661 tests in
 80.72s, with the same three Django URL-field warnings. Documentation validation
 remains 642 Markdown files, four skills and 215 requirement identifiers. This is
 iteration evidence; fresh exact-commit and protected delivery are still required.
+
+## Exact local certification and submitted PR
+
+PR #192 was opened on exact clean head
+`533d95f1e7ca8ed195d20fb72235375e31a4d8cc`, tree
+`4be1b42c9a50f7d5decb55f8174f48399f4af621`, against protected
+`4f0aae675124beedf77b0b77535094d9a6942222`. All eight retained gates passed
+in 399.112s (6m39s), completing at 2026-09-19 18:00:19 UTC: 11,661 units
+in 68.50s, 103 frontend tests, static/docs/contracts/security/packaging checks.
+Version-4 receipt `postgresql_deferred` reports zero databases and null combined
+coverage/headroom. Receipt, plan, actual unit report, wheel and sdist were preserved
+outside `.local-ci` with matching hashes before further certification. Receipt
+SHA-256: `f974b6c82c611ba1b45056817b7343ea588c7688041d9a93ab2c79d43a8863de`.
+Native additions remain uncollected/unexecuted. #189/#108/#48 remain open;
+the PR contains no closing reference. Hosted acceptance is independent.
+
+## Protected delivery
+
+PR #192 squash-merged as `d4a4f9d37d98688c907ad1a418d19cc0f00e0437` at
+2026-09-19 18:13:34 UTC. Exact-head PR gate was green, mergeability clean, and
+complete review/conversation/closing-reference lists empty. Hosted run 35459853360
+passed quality in 11m13s, units in 2m16s and aggregate gate in 4s. All processed
+`refs/pull/192/head` CodeQL analyses matched certified head: Python 1804911588,
+JavaScript/TypeScript 1804910652 and Actions 1804910130 each reported zero
+findings, errors or warnings.
+
+Clean local main fast-forwarded to the protected squash and matched origin/main;
+its tree `4be1b42c9a50f7d5decb55f8174f48399f4af621` equals the certified tree.
+The isolated repair worktree remained at `aa1ede69fb880dcb12d627bbfc049fba23166e68`.
+Only the unpublished host/staffing follow-up was rebased; its tree was unchanged.
+All three issues remain open and native debt remains deferred, not accepted.
