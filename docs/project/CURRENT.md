@@ -11,16 +11,19 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme archive packaging and initial history paging are delivered through
-[PR #191](https://github.com/martonpornoi/maru/pull/191), protected squash
-`4f0aae675124beedf77b0b77535094d9a6942222` at 2026-09-19 17:51:10 UTC.
-Its tree equals certified head `5b97bf1a222b07a680870660d650b141087667f2`;
+Programme remaining history paging and authorized core collection are delivered
+through [PR #192](https://github.com/martonpornoi/maru/pull/192), protected squash
+`d4a4f9d37d98688c907ad1a418d19cc0f00e0437` at 2026-09-19 18:13:34 UTC.
+Its tree equals certified head `533d95f1e7ca8ed195d20fb72235375e31a4d8cc`;
 clean local main equals origin/main and the protected result. All eight retained
-local gates passed in 6m54s (11,594 units/82.10s, 103 frontend cases).
-After npm's external audit outage recovered, hosted quality passed in 12m04s,
-units in 1m41s, exact-head PR gate in 4s and all three CodeQL analyses passed.
-#189/#108/#48 remain open. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-19-programme-exit-archive-preparation.md).
+local gates passed in 6m39s (11,661 units/68.50s, 103 frontend cases).
+Hosted quality passed in 11m13s, units in 2m16s, exact-head PR gate in 4s and
+all three CodeQL analyses reported zero findings/errors/warnings. #189/#108/#48
+remain open. PostgreSQL was deferred, not certified. See the
+[protected evidence](../checkpoints/2026-09-19-programme-exit-history-paging.md).
+PR #191's packaging and initial paging remain delivered, with its prior npm
+outage and recovery retained in the
+[foundation checkpoint](../checkpoints/2026-09-19-programme-exit-archive-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,8 +40,8 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-exit-item`, unpublished next component while certified
-[PR #192](https://github.com/martonpornoi/maru/pull/192) runs protected checks.
+Branch: `codex/programme-exit-item`, unpublished component transplanted onto
+protected PR #192 with identical tree verified. Exact certification is next.
 The prior npm outage is historical, not an active blocker. Continue #189, then
 #190/P11 and P12; no unrelated detour or idle wait for hosted delivery.
 P11's accepted ADR 0081/EVT-007/INT-007 exit contract has necessary implementation
