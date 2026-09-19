@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme's on-site HTTPS/print-response preparation and historical staffing-label
-correction are delivered through [PR #187](https://github.com/martonpornoi/maru/pull/187),
-protected squash `8450f80078629e482744b2af34037d8298dff359` at 2026-09-19 15:17:33 UTC.
-Its tree equals certified head `6039cb2e8f5da2c0baa52574c77eef3cd38c25af`;
+Programme's signed offline-continuity preparation is delivered through
+[PR #188](https://github.com/martonpornoi/maru/pull/188), protected squash
+`e3980ac33ef1e91cc8b94e8a90bf4b8a92941c80` at 2026-09-19 16:16:10 UTC.
+Its tree equals certified head `4c5cec0ec194d193629d5f7b3d5f92a3fba08058`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m42s, including 11,408 units in 63.38s and 103 frontend
-cases. Hosted quality took 9m48s and units 2m34s; exact-head PR gate and all
+local gates passed in 7m48s, including 11,511 units in 82.92s and 103 frontend
+cases. Hosted quality took 11m48s and units 1m44s; exact-head PR gate and all
 three processed CodeQL configurations passed. No parent or #175 was closed.
 PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-19-programme-onsite-fixture-preparation.md).
+[protected evidence](../checkpoints/2026-09-19-programme-continuity-fixture-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,30 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-continuity-fixture`, from protected PR #187.
+Branch: `codex/programme-exit-archive`, from protected PR #188.
+P11's accepted ADR 0081/EVT-007/INT-007 exit contract has necessary implementation
+gaps now explicitly listed in #108 and #48: #189 permission-controlled composite
+archive and #190 accountable stop-use. Existing timetable packs are not a whole
+profile archive; full-convention closure cannot be claimed as Programme-only exit.
+Exact output grants, including broader Venue authority, need explicit accounting
+under ADR 0106. Both prerequisites are native children of #108 as well as explicit
+parent checklist entries. #189 has an initial database-free bounded packaging
+primitive and exclusive keyset paging for working/delivery histories; 83 focused
+unit cases passed in 0.41s. Complete feedback passed 11,594 units in 81.25s with
+three existing Django warnings after a shared Windows temporary-directory access
+failure was corrected by using a fresh repository-owned test directory.
+Strict typing, semantic Python documentation and repository documentation
+(641 Markdown files, four skills, 215 requirements) passed. Exact certification
+and protected delivery of this foundation remain pending.
+Two PostgreSQL paging/append/scope/denial regressions
+are maintained but uncollected/unexecuted. It is not an export service: owner-specific complete
+collectors, schemas, authorization/source rechecks, audit, file linkage, supported
+volume handling, UI and native/P11 proof remain unfinished. Current ordinary
+history readers otherwise still truncate, so cannot establish archive completeness
+as-is. Paging retains each read's field ceiling, authorization and audit, but is
+not itself a consistent snapshot. See the
+[archive preparation checkpoint](../checkpoints/2026-09-19-programme-exit-archive-preparation.md).
+No new permission, native schema, route, profile or acceptance is claimed.
 P10 signed-continuity preparation is implemented: a web-only ephemeral Ed25519
 key and independent verifier trust, six real-purpose HTTPS downloads, actual
 offline CLI with networking/Django denied, retained history and clock/tamper/scope
@@ -47,10 +70,10 @@ retained work; no extra expensive database journey was added. Focused feedback
 passed 214 cases in 3.57s; complete pre-final feedback passed 11,509 units in
 92.73s with three existing URL-field warnings. Final purpose-ceiling regressions
 passed 17 cases in 0.96s. Documentation passed 640 Markdown files, four skills
-and 215 requirements. Fresh exact-commit certification is pending.
+and 215 requirements. Exact certification/protected delivery passed above.
 All native assertions remain uncollected/unexecuted #102 debt; this is not P10
 acceptance, device custody/disposal, dependency-outage or production evidence.
-Next: protected delivery, then P11 archive/recovery/stop-use and complete P12
+Next: P11 archive/recovery/stop-use and complete P12
 inventories/denials; restore PostgreSQL acceptance only after preparation.
 See the [continuity checkpoint](../checkpoints/2026-09-19-programme-continuity-fixture-preparation.md).
 
@@ -157,8 +180,7 @@ assertions are maintained but uncollected/unexecuted. Rendered/print/HTTPS/brows
 and genuine-person acceptance remain separate, not inferred from serializers.
 See the [release checkpoint](../checkpoints/2026-09-19-programme-release-fixture-preparation.md).
 
-Next: complete P10 signed/offline continuity preparation, then
-P11–P12 recovery/isolation.
+Next: complete P11 archive/recovery/stop-use, then P12 isolation.
 Keep P07 transport/browser evidence explicit in the integrated rehearsal. #175's
 implementation connection is delivered; its native race, rollback, scope,
 runtime and recovery obligations stay #102, and human screens remain #92.
