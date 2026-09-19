@@ -92,8 +92,33 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
 def test_native_room_recipe_mirror_and_unused_reverse():
+    archive = import_module(
+        "maru.authorization.migrations.0038_programme_archive_recipe"
+    )
     migration = import_module(
         "maru.authorization.migrations.0036_programme_room_operations_recipe"
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(archive.REVERSE_SQL)
+        for key, expected in json.loads(migration._FROZEN_RECIPES).items():
+            code, version = key.split("@")
+            cursor.execute(
+                "SELECT public.maru_programme_role_recipe(%s, %s)::text",
+                [code, int(version)],
+            )
+            assert json.loads(cursor.fetchone()[0]) == expected
+        cursor.execute(migration.REVERSE_SQL)
+        cursor.execute("SELECT public.maru_programme_role_recipe('room-operations', 1)")
+        assert cursor.fetchone() == (None,)
+        assert not programme_role_database_integrity_is_ready()
+        cursor.execute(migration.FORWARD_SQL)
+        cursor.execute(archive.FORWARD_SQL)
+    assert programme_role_database_integrity_is_ready()
+
+
+def test_native_archive_recipe_mirror_and_unused_reverse():
+    migration = import_module(
+        "maru.authorization.migrations.0038_programme_archive_recipe"
     )
     with connection.cursor() as cursor:
         for key, expected in json.loads(migration._FROZEN_RECIPES).items():
@@ -104,7 +129,7 @@ def test_native_room_recipe_mirror_and_unused_reverse():
             )
             assert json.loads(cursor.fetchone()[0]) == expected
         cursor.execute(migration.REVERSE_SQL)
-        cursor.execute("SELECT public.maru_programme_role_recipe('room-operations', 1)")
+        cursor.execute("SELECT public.maru_programme_role_recipe('exit-archive', 1)")
         assert cursor.fetchone() == (None,)
         assert not programme_role_database_integrity_is_ready()
         cursor.execute(migration.FORWARD_SQL)

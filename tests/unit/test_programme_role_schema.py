@@ -33,6 +33,7 @@ FENCE = import_module(
 ROOM = import_module(
     "maru.authorization.migrations.0036_programme_room_operations_recipe"
 )
+ARCHIVE = import_module("maru.authorization.migrations.0038_programme_archive_recipe")
 CONTRACT = readiness.PROGRAMME_ROLE_INTEGRITY_CONTRACT
 
 
@@ -77,10 +78,14 @@ def test_local_validation_never_follows_other_owner_relations(model, monkeypatch
 
 def test_frozen_native_recipe_contents_match_every_reviewed_definition():
     historical = json.loads(GUARDS._FROZEN_RECIPES)
-    frozen = json.loads(ROOM._FROZEN_RECIPES)
+    room = json.loads(ROOM._FROZEN_RECIPES)
+    frozen = json.loads(ARCHIVE._FROZEN_RECIPES)
     assert json.loads(ROOM._OLD_RECIPES) == historical
+    assert json.loads(ARCHIVE._OLD_RECIPES) == room
+    assert {key: frozen[key] for key in room} == room
+    assert set(frozen) - set(room) == {"exit-archive@1"}
     assert {key: frozen[key] for key in historical} == historical
-    assert set(frozen) - set(historical) == {"room-operations@1"}
+    assert set(frozen) - set(historical) == {"room-operations@1", "exit-archive@1"}
     assert set(frozen) == {
         f"{code}@{version}" for code, version in PROGRAMME_ROLE_RECIPES
     }
@@ -105,6 +110,7 @@ def test_native_boundary_is_source_derived_and_complete_not_authorization_wide()
         ("authorization", "0034_programme_role_approval_downgrade_fence"),
         ("authorization", "0035_programme_role_approval_audit"),
         ("authorization", "0036_programme_room_operations_recipe"),
+        ("authorization", "0038_programme_archive_recipe"),
     }
     assert len(CONTRACT.triggers) == 4
     assert set(CONTRACT.functions) == {
@@ -238,10 +244,10 @@ def test_audit_fix_forward_preserves_every_other_guard_and_retains_reverse_fence
     decision = "maru_programme_role_decision_guard()"
     for name, function in original.items():
         if name == "maru_programme_role_recipe(text, integer)":
-            _, room_functions = integrity.parse_database_integrity_sql_contracts(
-                ROOM.FORWARD_SQL
+            _, archive_functions = integrity.parse_database_integrity_sql_contracts(
+                ARCHIVE.FORWARD_SQL
             )
-            assert CONTRACT.functions[name] == room_functions[name]
+            assert CONTRACT.functions[name] == archive_functions[name]
             continue
         expected = (
             function

@@ -95,6 +95,7 @@ def test_conversion_capability_is_additive_exact_department_nondelegable():
         *OPERATOR_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",
+        "programme.export_archive",
     } == {
         *current.ORGANIZATION_CAPABILITIES,
         *current.EDITION_CAPABILITIES,

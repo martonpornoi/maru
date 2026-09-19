@@ -54,3 +54,29 @@ Complete database-free feedback subsequently passed all 11,740 units in 84.70s,
 with the same three existing Django URL-field warnings and a fresh owned temporary
 directory. Documentation validates 644 Markdown files, four skills and 215 stable
 requirements. Exact clean-commit certification and protected acceptance are next.
+
+## Exact certification and protected delivery
+
+All eight retained gates passed for clean head
+`78c541533f2cabb7c98f814af914e19c270e940e`, tree
+`fa662f3139c87831c11aefe1d1c3232e7f6c7b3b`, against protected base
+`c13c4185346014c54ce41f943859ce31c56a15f7`: 438.111s (7m18s), 11,740 units
+in 81.85s and 103 frontend cases. Receipt v4 completed 18:46:22 UTC as
+`postgresql_deferred`, zero databases and null combined coverage/headroom.
+Receipt, plan, actual unit report, wheel and sdist were preserved with matching
+hashes outside `.local-ci`; receipt SHA-256 is
+`9c3f759d14f704355b9426b690fa3518fe3466d82f16062f92910195490fdf29`.
+
+[PR #194](https://github.com/martonpornoi/maru/pull/194) merged at
+2026-09-19 19:04:38 UTC as protected squash
+`42c50e497bc6cfffa399725ad5845617149709c0`. Hosted run `35462336977`
+passed quality job `105948352789` in 12m58s, unit job `105948352798` in
+2m18s and exact-head PR gate `105950146833` in 3s. All three exact-head
+CodeQL analyses (`1805005079`, `1805004071`, `1805003593`) reported zero
+findings/errors/warnings. Complete reviews/threads and closing references were
+empty; immediate mergeability was CLEAN/MERGEABLE. Merge used the exact head.
+
+The protected tree equals the certified tree. Clean local main and origin/main
+both equal the squash; the detached repair worktree remains untouched. Issue
+comments on #189, #108 and #102 record delivery and maintained native debt.
+Parents remain open for the full archive, stop-use and integrated acceptance.

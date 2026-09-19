@@ -312,6 +312,26 @@ permitted until the final native/recovery/human/integrated gates are satisfied.
   [review contract](../modules/programme-review.md) and
   [recovery runbook](../operations/applications-programme-review-migration-and-recovery.md).
 
+### Programme restricted exit purpose
+
+ADR 0108 adds a separate C3 `programme.export_archive` purpose for EVT-007/INT-007,
+not permission to disclose every owner body. Its request metadata and explicitly
+declared source-lineage fields require exact edition scope; existing history,
+file, relationship, anonymity and retention checks still apply independently.
+Stable references are restricted provenance, never permission to dereference them.
+Ordinary summary/history projections and their existing audiences are unchanged.
+
+The intended output remains private to the current authenticated requester with
+all still-required rights. No shared bearer URL, general task directory, email
+delivery, impersonated download or new legal source-retention period is approved.
+Private artifact custody, bounded generation, expiry/disposal and minimized audit
+must be implemented before a usable export is claimed. This increment reserves
+the dormant capability/recipe and admission seam only; no task or artifact exists.
+Files must use the actual Applications reader and withhold anonymous identifying
+content before lookup; withdrawal, hold and disposal rules remain authoritative.
+Unrelated personal calendars, obsolete private host availability and broad
+named-person approval rationale are not archive configuration shortcuts.
+
 ### Programme private information layers
 
 - The canonical Programme item identity and closed operational codes are C1.

@@ -184,6 +184,7 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
         code for code, definition in CAPABILITIES.items() if definition.persistable
     } - {
         "programme.manage_staffing",
+        "programme.export_archive",
         "programme.view_staffing",
         *release.RELEASE_CAPABILITIES,
         *OPERATOR_CAPABILITIES,
@@ -222,7 +223,9 @@ def test_release_migration_adds_only_four_independent_edition_capabilities():
         *current.RESOURCE_CAPABILITIES,
     } == {
         code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - OPERATOR_CAPABILITIES - auth.CHANGE_COMMUNICATION_CAPABILITIES
+    } - OPERATOR_CAPABILITIES - auth.CHANGE_COMMUNICATION_CAPABILITIES - {
+        "programme.export_archive"
+    }
 
 
 @pytest.mark.parametrize(

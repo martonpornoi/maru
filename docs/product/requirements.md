@@ -213,6 +213,12 @@ architecture documents, implementation issues, tests, and release notes.
   must not be represented as a complete archive. Packaging grants no authority
   or permission to restore withdrawn disclosure; a public timetable pack or raw
   database backup is not this organizer-facing exit contract.
+  Restricted bulk generation and archive-only lineage require the separate
+  `programme.export_archive` purpose in addition to every owning source's current
+  read permissions. Ordinary summaries and historical field ceilings are not
+  widened. Task metadata and downloads remain requester-bound, with execution and
+  retrieval rechecks, explicit limits, expiry and audit; large exports use the
+  asynchronous boundary in QRY-006 (ADR 0108).
 
 ### Archival history
 

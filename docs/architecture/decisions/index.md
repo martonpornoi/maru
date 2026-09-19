@@ -20,6 +20,11 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0108](0108-purpose-controlled-programme-exit-archive.md) reserves an explicit
+Programme export purpose in addition to independent source rights, preserving
+ordinary field ceilings and requiring requester-bound, audited asynchronous
+handling for large private archives. It activates no current profile or export.
+
 [ADR 0094](0094-complete-programme-release-eligibility.md) separates the complete
 release-eligibility rule matrix from partial planning reports, authenticated
 owner collection, independent approval and atomic publication. The rule-only

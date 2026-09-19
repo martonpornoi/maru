@@ -289,7 +289,9 @@ def test_new_sender_capability_is_dormant_and_native_catalog_is_additive():
         + current.EDITION_CAPABILITIES
         + current.DEPARTMENT_CAPABILITIES
         + current.RESOURCE_CAPABILITIES
-    ) == {code for code, definition in CAPABILITIES.items() if definition.persistable}
+    ) == {
+        code for code, definition in CAPABILITIES.items() if definition.persistable
+    } - {"programme.export_archive"}
     definition = CAPABILITIES[VIEW_CHANGE_RECIPIENTS]
     assert definition.maximum_scope is ScopeLevel.EDITION
     assert definition.persistable

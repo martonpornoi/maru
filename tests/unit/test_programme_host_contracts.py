@@ -42,6 +42,7 @@ def test_host_capabilities_add_only_exact_edition_manager_authority():
         *OPERATOR_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",
+        "programme.export_archive",
     }
     for code in current.HOST_CAPABILITIES:
         assert CAPABILITIES[code].maximum_scope == ScopeLevel.EDITION

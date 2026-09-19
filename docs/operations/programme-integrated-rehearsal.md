@@ -829,6 +829,16 @@ module and replay affected checkpoints, including downstream consequences.
 | P11 | Export, recover and stop | Retain authorized history and archive evidence; restore a mutually consistent database/artifacts through #97's supported procedure and reauthorize reads. Stop-use prevents new work/access as contracted without erasing required evidence. |
 | P12 | Verify isolation and excluded effects | Cross-organization/edition/role/object/field attempts disclose nothing outside scope. Compare owner-controlled baseline and final state/effect inventories: no Registration, Participation, payment, attendance, accreditation, catalog, charity, Logistics or general Communications side effects. |
 
+P11 archive preparation follows ADR 0108: require the separately approved
+`exit-archive@1` purpose and every existing owner source/history/file permission.
+The current implementation only reserves this dormant boundary; it creates no
+export task or downloadable artifact. Check source lineage independently from
+ordinary history access, anonymous/file withholding before lookup, requester-only
+execution/retrieval, revocation, source drift, complete scope, expiry and audit.
+Native migration/scope/recipe cases remain #102 debt under ADR 0100. A schema-only
+metadata observation, if separately approved, is not P11 or PostgreSQL workflow
+acceptance. No current manifest may be activated from these preparations.
+
 P12 is an assertion at every relevant checkpoint, not just a final count. Absence
 of a navigation link does not prove absence of writes, authority, jobs or effects.
 Include wrong-tenant direct requests, revoked authority, stale versions, exact

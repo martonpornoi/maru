@@ -11,16 +11,18 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme host/staffing item collection is delivered through
-[PR #193](https://github.com/martonpornoi/maru/pull/193), protected squash
-`c13c4185346014c54ce41f943859ce31c56a15f7` at 2026-09-19 18:37:06 UTC.
-Its tree equals certified head `35fedf448f07404fc993e27077bedf143a5cffdd`;
+Programme complete placement-history collection is delivered through
+[PR #194](https://github.com/martonpornoi/maru/pull/194), protected squash
+`42c50e497bc6cfffa399725ad5845617149709c0` at 2026-09-19 19:04:38 UTC.
+Its tree equals certified head `78c541533f2cabb7c98f814af914e19c270e940e`;
 clean local main equals origin/main and the protected result. All eight retained
-local gates passed in 7m05s (11,710 units/82.93s, 103 frontend cases).
-Hosted quality passed in 12m03s, units in 2m26s, exact-head PR gate in 5s and
+local gates passed in 7m18s (11,740 units/81.85s, 103 frontend cases).
+Hosted quality passed in 12m58s, units in 2m18s, exact-head PR gate in 3s and
 all three CodeQL analyses reported zero findings/errors/warnings. #189/#108/#48
 remain open. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-19-programme-exit-item-collection.md).
+[protected evidence](../checkpoints/2026-09-19-programme-exit-placement-history.md).
+PR #193's [host/staffing collection](../checkpoints/2026-09-19-programme-exit-item-collection.md)
+remains delivered, with its exact evidence preserved.
 PR #192's [core history](../checkpoints/2026-09-19-programme-exit-history-paging.md)
 and PR #191's packaging and initial paging remain delivered, with its prior npm
 outage and recovery retained in the
@@ -41,9 +43,24 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-exit-placement-history`, unpublished next component
-transplanted onto protected PR #193 with identical tree verified. Exact clean-
-commit certification is next; no hosted delivery remains blocked.
+Branch: `codex/programme-archive-boundary`, unpublished permission/contract work
+following protected PR #194. ADR 0108 reserves a separate exact-edition export
+purpose and minimal immutable recipe, never replacement source authority.
+No current profile, ordinary field ceiling, existing recipe or root is widened.
+Migrations 0037/0038 retain used-authority/recipe downgrade fences. Expected source
+fingerprints and isolated fixture expectations are updated from reviewed declarations,
+not live observations; no new native schema acceptance is claimed. Schema-only
+permission has been requested; PostgreSQL suites remain deferred. Initial focused
+regressions passed 159 cases, expanded feedback exposed stale historical catalog
+and fixture expectations, and the repaired focused set passed 449 cases in 1.90s.
+Complete repaired database-free feedback passed 11,772 units in 64.22s with three
+existing Django warnings. Ruff/format, strict typing (737 files), semantic/NumPy
+documentation and repository docs (646 Markdown files) passed. A final additive
+scope-vocabulary check passed with all 31 archive-focused cases in 0.27s; it
+preserves historical native Organization floors rather than rewriting them to
+newer policy ceilings. Schema-only verification, exact certification and protected
+delivery are pending; no native acceptance is claimed. See the
+[archive authority checkpoint](../checkpoints/2026-09-19-programme-archive-authority-boundary.md).
 The prior npm outage is historical, not an active blocker. Continue #189, then
 #190/P11 and P12; no unrelated detour or idle wait for hosted delivery.
 P11's accepted ADR 0081/EVT-007/INT-007 exit contract has necessary implementation
