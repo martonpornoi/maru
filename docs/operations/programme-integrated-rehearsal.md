@@ -679,6 +679,53 @@ serializer checks establish composition only. Rendered/print/HTTPS/browser,
 first-publication rollback/races and P08–P12 remain separate acceptance. See the
 [release checkpoint](../checkpoints/2026-09-19-programme-release-fixture-preparation.md).
 
+### Actual-owner published-work change preparation
+
+`ProgrammeRunningFixture.prepare_change(proposal, review, items, planning, physical,
+staffing, release)` validates all eight original source documents before its fixed
+private child. Genuine startup, original lease and 180-second stage ceiling remain
+mandatory. Original controllers approve nine existing source/notice recipes,
+including a run-sheet role for exactly the first room and its original physical
+reviewer. Both notice decision permissions deliberately exercise self-review denial;
+these synthetic assignments are not recommended production responsibility mixes.
+
+The first released occurrence needs an earlier aisle inspection. Programme revises
+its explicit preparation work start and briefing, without editing the timetable.
+The original volunteer's accepted interval remains unchanged. The old release must
+be explicitly invalidated, with no ordinary selections disclosed. A fresh Workforce
+successor preview identifies the one affected retained confirmation. A stale digest
+fails without mutation. Applying the original preview cancels the old demand,
+retains the removed commitment and its original interval, and creates a separate
+draft with no copied acceptance. The original volunteer must claim this new work;
+the organizer independently confirms and locks fully covered work. The other two
+commitments and the candidate's three placements remain unchanged.
+
+Both release actors recollect all ten satisfied owner checks against a new digest.
+Independent approval and separate publication/retries advance the exact original
+pointer to version two. Author self-approval, approver self-publication and a stale
+pointer remain refused. History retains the invalidated predecessor; its comparison
+is suppressed, not reconstructed as a safe old timetable or an empty mass removal.
+Public output retains the original exact copy/placements. Operator work layers
+distinguish the cancelled predecessor from three current locked demands.
+
+Three notices target the existing ceremony host, new confirmed work commitment and
+independently admitted first-room operator. Each explicitly retains comparison
+suppression: no old geometry is restored. Preparation is not independent review;
+self-review and premature handoff fail. Approval does not imply handoff, and manual
+handoff does not imply acknowledgement. A different person cannot acknowledge;
+stale sequence fails, and only the original exact recipient acknowledges/retries.
+These are simulated command facts, not real human/provider delivery or a browser
+journey. Notice commands leave all retained work unchanged.
+
+Database-free tests exercise real signatures, typed DTOs, closed private decoding,
+guards, denial/retry paths and retained output semantics. The extended host-only
+native case is **uncollected/unexecuted #102 debt**, including actual runtime
+authority, transaction and event/rollback/concurrency obligations. This preparation
+does not prove a room/time move, available historical comparison, native P08 pass,
+rendered/print/browser acceptance or P09–P12. Those remain explicit #109/#92 and
+existing native acceptance obligations; see the
+[change checkpoint](../checkpoints/2026-09-19-programme-change-fixture-preparation.md).
+
 ### Scenario people and sessions
 
 Use repository-owned fictional convention names, synthetic people and reserved

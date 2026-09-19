@@ -63,3 +63,29 @@ and browser observations remain explicitly required. Restore PostgreSQL under
 #102 only after checkpoint preparation; #97, #92 and #109 remain mandatory before
 #108/#48 closure or supported promotion. A merged preparation is not a passed
 journey checkpoint.
+# Protected delivery appendix: PR #185
+
+Protected squash `de45c67216d7ad0e67417fecb83e02e84486afca` merged at
+2026-09-19 12:17:07 UTC. Its tree
+`792f2051e00752f39925521c684e6d1958ec326c` exactly equals certified head
+`17ed6724fb22c510e70078fa0a955b7b2a6b873a`.
+
+All eight retained local gates passed in 343.880s, completing at
+2026-09-18 22:54:13.7248627 UTC; 11,241 units passed in 62.78s and 103 frontend
+cases passed. Receipt v4 reports `postgresql_deferred`, zero database instances,
+and null combined coverage/timing headroom. Receipt SHA-256:
+`BB8DE21A87840FC474F18AC67523BF1E541F1CBC3118FBA7787E0891DDA63215`.
+The receipt, plan, unit report and two distributions were copied to the ignored
+`programme-release-17ed672-deferred` evidence directory and all five hashes matched.
+
+Hosted run 35404120378 passed: relevant quality 12m36s, units 2m19s and PR gate
+3s. All three exact-head CodeQL configurations were processed without findings,
+errors or warnings. Fully enumerated reviews, conversations and closing references
+were empty; mergeability was clean. No acceptance parent was closed. PostgreSQL
+and real HTTP/browser/print/human acceptance remain deferred or outstanding.
+
+The clean separate main worktree fast-forwarded to the exact protected result.
+The unrelated repair worktree remained clean at
+`aa1ede69fb880dcb12d627bbfc049fba23166e68`. Only agent-owned unfinished P08 files
+were preserved in a named stash and restored onto the next branch from main;
+the recoverable stash was retained. No deployment or profile activation occurred.

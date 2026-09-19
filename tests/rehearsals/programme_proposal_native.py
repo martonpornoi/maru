@@ -297,5 +297,100 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
                         sql.Identifier(table)
                     )
                 ).fetchone() == (0,)
+        changed = fixture.prepare_change(
+            result, reviewed, items, planning, physical, staffing, released
+        )
+        _assert_native_change(
+            fixture, changed, planning, staffing, items, physical, released
+        )
     # This proves no actual HTTP/browser/print journey, real venue fitness,
-    # representative human, complete cross-tenant inventory or P08-P12 acceptance.
+    # representative human, complete cross-tenant inventory or P09-P12 acceptance.
+
+
+def _assert_native_change(
+    fixture, changed, planning, staffing, items, physical, released
+):
+    with psycopg.connect(fixture.runtime.database_url, connect_timeout=5) as connection:
+        scope = (changed.organization_id, changed.edition_id)
+        assert connection.execute(
+            "SELECT active_release_id, version "
+            "FROM public.scheduling_schedulingreleasepointer "
+            "WHERE organization_id = %s AND edition_id = %s",
+            scope,
+        ).fetchone() == (changed.release_id, 2)
+        assert connection.execute(
+            "SELECT previous_release_id, approval_id, actor_id "
+            "FROM public.scheduling_schedulingrelease "
+            "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+            (changed.release_id, *scope),
+        ).fetchone() == (
+            released.release_id,
+            changed.approval_id,
+            planning.planner.account_id,
+        )
+        assert connection.execute(
+            "SELECT status FROM public.workforce_shiftdemand "
+            "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+            (changed.predecessor_demand_id, *scope),
+        ).fetchone() == ("cancelled",)
+        assert connection.execute(
+            "SELECT status, removal_kind, command_version "
+            "FROM public.workforce_shiftcommitment "
+            "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+            (changed.predecessor_commitment_id, *scope),
+        ).fetchone() == (
+            "removed",
+            "cancelled",
+            staffing.work[0].commitment_version + 1,
+        )
+        for work in (changed.work, *staffing.work[1:]):
+            assert connection.execute(
+                "SELECT account_id, demand_id, status, command_version "
+                "FROM public.workforce_shiftcommitment "
+                "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                (work.commitment_id, *scope),
+            ).fetchone() == (
+                staffing.volunteer.account_id,
+                work.demand_id,
+                "confirmed",
+                work.commitment_version,
+            )
+        recipients = (
+            items.ceremony_host.account_id,
+            staffing.volunteer.account_id,
+            physical.reviewer.account_id,
+        )
+        for notice, recipient, purpose in zip(
+            changed.notice_ids, recipients, ("host", "work", "room"), strict=True
+        ):
+            assert connection.execute(
+                "SELECT actor_id, recipient_id, recipient_purpose, "
+                "pointer_version, source_state "
+                "FROM public.scheduling_schedulingchangenotice "
+                "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                (notice, *scope),
+            ).fetchone() == (
+                planning.planner.account_id,
+                recipient,
+                purpose,
+                2,
+                "comparison_suppressed",
+            )
+            assert connection.execute(
+                "SELECT action, actor_id, sequence "
+                "FROM public.scheduling_schedulingchangenoticeevidence "
+                "WHERE notice_id = %s AND organization_id = %s "
+                "AND edition_id = %s ORDER BY sequence",
+                (notice, *scope),
+            ).fetchall() == [
+                ("approve", released.reviewer.account_id, 2),
+                ("handoff", planning.planner.account_id, 3),
+                ("acknowledge", recipient, 4),
+            ]
+        for table in (
+            "participation_participation",
+            "participation_participationcapacity",
+        ):
+            assert connection.execute(
+                sql.SQL("SELECT count(*) FROM public.{}").format(sql.Identifier(table))
+            ).fetchone() == (0,)

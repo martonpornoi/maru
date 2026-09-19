@@ -316,6 +316,17 @@ uncollected/unexecuted under #102; rendered/print/browser and full integrated
 acceptance remain separate. See the
 [integrated protocol](../operations/programme-integrated-rehearsal.md#actual-owner-first-release-preparation).
 
+The same isolated fixture prepares published-work succession: explicit earlier
+preparation terms, previewed retained impact, preserved old acceptance, a separate
+new personal claim/independent confirmation, and freshly reviewed republication.
+Three actual-purpose notices keep independent review, simulated manual handoff and
+genuine synthetic-recipient acknowledgement separate. An invalidated predecessor's
+comparison stays suppressed; cancelled historical work is not current work. No
+production behavior, schema, permissions or profiles change. Native execution,
+room/time-move and available-comparison acceptance remain pending, not inferred
+from these database-free fixture tests. See the
+[change protocol](../operations/programme-integrated-rehearsal.md#actual-owner-published-work-change-preparation).
+
 The #96 release work is delivered but remains dormant. Its contracts
 are `release_inputs` (exact versioned intent), `release_dependency_rules`
 (complete journal temporal consequences), `release_artifacts` (one mandatory
