@@ -534,6 +534,69 @@ class ProgrammeRunningFixture:
         except (OSError, subprocess.TimeoutExpired, ValueError):
             raise ProgrammeHttpsError("fixture_release_process_failed") from None
 
+    def prepare_change(
+        self, proposal, review, items, planning, physical, staffing, release
+    ):
+        """Prepare retained-work succession/notices with the original private lease."""
+        require_programme_rehearsal_request()
+        if self.scenario is None or not self._application_environment:
+            raise ProgrammeHttpsError("fixture_change_dependencies_required")
+        from tests.rehearsals.programme_change_scenario import (  # noqa: PLC0415
+            SOURCE_KEYS,
+            change_from_document,
+            change_sources,
+        )
+
+        documents = json.loads(
+            json.dumps(
+                dict(
+                    zip(
+                        SOURCE_KEYS,
+                        map(
+                            asdict,
+                            (
+                                self.scenario,
+                                proposal,
+                                review,
+                                items,
+                                planning,
+                                physical,
+                                staffing,
+                                release,
+                            ),
+                        ),
+                        strict=True,
+                    )
+                ),
+                default=str,
+            )
+        )
+        sources = change_sources(documents)
+        self.refresh_workers()
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "tests.rehearsals.programme_change_scenario"],
+                cwd=ROOT,
+                env=self._application_environment,
+                input=json.dumps(documents),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=min(180, remaining_lease(self.deadline)),
+                check=False,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            if result.returncode != 0 or len(result.stdout) > 16_384:
+                raise ProgrammeHttpsError("fixture_change_process_failed")
+            return change_from_document(
+                json.loads(result.stdout),
+                setup=sources[0],
+                staffing=sources[6],
+                release=sources[7],
+            )
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            raise ProgrammeHttpsError("fixture_change_process_failed") from None
+
 
 @contextmanager
 def isolated_programme_application(*, setup_mode=None, with_scanner=False):

@@ -15,6 +15,8 @@ from tests.rehearsals import programme_runner as runner
 from tests.rehearsals.programme_runtime_environment import (
     ProgrammeRehearsalEnvironmentError,
 )
+from tests.unit.test_programme_change_scenario import _result as _change_result
+from tests.unit.test_programme_change_scenario import _sources as _change_sources
 from tests.unit.test_programme_items_scenario import _result as _items_result
 from tests.unit.test_programme_physical_scenario import _result as _physical_result
 from tests.unit.test_programme_planning_scenario import _result as _planning_result
@@ -25,6 +27,67 @@ from tests.unit.test_programme_setup_scenarios import _document
 from tests.unit.test_programme_staffing_scenario import _result as _staffing_result
 
 RUN = "1234567890abcdef1234567890abcdef"
+
+
+@pytest.mark.parametrize("failure", [None, "nonzero", "timeout", "oversize", "source"])
+def test_change_child_keeps_original_eight_sources_private_and_lease_bounded(
+    launch_seams, monkeypatch, failure
+):
+    sources = _change_sources()
+    expected = _change_result(sources)
+    run = Mock(
+        return_value=SimpleNamespace(
+            returncode=0, stdout=json.dumps(asdict(expected), default=str)
+        )
+    )
+    if failure == "nonzero":
+        run.return_value.returncode = 2
+    elif failure == "timeout":
+        run.side_effect = subprocess.TimeoutExpired("private", 50)
+    elif failure == "oversize":
+        run.return_value.stdout = "private" * 4096
+    elif failure == "source":
+        sources = (*sources[:-1], replace(sources[-1], edition_id=_setup().edition_id))
+    monkeypatch.setattr(runner.subprocess, "run", run)
+    with runner.isolated_programme_application() as original:
+        fixture = replace(original, scenario=sources[0])
+        if failure is None:
+            assert fixture.prepare_change(*sources[1:]) == expected
+        elif failure == "source":
+            with pytest.raises(RuntimeError, match="result_invalid"):
+                fixture.prepare_change(*sources[1:])
+            run.assert_not_called()
+        else:
+            with pytest.raises(
+                runner.ProgrammeHttpsError, match="change_process_failed"
+            ):
+                fixture.prepare_change(*sources[1:])
+    if failure != "source":
+        assert run.call_args.args[0][-1] == "tests.rehearsals.programme_change_scenario"
+        options = run.call_args.kwargs
+        assert options["timeout"] == 50.0
+        assert options["stderr"] == subprocess.DEVNULL
+        assert sources[-1].reviewer.password not in repr(options["env"])
+        assert json.loads(options["input"])["release"]["release_id"] == str(
+            sources[-1].release_id
+        )
+        assert launch_seams.worker.call_count == 2
+
+
+def test_change_stage_requires_policy_and_prepared_setup(launch_seams, monkeypatch):
+    run = Mock()
+    monkeypatch.setattr(runner.subprocess, "run", run)
+    with runner.isolated_programme_application() as fixture:
+        with pytest.raises(runner.ProgrammeHttpsError, match="dependencies_required"):
+            fixture.prepare_change(*(None,) * 7)
+        monkeypatch.setattr(
+            runner,
+            "require_programme_rehearsal_request",
+            Mock(side_effect=ProgrammeRehearsalEnvironmentError("deferred")),
+        )
+        with pytest.raises(ProgrammeRehearsalEnvironmentError, match="deferred"):
+            fixture.prepare_change(*(None,) * 7)
+    run.assert_not_called()
 
 
 @pytest.mark.parametrize("failure", [None, "nonzero", "timeout", "oversize", "source"])

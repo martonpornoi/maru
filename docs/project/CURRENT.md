@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme's actual-owner staffing fixture preparation is delivered through
-[PR #184](https://github.com/martonpornoi/maru/pull/184), protected squash
-`ce1199b7d7a8f4e3dfef5b780ffa22a37e58b582` at 2026-09-18 22:31:19 UTC.
-Its tree equals certified head `85abc22ca38bfb102209bc117b01ac164df4b626`;
+Programme's actual-owner first-release fixture preparation is delivered through
+[PR #185](https://github.com/martonpornoi/maru/pull/185), protected squash
+`de45c67216d7ad0e67417fecb83e02e84486afca` at 2026-09-19 12:17:07 UTC.
+Its tree equals certified head `17ed6724fb22c510e70078fa0a955b7b2a6b873a`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m48s, including 11,186 units in 63.21s and 103 frontend
-cases. Hosted quality took 12m45s and units 2m22s; exact-head PR gate and all
+local gates passed in 5m44s, including 11,241 units in 62.78s and 103 frontend
+cases. Hosted quality took 12m36s and units 2m19s; exact-head PR gate and all
 three processed CodeQL configurations passed. No parent or #175 was closed.
 PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-19-programme-staffing-fixture-preparation.md).
+[protected evidence](../checkpoints/2026-09-19-programme-release-fixture-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,18 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-release-fixture`, from protected PR #184.
+Branch: `codex/programme-change-fixture`, from protected PR #185.
+Prepared P08's earlier preparation Shift, previewed retained-work impact, explicit
+successor/new personal acceptance, fresh independent republication and three
+purpose-specific reviewed notices. Cancelled history remains distinct from current
+work, and invalidated historical comparison stays suppressed. Focused database-free
+checks passed 150 cases in 1.08s; full feedback passed 11,326 units in 76.70s with
+three existing Django URL-field warnings. Documentation passed 638 Markdown files,
+four skills and 215 requirements. Exact certification/protected delivery are pending.
+No PostgreSQL execution occurred; native assertions are maintained #102 debt.
+Room/time-move, available comparison and stale-source notice acceptance remain
+explicit existing native/#109 obligations. See the
+[change checkpoint](../checkpoints/2026-09-19-programme-change-fixture-preparation.md).
 #177 is closed after its bounded authority correction: one truthful resource-only
 recipe and frozen native-function extension, without rewriting the 27 historical
 definitions or changing current profiles, table fingerprints or owner duties.
@@ -112,12 +123,13 @@ JSON/calendar serializers; volunteers retain their own unchanged work and gain n
 unrelated hosting/release discovery. Focused database-free feedback passed 114
 cases in 0.82s; complete feedback passed 11,241 units in 61.82s with three existing
 Django URL-field warnings. Repository documentation passed 637 Markdown files,
-four skills and 215 requirement IDs; exact certification is pending. Native first-release
+four skills and 215 requirement IDs; exact certification and protected delivery
+passed as recorded above. Native first-release
 assertions are maintained but uncollected/unexecuted. Rendered/print/HTTPS/browser
 and genuine-person acceptance remain separate, not inferred from serializers.
 See the [release checkpoint](../checkpoints/2026-09-19-programme-release-fixture-preparation.md).
 
-Next: protected release-preparation delivery, then P08 successor work/change notices,
+Next: finish and verify P08 successor work/change notices, then
 P09 on-site/rendered/print connections and P10–P12 continuity/recovery/isolation.
 Keep P07 transport/browser evidence explicit in the integrated rehearsal. #175's
 implementation connection is delivered; its native race, rollback, scope,
