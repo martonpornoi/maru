@@ -190,3 +190,14 @@ does not erase exports: stop issuance, retire the exact fixture/runtime adapter
 through its owning process and account for existing copies and trust history.
 This timetable pack is not the complete proposal/review/configuration/audit exit
 archive. #109 coordinates that broader #48 stop-use and recovery outcome.
+
+## Isolated preparation evidence
+
+The [integrated rehearsal](programme-integrated-rehearsal.md#signed-continuity-preparation)
+maintains dedicated ephemeral test-key issuance, independent trust, six scoped
+downloads, actual offline CLI/history handling, controlled-clock refusals and
+owner-command withdrawal/republication. PostgreSQL execution remains deferred;
+database-free component results do not certify native issuance or operational use.
+Its owned temporary synthetic files and network-denied verifier prove neither
+encrypted device custody nor secure erasure of external copies. The accountable
+event trust, history, clock, replacement and disposal procedures above still apply.

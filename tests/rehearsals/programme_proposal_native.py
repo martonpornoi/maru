@@ -6,6 +6,7 @@ import psycopg
 import pytest
 from psycopg import sql
 
+from tests.rehearsals.programme_continuity_scenario import verify_continuity_http
 from tests.rehearsals.programme_onsite_scenario import verify_onsite_http
 from tests.rehearsals.programme_runner import isolated_programme_application
 from tests.rehearsals.programme_runtime_environment import (
@@ -22,7 +23,7 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_RUN_ID", uuid4().hex)
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS", "3600")
     with isolated_programme_application(
-        setup_mode="new_foundation", with_scanner=True
+        setup_mode="new_foundation", with_scanner=True, with_continuity=True
     ) as fixture:
         result = fixture.prepare_proposal()
         assert result.organization_id == fixture.scenario.organization_id
@@ -315,8 +316,78 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             released,
             changed,
         )
+        _assert_native_continuity(
+            fixture,
+            changed,
+            verify_continuity_http(
+                fixture,
+                result,
+                reviewed,
+                items,
+                planning,
+                physical,
+                staffing,
+                released,
+                changed,
+            ),
+            planning,
+            staffing,
+            released,
+        )
     # Maintained HTTP assertions are not browser/native-print or human evidence.
-    # P10-P12, real venue fitness and complete cross-tenant inventory remain open.
+    # P11-P12, real venue fitness and complete cross-tenant inventory remain open.
+
+
+def _assert_native_continuity(
+    fixture, changed, continuity, planning, staffing, released
+):
+    withdrawn, recovered = continuity
+    with psycopg.connect(fixture.runtime.database_url, connect_timeout=5) as connection:
+        scope = (changed.organization_id, changed.edition_id)
+        assert connection.execute(
+            "SELECT active_release_id, version "
+            "FROM public.scheduling_schedulingreleasepointer "
+            "WHERE organization_id = %s AND edition_id = %s",
+            scope,
+        ).fetchone() == (recovered.object_id, 4)
+        assert connection.execute(
+            "SELECT release_id, pointer_version, actor_id "
+            "FROM public.scheduling_schedulingreleasewithdrawal "
+            "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+            (withdrawn.object_id, *scope),
+        ).fetchone() == (changed.release_id, 3, planning.planner.account_id)
+        assert recovered.approval_id not in {released.approval_id, changed.approval_id}
+        assert connection.execute(
+            "SELECT r.pointer_version, r.previous_release_id, r.actor_id, a.actor_id "
+            "FROM public.scheduling_schedulingrelease r "
+            "JOIN public.scheduling_schedulingreleaseapproval a "
+            "ON a.id = r.approval_id WHERE r.id = %s AND a.id = %s "
+            "AND r.organization_id = %s AND r.edition_id = %s",
+            (recovered.object_id, recovered.approval_id, *scope),
+        ).fetchone() == (
+            4,
+            None,
+            planning.planner.account_id,
+            released.reviewer.account_id,
+        )
+        for work in (changed.work, *staffing.work[1:]):
+            assert connection.execute(
+                "SELECT status, command_version FROM public.workforce_shiftcommitment "
+                "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                (work.commitment_id, *scope),
+            ).fetchone() == ("confirmed", work.commitment_version)
+        assert connection.execute(
+            "SELECT status, removal_kind FROM public.workforce_shiftcommitment "
+            "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+            (changed.predecessor_commitment_id, *scope),
+        ).fetchone() == ("removed", "cancelled")
+        for table in (
+            "participation_participation",
+            "participation_participationcapacity",
+        ):
+            assert connection.execute(
+                sql.SQL("SELECT count(*) FROM public.{}").format(sql.Identifier(table))
+            ).fetchone() == (0,)
 
 
 def _assert_native_change(

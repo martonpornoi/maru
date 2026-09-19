@@ -145,6 +145,24 @@ def test_deferral_precedes_all_source_or_transport_access(monkeypatch):
 
 
 @pytest.mark.parametrize(
+    "message", ["Signed export is not configured", "Source unavailable"]
+)
+def test_missing_signing_key_requires_its_own_failure_not_any_503(monkeypatch, message):
+    sources = _sources()
+    fixture = SimpleNamespace(scenario=sources[0], continuity_trust_policy=None)
+    session = Mock()
+    session.request.return_value = _response(message, status=503)
+    monkeypatch.setattr(onsite, "ProgrammeHttpSession", Mock(return_value=session))
+    monkeypatch.setattr(onsite, "require_programme_rehearsal_request", Mock())
+    if message == "Source unavailable":
+        with pytest.raises(onsite.ProgrammeHttpsError):
+            onsite.verify_unsigned_continuity(fixture)
+    else:
+        onsite.verify_unsigned_continuity(fixture)
+    session.cookies.clear.assert_called_once()
+
+
+@pytest.mark.parametrize(
     "fault",
     [
         None,
@@ -167,7 +185,9 @@ def test_complete_guarded_person_and_exact_scope_composition(monkeypatch, fault)
     sources = _sources()
     setup, _, _, items, planning, physical, staffing, _ = sources
     changed = _result(sources)
-    fixture = SimpleNamespace(scenario=setup, refresh_workers=Mock())
+    fixture = SimpleNamespace(
+        scenario=setup, refresh_workers=Mock(), continuity_trust_policy=None
+    )
     session, state = _login_session(physical, fault)
     monkeypatch.setattr(onsite, "require_programme_rehearsal_request", Mock())
     constructor = Mock(return_value=session)
@@ -258,7 +278,9 @@ def _login_session(physical, fault):
             "/edition/" in path and state.person == physical.reviewer
         ):
             status = 404
-        return _response("", status=status)
+        return _response(
+            "Signed export is not configured" if status == 503 else "", status=status
+        )
 
     session.login.side_effect = login
     session.logout.side_effect = logout

@@ -29,6 +29,71 @@ from tests.unit.test_programme_staffing_scenario import _result as _staffing_res
 RUN = "1234567890abcdef1234567890abcdef"
 
 
+@pytest.mark.parametrize(
+    "failure", [None, "nonzero", "timeout", "oversize", "source", "operation"]
+)
+def test_continuity_child_has_closed_input_original_lease_and_no_signing_key(
+    launch_seams, monkeypatch, failure
+):
+    from tests.rehearsals.programme_continuity_transition import (  # noqa: PLC0415
+        ProgrammeContinuityTransition,
+    )
+
+    sources = _change_sources()
+    changed = _change_result(sources)
+    expected = ProgrammeContinuityTransition(
+        "withdraw",
+        sources[0].organization_id,
+        sources[0].edition_id,
+        changed.release_id,
+        None,
+        3,
+    )
+    run = Mock(
+        return_value=SimpleNamespace(
+            returncode=0, stdout=json.dumps(asdict(expected), default=str)
+        )
+    )
+    monkeypatch.setattr(runner.subprocess, "run", run)
+    if failure == "nonzero":
+        run.return_value.returncode = 2
+    elif failure == "timeout":
+        run.side_effect = subprocess.TimeoutExpired("fixed child", 50)
+    elif failure == "oversize":
+        run.return_value.stdout = "x" * 16_385
+    elif failure == "source":
+        changed = replace(changed, edition_id=_setup().edition_id)
+    operation = "activate" if failure == "operation" else "withdraw"
+    with runner.isolated_programme_application() as original:
+        fixture = replace(original, scenario=sources[0])
+        if failure:
+            with pytest.raises((runner.ProgrammeHttpsError, ValueError, RuntimeError)):
+                fixture.prepare_continuity_transition(
+                    sources[1:], changed, operation=operation
+                )
+        else:
+            assert (
+                fixture.prepare_continuity_transition(
+                    sources[1:], changed, operation=operation
+                )
+                == expected
+            )
+    if failure in {"source", "operation"}:
+        run.assert_not_called()
+    else:
+        options = run.call_args.kwargs
+        assert options["timeout"] == 50.0
+        assert options["stderr"] == subprocess.DEVNULL
+        assert runner.SIGNING_ENV not in options["env"]
+        document = json.loads(options["input"])
+        assert set(document) == {"sources", "change", "operation"}
+        assert document["change"]["release_id"] == str(changed.release_id)
+        assert (
+            run.call_args.args[0][-1]
+            == "tests.rehearsals.programme_continuity_transition"
+        )
+
+
 @pytest.mark.parametrize("failure", [None, "nonzero", "timeout", "oversize", "source"])
 def test_change_child_keeps_original_eight_sources_private_and_lease_bounded(
     launch_seams, monkeypatch, failure
@@ -663,6 +728,71 @@ def test_requested_setup_runs_before_server_and_refreshes_real_workers(
         assert prepare.call_args.kwargs["mode"] == "existing_series"
         assert prepare.call_args.kwargs["deadline"] == fixture.deadline
         assert "PRIVATE_KEY" not in prepare.call_args.kwargs["environment"]
+
+
+def test_continuity_key_is_web_only_and_trust_is_independently_retained(
+    launch_seams, monkeypatch
+):
+    setup = object()
+    monkeypatch.setattr(runner, "_prepare_setup", Mock(return_value=setup))
+    generate = Mock(
+        return_value=SimpleNamespace(
+            signing_policy="private-issuer-key",
+            trust_policy=b"independent-public-trust",
+        )
+    )
+    monkeypatch.setattr(runner, "generate_continuity_material", generate)
+    with runner.isolated_programme_application(
+        setup_mode="new_foundation", with_continuity=True
+    ) as fixture:
+        generate.assert_called_once_with(setup, deadline=700.0)
+        assert fixture.continuity_trust_policy == b"independent-public-trust"
+        assert "private-issuer-key" not in repr(fixture)
+        assert runner.SIGNING_ENV not in fixture._application_environment
+        assert runner.SIGNING_ENV not in fixture._worker_environment
+    assert (
+        launch_seams.popen.call_args.kwargs["env"][runner.SIGNING_ENV]
+        == "private-issuer-key"
+    )
+    assert all(
+        runner.SIGNING_ENV not in call.args[1]
+        for call in launch_seams.worker.call_args_list
+    )
+    assert launch_seams.events[-3:] == [
+        "server-stop",
+        "directory-stop",
+        "database-stop",
+    ]
+
+
+@pytest.mark.parametrize(("mode", "enabled"), [(None, True), ("new_foundation", 1)])
+def test_invalid_continuity_option_opens_no_resource(launch_seams, mode, enabled):
+    with (
+        pytest.raises(runner.ProgrammeHttpsError, match="continuity_option"),
+        runner.isolated_programme_application(setup_mode=mode, with_continuity=enabled),
+    ):
+        pytest.fail("Invalid configuration was admitted.")
+    assert launch_seams.events == []
+
+
+def test_continuity_generation_failure_starts_no_server_and_cleans_owned_resources(
+    launch_seams, monkeypatch
+):
+    monkeypatch.setattr(runner, "_prepare_setup", Mock(return_value=object()))
+    monkeypatch.setattr(
+        runner,
+        "generate_continuity_material",
+        Mock(side_effect=runner.ProgrammeHttpsError("lease_insufficient")),
+    )
+    with (
+        pytest.raises(runner.ProgrammeHttpsError, match="lease_insufficient"),
+        runner.isolated_programme_application(
+            setup_mode="new_foundation", with_continuity=True
+        ),
+    ):
+        pytest.fail("Failed signing configuration was admitted.")
+    launch_seams.popen.assert_not_called()
+    assert launch_seams.events[-2:] == ["directory-stop", "database-stop"]
 
 
 def test_optional_real_scanner_configuration_and_owned_teardown_order(

@@ -726,6 +726,44 @@ rendered/print/browser acceptance or P09–P12. Those remain explicit #109/#92 a
 existing native acceptance obligations; see the
 [change checkpoint](../checkpoints/2026-09-19-programme-change-fixture-preparation.md).
 
+### Signed continuity preparation
+
+The same guarded full journey now maintains P10 `verify_continuity_http` after
+P09, without another database fixture. Explicit `with_continuity=True` generates
+one short-lived Ed25519 key only after actual setup. Only the web issuer receives
+the private policy; the parent retains an independently provisioned public trust
+policy. Workers and command children receive no signing key. No current profile,
+production key, global environment, machine trust or database policy changes.
+
+Six known public/personal/operator purposes obtain actual HTTPS packages with
+fresh login/logout where required. Verify signatures against independent trust,
+exact scope, purpose-specific release observation and exact source-row sets before
+using those bytes. Volunteer-only work must retain an unobserved hosting/release
+layer, not gain publication discovery. Other purposes observe release two.
+The real offline CLI runs with no database environment and an audit hook denying
+socket operations and Django imports. Each purpose initializes its own protected
+history once, in newly owned synthetic temporary storage. HTML remains explicitly
+historical; missing history, changed signatures and wrong scope produce no output.
+Expiry and early-clock refusals use the public library's explicit controlled clock,
+not altered OS time or a claim that five real minutes elapsed.
+
+Actual owner commands then withdraw release two at pointer three, with stale
+versions denied and exact retry equality. Reconnection downloads the current
+withdrawal and advances history. Another fresh ten-source preflight, independent
+review and separate publication produce pointer four, never reuse the old approval
+or silently change retained work. Old packs cannot replace observed newer history.
+The native case also independently queries pointer, withdrawal, approval authors,
+current/removed work and absence of Participation. These assertions remain
+**uncollected and unexecuted** while PostgreSQL policy is deferred.
+
+The original P01 setup variants retain the actual missing-key HTTP 503 check; the
+full journey uses dedicated signing instead. Database-free checks exercise actual
+cryptography, files and CLI children plus mocked HTTP/owner orchestration. They
+do not prove real HTTPS issuance, native permissions or a live dependency outage.
+P10 acceptance still requires the restored native run, actual unavailable-owner
+behavior, device trust/custody/clock procedure and accountable copy disposal.
+See the [P10 checkpoint](../checkpoints/2026-09-19-programme-continuity-fixture-preparation.md).
+
 ### Scenario people and sessions
 
 The host-only case now also maintains P09 `verify_onsite_http` after P08. It validates
@@ -742,7 +780,7 @@ no-store/nosniff, scope/time-zone and source/expiry warnings. Own shell identity
 permitted; private discussion, passwords and other people's contacts are not. The
 room operator cannot request technical fields or edition scope. Anonymous personal
 access, actor substitution and repeated parameters fail; unavailable signing remains
-explicit. This is maintained **unexecuted** native preparation, not a P09 PASS or
+explicit in the unsigned P01 variants. This is maintained **unexecuted** native preparation, not a P09 PASS or
 proof of native printing, layout, accessibility, performance or human comprehension.
 See the [P09 checkpoint](../checkpoints/2026-09-19-programme-onsite-fixture-preparation.md).
 

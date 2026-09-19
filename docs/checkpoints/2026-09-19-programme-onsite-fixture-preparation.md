@@ -72,3 +72,28 @@ checkpoint preparation. Native HTTP performance and owner authorization remain
 unmeasured. Browser layout/keyboard, genuine zoom, native print/pagination, screen
 reader and representative-person checks remain #92; this code proves none of them.
 #97/#109, #108 and #48 remain open. No activation or pilot approval is implied.
+
+## Protected delivery evidence
+
+PR #187 squash-merged at 2026-09-19 15:17:33 UTC as
+`8450f80078629e482744b2af34037d8298dff359`. Its tree
+`604fe23ec29515f8147a3a7608d9b99f3d8a7531` equals certified head
+`6039cb2e8f5da2c0baa52574c77eef3cd38c25af`. Clean local main was fast-forwarded
+to that exact origin/main result; the separate repair worktree stayed unchanged.
+Complete reviews, conversations and closing-reference collections were empty.
+Exact-head PR gate and all three processed CodeQL configurations passed, with no
+findings/errors/warnings. Hosted run 35450706624 took 9m48s for quality, 2m34s for
+units and three seconds for the aggregate gate.
+
+Exact local certification completed at 2026-09-19 15:04:19.7603839 UTC in 342.245s
+(5m42s). All eight retained gates passed, including 11,408 units in 63.38s and 103
+frontend cases. Its v4 receipt explicitly reports PostgreSQL deferred, zero database
+instances and null combined coverage/timing headroom. Receipt SHA256:
+`9d11569f2d14a91ab36853ef25bac4292af08495b9050d78e267535b5185d8c9`.
+Five artifacts are archived and hash-matched in the ignored local
+`.tools/certification-evidence/programme-onsite-6039cb2-deferred/` directory.
+An initial archive command guessed the wrong package directory; it did not copy
+the two packages. They were subsequently copied from the verified
+`.local-ci/package-dist/` location and all five hashes independently checked.
+This archive repair changed no source or certification result. #108/#102 retain
+linked merge/debt comments; no parent or acceptance gate was closed.
