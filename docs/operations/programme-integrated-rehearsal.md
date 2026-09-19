@@ -728,6 +728,24 @@ existing native acceptance obligations; see the
 
 ### Scenario people and sessions
 
+The host-only case now also maintains P09 `verify_onsite_http` after P08. It validates
+the complete prior chain before resource access, trusts only the owned loopback TLS
+leaf, uses the actual login form/CSRF and secure HttpOnly sessions, and never follows
+redirects or performs a domain mutation. Each request retains the original lease,
+fifteen-second socket timeout and 2 MiB response bound; private responses/cookies
+remain memory-only. Logout invalidates each successful session through its real route.
+
+Fresh HTML/print/JSON/calendar and now/next HTML/print checks cover public, own host,
+own volunteer, exact first-room operator and planner Department/edition purposes.
+They retain the exact release, personal work lineage, optional-layer ceiling,
+no-store/nosniff, scope/time-zone and source/expiry warnings. Own shell identity is
+permitted; private discussion, passwords and other people's contacts are not. The
+room operator cannot request technical fields or edition scope. Anonymous personal
+access, actor substitution and repeated parameters fail; unavailable signing remains
+explicit. This is maintained **unexecuted** native preparation, not a P09 PASS or
+proof of native printing, layout, accessibility, performance or human comprehension.
+See the [P09 checkpoint](../checkpoints/2026-09-19-programme-onsite-fixture-preparation.md).
+
 Use repository-owned fictional convention names, synthetic people and reserved
 example domains. Do not copy an actual convention roster. Provide one primary
 organization with two editions and a second organization to exercise isolation.

@@ -175,7 +175,7 @@ def test_shared_shells_have_one_heading_landmark_and_exact_current_source(
         assert "Private handover instructions" in text
     else:
         assert "Technical secret" in text
-        assert "retained predecessor, not cancelled" in text
+        assert "retained predecessor; see demand status" in text
 
 
 def test_signed_download_is_real_exact_audience_and_contains_no_key(

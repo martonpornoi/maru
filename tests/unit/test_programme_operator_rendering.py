@@ -173,11 +173,32 @@ def test_operator_continuity_retains_predecessors_without_inventing_attendance(
     assert "version 2" in facts["delivery_version"]
     work = {fact.code: fact.value for fact in demand.facts}
     assert demand.starts_at == START
-    assert "retained predecessor, not cancelled" in work["programme_link"]
+    assert "retained predecessor; see demand status" in work["programme_link"]
     assert (START - timedelta(hours=2)).isoformat() in work["retained_work"]
     assert "2 confirmed" in work["retained_work"]
     assert "Not attendance evidence" in work["retained_work"]
     assert work["required_headcount"] == "4"
+
+
+@pytest.mark.parametrize("state", ["open", "locked", "cancelled"])
+def test_historical_link_does_not_override_actual_demand_status(full_sheet, state):
+    original = full_sheet.staffing.demands[0]
+    demand = replace(
+        original,
+        state=state,
+        retained_work=tuple(
+            replace(row, state="removed" if state == "cancelled" else row.state)
+            for row in original.retained_work
+        ),
+    )
+    sheet = replace(
+        full_sheet, staffing=replace(full_sheet.staffing, demands=(demand,))
+    )
+    result = continuity(sheet)
+    facts = {fact.code: fact.value for fact in result.entries[1].facts}
+    assert facts["status"] == state
+    assert "retained predecessor; see demand status" in facts["programme_link"]
+    assert "not cancelled" not in facts["programme_link"]
 
 
 @pytest.mark.parametrize(

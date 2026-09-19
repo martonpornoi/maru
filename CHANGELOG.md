@@ -15,6 +15,10 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Programme's dormant on-site views no longer label every historical staffing
+  link as "not cancelled." They preserve the predecessor relationship while
+  directing readers to the demand's actual current status, including cancellation.
+
 - Programme's dormant personal journey now offers an own-purpose edition chooser
   with clear organization/series/edition labels, guarded return navigation and
   complete revalidation. It never treats proposal authorship or account membership
