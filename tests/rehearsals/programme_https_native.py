@@ -5,6 +5,7 @@ from uuid import uuid4
 import psycopg
 import pytest
 
+from tests.rehearsals.programme_onsite_scenario import verify_unsigned_continuity
 from tests.rehearsals.programme_runner import isolated_programme_application
 from tests.rehearsals.programme_runtime_environment import (
     require_programme_rehearsal_request,
@@ -31,6 +32,7 @@ def test_native_https_setup_preserves_root_real_people_and_narrow_decisions(
         )
         certificate = fixture.certificate_path
         assert certificate.is_file()
+        verify_unsigned_continuity(fixture)
         with psycopg.connect(
             fixture.runtime.database_url, connect_timeout=5
         ) as connection:

@@ -15,9 +15,13 @@ import time
 import urllib.error
 import urllib.request
 from contextlib import ExitStack, contextmanager
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 
+from tests.rehearsals.programme_continuity_material import (
+    SIGNING_ENV,
+    generate_continuity_material,
+)
 from tests.rehearsals.programme_database import isolated_programme_database
 from tests.rehearsals.programme_fixture_material import (
     ProgrammeFixtureMaterial,
@@ -172,6 +176,7 @@ class ProgrammeRunningFixture:
     scenario: ProgrammeSetupScenario | None = field(default=None, repr=False)
     scanner: ProgrammeScannerLease | None = None
     _application_environment: dict[str, str] = field(default_factory=dict, repr=False)
+    continuity_trust_policy: bytes | None = field(default=None, repr=False)
 
     def refresh_workers(self):
         """Run actual workers before each long checkpoint; never renew the lease."""
@@ -597,9 +602,78 @@ class ProgrammeRunningFixture:
         except (OSError, subprocess.TimeoutExpired, ValueError):
             raise ProgrammeHttpsError("fixture_change_process_failed") from None
 
+    def prepare_continuity_transition(self, sources, changed, *, operation):
+        """Run a closed continuity transition without sharing the web signing key."""
+        require_programme_rehearsal_request()
+        if self.scenario is None or not self._application_environment:
+            raise ProgrammeHttpsError("fixture_continuity_dependencies_required")
+        from tests.rehearsals.programme_change_scenario import (  # noqa: PLC0415
+            SOURCE_KEYS,
+            change_from_document,
+            change_sources,
+        )
+        from tests.rehearsals.programme_continuity_transition import (  # noqa: PLC0415
+            transition_from_document,
+        )
+
+        if operation not in {"withdraw", "republish"}:
+            raise ProgrammeHttpsError("fixture_continuity_operation_invalid")
+        documents = json.loads(
+            json.dumps(
+                dict(
+                    zip(
+                        SOURCE_KEYS, map(asdict, (self.scenario, *sources)), strict=True
+                    )
+                ),
+                default=str,
+            )
+        )
+        validated = change_sources(documents)
+        change_document = json.loads(json.dumps(asdict(changed), default=str))
+        change_from_document(
+            change_document,
+            setup=validated[0],
+            staffing=validated[6],
+            release=validated[7],
+        )
+        self.refresh_workers()
+        try:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "tests.rehearsals.programme_continuity_transition",
+                ],
+                cwd=ROOT,
+                env=self._application_environment,
+                input=json.dumps(
+                    {
+                        "sources": documents,
+                        "change": change_document,
+                        "operation": operation,
+                    }
+                ),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=min(180, remaining_lease(self.deadline)),
+                check=False,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            remaining_lease(self.deadline)
+            if result.returncode != 0 or len(result.stdout) > 16_384:
+                raise ProgrammeHttpsError("fixture_continuity_process_failed")
+            return transition_from_document(
+                json.loads(result.stdout), setup=validated[0], operation=operation
+            )
+        except (OSError, subprocess.TimeoutExpired, ValueError):
+            raise ProgrammeHttpsError("fixture_continuity_process_failed") from None
+
 
 @contextmanager
-def isolated_programme_application(*, setup_mode=None, with_scanner=False):
+def isolated_programme_application(
+    *, setup_mode=None, with_scanner=False, with_continuity=False
+):
     """Prepare, verify and temporarily serve one owned native loopback candidate.
 
     Parameters
@@ -610,6 +684,9 @@ def isolated_programme_application(*, setup_mode=None, with_scanner=False):
     with_scanner
         Explicitly own a pinned real ClamAV daemon for the private-file checkpoint.
         No external endpoint or test-clean adapter can be supplied.
+    with_continuity
+        Explicit test-only dedicated signing key after real setup; verifier trust
+        comes independently from the launcher, never from the downloaded package.
 
     Yields
     ------
@@ -632,6 +709,8 @@ def isolated_programme_application(*, setup_mode=None, with_scanner=False):
         raise ProgrammeHttpsError("invalid_fixture_setup_mode")
     if type(with_scanner) is not bool:
         raise ProgrammeHttpsError("invalid_fixture_scanner_option")
+    if type(with_continuity) is not bool or (with_continuity and setup_mode is None):
+        raise ProgrammeHttpsError("invalid_fixture_continuity_option")
     deadline = time.monotonic() + request.lease_seconds
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as reservation:
         reservation.bind(("127.0.0.1", 0))
@@ -690,8 +769,6 @@ def isolated_programme_application(*, setup_mode=None, with_scanner=False):
             )
             fixture.refresh_workers()
             if setup_mode is not None:
-                from dataclasses import replace  # noqa: PLC0415
-
                 fixture = replace(
                     fixture,
                     scenario=_prepare_setup(
@@ -702,6 +779,9 @@ def isolated_programme_application(*, setup_mode=None, with_scanner=False):
                     ),
                 )
                 fixture.refresh_workers()
+            signing_environment = {}
+            if with_continuity:
+                fixture, signing_environment = _prepare_continuity(fixture)
             _verify_lease(lease, request)
             remaining_lease(deadline)
             # Reserve while provisioning. A bind race after release fails;
@@ -712,6 +792,7 @@ def isolated_programme_application(*, setup_mode=None, with_scanner=False):
                     [sys.executable, "-c", _SERVER],
                     cwd=ROOT,
                     env=environment
+                    | signing_environment
                     | {
                         DEADLINE_ENV: repr(deadline),
                         DIRECTORY_ENV: str(path),
@@ -739,3 +820,11 @@ def isolated_programme_application(*, setup_mode=None, with_scanner=False):
                 yield fixture
             finally:
                 _stop_owned_process(process)
+
+
+def _prepare_continuity(fixture):
+    """Give only the web issuer its dedicated private key, not commands or workers."""
+    material = generate_continuity_material(fixture.scenario, deadline=fixture.deadline)
+    return replace(fixture, continuity_trust_policy=material.trust_policy), {
+        SIGNING_ENV: material.signing_policy
+    }

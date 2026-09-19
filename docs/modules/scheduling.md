@@ -1370,6 +1370,12 @@ latest signed metadata, release high-water and protected local verification time
 payload decoding, and publishes a new complete historical HTML file without
 network access. It cannot detect unseen changes or erase existing copies.
 
+The isolated [P10 rehearsal preparation](../operations/programme-integrated-rehearsal.md#signed-continuity-preparation)
+maintains the actual HTTP-to-offline path, independent trust and owner-command
+withdrawal/republication without widening this dormant module. Database-free
+crypto/CLI tests are component evidence; native execution and operational custody
+remain separate acceptance gates.
+
 The [page contract](../product/page-contracts/programme-onsite-continuity.md) and
 [operator runbook](../operations/programme-onsite-continuity.md) own exact routes,
 key/trust formats, initialization, lifetime, storage failure and disposal.

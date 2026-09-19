@@ -332,7 +332,8 @@ def verify_onsite_http(
             == set(map(str, planning.occurrence_ids))
         )
         _require(session.request(personal[0]).status == 302)
-        _read(session, public_now + "?format=pack", forbidden=forbidden, status=503)
+        if fixture.continuity_trust_policy is None:
+            _unsigned_pack(session, public_now, forbidden)
         _read(
             session,
             public + "?format=json&format=print",
@@ -401,6 +402,25 @@ def _demand_rows(changed, work):
         *(f"demand:{row.demand_id}" for row in work),
         f"demand:{changed.predecessor_demand_id}",
     )
+
+
+def _unsigned_pack(session, path, forbidden):
+    text = _read(session, path + "?format=pack", forbidden=forbidden, status=503)
+    _require("Signed export is not configured" in text)
+
+
+def verify_unsigned_continuity(fixture):
+    """Maintain the real no-key refusal in the inexpensive pre-publication fixture."""
+    require_programme_rehearsal_request()
+    _require(fixture.continuity_trust_policy is None)
+    setup = fixture.scenario
+    session = ProgrammeHttpSession(fixture)
+    try:
+        _unsigned_pack(
+            session, f"/programme/{setup.organization_id}/{setup.edition_id}/now/", ()
+        )
+    finally:
+        session.cookies.clear()
 
 
 def _operator_work(layer, changed, work):
