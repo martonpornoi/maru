@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme's signed offline-continuity preparation is delivered through
-[PR #188](https://github.com/martonpornoi/maru/pull/188), protected squash
-`e3980ac33ef1e91cc8b94e8a90bf4b8a92941c80` at 2026-09-19 16:16:10 UTC.
-Its tree equals certified head `4c5cec0ec194d193629d5f7b3d5f92a3fba08058`;
-clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 7m48s, including 11,511 units in 82.92s and 103 frontend
-cases. Hosted quality took 11m48s and units 1m44s; exact-head PR gate and all
-three processed CodeQL configurations passed. No parent or #175 was closed.
-PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-19-programme-continuity-fixture-preparation.md).
+Programme archive packaging and initial history paging are delivered through
+[PR #191](https://github.com/martonpornoi/maru/pull/191), protected squash
+`4f0aae675124beedf77b0b77535094d9a6942222` at 2026-09-19 17:51:10 UTC.
+Its tree equals certified head `5b97bf1a222b07a680870660d650b141087667f2`;
+clean local main equals origin/main and the protected result. All eight retained
+local gates passed in 6m54s (11,594 units/82.10s, 103 frontend cases).
+After npm's external audit outage recovered, hosted quality passed in 12m04s,
+units in 1m41s, exact-head PR gate in 4s and all three CodeQL analyses passed.
+#189/#108/#48 remain open. PostgreSQL was deferred, not certified. See the
+[protected evidence](../checkpoints/2026-09-19-programme-exit-archive-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,20 +37,10 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-exit-history`, unpublished follow-up based on PR #191's
-exact head. PR #191 remains OPEN, unmerged at
-`5b97bf1a222b07a680870660d650b141087667f2`; local and remote main remain protected
-PR #188. All eight local retained gates passed in 6m54s (11,594 units/82.10s,
-103 frontend cases). Hosted units passed in 1m41s and all three exact-head CodeQL
-analyses have zero findings/errors/warnings. Hosted quality failed after 13m26s
-only because npm's advisory endpoint repeatedly returned HTTP 503 maintenance;
-the required PR gate therefore failed. A direct local audit reproduced HTTP 503.
-No audit was bypassed and no full hosted retry was started while unavailable.
-The npm status page lists 2026-09-19 17:00–19:00 UTC maintenance, not a guaranteed
-recovery time. Restore the advisory service, rerun failed hosted checks and verify
-exact-head PR gate before merge. The review has no outstanding threads or closing
-issue references; GitHub's unintended parsing of a negated closure phrase was
-corrected before merge. #189/#108/#48 remain open.
+Branch: `codex/programme-exit-history`, unpublished follow-up transplanted onto
+protected PR #191 with identical content verified. The prior npm outage and
+closing-reference correction are retained in the archive checkpoint, not active
+blockers. Continue #189, then #190/P11 and P12; no unrelated detour.
 P11's accepted ADR 0081/EVT-007/INT-007 exit contract has necessary implementation
 gaps now explicitly listed in #108 and #48: #189 permission-controlled composite
 archive and #190 accountable stop-use. Existing timetable packs are not a whole
@@ -64,7 +54,7 @@ three existing Django warnings after a shared Windows temporary-directory access
 failure was corrected by using a fresh repository-owned test directory.
 Strict typing, semantic Python documentation and repository documentation
 (641 Markdown files, four skills, 215 requirements) passed. Exact foundation
-certification passed as above; protected delivery is blocked by the npm outage.
+certification and protected foundation delivery passed as above.
 Two PostgreSQL paging/append/scope/denial regressions
 are maintained but uncollected/unexecuted. It is not an export service: owner-specific complete
 collectors, schemas, authorization/source rechecks, audit, file linkage, supported
@@ -84,15 +74,12 @@ cases remain uncollected/unexecuted. This follow-up is not part of PR #191's
 certified head and has no exact certification or protected delivery yet.
 The named recoverable stash `5b6851fb9f5670a257ba9585189bbd780f0c7730` has already
 been applied to this follow-up branch; retain it but do not apply it again.
-After #191 merges, verify its tree equals the certified tree, synchronize the
-clean main worktree, then transplant only this unpublished follow-up onto that
-protected squash before fresh exact certification. No scheduled reminder or
-background merge watcher was created.
+The protected tree and clean main were verified; both unpublished follow-up
+commits were transplanted without changing their tree. Fresh exact certification
+is next. No scheduled reminder or background merge watcher was created.
 See the [remaining-history checkpoint](../checkpoints/2026-09-19-programme-exit-history-paging.md).
 No new permission, native schema, route, profile or acceptance is claimed.
-Resumed after the npm outage: the pinned frontend audit now passes and failed
-hosted jobs for #191 were rerun on the unchanged exact head; merge is still
-pending. Local work continues independently: one-item core collection composes
+One-item core collection now composes
 the actual owner readers under canonical scope locks and final per-layer checks.
 Focused tests passed 28 cases in 0.25s; Ruff, typing and both Python documentation
 checks passed. One additional native composition/audit/scope case is maintained

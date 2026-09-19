@@ -108,3 +108,22 @@ body was reworded and the complete GraphQL closing-reference list verified empty
 reviews and threads are also empty. #189/#108/#48 remain open. The separate tested
 history follow-up is retained on unpublished `codex/programme-exit-history`, not
 part of this certified head. Its named stash has already been applied once.
+
+## Protected delivery after service recovery
+
+The direct pinned-pnpm audit passed on resume. Only failed hosted jobs were
+rerun at the unchanged head, run `35457123554`, attempt 2. Quality passed in
+12m04s and the aggregate gate in 4s; passing units remained 1m41s. All three
+processed CodeQL configurations still have zero findings/errors/warnings.
+Complete review/thread/closing-reference pagination was empty and mergeability
+was CLEAN/MERGEABLE. No bypass or policy change was used.
+
+Exact-head squash merged as `4f0aae675124beedf77b0b77535094d9a6942222` at
+2026-09-19 17:51:10 UTC. Its tree is the certified
+`bc98245eacaeff62497427afc2ea0f75d7622bf4`. Clean local main was fast-forwarded
+and verified equal to origin/main and that protected commit; the repair worktree
+remained at `aa1ede69fb880dcb12d627bbfc049fba23166e68`.
+The two unpublished history/core follow-up commits were rebased onto the squash
+and their tree remained `b5985f410a2e64b0d22c8e783479e0f789f34ba2` before
+this delivery documentation update. #189/#108/#48 remain open. Native tests remain
+uncollected/unexecuted; this is development delivery, not P11 acceptance.
