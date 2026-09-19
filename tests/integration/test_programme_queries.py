@@ -935,6 +935,71 @@ def test_list_and_detail_isolate_two_organizations_and_same_org_editions(
         assert str(history_raised.value) == ""
 
 
+@pytest.mark.parametrize("kind", ["working", "delivery"])
+def test_history_cursor_reaches_retained_revisions_and_preserves_scope(
+    timetable_inventory, kind
+):
+    """Maintain keyset, intervening append and denial cases; PostgreSQL deferred."""
+    common, item, edition = timetable_inventory
+    read = getattr(programme_queries, f"list_programme_{kind}_history")
+    command = (
+        revise_programme_working if kind == "working" else revise_programme_delivery
+    )
+    field_name = "internal_title" if kind == "working" else "technical_requirements"
+    item.refresh_from_db()
+    version = item.aggregate_version
+
+    def append(label):
+        nonlocal version
+        result = command(
+            **common,
+            item_id=item.id,
+            **{field_name: label},
+            expected_version=version,
+            reason="Retain synthetic paging evidence",
+            idempotency_key=uuid4(),
+            source_channel="service",
+        )
+        version = result.resulting_item_version
+
+    append("PRIVATE second revision")
+    append("PRIVATE third revision")
+    request = {**common, "item_id": item.id, "reason": "Review retained history"}
+    first = read(**request, limit=1)
+    assert first[0].sequence == 3
+    append("PRIVATE appended after first page")
+    second = read(**request, limit=1, before_sequence=first[-1].sequence)
+    third = read(**request, limit=1, before_sequence=second[-1].sequence)
+    assert [row.sequence for row in (*first, *second, *third)] == [3, 2, 1]
+    assert read(**request, limit=1, before_sequence=1) == ()
+    assert read(**request, limit=1)[0].sequence == 4
+    audits = AuditEvent.objects.filter(
+        operation=f"programme.query.{kind}_history", outcome="allow"
+    ).order_by("occurred_at", "id")
+    assert sorted(audit.safe_metadata["target_count"] for audit in audits) == [
+        0,
+        1,
+        1,
+        1,
+        1,
+    ]
+    assert "PRIVATE" not in repr([audit.safe_metadata for audit in audits])
+
+    for foreign in (EventEditionFactory(series=edition.series), EventEditionFactory()):
+        with pytest.raises(ProgrammeQueryUnavailableError):
+            read(
+                **{
+                    **request,
+                    "organization_id": foreign.organization_id,
+                    "edition_id": foreign.id,
+                },
+                before_sequence=3,
+            )
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        read(**{**request, "authorizer": _AllowThenDenyAuthorizer()}, before_sequence=3)
+    assert audits.count() == 5
+
+
 @pytest.fixture
 def timetable_inventory(admits_exact_effect):
     actor, edition, policy = (

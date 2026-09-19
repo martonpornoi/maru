@@ -207,6 +207,12 @@ architecture documents, implementation issues, tests, and release notes.
   change the original terms. Stop-use accounts for the exact resulting assignments,
   including any explicitly broader shared Venue authority. Existing root roles
   remain unchanged (ADR 0106).
+  The Programme exit archive must retain each owner's authorized field and
+  retention ceiling, stable identifiers, portable schemas, source versions and
+  audit references. Missing owners, unavailable sources and truncated histories
+  must not be represented as a complete archive. Packaging grants no authority
+  or permission to restore withdrawn disclosure; a public timetable pack or raw
+  database backup is not this organizer-facing exit contract.
 
 ### Archival history
 

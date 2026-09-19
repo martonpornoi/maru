@@ -58,3 +58,36 @@ and complete P10 evidence remain #102/#109 obligations. Broader export/archive,
 logical recovery and stop-use remain P11/#97; full excluded-effect inventories and
 cross-tenant negatives remain P12. #92 human and #109 integrated gates, #108 and
 #48 all remain open. Preparation does not authorize production activation.
+
+## Protected delivery
+
+[PR #188](https://github.com/martonpornoi/maru/pull/188) merged at
+2026-09-19 16:16:10 UTC as `e3980ac33ef1e91cc8b94e8a90bf4b8a92941c80`.
+Certified head `4c5cec0ec194d193629d5f7b3d5f92a3fba08058` and the protected
+squash have tree `60bfd06af032ecd11cbdcea295db07ba6216fb2d`. Clean local main
+fast-forwarded to the exact protected origin/main; the unrelated detached repair
+worktree stayed clean at `aa1ede69fb880dcb12d627bbfc049fba23166e68`.
+
+Fresh exact-commit certification passed all eight retained gates in 468.077s
+(7m48s), including 11,511 units in 82.92s and 103 frontend cases. Completion was
+2026-09-19 16:01:03 UTC. Receipt v4 is explicitly `postgresql_deferred`: zero
+database instances, null combined coverage and measured timing headroom. Receipt
+SHA-256: `8D74DD274BE3D0CDB376BC8B1C94001C69E7E8B9D6F43C565650C1A9ADD66ACF`.
+All five certification/report/package files were independently hash-matched in
+`.tools/certification-evidence/programme-continuity-4c5cec0-deferred/`. The initial
+archive command stopped on an incorrect `.local-ci/unit.xml` path; correcting it
+to `.local-ci/reports/unit.xml` completed the archive without changing source,
+test results or receipt. That failed copy attempt was not a completed archive.
+
+Hosted run `35453688875` passed quality in 11m48s, units in 1m44s and PR gate in
+4s. Three processed exact-head CodeQL configurations under `refs/pull/188/head`
+reported no errors, warnings or findings. Reviews, review threads and closing
+references were empty with complete pagination; the exact head was CLEAN and
+MERGEABLE before matching-head squash merge. No parent, #175 or acceptance gate
+was closed; PostgreSQL/native/human/recovery limits above remain unchanged.
+
+P11 investigation identified necessary existing-contract prerequisites, now
+explicitly unchecked in #108 and #48: #189 permission-controlled Programme exit
+archive and #190 accountable modular stop-use. Signed timetable packs, a raw
+database dump or full-convention archival do not substitute for these outcomes.
+They precede complete P11/P12 preparation and restored #102/#97/#92/#109 evidence.

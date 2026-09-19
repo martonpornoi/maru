@@ -57,6 +57,7 @@ if TYPE_CHECKING:
 
 MAX_PROGRAMME_QUERY_ITEMS: Final = 200
 MAX_PROGRAMME_TIMETABLE_ITEMS: Final = 2_000
+_MAX_HISTORY_SEQUENCE: Final = 9_223_372_036_854_775_807
 _MAX_AUDIT_PURPOSE_LENGTH: Final = 160
 
 PROGRAMME_QUERY_FIELD_CEILINGS: Final = PROGRAMME_LAYER_FIELD_CEILINGS
@@ -456,6 +457,14 @@ def _bounded_limit(value: int) -> int:
         raise ValueError(
             f"Programme query limit must be between 1 and {MAX_PROGRAMME_QUERY_ITEMS}."
         )
+    return value
+
+
+def _history_cursor(value: int | None) -> int | None:
+    if value is not None and (
+        type(value) is not int or not 1 <= value <= _MAX_HISTORY_SEQUENCE
+    ):
+        raise ValueError("Programme history cursor must be a positive bigint.")
     return value
 
 
@@ -1001,6 +1010,7 @@ def list_programme_working_history(
     item_id: UUID,
     reason: str,
     limit: int = 100,
+    before_sequence: int | None = None,
     correlation_id: UUID | None = None,
     source_channel: str = "service",
     authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
@@ -1021,6 +1031,11 @@ def list_programme_working_history(
         The retained sensitive-read purpose.
     limit : int, default=100
         The bounded maximum number of history entries.
+    before_sequence : int | None, default=None
+        Exclusive sequence cursor; omit for the newest page. Continue with the
+        last returned sequence until a short or empty page. Every page has its
+        own authorization and audit; callers must separately verify source
+        consistency before claiming a complete archive.
     correlation_id : UUID | None, default=None
         Optional trace identifier; a server UUID is generated when absent.
     source_channel : str, default="service"
@@ -1034,6 +1049,7 @@ def list_programme_working_history(
         Newest-first working revisions with retained rationale.
     """
     item_id = require_uuid(item_id, field="item_id")
+    cursor = _history_cursor(before_sequence)
 
     def load() -> tuple[ProgrammeWorkingHistoryEntryProjection, ...]:
         if not ProgrammeItem.objects.filter(
@@ -1046,7 +1062,10 @@ def list_programme_working_history(
             item_id=item_id,
             organization_id=organization_id,
             edition_id=edition_id,
-        ).order_by("-sequence", "-id")[: _bounded_limit(limit)]
+        )
+        if cursor is not None:
+            revisions = revisions.filter(sequence__lt=cursor)
+        revisions = revisions.order_by("-sequence", "-id")[: _bounded_limit(limit)]
         return tuple(
             ProgrammeWorkingHistoryEntryProjection(
                 sequence=revision.sequence,
@@ -1086,6 +1105,7 @@ def list_programme_delivery_history(
     item_id: UUID,
     reason: str,
     limit: int = 100,
+    before_sequence: int | None = None,
     correlation_id: UUID | None = None,
     source_channel: str = "service",
     authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
@@ -1106,6 +1126,11 @@ def list_programme_delivery_history(
         The retained sensitive-read purpose.
     limit : int, default=100
         The bounded maximum number of history entries.
+    before_sequence : int | None, default=None
+        Exclusive sequence cursor; omit for the newest page. Continue with the
+        last returned sequence until a short or empty page. Every page has its
+        own authorization and audit; callers must separately verify source
+        consistency before claiming a complete archive.
     correlation_id : UUID | None, default=None
         Optional trace identifier; a server UUID is generated when absent.
     source_channel : str, default="service"
@@ -1119,6 +1144,7 @@ def list_programme_delivery_history(
         Newest-first delivery revisions with retained rationale.
     """
     item_id = require_uuid(item_id, field="item_id")
+    cursor = _history_cursor(before_sequence)
 
     def load() -> tuple[ProgrammeDeliveryHistoryEntryProjection, ...]:
         if not ProgrammeItem.objects.filter(
@@ -1131,7 +1157,10 @@ def list_programme_delivery_history(
             item_id=item_id,
             organization_id=organization_id,
             edition_id=edition_id,
-        ).order_by("-sequence", "-id")[: _bounded_limit(limit)]
+        )
+        if cursor is not None:
+            revisions = revisions.filter(sequence__lt=cursor)
+        revisions = revisions.order_by("-sequence", "-id")[: _bounded_limit(limit)]
         return tuple(
             ProgrammeDeliveryHistoryEntryProjection(
                 sequence=revision.sequence,

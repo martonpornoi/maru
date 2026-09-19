@@ -19,6 +19,51 @@ scope and recheck this proof; the DTO is neither delivery nor portable authority
 Notice preparation, persistence and acknowledgement remain Scheduling-owned #104
 work, not an activated Programme messaging feature.
 
+## Exit archive packaging (#189, in progress)
+
+`exit_archive_protocol` is a database-free, non-executable packaging primitive
+for EVT-007/INT-007 and ADR 0081. It encodes already authorized owner sections,
+not a raw model dump, read permission, source-completeness proof or usable export
+workflow. No collector, route, role, migration, current profile, background job,
+database restore or stop-use operation is added by this primitive.
+
+The provisional `programme.exit-archive@1` ZIP envelope has one records object
+and portable schema object per required owner: Events, Authorization, Applications,
+Programme, Scheduling, Venues, Workforce and Audit. Fixed filenames, exact
+`OWNER.programme-exit@1` contracts, byte lengths and SHA-256 member hashes accompany
+the exact organization/edition/requester/correlation and UTC generation instant.
+Applications file members use opaque UUID names, never caller filesystem paths.
+The whole uncompressed package is labelled C3 Restricted and explicitly not signed,
+encrypted, a current timetable, writable import, database backup or access grant.
+Hashes alone do not authenticate an editable archive manifest.
+
+The initial encoding bounds are 2 MiB per JSON/schema object, the existing 10 MiB
+Applications per-file ceiling, 256 files and 32 MiB combined content. Malformed,
+ambiguous/nonportable JSON, missing/duplicate owners or files, unsupported contracts
+and overflow fail as a whole; no partial package is returned. These are **primitive
+bounds**, not a claim that the complete exit workflow supports real-convention
+volume. Required larger-scope/asynchronous handling under QRY-006 remains #189
+work before any complete exit claim. Memory-only encoding supplies no device
+encryption, retention authority or secure-erasure guarantee.
+
+Working and delivery history readers now accept an exclusive `before_sequence`
+cursor. Their existing item-unique sequences support newest-first keyset pages
+with the unchanged 1–200 page bound, exact scope, layer field ceiling and audit
+before each page is returned. Omission preserves the current newest-page behavior.
+Continue with the last sequence until a short/empty page; an exact-sized final
+page requires a further empty read. Concurrent appends do not shift older pages,
+but paging alone is **not** a consistent archive snapshot: the collector must
+check owner source versions and current authorization before disclosure. This
+does not yet add paging for other history layers or any complete owner collector.
+
+Still required: owner-specific complete collectors and field schemas, authorized
+file linkage, source/change and current-permission rechecks, exact sensitive-read
+audit, readable task selection/download, supported volume handling, retention and
+disposal runbook, native/P11 composition and #102/#109 acceptance. Reusing a newest-
+history page is insufficient. Existing private review-history permissions remain
+authoritative; an archive must not turn retained private evidence into public copy
+or bypass a file owner's sharing withdrawal.
+
 ## Purpose and ownership
 
 Issue #88 delivered the dormant HR-015 staffing continuation through PR #89 under
