@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -73,6 +73,28 @@ cases in 78.58s. Earlier timestamp failures did not recur, but their root cause
 is not established and exhaustive exact-head acceptance remains pending.
 Failed runs and owned-resource cleanup are retained in
 the [restoration checkpoint](../checkpoints/2026-09-19-postgresql-restoration.md).
+
+First full attempt at `c7461f964a2bfd40d62117aa826bb42d3bc57737` passed all
+non-database gates and PostgreSQL shards 1–8 (8m17s–17m36s, all headroom checks
+passed), then failed four conversion-entry fixture cases in shard 9, not a timeout.
+The pool cancelled the other active shards and removed all owned containers.
+The failed `.local-ci` tree is preserved under
+`.tools/certification-evidence/programme-postgresql-c7461f9-failed`; no success
+receipt or complete coverage exists. A shared isolated manifest replaces the
+fixture's incomplete per-caller profile patches. The repaired Applications batch
+passed 115 cases and native retry-ACL/notice-migration coverage passed eight.
+Broader batches found four real recovery-order failures and two stale output
+fixture contracts. New Workforce 0028 runs the frozen starter/shared execution
+preflights before any newer starter migration reverses; readiness source-pins it.
+Existing unchanged-recorder/guard assertions remain, and entirely unused reversal
+is still required. The scheduling guard matrix also gains actual notice-row
+coverage and personal outputs use shared isolated admission metadata. All 19
+recovery/starter regressions passed in 534.93s; the five real release/planning/
+notice-matrix cases passed. After correcting the immutable test-registry fixture,
+all 18 personal-output cases passed in 369.95s. All diagnostic containers were
+removed. Complete unit feedback passed 11,789 cases in 82.30s; static, typing and
+documentation checks passed. Freeze the repaired candidate for another exhaustive
+exact-head attempt; no complete receipt, hosted acceptance or push exists yet.
 
 After restoration, bundle related #48/subtask outcomes into larger coherent PRs.
 Keep issue-specific acceptance/tests/docs and explicit closure mapping inside each

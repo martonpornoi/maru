@@ -343,14 +343,19 @@ def test_native_readiness_denies_weakened_guard():
 
 def test_native_used_evidence_refuses_schema_contraction(world):
     request(world)
-    fence = import_module(
-        "maru.workforce.migrations.0027_programme_starter_downgrade_fence"
-    )
-    with (
-        connection.schema_editor() as editor,
-        pytest.raises(RuntimeError, match="fix forward"),
+    for name, function in (
+        ("0027_programme_starter_downgrade_fence", "refuse_used_starter_downgrade"),
+        (
+            "0028_programme_starter_execution_fence",
+            "refuse_used_starter_execution_downgrade",
+        ),
     ):
-        fence.refuse_used_starter_downgrade(apps, editor)
+        fence = import_module(f"maru.workforce.migrations.{name}")
+        with (
+            connection.schema_editor() as editor,
+            pytest.raises(RuntimeError, match="fix forward"),
+        ):
+            getattr(fence, function)(apps, editor)
 
 
 def test_native_unused_guard_reverse_and_forward_preserve_empty_schema():
@@ -360,6 +365,9 @@ def test_native_unused_guard_reverse_and_forward_preserve_empty_schema():
     guards = import_module("maru.workforce.migrations.0026_programme_starter_integrity")
     with connection.schema_editor() as editor:
         fence.refuse_used_starter_downgrade(apps, editor)
+        import_module(
+            "maru.workforce.migrations.0028_programme_starter_execution_fence"
+        ).refuse_used_starter_execution_downgrade(apps, editor)
         editor.execute(guards.REVERSE_SQL, params=None)
         assert not programme_starter_database_integrity_is_ready()
         editor.execute(guards.FORWARD_SQL, params=None)

@@ -6,7 +6,8 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError, models
+from django.db import DatabaseError, migrations, models
+from django.db.migrations.loader import MigrationLoader
 
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
@@ -20,6 +21,9 @@ from maru.workforce.programme_starter_writer import _programme_starter_writer
 GUARDS = import_module("maru.workforce.migrations.0026_programme_starter_integrity")
 FENCE = import_module(
     "maru.workforce.migrations.0027_programme_starter_downgrade_fence"
+)
+EXECUTION_FENCE = import_module(
+    "maru.workforce.migrations.0028_programme_starter_execution_fence"
 )
 
 
@@ -69,7 +73,7 @@ def test_clean_never_traverses_foreign_owners(model, monkeypatch):
     )
 
 
-def test_native_source_contract_pins_all_three_migrations_and_four_guards():
+def test_native_source_contract_pins_all_four_migrations_and_four_guards():
     contract = readiness.PROGRAMME_STARTER_INTEGRITY_CONTRACT
     assert contract.source_contract_current
     assert contract.owned_relations == readiness.PROGRAMME_STARTER_RELATIONS
@@ -77,6 +81,8 @@ def test_native_source_contract_pins_all_three_migrations_and_four_guards():
         ("workforce", "0025_programme_starter_records"),
         ("workforce", "0026_programme_starter_integrity"),
         ("workforce", "0027_programme_starter_downgrade_fence"),
+        ("workforce", "0028_programme_starter_execution_fence"),
+        ("scheduling", "0022_change_notice_integrity"),
     }
     assert len(contract.triggers) == 4
     assert set(contract.functions) == {
@@ -136,4 +142,56 @@ def test_reverse_fences_both_retained_sources_before_contraction(used):
     assert trace[0] == (
         "LOCK TABLE public.workforce_programmestarterrequest, "
         "public.workforce_programmestarterdecision IN ACCESS EXCLUSIVE MODE"
+    )
+
+
+@pytest.mark.parametrize("failure", [None, "starter", "notice"])
+def test_execution_fence_checks_both_frozen_boundaries_before_contraction(
+    monkeypatch, failure
+):
+    trace = []
+    apps, editor = object(), object()
+
+    def check(name):
+        def invoke(actual_apps, actual_editor):
+            assert (actual_apps, actual_editor) == (apps, editor)
+            trace.append(name)
+            if name == failure:
+                raise RuntimeError("fix forward")
+
+        return invoke
+
+    monkeypatch.setattr(
+        EXECUTION_FENCE._starter, "refuse_used_starter_downgrade", check("starter")
+    )
+    monkeypatch.setattr(
+        EXECUTION_FENCE._notice,
+        "refuse_used_notice_boundary_downgrade",
+        check("notice"),
+    )
+    operation = EXECUTION_FENCE.Migration.operations[0]
+    assert operation.code is migrations.RunPython.noop
+    if failure:
+        with pytest.raises(RuntimeError, match="fix forward"):
+            operation.reverse_code(apps, editor)
+    else:
+        operation.reverse_code(apps, editor)
+    assert trace == (["starter"] if failure == "starter" else ["starter", "notice"])
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        ("programme", "0008_host_integrity"),
+        ("programme", "0011_staffing_integrity"),
+        ("programme", "0014_placement_decision_integrity"),
+        ("workforce", "0025_programme_starter_records"),
+        ("scheduling", "0020_release_recovery_fence"),
+    ],
+)
+def test_shared_execution_fence_precedes_older_boundary_removal(target):
+    graph = MigrationLoader(None).graph
+    assert graph.backwards_plan(target)[0] == (
+        "workforce",
+        "0028_programme_starter_execution_fence",
     )

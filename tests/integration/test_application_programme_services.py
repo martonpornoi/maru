@@ -125,9 +125,9 @@ from maru.applications.programme_reference_sources import (
     ProgrammeAnswerReferenceRequest,
 )
 from maru.audit.models import AuditEvent
-from maru.authorization import policy as authorization_policy
 from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events import adoption
 from maru.workforce.models import Department, EditionStructureControl
 from maru.workforce.structure_commands import (
     StructureDependencyConflictError,
@@ -2694,29 +2694,31 @@ def test_native_conversion_entry_real_grants_and_owner_audit(
         edition=edition, name="Programme", expected_code="programme"
     )
     create_department_for_test(edition=edition, name="Private", expected_code="private")
-    original_policy = authorization_policy.profile_allows_capability
     future_codes = {task.capability for task in department_task_services._TASKS} | {
         "programme.manage_items"
     }
-    monkeypatch.setattr(
-        authorization_policy,
-        "profile_allows_capability",
-        lambda code, version, capability: (
-            capability in future_codes or original_policy(code, version, capability)
-        ),
-    )
-    monkeypatch.setattr(
-        department_task_services, "profile_allows_application_target", lambda *_: True
-    )
     source_adapter = (
         department_task_services.PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER
     )
+    profile_key = (edition.adoption_profile_code, edition.adoption_profile_version)
+    profile = adoption.ADOPTION_PROFILES[profile_key]
+    adapters = profile.adapter_codes | {
+        department_task_services.APPLICATION_PROGRAMME_ITEM_TARGET_ADAPTER,
+    }
+    if missing != "adapter":
+        adapters |= {source_adapter}
+    # Every owner consumes the same isolated pins; keep real policy decisions.
     monkeypatch.setattr(
-        department_task_services,
-        "profile_allows_adapter",
-        lambda _code, _version, adapter: (
-            not (missing == "adapter" and adapter == source_adapter)
-        ),
+        adoption,
+        "ADOPTION_PROFILES",
+        {
+            **adoption.ADOPTION_PROFILES,
+            profile_key: replace(
+                profile,
+                capability_codes=profile.capability_codes | future_codes,
+                adapter_codes=adapters,
+            ),
+        },
     )
     if missing != "applications":
         CapabilityGrantFactory(

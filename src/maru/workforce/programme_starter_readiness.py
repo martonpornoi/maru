@@ -31,6 +31,9 @@ _MIGRATION_SOURCE_SHA256: Final[dict[str, str]] = {
     "0027_programme_starter_downgrade_fence": (
         "0f630ac634f880be272a0f152137c10c4d283eadfa04f38b4f27324cce55ac8b"
     ),
+    "0028_programme_starter_execution_fence": (
+        "af1c1b9414fd28e43de3a2af4a17e610b60be6daa455a1ae0892922ce3080282"
+    ),
 }
 
 
@@ -39,6 +42,7 @@ def _sources_current() -> bool:
         "0025_programme_starter_records",
         "0026_programme_starter_integrity",
         "0027_programme_starter_downgrade_fence",
+        "0028_programme_starter_execution_fence",
     }
     return set(_MIGRATION_SOURCE_SHA256) == expected and all(
         hashlib.sha256(
@@ -55,13 +59,17 @@ _BASE = build_database_integrity_contract(
     status_key="programme_starter_integrity",
     app_label="workforce",
     source_migration=("workforce", "0026_programme_starter_integrity"),
-    terminal_migration=("workforce", "0027_programme_starter_downgrade_fence"),
+    terminal_migration=("workforce", "0028_programme_starter_execution_fence"),
     source_migration_module="maru.workforce.migrations.0026_programme_starter_integrity",
 )
 PROGRAMME_STARTER_INTEGRITY_CONTRACT = replace(
     _BASE,
     source_contract_current=_BASE.source_contract_current and _sources_current(),
-    supporting_migrations=(("workforce", "0025_programme_starter_records"),),
+    supporting_migrations=(
+        ("workforce", "0025_programme_starter_records"),
+        ("workforce", "0027_programme_starter_downgrade_fence"),
+        ("scheduling", "0022_change_notice_integrity"),
+    ),
     owned_relations=PROGRAMME_STARTER_RELATIONS,
 )
 # Observed from empty PostgreSQL 17.11 schema only; not workflow acceptance.

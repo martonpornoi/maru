@@ -129,3 +129,88 @@ native migration evidence. The native batch above applied the actual new graph.
 Remote main remains the protected base recorded above. Freeze this candidate for
 full certification, preserve the preceding PR #194 receipt/artifacts outside
 `.local-ci`, and do not push until complete measured acceptance supports it.
+
+## First exhaustive attempt: retained failure, not a timeout
+
+Candidate `c7461f964a2bfd40d62117aa826bb42d3bc57737` (tree
+`7ba03fc33d844651f563734fd71c60960cc49960`) ran exhaustive certification with
+plan fingerprint `111ddfffbd7ba3188af8a03acfaca864ab020674a44e246fb3beb7b15d0973b4`.
+Packaging, dependency audits, Ruff, strict typing, documentation/NumPy/semantic
+checks, warning-fatal Sphinx, frontend and contract gates passed. All 103 frontend
+cases passed; the exact-head 11,781 units passed in 215.73s under concurrent load.
+
+Shards 1 through 8 passed with measured cleanup-inclusive durations of 496.593 to
+1,056.015 seconds, all with sufficient conservative headroom. Shard 9 failed four
+conversion-entry cases (51 passed) after 638.797 seconds; it did not time out.
+The pool then cancelled active shards 10 through 16 and did not dispatch the rest.
+Every owned container was removed, and an empty Docker inventory was verified.
+There is no success receipt or complete combined coverage result.
+
+Preserve the entire failed artifact directory at
+`.tools/certification-evidence/programme-postgresql-c7461f9-failed`, and the outer
+log at `.tools/issue102-certification-c7461f9.log`. No prior evidence was overwritten.
+
+The conversion fixture patched only the task entry's profile-admission function,
+while the real Applications authorizer independently required that same adapter.
+Replace those disconnected boolean patches with one isolated exact manifest
+consumed by both owners. Preserve actual persisted grants, missing-grant and
+missing-adapter denial, real policy and audited empty results. This changes only
+the fixture, not production admission. Broader accumulated native feature batches
+precede the next full exact-head attempt so additional debt is found sooner.
+
+## Broader native debt and recovery-order repair
+
+The repaired conversion/review batch passed 115 cases in 517.16s (owned duration
+521.672s). The runtime retry-ACL and notice-migration batch passed eight cases in
+282.66s (owned duration 288.453s). Host/staffing/placement/shift coverage passed
+124 cases and failed four in 897.58s; scheduling/release/operator/personal output
+coverage passed 217 and failed two in 1,449.70s. All four task-owned containers
+were removed. These are diagnostic results, not whole-repository acceptance.
+
+The four recovery failures exposed a real graph-order defect: reversing older
+Programme migrations removed Workforce 0025–0027 recorder entries and starter
+guards before the existing shared execution fence rejected retained evidence.
+New Workforce 0028 depends on starter 0027 and Scheduling 0022 and invokes both
+frozen preflights before any successor reverses. It adds no SQL objects and does
+not rewrite historical migrations. Starter readiness requires and source-pins
+the new marker. Entirely unused boundaries remain reversible; any retained
+starter or shared execution evidence requires fix-forward or consistent recovery.
+Keep the existing unchanged-recorder and unchanged-guard assertions intact.
+
+Five graph-order units and three preflight-order/short-circuit units supplement
+the actual retained/unused migration regressions. The focused source/model unit
+file passes all 31 cases. Native reruns remain required at this checkpoint.
+
+The two output failures were stale fixture contracts. Scheduling's exhaustive
+table inventory now includes both notice tables, and the real notice lifecycle
+checks their populated raw-update/delete rejection rather than merely excluding
+them from the matrix. Personal-output fixtures now use one isolated adoption
+manifest for all real owner checks, preserving actual grants, independent source
+permissions and audit. No current production profile is broadened.
+
+### Focused repaired recovery acceptance (2026-09-20)
+
+All 19 starter and selected host/staffing/placement recovery cases passed in
+534.93s (owned duration 539.703s). Evidence is under
+`.tools/issue102-native-a264d372b9724c268e83a585b16f056e`; its owned container
+was removed. This includes the four previously failing unchanged-recorder
+regressions, the fully unused host reverse/reapply and all native starter cases.
+Complete unit feedback passed 11,789 cases in 82.30s with three existing warnings;
+Ruff, strict typing and NumPy/semantic/repository documentation checks passed.
+
+The release/planning raw-write matrices and all three real operator-notice scope
+variants passed in the companion run. Its subsequent personal-output setup
+failed because the test registry is immutable; replace that registry within
+the test scope instead of mutating its mapping proxy. The retained attempt is
+`.tools/issue102-native-5c25c3da00fc4b55b6c32550f12f1acf` (five passed,
+ten setup/teardown errors, 299.02s; owned duration 303.422s and container removed).
+The corrected personal-output file is being rerun independently. This is a
+test-fixture correction, not a production permission or manifest change.
+
+The corrected personal-output run passed all 18 cases in 369.95s (owned duration
+374.422s), including actual private HTML/print/JSON/calendar owner rechecks.
+Evidence is under `.tools/issue102-native-8c7bf2944bbb4675ad945a66f7d1154a`.
+Its container was removed and an empty Docker inventory was verified. Remote
+main remains `42c50e497bc6cfffa399725ad5845617149709c0`. Freeze the repaired
+candidate for exhaustive exact-head certification; focused results do not waive
+that gate, combined coverage, measured headroom or independent hosted acceptance.

@@ -36,6 +36,15 @@ explicitly allows request INSERT/UPDATE for row locking and decision INSERT only
 Actual native and observed table metadata are required by command and candidate
 startup readiness; no readiness substitution or production activation is added.
 
+Migration 0028 orders the same frozen starter and shared Programme execution
+preflights before any newer starter successor can be reversed. Retained notice,
+release, authority or native mutation evidence blocks the whole contraction
+before migration recorder entries or guards disappear, even when starter tables
+are empty. An entirely unused boundary remains reversible. This adds no SQL
+objects or runtime authority; readiness pins its source and requires its marker
+alongside Scheduling 0022. Populated contraction requires fix-forward or
+consistent recovery, not partial removal of a supposedly unused feature.
+
 The [starter task](../product/page-contracts/programme-volunteer-starter.md)
 adds audited complete own-request review (100 pending requests or unavailable),
 exact original history, signed original-person preview/confirmation and the

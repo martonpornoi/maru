@@ -97,6 +97,10 @@ from tests.integration.test_programme_placement_decisions import (
     apply as assess_placement,
 )
 from tests.integration.test_programme_staffing_commands import staffing_position
+from tests.integration.test_scheduling_database_guards import (
+    NOTICE_TABLE_SUFFIXES,
+    assert_raw_guard_matrix,
+)
 from tests.integration.test_scheduling_public_outputs import (
     admitted as admitted,  # noqa: PLC0414
 )
@@ -698,6 +702,7 @@ def _assert_notice_lifecycle(sender, recipient, preview, release_scope):
     with pytest.raises(SchedulingVersionConflictError):
         acknowledge_programme_change_notice(own, ack_request, idempotency_key=ack_key)
     assert SchedulingChangeNoticeEvidence.objects.filter(notice=notice).count() == 3
+    assert_raw_guard_matrix(NOTICE_TABLE_SUFFIXES, mutable_versions={})
 
 
 def _notice_reviewer(sender):
