@@ -104,6 +104,28 @@ role, schema, route, file, portable serializer, activation or later-download
 authorization. Programme source bindings and placement decisions are still
 outside it; complete owner/profile coverage and supported volume remain #189 work.
 
+Retained placement decisions are a separate component: their per-placement/kind
+sequences do **not** advance the Programme item's version. The owner query
+`placement_queries.list_programme_placement_history_heads` enumerates exact-item
+streams in ascending placement-identifier pages of fifty, with a sentinel and
+explicit exclusive continuation. Each head carries the fixed sequence needed by
+the existing independently authorized history reader. An existing empty item is
+an audited empty inventory; an unknown or wrong-scope item is unavailable.
+Both kinds retain the placement-adapter admission and `placement_decisions` plus
+their separate `delivery_history` or `staffing_history` field ceiling. No current
+Scheduling/Venue source is reopened merely to read Programme's retained history.
+
+`exit_placement_queries.load_programme_exit_placement_histories` holds canonical
+parent/edition locks across both kinds' inventory and fixed-ceiling history pages,
+rechecks both admissions before return, and requires the final sensitive-read
+audit. Missing, repeated, gapped, inconsistent or over-bound pages refuse the
+whole result. Historical satisfied/blocked/withdrawn states remain historical,
+not current fit, staffing approval or publication permission. Its 2,000-stream
+and 20,000-record bounds are **collector refusal limits**, not mutation limits or
+proof of supported convention-wide volume. It is not yet composed into a whole
+owner/profile archive; source-reference schemas, wider collection and retrieval
+authority remain required. No existing role, schema, route or profile changes.
+
 Still required: owner-specific complete collectors and field schemas, authorized
 file linkage, source/change and current-permission rechecks, exact sensitive-read
 audit, readable task selection/download, supported volume handling, retention and

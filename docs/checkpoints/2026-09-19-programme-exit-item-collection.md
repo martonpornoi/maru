@@ -47,3 +47,17 @@ feedback passed 11,710 cases in 65.96s with three existing Django URL-field
 warnings and a fresh repository-owned temporary directory. Ruff, strict typing,
 NumPy and semantic documentation passed. These remain iteration results, not
 exact certification, PostgreSQL or protected acceptance.
+
+## Exact local certification and submitted PR
+
+PR #193 was opened on clean head `35fedf448f07404fc993e27077bedf143a5cffdd`,
+tree `ec2839b54372fc15493ffbef54f96b178d2090a2`, against protected
+`d4a4f9d37d98688c907ad1a418d19cc0f00e0437`. All eight retained gates passed
+in 425.043s (7m05s), completing 2026-09-19 18:22:45 UTC: 11,710 units/82.93s,
+103 frontend cases and complete static/docs/contracts/security/packaging checks.
+The v4 `postgresql_deferred` receipt reports zero databases and null combined
+coverage/headroom. Receipt, plan, actual unit report, wheel and sdist were
+preserved outside `.local-ci` with matching hashes. Receipt SHA-256:
+`1308b56b7aee6ece439a049818c09f6bcb037ed726d74a8d98a7be7f46d5e17a`.
+Native additions remain uncollected/unexecuted. #189/#108/#48 stay open;
+the submitted PR has no closing reference. Protected acceptance is independent.

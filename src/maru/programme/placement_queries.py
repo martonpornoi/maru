@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
 
 from django.db import transaction
+from django.db.models import Max
 
 from maru.events.adoption import profile_allows_adapter
 from maru.events.queries import edition_adoption_profile_reference
@@ -163,6 +164,41 @@ class ProgrammePlacementHistoryPage:
     through_sequence: int
     entries: tuple[ProgrammePlacementHistoryEntry, ...]
     next_after_sequence: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class ProgrammePlacementHistoryHead:
+    """Name one retained decision stream without opening current Scheduling data.
+
+    Attributes
+    ----------
+    placement_id
+        Opaque immutable placement reference already retained by Programme.
+    through_sequence
+        Current inclusive ceiling for this placement and selected decision kind.
+        Decisions do not advance the Programme item's aggregate version.
+    """
+
+    placement_id: UUID
+    through_sequence: int
+
+
+@dataclass(frozen=True, slots=True)
+class ProgrammePlacementHistoryHeadsPage:
+    """A bounded history-stream inventory with explicit continuation, not a snapshot.
+
+    Attributes
+    ----------
+    entries
+        At most fifty distinct placement heads in ascending identifier order.
+    next_after_placement_id
+        Exclusive last-returned identifier when more streams exist, otherwise None.
+        Pagination outside a composing locked transaction is not consistent-source
+        proof; neither the cursor nor an item version grants history access.
+    """
+
+    entries: tuple[ProgrammePlacementHistoryHead, ...]
+    next_after_placement_id: UUID | None
 
 
 def _read_purpose(kind: ProgrammePlacementDecisionKind) -> tuple[str, frozenset[str]]:
@@ -431,6 +467,110 @@ def preview_programme_placement_decision(
             source_channel=request.source_channel,
             authorizer=programme_authorizer,
         )
+
+
+def list_programme_placement_history_heads(
+    request: ProgrammePlacementReadRequest,
+    *,
+    item_id: UUID,
+    kind: ProgrammePlacementDecisionKind,
+    after_placement_id: UUID | None = None,
+    authorizer: ProgrammeAuthorizer = DEFAULT_PROGRAMME_AUTHORIZER,
+) -> ProgrammePlacementHistoryHeadsPage:
+    """Enumerate retained history streams under their independent rationale ceiling.
+
+    Parameters
+    ----------
+    request : ProgrammePlacementReadRequest
+        Trusted actor, tenant, edition and sensitive-read audit correlation.
+    item_id : UUID
+        Exact known Programme item, including retained non-active items.
+    kind : ProgrammePlacementDecisionKind
+        Closed accessibility-fit or no-staffing purpose, independently authorized.
+    after_placement_id : UUID | None, default=None
+        Exclusive continuation identifier from an earlier authorized page.
+    authorizer : ProgrammeAuthorizer, default=DEFAULT_PROGRAMME_AUTHORIZER
+        Existing field-aware Programme policy with unchanged adapter admission.
+
+    Returns
+    -------
+    ProgrammePlacementHistoryHeadsPage
+        Distinct bounded stream heads, or an audited empty page for an existing
+        item. Unknown or wrong-scope items remain unavailable.
+
+    Notes
+    -----
+    Parent/edition locking and final admission fence each page. Only retained
+    Programme references and stream ceilings are exposed; no current Scheduling,
+    Venue, Workforce or person data is dereferenced. A complete collector must
+    retain the outer transaction across all pages and fixed-ceiling histories.
+    """
+    for name in ("actor_id", "organization_id", "edition_id", "correlation_id"):
+        require_uuid(getattr(request, name), field=name)
+    _admit(request, kind, authorizer, history=True)
+    require_uuid(item_id, field="item_id")
+    if after_placement_id is not None:
+        require_uuid(after_placement_id, field="after_placement_id")
+
+    def load() -> ProgrammePlacementHistoryHeadsPage:
+        lock_programme_staffing_scope(
+            organization_id=request.organization_id, edition_id=request.edition_id
+        )
+        _admit(request, kind, authorizer, history=True)
+        if not ProgrammeItem.objects.filter(
+            id=item_id,
+            organization_id=request.organization_id,
+            edition_id=request.edition_id,
+        ).exists():
+            raise ProgrammeUnavailableError
+        rows = ProgrammePlacementDecision.objects.filter(
+            organization_id=request.organization_id,
+            edition_id=request.edition_id,
+            item_id=item_id,
+            kind=kind,
+        )
+        if after_placement_id is not None:
+            rows = rows.filter(placement_id__gt=after_placement_id)
+        heads = tuple(
+            rows.values("placement_id")
+            .annotate(through_sequence=Max("sequence"))
+            .order_by("placement_id")[: PLACEMENT_HISTORY_PAGE_SIZE + 1]
+        )
+        if any(
+            type(row["through_sequence"]) is not int
+            or not 1 <= row["through_sequence"] <= MAX_PLACEMENT_DECISIONS + 1
+            for row in heads
+        ):
+            raise ProgrammeUnavailableError
+        selected = tuple(
+            ProgrammePlacementHistoryHead(row["placement_id"], row["through_sequence"])
+            for row in heads[:PLACEMENT_HISTORY_PAGE_SIZE]
+        )
+        _admit(request, kind, authorizer, history=True)
+        return ProgrammePlacementHistoryHeadsPage(
+            selected,
+            selected[-1].placement_id
+            if len(heads) > PLACEMENT_HISTORY_PAGE_SIZE
+            else None,
+        )
+
+    capability, _fields = _read_purpose(kind)
+    return _authorized_query(
+        actor_id=request.actor_id,
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        capability_code=capability,
+        requested_fields=_history_fields(kind),
+        operation="programme.placement.history_heads",
+        loader=load,
+        target_type="programme.item",
+        target_id=item_id,
+        target_count=lambda page: len(page.entries),
+        reason="Enumerate retained Programme placement history",
+        correlation_id=request.correlation_id,
+        source_channel=request.source_channel,
+        authorizer=authorizer,
+    )
 
 
 def load_programme_placement_decision_history(

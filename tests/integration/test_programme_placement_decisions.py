@@ -27,6 +27,9 @@ from maru.programme.commands import (
     ProgrammeVersionConflictError,
     revise_programme_delivery,
 )
+from maru.programme.exit_placement_queries import (
+    load_programme_exit_placement_histories,
+)
 from maru.programme.models import (
     ProgrammeCommandReceipt,
     ProgrammeItem,
@@ -382,6 +385,102 @@ def test_history_keeps_fixed_ceiling_and_separate_rationale_authority(
     assert preview(assessed).decision_state == "blocked"
     with pytest.raises(ProgrammeAuthorizationDeniedError):
         history(assessed, 1)
+
+
+def test_exit_histories_include_independent_retained_placement_streams(
+    assessed, monkeypatch
+):
+    """Enumerate real grouped heads without reopening changed candidate sources."""
+    before = ProgrammeItem.objects.get(id=assessed.selection.item_id).aggregate_version
+    apply(assessed)
+    apply(assessed, preview(assessed), state=State.BLOCKED)
+    apply(assessed, preview(assessed, Kind.STAFFING_NOT_REQUIRED))
+    old_placement = assessed.selection.placement_id
+    changed = place(
+        assessed.world,
+        intent=moved(assessed.world),
+        version=assessed.selection.expected_candidate_version,
+    )
+    assessed.selection = replace(
+        assessed.selection,
+        candidate_revision_id=candidate_revision(changed).id,
+        placement_id=member(changed).placement_id,
+        expected_candidate_version=changed.version,
+    )
+    apply(assessed)
+    assert (
+        ProgrammeItem.objects.get(id=assessed.selection.item_id).aggregate_version
+        == before
+    )
+    monkeypatch.setattr(queries, "PLACEMENT_HISTORY_PAGE_SIZE", 1)
+
+    def no_current_candidate(*_args, **_kwargs):
+        pytest.fail(
+            "Retained Programme history must not reopen current Scheduling sources"
+        )
+
+    monkeypatch.setattr(queries, "load_release_candidate_source", no_current_candidate)
+    first = queries.list_programme_placement_history_heads(
+        assessed.request,
+        item_id=assessed.selection.item_id,
+        kind=Kind.ACCESSIBILITY_FIT,
+        authorizer=assessed.policy,
+    )
+    assert len(first.entries) == 1
+    assert first.next_after_placement_id == first.entries[0].placement_id
+    second = queries.list_programme_placement_history_heads(
+        assessed.request,
+        item_id=assessed.selection.item_id,
+        kind=Kind.ACCESSIBILITY_FIT,
+        after_placement_id=first.next_after_placement_id,
+        authorizer=assessed.policy,
+    )
+    assert second.next_after_placement_id is None
+    assert {head.placement_id for head in (*first.entries, *second.entries)} == {
+        old_placement,
+        assessed.selection.placement_id,
+    }
+    result = load_programme_exit_placement_histories(
+        assessed.request,
+        item_id=assessed.selection.item_id,
+        reason="Retain exact assessment history",
+        authorizer=assessed.policy,
+    )
+    assert len(result) == 3
+    old = next(
+        stream
+        for stream in result
+        if stream.kind is Kind.ACCESSIBILITY_FIT
+        and stream.head.placement_id == old_placement
+    )
+    assert [entry.sequence for entry in old.entries] == [1, 2]
+    assert [entry.state for entry in old.entries] == ["satisfied", "blocked"]
+    assert AuditEvent.objects.filter(
+        operation="programme.query.exit_placement_histories", outcome="allow"
+    ).exists()
+    with pytest.raises(ProgrammeUnavailableError):
+        queries.list_programme_placement_history_heads(
+            assessed.request,
+            item_id=uuid4(),
+            kind=Kind.ACCESSIBILITY_FIT,
+            authorizer=assessed.policy,
+        )
+    original = assessed.policy.authorize
+    monkeypatch.setattr(
+        assessed.policy,
+        "authorize",
+        lambda **kwargs: replace(
+            original(**kwargs),
+            fields=frozenset({"delivery_information", "placement_decisions"}),
+        ),
+    )
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        load_programme_exit_placement_histories(
+            assessed.request,
+            item_id=assessed.selection.item_id,
+            reason="Denied history",
+            authorizer=assessed.policy,
+        )
 
 
 @pytest.mark.parametrize(

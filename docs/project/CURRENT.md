@@ -40,8 +40,8 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-exit-item`, unpublished component transplanted onto
-protected PR #192 with identical tree verified. Exact certification is next.
+Branch: `codex/programme-exit-placement-history`, unpublished next component
+while [PR #193](https://github.com/martonpornoi/maru/pull/193) runs hosted checks.
 The prior npm outage is historical, not an active blocker. Continue #189, then
 #190/P11 and P12; no unrelated detour or idle wait for hosted delivery.
 P11's accepted ADR 0081/EVT-007/INT-007 exit contract has necessary implementation
@@ -79,18 +79,35 @@ been applied and committed; retain it but do not apply it again.
 No scheduled reminder or background merge watcher was created.
 See the [remaining-history checkpoint](../checkpoints/2026-09-19-programme-exit-history-paging.md).
 
-The unpublished item component composes core, host roster/history/current shared
+PR #193's item component composes core, host roster/history/current shared
 availability and complete fixed-ceiling staffing histories. The real roster's
 canonical complete-person locks precede core's actor lock; all six layer field
 sets are checked before collection and return. Source versions/sets and complete
 histories must agree. Focused core/item tests passed 77 cases in 0.37s; Ruff,
 strict typing, NumPy and semantic docs passed. Complete database-free feedback
 passed 11,710 units in 65.96s with three existing Django URL-field warnings.
+Exact head `35fedf448f07404fc993e27077bedf143a5cffdd` passed all eight retained
+gates in 425.043s (11,710 units/82.93s, 103 frontend cases), against protected
+`d4a4f9d37d98688c907ad1a418d19cc0f00e0437`. Its `postgresql_deferred` receipt
+and four companion files are preserved with matching hashes outside `.local-ci`.
 Two additional actual-command host/staffing cases are maintained but remain
 uncollected/unexecuted #102 debt. No schema, role, route, profile or native
 acceptance is claimed. Source bindings, placement decisions and complete archive
 composition remain open. See the
 [item checkpoint](../checkpoints/2026-09-19-programme-exit-item-collection.md).
+
+The local follow-up now enumerates retained placement/kind history heads and
+collects both separately authorized fixed-ceiling histories. These decisions do
+not increment the item version; canonical outer scope locks and independent
+stream sequences are retained. Existing source-adapter/history permissions remain
+mandatory, without reopening current Scheduling or Venue facts. Thirty focused
+tests passed in 0.27s, plus Ruff, strict typing, NumPy and semantic docs. Complete
+database-free feedback passed 11,740 units in 84.70s with the three existing Django
+warnings; documentation validates 644 Markdown files, four skills and 215
+requirements. One native actual-command case is maintained
+but uncollected/unexecuted #102 debt. Bounds are collector refusal limits, not a
+complete or volume-certified archive. See the
+[placement checkpoint](../checkpoints/2026-09-19-programme-exit-placement-history.md).
 P10 signed-continuity preparation is implemented: a web-only ephemeral Ed25519
 key and independent verifier trust, six real-purpose HTTPS downloads, actual
 offline CLI with networking/Django denied, retained history and clock/tamper/scope
