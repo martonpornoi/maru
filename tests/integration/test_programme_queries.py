@@ -104,7 +104,7 @@ class _TrustedAuthorizer:
         return PolicyDecision(
             allowed=True,
             fields=requested_fields or frozenset(),
-            obligations=frozenset({"audit_sensitive_read"}),
+            obligations=frozenset({"audit", "reason", "audit_sensitive_read"}),
             reason_code="sealed_future_profile_harness",
         )
 

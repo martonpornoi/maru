@@ -316,6 +316,14 @@ proposed-public profile and consent; the lead cannot write those values for
 them. Each included collaborator alone acknowledges or declines the exact seal;
 the lead's attributable sealing action does not create a response row.
 
+An optional answer can be cleared through the same typed, authorized command by
+appending an empty-value revision. Model validation agrees with the already
+nullable database value; required-question and type rules remain command-owned.
+Clearing a supporting-file answer does not delete its retained custody bytes,
+receipt or earlier answer revisions. Migration 0022 changes validation state
+only, with no data rewrite or native guard change. Reversing that state restores
+the older validation behavior without deleting retained empty-value revisions.
+
 Collaborator membership is a purpose relationship with append-only transitions
 through `invited`, `accepted`, `declined`, `left`, and `removed`. Invitation
 expiry is derived from an unaccepted invitation and its deadline rather than

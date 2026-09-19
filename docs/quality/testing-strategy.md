@@ -17,7 +17,20 @@ earlier-head evidence for a repaired candidate. Measure hosted quality latency
 separately from Python-test duration; the unchanged 30-minute quality limit is
 not evidence that future builds are guaranteed to fit.
 
-## Temporary Programme development exception
+## PostgreSQL restoration and Programme delivery bundles
+
+The maintainer authorized #102 restoration on 2026-09-19, before remaining #48
+features. The candidate sets `required` and must clear focused native diagnostics,
+accumulated debt, exhaustive exact-head local/hosted acceptance, unchanged combined
+coverage and measured shard headroom before protected delivery. Old timing weights
+and successful units are not native acceptance. Preserve failed-run evidence.
+
+Subsequent related Programme work is delivered in coherent larger PRs with each
+issue's tests/docs and closure conditions intact. Focused checks support iteration;
+the final exact bundle receives the complete risk-selected gate. Grouping work
+amortizes repeated execution without reducing selected tests or hiding failures.
+
+## Earlier temporary Programme development exception
 
 The maintainer explicitly authorized
 [ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md):

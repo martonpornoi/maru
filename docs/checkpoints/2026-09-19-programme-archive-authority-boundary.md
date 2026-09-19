@@ -69,3 +69,14 @@ pending. No browser journey is introduced.
 Complete owner lineage/schemas and composite archive, actual files, task/storage,
 background progress, requester-bound retrieval, bounds/expiry/disposal, native
 P11/P12 and #190 stop-use/recovery remain unfinished. #189/#108/#48 stay open.
+
+## PostgreSQL restoration follow-up
+
+The maintainer subsequently authorized full PostgreSQL restoration under #102,
+so the earlier schema-only permission request is no longer a blocker. The first
+owned PostgreSQL 17.11 diagnostic passed all four selected archive migration/
+recipe/fingerprint/reversal and used grant/bundle downgrade-fence cases in
+171.17s, with verified resource cleanup. See the
+[restoration checkpoint](2026-09-19-postgresql-restoration.md) for its exact scope.
+This supersedes the earlier no-native-execution status only for those four cases;
+it is not exhaustive certification, runtime-role or integrated Programme proof.

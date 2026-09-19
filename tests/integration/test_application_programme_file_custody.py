@@ -1,4 +1,4 @@
-"""Maintained native custody acceptance; execution is deferred to issue #102.
+"""Native custody acceptance restored through issue #102.
 
 The fixture exercises the closed owner persistence boundary, not an activated
 upload route, a trusted scanner deployment or runtime upload permission.
@@ -749,7 +749,12 @@ def test_native_attachment_final_recheck_and_clear_preserve_custody(
     assert response.status_code == 200
     assert response.content == PDF
     assert response["Content-Disposition"].startswith("attachment;")
-    append_programme_proposal_answer(
+    original_answers = list(
+        ApplicationAnswerRevision.objects.filter(question_id=source.question_id)
+        .order_by("sequence")
+        .values_list("id", "value")
+    )
+    cleared = append_programme_proposal_answer(
         actor_id=source.actor_id,
         organization_id=source.organization_id,
         edition_id=source.edition_id,
@@ -765,6 +770,15 @@ def test_native_attachment_final_recheck_and_clear_preserve_custody(
         source_channel="test",
         authorizer=fixtures._AUTHORIZER,
     )
+    answers = list(
+        ApplicationAnswerRevision.objects.filter(question_id=source.question_id)
+        .order_by("sequence")
+        .values_list("id", "value")
+    )
+    assert cleared.resulting_version == result.resulting_version + 1
+    assert answers[:-1] == original_answers
+    assert len(answers) == len(original_answers) + 1
+    assert answers[-1][1] is None
     assert (
         ProgrammeFileContent.objects.filter(
             intake__proposal_id=source.proposal_id

@@ -1,11 +1,11 @@
-"""Maintained native approval-record regressions, deferred under ADR 0100.
+"""Native approval-record regressions restored through issue #102.
 
 The shared transaction-local candidate is not the complete Programme manifest.
 Foundation and grant fixtures use real controller ceremonies and public commands.
 Deliberate bulk inserts probe native evidence guards, not runtime write permission.
 The command cases exercise actual public request/decision writers with one exact
-recipe admitted only to that rolled-back candidate. Never treat these tests as
-collected or executed until the final #102 gate restores PostgreSQL testing.
+recipe admitted only to that rolled-back candidate. Focused execution is not
+complete exact-head certification or integrated profile acceptance.
 """
 
 import json
@@ -469,7 +469,7 @@ def test_native_original_selection_replay_never_retargets_changed_email(command_
 
 def test_native_creation_cannot_prepare_people_in_foreign_scope(command_world):
     world = command_world
-    other = _foundation(("programme_operations", 1))
+    other = _foundation("programme_operations")
     with pytest.raises(AuthorizationDenied):
         prepare_programme_role_creation(
             actor=world[2],
@@ -1114,6 +1114,9 @@ def test_request_key_and_terminal_outcome_cannot_be_reused(world):
 def test_native_evidence_is_retained(world, model, operation):
     original = _insert_request(_request_values(world))
     decision = _insert_decision(_decision_values(world, original))
+    with connection.cursor() as cursor:
+        cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        cursor.execute("SET LOCAL maru.authority_provenance_test_reset = off")
     record = original if model is ProgrammeRoleRequest else decision
     table = sql.Identifier(model._meta.db_table)
     statement, params = {
@@ -1125,7 +1128,10 @@ def test_native_evidence_is_retained(world, model, operation):
         "truncate": (sql.SQL("TRUNCATE {} CASCADE").format(table), []),
     }[operation]
     with (
-        pytest.raises(IntegrityError),
+        pytest.raises(
+            IntegrityError,
+            match="cannot be truncated" if operation == "truncate" else "append-only",
+        ),
         transaction.atomic(),
         connection.cursor() as cursor,
     ):

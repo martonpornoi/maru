@@ -66,3 +66,17 @@ recovery regressions can accumulate and may require significant repair during
 restoration. The maintainer accepts that tradeoff to keep dormant feature
 development moving. Removing this temporary policy needs no test deletion or
 architecture reversal: switch the tracked mode and prove full acceptance.
+
+## Restoration authorized — 2026-09-19
+
+The maintainer has now requested restoration before the remaining #48 feature
+work, rather than waiting until every P11/P12 preparation is finished. The #102
+candidate restores the tracked mode to `required` and must prove the retained
+local/hosted acceptance and measured headroom before protected delivery. This
+ends the requested development deferral only as that restoration is delivered;
+it does not retroactively validate any earlier deferred commit.
+
+Subsequent #48 delivery groups related issues into coherent larger pull requests:
+focused feedback while developing, then the complete risk-selected acceptance
+on the final exact candidate. Bundling amortizes repeated verification, never
+reduces tests, removes historical selection, waives failures or activates a profile.

@@ -1643,7 +1643,7 @@ class ApplicationAnswerRevision(UUIDTimeStampedModel):
     classification = models.CharField(
         max_length=2, choices=ApplicationClassification, editable=False
     )
-    value = models.JSONField(null=True)
+    value = models.JSONField(null=True, blank=True)
     source = models.CharField(max_length=24, choices=AnswerSource)
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,

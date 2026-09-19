@@ -226,6 +226,8 @@
     ],
     "shared_baseline": false,
     "tests": [
+      "test_archive_capability_addition_and_unused_reverse_are_exact",
+      "test_archive_authority_fences_native_downgrade",
       "test_durable_programme_grant_refuses_capability_contraction",
       "test_durable_programme_role_refuses_capability_contraction",
       "test_programme_capability_expansion_and_empty_reversal_are_exact"
