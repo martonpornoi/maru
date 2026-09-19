@@ -13,7 +13,7 @@ from maru.programme import queries
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
 
 
-@pytest.fixture(params=["working", "delivery"])
+@pytest.fixture(params=["working", "delivery", "discussion"])
 def history(request, monkeypatch):
     kind = request.param
     actor, organization, edition, item = (UUID(int=i) for i in range(1, 5))
@@ -26,6 +26,7 @@ def history(request, monkeypatch):
             technical_requirements="Private technical notes",
             accessibility_delivery="Private delivery notes",
             media_consent_notes="Private consent notes",
+            body="Private discussion",
             actor_id=actor,
             reason="Retained synthetic rationale",
             occurred_at=datetime(2026, 9, 19, tzinfo=UTC),
@@ -89,15 +90,20 @@ def history(request, monkeypatch):
         return chain(rows)
 
     revision_select = Mock(side_effect=revisions_filter)
-    model = (
-        queries.ProgrammeWorkingRevision
-        if kind == "working"
-        else queries.ProgrammeDeliveryRevision
-    )
+    model = {
+        "working": queries.ProgrammeWorkingRevision,
+        "delivery": queries.ProgrammeDeliveryRevision,
+        "discussion": queries.ProgrammeDepartmentDiscussionEntry,
+    }[kind]
     monkeypatch.setattr(model.objects, "filter", revision_select)
     return SimpleNamespace(
         kind=kind,
-        query=getattr(queries, f"list_programme_{kind}_history"),
+        query=getattr(
+            queries,
+            "list_programme_discussion"
+            if kind == "discussion"
+            else f"list_programme_{kind}_history",
+        ),
         args={
             "actor_id": actor,
             "organization_id": organization,
@@ -130,11 +136,20 @@ def test_all_history_is_reachable_beyond_default_ceiling(history):
         for call in history.audit.call_args_list
     ] == [200, 5, 0]
     for call in history.auth.call_args_list:
-        assert call.kwargs["requested_fields"] == frozenset({f"{history.kind}_history"})
-        assert call.kwargs["capability_code"] == (
-            "programme.view_private"
-            if history.kind == "working"
-            else "programme.view_delivery"
+        assert call.kwargs["requested_fields"] == frozenset(
+            {
+                "discussion_entries"
+                if history.kind == "discussion"
+                else f"{history.kind}_history"
+            }
+        )
+        assert (
+            call.kwargs["capability_code"]
+            == {
+                "working": "programme.view_private",
+                "delivery": "programme.view_delivery",
+                "discussion": "programme.view_discussion",
+            }[history.kind]
         )
     assert "Private" not in repr(history.audit.call_args_list)
 

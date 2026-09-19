@@ -37,6 +37,7 @@ from maru.programme.commands import (
     revise_programme_delivery,
     revise_programme_working,
 )
+from maru.programme.exit_core_queries import load_programme_exit_core
 from maru.programme.models import ProgrammeItem
 from maru.programme.public_copy_commands import withdraw_programme_public_rendition
 from maru.programme.queries import (
@@ -53,6 +54,7 @@ from maru.programme.queries import (
     ProgrammePublicCopyReviewHistoryEntryProjection,
     ProgrammeQueryUnavailableError,
     ProgrammeReadinessConcernProjection,
+    ProgrammeReadinessHistoryCursor,
     ProgrammeReadinessHistoryEntryProjection,
     ProgrammeTimetableInventoryLimitError,
     ProgrammeWorkingHistoryEntryProjection,
@@ -766,6 +768,37 @@ def test_readiness_history_is_separate_bounded_audited_and_rationale_complete(
         authorizer=_TrustedAuthorizer(),
     )
     assert limited == (evidence,)
+    older = list_programme_readiness_history(
+        actor_id=actor.id,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        item_id=item.id,
+        reason="Page the complete retained readiness evidence.",
+        limit=1,
+        before=ProgrammeReadinessHistoryCursor(
+            evidence.item_version, evidence.concern, evidence.kind, evidence.sequence
+        ),
+        authorizer=query_authorizer,
+    )
+    assert older == (requirement,)
+    assert (
+        list_programme_readiness_history(
+            actor_id=actor.id,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            item_id=item.id,
+            reason="Observe the end of retained readiness evidence.",
+            limit=1,
+            before=ProgrammeReadinessHistoryCursor(
+                requirement.item_version,
+                requirement.concern,
+                requirement.kind,
+                requirement.sequence,
+            ),
+            authorizer=query_authorizer,
+        )
+        == ()
+    )
 
     configure_programme_readiness(
         actor_id=actor.id,
@@ -935,17 +968,23 @@ def test_list_and_detail_isolate_two_organizations_and_same_org_editions(
         assert str(history_raised.value) == ""
 
 
-@pytest.mark.parametrize("kind", ["working", "delivery"])
+@pytest.mark.parametrize("kind", ["working", "delivery", "discussion"])
 def test_history_cursor_reaches_retained_revisions_and_preserves_scope(
     timetable_inventory, kind
 ):
     """Maintain keyset, intervening append and denial cases; PostgreSQL deferred."""
     common, item, edition = timetable_inventory
-    read = getattr(programme_queries, f"list_programme_{kind}_history")
-    command = (
-        revise_programme_working if kind == "working" else revise_programme_delivery
+    read = getattr(
+        programme_queries,
+        "list_programme_discussion"
+        if kind == "discussion"
+        else f"list_programme_{kind}_history",
     )
-    field_name = "internal_title" if kind == "working" else "technical_requirements"
+    command, field_name = {
+        "working": (revise_programme_working, "internal_title"),
+        "delivery": (revise_programme_delivery, "technical_requirements"),
+        "discussion": (append_programme_discussion, "body"),
+    }[kind]
     item.refresh_from_db()
     version = item.aggregate_version
 
@@ -974,7 +1013,12 @@ def test_history_cursor_reaches_retained_revisions_and_preserves_scope(
     assert read(**request, limit=1, before_sequence=1) == ()
     assert read(**request, limit=1)[0].sequence == 4
     audits = AuditEvent.objects.filter(
-        operation=f"programme.query.{kind}_history", outcome="allow"
+        operation=(
+            "programme.query.discussion"
+            if kind == "discussion"
+            else f"programme.query.{kind}_history"
+        ),
+        outcome="allow",
     ).order_by("occurred_at", "id")
     assert sorted(audit.safe_metadata["target_count"] for audit in audits) == [
         0,
@@ -1019,6 +1063,51 @@ def timetable_inventory(admits_exact_effect):
         item,
         edition,
     )
+
+
+def test_exit_core_collects_authorized_layers_with_scope_and_audit(
+    timetable_inventory, monkeypatch
+):
+    """Maintain real core composition and refusal coverage; PostgreSQL deferred."""
+    common, item, edition = timetable_inventory
+    snapshot = load_programme_exit_core(
+        **common, item_id=item.id, reason="Inspect the synthetic retained core"
+    )
+    assert snapshot.private.item.id == item.id
+    assert (
+        len(snapshot.working) == len(snapshot.delivery) == len(snapshot.discussion) == 1
+    )
+    assert len(snapshot.readiness) == 2
+    assert len(snapshot.copy_reviews) == 1
+    assert "PRIVATE" not in repr(snapshot)
+    assert (
+        AuditEvent.objects.filter(
+            operation="programme.query.exit_core", outcome="allow"
+        ).count()
+        == 1
+    )
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        load_programme_exit_core(
+            **{key: value for key, value in common.items() if key != "authorizer"},
+            item_id=item.id,
+            reason="Deny the unadmitted current profile",
+        )
+    foreign = EventEditionFactory(series=edition.series)
+    with pytest.raises(ProgrammeQueryUnavailableError):
+        load_programme_exit_core(
+            **{**common, "edition_id": foreign.id},
+            item_id=item.id,
+            reason="Do not discover another edition's core",
+        )
+
+    def unavailable(_record):
+        raise DatabaseError("Synthetic required audit unavailable")
+
+    monkeypatch.setattr(programme_queries, "append_audit", unavailable)
+    with pytest.raises(DatabaseError):
+        load_programme_exit_core(
+            **common, item_id=item.id, reason="Require durable audit"
+        )
 
 
 def test_timetable_inventory_is_complete_but_omits_every_unrequested_layer(
@@ -1334,6 +1423,25 @@ def test_workbench_typed_source_and_exact_withdrawal_use_real_owner_commands(
             **common, item_id=item.id, reason="Review retained synthetic withdrawal"
         )[0].withdrawal_reason
         == "Synthetic exact disclosure withdrawal"
+    )
+    retained = list_programme_public_copy_review_history(
+        **common,
+        item_id=item.id,
+        reason="Page authorized private withdrawal evidence",
+        before_rendition_number=2,
+        limit=1,
+    )
+    assert retained[0].rendition_number == 1
+    assert retained[0].withdrawal_reason == "Synthetic exact disclosure withdrawal"
+    assert (
+        list_programme_public_copy_review_history(
+            **common,
+            item_id=item.id,
+            reason="Observe private review history end",
+            before_rendition_number=1,
+            limit=1,
+        )
+        == ()
     )
 
 
