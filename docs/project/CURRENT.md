@@ -11,17 +11,18 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme remaining history paging and authorized core collection are delivered
-through [PR #192](https://github.com/martonpornoi/maru/pull/192), protected squash
-`d4a4f9d37d98688c907ad1a418d19cc0f00e0437` at 2026-09-19 18:13:34 UTC.
-Its tree equals certified head `533d95f1e7ca8ed195d20fb72235375e31a4d8cc`;
+Programme host/staffing item collection is delivered through
+[PR #193](https://github.com/martonpornoi/maru/pull/193), protected squash
+`c13c4185346014c54ce41f943859ce31c56a15f7` at 2026-09-19 18:37:06 UTC.
+Its tree equals certified head `35fedf448f07404fc993e27077bedf143a5cffdd`;
 clean local main equals origin/main and the protected result. All eight retained
-local gates passed in 6m39s (11,661 units/68.50s, 103 frontend cases).
-Hosted quality passed in 11m13s, units in 2m16s, exact-head PR gate in 4s and
+local gates passed in 7m05s (11,710 units/82.93s, 103 frontend cases).
+Hosted quality passed in 12m03s, units in 2m26s, exact-head PR gate in 5s and
 all three CodeQL analyses reported zero findings/errors/warnings. #189/#108/#48
 remain open. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-19-programme-exit-history-paging.md).
-PR #191's packaging and initial paging remain delivered, with its prior npm
+[protected evidence](../checkpoints/2026-09-19-programme-exit-item-collection.md).
+PR #192's [core history](../checkpoints/2026-09-19-programme-exit-history-paging.md)
+and PR #191's packaging and initial paging remain delivered, with its prior npm
 outage and recovery retained in the
 [foundation checkpoint](../checkpoints/2026-09-19-programme-exit-archive-preparation.md).
 
@@ -41,7 +42,8 @@ No prerequisite in that chain needs restarting.
 ## Current work: complete isolated Programme fixture (#108)
 
 Branch: `codex/programme-exit-placement-history`, unpublished next component
-while [PR #193](https://github.com/martonpornoi/maru/pull/193) runs hosted checks.
+transplanted onto protected PR #193 with identical tree verified. Exact clean-
+commit certification is next; no hosted delivery remains blocked.
 The prior npm outage is historical, not an active blocker. Continue #189, then
 #190/P11 and P12; no unrelated detour or idle wait for hosted delivery.
 P11's accepted ADR 0081/EVT-007/INT-007 exit contract has necessary implementation
