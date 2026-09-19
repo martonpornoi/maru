@@ -54,3 +54,26 @@ and P10–P12 failure/recovery/isolation. Restore exhaustive PostgreSQL with mea
 timing headroom under #102 after checkpoint preparation; #97 recovery, #92 actual
 people and #109 integrated evidence remain required before #108/#48 closure and
 supported promotion. No human or production approval is inferred from a fixture.
+
+## Protected delivery appendix
+
+[PR #184](https://github.com/martonpornoi/maru/pull/184) merged at
+2026-09-18 22:31:19 UTC as `ce1199b7d7a8f4e3dfef5b780ffa22a37e58b582`.
+Its tree `7ae306557e7f9bd66697f46d2c5c8600a057b090` equals certified head
+`85abc22ca38bfb102209bc117b01ac164df4b626`. Clean local main, origin/main and
+the protected result matched; the unrelated repair worktree stayed unchanged.
+
+All eight exact-head retained gates passed in 348.381s, including 11,186 units
+in 63.21s and 103 frontend cases. Receipt v4 explicitly records
+`postgresql_deferred`, zero database instances and null combined coverage/timing
+headroom. Its SHA-256 is
+`D2C893770C6FDA69137E2D4B285628AAAB51D0B72A940AFA70E0E4EDB14C1511`;
+five artifacts were hash-verified into the ignored evidence archive before reuse.
+[Hosted acceptance](https://github.com/martonpornoi/maru/actions/runs/35400830087)
+passed quality in 12m45s, units in 2m22s and PR gate in 3s. All three processed
+exact-head CodeQL configurations had zero findings/errors/warnings. Review,
+conversation and closing-reference pagination was complete and empty.
+
+#108 and #175 retain the delivery and explicit #102 native/#92 human debt. Neither
+#175 nor a parent/activation gate was closed. Continue with P07; native P06
+acceptance is not inferred from this protected development delivery.

@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme's accountable Volunteer starter screens are delivered through
-[PR #183](https://github.com/martonpornoi/maru/pull/183), protected squash
-`180d4e84431d31d044d1b9db716c423431ca88f7` at 2026-09-18 21:53:15 UTC.
-Its tree equals certified head `2046e8741b39f65e5c6b75dfa2c396fc8925afb0`;
+Programme's actual-owner staffing fixture preparation is delivered through
+[PR #184](https://github.com/martonpornoi/maru/pull/184), protected squash
+`ce1199b7d7a8f4e3dfef5b780ffa22a37e58b582` at 2026-09-18 22:31:19 UTC.
+Its tree equals certified head `85abc22ca38bfb102209bc117b01ac164df4b626`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m46s, including 11,148 units in 62.78s and 103 frontend
-cases. Hosted quality took 12m18s and units 1m35s; exact-head PR gate and all
+local gates passed in 5m48s, including 11,186 units in 63.21s and 103 frontend
+cases. Hosted quality took 12m45s and units 2m22s; exact-head PR gate and all
 three processed CodeQL configurations passed. No parent or #175 was closed.
 PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-18-programme-volunteer-starter-review.md).
+[protected evidence](../checkpoints/2026-09-19-programme-staffing-fixture-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,7 +37,7 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-staffing-fixture`, from protected PR #183.
+Branch: `codex/programme-release-fixture`, from protected PR #184.
 #177 is closed after its bounded authority correction: one truthful resource-only
 recipe and frozen native-function extension, without rewriting the 27 historical
 definitions or changing current profiles, table fingerprints or owner duties.
@@ -97,14 +97,31 @@ No inferred membership, Participation, no-staffing waiver, release or publicatio
 The private child validates the complete source chain and keeps the original
 lease/runtime guard. Focused database-free feedback passed 91 cases in 0.74s;
 complete feedback passed 11,186 units in 62.76s. Documentation passed 636 Markdown
-files, four skills and 215 requirement IDs; exact certification is pending. The composed native case
+files, four skills and 215 requirement IDs; exact certification and protected
+delivery are retained above. The composed native case
 is maintained but uncollected/unexecuted. See the
 [staffing checkpoint](../checkpoints/2026-09-19-programme-staffing-fixture-preparation.md).
 
-Next: protected staffing-preparation delivery, then P07 current-source evaluation,
-independent release approval and atomic publication before P08–P12. Keep #175 open
-until its implementation delivery is verified; native race, rollback, scope,
-runtime and recovery acceptance stays #102, and human screens remain #92.
+Prepared P07's actual first-release composition: eighteen distinct synthetic
+people, existing separately approved role recipes, all ten fresh satisfied owner
+categories, author self-approval denial, independent approval/retry, approver
+self-publication denial, stale-pointer refusal and exact atomic publication/retry.
+Checked manifests retain the three original placements and reviewed renditions.
+Actual public, host, volunteer, room, Department and edition queries feed real
+JSON/calendar serializers; volunteers retain their own unchanged work and gain no
+unrelated hosting/release discovery. Focused database-free feedback passed 114
+cases in 0.82s; complete feedback passed 11,241 units in 61.82s with three existing
+Django URL-field warnings. Repository documentation passed 637 Markdown files,
+four skills and 215 requirement IDs; exact certification is pending. Native first-release
+assertions are maintained but uncollected/unexecuted. Rendered/print/HTTPS/browser
+and genuine-person acceptance remain separate, not inferred from serializers.
+See the [release checkpoint](../checkpoints/2026-09-19-programme-release-fixture-preparation.md).
+
+Next: protected release-preparation delivery, then P08 successor work/change notices,
+P09 on-site/rendered/print connections and P10–P12 continuity/recovery/isolation.
+Keep P07 transport/browser evidence explicit in the integrated rehearsal. #175's
+implementation connection is delivered; its native race, rollback, scope,
+runtime and recovery obligations stay #102, and human screens remain #92.
 Do not replace missing workflow with direct fixture writes or email-as-approval.
 
 Prepared actual reciprocal reservations and independent physical approval for

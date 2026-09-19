@@ -647,6 +647,38 @@ human acceptance remain separate. This is not complete #108/#48 or production
 activation. See the
 [staffing checkpoint](../checkpoints/2026-09-19-programme-staffing-fixture-preparation.md).
 
+### Actual-owner first-release preparation
+
+`ProgrammeRunningFixture.prepare_release(proposal, review, items, planning, physical,
+staffing)` validates the full source chain before refreshing workers and invoking
+its fixed private child within the original lease (at most 180 seconds). Genuine
+candidate startup precedes a new eighteenth distinct synthetic person or any owner
+action. Existing approved source, release and selected-room recipes supply actual
+authority; no broad catch-all role, new production recipe or profile is introduced.
+Both synthetic planner and reviewer deliberately hold review/publication
+capabilities to exercise the owners' authorship/independence denials. This is test
+configuration, not a recommended production responsibility assignment.
+
+Both independently authenticated people collect fresh complete evidence. All ten
+categories must be satisfied with the same exact snapshot and no finding; the
+fixture does not automatically acknowledge warnings or infer inapplicability.
+Author self-approval must fail. Independent approval/retry creates no release;
+approver self-publication and a stale expected pointer must fail without changing
+the prior absent state. Separate publication/retry must expose exactly the original
+three placements and reviewed renditions through the checked active manifest.
+
+Actual public, both own-host, own-volunteer, edition/Department and selected-room
+queries feed real JSON/calendar serializers. Each relevant output identifies the
+same release; own volunteer work remains separately retained, not a reason to
+reveal unrelated hosting/release existence. Exact confirmed commitments, original
+work intervals, purpose membership and linked locked demands remain unchanged.
+No unrequested private delivery layer is added. Runtime native observations for
+the actual actors, approval/artifact/pointer and no Participation are maintained
+but **uncollected/unexecuted #102 debt**. Database-free mocked-owner and real pure
+serializer checks establish composition only. Rendered/print/HTTPS/browser,
+first-publication rollback/races and P08–P12 remain separate acceptance. See the
+[release checkpoint](../checkpoints/2026-09-19-programme-release-fixture-preparation.md).
+
 ### Scenario people and sessions
 
 Use repository-owned fictional convention names, synthetic people and reserved
