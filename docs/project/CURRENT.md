@@ -11,16 +11,16 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme's actual-owner first-release fixture preparation is delivered through
-[PR #185](https://github.com/martonpornoi/maru/pull/185), protected squash
-`de45c67216d7ad0e67417fecb83e02e84486afca` at 2026-09-19 12:17:07 UTC.
-Its tree equals certified head `17ed6724fb22c510e70078fa0a955b7b2a6b873a`;
+Programme's retained-work successor and reviewed-notice preparation is delivered through
+[PR #186](https://github.com/martonpornoi/maru/pull/186), protected squash
+`57e58c81579bfaffa8130029b0f935db5b05a635` at 2026-09-19 14:33:55 UTC.
+Its tree equals certified head `b28d2d81135e34214c9806d088d759426cf1ad15`;
 clean local main matched origin/main and the protected result. All eight retained
-local gates passed in 5m44s, including 11,241 units in 62.78s and 103 frontend
-cases. Hosted quality took 12m36s and units 2m19s; exact-head PR gate and all
+local gates passed in 6m28s, including 11,326 units in 62.71s and 103 frontend
+cases. Hosted quality took 12m14s and units 2m31s; exact-head PR gate and all
 three processed CodeQL configurations passed. No parent or #175 was closed.
 PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-19-programme-release-fixture-preparation.md).
+[protected evidence](../checkpoints/2026-09-19-programme-change-fixture-preparation.md).
 
 Preserve the delivered chain: #152/#153 setup inputs/references/storage,
 #154 atomic foundation setup, #155 immutable scoped role recipes, #156 retained
@@ -37,14 +37,26 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-change-fixture`, from protected PR #185.
+Branch: `codex/programme-onsite-fixture`, from protected PR #186.
+Prepared P09 actual HTTPS/CSRF/session and six-purpose output assertions: public,
+host, volunteer, exact room and planner Department/edition HTML/print/JSON/calendar,
+plus now/next source/expiry warnings. Own work history and narrow field/scope denials
+remain explicit; no proxy, redirect, forced authentication or signing fallback.
+Corrected the dormant misleading "not cancelled" predecessor label; actual demand
+status remains authoritative. Focused feedback passed 222 cases in 6.30s; complete
+feedback passed 11,408 units in 61.83s with three existing URL-field warnings.
+Documentation passed 639 Markdown files, four skills and 215 requirements.
+Exact certification and protected delivery are pending. Native assertions remain uncollected/unexecuted;
+browser-native print, keyboard/zoom and representative-human acceptance stay #92.
+See the [on-site checkpoint](../checkpoints/2026-09-19-programme-onsite-fixture-preparation.md).
+
 Prepared P08's earlier preparation Shift, previewed retained-work impact, explicit
 successor/new personal acceptance, fresh independent republication and three
 purpose-specific reviewed notices. Cancelled history remains distinct from current
 work, and invalidated historical comparison stays suppressed. Focused database-free
 checks passed 150 cases in 1.08s; full feedback passed 11,326 units in 76.70s with
 three existing Django URL-field warnings. Documentation passed 638 Markdown files,
-four skills and 215 requirements. Exact certification/protected delivery are pending.
+four skills and 215 requirements. Exact certification/protected delivery passed above.
 No PostgreSQL execution occurred; native assertions are maintained #102 debt.
 Room/time-move, available comparison and stale-source notice acceptance remain
 explicit existing native/#109 obligations. See the
@@ -129,8 +141,8 @@ assertions are maintained but uncollected/unexecuted. Rendered/print/HTTPS/brows
 and genuine-person acceptance remain separate, not inferred from serializers.
 See the [release checkpoint](../checkpoints/2026-09-19-programme-release-fixture-preparation.md).
 
-Next: finish and verify P08 successor work/change notices, then
-P09 on-site/rendered/print connections and P10–P12 continuity/recovery/isolation.
+Next: verify and deliver P09 HTTPS/print-response preparation, then
+P10–P12 continuity/recovery/isolation.
 Keep P07 transport/browser evidence explicit in the integrated rehearsal. #175's
 implementation connection is delivered; its native race, rollback, scope,
 runtime and recovery obligations stay #102, and human screens remain #92.

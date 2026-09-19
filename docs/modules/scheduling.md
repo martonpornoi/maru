@@ -327,6 +327,16 @@ room/time-move and available-comparison acceptance remain pending, not inferred
 from these database-free fixture tests. See the
 [change protocol](../operations/programme-integrated-rehearsal.md#actual-owner-published-work-change-preparation).
 
+The isolated P09 continuation prepares actual HTTPS/CSRF/session reads for six
+public, personal and exact operator purposes across normal, print, JSON, calendar
+and now/next responses. It asserts release/work lineage, field ceilings and
+source/expiry warnings without changing owner behavior. Its native case remains
+uncollected/unexecuted; database-free transport tests and HTML assertions do not
+establish browser-native printing or representative-human acceptance. See the
+[on-site checkpoint](../checkpoints/2026-09-19-programme-onsite-fixture-preparation.md).
+Historical staffing links direct readers to the independently reported demand
+status; predecessor membership must not be mislabelled as proof of non-cancellation.
+
 The #96 release work is delivered but remains dormant. Its contracts
 are `release_inputs` (exact versioned intent), `release_dependency_rules`
 (complete journal temporal consequences), `release_artifacts` (one mandatory

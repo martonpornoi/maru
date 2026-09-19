@@ -125,7 +125,7 @@ def _staffing(layer: OperatorStaffingSnapshot | None) -> tuple[ContinuityEntry, 
                 + (
                     "current selection"
                     if link.current
-                    else "retained predecessor, not cancelled"
+                    else "retained predecessor; see demand status"
                 ),
             )
         )

@@ -6,6 +6,7 @@ import psycopg
 import pytest
 from psycopg import sql
 
+from tests.rehearsals.programme_onsite_scenario import verify_onsite_http
 from tests.rehearsals.programme_runner import isolated_programme_application
 from tests.rehearsals.programme_runtime_environment import (
     require_programme_rehearsal_request,
@@ -303,8 +304,19 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
         _assert_native_change(
             fixture, changed, planning, staffing, items, physical, released
         )
-    # This proves no actual HTTP/browser/print journey, real venue fitness,
-    # representative human, complete cross-tenant inventory or P09-P12 acceptance.
+        verify_onsite_http(
+            fixture,
+            result,
+            reviewed,
+            items,
+            planning,
+            physical,
+            staffing,
+            released,
+            changed,
+        )
+    # Maintained HTTP assertions are not browser/native-print or human evidence.
+    # P10-P12, real venue fitness and complete cross-tenant inventory remain open.
 
 
 def _assert_native_change(

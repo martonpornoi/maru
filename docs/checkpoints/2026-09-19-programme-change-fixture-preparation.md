@@ -64,3 +64,25 @@ room/time-move, safe available-comparison and revoked/stale notice-source covera
 remain required in existing native/#109 acceptance; this scenario does not claim
 those observations. PostgreSQL restoration #102 follows checkpoint preparation;
 #97, #92 and #109 still block supported promotion and #108/#48 closure.
+
+## Protected delivery evidence
+
+PR #186 squash-merged at 2026-09-19 14:33:55 UTC as
+`57e58c81579bfaffa8130029b0f935db5b05a635`. Its tree
+`d6f6f1438819b1aa6712e222493588095a93bc10` equals certified head
+`b28d2d81135e34214c9806d088d759426cf1ad15`. Clean local main was fast-forwarded
+to that exact origin/main result; the separate repair worktree stayed unchanged.
+Complete review/thread/closing-reference collections were empty, with no omitted
+pages. Exact-head PR gate, all retained checks and three processed CodeQL
+configurations passed with no findings/errors/warnings. Hosted run 35443636488
+took 12m14s for quality and 2m31s for units; its aggregate gate took three seconds.
+
+Exact local certification completed at 2026-09-19 12:41:53.7104678 UTC in 387.671s
+(6m28s). All eight retained gates passed, including 11,326 units in 62.71s and
+103 frontend cases. The v4 receipt explicitly reports PostgreSQL deferred, zero
+database instances and null combined coverage/timing headroom. Receipt SHA256:
+`84d5c70328b4f238759ab4e198c9ceffa059cdd3c2f6959357ac10da21f66013`.
+Five artifacts were archived and hash-matched under the ignored local
+`.tools/certification-evidence/programme-change-b28d2d8-deferred/` directory before
+later certification. This is development evidence, not native acceptance.
+#108/#102 retain linked merge/debt comments; no parent or acceptance gate closed.
