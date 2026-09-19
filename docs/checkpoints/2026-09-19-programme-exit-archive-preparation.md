@@ -72,3 +72,9 @@ database URL was deliberately unreachable. Final repository documentation passed
 641 Markdown files, four skills and 215 requirement IDs. This resolves the
 shared-temp feedback failure, not the deferred native acceptance obligations.
 Exact clean-commit certification and protected delivery are still pending.
+
+The first exact-commit attempt stopped at NumPy docstring lint: the pure encoder
+listed its helper's exception in a `Raises` section without directly raising it.
+The exception contract now lives in `Notes`, preserving behavior and documenting
+the same stable failure. No exemption or check was weakened; fresh certification
+of the corrected exact commit is required. The earlier attempt is not acceptance.

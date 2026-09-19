@@ -220,13 +220,10 @@ def encode_programme_exit_archive(
     bytes
         Uncompressed bounded ZIP with a versioned restricted manifest and hashes.
 
-    Raises
-    ------
-    ProgrammeArchiveInvalidError
-        If scope, owner contracts, JSON, files or complete content bounds are invalid.
-
     Notes
     -----
+    Validation helpers reject invalid scope, owner contracts, JSON, files or
+    complete content bounds with ``ProgrammeArchiveInvalidError``.
     Hashes detect byte mismatch, not forged origin or altered manifests. This is
     neither encrypted storage nor a signature, importer, backup, current timetable
     or grant. Collectors must prove completeness, field/retention ceilings, current
