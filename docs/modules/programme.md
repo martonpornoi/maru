@@ -68,6 +68,20 @@ audited empty page; an unknown/wrong-scope item remains unavailable. Every page
 retains current authorization and its existing read-purpose audit. No paging
 cursor serves as authorization, a source-version guarantee or an export receipt.
 
+`exit_core_queries.load_programme_exit_core` composes one item's current private
+working projection and complete bounded working, delivery, discussion, readiness
+and private-copy review histories. The outer audited read holds the existing
+canonical parent/edition locks while all existing readers run, including reads
+of independent withdrawal history. It requires each layer's own capability and
+field set before collection and again before return; no manager/root bypass or
+new export grant is introduced. Missing working evidence, gaps, repeats, bounds
+or audit failures refuse the whole core. Private contents are excluded from repr.
+Readiness collection is limited to 21,000 records per core, not a new write limit;
+larger histories require a later volume-aware path and never silently truncate.
+This is not the complete Programme owner section: host/staffing/source references,
+explicit portable serialization/schema, later download reauthorization and
+cross-owner consistency remain required. No route or profile is activated.
+
 Still required: owner-specific complete collectors and field schemas, authorized
 file linkage, source/change and current-permission rechecks, exact sensitive-read
 audit, readable task selection/download, supported volume handling, retention and

@@ -90,6 +90,16 @@ protected squash before fresh exact certification. No scheduled reminder or
 background merge watcher was created.
 See the [remaining-history checkpoint](../checkpoints/2026-09-19-programme-exit-history-paging.md).
 No new permission, native schema, route, profile or acceptance is claimed.
+Resumed after the npm outage: the pinned frontend audit now passes and failed
+hosted jobs for #191 were rerun on the unchanged exact head; merge is still
+pending. Local work continues independently: one-item core collection composes
+the actual owner readers under canonical scope locks and final per-layer checks.
+Focused tests passed 28 cases in 0.25s; Ruff, typing and both Python documentation
+checks passed. One additional native composition/audit/scope case is maintained
+but uncollected/unexecuted. Hosts/staffing and the complete archive remain open.
+Complete feedback with core collection passed 11,661 units in 80.72s with the
+same three Django warnings; documentation still validates 642 Markdown files,
+four skills and 215 requirements. No exact certification of this follow-up yet.
 P10 signed-continuity preparation is implemented: a web-only ephemeral Ed25519
 key and independent verifier trust, six real-purpose HTTPS downloads, actual
 offline CLI with networking/Django denied, retained history and clock/tamper/scope

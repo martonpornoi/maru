@@ -37,6 +37,7 @@ from maru.programme.commands import (
     revise_programme_delivery,
     revise_programme_working,
 )
+from maru.programme.exit_core_queries import load_programme_exit_core
 from maru.programme.models import ProgrammeItem
 from maru.programme.public_copy_commands import withdraw_programme_public_rendition
 from maru.programme.queries import (
@@ -1062,6 +1063,51 @@ def timetable_inventory(admits_exact_effect):
         item,
         edition,
     )
+
+
+def test_exit_core_collects_authorized_layers_with_scope_and_audit(
+    timetable_inventory, monkeypatch
+):
+    """Maintain real core composition and refusal coverage; PostgreSQL deferred."""
+    common, item, edition = timetable_inventory
+    snapshot = load_programme_exit_core(
+        **common, item_id=item.id, reason="Inspect the synthetic retained core"
+    )
+    assert snapshot.private.item.id == item.id
+    assert (
+        len(snapshot.working) == len(snapshot.delivery) == len(snapshot.discussion) == 1
+    )
+    assert len(snapshot.readiness) == 2
+    assert len(snapshot.copy_reviews) == 1
+    assert "PRIVATE" not in repr(snapshot)
+    assert (
+        AuditEvent.objects.filter(
+            operation="programme.query.exit_core", outcome="allow"
+        ).count()
+        == 1
+    )
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        load_programme_exit_core(
+            **{key: value for key, value in common.items() if key != "authorizer"},
+            item_id=item.id,
+            reason="Deny the unadmitted current profile",
+        )
+    foreign = EventEditionFactory(series=edition.series)
+    with pytest.raises(ProgrammeQueryUnavailableError):
+        load_programme_exit_core(
+            **{**common, "edition_id": foreign.id},
+            item_id=item.id,
+            reason="Do not discover another edition's core",
+        )
+
+    def unavailable(_record):
+        raise DatabaseError("Synthetic required audit unavailable")
+
+    monkeypatch.setattr(programme_queries, "append_audit", unavailable)
+    with pytest.raises(DatabaseError):
+        load_programme_exit_core(
+            **common, item_id=item.id, reason="Require durable audit"
+        )
 
 
 def test_timetable_inventory_is_complete_but_omits_every_unrequested_layer(

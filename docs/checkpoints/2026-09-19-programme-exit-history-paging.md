@@ -51,3 +51,28 @@ Complete database-free feedback subsequently passed all 11,633 units in 82.16s,
 with three existing Django URL-field warnings and an owned temporary directory.
 Repository documentation passed 642 Markdown files, four skills and 215 requirement
 identifiers. Exact clean-commit certification and protected delivery remain pending.
+
+## First owning collection boundary
+
+The resumed follow-up also composes one item's core private layers through actual
+Programme readers. All four independent capability/field sets are authorized
+before collection under the existing canonical parent/edition locking seam and
+again before return. The outer minimized audit is required. Existing per-page
+audits remain; no model dump, grant, file read or serializer expansion is added.
+Complete contiguous sequences and each readiness concern/kind are checked rather
+than silently accepting gaps, repeats or truncation. Current working copy must
+match retained working history. A 21,000-entry readiness collection ceiling is a
+refusal boundary, not a new mutation limit or real-convention archive capacity.
+The DTO excludes private contents from repr and is expressly only a core component.
+
+Focused database-free collection tests passed 28 cases in 0.25s. Ruff, strict
+typing, NumPy and semantic documentation passed. One real-command native fixture
+case maintains collection, exact-edition/default-profile denial and required audit
+failure; it is uncollected/unexecuted. No native lock/race or complete owner proof
+is claimed. Hosts, staffing, source references, portable serialization/schema,
+cross-owner consistency and later download authorization remain required.
+
+Complete database-free feedback including core collection passed 11,661 tests in
+80.72s, with the same three Django URL-field warnings. Documentation validation
+remains 642 Markdown files, four skills and 215 requirement identifiers. This is
+iteration evidence; fresh exact-commit and protected delivery are still required.
