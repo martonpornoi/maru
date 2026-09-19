@@ -76,3 +76,18 @@ Complete database-free feedback including core collection passed 11,661 tests in
 80.72s, with the same three Django URL-field warnings. Documentation validation
 remains 642 Markdown files, four skills and 215 requirement identifiers. This is
 iteration evidence; fresh exact-commit and protected delivery are still required.
+
+## Exact local certification and submitted PR
+
+PR #192 was opened on exact clean head
+`533d95f1e7ca8ed195d20fb72235375e31a4d8cc`, tree
+`4be1b42c9a50f7d5decb55f8174f48399f4af621`, against protected
+`4f0aae675124beedf77b0b77535094d9a6942222`. All eight retained gates passed
+in 399.112s (6m39s), completing at 2026-09-19 18:00:19 UTC: 11,661 units
+in 68.50s, 103 frontend tests, static/docs/contracts/security/packaging checks.
+Version-4 receipt `postgresql_deferred` reports zero databases and null combined
+coverage/headroom. Receipt, plan, actual unit report, wheel and sdist were preserved
+outside `.local-ci` with matching hashes before further certification. Receipt
+SHA-256: `f974b6c82c611ba1b45056817b7343ea588c7688041d9a93ab2c79d43a8863de`.
+Native additions remain uncollected/unexecuted. #189/#108/#48 remain open;
+the PR contains no closing reference. Hosted acceptance is independent.

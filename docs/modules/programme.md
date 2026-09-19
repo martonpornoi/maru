@@ -82,6 +82,28 @@ This is not the complete Programme owner section: host/staffing/source reference
 explicit portable serialization/schema, later download reauthorization and
 cross-owner consistency remain required. No route or profile is activated.
 
+`exit_item_queries.load_programme_exit_item` composes that core with the complete
+retained host roster, ordered relationship histories, current shared-availability
+dependencies, and staffing requirements with their fixed-ceiling history pages.
+All six independent layer capability/field sets must pass before collection and
+again before return. In the outer audited transaction, the actual roster reader
+first locks canonical parent/edition scope and then the actor plus related people
+in identifier order; core's actor-only locking happens afterward, never first.
+Every item/version/lifecycle must agree across current projections. Host histories
+must be contiguous and end at the current relationship; staffing histories must
+reach the exact selected version and original current terms without gaps, repeated
+pages, silent truncation or missing retirement. Source-set mismatch and audit
+failure withhold the whole result. The DTO suppresses private content in repr.
+
+These existing organizer host ceilings omit historical private availability and
+invitation copy. Current ended/inactive/unconfirmed/not-shared/outside-edition/
+unavailable/shared distinctions remain unchanged; missing periods are never
+reconstructed or treated as free time. Retired staffing terms remain historical,
+not renewed demand or Workforce assignment proof. This item component adds no
+role, schema, route, file, portable serializer, activation or later-download
+authorization. Programme source bindings and placement decisions are still
+outside it; complete owner/profile coverage and supported volume remain #189 work.
+
 Still required: owner-specific complete collectors and field schemas, authorized
 file linkage, source/change and current-permission rechecks, exact sensitive-read
 audit, readable task selection/download, supported volume handling, retention and

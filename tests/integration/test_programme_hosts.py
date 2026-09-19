@@ -30,6 +30,7 @@ from maru.programme.commands import (
     configure_programme_readiness,
     record_programme_readiness_evidence,
 )
+from maru.programme.exit_item_queries import load_programme_exit_item
 from maru.programme.host_commands import (
     invite_programme_host,
     remove_programme_host,
@@ -863,6 +864,54 @@ def test_roster_locks_actor_and_hosts_in_one_identifier_order(world, monkeypatch
     )
     load_programme_host_roster(read_request(world), authorizer=world[2]["authorizer"])
     assert locked == sorted({world[0].id, world[1].id}, key=str)
+
+
+def test_exit_item_retains_ended_hosts_without_obsolete_availability(
+    world, monkeypatch
+):
+    """Compose real owner histories and preserve the roster's canonical lock order."""
+    confirmed = respond(world, invite(world))
+    terminal = remove(world, share(world, confirmed))
+    manager, person, common = world
+    original = host_queries.resolve_active_verified_person_reference
+    locked = []
+
+    def resolve(*, account_id, lock=False):
+        if lock:
+            locked.append(account_id)
+        return original(account_id=account_id, lock=lock)
+
+    monkeypatch.setattr(
+        host_queries, "resolve_active_verified_person_reference", resolve
+    )
+    args = {
+        "actor_id": manager.id,
+        "organization_id": common["organization_id"],
+        "edition_id": common["edition_id"],
+        "item_id": common["item_id"],
+        "correlation_id": uuid4(),
+        "reason": "Inspect retained Programme exit evidence",
+    }
+    result = load_programme_exit_item(**args, authorizer=common["authorizer"])
+    assert locked[:2] == sorted({manager.id, person.id}, key=str)
+    assert result.core.private.item.aggregate_version == terminal.resulting_item_version
+    assert result.roster.entries[0].relationship.state == "removed"
+    assert len(result.host_histories[0]) == terminal.resulting_host_version
+    assert result.host_dependencies.hosts[0].status == "ended"
+    assert result.host_dependencies.hosts[0].periods == ()
+    assert result.staffing.requirements == result.staffing_histories == ()
+    assert AuditEvent.objects.filter(
+        operation="programme.query.exit_item",
+        target_id=common["item_id"],
+        outcome="allow",
+    ).exists()
+    with pytest.raises(ProgrammeAuthorizationDeniedError):
+        load_programme_exit_item(**args)
+    foreign = EventEditionFactory(organization_id=common["organization_id"])
+    with pytest.raises(ProgrammeQueryUnavailableError):
+        load_programme_exit_item(
+            **(args | {"edition_id": foreign.id}), authorizer=common["authorizer"]
+        )
 
 
 def test_host_and_availability_cursors_invalidate_only_their_dependent_concerns(world):
