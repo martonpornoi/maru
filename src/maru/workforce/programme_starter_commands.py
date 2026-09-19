@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Never
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -53,6 +53,35 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from maru.identity.models import Account
+
+
+def _database_now() -> datetime:
+    """Sample starter intent time using the clock enforced by its native guards.
+
+    Returns
+    -------
+    datetime
+        A timezone-aware database timestamp inside the command transaction.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the database clock result is malformed; no host fallback is allowed.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        row = cursor.fetchone()
+    if (
+        row is None
+        or len(row) != 1
+        or not isinstance(row[0], datetime)
+        or timezone.is_naive(row[0])
+    ):
+        raise AuthorizationDenied(
+            "Programme starter is unavailable.",
+            reason_code="programme_starter_unavailable",
+        )
+    return row[0]
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,7 +306,7 @@ def request_programme_starter(
                 targets,
                 role=AuthorityControl.Role.APPROVER,
             )
-            now = timezone.now()
+            now = _database_now()
             definition = PROGRAMME_STARTER_DEFINITION
             original = ProgrammeStarterRequest(
                 organization_id=scope.organization_id,
@@ -427,7 +456,7 @@ def decide_programme_starter(
                     "This key belongs to different intent.",
                     code="programme_starter_retry_conflict",
                 )
-            now = timezone.now()
+            now = _database_now()
             terminal = ProgrammeStarterDecision(
                 request_id=original.id,
                 actor_id=actor.id,

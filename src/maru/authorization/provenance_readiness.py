@@ -147,6 +147,7 @@ _ACTIVATION_MIGRATIONS = (
     ("workforce", "0019_programme_shift_bindings"),
     ("workforce", "0020_programme_binding_integrity"),
     ("workforce", "0021_programme_binding_downgrade_fence"),
+    ("workforce", "0028_programme_starter_execution_fence"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -1526,7 +1527,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "0856108aaf1bf9fd11092d908fd289542e36faeb815a47e7d5de5680f2abd5a4"
     ),
     "maru_workforce_department_fk_contract_is_current()": (
-        "363ced06d53c708b0b36a0a170be1f82cb8e51492c649f59860294aec8a44e0d"
+        "6f17d789d9762f24b0b4f3adc284d81a4444d83a8c6cdbe186a8260dd2058761"
     ),
     "maru_workforce_page9_scope_mutex()": (
         "75e5f8a98fd059d1e5d2de0db420e77beec79f3c6eb12b051388ab66c85790c6"

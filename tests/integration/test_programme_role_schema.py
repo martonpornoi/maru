@@ -13,7 +13,7 @@ from dataclasses import replace
 from datetime import date, timedelta
 from functools import partial
 from importlib import import_module
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from uuid import UUID, uuid4
 
 import pytest
@@ -867,10 +867,16 @@ def _audit(world, *, record_id, actor_id, operation, target_type, correlation):
     )
 
 
+def _native_time():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        return cursor.fetchone()[0]
+
+
 def _request_values(world):
     organization, edition, author, approver, recipient = world
     recipe = PROGRAMME_ROLE_RECIPES[("coverage-reader", 1)]
-    record_id, correlation, now = uuid4(), uuid4(), timezone.now()
+    record_id, correlation, now = uuid4(), uuid4(), _native_time()
     audit = _audit(
         world,
         record_id=record_id,
@@ -928,7 +934,7 @@ def _decision_values(world, original, action="decline"):
         "request_id": original.id,
         "actor_id": actor.id,
         "action": action,
-        "decided_at": timezone.now(),
+        "decided_at": _native_time(),
     }
 
 
@@ -958,6 +964,70 @@ def test_request_and_own_nonapproval_retain_intent_without_grant(world, action):
     original.refresh_from_db()
     for field, value in values.items():
         assert getattr(original, field) == value
+
+
+@pytest.mark.parametrize("offset_days", [-1, 1])
+@pytest.mark.parametrize("action", list(ProgrammeRoleDecision))
+def test_actual_role_evidence_uses_database_time_despite_host_clock_offset(
+    command_world, monkeypatch, offset_days, action
+):
+    host_now = timezone.now
+    monkeypatch.setattr(
+        role_commands,
+        "timezone",
+        SimpleNamespace(
+            now=lambda: host_now() + timedelta(days=offset_days),
+            is_naive=timezone.is_naive,
+        ),
+    )
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        before = cursor.fetchone()[0]
+    original = _command_request(command_world)
+    _command_decision(
+        command_world,
+        original,
+        action=action,
+        actor=command_world[2]
+        if action is ProgrammeRoleDecision.CANCEL
+        else command_world[3],
+    )
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        after = cursor.fetchone()[0]
+    stored = ProgrammeRoleRequest.objects.get(id=original.request_id)
+    decision = ProgrammeRoleDecisionRecord.objects.get(request=stored)
+    assert before <= stored.requested_at <= decision.decided_at <= after
+    assert stored.approval_deadline == stored.requested_at + timedelta(days=7)
+    assert (decision.role_assignment_id is not None) is (
+        action is ProgrammeRoleDecision.APPROVE
+    )
+
+
+@pytest.mark.parametrize("kind", ["request", "decision"])
+@pytest.mark.parametrize("fault", ["before_transaction", "future"])
+def test_native_role_evidence_rejects_timestamps_outside_database_bounds(
+    world, kind, fault
+):
+    values = _request_values(world)
+    if kind == "decision":
+        values = _decision_values(world, _insert_request(values))
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT transaction_timestamp(), clock_timestamp()")
+        started, current = cursor.fetchone()
+    invalid = (
+        started - timedelta(microseconds=1)
+        if fault == "before_transaction"
+        else current + timedelta(days=1)
+    )
+    if kind == "request":
+        values.update(
+            requested_at=invalid, approval_deadline=invalid + timedelta(days=7)
+        )
+    else:
+        values["decided_at"] = invalid
+    with pytest.raises(IntegrityError, match=r"intent.*invalid"), transaction.atomic():
+        (_insert_request if kind == "request" else _insert_decision)(values)
 
 
 @pytest.mark.parametrize("fault", [None, "recipient", "reason", "start", "old_output"])
@@ -996,7 +1066,7 @@ def test_approval_requires_exact_new_provenance_backed_assignment(world, fault):
     )
     values.update(role_bundle_id=role.id, role_assignment_id=assignment.id)
     if fault == "old_output":
-        values["decided_at"] = timezone.now()
+        values["decided_at"] = _native_time()
     if fault:
         with pytest.raises(IntegrityError), transaction.atomic():
             _insert_decision(values)

@@ -169,7 +169,7 @@ def test_execution_fence_checks_both_frozen_boundaries_before_contraction(
         "refuse_used_notice_boundary_downgrade",
         check("notice"),
     )
-    operation = EXECUTION_FENCE.Migration.operations[0]
+    operation = EXECUTION_FENCE.Migration.operations[-1]
     assert operation.code is migrations.RunPython.noop
     if failure:
         with pytest.raises(RuntimeError, match="fix forward"):
@@ -195,3 +195,18 @@ def test_shared_execution_fence_precedes_older_boundary_removal(target):
         "workforce",
         "0028_programme_starter_execution_fence",
     )
+
+
+def test_execution_successor_extends_only_exact_known_department_references():
+    previous = EXECUTION_FENCE._ownership.DEPARTMENT_FK_CONTRACT_SQL
+    assert previous == EXECUTION_FENCE.REVERSE_SQL
+    expected = previous.replace(
+        EXECUTION_FENCE._PRIOR_RELATION,
+        f"{EXECUTION_FENCE._PRIOR_RELATION}\n{EXECUTION_FENCE._PROGRAMME_RELATIONS}",
+    )
+    assert expected == EXECUTION_FENCE.FORWARD_SQL
+    assert EXECUTION_FENCE._PROGRAMME_RELATIONS.count("::pg_catalog.regclass") == 2
+    assert EXECUTION_FENCE._PROGRAMME_RELATIONS.count("ARRAY['department_id']") == 2
+    assert "public.authorization_programmerolerequest" in EXECUTION_FENCE.FORWARD_SQL
+    assert "public.events_programmeadoptionsetupreceipt" in EXECUTION_FENCE.FORWARD_SQL
+    assert isinstance(EXECUTION_FENCE.Migration.operations[0], migrations.RunSQL)

@@ -260,6 +260,14 @@ The assignment retains the original request reason; the terminal record retains
 the separate decision reason. Decline/cancel creates no authority or owner event.
 There is no invitation, delivery provider or unrelated product effect.
 
+Request and decision evidence uses PostgreSQL `clock_timestamp()` sampled inside
+the command transaction, matching the clock that enforces native intent bounds
+and approval expiry. Host clock drift must not make valid intent appear future
+or pre-transaction. Invalid/unavailable database time fails closed without a host
+fallback; native bounds, deadlines, assignment provenance and actual-person
+checks remain unchanged. Direct native fixtures likewise use the database clock
+and separately prove that pre-transaction/future timestamps are rejected.
+
 Exact retries require the actual actor's current persistent controller source and
 return only original minimized result IDs; they do not renew deadlines, replace
 terminal outcomes or regrant revoked/expired assignments. Another key or changed

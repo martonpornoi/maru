@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db import DatabaseError, IntegrityError
 
 from maru.authorization.services import AuthorizationDenied
 from maru.identity.models import Account
@@ -26,6 +26,39 @@ from maru.workforce.programme_starter_inputs import (
 from maru.workforce.programme_starter_writer import _require_programme_starter_writer
 
 NOW = datetime(2030, 8, 1, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        (NOW,),
+        None,
+        (),
+        (NOW, NOW),
+        (None,),
+        ("2030-08-01",),
+        (NOW.replace(tzinfo=None),),
+    ],
+)
+def test_starter_clock_requires_one_aware_database_timestamp(monkeypatch, row):
+    database = MagicMock()
+    cursor = database.cursor.return_value.__enter__.return_value
+    cursor.fetchone.return_value = row
+    monkeypatch.setattr(commands, "connection", database)
+    if row == (NOW,):
+        assert commands._database_now() == NOW
+    else:
+        with pytest.raises(AuthorizationDenied, match="unavailable"):
+            commands._database_now()
+    cursor.execute.assert_called_once_with("SELECT pg_catalog.clock_timestamp()")
+
+
+def test_starter_clock_never_falls_back_after_database_failure(monkeypatch):
+    database = MagicMock()
+    database.cursor.side_effect = DatabaseError("synthetic unavailable clock")
+    monkeypatch.setattr(commands, "connection", database)
+    with pytest.raises(DatabaseError, match="synthetic unavailable clock"):
+        commands._database_now()
 
 
 @pytest.fixture
@@ -95,7 +128,7 @@ def world(monkeypatch):
             trace.append("commit")
 
     monkeypatch.setattr(commands.transaction, "atomic", atomic)
-    monkeypatch.setattr(commands.timezone, "now", lambda: NOW)
+    monkeypatch.setattr(commands, "_database_now", lambda: NOW)
     monkeypatch.setattr(
         commands,
         "append_audit",

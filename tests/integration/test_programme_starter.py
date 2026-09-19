@@ -282,10 +282,44 @@ def test_actual_expired_request_cannot_create_output(world, monkeypatch):
     original = request(world)
     before = counts()
     future = timezone.now() + timedelta(days=8)
-    monkeypatch.setattr(commands.timezone, "now", lambda: future)
+    monkeypatch.setattr(commands, "_database_now", lambda: future)
     with pytest.raises(ValidationError, match="expired"):
         decide(world, original)
     assert counts() == before
+
+
+@pytest.mark.parametrize("offset_days", [-1, 1])
+@pytest.mark.parametrize("action", list(Action))
+def test_actual_starter_evidence_uses_database_time_despite_host_clock_offset(
+    world, monkeypatch, offset_days, action
+):
+    host_now = timezone.now
+    monkeypatch.setattr(
+        commands,
+        "timezone",
+        SimpleNamespace(
+            now=lambda: host_now() + timedelta(days=offset_days),
+            is_naive=timezone.is_naive,
+        ),
+    )
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        before = cursor.fetchone()[0]
+    original = request(world)
+    decide(
+        world,
+        original,
+        action=action,
+        actor=world.author if action is Action.CANCEL else world.approver,
+    )
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        after = cursor.fetchone()[0]
+    stored = ProgrammeStarterRequest.objects.get(id=original.request_id)
+    terminal = ProgrammeStarterDecision.objects.get(request=stored)
+    assert before <= stored.requested_at <= terminal.decided_at <= after
+    assert stored.approval_deadline == stored.requested_at + timedelta(days=7)
+    assert (terminal.template_id is not None) is (action is Action.APPROVE)
 
 
 def test_actual_late_failure_rolls_back_bundle_template_audit_and_effects(

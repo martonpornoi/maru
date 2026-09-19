@@ -214,3 +214,95 @@ Its container was removed and an empty Docker inventory was verified. Remote
 main remains `42c50e497bc6cfffa399725ad5845617149709c0`. Freeze the repaired
 candidate for exhaustive exact-head certification; focused results do not waive
 that gate, combined coverage, measured headroom or independent hosted acceptance.
+
+## Second exhaustive attempt: schema inventory and clock-bound evidence
+
+Candidate `71898fd4ea87cbb3529e337c4c93d3308edaeaa4` (tree
+`36adb9ee8e9a8d4ca4b79ba2b8133748010b636b`) used source-bound plan
+`39e5be172e4ffcd165d42829e530270666ad3be636c28726bddfc765a34dba81`:
+53 shards, 351 groups and 106 historical groups, at most eight databases.
+All non-database gates passed; exact-head units passed 11,789 cases in 187.37s
+under load. Shards 1–9 passed in 452.703–996.625 seconds with measured headroom
+and cleanup, including the earlier shard-9 conversion fixture repair.
+
+Shard 14 failed one exact Department foreign-key inventory assertion (138 passed)
+in 824.43s, owned duration 834.968s. Native catalog inspection confirmed that the
+test omitted two accepted successors: `authorization_programmerolerequest` and
+`events_programmeadoptionsetupreceipt`. Add those exact Department references;
+retain the independent native current-contract, target-column and safe-delete
+checks. Do not accept an arbitrary observed inventory or weaken its closed set.
+
+Incremental shard-11 evidence also records four role-schema failures before the
+pool cancelled it. Earlier retained logs include the same decision-time guard
+failure in an actual public command, not only raw fixture inserts. Application
+wall-clock values are compared with database transaction/clock timestamps by
+the native guard. A deliberate host-clock-offset regression is being run before
+repair; the earlier passing reruns did not resolve this contract mismatch.
+
+The failed pool cancelled active shards 10–13 and 15–17 and removed every owned
+container; an empty Docker inventory was verified. Preserve the entire artifact
+tree under `.tools/certification-evidence/programme-postgresql-71898fd-failed`
+and the outer `.tools/issue102-certification-71898fd.log`. No full success receipt,
+combined coverage, push, hosted acceptance or merge is claimed.
+
+### Clock and Department-reference repairs
+
+The deliberate pre-fix native probe reproduced all six host-clock-offset cases
+(request followed by approve/decline/cancel, clock one day ahead/behind). Its
+other failure confirmed that merely updating the test inventory was insufficient:
+the installed `maru_workforce_department_fk_contract_is_current()` also returned
+false. The run retained 63 passing/seven failing cases in 174.14s, owned duration
+178.484s, under `.tools/issue102-native-a79af8e1ce9c4691bb0f52d07f08f387`;
+the owned container was removed.
+
+Role commands now sample aware PostgreSQL `clock_timestamp()` inside their
+transaction for request/decision evidence and deadlines, matching the native
+guard clock. Invalid/unavailable database time has no host fallback. The native
+time bounds and exact assignment/audit/person/source conditions are unchanged.
+Direct guard fixtures use an independently queried database timestamp; four
+additional negative cases retain rejection of pre-transaction and future intent.
+Public-command skew cases check real requests and all three decisions, while
+eight units cover valid/malformed/unavailable database-clock results.
+
+The still-unpublished Workforce 0028 is extended to replace only the existing
+Department-reference function with its closed 21-reference successor. It adds
+the two exact accepted references, retains metadata/owner/ACL/search path, and
+runs the shared used-evidence preflight before any reverse SQL or recorder change.
+Released historical migrations are untouched. Current readiness requires 0028
+and function fingerprint
+`6f17d789d9762f24b0b4f3adc284d81a4444d83a8c6cdbe186a8260dd2058761`;
+the source-derived predecessor fingerprint exactly reproduced the previously
+observed value before deriving the successor. Actual metadata still needs native
+verification. Unknown references and cascading known references have explicit
+negative native regressions; this is not a permissive observed-schema allowlist.
+
+Complete unit feedback passed 11,798 cases in 69.17s with three existing warnings;
+strict typing and semantic Python documentation passed. Native role/schema and
+recovery/unsafe-reference reruns are underway before freezing another candidate.
+
+The repaired role/schema batch passed all 153 cases in 263.59s (owned duration
+267.938s), under `.tools/issue102-native-ae83da15e923441883fa9abc48da7af4`.
+It confirms all six public-command clock-offset cases, invalid timestamp denials
+and the actual successor fingerprint/current native Department contract. The
+recovery/unsafe-reference batch passed 21 cases in 473.92s (owned duration
+478.703s), under `.tools/issue102-native-35594c84572d4d329e349a6da54d0e97`.
+Unknown relations and cascading known references are rejected; empty full-graph
+reversal and retained-record refusal still pass. Both containers were removed.
+
+Inspection found the same bounded-time assumption in the related Volunteer
+starter commands. Apply the same owner-local database-clock contract there,
+retaining all native guards and adding six real approve/decline/cancel skew cases
+and eight malformed/unavailable-clock units. The existing application-expiry
+probe now overrides its explicit clock seam, not global host time. A final native
+starter/required-migration-marker batch and complete units are running before the
+next clean candidate. No released migration or timing/coverage threshold changes.
+
+Final starter/required-marker feedback passed all 28 cases in 185.03s (owned
+duration 189.453s), under
+`.tools/issue102-native-4fcf45e6e9944df09b6eed24dd76246e`. This includes all six
+starter clock-offset decisions and refusal when the new 0028 recorder marker is
+missing. The container was removed and the Docker inventory is empty. Complete
+units passed 11,806 cases in 67.05s; Ruff/format, strict typing, NumPy/semantic
+documentation and all repository docs passed. Freeze the repaired candidate for
+the next exhaustive exact-head attempt against unchanged protected main. No
+focused or prior-commit evidence is being promoted to a full success receipt.

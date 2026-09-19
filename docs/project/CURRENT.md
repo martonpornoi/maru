@@ -61,40 +61,36 @@ failures and stale timing assumptions, then certify exhaustive history with the
 same local/hosted assignments and substantial measured headroom before push.
 Do not claim restored acceptance merely from changing the policy file.
 
-Focused native execution has exposed and repaired invalid test prerequisites
-(profile/scoped authority, mutation audit obligations, test-reset exemption and
-SQL parameter handling). Actual supporting-file clearing also exposed a real
-nullable-value/model-validation mismatch: Applications migration 0022 records
-`blank=True` for the already-nullable answer value without changing database
-guards or retained data. Seven new units and stronger native history assertions
-cover it. The repaired uninstrumented role/starter/setup/file-custody batch passed
-171 cases in 414.34s with exact container cleanup; complete units passed 11,781
-cases in 78.58s. Earlier timestamp failures did not recur, but their root cause
-is not established and exhaustive exact-head acceptance remains pending.
-Failed runs and owned-resource cleanup are retained in
-the [restoration checkpoint](../checkpoints/2026-09-19-postgresql-restoration.md).
+Native execution repaired stale fixture admission, audit/reset obligations and
+SQL parameter handling, plus four real defects: optional-answer clearing validation
+(Applications 0022), reverse-order removal of starter guards, the closed Department
+reference inventory, and host/database clock assumptions in role/starter evidence.
+Unpublished Workforce 0028 installs the exact 21-reference successor and runs
+frozen shared retained-evidence preflights before reverse SQL or recorder changes.
+Readiness pins its source, marker and function metadata. Role/starter commands
+sample database time inside their transactions with no host fallback; native
+time bounds, deadlines, source permissions and audit/provenance remain unchanged.
 
-First full attempt at `c7461f964a2bfd40d62117aa826bb42d3bc57737` passed all
-non-database gates and PostgreSQL shards 1–8 (8m17s–17m36s, all headroom checks
-passed), then failed four conversion-entry fixture cases in shard 9, not a timeout.
-The pool cancelled the other active shards and removed all owned containers.
-The failed `.local-ci` tree is preserved under
-`.tools/certification-evidence/programme-postgresql-c7461f9-failed`; no success
-receipt or complete coverage exists. A shared isolated manifest replaces the
-fixture's incomplete per-caller profile patches. The repaired Applications batch
-passed 115 cases and native retry-ACL/notice-migration coverage passed eight.
-Broader batches found four real recovery-order failures and two stale output
-fixture contracts. New Workforce 0028 runs the frozen starter/shared execution
-preflights before any newer starter migration reverses; readiness source-pins it.
-Existing unchanged-recorder/guard assertions remain, and entirely unused reversal
-is still required. The scheduling guard matrix also gains actual notice-row
-coverage and personal outputs use shared isolated admission metadata. All 19
-recovery/starter regressions passed in 534.93s; the five real release/planning/
-notice-matrix cases passed. After correcting the immutable test-registry fixture,
-all 18 personal-output cases passed in 369.95s. All diagnostic containers were
-removed. Complete unit feedback passed 11,789 cases in 82.30s; static, typing and
-documentation checks passed. Freeze the repaired candidate for another exhaustive
-exact-head attempt; no complete receipt, hosted acceptance or push exists yet.
+The two exhaustive attempts (`c7461f9` and `71898fd`) passed non-database gates but
+failed native contracts, not timing limits. The latest passed shards 1–9 in
+7m33s–16m37s with measured headroom before the Department/role failures. All owned
+containers were removed. Preserve their complete failed artifacts under
+`.tools/certification-evidence/programme-postgresql-c7461f9-failed` and
+`.tools/certification-evidence/programme-postgresql-71898fd-failed`.
+No complete success receipt, combined coverage, push or hosted acceptance exists.
+
+Repaired focused native evidence includes 171 role/starter/setup/file cases,
+115 Applications cases, eight retry-ACL/notice-migration cases, five real raw-write
+matrix cases and 18 personal-output cases. The latest role/schema batch passed
+153 cases in 263.59s, including deliberate host-clock skew and exact native
+metadata; recovery/unsafe-reference coverage passed 21 in 473.92s. Complete units
+passed 11,806 cases in 67.05s; static, typing and documentation checks passed.
+All 28 final starter-clock/missing-marker cases passed in 185.03s, including the
+new required recorder row; every diagnostic container is removed. Freeze the
+repaired candidate for exhaustive exact-head acceptance. Preserve failed probes and see the
+[restoration checkpoint](../checkpoints/2026-09-19-postgresql-restoration.md)
+for exact runs, repairs and owned-resource cleanup. Focused evidence is not full
+certification, #109 integrated acceptance or production approval.
 
 After restoration, bundle related #48/subtask outcomes into larger coherent PRs.
 Keep issue-specific acceptance/tests/docs and explicit closure mapping inside each

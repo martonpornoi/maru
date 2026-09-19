@@ -32,7 +32,7 @@ _MIGRATION_SOURCE_SHA256: Final[dict[str, str]] = {
         "0f630ac634f880be272a0f152137c10c4d283eadfa04f38b4f27324cce55ac8b"
     ),
     "0028_programme_starter_execution_fence": (
-        "af1c1b9414fd28e43de3a2af4a17e610b60be6daa455a1ae0892922ce3080282"
+        "76f1a3d494fa211d32425a2ca00d0c9f600b0013dac174c3051f343ae6a79a09"
     ),
 }
 
