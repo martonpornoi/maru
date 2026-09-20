@@ -1,11 +1,13 @@
 """Database-free candidate ACL preparation, never native permission evidence."""
 
+import re
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 import psycopg
 import pytest
 
+from maru.scheduling.readiness import SCHEDULING_INTEGRITY_CONTRACT
 from tests.rehearsals import programme_candidate_acl as acl
 from tests.rehearsals import programme_runtime_privileges as contract
 from tests.rehearsals.programme_runtime_environment import (
@@ -49,6 +51,27 @@ def test_literal_inventory_preserves_all_unrelated_native_limits():
         "INSERT",
         "DELETE",
     )
+
+
+def test_every_native_release_source_can_be_locked_without_new_delete_rights():
+    identity = "maru_scheduling_lock_release_source(text, uuid, uuid, uuid)"
+    source = SCHEDULING_INTEGRITY_CONTRACT.functions[identity].source
+    tables = {
+        "public." + table
+        for table in re.findall(r"WHEN '[a-z_]+' THEN '([a-z_]+)'", source)
+    }
+    assert "public.programme_programmepublicrendition" in tables
+    classes = contract.candidate_relation_classes()
+    # The ordinary class also supports UPDATE; candidate additions there are
+    # only the two declared call vocabulary tables, not release history.
+    updatable = set(classes[2]) | set(classes[3])
+    restricted = set().union(*classes)
+    assert tables & restricted <= updatable
+    assert contract.PRIVILEGES["public.programme_programmepublicrendition"] == (
+        "INSERT",
+        "UPDATE",
+    )
+    assert "public." + identity.replace(" ", "") in contract._FUNCTIONS
 
 
 @pytest.mark.parametrize("defect", ["unknown", "overlap", "other_class"])

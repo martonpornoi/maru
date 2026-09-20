@@ -1,5 +1,20 @@
 # Workforce-only adoption and recovery
 
+Programme's dormant assignment preparation in Workforce migration 0029 does not
+change this profile's workflow. It extends only the native no-Participation branch
+to exact `programme_operations@1`, without making that profile selectable or
+persistable. Before replacing the function, the migration verifies the frozen
+predecessor source and behavioral metadata under exclusive edition/assignment
+locks. OID, ownership, ACL and every other function attribute remain unchanged.
+Reversal first preserves the inherited starter/shared execution boundary and
+then restores the predecessor only when no Programme edition exists. Retained
+starter, operator/change authority, reviewed-copy or native release evidence also
+requires fix-forward; do not remove the successor before its predecessor refuses.
+Any retained Programme edition requires compatible code and fix-forward or mutually
+consistent recovery. Do not disable guards or rewrite the immutable profile to
+make a downgrade pass. The existing Full Convention and Workforce-only evidence
+rules remain unchanged.
+
 **Audience:** Platform administrators, deployment operators, and maintainers
 rehearsing the first bounded Maru adoption profile  
 **Outcome:** Establish or recover a Workforce-only foundation without enabling

@@ -193,7 +193,7 @@ def test_shared_execution_fence_precedes_older_boundary_removal(target):
     graph = MigrationLoader(None).graph
     assert graph.backwards_plan(target)[0] == (
         "workforce",
-        "0028_programme_starter_execution_fence",
+        "0029_programme_assignment_adoption",
     )
 
 

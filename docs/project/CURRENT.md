@@ -91,11 +91,27 @@ The corrected sequence preserves the product boundary and now passes actual
 proposal, review, conversion and item preparation, stopping in planning after
 332.43s. Content-free diagnostics (343.60s) identified missing required Venue
 location/address/country inputs. These now use explicit fictional values and
-the real owner normalizer in unit coverage; the native continuation is running.
+the real owner normalizer in unit coverage; the native continuation passed
+planning and independent physical approval.
 The adjacent 53 fixture units passed in 0.98s. No complete journey is claimed.
 See the [writer/setup checkpoint](../checkpoints/2026-09-20-programme-native-writer-and-setup.md).
 See the [native root/archive result](../checkpoints/2026-09-20-programme-native-root-and-archive.md).
 See the [actual scanner checkpoint](../checkpoints/2026-09-20-programme-offline-scanner-runtime.md).
+
+P06 then exposed a missing native exact-adoption branch after 451.26s. Workforce
+0029 now prepares Programme's no-Participation assignment evidence without
+selecting/activating that profile; all older-profile rules and function privileges
+remain intact. Reverse execution preserves the inherited shared recovery fence
+before any successor removal. Seven native cases passed in 14.08s and 55 adjacent
+assignment/starter/root-lineage cases in 145.70s. The fresh real-runtime diagnostic
+passed staffing and reached release after 615.72s, where the isolated candidate
+lacked UPDATE needed to lock reviewed public copy. That one candidate permission
+is corrected without changing production ACLs or native immutability; complete
+native source-lock inventory and adjacent units passed 61 cases in 0.80s.
+The complete fast suite passed 12,652 tests in 82.18s; native reviewed-copy locking
+and immutable-history rejection passed in 3.97s. Documentation validation passed
+661 Markdown files, four skills and 215 requirements.
+The complete journey remains pending. See the [assignment checkpoint](../checkpoints/2026-09-20-programme-native-assignment-preparation.md).
 
 Focused evidence: 51 native custody/whole-owner workflow tests passed in 89.64s,
 including complete ZIP retrieval, source drift, audit rollback, partial-custody

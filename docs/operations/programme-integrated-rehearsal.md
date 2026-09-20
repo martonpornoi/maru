@@ -287,6 +287,11 @@ Issue #180 also declares fourteen literal helper signatures, with independent
 source digests and full native metadata. Thirteen SECURITY INVOKER helpers validate
 review stages, exact role definitions/scopes, conflict evidence, release dependency
 membership, independent approval, artifacts, personal obligations and change notices.
+The continued native journey adds UPDATE only for the existing retained
+`programme_programmepublicrendition` candidate table: the already-allowlisted
+release source helper needs it for `SELECT FOR UPDATE`. Native history remains
+immutable and DELETE remains denied. All 87 relation identities and the fourteen
+additional helper signatures remain unchanged; production grants are not widened.
 The sole additional SECURITY DEFINER helper is the existing
 `maru_workforce_page9_try_scope_mutex(bigint)`: its entire pinned body only attempts
 a transaction-scoped advisory lock and raises SQLSTATE 40001 on contention. It

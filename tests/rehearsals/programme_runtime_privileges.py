@@ -52,7 +52,6 @@ INSERT = _tables(
         "programme": (
             "programmearchivetaskevent",
             "programmeitemsourcebinding",
-            "programmepublicrendition",
             "programmepublicrenditionwithdrawal",
             "programmehostinvitation",
             "programmehostrevision",
@@ -110,6 +109,9 @@ INSERT_UPDATE = _tables(
         ),
         "programme": (
             "programmearchivetask",
+            # Native release source capture locks the retained copy FOR UPDATE.
+            # Its existing native immutable-history guard still rejects edits.
+            "programmepublicrendition",
             "programmeeditioncontrol",
             "programmeitem",
             "programmeworkingrevision",

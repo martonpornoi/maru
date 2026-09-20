@@ -4,7 +4,7 @@ from dataclasses import asdict, replace
 from uuid import uuid4
 
 import pytest
-from django.db import connection
+from django.db import DatabaseError, connection, transaction
 from django.test.utils import CaptureQueriesContext
 
 from maru.programme import release_queries as sources
@@ -82,6 +82,27 @@ def public_copy(scope, reviewer_id):
         correlation_id=uuid4(),
         authorizer=scope.policy,
     )
+
+
+def test_public_copy_can_be_locked_but_native_history_cannot_be_updated(release_scope):
+    approved = public_copy(release_scope, AccountFactory().id)
+    with transaction.atomic():
+        copy = ProgrammePublicRendition.objects.select_for_update().get(
+            id=approved.result_object_id
+        )
+        original_title = copy.public_title
+        with (
+            pytest.raises(DatabaseError, match="public renditions are immutable"),
+            transaction.atomic(),
+            connection.cursor() as cursor,
+        ):
+            cursor.execute(
+                "UPDATE public.programme_programmepublicrendition "
+                "SET public_title = %s WHERE id = %s",
+                ["Forbidden synthetic history rewrite", copy.id],
+            )
+        copy.refresh_from_db()
+        assert copy.public_title == original_title
 
 
 def test_missing_copy_does_not_hide_complete_seven_concern_readiness(release_scope):

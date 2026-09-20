@@ -55,6 +55,21 @@ authority is added; readiness pins its source and requires its marker
 alongside Scheduling 0022. Populated contraction requires fix-forward or
 consistent recovery, not partial removal of a supposedly unused feature.
 
+Migration 0029 separately prepares the native Position-assignment guard for the
+exact `programme_operations@1` pair. Like Workforce-only, that pair requires
+Workforce role/receipt evidence without a Participation capacity; Full Convention
+keeps its existing Participation requirement. Every other version/code still
+fails closed. Independent approval, scope, status/version and immutable command
+evidence predicates are unchanged. This changes no selectable profile, edition
+constraint, runtime permission or existing row. Native provenance readiness pins
+the observed function metadata and requires the migration marker. Reversal locks
+  editions and assignments and refuses if any Programme edition exists. It also
+  runs the inherited shared execution fence before replacement, preserving used
+  starter, reviewed-copy, native release and operator/change-authority evidence.
+  Only an unused boundary restores the exact predecessor with OID/owner/ACL intact.
+The [assignment continuation checkpoint](../checkpoints/2026-09-20-programme-native-assignment-preparation.md)
+records the actual P06 failure and focused evidence, not full integrated acceptance.
+
 The [starter task](../product/page-contracts/programme-volunteer-starter.md)
 adds audited complete own-request review (100 pending requests or unavailable),
 exact original history, signed original-person preview/confirmation and the
@@ -81,7 +96,9 @@ locks full coverage. It uses actual owner commands, not direct fixture writes,
 authority substitutions or inferred Participation. See the
 [staffing preparation checkpoint](../checkpoints/2026-09-19-programme-staffing-fixture-preparation.md).
 Schema-only observations do not certify actual command rollback, races or runtime
-permissions. Maintained PostgreSQL cases remain uncollected/unexecuted under #102;
+permissions. PostgreSQL acceptance is restored through #102/PR #195. The actual
+isolated journey now reaches the independently approved starter and subsequent
+assignment continuation; complete P06/native journey evidence remains #109,
 human comprehension remains #92 and promotion still requires #97/#109.
 
 ## Existing owner boundaries
