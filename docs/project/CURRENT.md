@@ -174,7 +174,17 @@ the stop/public-copy/host/dependency/metadata matrix passes 81/28.25s. See the
 Full fast run28 found one stale guard-count expectation; after updating the exact
 inventory, run29 passes 12,946/68.83s with three existing URL-field warnings.
 Static/docs/docstrings and model/migration consistency pass.
-Applications and Events terminal closure remain next.
+Applications native preparation now fences all 43 operational relations, with
+exact reciprocal cleanup evidence on nine relations. Actual candidate-policy call
+retirement, lead proposal withdrawal and staged-payload disposal pass, including
+exact retries. The final native stop and established Programme/import matrix
+passes 148 cases in 105.48s. Fast run30 found one stale public-import expectation;
+after correcting that inventory, run31 passes 12,969 cases in 69.53s with three
+existing URL-field warnings. See the
+[Applications boundary checkpoint](../checkpoints/2026-09-21-programme-stop-applications-boundary.md).
+Events terminal closure and complete preview/command/UI remain next. Component
+terminal arrangements are not a real Stop Programme command, and orphan recovery
+after a genuine terminal transition remains part of integrated acceptance.
 See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and

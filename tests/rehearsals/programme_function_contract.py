@@ -148,7 +148,7 @@ OWNER_CONTRACTS = (
     (
         "maru.applications.readiness",
         "APPLICATIONS_INTEGRITY_CONTRACT",
-        "f2d205f6dea6b1cb33b8bc1e971d8e299d440f7c492a524f13ebf2747cc1d57f",
+        "f14aa59b38fe67986cc4bcc2ae96a050d83e3a23edd1946e9cdbf47c7d096df0",
     ),
     (
         "maru.authorization.programme_role_readiness",

@@ -4,7 +4,31 @@ Status: mounted generic application portfolio plus implemented dormant
 Programme-call, acknowledged-proposal, Programme-import, and Department-
 ownership-continuity, staged-review and accepted-conversion kernels;
 production remains gated
-Last updated: 2026-09-20
+Last updated: 2026-09-21
+
+## Programme terminal boundary
+
+Under [ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md),
+migration 0023 fences all 43 adopted operational relations: 28 direct edition
+owners and 15 children whose scope is resolved through their exact parent chain.
+Old and new scope lock the Events parent; unknown scope and non-READ-COMMITTED
+writes fail closed. Shared definitions/submissions are covered without changing
+other profiles. New intake, review, conversion and payload restoration are not
+terminal exceptions.
+
+Retained call retirement, lead-owned proposal withdrawal, staged import disposal
+and existing orphan-owner recovery admit only their listed field deltas. Nine
+relations independently require reciprocal receipt, exact canonical intent,
+actor/version/scope and fresh same-transaction native audit evidence. Cleanup
+commands use the existing native audit witness only for these stopped-profile
+successes; ordinary and denied audit paths keep their original behavior. Current
+permission and original retry checks remain mandatory. No private history or
+original file is deleted by stopping.
+
+The source-pinned Applications readiness contract includes all 52 new attachments
+and both functions. This is owner-component preparation, not an available Stop
+Programme action or complete integrated stop acceptance. See the
+[Applications boundary checkpoint](../checkpoints/2026-09-21-programme-stop-applications-boundary.md).
 
 ## Logical recovery schema comparison
 

@@ -28,8 +28,8 @@ def test_0005_is_one_atomic_cross_domain_integrity_step() -> None:
     assert operation.sql == migration.FORWARD_SQL
     assert operation.reverse_sql == migration.REVERSE_SQL
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 148
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 34
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 200
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 36
 
 
 def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None:

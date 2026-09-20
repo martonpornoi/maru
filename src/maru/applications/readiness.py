@@ -17,6 +17,7 @@ from maru.core.database_integrity_readiness import (
     DatabaseIntegrityContract,
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
     parse_database_integrity_sql_contracts,
 )
 from maru.core.postgresql_schema_canonicalization import schema_definition_sha256
@@ -252,7 +253,7 @@ _CONVERSION_TRIGGERS, _CONVERSION_FUNCTIONS = parse_database_integrity_sql_contr
 _FILE_TRIGGERS, _FILE_FUNCTIONS = parse_database_integrity_sql_contracts(
     _FILE_MIGRATION.FORWARD_SQL
 )
-APPLICATIONS_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
+_OWNED_INTEGRITY_CONTRACT = replace(
     _REVIEW_INTEGRITY_CONTRACT,
     source_migration=("applications", "0020_programme_file_integrity"),
     source_migration_module=(
@@ -281,6 +282,15 @@ APPLICATIONS_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
         and _conversion_migration_contract_is_current()
         and _file_migration_contract_is_current()
     ),
+)
+
+
+APPLICATIONS_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
+    extend_database_integrity_contract(
+        _OWNED_INTEGRITY_CONTRACT,
+        migration_module="maru.applications.migrations.0023_programme_stop_boundary",
+        source_sha256="75a144aa28cde54510e643f825ca52680841883b25ce631c6922f1fa746e54f8",
+    )
 )
 
 
