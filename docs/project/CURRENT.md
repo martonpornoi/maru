@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-20
+Last updated: 2026-09-21
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -109,7 +109,7 @@ managed worktree for that populated run; primary-worktree changes did not
 alter its source. #190 now has a database-free original stop-intent contract;
 70 focused cases pass in 0.31s. ADR 0111 records the selected explicit retained
 historical/shared/inactive/separately-revoked grant dispositions and the concrete
-adopted command inventory. It remains proposed: complete native owner guards,
+adopted command inventory. The decision is accepted for implementation, but complete native owner guards,
 preview, command, UI and end-to-end acceptance are not implemented by these inputs.
 The complete fast suite including the partial-backup and stop-input additions
 passes 12,823 cases in 68.67s, with the three existing URL-field warnings
@@ -125,12 +125,25 @@ boundary units (0.69s), 30 review-lifecycle units (0.25s), and 205 role/history/
 units (1.52s). Native established workflows pass: 36 Venue/reservation cases
 (81.17s), 23 personal/continuity cases (92.00s), 39 authority commands (60.56s),
 and eight review workflows (26.91s). These are component regressions, not a real
-stopped-edition native journey. No stop receipt/transition, complete native guard
-set or final Stop Programme UI exists yet; ADR 0111 and #190 remain open.
+stopped-edition native journey. No completed stop transition, complete native guard
+set or final Stop Programme UI exists yet; #190 acceptance remains open.
 The complete fast suite after these owner/history additions passes 12,918 cases
 in 69.32s with three existing URL-field warnings. See the
 [owner-admission checkpoint](../checkpoints/2026-09-20-programme-stop-owner-admission.md)
 for exact reports and the distinction from a genuinely stopped native journey.
+Native preparation now adds dormant Events stop-receipt storage (all native
+inserts still refused), 25 Scheduling and 22 Workforce terminal writer guards,
+source-pinned preparation/readiness and an updated isolated migration overlay.
+Focused storage checks pass 55 cases/1.70s; Scheduling stop/placement checks pass
+71/25.46s; Workforce stop/metadata checks pass 86/2.24s; existing starter,
+Availability and Shift workflows pass 40/129.48s. Full fast run23 exposed stale
+rehearsal pins and missing new-file timing inventory; those have been repaired.
+Run24 passes all 12,934 fast cases in 68.72s with three existing URL-field warnings.
+Ruff, formatting, documentation/docstrings and model/migration consistency pass.
+See the
+[native preparation checkpoint](../checkpoints/2026-09-21-programme-stop-native-preparation.md).
+Other owner guards, complete stop preview/command/UI and genuine P11 acceptance
+remain incomplete; preparation readiness must not enable stopping by itself.
 See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and
@@ -169,13 +182,14 @@ credential logging or weakened security is claimed. See the
 and [inventory](../checkpoints/2026-09-20-programme-excluded-state-inventory.md)
 checkpoints.
 
-Next: preserve #198's bounded pass, finish #97 logical-recovery verification and
-remaining bounded recovery/resource and browser
-acceptance, then #190 stop-use and remaining #175 acceptance. Proposed
-[ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md) examines
-a separate Events-owned Programme stop operation using the archived state; it is
-not accepted or implemented. Complete the owner entry/history inventory first.
-Then finish #108 promotion, #109 P01–P12, #97 logical restore and #92 genuine human
+Next: preserve #198's bounded pass and #97's pinned populated restore/refusal;
+complete #190 native stop guards, exact receipt/transition and preview/confirmation,
+alongside remaining bounded archive resource/browser and #175 acceptance.
+[ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md) now
+accepts the concrete command/scope/native-exception map for implementation, not
+delivery. It retains the archived-state owner boundary and explicit historical/
+shared authority dispositions. Complete native guard closure precedes any working
+stop action. Then finish #108 promotion, #109 P01–P12 and #92 genuine human
 evidence. Keep #189/#190/#108/#109/#97/#92/#48 open until their actual outcomes.
 Full risk-selected exact-head local certification and protected hosted delivery
 remain required; no test deferral, false success receipt or merge bypass.

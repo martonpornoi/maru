@@ -20,6 +20,7 @@ def test_literal_inventory_preserves_all_unrelated_native_limits():
     assert len(contract.PRIVILEGES) == 87
     assert set(projected[0]) == {
         "public.django_migrations",
+        "public.events_programmestopreceipt",
         "public.authorization_authorityprovenanceactivation",
         "public.authorization_provenanceactivationlatch",
         "public.identity_platforminvitationretentionpolicycontrol",

@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
     """Keep native profile enforcement and refuse installation or reversal on use."""
 
     dependencies: ClassVar[list[tuple[str, str]]] = [
-        ("events", "0014_programme_setup_downgrade_fence"),
+        ("events", "0015_programme_stop_receipt"),
     ]
     operations: ClassVar[list[object]] = [
         migrations.RunPython(require_empty_current_schema, migrations.RunPython.noop),

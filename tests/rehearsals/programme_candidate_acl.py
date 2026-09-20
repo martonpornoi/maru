@@ -65,7 +65,7 @@ def install_candidate_table_privileges(lease):
             if connection.execute(
                 "SELECT EXISTS (SELECT 1 FROM public.events_eventedition), "
                 "EXISTS (SELECT 1 FROM public.django_migrations "
-                "WHERE app = 'events' AND name = '0015_isolated_programme_candidate')"
+                "WHERE app = 'events' AND name = '0016_isolated_programme_candidate')"
             ).fetchone() != (False, True):
                 raise ProgrammeProvisioningError("candidate_acl_schema_unavailable")
             if connection.execute(

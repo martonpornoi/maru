@@ -158,7 +158,7 @@ OWNER_CONTRACTS = (
     (
         "maru.scheduling.readiness",
         "SCHEDULING_INTEGRITY_CONTRACT",
-        "ffe9c6eb285b633900ec278170c2c5f99fea64ec6e68be9b83f8127b0860c77f",
+        "11344cc2a2187847aa0b317f2fdd16d76d495ba4dff09907e85cdea789e67e41",
     ),
     (
         "maru.programme.readiness",

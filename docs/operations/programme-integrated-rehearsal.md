@@ -172,8 +172,8 @@ available yet.
 `programme_candidate_schema_settings.py` is a non-serving, explicit migration
 child. It inherits the guarded provisioning settings and uses an Events-only
 migration overlay in `programme_event_migrations/`. The overlay discovers every
-unchanged owner migration, then appends `0015_isolated_programme_candidate` after
-the current `0014` leaf. It registers no application profile, so normal owner
+unchanged owner migration, then appends `0016_isolated_programme_candidate` after
+the current `0015` Events leaf. It registers no application profile, so normal owner
 checks still run against the unchanged current profiles; no check is skipped or
 silenced. Production migration files/settings remain unchanged.
 

@@ -385,8 +385,18 @@ aggregate and lifecycle versions, complete preview fingerprint and a required
 240-character accountable reason form one purpose-separated request digest.
 It performs no discovery, authorization, profile registration or transition.
 The owner/native stop command and complete preview remain pending under
-[proposed ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md);
+[ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md);
 input validation alone must never be exposed as a working Stop Programme action.
+
+Migration `0015_programme_stop_receipt` adds immutable, select-only retained
+storage binding original actor/key, intent/preview digests, expected lifecycle
+and aggregate versions, transition, audit and impact document. Its initial native
+guard refuses **all** inserts until complete terminal admission is installed;
+the ORM writer context cannot bypass that rule. Used receipts fence normal
+downgrade before either storage or guards can be removed. The preparation probe
+pins the full migration sources, receipt schema, and Scheduling/Workforce stop
+attachments. A passing preparation probe is not complete owner closure and must
+never enable the Stop Programme command by itself.
 
 `programme_stop_queries.resolve_programme_stop_reference` supplies a minimized
 exact-owner observation for those owner checks: whether the version-one Programme

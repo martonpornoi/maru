@@ -71,6 +71,7 @@ def test_provisioning_sql_covers_every_dormant_programme_read_only_relation() ->
                 "public.applications_programme",
                 "public.authorization_programmerole",
                 "public.events_programmeadoptionsetupreceipt",
+                "public.events_programmestopreceipt",
                 "public.programme_",
                 "public.scheduling_",
                 "public.venues_venueschedulingbinding",
@@ -86,6 +87,7 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
     assert RUNTIME_DATABASE_SELECT_ONLY_RELATIONS == (
         "public.django_migrations",
         "public.events_programmeadoptionsetupreceipt",
+        "public.events_programmestopreceipt",
         "public.authorization_programmerolerequest",
         "public.authorization_programmeroledecisionrecord",
         "public.authorization_authorityprovenanceactivation",

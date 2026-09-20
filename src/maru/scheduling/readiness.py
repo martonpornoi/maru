@@ -14,6 +14,7 @@ from maru.core.database_integrity_readiness import (
     DatabaseIntegrityContract,
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
 )
 from maru.core.relation_schema_readiness import relation_schema_is_current
 
@@ -35,31 +36,36 @@ _VENUE = build_database_integrity_contract(
 )
 _FENCE = import_module("maru.scheduling.migrations.0006_scheduling_downgrade_fence")
 _FENCE_SHA256 = "1d7fb01e7311dadbbd9d48899a240a37a9fccf4f47bf001da24d24528d6803b6"
-SCHEDULING_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
-    with_native_release_integrity(
-        replace(
-            _BASE,
-            triggers={
-                **_BASE.triggers,
-                **{
-                    name: trigger
-                    for name, trigger in _VENUE.triggers.items()
-                    if trigger.table.startswith("scheduling_")
-                },
+_RELEASE_CONTRACT = with_native_release_integrity(
+    replace(
+        _BASE,
+        triggers={
+            **_BASE.triggers,
+            **{
+                name: trigger
+                for name, trigger in _VENUE.triggers.items()
+                if trigger.table.startswith("scheduling_")
             },
-            functions={**_BASE.functions, **_VENUE.functions},
-            runtime_executable_functions=frozenset(
-                {"maru_validate_scheduling_linked_booking(uuid)"}
-            ),
-            source_contract_current=(
-                _BASE.source_contract_current
-                and _VENUE.source_contract_current
-                and hashlib.sha256(
-                    inspect.getsource(_FENCE).replace("\r\n", "\n").encode()
-                ).hexdigest()
-                == _FENCE_SHA256
-            ),
-        )
+        },
+        functions={**_BASE.functions, **_VENUE.functions},
+        runtime_executable_functions=frozenset(
+            {"maru_validate_scheduling_linked_booking(uuid)"}
+        ),
+        source_contract_current=(
+            _BASE.source_contract_current
+            and _VENUE.source_contract_current
+            and hashlib.sha256(
+                inspect.getsource(_FENCE).replace("\r\n", "\n").encode()
+            ).hexdigest()
+            == _FENCE_SHA256
+        ),
+    )
+)
+SCHEDULING_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
+    extend_database_integrity_contract(
+        _RELEASE_CONTRACT,
+        migration_module="maru.scheduling.migrations.0023_programme_stop_boundary",
+        source_sha256="bd394658be8748c2e973203f0d8ceeb7f3e53a46d86f8f8325272e038c5544a5",
     )
 )
 SCHEDULING_SCHEMA_SHA256: Final = {

@@ -1463,6 +1463,18 @@ and [atomic-release extension](../operations/programme-atomic-release-migration-
 describe exact schema/readiness, runtime ACLs and populated contraction fences.
 The native editor and staffing were delivered dormant through #85 and #88.
 Neither release eligibility nor dormant approval/publication adds a live workflow.
+
+Migration `0023_programme_stop_boundary` adds an invoker-security guard to the
+explicit 25-table operational inventory. It locks both old and new Events scopes
+in deterministic order and refuses writes for exact Programme editions that are
+archived/cancelled; unknown scope, unsupported Programme versions or a stale
+snapshot isolation level fail closed. Existing evidence, scope and immutable-row
+guards remain mandatory. Withdraw the current release through its authorized
+command **before** terminal stop. Dependency keys/changes retain their independent
+native rules so shared Identity/security changes can still invalidate retained
+history. No new helper EXECUTE privilege is needed. Exact readiness includes the
+new attachments, and used stop receipts prevent removing the fence.
+
 Role-specific outputs, on-site continuity, logical-restore compatibility (#97),
 guided activation and integrated acceptance remain mandatory #48 work.
 #87 is delivered; representative-human

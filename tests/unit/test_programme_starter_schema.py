@@ -73,7 +73,7 @@ def test_clean_never_traverses_foreign_owners(model, monkeypatch):
     )
 
 
-def test_native_source_contract_pins_all_four_migrations_and_four_guards():
+def test_native_source_contract_pins_starter_history_and_additive_stop_guards():
     contract = readiness.PROGRAMME_STARTER_INTEGRITY_CONTRACT
     assert contract.source_contract_current
     assert contract.owned_relations == readiness.PROGRAMME_STARTER_RELATIONS
@@ -83,12 +83,14 @@ def test_native_source_contract_pins_all_four_migrations_and_four_guards():
         ("workforce", "0027_programme_starter_downgrade_fence"),
         ("workforce", "0028_programme_starter_execution_fence"),
         ("scheduling", "0022_change_notice_integrity"),
+        ("workforce", "0030_programme_stop_boundary"),
     }
-    assert len(contract.triggers) == 4
+    assert len(contract.triggers) == 6
     assert set(contract.functions) == {
         "maru_workforce_starter_request_guard()",
         "maru_workforce_starter_decision_guard()",
         "maru_workforce_starter_refuse_truncate()",
+        "maru_workforce_programme_stop_guard()",
     }
     assert not contract.runtime_executable_functions
     assert all(
@@ -191,9 +193,10 @@ def test_execution_fence_checks_both_frozen_boundaries_before_contraction(
 )
 def test_shared_execution_fence_precedes_older_boundary_removal(target):
     graph = MigrationLoader(None).graph
-    assert graph.backwards_plan(target)[0] == (
-        "workforce",
-        "0029_programme_assignment_adoption",
+    plan = graph.backwards_plan(target)
+    assert plan[0] == ("workforce", "0030_programme_stop_boundary")
+    assert plan.index(("workforce", "0029_programme_assignment_adoption")) < plan.index(
+        ("workforce", "0028_programme_starter_execution_fence")
     )
 
 

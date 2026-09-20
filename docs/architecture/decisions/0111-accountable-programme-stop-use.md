@@ -1,6 +1,6 @@
 # ADR 0111: Stop Programme through a profile-specific archived boundary
 
-- Status: Proposed; owner integration and native acceptance pending
+- Status: Accepted for implementation; owner-native integration and delivery acceptance pending
 - Date: 2026-09-20
 - Extends: ADRs 0081, 0106, 0108 and 0109
 - Requirements: EVT-007, ARC-003, ARC-005, AUD-001, INT-007 and NFR-013
@@ -20,7 +20,7 @@ Edition-scoped work must stop without implying that Organization-scoped Venue
 authority or constitutional representation disappeared. Immutable assignments,
 confirmed work and prior disclosures also cannot be rewritten to claim completion.
 
-## Proposed decision
+## Decision
 
 ### Reuse the terminal state, not the full-convention transition workflow
 
@@ -130,7 +130,7 @@ the stop contract. The following findings were checked against the local code:
 The archive requires current independent owner rights even after generation.
 Blindly revoking every source grant would also remove later authorized history
 and archive retrieval; archived context must not manufacture replacement rights.
-Before accepting this ADR, settle the explicit disposition of each exact grant
+The selected disposition below accounts for each exact grant
 (revoked, already inactive, or deliberately retained for an admitted historical
 or shared purpose), including what remains accessible to the original requester.
 No retained grant may reopen ordinary Programme operations. A withdrawn pointer
@@ -195,15 +195,89 @@ source movement caused by stop can make an older package unavailable. Generate a
 fresh authorized historical package or finish retrieval before stop rather than
 weakening freshness checks.
 
-The next implementation step is to map these families to exact native root and
-derived-table guards, purpose exceptions and actual race/denial cases. This table
-does not claim that every family is already fenced. Native guards must consider
-both old and new scope on updates, so moving a row cannot escape a stopped edition.
+### Native scope and exception contract
 
-The map remains incomplete until the exact adopted command/read/effect inventory,
-field ceilings, native exceptions and corresponding negative cases are enumerated.
-No schema or stop command is authorized by treating this proposed map as already
-accepted or tested.
+The model metadata inventory confirms the following owner closure. Each owner
+must pin its literal table set and child-to-parent scope paths in its own migration
+and integrity contract; a new adopted writer/table requires deliberate review,
+not automatic inclusion in a permissive exception. This is the implementation
+contract, not evidence that its guards are already installed.
+
+- Applications' Programme call/proposal/import/receipt/file-intake/accepted-
+  transition records have direct organization/edition scope. Review policy derives
+  it through call; case through proposal; assignment/entry through case; decision
+  through entry; acknowledgement through decision; original file content through
+  intake. Shared definition/submission/file-receipt/command-receipt records also
+  have direct scope. Definition owner/reviewer/section/question rows derive through
+  definition; answer/review/target rows derive through submission. Guard these
+  shared roots as well as Programme-prefixed records, without changing another
+  profile's workflows.
+- All operational Programme and Scheduling records carry direct organization/
+  edition scope. Archive task carries direct scope; its events/chunks derive
+  through task and remain separately governed archive custody, not operational
+  content. Scheduling dependency keys/changes may instead have global or shared
+  Organization scope; never block a global Identity/security change because it
+  invalidates a retained release from a stopped edition.
+- Workforce Department/structure/position/assignment/document/demand/commitment/
+  availability/binding records carry edition scope where modeled. Position
+  requirements/opportunity derive through Position; volunteer application through
+  opportunity/Position; Availability windows through their edition-owned plan;
+  starter decision through request. Position templates and shared Organization
+  role definitions remain shared. Availability is person-owned **and edition-
+  scoped**, not a global calendar: another edition stays usable without permitting
+  fresh work in the stopped one.
+- Venue selection/space/member/availability/booking/history/occupancy/binding
+  records carry direct scope. Receipts may have null edition for shared catalog
+  commands; those are not stopped. Existing room/property/layout/accommodation
+  catalog records are Organization-owned and remain outside the edition freeze.
+- Authorization grants, assignments and resource bindings carry their actual
+  target scope; guided requests also carry a Programme context even for shared
+  Venue authority. Guided decisions derive through their request. Issuance/control
+  provenance retains its existing immutable proof; terminal state must not invent
+  replacement provenance, delete definitions or prevent authorized revocation.
+
+Each owner-native guard locks the exact Events parent before admitting a scoped
+write and observes the documented profile/lifecycle projection. It considers
+both old and new scope, including derived-parent moves, and rejects unknown scope.
+Programme writers use READ COMMITTED; stale snapshot or conflicting scope is a
+closed failure, never an excuse to omit the stop check. Ordinary owner commands
+retain their wider canonical parent/person lock order. No trigger is disabled,
+no session "stop bypass" exists, and no general privileged writer is introduced.
+
+Default after terminal state is refusal. Explicit exceptions must be independently
+enforced by their owner rather than making a whole table writable:
+
+| Owner purpose | Narrow retained consequence |
+| --- | --- |
+| Applications withdrawal/disposal/ownership recovery | Existing reasoned proposal withdrawal, staging payload disposal, or historical orphan-owner recovery only; preserve source identity and existing receipt/evidence checks. No new intake, review acknowledgement, conversion or restored payload. |
+| Programme privacy withdrawal | Existing public-rendition withdrawal, a host's non-confirming response or withdrawal of shared host availability. Only corresponding dependency/version/evidence changes; no new copy, confirmation, host invitation or availability window. |
+| Programme archive custody | Requester-bound fresh historical archive, continuation/disposal/cancellation under current independent source rights, source fingerprints, bounds and expiry. Never bypass source movement or revive expired bytes. |
+| Scheduling evidence | Required native dependency invalidation, retained pointer withdrawal evidence and immutable read audit. No new planning, release approval/publication or notice. |
+| Workforce correction | Only a correction already admitted by the owning lifecycle and authority contract; stopping performs no completion/removal and introduces no new correction privilege. |
+| Venues retained obligations | Existing deliberate booking cancellation or publication withdrawal with exact scope, unchanged physical envelope, actor/reason/version/receipt and native mutation evidence. No new booking, reapproval, republishing or occupancy reactivation. Linked-booking rules remain independently enforced. |
+| Authorization security | Current authorized revocation and immutable historical proof; no fresh scoped grant, renewal, delegation or pending approval. Shared authority stays explicit. |
+| Foundation security/retention | Account restriction, current-authority revocation, immutable audit/internal event consequences and owner-admitted retention/disposal remain independently governed. No global worker/account shutdown or unrelated delivery. |
+
+When a legitimate exception writes state before its receipt/audit, validate the
+complete same-transaction owner evidence with a deferred constraint in addition
+to the initial scope lock. An allowed operation name alone is insufficient:
+bind the exact affected record/version, native audit witness, source identity and
+permitted field delta. Do not allow unrelated writes in the same transaction just
+because one privacy or correction receipt exists. Immutable history guards remain.
+
+Events' receipt storage precedes owner integration; the final terminal-transition
+integrity migration depends on the complete owner guard closure. The command must
+require that exact closure before stopping. Used stop evidence fences reversal;
+empty unused schema may reverse only through the coherent dependency graph. The
+isolated candidate overlay follows the new Events leaf, rather than conflicting
+with its migration number. None of these migrations activates a production profile.
+
+The command, scope and exception map above authorizes implementation, not a claim
+that enforcement is complete. Owner guards, protected-field previews, missing-
+authority refusal, raw-write negatives, stale/retry/race/rollback cases and the
+actual composed terminal transition must be implemented and verified before
+protected delivery acceptance. Additive dormant storage or an individual guard
+must not expose a working Stop Programme action prematurely.
 
 - A second independent active/stopped flag duplicates Events' terminal lifecycle
   and risks contradictory admission. Prefer the existing archived state if the
@@ -213,11 +287,11 @@ accepted or tested.
 - Application-only hidden navigation, one withdrawn timetable or role-name-based
   revocation does not establish a complete stop boundary.
 
-Before acceptance, map every adopted command/read/output/effect and required
-history/correction exception, then run real scope/field denial, stale/retry/race,
+Before delivery acceptance, verify every mapped command/read/output/effect and
+history/correction exception with real scope/field denial, stale/retry/race,
 rollback, native recovery and excluded-effects cases. Verify the stop preview and
 confirmation UI, original work/evidence preservation, shared-grant accounting,
 P11 composition and #97 restore. If the existing terminal state cannot support
-these semantics without changing other profiles, revise this proposed decision
-before implementation; do not silently weaken the outcome. #92 human and #109
+these semantics without changing other profiles, explicitly amend or supersede
+this decision; do not silently weaken the outcome. #92 human and #109
 integrated evidence remain separate requirements before closing #48.

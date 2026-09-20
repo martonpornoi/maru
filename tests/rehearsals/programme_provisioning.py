@@ -34,7 +34,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROVISIONING_SOURCE = (
     ROOT / "docs/operations/postgresql-runtime-role-provisioning.sql.example"
 )
-PROVISIONING_SHA256 = "588cd7833f19b33c58619d649848807a0a18da2b5e0c4bb3d6870e289247f53e"
+PROVISIONING_SHA256 = "a8029c2986e0972b7a3f4bb12230fefbe286a899427812b93d53e9b5c891dc5e"
 _PASSWORD = re.compile(r"[A-Za-z0-9_-]{43}\Z")
 _PROCESS_ENVIRONMENT = frozenset(
     {"systemroot", "windir", "comspec", "path", "pathext", "temp", "tmp", "home"}

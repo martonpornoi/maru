@@ -1611,3 +1611,20 @@ history is not attendance. Ended assignments do not erase retained commitments.
 No planner identity, confirmation/removal rationale or availability calendar is
 fetched. Missing owner joins and overflow are unavailable, not partial success.
 This input does not itself mount a personal calendar or activate Programme.
+
+## Programme terminal writer preparation
+
+Migration `0030_programme_stop_boundary` freezes ordinary writes in archived or
+cancelled `programme_operations@1` editions without completing, removing or
+rewriting retained work. Its literal inventory covers 17 directly scoped and
+five parent-derived tables; shared Organization-owned Position templates stay
+outside it. Availability remains person-owned **and edition-scoped**: other
+editions stay usable. Existing owner contracts already limit corrections to
+their permitted nonterminal lifecycles; this guard introduces no new correction
+privilege. It preserves all existing assignment, staffing, provenance and receipt
+guards, locks both source/destination Events parents, and rejects unresolved
+scope or unsupported Programme isolation/version. The starter probe includes
+its two added attachments; Events' stop-preparation probe verifies the complete
+22-table fence. Native trigger functions gain no new runtime EXECUTE grant.
+Retained stop receipts prevent ordinary reversal before the guards are removed.
+This component is not the complete stop command, preview or P11 acceptance.

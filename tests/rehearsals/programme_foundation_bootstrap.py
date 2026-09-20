@@ -106,7 +106,7 @@ def bootstrap_stopped_foundation():
             raise ProgrammeProvisioningError("foundation_bootstrap_identity_invalid")
         cursor.execute(
             "SELECT EXISTS (SELECT 1 FROM public.django_migrations "
-            "WHERE app = 'events' AND name = '0015_isolated_programme_candidate'), "
+            "WHERE app = 'events' AND name = '0016_isolated_programme_candidate'), "
             "EXISTS (SELECT 1 FROM public.identity_account), "
             "EXISTS (SELECT 1 FROM public.organizations_organization), "
             "EXISTS (SELECT 1 FROM public.events_eventedition), "
