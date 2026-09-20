@@ -306,3 +306,51 @@ units passed 11,806 cases in 67.05s; Ruff/format, strict typing, NumPy/semantic
 documentation and all repository docs passed. Freeze the repaired candidate for
 the next exhaustive exact-head attempt against unchanged protected main. No
 focused or prior-commit evidence is being promoted to a full success receipt.
+
+## Third exhaustive attempt and exact truncate-guard probe repair
+
+The exhaustive candidate `32158f9688ebc465fb5fcccac79542e15943b51e`, tree
+`4c251fb945bac028fbf4b1303549e7e2d806eade`, used the unchanged base and plan
+`9b65bd09302946ee71a452e313d9636f21557b0d9af4734f58c7e70c9b9122f4`.
+Non-database gates and all 11,806 units passed; units took 189.01s under concurrent
+load. Shards 1–39 passed, each with measured headroom and verified cleanup. The
+longest was 2,980.781s (49m41s), not a hosted measurement or runtime guarantee.
+
+Shard 41 then failed one Workforce structure-integrity test, with 14 other cases
+passing. The single-table TRUNCATE probe was rejected by PostgreSQL's FK preflight
+because the later `events_programmeadoptionsetupreceipt` now references the
+Workforce receipt. It did not reach the intended native immutability trigger.
+This is a stale test setup, not permission to remove the FK, relax the trigger,
+accept any database error, or truncate real data. The corrected probe explicitly
+names those two receipt tables, keeps the test-reset exemption off, requires the
+Workforce-specific immutability message and SQLSTATE `23514`, and asserts the
+original receipts are unchanged after rollback.
+
+The pool canceled shards 40 and 42–47; 48–53 never started. All 47 owned
+containers were removed. The complete failed tree is preserved at
+`.tools/certification-evidence/programme-postgresql-32158f9-failed`, with outer log
+`.tools/issue102-certification-32158f9.log`. No success receipt, final combined
+coverage, push, hosted acceptance or restored protected-main gate is claimed.
+
+Focused uninstrumented native feedback passed all eight Workforce integrity
+cases in 170.99s (owned duration 175.422s), under
+`.tools/issue102-native-e5b9a0f69fe345f891f836d3346a64b0`; cleanup was verified.
+Ruff and formatting passed. To expose remaining debt before another expensive
+full run, all 14 unfinished exact shard selections are being diagnosed without
+coverage, with four isolated databases at a time. The runner revalidates unchanged
+group assignments against the repaired source. These diagnostics retain every
+selected current/history case, fail on skipped cases, and cannot emit a full
+certification receipt. Fresh complete exact-head acceptance remains mandatory.
+
+All 14 unfinished selections passed under
+`.tools/issue102-remaining-7af40b40bd1a4def878cc48a14d0f21e`: 1,494 selected native
+cases, zero failures/errors/skips, every owned database removed. The diagnostic
+plan `bf33935f08b6eb3deb38a098ddc98e96f5b4972bad7420bc53a03e1f3a50651d`
+retained the same 53 assignments and every current/historical case. Diagnostic
+owned durations were 988.593–1,504.547s without coverage and with four workers;
+these are not eight-worker instrumented headroom or full certification. No
+additional defects were found. Complete units passed again (11,806 in 79.10s,
+three existing warnings), along with Ruff/format, documentation validation and
+diff whitespace checks. Remote main remains the exact original protected base.
+Freeze this repaired candidate for a new complete exact-head run; none of the
+partial or uninstrumented observations is reused as a success receipt.

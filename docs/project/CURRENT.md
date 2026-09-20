@@ -71,12 +71,15 @@ Readiness pins its source, marker and function metadata. Role/starter commands
 sample database time inside their transactions with no host fallback; native
 time bounds, deadlines, source permissions and audit/provenance remain unchanged.
 
-The two exhaustive attempts (`c7461f9` and `71898fd`) passed non-database gates but
-failed native contracts, not timing limits. The latest passed shards 1–9 in
-7m33s–16m37s with measured headroom before the Department/role failures. All owned
-containers were removed. Preserve their complete failed artifacts under
-`.tools/certification-evidence/programme-postgresql-c7461f9-failed` and
-`.tools/certification-evidence/programme-postgresql-71898fd-failed`.
+Three exhaustive attempts (`c7461f9`, `71898fd` and `32158f9`) passed non-database
+gates but failed native contracts, not timing limits. The latest passed shards
+1–39 with measured headroom (longest 49m41s), then exposed a stale single-table
+TRUNCATE probe in shard 41. Programme setup's newer receipt FK prevented the test
+from reaching its intended Workforce trigger. The repair names both exact receipt
+tables, requires the specific Workforce error and SQLSTATE, and proves the original
+receipts survive. All 47 started databases were removed; no timing waiver applies.
+Preserve each complete failed artifact tree under
+`.tools/certification-evidence/programme-postgresql-<head>-failed`.
 No complete success receipt, combined coverage, push or hosted acceptance exists.
 
 Repaired focused native evidence includes 171 role/starter/setup/file cases,
@@ -86,8 +89,13 @@ matrix cases and 18 personal-output cases. The latest role/schema batch passed
 metadata; recovery/unsafe-reference coverage passed 21 in 473.92s. Complete units
 passed 11,806 cases in 67.05s; static, typing and documentation checks passed.
 All 28 final starter-clock/missing-marker cases passed in 185.03s, including the
-new required recorder row; every diagnostic container is removed. Freeze the
-repaired candidate for exhaustive exact-head acceptance. Preserve failed probes and see the
+new required recorder row. The repaired Workforce integrity file passed all eight
+native cases in 170.99s, with its owned database removed. All 14 unfinished shard
+selections then passed uninstrumented diagnostics: 1,494 native cases, no skips
+or failures, four disposable databases at a time and verified cleanup. Complete
+units passed again (11,806 in 79.10s); lint, formatting and documentation passed.
+These diagnostics are not certification or combined coverage. Freeze the repaired
+candidate for exhaustive exact-head acceptance. Preserve failed probes and see the
 [restoration checkpoint](../checkpoints/2026-09-19-postgresql-restoration.md)
 for exact runs, repairs and owned-resource cleanup. Focused evidence is not full
 certification, #109 integrated acceptance or production approval.

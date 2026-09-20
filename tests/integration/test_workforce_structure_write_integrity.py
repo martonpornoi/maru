@@ -217,7 +217,12 @@ def _write_duplicate_changed_fields(world: _StructureWorld) -> None:
 def _truncate_receipts_without_test_reset() -> None:
     with transaction.atomic(), connection.cursor() as cursor:
         cursor.execute("SET LOCAL maru.authority_provenance_test_reset = 'off'")
-        cursor.execute("TRUNCATE TABLE workforce_editionstructurecommandreceipt")
+        # Include the exact referencing receipt table so the native Workforce
+        # trigger, rather than PostgreSQL's FK preflight, rejects the operation.
+        cursor.execute(
+            "TRUNCATE TABLE workforce_editionstructurecommandreceipt, "
+            "events_programmeadoptionsetupreceipt"
+        )
 
 
 def _change_same_department_twice_at_one_version(world: _StructureWorld) -> None:
@@ -320,8 +325,14 @@ def test_receipt_arrays_actions_and_immutability_fail_closed() -> None:
         EditionStructureCommandReceipt.objects.filter(pk=receipt.pk).update(
             reason="Forbidden mutation."
         )
-    with pytest.raises(IntegrityError, match="cannot be truncated"):
+    before_truncate = list(EditionStructureCommandReceipt.objects.values())
+    with pytest.raises(
+        IntegrityError,
+        match="structure receipts are immutable and cannot be truncated",
+    ) as caught:
         _truncate_receipts_without_test_reset()
+    assert caught.value.__cause__.sqlstate == "23514"
+    assert list(EditionStructureCommandReceipt.objects.values()) == before_truncate
 
 
 def test_one_department_cannot_change_twice_at_one_structure_version() -> None:
