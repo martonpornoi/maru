@@ -42,10 +42,14 @@ def test_indivisible_or_total_over_budget_cannot_be_hidden_by_more_shards():
     with pytest.raises(ValueError, match="indivisible"):
         budget.budget_partition(groups(1, 2001))
     with pytest.raises(ValueError, match="capacity"):
-        budget.budget_partition(groups(65, 2000))
+        budget.budget_partition(groups(129, 2000))
     with pytest.raises(ValueError, match="empty"):
         budget.budget_partition(())
-    assert len(budget.budget_partition(groups(64, 2000))) == 64
+    assert len(budget.budget_partition(groups(128, 2000))) == 128
+    assert len(budget.budget_partition(groups(65, 2000))) == 65
+    assert budget.MAX_WORKERS == 8
+    assert budget.TARGET_SECONDS == 3600
+    assert budget.MEASURED_CEILING_SECONDS == 5400
 
 
 @pytest.mark.parametrize(

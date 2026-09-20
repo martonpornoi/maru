@@ -12,6 +12,7 @@ from maru.core.database_integrity_readiness import (
     DatabaseIntegrityContract,
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
 )
 from maru.core.relation_schema_readiness import relation_schema_is_current
 from maru.scheduling.release_integrity import with_native_release_integrity
@@ -33,34 +34,39 @@ _BINDING_CONTRACT = build_database_integrity_contract(
 )
 _FENCE = import_module("maru.venues.migrations.0005_scheduling_downgrade_fence")
 _FENCE_SHA256 = "2061e11ca829831da07ddd96a51ef9dac3fd1e59de093e8ec37d2e19d1eaf3ed"
+_RELEASE_CONTRACT = with_native_release_integrity(
+    replace(
+        _BINDING_CONTRACT,
+        triggers={
+            **_BASE_INTEGRITY_CONTRACT.triggers,
+            **{
+                name: trigger
+                for name, trigger in _BINDING_CONTRACT.triggers.items()
+                if trigger.table.startswith("venues_")
+            },
+        },
+        functions={
+            **_BASE_INTEGRITY_CONTRACT.functions,
+            **_BINDING_CONTRACT.functions,
+        },
+        runtime_executable_functions=frozenset(
+            {"maru_validate_scheduling_linked_booking(uuid)"}
+        ),
+        source_contract_current=(
+            _BASE_INTEGRITY_CONTRACT.source_contract_current
+            and _BINDING_CONTRACT.source_contract_current
+            and hashlib.sha256(
+                inspect.getsource(_FENCE).replace("\r\n", "\n").encode()
+            ).hexdigest()
+            == _FENCE_SHA256
+        ),
+    )
+)
 VENUES_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
-    with_native_release_integrity(
-        replace(
-            _BINDING_CONTRACT,
-            triggers={
-                **_BASE_INTEGRITY_CONTRACT.triggers,
-                **{
-                    name: trigger
-                    for name, trigger in _BINDING_CONTRACT.triggers.items()
-                    if trigger.table.startswith("venues_")
-                },
-            },
-            functions={
-                **_BASE_INTEGRITY_CONTRACT.functions,
-                **_BINDING_CONTRACT.functions,
-            },
-            runtime_executable_functions=frozenset(
-                {"maru_validate_scheduling_linked_booking(uuid)"}
-            ),
-            source_contract_current=(
-                _BASE_INTEGRITY_CONTRACT.source_contract_current
-                and _BINDING_CONTRACT.source_contract_current
-                and hashlib.sha256(
-                    inspect.getsource(_FENCE).replace("\r\n", "\n").encode()
-                ).hexdigest()
-                == _FENCE_SHA256
-            ),
-        )
+    extend_database_integrity_contract(
+        _RELEASE_CONTRACT,
+        migration_module="maru.venues.migrations.0009_programme_stop_boundary",
+        source_sha256="2c06618a0dc345ea992ef8698bf89b5b5079a69eaa5f61def59d09aa8dc3a083",
     )
 )
 VENUE_BINDING_SCHEMA_SHA256: Final = {

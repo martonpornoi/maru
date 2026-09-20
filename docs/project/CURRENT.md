@@ -153,7 +153,19 @@ typing passes all 776 source files. See the
 [authority boundary checkpoint](../checkpoints/2026-09-21-programme-stop-authority-boundary.md).
 Final focused native Authorization tests pass 16/12.91s; full fast run25 passes
 12,943/69.74s with three existing URL-field warnings. Static/documentation checks
-pass. Applications, Programme, Venues and Events terminal closure remain next.
+pass. Venues native preparation now fences all nine scoped tables and preserves
+only exact audited cancellation/withdrawal of retained obligations. Its expanded
+native and established workflow regressions pass 76/75.96s; the final 31-case
+matrix passes in 12.86s. See the
+[Venue boundary checkpoint](../checkpoints/2026-09-21-programme-stop-venue-boundary.md).
+Fast run26 exposed an exhausted 64-shard planning cap for exhaustive historical
+scope and an overly specific migration-order test. The planner now permits up to
+128 shards, still at eight concurrent workers with every existing timeout,
+headroom and coverage requirement unchanged; migration tests assert the required
+fence ordering rather than unrelated siblings. Focused policy/fence checks pass
+143/16.97s. Full fast run27 passes 12,944 cases in 69.17s with three existing
+URL-field warnings; Ruff and documentation/docstring validation pass.
+Applications, Programme and Events terminal closure remain next.
 See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and

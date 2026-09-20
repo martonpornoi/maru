@@ -1,14 +1,47 @@
 """Venue stop admission under parent locks, without weakening correction policy."""
 
 from datetime import UTC, datetime
+from importlib import import_module
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
+from django.apps import apps
 
 from maru.events.programme_stop_queries import ProgrammeStopReference
+from maru.events.programme_stop_readiness import PROGRAMME_STOP_PREPARATION_CONTRACT
 from maru.venues import scheduling_reservations, services
+from maru.venues.readiness import VENUES_INTEGRITY_CONTRACT
+
+
+def test_native_stop_inventory_covers_every_edition_owned_venue_relation():
+    guards = import_module("maru.venues.migrations.0009_programme_stop_boundary")
+    direct = {
+        model._meta.model_name
+        for model in apps.get_app_config("venues").get_models()
+        if any(field.name == "edition" for field in model._meta.fields)
+    }
+    assert set(guards.GUARDED_MODELS) == direct
+    for contract in (VENUES_INTEGRITY_CONTRACT, PROGRAMME_STOP_PREPARATION_CONTRACT):
+        assert contract.source_contract_current
+        assert (
+            "venues",
+            "0009_programme_stop_boundary",
+        ) in contract.required_migrations
+        triggers = {**contract.triggers, **contract.supporting_triggers}
+        assert {
+            value.table
+            for name, value in triggers.items()
+            if name.startswith("a00_venues_programme_stop_")
+        } == {f"venues_{model}" for model in direct}
+        assert not contract.functions[
+            "maru_venues_programme_stop_correction()"
+        ].security_definer
+        assert (
+            "maru_venues_programme_stop_correction()"
+            not in contract.runtime_executable_functions
+        )
 
 
 @pytest.mark.parametrize(

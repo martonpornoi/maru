@@ -240,6 +240,7 @@
   "tests/integration/test_tenant_models.py": 1.621,
   "tests/integration/test_unified_admin_routing.py": 1.486,
   "tests/integration/test_venue_lifecycle_coverage.py": 3.96,
+  "tests/integration/test_venue_programme_stop.py": 300.0,
   "tests/integration/test_venue_release_sources.py": 29.955,
   "tests/integration/test_venue_scheduling_binding_guards.py": 32.099,
   "tests/integration/test_venue_scheduling_source.py": 41.819,

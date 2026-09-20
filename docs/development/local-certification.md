@@ -82,6 +82,11 @@ from entering exact-commit certification.
 The test phase uses one database-free unit process and a bounded local worker
 pool executing the same budgeted shard manifest as GitHub. At most eight
 PostgreSQL containers run concurrently; each shard receives a fresh database.
+The planner permits up to 128 sequentially scheduled shards as the inventory
+grows; this does not raise concurrency or any per-shard budget. The one-hour
+predicted target, slowdown/overhead allowance, measured acceptance headroom and
+two-hour hosted kill limit remain unchanged. An indivisible over-budget group
+still requires measurement or optimization, never automatic timeout extension.
 The compatibility parameter `-IntegrationShards` now limits worker concurrency,
 not the number of planned shards. Current
 cases in a file stay together; independently restorable historical functions

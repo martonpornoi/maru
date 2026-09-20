@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from scripts.ci_test_policy import TestGroup
 
 MAX_WORKERS = 8
-MAX_SHARDS = 64
+MAX_SHARDS = 128
 TARGET_SECONDS = 3600
 OVERHEAD_SECONDS = 600
 SLOWDOWN_FACTOR = 1.5

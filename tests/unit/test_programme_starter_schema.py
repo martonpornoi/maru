@@ -194,7 +194,9 @@ def test_execution_fence_checks_both_frozen_boundaries_before_contraction(
 def test_shared_execution_fence_precedes_older_boundary_removal(target):
     graph = MigrationLoader(None).graph
     plan = graph.backwards_plan(target)
-    assert plan[0] == ("workforce", "0030_programme_stop_boundary")
+    assert plan.index(("workforce", "0030_programme_stop_boundary")) < plan.index(
+        ("workforce", "0029_programme_assignment_adoption")
+    )
     assert plan.index(("workforce", "0029_programme_assignment_adoption")) < plan.index(
         ("workforce", "0028_programme_starter_execution_fence")
     )

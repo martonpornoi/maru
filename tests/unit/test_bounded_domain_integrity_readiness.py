@@ -52,7 +52,7 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         ("applications_integrity", True, 148, 34, 2),
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
-        ("venues_integrity", True, 38, 56, 32),
+        ("venues_integrity", True, 51, 58, 33),
         ("programme_integrity", True, 75, 69, 34),
         ("scheduling_integrity", True, 106, 54, 33),
     ]

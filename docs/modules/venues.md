@@ -308,8 +308,17 @@ Organization catalog commands do not acquire this edition restriction. Existing
 reasoned booking cancellation and publication withdrawal remain explicit retained-
 obligation corrections, with both current policy checks, original receipt/version
 rules and native evidence intact; stop itself performs neither action for them.
-These application checks are components, not the complete native stop boundary
-or an enabled Stop Programme action.
+Migration 0009 additionally locks old/new exact Events scope for all nine
+edition-owned relations. Terminal Programme permits only unchanged-envelope
+booking cancellation/publication withdrawal, cancellation-only occupancy removal,
+and their exact immutable history and receipts. Deferred native constraints bind
+the original version, actor, canonical Unicode reason/intent, operation, capability,
+field delta and same-transaction Audit witness. The physical-release source helper
+remains unchanged: publication withdrawal is not a physical booking change.
+Shared catalog operations and independently enforced linked-booking rules remain
+unchanged. Native readiness includes every additive guard; used stop evidence
+fences downgrade before any guard is removed. These owner components do not enable
+Stop Programme without the complete Events and other-owner closure.
 
 Remaining work includes integrated editor acceptance,
 Programme release-output reconciliation, equipment/qualification checks,

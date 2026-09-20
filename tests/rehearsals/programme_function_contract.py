@@ -168,7 +168,7 @@ OWNER_CONTRACTS = (
     (
         "maru.venues.readiness",
         "VENUES_INTEGRITY_CONTRACT",
-        "3b8effa6929e9648cc0ed231cabc1b03d94642c76fa24a8b98d2d0db9fabdaad",
+        "a4bf996b2f9958edb2920f70e2c7ffb291c536d98e7b6764a0863c478d3a3170",
     ),
 )
 
