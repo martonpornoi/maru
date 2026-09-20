@@ -50,6 +50,7 @@ or permission to use production personal data.
   integrity, delegable continuity disposal, downgrade refusal, and fix-forward
   recovery for the dormant import schema.
 - [Effects worker](effects-worker-runbook.md)
+- [Restricted Programme exit archive and worker](programme-exit-archive.md)
 - [Programme atomic release migration and recovery](programme-atomic-release-migration-and-recovery.md)
   covers the complete owner graph, used-evidence fence, physical recovery and
   the separately tracked logical-restore prerequisite.
@@ -103,6 +104,7 @@ scheduling-migration-and-recovery
 programme-release-sources-migration-and-recovery
 programme-atomic-release-migration-and-recovery
 effects-worker-runbook
+programme-exit-archive
 github-pages-publication
 public-repository-readiness
 release-process

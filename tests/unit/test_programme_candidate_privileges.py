@@ -17,6 +17,9 @@ def test_literal_inventory_preserves_all_unrelated_native_limits():
     projected = contract.candidate_relation_classes()
     assert len(contract.PRIVILEGES) == 84
     assert set(projected[0]) == {
+        "public.programme_programmearchivetask",
+        "public.programme_programmearchivetaskevent",
+        "public.programme_programmearchivechunk",
         "public.django_migrations",
         "public.authorization_authorityprovenanceactivation",
         "public.authorization_provenanceactivationlatch",

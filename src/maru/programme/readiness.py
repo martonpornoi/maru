@@ -21,6 +21,7 @@ from maru.core.database_integrity_readiness import (
 )
 from maru.scheduling.release_integrity import with_native_release_integrity
 
+from .archive_integrity import ARCHIVE_SCHEMA_OBJECT_SHA256, with_archive_integrity
 from .catalogs import (
     ProgrammeReadinessDisposition,
     ProgrammeReadinessEvidenceState,
@@ -233,7 +234,7 @@ def _placement_decision_migration_contract_is_current() -> bool:
 _DECISION_TRIGGERS, _DECISION_FUNCTIONS = parse_database_integrity_sql_contracts(
     _PLACEMENT_DECISION_MIGRATION.FORWARD_SQL
 )
-PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
+PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = with_archive_integrity(
     with_native_release_integrity(
         replace(
             _STAFFING_INTEGRITY_CONTRACT,
@@ -295,6 +296,9 @@ class ProgrammeSchemaCatalog:
 PROGRAMME_RELATION_SEMANTICS: Final[
     Mapping[str, tuple[str, str, bool, bool, bool, str]]
 ] = {
+    "programme_programmearchivetask": ("r", "p", False, False, False, "d"),
+    "programme_programmearchivetaskevent": ("r", "p", False, False, False, "d"),
+    "programme_programmearchivechunk": ("r", "p", False, False, False, "d"),
     "programme_programmecommandreceipt": ("r", "p", False, False, False, "d"),
     "programme_programmedeliveryrevision": ("r", "p", False, False, False, "d"),
     "programme_programmedepartmentdiscussionentry": (
@@ -378,6 +382,7 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # digest from pg_get_constraintdef(..., TRUE) or pg_get_indexdef(...).
 # An incomplete mapping deliberately keeps Programme readiness blocked.
 PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
+    **ARCHIVE_SCHEMA_OBJECT_SHA256,
     (
         "constraint:"
         "programme_programmepublicrenditionwithdrawal:"

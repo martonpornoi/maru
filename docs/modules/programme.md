@@ -1,9 +1,9 @@
 # Programme module
 
 Status: dormant private-domain foundation; no current adoption profile, route,
-API, navigation, worker, or production writer
+API, navigation, running worker, or production writer
 
-Last updated: 2026-09-13
+Last updated: 2026-09-20
 
 ## Exact change-recipient reference (#104, in progress)
 
@@ -128,11 +128,12 @@ from content identity but the required Audit section is never optional. Comparin
 this digest after a newly authorized complete retrieval collection catches source
 changes outside a Programme item cursor, including independent placement/public
 copy, review/file, release, configuration and Shift-link changes. A digest alone is
-not current authority, a signature or permission to download. Background persistence,
-private artifact custody, expiry, retrieval and the visible task remain separate work.
+not current authority, a signature or permission to download. The dormant
+task/custody implementation below consumes this identity; integrated P11 and
+production promotion remain separate acceptance gates.
 
 [ADR 0109](../architecture/decisions/0109-bounded-programme-archive-custody.md)
-now specifies that task/custody boundary. `exit_archive_stream` implements only
+specifies that task/custody boundary. `exit_archive_stream` implements
 its pure larger encoder: 128 MiB records, 2 MiB schemas, 2,000 files/10 MiB each,
 1 GiB content plus 2 MiB metadata overhead. It validates the entire closed member
 set before writing, binds the actual Events profile/scope rather than inventing
@@ -141,6 +142,48 @@ in at most 1 MiB writes. Short writes, bad JSON/scope/identity and capacity
 overflow fail closed; sink failure requires rollback/disposal of partial custody.
 Its capacity marker is `programme.exit-background-capacity@1`; the provisional
 small codec is unchanged. Encoding itself creates no job or download authority.
+
+### Request, custody, worker and actual disclosure
+
+`archive_tasks.request_programme_archive` takes the actual requester and exact
+independent tenant/edition plus a nonzero idempotency key. It returns only the
+acknowledged task ID, not source data or private metadata. Replay never changes
+expiry or resurrects terminal work; explicit retry links a new request to an
+own failed/cancelled/expired request. `cancel_programme_archive` requires current
+export authority, exact requester/scope and expected version. It returns no
+source content, so does not re-export owners merely to dispose derived bytes.
+
+`ProgrammeArchiveTask`, append-only `ProgrammeArchiveTaskEvent` and immutable
+`ProgrammeArchiveChunk` are Programme-owned. Migrations 0020/0021 enforce scope,
+fixed database-clock expiry, exact version/state transitions, bounded capacity,
+fresh native Audit witnesses, immutable request/generation/byte identity and
+atomic complete custody or disposal. Used downgrades refuse before removing guards.
+The runtime ACL inventory/provisioning example keeps all three SELECT-only.
+
+`archive_generation` commits claim separately, then holds the complete source
+closure through private encoding, chunk storage and audited ready state. Failed
+generation rolls back partial chunks before retaining a closed failure code.
+The single purpose worker uses the original requester's current rights, a native
+session lock, finite statement/lock limits and a hard 20-minute child timeout.
+Bounded due cleanup does not need to impersonate revoked/inactive requesters to
+remove only derived bytes; retained requester attribution remains honest.
+
+`archive_queries.inspect_programme_archive` requires fresh complete owner checks
+for private metadata and download, exact requester/route scope and current extra
+purpose. It compares ready source identity, verifies all chunk/whole-ZIP identities
+before byte disclosure, and checks expiry again. Access expiry is explicit and
+separate from the recorded worker phase; no synthetic transition is presented as
+stored evidence. Per-read audits precede private output. Cancellation retains all
+canonical source records, holds, task evidence and byte identities.
+
+The reserved `archive_urls`/`archive_views` shared-shell screen uses those same
+commands/queries, closed CSRF-protected forms and a fixed-name private/no-store
+attachment. It has no automatic polling, public media path, job directory or
+other-person download. These routes remain absent from production configuration.
+See the [page contract](../product/page-contracts/programme-exit-archive.md) and
+[worker/custody runbook](../operations/programme-exit-archive.md). Integrated P11,
+resource measurement, native runtime promotion and genuine browser acceptance
+remain required; having a dormant screen is not completed #189/#48 acceptance.
 
 ### Purpose and packaging components
 
@@ -159,9 +202,9 @@ audit, task, artifact, grant or profile mutation. Actual collectors/workers and
 downloads must check the authenticated requester and each source's authority,
 consistency, retention and audit before release. Existing ordinary history DTOs
 and field ceilings are unchanged. No current profile admits the capability,
-adapter or minimal `exit-archive@1` role recipe. Requester-bound background
-execution, private custody/expiry and UI remain work
-to implement, not features delivered by reserving this permission.
+adapter or minimal `exit-archive@1` role recipe. The dormant requester-bound
+background/custody/UI components above do not grant profile admission merely
+because this permission exists.
 
 `exit_archive_protocol` is a database-free, non-executable packaging primitive
 for EVT-007/INT-007 and ADR 0081. It encodes already authorized owner sections,
