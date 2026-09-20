@@ -45,7 +45,10 @@ from maru.authorization.provenance import (
 from maru.authorization.retired_targets import (
     lock_retired_department_authority_boundaries,
 )
-from maru.authorization.services import AuthorizationDenied
+from maru.authorization.services import (
+    AuthorizationDenied,
+    _require_programme_issuance_open,
+)
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.adoption import profile_allows_capabilities
 from maru.events.models import EventEdition
@@ -933,6 +936,7 @@ def grant_capability_direct(  # noqa: DOC503 - bare re-raise preserves original 
                     },
                     reason_code="module_not_adopted",
                 )
+            _require_programme_issuance_open(locked_target)
             decision = _require_dual_control(
                 actor=actor,
                 approver=approver,
@@ -1508,6 +1512,7 @@ def assign_role(  # noqa: DOC503 - bare re-raise preserves original error
             locked = _lock_target(target)
             locked_target = locked.target
             organization = locked.organization
+            _require_programme_issuance_open(locked_target)
             decision = _require_dual_control(
                 actor=actor,
                 approver=approver,

@@ -155,7 +155,11 @@ def test_locked_scope_requires_active_foundation_and_lifecycle(monkeypatch, faul
         boundary._lock_scope(scope())
 
 
-def test_locked_scope_orders_representation_parents_then_target(monkeypatch):
+@pytest.mark.parametrize("lifecycle", ["live", "archived", "cancelled"])
+@pytest.mark.parametrize("historical", [False, True])
+def test_locked_scope_orders_representation_parents_then_target(
+    monkeypatch, lifecycle, historical
+):
     calls = []
     foundation = SimpleNamespace(
         fingerprint="a" * 64,
@@ -183,10 +187,15 @@ def test_locked_scope_orders_representation_parents_then_target(monkeypatch):
         "_lock_target",
         lambda value: (
             calls.append("context" if value is context else "target"),
-            SimpleNamespace(edition=SimpleNamespace(lifecycle="live"), target=value),
+            SimpleNamespace(edition=SimpleNamespace(lifecycle=lifecycle), target=value),
         )[1],
     )
-    assert boundary._lock_scope(scope()) is target
+    if lifecycle in {"archived", "cancelled"} and not historical:
+        with pytest.raises(AuthorizationDenied):
+            boundary._lock_scope(scope(), historical=historical)
+        assert calls == ["representation", "owners", "context"]
+        return
+    assert boundary._lock_scope(scope(), historical=historical) is target
     assert calls == ["representation", "owners", "context", "target"]
 
 

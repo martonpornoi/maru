@@ -388,6 +388,14 @@ The owner/native stop command and complete preview remain pending under
 [proposed ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md);
 input validation alone must never be exposed as a working Stop Programme action.
 
+`programme_stop_queries.resolve_programme_stop_reference` supplies a minimized
+exact-owner observation for those owner checks: whether the version-one Programme
+rule applies, whether its lifecycle is Archived/Cancelled, and its aggregate
+version. Invalid scope, unregistered/future Programme versions and unknown state
+are unavailable. Another registered profile retains its existing lifecycle rules.
+Writers hold canonical parents through commit; a non-stopped observation grants
+neither authority nor an exception to any stricter owner lifecycle.
+
 The accepted future setup location is
 `/admin/platform/setup/programme-operations/`, but that route is deliberately
 inactive in this contract-only change. It must provision an independently
@@ -615,6 +623,10 @@ attribution and the stable edition code, name and aggregate version for own-purp
 choice. The consumer must hold canonical parents and prove a real authorized
 retained purpose first; final source checks and disclosure audit remain mandatory.
 It is not a general edition directory.
+Both personal timetable references exclude terminal `programme_operations@1`
+within their exact owner query. Retained work does not make a stopped edition a
+current timetable destination; this does not delete independently authorized
+historical work or change Workforce-only behavior.
 
 The internal `resolve_personal_timetable_edition_label` reference supplies only
 the current edition name and aggregate version. The personal timetable compositor

@@ -964,6 +964,22 @@ here.
 
 ## Limitations
 
+Programme stop-use preparation fences fresh direct grants, delegation and role
+assignments into a terminal Programme edition after target locking. Generic
+commands therefore cannot bypass the guided request boundary. Revocation and
+shared Organization authority remain separately governed; no assignment or root
+is automatically deleted or extended.
+
+An exact known Programme role request may be read after stop only by its currently
+authorized original author or named approver, with the same recipe/source checks,
+person ceiling and mandatory audit. This is not a terminal request inventory or
+recipient directory. Undecided intent is labelled unapproved at stop, not rewritten
+as a decision. The shared-shell detail is explicitly historical and hides creation,
+open-inventory and decision controls; POST is read-only. A retained approved
+assignment is original evidence, not proof of present operational authority.
+The complete native stop receipt/owner guards and integrated acceptance remain
+pending under #190; these reader/command components do not activate stop-use.
+
 Production legacy reconciliation/cutover, representative authority load,
 step-up execution,
 service/device principals,

@@ -232,9 +232,16 @@ def programme_role_workspace(
         form = None
         message = ""
         status = 200
+        if workspace.is_historical and request.method == "POST":
+            return _secure(
+                HttpResponse(
+                    "Programme has stopped. This request is read-only history.",
+                    status=409,
+                )
+            )
         if request_id is not None:
             selected = workspace.requests[0]
-            if (
+            if not workspace.is_historical and (
                 request.method == "POST"
                 or selected.can_approve
                 or selected.can_decline

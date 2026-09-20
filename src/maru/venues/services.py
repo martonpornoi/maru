@@ -27,6 +27,7 @@ from maru.authorization.policy import (
 )
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
+from maru.events.programme_stop_queries import resolve_programme_stop_reference
 from maru.events.write_references import lock_edition_ownership
 from maru.identity.queries import (
     resolve_active_verified_account_reference,
@@ -481,6 +482,19 @@ def _organization_decision(
     )
 
 
+def _require_programme_operation_open(
+    *, organization_id: UUID, edition_id: UUID
+) -> None:
+    """Refuse new Programme work under already-held canonical owner locks."""
+    reference = resolve_programme_stop_reference(
+        organization_id=organization_id, edition_id=edition_id
+    )
+    if reference is None:
+        raise VenueAuthorizationDeniedError
+    if reference.is_stopped:
+        raise VenueStateConflictError
+
+
 def _edition_decision(
     *,
     actor: Account,
@@ -501,6 +515,9 @@ def _edition_decision(
     _lock_owner_scope(
         actor_id=actor.id, organization_id=organization_id, edition_id=edition_id
     )
+    _require_programme_operation_open(
+        organization_id=organization_id, edition_id=edition_id
+    )
     return _require_decision(
         actor=actor,
         capability_code=capability_code,
@@ -519,6 +536,7 @@ def _space_decision(
     space_selection_id: UUID,
     capability_code: str,
     at: datetime,
+    retained_correction: bool = False,
 ) -> _AuthorizedSpace:
     row = (
         EditionSpaceSelection.objects.filter(
@@ -548,6 +566,10 @@ def _space_decision(
     _lock_owner_scope(
         actor_id=actor.id, organization_id=organization_id, edition_id=edition_id
     )
+    if not retained_correction:
+        _require_programme_operation_open(
+            organization_id=organization_id, edition_id=edition_id
+        )
     target = resolve_edition_space_target(
         organization_id=organization_id,
         edition_id=edition_id,
@@ -4257,6 +4279,7 @@ def withdraw_venue_booking_publication(
         space_selection_id=space_selection_id,
         capability_code=SPACE_PUBLISH_CAPABILITY,
         at=evaluated_at,
+        retained_correction=True,
     )
     if receipt := _existing_receipt(
         actor=actor,
@@ -4387,6 +4410,7 @@ def cancel_venue_booking(
         space_selection_id=space_selection_id,
         capability_code=SPACE_MANAGE_CAPABILITY,
         at=evaluated_at,
+        retained_correction=True,
     )
     if receipt := _existing_receipt(
         actor=actor,

@@ -164,7 +164,9 @@ def _lock_key(actor_id: UUID, key: UUID, purpose: str) -> None:
         )
 
 
-def _lock_scope(scope: ProgrammeRoleScope) -> ResolvedAuthorizationTarget:
+def _lock_scope(
+    scope: ProgrammeRoleScope, *, historical: bool = False
+) -> ResolvedAuthorizationTarget:
     foundation = resolve_programme_setup_foundation(
         organization_id=scope.organization_id
     )
@@ -190,10 +192,9 @@ def _lock_scope(scope: ProgrammeRoleScope) -> ResolvedAuthorizationTarget:
     if context is None:
         raise _unavailable()
     locked_context = _lock_target(context)
-    if locked_context.edition is None or locked_context.edition.lifecycle in {
-        "archived",
-        "cancelled",
-    }:
+    if locked_context.edition is None or (
+        not historical and locked_context.edition.lifecycle in {"archived", "cancelled"}
+    ):
         raise _unavailable()
     locked_target = _lock_target(_resolve_scope(scope))
     if scope.level is ScopeLevel.RESOURCE and (

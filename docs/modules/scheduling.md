@@ -1232,6 +1232,10 @@ contract or adopted-but-denied/unavailable/moving data fails closed. Independent
 Venue wayfinding covers only approved own host rooms. Workforce-only needs no
 Programme or release query. No returned layer edits accepted work, creates an
 attendee relationship or claims attendance.
+For a stopped Programme edition, Events withholds the personal timetable context
+even when retained work still exists. Both discovery and current composition are
+unavailable; independently admitted owner history remains separate. Withdrawal of
+one release is not this terminal stop state and retains its existing semantics.
 
 `personal_output_rendering` provides `scheduling.personal-timetable@1` JSON and
 private RFC 5545 calendar snapshots. It accepts only the closed private DTO graph,

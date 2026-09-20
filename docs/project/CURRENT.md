@@ -114,6 +114,23 @@ preview, command, UI and end-to-end acceptance are not implemented by these inpu
 The complete fast suite including the partial-backup and stop-input additions
 passes 12,823 cases in 68.67s, with the three existing URL-field warnings
 (`.tools/programme-exit-bundle-units-21.xml`).
+
+Subsequent #190 owner preparation adds the exact Events stop-state reference;
+Venue fresh-operation admission with explicit retained cancellation/withdrawal;
+generic Authorization direct-grant/delegation/role-issuance fencing; terminal
+personal timetable withholding; review acknowledgement stop admission; and exact
+authorized own-request history without operational controls. Focused tests pass:
+57 Events/Venue units (0.43s), 148 personal-output units (1.37s), 150 authority
+boundary units (0.69s), 30 review-lifecycle units (0.25s), and 205 role/history/UI
+units (1.52s). Native established workflows pass: 36 Venue/reservation cases
+(81.17s), 23 personal/continuity cases (92.00s), 39 authority commands (60.56s),
+and eight review workflows (26.91s). These are component regressions, not a real
+stopped-edition native journey. No stop receipt/transition, complete native guard
+set or final Stop Programme UI exists yet; ADR 0111 and #190 remain open.
+The complete fast suite after these owner/history additions passes 12,918 cases
+in 69.32s with three existing URL-field warnings. See the
+[owner-admission checkpoint](../checkpoints/2026-09-20-programme-stop-owner-admission.md)
+for exact reports and the distinction from a genuinely stopped native journey.
 See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and

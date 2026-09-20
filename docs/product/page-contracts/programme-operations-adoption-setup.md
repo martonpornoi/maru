@@ -169,6 +169,14 @@ unchanged. Storage alone cannot prove a
 person's action or grant access.
 See the [owning contract](../../modules/authorization.md#dormant-programme-operational-role-contracts).
 
+In a terminal Programme context, a known original access-request link may still
+show the currently authorized author's or approver's exact history. It prominently
+states that Programme stopped, distinguishes retained history/shared grants from
+effective operation, and presents no new-request, open-inventory or decision
+controls. An undecided request is not fabricated into a decline. POST remains
+read-only, and final source/authority rechecks still suppress changed private
+output. This component is not the complete Stop Programme preview/confirmation UI.
+
 ### Shared task navigation and edition discovery
 
 The existing shared navigation registry gains seven code-owned future Programme

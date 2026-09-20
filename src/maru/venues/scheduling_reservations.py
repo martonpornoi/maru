@@ -15,6 +15,7 @@ from maru.authorization.policy import (
 )
 from maru.events.adoption import profile_allows_adapter
 from maru.events.queries import edition_adoption_profile_reference
+from maru.events.write_references import lock_edition_ownership
 from maru.scheduling.reservation_sources import resolve_scheduling_reservation_source
 
 from .adoption import VENUES_SCHEDULING_RESERVATION_ADAPTER
@@ -41,6 +42,7 @@ from .services import (
     _append_evidence_ids,
     _booking_envelope,
     _require_available_capacity,
+    _require_programme_operation_open,
     _write_booking_occupancy,
 )
 from .writer_boundary import venue_writer
@@ -306,6 +308,13 @@ def apply_scheduling_reservation(
         raise VenueResourceUnavailableError
     source_channel = normalized_source_channel(source_channel)
     _require_adapter(organization_id, edition_id)
+    if not lock_edition_ownership(
+        organization_id=organization_id, edition_id=edition_id
+    ):
+        raise VenueResourceUnavailableError
+    _require_programme_operation_open(
+        organization_id=organization_id, edition_id=edition_id
+    )
     source = resolve_scheduling_reservation_source(
         actor_id=actor_id,
         organization_id=organization_id,

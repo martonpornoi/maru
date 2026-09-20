@@ -299,6 +299,18 @@ directories. Scheduling compares complete sources and performs its required
 `scheduling.operator_entry.read` audit before releasing choices. No configuration,
 layout, contact, personnel, availability or instruction content is selected.
 
+For #190 stop-use preparation, fresh edition selection, room availability,
+booking/rescheduling, approval and publication commands recheck Events' exact
+Programme stop consequence after canonical parent locking. The Scheduling
+reservation adapter independently does the same before loading its live intent.
+Stopped/unavailable context admits no fresh operation. Ordinary shared
+Organization catalog commands do not acquire this edition restriction. Existing
+reasoned booking cancellation and publication withdrawal remain explicit retained-
+obligation corrections, with both current policy checks, original receipt/version
+rules and native evidence intact; stop itself performs neither action for them.
+These application checks are components, not the complete native stop boundary
+or an enabled Stop Programme action.
+
 Remaining work includes integrated editor acceptance,
 Programme release-output reconciliation, equipment/qualification checks,
 calendar/signage/print exports, accommodation blocks/assignment/allocation,

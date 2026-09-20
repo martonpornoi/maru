@@ -472,6 +472,10 @@ Recipients are the exact included contributors from the reviewed seal, not
 the latest roster. Later removal, withdrawal, or owner retirement does not
 erase their addressed message or prevent their own required acknowledgement.
 Acknowledgement means receipt, not agreement, contributor consent, or hosting.
+Terminal Programme stop is distinct from those live-workflow changes: a fresh
+acknowledgement rechecks the exact Events stop state under the canonical owner
+locks and is refused after stop. Existing decision/acknowledgement evidence and
+authorized historical reads remain; replay returns only its original evidence.
 
 The seven review relations use the existing
 `applications-programme-restricted` purpose. This is voluntary proposal

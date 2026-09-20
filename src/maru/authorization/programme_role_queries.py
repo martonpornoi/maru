@@ -39,6 +39,7 @@ from maru.authorization.retired_targets import (
     lock_retired_department_authority_boundaries,
 )
 from maru.authorization.services import AuthorizationDenied
+from maru.events.programme_stop_queries import resolve_programme_stop_reference
 from maru.identity.queries import active_verified_person_account_display_labels
 
 if TYPE_CHECKING:
@@ -101,6 +102,7 @@ class ProgrammeRoleReview:
             "approve": "Approved",
             "decline": "Declined",
             "cancel": "Cancelled",
+            "stopped": "Unapproved when Programme stopped",
         }[self.state]
 
 
@@ -114,11 +116,14 @@ class ProgrammeRoleWorkspace:
         Independently admitted actual grant target and Programme edition context.
     requests
         Complete open inventory or the single exact requested historical record.
+    is_historical
+        Terminal Programme context; no creation, inventory or decision controls.
     """
 
     scope_label: str
     context_label: str
     requests: tuple[ProgrammeRoleReview, ...]
+    is_historical: bool = False
 
 
 def _recipe_for(
@@ -143,11 +148,21 @@ def _project(
     labels: dict[UUID, str],
     actor_id: UUID,
     now: datetime,
+    *,
+    stopped: bool = False,
 ) -> ProgrammeRoleReview:
     expired = now >= row.approval_deadline or (
         row.expires_at is not None and now >= row.expires_at
     )
-    state = decision.action if decision else "expired" if expired else "pending"
+    state = (
+        decision.action
+        if decision
+        else "stopped"
+        if stopped
+        else "expired"
+        if expired
+        else "pending"
+    )
     identities = (row.author_id, row.approver_id, row.recipient_id)
     return ProgrammeRoleReview(
         row.id,
@@ -166,11 +181,12 @@ def _project(
         decision.decided_at if decision else None,
         decision.role_assignment_id if decision else None,
         decision is None
+        and not stopped
         and not expired
         and actor_id == row.approver_id
         and all(identity in labels for identity in identities),
-        decision is None and actor_id == row.approver_id,
-        decision is None and actor_id == row.author_id,
+        decision is None and not stopped and actor_id == row.approver_id,
+        decision is None and not stopped and actor_id == row.author_id,
     )
 
 
@@ -227,7 +243,15 @@ def load_programme_role_workspace(
     _require_actor(actor, _resolve_scope(scope))
     with transaction.atomic():
         lock_retired_department_authority_boundaries()
-        target = _lock_scope(scope)
+        target = _lock_scope(scope, historical=request_id is not None)
+        stop = resolve_programme_stop_reference(
+            organization_id=scope.organization_id, edition_id=scope.programme_edition_id
+        )
+        if stop is None or not stop.applies or (stop.is_stopped and request_id is None):
+            raise AuthorizationDenied(
+                "Programme access is unavailable.",
+                reason_code="programme_role_unavailable",
+            )
         current = _lock_people({actor.id})[actor.id]
         _require_profile()
         _require_integrity()
@@ -290,10 +314,17 @@ def load_programme_role_workspace(
             page_access_scope_label(context),
             tuple(
                 _project(
-                    row, decisions.get(row.id), recipes[row.id], labels, current.id, now
+                    row,
+                    decisions.get(row.id),
+                    recipes[row.id],
+                    labels,
+                    current.id,
+                    now,
+                    stopped=stop.is_stopped,
                 )
                 for row in rows
             ),
+            is_historical=stop.is_stopped,
         )
         _require_profile()
         _require_current_controller(current, target)
