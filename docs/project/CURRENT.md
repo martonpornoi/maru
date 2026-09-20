@@ -37,9 +37,30 @@ This is not yet protected delivery or production activation.
 The local custody/workflow continuation implements requester-bound requests, native lifecycle and
 private chunk custody (Programme migrations 0020/0021), explicit cancellation/retry,
 single-worker supervision, current-source private inspection/download and a dormant
-shared-shell screen. Runtime tables remain SELECT-only, including the isolated
-candidate inventory; production URLs and profiles are unchanged. The worker has a
+shared-shell screen, retained in local commit `4f9e3be`. Default runtime tables
+remain SELECT-only; production URLs and profiles are unchanged. The worker has a
 hard 20-minute child limit and finite database timeouts, not an installed service.
+
+The next uncommitted step deliberately extends only the owned #109 candidate with
+the archive purpose/recipe/adapter, reserved route and three least-privilege table
+classes for genuine P11 runtime acceptance. This is preparation, not evidence
+that the newly extended isolated fixture has run successfully.
+
+Real isolated execution now exposes a required foundation prerequisite tracked
+explicitly as [#196](https://github.com/martonpornoi/maru/issues/196) in #48's
+delivery decomposition and #109. Three fresh owned runtime attempts correctly
+refused invitation readiness before setup/archive execution (about 3m01s each).
+Observed database/provenance, Programme/Scheduling/Applications/Venues integrity,
+Logistics, setup/role/starter checks pass; Identity invitations remain unavailable.
+The real readiness contract deliberately requires an unimplemented stopped-writer
+generation (`None`), independently of the new archive. No flag, schema check or
+encryption requirement was relaxed. Preserve archive preparation and complete
+the narrow Identity-owned writer cutover before rerunning P11. This does not
+authorize unrelated Registration implementation or production activation.
+See the [native prerequisite checkpoint](../checkpoints/2026-09-20-programme-native-identity-prerequisite.md).
+ADR 0110 now contracts that independent Identity cutover; implementation is next.
+The corrected full fast suite passed 12,563 tests in 77.42s. No integrated native
+pass or final certification is claimed by that result.
 
 Focused evidence: 51 native custody/whole-owner workflow tests passed in 89.64s,
 including complete ZIP retrieval, source drift, audit rollback, partial-custody

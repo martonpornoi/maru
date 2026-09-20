@@ -881,6 +881,24 @@ Maru must not infer age from profile, appearance, behavior, or social accounts.
 
 ## Backups and replicas
 
+### Programme exit archive custody
+
+The purpose-controlled Programme exit archive is **C3 Restricted**, including its
+original authorized files and historical records. Export permission does not
+replace each owner's current field and purpose permission. A private download
+is bound to its original requester; it is not a public link or bearer grant.
+
+Derived database chunks expire 24 hours after the database-clock request, without
+renewal by reading or retrying that request key. Access stops at expiry even when
+the cleanup worker is unavailable. Cancellation, expiry or failed generation
+disposes only these derived chunks; immutable task, lifecycle and audit evidence
+remain under the organization's approved evidence-retention and hold policy.
+There is no automatic source-record erasure or task-history deletion. Downloaded
+copies require accountable custody and disposal outside Maru. Backup rotation
+and restored restriction ledgers still apply; chunk disposal cannot promise
+immediate erasure from immutable backups. See the
+[archive operations contract](../operations/programme-exit-archive.md).
+
 Retention cannot promise immediate erasure from immutable backup generations.
 The policy must describe backup rotation, access isolation, restore procedure,
 and how restored data is brought forward through completed deletion and

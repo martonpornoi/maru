@@ -50,6 +50,7 @@ INSERT = _tables(
             "programmefilecontent",
         ),
         "programme": (
+            "programmearchivetaskevent",
             "programmeitemsourcebinding",
             "programmepublicrendition",
             "programmepublicrenditionwithdrawal",
@@ -108,6 +109,7 @@ INSERT_UPDATE = _tables(
             "programmereviewassignment",
         ),
         "programme": (
+            "programmearchivetask",
             "programmeeditioncontrol",
             "programmeitem",
             "programmeworkingrevision",
@@ -134,7 +136,7 @@ INSERT_UPDATE = _tables(
 INSERT_DELETE = _tables(
     {
         "applications": ("programmecallcontributorfield",),
-        "programme": ("programmehostavailabilitywindow",),
+        "programme": ("programmehostavailabilitywindow", "programmearchivechunk"),
     }
 )
 # Draft replacement deletes track/format rows; proposal admission locks them.

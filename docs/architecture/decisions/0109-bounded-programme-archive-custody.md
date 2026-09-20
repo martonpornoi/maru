@@ -92,6 +92,13 @@ There is no public media path, external storage key or reusable signed link.
 Runtime relations remain SELECT-only until final profile/runtime promotion;
 application writer boundaries and native guards are separately verified.
 
+As with the existing #109 fixture, the separately owned, explicitly opted-in
+synthetic candidate may promote exactly these three relations to exercise their
+real runtime boundary: task INSERT/UPDATE, lifecycle INSERT, chunk INSERT/DELETE.
+This is isolated rehearsal preparation, not a production profile or grant. Native
+readiness, immutable guards, denied REFERENCES/DDL and complete source policies
+remain enforced. Default application/provisioning inventories stay SELECT-only.
+
 The ordinary database/transport/private-volume operational protections apply.
 This is restricted C3 derived data, not an encrypted archive product. Operators
 must account for database capacity and backup retention of expired copies;

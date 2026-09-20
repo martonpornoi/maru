@@ -141,6 +141,15 @@ architecture documents, implementation issues, tests, and release notes.
   authority, participation, registration, application, onboarding, workforce,
   or other convention relationship. Fixtures, tests, and tutorials may use
   only deterministic synthetic identities and reserved example domains.
+  Invitation writer readiness is an Identity-owned boundary, independent of
+  Registration configuration adoption. Public verification/recovery must reject
+  invitation challenges before performing generic issuance or consumption.
+  Canonical durable delivery is the sole invitation delivery writer; obsolete
+  challenge delivery fields must be frozen at the database boundary. Readiness
+  must observe the complete installed writer generation and existing invitation
+  integrity, keys, policy and worker gates, never a code flag alone. Historical
+  values remain honest legacy evidence; used generations require fix-forward
+  recovery rather than reopening retired writers (ADR 0110).
 - **IDN-014 — Purpose-bounded accounts and workspaces:** An active person
   account may receive authority or self-service access for one adopted purpose
   without an edition Participation row, attendee registration, payment,

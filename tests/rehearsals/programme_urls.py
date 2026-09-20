@@ -17,6 +17,7 @@ OWNER_URLCONFS = (
     "maru.applications.programme_proposal_urls",
     "maru.applications.programme_review_setup_urls",
     "maru.programme.workbench_urls",
+    "maru.programme.archive_urls",
     "maru.programme.host_urls",
     "maru.scheduling.planning_urls",
     "maru.scheduling.release_workspace_urls",

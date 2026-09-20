@@ -15,11 +15,8 @@ from tests.rehearsals.programme_runtime_environment import (
 
 def test_literal_inventory_preserves_all_unrelated_native_limits():
     projected = contract.candidate_relation_classes()
-    assert len(contract.PRIVILEGES) == 84
+    assert len(contract.PRIVILEGES) == 87
     assert set(projected[0]) == {
-        "public.programme_programmearchivetask",
-        "public.programme_programmearchivetaskevent",
-        "public.programme_programmearchivechunk",
         "public.django_migrations",
         "public.authorization_authorityprovenanceactivation",
         "public.authorization_provenanceactivationlatch",
@@ -41,6 +38,17 @@ def test_literal_inventory_preserves_all_unrelated_native_limits():
     assert contract.PRIVILEGES[
         "public.applications_programmeproposalcontributorprofilerevision"
     ] == ("INSERT", "UPDATE")
+    assert contract.PRIVILEGES["public.programme_programmearchivetask"] == (
+        "INSERT",
+        "UPDATE",
+    )
+    assert contract.PRIVILEGES["public.programme_programmearchivetaskevent"] == (
+        "INSERT",
+    )
+    assert contract.PRIVILEGES["public.programme_programmearchivechunk"] == (
+        "INSERT",
+        "DELETE",
+    )
 
 
 @pytest.mark.parametrize("defect", ["unknown", "overlap", "other_class"])
@@ -169,7 +177,7 @@ def test_reference_guard_uses_complete_table_and_column_boundary(result):
     assert "has_column_privilege" in query
     assert "pg_has_role(current_user, reachable.oid, 'SET')" in query
     assert "reachable.oid, relation.oid" in query
-    assert parameters == [84, sorted(contract.PRIVILEGES)]
+    assert parameters == [87, sorted(contract.PRIVILEGES)]
 
 
 @pytest.fixture
@@ -213,7 +221,7 @@ def test_grant_plane_changes_only_literal_table_operations_after_preflight(grant
         text.startswith("GRANT ") and text.endswith(" TO maru_runtime")
         for text in grants
     )
-    assert sum(text.count('"public".') for text in grants) == 84
+    assert sum(text.count('"public".') for text in grants) == 87
     assert not any(
         "ALL " in text or "FUNCTION" in text or "WITH GRANT" in text for text in grants
     )
