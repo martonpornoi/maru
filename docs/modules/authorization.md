@@ -21,11 +21,27 @@ by itself.
 
 [ADR 0106](../architecture/decisions/0106-scoped-programme-operational-approval.md)
 preserves both accountable representation roots and adds optional, independently
-approved operational definitions. `programme_role_recipes` owns 28 immutable v1
+approved operational definitions. `programme_role_recipes` owns 29 immutable v1
 recipes with readable consequences, literal capabilities, exact allowed scope
 and complete definition digests. Their owner catalog entries are registered for
 future exact-manifest validation; neither current profile admits them. Registration
 is not a grant, role-bundle insertion, route or Programme activation.
+
+`exit-archive@1` adds only exact-edition `programme.export_archive` under
+[ADR 0108](../architecture/decisions/0108-purpose-controlled-programme-exit-archive.md).
+Its `archive_requests` and `source_lineage` fields admit the extra bulk-export
+purpose, not owner content, private files, another person's task or downloads.
+Independent source rights remain mandatory. Existing recipe digests, ordinary
+field ceilings, roots and all current profiles stay unchanged; the recipe is
+not yet admitted to a candidate or current manifest. Actual two-person approval
+is still required to issue it. No role or grant is inserted by registration.
+
+Migrations 0037/0038 add the scope-function vocabulary and literal native recipe.
+Unknown capabilities remain denied; source-pinned readiness requires the successor
+definitions. No relation shape or runtime ACL is broadened. Reverse locks retained
+grants/bundles and request/decision evidence and refuses contraction when the new
+authority or recipe is used; retain that evidence and fix forward. Declaration
+fingerprints are source-derived expectations, not native schema acceptance.
 
 `room-operations@1` is the supported isolated-candidate exact-room definition.
 It explicitly includes room availability, operational booking management and
@@ -243,6 +259,14 @@ commit atomically. A decision failure rolls back new bundles and grants as well.
 The assignment retains the original request reason; the terminal record retains
 the separate decision reason. Decline/cancel creates no authority or owner event.
 There is no invitation, delivery provider or unrelated product effect.
+
+Request and decision evidence uses PostgreSQL `clock_timestamp()` sampled inside
+the command transaction, matching the clock that enforces native intent bounds
+and approval expiry. Host clock drift must not make valid intent appear future
+or pre-transaction. Invalid/unavailable database time fails closed without a host
+fallback; native bounds, deadlines, assignment provenance and actual-person
+checks remain unchanged. Direct native fixtures likewise use the database clock
+and separately prove that pre-transaction/future timestamps are rejected.
 
 Exact retries require the actual actor's current persistent controller source and
 return only original minimized result IDs; they do not renew deadlines, replace

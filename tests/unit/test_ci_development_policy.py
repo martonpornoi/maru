@@ -13,6 +13,16 @@ from maru.events.adoption import ADOPTION_PROFILES
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_tracked_policy_requires_database_acceptance_after_restoration():
+    assert policy.postgresql_policy_mode() == "required"
+    for integration in ("targeted", "full"):
+        result = policy.apply_development_policy(
+            {"integration": integration, "history": "all"}
+        )
+        assert result["integration"] == integration
+        assert result["postgresql_deferred"] == "false"
+
+
 @pytest.mark.parametrize("mode", ["required", "deferred"])
 def test_policy_has_one_reviewed_mode_and_restoration_owner(tmp_path, mode):
     path = tmp_path / "policy.json"

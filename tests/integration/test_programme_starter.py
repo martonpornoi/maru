@@ -1,9 +1,10 @@
-"""Maintained native starter regressions; uncollected/unexecuted under ADR 0100.
+"""Native starter regressions restored through issue #102.
 
 The rolled-back schema candidate is not the complete Programme runtime fixture.
 Real source authority and public commands remain in use; no policy success stub.
 """
 
+from dataclasses import replace
 from datetime import date, timedelta
 from importlib import import_module
 from types import SimpleNamespace
@@ -20,6 +21,7 @@ from maru.authorization.models import RoleAssignment, RoleBundle
 from maru.authorization.services import AuthorizationDenied
 from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events import adoption
 from maru.events.services import EventEditionDetails, create_event_edition
 from maru.organizations.services import (
     ConventionSeriesCreationDetails,
@@ -36,11 +38,12 @@ from maru.workforce.models import (
     ProgrammeStarterRequest,
 )
 from maru.workforce.programme_starter_creation import prepare_programme_starter_creation
-from maru.workforce.programme_starter_inputs import ProgrammeStarterAction as Action
 from maru.workforce.programme_starter_inputs import (
+    PROGRAMME_STARTER_DEFINITION,
     ProgrammeStarterIntent,
     ProgrammeStarterScope,
 )
+from maru.workforce.programme_starter_inputs import ProgrammeStarterAction as Action
 from maru.workforce.programme_starter_queries import load_programme_starter_workspace
 from maru.workforce.programme_starter_readiness import (
     PROGRAMME_STARTER_RELATIONS,
@@ -49,7 +52,10 @@ from maru.workforce.programme_starter_readiness import (
 )
 from maru.workforce.programme_starter_selection import ProgrammeStarterDraft
 from tests.factories import AccountFactory
-from tests.support.authority import activate_synthetic_board
+from tests.support.authority import (
+    activate_synthetic_board,
+    grant_board_controllers_edition_capability,
+)
 from tests.support.programme_schema import admit_transaction_local_schema_candidate
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -58,6 +64,21 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 @pytest.fixture
 def world(monkeypatch):
     admit_transaction_local_schema_candidate(monkeypatch)
+    candidate = adoption.ADOPTION_PROFILES[("programme_operations", 1)]
+    definition = PROGRAMME_STARTER_DEFINITION
+    monkeypatch.setattr(
+        adoption,
+        "ADOPTION_PROFILES",
+        {
+            **adoption.ADOPTION_PROFILES,
+            ("programme_operations", 1): replace(
+                candidate,
+                catalog_entries=candidate.catalog_entries | {definition.catalog_entry},
+                capability_codes=candidate.capability_codes
+                | set(definition.capability_codes),
+            ),
+        },
+    )
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     context = {
         "actor": administrator,
@@ -68,7 +89,7 @@ def world(monkeypatch):
         details=OrganizationCreationDetails(name="Synthetic starter organizers"),
         **context,
     )
-    author, approver = activate_synthetic_board(organization)
+    activate_synthetic_board(organization)
     series = create_convention_series(
         organization_id=organization.id,
         details=ConventionSeriesCreationDetails(name="Synthetic starter series"),
@@ -89,6 +110,9 @@ def world(monkeypatch):
         adoption_profile_code="programme_operations",
         **context,
     ).edition
+    author, approver = grant_board_controllers_edition_capability(
+        edition, "workforce.manage_structure"
+    )
     return SimpleNamespace(
         author=author,
         approver=approver,
@@ -258,10 +282,44 @@ def test_actual_expired_request_cannot_create_output(world, monkeypatch):
     original = request(world)
     before = counts()
     future = timezone.now() + timedelta(days=8)
-    monkeypatch.setattr(commands.timezone, "now", lambda: future)
+    monkeypatch.setattr(commands, "_database_now", lambda: future)
     with pytest.raises(ValidationError, match="expired"):
         decide(world, original)
     assert counts() == before
+
+
+@pytest.mark.parametrize("offset_days", [-1, 1])
+@pytest.mark.parametrize("action", list(Action))
+def test_actual_starter_evidence_uses_database_time_despite_host_clock_offset(
+    world, monkeypatch, offset_days, action
+):
+    host_now = timezone.now
+    monkeypatch.setattr(
+        commands,
+        "timezone",
+        SimpleNamespace(
+            now=lambda: host_now() + timedelta(days=offset_days),
+            is_naive=timezone.is_naive,
+        ),
+    )
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        before = cursor.fetchone()[0]
+    original = request(world)
+    decide(
+        world,
+        original,
+        action=action,
+        actor=world.author if action is Action.CANCEL else world.approver,
+    )
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        after = cursor.fetchone()[0]
+    stored = ProgrammeStarterRequest.objects.get(id=original.request_id)
+    terminal = ProgrammeStarterDecision.objects.get(request=stored)
+    assert before <= stored.requested_at <= terminal.decided_at <= after
+    assert stored.approval_deadline == stored.requested_at + timedelta(days=7)
+    assert (terminal.template_id is not None) is (action is Action.APPROVE)
 
 
 def test_actual_late_failure_rolls_back_bundle_template_audit_and_effects(
@@ -282,6 +340,9 @@ def test_actual_late_failure_rolls_back_bundle_template_audit_and_effects(
 @pytest.mark.parametrize("mutation", ["update", "delete", "truncate"])
 def test_native_retained_request_refuses_direct_mutation(world, mutation):
     original = request(world)
+    with connection.cursor() as cursor:
+        cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        cursor.execute("SET LOCAL maru.authority_provenance_test_reset = off")
     statements = {
         "update": (
             "UPDATE workforce_programmestarterrequest "
@@ -291,7 +352,10 @@ def test_native_retained_request_refuses_direct_mutation(world, mutation):
         "truncate": "TRUNCATE workforce_programmestarterrequest CASCADE",
     }
     with (
-        pytest.raises(IntegrityError),
+        pytest.raises(
+            IntegrityError,
+            match="cannot be truncated" if mutation == "truncate" else "append-only",
+        ),
         transaction.atomic(),
         connection.cursor() as cursor,
     ):
@@ -313,14 +377,19 @@ def test_native_readiness_denies_weakened_guard():
 
 def test_native_used_evidence_refuses_schema_contraction(world):
     request(world)
-    fence = import_module(
-        "maru.workforce.migrations.0027_programme_starter_downgrade_fence"
-    )
-    with (
-        connection.schema_editor() as editor,
-        pytest.raises(RuntimeError, match="fix forward"),
+    for name, function in (
+        ("0027_programme_starter_downgrade_fence", "refuse_used_starter_downgrade"),
+        (
+            "0028_programme_starter_execution_fence",
+            "refuse_used_starter_execution_downgrade",
+        ),
     ):
-        fence.refuse_used_starter_downgrade(apps, editor)
+        fence = import_module(f"maru.workforce.migrations.{name}")
+        with (
+            connection.schema_editor() as editor,
+            pytest.raises(RuntimeError, match="fix forward"),
+        ):
+            getattr(fence, function)(apps, editor)
 
 
 def test_native_unused_guard_reverse_and_forward_preserve_empty_schema():
@@ -330,7 +399,10 @@ def test_native_unused_guard_reverse_and_forward_preserve_empty_schema():
     guards = import_module("maru.workforce.migrations.0026_programme_starter_integrity")
     with connection.schema_editor() as editor:
         fence.refuse_used_starter_downgrade(apps, editor)
-        editor.execute(guards.REVERSE_SQL)
+        import_module(
+            "maru.workforce.migrations.0028_programme_starter_execution_fence"
+        ).refuse_used_starter_execution_downgrade(apps, editor)
+        editor.execute(guards.REVERSE_SQL, params=None)
         assert not programme_starter_database_integrity_is_ready()
-        editor.execute(guards.FORWARD_SQL)
+        editor.execute(guards.FORWARD_SQL, params=None)
     assert programme_starter_database_integrity_is_ready()

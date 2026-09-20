@@ -89,7 +89,7 @@ def test_native_operator_catalog_is_additive_dormant_and_independently_ceilinged
         *current.RESOURCE_CAPABILITIES,
     } == {
         code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - CHANGE_COMMUNICATION_CAPABILITIES
+    } - CHANGE_COMMUNICATION_CAPABILITIES - {"programme.export_archive"}
     for code in scope.OPERATOR_CAPABILITIES:
         definition = CAPABILITIES[code]
         assert definition.maximum_scope is ScopeLevel.EDITION

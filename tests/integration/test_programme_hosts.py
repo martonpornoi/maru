@@ -907,7 +907,7 @@ def test_exit_item_retains_ended_hosts_without_obsolete_availability(
     ).exists()
     with pytest.raises(ProgrammeAuthorizationDeniedError):
         load_programme_exit_item(**args)
-    foreign = EventEditionFactory(organization_id=common["organization_id"])
+    foreign = EventEditionFactory(series__organization_id=common["organization_id"])
     with pytest.raises(ProgrammeQueryUnavailableError):
         load_programme_exit_item(
             **(args | {"edition_id": foreign.id}), authorizer=common["authorizer"]

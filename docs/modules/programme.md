@@ -19,7 +19,26 @@ scope and recheck this proof; the DTO is neither delivery nor portable authority
 Notice preparation, persistence and acknowledgement remain Scheduling-owned #104
 work, not an activated Programme messaging feature.
 
-## Exit archive packaging (#189, in progress)
+## Exit archive purpose and packaging (#189, in progress)
+
+[ADR 0108](../architecture/decisions/0108-purpose-controlled-programme-exit-archive.md)
+reserves one additional exact-edition export purpose and unchanged independent
+source permissions. `archive_authorization.authorize_programme_archive_scope`
+uses the ordinary current actor/edition policy seam, requires a nonempty exact
+subset of `archive_requests`/`source_lineage`, and checks the pinned edition's
+`programme.exit-archive@1` adapter. The optional lock uses existing canonical
+parent/edition/person ordering; whole-owner collection must establish its complete
+person closure first. A closed planning lifecycle does not itself grant or deny
+retained export reads: current profile, retention and all source rights still govern.
+
+This helper returns only extra-purpose admission. It performs no content read,
+audit, task, artifact, grant or profile mutation. Actual collectors/workers and
+downloads must check the authenticated requester and each source's authority,
+consistency, retention and audit before release. Existing ordinary history DTOs
+and field ceilings are unchanged. No current profile admits the capability,
+adapter or minimal `exit-archive@1` role recipe. Archive lineage DTOs/schemas,
+requester-bound background execution, private custody/expiry and UI remain work
+to implement, not features delivered by reserving this permission.
 
 `exit_archive_protocol` is a database-free, non-executable packaging primitive
 for EVT-007/INT-007 and ADR 0081. It encodes already authorized owner sections,

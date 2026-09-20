@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -50,6 +50,35 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from maru.identity.models import Account
+
+
+def _database_now() -> datetime:
+    """Read durable intent time from the clock enforced by the native guards.
+
+    Returns
+    -------
+    datetime
+        A timezone-aware database timestamp sampled inside the command transaction.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the database does not return one valid aware timestamp; never use a
+        host-clock fallback for evidence bounded by database transaction time.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        row = cursor.fetchone()
+    if (
+        row is None
+        or len(row) != 1
+        or not isinstance(row[0], datetime)
+        or timezone.is_naive(row[0])
+    ):
+        raise AuthorizationDenied(
+            "Programme access is unavailable.", reason_code="programme_role_unavailable"
+        )
+    return row[0]
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,7 +306,7 @@ def request_programme_role(
         people = _lock_people(
             {actor.id, normalized.approver_id, normalized.recipient_id}
         )
-        now = timezone.now()
+        now = _database_now()
         start = _effective_start(normalized, now)
         _require_horizons(
             people[actor.id],
@@ -452,7 +481,7 @@ def decide_programme_role(
                 "This key belongs to another decision.",
                 code="programme_role_retry_conflict",
             )
-        now = timezone.now()
+        now = _database_now()
         terminal = ProgrammeRoleDecisionRecord(
             request_id=original.id,
             actor_id=actor.id,

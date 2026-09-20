@@ -19,6 +19,12 @@ their existing-evidence purpose without creating later planning state. Replay
 never recreates or regrants anything. Foreign scope and unrelated people cannot
 use a known request ID to act.
 
+Starter requests and decisions sample PostgreSQL `clock_timestamp()` inside their
+transaction for durable intent and the seven-day deadline, matching the native
+time bounds. Invalid/unavailable database time fails closed without a host-clock
+fallback. Clock-skew regressions exercise all three actual-person decisions;
+no deadline, native bound, source authority or retained-evidence guard is relaxed.
+
 The atomic approval reuses the original private Workforce factory and public
 Authorization RoleBundle command. It creates only the immutable shared template
 and role meaning, or reuses the exact compatible historically proven definition.
@@ -35,6 +41,19 @@ permissions remain SELECT-only for these dormant tables; the isolated candidate
 explicitly allows request INSERT/UPDATE for row locking and decision INSERT only.
 Actual native and observed table metadata are required by command and candidate
 startup readiness; no readiness substitution or production activation is added.
+
+Migration 0028 orders the same frozen starter and shared Programme execution
+preflights before any newer starter successor can be reversed. Retained notice,
+release, authority or native mutation evidence blocks the whole contraction
+before migration recorder entries or guards disappear, even when starter tables
+are empty. An entirely unused boundary remains reversible. It also updates the
+existing closed Department-reference helper for the exact `department_id` on
+Programme setup receipts and role requests, yielding 21 accepted references.
+Unknown relations/columns and cascading deletion still fail closed; its function
+owner, ACL and trusted search path remain unchanged. No new relation or runtime
+authority is added; readiness pins its source and requires its marker
+alongside Scheduling 0022. Populated contraction requires fix-forward or
+consistent recovery, not partial removal of a supposedly unused feature.
 
 The [starter task](../product/page-contracts/programme-volunteer-starter.md)
 adds audited complete own-request review (100 pending requests or unavailable),
@@ -461,6 +480,12 @@ making Workforce inspect Programme records. The
 overview, three child GET page shapes, five POST actions, strict GET plus five
 API mutations, and exact navigation now mount those shared services without
 reopening specialist Department writes.
+
+Workforce `0028_programme_starter_execution_fence` adds only the two later
+setup-receipt/role-request Department references to that existing closed contract.
+The shared readiness catalog requires its exact function fingerprint and marker.
+Its reverse preflight refuses retained execution evidence before restoring the
+19-reference predecessor; partially contracted schemas remain fail closed.
 
 ### Workforce task workspace
 

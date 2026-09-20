@@ -46,13 +46,14 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
         *OPERATOR_CAPABILITIES,
         "programme.view_scheduling_dependencies",
         "venues.view_scheduling_dependencies",
+        "programme.export_archive",
     }
 
 
 def test_review_scope_declaration_matches_the_runtime_readiness_fingerprint() -> None:
     """Catch stale capability-function pins without a PostgreSQL matrix run."""
     current = import_module(
-        "maru.authorization.migrations.0031_programme_change_communication_capabilities"
+        "maru.authorization.migrations.0037_programme_archive_capability"
     )
     declaration = current.FORWARD_SQL
     assert "$$ LANGUAGE plpgsql IMMUTABLE STRICT" in declaration
@@ -133,6 +134,7 @@ def test_authorization_min_scope_is_prior_catalog_plus_exact_department_code() -
     } - {
         "applications.import_programme",
         "applications.dispose_programme_import",
+        "programme.export_archive",
         "applications.recover_programme_department_ownership",
         "applications.manage_programme_review",
         "applications.review_programme",

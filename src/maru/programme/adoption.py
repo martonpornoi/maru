@@ -13,10 +13,25 @@ PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER = (
 PROGRAMME_SCHEDULING_CONFLICT_SOURCE = "programme.item-and-host-availability@1"
 PROGRAMME_PLACEMENT_DECISION_ADAPTER = "programme.placement-decisions@1"
 PROGRAMME_RELEASE_SOURCE_ADAPTER = "programme.release-source@1"
+PROGRAMME_EXIT_ARCHIVE_ADAPTER = "programme.exit-archive@1"
 
 PROGRAMME_ADOPTION_ADAPTERS = build_adoption_adapter_registry(
     owner_module="programme",
     descriptors=(
+        AdoptionAdapterDescriptor(
+            code=PROGRAMME_EXIT_ARCHIVE_ADAPTER,
+            owner_module="programme",
+            kind="exit-archive",
+            result_semantics=(
+                "Collects explicitly scoped restricted exit evidence through "
+                "versioned owning projections with separate export and source rights."
+            ),
+            failure_semantics=(
+                "Withholds unpinned, denied, changed, unavailable or incomplete "
+                "archive sources; no ordinary read, stored success or opaque link "
+                "grants export, future download or production activation."
+            ),
+        ),
         AdoptionAdapterDescriptor(
             code=PROGRAMME_RELEASE_SOURCE_ADAPTER,
             owner_module="programme",
@@ -82,6 +97,7 @@ __all__ = [
     "PROGRAMME_ACCEPTED_APPLICATION_SOURCE_ADAPTER",
     "PROGRAMME_ADOPTION_ADAPTERS",
     "PROGRAMME_ADOPTION_CONFLICT_SOURCES",
+    "PROGRAMME_EXIT_ARCHIVE_ADAPTER",
     "PROGRAMME_PLACEMENT_DECISION_ADAPTER",
     "PROGRAMME_RELEASE_SOURCE_ADAPTER",
     "PROGRAMME_SCHEDULING_CONFLICT_SOURCE",

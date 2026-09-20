@@ -1,4 +1,4 @@
-"""Maintained native receipt checks; unexecuted during ADR 0100 deferral.
+"""Native receipt checks restored through issue #102.
 
 The transaction-local schema candidate below admits one exact future profile pair
 solely to exercise receipt integrity. It copies Workforce's existing manifest for
@@ -490,6 +490,9 @@ def test_native_receipt_rejects_changed_intent_and_unproven_state(
 @pytest.mark.parametrize("operation", ["update", "delete", "truncate"])
 def test_completed_setup_evidence_is_retained(receipt_world, operation):
     receipt = _native_insert(receipt_world)
+    with connection.cursor() as cursor:
+        cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        cursor.execute("SET LOCAL maru.authority_provenance_test_reset = off")
     statement, parameters = {
         "update": (
             "UPDATE events_programmeadoptionsetupreceipt SET reason = %s WHERE id = %s",
@@ -502,7 +505,10 @@ def test_completed_setup_evidence_is_retained(receipt_world, operation):
         "truncate": ("TRUNCATE events_programmeadoptionsetupreceipt", []),
     }[operation]
     with (
-        pytest.raises(IntegrityError),
+        pytest.raises(
+            IntegrityError,
+            match="cannot be truncated" if operation == "truncate" else "append-only",
+        ),
         transaction.atomic(),
         connection.cursor() as cursor,
     ):

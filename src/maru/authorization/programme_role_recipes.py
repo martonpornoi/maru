@@ -472,6 +472,17 @@ _RECIPES = (
         (ScopeLevel.EDITION, ScopeLevel.DEPARTMENT, ScopeLevel.RESOURCE),
         _ROOM_KIND,
     ),
+    _recipe(
+        "exit-archive",
+        "Programme restricted exit archive",
+        (
+            "Request and retrieve one's own restricted Programme exit archive "
+            "and its declared lineage in one edition; independent source, file "
+            "and history permissions remain required."
+        ),
+        ScopeLevel.EDITION,
+        ("programme.export_archive",),
+    ),
 )
 
 

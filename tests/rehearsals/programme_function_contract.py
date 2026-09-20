@@ -56,7 +56,7 @@ HELPERS = MappingProxyType(
             volatility="s",
         ),
         "maru_programme_role_recipe(text, integer)": HelperPermission(
-            "c706c56066f52fc7e94b2f239b67afec8b68111f9bdd173f2b459d222ecb0a14",
+            "7d61779a3954effa4aebd60d902fd53f5b9868e96b62516b55495e00836229f4",
             result="jsonb",
             volatility="i",
         ),
@@ -153,7 +153,7 @@ OWNER_CONTRACTS = (
     (
         "maru.authorization.programme_role_readiness",
         "PROGRAMME_ROLE_INTEGRITY_CONTRACT",
-        "b83f605f48caf3b944bfcaa6019eb2fda8f8a431c7d1d24565a02a200cb2d72b",
+        "7fbd122a54b51a22b983be0a92312eb6c72f6eb8869a2b3892a86ec376700ae4",
     ),
     (
         "maru.scheduling.readiness",

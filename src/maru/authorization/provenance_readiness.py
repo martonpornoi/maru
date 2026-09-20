@@ -127,6 +127,7 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0029_programme_release_capabilities"),
     ("authorization", "0030_programme_operator_capabilities"),
     ("authorization", "0031_programme_change_communication_capabilities"),
+    ("authorization", "0037_programme_archive_capability"),
     ("events", "0010_workforce_adoption_profile"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("organizations", "0014_purpose_bounded_representation"),
@@ -146,6 +147,7 @@ _ACTIVATION_MIGRATIONS = (
     ("workforce", "0019_programme_shift_bindings"),
     ("workforce", "0020_programme_binding_integrity"),
     ("workforce", "0021_programme_binding_downgrade_fence"),
+    ("workforce", "0028_programme_starter_execution_fence"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -1346,7 +1348,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1d4ef9c453acc221e452c08d09a8d9f45c70618e3c2ea0c7fbcdfb8781d7bece"
     ),
     "maru_authorization_capability_min_scope(text)": (
-        "7e7d5042e16b12d8792da14e5871a5a52663c2491bf336db01711e063e9b5d3a"
+        "4ffc155738d573f520b36af47b1b38de3da4202fe31fe9a2d11c6afb70f74cfe"
     ),
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)": (
         "093a2f3a81a16d7a09bc782c23711aa4b108274ee7a9baf8fa955e52d82cc481"
@@ -1525,7 +1527,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "0856108aaf1bf9fd11092d908fd289542e36faeb815a47e7d5de5680f2abd5a4"
     ),
     "maru_workforce_department_fk_contract_is_current()": (
-        "363ced06d53c708b0b36a0a170be1f82cb8e51492c649f59860294aec8a44e0d"
+        "6f17d789d9762f24b0b4f3adc284d81a4444d83a8c6cdbe186a8260dd2058761"
     ),
     "maru_workforce_page9_scope_mutex()": (
         "75e5f8a98fd059d1e5d2de0db420e77beec79f3c6eb12b051388ab66c85790c6"

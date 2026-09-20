@@ -70,6 +70,11 @@ PROGRAMME_ROLE_INTEGRITY_CONTRACT = extend_database_integrity_contract(
     migration_module="maru.authorization.migrations.0036_programme_room_operations_recipe",
     source_sha256="afd94dc442a3ba6f396cea7f92f4fc723a5bb6bcba265e3455e295a868477a7f",
 )
+PROGRAMME_ROLE_INTEGRITY_CONTRACT = extend_database_integrity_contract(
+    PROGRAMME_ROLE_INTEGRITY_CONTRACT,
+    migration_module="maru.authorization.migrations.0038_programme_archive_recipe",
+    source_sha256="4771500d8aef329bf75dec7392561b7189ceea4dac74ffe3ccdcdeb5a0e11c48",
+)
 # Observed on PostgreSQL 17.11 by the approved disposable schema-only migration.
 # Relation/catalog evidence is not native workflow or migration-test acceptance.
 PROGRAMME_ROLE_SCHEMA_SHA256: Final[dict[str, str]] = {

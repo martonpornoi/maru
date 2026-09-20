@@ -64,8 +64,10 @@ def digest(details=None, target=None):
 
 def test_exact_recipe_contents_are_frozen_and_registered_without_profile_activation():
     definitions = tuple(recipes.PROGRAMME_ROLE_RECIPES.values())
-    assert len(definitions) == 28
-    original_definitions = tuple(r for r in definitions if r.code != "room-operations")
+    assert len(definitions) == 29
+    original_definitions = tuple(
+        r for r in definitions if r.code not in {"room-operations", "exit-archive"}
+    )
     assert len(original_definitions) == 27
     # Updating v1 contents is not a cosmetic edit: retained intent pins this identity.
     assert (

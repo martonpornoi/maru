@@ -438,6 +438,14 @@ def test_file_receipt_scope_digest_and_retention_are_closed() -> None:
         receipt.save()
 
 
+@pytest.mark.parametrize("value", [None, "", [], {}, False, 0, "Help"])
+def test_answer_revision_value_allows_normalized_optional_values(value) -> None:
+    """Field validation must not override the command's typed answer normalizer."""
+    revision = ApplicationAnswerRevision(value=value)
+    field = ApplicationAnswerRevision._meta.get_field("value")
+    assert field.clean(value, revision) == value
+
+
 def test_answer_revision_snapshots_and_append_only_boundary() -> None:
     definition = _definition()
     submission = ApplicationSubmission(

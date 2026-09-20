@@ -1650,6 +1650,18 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
+        code="programme.export_archive",
+        description=(
+            "Request a restricted Programme exit archive and inspect its declared "
+            "lineage with independent source permissions."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset({"archive_requests", "source_lineage"}),
+        obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+    ),
+    Capability(
         code="programme.manage_items",
         description=(
             "Create and revise private Programme items and Department discussion."

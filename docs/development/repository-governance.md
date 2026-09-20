@@ -2,7 +2,16 @@
 
 ## Branch workflow
 
-During the maintainer-authorized dormant Programme phase,
+On 2026-09-19 the maintainer authorized #102 to restore PostgreSQL acceptance
+before further Programme feature bundles. The restoration candidate changes the
+tracked policy to `required`; delivery requires exhaustive exact-head local and
+hosted verification with unchanged coverage and measured timing headroom. No
+ruleset, bypass or release authority changes. Related #48/subtask outcomes may
+share one coherent PR with explicit acceptance and issue-closure mapping, focused
+development feedback and complete final risk-selected certification. Avoid repeated
+ready-state pushes for small components; every changed head still needs fresh proof.
+
+During the preceding maintainer-authorized dormant Programme deferral,
 [ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md)
 temporarily overrides only PostgreSQL execution and database-dependent combined
 coverage below. The tracked policy selects an explicit deferred development

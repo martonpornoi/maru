@@ -11,7 +11,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
 from maru.audit.models import AuditEvent
-from maru.authorization import policy
+from maru.events import adoption
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.participation.models import Participation
@@ -72,18 +72,32 @@ from tests.support.authority import grant_board_controllers_edition_capability
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
 
+def _admit_capabilities(scope, monkeypatch, capabilities):
+    edition = EventEdition.objects.get(id=scope.request.edition_id)
+    key = (edition.adoption_profile_code, edition.adoption_profile_version)
+    profile = adoption.ADOPTION_PROFILES[key]
+    monkeypatch.setattr(
+        adoption,
+        "ADOPTION_PROFILES",
+        {
+            **adoption.ADOPTION_PROFILES,
+            key: replace(
+                profile, capability_codes=profile.capability_codes | capabilities
+            ),
+        },
+    )
+
+
 @pytest.fixture
 def personal_scope(review_scope, monkeypatch):
-    original = policy.profile_allows_capability
-
-    def admitted(code, version, capability):
-        return capability in {
+    _admit_capabilities(
+        review_scope,
+        monkeypatch,
+        {
             "programme.view_host_self",
             "scheduling.view_host_self",
-        } or original(code, version, capability)
-
-    monkeypatch.setattr(policy, "profile_allows_capability", admitted)
-    monkeypatch.setattr(composition, "profile_allows_capability", admitted)
+        },
+    )
     return review_scope
 
 
@@ -100,15 +114,8 @@ def arguments(scope):
 
 
 def _assert_guided_host_choices(scope, sender, presence, monkeypatch):
-    original = policy.profile_allows_capability
     capabilities = {"programme.view_private", "scheduling.view_planning"}
-    monkeypatch.setattr(
-        policy,
-        "profile_allows_capability",
-        lambda code, version, capability: (
-            capability in capabilities or original(code, version, capability)
-        ),
-    )
+    _admit_capabilities(scope, monkeypatch, capabilities)
     for capability in capabilities:
         CapabilityGrantFactory(
             organization_id=scope.request.organization_id,
@@ -200,14 +207,7 @@ def test_personal_presence_is_exact_released_work_not_full_envelope_or_public_co
         capability_code="scheduling.view_host_self",
     ).exists()
     sender = AccountFactory()
-    original = policy.profile_allows_capability
-    monkeypatch.setattr(
-        policy,
-        "profile_allows_capability",
-        lambda code, version, capability: (
-            capability == "programme.view_hosts" or original(code, version, capability)
-        ),
-    )
+    _admit_capabilities(personal_scope, monkeypatch, {"programme.view_hosts"})
     CapabilityGrantFactory(
         organization_id=inputs["organization_id"],
         edition_id=inputs["edition_id"],
@@ -226,7 +226,7 @@ def test_personal_presence_is_exact_released_work_not_full_envelope_or_public_co
     )
     assert recipient.account_id == inputs["actor_id"] != sender.id
     assert recipient.relationship.state == "confirmed"
-    # Maintained #108/#102 debt only: not collected or run while PostgreSQL is deferred.
+    # Exercise the actual owner purpose and its independently granted planning scope.
     _assert_guided_host_choices(personal_scope, sender, presence, monkeypatch)
     assert AuditEvent.objects.filter(
         operation="programme.query.host_roster",

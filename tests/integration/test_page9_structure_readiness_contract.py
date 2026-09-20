@@ -281,7 +281,7 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
         "0856108aaf1bf9fd11092d908fd289542e36faeb815a47e7d5de5680f2abd5a4"
     ),
     "maru_workforce_department_fk_contract_is_current()": (
-        "363ced06d53c708b0b36a0a170be1f82cb8e51492c649f59860294aec8a44e0d"
+        "6f17d789d9762f24b0b4f3adc284d81a4444d83a8c6cdbe186a8260dd2058761"
     ),
     "maru_workforce_page9_scope_mutex()": (
         "75e5f8a98fd059d1e5d2de0db420e77beec79f3c6eb12b051388ab66c85790c6"
@@ -306,9 +306,11 @@ PAGE9_DEPARTMENT_FK_CONTRACT = (
     ),
     ("applications_programmeimportcommandreceipt", ("source_department_id",)),
     ("authorization_capabilitygrant", ("department_id",)),
+    ("authorization_programmerolerequest", ("department_id",)),
     ("authorization_roleassignment", ("department_id",)),
     ("authorization_scopedresourcebinding", ("department_id",)),
     ("charities_charityselection", ("responsible_department_id",)),
+    ("events_programmeadoptionsetupreceipt", ("department_id",)),
     ("logistics_equipmentoffer", ("responsible_department_id",)),
     ("logistics_logisticsmanifest", ("responsible_department_id",)),
     (
@@ -548,6 +550,7 @@ def test_page9_constraint_timing_tamper_blocks_readiness() -> None:
         "0016_programme_call_department_fk_contract",
         "0017_programme_import_department_fk_contract",
         "0018_programme_department_ownership_contract",
+        "0028_programme_starter_execution_fence",
     ],
 )
 def test_missing_page9_migration_recorder_row_blocks_readiness(
@@ -615,6 +618,45 @@ def test_page9_department_fk_contract_is_installed_exactly() -> None:
     assert all(tuple(row[2]) == ("id",) for row in rows)
     assert all(str(row[3]) in {"a", "r"} for row in rows)
     assert contract_is_current == (True,)
+
+
+@pytest.mark.parametrize("fault", ["unknown_reference", "cascading_known_reference"])
+def test_page9_department_fk_successor_still_rejects_unsafe_references(fault):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT public.maru_workforce_department_fk_contract_is_current()"
+        )
+        assert cursor.fetchone() == (True,)
+        if fault == "unknown_reference":
+            cursor.execute(
+                "CREATE TABLE public.test_unknown_programme_department_reference "
+                "(department_id uuid REFERENCES public.workforce_department(id))"
+            )
+        else:
+            cursor.execute(
+                "SELECT conname FROM pg_catalog.pg_constraint "
+                "WHERE contype = 'f' AND conrelid = "
+                "'public.events_programmeadoptionsetupreceipt'::pg_catalog.regclass "
+                "AND confrelid = 'public.workforce_department'::pg_catalog.regclass"
+            )
+            (constraint_name,) = cursor.fetchone()
+            cursor.execute(
+                sql.SQL(
+                    "ALTER TABLE public.events_programmeadoptionsetupreceipt "
+                    "DROP CONSTRAINT {}"
+                ).format(sql.Identifier(constraint_name))
+            )
+            cursor.execute(
+                "ALTER TABLE public.events_programmeadoptionsetupreceipt "
+                "ADD CONSTRAINT test_unsafe_department_reference "
+                "FOREIGN KEY (department_id) "
+                "REFERENCES public.workforce_department(id) "
+                "ON DELETE CASCADE"
+            )
+        cursor.execute(
+            "SELECT public.maru_workforce_department_fk_contract_is_current()"
+        )
+        assert cursor.fetchone() == (False,)
 
 
 def test_page9_contract_sets_are_inside_the_downgrade_fence() -> None:

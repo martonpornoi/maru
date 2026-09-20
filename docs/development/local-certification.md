@@ -22,11 +22,25 @@ it does not replace fresh certification of the clean candidate.
 
 ## What the gate proves
 
-### Temporary Programme development policy
+### Programme PostgreSQL restoration (#102)
+
+The maintainer authorized restoring database acceptance on 2026-09-19. The
+restoration candidate now sets the tracked policy to `required`; protected main
+changes only after full exact-head local and hosted acceptance succeeds and the
+restoration PR merges. Use `-Mode Full` for that candidate and preserve measured
+shard headroom. A policy-file change alone does not establish native correctness.
+
+After restoration, related #48 outcomes may share one coherent PR. Keep their
+requirements, acceptance cases and closure mapping explicit. Run focused feedback
+during development, then one complete required certification of the final exact
+bundle, followed by independent hosted acceptance. Further source edits invalidate
+that receipt. Batching reduces repeated runs, not coverage or historical scope.
+
+### Earlier temporary Programme development policy
 
 [ADR 0100](../architecture/decisions/0100-temporary-programme-postgresql-deferral.md)
-currently sets `scripts/ci_postgresql_policy.json` to `deferred`, as explicitly
-requested by the maintainer. Default `scripts/certify.ps1` runs exact-commit
+previously set `scripts/ci_postgresql_policy.json` to `deferred`, as explicitly
+requested by the maintainer. In that mode `scripts/certify.ps1` runs exact-commit
 non-database development acceptance through `certify_deferred.ps1`, without
 Docker or PostgreSQL. It retains locked inputs, packaging, static/NumPy/Sphinx,
 static Django/generated contracts, frontend, vulnerability and all unit checks.

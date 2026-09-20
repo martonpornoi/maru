@@ -534,6 +534,20 @@ an exact 19-reference inventory. `0018` also installs the reciprocal raw-write
 retirement backstop. Reversing it restores the exact 15-reference predecessor
 and must precede removing Applications `0010`.
 
+Workforce `0028_programme_starter_execution_fence` recognizes the two later
+`department_id` references on `authorization_programmerolerequest` and
+`events_programmeadoptionsetupreceipt`, making the current inventory exactly 21.
+Unknown references and unsafe delete actions remain blockers. Readiness pins the
+new function body/metadata and migration marker. Reverse invokes the frozen shared
+retained-evidence fences before restoring the 19-reference predecessor; no
+existing historical migration, runtime privilege or retained record is rewritten.
+
+The native receipt-truncation regression names both the Workforce receipt and
+its referencing Programme setup receipt table so PostgreSQL's FK preflight does
+not hide the Workforce immutability trigger. It requires the exact guard error
+and SQLSTATE with the cleanup exemption off, then verifies retained receipts are
+unchanged. This synthetic denial probe does not authorize real truncation.
+
 Applications `0010` through `0012` and Authorization `0023` add the transition
 evidence, integrity guards, downgrade fence, and dormant exact-ID recovery
 declaration. Forward migration does not fabricate evidence for an old orphan.

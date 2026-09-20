@@ -1,5 +1,6 @@
 """PostgreSQL scope and downgrade coverage for Programme capabilities."""
 
+from importlib import import_module
 from uuid import UUID
 
 import pytest
@@ -175,3 +176,52 @@ def test_programme_capabilities_match_the_readiness_function_fingerprint() -> No
         fingerprint
         == _FUNCTION_DEFINITION_SHA256["maru_authorization_capability_min_scope(text)"]
     ), fingerprint
+
+
+def test_archive_capability_addition_and_unused_reverse_are_exact() -> None:
+    """Retain all earlier scopes and refuse broader-than-edition archive authority."""
+    before = ("authorization", "0036_programme_room_operations_recipe")
+    after = ("authorization", "0037_programme_archive_capability")
+    migration = import_module(
+        "maru.authorization.migrations.0037_programme_archive_capability"
+    )
+    _migrate(before)
+    old_fingerprint = _installed_scope_function_fingerprint()
+    assert _minimum_scope("programme.export_archive") == -1
+    _migrate(after)
+    for level, codes in enumerate(
+        (
+            migration.ORGANIZATION_CAPABILITIES,
+            migration.EDITION_CAPABILITIES,
+            migration.DEPARTMENT_CAPABILITIES,
+            migration.RESOURCE_CAPABILITIES,
+        )
+    ):
+        assert all(_minimum_scope(code) == level for code in codes)
+    assert _minimum_scope("programme.future_unregistered") == -1
+    assert (
+        _installed_scope_function_fingerprint()
+        == _FUNCTION_DEFINITION_SHA256["maru_authorization_capability_min_scope(text)"]
+    )
+    _migrate(before)
+    assert _minimum_scope("programme.export_archive") == -1
+    assert _installed_scope_function_fingerprint() == old_fingerprint
+    _migrate(after)
+
+
+@pytest.mark.parametrize("retained", ["grant", "bundle"])
+def test_archive_authority_fences_native_downgrade(retained) -> None:
+    """Keep used scope vocabulary installed without deleting retained authority."""
+    if retained == "grant":
+        edition = EventEditionFactory()
+        record = CapabilityGrantFactory(
+            organization=edition.organization,
+            edition=edition,
+            capability_code="programme.export_archive",
+        )
+    else:
+        record = RoleBundleFactory(capability_codes=["programme.export_archive"])
+    with pytest.raises(RuntimeError, match="retain it and fix forward"):
+        _migrate(("authorization", "0036_programme_room_operations_recipe"))
+    assert type(record).objects.filter(pk=record.pk).exists()
+    assert _minimum_scope("programme.export_archive") == 1

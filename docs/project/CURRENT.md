@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is an actively developed Django/PostgreSQL modular monolith, not a
@@ -11,16 +11,18 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
-Programme host/staffing item collection is delivered through
-[PR #193](https://github.com/martonpornoi/maru/pull/193), protected squash
-`c13c4185346014c54ce41f943859ce31c56a15f7` at 2026-09-19 18:37:06 UTC.
-Its tree equals certified head `35fedf448f07404fc993e27077bedf143a5cffdd`;
+Programme complete placement-history collection is delivered through
+[PR #194](https://github.com/martonpornoi/maru/pull/194), protected squash
+`42c50e497bc6cfffa399725ad5845617149709c0` at 2026-09-19 19:04:38 UTC.
+Its tree equals certified head `78c541533f2cabb7c98f814af914e19c270e940e`;
 clean local main equals origin/main and the protected result. All eight retained
-local gates passed in 7m05s (11,710 units/82.93s, 103 frontend cases).
-Hosted quality passed in 12m03s, units in 2m26s, exact-head PR gate in 5s and
+local gates passed in 7m18s (11,740 units/81.85s, 103 frontend cases).
+Hosted quality passed in 12m58s, units in 2m18s, exact-head PR gate in 3s and
 all three CodeQL analyses reported zero findings/errors/warnings. #189/#108/#48
 remain open. PostgreSQL was deferred, not certified. See the
-[protected evidence](../checkpoints/2026-09-19-programme-exit-item-collection.md).
+[protected evidence](../checkpoints/2026-09-19-programme-exit-placement-history.md).
+PR #193's [host/staffing collection](../checkpoints/2026-09-19-programme-exit-item-collection.md)
+remains delivered, with its exact evidence preserved.
 PR #192's [core history](../checkpoints/2026-09-19-programme-exit-history-paging.md)
 and PR #191's packaging and initial paging remain delivered, with its prior npm
 outage and recovery retained in the
@@ -41,9 +43,94 @@ No prerequisite in that chain needs restarting.
 
 ## Current work: complete isolated Programme fixture (#108)
 
-Branch: `codex/programme-exit-placement-history`, unpublished next component
-transplanted onto protected PR #193 with identical tree verified. Exact clean-
-commit certification is next; no hosted delivery remains blocked.
+### PostgreSQL restoration and larger delivery bundles (#102)
+
+Active branch: `codex/restore-programme-postgresql`, based on protected
+`42c50e497bc6cfffa399725ad5845617149709c0` plus the preserved archive component.
+
+On 2026-09-19 the maintainer authorized restoring PostgreSQL checks now, before
+the remaining #48 features. The local candidate sets the tracked policy to
+`required`; protected main remains deferred until this candidate passes full
+exact-head local/hosted acceptance and merges. Native checks may now run only
+against task-owned synthetic disposable databases. No profile activation,
+production deployment or waived coverage/timing safeguard is authorized.
+
+The restoration candidate includes the already prepared archive authority below.
+Inventory accumulated debt, start with focused native/schema checks, repair
+failures and stale timing assumptions, then certify exhaustive history with the
+same local/hosted assignments and substantial measured headroom before push.
+Do not claim restored acceptance merely from changing the policy file.
+
+Native execution repaired stale fixture admission, audit/reset obligations and
+SQL parameter handling, plus four real defects: optional-answer clearing validation
+(Applications 0022), reverse-order removal of starter guards, the closed Department
+reference inventory, and host/database clock assumptions in role/starter evidence.
+Unpublished Workforce 0028 installs the exact 21-reference successor and runs
+frozen shared retained-evidence preflights before reverse SQL or recorder changes.
+Readiness pins its source, marker and function metadata. Role/starter commands
+sample database time inside their transactions with no host fallback; native
+time bounds, deadlines, source permissions and audit/provenance remain unchanged.
+
+Three exhaustive attempts (`c7461f9`, `71898fd` and `32158f9`) passed non-database
+gates but failed native contracts, not timing limits. The latest passed shards
+1–39 with measured headroom (longest 49m41s), then exposed a stale single-table
+TRUNCATE probe in shard 41. Programme setup's newer receipt FK prevented the test
+from reaching its intended Workforce trigger. The repair names both exact receipt
+tables, requires the specific Workforce error and SQLSTATE, and proves the original
+receipts survive. All 47 started databases were removed; no timing waiver applies.
+Preserve each complete failed artifact tree under
+`.tools/certification-evidence/programme-postgresql-<head>-failed`.
+No complete success receipt, combined coverage, push or hosted acceptance exists.
+
+Repaired focused native evidence includes 171 role/starter/setup/file cases,
+115 Applications cases, eight retry-ACL/notice-migration cases, five real raw-write
+matrix cases and 18 personal-output cases. The latest role/schema batch passed
+153 cases in 263.59s, including deliberate host-clock skew and exact native
+metadata; recovery/unsafe-reference coverage passed 21 in 473.92s. Complete units
+passed 11,806 cases in 67.05s; static, typing and documentation checks passed.
+All 28 final starter-clock/missing-marker cases passed in 185.03s, including the
+new required recorder row. The repaired Workforce integrity file passed all eight
+native cases in 170.99s, with its owned database removed. All 14 unfinished shard
+selections then passed uninstrumented diagnostics: 1,494 native cases, no skips
+or failures, four disposable databases at a time and verified cleanup. Complete
+units passed again (11,806 in 79.10s); lint, formatting and documentation passed.
+These diagnostics are not certification or combined coverage. Freeze the repaired
+candidate for exhaustive exact-head acceptance. Preserve failed probes and see the
+[restoration checkpoint](../checkpoints/2026-09-19-postgresql-restoration.md)
+for exact runs, repairs and owned-resource cleanup. Focused evidence is not full
+certification, #109 integrated acceptance or production approval.
+
+After restoration, bundle related #48/subtask outcomes into larger coherent PRs.
+Keep issue-specific acceptance/tests/docs and explicit closure mapping inside each
+bundle; run focused checks while developing and full required acceptance for its
+final exact commit. Avoid repeated ready-PR pushes for each small component, but
+do not mix unrelated work or allow a bundle to obscure ownership/security review.
+Archive/exit completion, accountable stop-use and integrated isolation/recovery
+are sensible outcome boundaries; select the next bundle from the remaining debt.
+
+### Prepared archive authority (prior database-free evidence)
+
+Prepared on `codex/programme-archive-boundary`, unpublished permission/contract work
+following protected PR #194. ADR 0108 reserves a separate exact-edition export
+purpose and minimal immutable recipe, never replacement source authority.
+No current profile, ordinary field ceiling, existing recipe or root is widened.
+Migrations 0037/0038 retain used-authority/recipe downgrade fences. Expected source
+fingerprints and isolated fixture expectations are updated from reviewed declarations,
+not live observations at preparation time. The later #102 restoration authority
+now permits native execution; the earlier schema-only request is no longer a
+blocker. Initial focused
+regressions passed 159 cases, expanded feedback exposed stale historical catalog
+and fixture expectations, and the repaired focused set passed 449 cases in 1.90s.
+Complete repaired database-free feedback passed 11,772 units in 64.22s with three
+existing Django warnings. Ruff/format, strict typing (737 files), semantic/NumPy
+documentation and repository docs (646 Markdown files) passed. A final additive
+scope-vocabulary check passed with all 31 archive-focused cases in 0.27s; it
+preserves historical native Organization floors rather than rewriting them to
+newer policy ceilings. The first #102 native diagnostic passed four archive
+scope/recipe/fingerprint/unused-reverse/used-authority-fence cases in 171.17s;
+the owned container was removed. Exact full certification and protected delivery
+remain pending; focused native evidence is not whole-suite acceptance. See the
+[archive authority checkpoint](../checkpoints/2026-09-19-programme-archive-authority-boundary.md).
 The prior npm outage is historical, not an active blocker. Continue #189, then
 #190/P11 and P12; no unrelated detour or idle wait for hosted delivery.
 P11's accepted ADR 0081/EVT-007/INT-007 exit contract has necessary implementation

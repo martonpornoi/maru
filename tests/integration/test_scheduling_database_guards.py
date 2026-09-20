@@ -41,6 +41,9 @@ RELEASE_TABLE_SUFFIXES = frozenset(
         "schedulingreleasewithdrawal",
     }
 )
+NOTICE_TABLE_SUFFIXES = frozenset(
+    {"schedulingchangenotice", "schedulingchangenoticeevidence"}
+)
 
 
 def assert_raw_guard_matrix(expected, *, mutable_versions):
@@ -53,7 +56,8 @@ def assert_raw_guard_matrix(expected, *, mutable_versions):
         import_module("maru.scheduling.migrations.0005_integrity_guards").TABLE_SUFFIXES
     )
     assert planning.isdisjoint(RELEASE_TABLE_SUFFIXES)
-    assert set(models) == planning | RELEASE_TABLE_SUFFIXES
+    assert NOTICE_TABLE_SUFFIXES.isdisjoint(planning | RELEASE_TABLE_SUFFIXES)
+    assert set(models) == planning | RELEASE_TABLE_SUFFIXES | NOTICE_TABLE_SUFFIXES
     assert set(expected) <= models.keys()
     checked = set()
     for name in sorted(expected):
