@@ -33,7 +33,7 @@ def _expected_trigger_rows() -> dict[str, tuple[object, ...]]:
     }
 
 
-def test_page10_additive_catalog_is_installed_but_cutover_is_inactive() -> None:
+def test_page10_writer_generation_does_not_replace_operational_gates() -> None:
     catalog = invitation_readiness.inspect_platform_invitation_additive_catalog()
     report = invitation_readiness.build_platform_invitation_readiness_report()
 
@@ -55,7 +55,7 @@ def test_page10_additive_catalog_is_installed_but_cutover_is_inactive() -> None:
     assert len(invitation_readiness._INDEX_CONTRACTS) == 16
     assert report["status"] == "ready"
     assert report["production_status"] == "blocked"
-    assert report["writer_cutover_status"] == "inactive"
+    assert report["writer_cutover_status"] == "active"
     assert report["schema_generation"] == "page10-invitations-additive-v10"
     assert report["additive_gates"]["digest_key_schema_migration"] == "resolved"
     assert report["additive_gates"]["digest_key_column"] == "resolved"
@@ -74,9 +74,11 @@ def test_page10_additive_catalog_is_installed_but_cutover_is_inactive() -> None:
     assert report["additive_gates"]["retention_relations"] == "resolved"
     assert catalog.uncataloged_function_identities == ()
     assert catalog.uncataloged_trigger_names == ()
-    assert invitation_readiness.PAGE10_INVITATION_STOPPED_WRITER_GENERATION is None
+    assert invitation_readiness.PAGE10_INVITATION_STOPPED_WRITER_GENERATION == (
+        "identity-invitation-writers-v1"
+    )
     assert report["known_production_gates"]["stopped_writer_generation"] == (
-        "unresolved"
+        "resolved"
     )
     assert (
         report["known_production_gates"]["account_prefix_search_query_plan"]

@@ -41,10 +41,10 @@ shared-shell screen, retained in local commit `4f9e3be`. Default runtime tables
 remain SELECT-only; production URLs and profiles are unchanged. The worker has a
 hard 20-minute child limit and finite database timeouts, not an installed service.
 
-The next uncommitted step deliberately extends only the owned #109 candidate with
+Local commit `f030d59` extends only the owned #109 candidate with
 the archive purpose/recipe/adapter, reserved route and three least-privilege table
 classes for genuine P11 runtime acceptance. This is preparation, not evidence
-that the newly extended isolated fixture has run successfully.
+that the newly extended isolated fixture has completed successfully.
 
 Real isolated execution now exposes a required foundation prerequisite tracked
 explicitly as [#196](https://github.com/martonpornoi/maru/issues/196) in #48's
@@ -58,9 +58,23 @@ encryption requirement was relaxed. Preserve archive preparation and complete
 the narrow Identity-owned writer cutover before rerunning P11. This does not
 authorize unrelated Registration implementation or production activation.
 See the [native prerequisite checkpoint](../checkpoints/2026-09-20-programme-native-identity-prerequisite.md).
-ADR 0110 now contracts that independent Identity cutover; implementation is next.
-The corrected full fast suite passed 12,563 tests in 77.42s. No integrated native
-pass or final certification is claimed by that result.
+ADR 0110's independent Identity cutover is now implemented locally. Identity
+0023 preserves the existing inert legacy-delivery check, rejects invitation-purpose
+conversion, and adds observed generation/recovery enforcement; generic challenge
+services now reject invitation and unknown purposes before side effects. Actual
+isolated startup passes full invitation readiness. Native adjacent tests passed
+280 cases in 50.57s, public/retention regressions 10 in 10.40s, and corrected
+fresh/populated writer migration tests 17 in 4.00s. The expanded fail-closed unit
+batch passed 46 in 0.29s; the preceding full fast suite passed 12,575 in 71.88s.
+
+Real setup then exposed [#197](https://github.com/martonpornoi/maru/issues/197):
+active native provenance still recognizes only Executive Board ceremony evidence
+in its completeness/historical functions, refusing supported Maru-operator
+activation. This required correction is explicitly under #48/#109. Preserve the
+actual active provenance gate and correct all affected native validators; do not
+substitute a Board identity, mock authority or claim integrated P11 acceptance.
+The diagnostic attempt failed in 190.32s at activation commit; no archive ran.
+See the [writer/setup checkpoint](../checkpoints/2026-09-20-programme-native-writer-and-setup.md).
 
 Focused evidence: 51 native custody/whole-owner workflow tests passed in 89.64s,
 including complete ZIP retrieval, source drift, audit rollback, partial-custody

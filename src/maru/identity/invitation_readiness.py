@@ -32,6 +32,10 @@ from maru.identity.invitation_token_keys import (
     invitation_token_keyring,
     invitation_token_keys_are_ready,
 )
+from maru.identity.invitation_writer_readiness import (
+    INVITATION_WRITER_GENERATION,
+    invitation_writer_generation_is_ready,
+)
 from maru.identity.models import (
     PlatformAccountInvitation,
     PlatformInvitationSchedulerRun,
@@ -44,9 +48,8 @@ if TYPE_CHECKING:
     from django.db.backends.utils import CursorWrapper
 
 PAGE10_INVITATION_ADDITIVE_SCHEMA_GENERATION: Final = "page10-invitations-additive-v10"
-# This is intentionally absent. Migration 0011 is additive and cannot provide
-# stopped-writer or downgrade-fence evidence for a future canonical cutover.
-PAGE10_INVITATION_STOPPED_WRITER_GENERATION: Final[str | None] = None
+# Expected version only. Readiness requires the observed native generation below.
+PAGE10_INVITATION_STOPPED_WRITER_GENERATION: Final = INVITATION_WRITER_GENERATION
 
 _SUPPORTED_DATABASE_SCHEMA: Final = "public"
 _SUPPORTED_POSTGRESQL_SERVER_MAJOR: Final = 17
@@ -1805,9 +1808,7 @@ def _platform_invitation_production_gates(
         "invitation_retention_policy_and_job": (
             platform_invitation_retention_heartbeat_is_ready()
         ),
-        "stopped_writer_generation": (
-            PAGE10_INVITATION_STOPPED_WRITER_GENERATION is not None
-        ),
+        "stopped_writer_generation": invitation_writer_generation_is_ready(),
         "account_prefix_search_query_plan": (
             platform_account_prefix_query_plan_is_ready()
         ),
@@ -1866,9 +1867,7 @@ def build_platform_invitation_readiness_report() -> dict[str, object]:
         "status": additive_status,
         "production_status": ("ready" if all(production_gates.values()) else "blocked"),
         "writer_cutover_status": (
-            "active"
-            if PAGE10_INVITATION_STOPPED_WRITER_GENERATION is not None
-            else "inactive"
+            "active" if production_gates["stopped_writer_generation"] else "inactive"
         ),
         "integrity_review_scope": {
             "reviewed_migration": ".".join(_REVIEWED_INTEGRITY_MIGRATION),

@@ -41,6 +41,7 @@ or permission to use production personal data.
   evidence without selecting production infrastructure.
 - [Deployment and service objectives](deployment-and-service-objectives.md)
 - [Observability and readiness](observability-and-readiness.md)
+- [Identity invitation writer generation and recovery](identity-invitation-writer-recovery.md)
 - [Applications Programme calls/proposals migration and recovery](applications-programme-calls-and-proposals-migration-and-recovery.md)
 - [Programme Department ownership continuity and recovery](applications-programme-department-ownership-recovery.md)
 - [Programme supporting-file handling](programme-supporting-file-handling.md)
@@ -83,6 +84,7 @@ programme-onsite-continuity
 clean-convention-onboarding-walkthrough
 empty-experience-baseline
 workforce-only-adoption-and-recovery
+identity-invitation-writer-recovery
 marucon-admin-rehearsal
 page-01-platform-home
 page-02-create-organization

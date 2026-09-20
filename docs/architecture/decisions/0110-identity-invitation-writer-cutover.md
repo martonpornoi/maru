@@ -24,12 +24,15 @@ public bootstrap, verification/recovery, and stopped migration-owner bootstrap
 also serve legitimate non-invitation flows. They must not invent an invitation
 or become dependent on Registration configuration.
 
-The remaining competing invitation path is the generic challenge interface and
-its legacy delivery columns. The generic delivery helper already refuses
-invitations, but generic issuance/consumption accepts an open purpose string;
-the legacy delivery columns are not independently frozen for every ordinary
-invitation challenge update. A future accidental caller or obsolete writer must
-not turn those columns into a second delivery authority.
+The generic delivery helper already refuses invitations, but generic
+issuance/consumption accepts an open purpose string. The existing native
+`identity_invitation_legacy_delivery_suppressed` check already enforces inert
+legacy delivery fields for every invitation row; those fields are not an
+unguarded competing delivery authority. The remaining cutover closes the generic
+interface, prevents conversion of a non-invitation challenge into an invitation,
+and binds readiness and downgrade refusal to an observed writer generation.
+The generation guard repeats the existing inert-field requirement explicitly;
+it does not claim to introduce that previously enforced constraint.
 
 ## Decision
 
