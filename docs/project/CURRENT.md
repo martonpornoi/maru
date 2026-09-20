@@ -11,6 +11,25 @@ and [checkpoints](../checkpoints/index.md) preserve historical evidence.
 
 ## Latest protected delivery
 
+PostgreSQL acceptance is restored through
+[PR #195](https://github.com/martonpornoi/maru/pull/195), protected squash
+`b056aa253a39df2648752daf35ac5a158a9950d7` at 2026-09-20 11:14:26 UTC.
+Its tree equals fully certified head `c018d99d71baa230c1bf2edd942c034740e995c7`;
+clean local main equals origin/main and the protected result. All 53 local and
+hosted PostgreSQL shards passed: 4,592 native cases, 11,806 units and 103 frontend
+cases, with 91.53% local and 91.54% hosted combined coverage. Full local acceptance
+took 3h47m58s; hosted acceptance took 4h21m02s, with jobs from 6m50s to 57m03s.
+The exact-head PR gate and all three CodeQL analyses passed. #102 is closed;
+#189/#190/#108/#109/#97/#92/#48 remain open. No profile is activated. See the
+[protected restoration evidence](../checkpoints/2026-09-20-postgresql-restoration-protected-delivery.md).
+
+The next branch, `codex/programme-exit-bundle`, starts from that protected result.
+Its initial delivery-record documentation is prepared locally for the next larger
+bundle, not a separately certified or published feature. Complete #189's archive
+outcome and P11 composition together; then #190 stop-use and integrated recovery.
+
+Earlier delivery:
+
 Programme complete placement-history collection is delivered through
 [PR #194](https://github.com/martonpornoi/maru/pull/194), protected squash
 `42c50e497bc6cfffa399725ad5845617149709c0` at 2026-09-19 19:04:38 UTC.
@@ -45,21 +64,20 @@ No prerequisite in that chain needs restarting.
 
 ### PostgreSQL restoration and larger delivery bundles (#102)
 
-Active branch: `codex/restore-programme-postgresql`, based on protected
-`42c50e497bc6cfffa399725ad5845617149709c0` plus the preserved archive component.
+Delivered branch: `codex/restore-programme-postgresql`, certified against protected
+`42c50e497bc6cfffa399725ad5845617149709c0` with the preserved archive component.
 
 On 2026-09-19 the maintainer authorized restoring PostgreSQL checks now, before
-the remaining #48 features. The local candidate sets the tracked policy to
-`required`; protected main remains deferred until this candidate passes full
-exact-head local/hosted acceptance and merges. Native checks may now run only
+the remaining #48 features. PR #195 passed full exact-head local/hosted acceptance
+and merged; protected main now sets the tracked policy to `required`.
+Native checks may run only
 against task-owned synthetic disposable databases. No profile activation,
 production deployment or waived coverage/timing safeguard is authorized.
 
-The restoration candidate includes the already prepared archive authority below.
-Inventory accumulated debt, start with focused native/schema checks, repair
-failures and stale timing assumptions, then certify exhaustive history with the
-same local/hosted assignments and substantial measured headroom before push.
-Do not claim restored acceptance merely from changing the policy file.
+The restoration includes the archive authority below. Accumulated debt was
+inventoried, focused native/schema checks repaired actual and stale contracts,
+and exhaustive history passed with identical local/hosted assignments and measured
+headroom. Restoration is supported by executed evidence, not just a policy edit.
 
 Native execution repaired stale fixture admission, audit/reset obligations and
 SQL parameter handling, plus four real defects: optional-answer clearing validation
@@ -80,7 +98,8 @@ tables, requires the specific Workforce error and SQLSTATE, and proves the origi
 receipts survive. All 47 started databases were removed; no timing waiver applies.
 Preserve each complete failed artifact tree under
 `.tools/certification-evidence/programme-postgresql-<head>-failed`.
-No complete success receipt, combined coverage, push or hosted acceptance exists.
+The fourth clean candidate passed complete certification and protected delivery;
+the earlier failed attempts remain preserved, not relabelled as successes.
 
 Repaired focused native evidence includes 171 role/starter/setup/file cases,
 115 Applications cases, eight retry-ACL/notice-migration cases, five real raw-write
@@ -94,8 +113,8 @@ native cases in 170.99s, with its owned database removed. All 14 unfinished shar
 selections then passed uninstrumented diagnostics: 1,494 native cases, no skips
 or failures, four disposable databases at a time and verified cleanup. Complete
 units passed again (11,806 in 79.10s); lint, formatting and documentation passed.
-These diagnostics are not certification or combined coverage. Freeze the repaired
-candidate for exhaustive exact-head acceptance. Preserve failed probes and see the
+These diagnostics were not reused as certification or combined coverage. The
+subsequent complete exact-head acceptance passed. Preserve failed probes and see the
 [restoration checkpoint](../checkpoints/2026-09-19-postgresql-restoration.md)
 for exact runs, repairs and owned-resource cleanup. Focused evidence is not full
 certification, #109 integrated acceptance or production approval.
@@ -108,10 +127,10 @@ do not mix unrelated work or allow a bundle to obscure ownership/security review
 Archive/exit completion, accountable stop-use and integrated isolation/recovery
 are sensible outcome boundaries; select the next bundle from the remaining debt.
 
-### Prepared archive authority (prior database-free evidence)
+### Delivered archive authority (not the complete archive)
 
-Prepared on `codex/programme-archive-boundary`, unpublished permission/contract work
-following protected PR #194. ADR 0108 reserves a separate exact-edition export
+Originally prepared on `codex/programme-archive-boundary` after PR #194 and now
+delivered with full native acceptance in PR #195. ADR 0108 reserves a separate exact-edition export
 purpose and minimal immutable recipe, never replacement source authority.
 No current profile, ordinary field ceiling, existing recipe or root is widened.
 Migrations 0037/0038 retain used-authority/recipe downgrade fences. Expected source
@@ -128,8 +147,8 @@ scope-vocabulary check passed with all 31 archive-focused cases in 0.27s; it
 preserves historical native Organization floors rather than rewriting them to
 newer policy ceilings. The first #102 native diagnostic passed four archive
 scope/recipe/fingerprint/unused-reverse/used-authority-fence cases in 171.17s;
-the owned container was removed. Exact full certification and protected delivery
-remain pending; focused native evidence is not whole-suite acceptance. See the
+the owned container was removed. Subsequent exact full certification and protected
+delivery passed in PR #195; this does not complete the archive service. See the
 [archive authority checkpoint](../checkpoints/2026-09-19-programme-archive-authority-boundary.md).
 The prior npm outage is historical, not an active blocker. Continue #189, then
 #190/P11 and P12; no unrelated detour or idle wait for hosted delivery.
