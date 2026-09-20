@@ -1,6 +1,9 @@
 """Actual archive schema/state/custody guards, not current profile activation."""
 
 import hashlib
+import json
+import time
+import tracemalloc
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from threading import Barrier
@@ -29,6 +32,13 @@ from maru.programme.archive_tasks import (
     request_programme_archive,
 )
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
+from maru.programme.exit_archive_protocol import (
+    OWNERS,
+    ProgrammeArchiveContext,
+    ProgrammeArchiveFile,
+    ProgrammeArchiveSection,
+)
+from maru.programme.exit_archive_stream import write_programme_exit_archive
 from maru.programme.models import (
     ProgrammeArchiveChunk,
     ProgrammeArchiveTask,
@@ -420,3 +430,74 @@ def test_private_sink_roundtrip_spans_exact_chunks_and_rechecks_every_byte():
     task.artifact_digest = "0" * 64
     with pytest.raises(ProgrammeArchiveUnavailableError):
         _verified_chunks(task)
+
+
+def test_native_large_private_custody_stays_bounded_and_disposes_only_derived_bytes(
+    record_testsuite_property,
+):
+    # Codec/custody load evidence, not scanned-file or independent owner acceptance.
+    task = create()
+    claim(task)
+    started = time.monotonic()
+    tracemalloc.start()
+    try:
+        payload = b"x" * (10 * 1024 * 1024)
+        sections = tuple(
+            ProgrammeArchiveSection(
+                owner,
+                f"{owner}.programme-exit@1",
+                json.dumps(
+                    {
+                        "id": str(task.edition_id),
+                        "organization_id": str(task.organization_id),
+                        "adoption_profile_code": "full_convention",
+                        "adoption_profile_version": 1,
+                    }
+                    if owner == "events"
+                    else {"synthetic_custody_load": owner}
+                ).encode(),
+                b'{"type":"object"}',
+            )
+            for owner in OWNERS
+        )
+        with transaction.atomic(), programme_writer():
+            sink = _ArchiveChunkSink(task.id)
+            encoded = write_programme_exit_archive(
+                context=ProgrammeArchiveContext(
+                    task.organization_id,
+                    task.edition_id,
+                    task.actor_id,
+                    task.generation_correlation_id,
+                    task.started_at,
+                ),
+                sections=sections,
+                files=tuple(ProgrammeArchiveFile(uuid4(), payload) for _ in range(4)),
+                source_digest="a" * 64,
+                sink=sink,
+            )
+            sink.finish()
+            task.source_digest = "a" * 64
+            task.artifact_digest = encoded.sha256
+            task.chunk_root = sink.root.hexdigest()
+            task.chunk_count = sink.count
+            task.artifact_bytes = encoded.size_bytes
+            archive_tasks._finish(task, "ready", worker=True)
+        chunks = _verified_chunks(task)
+        assert len(chunks) == 41
+        assert all(0 < len(chunk) <= 1_048_576 for chunk in chunks)
+        assert sum(map(len, chunks)) == encoded.size_bytes > 40 * 1024 * 1024
+        actual = hashlib.sha256()
+        for chunk in chunks:
+            actual.update(chunk)
+        assert actual.hexdigest() == encoded.sha256
+        _current, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    record_testsuite_property("archive_synthetic_custody_bytes", encoded.size_bytes)
+    record_testsuite_property("archive_python_peak_bytes", peak)
+    record_testsuite_property("archive_custody_seconds", time.monotonic() - started)
+    assert peak < 160 * 1024 * 1024
+    with transaction.atomic(), programme_writer():
+        archive_tasks._finish(task, "cancelled", worker=True)
+    assert not ProgrammeArchiveChunk.objects.filter(task=task).exists()
+    assert ProgrammeArchiveTaskEvent.objects.filter(task=task).count() == 4

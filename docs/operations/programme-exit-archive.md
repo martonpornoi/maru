@@ -75,6 +75,12 @@ permitted combination finishes within the worker deadline. Reserve an initial
 measure the intended synthetic workload before deployment. Do not increase
 parallelism or size ceilings to hide an unmeasured resource problem.
 
+The native codec/custody regression on 2026-09-20 round-tripped a 40 MiB synthetic
+payload ZIP in 41 bounded chunks, verified every byte and disposed derived rows.
+The measured operation took 2.203s with 52,543,932 bytes of tracked Python peak
+memory. This measures neither complete owner collection nor process RSS and is
+not a maximum-envelope guarantee. Retain the deployment workload measurement.
+
 The deterministic stored ZIP is written into private Programme-owned chunks of
 at most 1 MiB. Completion atomically binds count, total bytes, ordered chunk root,
 source digest and whole-ZIP digest. Retrieval checks every chunk and whole identity

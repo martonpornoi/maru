@@ -345,32 +345,29 @@ def _compose_proposal(setup, *, run_id):
         profiled.resulting_version,
         proposal_id=proposal_id,
     )
-    version = sealed.resulting_version
-    for person in (lead, collaborator):
-        frozen = get_self_programme_frozen_revision(
-            **_query_scope(setup, person),
-            proposal_id=proposal_id,
+    frozen = get_self_programme_frozen_revision(
+        **_query_scope(setup, collaborator),
+        proposal_id=proposal_id,
+        revision_id=sealed.target_id,
+    )
+    responded = _command(
+        commands.respond_to_programme_proposal_revision,
+        setup,
+        collaborator,
+        sealed.resulting_version,
+        proposal_id=proposal_id,
+        response=inputs.ProgrammeProposalRevisionResponseInput(
             revision_id=sealed.target_id,
-        )
-        responded = _command(
-            commands.respond_to_programme_proposal_revision,
-            setup,
-            person,
-            version,
-            proposal_id=proposal_id,
-            response=inputs.ProgrammeProposalRevisionResponseInput(
-                revision_id=sealed.target_id,
-                contributor_id=frozen.own_contributor_id,
-                profile_revision_id=frozen.own_profile.profile_revision_id,
-                decision=inputs.ProgrammeProposalRevisionResponseDecision.ACKNOWLEDGED,
-            ),
-        )
-        version = responded.resulting_version
+            contributor_id=frozen.own_contributor_id,
+            profile_revision_id=frozen.own_profile.profile_revision_id,
+            decision=inputs.ProgrammeProposalRevisionResponseDecision.ACKNOWLEDGED,
+        ),
+    )
     submitted = _command(
         commands.submit_programme_proposal,
         setup,
         lead,
-        version,
+        responded.resulting_version,
         proposal_id=proposal_id,
         revision_id=sealed.target_id,
     )

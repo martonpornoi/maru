@@ -150,6 +150,10 @@ def _mock_composition(monkeypatch, *, submitted=True):
     events = []
 
     def result(name, **kwargs):
+        if name == "respond_to_programme_proposal_revision":
+            assert kwargs["actor_id"] == collaborator.account_id
+        if name in {"seal_programme_proposal", "submit_programme_proposal"}:
+            assert kwargs["actor_id"] == lead.account_id
         events.append((name, kwargs))
         return commands.ProgrammeCommandResult(
             uuid4(),
@@ -243,7 +247,7 @@ def _mock_composition(monkeypatch, *, submitted=True):
             own_contributor_id=value[0],
             own_profile=SimpleNamespace(profile_revision_id=value[1]),
             revision=SimpleNamespace(submitted=submitted),
-            summary=SimpleNamespace(aggregate_version=10),
+            summary=SimpleNamespace(aggregate_version=9),
         )
 
     monkeypatch.setattr(
@@ -263,7 +267,7 @@ def test_composition_preserves_real_signatures_exact_seal_own_consent_and_upload
         monkeypatch
     )
     result = scenario._compose_proposal(setup, run_id=RUN)
-    assert result.version == 10
+    assert result.version == 9
     assert result.lead == lead
     assert result.collaborator == collaborator
     for name, kwargs in events:
@@ -280,9 +284,12 @@ def test_composition_preserves_real_signatures_exact_seal_own_consent_and_upload
         kw for name, kw in events if name == "respond_to_programme_proposal_revision"
     ]
     assert [kw["actor_id"] for kw in responses] == [
-        lead.account_id,
         collaborator.account_id,
     ]
+    seal = next(kw for name, kw in events if name == "seal_programme_proposal")
+    submit = next(kw for name, kw in events if name == "submit_programme_proposal")
+    assert responses[0]["expected_version"] == seal["expected_version"] + 1
+    assert submit["expected_version"] == responses[0]["expected_version"] + 1
     for kw in responses:
         response = kw["response"]
         assert response.revision_id == result.revision_id

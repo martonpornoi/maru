@@ -85,9 +85,14 @@ refresh now pass the actual ClamAV/public-preparer check in 15.81s. The updater
 finishes before scanning and the offline daemon sees signatures read-only; owned
 resources are disposed. Sixty-one focused transport/lifecycle/refresh units passed
 in 0.88s; the full fast suite passed 12,646 in 72.77s. Freshness and real-scanning
-requirements are not waived. The populated
-journey now reaches its P02 proposal child but fails there; content-free diagnostics
-are running before any further source change or integrated acceptance claim.
+requirements are not waived. The populated journey exposed a rehearsal-only
+mistake: the lead was asked to use the collaborator-only acknowledgement command.
+The corrected sequence preserves the product boundary and now passes actual
+proposal, review, conversion and item preparation, stopping in planning after
+332.43s. Content-free diagnostics (343.60s) identified missing required Venue
+location/address/country inputs. These now use explicit fictional values and
+the real owner normalizer in unit coverage; the native continuation is running.
+The adjacent 53 fixture units passed in 0.98s. No complete journey is claimed.
 See the [writer/setup checkpoint](../checkpoints/2026-09-20-programme-native-writer-and-setup.md).
 See the [native root/archive result](../checkpoints/2026-09-20-programme-native-root-and-archive.md).
 See the [actual scanner checkpoint](../checkpoints/2026-09-20-programme-offline-scanner-runtime.md).
@@ -105,8 +110,20 @@ were recalculated, not guessed or used to bypass native readiness. The affected
 validation passed 652 Markdown files, four skills and 215 requirement IDs.
 See the [custody checkpoint](../checkpoints/2026-09-20-programme-exit-custody-workflow.md).
 
+Additional actual PostgreSQL races prove cancellation before generation cannot
+publish, cancellation during generation serializes and needs a fresh version,
+and source withdrawal waits for generation then invalidates retrieval. A 40 MiB
+synthetic codec/custody load round-trip used 41 bounded chunks and about 50.1 MiB
+tracked Python memory in 2.20s; disposal retained lifecycle evidence. This is not
+maximum-capacity, complete-owner resource or RSS evidence. Four combined race/load
+checks passed in 14.28s, and two final-authority/deadline rollback cases in 5.35s.
+The preceding expanded archive batch passed 53 tests in 92.56s; the final 57-case
+batch passed in 103.06s. The complete fast suite passed 12,646 tests in 71.54s
+(three existing URL-field transition warnings); documentation validation passed
+660 files, four skills and 215 requirements. See the [rehearsal/race checkpoint](../checkpoints/2026-09-20-programme-native-rehearsal-and-archive-races.md).
+
 Remaining before the archive/P11 bundle is complete: broader regression/coverage,
-request/cancel/expiry races and native runtime/resource/recovery acceptance,
+remaining expiry and native complete-owner resource/recovery acceptance,
 synthetic integrated P11 wiring, genuine browser acceptance, exact-head local
 certification and protected hosted delivery. The archive screen does not itself
 complete #189, #108 or #48. Then prioritize #190 stop-use, remaining #175 acceptance,

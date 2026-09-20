@@ -19,7 +19,7 @@ rehearsal or a production activation claim.
 
 **Audience:** Maintainers preparing #108, independent Programme evaluators and recovery operators\
 **Outcome:** Prepare one reproducible journey and collect evidence for #109/#92 without confusing component delivery with acceptance\
-**Status:** Preparation protocol; the complete fixture and setup are not yet implemented or accepted
+**Status:** Maintained partial native rehearsal; complete integrated acceptance remains open
 
 ## Entry conditions and authority
 
@@ -29,9 +29,9 @@ ADR 0081, NFR-013, IDN-011/012, PRG-001 through PRG-011, SCH-001 through SCH-012
 OPS-009, INT-007 and UX-029 as the owning boundaries. Current status belongs in
 [CURRENT](../project/CURRENT.md), not in a copied readiness percentage.
 
-While ADR 0100 defers PostgreSQL, prepare fixture code, role scripts, assertions
-and documentation, but do not collect or execute database tests. Mocked browser
-observations remain component evidence. A fixture lease ending successfully is
+PostgreSQL acceptance is required again through #102 / PR #195. Historical
+deferral-era preparation notes below are not a current instruction to skip native
+checks. Mocked browser observations remain component evidence. A fixture lease ending successfully is
 cleanup evidence, not a successful journey. Do not enable the production profile,
 add runtime grants, provision production keys or use personal data to make a demo.
 
@@ -39,11 +39,11 @@ Before executing final acceptance:
 
 - pin the candidate commit, dependency locks, supported PostgreSQL image and
   exact isolated candidate profile/role definitions;
-- restore required PostgreSQL verification under #102 and establish #97's
-  supported logical-recovery procedure;
-- provide an explicit opt-in launcher with a dedicated database, loopback URL,
-  bounded lease and verified task-owned cleanup; **no complete integrated launcher
-  exists yet**, so there is no launch command in this protocol;
+- retain required PostgreSQL verification restored under #102 and establish
+  #97's supported logical-recovery procedure;
+- use the maintained explicit opt-in host-only entrypoints with a dedicated
+  database, loopback URL, bounded lease and verified task-owned cleanup; these
+  do not yet complete P11 stop-use/recovery or P12;
 - use real owning commands and permissions for acceptance, not an always-allow
   authorizer, direct status edits, disabled guards or fabricated approval;
 - record synthetic scanner/signing/delivery adapters and their limits separately
@@ -51,8 +51,8 @@ Before executing final acceptance:
 - preserve existing profiles and the unadopted product boundaries throughout.
 
 Existing `tests/rehearsals/programme_*.py` files exercise individual components.
-Some require PostgreSQL and synthetic authority substitutions. They must not be
-launched during deferral or relabelled as the complete fixture.
+Some require PostgreSQL and synthetic authority substitutions. Do not relabel
+those component checks as the genuine restricted-runtime integrated fixture.
 
 ## Prepare the fixture and distinct sessions
 
@@ -496,16 +496,19 @@ same original fixture deadline. They require the exact owned setup; proposal
 preparation additionally requires the owned real scanner. Private account material
 uses bounded fixed stdin/stdout protocols, not command arguments, logs, files,
 worker signing keys or public health. Each attributed action authenticates its
-own synthetic person through the actual backend. These paths are prepared, not
-native-executed, and do not replace real HTTPS form/browser acceptance.
+own synthetic person through the actual backend. The populated native run on
+2026-09-20 now passes proposal, review, conversion and item preparation before
+failing in planning. This partial result does not replace complete integrated
+acceptance or real browser observations.
 
 The proposal scenario creates one complete call through the intake persona,
 discovers it through the lead's actual public query, creates typed private answers
 and scans a small valid synthetic PDF through the unchanged Applications upload
 command. It checks original body-free upload receipt replay without rescanning,
 then independently accepts the collaborator invitation, supplies that person's
-profile/consent, seals, reads each person's own frozen profile, acknowledges the
-same exact revision and submits it. Neither contributor becomes an attendee or
+profile/consent, has the lead seal, and reads the collaborator's own frozen
+profile. Only that collaborator acknowledges the exact seal; the lead then
+submits it and inspects the frozen result. Neither contributor becomes an attendee or
 Programme host through this composition.
 
 Review creates six separately authenticated ordinary staff people. Existing
@@ -824,7 +827,7 @@ rewriting immutable history to reuse one world.
 | Platform administrator | Provision foundations; never become a controller, member, host or volunteer. |
 | Two accountable people | Accept their own invitations in separate sessions; reuse truthful existing representation where present. |
 | Programme organizer | Configure a call or core item, readiness and deliberate host invitations. |
-| Proposal lead and collaborator | Independently own profiles/consent and acknowledge the exact sealed proposal. Neither is automatically a host. |
+| Proposal lead and collaborator | Independently own profiles/consent. The lead seals/submits; the collaborator acknowledges the exact seal. Neither is automatically a host. |
 | Reviewer, moderator and decision maker | Exercise exact assignments, field ceilings, recusal and independent decisions. |
 | Planner, Venue owner and release approver/publisher | Use separately admitted owner tasks; preserve every required independent approval. |
 | Volunteer and Workforce organizer | Own claim versus independent confirmation; neither becomes an attendee. |

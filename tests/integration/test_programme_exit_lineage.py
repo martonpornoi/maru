@@ -3,10 +3,15 @@
 import io
 import json
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from queue import Queue
+from threading import Event
+from time import monotonic
 from uuid import UUID, uuid4
 
 import pytest
+from django.db import close_old_connections, connection, connections
 
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
@@ -16,6 +21,7 @@ from maru.programme import (
     archive_authorization,
     archive_generation,
     archive_queries,
+    archive_tasks,
     archive_worker,
     exit_lineage_queries,
     exit_owner_queries,
@@ -23,6 +29,7 @@ from maru.programme import (
 )
 from maru.programme import queries as programme_queries
 from maru.programme.archive_tasks import (
+    ProgrammeArchiveConflictError,
     ProgrammeArchiveScope,
     ProgrammeArchiveUnavailableError,
     cancel_programme_archive,
@@ -178,6 +185,189 @@ def test_cancelled_claim_cannot_publish_bytes_when_generation_resumes(archive_wo
     assert ProgrammeItem.objects.filter(id=item.id).exists()
 
 
+def _separate_connection(action):
+    close_old_connections()
+    try:
+        return action()
+    finally:
+        connections.close_all()
+
+
+def _wait_native_blocked(pid, future):
+    deadline = monotonic() + 4
+    while True:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT cardinality(pg_blocking_pids(%s))", [pid])
+            if cursor.fetchone()[0] > 0:
+                return
+        assert monotonic() < deadline, "Competing command never reached native lock"
+        assert not future.done()
+        Event().wait(0.02)
+
+
+def test_native_cancellation_wins_between_claim_and_generation(
+    archive_workflow, monkeypatch
+):
+    scope, task_id, request, item = archive_workflow
+    claimed, resume = Event(), Event()
+    original = archive_generation._claim
+
+    def pause_after_claim(*args):
+        result = original(*args)
+        claimed.set()
+        assert resume.wait(10)
+        return result
+
+    monkeypatch.setattr(archive_generation, "_claim", pause_after_claim)
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        worker = executor.submit(
+            _separate_connection,
+            lambda: archive_generation.generate_programme_archive(task_id=task_id),
+        )
+        try:
+            assert claimed.wait(10)
+            cancel_programme_archive(
+                scope=scope,
+                task_id=task_id,
+                expected_version=2,
+                authorizer=request["authorizer"],
+            )
+        finally:
+            resume.set()
+        assert worker.result(timeout=15) == "cancelled"
+    assert ProgrammeArchiveTask.objects.get(id=task_id).state == "cancelled"
+    assert not ProgrammeArchiveChunk.objects.filter(task_id=task_id).exists()
+    assert ProgrammeItem.objects.filter(id=item.id).exists()
+    with pytest.raises(ProgrammeArchiveUnavailableError):
+        archive_queries.inspect_programme_archive(
+            scope=scope, task_id=task_id, download=True
+        )
+
+
+def test_native_generation_serializes_cancel_and_requires_its_fresh_version(
+    archive_workflow, monkeypatch
+):
+    scope, task_id, request, item = archive_workflow
+    encoding, resume = Event(), Event()
+    cancel_pid = Queue()
+    original_write = archive_generation.write_programme_exit_archive
+    original_authorize = archive_tasks._authorize
+
+    def pause_encoding(**args):
+        encoding.set()
+        assert resume.wait(10)
+        return original_write(**args)
+
+    def announce_cancel(*args, **kwargs):
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT pg_backend_pid()")
+            cancel_pid.put(cursor.fetchone()[0])
+        return original_authorize(*args, **kwargs)
+
+    monkeypatch.setattr(
+        archive_generation, "write_programme_exit_archive", pause_encoding
+    )
+    monkeypatch.setattr(archive_tasks, "_authorize", announce_cancel)
+
+    def cancel():
+        return cancel_programme_archive(
+            scope=scope,
+            task_id=task_id,
+            expected_version=2,
+            authorizer=request["authorizer"],
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        worker = executor.submit(
+            _separate_connection,
+            lambda: archive_generation.generate_programme_archive(task_id=task_id),
+        )
+        try:
+            assert encoding.wait(10)
+            cancellation = executor.submit(_separate_connection, cancel)
+            pid = cancel_pid.get(timeout=5)
+            _wait_native_blocked(pid, cancellation)
+        finally:
+            resume.set()
+        assert worker.result(timeout=15) == "ready"
+        with pytest.raises(ProgrammeArchiveConflictError):
+            cancellation.result(timeout=15)
+    assert ProgrammeArchiveTask.objects.get(id=task_id).version == 3
+    assert ProgrammeArchiveChunk.objects.filter(task_id=task_id).exists()
+    cancel_programme_archive(
+        scope=scope,
+        task_id=task_id,
+        expected_version=3,
+        authorizer=request["authorizer"],
+    )
+    assert ProgrammeArchiveTask.objects.get(id=task_id).state == "cancelled"
+    assert not ProgrammeArchiveChunk.objects.filter(task_id=task_id).exists()
+    assert ProgrammeItem.objects.filter(id=item.id).exists()
+
+
+def test_native_source_change_waits_for_generation_then_invalidates_retrieval(
+    archive_workflow, monkeypatch
+):
+    scope, task_id, request, item = archive_workflow
+    rendition_id = item.public_renditions.get().id
+    encoding, resume = Event(), Event()
+    writer_pid = Queue()
+    original_write = archive_generation.write_programme_exit_archive
+
+    def pause_encoding(**args):
+        encoding.set()
+        assert resume.wait(10)
+        return original_write(**args)
+
+    monkeypatch.setattr(
+        archive_generation, "write_programme_exit_archive", pause_encoding
+    )
+
+    def withdraw():
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT pg_backend_pid()")
+            writer_pid.put(cursor.fetchone()[0])
+        return withdraw_programme_public_rendition(
+            **{
+                key: value
+                for key, value in request.items()
+                if key not in {"reason", "item_id"}
+            },
+            item_id=item.id,
+            rendition_id=rendition_id,
+            idempotency_key=uuid4(),
+            expected_version=item.aggregate_version,
+            source_channel="programme-exit",
+            reason="Synthetic withdrawal concurrent with archive generation",
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        worker = executor.submit(
+            _separate_connection,
+            lambda: archive_generation.generate_programme_archive(task_id=task_id),
+        )
+        try:
+            assert encoding.wait(10)
+            withdrawal = executor.submit(_separate_connection, withdraw)
+            _wait_native_blocked(writer_pid.get(timeout=5), withdrawal)
+        finally:
+            resume.set()
+        assert worker.result(timeout=15) == "ready"
+        withdrawal.result(timeout=15)
+    assert ProgrammeArchiveTask.objects.get(id=task_id).state == "ready"
+    with pytest.raises(ProgrammeArchiveUnavailableError):
+        archive_queries.inspect_programme_archive(
+            scope=scope, task_id=task_id, download=True
+        )
+    assert not AuditEvent.objects.filter(
+        operation="programme.exit.task.download"
+    ).exists()
+    current = archive_queries.inspect_programme_archive(scope=scope, task_id=task_id)
+    assert current.source_changed
+    assert current.size_bytes == 0
+    assert current.chunks == ()
+
+
 def test_retrieval_rechecks_an_independent_owner_after_success(
     archive_workflow, monkeypatch
 ):
@@ -265,6 +455,40 @@ def test_background_claim_denial_fails_closed_without_reading_sources(
     assert not AuditEvent.objects.filter(
         operation="programme.query.exit_owner"
     ).exists()
+
+
+@pytest.mark.parametrize("failure", ["deadline", "final_authority"])
+def test_completed_encoding_is_rolled_back_if_final_disclosure_checks_fail(
+    archive_workflow, monkeypatch, failure
+):
+    _, task_id, _, _ = archive_workflow
+    original = archive_generation.write_programme_exit_archive
+
+    def encode_then_change(**args):
+        result = original(**args)
+        if failure == "deadline":
+            # Application deadline seam only; native clocks/guards remain real.
+            started = ProgrammeArchiveTask.objects.get(id=task_id).started_at
+            monkeypatch.setattr(
+                archive_generation, "_now", lambda: started + timedelta(minutes=21)
+            )
+        else:
+
+            def deny(*_, **__):
+                raise ProgrammeAuthorizationDeniedError
+
+            monkeypatch.setattr(archive_generation, "_authorize", deny)
+        return result
+
+    monkeypatch.setattr(
+        archive_generation, "write_programme_exit_archive", encode_then_change
+    )
+    assert archive_generation.generate_programme_archive(task_id=task_id) == "failed"
+    task = ProgrammeArchiveTask.objects.get(id=task_id)
+    assert task.version == 3
+    assert task.failure_code == "source_unavailable"
+    assert not ProgrammeArchiveChunk.objects.filter(task_id=task_id).exists()
+    assert not AuditEvent.objects.filter(operation="programme.exit.task.ready").exists()
 
 
 def test_retrieval_rejects_source_drift_independent_of_original_success(
