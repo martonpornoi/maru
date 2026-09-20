@@ -58,6 +58,10 @@ from maru.organizations.models import (
     OrganizationRepresentation,
     RepresentationAppointment,
 )
+from maru.organizations.representation_catalog import (
+    REPRESENTATION_ROLE_CODES,
+    representation_definition_for_role,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -101,7 +105,6 @@ _APPROVER = AuthorityControl.Role.APPROVER
 _PERSISTENT = AuthorityControl.Basis.PERSISTENT_AUTHORITY
 _PLATFORM_BOOTSTRAP = AuthorityControl.Basis.PLATFORM_REPRESENTATION_BOOTSTRAP
 _REPRESENTATION_ACCEPTANCE = AuthorityControl.Basis.REPRESENTATION_ACCEPTANCE
-_BOARD_CODE = "executive-board"
 _GRANT_CONTROL_CAPABILITY = "authorization.grant_direct"
 _ROLE_CONTROL_CAPABILITY = "authorization.manage_roles"
 _ACTIVATION_MIGRATIONS = (
@@ -128,6 +131,7 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0030_programme_operator_capabilities"),
     ("authorization", "0031_programme_change_communication_capabilities"),
     ("authorization", "0037_programme_archive_capability"),
+    ("authorization", "0039_accountable_representation_lineage"),
     ("events", "0010_workforce_adoption_profile"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("organizations", "0014_purpose_bounded_representation"),
@@ -1360,7 +1364,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "17766670063a235c5c45dffd4bbf8c1339e434dd5056bc2ae0628825c07f3375"
     ),
     "maru_assert_authority_issuance_complete_internal(bigint,bigint[],integer)": (
-        "e094e76364a1a24f204f858f8b7e50f5112b3010a6681070edbe20f0b96c7963"
+        "a9e175180cfee167d71f804585063617f674596e588a757e1307e202dd2d89ef"
     ),
     "maru_assert_authority_provenance_activation()": (
         "1677e1c5de59ca5e884ffbc0bba0036e656900962caaad0375d1569cda6bf779"
@@ -1372,13 +1376,13 @@ _FUNCTION_DEFINITION_SHA256 = {
         "798326146c48661860bff7c4d7441ac5f03b624557d4f23d003b36cd9d2310b3"
     ),
     "maru_authority_bundle_historical_v1(uuid,timestamptz,uuid,bigint[],integer)": (
-        "99c48835597a25b37560a94104921008380a2ea9dc9543a8cf50ede6ee871e2c"
+        "9c0df10b42c815684d16a5b0083e8a2fbeef0a4a4cb95e080713ac941200341d"
     ),
     (
         "maru_authority_issuance_valid_v1(bigint,uuid,character varying,uuid,uuid,"
         "uuid,uuid,timestamptz,timestamptz,timestamptz,boolean,boolean,bigint[],"
         "integer)"
-    ): "b9e6aed373ea09fa3c2095c9711b5c1443d65e022aa3b68d2ec06b41e449f666",
+    ): "08e8fd5409b837c5afe6c62d26950670a6ee3097179f2dfcacb2dfd8deb734e0",
     "maru_authority_provenance_is_active()": (
         "9af8bca6b827ec9e97f8046d0089d6885cc6655aac333570e5246f1516113da4"
     ),
@@ -2317,6 +2321,7 @@ class _AuthorityGraph:
                 "id",
                 "organization_id",
                 "code",
+                "name",
                 "version",
                 "capability_codes",
                 "created_by_id",
@@ -2384,6 +2389,8 @@ class _AuthorityGraph:
             OrganizationRepresentation.objects.values(
                 "id",
                 "organization_id",
+                "code",
+                "name",
                 "state",
                 "activated_by_id",
                 "activated_at",
@@ -2629,11 +2636,11 @@ class _AuthorityGraph:
 
     def _board_target(self, kind: str, target: Mapping[str, Any]) -> bool:
         if kind == "bundle":
-            return bool(target["code"] == _BOARD_CODE)
+            return target["code"] in REPRESENTATION_ROLE_CODES
         if kind != "assignment":
             return False
         bundle = self.bundles.get(target["role_bundle_id"])
-        return bundle is not None and bundle["code"] == _BOARD_CODE
+        return bundle is not None and bundle["code"] in REPRESENTATION_ROLE_CODES
 
     def _board_basis_valid(
         self,
@@ -2665,6 +2672,23 @@ class _AuthorityGraph:
         appointment = self.appointments.get(approver["appointment_id"])
         platform_actor = self.accounts.get(actor["principal_id"])
         if representation is None or appointment is None or platform_actor is None:
+            return False
+        bundle = (
+            target if kind == "bundle" else self.bundles.get(target["role_bundle_id"])
+        )
+        definition = (
+            representation_definition_for_role(str(bundle["code"])) if bundle else None
+        )
+        if (
+            definition is None
+            or bundle is None
+            or bundle["name"] != definition.role_name
+            or bundle["version"] != definition.role_version
+            or len(bundle["capability_codes"]) != len(definition.capability_codes)
+            or set(bundle["capability_codes"]) != set(definition.capability_codes)
+            or representation["code"] != definition.code
+            or representation["name"] != definition.name
+        ):
             return False
         actor_id, approver_id, recipient_id, _required = self._ordinary_attribution(
             kind, target

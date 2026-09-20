@@ -68,13 +68,26 @@ fresh/populated writer migration tests 17 in 4.00s. The expanded fail-closed uni
 batch passed 46 in 0.29s; the preceding full fast suite passed 12,575 in 71.88s.
 
 Real setup then exposed [#197](https://github.com/martonpornoi/maru/issues/197):
-active native provenance still recognizes only Executive Board ceremony evidence
+active native provenance recognized only Executive Board ceremony evidence
 in its completeness/historical functions, refusing supported Maru-operator
-activation. This required correction is explicitly under #48/#109. Preserve the
-actual active provenance gate and correct all affected native validators; do not
-substitute a Board identity, mock authority or claim integrated P11 acceptance.
-The diagnostic attempt failed in 190.32s at activation commit; no archive ran.
+activation. Authorization 0039 now corrects all three native validators locally,
+preserving original Board branches and exact function identity/privileges. Native
+readiness pins observed metadata and recognizes both exact definitions. Thirteen
+focused activation/differential/delegation/containment/history/migration cases
+passed in 25.45s, and the broader neighboring batch passed 105 in 132.05s.
+
+The unmodified real restricted-runtime archive component now passes in 270.15s:
+fresh setup, independently approved source/export rights, complete empty-owner
+archive, requester-only HTTPS retrieval and cancellation. The full fast suite
+passed 12,609 in 70.49s. This does not claim the populated P01–P12 journey.
+That journey exposed scanner fixture dependencies: the immutable image was absent
+(now explicitly cached), internal-only Docker networking does not publish a port,
+and real 1.5.4 signatures dated September 13 exceed the seven-day freshness limit.
+A closed loopback exec transport is being tested without giving the scanner
+external networking; a separate explicit disposable public-signature refresh
+is next. Freshness and real-scanning requirements are not waived.
 See the [writer/setup checkpoint](../checkpoints/2026-09-20-programme-native-writer-and-setup.md).
+See the [native root/archive result](../checkpoints/2026-09-20-programme-native-root-and-archive.md).
 
 Focused evidence: 51 native custody/whole-owner workflow tests passed in 89.64s,
 including complete ZIP retrieval, source drift, audit rollback, partial-custody

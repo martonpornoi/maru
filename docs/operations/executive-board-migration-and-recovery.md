@@ -13,6 +13,27 @@ governance approvals in the deployment runbook.
 
 ## Safety boundary
 
+### Accepted Maru-operator native lineage successor
+
+ADR 0080 also permits the exact `maru_operators` accountable root; it never
+relabels an Executive Board. Authorization `0039_accountable_representation_lineage`
+corrects three native completeness/historical functions that previously retained
+Board-only recognition. Apply it with writers stopped under the migration owner.
+It locks bundle, assignment, issuance and control relations, verifies the frozen
+predecessor source/metadata, and preserves function OIDs, owners, ACLs and pinned
+search paths. Existing Board evidence and every retained business row are unchanged.
+
+Require exact native readiness after installation. Both roots retain two-person
+ceremony, exact capabilities, organization scope and active/historical containment
+checks. A Maru-operator name alone is never authority. Neither this correction nor
+its tests activate a Programme production profile.
+
+Unused reversal is supported. Any retained `maru-operators` bundle blocks reversal
+before native enforcement is changed; after use, retain compatible code and fix
+forward or perform a verified whole-system restore. Existing Board-only evidence
+does not itself prevent reversing this successor. Do not remove provenance records
+or disable the activation latch to force downgrade or setup through.
+
 These migrations do not infer an Executive Board from Django staff flags,
 Groups, account age, email addresses, old role names, or a public roster.
 Existing Draft organizations remain Draft. A non-Draft organization without a

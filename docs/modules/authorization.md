@@ -6,7 +6,7 @@ Maru-operator roots, provenance writing, profile-compatible access management,
 and guarded exact-lineage policy/runtime activation; dormant Applications
 Programme capabilities remain unadopted and production legacy reconciliation
 and cutover remain gates
-Last updated: 2026-09-18
+Last updated: 2026-09-20
 
 ## Purpose and requirements
 
@@ -16,6 +16,24 @@ UX-020, UX-024, UX-028, UX-030, NFR-013, ADR 0003, ADR 0023, ADR 0040,
 ADR 0041, ADR 0044, ADR 0080, ADR 0081, ADR 0082, ADR 0083, and ADR 0084. A membership,
 account, familiar role name, or visible destination never grants broad access
 by itself.
+
+## Native accountable-root lineage correction
+
+Authorization migration `0039_accountable_representation_lineage` corrects #197:
+the older completeness and historical assignment/bundle validators recognized
+only Executive Board ceremony evidence even though ADR 0080 already admitted
+Maru operators. The correction preserves each original Board branch and adds
+the exact existing Maru-operator name, version, 22-capability set, matching
+representation and membership label. Independent controls, current containment,
+historical evidence, recursion limits and ordinary persistent-authority checks
+remain unchanged. No capability or profile is added.
+
+The migration verifies frozen predecessor function source/metadata, preserves
+function identity/owner/ACL/search path, and changes no retained business rows.
+Readiness requires its migration and the three actually observed fingerprints;
+count-only graph inspection recognizes both exact code-owned definitions.
+Reversal locks the authority records and refuses if a Maru-operator bundle has
+been used. See [representation recovery](../operations/executive-board-migration-and-recovery.md).
 
 ## Dormant Programme operational-role contracts
 

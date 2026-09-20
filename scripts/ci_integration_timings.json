@@ -3,6 +3,7 @@
   "tests/integration/test_access_preview_api.py": 13.761,
   "tests/integration/test_account.py": 349.502,
   "tests/integration/test_account_step_up_html.py": 264.396,
+  "tests/integration/test_accountable_representation_native_lineage.py": 300.0,
   "tests/integration/test_accreditation_privacy_closure.py": 19.977,
   "tests/integration/test_activity_queries.py": 246.046,
   "tests/integration/test_admin_edition_context.py": 364.139,
