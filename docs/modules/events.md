@@ -379,6 +379,15 @@ adoption: version 1 must pin its continuity artifacts, regeneration, restore,
 stop-use, and expansion behavior before activation. It does not gain every
 present or future `exports` capability merely because continuity is required.
 
+Stop confirmation has a dormant database-free input boundary in
+`programme_stop_inputs`: exact original actor/organization/edition/retry UUIDs,
+aggregate and lifecycle versions, complete preview fingerprint and a required
+240-character accountable reason form one purpose-separated request digest.
+It performs no discovery, authorization, profile registration or transition.
+The owner/native stop command and complete preview remain pending under
+[proposed ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md);
+input validation alone must never be exposed as a working Stop Programme action.
+
 The accepted future setup location is
 `/admin/platform/setup/programme-operations/`, but that route is deliberately
 inactive in this contract-only change. It must provision an independently

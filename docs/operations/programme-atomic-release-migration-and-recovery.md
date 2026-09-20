@@ -139,8 +139,10 @@ receipt triggers use the same exact enum rule. [ADR 0114](../architecture/decisi
 separately pins the two Identity conditional triggers' complete reviewed deparsed
 definitions instead of internal cast-format metadata; the trigger predicates and
 independent attachment checks remain exact. The focused
-schema, populated component and genuine restored-runtime development checks pass.
-Partial-backup rejection and exact-head protected acceptance remain tracked in
+schema, populated component and genuine restored-runtime checks pass. The
+[pinned populated run](../checkpoints/2026-09-20-programme-pinned-logical-recovery.md)
+also rejects an actual backup missing nonempty release-journal data before
+restored worker admission. Exact-head protected acceptance remains tracked in
 [#97](https://github.com/martonpornoi/maru/issues/97). Do not
 waive readiness or accept arbitrary restored hashes.
 

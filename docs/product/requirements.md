@@ -216,6 +216,12 @@ architecture documents, implementation issues, tests, and release notes.
   change the original terms. Stop-use accounts for the exact resulting assignments,
   including any explicitly broader shared Venue authority. Existing root roles
   remain unchanged (ADR 0106).
+  Stop confirmation must bind the original actor, exact tenant/edition, retry
+  identity, displayed source versions and complete current impact preview to a
+  bounded accountable reason. Changed intent or changed impact requires deliberate
+  renewed confirmation; a retry must neither replay owner mutations nor restore
+  operational access. Historical read authority is not automatically revoked or
+  extended by stopping, and retained shared authority must remain explicit.
   The Programme exit archive must retain each owner's authorized field and
   retention ceiling, stable identifiers, portable schemas, source versions and
   audit references. Missing owners, unavailable sources and truncated histories

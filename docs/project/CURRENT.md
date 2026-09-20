@@ -100,7 +100,20 @@ trigger correction passes 12,749 cases in 84.67s. Maintained run17 passes in
 ACL/function refusal and actual post-restore authority revocation. The restore
 phase took 38.437s; the original remained unchanged and cleanup completed.
 The subsequently staged missing-journal partial-backup phase was not part of
-that run and still needs execution before final acceptance.
+run17. Pinned run19 now passes the complete maintained journey in 939.44s
+(15m39s), including 38.172s genuine restoration and 5.484s partial-backup refusal
+before worker admission. The exact ownership-label container inventory is empty
+after disposal. See the [pinned recovery result](../checkpoints/2026-09-20-programme-pinned-logical-recovery.md).
+Recovery commit `dea7674068d6322bfae74b6f4e45b6e56d695c37` is pinned in a separate
+managed worktree for that populated run; primary-worktree changes did not
+alter its source. #190 now has a database-free original stop-intent contract;
+70 focused cases pass in 0.31s. ADR 0111 records the selected explicit retained
+historical/shared/inactive/separately-revoked grant dispositions and the concrete
+adopted command inventory. It remains proposed: complete native owner guards,
+preview, command, UI and end-to-end acceptance are not implemented by these inputs.
+The complete fast suite including the partial-backup and stop-input additions
+passes 12,823 cases in 68.67s, with the three existing URL-field warnings
+(`.tools/programme-exit-bundle-units-21.xml`).
 See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and
@@ -116,8 +129,8 @@ Recent focused evidence:
   enum-cast reparse; 36 units and 11 native cases pass in 11.53s. A populated
   logical-restore component passes in 13.86s with actual withdrawal/retry/native
   invalidation and original artifact bytes. The later 194-case native catalog
-  suite and genuine restored-runtime run17 pass as detailed above; partial-backup
-  rejection and exact-head delivery remain pending. See the
+  suite and genuine restored-runtime runs17/19 pass as detailed above; run19 also
+  proves partial-backup refusal. Exact-head delivery remains pending. See the
   [schema recovery checkpoint](../checkpoints/2026-09-20-programme-logical-schema-recovery.md).
 - 57 native archive custody/composition/race/resource cases: 103.06s.
 - Seven native assignment/recovery cases: 14.08s; 55 adjacent cases: 145.70s.
