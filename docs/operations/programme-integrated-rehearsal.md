@@ -446,13 +446,35 @@ logical recovery #97, integrated #109 and representative humans #92 remain requi
 
 The optional `with_scanner=True` runner preparation supplies the real dependency
 required by P02/ADR 0104. It uses a cached immutable official ClamAV 1.5.4 image,
-an owned internal bridge, loopback publication and an independently expiring,
+an owned internal bridge, closed host-loopback relay and an independently expiring,
 non-root/read-only resource-bounded daemon. There is no test-clean implementation,
-external endpoint, persistent host data or automatic image/signature download.
+external endpoint, application-data mount or automatic image/signature download.
 Actual bounded PING/VERSION evidence requires the pinned engine and signatures no
 older than seven days; every PDF still passes through the unchanged owner scanner.
 An old pin must be deliberately refreshed and verified, not accepted through a
-stale-signature exception. Budget 4 GiB for the daemon plus the database/application.
+stale-signature exception. The image remains immutable; when its bundled signatures
+are stale, explicitly set `MARU_PROGRAMME_SCANNER_REFRESH=isolated` for an opted-in
+rehearsal. A separate non-root FreshClam updater uses only a new nonce-owned local
+volume containing public signatures from that image, no application bytes or
+credentials, and a maximum 180-second update. It alone has temporary network access
+and exits before scanning. The offline daemon mounts those definitions read-only;
+the unchanged seven-day real VERSION check still decides freshness. Cleanup removes
+the exact updater and volume after the scanner, never prunes or adopts an existing
+volume. Without that explicit flag, stale signatures still refuse startup.
+
+Docker Desktop's internal-only bridge produced no published endpoint during actual
+execution. The daemon therefore publishes no container port and retains its internal
+network. A host listener binds only `127.0.0.1` and permits at most two bounded
+PING/VERSION/INSTREAM exchanges through a fixed Docker exec to the exact owned
+container's local daemon. It limits total data to 10 MiB, wire overhead to 64 KiB,
+replies to 1,024 bytes, and each exchange to 12 seconds. Unsupported control commands
+are never forwarded, private bytes go only on stdin, and backend errors never become
+clean verdicts. The normal Applications preparer retains its own tighter deadline
+and exact response checks. The relay closes before daemon disposal. See
+[Docker network/port semantics](https://docs.docker.com/engine/network/port-publishing/).
+
+Budget 4 GiB for the daemon plus the database/application; the sequential updater
+is capped at 2 GiB and has no retained service or private-data store.
 Normal cleanup verifies exact nonce/IDs and empty network; controller-crash recovery
 may need removal of that exact labelled empty network after auto-expiry, not pruning.
 
@@ -460,8 +482,9 @@ Both fixture transports now require a recognized stable Docker engine version 28
 or newer and pin commands to the inspected local endpoint. This prevents the older
 localhost-publication exposure and a concurrent default-context switch. These
 preconditions change no Docker configuration or unrelated resources. One host-only
-`programme_scanner_native.py` actual daemon/public-preparer case is maintained but
-uncollected/unexecuted. See the
+`programme_scanner_native.py` actual daemon/public-preparer case passed with explicit
+fresh signatures in 15.81s on 2026-09-20. This proves real scanner preparation and
+owned cleanup, not the entire populated Programme journey. See the
 [scanner checkpoint](../checkpoints/2026-09-18-programme-real-scanner-preparation.md)
 for source metadata, limits and unverified native debt.
 

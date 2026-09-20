@@ -1,4 +1,4 @@
-"""Host-only call-to-private-item composition; uncollected/unexecuted while deferred."""
+"""Opt-in host-only populated Programme composition, separate from ordinary CI."""
 
 from uuid import uuid4
 

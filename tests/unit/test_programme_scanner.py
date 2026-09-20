@@ -1,6 +1,7 @@
 """Mocked real-scanner lifecycle and pure health parsing, never native scan evidence."""
 
 import json
+from contextlib import nullcontext
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -39,7 +40,7 @@ def container():
         "image": scanner.SCANNER_IMAGE,
         "labels": {scanner._LABEL: RUN, scanner._OWNER: OWNER},
         "ports": {
-            "3310/tcp": [{"HostIp": "127.0.0.1", "HostPort": "55310"}],
+            "3310/tcp": None,
             "7357/tcp": None,
         },
     }
@@ -94,24 +95,24 @@ def test_network_cleanup_requires_exact_empty_owned_internal_bridge(change):
 
 
 @pytest.mark.parametrize(
-    "change", ["wildcard", "milter", "extra", "privileged", "missing", "multiple"]
+    "change", ["wildcard", "milter", "extra", "loopback", "missing", "empty"]
 )
 def test_port_scope_rejects_extra_or_non_loopback_publication(change):
     value = container()
     if change == "wildcard":
-        value["ports"]["3310/tcp"][0]["HostIp"] = "0.0.0.0"  # noqa: S104 - refusal
+        value["ports"]["3310/tcp"] = [{"HostIp": "0.0.0.0", "HostPort": "55310"}]  # noqa: S104 - refusal
     elif change == "milter":
         value["ports"]["7357/tcp"] = [{"HostIp": "127.0.0.1", "HostPort": "55311"}]
     elif change == "extra":
         value["ports"]["9999/tcp"] = None
-    elif change == "privileged":
-        value["ports"]["3310/tcp"][0]["HostPort"] = "443"
+    elif change == "loopback":
+        value["ports"]["3310/tcp"] = [{"HostIp": "127.0.0.1", "HostPort": "55310"}]
     elif change == "missing":
         value["ports"] = {}
     else:
-        value["ports"]["3310/tcp"] *= 2
+        value["ports"] = None
     with pytest.raises(scanner.ProgrammeScannerError, match="port_scope_changed"):
-        scanner._port(value)
+        scanner._require_unpublished(value)
 
 
 def test_version_requires_exact_engine_and_recent_real_timestamp():
@@ -200,6 +201,9 @@ def docker_world(monkeypatch):
     monkeypatch.setattr(
         scanner, "_ready", Mock(return_value=("1.5.4", 28000, datetime.now(UTC)))
     )
+    monkeypatch.setattr(
+        scanner, "scanner_loopback_transport", Mock(return_value=nullcontext(55310))
+    )
     world.docker = docker
     return world
 
@@ -218,7 +222,6 @@ def test_owned_daemon_uses_pinned_image_restricted_resources_and_ordered_cleanup
         arguments, kwargs = next(call for call in world.calls if call[0][0] == "run")
         for flag, value in (
             ("--pull", "never"),
-            ("--publish", "127.0.0.1::3310"),
             ("--network", NETWORK),
             ("--user", "clamav"),
             ("--memory", "4g"),
@@ -228,6 +231,7 @@ def test_owned_daemon_uses_pinned_image_restricted_resources_and_ordered_cleanup
             assert arguments[arguments.index(flag) + 1] == value
         assert scanner.SCANNER_IMAGE in arguments
         assert "--read-only" in arguments
+        assert "--publish" not in arguments
         assert "--volume" not in arguments
         assert "--mount" not in arguments
         assert kwargs["timeout"] == 120
@@ -238,6 +242,26 @@ def test_owned_daemon_uses_pinned_image_restricted_resources_and_ordered_cleanup
     ]
     assert world.network is None
     assert world.container is None
+
+
+def test_refreshed_public_definitions_are_read_only_in_offline_daemon(
+    docker_world, monkeypatch
+):
+    monkeypatch.setattr(
+        scanner,
+        "refreshed_signatures",
+        Mock(return_value=nullcontext("owned-signatures")),
+    )
+    with scanner.isolated_programme_scanner(deadline=700.0):
+        args, _kwargs = next(call for call in docker_world.calls if call[0][0] == "run")
+        assert args[args.index("--network") + 1] == NETWORK
+        assert (
+            args[args.index("--mount") + 1]
+            == "type=volume,source=owned-signatures,"
+            "target=/var/lib/clamav,readonly,volume-nocopy"
+        )
+        assert "freshclam" not in args[-1]
+        assert "--publish" not in args
 
 
 def test_uncertain_container_start_cleans_only_nonce_verified_resources(docker_world):

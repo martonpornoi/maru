@@ -50,13 +50,10 @@ Real isolated execution now exposes a required foundation prerequisite tracked
 explicitly as [#196](https://github.com/martonpornoi/maru/issues/196) in #48's
 delivery decomposition and #109. Three fresh owned runtime attempts correctly
 refused invitation readiness before setup/archive execution (about 3m01s each).
-Observed database/provenance, Programme/Scheduling/Applications/Venues integrity,
-Logistics, setup/role/starter checks pass; Identity invitations remain unavailable.
-The real readiness contract deliberately requires an unimplemented stopped-writer
-generation (`None`), independently of the new archive. No flag, schema check or
-encryption requirement was relaxed. Preserve archive preparation and complete
-the narrow Identity-owned writer cutover before rerunning P11. This does not
-authorize unrelated Registration implementation or production activation.
+Those initial runs passed database/provenance, Programme/Scheduling/Applications/
+Venues integrity, Logistics and setup/role/starter checks but refused the missing
+invitation writer generation. The narrow correction below preserves every native
+and encryption gate; it does not adopt Registration or activate production.
 See the [native prerequisite checkpoint](../checkpoints/2026-09-20-programme-native-identity-prerequisite.md).
 ADR 0110's independent Identity cutover is now implemented locally. Identity
 0023 preserves the existing inert legacy-delivery check, rejects invitation-purpose
@@ -83,11 +80,17 @@ passed 12,609 in 70.49s. This does not claim the populated P01–P12 journey.
 That journey exposed scanner fixture dependencies: the immutable image was absent
 (now explicitly cached), internal-only Docker networking does not publish a port,
 and real 1.5.4 signatures dated September 13 exceed the seven-day freshness limit.
-A closed loopback exec transport is being tested without giving the scanner
-external networking; a separate explicit disposable public-signature refresh
-is next. Freshness and real-scanning requirements are not waived.
+The closed loopback exec transport and separate explicitly opted-in public-signature
+refresh now pass the actual ClamAV/public-preparer check in 15.81s. The updater
+finishes before scanning and the offline daemon sees signatures read-only; owned
+resources are disposed. Sixty-one focused transport/lifecycle/refresh units passed
+in 0.88s; the full fast suite passed 12,646 in 72.77s. Freshness and real-scanning
+requirements are not waived. The populated
+journey now reaches its P02 proposal child but fails there; content-free diagnostics
+are running before any further source change or integrated acceptance claim.
 See the [writer/setup checkpoint](../checkpoints/2026-09-20-programme-native-writer-and-setup.md).
 See the [native root/archive result](../checkpoints/2026-09-20-programme-native-root-and-archive.md).
+See the [actual scanner checkpoint](../checkpoints/2026-09-20-programme-offline-scanner-runtime.md).
 
 Focused evidence: 51 native custody/whole-owner workflow tests passed in 89.64s,
 including complete ZIP retrieval, source drift, audit rollback, partial-custody
