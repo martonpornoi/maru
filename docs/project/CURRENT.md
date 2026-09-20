@@ -26,7 +26,8 @@ The exact-head PR gate and all three CodeQL analyses passed. #102 is closed;
 ## Local Programme exit bundle
 
 Branch `codex/programme-exit-bundle` continues from protected PR #195. Local
-commits through `c12b674` are not pushed, fully certified or protected-delivered.
+commits through `453ce57` and the current #198 correction are not pushed, fully
+certified or protected-delivered.
 No current profile, production route or production data has been activated.
 
 The bundle implements #189's eight-owner restricted exit package, complete source
@@ -61,13 +62,35 @@ retained work and three complete notice workflows, plus every intervening
 comparison against the pre-setup baseline of 97 excluded-owner tables. P07 took
 181.906s and P08 251.406s. The run failed after 980.58s at an on-site operator
 HTTP request; the closed transport error does not establish its cause. A separate
-redacted latency diagnostic is in progress, temporarily observing HTTP responses
+redacted latency diagnostic completed, temporarily observing HTTP responses
 up to 60s within the unchanged lease. It is not unmodified acceptance; the
 maintained HTTP budget remains 15s. No CI shard/job timeout changed.
 The maintained transport now distinguishes timeout and TLS failure without raw
 exception text, credentials, automatic retries or a longer budget. Forty-three
 focused transport tests pass in 0.60s; on-site, continuity and archive phases also
 record elapsed/state properties on subsequent runs.
+
+The extended diagnostic confirms a required performance blocker: room output
+took 16.953s and Department output 35.813s with three scheduled items, versus
+roughly 0.4s public and 1s personal output. #198 is now a native child of #108 and
+explicitly listed in both #108/#48 decompositions. Its correction belongs in this
+bundle and must preserve all independent owner, field, freshness and audit checks.
+A shortened genuine-runtime profile found 15,480 room and 32,108 Department
+queries, with most elapsed time in recursive point-in-time policy observations.
+It deliberately ended without a passing acceptance receipt. ADR 0112 now routes
+only those fresh policy observations through the existing exact native validator;
+independent Python writer proofs, all owner rechecks and the HTTP budget remain.
+Fourteen focused units and 89 native differential/policy/activation/writer cases
+pass. The complete fast suite passes 12,676 cases in 77.89s with three existing
+URL-field warnings; an unmodified populated journey is running.
+See the [latency correction](../checkpoints/2026-09-20-programme-policy-latency.md).
+The extended functional diagnostic passed
+in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and
+withdrawal/republication, populated eight-owner/original-file archive, requester-only
+download and cancellation/disposal, with every excluded-owner comparison unchanged.
+Archive inspection/download took 25.360s/23.484s, also exceeding the maintained
+HTTP ceiling. This is valuable functional evidence, not unmodified performance,
+complete P11 stop/restore, P12 denial-matrix, browser/human or final acceptance.
 
 Recent focused evidence:
 
@@ -91,7 +114,8 @@ credential logging or weakened security is claimed. See the
 and [inventory](../checkpoints/2026-09-20-programme-excluded-state-inventory.md)
 checkpoints.
 
-Next: finish populated archive/P11, remaining bounded recovery/resource and browser
+Next: resolve #198's operator/archive latency and rerun unmodified populated P11,
+remaining bounded recovery/resource and browser
 acceptance, then #190 stop-use and remaining #175 acceptance. Proposed
 [ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md) examines
 a separate Events-owned Programme stop operation using the archived state; it is

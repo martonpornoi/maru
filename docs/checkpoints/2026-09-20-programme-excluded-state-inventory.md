@@ -91,8 +91,47 @@ the screen's actual keyboard/zoom/reduced-motion and human tasks under #92/#109.
 
 ## Remaining acceptance
 
-Native per-checkpoint inventories passed through P08, not yet the complete
-restricted-runtime journey. They cannot detect create-then-delete activity between
+The extended HTTP diagnostic subsequently measured room output at 16.953s and
+Department output at 35.813s, with three scheduled items. Repeat room outputs
+took approximately 14–17s, Department outputs 28–35s and edition outputs 17–23s;
+public output was about 0.4s and personal output about 1s. This confirms a real
+on-site latency problem without proving the exact cause of the earlier closed
+transport exception. It is tracked as #198, a native #108 child explicitly added
+to both #108/#48 delivery decompositions. Required correction must retain all
+current owner authority, source comparisons, field ceilings, locks and audit.
+
+A single actual resource-scoped native authority-check diagnostic took 19.280ms
+with JIT on and 19.353ms with session-local JIT off; neither outer plan used JIT.
+That comparison does not establish the cost of a complete request or justify
+changing application database settings. Function timing counters were then
+enabled only for new connections in the exact owned diagnostic database; no
+source, permission, timeout or production setting changed. A separately shortened
+genuine-runtime profiling driver measures only three operator HTML views, function
+timings and query counts. It deliberately ends without a passing pytest receipt,
+never records SQL parameters/HTTP contents, and does not replace unmodified
+P09/P10/P11 acceptance. The maintained transport ceiling remains 15s.
+
+The extended functional diagnostic passed in 1,749.93s (29m09s), with all its
+actual assertions: P09 output formats and denials, P10 signed offline CLI,
+withdrawal/republication and known-state suppression, and the populated P11
+eight-owner package with original proposal file, schemas, hashes and exact requester
+download. Cancellation retained queued/running/ready/cancelled evidence and removed
+derived chunks. Anonymous download redirected, the other controller received 404,
+and disposed download returned 404. All checkpoint inventories, including final
+archive disposal, matched the original excluded-owner baseline. Evidence remains
+`.tools/programme-populated-runtime-diagnostic-12.xml`, explicitly diagnostic.
+
+Requester archive inspection took 25.360s and retrieval 23.484s; disposed retrieval
+refusal took 23.250s. These exceed the maintained 15-second HTTP limit too. Extend
+#198's measured investigation to this related owner-composed output, without
+weakening current-source checks. The original unmodified run remains failed;
+the extended diagnostic pass does not supersede that failure. Subsequent runs
+also record archive generation time, encoded bytes and tracked Python peak from
+the verified scenario's numeric result, without private contents or identifiers.
+
+Native per-checkpoint inventories therefore pass across the full implemented
+journey under the extended diagnostic, not yet unmodified final acceptance.
+They cannot detect create-then-delete activity between
 observations, prove cross-tenant/object/field denial, replace owner receipt/audit
 checks, or satisfy P11 stop-use, #97 database restore, #92 human acceptance or final
 profile promotion. Keep #109/#108/#48 open while those outcomes remain incomplete.

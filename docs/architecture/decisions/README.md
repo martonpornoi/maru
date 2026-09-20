@@ -116,6 +116,7 @@ the system.
 | [0109](0109-bounded-programme-archive-custody.md) | Accepted; implementation pending | Bound requester-only background Programme archives, private chunk custody, current retrieval checks and derived-artifact expiry without widening source access |
 | [0110](0110-identity-invitation-writer-cutover.md) | Accepted; implementation pending | Complete the independently observed Identity invitation writer generation without adopting Registration or weakening Programme rehearsal readiness |
 | [0111](0111-accountable-programme-stop-use.md) | Proposed | Reuse Events' archived state through a separate accountable Programme stop boundary without full-convention side effects or unrelated authority revocation |
+| [0112](0112-native-point-in-time-policy-observation.md) | Accepted; implementation pending | Remove recursive client round trips from fresh policy observations using the existing exact native validator while preserving independent locking writer proofs |
 
 New ADRs use the next four-digit number and contain:
 

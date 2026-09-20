@@ -321,7 +321,13 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             released,
         )
         fixture.verify_excluded_state()
-        prepare(_assert_native_archive, fixture, result)
+        archive = prepare(_assert_native_archive, fixture, result)
+        for name, value in (
+            ("generation_seconds", archive.generation_seconds),
+            ("artifact_bytes", archive.artifact_bytes),
+            ("python_peak_bytes", archive.python_peak_bytes),
+        ):
+            record_testsuite_property("programme_archive_" + name, value)
         fixture.verify_excluded_state()
     # Maintained HTTP assertions are not browser/native-print or human evidence.
     # P11 stop-use/recovery and complete cross-tenant/role/field P12 remain open.
@@ -416,6 +422,7 @@ def _assert_native_archive(fixture, result):
             "WHERE task_id = %s ORDER BY version",
             (archive.task_id,),
         ).fetchall() == [("queued",), ("running",), ("ready",), ("cancelled",)]
+    return archive
 
 
 def _assert_native_continuity(

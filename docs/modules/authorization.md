@@ -442,6 +442,15 @@ bypassed. Revoking any ancestor invalidates its delegated descendants.
 
 ## Public commands and decisions
 
+ADR 0112 keeps ordinary `decide` calls as fresh non-locking point-in-time
+observations, using the existing fingerprinted native exact-issuance validator
+instead of recursively loading ancestors over many ORM round trips. Every call
+still observes the marker/latch, resolves current scope and applies the same
+adoption, principal, role-purpose and field rules. No result is cached or
+transferred between owners. Database failure has no compatibility fallback.
+Writer source selection, locking checks and persistent-horizon proofs retain
+the independent Python validator; a policy decision does not replace them.
+
 - `decide(principal, capability_code, resource, requested_fields, at)`
 - `decide_verified_principal_exact_edition(...)`, the identifier-only adapter
   that reloads current active/email-verified principal state, seals the exact

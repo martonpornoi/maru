@@ -20,6 +20,11 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0112](0112-native-point-in-time-policy-observation.md) uses the existing
+fingerprinted native validator for fresh non-locking policy observations. Exact
+source identity, current fields and owner rechecks remain unchanged; writers
+retain independent Python control-source and locking horizon validation.
+
 [ADR 0109](0109-bounded-programme-archive-custody.md) selects purpose-specific
 request tasks, bounded larger ZIP encoding and expiring PostgreSQL chunk custody,
 with current requester/source checks at actual retrieval. Its implementation and
