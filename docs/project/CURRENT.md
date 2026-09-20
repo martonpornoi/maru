@@ -165,7 +165,16 @@ headroom and coverage requirement unchanged; migration tests assert the required
 fence ordering rather than unrelated siblings. Focused policy/fence checks pass
 143/16.97s. Full fast run27 passes 12,944 cases in 69.17s with three existing
 URL-field warnings; Ruff and documentation/docstring validation pass.
-Applications, Programme and Events terminal closure remain next.
+Programme native preparation now additionally fences nineteen operational tables
+and retains only exact personal/copy privacy exits, with field deltas and fresh
+native receipt/audit binding. Its three archive-custody tables retain independent
+requester/source/expiry enforcement. New native tests use the real candidate policy;
+the stop/public-copy/host/dependency/metadata matrix passes 81/28.25s. See the
+[content boundary checkpoint](../checkpoints/2026-09-21-programme-stop-content-boundary.md).
+Full fast run28 found one stale guard-count expectation; after updating the exact
+inventory, run29 passes 12,946/68.83s with three existing URL-field warnings.
+Static/docs/docstrings and model/migration consistency pass.
+Applications and Events terminal closure remain next.
 See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and

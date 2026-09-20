@@ -163,7 +163,7 @@ OWNER_CONTRACTS = (
     (
         "maru.programme.readiness",
         "PROGRAMME_INTEGRITY_CONTRACT",
-        "615a86e25cd7057200bd45c5ab5b4bfcc5c571270fbf003831f4a773bd198be2",
+        "8745b93d7a2073b1558fea2bcbc5f99ed69b6cb9eee6c614beec9bf4d39a526e",
     ),
     (
         "maru.venues.readiness",

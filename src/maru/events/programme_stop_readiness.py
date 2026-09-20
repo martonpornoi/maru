@@ -52,6 +52,10 @@ _SOURCES = (
         "venues.0009_programme_stop_boundary",
         "2c06618a0dc345ea992ef8698bf89b5b5079a69eaa5f61def59d09aa8dc3a083",
     ),
+    (
+        "programme.0022_programme_stop_boundary",
+        "3165ab6aa857a62ae26c388a8bd4988bffecbf4c37d816efc6b3065f8dc95699",
+    ),
 )
 for _source, _digest in _SOURCES:
     _owner, _migration = _source.split(".", 1)

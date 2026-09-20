@@ -17,6 +17,7 @@ from maru.core.database_integrity_readiness import (
     DatabaseIntegrityContract,
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
     parse_database_integrity_sql_contracts,
 )
 from maru.core.postgresql_schema_canonicalization import schema_definition_sha256
@@ -235,7 +236,7 @@ def _placement_decision_migration_contract_is_current() -> bool:
 _DECISION_TRIGGERS, _DECISION_FUNCTIONS = parse_database_integrity_sql_contracts(
     _PLACEMENT_DECISION_MIGRATION.FORWARD_SQL
 )
-PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = with_archive_integrity(
+_ARCHIVE_INTEGRITY_CONTRACT = with_archive_integrity(
     with_native_release_integrity(
         replace(
             _STAFFING_INTEGRITY_CONTRACT,
@@ -249,6 +250,15 @@ PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = with_archive_in
                 and _placement_decision_migration_contract_is_current()
             ),
         )
+    )
+)
+
+
+PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
+    extend_database_integrity_contract(
+        _ARCHIVE_INTEGRITY_CONTRACT,
+        migration_module="maru.programme.migrations.0022_programme_stop_boundary",
+        source_sha256="3165ab6aa857a62ae26c388a8bd4988bffecbf4c37d816efc6b3065f8dc95699",
     )
 )
 

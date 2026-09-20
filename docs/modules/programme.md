@@ -3,7 +3,29 @@
 Status: dormant private-domain foundation; no current adoption profile, route,
 API, navigation, running worker, or production writer
 
-Last updated: 2026-09-20
+Last updated: 2026-09-21
+
+## Terminal Programme owner boundary (#190, in progress)
+
+Migration 0022 serializes all nineteen operational tables against the exact
+old/new Events parent. Archived/cancelled `programme_operations@1` refuses fresh
+content, host invitations/confirmation, shared availability, staffing, placement,
+readiness decisions and public-copy approval. Unknown scope/version and stale
+transaction isolation fail closed; other profiles retain their existing rules.
+
+Only existing personal decline/withdrawal, erasure of shared host availability,
+and exact authorized public-copy withdrawal remain possible. Native guards limit
+every changed field, relationship/version, dependency concern and deleted period.
+Deferred evidence binds each consequence to its exact owner receipt and fresh
+same-transaction Audit witness; another personal exit or unrelated valid audit
+cannot authorize it. Existing reciprocal history, privacy, release invalidation,
+event and outbox constraints remain independently required.
+
+The three archive-custody tables remain under their separate requester, source,
+expiry and immutable-evidence contract; this is not an operational-write exception.
+Readiness pins all added functions and attachments without runtime EXECUTE grants.
+Retained Events stop evidence fences downgrade. These native components do not
+enable stopping until the complete Events/owner preview and command are accepted.
 
 ## Logical recovery schema comparison
 
