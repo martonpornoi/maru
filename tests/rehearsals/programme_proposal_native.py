@@ -288,7 +288,8 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
         _assert_native_change(
             fixture, changed, planning, staffing, items, physical, released
         )
-        verify_onsite_http(
+        prepare(
+            verify_onsite_http,
             fixture,
             result,
             reviewed,
@@ -303,7 +304,8 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
         _assert_native_continuity(
             fixture,
             changed,
-            verify_continuity_http(
+            prepare(
+                verify_continuity_http,
                 fixture,
                 result,
                 reviewed,
@@ -319,7 +321,7 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             released,
         )
         fixture.verify_excluded_state()
-        _assert_native_archive(fixture, result)
+        prepare(_assert_native_archive, fixture, result)
         fixture.verify_excluded_state()
     # Maintained HTTP assertions are not browser/native-print or human evidence.
     # P11 stop-use/recovery and complete cross-tenant/role/field P12 remain open.

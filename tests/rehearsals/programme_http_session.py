@@ -141,7 +141,19 @@ class ProgrammeHttpSession:
                 if len(content) > MAX_RESPONSE_BYTES:
                     raise ProgrammeHttpsError("fixture_http_response_oversized")
                 return ProgrammeHttpResponse(response.code, response.headers, content)
-        except (OSError, ValueError, urllib.error.URLError):
+        except TimeoutError:
+            raise ProgrammeHttpsError("fixture_http_transport_timeout") from None
+        except ssl.SSLError:
+            raise ProgrammeHttpsError("fixture_http_transport_tls_failed") from None
+        except urllib.error.URLError as error:
+            # urllib may wrap these failures. Retain only a closed category, never
+            # a URL, certificate detail, credential-bearing body or exception text.
+            if isinstance(error.reason, TimeoutError):
+                raise ProgrammeHttpsError("fixture_http_transport_timeout") from None
+            if isinstance(error.reason, ssl.SSLError):
+                raise ProgrammeHttpsError("fixture_http_transport_tls_failed") from None
+            raise ProgrammeHttpsError("fixture_http_transport_failed") from None
+        except (OSError, ValueError):
             raise ProgrammeHttpsError("fixture_http_transport_failed") from None
 
     def login(self, person, *, destination):

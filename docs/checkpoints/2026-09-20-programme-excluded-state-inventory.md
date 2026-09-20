@@ -66,6 +66,12 @@ administrative query or export API.
   pass. Evidence is retained separately from normal acceptance.
 - Complete database-free feedback passed 12,666 tests in 85.95s with three
   existing Django URL-field warnings.
+- Subsequent transport diagnostics retain separate closed timeout/TLS categories,
+  including urllib-wrapped failures, without raw exception messages or request
+  contents. The original 15-second socket ceiling and shorter remaining lease
+  still apply; no request is automatically retried. All 43 transport unit cases
+  passed in 0.60s. P09, continuity and archive now also use the elapsed/state
+  recorder on subsequent executions.
 - A further native archive crash-recovery case passed in 5.40s. An independent
   connection terminates only the test's observed backend, matched to its exact
   database, database user and unique application marker. An actual chunk INSERT

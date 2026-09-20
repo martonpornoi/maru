@@ -101,6 +101,36 @@ retention override, server shutdown or external message/provider action.
 
 ## Alternatives and acceptance
 
+### Inspected owner boundaries and unresolved changes
+
+This is an implementation map, not proof that the archived state already meets
+the stop contract. The following findings were checked against the local code:
+
+| Owner | Existing boundary | Required stop integration |
+| --- | --- | --- |
+| Events | `services.transition_edition` invokes full closure/Participation; migration 0004 permits only existing lifecycle edges; migration 0011 requires native release-change audit/witness. | Separate exact-profile command/receipt and native edge; preserve existing transition evidence and invalidation, block generic/bulk bypass and fence used downgrade. |
+| Authorization | Programme grant decisions retain exact output assignment IDs. `_lock_scope` rejects archived/cancelled context for both commands and the own-request reader. | Complete owner-controlled assignment accounting and current authorized revocation; an explicit bounded historical detail path without approval controls. Pending intent cannot become a new grant after stop. |
+| Applications | Proposal writes share mutable-scope checks; file intake has its own preflight, source/version and retry boundary. | Verify every call/proposal/review/decision/import/file path and in-flight processing under the same stop lock; preserve legitimate sealed history, withdrawal/privacy/disposal purposes. |
+| Programme | Private writes consume Events' private-planning flag; public-copy withdrawal and some operational/correction paths deliberately have separate rules. Archive custody separately rechecks source/export permission. | Inventory the exceptions individually; ordinary operation stops, required history/correction and authorized archive custody remain explicit rather than accidentally disabled. |
+| Scheduling | `_execute` gates fresh ordinary writes through Events; immutable retry receipts precede that gate. Current outputs use the checked release pointer/dependency journal. | Withdraw before the terminal transition under current withdrawal authority, keep historical receipts non-operational, and verify personal/operator/continuity known-state suppression as well as public output. |
+| Workforce | Assignment and Shift commands have lifecycle checks; retained commitments and shared person-owned Availability are distinct. | Test all starter/structure/assignment/demand/claim/confirmation/recovery paths. Stop does not complete or erase accepted work, or prevent a person updating Availability for another adoption. |
+| Venues | Shared property facts are Organization-owned. `select_venue_for_edition` resolves/locks the edition but does not itself check its lifecycle. | Explicitly guard edition selection, availability, physical reservation/approval and their native writers for stopped Programme. Preserve shared facts and other editions; archiving alone is insufficient. |
+| Effects/Identity/Audit | Existing invitation/worker and immutable event/audit boundaries are separately owned. | Inventory pending work and safe completion/disposal; an account remains usable elsewhere. No excluded-owner event or delivery, invented login authority or audit deletion. |
+
+The archive requires current independent owner rights even after generation.
+Blindly revoking every source grant would also remove later authorized history
+and archive retrieval; archived context must not manufacture replacement rights.
+Before accepting this ADR, settle the explicit disposition of each exact grant
+(revoked, already inactive, or deliberately retained for an admitted historical
+or shared purpose), including what remains accessible to the original requester.
+No retained grant may reopen ordinary Programme operations. A withdrawn pointer
+alone also does not prove suppression of independently retained personal work.
+
+The map remains incomplete until the exact adopted command/read/effect inventory,
+field ceilings, native exceptions and corresponding negative cases are enumerated.
+No schema or stop command is authorized by treating this proposed map as already
+accepted or tested.
+
 - A second independent active/stopped flag duplicates Events' terminal lifecycle
   and risks contradictory admission. Prefer the existing archived state if the
   complete owner/entry-point inventory proves that it can represent this outcome.

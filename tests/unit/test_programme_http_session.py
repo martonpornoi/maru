@@ -202,6 +202,31 @@ def test_response_failure_discloses_no_payload(fixture, fault):
         assert response.closed
 
 
+@pytest.mark.parametrize("wrapped", [False, True])
+@pytest.mark.parametrize(
+    ("failure", "code"),
+    [
+        (TimeoutError("private timeout"), "fixture_http_transport_timeout"),
+        (ssl.SSLError("private certificate"), "fixture_http_transport_tls_failed"),
+        (ConnectionResetError("private peer"), "fixture_http_transport_failed"),
+    ],
+)
+def test_transport_diagnostics_are_closed_and_do_not_retry(
+    fixture, wrapped, failure, code
+):
+    session = _session(fixture)
+    session.deadline = 107.0
+    session.opener.open.side_effect = (
+        urllib.error.URLError(failure) if wrapped else failure
+    )
+    with pytest.raises(http.ProgrammeHttpsError) as caught:
+        session.request("/programme/?private=not-logged")
+    assert str(caught.value) == code
+    assert caught.value.__suppress_context__
+    assert session.opener.open.call_count == 1
+    assert session.opener.open.call_args.kwargs == {"timeout": 7.0}
+
+
 @pytest.mark.parametrize(
     "fault",
     [

@@ -26,7 +26,7 @@ The exact-head PR gate and all three CodeQL analyses passed. #102 is closed;
 ## Local Programme exit bundle
 
 Branch `codex/programme-exit-bundle` continues from protected PR #195. Local
-commits through `ee2a6a3` are not pushed, fully certified or protected-delivered.
+commits through `c12b674` are not pushed, fully certified or protected-delivered.
 No current profile, production route or production data has been activated.
 
 The bundle implements #189's eight-owner restricted exit package, complete source
@@ -64,6 +64,10 @@ HTTP request; the closed transport error does not establish its cause. A separat
 redacted latency diagnostic is in progress, temporarily observing HTTP responses
 up to 60s within the unchanged lease. It is not unmodified acceptance; the
 maintained HTTP budget remains 15s. No CI shard/job timeout changed.
+The maintained transport now distinguishes timeout and TLS failure without raw
+exception text, credentials, automatic retries or a longer budget. Forty-three
+focused transport tests pass in 0.60s; on-site, continuity and archive phases also
+record elapsed/state properties on subsequent runs.
 
 Recent focused evidence:
 
