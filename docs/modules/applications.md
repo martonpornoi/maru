@@ -4,7 +4,16 @@ Status: mounted generic application portfolio plus implemented dormant
 Programme-call, acknowledged-proposal, Programme-import, and Department-
 ownership-continuity, staged-review and accepted-conversion kernels;
 production remains gated
-Last updated: 2026-09-15
+Last updated: 2026-09-20
+
+## Logical recovery schema comparison
+
+Under [ADR 0113](../architecture/decisions/0113-logical-restore-enum-cast-canonicalization.md),
+the Applications definition catalog recognizes only PostgreSQL's exact constant
+enum array-cast reparse, using its existing pretty CHECK and non-pretty index
+formats. Metadata and reviewed catalog hashes remain unchanged; malformed,
+weakened and unvalidated definitions still fail readiness. No runtime privilege,
+data repair or Programme activation follows from this comparison.
 
 ## Purpose and boundary
 

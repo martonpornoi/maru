@@ -13,6 +13,10 @@ from tests.rehearsals.programme_archive_scenario import (
     verify_archive_http,
 )
 from tests.rehearsals.programme_continuity_scenario import verify_continuity_http
+from tests.rehearsals.programme_logical_restore import (
+    verify_incomplete_backup_rejected,
+    verify_logical_restore,
+)
 from tests.rehearsals.programme_onsite_scenario import verify_onsite_http
 from tests.rehearsals.programme_runner import isolated_programme_application
 from tests.rehearsals.programme_runtime_environment import (
@@ -329,6 +333,19 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
         ):
             record_testsuite_property("programme_archive_" + name, value)
         fixture.verify_excluded_state()
+        prepare(
+            verify_logical_restore,
+            fixture,
+            result,
+            reviewed,
+            items,
+            planning,
+            physical,
+            staffing,
+            released,
+            changed,
+        )
+        prepare(verify_incomplete_backup_rejected, fixture)
     # Maintained HTTP assertions are not browser/native-print or human evidence.
     # P11 stop-use/recovery and complete cross-tenant/role/field P12 remain open.
 

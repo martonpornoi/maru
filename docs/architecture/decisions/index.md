@@ -20,6 +20,17 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0114](0114-restore-stable-identity-trigger-predicates.md) replaces two
+Identity conditional-trigger parse-tree hashes with exact reviewed complete
+deparsed definitions, retaining independent attachment and native-function checks.
+It addresses implicit/explicit cast-format metadata after logical restore, not
+permission to change a retention predicate or bypass readiness.
+
+[ADR 0113](0113-logical-restore-enum-cast-canonicalization.md) records the single
+enum-array cast equivalence used for logical-restore schema comparison. It
+preserves existing hashes and rejects all other metadata drift; complete
+populated and native-runtime recovery remains required.
+
 [ADR 0112](0112-native-point-in-time-policy-observation.md) uses the existing
 fingerprinted native validator for fresh non-locking policy observations. Exact
 source identity, current fields and owner rechecks remain unchanged; writers

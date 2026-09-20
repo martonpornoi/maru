@@ -129,13 +129,43 @@ and pointer version. In a separately identified same-image disposable environmen
    then stop only the exact ID/label-verified disposable clone. Preserve minimized
    evidence of both successful and failed stages.
 
-Logical `pg_dump`/`pg_restore` currently fails exact schema readiness even on
-the same image: PostgreSQL reparses some array cast CHECK expressions into
-equivalent but differently rendered catalog definitions. Native functions,
-triggers, ACLs and recorders passed the focused diagnostic; schema fingerprints
-did not. [#97](https://github.com/martonpornoi/maru/issues/97) owns resolving
-that mismatch with negative weakened-constraint tests before activation or the
-director pilot. Do not waive readiness or accept arbitrary restored hashes.
+Logical `pg_dump`/`pg_restore` previously failed exact schema readiness even on
+the same image: PostgreSQL reparses some enum array casts into equivalent but
+differently rendered catalog definitions. [ADR 0113](../architecture/decisions/0113-logical-restore-enum-cast-canonicalization.md)
+recognizes only the documented literal enum-cast equivalence in CHECK,
+exclusion and index definitions. Reviewed hashes, physical column positions,
+native functions, ACLs and recorders remain unchanged. Authorization's conditional
+receipt triggers use the same exact enum rule. [ADR 0114](../architecture/decisions/0114-restore-stable-identity-trigger-predicates.md)
+separately pins the two Identity conditional triggers' complete reviewed deparsed
+definitions instead of internal cast-format metadata; the trigger predicates and
+independent attachment checks remain exact. The focused
+schema, populated component and genuine restored-runtime development checks pass.
+Partial-backup rejection and exact-head protected acceptance remain tracked in
+[#97](https://github.com/martonpornoi/maru/issues/97). Do not
+waive readiness or accept arbitrary restored hashes.
+
+The maintained isolated Programme rehearsal additionally attempts a complete
+custom-format `pg_dump` and `pg_restore --exit-on-error` into a new UUID-named
+database in its exact ID/nonce-verified disposable container. It retains owner
+and ACL restoration, recreates the explicit database-level runtime CONNECT-only
+contract, and does not disable triggers or use data-only restoration. This is a
+same-image logical recovery check, not cluster-role backup, production PITR or
+a provider restore guarantee.
+
+Before permitting restored commands, compare all copied public-table counts
+and fingerprints, run the real worker and candidate-runtime readiness checks,
+and validate the current authorized manifest and immutable artifact. Exercise a
+new copy withdrawal and its exact retry, inspect the single journal consequence,
+and confirm the checked manifest withholds selections. Verify the original
+database remains unchanged. Delete only the newly created restore database;
+never force-drop sessions, replace the source, or extend the original rehearsal
+lease to make a failed restore pass. Preserve failures as failures alongside the
+[recovery checkpoint](../checkpoints/2026-09-20-programme-logical-schema-recovery.md).
+The [native recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md)
+records the actual restored worker, changed-authority refusal and reversible
+clone-only unsafe-ACL/function negatives. Invalidation retains the pointer to
+the original immutable release but withholds selections; only explicit release
+withdrawal/replacement changes that pointer.
 
 ## Resume owner behavior and checked reads
 
@@ -153,8 +183,9 @@ It proves only identity/version and never authorizes serving artifact content.
 Reasoned withdrawal retains history, advances the pointer and does not restore a
 predecessor. Do not use retained approval/history pages as an unsafe-content
 fallback. No database migration, runtime privilege grant or schema-only exception
-is needed for these HTTP/discovery additions. PostgreSQL and recovery acceptance
-remain deferred gates, not replaced by synthetic browser or unit evidence.
+is needed for these HTTP/discovery additions. PostgreSQL checks are restored;
+recovery acceptance remains a distinct gate, not replaced by browser or unit
+evidence.
 
 Recheck the exact current pointer through the audited release-manifest query.
 Missing artifacts, malformed bytes, incomplete dependency ranges, wrong scope

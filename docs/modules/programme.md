@@ -5,6 +5,16 @@ API, navigation, running worker, or production writer
 
 Last updated: 2026-09-20
 
+## Logical recovery schema comparison
+
+[ADR 0113](../architecture/decisions/0113-logical-restore-enum-cast-canonicalization.md)
+recognizes only PostgreSQL's exact constant enum array-cast reparse in the
+existing pretty CHECK and non-pretty index definitions. It preserves all other
+metadata and every reviewed schema hash, including archive custody objects.
+Changed constraints, native guards and privileges still fail readiness. The
+[recovery runbook](../operations/programme-atomic-release-migration-and-recovery.md)
+keeps component, restored-runtime and protected-delivery evidence separate.
+
 ## Exact change-recipient reference (#104, in progress)
 
 `change_recipient_queries.load_host_change_recipient` selects one exact current

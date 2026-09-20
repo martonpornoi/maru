@@ -53,6 +53,7 @@ from maru.authorization.provenance import (
     authority_issuance_is_current,
     role_bundle_provenance_is_historical,
 )
+from maru.core.postgresql_schema_canonicalization import canonical_schema_definition
 from maru.identity.models import Account
 from maru.organizations.models import (
     OrganizationRepresentation,
@@ -1907,7 +1908,10 @@ def _inspect_cutover_catalog() -> _CatalogState:
         installed_triggers = {
             row[0]: (*tuple(row[1:9]), tuple(row[9] or ())) for row in trigger_rows
         }
-        installed_trigger_definitions = {row[0]: str(row[10]) for row in trigger_rows}
+        installed_trigger_definitions = {
+            row[0]: canonical_schema_definition(str(row[10]), pretty=True)
+            for row in trigger_rows
+        }
         cursor.execute(
             """
             SELECT required.identity,

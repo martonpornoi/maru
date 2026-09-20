@@ -22,7 +22,10 @@ from tests.rehearsals.programme_continuity_material import (
     SIGNING_ENV,
     generate_continuity_material,
 )
-from tests.rehearsals.programme_database import isolated_programme_database
+from tests.rehearsals.programme_database import (
+    ProgrammeDatabaseLease,
+    isolated_programme_database,
+)
 from tests.rehearsals.programme_excluded_state import (
     ExcludedStateSnapshot,
     capture_excluded_state,
@@ -185,6 +188,7 @@ class ProgrammeRunningFixture:
     excluded_state_baseline: ExcludedStateSnapshot | None = field(
         default=None, repr=False
     )
+    _database_lease: ProgrammeDatabaseLease | None = field(default=None, repr=False)
 
     def verify_excluded_state(self):
         """Check the original pre-setup baseline; never infer role/field acceptance."""
@@ -791,6 +795,7 @@ def isolated_programme_application(
                 excluded_state_baseline=(
                     capture_excluded_state(runtime) if with_isolation else None
                 ),
+                _database_lease=lease,
             )
             fixture.refresh_workers()
             if setup_mode is not None:

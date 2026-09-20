@@ -114,7 +114,7 @@ class _TriggerContract:
     deferrable: bool = False
     initially_deferred: bool = False
     columns: tuple[str, ...] = ()
-    when_sha256: str | None = None
+    when_definition: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -401,8 +401,14 @@ _TRIGGER_CONTRACTS: Final[dict[str, _TriggerContract]] = {
         "identity_platformidentitydelivery",
         "identity_page10_delivery_version_guard()",
         _ROW_BEFORE_UPDATE,
-        when_sha256=(
-            "b18029d0a95dd425ae369dc640458126bacd1c2aab83d391c8254a1a97e8f417"
+        when_definition=(
+            "CREATE TRIGGER identity_page10_delivery_version BEFORE UPDATE ON "
+            "identity_platformidentitydelivery FOR EACH ROW WHEN (NOT "
+            "(old.provider_reference::text <> ''::text AND "
+            "old.provider_reference::text !~ '^disposed-provider-[0-9a-f]{32}$'::text "
+            "AND new.provider_reference::text ~ "
+            "'^disposed-provider-[0-9a-f]{32}$'::text)) "
+            "EXECUTE FUNCTION identity_page10_delivery_version_guard()"
         ),
     ),
     "identity_page10_late_outcome_immutable": _TriggerContract(
@@ -473,8 +479,17 @@ _TRIGGER_CONTRACTS: Final[dict[str, _TriggerContract]] = {
         "identity_platformidentitydelivery",
         "identity_page10_hardened_delivery_guard()",
         _ROW_BEFORE_UPDATE,
-        when_sha256=(
-            "c3bccbe822870ad45afcbb96cfc123bf8138ac4f62bcf71a84c43bcf485a6dec"
+        when_definition=(
+            "CREATE TRIGGER identity_page10_hardened_delivery_update BEFORE UPDATE ON "
+            "identity_platformidentitydelivery FOR EACH ROW WHEN "
+            "(NOT old.provider_reference::text IS DISTINCT FROM "
+            "new.provider_reference::text OR NOT "
+            "(old.provider_reference::text <> ''::text "
+            "AND old.provider_reference::text !~ "
+            "'^disposed-provider-[0-9a-f]{32}$'::text "
+            "AND new.provider_reference::text ~ "
+            "'^disposed-provider-[0-9a-f]{32}$'::text)) "
+            "EXECUTE FUNCTION identity_page10_hardened_delivery_guard()"
         ),
     ),
     "identity_page10_retention_provider_delivery_update": _TriggerContract(
@@ -1262,12 +1277,7 @@ def inspect_platform_invitation_additive_catalog() -> PlatformInvitationAdditive
                    trigger.tgdeferrable,
                    trigger.tginitdeferred,
                    CASE WHEN trigger.tgqual IS NULL THEN NULL ELSE
-                       pg_catalog.encode(
-                           pg_catalog.sha256(
-                               pg_catalog.convert_to(trigger.tgqual::text, 'UTF8')
-                           ),
-                           'hex'
-                       )
+                       pg_catalog.pg_get_triggerdef(trigger.oid, TRUE)
                    END,
                    trigger.tgnargs,
                    ARRAY(
@@ -1390,7 +1400,7 @@ def inspect_platform_invitation_additive_catalog() -> PlatformInvitationAdditive
             "O",
             contract.deferrable,
             contract.initially_deferred,
-            contract.when_sha256,
+            contract.when_definition,
             0,
             contract.columns,
         )

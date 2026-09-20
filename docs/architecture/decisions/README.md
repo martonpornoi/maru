@@ -117,6 +117,8 @@ the system.
 | [0110](0110-identity-invitation-writer-cutover.md) | Accepted; implementation pending | Complete the independently observed Identity invitation writer generation without adopting Registration or weakening Programme rehearsal readiness |
 | [0111](0111-accountable-programme-stop-use.md) | Proposed | Reuse Events' archived state through a separate accountable Programme stop boundary without full-convention side effects or unrelated authority revocation |
 | [0112](0112-native-point-in-time-policy-observation.md) | Accepted; implementation pending | Remove recursive client round trips from fresh policy observations using the existing exact native validator while preserving independent locking writer proofs |
+| [0113](0113-logical-restore-enum-cast-canonicalization.md) | Accepted | Recognize only exact PostgreSQL enum-array cast reparsing while retaining pinned schema hashes and every independent recovery gate |
+| [0114](0114-restore-stable-identity-trigger-predicates.md) | Accepted | Preserve exact reviewed Identity trigger predicates across logical restore without pinning internal cast-format flags |
 
 New ADRs use the next four-digit number and contain:
 

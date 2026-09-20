@@ -34,12 +34,19 @@ def test_schema_collector_normalizes_json_adapters_and_binds_relation_names(
     monkeypatch,
 ):
     cursor = MagicMock()
-    cursor.fetchall.return_value = [("example", {"columns": [], "relation": ["r"]})]
+    cursor.fetchall.return_value = [
+        (
+            "example",
+            {"columns": [], "relation": ["r"], "constraints": [], "indexes": []},
+        )
+    ]
     manager = MagicMock()
     manager.__enter__.return_value = cursor
     monkeypatch.setattr(schema.connection, "cursor", lambda: manager)
     first = schema.collect_relation_schema_fingerprints(("untrusted' text",))
-    cursor.fetchall.return_value = [("example", '{"relation":["r"],"columns":[]}')]
+    cursor.fetchall.return_value = [
+        ("example", '{"relation":["r"],"columns":[],"constraints":[],"indexes":[]}')
+    ]
     assert schema.collect_relation_schema_fingerprints(("untrusted' text",)) == first
     query, values = cursor.execute.call_args.args
     assert "untrusted' text" not in query

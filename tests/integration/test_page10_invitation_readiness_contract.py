@@ -25,7 +25,7 @@ def _expected_trigger_rows() -> dict[str, tuple[object, ...]]:
             "O",
             contract.deferrable,
             contract.initially_deferred,
-            contract.when_sha256,
+            contract.when_definition,
             0,
             contract.columns,
         )
@@ -139,12 +139,7 @@ def test_page10_declared_trigger_contract_matches_the_fresh_catalog() -> None:
                    trigger.tgdeferrable,
                    trigger.tginitdeferred,
                    CASE WHEN trigger.tgqual IS NULL THEN NULL ELSE
-                       pg_catalog.encode(
-                           pg_catalog.sha256(
-                               pg_catalog.convert_to(trigger.tgqual::text, 'UTF8')
-                           ),
-                           'hex'
-                       )
+                       pg_catalog.pg_get_triggerdef(trigger.oid, TRUE)
                    END,
                    trigger.tgnargs,
                    ARRAY(

@@ -32,6 +32,7 @@ from maru.authorization.database_role_safety import (
     RuntimeDatabaseRoleProbeError,
     probe_runtime_database_role_safety,
 )
+from maru.core.postgresql_schema_canonicalization import schema_definition_sha256
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -1124,18 +1125,7 @@ def _schema_definition_rows(
                index_record.indislive,
                index_record.indisprimary,
                index_record.indisexclusion,
-               pg_catalog.encode(
-                   pg_catalog.sha256(
-                       pg_catalog.convert_to(
-                           pg_catalog.pg_get_constraintdef(
-                               constraint_record.oid,
-                               TRUE
-                           ),
-                           'UTF8'
-                       )
-                   ),
-                   'hex'
-               )
+               pg_catalog.pg_get_constraintdef(constraint_record.oid, TRUE)
           FROM pg_catalog.pg_constraint AS constraint_record
           JOIN pg_catalog.pg_class AS relation
             ON relation.oid = constraint_record.conrelid
@@ -1154,7 +1144,10 @@ def _schema_definition_rows(
         [list(constraint_contracts)],
     )
     for row in cursor.fetchall():
-        rows[f"constraint:{row[0]}"] = tuple(row[1:])
+        rows[f"constraint:{row[0]}"] = (
+            *row[1:-1],
+            schema_definition_sha256(str(row[-1]), pretty=True),
+        )
 
     cursor.execute(
         """
@@ -1169,15 +1162,7 @@ def _schema_definition_rows(
                index_record.indisexclusion,
                index_record.indexprs IS NOT NULL,
                index_record.indpred IS NOT NULL,
-               pg_catalog.encode(
-                   pg_catalog.sha256(
-                       pg_catalog.convert_to(
-                           pg_catalog.pg_get_indexdef(index_record.indexrelid),
-                           'UTF8'
-                       )
-                   ),
-                   'hex'
-               )
+               pg_catalog.pg_get_indexdef(index_record.indexrelid)
           FROM pg_catalog.pg_index AS index_record
           JOIN pg_catalog.pg_class AS index_relation
             ON index_relation.oid = index_record.indexrelid
@@ -1197,7 +1182,7 @@ def _schema_definition_rows(
         [list(index_contracts)],
     )
     for row in cursor.fetchall():
-        rows[f"index:{row[0]}"] = tuple(row[1:])
+        rows[f"index:{row[0]}"] = (*row[1:-1], schema_definition_sha256(str(row[-1])))
     return rows
 
 

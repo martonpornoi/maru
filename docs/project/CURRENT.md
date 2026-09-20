@@ -26,7 +26,7 @@ The exact-head PR gate and all three CodeQL analyses passed. #102 is closed;
 ## Local Programme exit bundle
 
 Branch `codex/programme-exit-bundle` continues from protected PR #195. Local
-commits through `453ce57` and the current #198 correction are not pushed, fully
+latency commit `d2ac42f` and subsequent #97 recovery work are not pushed, fully
 certified or protected-delivered.
 No current profile, production route or production data has been activated.
 
@@ -82,8 +82,26 @@ only those fresh policy observations through the existing exact native validator
 independent Python writer proofs, all owner rechecks and the HTTP budget remain.
 Fourteen focused units and 89 native differential/policy/activation/writer cases
 pass. The complete fast suite passes 12,676 cases in 77.89s with three existing
-URL-field warnings; an unmodified populated journey is running.
+URL-field warnings. The populated journey now passes the maintained 15-second
+HTTP budget in 958.27s (15m58s), including P09, P10, populated archive and final
+disposal with every excluded-owner comparison unchanged. Archive generation took
+17.828s for 157,233 bytes with 2,997,633 bytes tracked Python peak (not RSS).
 See the [latency correction](../checkpoints/2026-09-20-programme-policy-latency.md).
+The [bounded populated pass](../checkpoints/2026-09-20-programme-bounded-native-journey.md)
+retains its phase timings and remaining acceptance limits.
+The #97 collector/restore-harness update passed 12,746 fast cases in 71.78s before
+the latest trigger correction. The first genuine populated restore failed only
+after its data-copy comparison, at restored-worker readiness (951.93s overall).
+ADRs 0113/0114 now cover exact pretty enum casts and two Identity trigger internal
+cast-format flags without changing predicates or native objects. The 194-case
+native suite and full schema round-trip pass. The complete fast suite after the
+trigger correction passes 12,749 cases in 84.67s. Maintained run17 passes in
+934.27s, including genuine restored-worker/read readiness, clone-only unsafe
+ACL/function refusal and actual post-restore authority revocation. The restore
+phase took 38.437s; the original remained unchanged and cleanup completed.
+The subsequently staged missing-journal partial-backup phase was not part of
+that run and still needs execution before final acceptance.
+See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and
 withdrawal/republication, populated eight-owner/original-file archive, requester-only
@@ -94,6 +112,13 @@ complete P11 stop/restore, P12 denial-matrix, browser/human or final acceptance.
 
 Recent focused evidence:
 
+- #97/ADR 0113: unchanged pinned schema hashes survive the exact PostgreSQL
+  enum-cast reparse; 36 units and 11 native cases pass in 11.53s. A populated
+  logical-restore component passes in 13.86s with actual withdrawal/retry/native
+  invalidation and original artifact bytes. The later 194-case native catalog
+  suite and genuine restored-runtime run17 pass as detailed above; partial-backup
+  rejection and exact-head delivery remain pending. See the
+  [schema recovery checkpoint](../checkpoints/2026-09-20-programme-logical-schema-recovery.md).
 - 57 native archive custody/composition/race/resource cases: 103.06s.
 - Seven native assignment/recovery cases: 14.08s; 55 adjacent cases: 145.70s.
 - Native reviewed-copy locking/immutable-history rejection: 3.97s.
@@ -114,7 +139,7 @@ credential logging or weakened security is claimed. See the
 and [inventory](../checkpoints/2026-09-20-programme-excluded-state-inventory.md)
 checkpoints.
 
-Next: resolve #198's operator/archive latency and rerun unmodified populated P11,
+Next: preserve #198's bounded pass, finish #97 logical-recovery verification and
 remaining bounded recovery/resource and browser
 acceptance, then #190 stop-use and remaining #175 acceptance. Proposed
 [ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md) examines

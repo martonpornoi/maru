@@ -3,7 +3,16 @@
 Status: bounded storage, offers, manifests, and custody slice accepted in the
 canonical current tree; full LOG portfolio remains partial and production is
 gated
-Last updated: 2026-08-31
+Last updated: 2026-09-20
+
+## Logical recovery schema comparison
+
+[ADR 0113](../architecture/decisions/0113-logical-restore-enum-cast-canonicalization.md)
+recognizes only PostgreSQL's exact constant enum array-cast reparse before the
+existing definition hashes are compared. Pretty CHECK and non-pretty index
+formats stay distinct; other metadata, permissions and reviewed hashes are
+unchanged. This shared recovery correction neither adopts Logistics into
+Programme nor creates Logistics records, authority or effects.
 
 ## Purpose and boundary
 

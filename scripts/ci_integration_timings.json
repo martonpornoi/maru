@@ -87,6 +87,7 @@
   "tests/integration/test_idn011_database_migrations.py": 2768.197,
   "tests/integration/test_invitation_token_digest_key_migration.py": 718.249,
   "tests/integration/test_invitation_writer_cutover.py": 300.0,
+  "tests/integration/test_logical_schema_canonicalization.py": 300.0,
   "tests/integration/test_logistics.py": 24.871,
   "tests/integration/test_logistics_catalog_api.py": 10.357,
   "tests/integration/test_logistics_readiness.py": 1.59,

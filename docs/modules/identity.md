@@ -6,7 +6,17 @@ strict platform account-invitation HTML/API adapters, the repository-verified
 User accounts first experience slice, and an author-verified retention-v10
 corrective candidate; complete rendered owner acceptance, independent retention
 acceptance, production policy activation, and writer cutover remain gated
-Last updated: 2026-09-11
+Last updated: 2026-09-20
+
+## Logical restore predicate verification
+
+[ADR 0114](../architecture/decisions/0114-restore-stable-identity-trigger-predicates.md)
+pins the complete reviewed definitions of the two conditional delivery guards
+from Identity 0018. Logical restore changes internal implicit/explicit cast flags,
+not their rendered predicates. Exact name/table/function, timing, events,
+deferral, enabled state, arguments and column checks remain independent; all
+other invitation triggers still require no predicate. This changes no guard,
+retention policy, stored reference, runtime privilege or worker requirement.
 
 ## Purpose and requirements
 
