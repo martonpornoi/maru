@@ -970,6 +970,24 @@ commands therefore cannot bypass the guided request boundary. Revocation and
 shared Organization authority remain separately governed; no assignment or root
 is automatically deleted or extended.
 
+Migration `0040_programme_stop_boundary` independently fences capability grants,
+role assignments, resource bindings and guided requests/decisions, checking both
+source and destination edition scope. Guided Organization-scope requests retain
+their Programme context and cannot be newly approved after it stops; an actual
+shared Organization grant is not implicitly revoked or frozen. Existing immutable
+issuance and current-authority rules continue to apply.
+
+Only an exact first revocation may change a retained stopped-scope grant or role:
+the revocation triplet and update timestamp, with every issuance field unchanged.
+A deferred native guard requires the matching actual actor, scope, object,
+operation and Audit witness from the same database transaction. The existing
+public commands lend that native audit evidence only for successful stopped-scope
+revocation, without a broader read or different authority requirement. Another
+record's audit, an old witness, a scope move or rewritten validity cannot pass.
+Other-profile/shared/denied audit paths retain their earlier behavior. Purpose-
+bounded role readiness and Events preparation pin the new functions/attachments;
+there is no new runtime helper EXECUTE grant. Used stop receipts fence reversal.
+
 An exact known Programme role request may be read after stop only by its currently
 authorized original author or named approver, with the same recipe/source checks,
 person ceiling and mandatory audit. This is not a terminal request inventory or

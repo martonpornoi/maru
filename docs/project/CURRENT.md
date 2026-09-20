@@ -144,6 +144,16 @@ See the
 [native preparation checkpoint](../checkpoints/2026-09-21-programme-stop-native-preparation.md).
 Other owner guards, complete stop preview/command/UI and genuine P11 acceptance
 remain incomplete; preparation readiness must not enable stopping by itself.
+Authorization native preparation now additionally fences fresh scoped issuance
+and guided decisions, while retaining only exact first revocation with matching
+same-transaction native audit. Shared Organization authority and other editions
+remain usable. The expanded native and existing authority/role workflows pass
+144 cases in 160.54s; focused routing/metadata checks pass 121 in 1.07s and full
+typing passes all 776 source files. See the
+[authority boundary checkpoint](../checkpoints/2026-09-21-programme-stop-authority-boundary.md).
+Final focused native Authorization tests pass 16/12.91s; full fast run25 passes
+12,943/69.74s with three existing URL-field warnings. Static/documentation checks
+pass. Applications, Programme, Venues and Events terminal closure remain next.
 See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and

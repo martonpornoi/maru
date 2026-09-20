@@ -50,6 +50,7 @@
   "tests/integration/test_authorization_department_dependency_queries.py": 10.507,
   "tests/integration/test_authorization_enforcement.py": 2.763,
   "tests/integration/test_authorization_policy.py": 12.098,
+  "tests/integration/test_authorization_programme_stop.py": 300.0,
   "tests/integration/test_authorization_provenance_runtime.py": 14.503,
   "tests/integration/test_authorization_resource_bindings.py": 19.929,
   "tests/integration/test_authorization_scope_v2_activation.py": 18.631,

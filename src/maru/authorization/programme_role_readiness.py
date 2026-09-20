@@ -75,6 +75,20 @@ PROGRAMME_ROLE_INTEGRITY_CONTRACT = extend_database_integrity_contract(
     migration_module="maru.authorization.migrations.0038_programme_archive_recipe",
     source_sha256="4771500d8aef329bf75dec7392561b7189ceea4dac74ffe3ccdcdeb5a0e11c48",
 )
+_WITH_STOP = extend_database_integrity_contract(
+    PROGRAMME_ROLE_INTEGRITY_CONTRACT,
+    migration_module="maru.authorization.migrations.0040_programme_stop_boundary",
+    source_sha256="c727e2e7f73bcb45f7e30a82733423f84a24f553549a508cc41053d4934e96bf",
+)
+PROGRAMME_ROLE_INTEGRITY_CONTRACT = replace(
+    _WITH_STOP,
+    triggers={
+        name: trigger
+        for name, trigger in _WITH_STOP.triggers.items()
+        if trigger.table in PROGRAMME_ROLE_RELATIONS
+    },
+)
+
 # Observed on PostgreSQL 17.11 by the approved disposable schema-only migration.
 # Relation/catalog evidence is not native workflow or migration-test acceptance.
 PROGRAMME_ROLE_SCHEMA_SHA256: Final[dict[str, str]] = {

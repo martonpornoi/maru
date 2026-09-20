@@ -44,6 +44,10 @@ _SOURCES = (
         "workforce.0030_programme_stop_boundary",
         "941e61a22e56dab7129df2a5ef35445752d93f92e2a5814f73489af778d46eb5",
     ),
+    (
+        "authorization.0040_programme_stop_boundary",
+        "c727e2e7f73bcb45f7e30a82733423f84a24f553549a508cc41053d4934e96bf",
+    ),
 )
 for _source, _digest in _SOURCES:
     _owner, _migration = _source.split(".", 1)
