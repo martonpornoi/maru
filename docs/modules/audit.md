@@ -48,6 +48,26 @@ cross-tenant counts.
 
 ## Integrated behavior
 
+### Minimized Programme exit manifest (#189)
+
+The `audit.programme-exit@1` section contains only the generating requester's
+successful final owner-read receipts in the exact Organization, edition and
+server-generated collection correlation. The seven required owner operations
+must all be present; other operations and failed outcomes are excluded. It
+requires independent `audit.view_security` authority
+for every exported field, in addition to `programme.export_archive/source_lineage`.
+Its closed fields are event ID, aware occurrence time, capability code, operation
+and outcome. No other person's event, target, reason, safe metadata, security-log
+history or integrity-batch digest is copied. The envelope supplies the exact
+requester/scope/correlation once. At most 50,000 receipts and 16 MiB are allowed;
+overflow, denial or failed mandatory audit returns no section. The collection
+must use a fresh server correlation, never accept a browser-selected one.
+The manifest is generation evidence, not proof of independent signature,
+unchanged source authority, complete security history or current operational safety.
+Its own sensitive-read receipt is retained server-side after the selected set;
+it does not recursively include itself. Retrieval reauthorization produces a new
+correlation and does not compare audit IDs as if they were source versions.
+
 Organization/series creation, organization/series profile changes, protected
 empty-Draft deletion, edition creation, and edition profile changes append
 allow evidence inside their canonical transaction. Changed-field names are

@@ -1,5 +1,6 @@
 """Exact physical source policy and minimized live occupancy projections."""
 
+import json
 from dataclasses import asdict, replace
 from datetime import UTC, date, datetime, timedelta
 from uuid import UUID, uuid4
@@ -8,9 +9,12 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, connection
 from django.test.utils import CaptureQueriesContext
+from jsonschema import Draft202012Validator
 
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
+from maru.programme import archive_authorization
+from maru.venues import programme_exit_queries as archive
 from maru.venues import scheduling_queries as source
 from maru.venues import timetable_queries as timetable
 from maru.venues.services import (
@@ -21,9 +25,40 @@ from maru.venues.services import (
 )
 from tests.factories import EventEditionFactory
 from tests.integration import test_venues as scenarios
+from tests.integration.test_programme_queries import _TrustedAuthorizer
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 START = datetime(2030, 8, 2, 8, tzinfo=UTC)
+
+
+def test_exit_room_archive_retains_real_workspace_policy_and_closed_schema(
+    world, monkeypatch
+):
+    scope, room = world
+    monkeypatch.setattr(
+        archive_authorization, "profile_allows_adapter", lambda *_: True
+    )
+    args = {
+        "actor_id": scope.selector.id,
+        "organization_id": scope.edition.organization_id,
+        "edition_id": scope.edition.id,
+        "correlation_id": uuid4(),
+        "programme_authorizer": _TrustedAuthorizer(),
+    }
+    result = archive.load_programme_exit_venues(**args)
+    data = json.loads(result.data)
+    Draft202012Validator(json.loads(result.schema)).validate(data)
+    assert [row["id"] for row in data["spaces"]] == [str(room.id)]
+    assert data["spaces"][0]["label"] == "Main Stage"
+    assert (
+        AuditEvent.objects.filter(
+            operation="venues.query.timetable_spaces",
+            correlation_id=args["correlation_id"],
+        ).count()
+        == 2
+    )
+    with pytest.raises(timetable.VenueTimetableQueryDeniedError):
+        archive.load_programme_exit_venues(**{**args, "actor_id": scope.scheduler.id})
 
 
 def test_physical_key_derivation_matches_postgresql_and_is_edition_bounded():

@@ -31,7 +31,19 @@ is not a grant, role-bundle insertion, route or Programme activation.
 [ADR 0108](../architecture/decisions/0108-purpose-controlled-programme-exit-archive.md).
 Its `archive_requests` and `source_lineage` fields admit the extra bulk-export
 purpose, not owner content, private files, another person's task or downloads.
-Independent source rights remain mandatory. Existing recipe digests, ordinary
+Independent source rights remain mandatory. The restricted exit's
+`authorization.programme-exit@1` section declares only the selected exact profile's
+admitted immutable Programme recipe definitions and policy version. Its explicit
+fields are profile code/version, policy version, and each admitted recipe's
+code/version/name/purpose, capability codes, target scopes, resource kind and
+definition digest. The source check independently requires Events basic profile
+code/version read authority; the catalog is public code, not assignment history.
+Unadmitted recipes, actual grants/assignments, named-person approval requests,
+private rationales and identity directories are excluded. Unknown profiles or
+catalog/recipe mismatches fail closed; the section never claims to retain or
+restore effective access. At most 100 recipes and 2 MiB are supported. Source and
+extra-purpose checks run again before its mandatory sensitive-read audit.
+Existing recipe digests, ordinary
 field ceilings, roots and all current profiles stay unchanged; the recipe is
 not yet admitted to a candidate or current manifest. Actual two-person approval
 is still required to issue it. No role or grant is inserted by registration.

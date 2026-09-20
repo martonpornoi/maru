@@ -113,6 +113,7 @@ the system.
 | [0106](0106-scoped-programme-operational-approval.md) | Accepted; implementation pending | Keep accountable roots unchanged and approve exact scoped Programme operational roles through immutable intent and actual independent-person decisions |
 | [0107](0107-programme-volunteer-starter-approval.md) | Accepted; implementation pending | Retain an independent person's own decision on the one minimal shared Volunteer Position template needed by blank Programme setup |
 | [0108](0108-purpose-controlled-programme-exit-archive.md) | Accepted; implementation pending | Require separate restricted Programme export purpose plus independent source rights, explicit lineage and requester-bound asynchronous artifact handling |
+| [0109](0109-bounded-programme-archive-custody.md) | Accepted; implementation pending | Bound requester-only background Programme archives, private chunk custody, current retrieval checks and derived-artifact expiry without widening source access |
 
 New ADRs use the next four-digit number and contain:
 

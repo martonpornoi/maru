@@ -28,6 +28,81 @@ Its initial delivery-record documentation is prepared locally for the next large
 bundle, not a separately certified or published feature. Complete #189's archive
 outcome and P11 composition together; then #190 stop-use and integrated recovery.
 
+The archive bundle now has uncommitted Programme lineage, complete owner
+composition and explicit portable serialization, plus Events-owned current
+configuration. Extra archive-purpose authority remains separate from every
+source/history field check; current profiles remain unchanged. Whole-Programme
+collection locks the full requester/host set before **any** audited child read,
+because audit foreign keys can otherwise acquire an actor lock too early.
+Focused evidence: 178 archive units and 41 Events-section units passed; the
+latest Programme native batch passed 10 cases in 16.69s, including two items with
+reversed host-person order and invitation-content exclusion. The first native
+attempt caught an incorrect test expectation for the source binding code
+(7 passed/1 failed); correction passed, without changing stored source codes.
+The combined Programme/Events native batch then passed 12 cases in 17.89s.
+An Applications-owned complete review-case collector now retains contiguous
+evidence and source lineage through existing decider, independence, stage,
+anonymity and sensitive-field ceilings; 36 focused units passed and native
+checks passed seven cases in 17.02s. Complete outgoing decision-message paging
+has since been added, with 45 focused units passing and eight native cases
+passing in 18.60s. The archive-only exact-answer file reader adds 36 passing
+units and a combined review/file native batch of 17 cases passing in 43.55s.
+It verifies retained historical seals without relaxing ordinary browser reads,
+anonymity before custody lookup, independent decider rights and exact scope.
+The initial file native attempt had nine missing-fixture setup errors after
+lint removed imports; the explicit fixture registration repair passed, with the
+failed artifact preserved. Scanner transport remains synthetic, not deployment proof.
+Exact-Department call/policy configuration collection adds 23 passing focused
+units and four native cases in 10.53s. The composed reviewed-proposal Department
+scope adds 34 passing units and a six-case selected native batch in 15.10s,
+covering configuration, private files, anonymous omission and denied-case refusal.
+Its explicit serializer adds 50 passing units, with bytes kept outside JSON.
+The combined Programme/Events/Applications native batch passed 36 cases in
+83.97s. Complete Applications owner Department discovery/coverage now adds
+19 passing units and two native cases in 6.61s, including actual two-Department
+locks before child reads. This establishes the declared reviewed-proposal owner
+scope, with purpose exclusions, not the complete multi-owner archive.
+Scheduling's restricted history/canonical-artifact collector passed 38 focused
+units, its serializer passed 37, and five native cases including schema/byte
+round trips passed in 34.56s. It preserves withdrawn historical identity evidence
+without changing normal serving rules. Workforce's complete Programme Shift-link
+history collector passed 21 units and one real reconciled-lineage native case in
+4.94s; its serializer passed 23 units and a repeated native/schema case in 5.18s.
+Venue room-wayfinding passed 43 units and one native independent-policy/schema
+case in 2.33s. Audit/Authorization sections passed 39 units and one native
+tenant/requester/permission test in 2.06s after correcting the foreign-scope
+exception expectation (original failure preserved). Owner contract names were
+aligned with the existing `OWNER.programme-exit@1` envelope.
+Complete eight-owner composition now passes 39 focused units and two actual
+native scenarios: Programme plus independent real source grants/byte encoding
+and repeat-source identity (3.99s), then reviewed proposal/file plus Programme
+host, real source grants and Department-before-person closure (5.40s).
+The initial native grant fixture incorrectly omitted required edition scope;
+the corrected fixture passed without changing authorization. Applications opaque
+source-authorized Department references add three passing units. All source
+sections remain dormant; background task/custody/download acceptance is not done.
+ADR 0109 now contracts requester-bound background tasks, private expiring chunk
+custody and current retrieval checks. The larger pure stream encoder is implemented
+and passes its 102-case combined encoder/provisional-codec batch; it does not yet
+create a task or artifact. The complete fast unit suite subsequently passed
+12,432 cases in 84.66s with three existing URL-field warnings. The combined native
+owner/adjacent-source batch passed 98 cases in 227.07s (before the separate populated
+composition case added above). Full mypy passed 756 source files; documentation
+validation passed 649 Markdown files, four skills and 215 requirement IDs. Two
+format-only corrections followed the initial format check; no source behavior
+changed. This remains focused development evidence, not exact-head certification.
+The broader unit run initially had one missing new-file timing-inventory entry
+failure and 384 setup errors from the inaccessible existing Windows pytest temp
+root. Preserving that failure, adding conservative 300-second whole-file seed
+weights for the two new native files, and using a fresh task-owned temp root
+yielded 11,973 passing units in 69.38s (three existing Django URL-field warnings).
+The active group timing planner still uses its conservative new-group fallback;
+no calibrated cost, coverage threshold or timing safeguard was weakened.
+This is local component evidence, not
+certification or complete #189/#48 acceptance. Remaining bundle work includes
+other owner sections/files, full cross-owner closure, supported background
+packaging/private custody/expiry, visible task/download and integrated P11.
+
 Earlier delivery:
 
 Programme complete placement-history collection is delivered through

@@ -42,6 +42,31 @@ this seam through Workforce rather than loading Events models privately.
 
 ## Owned data and invariants
 
+### Programme exit configuration projection
+
+For EVT-007/INT-007 and ADR 0108, `programme_exit_queries` owns the closed
+`events.programme-exit@1` archive section. Additional
+`programme.export_archive/source_lineage` admission does not replace
+`events.view_basic` or its field ceiling. The section contains only edition
+`id`, `organization_id`, `series_id`, `slug`, `name`, `lifecycle`,
+`aggregate_version`, `adoption_profile_code`, `adoption_profile_version`,
+`time_zone`, `language_codes`, `starts_on` and `ends_on`. Dates are ISO calendar
+strings, UUIDs canonical strings and languages an ordered array. No currencies,
+other-edition inventory, parent private information, lifecycle rationale,
+creation/setup receipt, security key or named-person approval is included.
+Those omissions are explicit: this is the current edition configuration, not
+an Events audit-history or whole-database export. Programme profile permissions
+and recipes are Authorization's separate section.
+
+The reader checks both authorities before any owned content, locks coherent
+Organization/Series/Edition ownership, checks authority again under the lock,
+and repeats admission before returning its explicit JSON/schema. Mandatory
+sensitive-read audit is in the same transaction. Denied, wrong-scope, changed or
+unavailable sources cannot return a partial section. This owner reads no person
+labels and does not lock an actor ahead of the composing archive's full person
+closure. Its section is neither a usable eight-owner archive nor later-download
+authority, and the current profile manifests remain unchanged.
+
 - organization and convention-series scope;
 - immutable code-owned adoption-profile code and version;
 - case-insensitively series-scoped slug and display name;

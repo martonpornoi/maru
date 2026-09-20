@@ -249,6 +249,21 @@ ownership is unavailable, not a partial room list. Exact scope, final
 authorization and required minimized audit precede disclosure. These labels
 are not proof of physical availability or permission to reserve a space.
 
+For #189, `programme_exit_queries.load_programme_exit_venues` composes that
+complete retained room inventory with separate Programme archive-purpose
+admission. Its closed `venues.programme-exit@1` schema includes only those nine
+existing room/Venue identity, version, label and lifecycle fields, with explicit
+purpose `programme-room-wayfinding@1`. It is not a full reusable-property export
+or a historical capacity/availability assertion. Contacts, layout/security/access
+documents, opening restrictions, unrelated bookings and foreign busy calendars
+remain deliberately excluded; Programme exit authority does not grant them.
+The same real workspace field policy, complete 256-room bound and mandatory
+source audit run before return, including for an empty inventory. Canonical
+parent/edition locking, a second complete source comparison and final archive
+admission prevent a changed or denied list becoming a success. JSON/schema are
+bounded to 2 MiB; unknown DTOs, duplicate room IDs and overflow fail closed.
+The whole archive must establish its larger Department/person closure first.
+
 `programme_output_queries.load_released_room_wayfinding` supplies ADR 0097's
 separate public Programme wayfinding boundary. It independently resolves the
 exact-profile-admitted current Programme release, then reads only selected

@@ -306,6 +306,48 @@ Registration, Participation, payment or attendance record is created.
 
 ## Owned state and commands
 
+### Restricted exit history (#189)
+
+The archive-only Scheduling collector requires separate Programme
+`programme.export_archive/source_lineage` admission and the existing Scheduling
+planning, history and release-manifest field ceilings. It retains the complete
+current planning inventory, every candidate's immutable historical manifest,
+all original service-day/occurrence revisions, complete contiguous publication
+and withdrawal history, and independently verified identity-only canonical
+release artifacts. These are restricted historical evidence, not a currently
+valid timetable or permission to dereference another owner's identifiers.
+Withdrawn releases retain their canonical identity evidence but acquire no
+public-copy, host availability, worker calendar or operational-serving rights.
+The ordinary release reader's withdrawn/invalidated suppression is unchanged.
+
+Day revision columns are explicitly `id`, `day_id`, `sequence`, `label`,
+`starts_at`, `ends_at`, `precision_minutes`, `edition_version`, `lifecycle`,
+`actor_id`, `reason`, `occurred_at`; occurrence revision columns are `id`,
+`occurrence_id`, `sequence`, `group_key`, `group_sequence`, `lifecycle`, `actor_id`,
+`reason`, `occurred_at`. Candidate geometry/history remains the existing closed
+owner DTO, never a model dump. Each canonical release record retains release,
+approval, original candidate revision, source digest, predecessor and original
+pointer version plus the checked identity-only artifact contract/digest/bytes.
+No private owner body, dependency directory, command retry key or source secret
+is added to these projections.
+
+The complete collection refuses more than 20,000 candidate revisions, 250,000
+historical placement memberships, 100,000 day/occurrence revisions, 10,000
+pointer-history entries or 64 MiB of canonical artifacts. These are explicit
+archive budgets, not silent truncation of the larger planning history limits.
+Sequence gaps, changed current inventories, incomplete artifacts, any independent
+source denial or required audit failure leave no complete result. Canonical
+parent/edition locks cover owned writes; the full cross-owner archive must
+establish its complete Department/person/physical closure before child reads.
+No live dependency-validity claim is made by exporting historical identities.
+Its portable `scheduling.programme-exit@1` JSON declares that historical-only
+purpose, carries explicit day/occurrence column names and closed typed planning,
+geometry, history and release records, and forbids undeclared fields. Canonical
+artifact payloads are lossless UTF-8 JSON strings; re-encoding the string as UTF-8
+must reproduce the recorded digest/byte count. Arbitrary binary values remain
+forbidden. The owner JSON budget is 128 MiB/two million values, including the
+escaped canonical payloads; encoding failure refuses the whole section.
+
 The isolated #108 fixture now prepares first publication through actual owner
 preflight, independent approval and separate publication commands, exact retries
 and author/approver/stale-pointer denials. It composes current public, own-host,

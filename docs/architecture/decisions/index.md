@@ -20,6 +20,11 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0109](0109-bounded-programme-archive-custody.md) selects purpose-specific
+request tasks, bounded larger ZIP encoding and expiring PostgreSQL chunk custody,
+with current requester/source checks at actual retrieval. Its implementation and
+native/integrated acceptance remain required; no current profile is activated.
+
 [ADR 0108](0108-purpose-controlled-programme-exit-archive.md) reserves an explicit
 Programme export purpose in addition to independent source rights, preserving
 ordinary field ceilings and requiring requester-bound, audited asynchronous

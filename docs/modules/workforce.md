@@ -860,6 +860,29 @@ Restricted actor references and rationale appear only in that historical purpose
 they confer no personnel directory, private commitment or Scheduling authority.
 Both reads retain canonical scope, reauthorize and audit before disclosure.
 
+The #189 Programme exit collector joins **all retained edition binding lineages**
+through these two existing readers, with additional
+`programme.export_archive/source_lineage` admission. Every current binding and
+every contiguous historical revision is retained, including demand predecessor
+links. The explicit portable schema contains item ID, the closed binding fields
+and their eight-field Programme staffing source, and history actor ID, rationale
+and time. Source and demand identifiers confer no right to follow them into
+private personnel records. This is Programme's Shift-link archive, not a complete
+Workforce export: unrelated demands, volunteer identities, availability calendars
+and private commitment reasons are never loaded. Work terms remain in the
+independently authorized Programme requirement history; an old link is not a
+current staffing or coverage promise.
+
+The complete owner inventory is bounded at 10,000 binding lineages and 100,000
+retained binding revisions. Current and historical source fields plus Workforce
+work-field admission remain required even for an empty result. Complete binding
+inventory, exact item scope, contiguous versions and final current-source checks
+must agree under the canonical parent/edition fence; denial, changed source,
+missing evidence, audit failure or overflow returns no successful partial result.
+The full archive composer must acquire its complete cross-owner Department and
+person closure before invoking these audited reads. JSON uses canonical UUID
+strings and UTC instants, explicit field allowlists and a 64 MiB section budget.
+
 `programme_navigation.programme_shift_links` constructs only optional exact-demand
 destinations from current bindings already admitted and audited by their owner.
 It requires all `SHIFT_ORGANIZER_REQUIRED_FIELDS`, including holder labels;
