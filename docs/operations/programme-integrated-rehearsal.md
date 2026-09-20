@@ -719,7 +719,13 @@ first-publication rollback/races and P08–P12 remain separate acceptance. See t
 
 `ProgrammeRunningFixture.prepare_change(proposal, review, items, planning, physical,
 staffing, release)` validates all eight original source documents before its fixed
-private child. Genuine startup, original lease and 180-second stage ceiling remain
+private child. Genuine startup and the original lease remain mandatory. The P08
+composite child has a 600-second ceiling for retained-work succession, full
+republication and three independent prepare/review/handoff/acknowledgement flows;
+it never extends the original fixture lease or any individual owner/database limit.
+The populated JUnit report records each preparation phase's elapsed time and
+passed/failed state, including on failure. This host-only fixture ceiling does
+not change CI shard/job budgets. The other existing stage ceilings remain
 mandatory. Original controllers approve nine existing source/notice recipes,
 including a run-sheet role for exactly the first room and its original physical
 reviewer. Both notice decision permissions deliberately exercise self-review denial;
@@ -867,16 +873,27 @@ module and replay affected checkpoints, including downstream consequences.
 
 P11 archive preparation follows ADR 0108: require the separately approved
 `exit-archive@1` purpose and every existing owner source/history/file permission.
-The current implementation only reserves this dormant boundary; it creates no
-export task or downloadable artifact. Check source lineage independently from
+The local exit bundle implements the dormant eight-owner composition and bounded
+requester-owned task/chunk custody; protected delivery and populated P11 acceptance
+remain pending. Check source lineage independently from
 ordinary history access, anonymous/file withholding before lookup, requester-only
 execution/retrieval, revocation, source drift, complete scope, expiry and audit.
-Native migration/scope/recipe cases remain #102 debt under ADR 0100. A schema-only
-metadata observation, if separately approved, is not P11 or PostgreSQL workflow
-acceptance. No current manifest may be activated from these preparations.
+Native migration/scope/recipe acceptance was restored through #102 / PR #195;
+the new complete bundle needs its own exact-head certification. A schema-only
+metadata observation is not P11 or PostgreSQL workflow acceptance. No current
+manifest may be activated from these preparations.
 
 P12 is an assertion at every relevant checkpoint, not just a final count. Absence
 of a navigation link does not prove absence of writes, authority, jobs or effects.
+The populated host-only fixture opts into `with_isolation=True`: it retains one
+pre-setup, read-only baseline for all 97 excluded-owner tables and checks it after
+every implemented phase. Native SHA-256 row fingerprints detect additions, edits
+and removals without returning row contents; inventory/source/role drift, a
+10,000-row per-table limit or database timeout refuses the checkpoint. Each check
+also rejects out-of-manifest event/version or delivery routes and excluded-owner
+grant/bundle capabilities. The baseline is never refreshed after a difference.
+This observer remains test-only and does not prove the denial matrix by itself;
+see its [evidence and limits](../checkpoints/2026-09-20-programme-excluded-state-inventory.md).
 Include wrong-tenant direct requests, revoked authority, stale versions, exact
 retries, unavailable dependencies, rollback and empty/overflow responses. Retain
 both positive and denial/audit evidence without logging private answer contents.

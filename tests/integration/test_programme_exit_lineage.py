@@ -11,7 +11,7 @@ from time import monotonic
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import close_old_connections, connection, connections
+from django.db import DatabaseError, close_old_connections, connection, connections
 
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
@@ -19,6 +19,7 @@ from maru.events import programme_exit_queries as event_exit
 from maru.identity.models import Account
 from maru.programme import (
     archive_authorization,
+    archive_custody,
     archive_generation,
     archive_queries,
     archive_tasks,
@@ -366,6 +367,80 @@ def test_native_source_change_waits_for_generation_then_invalidates_retrieval(
     assert current.source_changed
     assert current.size_bytes == 0
     assert current.chunks == ()
+
+
+def test_native_backend_loss_discards_partial_archive_and_allows_deliberate_retry(
+    archive_workflow, monkeypatch
+):
+    scope, task_id, request, item = archive_workflow
+    assert archive_generation._claim(scope, task_id)
+    stored, resume = Event(), Event()
+    worker_pid = Queue()
+    application_name = "maru-archive-crash-" + uuid4().hex
+    original_store = archive_custody._ArchiveChunkSink._store
+
+    def pause_after_native_chunk(sink):
+        original_store(sink)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT set_config('application_name', %s, true), pg_backend_pid()",
+                [application_name],
+            )
+            worker_pid.put(cursor.fetchone()[1])
+        assert ProgrammeArchiveChunk.objects.filter(task_id=task_id).exists()
+        stored.set()
+        assert resume.wait(10)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+
+    monkeypatch.setattr(
+        archive_custody._ArchiveChunkSink, "_store", pause_after_native_chunk
+    )
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        worker = executor.submit(
+            _separate_connection, lambda: archive_generation._generate(scope, task_id)
+        )
+        try:
+            assert stored.wait(10)
+            assert not ProgrammeArchiveChunk.objects.filter(task_id=task_id).exists()
+            with connection.cursor() as cursor:
+                # Kill only this test's observed connection, in this test database,
+                # under its unique application marker. Never select an arbitrary PID.
+                cursor.execute(
+                    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                    "WHERE pid = %s AND datname = current_database() "
+                    "AND usename = current_user AND application_name = %s "
+                    "AND pid <> pg_backend_pid()",
+                    [worker_pid.get(timeout=5), application_name],
+                )
+                assert cursor.fetchall() == [(True,)]
+        finally:
+            resume.set()
+        with pytest.raises(DatabaseError):
+            worker.result(timeout=15)
+    monkeypatch.setattr(archive_custody._ArchiveChunkSink, "_store", original_store)
+    assert ProgrammeArchiveTask.objects.get(id=task_id).state == "running"
+    assert not ProgrammeArchiveChunk.objects.filter(task_id=task_id).exists()
+    assert not archive_generation.dispose_due_programme_archive(task_id=task_id)
+    with pytest.raises(ProgrammeArchiveUnavailableError):
+        archive_queries.inspect_programme_archive(
+            scope=scope, task_id=task_id, download=True
+        )
+    cancel_programme_archive(
+        scope=scope,
+        task_id=task_id,
+        expected_version=2,
+        authorizer=request["authorizer"],
+    )
+    replacement = request_programme_archive(
+        scope=scope,
+        request_key=uuid4(),
+        previous_task_id=task_id,
+        authorizer=request["authorizer"],
+    )
+    assert archive_generation.generate_programme_archive(task_id=replacement) == "ready"
+    assert ProgrammeArchiveTask.objects.get(id=task_id).state == "cancelled"
+    assert ProgrammeItem.objects.filter(id=item.id).exists()
 
 
 def test_retrieval_rechecks_an_independent_owner_after_success(

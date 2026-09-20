@@ -155,6 +155,28 @@ def test_change_stage_requires_policy_and_prepared_setup(launch_seams, monkeypat
     run.assert_not_called()
 
 
+def test_composite_change_is_still_capped_by_original_lease(launch_seams, monkeypatch):
+    sources = _change_sources()
+    run = Mock(
+        return_value=SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps(asdict(_change_result(sources)), default=str),
+        )
+    )
+    monkeypatch.setattr(runner.subprocess, "run", run)
+    with runner.isolated_programme_application() as original:
+        fixture = replace(original, scenario=sources[0])
+        monkeypatch.setattr(runner, "remaining_lease", lambda _deadline: 900)
+        fixture.prepare_change(*sources[1:])
+        assert run.call_args.kwargs["timeout"] == 600
+        monkeypatch.setattr(runner, "remaining_lease", lambda _deadline: 17)
+        fixture.prepare_change(*sources[1:])
+        assert run.call_args.kwargs["timeout"] == 17
+        run.side_effect = subprocess.TimeoutExpired("private", 17)
+        with pytest.raises(runner.ProgrammeHttpsError, match="failed_timeout"):
+            fixture.prepare_change(*sources[1:])
+
+
 @pytest.mark.parametrize("failure", [None, "nonzero", "timeout", "oversize", "source"])
 def test_release_child_retains_original_full_chain_private_pipe_and_lease(
     launch_seams, monkeypatch, failure
@@ -728,6 +750,32 @@ def test_requested_setup_runs_before_server_and_refreshes_real_workers(
         assert prepare.call_args.kwargs["mode"] == "existing_series"
         assert prepare.call_args.kwargs["deadline"] == fixture.deadline
         assert "PRIVATE_KEY" not in prepare.call_args.kwargs["environment"]
+
+
+def test_excluded_baseline_precedes_setup_and_is_never_silently_refreshed(
+    launch_seams, monkeypatch
+):
+    calls = []
+    baseline = object()
+    monkeypatch.setattr(
+        runner,
+        "capture_excluded_state",
+        lambda _runtime: calls.append("baseline") or baseline,
+    )
+    monkeypatch.setattr(
+        runner, "_prepare_setup", lambda **_kwargs: calls.append("setup") or object()
+    )
+    verify = Mock()
+    monkeypatch.setattr(runner, "verify_excluded_state", verify)
+    with runner.isolated_programme_application(
+        setup_mode="new_foundation", with_isolation=True
+    ) as fixture:
+        assert calls == ["baseline", "setup"]
+        fixture.verify_excluded_state()
+        fixture.verify_excluded_state()
+        assert fixture.excluded_state_baseline is baseline
+        assert verify.call_count == 2
+        verify.assert_called_with(fixture.runtime, baseline)
 
 
 def test_continuity_key_is_web_only_and_trust_is_independently_retained(

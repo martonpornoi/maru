@@ -138,6 +138,7 @@
   "tests/integration/test_programme_database_integrity.py": 33.895,
   "tests/integration/test_programme_department_ownership_races.py": 29.097,
   "tests/integration/test_programme_department_ownership_recovery.py": 7.572,
+  "tests/integration/test_programme_excluded_inventory.py": 300.0,
   "tests/integration/test_programme_exit_lineage.py": 300.0,
   "tests/integration/test_programme_hosts.py": 296.705,
   "tests/integration/test_programme_operational_public_review.py": 29.955,

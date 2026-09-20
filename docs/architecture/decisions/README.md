@@ -115,6 +115,7 @@ the system.
 | [0108](0108-purpose-controlled-programme-exit-archive.md) | Accepted; implementation pending | Require separate restricted Programme export purpose plus independent source rights, explicit lineage and requester-bound asynchronous artifact handling |
 | [0109](0109-bounded-programme-archive-custody.md) | Accepted; implementation pending | Bound requester-only background Programme archives, private chunk custody, current retrieval checks and derived-artifact expiry without widening source access |
 | [0110](0110-identity-invitation-writer-cutover.md) | Accepted; implementation pending | Complete the independently observed Identity invitation writer generation without adopting Registration or weakening Programme rehearsal readiness |
+| [0111](0111-accountable-programme-stop-use.md) | Proposed | Reuse Events' archived state through a separate accountable Programme stop boundary without full-convention side effects or unrelated authority revocation |
 
 New ADRs use the next four-digit number and contain:
 

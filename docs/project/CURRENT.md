@@ -23,129 +23,79 @@ The exact-head PR gate and all three CodeQL analyses passed. #102 is closed;
 #189/#190/#108/#109/#97/#92/#48 remain open. No profile is activated. See the
 [protected restoration evidence](../checkpoints/2026-09-20-postgresql-restoration-protected-delivery.md).
 
-The next branch, `codex/programme-exit-bundle`, starts from that protected result.
-Its initial delivery-record documentation is prepared locally for the next larger
-bundle, not a separately certified or published feature. Complete #189's archive
-outcome and P11 composition together; then #190 stop-use and integrated recovery.
+## Local Programme exit bundle
 
-The owner/composition milestone is retained in local commit `06bb6b7`; see the
-[owner checkpoint](../checkpoints/2026-09-20-programme-exit-owner-composition.md).
-All eight declared owners and original clean files now compose under complete
-canonical Department/person locks, with source identity and bounded ZIP encoding.
-This is not yet protected delivery or production activation.
+Branch `codex/programme-exit-bundle` continues from protected PR #195. Local
+commits through `ee2a6a3` are not pushed, fully certified or protected-delivered.
+No current profile, production route or production data has been activated.
 
-The local custody/workflow continuation implements requester-bound requests, native lifecycle and
-private chunk custody (Programme migrations 0020/0021), explicit cancellation/retry,
-single-worker supervision, current-source private inspection/download and a dormant
-shared-shell screen, retained in local commit `4f9e3be`. Default runtime tables
-remain SELECT-only; production URLs and profiles are unchanged. The worker has a
-hard 20-minute child limit and finite database timeouts, not an installed service.
+The bundle implements #189's eight-owner restricted exit package, complete source
+lineage and original clean files; requester-bound asynchronous custody, expiry,
+cancellation, worker bounds and private retrieval; and the dormant shared-shell
+archive screen. Generation/retrieval preserve every independent owner permission,
+source version, field/retention ceiling and complete canonical lock order.
+See the [owner composition](../checkpoints/2026-09-20-programme-exit-owner-composition.md)
+and [custody/workflow](../checkpoints/2026-09-20-programme-exit-custody-workflow.md)
+checkpoints for implementation and limits.
 
-Local commit `f030d59` extends only the owned #109 candidate with
-the archive purpose/recipe/adapter, reserved route and three least-privilege table
-classes for genuine P11 runtime acceptance. This is preparation, not evidence
-that the newly extended isolated fixture has completed successfully.
+Real restricted-runtime execution exposed three necessary owner corrections:
 
-Real isolated execution now exposes a required foundation prerequisite tracked
-explicitly as [#196](https://github.com/martonpornoi/maru/issues/196) in #48's
-delivery decomposition and #109. Three fresh owned runtime attempts correctly
-refused invitation readiness before setup/archive execution (about 3m01s each).
-Those initial runs passed database/provenance, Programme/Scheduling/Applications/
-Venues integrity, Logistics and setup/role/starter checks but refused the missing
-invitation writer generation. The narrow correction below preserves every native
-and encryption gate; it does not adopt Registration or activate production.
-See the [native prerequisite checkpoint](../checkpoints/2026-09-20-programme-native-identity-prerequisite.md).
-ADR 0110's independent Identity cutover is now implemented locally. Identity
-0023 preserves the existing inert legacy-delivery check, rejects invitation-purpose
-conversion, and adds observed generation/recovery enforcement; generic challenge
-services now reject invitation and unknown purposes before side effects. Actual
-isolated startup passes full invitation readiness. Native adjacent tests passed
-280 cases in 50.57s, public/retention regressions 10 in 10.40s, and corrected
-fresh/populated writer migration tests 17 in 4.00s. The expanded fail-closed unit
-batch passed 46 in 0.29s; the preceding full fast suite passed 12,575 in 71.88s.
+- #196: Identity 0023 independently observes and fences invitation writer cutover.
+- #197: Authorization 0039 preserves exact native Maru-operator root lineage.
+- #175/P06: Workforce 0029 admits exact Programme assignment evidence without
+  Participation, preserving existing profiles and inherited downgrade fences.
 
-Real setup then exposed [#197](https://github.com/martonpornoi/maru/issues/197):
-active native provenance recognized only Executive Board ceremony evidence
-in its completeness/historical functions, refusing supported Maru-operator
-activation. Authorization 0039 now corrects all three native validators locally,
-preserving original Board branches and exact function identity/privileges. Native
-readiness pins observed metadata and recognizes both exact definitions. Thirteen
-focused activation/differential/delegation/containment/history/migration cases
-passed in 25.45s, and the broader neighboring batch passed 105 in 132.05s.
+These changes do not bypass provenance, encryption, scanning or native readiness.
+The original standalone archive runtime test passes in 270.15s. The real offline
+scanner/public preparer passes in 15.81s with explicit bounded signature refresh.
+The populated journey corrected its collaborator-only acknowledgement, complete
+fictional Venue inputs and exact reviewed-copy locking permission. The latter is
+candidate-only; native history remains immutable and production ACLs are unchanged.
+See the [root/archive](../checkpoints/2026-09-20-programme-native-root-and-archive.md),
+[scanner](../checkpoints/2026-09-20-programme-offline-scanner-runtime.md) and
+[assignment](../checkpoints/2026-09-20-programme-native-assignment-preparation.md)
+checkpoints.
 
-The unmodified real restricted-runtime archive component now passes in 270.15s:
-fresh setup, independently approved source/export rights, complete empty-owner
-archive, requester-only HTTPS retrieval and cancellation. The full fast suite
-passed 12,609 in 70.49s. This does not claim the populated P01–P12 journey.
-That journey exposed scanner fixture dependencies: the immutable image was absent
-(now explicitly cached), internal-only Docker networking does not publish a port,
-and real 1.5.4 signatures dated September 13 exceed the seven-day freshness limit.
-The closed loopback exec transport and separate explicitly opted-in public-signature
-refresh now pass the actual ClamAV/public-preparer check in 15.81s. The updater
-finishes before scanning and the offline daemon sees signatures read-only; owned
-resources are disposed. Sixty-one focused transport/lifecycle/refresh units passed
-in 0.88s; the full fast suite passed 12,646 in 72.77s. Freshness and real-scanning
-requirements are not waived. The populated journey exposed a rehearsal-only
-mistake: the lead was asked to use the collaborator-only acknowledgement command.
-The corrected sequence preserves the product boundary and now passes actual
-proposal, review, conversion and item preparation, stopping in planning after
-332.43s. Content-free diagnostics (343.60s) identified missing required Venue
-location/address/country inputs. These now use explicit fictional values and
-the real owner normalizer in unit coverage; the native continuation passed
-planning and independent physical approval.
-The adjacent 53 fixture units passed in 0.98s. No complete journey is claimed.
-See the [writer/setup checkpoint](../checkpoints/2026-09-20-programme-native-writer-and-setup.md).
-See the [native root/archive result](../checkpoints/2026-09-20-programme-native-root-and-archive.md).
-See the [actual scanner checkpoint](../checkpoints/2026-09-20-programme-offline-scanner-runtime.md).
+Latest unmodified populated execution passed P08, including successor release,
+retained work and three complete notice workflows, plus every intervening
+comparison against the pre-setup baseline of 97 excluded-owner tables. P07 took
+181.906s and P08 251.406s. The run failed after 980.58s at an on-site operator
+HTTP request; the closed transport error does not establish its cause. A separate
+redacted latency diagnostic is in progress, temporarily observing HTTP responses
+up to 60s within the unchanged lease. It is not unmodified acceptance; the
+maintained HTTP budget remains 15s. No CI shard/job timeout changed.
 
-P06 then exposed a missing native exact-adoption branch after 451.26s. Workforce
-0029 now prepares Programme's no-Participation assignment evidence without
-selecting/activating that profile; all older-profile rules and function privileges
-remain intact. Reverse execution preserves the inherited shared recovery fence
-before any successor removal. Seven native cases passed in 14.08s and 55 adjacent
-assignment/starter/root-lineage cases in 145.70s. The fresh real-runtime diagnostic
-passed staffing and reached release after 615.72s, where the isolated candidate
-lacked UPDATE needed to lock reviewed public copy. That one candidate permission
-is corrected without changing production ACLs or native immutability; complete
-native source-lock inventory and adjacent units passed 61 cases in 0.80s.
-The complete fast suite passed 12,652 tests in 82.18s; native reviewed-copy locking
-and immutable-history rejection passed in 3.97s. Documentation validation passed
-661 Markdown files, four skills and 215 requirements.
-The complete journey remains pending. See the [assignment checkpoint](../checkpoints/2026-09-20-programme-native-assignment-preparation.md).
+Recent focused evidence:
 
-Focused evidence: 51 native custody/whole-owner workflow tests passed in 89.64s,
-including complete ZIP retrieval, source drift, audit rollback, partial-custody
-rollback, real worker serialization and unused/used migration reversal. The
-UI/resource/worker/ACL unit batch passed 98 cases in 1.25s. The broader unit run
-then found stale closed schema and rehearsal-source inventories: 48 failures,
-7 setup errors, 12,462 passes in 72.92s. Reviewed updates add only three read-only
-archive relations, eight triggers, five functions and two migrations; source pins
-were recalculated, not guessed or used to bypass native readiness. The affected
-193-unit regression batch passed in 2.01s. The complete corrected fast suite passed
-12,517 tests in 70.13s (three existing Django URL-field warnings). Documentation
-validation passed 652 Markdown files, four skills and 215 requirement IDs.
-See the [custody checkpoint](../checkpoints/2026-09-20-programme-exit-custody-workflow.md).
+- 57 native archive custody/composition/race/resource cases: 103.06s.
+- Seven native assignment/recovery cases: 14.08s; 55 adjacent cases: 145.70s.
+- Native reviewed-copy locking/immutable-history rejection: 3.97s.
+- Four native excluded-inventory mechanics cases: 1.11s.
+- Actual archive-generation database-connection loss, partial-byte rollback and
+  deliberate cancellation/retry: one native case passed in 5.40s.
+- 95 observer/orchestration units: 0.76s; 280 adjacent runtime/CI units: 2.30s.
+- Complete fast suite including inventory additions: 12,666 passed in 85.95s,
+  with three existing URL-field warnings.
 
-Additional actual PostgreSQL races prove cancellation before generation cannot
-publish, cancellation during generation serializes and needs a fresh version,
-and source withdrawal waits for generation then invalidates retrieval. A 40 MiB
-synthetic codec/custody load round-trip used 41 bounded chunks and about 50.1 MiB
-tracked Python memory in 2.20s; disposal retained lifecycle evidence. This is not
-maximum-capacity, complete-owner resource or RSS evidence. Four combined race/load
-checks passed in 14.28s, and two final-authority/deadline rollback cases in 5.35s.
-The preceding expanded archive batch passed 53 tests in 92.56s; the final 57-case
-batch passed in 103.06s. The complete fast suite passed 12,646 tests in 71.54s
-(three existing URL-field transition warnings); documentation validation passed
-660 files, four skills and 215 requirements. See the [rehearsal/race checkpoint](../checkpoints/2026-09-20-programme-native-rehearsal-and-archive-races.md).
+The 40 MiB synthetic archive load measured about 50.1 MiB tracked Python memory;
+that is not maximum-capacity, complete-owner or RSS evidence. The excluded-owner
+observer does not prove the complete role/object/field denial matrix or activity
+created and deleted between observations. Browser connection works, but private
+fixture credential handoff is blocked by Windows before setup; no UI acceptance,
+credential logging or weakened security is claimed. See the
+[rehearsal/race](../checkpoints/2026-09-20-programme-native-rehearsal-and-archive-races.md)
+and [inventory](../checkpoints/2026-09-20-programme-excluded-state-inventory.md)
+checkpoints.
 
-Remaining before the archive/P11 bundle is complete: broader regression/coverage,
-remaining expiry and native complete-owner resource/recovery acceptance,
-synthetic integrated P11 wiring, genuine browser acceptance, exact-head local
-certification and protected hosted delivery. The archive screen does not itself
-complete #189, #108 or #48. Then prioritize #190 stop-use, remaining #175 acceptance,
-#108 promotion, #109 P01–P12, #97 logical restore and #92 genuine human evidence.
-PostgreSQL checks remain required; no deferred policy, fake success receipt,
-production activation or merge bypass has been introduced.
+Next: finish populated archive/P11, remaining bounded recovery/resource and browser
+acceptance, then #190 stop-use and remaining #175 acceptance. Proposed
+[ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md) examines
+a separate Events-owned Programme stop operation using the archived state; it is
+not accepted or implemented. Complete the owner entry/history inventory first.
+Then finish #108 promotion, #109 P01–P12, #97 logical restore and #92 genuine human
+evidence. Keep #189/#190/#108/#109/#97/#92/#48 open until their actual outcomes.
+Full risk-selected exact-head local certification and protected hosted delivery
+remain required; no test deferral, false success receipt or merge bypass.
 
 Earlier delivery:
 

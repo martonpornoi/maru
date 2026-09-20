@@ -23,6 +23,11 @@ from tests.rehearsals.programme_continuity_material import (
     generate_continuity_material,
 )
 from tests.rehearsals.programme_database import isolated_programme_database
+from tests.rehearsals.programme_excluded_state import (
+    ExcludedStateSnapshot,
+    capture_excluded_state,
+    verify_excluded_state,
+)
 from tests.rehearsals.programme_fixture_material import (
     ProgrammeFixtureMaterial,
     generate_fixture_material,
@@ -177,6 +182,14 @@ class ProgrammeRunningFixture:
     scanner: ProgrammeScannerLease | None = None
     _application_environment: dict[str, str] = field(default_factory=dict, repr=False)
     continuity_trust_policy: bytes | None = field(default=None, repr=False)
+    excluded_state_baseline: ExcludedStateSnapshot | None = field(
+        default=None, repr=False
+    )
+
+    def verify_excluded_state(self):
+        """Check the original pre-setup baseline; never infer role/field acceptance."""
+        remaining_lease(self.deadline)
+        verify_excluded_state(self.runtime, self.excluded_state_baseline)
 
     def refresh_workers(self):
         """Run actual workers before each long checkpoint; never renew the lease."""
@@ -587,7 +600,10 @@ class ProgrammeRunningFixture:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
                 text=True,
-                timeout=min(180, remaining_lease(self.deadline)),
+                # P08 includes retained work, complete successor publication and
+                # three independent prepare/review/handoff/acknowledgement flows.
+                # Bound this composite, not each operation, by the original lease.
+                timeout=min(600, remaining_lease(self.deadline)),
                 check=False,
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
             )
@@ -599,7 +615,9 @@ class ProgrammeRunningFixture:
                 staffing=sources[6],
                 release=sources[7],
             )
-        except (OSError, subprocess.TimeoutExpired, ValueError):
+        except subprocess.TimeoutExpired:
+            raise ProgrammeHttpsError("fixture_change_process_failed_timeout") from None
+        except (OSError, ValueError):
             raise ProgrammeHttpsError("fixture_change_process_failed") from None
 
     def prepare_continuity_transition(self, sources, changed, *, operation):
@@ -672,7 +690,7 @@ class ProgrammeRunningFixture:
 
 @contextmanager
 def isolated_programme_application(
-    *, setup_mode=None, with_scanner=False, with_continuity=False
+    *, setup_mode=None, with_scanner=False, with_continuity=False, with_isolation=False
 ):
     """Prepare, verify and temporarily serve one owned native loopback candidate.
 
@@ -687,6 +705,8 @@ def isolated_programme_application(
     with_continuity
         Explicit test-only dedicated signing key after real setup; verifier trust
         comes independently from the launcher, never from the downloaded package.
+    with_isolation
+        Retain a read-only excluded-owner baseline before any setup scenario.
 
     Yields
     ------
@@ -711,6 +731,8 @@ def isolated_programme_application(
         raise ProgrammeHttpsError("invalid_fixture_scanner_option")
     if type(with_continuity) is not bool or (with_continuity and setup_mode is None):
         raise ProgrammeHttpsError("invalid_fixture_continuity_option")
+    if type(with_isolation) is not bool:
+        raise ProgrammeHttpsError("invalid_fixture_isolation_option")
     deadline = time.monotonic() + request.lease_seconds
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as reservation:
         reservation.bind(("127.0.0.1", 0))
@@ -766,6 +788,9 @@ def isolated_programme_application(
                 environment | material.worker_environment(),
                 scanner=scanner,
                 _application_environment=environment,
+                excluded_state_baseline=(
+                    capture_excluded_state(runtime) if with_isolation else None
+                ),
             )
             fixture.refresh_workers()
             if setup_mode is not None:
