@@ -22,6 +22,7 @@ from tests.rehearsals.programme_runner import isolated_programme_application
 from tests.rehearsals.programme_runtime_environment import (
     require_programme_rehearsal_request,
 )
+from tests.rehearsals.programme_stop_scenario import verify_stop_runtime
 
 require_programme_rehearsal_request()
 pytestmark = pytest.mark.integration
@@ -346,6 +347,7 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             changed,
         )
         prepare(verify_incomplete_backup_rejected, fixture)
+        prepare(verify_stop_runtime, fixture)
     # Maintained HTTP assertions are not browser/native-print or human evidence.
     # P11 stop-use/recovery and complete cross-tenant/role/field P12 remain open.
 

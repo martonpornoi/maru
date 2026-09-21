@@ -33,9 +33,40 @@ and compare the original preview before mutation. Effects additionally locks
 existing outbox rows while counting, without processing or cancelling them.
 Global security and independently adopted/shared work remain independent.
 
-The complete Events transition, combined preview/confirmation UI, native terminal
-receipt closure and P11/P12 acceptance remain unfinished. These public queries
-enable no stop action, current profile or production route.
+`programme_stop_composition.load_programme_stop_preview` now collects all seven
+owners under canonical shared-authority, representation, parent/structure and
+complete retained-release-person locks. Its immutable UTF-8 snapshot binds actual
+actor, exact scope, both Events versions and every minimized owner projection,
+with a 4 MiB complete-preview ceiling. Independent owner reads remain audited.
+
+`programme_stop_commands.stop_programme` rebuilds that snapshot before acting.
+If an active pointer exists, the actual actor must also pass Scheduling's existing
+release-withdrawal command; its real outcome is retained beside the original
+preview. It then archives directly, writes the ordinary Events transition,
+native audit/release-invalidation evidence, internal domain event and immutable
+stop receipt atomically. No intermediate lifecycle, blanket grant revocation,
+Participation snapshot or completed work is manufactured. Exact current-authority
+retry returns the original receipt; changed intent cannot reuse its key.
+
+Events 0016 depends on all six native owner boundaries. It binds terminal changes
+reciprocally to same-transaction receipt, original UTF-8 intent, complete bounded
+preview, actual withdrawal, Audit witness and domain event. The generic transition
+path refuses Programme archive/cancel; raw terminal updates without a receipt
+cannot commit. Used stop evidence prevents downgrade. Readiness checks the complete
+receipt relation plus both exact terminal attachments, not a permissive subset
+claim about unrelated legacy Events guards. No production profile or route is
+activated. Real restricted-runtime composition proves active-release withdrawal,
+rollback, original retry and retained artifacts. Concurrency, stopped-state
+recovery, HTTP/browser composition and complete P11/P12 acceptance remain open.
+
+The dormant `programme_stop_views` screen uses strict original-version/digest/key
+forms and actual signed-in/route scope, not a newly substituted preview on POST.
+Missing withdrawal authority offers no confirmation. Errors preserve original
+input for deliberate retry; terminal context has no operating/reopen controls.
+`programme_stop_receipt_queries.load_programme_stop_receipt` restricts minimized
+historical detail to the original actor with current controller prerequisites,
+auditing before disclosure without revealing another actor's reason or sources.
+See the [Stop Programme page contract](../product/page-contracts/programme-stop-use.md).
 
 ## Purpose and requirements
 
@@ -414,19 +445,19 @@ Stop confirmation has a dormant database-free input boundary in
 aggregate and lifecycle versions, complete preview fingerprint and a required
 240-character accountable reason form one purpose-separated request digest.
 It performs no discovery, authorization, profile registration or transition.
-The owner/native stop command and complete preview remain pending under
+The composed preview and owner/native command described above implement
 [ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md);
-input validation alone must never be exposed as a working Stop Programme action.
+input validation alone never supplies stop authority or native readiness.
 
 Migration `0015_programme_stop_receipt` adds immutable, select-only retained
 storage binding original actor/key, intent/preview digests, expected lifecycle
 and aggregate versions, transition, audit and impact document. Its initial native
-guard refuses **all** inserts until complete terminal admission is installed;
-the ORM writer context cannot bypass that rule. Used receipts fence normal
-downgrade before either storage or guards can be removed. The preparation probe
-pins the full migration sources, receipt schema, and Scheduling/Workforce stop
-attachments. A passing preparation probe is not complete owner closure and must
-never enable the Stop Programme command by itself.
+guard refuses **all** inserts until migration 0016 installs complete terminal
+admission; the ORM writer context cannot bypass either rule. Used receipts fence
+normal downgrade before storage or guards can be removed. Full command readiness
+pins both migration sources, receipt schema and exact native terminal attachments.
+Every owner independently checks its required stop fence during composition;
+storage or profile registration alone never enables a stop.
 
 `programme_stop_queries.resolve_programme_stop_reference` supplies a minimized
 exact-owner observation for those owner checks: whether the version-one Programme

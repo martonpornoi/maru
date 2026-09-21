@@ -14,6 +14,7 @@ from maru.applications import programme_stop_queries as queries
 from maru.audit.models import AuditEvent
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.programme_stop_queries import load_programme_stop_effects
+from maru.events.programme_stop_composition import load_programme_stop_preview
 from maru.programme import programme_stop_queries as content_queries
 from maru.programme.authorization import DEFAULT_PROGRAMME_AUTHORIZER
 from maru.scheduling.day_commands import create_scheduling_service_day
@@ -53,6 +54,92 @@ def _read(world, reader, **changes):
             **changes,
         }
     )
+
+
+def _preview(world, reader, **changes):
+    return load_programme_stop_preview(
+        **{
+            "actor_id": reader[0].id,
+            "organization_id": world[0].id,
+            "edition_id": world[1].id,
+            "correlation_id": uuid4(),
+            **changes,
+        }
+    )
+
+
+def test_composed_preview_binds_all_seven_owners_without_mutating_work(
+    world, reader, call
+):
+    before = (
+        world[1].lifecycle,
+        world[1].aggregate_version,
+        world[1].lifecycle_version,
+    )
+    trace = uuid4()
+    original = _preview(world, reader, correlation_id=trace)
+    assert tuple(row.owner for row in original.inventories) == (
+        "applications",
+        "programme",
+        "workforce",
+        "venues",
+        "effects",
+    )
+    assert original.scheduling.inventory.owner == "scheduling"
+    assert len(original.authority.assignments) >= 2
+    assert original.scheduling.active_release_id is None
+    assert original.scheduling.pointer_version == 0
+    assert original == _preview(world, reader)
+    assert len(original.fingerprint) == 64
+    assert str(call.active.target_id) not in repr(original)
+    world[1].refresh_from_db()
+    assert before == (
+        world[1].lifecycle,
+        world[1].aggregate_version,
+        world[1].lifecycle_version,
+    )
+    assert AuditEvent.objects.filter(correlation_id=trace, outcome="allow").count() == 8
+
+
+def test_composed_original_confirmation_changes_when_an_owner_changes(
+    world, reader, call
+):
+    original = _preview(world, reader)
+    commands.retire_programme_call(
+        **call.common,
+        call_id=call.active.target_id,
+        owner_department_id=call.department.id,
+        expected_version=call.active.resulting_version,
+        reason="Synthetic owner change after complete stop preview.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    fresh = _preview(world, reader)
+    assert original.aggregate_version == fresh.aggregate_version
+    assert original.fingerprint != fresh.fingerprint
+
+
+def test_composed_denial_has_no_owner_inventory_or_target_disclosure(world, reader):
+    trace = uuid4()
+    with pytest.raises(AuthorizationDenied):
+        _preview(world, reader, actor_id=world[2].id, correlation_id=trace)
+    event = AuditEvent.objects.get(correlation_id=trace)
+    assert event.operation == "events.query.programme_stop"
+    assert event.outcome == "deny"
+    assert event.target_id is None
+    assert event.safe_metadata == {}
+
+
+def test_composed_source_failure_rolls_back_partial_disclosure_evidence(world, reader):
+    trace = uuid4()
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "ALTER TABLE public.programme_programmeitem "
+            "DISABLE TRIGGER programme_stop_privacy_0"
+        )
+    with pytest.raises(ValidationError):
+        _preview(world, reader, correlation_id=trace)
+    assert not AuditEvent.objects.filter(correlation_id=trace, outcome="allow").exists()
 
 
 def test_real_controller_sees_complete_counts_without_applicant_source_rights(

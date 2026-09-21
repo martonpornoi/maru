@@ -1,8 +1,10 @@
-"""Exact native stop preparation, not complete terminal-command admission."""
+"""Exact native stop receipt and reciprocal terminal-transition readiness."""
 
+from collections import Counter
+from dataclasses import replace
 from typing import Final
 
-from django.db import DatabaseError
+from django.db import DatabaseError, connection
 
 from maru.core.database_integrity_readiness import (
     DatabaseIntegrityContract,
@@ -60,6 +62,10 @@ _SOURCES = (
         "applications.0023_programme_stop_boundary",
         "75a144aa28cde54510e643f825ca52680841883b25ce631c6922f1fa746e54f8",
     ),
+    (
+        "events.0016_programme_stop_integrity",
+        "54a4c23cf03a920b685681e841493ada2119046032165cccb73af167cad71068",
+    ),
 )
 for _source, _digest in _SOURCES:
     _owner, _migration = _source.split(".", 1)
@@ -68,7 +74,59 @@ for _source, _digest in _SOURCES:
         migration_module=f"maru.{_owner}.migrations.{_migration}",
         source_sha256=_digest,
     )
-PROGRAMME_STOP_PREPARATION_CONTRACT = _BASE
+PROGRAMME_STOP_TRANSITION_TRIGGERS = {
+    name: trigger
+    for name, trigger in _BASE.triggers.items()
+    if trigger.table == "events_eventedition"
+}
+# Receipt integrity remains a complete relation contract. The two new edition
+# attachments are checked separately: this purpose does not pretend to describe
+# every unrelated legacy Events trigger with the generic whole-relation checker.
+PROGRAMME_STOP_PREPARATION_CONTRACT = replace(
+    _BASE,
+    triggers={
+        name: trigger
+        for name, trigger in _BASE.triggers.items()
+        if trigger.table == PROGRAMME_STOP_RELATION
+    },
+)
+
+
+def _transition_attachments_are_current() -> bool:
+    expected = PROGRAMME_STOP_TRANSITION_TRIGGERS
+    if set(expected) != {
+        "events_lifecycle_version_guard",
+        "events_programme_stop_transition",
+    }:
+        return False
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT t.tgname::text, r.relname::text,
+                   pn.nspname || '.' || p.proname || '(' ||
+                       pg_catalog.oidvectortypes(p.proargtypes) || ')',
+                   t.tgtype, t.tgenabled, t.tgconstraint <> 0,
+                   t.tgdeferrable, t.tginitdeferred, t.tgqual IS NULL,
+                   t.tgnargs, cardinality(t.tgattr::smallint[]) = 0, t.tgargs,
+                   p.proowner = r.relowner AND rn.nspname = 'public'
+                       AND r.relkind IN ('r', 'p')
+              FROM pg_catalog.pg_trigger t
+              JOIN pg_catalog.pg_class r ON r.oid = t.tgrelid
+              JOIN pg_catalog.pg_namespace rn ON rn.oid = r.relnamespace
+              JOIN pg_catalog.pg_proc p ON p.oid = t.tgfoid
+              JOIN pg_catalog.pg_namespace pn ON pn.oid = p.pronamespace
+             WHERE NOT t.tgisinternal AND (
+                 t.tgname = ANY(%s::text[]) OR t.tgfoid IN (
+                     pg_catalog.to_regprocedure('public.maru_validate_edition_lifecycle_version()'),
+                     pg_catalog.to_regprocedure('public.maru_programme_stop_transition_guard()')
+                 ))
+        """,
+            [sorted(expected)],
+        )
+        rows = cursor.fetchall()
+    return Counter(tuple(row) for row in rows) == Counter(
+        trigger.catalog_row for trigger in expected.values()
+    )
 
 
 def programme_stop_preparation_is_ready() -> bool:
@@ -88,6 +146,22 @@ def programme_stop_preparation_is_ready() -> bool:
                 PROGRAMME_STOP_PREPARATION_CONTRACT
             )
             and relation_schema_is_current(PROGRAMME_STOP_SCHEMA_SHA256)
+            and _transition_attachments_are_current()
         )
     except (DatabaseError, LookupError, RuntimeError, TypeError, ValueError):
         return False
+
+
+def programme_stop_command_is_ready() -> bool:
+    """Require the exact terminal receipt closure as well as every owner fence.
+
+    Returns
+    -------
+    bool
+        Complete native closure, never controller authority or preview acceptance.
+    """
+    return (
+        ("events", "0016_programme_stop_integrity")
+        in PROGRAMME_STOP_PREPARATION_CONTRACT.required_migrations
+        and programme_stop_preparation_is_ready()
+    )

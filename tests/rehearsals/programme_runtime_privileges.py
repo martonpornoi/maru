@@ -32,7 +32,7 @@ def _tables(groups):
 # Retained evidence never updated or locked by the mounted owner commands.
 INSERT = _tables(
     {
-        "events": ("programmeadoptionsetupreceipt",),
+        "events": ("programmeadoptionsetupreceipt", "programmestopreceipt"),
         "authorization": ("programmeroledecisionrecord",),
         "applications": (
             "programmeproposalselectionrevision",

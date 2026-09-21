@@ -199,6 +199,24 @@ the corrected focused matrix passes 58/41.16s. Fast run33 passes 13,065/69.07s
 with three existing warnings. No combined stop
 preview, terminal command or complete Events native closure is enabled yet.
 See the [minimized impact checkpoint](../checkpoints/2026-09-21-programme-stop-owner-impact.md).
+The composed preview, actual stop command and Events 0016 reciprocal native closure
+now pass genuine populated restricted-runtime execution. Run21 completes in
+967.73s (16m07s), including 22.734s stop composition: real missing-withdrawal denial,
+independently approved authority, stale-preview refusal, actual withdrawal/terminal
+rollback, committed stop, original retry and unchanged artifact bytes. Existing
+P01–P10, populated archive and active-state logical recovery still pass. Run20
+correctly refused stale bundled scanner signatures; run21 used the documented
+bounded public-signature refresh, not a freshness waiver.
+The owner/native matrix passes 224/552.81s using genuine confirmed stops rather
+than raw terminal fixture updates. The 24-case native command/tampering/used-
+downgrade suite passes in 91.51s; original-actor-only receipt scope passes
+2/11.18s. Genuine unused Events 0016 reverse/forward succeeds. The dormant screen's
+29 real-form/HTML tests and 111 candidate startup/ACL units pass; full fast run35
+passes 13,110/70.35s with three existing warnings. The isolated overlay is now
+0017, with 88 explicitly declared candidate writable relations and stop readiness
+required at startup. Production remains inactive. HTTP/browser stop composition,
+stopped-state logical restore, concurrency and complete P11/P12 remain open.
+See the [accountable stop checkpoint](../checkpoints/2026-09-21-programme-accountable-stop-runtime.md).
 See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and
@@ -238,7 +256,7 @@ and [inventory](../checkpoints/2026-09-20-programme-excluded-state-inventory.md)
 checkpoints.
 
 Next: preserve #198's bounded pass and #97's pinned populated restore/refusal;
-complete #190 native stop guards, exact receipt/transition and preview/confirmation,
+complete #190 HTTP/browser stop composition, concurrency and stopped-state recovery,
 alongside remaining bounded archive resource/browser and #175 acceptance.
 [ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md) now
 accepts the concrete command/scope/native-exception map for implementation, not

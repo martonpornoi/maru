@@ -19,27 +19,25 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 GUARDS = import_module("maru.workforce.migrations.0030_programme_stop_boundary")
 
 
-@pytest.mark.parametrize("model", GUARDS.DIRECT_MODELS)
-@pytest.mark.parametrize("state", ["archived", "cancelled"])
-def test_native_direct_workforce_writers_refuse_terminal_programme(
-    monkeypatch, model, state
-):
+@pytest.mark.parametrize("prior", ["draft", "preparing"])
+def test_native_direct_workforce_writers_refuse_terminal_programme(monkeypatch, prior):
     admit_transaction_local_schema_candidate(monkeypatch)
     edition = EventEditionFactory(adoption_profile_code="programme_operations")
-    _terminal(edition, state)
-    with (
-        connection.cursor() as cursor,
-        pytest.raises(
-            IntegrityError, match="Stopped Programme refuses ordinary Workforce"
-        ),
-        transaction.atomic(),
-    ):
-        cursor.execute(
-            sql.SQL(
-                "INSERT INTO {} (id, organization_id, edition_id) VALUES (%s, %s, %s)"
-            ).format(sql.Identifier("public", f"workforce_{model}")),
-            [uuid4(), edition.organization_id, edition.id],
-        )
+    _terminal(edition, "archived", from_state=prior)
+    for model in GUARDS.DIRECT_MODELS:
+        with (
+            connection.cursor() as cursor,
+            pytest.raises(
+                IntegrityError, match="Stopped Programme refuses ordinary Workforce"
+            ),
+            transaction.atomic(),
+        ):
+            cursor.execute(
+                sql.SQL(
+                    "INSERT INTO {} (id, organization_id, edition_id) VALUES (%s, %s, %s)"
+                ).format(sql.Identifier("public", f"workforce_{model}")),
+                [uuid4(), edition.organization_id, edition.id],
+            )
 
 
 @pytest.mark.parametrize("model", GUARDS.DERIVED_MODELS)

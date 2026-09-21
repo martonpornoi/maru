@@ -2,55 +2,103 @@
 
 from contextlib import contextmanager
 from importlib import import_module
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 from django.db import IntegrityError, connection, transaction
+from django.utils import timezone
 from psycopg import sql
 
+from maru.authorization.commands import grant_capability_direct
+from maru.authorization.policy import resolve_edition_target
+from maru.events import adoption
+from maru.events.programme_stop_commands import stop_programme
+from maru.events.programme_stop_composition import load_programme_stop_preview
+from maru.events.programme_stop_inputs import ProgrammeStopInput
+from maru.events.services import transition_edition
 from maru.scheduling.readiness import scheduling_database_integrity_is_ready
-from tests.factories import EventEditionFactory
+from tests.factories import AccountFactory, EventEditionFactory
+from tests.rehearsals.programme_candidate import PROGRAMME_REHEARSAL_PROFILE
+from tests.support.authority import activate_synthetic_board
 from tests.support.programme_schema import admit_transaction_local_schema_candidate
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 GUARDS = import_module("maru.scheduling.migrations.0023_programme_stop_boundary")
 
 
-def _terminal(edition, state):
-    states = (
-        ["cancelled"]
-        if state == "cancelled"
-        else ["preparing", "ready", "live", "closing", "archived"]
-    )
-    with connection.cursor() as cursor:
-        for destination in states:
-            cursor.execute(
-                "UPDATE public.events_eventedition SET lifecycle = %s, "
-                "lifecycle_version = lifecycle_version + 1, "
-                "aggregate_version = aggregate_version + 1 WHERE id = %s",
-                [destination, edition.id],
+def _terminal(edition, state, *, from_state="draft"):
+    # Component consumers now use a genuine confirmed stop. No lifecycle bypass,
+    # disabled trigger or invented stop receipt supplies retained privacy fixtures.
+    assert state == "archived"
+    with patch.dict(
+        adoption.ADOPTION_PROFILES,
+        {("programme_operations", 1): PROGRAMME_REHEARSAL_PROFILE},
+    ):
+        author, approver = activate_synthetic_board(edition.organization)
+        actor = AccountFactory()
+        target = resolve_edition_target(
+            organization_id=edition.organization_id, edition_id=edition.id
+        )
+        for capability in ("authorization.manage_roles", "events.transition"):
+            grant_capability_direct(
+                actor=author,
+                approver=approver,
+                recipient=actor,
+                target=target,
+                capability_code=capability,
+                effective_from=timezone.now(),
+                expires_at=None,
+                reason="Authorize the synthetic owner-boundary stop fixture.",
+                correlation_id=uuid4(),
+                source_channel="test",
             )
+        scope = {
+            "actor_id": actor.id,
+            "organization_id": edition.organization_id,
+            "edition_id": edition.id,
+            "correlation_id": uuid4(),
+        }
+        if from_state != "draft":
+            transition_edition(
+                actor=actor,
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+                to_state=from_state,
+                reason="Prepare the synthetic adopted edition.",
+                correlation_id=uuid4(),
+                source_channel="test",
+            )
+        preview = load_programme_stop_preview(**scope)
+        return stop_programme(
+            **scope,
+            idempotency_key=uuid4(),
+            details=ProgrammeStopInput(
+                preview.aggregate_version,
+                preview.lifecycle_version,
+                preview.fingerprint,
+                "Stop synthetic Programme while retaining owner history.",
+            ),
+        )
 
 
-@pytest.mark.parametrize("model", GUARDS.GUARDED_MODELS)
-@pytest.mark.parametrize("state", ["archived", "cancelled"])
-def test_every_native_operational_insert_refuses_terminal_programme(
-    monkeypatch, model, state
-):
+@pytest.mark.parametrize("prior", ["draft", "preparing"])
+def test_every_native_operational_insert_refuses_terminal_programme(monkeypatch, prior):
     admit_transaction_local_schema_candidate(monkeypatch)
     edition = EventEditionFactory(adoption_profile_code="programme_operations")
-    _terminal(edition, state)
-    with (
-        connection.cursor() as cursor,
-        pytest.raises(IntegrityError, match="Stopped Programme refuses"),
-        transaction.atomic(),
-    ):
-        cursor.execute(
-            sql.SQL(
-                "INSERT INTO {} (id, organization_id, edition_id) VALUES (%s, %s, %s)"
-            ).format(sql.Identifier("public", f"scheduling_{model}")),
-            [uuid4(), edition.organization_id, edition.id],
-        )
+    _terminal(edition, "archived", from_state=prior)
+    for model in GUARDS.GUARDED_MODELS:
+        with (
+            connection.cursor() as cursor,
+            pytest.raises(IntegrityError, match="Stopped Programme refuses"),
+            transaction.atomic(),
+        ):
+            cursor.execute(
+                sql.SQL(
+                    "INSERT INTO {} (id, organization_id, edition_id) VALUES (%s, %s, %s)"
+                ).format(sql.Identifier("public", f"scheduling_{model}")),
+                [uuid4(), edition.organization_id, edition.id],
+            )
 
 
 @pytest.mark.parametrize(

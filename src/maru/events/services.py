@@ -806,6 +806,14 @@ def _bulk_transition_audit_record(
 
 
 def _require_valid_transition(edition: EventEdition, *, to_state: str) -> None:
+    if edition.adoption_profile_code == "programme_operations" and to_state in {
+        "archived",
+        "cancelled",
+    }:
+        raise ValidationError(
+            "Use the accountable Stop Programme preview and confirmation.",
+            code="programme_stop_confirmation_required",
+        )
     allowed = ALLOWED_TRANSITIONS[edition.lifecycle]
     if to_state not in allowed:
         raise ValidationError(

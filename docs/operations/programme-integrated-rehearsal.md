@@ -10,12 +10,23 @@ for canonical row locking, terminal decision INSERT only. Both tables are
 SELECT-only in the canonical production ACL source, whose candidate checksum is
 updated with the exact new revokes. The fourteen helper grants are unchanged.
 Startup additionally requires actual starter native/table readiness. The archive
-continuation now admits **87** table classes, adding request INSERT/UPDATE, event
+continuation admitted **87** table classes, adding request INSERT/UPDATE, event
 INSERT and chunk INSERT/DELETE only to the isolated candidate. Default runtime
 archive tables stay SELECT-only. A genuine fresh setup-to-empty-owner-archive
 runtime check passed on 2026-09-20 in 270.15s, including requester-only HTTPS
 download and cancellation. This is not the populated P01–P12 acceptance, a browser
 rehearsal or a production activation claim.
+
+Accountable stop adds only INSERT on Events' immutable stop receipt, for **88**
+explicit candidate writable relations. Production keeps that relation SELECT-only.
+Startup now also requires Events 0016's exact terminal/receipt native readiness.
+The populated runner's final `verify_stop_runtime` phase checks actual missing
+withdrawal denial, independent publisher approval, stale original preview refusal,
+withdrawal/terminal rollback, committed stop and exact reauthorized retry while
+retaining release artifact bytes. Its private child uses bounded stdin, closed
+phase-only failure codes and the original finite lease; no credentials or source
+records are logged. This is command composition, not HTTP/browser stop or stopped-
+state logical restore. The stop screen is mounted only in the isolated URLconf.
 
 **Audience:** Maintainers preparing #108, independent Programme evaluators and recovery operators\
 **Outcome:** Prepare one reproducible journey and collect evidence for #109/#92 without confusing component delivery with acceptance\
@@ -172,8 +183,8 @@ available yet.
 `programme_candidate_schema_settings.py` is a non-serving, explicit migration
 child. It inherits the guarded provisioning settings and uses an Events-only
 migration overlay in `programme_event_migrations/`. The overlay discovers every
-unchanged owner migration, then appends `0016_isolated_programme_candidate` after
-the current `0015` Events leaf. It registers no application profile, so normal owner
+unchanged owner migration, then appends `0017_isolated_programme_candidate` after
+the current `0016` Events leaf. It registers no application profile, so normal owner
 checks still run against the unchanged current profiles; no check is skipped or
 silenced. Production migration files/settings remain unchanged.
 
@@ -290,8 +301,9 @@ membership, independent approval, artifacts, personal obligations and change not
 The continued native journey adds UPDATE only for the existing retained
 `programme_programmepublicrendition` candidate table: the already-allowlisted
 release source helper needs it for `SELECT FOR UPDATE`. Native history remains
-immutable and DELETE remains denied. All 87 relation identities and the fourteen
-additional helper signatures remain unchanged; production grants are not widened.
+immutable and DELETE remains denied. The later stop addition brings the exact
+relation inventory to 88. The fourteen additional helper signatures remain
+unchanged; production grants are not widened.
 The sole additional SECURITY DEFINER helper is the existing
 `maru_workforce_page9_try_scope_mutex(bigint)`: its entire pinned body only attempts
 a transaction-scoped advisory lock and raises SQLSTATE 40001 on contention. It

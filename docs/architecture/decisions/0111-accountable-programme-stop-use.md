@@ -50,9 +50,11 @@ both displayed Events versions, the complete owner-preview fingerprint and a
 required NFC-normalized rationale of at most 240 characters. Boolean, coerced,
 negative or overflowing versions, partial/noncanonical fingerprints and control
 characters are rejected. The digest is purpose/version separated and is not an
-authorization token. Transport channels and fresh correlation IDs do not change
+authorization token. Canonical intent uses compact key-sorted UTF-8 JSON, matching
+the native exact-receipt proof for NFC non-ASCII rationales as well as ASCII.
+Transport channels and fresh correlation IDs do not change
 the original intent; the eventual receipt retains its original attribution.
-This preparation enables no command, route, profile, transition or native writer.
+Input normalization alone enables no command, route, profile or native writer.
 
 ### Accountable preview and actual owner authority
 

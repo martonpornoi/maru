@@ -19,6 +19,13 @@ reported as a prerequisite, not borrowed from controller/stop permission. Privat
 planning labels, notices, hosts and artifact bytes are not returned. See the
 [minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
 
+`programme_stop_references.resolve_programme_stop_release_people` supplies the
+complete retained-release Identity dependency union plus the actual actor. The
+composer first holds canonical shared authority/foundation/edition parents, then
+locks this bounded union before controller or narrower source locks. It includes
+historical people needed by actual withdrawal without disclosing a directory,
+locking the pointer first, granting withdrawal or replacing final authorization.
+
 ### Personal edition discovery (#108)
 
 The dormant `/my/programme/timetables/` chooser uses

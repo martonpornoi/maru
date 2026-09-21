@@ -17,10 +17,9 @@ from tests.rehearsals.programme_runtime_environment import (
 
 def test_literal_inventory_preserves_all_unrelated_native_limits():
     projected = contract.candidate_relation_classes()
-    assert len(contract.PRIVILEGES) == 87
+    assert len(contract.PRIVILEGES) == 88
     assert set(projected[0]) == {
         "public.django_migrations",
-        "public.events_programmestopreceipt",
         "public.authorization_authorityprovenanceactivation",
         "public.authorization_provenanceactivationlatch",
         "public.identity_platforminvitationretentionpolicycontrol",
@@ -201,7 +200,7 @@ def test_reference_guard_uses_complete_table_and_column_boundary(result):
     assert "has_column_privilege" in query
     assert "pg_has_role(current_user, reachable.oid, 'SET')" in query
     assert "reachable.oid, relation.oid" in query
-    assert parameters == [87, sorted(contract.PRIVILEGES)]
+    assert parameters == [88, sorted(contract.PRIVILEGES)]
 
 
 @pytest.fixture
@@ -245,7 +244,7 @@ def test_grant_plane_changes_only_literal_table_operations_after_preflight(grant
         text.startswith("GRANT ") and text.endswith(" TO maru_runtime")
         for text in grants
     )
-    assert sum(text.count('"public".') for text in grants) == 87
+    assert sum(text.count('"public".') for text in grants) == 88
     assert not any(
         "ALL " in text or "FUNCTION" in text or "WITH GRANT" in text for text in grants
     )
