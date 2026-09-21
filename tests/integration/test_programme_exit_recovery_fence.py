@@ -1,9 +1,10 @@
 """Real empty joined-fence reversal must refuse readiness until exact restoration."""
 
 from importlib import import_module
+from uuid import uuid4
 
 import pytest
-from django.db import connection
+from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.recorder import MigrationRecorder
 
@@ -30,6 +31,40 @@ def test_unused_exit_fence_reverses_and_restores_complete_readiness(unrelated_ro
     finally:
         MigrationExecutor(connection).migrate(leaves)
     assert programme_stop_command_is_ready()
+
+
+@pytest.mark.usefixtures("restores_current_migration_graph")
+def test_unused_stop_schema_restores_its_dormant_refusal_then_current_admission():
+    executor = MigrationExecutor(connection)
+    leaves = executor.loader.graph.leaf_nodes()
+    try:
+        executor.migrate([("events", "0015_programme_stop_receipt")])
+        assert not programme_stop_command_is_ready()
+        with connection.cursor() as cursor:
+            with (
+                pytest.raises(IntegrityError, match="complete native stop admission"),
+                transaction.atomic(),
+            ):
+                cursor.execute(
+                    "INSERT INTO public.events_programmestopreceipt (id) VALUES (%s)",
+                    [uuid4()],
+                )
+            cursor.execute("SELECT count(*) FROM public.events_programmestopreceipt")
+            assert cursor.fetchone() == (0,)
+    finally:
+        MigrationExecutor(connection).migrate(leaves)
+    assert programme_stop_command_is_ready()
+    with connection.cursor() as cursor:
+        with (
+            pytest.raises(IntegrityError, match="exact bounded intent"),
+            transaction.atomic(),
+        ):
+            cursor.execute(
+                "INSERT INTO public.events_programmestopreceipt (id) VALUES (%s)",
+                [uuid4()],
+            )
+        cursor.execute("SELECT count(*) FROM public.events_programmestopreceipt")
+        assert cursor.fetchone() == (0,)
 
 
 @pytest.mark.parametrize(

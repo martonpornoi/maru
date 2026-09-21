@@ -93,6 +93,20 @@ Durable evidence and contracts:
 
 ## Latest executed evidence and limits
 
+- Full certification at `8f3f825f180438953630c2fb39eacbf2f12a9eca` stopped after
+  46m35s on one stale stop-schema test expectation in shard 33. The current native
+  guard correctly rejected a malformed receipt; the test still expected migration
+  0015's earlier unconditional refusal. Thirty-two shards passed (1,620 native
+  cases), all 13,222 units passed in 176.41s, and all 40 started containers were
+  removed. No timing headroom was exhausted. Evidence is preserved in
+  `.tools/certification-evidence/programme-exit-8f3f825-stop-expectation-failed`.
+  Test-only repair checks the current exact-intent refusal and separately executes
+  the historical 0015 refusal through real reverse/reapply, preserving zero-written-
+  rows assertions. The repair passes **44 native cases / 291.56s** and complete
+  fast run40 (**13,222 units / 72.21s**). See the
+  [schema-expectation repair](../checkpoints/2026-09-21-programme-stop-schema-expectation-repair.md).
+  No application/rehearsal source or applied migration changed. Fresh exact-head
+  full certification remains required; no success receipt or push exists.
 - Recovery correction `ad6192993ff6d9eab6c6117f9081dd2a47713833` passes 65 focused
   fence/overlay units, complete fast run39 (**13,222 / 72.68s**, three existing
   Django warnings), and **66 native regressions / 1,008.83s**, with no native skips.

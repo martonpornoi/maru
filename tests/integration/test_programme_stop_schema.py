@@ -1,4 +1,4 @@
-"""Execute dormant stop receipt refusal against real PostgreSQL."""
+"""Execute current stop receipt admission and ACL checks against PostgreSQL."""
 
 from uuid import uuid4
 
@@ -8,12 +8,12 @@ from django.db import IntegrityError, connection, transaction
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
-def test_native_stop_receipt_insertion_is_closed_until_full_owner_admission():
+def test_native_stop_receipt_insertion_requires_complete_bounded_intent():
     # The BEFORE guard must refuse before even invalid references can be written.
     # This is intentionally not a fabricated completed stop fixture.
     with transaction.atomic(), connection.cursor() as cursor:
         with (
-            pytest.raises(IntegrityError, match="complete native stop admission"),
+            pytest.raises(IntegrityError, match="exact bounded intent"),
             transaction.atomic(),
         ):
             cursor.execute(
