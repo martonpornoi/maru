@@ -1545,18 +1545,46 @@ def test_profile_evidence_rejects_values_for_absent_or_hidden_call_fields() -> N
         )
 
 
-def test_raw_proposal_evidence_rejects_cross_tenant_scope() -> None:
+@pytest.mark.parametrize(
+    ("tampered_scope", "expected_error"),
+    [
+        ("organization", "Applications stop requires exact edition"),
+        ("edition", "Applications stop requires exact edition"),
+        (
+            "both",
+            "Programme selection scope, duration, chain, actor, or version mismatch",
+        ),
+    ],
+)
+def test_raw_proposal_evidence_rejects_cross_tenant_scope(
+    tampered_scope: str, expected_error: str
+) -> None:
     proposal = _start_proposal(_activate_call(_create_draft_call()))
     other = EventEditionFactory()
+    definition = proposal.call.draft.definition
+    tracked_models = (
+        ApplicationSubmission,
+        ProgrammeProposal,
+        ProgrammeProposalSelectionRevision,
+    )
+    original_rows = [
+        list(model.objects.order_by("pk").values()) for model in tracked_models
+    ]
 
     with (
-        pytest.raises(DatabaseError, match="scope"),
+        pytest.raises(DatabaseError, match=expected_error) as rejected,
         transaction.atomic(),
         _raw_programme_writer(),
     ):
         ProgrammeProposalSelectionRevision.objects.create(
-            organization=other.organization,
-            edition=proposal.call.draft.definition.edition,
+            organization_id=(
+                definition.organization_id
+                if tampered_scope == "edition"
+                else other.organization_id
+            ),
+            edition_id=(
+                definition.edition_id if tampered_scope == "organization" else other.id
+            ),
             proposal=proposal.proposal,
             sequence=2,
             track=proposal.call.track,
@@ -1566,6 +1594,10 @@ def test_raw_proposal_evidence_rejects_cross_tenant_scope() -> None:
             source_version=1,
             resulting_version=2,
         )
+
+    assert rejected.value.__cause__.sqlstate == "23514"
+    for model, original in zip(tracked_models, original_rows, strict=True):
+        assert list(model.objects.order_by("pk").values()) == original
 
 
 def test_raw_call_owner_rejects_cross_edition_department() -> None:

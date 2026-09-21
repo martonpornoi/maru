@@ -93,6 +93,19 @@ Durable evidence and contracts:
 
 ## Latest executed evidence and limits
 
+- The remaining-shard diagnostic found five stale composition-test failures in
+  shards 57, 58 and 63: deferred Board corruption-fixture events, layered proposal
+  scope refusal and incomplete legacy ACL reapplication. Test-only repairs keep
+  the new guards enabled, add coordinated foreign-scope rollback assertions and
+  prove incomplete restoration remains unready before exact full-graph recovery.
+  Focused native checks pass **22 / 272.37s** and **1 / 295.08s**; complete fast
+  unit run42 passes **13,222 / 104.38s** with the three existing warnings. The
+  disposable repair database is removed. See the
+  [native composition repairs](../checkpoints/2026-09-21-programme-native-composition-test-repairs.md).
+  All seventeen diagnostic shards finished: 1,631 cases, five failures above,
+  zero errors/skips, complete cleanup and measured headroom (maximum 41m47s).
+  An explicitly non-certifying preserved-parts coverage preview reaches 91.74%.
+  Fresh full certification is still required. No application or migration changed.
 - Full certification at `e3635ab95574ec56ab5d9744f50755698e079458` stopped after
   approximately 2h21m on two stale native scope-error expectations in shard 55.
   The new stop guard correctly rejected the malformed parent pair before the older
@@ -103,8 +116,8 @@ Durable evidence and contracts:
   database-integrity cases pass in 180.66s; fast unit run41 passes all 13,222 cases
   in 92.10s with the three existing warnings. See the
   [scope-guard repair](../checkpoints/2026-09-21-programme-scope-guard-expectation-repair.md).
-  The 17 incomplete groups are receiving focused diagnostics before fresh complete
-  exact-head certification; no partial-run success or push is claimed.
+  The seventeen previously incomplete shards received the diagnostic sweep above;
+  no partial-run success or push is claimed.
 - Full certification at `8f3f825f180438953630c2fb39eacbf2f12a9eca` stopped after
   46m35s on one stale stop-schema test expectation in shard 33. The current native
   guard correctly rejected a malformed receipt; the test still expected migration

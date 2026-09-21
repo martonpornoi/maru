@@ -1638,6 +1638,7 @@ def test_sql_lineage_rejects_malformed_current_board_assignment(
     )
     issuance = AuthorityIssuance.objects.get(role_assignment=assignment)
     _activate()
+    original_assignment = RoleAssignment.objects.values().get(pk=assignment.pk)
 
     with transaction.atomic():
         with connection.cursor() as cursor:
@@ -1650,6 +1651,12 @@ def test_sql_lineage_rejects_malformed_current_board_assignment(
                     "ALTER TABLE public.authorization_roleassignment "
                     f"DISABLE TRIGGER {trigger_name}"
                 )
+            # Keep the stop guard enabled. Its shared-Organization no-op must run
+            # now so this corruption fixture can restore the original guards
+            # without a queued deferred event blocking ALTER TABLE.
+            cursor.execute(
+                "SET CONSTRAINTS authorization_programme_stop_revoke_1 IMMEDIATE"
+            )
             cursor.execute(mutation_sql, [assignment.id])
             for trigger_name in (
                 "authorization_role_assignment_guard",
@@ -1685,6 +1692,7 @@ def test_sql_lineage_rejects_malformed_current_board_assignment(
     assignment.refresh_from_db()
     assert assignment.effective_from == issuance.evaluated_at
     assert assignment.expires_at is None
+    assert RoleAssignment.objects.values().get(pk=assignment.pk) == original_assignment
 
 
 @pytest.mark.parametrize("isolation_level", ["REPEATABLE READ", "SERIALIZABLE"])
