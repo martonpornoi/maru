@@ -84,6 +84,13 @@ Durable evidence and contracts:
 
 ## Latest executed evidence and limits
 
+- First exact-bundle certification at `2a41f96` failed formatting. Its supported
+  cancellation removed all eight started native databases; failed artifacts are
+  preserved. Formatting, lint and explicit NumPy documentation are repaired; full
+  typing, semantic docs, fresh warning-fatal Sphinx, frontend and generated-contract
+  preflights now pass. See the
+  [preflight checkpoint](../checkpoints/2026-09-21-programme-exit-certification-preflight.md).
+  A new clean exact-head full certification is still required.
 - Complete fast run36: **13,139 passed / 73.77s**, three existing Django URL-field
   warnings. Focused private-process/HTTP tests: 72 passed / 0.78s. Ruff/format and
   documentation checks pass (682 Markdown files).

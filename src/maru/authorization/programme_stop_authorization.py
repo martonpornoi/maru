@@ -31,7 +31,9 @@ def require_programme_stop_preflight(
     ----------
     actor_id : UUID
         Actual authenticated person, never an alternate privileged principal.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Exact expected tenant and Programme version-one adoption.
 
     Raises
@@ -82,7 +84,9 @@ def require_programme_stop_controller(
     ----------
     actor_id : UUID
         Actual authenticated person, reloaded and locked; never an alternate actor.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Exact expected tenant and Programme adoption, not discovered private scope.
 
     Raises

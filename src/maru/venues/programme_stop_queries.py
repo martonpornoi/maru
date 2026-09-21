@@ -58,7 +58,9 @@ def load_programme_stop_venues(
     ----------
     actor_id : UUID
         Current ordinary accountable controller with Events transition authority.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Exact independently selected Programme context, never inferred from a file.
     correlation_id : UUID
         Trusted non-nil trace for mandatory minimized disclosure evidence.

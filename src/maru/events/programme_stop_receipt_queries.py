@@ -51,7 +51,9 @@ def load_programme_stop_receipt(
     ----------
     actor_id : UUID
         Actual signed-in original requester with current stop prerequisites.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Independently selected exact adopted scope.
     receipt_id : UUID
         Previously acknowledged receipt; no enumeration or other-actor history.

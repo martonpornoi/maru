@@ -164,7 +164,9 @@ def programme_stop(
     ----------
     request : HttpRequest
         Authenticated CSRF-protected request; submitted fields never choose actor.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Exact independently selected scope from the route.
     receipt_id : UUID | None, default=None
         Exact original-actor receipt, or the deliberate preview/confirmation home.

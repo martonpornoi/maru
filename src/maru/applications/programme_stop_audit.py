@@ -35,7 +35,27 @@ def _append_cleanup_audit(
     occurred_at: datetime,
     retry_key: UUID,
 ) -> _AuditReference:
-    """Bind stopped cleanup under existing owner locks to its original retry intent."""
+    """Bind stopped cleanup under existing owner locks to its original retry intent.
+
+    Parameters
+    ----------
+    record : AuditRecord
+        Owner-produced exact operation, actor and scope evidence.
+    occurred_at : datetime
+        Owning command's authoritative operation instant.
+    retry_key : UUID
+        Original cleanup identity, retained across authorized retries.
+
+    Returns
+    -------
+    _AuditReference
+        Native mutation witness or ordinary owner audit identifier.
+
+    Raises
+    ------
+    ProgrammeCleanupUnavailableError
+        If a cleanup operation lacks exact scope or current stop evidence.
+    """
     if record.outcome == "allow" and record.operation in _CLEANUP_OPERATIONS:
         if record.organization_id is None or record.event_edition_id is None:
             raise ProgrammeCleanupUnavailableError

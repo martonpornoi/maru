@@ -79,7 +79,7 @@ def _validate_trace(correlation_id: UUID, source_channel: str) -> None:
         )
 
 
-def stop_programme(
+def stop_programme(  # noqa: DOC502 - owning validation and command helpers raise.
     *,
     actor_id: UUID,
     organization_id: UUID,
@@ -95,7 +95,9 @@ def stop_programme(
     ----------
     actor_id : UUID
         Actual ordinary controller; never a supplied alternate approver.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Exact adopted tenant and edition.
     details : ProgrammeStopInput
         Original displayed versions, complete preview digest and accountable reason.

@@ -95,7 +95,8 @@ def test_every_native_operational_insert_refuses_terminal_programme(monkeypatch,
         ):
             cursor.execute(
                 sql.SQL(
-                    "INSERT INTO {} (id, organization_id, edition_id) VALUES (%s, %s, %s)"
+                    "INSERT INTO {} (id, organization_id, edition_id) "
+                    "VALUES (%s, %s, %s)"
                 ).format(sql.Identifier("public", f"scheduling_{model}")),
                 [uuid4(), edition.organization_id, edition.id],
             )

@@ -110,7 +110,9 @@ def build_programme_stop_inventory(
     ----------
     owner : str
         Exact reviewed stop owner, not dynamic module discovery.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Independently authorized and coherently locked scope of every supplied row.
     sources : Iterable[ProgrammeStopMetadataSource]
         Literal complete collection inventory supplied by the owning reader, with

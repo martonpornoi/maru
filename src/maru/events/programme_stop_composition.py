@@ -228,7 +228,9 @@ def load_programme_stop_preview(
     ----------
     actor_id : UUID
         Actual ordinary controller with independent Events transition authority.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Exact Programme context, never discovered through private identifiers.
     correlation_id : UUID
         Trusted non-nil trace for minimized read evidence.
@@ -242,6 +244,8 @@ def load_programme_stop_preview(
     ------
     ValidationError
         If trace, complete source, bounds or active lifecycle is unavailable.
+    AuthorizationDenied
+        If the current ordinary controller or independent transition right is absent.
 
     Notes
     -----

@@ -77,9 +77,7 @@ def test_page10_writer_generation_does_not_replace_operational_gates() -> None:
     assert invitation_readiness.PAGE10_INVITATION_STOPPED_WRITER_GENERATION == (
         "identity-invitation-writers-v1"
     )
-    assert report["known_production_gates"]["stopped_writer_generation"] == (
-        "resolved"
-    )
+    assert report["known_production_gates"]["stopped_writer_generation"] == ("resolved")
     assert (
         report["known_production_gates"]["account_prefix_search_query_plan"]
         == "resolved"

@@ -224,7 +224,9 @@ def load_programme_stop_authority(
     ----------
     actor_id : UUID
         Actual ordinary controller with independent current Events transition rights.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Exact known adoption scope; neither is inferred from an assignment.
     correlation_id : UUID
         Server-issued non-nil disclosure audit trace.

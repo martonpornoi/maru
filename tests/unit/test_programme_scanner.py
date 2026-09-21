@@ -256,8 +256,7 @@ def test_refreshed_public_definitions_are_read_only_in_offline_daemon(
         args, _kwargs = next(call for call in docker_world.calls if call[0][0] == "run")
         assert args[args.index("--network") + 1] == NETWORK
         assert (
-            args[args.index("--mount") + 1]
-            == "type=volume,source=owned-signatures,"
+            args[args.index("--mount") + 1] == "type=volume,source=owned-signatures,"
             "target=/var/lib/clamav,readonly,volume-nocopy"
         )
         assert "freshclam" not in args[-1]

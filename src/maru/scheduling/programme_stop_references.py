@@ -24,7 +24,9 @@ def resolve_programme_stop_release_people(
     ----------
     actor_id : UUID
         Actual stop requester, independently admitted by nonlocking preflight.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Exact Programme ownership already locked by the surrounding composer.
 
     Returns

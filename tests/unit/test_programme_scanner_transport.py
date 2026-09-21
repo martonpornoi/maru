@@ -144,9 +144,12 @@ def test_listener_is_loopback_owned_and_closes_after_context(monkeypatch):
 def test_listener_closes_malformed_input_without_backend_execution(monkeypatch):
     relay = Mock()
     monkeypatch.setattr(transport, "exchange", relay)
-    with transport.scanner_loopback_transport(
-        Mock(), "a" * 64, deadline=time.monotonic() + 5
-    ) as port, socket.create_connection(("127.0.0.1", port), timeout=1) as client:
+    with (
+        transport.scanner_loopback_transport(
+            Mock(), "a" * 64, deadline=time.monotonic() + 5
+        ) as port,
+        socket.create_connection(("127.0.0.1", port), timeout=1) as client,
+    ):
         client.sendall(b"zSHUTDOWN\0")
         assert client.recv(1024) == b""
     relay.assert_not_called()

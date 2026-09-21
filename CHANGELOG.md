@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Programme's dormant room and Department outputs now retain fresh independent
+  policy checks without repeatedly traversing the same native authority lineage.
+  Logical database recovery preserves exact schema readiness and retained release
+  artifacts, including after an accountable Programme stop.
+
 - Programme's dormant on-site views no longer label every historical staffing
   link as "not cancelled." They preserve the predecessor relationship while
   directing readers to the demand's actual current status, including cancellation.
@@ -31,6 +36,15 @@ rather than replace the curated summary.
   avoids repeatedly rendering the entire archive in every page's sidebar.
 
 ### Added
+
+- Added a dormant permission-controlled Programme exit archive with complete owner
+  records, original clean files, retained schemas and audit lineage, bounded private
+  custody and requester-only retrieval. It is not a database backup or public export.
+
+- Added an accountable dormant **Stop Programme** preview and confirmation. It
+  withdraws the active timetable only with the actor's independent permission,
+  prevents fresh Programme work and retains required history and shared authority.
+  Neither workflow activates the Programme profile or grants production approval.
 
 - Dormant Programme supporting-file tasks now offer explicit private PDF upload,
   original-result recovery, deliberate answer clearing and independently authorized

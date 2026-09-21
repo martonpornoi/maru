@@ -47,7 +47,9 @@ def _invalid(field: str, message: str, code: str) -> Never:
     raise ValidationError({field: ValidationError(message, code=code)})
 
 
-def normalize_programme_stop_input(details: ProgrammeStopInput) -> ProgrammeStopInput:
+def normalize_programme_stop_input(  # noqa: DOC502 - shared validator raises field errors.
+    details: ProgrammeStopInput,
+) -> ProgrammeStopInput:
     """Validate without coercing versions or accepting a partial preview identity.
 
     Parameters
@@ -103,7 +105,7 @@ def normalize_programme_stop_input(details: ProgrammeStopInput) -> ProgrammeStop
     return replace(details, reason=reason)
 
 
-def programme_stop_request_digest(
+def programme_stop_request_digest(  # noqa: DOC502 - normalization and identity helpers raise.
     details: ProgrammeStopInput,
     *,
     actor_id: UUID,
@@ -119,7 +121,9 @@ def programme_stop_request_digest(
         Original confirmation values, validated again before hashing.
     actor_id : UUID
         Actual authenticated controller, never a submitted alternate approver.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Exact explicitly selected tenant, never discovered through private records.
+    edition_id : UUID
         Exact independently resolved tenant and edition scope.
     idempotency_key : UUID
         Original non-nil retry identity, not regenerated after a lost response.

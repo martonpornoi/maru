@@ -690,7 +690,20 @@ def _record(
 def _require_review_lifecycle(
     scope: AuthorizedProgrammeReviewScope, action: ProgrammeReviewAction
 ) -> None:
-    """Keep live acknowledgement separate from planning, but never bypass stop."""
+    """Keep live acknowledgement separate from planning, but never bypass stop.
+
+    Parameters
+    ----------
+    scope : AuthorizedProgrammeReviewScope
+        Independently admitted owner context with current lifecycle evidence.
+    action : ProgrammeReviewAction
+        Exact command purpose; acknowledgement does not grant planning writes.
+
+    Raises
+    ------
+    ProgrammeReviewConflictError
+        If lifecycle evidence is unavailable or the requested work is closed.
+    """
     if action is ProgrammeReviewAction.ACKNOWLEDGED:
         reference = resolve_programme_stop_reference(
             organization_id=scope.organization_id, edition_id=scope.edition_id

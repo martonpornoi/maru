@@ -485,7 +485,22 @@ def _organization_decision(
 def _require_programme_operation_open(
     *, organization_id: UUID, edition_id: UUID
 ) -> None:
-    """Refuse new Programme work under already-held canonical owner locks."""
+    """Refuse new Programme work under already-held canonical owner locks.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Exact independently admitted tenant.
+    edition_id : UUID
+        Edition whose current adopted lifecycle governs the Venue operation.
+
+    Raises
+    ------
+    VenueAuthorizationDeniedError
+        If current adopted scope cannot be established.
+    VenueStateConflictError
+        If the Programme adoption has stopped.
+    """
     reference = resolve_programme_stop_reference(
         organization_id=organization_id, edition_id=edition_id
     )

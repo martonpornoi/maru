@@ -62,7 +62,18 @@ def _raise_authorization(message: str, *, reason_code: str) -> Never:
 
 
 def _require_programme_issuance_open(target: ResolvedAuthorizationTarget) -> None:
-    """Fence fresh Programme grants under locked scope, not revocation or history."""
+    """Fence fresh Programme grants under locked scope, not revocation or history.
+
+    Parameters
+    ----------
+    target : ResolvedAuthorizationTarget
+        Current owner-resolved and locked authorization target.
+
+    Notes
+    -----
+    Missing or terminal Programme evidence delegates denial to the existing
+    authorization error boundary. Non-Programme targets remain unchanged.
+    """
     if (
         target.edition_id is None
         or target.adoption_profile_code != "programme_operations"

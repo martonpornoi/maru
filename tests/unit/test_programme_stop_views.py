@@ -273,7 +273,10 @@ def test_terminal_context_and_original_receipt_offer_no_operational_controls(pag
 
 
 def test_reserved_owner_route_is_not_a_production_handler(page):
-    path = f"/admin/programme/stop/{page.preview.organization_id}/{page.preview.edition_id}/"
+    path = (
+        f"/admin/programme/stop/{page.preview.organization_id}/"
+        f"{page.preview.edition_id}/"
+    )
     assert (
         resolve(path, urlconf="maru.events.programme_stop_urls").func
         == views.programme_stop

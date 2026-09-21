@@ -34,7 +34,8 @@ def test_native_direct_workforce_writers_refuse_terminal_programme(monkeypatch, 
         ):
             cursor.execute(
                 sql.SQL(
-                    "INSERT INTO {} (id, organization_id, edition_id) VALUES (%s, %s, %s)"
+                    "INSERT INTO {} (id, organization_id, edition_id) "
+                    "VALUES (%s, %s, %s)"
                 ).format(sql.Identifier("public", f"workforce_{model}")),
                 [uuid4(), edition.organization_id, edition.id],
             )
