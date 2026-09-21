@@ -1,5 +1,10 @@
 # Programme setup-to-on-site rehearsal
 
+For the shorter participant handoff, use the
+[human-acceptance session cards](programme-human-acceptance.md). Maintained status
+is in [CURRENT](../project/CURRENT.md); the preparation sections below also retain
+the earlier component boundaries, not instructions to skip now-required testing.
+
 The #175 backend and dormant audited own-person starter screen prepare the fixed
 Volunteer definition. Positions has a separately admitted contextual entry and
 platform setup explains the ordinary-controller handoff. The actual blank-setup/
@@ -849,8 +854,9 @@ no-store/nosniff, scope/time-zone and source/expiry warnings. Own shell identity
 permitted; private discussion, passwords and other people's contacts are not. The
 room operator cannot request technical fields or edition scope. Anonymous personal
 access, actor substitution and repeated parameters fail; unavailable signing remains
-explicit in the unsigned P01 variants. This is maintained **unexecuted** native preparation, not a P09 PASS or
-proof of native printing, layout, accessibility, performance or human comprehension.
+explicit in the unsigned P01 variants. This phase was initially unexecuted
+preparation and is now included in the recorded populated run24. Its automated HTTP
+results do not prove native printing, layout, accessibility or human comprehension.
 See the [P09 checkpoint](../checkpoints/2026-09-19-programme-onsite-fixture-preparation.md).
 
 Use repository-owned fictional convention names, synthetic people and reserved
@@ -958,6 +964,9 @@ not replace full exact-head certification, a complete every-state isolation matr
 or human/browser acceptance.
 
 ## Human and accessibility session (#92)
+
+Use the [participant cards and evidence form](programme-human-acceptance.md) for the
+actual session; the technical protocol below retains its required acceptance scope.
 
 Prepare a short participant script from P01 through P11. A representative organizer
 and distinct host/volunteer must complete their own tasks without developer

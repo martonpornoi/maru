@@ -164,6 +164,13 @@ Exact-certificate-pinned HTTP evidence is not visible-browser acceptance.
 
 ## Next actions and remaining closure gates
 
+The [human session cards](../operations/programme-human-acceptance.md) now provide
+a concise facilitator/participant handoff and evidence form. This documentation
+increment was prepared separately from the frozen exit-bundle certification at
+`b2e88af`; it records no human pass. Documentation validation and a fresh warning-fatal
+Sphinx build pass; exact-head certification/protected delivery remain outstanding.
+The browser certificate prerequisite and genuine independent people remain required.
+
 1. Freeze and certify the implemented exit/recovery bundle against exact main;
    repair concrete gate failures without weakening coverage or native checks.
 2. Complete remaining archive/stop acceptance and full P12 scope/object/field

@@ -12,9 +12,11 @@ or permission to use production personal data.
 
 ## Explore safely
 
-- [Programme integrated rehearsal](programme-integrated-rehearsal.md) prepares
-  the setup-to-on-site role script and evidence checkpoints; it is not an
-  executable fixture or completed acceptance.
+- [Programme integrated rehearsal](programme-integrated-rehearsal.md) describes
+  the maintained isolated native fixture and setup-to-on-site evidence boundaries;
+  it is not completed human acceptance or production activation.
+- [Programme human-acceptance session](programme-human-acceptance.md) supplies
+  participant task cards, facilitator prerequisites and an honest evidence form.
 - [Read and copy a Programme timetable](programme-output-evaluation.md) explains
   dormant public/personal synthetic output, source states and private saved copies.
 - [Programme now and offline continuity](programme-onsite-continuity.md) covers
@@ -78,6 +80,7 @@ analogy.
 :maxdepth: 1
 
 maru-hands-on-tutorial
+programme-human-acceptance
 programme-integrated-rehearsal
 programme-output-evaluation
 programme-onsite-continuity
