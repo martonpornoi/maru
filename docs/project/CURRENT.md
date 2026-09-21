@@ -91,9 +91,15 @@ Durable evidence and contracts:
   preflights now pass. See the
   [preflight checkpoint](../checkpoints/2026-09-21-programme-exit-certification-preflight.md).
   A new clean exact-head full certification is still required.
-- Complete fast run36: **13,139 passed / 73.77s**, three existing Django URL-field
-  warnings. Focused private-process/HTTP tests: 72 passed / 0.78s. Ruff/format and
-  documentation checks pass (682 Markdown files).
+- Exit-route isolation run4 passes in **258.82s** against real existing foreign
+  and sibling foundations, mixed scopes and other authenticated people. Thirty-two
+  protocol/observer units pass. Organization-scoped stop-preview authority is
+  preserved; archive-purpose and requester restrictions remain independent. See
+  the [exact evidence and limits](../checkpoints/2026-09-21-programme-exit-real-scope-isolation.md).
+  This is a bounded P12 increment, not the entire Programme isolation matrix.
+- Complete consolidated fast run37: **13,171 passed / 71.43s**, three existing
+  Django URL-field warnings. Focused private-process/HTTP tests: 72 passed / 0.78s.
+  Ruff/format and documentation checks pass (684 Markdown files).
 - Real stop/native owner matrices: 224 passed / 552.81s. Command/tampering/
   immutable receipt/used downgrade: 24 passed / 91.51s. Original-actor receipt
   denial: two focused cases / 11.18s. Forms/HTML: 29; candidate startup/ACL: 111.

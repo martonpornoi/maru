@@ -924,6 +924,16 @@ Include wrong-tenant direct requests, revoked authority, stale versions, exact
 retries, unavailable dependencies, rollback and empty/overflow responses. Retain
 both positive and denial/audit evidence without logging private answer contents.
 
+The opt-in `tests/rehearsals/programme_isolation_native.py` exit-route probe creates
+real sibling and foreign foundations through public setup commands, then exercises
+anonymous, wrong-scope, mixed-scope and wrong-requester HTTP access with real
+authentication. Its 258.82s native result and 32 observer units are recorded in the
+[scope-isolation checkpoint](../checkpoints/2026-09-21-programme-exit-real-scope-isolation.md).
+An Organization-scoped Maru operator can legitimately preview a sibling edition's
+stop, but its visible scope must be correct; archive purpose remains separately
+approved. Do not replace this positive control with a blanket sibling denial.
+This focused matrix complements, but does not complete, integrated P12.
+
 ## Human and accessibility session (#92)
 
 Prepare a short participant script from P01 through P11. A representative organizer
