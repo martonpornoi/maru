@@ -65,8 +65,12 @@ cannot commit. Used stop evidence prevents downgrade. Readiness checks the compl
 receipt relation plus both exact terminal attachments, not a permissive subset
 claim about unrelated legacy Events guards. No production profile or route is
 activated. Real restricted-runtime composition proves active-release withdrawal,
-rollback, original retry and retained artifacts. Concurrency, stopped-state
-recovery, HTTP/browser composition and complete P11/P12 acceptance remain open.
+rollback, original retry and retained artifacts. Separate HTTPS confirmation and
+three observed two-connection races pass, as does populated stopped-state logical
+recovery; the [executed evidence](../checkpoints/2026-09-21-programme-stop-http-races-recovery.md)
+and [populated continuation](../checkpoints/2026-09-21-programme-populated-isolation-execution.md)
+retain their exact source revisions. Fresh exact-head certification, visible-browser
+and human acceptance, and complete integrated P11/P12 closure remain separate gates.
 
 The dormant `programme_stop_views` screen uses strict original-version/digest/key
 forms and actual signed-in/route scope, not a newly substituted preview on POST.

@@ -74,7 +74,7 @@ are unchanged. The archive's independent native downgrade refusal is still teste
 Events 0018 now carries the other retained owner preflights across that join too:
 authority (including revoked grants), setup, approval, starter, notices, archive and
 domain history cannot lose newer guards before an older refusal. Its forward is a
-no-op; native verification of this correction is in progress.
+no-op; focused native recovery and the complete populated continuation now pass.
 
 Durable evidence and contracts:
 
@@ -93,86 +93,39 @@ Durable evidence and contracts:
 
 ## Latest executed evidence and limits
 
-- Full certification of `b2e88af4f0e6468180893ad248e5e617a4fe2fca` failed two
-  retained-notice-authority historical assertions in shard 14: Events 0016/0017
-  and Workforce 0030 reversed before the older notice fence refused contraction.
-  Fifteen shards passed (577 native cases); seven other active shards were
-  cancelled. All 23 started containers were removed, and no shard exhausted timing
-  headroom. All 13,190 certification units passed in 180.93s. Failed evidence is
-  preserved in `.tools/certification-evidence/programme-exit-b2e88af-notice-failed`.
-  The additive Events 0018 correction composes thirty frozen owner preflights without
-  weakening unchanged-recorder assertions or editing applied Events 0017. Sixty-five
-  focused fence/overlay units pass. Complete fast run39 passes 13,222 cases in
-  72.68s, with three existing Django URL-field warnings; expanded native regression
-  execution is pending. Ruff/format, typing (793 source files), NumPy and semantic
-  documentation (814 source files) and maintained Markdown/skill checks pass.
-  See the [failed-attempt record](../checkpoints/2026-09-21-programme-retained-authority-certification-failure.md).
-
-- Full attempt at `9de5c826035e7b3cbc489c73b8a4dfb30e434d7a` passed all 13,171
-  certification units, but failed two archive migration
-  recovery assertions. Six native shards passed before fail-fast cancellation;
-  all fourteen started containers were removed. Failed evidence is preserved in
-  `.tools/certification-evidence/programme-exit-9de5c82-migration-failed`.
-  Follow-up reproduced a real partial-successor reversal defect in 53.99s.
-  The new Events 0017 fence and full-current test recovery pass **31 native cases
-  in 199.61s**, plus 35 focused units. See the
-  [recovery-fence checkpoint](../checkpoints/2026-09-21-programme-exit-recovery-fence.md).
-  A fresh complete exact-head certification remains required.
-- The separately prepared populated P12 increment is now consolidated in the exit
-  bundle. Seven actual-purpose HTTP probes cover proposal, decision, private item,
-  planner, starter, room and Department output routes against real foreign/sibling/
-  mixed scopes and an unrelated confirmed volunteer. The first extended native run
-  failed the planner positive control after 850.29s. Explicit independent content
-  and Venue-selection approvals now occur in P05; later release preparation no
-  longer duplicates content approval. Seventy focused units pass. Corrected native
-  run24 at `8e3c02c2fb95cda9c252f188d48c436b6109ca82` passes in **1,039.27s
-  (17m19s)**, including the 49-response scope/purpose matrix (45.891s), all populated
-  phases, archive, active restore, stop and stopped-state restore. See the
-  [executed evidence](../checkpoints/2026-09-21-programme-populated-isolation-execution.md)
-  and the
-  [preparation and failed-attempt record](../checkpoints/2026-09-21-programme-populated-isolation-preparation.md).
-
-- First exact-bundle certification at `2a41f96` failed formatting. Its supported
-  cancellation removed all eight started native databases; failed artifacts are
-  preserved. Formatting, lint and explicit NumPy documentation are repaired; full
-  typing, semantic docs, fresh warning-fatal Sphinx, frontend and generated-contract
-  preflights now pass. See the
-  [preflight checkpoint](../checkpoints/2026-09-21-programme-exit-certification-preflight.md).
-  A new clean exact-head full certification is still required.
-- Exit-route isolation run4 passes in **258.82s** against real existing foreign
-  and sibling foundations, mixed scopes and other authenticated people. Thirty-two
-  protocol/observer units pass. Organization-scoped stop-preview authority is
-  preserved; archive-purpose and requester restrictions remain independent. See
-  the [exact evidence and limits](../checkpoints/2026-09-21-programme-exit-real-scope-isolation.md).
-  This is a bounded P12 increment, not the entire Programme isolation matrix.
-- Complete consolidated fast run38 at `8e3c02c`: **13,190 passed / 72.62s**, three
-  existing Django URL-field warnings. Focused private-process/HTTP tests:
-  72 passed / 0.78s. Ruff/format, typing (793 source files), NumPy and semantic
-  documentation (814 source files) pass. Maintained Markdown/skill validation passes.
-- Real stop/native owner matrices: 224 passed / 552.81s. Command/tampering/
-  immutable receipt/used downgrade: 24 passed / 91.51s. Original-actor receipt
-  denial: two focused cases / 11.18s. Forms/HTML: 29; candidate startup/ACL: 111.
-- Populated restricted-runtime run21: **967.73s**, including P01–P10, archive,
-  active-state logical recovery, partial-backup refusal and actual stop
-  (22.734s). Missing withdrawal authority, stale confirmation, rollback, one
-  committed withdrawal, exact retry and unchanged artifact bytes are proved.
-  Every phase preserves the baseline of 97 excluded-owner tables.
-- Separate real HTTPS/three two-connection races/stopped-state restore:
-  **279.78s**. Actual PostgreSQL blocking is observed in both stop/draft orders
-  and the same-key race. Restored original receipt retry succeeds; reopening
-  fails. This blank-owner fixture does not prove populated artifact recovery.
-- Extended populated run23 passes in **994.23s (16m34s)**, including actual stop
-  (22.797s), active-state recovery (39.000s), and stopped-state logical recovery
-  with populated immutable artifacts (18.453s). Archive generation took 15.563s
-  for 157,233 bytes. Run22 refused a missing explicit run identity before execution;
-  that attempt remains a failure, not inherited acceptance.
-- The pinned #97 run19 at `dea7674068d6322bfae74b6f4e45b6e56d695c37` passed
-  in 939.44s, including actual clone readiness/revocation and partial-backup
-  refusal. Preserve its separate managed worktree and evidence.
-- The 40 MiB archive custody test measured about 50.1 MiB tracked Python peak,
-  not process RSS or maximum capacity. Actual generation connection loss rolls
-  back partial bytes. Real twenty-minute process expiry and intended deployment
-  workload measurement are not established by mocked-clock checks.
+- Recovery correction `ad6192993ff6d9eab6c6117f9081dd2a47713833` passes 65 focused
+  fence/overlay units, complete fast run39 (**13,222 / 72.68s**, three existing
+  Django warnings), and **66 native regressions / 1,008.83s**, with no native skips.
+  Both original notice failures and fourteen retained authority families pass
+  unchanged-recorder assertions. Neighboring historical regressions pass **18 cases
+  / 1,218.03s**, and populated run26 passes **1,058.92s**, all sixteen phases and no
+  skips. See the [current verification](../checkpoints/2026-09-21-programme-retained-recovery-verification.md).
+  Ruff/format, typing, NumPy/semantic documentation,
+  maintained Markdown/skills and fresh warning-fatal Sphinx pass.
+- Full `b2e88af` certification failed retained-notice-authority recovery, not timing;
+  fifteen native shards and all units passed, and all 23 started containers were
+  removed. The additive correction preserves original owner fences and applied
+  migrations. Keep the [failed evidence](../checkpoints/2026-09-21-programme-retained-authority-certification-failure.md),
+  earlier [native-fence repair](../checkpoints/2026-09-21-programme-exit-recovery-fence.md)
+  and [static preflight record](../checkpoints/2026-09-21-programme-exit-certification-preflight.md).
+  No failed or partial attempt is a success receipt; final exact-head certification
+  remains required.
+- Populated run24 at `8e3c02c` passed **1,039.27s**: all sixteen phases, including
+  49 actual-purpose scope/denial responses across seven routes, archive, active
+  restore, stop and populated stopped-state restore. Every phase checks 97 excluded
+  tables. Exact timings, source revision and limits are in the
+  [executed checkpoint](../checkpoints/2026-09-21-programme-populated-isolation-execution.md).
+  Run25 at `ad61929` failed safely before proposal setup in 12.11s because its command
+  omitted the documented signature-refresh opt-in. Passing run26 uses that option; no
+  scanner freshness exception or source change was made.
+- Separate [real exit-route isolation](../checkpoints/2026-09-21-programme-exit-real-scope-isolation.md)
+  passed 258.82s; [HTTPS, three real database races and stopped restore](../checkpoints/2026-09-21-programme-stop-http-races-recovery.md)
+  passed 279.78s. Preserve their exact source revisions and the separately pinned
+  #97 worktree/evidence. HTTP is not visible-browser acceptance, and table snapshots
+  alone do not prove every denied field or transient effect.
+- The 40 MiB archive test measured about 50.1 MiB tracked Python peak, not process
+  RSS or maximum capacity. Connection-loss rollback is tested. Real twenty-minute
+  process expiry and deployment workload measurement remain unproved.
 
 The in-app browser rejected the fresh isolated fixture's temporary HTTPS
 certificate with `ERR_CERT_AUTHORITY_INVALID` before login. Credentials were
