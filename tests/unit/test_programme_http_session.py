@@ -7,6 +7,7 @@ from http.cookiejar import Cookie
 from types import SimpleNamespace
 from unittest.mock import Mock
 from urllib.parse import parse_qs
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -147,6 +148,61 @@ def test_no_domain_mutation_transport_and_expired_lease(fixture):
     session.deadline = 99.0
     with pytest.raises(http.ProgrammeHttpsError, match="lease_expired"):
         session.request("/programme/")
+    session.opener.open.assert_not_called()
+
+
+def test_only_dedicated_exact_scope_can_submit_stop_form(fixture):
+    session = _session(fixture)
+    session.opener.open.return_value = Response(status=302)
+    organization, edition = uuid4(), uuid4()
+    form = {
+        "reason": "Synthetic stop only",
+        "confirm": "on",
+        "idempotency_key": str(uuid4()),
+    }
+    result = session.submit_stop(
+        organization_id=organization, edition_id=edition, form=form
+    )
+    assert result.status == 302
+    request = session.opener.open.call_args.args[0]
+    assert (
+        request.full_url
+        == session.origin + f"/admin/programme/stop/{organization}/{edition}/"
+    )
+    assert request.get_method() == "POST"
+    assert parse_qs(request.data.decode()) == {
+        key: [value] for key, value in form.items()
+    }
+    assert request.get_header("Origin") == session.origin
+    assert session.opener.open.call_args.kwargs == {"timeout": 15}
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"organization_id": "https://elsewhere.invalid"},
+        {"edition_id": UUID(int=0)},
+        {"form": []},
+        {"form": {"actor_id": str(uuid4())}},
+        {"form": {"reason": "x" * 1025}},
+        {"form": {"reason": b"private"}},
+    ],
+)
+def test_stop_transport_cannot_become_arbitrary_path_actor_or_unbounded_post(
+    fixture, changes
+):
+    session = _session(fixture)
+    with pytest.raises(http.ProgrammeHttpsError, match="stop_form_invalid"):
+        session.submit_stop(
+            **(
+                {
+                    "organization_id": uuid4(),
+                    "edition_id": uuid4(),
+                    "form": {"reason": "Synthetic"},
+                }
+                | changes
+            )
+        )
     session.opener.open.assert_not_called()
 
 

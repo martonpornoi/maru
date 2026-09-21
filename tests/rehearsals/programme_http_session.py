@@ -9,6 +9,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from urllib.parse import urlencode, urlsplit
+from uuid import UUID
 
 from tests.rehearsals.programme_https import ProgrammeHttpsError, remaining_lease
 from tests.rehearsals.programme_runtime_environment import (
@@ -113,6 +114,37 @@ class ProgrammeHttpSession:
             or (form is not None and path not in {_LOGIN, _LOGOUT})
         ):
             raise ProgrammeHttpsError("fixture_http_path_invalid")
+        return self._exchange(path, form=form)
+
+    def submit_stop(self, *, organization_id, edition_id, form):
+        """Post only a bounded stop form to its exact literal synthetic route."""
+        require_programme_rehearsal_request()
+        if (
+            any(
+                type(value) is not UUID or not value.int
+                for value in (organization_id, edition_id)
+            )
+            or type(form) is not dict
+            or set(form)
+            - {
+                "expected_aggregate_version",
+                "expected_lifecycle_version",
+                "preview_fingerprint",
+                "idempotency_key",
+                "reason",
+                "confirm",
+                "csrfmiddlewaretoken",
+            }
+            or any(
+                type(value) is not str or len(value) > 1024 for value in form.values()
+            )
+        ):
+            raise ProgrammeHttpsError("fixture_http_stop_form_invalid")
+        return self._exchange(
+            f"/admin/programme/stop/{organization_id}/{edition_id}/", form=form
+        )
+
+    def _exchange(self, path, *, form):
         timeout = min(15, remaining_lease(self.deadline))
         headers = {"Accept-Encoding": "identity"}
         if form is not None:

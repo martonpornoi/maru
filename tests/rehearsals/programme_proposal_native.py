@@ -23,6 +23,7 @@ from tests.rehearsals.programme_runtime_environment import (
     require_programme_rehearsal_request,
 )
 from tests.rehearsals.programme_stop_scenario import verify_stop_runtime
+from tests.rehearsals.programme_stopped_restore import verify_stopped_logical_restore
 
 require_programme_rehearsal_request()
 pytestmark = pytest.mark.integration
@@ -333,7 +334,6 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             ("python_peak_bytes", archive.python_peak_bytes),
         ):
             record_testsuite_property("programme_archive_" + name, value)
-        fixture.verify_excluded_state()
         prepare(
             verify_logical_restore,
             fixture,
@@ -348,6 +348,7 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
         )
         prepare(verify_incomplete_backup_rejected, fixture)
         prepare(verify_stop_runtime, fixture)
+        prepare(verify_stopped_logical_restore, fixture)
     # Maintained HTTP assertions are not browser/native-print or human evidence.
     # P11 stop-use/recovery and complete cross-tenant/role/field P12 remain open.
 

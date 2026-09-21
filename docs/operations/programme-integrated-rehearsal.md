@@ -28,6 +28,20 @@ phase-only failure codes and the original finite lease; no credentials or source
 records are logged. This is command composition, not HTTP/browser stop or stopped-
 state logical restore. The stop screen is mounted only in the isolated URLconf.
 
+The separate opt-in `tests/rehearsals/programme_stop_native.py` now executes real
+HTTPS confirmation, original retry and receipt denial, real two-connection
+stop/draft races in both orders, same-key stop contention, and logical recovery
+of the stopped foundation. It requires `MARU_PROGRAMME_REHEARSAL=isolated`, a fresh
+32-hex `MARU_PROGRAMME_REHEARSAL_RUN_ID` and the bounded
+`MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS=3600`. Run with the repository Python and
+`-m pytest tests/rehearsals/programme_stop_native.py -q`; it is intentionally outside
+routine test discovery. Clones use genuine restricted runtime connections and
+readiness, preserve the source snapshot and dispose only owned resources.
+The successful blank-foundation run took 279.78s. It does not replace the populated
+journey, browser/human acceptance or exact-head certification. The populated runner
+also invokes `verify_stopped_logical_restore` after its actual stop; record that
+extended execution separately rather than inheriting the older populated result.
+
 **Audience:** Maintainers preparing #108, independent Programme evaluators and recovery operators\
 **Outcome:** Prepare one reproducible journey and collect evidence for #109/#92 without confusing component delivery with acceptance\
 **Status:** Maintained partial native rehearsal; complete integrated acceptance remains open
