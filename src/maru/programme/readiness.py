@@ -394,6 +394,37 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # An incomplete mapping deliberately keeps Programme readiness blocked.
 PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
     **ARCHIVE_SCHEMA_OBJECT_SHA256,
+    "constraint:programme_programmeitem:programme_stop_privacy_0": (
+        "bbf4b5d78de32a5afa6224d1fea8895c94b2909eede6b94d130b8c00f6fef2af",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmereadinessrequirement:programme_stop_privacy_1": (
+        "301b9f40ca0e5b9f6ed37e35fe2af83452a3bc7239f7709e3e9db27c217ba524",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmehostrelationship:programme_stop_privacy_2": (
+        "12353d0a4126841d3e07646775e366388047d52fad93b5306499b5ac3dba214a",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmehostrevision:programme_stop_privacy_3": (
+        "c2139125470af915e90ffc4cfe882a0f32c89e804ea8896ed022eb80404df4a6",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmehostavailabilitywindow:programme_stop_privacy_4": (
+        "722a47fd5e87cb6a8cdcc524277ad118fee3b001eba1ec009c43a88850f5d302",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "constraint:programme_programmepublicrenditionwithdrawal:"
+        "programme_stop_privacy_5"
+    ): (
+        "a377d91f512a8e45e947d1c03bd946f33841ae8cac6c3cce13e0289ccfd4cd54",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmecommandreceipt:programme_stop_privacy_6": (
+        "10b2a0b352900ef0fca94ea78e2276c8609a569a7ca425b31f6823ff65c3c2c1",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
     (
         "constraint:"
         "programme_programmepublicrenditionwithdrawal:"

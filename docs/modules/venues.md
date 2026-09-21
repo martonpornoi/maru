@@ -7,6 +7,13 @@ Last updated: 2026-09-07
 
 ## Purpose and boundary
 
+`programme_stop_queries.load_programme_stop_venues` reports minimized counts for
+nine edition-owned selection/booking/evidence relations. Shared property facts,
+contacts, accommodation inventory and other editions are not read by this purpose.
+Booking lifecycle counts do not imply cancellation, publication withdrawal or
+release of a physical obligation; those retain their actual owner commands. See
+the [minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
 The #96 native release work joins property location/lifecycle, selection
 availability and booking reschedule/approval/cancellation to existing Scheduling
 dependency generations in the same owner transaction. Exact native receipts and

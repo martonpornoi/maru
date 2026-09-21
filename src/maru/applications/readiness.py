@@ -551,8 +551,8 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # deliberately keeps Applications readiness blocked.
 APPLICATIONS_SCHEMA_CATALOG_SHA256: Final[Mapping[str, tuple[int, str]]] = {
     "constraint:": (
-        474,
-        "9e65c723d031f87274dc574bb0eb5cee1aeb8741dce5f18d23873ef3c5f82b76",
+        483,
+        "08dca73ea2ee54a1c245b4947df32df14304dfedb59e13bed861004731f96b85",
     ),
     "index:": (
         324,

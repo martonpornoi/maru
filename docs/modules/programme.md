@@ -7,6 +7,14 @@ Last updated: 2026-09-21
 
 ## Terminal Programme owner boundary (#190, in progress)
 
+`programme_stop_queries.load_programme_stop_content` reports minimized counts for
+all nineteen operational and three archive-custody relations, including pending
+host states and stored archive-job states. Source IDs, working/delivery text,
+briefings and original bytes remain hidden. Counts confer neither host consent
+nor current archive download permission. Exact schema readiness includes all seven
+new native privacy constraint objects, with every pre-existing definition intact.
+See the [minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
 Migration 0022 serializes all nineteen operational tables against the exact
 old/new Events parent. Archived/cancelled `programme_operations@1` refuses fresh
 content, host invitations/confirmation, shared availability, staffing, placement,

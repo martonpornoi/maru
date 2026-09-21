@@ -6,7 +6,30 @@ Maru-operator roots, provenance writing, profile-compatible access management,
 and guarded exact-lineage policy/runtime activation; dormant Applications
 Programme capabilities remain unadopted and production legacy reconciliation
 and cutover remain gates
-Last updated: 2026-09-20
+Last updated: 2026-09-21
+
+## Programme stop-purpose accounting
+
+`programme_stop_authorization.require_programme_stop_controller` checks actual
+ordinary controller provenance and Events transition permission under canonical
+scope locks. Nonlocking `require_programme_stop_preflight` first rejects invalid
+people, profiles or either missing capability; it admits only canonical lock
+preparation, never final controller provenance or mutation. Shared authority
+fences precede private foundation locks. The final locked proof remains required.
+`programme_stop_queries.load_programme_stop_authority` independently
+rechecks that purpose and returns only exact grant/assignment IDs, target scope,
+closed retained-historical/shared/inactive/separately-revoked dispositions and
+hashed validity/source metadata, plus unapproved/expired/decided request counts.
+It neither discloses recipients or private reasons nor asserts effective access.
+
+Each of direct grants, role outputs and approval requests is capped at 2,000
+records, complete-or-unavailable. Edition outputs include Department/resource
+scope; shared Organization outputs are limited to actual guided approvals from
+this adoption. Roots, unrelated Organization grants and other editions are not
+enumerated or revoked. A separately revoked disposition reports an existing
+revocation, never an action performed by stop. Source movement changes the
+fingerprint; a read does not grant any mutation. See the
+[Events stop-purpose contract](events.md#minimized-programme-stop-impact-190-in-progress).
 
 ## Purpose and requirements
 

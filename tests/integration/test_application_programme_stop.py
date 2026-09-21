@@ -14,7 +14,7 @@ from django.utils import timezone
 from psycopg import sql
 
 from maru.applications import programme_commands as commands
-from maru.applications import programme_stop_audit
+from maru.applications import programme_stop_audit, readiness
 from maru.applications.models import (
     ApplicationDefinition,
     ProgrammeCallFormat,
@@ -142,6 +142,20 @@ def test_all_direct_owner_tables_refuse_new_stopped_work(candidate, model):
 
 def test_exact_applications_stop_preparation_is_ready():
     assert programme_stop_preparation_is_ready()
+
+
+def test_cleanup_catalog_is_additive_and_complete_owner_readiness_remains_current():
+    rows = readiness.collect_applications_schema_object_sha256()
+    added = {
+        f"constraint:applications_{model}:applications_programme_stop_cleanup_{index}"
+        for index, model in enumerate(GUARDS.CLEANUP_MODELS)
+    }
+    assert added <= rows.keys()
+    assert readiness._schema_object_catalog_sha256(
+        {key: value for key, value in rows.items() if key not in added},
+        prefix="constraint:",
+    ) == (474, "9e65c723d031f87274dc574bb0eb5cee1aeb8741dce5f18d23873ef3c5f82b76")
+    assert readiness.applications_database_integrity_is_ready()
 
 
 def test_actual_lead_can_withdraw_but_not_reopen_proposal_after_stop(candidate, call):

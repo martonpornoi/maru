@@ -6,6 +6,15 @@ Last updated: 2026-09-10
 
 ## Purpose and requirements
 
+`programme_stop_queries.load_programme_stop_effects` counts only exact-edition
+event envelopes, outbox states, attempts and replay metadata for the explicit
+controller stop purpose. Existing outbox rows are locked in stable ID order while
+collecting; claim/completion/replay resumes after commit. No worker is invoked or
+stopped, no message is cancelled and no payload, token or raw error is returned.
+Shared Organization/global Identity work is outside this edition inventory. These
+counts do not certify worker settlement or permission for an operational retry.
+See the [minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
 `maru.effects` implements ADR 0005 for INT-002, INT-003, AUT-002, EVT-006,
 NFR-004, and NFR-013. It prevents a committed canonical action from silently
 losing required asynchronous follow-up or delivering an edition-scoped effect

@@ -63,6 +63,17 @@ pending processing/files/exports, retained commitments and exact operational
 assignments. Stop-purpose visibility is explicit; it does not grant bulk private
 source access or reuse export permission as a general controller role.
 
+The explicit stop-purpose field ceiling is minimized owner metadata: complete
+collection totals/closed states, hashed source identity, exact operational
+grant/assignment IDs and target dispositions, and Scheduling's stored pointer
+with its independently checked withdrawal prerequisite. It excludes person labels,
+proposal/review text, reasons, calendars, original files/artifacts and effect
+payloads. Authorization requires real current ordinary role-controller provenance
+plus `events.transition`; representation alone is not the latter permission.
+Each owner audits its read and rechecks current admission. Metadata is streamed
+one bounded collection at a time, complete-or-unavailable, not partially sampled.
+This does not grant any underlying content read, archive download or mutation.
+
 Every owner mutation retains its existing public command and actual authority.
 If withdrawing an active release or revoking a particular assignment requires
 additional current permission, preview must show that prerequisite and refusal

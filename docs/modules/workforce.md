@@ -1,5 +1,15 @@
 # Workforce module
 
+## Programme stop impact
+
+`programme_stop_queries.load_programme_stop_workforce` reports minimized state
+counts across 22 edition-owned/derived relations, including retained demands,
+commitments, assignments, onboarding and Availability plans. It does not return
+people, document bytes, private reasons or calendar periods. Shared Position
+templates remain outside this inventory. No counted claim, assignment or Shift is
+completed, removed or converted to Participation by a preview or stop. See the
+[minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
 ## Dormant Programme Volunteer starter
 
 HR-012 and [ADR 0107](../architecture/decisions/0107-programme-volunteer-starter-approval.md)

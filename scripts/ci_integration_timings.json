@@ -30,6 +30,8 @@
   "tests/integration/test_application_programme_review_transitions.py": 146.655,
   "tests/integration/test_application_programme_services.py": 40.071,
   "tests/integration/test_application_programme_stop.py": 300.0,
+  "tests/integration/test_programme_stop_controller.py": 300.0,
+  "tests/integration/test_programme_stop_impact.py": 300.0,
   "tests/integration/test_application_studio.py": 31.704,
   "tests/integration/test_applications_integrity_function_acl_migration.py": 591.27,
   "tests/integration/test_attendee_reporting.py": 54.36,

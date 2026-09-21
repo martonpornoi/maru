@@ -185,6 +185,20 @@ existing URL-field warnings. See the
 Events terminal closure and complete preview/command/UI remain next. Component
 terminal arrangements are not a real Stop Programme command, and orphan recovery
 after a genuine terminal transition remains part of integrated acceptance.
+Seven owner-controlled minimized impact readers now cover actual authority
+dispositions, Applications, content/hosting/archive custody, Scheduling's exact
+stored pointer, retained Workforce/Venue obligations and pending Effects. They
+require current ordinary controller provenance plus independent Events transition
+rights, stream bounded metadata and disclose no private content. Actual native
+reads exposed missing additive Applications/Programme constraint catalog pins;
+the exact nine/seven additions are now pinned with original definitions unchanged.
+The combined native impact/controller/privacy matrix passes 175/51.74s; full
+typing of nine new source files and semantic docstrings pass. Canonical shared
+authority fences and early nonlocking admission now precede private parent locks;
+the corrected focused matrix passes 58/41.16s. Fast run33 passes 13,065/69.07s
+with three existing warnings. No combined stop
+preview, terminal command or complete Events native closure is enabled yet.
+See the [minimized impact checkpoint](../checkpoints/2026-09-21-programme-stop-owner-impact.md).
 See the [native catalog recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md).
 The extended functional diagnostic passed
 in 1,749.93s (29m09s): actual P09 outputs, P10 signed offline verification and

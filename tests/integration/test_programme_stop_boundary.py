@@ -11,7 +11,7 @@ from psycopg import sql
 
 from maru.events import adoption
 from maru.events.programme_stop_readiness import programme_stop_preparation_is_ready
-from maru.programme import commands
+from maru.programme import commands, readiness
 from maru.programme.authorization import DEFAULT_PROGRAMME_AUTHORIZER
 from maru.programme.commands import ProgrammeLifecycleConflictError
 from maru.programme.models import (
@@ -31,6 +31,11 @@ from tests.support.programme_schema import admit_transaction_local_schema_candid
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 GUARDS = import_module("maru.programme.migrations.0022_programme_stop_boundary")
+
+
+def test_complete_programme_schema_includes_exact_privacy_constraints():
+    assert readiness.inspect_programme_schema_catalog().ready
+    assert readiness.programme_database_integrity_is_ready()
 
 
 @pytest.fixture

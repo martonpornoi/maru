@@ -5,7 +5,37 @@ Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
 profile-scoped unified-shell context, and dormant Programme and Applications
 reference seams; Programme Operations remains inactive
-Last updated: 2026-09-16
+Last updated: 2026-09-21
+
+## Minimized Programme stop impact (#190, in progress)
+
+ADR 0111's stop purpose requires a currently verified ordinary controller with
+real `authorization.manage_roles` provenance **and** independent exact-edition
+`events.transition` permission. Platform status, root representation alone,
+export permission or a visible destination is insufficient. Authorization owns
+this assertion; owning consequences such as release withdrawal still reauthorize.
+
+Owner-controlled `programme_stop_queries` now project Applications, Programme,
+Scheduling, Workforce, Venues, Effects and exact Authorization output accounting.
+The first six select only literal metadata columns, stream one bounded collection
+at a time and return totals/closed states plus a scope-bound source fingerprint.
+The common Events encoder permits at most 64 collections, 10,000 rows per
+collection and 8 MiB of serialized metadata per owner. It rejects overflow,
+duplicates, malformed rows and unknown encodings; it never returns a partial
+inventory. These are stored-state counts, not effective access, task completion,
+artifact availability or a claim that physical obligations were cancelled.
+
+No private proposal/review text, file/archive bytes, person labels, calendars,
+reasons, contact details or effect payloads are disclosed by this purpose.
+Every owner rechecks admission and audits before returning. Complete composition
+must hold canonical foundation/edition/person locks, rebuild all owner projections
+and compare the original preview before mutation. Effects additionally locks
+existing outbox rows while counting, without processing or cancelling them.
+Global security and independently adopted/shared work remain independent.
+
+The complete Events transition, combined preview/confirmation UI, native terminal
+receipt closure and P11/P12 acceptance remain unfinished. These public queries
+enable no stop action, current profile or production route.
 
 ## Purpose and requirements
 

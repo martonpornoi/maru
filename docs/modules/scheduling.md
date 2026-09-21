@@ -7,6 +7,18 @@ and protected-delivery status; this guide is the owner contract, not a merge cla
 
 ## Ownership and adoption
 
+### Programme stop impact
+
+`programme_stop_queries.load_programme_stop_scheduling` reports minimized counts
+for all 27 edition-owned relations and the exact stored release pointer. Global
+or shared dependency keys are outside its edition inventory. An invalidated
+release remains an active pointer requiring actual withdrawal; filtered current
+output is not evidence of withdrawal. Never-published pointer version zero is
+distinct from a withdrawn retained version. Independent withdrawal authority is
+reported as a prerequisite, not borrowed from controller/stop permission. Private
+planning labels, notices, hosts and artifact bytes are not returned. See the
+[minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
 ### Personal edition discovery (#108)
 
 The dormant `/my/programme/timetables/` chooser uses

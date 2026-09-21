@@ -30,6 +30,14 @@ and both functions. This is owner-component preparation, not an available Stop
 Programme action or complete integrated stop acceptance. See the
 [Applications boundary checkpoint](../checkpoints/2026-09-21-programme-stop-applications-boundary.md).
 
+`programme_stop_queries.load_programme_stop_applications` counts all 43 relations
+through their exact owner/parent scope, selecting only source IDs, timestamps,
+closed states and versions. It discloses no source IDs, answers, review decisions,
+contributor profiles or original files. The complete schema catalog includes the
+nine new deferred cleanup constraints (483 total); removing just those nine from
+the observed catalog reproduces the previous 474-object fingerprint exactly.
+See the [minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
 ## Logical recovery schema comparison
 
 Under [ADR 0113](../architecture/decisions/0113-logical-restore-enum-cast-canonicalization.md),
