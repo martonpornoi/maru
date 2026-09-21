@@ -935,7 +935,7 @@ stop, but its visible scope must be correct; archive purpose remains separately
 approved. Do not replace this positive control with a blanket sibling denial.
 This focused matrix complements, but does not complete, integrated P12.
 
-The next prepared populated-run phase, `verify_journey_isolation_http`, adds seven
+The populated-run phase, `verify_journey_isolation_http`, adds seven
 literal owning-route cases with genuine independently authorized actors: personal
 proposal, accountable decision, private item, timetable planning, Volunteer starter,
 room output and Department output. It checks original-scope positive controls,
@@ -948,9 +948,14 @@ The fixture now deliberately requests independent `content` and `venue-selection
 roles for its planner before P05, using both real synthetic controllers' separate
 request/approval actions. The ordinary `planner` recipe is unchanged and does not
 implicitly confer either source purpose. Content approval is no longer duplicated
-later at publication. Seventy focused observer/planning/release units pass; the
-corrected populated native extension still needs execution and is not inherited
-from older journey results.
+later at publication. Seventy focused observer/planning/release units pass. Corrected
+native run24 at `8e3c02c2fb95cda9c252f188d48c436b6109ca82` passes in 1,039.27s:
+all 49 scope/purpose response assertions pass in 45.891s, followed by the populated
+archive, active restore, stop and stopped-state restore. See its
+[exact execution record](../checkpoints/2026-09-21-programme-populated-isolation-execution.md).
+No acceptance is inherited from the earlier failed run. This bounded evidence does
+not replace full exact-head certification, a complete every-state isolation matrix,
+or human/browser acceptance.
 
 ## Human and accessibility session (#92)
 

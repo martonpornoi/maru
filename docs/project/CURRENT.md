@@ -105,8 +105,12 @@ Durable evidence and contracts:
   mixed scopes and an unrelated confirmed volunteer. The first extended native run
   failed the planner positive control after 850.29s. Explicit independent content
   and Venue-selection approvals now occur in P05; later release preparation no
-  longer duplicates content approval. Seventy focused units pass; corrected native
-  execution remains pending. See the
+  longer duplicates content approval. Seventy focused units pass. Corrected native
+  run24 at `8e3c02c2fb95cda9c252f188d48c436b6109ca82` passes in **1,039.27s
+  (17m19s)**, including the 49-response scope/purpose matrix (45.891s), all populated
+  phases, archive, active restore, stop and stopped-state restore. See the
+  [executed evidence](../checkpoints/2026-09-21-programme-populated-isolation-execution.md)
+  and the
   [preparation and failed-attempt record](../checkpoints/2026-09-21-programme-populated-isolation-preparation.md).
 
 - First exact-bundle certification at `2a41f96` failed formatting. Its supported
@@ -122,9 +126,10 @@ Durable evidence and contracts:
   preserved; archive-purpose and requester restrictions remain independent. See
   the [exact evidence and limits](../checkpoints/2026-09-21-programme-exit-real-scope-isolation.md).
   This is a bounded P12 increment, not the entire Programme isolation matrix.
-- Complete consolidated fast run37: **13,171 passed / 71.43s**, three existing
-  Django URL-field warnings. Focused private-process/HTTP tests: 72 passed / 0.78s.
-  Ruff/format and documentation checks pass (684 Markdown files).
+- Complete consolidated fast run38 at `8e3c02c`: **13,190 passed / 72.62s**, three
+  existing Django URL-field warnings. Focused private-process/HTTP tests:
+  72 passed / 0.78s. Ruff/format, typing (793 source files), NumPy and semantic
+  documentation (814 source files) pass. Maintained Markdown/skill validation passes.
 - Real stop/native owner matrices: 224 passed / 552.81s. Command/tampering/
   immutable receipt/used downgrade: 24 passed / 91.51s. Original-actor receipt
   denial: two focused cases / 11.18s. Forms/HTML: 29; candidate startup/ACL: 111.
