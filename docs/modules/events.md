@@ -48,6 +48,10 @@ stop receipt atomically. No intermediate lifecycle, blanket grant revocation,
 Participation snapshot or completed work is manufactured. Exact current-authority
 retry returns the original receipt; changed intent cannot reuse its key.
 
+Events 0017 extends the existing native-evidence used-downgrade fence across this
+joined generation before any successor guard can reverse. Exact stop readiness
+requires its source-pinned recorder; empty reverse/reapply remains supported.
+
 Events 0016 depends on all six native owner boundaries. It binds terminal changes
 reciprocally to same-transaction receipt, original UTF-8 intent, complete bounded
 preview, actual withdrawal, Audit witness and domain event. The generic transition

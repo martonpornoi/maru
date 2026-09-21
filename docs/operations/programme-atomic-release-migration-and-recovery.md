@@ -48,6 +48,15 @@ permission to normalize away physical drift or recalculate a deployed pin.
 
 ## Reverse only while genuinely unused
 
+The Programme exit extension keeps this whole-generation contract. Events 0017
+fences the joined Events 0016 owner graph on retained native Audit witnesses or
+Scheduling dependency keys before any exit/stop successor reverses. Empty reversal
+is still permitted; exact stop readiness remains false until the required fence
+is reapplied. Do not reverse individual newer guards and then interpret a later
+predecessor refusal as unchanged recovery. Use the complete graph, preserve used
+evidence, and fix forward. The archive also retains its independent native fence.
+See the [recovery-fence evidence](../checkpoints/2026-09-21-programme-exit-recovery-fence.md).
+
 Authorization 0030 adds the five operator-purpose read capabilities under
 [ADR 0099](../architecture/decisions/0099-purpose-scoped-programme-operator-outputs.md).
 It replaces the exact native capability-scope function without changing its

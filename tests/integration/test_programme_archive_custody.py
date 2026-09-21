@@ -6,6 +6,7 @@ import time
 import tracemalloc
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
+from importlib import import_module
 from threading import Barrier
 from uuid import uuid4
 
@@ -233,18 +234,45 @@ def test_native_ready_bytes_cannot_be_deleted_or_mutated_without_disposal():
         ProgrammeArchiveChunk.objects.filter(task=task).update(payload=b"changed")
 
 
-def test_native_used_downgrade_refuses_before_removing_guards_or_recorder():
+def test_native_used_downgrade_refuses_before_removing_guards_or_recorder(
+    restores_current_migration_graph,
+):
     create()
-    with pytest.raises(DatabaseError, match="fix forward"):
-        MigrationExecutor(connection).migrate(
-            [("programme", "0020_exit_archive_records")]
+    leaves = MigrationExecutor(connection).loader.graph.leaf_nodes()
+    applied_before = MigrationExecutor(connection).loader.applied_migrations
+    try:
+        # Preserve the archive's own native refusal independently of the newer
+        # joined-generation fence that must now stop ordinary whole-graph reversal.
+        archive_migration = import_module(
+            "maru.programme.migrations.0021_exit_archive_integrity"
         )
+        with (
+            pytest.raises(DatabaseError, match="fix forward"),
+            transaction.atomic(),
+            connection.cursor() as cursor,
+        ):
+            cursor.execute(archive_migration.REVERSE_SQL)
+        with pytest.raises(RuntimeError, match="retain its execution boundary"):
+            MigrationExecutor(connection).migrate(
+                [("programme", "0020_exit_archive_records")]
+            )
+        applied = MigrationExecutor(connection).loader.applied_migrations
+        assert applied == applied_before
+        assert ("programme", "0021_exit_archive_integrity") in applied
+        with pytest.raises(DatabaseError), transaction.atomic():
+            ProgrammeArchiveTask.objects.update(version=2)
+        assert ProgrammeArchiveTask.objects.count() == 1
+    finally:
+        MigrationExecutor(connection).migrate(leaves)
     assert programme_database_integrity_is_ready()
     assert ProgrammeArchiveTask.objects.count() == 1
 
 
-def test_native_unused_schema_reverse_and_forward_preserve_readiness():
+def test_native_unused_schema_reverse_and_forward_preserve_readiness(
+    restores_current_migration_graph,
+):
     assert not ProgrammeArchiveTask.objects.exists()
+    leaves = MigrationExecutor(connection).loader.graph.leaf_nodes()
     try:
         MigrationExecutor(connection).migrate(
             [("programme", "0019_public_copy_withdrawal_integrity")]
@@ -255,9 +283,7 @@ def test_native_unused_schema_reverse_and_forward_preserve_readiness():
         )
         assert not programme_database_integrity_is_ready()
     finally:
-        MigrationExecutor(connection).migrate(
-            [("programme", "0021_exit_archive_integrity")]
-        )
+        MigrationExecutor(connection).migrate(leaves)
     assert programme_database_integrity_is_ready()
 
 

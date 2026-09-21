@@ -124,6 +124,18 @@ retention override, server shutdown or external message/provider action.
 
 ## Alternatives and acceptance
 
+### Preserve the existing composed native recovery fence
+
+The joined stop generation must extend ADR 0096's used native-evidence recovery
+boundary, not let unused individual successor migrations reverse before the older
+fence is reached. Events 0017 is an additive reverse-only fence over Events 0016's
+complete owner join. It locks retained Audit native witnesses and Scheduling
+dependency keys and refuses used contraction before any successor guard or recorder
+is removed. Exact stop readiness requires the pinned fence; empty reverse/reapply
+remains supported. Existing applied migrations and the archive's own independent
+downgrade fence remain unchanged. See the
+[reproduced regression and correction](../../checkpoints/2026-09-21-programme-exit-recovery-fence.md).
+
 ### Inspected owner boundaries and unresolved changes
 
 This is an implementation map, not proof that the archived state already meets

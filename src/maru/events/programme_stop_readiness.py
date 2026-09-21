@@ -66,6 +66,10 @@ _SOURCES = (
         "events.0016_programme_stop_integrity",
         "54a4c23cf03a920b685681e841493ada2119046032165cccb73af167cad71068",
     ),
+    (
+        "events.0017_programme_exit_recovery_fence",
+        "13233baff44ad2855d4163771162619c90fb47bd5bf178810fc26cdc7e86eaf4",
+    ),
 )
 for _source, _digest in _SOURCES:
     _owner, _migration = _source.split(".", 1)
@@ -161,7 +165,7 @@ def programme_stop_command_is_ready() -> bool:
         Complete native closure, never controller authority or preview acceptance.
     """
     return (
-        ("events", "0016_programme_stop_integrity")
+        ("events", "0017_programme_exit_recovery_fence")
         in PROGRAMME_STOP_PREPARATION_CONTRACT.required_migrations
         and programme_stop_preparation_is_ready()
     )

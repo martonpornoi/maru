@@ -60,12 +60,17 @@ Implemented in this coherent bundle:
 - #97: unchanged native contract readiness after logical restore, including
   exact enum-cast/trigger rendering under ADRs 0113/0114 and partial-backup refusal.
 
-The isolated migration overlay is 0017, with 88 explicit candidate writable
+The isolated migration overlay is 0018, with 88 explicit candidate writable
 relations, thirteen invoker validators and one existing narrow definer helper.
 Production ACLs and existing profiles remain unchanged. Events 0016 implements
 the reciprocal native stop/receipt proof; unused reverse/forward succeeds and
 used evidence fences downgrade. Source/metadata pins are maintained in their
 owning code; never rebaseline a weakened live schema.
+
+Events 0017 now extends the retained native-evidence fence over the whole joined
+exit generation, before Events/Venues/Workforce successors can partially reverse.
+Its no-op forward/reverse-only fence is source-pinned; existing applied migrations
+are unchanged. The archive's independent native downgrade refusal is still tested.
 
 Durable evidence and contracts:
 
@@ -83,6 +88,17 @@ Durable evidence and contracts:
   [Programme Operations contract](../product/page-contracts/programme-operations-adoption-setup.md).
 
 ## Latest executed evidence and limits
+
+- Full attempt at `9de5c826035e7b3cbc489c73b8a4dfb30e434d7a` passed all 13,171
+  certification units, but failed two archive migration
+  recovery assertions. Six native shards passed before fail-fast cancellation;
+  all fourteen started containers were removed. Failed evidence is preserved in
+  `.tools/certification-evidence/programme-exit-9de5c82-migration-failed`.
+  Follow-up reproduced a real partial-successor reversal defect in 53.99s.
+  The new Events 0017 fence and full-current test recovery pass **31 native cases
+  in 199.61s**, plus 35 focused units. See the
+  [recovery-fence checkpoint](../checkpoints/2026-09-21-programme-exit-recovery-fence.md).
+  A fresh complete exact-head certification remains required.
 
 - First exact-bundle certification at `2a41f96` failed formatting. Its supported
   cancellation removed all eight started native databases; failed artifacts are

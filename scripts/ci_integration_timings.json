@@ -146,6 +146,7 @@
   "tests/integration/test_programme_department_ownership_recovery.py": 7.572,
   "tests/integration/test_programme_excluded_inventory.py": 300.0,
   "tests/integration/test_programme_exit_lineage.py": 300.0,
+  "tests/integration/test_programme_exit_recovery_fence.py": 300.0,
   "tests/integration/test_programme_hosts.py": 296.705,
   "tests/integration/test_programme_operational_public_review.py": 29.955,
   "tests/integration/test_programme_operator_migrations.py": 29.955,
