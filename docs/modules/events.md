@@ -50,7 +50,12 @@ retry returns the original receipt; changed intent cannot reuse its key.
 
 Events 0017 extends the existing native-evidence used-downgrade fence across this
 joined generation before any successor guard can reverse. Exact stop readiness
-requires its source-pinned recorder; empty reverse/reapply remains supported.
+requires its source-pinned recorder. Events 0018 additionally composes the frozen
+retained authority, setup, approval, starter, notice, archive and Programme owner
+preflights before any joined successor reverses. Original owner locks/refusals are
+preserved, including revoked authority; no runtime registry is inferred. Both
+forwards are no-ops. Empty reverse/reapply remains supported in offline maintenance,
+including when only unrelated ordinary authority exists.
 
 Events 0016 depends on all six native owner boundaries. It binds terminal changes
 reciprocally to same-transaction receipt, original UTF-8 intent, complete bounded

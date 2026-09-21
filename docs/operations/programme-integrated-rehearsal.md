@@ -25,7 +25,7 @@ rehearsal or a production activation claim.
 Accountable stop adds only INSERT on Events' immutable stop receipt, for **88**
 explicit candidate writable relations. Production keeps that relation SELECT-only.
 Startup now also requires Events 0016's exact terminal/receipt native readiness
-and Events 0017's source-pinned joined recovery fence.
+and Events 0017/0018's source-pinned joined native/retained recovery fences.
 The populated runner's final `verify_stop_runtime` phase checks actual missing
 withdrawal denial, independent publisher approval, stale original preview refusal,
 withdrawal/terminal rollback, committed stop and exact reauthorized retry while
@@ -203,8 +203,8 @@ available yet.
 `programme_candidate_schema_settings.py` is a non-serving, explicit migration
 child. It inherits the guarded provisioning settings and uses an Events-only
 migration overlay in `programme_event_migrations/`. The overlay discovers every
-unchanged owner migration, then appends `0018_isolated_programme_candidate` after
-the current `0017` Events leaf. It registers no application profile, so normal owner
+unchanged owner migration, then appends `0019_isolated_programme_candidate` after
+the current `0018` Events leaf. It registers no application profile, so normal owner
 checks still run against the unchanged current profiles; no check is skipped or
 silenced. Production migration files/settings remain unchanged.
 

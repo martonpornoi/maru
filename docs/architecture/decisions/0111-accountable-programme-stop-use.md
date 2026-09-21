@@ -136,6 +136,23 @@ remains supported. Existing applied migrations and the archive's own independent
 downgrade fence remain unchanged. See the
 [reproduced regression and correction](../../checkpoints/2026-09-21-programme-exit-recovery-fence.md).
 
+Retained authority without native witnesses must preserve the same joined boundary.
+Events 0018 therefore carries thirty explicit frozen owner preflights forward before
+any successor reverses: native evidence first; starter/notice/reviewed-copy/release;
+stop/archive; operational authority, original setup and approval intent; and the
+retained Applications, Programme, Scheduling/Venues and Workforce binding graphs.
+It reuses the historical owners' locks, queries and original refusal messages,
+including revoked grants, rather than scanning a current capability registry or
+inferring permission from a namespace. No exception is swallowed and no schema/data
+is changed on forward application. This conservatively retains the joined generation
+once any of those Programme boundaries is used; unrelated ordinary authority alone
+does not prevent an otherwise unused reversal. Existing owner fences remain intact.
+Recovery preflights run atomically in offline maintenance, never beside live writers.
+Exact stop readiness pins both additive fences. The
+[retained-authority certification failure](../../checkpoints/2026-09-21-programme-retained-authority-certification-failure.md)
+records why the earlier native-only correction was insufficient; fresh native and
+complete exact-head acceptance remain required.
+
 ### Inspected owner boundaries and unresolved changes
 
 This is an implementation map, not proof that the archived state already meets

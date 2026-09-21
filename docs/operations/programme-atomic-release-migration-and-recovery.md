@@ -57,6 +57,15 @@ predecessor refusal as unchanged recovery. Use the complete graph, preserve used
 evidence, and fix forward. The archive also retains its independent native fence.
 See the [recovery-fence evidence](../checkpoints/2026-09-21-programme-exit-recovery-fence.md).
 
+Events 0018 extends this preflight to the other frozen retained Programme boundaries,
+including grants that were subsequently revoked, role meanings, setup/approval/starter
+intent, notices, archive custody and domain history. It invokes original owner
+preflights before any successor reverses, retaining their locks and refusal behavior.
+Both new source pins are required for stop readiness. Run recovery in offline
+maintenance with application writers stopped; never weaken a refusal by deleting
+retained evidence, removing recorder entries or bypassing the whole graph. Unused
+reversal remains a tested recovery path, not a production uninstall workflow.
+
 Authorization 0030 adds the five operator-purpose read capabilities under
 [ADR 0099](../architecture/decisions/0099-purpose-scoped-programme-operator-outputs.md).
 It replaces the exact native capability-scope function without changing its

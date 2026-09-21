@@ -60,7 +60,7 @@ Implemented in this coherent bundle:
 - #97: unchanged native contract readiness after logical restore, including
   exact enum-cast/trigger rendering under ADRs 0113/0114 and partial-backup refusal.
 
-The isolated migration overlay is 0018, with 88 explicit candidate writable
+The isolated migration overlay is 0019, with 88 explicit candidate writable
 relations, thirteen invoker validators and one existing narrow definer helper.
 Production ACLs and existing profiles remain unchanged. Events 0016 implements
 the reciprocal native stop/receipt proof; unused reverse/forward succeeds and
@@ -71,6 +71,10 @@ Events 0017 now extends the retained native-evidence fence over the whole joined
 exit generation, before Events/Venues/Workforce successors can partially reverse.
 Its no-op forward/reverse-only fence is source-pinned; existing applied migrations
 are unchanged. The archive's independent native downgrade refusal is still tested.
+Events 0018 now carries the other retained owner preflights across that join too:
+authority (including revoked grants), setup, approval, starter, notices, archive and
+domain history cannot lose newer guards before an older refusal. Its forward is a
+no-op; native verification of this correction is in progress.
 
 Durable evidence and contracts:
 
@@ -88,6 +92,21 @@ Durable evidence and contracts:
   [Programme Operations contract](../product/page-contracts/programme-operations-adoption-setup.md).
 
 ## Latest executed evidence and limits
+
+- Full certification of `b2e88af4f0e6468180893ad248e5e617a4fe2fca` failed two
+  retained-notice-authority historical assertions in shard 14: Events 0016/0017
+  and Workforce 0030 reversed before the older notice fence refused contraction.
+  Fifteen shards passed (577 native cases); seven other active shards were
+  cancelled. All 23 started containers were removed, and no shard exhausted timing
+  headroom. All 13,190 certification units passed in 180.93s. Failed evidence is
+  preserved in `.tools/certification-evidence/programme-exit-b2e88af-notice-failed`.
+  The additive Events 0018 correction composes thirty frozen owner preflights without
+  weakening unchanged-recorder assertions or editing applied Events 0017. Sixty-five
+  focused fence/overlay units pass. Complete fast run39 passes 13,222 cases in
+  72.68s, with three existing Django URL-field warnings; expanded native regression
+  execution is pending. Ruff/format, typing (793 source files), NumPy and semantic
+  documentation (814 source files) and maintained Markdown/skill checks pass.
+  See the [failed-attempt record](../checkpoints/2026-09-21-programme-retained-authority-certification-failure.md).
 
 - Full attempt at `9de5c826035e7b3cbc489c73b8a4dfb30e434d7a` passed all 13,171
   certification units, but failed two archive migration
@@ -165,10 +184,11 @@ Exact-certificate-pinned HTTP evidence is not visible-browser acceptance.
 ## Next actions and remaining closure gates
 
 The [human session cards](../operations/programme-human-acceptance.md) now provide
-a concise facilitator/participant handoff and evidence form. This documentation
-increment was prepared separately from the frozen exit-bundle certification at
-`b2e88af`; it records no human pass. Documentation validation and a fresh warning-fatal
-Sphinx build pass; exact-head certification/protected delivery remain outstanding.
+a concise facilitator/participant handoff and evidence form. They were prepared
+separately while `b2e88af` was frozen and folded into the coherent bundle after that
+certification failed. They record no human pass. Documentation validation and a
+fresh warning-fatal Sphinx build pass; final exact-head certification/protected
+delivery remain outstanding.
 The browser certificate prerequisite and genuine independent people remain required.
 
 1. Freeze and certify the implemented exit/recovery bundle against exact main;

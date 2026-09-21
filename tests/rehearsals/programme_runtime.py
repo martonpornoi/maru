@@ -90,7 +90,7 @@ def _require_native_readiness(environment):
             raise ProgrammeStartupError("candidate_runtime_identity_mismatch")
         cursor.execute(
             "SELECT EXISTS (SELECT 1 FROM public.django_migrations "
-            "WHERE app = 'events' AND name = '0018_isolated_programme_candidate')"
+            "WHERE app = 'events' AND name = '0019_isolated_programme_candidate')"
         )
         if cursor.fetchone() != (True,):
             raise ProgrammeStartupError("candidate_schema_not_installed")
