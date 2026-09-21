@@ -191,6 +191,10 @@ temporary directory fixes the execution setup without changing tests. Native
 execution is pending available database capacity. No production capability,
 profile or route changes and no human or native acceptance is claimed. The primary
 exit-bundle candidate remains unchanged during its own exact-head certification.
+Pre-native review also caught release sequencing: P10 withdraws and publishes
+another release, so the new delivery-field phase now runs directly after P09,
+before that transition. A focused ordering regression and the new verifier tests
+pass 76 cases in 0.66s; this later test-only change still needs native execution.
 
 The [human session cards](../operations/programme-human-acceptance.md) now provide
 a concise facilitator/participant handoff and evidence form. They were prepared

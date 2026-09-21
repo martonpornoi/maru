@@ -55,7 +55,7 @@ def _record_archive_metrics(archive, record_result):
         record_result("programme_archive_" + name, value)
 
 
-def _verify_p12(prepare, fixture, sources, changed):
+def _verify_p12(prepare, fixture, sources):
     proposal, reviewed, items, planning, physical, staffing, _ = sources
     scopes = prepare(
         verify_journey_isolation_http,
@@ -67,7 +67,6 @@ def _verify_p12(prepare, fixture, sources, changed):
         physical,
         staffing,
     )
-    prepare(verify_delivery_isolation_http, fixture, *sources, changed)
     prepare(verify_object_mutation_isolation, fixture, scopes, reviewed, items)
 
 
@@ -332,6 +331,21 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             released,
             changed,
         )
+        # P10 deliberately withdraws and publishes another release. Verify the
+        # successor's live delivery layers before that transition, not against
+        # its stale release ID afterward.
+        prepare(
+            verify_delivery_isolation_http,
+            fixture,
+            result,
+            reviewed,
+            items,
+            planning,
+            physical,
+            staffing,
+            released,
+            changed,
+        )
         fixture.verify_excluded_state()
         _assert_native_continuity(
             fixture,
@@ -357,7 +371,6 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             prepare,
             fixture,
             (result, reviewed, items, planning, physical, staffing, released),
-            changed,
         )
         archive = prepare(_assert_native_archive, fixture, result)
         _record_archive_metrics(archive, record_testsuite_property)

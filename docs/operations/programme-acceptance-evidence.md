@@ -86,6 +86,8 @@ execution remains pending:
   responses. Unrequested fields and private contact/discussion canaries stay out.
   Revoking only that assignment must deny the next optional-layer request in the
   same HTTP session while the independent ordinary run sheet remains available.
+  This phase runs immediately after P09: P10 deliberately publishes a different
+  release, so the prior successor identifier must not be reused afterward.
 - `verify_object_mutation_isolation` follows the original scope-denial phase,
   then completes the foreign synthetic foundation's independent accountability
   through owner commands. Separately approved foreign/sibling content editors

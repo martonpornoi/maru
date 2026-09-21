@@ -1,8 +1,10 @@
 """P12 verifier fault injection is not native or representative-person evidence."""
 
+import ast
 import io
 import json
 from itertools import combinations
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 from urllib.parse import parse_qs, urlsplit
@@ -349,3 +351,19 @@ def _assert_sequence(events, path):
         (field,) for field in isolation.INSTRUCTIONS
     ] + [()]
     assert all(not event[3] for event in after_revoke)
+
+
+def test_native_delivery_observes_successor_before_continuity_publishes_another():
+    source = Path(__file__).parents[1] / "rehearsals" / "programme_proposal_native.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    calls = {
+        node.args[0].id: node.lineno
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "prepare"
+        and node.args
+        and isinstance(node.args[0], ast.Name)
+    }
+    assert calls["verify_onsite_http"] < calls["verify_delivery_isolation_http"]
+    assert calls["verify_delivery_isolation_http"] < calls["verify_continuity_http"]
