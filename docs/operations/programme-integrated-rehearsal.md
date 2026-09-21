@@ -1,9 +1,68 @@
 # Programme setup-to-on-site rehearsal
 
+**Audience:** Maintainers, independent Programme evaluators and recovery operators\
+**Outcome:** Reproduce the synthetic journey and collect the separate #109/#92 evidence\
+**Status:** Executed bounded native continuation; complete integrated/human acceptance remains open
+
 For the shorter participant handoff, use the
 [human-acceptance session cards](programme-human-acceptance.md). Maintained status
 is in [CURRENT](../project/CURRENT.md); the preparation sections below also retain
 the earlier component boundaries, not instructions to skip now-required testing.
+
+## Current executable entry and evidence
+
+Use the [P01–P12 evidence map](programme-acceptance-evidence.md) to distinguish
+the recorded automated assertions from remaining human and integrated gates.
+
+The complete populated host-only entrypoint is
+`tests/rehearsals/programme_proposal_native.py`. It starts a new synthetic foundation
+with actual restricted runtime roles, independent synthetic decisions, the real
+scanner, continuity signing and excluded-owner observation. It proceeds through
+all sixteen recorded phases: proposal, review, items/readiness, planning, physical
+approval, staffing, release/change, on-site outputs, continuity, isolation, archive,
+active restore, incomplete-backup refusal, stop and stopped-state restore.
+
+Run from a pinned clean checkout in a task-specific PowerShell session with the
+locked repository environment and Docker Desktop available. Do not run alongside
+a full eight-database certification pool. The resource boundary refuses a deferred
+policy and does not adopt an existing database or use production credentials.
+
+```powershell
+$env:CI = 'true'
+$env:MARU_PROGRAMME_REHEARSAL = 'isolated'
+$env:MARU_PROGRAMME_REHEARSAL_RUN_ID = [guid]::NewGuid().ToString('N')
+$env:MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS = '3600'
+$env:MARU_PROGRAMME_SCANNER_REFRESH = 'isolated'
+$programmeReport = '.tools/programme-populated-' + [guid]::NewGuid().ToString('N') + '.xml'
+git rev-parse HEAD
+& .venv/Scripts/python.exe -m pytest tests/rehearsals/programme_proposal_native.py -q --junitxml=$programmeReport
+```
+
+The test allocates its own fresh resource nonce; do not infer resource ownership
+from the report filename or the initial environment nonce. Retain the exact source,
+JUnit phase properties and inspected task-owned resource/cleanup evidence. The
+signature-refresh opt-in uses the existing bounded updater and a new owned volume;
+it neither disables freshness checks nor authorizes arbitrary network access.
+
+[Populated run26](../checkpoints/2026-09-21-programme-retained-recovery-verification.md)
+at `ad6192993ff6d9eab6c6117f9081dd2a47713833` passed in 1,058.92s. It includes 49
+real scope/purpose responses, field-limited on-site outputs, all 97 excluded-table
+baselines after each phase, active/stopped logical recovery and owned cleanup.
+Run25's omitted refresh option failed safely and remains a failure. Later test/docs
+repairs do not change that recorded application/rehearsal source, but still require
+fresh exact-head certification; this host-only test is outside ordinary CI.
+
+This command completes automated synthetic tasks, not a human session. It neither
+proves every possible state/field combination nor supplies genuine browser zoom,
+printing, screen-reader use or operational-owner acceptance. Use the participant
+cards with a suitable fresh state and a trusted browser origin for #92. Keep
+#109/#108/#48 open until their actual criteria and protected delivery are complete.
+
+## Incremental implementation context
+
+The following component notes explain ownership and earlier preparation limits.
+Use the executed checkpoints above for current evidence, not older unexecuted
+component descriptions as a blanket statement about the populated run.
 
 The #175 backend and dormant audited own-person starter screen prepare the fixed
 Volunteer definition. Positions has a separately admitted contextual entry and
@@ -48,10 +107,6 @@ journey, browser/human acceptance or exact-head certification. The populated run
 also invokes `verify_stopped_logical_restore` after its actual stop; record that
 extended execution separately rather than inheriting the older populated result.
 
-**Audience:** Maintainers preparing #108, independent Programme evaluators and recovery operators\
-**Outcome:** Prepare one reproducible journey and collect evidence for #109/#92 without confusing component delivery with acceptance\
-**Status:** Maintained partial native rehearsal; complete integrated acceptance remains open
-
 ## Entry conditions and authority
 
 This protocol implements the acceptance plan for [#48](https://github.com/martonpornoi/maru/issues/48),
@@ -73,8 +128,8 @@ Before executing final acceptance:
 - retain required PostgreSQL verification restored under #102 and establish
   #97's supported logical-recovery procedure;
 - use the maintained explicit opt-in host-only entrypoints with a dedicated
-  database, loopback URL, bounded lease and verified task-owned cleanup; these
-  do not yet complete P11 stop-use/recovery or P12;
+  database, loopback URL, bounded lease and verified task-owned cleanup; record
+  which P11/P12 contracts were observed rather than inheriting a blanket pass;
 - use real owning commands and permissions for acceptance, not an always-allow
   authorizer, direct status edits, disabled guards or fabricated approval;
 - record synthetic scanner/signing/delivery adapters and their limits separately
@@ -112,10 +167,10 @@ also validate catalog completeness, explicit exclusions and import purity. These
 are preparation checks, not requests against a running server, native authority,
 schema installation, genuine-person acceptance or P01–P12 results.
 
-The eventual opt-in fixture must separately establish its disposable database and
+The opt-in fixture must separately establish its disposable database and
 actual approved runtime boundary. A test-only candidate object is neither a launcher
 nor a migration, and does not satisfy P01–P12 by itself. Never launch it under the
-deferred policy; retain explicit not-run status until restored acceptance.
+deferred policy; distinguish unexecuted scenarios from the recorded native runs.
 
 ### Prepared runtime resource boundary
 
@@ -145,10 +200,10 @@ its database child after ten further seconds. These process/expiry semantics
 remain **unexecuted native debt**, not a guarantee inferred from mocked tests.
 
 The returned `postgres` administrator transport is only for isolated provisioning;
-it must never serve application traffic or count as runtime-role proof. Separate
-migration/runtime roles, candidate schema installation, guarded application startup,
-realistic setup/roles and P01–P12 remain unfinished. No complete launch command is
-available. The current deferred policy refuses native resource startup.
+it must never serve application traffic or count as runtime-role proof. The
+populated entrypoint above composes separate migration/runtime roles, candidate
+schema installation, guarded startup and synthetic setup/roles. The tracked
+required policy permits that explicit owned startup; deferred mode still refuses it.
 
 Four maintained host-only cases in `programme_database_native.py` cover real
 database identity/normal cleanup, body-failure cleanup, live-controller expiry and
@@ -940,6 +995,14 @@ An Organization-scoped Maru operator can legitimately preview a sibling edition'
 stop, but its visible scope must be correct; archive purpose remains separately
 approved. Do not replace this positive control with a blanket sibling denial.
 This focused matrix complements, but does not complete, integrated P12.
+
+The maintained populated entry also prepares explicit connected-role delivery
+and real-object mutation phases. Their exact positive controls, current-version
+and CSRF requirements, field subsets, revocation boundary and affected-state
+comparisons are described in the
+[P12 evidence map](programme-acceptance-evidence.md). They are not yet native passes;
+the earlier recorded sixteen-phase runs do not include these additions. Preserve
+each run's actual phase results instead of attributing new checks to old evidence.
 
 The populated-run phase, `verify_journey_isolation_http`, adds seven
 literal owning-route cases with genuine independently authorized actors: personal

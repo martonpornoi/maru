@@ -144,6 +144,35 @@ class ProgrammeHttpSession:
             f"/admin/programme/stop/{organization_id}/{edition_id}/", form=form
         )
 
+    def submit_working_item(self, *, organization_id, edition_id, item_id, form):
+        """Post only the closed private-working form to one literal owned route."""
+        require_programme_rehearsal_request()
+        if (
+            any(
+                type(value) is not UUID or not value.int
+                for value in (organization_id, edition_id, item_id)
+            )
+            or type(form) is not dict
+            or set(form)
+            != {
+                "expected_version",
+                "idempotency_key",
+                "internal_title",
+                "working_summary",
+                "reason",
+                "csrfmiddlewaretoken",
+            }
+            or any(
+                type(value) is not str or len(value) > 6000 for value in form.values()
+            )
+            or sum(map(len, form.values())) > 16000
+        ):
+            raise ProgrammeHttpsError("fixture_http_working_form_invalid")
+        return self._exchange(
+            f"/admin/programme/items/{organization_id}/{edition_id}/{item_id}/working/",
+            form=form,
+        )
+
     def _exchange(self, path, *, form):
         timeout = min(15, remaining_lease(self.deadline))
         headers = {"Accept-Encoding": "identity"}

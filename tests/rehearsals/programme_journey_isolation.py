@@ -192,3 +192,4 @@ def verify_journey_isolation_http(
     finally:
         session.cookies.clear()
     fixture.verify_excluded_state()
+    return scopes

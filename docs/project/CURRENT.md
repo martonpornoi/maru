@@ -175,6 +175,23 @@ Exact-certificate-pinned HTTP evidence is not visible-browser acceptance.
 
 ## Next actions and remaining closure gates
 
+An isolated #109 follow-up prepares genuine selected-room delivery-layer
+acceptance: independently approve the existing exact-room recipe, check all
+seven nonempty field subsets through real JSON/print requests, revoke only that
+assignment, then check immediate denial in the same session while the base room
+output still works. A second phase creates genuinely owned foreign/sibling items
+through separately approved content roles, proves successful owner POSTs, then
+checks four cross-tenant/edition/object POST refusals using valid CSRF and current
+versions. Complete affected Programme rows and Programme events must remain
+unchanged after each refusal; both rightful owners must still be able to edit.
+All 13,305 fast units pass in 113.02s (three existing URLField warnings); the
+192 focused verifier/transport checks pass in 1.74s. An initial focused attempt
+could not access the shared Windows pytest temporary root; a fresh task-owned
+temporary directory fixes the execution setup without changing tests. Native
+execution is pending available database capacity. No production capability,
+profile or route changes and no human or native acceptance is claimed. The primary
+exit-bundle candidate remains unchanged during its own exact-head certification.
+
 The [human session cards](../operations/programme-human-acceptance.md) now provide
 a concise facilitator/participant handoff and evidence form. They were prepared
 separately while `b2e88af` was frozen and folded into the coherent bundle after that

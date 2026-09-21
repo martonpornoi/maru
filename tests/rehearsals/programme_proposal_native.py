@@ -13,11 +13,13 @@ from tests.rehearsals.programme_archive_scenario import (
     verify_archive_http,
 )
 from tests.rehearsals.programme_continuity_scenario import verify_continuity_http
+from tests.rehearsals.programme_delivery_isolation import verify_delivery_isolation_http
 from tests.rehearsals.programme_journey_isolation import verify_journey_isolation_http
 from tests.rehearsals.programme_logical_restore import (
     verify_incomplete_backup_rejected,
     verify_logical_restore,
 )
+from tests.rehearsals.programme_object_isolation import verify_object_mutation_isolation
 from tests.rehearsals.programme_onsite_scenario import verify_onsite_http
 from tests.rehearsals.programme_runner import isolated_programme_application
 from tests.rehearsals.programme_runtime_environment import (
@@ -51,6 +53,22 @@ def _record_archive_metrics(archive, record_result):
         ("python_peak_bytes", archive.python_peak_bytes),
     ):
         record_result("programme_archive_" + name, value)
+
+
+def _verify_p12(prepare, fixture, sources, changed):
+    proposal, reviewed, items, planning, physical, staffing, _ = sources
+    scopes = prepare(
+        verify_journey_isolation_http,
+        fixture,
+        proposal,
+        reviewed,
+        items,
+        planning,
+        physical,
+        staffing,
+    )
+    prepare(verify_delivery_isolation_http, fixture, *sources, changed)
+    prepare(verify_object_mutation_isolation, fixture, scopes, reviewed, items)
 
 
 def test_native_real_proposal_items_planning_and_independent_physical_approval(
@@ -335,15 +353,11 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             released,
         )
         fixture.verify_excluded_state()
-        prepare(
-            verify_journey_isolation_http,
+        _verify_p12(
+            prepare,
             fixture,
-            result,
-            reviewed,
-            items,
-            planning,
-            physical,
-            staffing,
+            (result, reviewed, items, planning, physical, staffing, released),
+            changed,
         )
         archive = prepare(_assert_native_archive, fixture, result)
         _record_archive_metrics(archive, record_testsuite_property)

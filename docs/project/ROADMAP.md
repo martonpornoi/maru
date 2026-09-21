@@ -183,12 +183,11 @@ minutes each. This is timeout resilience, not a total-work reduction or
 Programme adoption.
 An eligible rule result is not approval, publication or profile activation.
 Child #97 owns exact-readiness compatibility after logical PostgreSQL restore.
-The maintainer-authorized ADR 0100 now temporarily defers PostgreSQL execution
-during dormant feature development, retaining tests and all non-database gates.
-#48 must restore exhaustive local/hosted database, coverage and timing acceptance
-before activation or integrated Programme acceptance; deferred development is
-not a database-correctness or readiness claim.
-It must pass before profile activation or a director pilot; same-image physical
+ADR 0100's temporary PostgreSQL development deferral is historical. #102 / PR #195
+restored required native acceptance with unchanged coverage and timing gates.
+Related Programme outcomes may share a coherent PR, but its final exact head needs
+complete local and independent hosted acceptance; older results do not certify it.
+Logical recovery must pass before profile activation or a director pilot; same-image physical
 recovery evidence does not waive logical-restore or production/PITR acceptance.
 
 ADR 0081 accepts `programme_operations@1` as an exact target contract. Its
@@ -438,9 +437,10 @@ documentation changes use no PostgreSQL; every code PR runs all current-schema
 cases; domain schema changes add affected owner/dependent history and committed
 whole-graph recovery; global safety/harness and destructive changes require
 exhaustive history. Changed-revision nightly acceptance and releases retain
-full history. Routine and local runs use eight isolated databases; exhaustive
-hosted runs use sixteen smaller groups with at most eight active databases and
-unchanged per-job limits. Shared historical baselines remain indivisible.
+full history. ADR 0098 subsequently replaces fixed shard counts with source-bound,
+budgeted complete-group assignments shared by local and hosted execution. At most
+eight isolated databases run concurrently, with unchanged per-job limits and
+measured headroom. Shared historical baselines remain indivisible.
 Coverage retains its 90-percent threshold and exclusions, with two-decimal
 reporting and measurement starting before application initialization.
 Draft-light feedback, fail-closed preflight, protected `PR gate` and no duplicate
@@ -858,7 +858,8 @@ acknowledgement under ADR 0102. #107 delivers on-site continuity; #108's dormant
 guided item, Applications, review, file and owner-task connections are delivered.
 Atomic setup, optional scoped role definitions and retained independent-approval
 storage are dormant foundations. Actual-person request/decision commands now
-compose exact existing authority owners; their native acceptance is deferred.
+compose exact existing authority owners. Required native acceptance is restored;
+its current candidate-specific results belong in CURRENT and the checkpoints.
 Protected own-request readers and actual-person review controls are implemented
 dormant. The guided foundation creation/reuse screen and original-actor receipt
 now hand off to existing truthful representation controls. Guided operational
@@ -869,15 +870,17 @@ selected-room access requests/reviews without pasted identifiers. Dormant shared
 entry composition now independently admits fixed Programme tasks and discovers
 narrow-role edition contexts; search and pins reuse the same current projection.
 Neither current profile nor production routing changes. Shared navigation is delivered
-through PR #163. The complete isolated fixture remains unfinished; component
-browser evidence does not replace native/human acceptance.
-These remain components, not an activated departmental workflow. Next are
-accountable setup and a complete isolated fixture, followed by #102 restored
-database acceptance, #97 logical recovery, #92 human acceptance and #109 joined
-proof before #108's final profile promotion. The
+through PR #163. The isolated fixture now composes accountable setup through
+on-site outputs, continuity, archive, active/stopped logical recovery and stop-use.
+Its recorded native continuation and bounded isolation probes do not replace
+complete exact-head acceptance, representative humans or visible-browser evidence.
+These remain components, not an activated departmental workflow. Finish protected
+delivery and reconcile the joined #109 evidence, including #97 logical recovery
+and #92 genuine human acceptance, before #108's final profile promotion. The
 [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
-defines the evidence sequence without claiming execution. Each child remains
-separately verified and delivered.
+defines the evidence sequence and links exact executed results and their limits.
+Each child keeps explicit verification and closure criteria, including when
+several related outcomes share one protected delivery bundle.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme

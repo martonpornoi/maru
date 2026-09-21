@@ -375,3 +375,57 @@ def test_logout_posts_csrf_and_always_forgets_private_cookies(fixture, failure):
     request = session.opener.open.call_args.args[0]
     assert request.full_url.endswith("/accounts/logout/")
     assert parse_qs(request.data.decode()) == {"csrfmiddlewaretoken": ["a" * 32]}
+
+
+@pytest.mark.parametrize(
+    "fault", [None, "id", "nil", "missing", "extra", "value", "large", "total"]
+)
+def test_working_form_transport_is_literal_closed_and_bounded(fixture, fault):
+    session = _session(fixture)
+    session.opener.open.return_value = Response(status=302)
+    organization, edition, item = uuid4(), uuid4(), uuid4()
+    form = {
+        "csrfmiddlewaretoken": "a" * 64,
+        "expected_version": "1",
+        "idempotency_key": str(uuid4()),
+        "internal_title": "Synthetic item",
+        "working_summary": "",
+        "reason": "Synthetic test only.",
+    }
+    if fault == "id":
+        item = str(item)
+    elif fault == "nil":
+        item = UUID(int=0)
+    elif fault == "missing":
+        form.pop("reason")
+    elif fault == "extra":
+        form["actor_id"] = str(uuid4())
+    elif fault == "value":
+        form["expected_version"] = 1
+    elif fault == "large":
+        form["working_summary"] = "x" * 6001
+    elif fault == "total":
+        form.update(
+            internal_title="x" * 6000, working_summary="x" * 6000, reason="x" * 6000
+        )
+    kwargs = {
+        "organization_id": organization,
+        "edition_id": edition,
+        "item_id": item,
+        "form": form,
+    }
+    if fault:
+        with pytest.raises(http.ProgrammeHttpsError, match="working_form_invalid"):
+            session.submit_working_item(**kwargs)
+        session.opener.open.assert_not_called()
+    else:
+        assert session.submit_working_item(**kwargs).status == 302
+        request = session.opener.open.call_args.args[0]
+        assert (
+            request.full_url
+            == session.origin
+            + f"/admin/programme/items/{organization}/{edition}/{item}/working/"
+        )
+        assert parse_qs(request.data.decode(), keep_blank_values=True) == {
+            key: [value] for key, value in form.items()
+        }

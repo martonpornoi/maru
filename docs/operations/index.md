@@ -17,6 +17,8 @@ or permission to use production personal data.
   it is not completed human acceptance or production activation.
 - [Programme human-acceptance session](programme-human-acceptance.md) supplies
   participant task cards, facilitator prerequisites and an honest evidence form.
+- [Programme acceptance evidence](programme-acceptance-evidence.md) maps P01–P12
+  to recorded automated results and the human/integrated gates still required.
 - [Read and copy a Programme timetable](programme-output-evaluation.md) explains
   dormant public/personal synthetic output, source states and private saved copies.
 - [Programme now and offline continuity](programme-onsite-continuity.md) covers
@@ -80,6 +82,7 @@ analogy.
 :maxdepth: 1
 
 maru-hands-on-tutorial
+programme-acceptance-evidence
 programme-human-acceptance
 programme-integrated-rehearsal
 programme-output-evaluation

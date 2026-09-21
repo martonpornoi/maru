@@ -2,8 +2,9 @@
 
 - Status: Accepted contract, runtime inactive. Dormant Applications, Programme,
   Scheduling, staffing, release, notice, continuity and guided task components
-  are installed. Accountable setup, the complete isolated fixture, final
-  acceptance and profile promotion remain incomplete; the production setup
+  are installed. Accountable setup and the populated native fixture have recorded
+  synthetic execution; complete integrated/human acceptance and final profile
+  promotion remain incomplete. The production setup
   route and current-profile authority remain absent.
 - Reserved route: `/admin/platform/setup/programme-operations/` (deliberately
   non-routable until the complete integrated profile is implemented and
