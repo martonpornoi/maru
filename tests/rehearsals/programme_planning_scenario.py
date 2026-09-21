@@ -323,6 +323,11 @@ def prepare_planning_scenario(setup, proposal, review, items):
         )
         for person, code, level in (
             (planner, "planner", ScopeLevel.EDITION),
+            # The connected editor independently admits private item labels and
+            # edition Venue choices. These are deliberate synthetic approvals,
+            # not authority implicitly granted by the planner role itself.
+            (planner, "content", ScopeLevel.EDITION),
+            (planner, "venue-selection", ScopeLevel.EDITION),
             (catalog_person, "venue-catalog", ScopeLevel.ORGANIZATION),
             (catalog_person, "venue-selection", ScopeLevel.EDITION),
         )
@@ -380,7 +385,7 @@ def _decode_planning(document, *, setup, proposal, review, items):
                 ("room_ids", 2),
                 ("occurrence_ids", 3),
                 ("placement_ids", 3),
-                ("role_assignment_ids", 5),
+                ("role_assignment_ids", 7),
             )
         )
         or len({p.account_id for p in people}) != 15

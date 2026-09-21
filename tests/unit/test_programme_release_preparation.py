@@ -275,7 +275,7 @@ def test_existing_roles_keep_both_independence_checks_real_and_room_sources_exac
             preparation.approve_release_roles(setup, planning, result.reviewer)
             == result.role_assignment_ids
         )
-        assert len(grants.call_args_list) == 13
+        assert len(grants.call_args_list) == 12
         for call in grants.call_args_list:
             assert call.kwargs["people"] == setup.controllers
             assert call.kwargs["level"] in {ScopeLevel.EDITION, ScopeLevel.RESOURCE}

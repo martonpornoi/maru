@@ -13,6 +13,7 @@ from tests.rehearsals.programme_archive_scenario import (
     verify_archive_http,
 )
 from tests.rehearsals.programme_continuity_scenario import verify_continuity_http
+from tests.rehearsals.programme_journey_isolation import verify_journey_isolation_http
 from tests.rehearsals.programme_logical_restore import (
     verify_incomplete_backup_rejected,
     verify_logical_restore,
@@ -43,6 +44,15 @@ def _prepare_phase(fixture, record_result, operation, *sources):
         record_result(prefix + "_seconds", round(time.monotonic() - started, 3))
 
 
+def _record_archive_metrics(archive, record_result):
+    for name, value in (
+        ("generation_seconds", archive.generation_seconds),
+        ("artifact_bytes", archive.artifact_bytes),
+        ("python_peak_bytes", archive.python_peak_bytes),
+    ):
+        record_result("programme_archive_" + name, value)
+
+
 def test_native_real_proposal_items_planning_and_independent_physical_approval(
     monkeypatch,
     record_testsuite_property,
@@ -58,8 +68,6 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
         prepare = partial(_prepare_phase, fixture, record_testsuite_property)
         fixture.verify_excluded_state()
         result = prepare(fixture.prepare_proposal)
-        assert result.organization_id == fixture.scenario.organization_id
-        assert result.lead.account_id != result.collaborator.account_id
         _assert_native_proposal(fixture, result)
         reviewed = prepare(fixture.prepare_review, result)
         _assert_native_review(fixture, result, reviewed)
@@ -327,13 +335,18 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             released,
         )
         fixture.verify_excluded_state()
+        prepare(
+            verify_journey_isolation_http,
+            fixture,
+            result,
+            reviewed,
+            items,
+            planning,
+            physical,
+            staffing,
+        )
         archive = prepare(_assert_native_archive, fixture, result)
-        for name, value in (
-            ("generation_seconds", archive.generation_seconds),
-            ("artifact_bytes", archive.artifact_bytes),
-            ("python_peak_bytes", archive.python_peak_bytes),
-        ):
-            record_testsuite_property("programme_archive_" + name, value)
+        _record_archive_metrics(archive, record_testsuite_property)
         prepare(
             verify_logical_restore,
             fixture,
@@ -398,6 +411,8 @@ def _assert_native_items(fixture, items):
 
 
 def _assert_native_proposal(fixture, result):
+    assert result.organization_id == fixture.scenario.organization_id
+    assert result.lead.account_id != result.collaborator.account_id
     # Independent read under genuine runtime login; no SQL/factory writes.
     with psycopg.connect(fixture.runtime.database_url, connect_timeout=5) as connection:
         assert connection.execute("SELECT session_user, current_user").fetchone() == (

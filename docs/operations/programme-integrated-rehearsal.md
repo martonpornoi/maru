@@ -935,6 +935,23 @@ stop, but its visible scope must be correct; archive purpose remains separately
 approved. Do not replace this positive control with a blanket sibling denial.
 This focused matrix complements, but does not complete, integrated P12.
 
+The next prepared populated-run phase, `verify_journey_isolation_http`, adds seven
+literal owning-route cases with genuine independently authorized actors: personal
+proposal, accountable decision, private item, timetable planning, Volunteer starter,
+room output and Department output. It checks original-scope positive controls,
+real foreign/sibling/mixed-scope refusals, anonymous handling and confirmed-volunteer
+denial. The native planner deliberately returns 403 where the other owning routes
+use login redirects and non-disclosing 404; the observer preserves those contracts.
+Fifteen database-free observer units pass. The first extended populated execution
+failed its planner positive control after 850.29s; it is not an accepted P12 run.
+The fixture now deliberately requests independent `content` and `venue-selection`
+roles for its planner before P05, using both real synthetic controllers' separate
+request/approval actions. The ordinary `planner` recipe is unchanged and does not
+implicitly confer either source purpose. Content approval is no longer duplicated
+later at publication. Seventy focused observer/planning/release units pass; the
+corrected populated native extension still needs execution and is not inherited
+from older journey results.
+
 ## Human and accessibility session (#92)
 
 Prepare a short participant script from P01 through P11. A representative organizer

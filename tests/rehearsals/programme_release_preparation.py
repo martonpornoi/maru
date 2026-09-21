@@ -40,7 +40,7 @@ def approve_release_roles(setup, planning, reviewer):
         for person, codes in (
             (
                 planning.planner,
-                ("content", "release-approval", "publisher", "run-sheet"),
+                ("release-approval", "publisher", "run-sheet"),
             ),
             (
                 reviewer,

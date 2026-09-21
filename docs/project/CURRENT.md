@@ -99,6 +99,15 @@ Durable evidence and contracts:
   in 199.61s**, plus 35 focused units. See the
   [recovery-fence checkpoint](../checkpoints/2026-09-21-programme-exit-recovery-fence.md).
   A fresh complete exact-head certification remains required.
+- The separately prepared populated P12 increment is now consolidated in the exit
+  bundle. Seven actual-purpose HTTP probes cover proposal, decision, private item,
+  planner, starter, room and Department output routes against real foreign/sibling/
+  mixed scopes and an unrelated confirmed volunteer. The first extended native run
+  failed the planner positive control after 850.29s. Explicit independent content
+  and Venue-selection approvals now occur in P05; later release preparation no
+  longer duplicates content approval. Seventy focused units pass; corrected native
+  execution remains pending. See the
+  [preparation and failed-attempt record](../checkpoints/2026-09-21-programme-populated-isolation-preparation.md).
 
 - First exact-bundle certification at `2a41f96` failed formatting. Its supported
   cancellation removed all eight started native databases; failed artifacts are

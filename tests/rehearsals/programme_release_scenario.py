@@ -107,8 +107,8 @@ def _decode(document, *, setup, proposal, review, items, planning, physical, sta
         )
         or result.placement_ids != planning.placement_ids
         or len({person.account_id for person in people}) != 18
-        or len(result.role_assignment_ids) != 13
-        or len(set(result.role_assignment_ids)) != 13
+        or len(result.role_assignment_ids) != 12
+        or len(set(result.role_assignment_ids)) != 12
         or any(not value.int for value in result.role_assignment_ids)
         or any(isinstance(value, UUID) and not value.int for value in values.values())
         or result.approval_id == result.release_id

@@ -60,7 +60,7 @@ def _result(setup, items):
         uuid4(),
         _person("planner"),
         _person("venue"),
-        tuple(uuid4() for _ in range(5)),
+        tuple(uuid4() for _ in range(7)),
     )
 
 
@@ -355,8 +355,17 @@ def test_preparation_uses_guarded_startup_then_real_narrow_role_recipes(monkeypa
     )
     monkeypatch.setattr(scenario, "_compose_plan", Mock(return_value=plan))
     result = scenario.prepare_planning_scenario(*sources)
-    assert order == ["guard", "planner", "venue-catalog", "venue-selection"]
+    assert order == [
+        "guard",
+        "planner",
+        "content",
+        "venue-selection",
+        "venue-catalog",
+        "venue-selection",
+    ]
     assert [c.kwargs["level"] for c in grant.call_args_list] == [
+        ScopeLevel.EDITION,
+        ScopeLevel.EDITION,
         ScopeLevel.EDITION,
         ScopeLevel.ORGANIZATION,
         ScopeLevel.EDITION,
