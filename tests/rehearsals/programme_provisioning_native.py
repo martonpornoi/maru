@@ -128,6 +128,11 @@ def test_native_migration_runtime_separation_and_reprovision_refusal(
         ):
             provision_programme_runtime(lease)
         if candidate_schema:
+            expected_refusal = (
+                "candidate_native_readiness_unavailable"
+                if candidate_writes
+                else "candidate_native_helper_unavailable"
+            )
             environment = provisioning._child_environment(
                 lease,
                 require_programme_rehearsal_request(),
@@ -138,7 +143,7 @@ def test_native_migration_runtime_separation_and_reprovision_refusal(
             provisioning._child(
                 [
                     "-c",
-                    """
+                    f"""
 from tests.rehearsals.programme_registration import (
     register_isolated_programme_candidate,
 )
@@ -174,9 +179,9 @@ from tests.rehearsals.programme_runtime_environment import (
 try:
     _require_native_readiness(require_programme_runtime_environment())
 except ProgrammeStartupError as error:
-    # Real identity, installed migration and physical profile constraint must
-    # pass before the genuinely inactive authority boundary refuses readiness.
-    assert str(error) == "candidate_native_readiness_unavailable"
+    # Schema-only roles lack helper execution; writer roles reach the later
+    # inactive-authority boundary. Neither state may construct a ready runtime.
+    assert str(error) == {expected_refusal!r}
 else:
     raise AssertionError("Unactivated native authority unexpectedly ready")
 print("programme-candidate-registration-verified")

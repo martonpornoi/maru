@@ -9,12 +9,13 @@ the [executable rehearsal](programme-integrated-rehearsal.md) for technical setu
 and the [participant cards](programme-human-acceptance.md) for genuine people.
 It implements #48/#109's existing NFR-013, OPS-009, INT-007 and UX-029 boundaries.
 
-The common automated source is `ad6192993ff6d9eab6c6117f9081dd2a47713833`:
-[populated run26](../checkpoints/2026-09-21-programme-retained-recovery-verification.md)
-passed all sixteen phases in 1,058.92s using the restricted native runtime.
-Application/rehearsal source is unchanged at repair head
-`ef7b17743b183f2875d015381e9ba836f181f02a`; this does not transfer whole-commit
-certification across heads. The full exact-head run remains separately required.
+The latest populated source is `c063f70731b43574c0b7263f7564c8fd24e87a6c`:
+[the expanded native journey](../checkpoints/2026-09-23-programme-acceptance-recovery.md)
+passed all eighteen phases in 1,336.35s using the restricted native runtime.
+It extends [populated run26](../checkpoints/2026-09-21-programme-retained-recovery-verification.md)
+with connected delivery-layer and object-mutation isolation. The earlier bundle
+at `ef7b17743b183f2875d015381e9ba836f181f02a` separately passed full certification;
+neither result transfers whole-commit certification to a changed bundle.
 
 | Checkpoint | Recorded automated evidence | Remaining acceptance boundary |
 | --- | --- | --- |
@@ -29,7 +30,7 @@ certification across heads. The full exact-head run remains separately required.
 | P09 — On-site outputs | Real login/CSRF, HTML/print/JSON/calendar and now/next; exact own-host/work rows, requested-layer ceilings, private-note/contact canaries, anonymous/actor-substitution/duplicate-parameter denials. | Real layout, native print pagination, screen-reader use and interpretation of source/version/freshness warnings. |
 | P10 — Continuity | Actual downloads and offline verifier, signature/scope/history refusals, unchanged retained history, newer withdrawal and reconnection. Controlled-clock library checks reject early/expired copies without producing output. | Native elapsed-process expiry is separate from controlled-clock evidence; representative disconnected-operation and private-copy custody remain required. |
 | P11 — Exit and recovery | Complete owner archive; active/stopped logical restores, incomplete-backup refusal, immutable bytes, missing-withdrawal denial, stale stop-preview refusal, rollback and exact stop retry. | Human archive/backup distinction and stop-impact comprehension; no production backup/PITR, deployment or capacity claim. |
-| P12 — Isolation and excluded effects | Original 97-table fingerprints checked after each phase; capability/effect inventory guards; 49 genuine positive/anonymous/foreign/sibling/mixed-scope/wrong-purpose responses across seven routes, plus the P03/P09 field assertions above. | Reconcile each relevant object/field/mutation/failure state with its owning tests and genuine session evidence; a finite matrix is not every possible state or proof against all transient effects. |
+| P12 — Isolation and excluded effects | Original 97-table fingerprints checked after each phase; capability/effect inventory guards; 49 genuine scope/purpose responses across seven routes; all seven independently authorized delivery-layer subsets and immediate revocation; four actual foreign/sibling object POST denials between successful owner controls. | Reconcile each relevant state with its owning tests and genuine session evidence; a finite matrix is not every possible state or proof against all transient effects. |
 
 ## Independent supporting evidence
 
@@ -56,8 +57,9 @@ Owner tests complement the populated fixture, but their harness matters:
 - `test_programme_queries.py::test_layer_queries_are_separate_reauthorized_audited_and_content_safe`
   checks separate working, delivery, discussion, history and four-field public
   renditions, including excluded SQL columns. It uses a test authorizer. The
-  populated P03/P09 checks add actual policy/route disclosure evidence, not every
-  positive technical/accessibility delivery-layer combination.
+  populated P03/P09 checks add actual policy/route disclosure evidence. The new
+  connected delivery phase additionally checks every nonempty subset of the three
+  optional technical/accessibility/media run-sheet fields.
 - `test_scheduling_release_queries.py` checks denial before private collection,
   field refusal, post-collection reauthorization, failed read audit, unavailable
   history and bounded dependency reads. Some cases deliberately substitute policy
@@ -68,16 +70,15 @@ Owner tests complement the populated fixture, but their harness matters:
   Injected late failures test transaction behavior; they do not establish a real
   deployment outage or human recovery procedure.
 
-Before accepting P12, reconcile these with actual connected-runtime cases for
-independently admitted positive delivery layers and their denials, object-targeted
-mutation scope, and already-admitted actors whose authority/source changes. Keep
-positive controls and exact before/after evidence; do not substitute random missing
-identifiers, blanket sibling denial or a larger test count. The existing 49-response
-probe uses GET requests; it is not itself a mutation-denial matrix. These are
-concrete remaining #109 checks within its existing scope, not new product features.
+The connected cases below add independently admitted positive delivery layers,
+their denials, object-targeted mutation scope and immediate authority revocation.
+Keep the positive controls and exact before/after evidence; random missing
+identifiers, blanket sibling denial or a larger test count cannot replace them.
+The original 49-response probe uses GET requests; the new POST phase supplies
+separate mutation-denial evidence. These remain bounded #109 checks, not a claim
+that every possible state or the genuine human journey has passed.
 
-The isolated follow-up now prepares two additional populated phases, whose native
-execution remains pending:
+The two additional populated phases both passed in the recorded native run:
 
 - `verify_delivery_isolation_http` starts from the independently admitted room
   operator, proves optional delivery fields are denied, requests and independently
@@ -104,8 +105,9 @@ to count a 403 CSRF failure, stale-version conflict or unavailable positive cont
 as scope proof. Six affected owner tables plus scoped Programme events are compared;
 the independent 97-table excluded-owner observer still runs after every denial and
 phase. Neither comparison alone proves absence of every possible transient effect.
-Fast verifier/fault-injection tests are preparation, not evidence that these two
-new native phases passed. No product profile, role recipe or route is widened.
+Fast verifier/fault-injection tests additionally challenge the evidence collectors;
+the recorded actual-runtime run, not those doubles, proves the two phases above.
+No product profile, role recipe or route is widened.
 
 ### Delivery and genuine acceptance
 

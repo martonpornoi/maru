@@ -18,9 +18,10 @@ The complete populated host-only entrypoint is
 `tests/rehearsals/programme_proposal_native.py`. It starts a new synthetic foundation
 with actual restricted runtime roles, independent synthetic decisions, the real
 scanner, continuity signing and excluded-owner observation. It proceeds through
-all sixteen recorded phases: proposal, review, items/readiness, planning, physical
-approval, staffing, release/change, on-site outputs, continuity, isolation, archive,
-active restore, incomplete-backup refusal, stop and stopped-state restore.
+all eighteen recorded phases: proposal, review, items/readiness, planning, physical
+approval, staffing, release/change, on-site outputs, delivery-layer isolation,
+continuity, scope and object-mutation isolation, archive, active restore,
+incomplete-backup refusal, stop and stopped-state restore.
 
 Run from a pinned clean checkout in a task-specific PowerShell session with the
 locked repository environment and Docker Desktop available. Do not run alongside
@@ -33,6 +34,7 @@ $env:MARU_PROGRAMME_REHEARSAL = 'isolated'
 $env:MARU_PROGRAMME_REHEARSAL_RUN_ID = [guid]::NewGuid().ToString('N')
 $env:MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS = '3600'
 $env:MARU_PROGRAMME_SCANNER_REFRESH = 'isolated'
+New-Item -ItemType Directory -Path .tools -Force | Out-Null
 $programmeReport = '.tools/programme-populated-' + [guid]::NewGuid().ToString('N') + '.xml'
 git rev-parse HEAD
 & .venv/Scripts/python.exe -m pytest tests/rehearsals/programme_proposal_native.py -q --junitxml=$programmeReport
@@ -48,9 +50,13 @@ it neither disables freshness checks nor authorizes arbitrary network access.
 at `ad6192993ff6d9eab6c6117f9081dd2a47713833` passed in 1,058.92s. It includes 49
 real scope/purpose responses, field-limited on-site outputs, all 97 excluded-table
 baselines after each phase, active/stopped logical recovery and owned cleanup.
-Run25's omitted refresh option failed safely and remains a failure. Later test/docs
-repairs do not change that recorded application/rehearsal source, but still require
-fresh exact-head certification; this host-only test is outside ordinary CI.
+Run25's omitted refresh option failed safely and remains a failure. The expanded
+[eighteen-phase run](../checkpoints/2026-09-23-programme-acceptance-recovery.md)
+at `c063f70731b43574c0b7263f7564c8fd24e87a6c` passed in 1,336.35s with all seven
+delivery-field subsets, immediate revocation and actual cross-scope object POSTs.
+Its first attempt failed before journey setup because the new checkout lacked
+`.tools`; create that ignored directory as shown above. Both reports are retained.
+This host-only journey remains separate from ordinary exact-head certification.
 
 This command completes automated synthetic tasks, not a human session. It neither
 proves every possible state/field combination nor supplies genuine browser zoom,
@@ -332,10 +338,11 @@ candidate migration history and a validated exact physical profile constraint,
 then genuine core health, Programme setup integrity and role integrity. The
 declared PG17 constraint expression is **not an observed fingerprint**: native
 acceptance must confirm it, and any mismatch fails without normalization. The
-maintained candidate provisioning case additionally expects unactivated authority
-to refuse startup. That case and positive startup remain unexecuted #102 debt;
-database-free doubles prove control flow only. Restore the tracked PostgreSQL
-policy through protected delivery after preparation, before any native run.
+maintained candidate provisioning case distinguishes schema-only helper-permission
+refusal from the later inactive-authority refusal reached with candidate writes.
+Both must remain unready. Native evidence and any remaining limits are recorded
+in the current checkpoints; database-free doubles prove control flow only.
+PostgreSQL policy is required, restored through PR #195.
 
 ### Prepared candidate runtime privileges
 
