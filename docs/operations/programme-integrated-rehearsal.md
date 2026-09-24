@@ -13,6 +13,12 @@ the earlier component boundaries, not instructions to skip now-required testing.
 
 Use the [P01–P12 evidence map](programme-acceptance-evidence.md) to distinguish
 the recorded automated assertions from remaining human and integrated gates.
+The combined source is protected through [PR #199](https://github.com/martonpornoi/maru/pull/199),
+with [exact-head local/hosted acceptance and issue closure evidence](../checkpoints/2026-09-24-programme-exit-protected-delivery.md).
+The eighteen-phase native journey and retained host checks were separately executed
+as recorded there and in the linked recovery checkpoint; earlier preparation-only
+paragraphs below are not the current execution status. Genuine #92 acceptance and
+#108's final profile promotion remain outstanding.
 
 The complete populated host-only entrypoint is
 `tests/rehearsals/programme_proposal_native.py`. It starts a new synthetic foundation

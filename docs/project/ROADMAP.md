@@ -151,12 +151,12 @@ operator recipient selection, governed preparation/review/manual handoff,
 immutable acknowledgement and dormant shared-shell user surfaces under ADR
 0102. #107 is delivered through PR #111 with dormant now/next, complete run sheets,
 print, signed continuity and preprovisioned offline known-state verification under
-ADR 0103. #108 retains guided owning-task selections, and #92/#102 retain human
-and native database acceptance. This does not complete the #48 operational journey.
+ADR 0103. Guided owning-task selections are implemented but remain dormant;
+#92 retains human acceptance. This does not complete the #48 operational journey.
 The visible #48 decomposition is the maintainer's first priority. Remaining
 outcomes are #108 guided departmental surfaces/gated activation and #109
-integrated rehearsal. #102 restores
-database acceptance; #97 recovery and #92 human acceptance remain mandatory.
+integrated rehearsal. #102 restored required database acceptance; #97 logical
+recovery is delivered through PR #199. #92 human acceptance remains mandatory.
 Document discovered prerequisites under their owning item and defer unrelated
 ideas. #108's dormant fixture enables acceptance before its final promotion.
 Its first guided item-workspace increment, delivered through PR #112, supplies
@@ -182,13 +182,14 @@ selection or coverage. Its complete hosted run passed all 39 jobs below 50
 minutes each. This is timeout resilience, not a total-work reduction or
 Programme adoption.
 An eligible rule result is not approval, publication or profile activation.
-Child #97 owns exact-readiness compatibility after logical PostgreSQL restore.
+Child #97 delivered exact-readiness compatibility after logical PostgreSQL restore
+through PR #199, including active/stopped recovery and partial-backup refusal.
 ADR 0100's temporary PostgreSQL development deferral is historical. #102 / PR #195
 restored required native acceptance with unchanged coverage and timing gates.
 Related Programme outcomes may share a coherent PR, but its final exact head needs
 complete local and independent hosted acceptance; older results do not certify it.
-Logical recovery must pass before profile activation or a director pilot; same-image physical
-recovery evidence does not waive logical-restore or production/PITR acceptance.
+Its recorded synthetic logical recovery is not production/PITR acceptance;
+same-image physical recovery is not a substitute for either boundary.
 
 ADR 0081 accepts `programme_operations@1` as an exact target contract. Its
 adopted product modules are Applications, Programme, Scheduling, Venues, and
@@ -874,9 +875,11 @@ through PR #163. The isolated fixture now composes accountable setup through
 on-site outputs, continuity, archive, active/stopped logical recovery and stop-use.
 Its recorded native continuation and bounded isolation probes do not replace
 complete exact-head acceptance, representative humans or visible-browser evidence.
-These remain components, not an activated departmental workflow. Finish protected
-delivery and reconcile the joined #109 evidence, including #97 logical recovery
-and #92 genuine human acceptance, before #108's final profile promotion. The
+PR #199 delivered this bundle with full exact-head local and hosted acceptance;
+the eighteen-phase host-only journey supplies its separately attributed automated
+proof. This is not an activated departmental workflow. Complete #92's genuine
+human acceptance and reconcile the joined #109 evidence before #108's final
+profile promotion. The
 [integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
 defines the evidence sequence and links exact executed results and their limits.
 Each child keeps explicit verification and closure criteria, including when

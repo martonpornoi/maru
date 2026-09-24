@@ -658,9 +658,13 @@ relations remain runtime SELECT-only, with owner-only guard functions.
 
 Migrations 0019–0021 install schema, integrity and a populated downgrade fence.
 The preflight refuses unproven legacy Programme file answers or reserved
-`programme-db/` receipts rather than inventing custody for old data. Exact metadata
-was observed in an approved disposable schema-only check; native behavioral
-acceptance remains unexecuted #102 debt.
+`programme-db/` receipts rather than inventing custody for old data. The original
+schema-only observation did not establish native behavior; restored full native
+acceptance and populated logical recovery are now recorded under PR #199.
+The direct native custody fixture uses PostgreSQL's clock for synthetic scan
+evidence, avoiding host/container skew while preserving explicit future-scan and
+pre-call rejection. This fixture is not a trusted scanner or deployment-clock
+guarantee; production preparation and native timing guards remain unchanged.
 
 `programme_file_commands.upload_and_use_programme_file` now owns dormant intake:
 it admits the exact contributor, applicable private question, original versions,
