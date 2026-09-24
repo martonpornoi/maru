@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-23
+Last updated: 2026-09-24
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -11,9 +11,16 @@ the release baseline.
 
 ## Protected baseline and testing policy
 
-[PR #195](https://github.com/martonpornoi/maru/pull/195) restored required
-PostgreSQL acceptance and archive-purpose authority. Protected main remains
-`b056aa253a39df2648752daf35ac5a158a9950d7`, refreshed on 2026-09-23; #102 is closed.
+[PR #199](https://github.com/martonpornoi/maru/pull/199) delivered the combined
+Programme exit/recovery/isolation bundle at protected squash
+`be83a5764d2d6aac887615ce0d498e237e94fc27` on 2026-09-24. Its tree equals certified
+head `e4b449480ab632962805bea87f3741a76f27a64d`; clean local main and `origin/main`
+were synchronized to that squash. The feature branch and unrelated worktrees
+remain preserved. This documentation follow-up records that milestone; it does
+not certify itself or activate Programme.
+
+[PR #195](https://github.com/martonpornoi/maru/pull/195) previously restored
+required PostgreSQL acceptance and archive-purpose authority; #102 remains closed.
 Its 53 local/hosted shards and exact-head gates passed. Keep its
 [protected evidence](../checkpoints/2026-09-20-postgresql-restoration-protected-delivery.md).
 Earlier PostgreSQL deferral is historical, not current permission.
@@ -27,7 +34,7 @@ and match-head squash; verify equal trees and fast-forward clean main. No bypass
 
 ## Combined Programme exit and isolation bundle
 
-Branch `codex/programme-exit-bundle` is local, not pushed or merged. It includes:
+PR #199 is merged; #189/#190/#97/#175/#196/#197/#198 are closed. It delivers:
 
 - #189: independent eight-owner archive, complete lineage/original clean files,
   requester-bound asynchronous custody, limits, expiry/cancellation and dormant UI.
@@ -57,7 +64,28 @@ Use the [P01–P12 evidence map](../operations/programme-acceptance-evidence.md)
 [archive runbook](../operations/programme-exit-archive.md) and
 [setup contract](../product/page-contracts/programme-operations-adoption-setup.md).
 
-## Recovered verification and current repair
+## Exact-head protected acceptance
+
+The [protected delivery checkpoint](../checkpoints/2026-09-24-programme-exit-protected-delivery.md)
+records full local acceptance at `e4b4494`: **13,306 units, 5,079 PostgreSQL cases
+across 71 shards, 103 frontend cases and 91.74% combined coverage**, all ten gates,
+in **3h50m50s**. Every native job passed measured headroom and owned cleanup.
+
+Independent [hosted acceptance](https://github.com/martonpornoi/maru/actions/runs/35929623040)
+passed all 71 shards, combined coverage and the protected PR gate in **4h39m44s**.
+All 72 Python reports total **18,385 cases**, with zero failures, errors or skips;
+combined coverage is **91.74%**. Hosted shards ranged **6m01s–60m36s**, median
+**18m49s**, leaving at least **59m24s** before the unchanged two-hour limit.
+[CodeQL](https://github.com/martonpornoi/maru/actions/runs/35929590704) passed.
+Two redirect findings were individually reviewed as false positives: fixed local
+path prefixes and actual UUID route converters exclude caller-selected origins;
+112 focused checks passed. The review evidence and dispositions are linked in the
+checkpoint. No source suppression, security-rule change or protected bypass was used.
+
+The eighteen-phase host-only journey and separate host/provisioning evidence below
+remain precisely attributed; routine certification does not silently include them.
+
+## Recovered supporting verification
 
 The [2026-09-23 evidence checkpoint](../checkpoints/2026-09-23-programme-acceptance-recovery.md)
 records results recovered after the interrupted session:
@@ -84,7 +112,8 @@ records results recovered after the interrupted session:
   separate full certifications for two related PRs. The old successful receipt
   does not certify this changed bundle. Complete fast run43 passes **13,306 /
   90.94s**, with the same three warnings; Ruff and documentation validation pass.
-  Final exact-head certification/protected delivery remain required.
+  The subsequent combined exact-head certification and protected delivery are
+  recorded above; earlier receipts do not substitute for that new result.
 
 Earlier failed full attempts and their fixes remain in checkpoints: the
 [retained-authority fence](../checkpoints/2026-09-21-programme-retained-recovery-verification.md),
@@ -94,13 +123,12 @@ Do not erase failures or combine them into a false exact-head success.
 
 ## Next actions and remaining closure gates
 
-1. Freeze the combined bundle and run required exact-head local/hosted acceptance.
-2. Deliver by protected PR; reconcile only completed #189/#190/#97/#175/#196/#197/#198.
-3. Complete #109's joined evidence with #92's genuine representative-person,
+1. Complete #109's joined evidence with #92's genuine representative-person,
    screen-reader and materially changed browser observations. The
    [participant cards](../operations/programme-human-acceptance.md) supply tasks and
    an evidence form, not a human pass.
-4. Only after #97/#102/#92/#109, implement and separately verify #108's final profile
+2. #97 and #102 are delivered. Only after #92/#109 also pass, implement and
+   separately verify #108's final profile
    promotion. Close #48 only when the decomposition and integrated criteria pass.
 
 The browser rejected the temporary HTTPS certificate before login

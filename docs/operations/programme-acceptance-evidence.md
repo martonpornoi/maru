@@ -16,6 +16,13 @@ It extends [populated run26](../checkpoints/2026-09-21-programme-retained-recove
 with connected delivery-layer and object-mutation isolation. The earlier bundle
 at `ef7b17743b183f2875d015381e9ba836f181f02a` separately passed full certification;
 neither result transfers whole-commit certification to a changed bundle.
+The combined final head `e4b449480ab632962805bea87f3741a76f27a64d` subsequently
+passed complete local and independent hosted acceptance and merged through
+[PR #199](https://github.com/martonpornoi/maru/pull/199). Its
+[protected delivery record](../checkpoints/2026-09-24-programme-exit-protected-delivery.md)
+records 71 passing PostgreSQL shards, 91.74% combined coverage and exact tree
+equality. This closes the component/recovery issues, not the human-dependent
+#92/#109/#108/#48 outcomes below.
 
 | Checkpoint | Recorded automated evidence | Remaining acceptance boundary |
 | --- | --- | --- |
@@ -111,9 +118,9 @@ No product profile, role recipe or route is widened.
 
 ### Delivery and genuine acceptance
 
-Deliver the source bundle only after its own clean exact-head local certification,
-independent hosted gates and protected merge. Update supporting issue checkboxes
-from that delivery, not from this index. Finish the P12 state reconciliation and
+The source bundle has passed its own clean exact-head local certification,
+independent hosted gates and protected merge through PR #199. Supporting issue
+closures refer to that delivery, not merely this index. Finish the P12 state reconciliation and
 retain concrete gaps under #109 rather than implying a universal isolation pass.
 
 #92 needs representative people, screen-reader evidence and independent
