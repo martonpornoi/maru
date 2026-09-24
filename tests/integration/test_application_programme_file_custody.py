@@ -6,6 +6,7 @@ upload route, a trusted scanner deployment or runtime upload permission.
 
 import hashlib
 from dataclasses import replace
+from datetime import timedelta
 from functools import partial
 from importlib import import_module
 from types import SimpleNamespace
@@ -19,7 +20,6 @@ from django.db import DatabaseError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.middleware.csrf import get_token
 from django.test import RequestFactory
-from django.utils import timezone
 
 from maru.applications import programme_file_commands as file_commands
 from maru.applications import programme_file_queries as file_queries
@@ -138,6 +138,11 @@ def _persist(
     receipt_values.update(receipt_changes or {})
     with transaction.atomic(), programme_application_database_writer():
         receipt = ApplicationFileReceipt.objects.create(**receipt_values)
+        # This direct native fixture supplies synthetic evidence, not a real scan.
+        # Use the enforcing clock: Windows and Docker clocks can differ by ms.
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT clock_timestamp()")
+            scanned_at = cursor.fetchone()[0]
         values = {
             "id": intake_id,
             "organization_id": world.call.edition.organization_id,
@@ -150,7 +155,7 @@ def _persist(
             "call_version": definition.aggregate_version,
             "definition_version": definition.version,
             "retry_key": retry_key,
-            "scanned_at": timezone.now(),
+            "scanned_at": scanned_at,
         }
         values.update(intake_changes or {})
         intake = ProgrammeFileIntake(**values)
@@ -184,6 +189,28 @@ def test_native_custody_commits_only_with_exact_first_answer_and_canonical_recei
     assert reused.resulting_version == world.version + 2
     assert ProgrammeFileIntake.objects.count() == 1
     assert applications_database_integrity_is_ready()
+
+
+@pytest.mark.parametrize("scan_time", ["future", "before_call_open"])
+def test_native_custody_rejects_future_or_pre_call_scan_evidence(world, scan_time):
+    definition = ApplicationDefinition.objects.get(id=world.call.definition_id)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT clock_timestamp()")
+        database_now = cursor.fetchone()[0]
+    scanned_at = (
+        database_now + timedelta(minutes=1)
+        if scan_time == "future"
+        else definition.opens_at - timedelta(seconds=1)
+    )
+    with pytest.raises(DatabaseError, match="exact current private purpose"):
+        _persist(world, intake_changes={"scanned_at": scanned_at})
+    assert not ProgrammeFileIntake.objects.exists()
+    assert not ProgrammeFileContent.objects.exists()
+    assert not ApplicationFileReceipt.objects.exists()
+    assert (
+        ProgrammeProposal.objects.get(id=world.proposal_id).submission.aggregate_version
+        == world.version
+    )
 
 
 @pytest.mark.parametrize("omit", ["content", "answer", "matching_retry"])

@@ -16,8 +16,8 @@ Programme exit/recovery/isolation bundle at protected squash
 `be83a5764d2d6aac887615ce0d498e237e94fc27` on 2026-09-24. Its tree equals certified
 head `e4b449480ab632962805bea87f3741a76f27a64d`; clean local main and `origin/main`
 were synchronized to that squash. The feature branch and unrelated worktrees
-remain preserved. This documentation follow-up records that milestone; it does
-not certify itself or activate Programme.
+remain preserved. The follow-up records that milestone and repairs #200's native
+test-fixture clock ordering; it does not certify itself or activate Programme.
 
 [PR #195](https://github.com/martonpornoi/maru/pull/195) previously restored
 required PostgreSQL acceptance and archive-purpose authority; #102 remains closed.
@@ -120,6 +120,18 @@ Earlier failed full attempts and their fixes remain in checkpoints: the
 [scope expectation](../checkpoints/2026-09-21-programme-scope-guard-expectation-repair.md)
 and [composition repairs](../checkpoints/2026-09-21-programme-native-composition-test-repairs.md).
 Do not erase failures or combine them into a false exact-head success.
+
+## Follow-up clock-fixture verification
+
+#200 records a test-only repair exposed by the documentation-only `9b3add6` Auto
+run: six custody cases used Windows scan timestamps ahead of PostgreSQL and
+correctly hit its unchanged future-scan refusal. The failed evidence is preserved.
+Native fixtures now observe the database clock and add explicit future/pre-call
+negatives. The original 77-case group plus both new cases passed **79 / 256.46s**,
+with owned cleanup verified. Production scan time, database guards, clock settings
+and CI policy are unchanged. The [clock checkpoint](../checkpoints/2026-09-24-programme-custody-fixture-clock.md)
+records the failure and focused proof; final exact-head acceptance belongs to the
+follow-up's protected PR, not an inherited PR #199 receipt.
 
 ## Next actions and remaining closure gates
 

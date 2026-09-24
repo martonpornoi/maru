@@ -75,7 +75,17 @@ storage keys without this provenance. Investigate/reconcile explicitly; do not
 fake scan or first-answer evidence, drop records, or disable guards to migrate.
 Once any custody exists, contraction is blocked before guards or tables are
 removed. Fix forward with compatible code. An approved empty-schema reverse and
-reapply was observed; populated behavior remains unexecuted native acceptance.
+reapply was observed initially; subsequent full native and populated recovery
+evidence is recorded in the [PR #199 delivery checkpoint](../checkpoints/2026-09-24-programme-exit-protected-delivery.md).
+
+The native guard refuses a scan timestamp in PostgreSQL's future or outside the
+call's edit window. Application and database clock ordering therefore matters:
+clock skew can fail closed even for a genuinely clean scan. Do not backdate actual
+scan evidence, sleep/retry until accepted, relax the guard or change machine clocks
+to make a test pass. Investigate clock synchronization before operational reliance.
+Direct native custody tests supply synthetic evidence using a database-clock
+observation and retain explicit future/pre-call negative cases; they do not prove
+a scanner deployment or cross-host clock guarantee.
 
 Backups must contain mutually consistent bytes, provenance, answers/seals,
 audit/outbox and migration history in one whole-database recovery boundary.
@@ -83,8 +93,9 @@ Restrict backup access as for the underlying question data. Clearing an answer
 does not delete its retained file, release a hold or remove a backup copy. No
 automatic pruning or disposal workflow is enabled. Retention/hold/disposal,
 backup-expiry, storage growth and recovery-time acceptance are activation gates.
-Logical dump/restore readiness remains blocked by #97; this schema-only check does
-not resolve it. Use synthetic data only.
+PR #199 resolved #97's exact synthetic logical-restore readiness separately from
+the original schema-only check. This does not establish production/PITR or capacity
+acceptance. Use synthetic data only.
 
 ## Dormant owning upload and result commands
 
