@@ -540,6 +540,11 @@ def test_manager_commands_preserve_exact_scope_subject_and_original_versions(
         host_id=hosting.host_id if task != "invite" else None,
     )
     assert response.status_code == (200 if task == "invite" else 302)
+    if task != "invite":
+        assert response["Location"] == (
+            f"/admin/programme/hosts/{hosting.organization}/{hosting.edition}/"
+            f"{hosting.item_id}/"
+        )
     name = "remove_programme_host" if task == "remove" else "invite_programme_host"
     writer = hosting.writers[name]
     writer.assert_called_once()
@@ -630,6 +635,10 @@ def test_personal_response_never_impersonates_or_collects_rationale(hosting, dec
     data = {**own_data(), "response": decision}
     response = call(hosting, "invitation", data, own=True)
     assert response.status_code == 302
+    assert response["Location"] == (
+        f"/my/programme/hosting/{hosting.organization}/{hosting.edition}/"
+        f"{hosting.item_id}/invitation/"
+    )
     kwargs = hosting.writers["respond_to_programme_host_invitation"].call_args.kwargs
     assert kwargs["actor_id"] == hosting.person_id
     assert kwargs["item_id"] == hosting.item_id

@@ -11,6 +11,13 @@ the release baseline.
 
 ## Protected baseline and testing policy
 
+[PR #201](https://github.com/martonpornoi/maru/pull/201) subsequently delivered
+the custody clock-fixture repair and exit delivery record as protected squash
+`eff8286b2c7dcff00e51159d76d70d61e7cd4745`; its tree equals certified `906f9e0`.
+Local and hosted affected-history acceptance passed 31 PostgreSQL shards,
+13,306 units, 103 frontend cases and 91.61% combined coverage. #200 is closed.
+This is the base for the separate redirect hardening below, not its certification.
+
 [PR #199](https://github.com/martonpornoi/maru/pull/199) delivered the combined
 Programme exit/recovery/isolation bundle at protected squash
 `be83a5764d2d6aac887615ce0d498e237e94fc27` on 2026-09-24. Its tree equals certified
@@ -134,6 +141,19 @@ records the failure and focused proof; final exact-head acceptance belongs to th
 follow-up's protected PR, not an inherited PR #199 receipt.
 
 ## Next actions and remaining closure gates
+
+The maintainer requested resolving the seven open medium CodeQL redirect alerts
+#13–#19 before the next human session. The focused candidate adds one domain-neutral
+local-only redirect boundary, applies it to all seven reported sinks, and replaces
+three request-path continuations with canonical scoped destinations. It does not
+dismiss alerts, change scanner/ruleset policy, alter schema or authorization,
+or activate Programme. Focused HTTP/helper tests pass **445 / 3.49s**, and complete
+database-free units pass **13,351 / 71.17s** with three existing Django warnings;
+Ruff passes.
+Complete exact-commit local acceptance and hosted CodeQL/protected acceptance are
+still required. The [redirect checkpoint](../checkpoints/2026-09-24-programme-local-redirects.md)
+records scope, test iterations and remaining evidence. This security maintenance
+does not close or substitute for #92/#109/#108/#48.
 
 1. Complete #109's joined evidence with #92's genuine representative-person,
    screen-reader and materially changed browser observations. The

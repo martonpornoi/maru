@@ -2,7 +2,7 @@
 
 Status: Living baseline with implemented tenant, authority, bounded-read, and
 public-contribution controls
-Last updated: 2026-09-02
+Last updated: 2026-09-24
 
 This living threat model covers the proposed architecture before code exists.
 Every vertical slice must refine its assets, data flows, abuse cases, controls,
@@ -159,6 +159,17 @@ untrusted channel, bounded, observable, and assumed capable of failure.
   never becomes an HTTP response. Post/redirect/get flows reverse a named route
   instead of trusting a request-derived target, and frontend path segments are
   percent-encoded.
+- Programme item, hosting, decision-receipt, access-review, Volunteer starter
+  and change-notice continuations use the domain-neutral `core.redirects`
+  local-only response boundary. It accepts only absolute local paths, rejects
+  schemes/authorities using Django's empty-host-allowlist URL validator, and
+  rejects backslashes and literal ASCII controls. It does not trust Host,
+  forwarded-host or return-URL input. Review and notice continuations reconstruct
+  canonical destinations from the owning URLconf and exact original scope instead
+  of reflecting `request.path`. The destination still authorizes independently;
+  a redirect grants no access or second mutation. These dormant adapters remain
+  unmounted in production. This is explicit defense in depth, not a claim that
+  fixed-prefix UUID routes previously allowed external destinations.
 - Canonical integer inputs use bounded linear ASCII-decimal checks rather than
   backtracking regular expressions. Alias, Unicode-digit, sign, leading-zero,
   and overlong forms are rejected before integer conversion.

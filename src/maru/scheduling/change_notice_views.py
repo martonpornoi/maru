@@ -11,13 +11,15 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
+from maru.core.redirects import local_redirect
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
 from maru.programme.queries import (
     ProgrammeQueryUnavailableError,
@@ -751,8 +753,13 @@ def _page(
             else (_get(scope, request, personal=personal), 200)
         )
         if isinstance(result, UUID):
+            destination = reverse(
+                "my-programme-changes" if personal else "programme-change-notices",
+                kwargs={"organization_id": organization_id, "edition_id": edition_id},
+                urlconf=getattr(request, "urlconf", None),
+            )
             return _secure(
-                HttpResponseRedirect(f"{request.path}?notice={result}"),
+                local_redirect(f"{destination}?notice={result}"),
                 token_urlsafe(32),
             )
         context, status = result

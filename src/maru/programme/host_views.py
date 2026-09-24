@@ -11,12 +11,14 @@ from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
+
+from maru.core.redirects import local_redirect
 
 from . import commands, host_commands, host_queries, queries
 from .authorization import (
@@ -361,7 +363,7 @@ def programme_hosts(
                         "email delivery or the person's confirmation.",
                         fail_silently=True,
                     )
-                    return _secure(HttpResponseRedirect(_root(scope, item_id)))
+                    return _secure(local_redirect(_root(scope, item_id)))
             context = _context(scope, item_id, task, host_id)
             _write(scope)
             context.update(

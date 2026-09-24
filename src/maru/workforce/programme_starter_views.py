@@ -11,7 +11,7 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -19,6 +19,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
+from maru.core.redirects import local_redirect
 from maru.identity.models import Account
 from maru.identity.services import require_recent_step_up
 from maru.workforce.programme_starter_commands import decide_programme_starter
@@ -177,7 +178,9 @@ def _decide(
             "and key; do not create another attempt.",
         )
         return 503
-    return _secure(HttpResponseRedirect(request.path))
+    return _secure(
+        local_redirect(_url(request, scope, "-request", request_id=request_id))
+    )
 
 
 @login_required(login_url="staff-login")

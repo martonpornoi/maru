@@ -98,6 +98,7 @@ def call(
     query="",
     level="edition",
     method=None,
+    request_path=None,
 ):
     route = f"/admin/programme/access/{UUID(int=1)}/{UUID(int=2)}/{level}/"
     if selected:
@@ -119,6 +120,8 @@ def call(
     )
     request._dont_enforce_csrf_checks = not csrf
     request.urlconf = URLCONF
+    if request_path is not None:
+        request.path = request_path
     if author:
         original = page.loader.return_value.requests[0]
         page.loader.return_value = replace(
@@ -148,6 +151,19 @@ def decision_data(action="approve"):
         "confirmed": "on",
         "idempotency_key": str(uuid4()),
     }
+
+
+@pytest.mark.parametrize(
+    "path", ["//outside.example/", "/\\outside.example/", "/alias/"]
+)
+def test_decision_redirect_uses_original_scope_not_request_path(page, path):
+    response = call(page, decision_data(), request_path=path)
+    assert response.status_code == 302
+    assert response["Location"] == (
+        f"/admin/programme/access/{UUID(int=1)}/{UUID(int=2)}/edition/"
+        f"{page.row.request_id}/"
+    )
+    page.command.assert_called_once()
 
 
 def test_stopped_detail_has_history_but_no_operational_controls_or_links(page):

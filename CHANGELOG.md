@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Programme's dormant post-action continuations now enforce local-only redirect
+  destinations and reconstruct approval/notice routes from their original scope.
+  External and browser-ambiguous targets are refused without weakening CodeQL,
+  changing workflow authority, or activating the Programme profile.
+
 - Programme's dormant room and Department outputs now retain fresh independent
   policy checks without repeatedly traversing the same native authority lineage.
   Logical database recovery preserves exact schema readiness and retained release

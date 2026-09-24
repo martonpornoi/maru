@@ -12,13 +12,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
 from maru.core.forms import StrictBase10IntegerField
+from maru.core.redirects import local_redirect
 from maru.events.queries import resolve_edition_time_envelope_reference
 from maru.events.scheduling_queries import resolve_scheduling_edition_reference
 from maru.scheduling.personal_navigation import (
@@ -364,7 +365,7 @@ def _post(
                 "Your hosting decision was recorded for this item only.",
                 fail_silently=True,
             )
-            return _secure(HttpResponseRedirect(f"{_root(scope)}{item_id}/invitation/"))
+            return _secure(local_redirect(f"{_root(scope)}{item_id}/invitation/"))
     context = _context(scope, item_id, task)
     _authorize(scope, capability)
     context.update(

@@ -142,6 +142,7 @@ def call(
     csrf=False,
     query="",
     method=None,
+    request_path=None,
 ):
     name = "programme-volunteer-starter" + (
         "-new" if create else "-request" if selected else ""
@@ -173,6 +174,8 @@ def call(
     )
     request._dont_enforce_csrf_checks = not csrf
     request.urlconf = URLCONF
+    if request_path is not None:
+        request.path = request_path
     if author and not create:
         page.loader.return_value = replace(
             page.workspace,
@@ -218,6 +221,25 @@ def confirmed(page):
         selection_proof=soup.select_one("input[name=selection_proof]")["value"],
     )
     return values
+
+
+@pytest.mark.parametrize(
+    "path", ["//outside.example/", "/\\outside.example/", "/alias/"]
+)
+def test_decision_redirect_uses_original_scope_not_request_path(page, path):
+    response = call(page, decision(), request_path=path)
+    assert response.status_code == 302
+    assert response["Location"] == reverse(
+        "programme-volunteer-starter-request",
+        kwargs={
+            "organization_id": SCOPE.organization_id,
+            "series_id": SCOPE.series_id,
+            "edition_id": SCOPE.edition_id,
+            "request_id": page.row.request_id,
+        },
+        urlconf=URLCONF,
+    )
+    page.command.assert_called_once()
 
 
 def test_real_review_template_uses_one_shared_shell_and_exact_consequences(page):
