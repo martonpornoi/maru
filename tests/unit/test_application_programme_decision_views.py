@@ -198,7 +198,9 @@ def test_read_does_not_require_write_or_open_planning(page):
 def test_confirmed_receipt_uses_exact_owner_signature_without_newer_proof(page):
     response = request("post", data(expected_version="7"))
     assert response.status_code == 302
-    assert response["Location"].endswith(f"/decisions/{UUID(int=20)}/")
+    assert response["Location"] == (
+        f"/my/applications/programme/{UUID(int=2)}/{UUID(int=3)}/decisions/{UUID(int=20)}/"
+    )
     page.command.assert_called_once()
     values = page.command.call_args.kwargs
     assert values["actor_id"] == UUID(int=1)

@@ -10,7 +10,7 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.urls import NoReverseMatch, Resolver404, resolve, reverse
 from django.views.decorators.cache import never_cache
@@ -29,6 +29,7 @@ from maru.authorization.programme_role_queries import (
     ProgrammeRoleWorkspace,
     load_programme_role_workspace,
 )
+from maru.core.redirects import local_redirect
 from maru.identity.models import Account
 
 _UNAVAILABLE = (
@@ -277,7 +278,9 @@ def programme_role_workspace(
                         )
                         status = 503
                     else:
-                        return _secure(HttpResponseRedirect(request.path))
+                        return _secure(
+                            local_redirect(f"{_root(request, scope)}{request_id}/")
+                        )
                 else:
                     status = 400
                 message = (

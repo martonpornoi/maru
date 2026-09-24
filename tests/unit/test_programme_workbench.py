@@ -278,8 +278,9 @@ def test_real_forms_forward_only_closed_exact_scope_and_original_intent(page, ta
     assert isinstance(kwargs["correlation_id"], UUID)
     if task != "create":
         assert kwargs["item_id"] == page.item_id
-    assert response["Location"].endswith(
-        f"/{page.item_id}/{'working' if task == 'create' else task}/"
+    assert response["Location"] == (
+        f"/admin/programme/items/{page.organization}/{page.edition}/"
+        f"{page.item_id}/{'working' if task == 'create' else task}/"
     )
     for other, writer in page.writers.items():
         if other != task:

@@ -11,13 +11,14 @@ from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
+from maru.core.redirects import local_redirect
 from maru.events.scheduling_queries import resolve_scheduling_edition_reference
 from maru.identity.queries import resolve_active_verified_person_reference
 from maru.scheduling.planning_queries import SchedulingReadRequest
@@ -312,7 +313,7 @@ def _post(
         )
         return None, 409
     return _secure(
-        HttpResponseRedirect(
+        local_redirect(
             f"{_root(scope)}{result.item_id}/{'working' if task == 'create' else task}/"
         )
     ), 302

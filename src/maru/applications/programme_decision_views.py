@@ -11,7 +11,7 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -19,6 +19,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
 from maru.core.forms import StrictBase10IntegerField
+from maru.core.redirects import local_redirect
 
 from . import programme_review_queries as queries
 from .forms import RetryForm
@@ -291,7 +292,7 @@ def _detail(
                     "reloading; your original confirmation proof is retained.",
                 )
             else:
-                return _secure(HttpResponseRedirect(f"{_root(scope)}{decision_id}/"))
+                return _secure(local_redirect(f"{_root(scope)}{decision_id}/"))
 
     def verify() -> None:
         current = queries.get_self_programme_decision(

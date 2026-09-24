@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from django.contrib.auth.models import AnonymousUser
 from django.http import QueryDict
 from django.test import RequestFactory
-from django.urls import Resolver404, resolve
+from django.urls import Resolver404, resolve, reverse
 
 from maru.scheduling import change_notice_views as views
 from maru.scheduling.authorization import SchedulingAuthorizationDeniedError
@@ -101,6 +101,7 @@ def call(
     anonymous=False,
     csrf=False,
     method=None,
+    request_path=None,
 ):
     if data is not None:
         encoded = data if isinstance(data, QueryDict) else QueryDict("", mutable=True)
@@ -127,6 +128,9 @@ def call(
         )
     )
     request._dont_enforce_csrf_checks = not csrf
+    request.urlconf = "maru.scheduling.output_urls"
+    if request_path is not None:
+        request.path = request_path
     view = (
         views.personal_programme_changes if personal else views.programme_change_notices
     )
@@ -210,7 +214,17 @@ def test_preview_does_not_mutate_and_preparation_binds_displayed_source(page):
         command.assert_not_called()
     response = call(page, data=selection(page, "prepare"))
     assert response.status_code == 302
-    assert response["Location"] == f"/synthetic/notices/?notice={page.detail.notice_id}"
+    assert response["Location"] == (
+        reverse(
+            "programme-change-notices",
+            kwargs={
+                "organization_id": page.world.request.organization_id,
+                "edition_id": page.world.request.edition_id,
+            },
+            urlconf="maru.scheduling.output_urls",
+        )
+        + f"?notice={page.detail.notice_id}"
+    )
     command, intent = page.submit["prepare"].call_args.args
     assert command.actor_id == page.world.request.actor_id
     assert command.idempotency_key == UUID(int=90)
@@ -233,6 +247,28 @@ def test_each_action_delegates_exact_intent_to_its_governed_boundary(page, actio
         assert command.call_args.kwargs["idempotency_key"] == UUID(int=91)
     if action in {"approve", "reject"}:
         assert command.call_args.kwargs["action"].value == action
+
+
+@pytest.mark.parametrize("personal", [False, True])
+@pytest.mark.parametrize(
+    "path", ["//outside.example/", "/\\outside.example/", "/alias/"]
+)
+def test_notice_redirect_uses_owning_route_not_request_path(page, personal, path):
+    action = "acknowledge" if personal else "approve"
+    response = call(
+        page, data=decision(page, action), personal=personal, request_path=path
+    )
+    assert response.status_code == 302
+    expected = reverse(
+        "my-programme-changes" if personal else "programme-change-notices",
+        kwargs={
+            "organization_id": page.world.request.organization_id,
+            "edition_id": page.world.request.edition_id,
+        },
+        urlconf="maru.scheduling.output_urls",
+    )
+    assert response["Location"] == f"{expected}?notice={page.detail.notice_id}"
+    page.submit["acknowledge" if personal else "review"].assert_called_once()
 
 
 @pytest.mark.parametrize(
