@@ -148,6 +148,11 @@ def test_rooms_use_owned_configuration_active_property_and_exact_room_roles(
     }
 
     def invoke(name, **values):
+        if name == "create_venue_property":
+            profile = services._normalize_profile(values["profile"])
+            assert profile["location_name"] == "Fictional rehearsal town"
+            assert profile["postal_address"] == "1 Fictional Rehearsal Road"
+            assert profile["country_code"] == "HU"
         events.append((name, values))
         return services.VenueCommandResult(
             next(results[name]), uuid4(), 1, replayed=False

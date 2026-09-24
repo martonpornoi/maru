@@ -112,6 +112,8 @@ GRANT SELECT ON TABLE
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.events_programmeadoptionsetupreceipt FROM maru_runtime, PUBLIC;
 GRANT SELECT ON TABLE public.events_programmeadoptionsetupreceipt TO maru_runtime;
+REVOKE ALL ON TABLE public.events_programmestopreceipt FROM maru_runtime, PUBLIC;
+GRANT SELECT ON TABLE public.events_programmestopreceipt TO maru_runtime;
 
 -- Programme operational approval evidence remains dormant under #108.
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
@@ -146,6 +148,9 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.programme_programmereadinessevidence,
     public.programme_programmepublicrendition,
     public.programme_programmepublicrenditionwithdrawal,
+    public.programme_programmearchivetask,
+    public.programme_programmearchivetaskevent,
+    public.programme_programmearchivechunk,
     public.programme_programmecommandreceipt,
     public.programme_programmehostrelationship,
     public.programme_programmehostinvitation,
@@ -169,6 +174,9 @@ REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.programme_programmereadinessevidence,
     public.programme_programmepublicrendition,
     public.programme_programmepublicrenditionwithdrawal,
+    public.programme_programmearchivetask,
+    public.programme_programmearchivetaskevent,
+    public.programme_programmearchivechunk,
     public.programme_programmecommandreceipt,
     public.programme_programmehostrelationship,
     public.programme_programmehostinvitation,
@@ -192,6 +200,9 @@ GRANT SELECT ON TABLE
     public.programme_programmereadinessevidence,
     public.programme_programmepublicrendition,
     public.programme_programmepublicrenditionwithdrawal,
+    public.programme_programmearchivetask,
+    public.programme_programmearchivetaskevent,
+    public.programme_programmearchivechunk,
     public.programme_programmecommandreceipt,
     public.programme_programmehostrelationship,
     public.programme_programmehostinvitation,

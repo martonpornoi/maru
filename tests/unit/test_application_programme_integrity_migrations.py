@@ -28,8 +28,8 @@ def test_0005_is_one_atomic_cross_domain_integrity_step() -> None:
     assert operation.sql == migration.FORWARD_SQL
     assert operation.reverse_sql == migration.REVERSE_SQL
     assert APPLICATIONS_INTEGRITY_CONTRACT.source_contract_current
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 148
-    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 34
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.triggers) == 200
+    assert len(APPLICATIONS_INTEGRITY_CONTRACT.functions) == 36
 
 
 def test_schema_fingerprint_covers_the_complete_applications_namespace() -> None:
@@ -145,8 +145,8 @@ def test_schema_fingerprint_pins_complete_constraint_and_index_catalogs() -> Non
     """Keep code-owned PostgreSQL 17 object catalogs complete and immutable."""
     assert applications_readiness.APPLICATIONS_SCHEMA_CATALOG_SHA256 == {
         "constraint:": (
-            474,
-            "9e65c723d031f87274dc574bb0eb5cee1aeb8741dce5f18d23873ef3c5f82b76",
+            483,
+            "08dca73ea2ee54a1c245b4947df32df14304dfedb59e13bed861004731f96b85",
         ),
         "index:": (
             324,

@@ -34,6 +34,7 @@ from maru.authorization.retired_targets import (
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.adoption import profile_allows_capability
 from maru.events.models import EventEdition
+from maru.events.programme_stop_queries import resolve_programme_stop_reference
 from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.workforce.models import Department
@@ -58,6 +59,34 @@ class AuthorizationDenied(PermissionDenied):
 
 def _raise_authorization(message: str, *, reason_code: str) -> Never:
     raise AuthorizationDenied(message, reason_code=reason_code)
+
+
+def _require_programme_issuance_open(target: ResolvedAuthorizationTarget) -> None:
+    """Fence fresh Programme grants under locked scope, not revocation or history.
+
+    Parameters
+    ----------
+    target : ResolvedAuthorizationTarget
+        Current owner-resolved and locked authorization target.
+
+    Notes
+    -----
+    Missing or terminal Programme evidence delegates denial to the existing
+    authorization error boundary. Non-Programme targets remain unchanged.
+    """
+    if (
+        target.edition_id is None
+        or target.adoption_profile_code != "programme_operations"
+    ):
+        return
+    reference = resolve_programme_stop_reference(
+        organization_id=target.organization_id, edition_id=target.edition_id
+    )
+    if reference is None or not reference.applies or reference.is_stopped:
+        _raise_authorization(
+            "Programme authority changes are unavailable.",
+            reason_code="programme_authority_unavailable",
+        )
 
 
 def _scope_is_within(
@@ -552,6 +581,7 @@ def delegate_capability(  # noqa: DOC503, PLR0915 - bare re-raise preserves orig
             # delegation from waiting on each other's advisory/row locks.
             lock_retired_department_authority_boundaries()
             locked_target = _lock_target(target)
+            _require_programme_issuance_open(locked_target)
             locked_parent = _lock_parent_chain(
                 parent_id=parent.id,
                 actor=actor,

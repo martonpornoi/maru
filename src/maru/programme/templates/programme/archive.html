@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Programme exit archive · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}">{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Administration / Programme exit archive</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench">
+  <h1>Programme exit archive</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Restricted, original requester only</summary>
+    <p>Organization {{ scope.organization_id }} · Edition {{ scope.edition_id }}</p>
+    <p>Export authority does not grant source access. Generation, status and download check all required owner permissions independently. This task cannot be shared or downloaded for another person.</p>
+  </details>
+  <section aria-labelledby="archive-scope"><h2 id="archive-scope">What this archive contains</h2>
+    <p>Supported edition configuration, reviewed proposals and permitted clean files, decisions, Programme history, schedules and historical releases, room wayfinding, staffing links, role definitions and this export's audit manifest.</p>
+    <p>It excludes private unsubmitted proposals, withheld identifying material, invitation secrets, private host calendars, volunteer identities and unrelated modules. Missing or denied required sources prevent a complete archive; they are not silently skipped.</p>
+    <p>This is restricted C3 evidence, not encrypted or signed output, a public timetable, a database backup or an import. Keep the ZIP in controlled private storage. Verify paths, sizes and hashes against its manifest and inspect its schemas locally. Hashes detect corruption, not authenticity; do not upload this ZIP to a public checker.</p>
+    <p>Access expires 24 hours after the original request, including queue time. Generation has a 20-minute budget. Limits include 128 MiB per records section, 2,000 files up to 10 MiB each and 1 GiB of total content; stricter owner limits also apply. Oversized or unavailable sources fail without a partial download.</p>
+  </section>
+  {% if task %}
+  <section aria-labelledby="archive-status"><h2 id="archive-status">Your archive request</h2>
+    <dl><dt>Recorded phase</dt><dd>{{ task.state }}</dd><dt>Version</dt><dd>{{ task.version }}</dd><dt>Requested</dt><dd>{{ task.requested_at|date:"c" }}</dd><dt>Access expires</dt><dd>{{ task.expires_at|date:"c" }}</dd></dl>
+    {% if task.expired %}<p>Access has expired. The recorded phase does not prove that worker disposal has already run. You can cancel retained active work before making a new request.</p>{% endif %}
+    {% if task.source_changed %}<p>Authorized sources changed after generation. No download is available. Cancel this derived archive, then deliberately create a new linked request.</p>{% endif %}
+    {% if task.failure_code %}<p>Failure: {{ task.failure_code }}. No complete download is available. Correct the prerequisite and deliberately retry.</p>{% endif %}
+    {% if task.state == "ready" and not task.expired and not task.source_changed %}<p><a href="{{ task_url }}download/">Download private archive</a> · {{ task.size_bytes }} bytes</p>{% endif %}
+    <p><a href="{{ task_url }}">Refresh status and permissions</a>. Checks can take time; this page does not poll in the background.</p>
+  </section>
+  {% endif %}
+  {% if invalid %}<p role="alert" tabindex="-1">The command was not accepted. Review the fields below; your request identity has been kept.</p>{% endif %}
+  <section aria-labelledby="archive-action"><h2 id="archive-action">{% if action == "cancel" %}Cancel and dispose{% elif action == "retry" %}Deliberately retry{% else %}Request a private archive{% endif %}</h2>
+    {% if action == "cancel" %}<p>This removes only derived archive bytes. Source records, holds and immutable task/audit evidence remain. It cannot erase downloaded copies or historical backups.</p>{% elif action == "retry" %}<p>This creates a new linked request with a new expiry. It does not resurrect or rewrite the previous request.</p>{% endif %}
+    <form method="post" action="{{ task_url }}">{% csrf_token %}<input type="hidden" name="action" value="{{ action }}">{{ form.as_p }}
+      <button type="submit">{% if action == "cancel" %}Cancel and remove derived bytes{% elif action == "retry" %}Create a new linked request{% else %}Queue private archive{% endif %}</button>
+    </form>
+    <p>Ending Programme use is a separate accountable decision. An archive does not authorize stop-use or waive future download permissions.</p>
+  </section>
+  <p><a href="{{ root_url }}">Archive scope and new request</a></p>
+</div>
+{% endblock %}

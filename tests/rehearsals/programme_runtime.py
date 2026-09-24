@@ -64,6 +64,9 @@ def _require_native_readiness(environment):
     from maru.events.programme_setup_readiness import (  # noqa: PLC0415
         programme_setup_database_integrity_is_ready,
     )
+    from maru.events.programme_stop_readiness import (  # noqa: PLC0415
+        programme_stop_command_is_ready,
+    )
     from maru.workforce.programme_starter_readiness import (  # noqa: PLC0415
         programme_starter_database_integrity_is_ready,
     )
@@ -87,7 +90,7 @@ def _require_native_readiness(environment):
             raise ProgrammeStartupError("candidate_runtime_identity_mismatch")
         cursor.execute(
             "SELECT EXISTS (SELECT 1 FROM public.django_migrations "
-            "WHERE app = 'events' AND name = '0015_isolated_programme_candidate')"
+            "WHERE app = 'events' AND name = '0019_isolated_programme_candidate')"
         )
         if cursor.fetchone() != (True,):
             raise ProgrammeStartupError("candidate_schema_not_installed")
@@ -112,6 +115,7 @@ def _require_native_readiness(environment):
         or not response.data.get("dependencies")
         or any(value != "ok" for value in response.data["dependencies"].values())
         or not programme_setup_database_integrity_is_ready()
+        or not programme_stop_command_is_ready()
         or not programme_role_database_integrity_is_ready()
         or not programme_starter_database_integrity_is_ready()
     ):

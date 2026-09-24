@@ -86,35 +86,55 @@ def _create_item(*, actor: Account, edition: EventEdition) -> ProgrammeItem:
     return ProgrammeItem.objects.get(id=result.item_id)
 
 
-@pytest.mark.parametrize("tampered_column", ["organization_id", "edition_id"])
-def test_raw_item_scope_tampering_is_atomic(tampered_column: str) -> None:
-    """Reject both tenant and edition reassignment below the ORM boundary."""
+@pytest.mark.parametrize(
+    ("tampered_columns", "expected_error"),
+    [
+        (("organization_id",), "Programme stop boundary requires exact edition"),
+        (("edition_id",), "Programme stop boundary requires exact edition"),
+        (
+            ("organization_id", "edition_id"),
+            "Programme item identity, scope, kind, and provenance are immutable",
+        ),
+    ],
+)
+def test_raw_item_scope_tampering_is_atomic(
+    tampered_columns: tuple[str, ...], expected_error: str
+) -> None:
+    """Reject mismatched scope and coordinated moves to another valid scope."""
     actor = AccountFactory()
     edition = EventEditionFactory()
     foreign_edition = EventEditionFactory()
     item = _create_item(actor=actor, edition=edition)
-    foreign_value = (
-        foreign_edition.organization_id
-        if tampered_column == "organization_id"
-        else foreign_edition.id
-    )
+    _create_item(actor=actor, edition=foreign_edition)
+    original_items = list(ProgrammeItem.objects.order_by("id").values())
+    foreign_values = {
+        "organization_id": foreign_edition.organization_id,
+        "edition_id": foreign_edition.id,
+    }
+    assignments = ", ".join(f"{column} = %s" for column in tampered_columns)
 
     with (
-        pytest.raises(DatabaseError, match="scope mismatch"),
+        pytest.raises(DatabaseError, match=expected_error) as rejected,
         transaction.atomic(),
         connection.cursor() as cursor,
     ):
         cursor.execute(
             f"""
             UPDATE public.programme_programmeitem
-               SET {tampered_column} = %s,
+               SET {assignments},
                    aggregate_version = 2,
                    updated_at = %s
              WHERE id = %s
             """,  # noqa: S608
-            [foreign_value, timezone.now(), item.id],
+            [
+                *(foreign_values[column] for column in tampered_columns),
+                timezone.now(),
+                item.id,
+            ],
         )
 
+    assert rejected.value.__cause__.sqlstate == "23514"
+    assert list(ProgrammeItem.objects.order_by("id").values()) == original_items
     item.refresh_from_db()
     assert item.organization_id == edition.organization_id
     assert item.edition_id == edition.id

@@ -6,7 +6,17 @@ strict platform account-invitation HTML/API adapters, the repository-verified
 User accounts first experience slice, and an author-verified retention-v10
 corrective candidate; complete rendered owner acceptance, independent retention
 acceptance, production policy activation, and writer cutover remain gated
-Last updated: 2026-09-11
+Last updated: 2026-09-20
+
+## Logical restore predicate verification
+
+[ADR 0114](../architecture/decisions/0114-restore-stable-identity-trigger-predicates.md)
+pins the complete reviewed definitions of the two conditional delivery guards
+from Identity 0018. Logical restore changes internal implicit/explicit cast flags,
+not their rendered predicates. Exact name/table/function, timing, events,
+deferral, enabled state, arguments and column checks remain independent; all
+other invitation triggers still require no predicate. This changes no guard,
+retention policy, stored reference, runtime privilege or worker requirement.
 
 ## Purpose and requirements
 
@@ -335,6 +345,23 @@ origin races, test-only reset isolation, populated-v7 upgrade, and the live-
 data downgrade fence. The populated-upgrade rehearsal explicitly proves that
 a v7 receipt created under policy v1 still upgrades after the control advances
 monotonically to policy v2, without rewriting the historical policy evidence.
+
+## Independent invitation writer generation
+
+ADR 0110 and Identity migration `0023_invitation_writer_cutover` close generic
+challenge issuance/consumption to email verification and account recovery.
+Invitation commands and durable delivery remain their separate authority. The
+pre-existing native check already required inert legacy invitation delivery
+fields; the new guard reiterates it, prevents purpose conversion and provides
+an observed generation with a post-use downgrade fence. No historical private
+data or delivery evidence is rewritten.
+
+Readiness checks the actual migration, exact trigger/function source and metadata,
+owner-only function ACL and its sole attachment. A version label is not proof.
+Existing key coverage, policy, workers, search plans and least-privilege runtime
+checks remain required. This independent Identity boundary does not activate
+Registration or a Programme profile. See the
+[writer recovery procedure](../operations/identity-invitation-writer-recovery.md).
 
 ## Limitations
 

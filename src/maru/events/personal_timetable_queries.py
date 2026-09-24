@@ -49,12 +49,19 @@ def resolve_personal_timetable_edition_choice(
     -----
     This internal reference grants no permission and is not an edition directory.
     The consumer owns complete source comparison and required disclosure audit.
+    A terminal Programme edition is not a current timetable choice; its retained
+    work remains available only through independently admitted historical owners.
     """
     row = (
         EventEdition.objects.filter(
             id=edition_id,
             organization_id=organization_id,
             series__organization_id=organization_id,
+        )
+        .exclude(
+            adoption_profile_code="programme_operations",
+            adoption_profile_version=1,
+            lifecycle__in=("archived", "cancelled"),
         )
         .values_list(
             "organization_id", "id", "series_id", "name", "slug", "aggregate_version"
@@ -103,12 +110,19 @@ def resolve_personal_timetable_edition_label(
     canonical parents, require current exact-person owner authority and actual
     records before calling, and recheck those owners before disclosure. Empty
     personal scopes and anonymous public output must not use this reference.
+    Terminal Programme context is unavailable even when separately retained work
+    would otherwise produce rows. This does not delete commitments or history.
     """
     row = (
         EventEdition.objects.filter(
             id=edition_id,
             organization_id=organization_id,
             series__organization_id=organization_id,
+        )
+        .exclude(
+            adoption_profile_code="programme_operations",
+            adoption_profile_version=1,
+            lifecycle__in=("archived", "cancelled"),
         )
         .values_list("name", "aggregate_version")
         .first()

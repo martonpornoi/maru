@@ -148,27 +148,27 @@ OWNER_CONTRACTS = (
     (
         "maru.applications.readiness",
         "APPLICATIONS_INTEGRITY_CONTRACT",
-        "f2d205f6dea6b1cb33b8bc1e971d8e299d440f7c492a524f13ebf2747cc1d57f",
+        "f14aa59b38fe67986cc4bcc2ae96a050d83e3a23edd1946e9cdbf47c7d096df0",
     ),
     (
         "maru.authorization.programme_role_readiness",
         "PROGRAMME_ROLE_INTEGRITY_CONTRACT",
-        "7fbd122a54b51a22b983be0a92312eb6c72f6eb8869a2b3892a86ec376700ae4",
+        "2b6ba9329c7a53d1456b26f17c2716f4de00d9adbc7448127c2bd92193a29c3c",
     ),
     (
         "maru.scheduling.readiness",
         "SCHEDULING_INTEGRITY_CONTRACT",
-        "ffe9c6eb285b633900ec278170c2c5f99fea64ec6e68be9b83f8127b0860c77f",
+        "11344cc2a2187847aa0b317f2fdd16d76d495ba4dff09907e85cdea789e67e41",
     ),
     (
         "maru.programme.readiness",
         "PROGRAMME_INTEGRITY_CONTRACT",
-        "013fbe7d51ba59d568ee156f93f505b184495504cce1e6b0f4516339d90eb29d",
+        "8745b93d7a2073b1558fea2bcbc5f99ed69b6cb9eee6c614beec9bf4d39a526e",
     ),
     (
         "maru.venues.readiness",
         "VENUES_INTEGRITY_CONTRACT",
-        "3b8effa6929e9648cc0ed231cabc1b03d94642c76fa24a8b98d2d0db9fabdaad",
+        "a4bf996b2f9958edb2920f70e2c7ffb291c536d98e7b6764a0863c478d3a3170",
     ),
 )
 

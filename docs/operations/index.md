@@ -12,9 +12,13 @@ or permission to use production personal data.
 
 ## Explore safely
 
-- [Programme integrated rehearsal](programme-integrated-rehearsal.md) prepares
-  the setup-to-on-site role script and evidence checkpoints; it is not an
-  executable fixture or completed acceptance.
+- [Programme integrated rehearsal](programme-integrated-rehearsal.md) describes
+  the maintained isolated native fixture and setup-to-on-site evidence boundaries;
+  it is not completed human acceptance or production activation.
+- [Programme human-acceptance session](programme-human-acceptance.md) supplies
+  participant task cards, facilitator prerequisites and an honest evidence form.
+- [Programme acceptance evidence](programme-acceptance-evidence.md) maps P01–P12
+  to recorded automated results and the human/integrated gates still required.
 - [Read and copy a Programme timetable](programme-output-evaluation.md) explains
   dormant public/personal synthetic output, source states and private saved copies.
 - [Programme now and offline continuity](programme-onsite-continuity.md) covers
@@ -41,6 +45,7 @@ or permission to use production personal data.
   evidence without selecting production infrastructure.
 - [Deployment and service objectives](deployment-and-service-objectives.md)
 - [Observability and readiness](observability-and-readiness.md)
+- [Identity invitation writer generation and recovery](identity-invitation-writer-recovery.md)
 - [Applications Programme calls/proposals migration and recovery](applications-programme-calls-and-proposals-migration-and-recovery.md)
 - [Programme Department ownership continuity and recovery](applications-programme-department-ownership-recovery.md)
 - [Programme supporting-file handling](programme-supporting-file-handling.md)
@@ -50,6 +55,7 @@ or permission to use production personal data.
   integrity, delegable continuity disposal, downgrade refusal, and fix-forward
   recovery for the dormant import schema.
 - [Effects worker](effects-worker-runbook.md)
+- [Restricted Programme exit archive and worker](programme-exit-archive.md)
 - [Programme atomic release migration and recovery](programme-atomic-release-migration-and-recovery.md)
   covers the complete owner graph, used-evidence fence, physical recovery and
   the separately tracked logical-restore prerequisite.
@@ -76,12 +82,15 @@ analogy.
 :maxdepth: 1
 
 maru-hands-on-tutorial
+programme-acceptance-evidence
+programme-human-acceptance
 programme-integrated-rehearsal
 programme-output-evaluation
 programme-onsite-continuity
 clean-convention-onboarding-walkthrough
 empty-experience-baseline
 workforce-only-adoption-and-recovery
+identity-invitation-writer-recovery
 marucon-admin-rehearsal
 page-01-platform-home
 page-02-create-organization
@@ -103,6 +112,7 @@ scheduling-migration-and-recovery
 programme-release-sources-migration-and-recovery
 programme-atomic-release-migration-and-recovery
 effects-worker-runbook
+programme-exit-archive
 github-pages-publication
 public-repository-readiness
 release-process

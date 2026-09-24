@@ -64,6 +64,7 @@ _SOURCE_CHANNEL_VALIDATOR = RegexValidator(
 _OWNER_MANAGED_RELATION_FIELDS = frozenset(
     {
         "actor",
+        "audit_event",
         "account",
         "created_by",
         "edition",
@@ -1855,7 +1856,183 @@ class ProgrammePlacementDecision(_AppendOnlyProgrammeModel):
         ]
 
 
+class ProgrammeArchiveTask(_ClosedProgrammeModel):
+    """Requester-bound derived archive lifecycle, never authority to read sources."""
+
+    class State(models.TextChoices):
+        """Enumerate the closed background task phases."""
+
+        QUEUED = "queued", "Queued"
+        RUNNING = "running", "Running"
+        READY = "ready", "Ready"
+        FAILED = "failed", "Failed"
+        CANCELLED = "cancelled", "Cancelled"
+        EXPIRED = "expired", "Expired"
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="programme_archive_tasks",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="programme_archive_tasks",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="programme_archive_tasks",
+    )
+    previous_task = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="replacement_requests",
+    )
+    request_key = models.UUIDField()
+    contract = models.CharField(max_length=64)
+    version = models.PositiveBigIntegerField()
+    state = models.CharField(max_length=16, choices=State.choices)
+    requested_at = models.DateTimeField()
+    expires_at = models.DateTimeField()
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    generation_correlation_id = models.UUIDField(null=True, blank=True)
+    source_digest = models.CharField(
+        max_length=64, blank=True, validators=[_SHA256_VALIDATOR]
+    )
+    artifact_digest = models.CharField(
+        max_length=64, blank=True, validators=[_SHA256_VALIDATOR]
+    )
+    chunk_root = models.CharField(
+        max_length=64, blank=True, validators=[_SHA256_VALIDATOR]
+    )
+    artifact_bytes = models.PositiveBigIntegerField(default=0)
+    chunk_count = models.PositiveIntegerField(default=0)
+    failure_code = models.CharField(max_length=32, blank=True)
+
+    class Meta:
+        """Keep idempotent request identity and worker discovery bounded."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("edition", "actor", "request_key"),
+                name="programme_archive_request_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(version__gte=1), name="programme_archive_version_pos"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    state__in=(
+                        "queued",
+                        "running",
+                        "ready",
+                        "failed",
+                        "cancelled",
+                        "expired",
+                    )
+                ),
+                name="programme_archive_state_closed",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(contract="programme.exit-archive@1"),
+                name="programme_archive_contract",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    artifact_bytes__lte=1_075_838_976, chunk_count__lte=1026
+                ),
+                name="programme_archive_byte_limits",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "actor"),
+                name="prg_archive_scope_idx",
+            ),
+            models.Index(fields=("state", "expires_at"), name="prg_archive_worker_idx"),
+        ]
+
+
+class ProgrammeArchiveTaskEvent(_AppendOnlyProgrammeModel):
+    """Immutable minimized task phase evidence, retained after artifact disposal."""
+
+    task = models.ForeignKey(
+        ProgrammeArchiveTask, on_delete=models.PROTECT, related_name="lifecycle_events"
+    )
+    version = models.PositiveBigIntegerField()
+    state = models.CharField(max_length=16, choices=ProgrammeArchiveTask.State.choices)
+    occurred_at = models.DateTimeField()
+    correlation_id = models.UUIDField()
+    failure_code = models.CharField(max_length=32, blank=True)
+    audit_event = models.OneToOneField(
+        "audit.AuditEvent",
+        on_delete=models.PROTECT,
+        related_name="programme_archive_lifecycle_event",
+    )
+
+    class Meta:
+        """Keep exact task sequence unique and positive."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("task", "version"), name="programme_archive_event_uq"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(version__gte=1), name="programme_archive_event_pos"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    state__in=(
+                        "queued",
+                        "running",
+                        "ready",
+                        "failed",
+                        "cancelled",
+                        "expired",
+                    )
+                ),
+                name="programme_archive_event_state",
+            ),
+        ]
+
+
+class ProgrammeArchiveChunk(_AppendOnlyProgrammeModel):
+    """Private derived ZIP bytes; only terminal task disposal may remove them."""
+
+    task = models.ForeignKey(
+        ProgrammeArchiveTask, on_delete=models.PROTECT, related_name="artifact_chunks"
+    )
+    sequence = models.PositiveIntegerField()
+    size_bytes = models.PositiveIntegerField()
+    sha256 = models.CharField(max_length=64, validators=[_SHA256_VALIDATOR])
+    payload = models.BinaryField(max_length=1_048_576)
+
+    class Meta:
+        """Require a bounded exact immutable chunk identity."""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("task", "sequence"), name="programme_archive_chunk_uq"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(sequence__gte=1, sequence__lte=1026),
+                name="programme_archive_chunk_seq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(size_bytes__gte=1, size_bytes__lte=1_048_576),
+                name="programme_archive_chunk_size",
+            ),
+        ]
+
+
 __all__ = [
+    "ProgrammeArchiveChunk",
+    "ProgrammeArchiveTask",
+    "ProgrammeArchiveTaskEvent",
     "ProgrammeCommandReceipt",
     "ProgrammeDeliveryRevision",
     "ProgrammeDepartmentDiscussionEntry",

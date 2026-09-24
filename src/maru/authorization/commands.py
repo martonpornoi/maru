@@ -10,6 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
+from maru.audit.mutation_evidence import audited_mutation
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.bindings import resource_binding_target_exists
 from maru.authorization.catalog import (
@@ -45,10 +46,14 @@ from maru.authorization.provenance import (
 from maru.authorization.retired_targets import (
     lock_retired_department_authority_boundaries,
 )
-from maru.authorization.services import AuthorizationDenied
+from maru.authorization.services import (
+    AuthorizationDenied,
+    _require_programme_issuance_open,
+)
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.adoption import profile_allows_capabilities
 from maru.events.models import EventEdition
+from maru.events.programme_stop_queries import resolve_programme_stop_reference
 from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.organizations.representation_catalog import REPRESENTATION_ROLE_CODES
@@ -102,6 +107,11 @@ class _CommandAudit:
     elevated: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class _CommandAuditReference:
+    id: UUID
+
+
 def _append_command_audit(
     *,
     principal: Account,
@@ -110,32 +120,48 @@ def _append_command_audit(
     reason_code: str,
     approval: bool = False,
     causation_id: UUID | None = None,
-) -> AuditEvent:
+) -> AuditEvent | _CommandAuditReference:
     operation = f"{command.operation}.approve" if approval else command.operation
-    return append_audit(
-        AuditRecord(
-            principal_kind="account",
-            principal_id=principal.id,
-            principal_context_id=None,
-            organization_id=command.organization_id,
-            event_edition_id=command.edition_id,
-            capability_code=command.capability_code,
-            operation=operation,
-            target_type=command.target_type,
-            target_id=command.target_id,
-            outcome=outcome,
-            reason_code=reason_code,
-            correlation_id=command.correlation_id,
-            request_id=command.request_id,
-            source_channel=command.source_channel,
-            obligations=command.obligations,
-            changed_fields=command.changed_fields,
-            causation_id=causation_id,
-            elevated=command.elevated,
-            safe_metadata={"policy_version": POLICY_VERSION},
-            retention_class="security-extended",
-        )
+    record = AuditRecord(
+        principal_kind="account",
+        principal_id=principal.id,
+        principal_context_id=None,
+        organization_id=command.organization_id,
+        event_edition_id=command.edition_id,
+        capability_code=command.capability_code,
+        operation=operation,
+        target_type=command.target_type,
+        target_id=command.target_id,
+        outcome=outcome,
+        reason_code=reason_code,
+        correlation_id=command.correlation_id,
+        request_id=command.request_id,
+        source_channel=command.source_channel,
+        obligations=command.obligations,
+        changed_fields=command.changed_fields,
+        causation_id=causation_id,
+        elevated=command.elevated,
+        safe_metadata={"policy_version": POLICY_VERSION},
+        retention_class="security-extended",
     )
+    if (
+        outcome == AuditEvent.Outcome.ALLOW
+        and operation
+        in {"authorization.capability.revoke", "authorization.role.revoke"}
+        and command.edition_id is not None
+    ):
+        reference = resolve_programme_stop_reference(
+            organization_id=command.organization_id, edition_id=command.edition_id
+        )
+        if reference is None:
+            raise AuthorizationDenied(
+                "Authority revocation scope is unavailable.",
+                reason_code="programme_authority_unavailable",
+            )
+        if reference.is_stopped:
+            with audited_mutation(record) as evidence:
+                return _CommandAuditReference(evidence.audit_id)
+    return append_audit(record)
 
 
 def _deny(
@@ -933,6 +959,7 @@ def grant_capability_direct(  # noqa: DOC503 - bare re-raise preserves original 
                     },
                     reason_code="module_not_adopted",
                 )
+            _require_programme_issuance_open(locked_target)
             decision = _require_dual_control(
                 actor=actor,
                 approver=approver,
@@ -1508,6 +1535,7 @@ def assign_role(  # noqa: DOC503 - bare re-raise preserves original error
             locked = _lock_target(target)
             locked_target = locked.target
             organization = locked.organization
+            _require_programme_issuance_open(locked_target)
             decision = _require_dual_control(
                 actor=actor,
                 approver=approver,

@@ -1,9 +1,49 @@
 # Programme module
 
 Status: dormant private-domain foundation; no current adoption profile, route,
-API, navigation, worker, or production writer
+API, navigation, running worker, or production writer
 
-Last updated: 2026-09-13
+Last updated: 2026-09-21
+
+## Terminal Programme owner boundary (#190, in progress)
+
+`programme_stop_queries.load_programme_stop_content` reports minimized counts for
+all nineteen operational and three archive-custody relations, including pending
+host states and stored archive-job states. Source IDs, working/delivery text,
+briefings and original bytes remain hidden. Counts confer neither host consent
+nor current archive download permission. Exact schema readiness includes all seven
+new native privacy constraint objects, with every pre-existing definition intact.
+See the [minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
+Migration 0022 serializes all nineteen operational tables against the exact
+old/new Events parent. Archived/cancelled `programme_operations@1` refuses fresh
+content, host invitations/confirmation, shared availability, staffing, placement,
+readiness decisions and public-copy approval. Unknown scope/version and stale
+transaction isolation fail closed; other profiles retain their existing rules.
+
+Only existing personal decline/withdrawal, erasure of shared host availability,
+and exact authorized public-copy withdrawal remain possible. Native guards limit
+every changed field, relationship/version, dependency concern and deleted period.
+Deferred evidence binds each consequence to its exact owner receipt and fresh
+same-transaction Audit witness; another personal exit or unrelated valid audit
+cannot authorize it. Existing reciprocal history, privacy, release invalidation,
+event and outbox constraints remain independently required.
+
+The three archive-custody tables remain under their separate requester, source,
+expiry and immutable-evidence contract; this is not an operational-write exception.
+Readiness pins all added functions and attachments without runtime EXECUTE grants.
+Retained Events stop evidence fences downgrade. These native components do not
+enable stopping until the complete Events/owner preview and command are accepted.
+
+## Logical recovery schema comparison
+
+[ADR 0113](../architecture/decisions/0113-logical-restore-enum-cast-canonicalization.md)
+recognizes only PostgreSQL's exact constant enum array-cast reparse in the
+existing pretty CHECK and non-pretty index definitions. It preserves all other
+metadata and every reviewed schema hash, including archive custody objects.
+Changed constraints, native guards and privileges still fail readiness. The
+[recovery runbook](../operations/programme-atomic-release-migration-and-recovery.md)
+keeps component, restored-runtime and protected-delivery evidence separate.
 
 ## Exact change-recipient reference (#104, in progress)
 
@@ -21,6 +61,172 @@ work, not an activated Programme messaging feature.
 
 ## Exit archive purpose and packaging (#189, in progress)
 
+### Programme-owned lineage contract
+
+The archive-only `programme.exit-lineage@1` projection adds stable identifiers,
+not private body text or authority to dereference another owner. It requires
+`programme.export_archive/source_lineage` and all six existing Programme layer
+history ceilings. Placement lineage additionally retains the placement adapter
+and both existing `placement_decisions` history admissions. Ordinary query DTOs
+do not change. The exact item, organization and edition scope applies to every
+query, including each child collection. Canonical parent/edition locks fence
+Programme mutations across the collection; current purpose and source admission
+are checked before reads and again before return, with a required sensitive-read
+audit. Whole-edition person closure and cross-owner consistency remain the
+composing archive's responsibility; this identifier-only reader acquires no
+actor-first/person lock and opens no foreign model.
+
+Every collection has explicit columns; there is no model-field discovery.
+`id` is always the immutable record UUID. Common `item_version`/`sequence`
+columns retain their original owner meanings, not a synthetic global cursor.
+
+| Collection | Additional columns after `id` |
+| --- | --- |
+| source_bindings | binding_code, source_object_id, source_version |
+| working | sequence, item_version |
+| delivery | sequence, item_version |
+| discussion | sequence, item_version |
+| readiness_requirements | concern, requirement_version, dependency_version, item_version |
+| readiness_revisions | requirement_id, sequence, item_version |
+| readiness_evidence | requirement_id, sequence, item_version, requirement_version, dependency_version, source_code, source_object_id, source_version |
+| renditions | rendition_number, source_item_version, source_working_revision_id, supersedes_id |
+| withdrawals | rendition_id, item_version |
+| hosts | account_id, version, invitation_sequence, availability_version, item_version |
+| host_revisions | host_id, sequence, invitation_sequence, item_version |
+| staffing_requirements | occurrence_id, version, item_version |
+| staffing_revisions | requirement_id, sequence, item_version, occurrence_version, position_id |
+| placement_decisions | occurrence_id, candidate_revision_id, placement_id, kind, sequence, item_version, delivery_revision_id, space_selection_version |
+
+Rows are ordered by UUID and returned as immutable values paired with these
+closed column names. Foreign identifiers are opaque references only. Nullable
+source/predecessor columns retain explicit nulls. Histories join by their existing
+natural keys (item/sequence, requirement/sequence, host/sequence,
+item/rendition-number, or placement/kind/sequence). Private invitation records,
+availability windows/digests, command idempotency keys and request digests are
+absent. The reader refuses over 20,000 rows in any collection or 50,000 total
+per item, missing/duplicate source binding, or missing initial working evidence;
+these are explicit refusal limits, never truncation or new mutation limits.
+This lineage component is not the whole owner section or a downloadable archive.
+
+`exit_owner_queries.load_programme_exit_owner` composes all retained Programme
+items in an edition, including retired items, their existing protected core,
+host/current-shared-availability/staffing histories, both placement histories and
+the explicit lineage above. It holds the parent/edition fence throughout and
+collects the bounded full host-person ID set before locking any people or opening
+the first content reader. Identity locks the requester and every retained host in
+canonical UUID order, including inactive hosts; content readers still decide
+current disclosure independently. Per-item locks are not mistaken for complete
+edition closure. All source/export admissions are repeated before return, and an
+empty authorized owner still requires audit. The component refuses more than
+1,000 items, 150,000 lineage records or 2,000 distinct requester/host accounts.
+Missing identities, content/lineage version disagreement and audit failure refuse
+the entire owner. These are collection refusal limits, not write limits. A future
+cross-owner composer must prelock its larger complete person closure before
+calling this owner; no eight-owner consistency or later download is implied.
+
+The owner serializer uses `programme.programme-exit@1`. Its closed, versioned
+record declarations explicitly select the fields of the collected owner, item,
+core, ordinary protected history/roster/dependency/staffing DTOs, placement streams
+and lineage collections above. Each object has a `$record` discriminator; the
+embedded schema lists every allowed field and rejects additional properties.
+UUIDs become canonical strings, aware instants become UTC ISO-8601 strings,
+tuples become arrays, and explicit nulls remain null. Integer versions remain
+integers and must be read without floating-point rounding. Neither dataclass
+inspection nor a model dump chooses fields; adding a DTO attribute cannot
+silently expand the archive. Unknown object types, naive instants, malformed
+scalar values and resource overflow refuse serialization. Invitation/self-only
+DTOs have no declaration. Serialization is pure and is never authorization,
+complete cross-owner acceptance or permission for later download.
+
+### Complete declared owner composition
+
+`exit_composition.collect_programme_exit` composes all eight explicitly required
+owner sections through public source-authorized queries. Canonical shared barriers,
+Organization, series, edition and mutex precede complete Applications Department
+discovery; sorted Department locks precede the whole requester/Programme-host
+person set. Only then may any child query append an audit or acquire a narrower
+lock. Parent fences protect membership while the complete owner set is collected.
+Missing/denied/changed/overbudget sources fail the whole collection. This does not
+activate a profile or create a persisted archive request.
+
+Applications declares reviewed proposals, exact authorized sealed files and call/
+policy configuration, not private unsubmitted drafts. Scheduling retains historical
+canonical bytes even after withdrawal without claiming they are current. Workforce
+retains Programme Shift links, not private calendars or volunteer directories.
+Venues supplies current room wayfinding identities, not property security or
+availability records. Events supplies its closed current configuration. Authorization
+supplies profile-admitted immutable recipe definitions, not named-person approvals
+or effective grants. Audit independently requires security-read authority and
+supplies only successful final collection receipts for the actual requester and
+fresh server correlation. Every section declares its own exact scope/exclusions;
+the package is not a full database or private-module backup.
+
+The `programme.exit-source-identity@1` content digest binds every non-Audit section's
+contract, bytes and schema and each original file's ID, size and digest. Identical
+file IDs deduplicate only when bytes match. Fresh read-audit IDs/times are excluded
+from content identity but the required Audit section is never optional. Comparing
+this digest after a newly authorized complete retrieval collection catches source
+changes outside a Programme item cursor, including independent placement/public
+copy, review/file, release, configuration and Shift-link changes. A digest alone is
+not current authority, a signature or permission to download. The dormant
+task/custody implementation below consumes this identity; integrated P11 and
+production promotion remain separate acceptance gates.
+
+[ADR 0109](../architecture/decisions/0109-bounded-programme-archive-custody.md)
+specifies that task/custody boundary. `exit_archive_stream` implements
+its pure larger encoder: 128 MiB records, 2 MiB schemas, 2,000 files/10 MiB each,
+1 GiB content plus 2 MiB metadata overhead. It validates the entire closed member
+set before writing, binds the actual Events profile/scope rather than inventing
+a profile, and writes a deterministic stored ZIP to the caller's private sink
+in at most 1 MiB writes. Short writes, bad JSON/scope/identity and capacity
+overflow fail closed; sink failure requires rollback/disposal of partial custody.
+Its capacity marker is `programme.exit-background-capacity@1`; the provisional
+small codec is unchanged. Encoding itself creates no job or download authority.
+
+### Request, custody, worker and actual disclosure
+
+`archive_tasks.request_programme_archive` takes the actual requester and exact
+independent tenant/edition plus a nonzero idempotency key. It returns only the
+acknowledged task ID, not source data or private metadata. Replay never changes
+expiry or resurrects terminal work; explicit retry links a new request to an
+own failed/cancelled/expired request. `cancel_programme_archive` requires current
+export authority, exact requester/scope and expected version. It returns no
+source content, so does not re-export owners merely to dispose derived bytes.
+
+`ProgrammeArchiveTask`, append-only `ProgrammeArchiveTaskEvent` and immutable
+`ProgrammeArchiveChunk` are Programme-owned. Migrations 0020/0021 enforce scope,
+fixed database-clock expiry, exact version/state transitions, bounded capacity,
+fresh native Audit witnesses, immutable request/generation/byte identity and
+atomic complete custody or disposal. Used downgrades refuse before removing guards.
+The runtime ACL inventory/provisioning example keeps all three SELECT-only.
+
+`archive_generation` commits claim separately, then holds the complete source
+closure through private encoding, chunk storage and audited ready state. Failed
+generation rolls back partial chunks before retaining a closed failure code.
+The single purpose worker uses the original requester's current rights, a native
+session lock, finite statement/lock limits and a hard 20-minute child timeout.
+Bounded due cleanup does not need to impersonate revoked/inactive requesters to
+remove only derived bytes; retained requester attribution remains honest.
+
+`archive_queries.inspect_programme_archive` requires fresh complete owner checks
+for private metadata and download, exact requester/route scope and current extra
+purpose. It compares ready source identity, verifies all chunk/whole-ZIP identities
+before byte disclosure, and checks expiry again. Access expiry is explicit and
+separate from the recorded worker phase; no synthetic transition is presented as
+stored evidence. Per-read audits precede private output. Cancellation retains all
+canonical source records, holds, task evidence and byte identities.
+
+The reserved `archive_urls`/`archive_views` shared-shell screen uses those same
+commands/queries, closed CSRF-protected forms and a fixed-name private/no-store
+attachment. It has no automatic polling, public media path, job directory or
+other-person download. These routes remain absent from production configuration.
+See the [page contract](../product/page-contracts/programme-exit-archive.md) and
+[worker/custody runbook](../operations/programme-exit-archive.md). Integrated P11,
+resource measurement, native runtime promotion and genuine browser acceptance
+remain required; having a dormant screen is not completed #189/#48 acceptance.
+
+### Purpose and packaging components
+
 [ADR 0108](../architecture/decisions/0108-purpose-controlled-programme-exit-archive.md)
 reserves one additional exact-edition export purpose and unchanged independent
 source permissions. `archive_authorization.authorize_programme_archive_scope`
@@ -36,9 +242,9 @@ audit, task, artifact, grant or profile mutation. Actual collectors/workers and
 downloads must check the authenticated requester and each source's authority,
 consistency, retention and audit before release. Existing ordinary history DTOs
 and field ceilings are unchanged. No current profile admits the capability,
-adapter or minimal `exit-archive@1` role recipe. Archive lineage DTOs/schemas,
-requester-bound background execution, private custody/expiry and UI remain work
-to implement, not features delivered by reserving this permission.
+adapter or minimal `exit-archive@1` role recipe. The dormant requester-bound
+background/custody/UI components above do not grant profile admission merely
+because this permission exists.
 
 `exit_archive_protocol` is a database-free, non-executable packaging primitive
 for EVT-007/INT-007 and ADR 0081. It encodes already authorized owner sections,

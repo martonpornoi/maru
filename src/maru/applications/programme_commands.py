@@ -110,6 +110,7 @@ from maru.applications.programme_inputs import (
     require_programme_expected_version,
     require_programme_uuid,
 )
+from maru.applications.programme_stop_audit import _append_cleanup_audit
 from maru.applications.programme_write_scope import (
     ApplicationsProgrammeWriteScopeUnavailableError,
     lock_programme_edition_write_scope,
@@ -121,6 +122,7 @@ from maru.applications.retry_namespace import lock_applications_retry_namespace
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.programme_stop_queries import resolve_programme_stop_reference
 from maru.identity.queries import (
     resolve_active_verified_person_reference,
     resolve_active_verified_person_reference_by_email,
@@ -639,9 +641,19 @@ def _require_private_writes(
     scope: AuthorizedProgrammeCallScope
     | AuthorizedProgrammeProposalScope
     | AuthorizedProgrammeSelfEntryScope,
+    *,
+    retained_cleanup: bool = False,
 ) -> None:
-    if not scope.accepts_private_planning_writes:
-        raise ApplicationsProgrammeStateConflictError
+    if scope.accepts_private_planning_writes:
+        return
+    if retained_cleanup:
+        reference = resolve_programme_stop_reference(
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+        )
+        if reference is not None and reference.applies and reference.is_stopped:
+            return
+    raise ApplicationsProgrammeStateConflictError
 
 
 def _idempotency_hash(retry_key: UUID) -> str:
@@ -700,7 +712,7 @@ def _record_success(
         expected_version=expected_version,
         resulting_version=resulting_version,
     )
-    audit = append_audit(
+    audit = _append_cleanup_audit(
         AuditRecord(
             principal_kind="account",
             principal_id=scope.actor_id,
@@ -734,6 +746,7 @@ def _record_success(
             retention_class="applications-programme-restricted",
         ),
         occurred_at=occurred_at,
+        retry_key=retry_key,
     )
     if submission is None:
         current_call = cast("ProgrammeCall", call)
@@ -2063,7 +2076,10 @@ def _call_lifecycle_command(
         department_id=owner_department_id,
         authorizer=authorizer,
     )
-    _require_private_writes(scope)
+    _require_private_writes(
+        scope,
+        retained_cleanup=action == ProgrammeCommandAction.CALL_RETIRED,
+    )
     _lock_programme_write_scope(
         actor_id=actor_id,
         organization_id=organization_id,
@@ -2078,7 +2094,10 @@ def _call_lifecycle_command(
         authorizer=authorizer,
         lock=True,
     )
-    _require_private_writes(scope)
+    _require_private_writes(
+        scope,
+        retained_cleanup=action == ProgrammeCommandAction.CALL_RETIRED,
+    )
     call = _locked_call(
         organization_id=organization_id,
         edition_id=edition_id,
@@ -6280,7 +6299,7 @@ def withdraw_programme_proposal(
         lock=True,
         effective_now=effective_now,
     )
-    _require_private_writes(scope)
+    _require_private_writes(scope, retained_cleanup=True)
     proposal = _locked_proposal(
         organization_id=organization_id,
         edition_id=edition_id,

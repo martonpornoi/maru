@@ -8,7 +8,10 @@ import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
-from maru.applications.readiness import APPLICATIONS_INTEGRITY_CONTRACT
+from maru.applications.readiness import (
+    APPLICATIONS_INTEGRITY_CONTRACT,
+    applications_database_integrity_is_ready,
+)
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -165,6 +168,10 @@ def test_acl_migration_reverses_and_reapplies_without_definition_drift() -> None
 
 
 def test_programme_integrity_reverse_restores_legacy_and_reapplies_exactly() -> None:
+    initial_executor = MigrationExecutor(connection)
+    current_targets = initial_executor.loader.graph.leaf_nodes()
+    current_applied = set(initial_executor.loader.applied_migrations)
+    assert applications_database_integrity_is_ready()
     current_functions = tuple(APPLICATIONS_INTEGRITY_CONTRACT.functions)
     current_triggers = tuple(APPLICATIONS_INTEGRITY_CONTRACT.triggers)
     before_functions = _function_acl_catalog(current_functions)
@@ -184,6 +191,15 @@ def test_programme_integrity_reverse_restores_legacy_and_reapplies_exactly() -> 
 
     executor = MigrationExecutor(connection)
     executor.migrate([APPLICATIONS_INTEGRITY_CONTRACT.terminal_migration])
+
+    # The original terminal is only the base of an additively extended contract.
+    # Supporting owner migrations remain required; a base-only restore is unsafe.
+    assert not applications_database_integrity_is_ready()
+    MigrationExecutor(connection).migrate(current_targets)
+    assert applications_database_integrity_is_ready()
+    assert (
+        set(MigrationExecutor(connection).loader.applied_migrations) == current_applied
+    )
 
     after_functions = _function_acl_catalog(current_functions)
     after_triggers = _trigger_catalog(current_triggers)

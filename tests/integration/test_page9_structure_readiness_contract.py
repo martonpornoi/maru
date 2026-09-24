@@ -551,6 +551,7 @@ def test_page9_constraint_timing_tamper_blocks_readiness() -> None:
         "0017_programme_import_department_fk_contract",
         "0018_programme_department_ownership_contract",
         "0028_programme_starter_execution_fence",
+        "0029_programme_assignment_adoption",
     ],
 )
 def test_missing_page9_migration_recorder_row_blocks_readiness(

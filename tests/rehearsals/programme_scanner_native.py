@@ -1,4 +1,4 @@
-"""Host-only real daemon preparation proof; not collected or run while deferred."""
+"""Opt-in real scanner preparation proof, separate from ordinary native CI."""
 
 import hashlib
 import time

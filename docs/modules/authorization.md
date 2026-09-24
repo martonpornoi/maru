@@ -6,7 +6,30 @@ Maru-operator roots, provenance writing, profile-compatible access management,
 and guarded exact-lineage policy/runtime activation; dormant Applications
 Programme capabilities remain unadopted and production legacy reconciliation
 and cutover remain gates
-Last updated: 2026-09-18
+Last updated: 2026-09-21
+
+## Programme stop-purpose accounting
+
+`programme_stop_authorization.require_programme_stop_controller` checks actual
+ordinary controller provenance and Events transition permission under canonical
+scope locks. Nonlocking `require_programme_stop_preflight` first rejects invalid
+people, profiles or either missing capability; it admits only canonical lock
+preparation, never final controller provenance or mutation. Shared authority
+fences precede private foundation locks. The final locked proof remains required.
+`programme_stop_queries.load_programme_stop_authority` independently
+rechecks that purpose and returns only exact grant/assignment IDs, target scope,
+closed retained-historical/shared/inactive/separately-revoked dispositions and
+hashed validity/source metadata, plus unapproved/expired/decided request counts.
+It neither discloses recipients or private reasons nor asserts effective access.
+
+Each of direct grants, role outputs and approval requests is capped at 2,000
+records, complete-or-unavailable. Edition outputs include Department/resource
+scope; shared Organization outputs are limited to actual guided approvals from
+this adoption. Roots, unrelated Organization grants and other editions are not
+enumerated or revoked. A separately revoked disposition reports an existing
+revocation, never an action performed by stop. Source movement changes the
+fingerprint; a read does not grant any mutation. See the
+[Events stop-purpose contract](events.md#minimized-programme-stop-impact-190-in-progress).
 
 ## Purpose and requirements
 
@@ -16,6 +39,24 @@ UX-020, UX-024, UX-028, UX-030, NFR-013, ADR 0003, ADR 0023, ADR 0040,
 ADR 0041, ADR 0044, ADR 0080, ADR 0081, ADR 0082, ADR 0083, and ADR 0084. A membership,
 account, familiar role name, or visible destination never grants broad access
 by itself.
+
+## Native accountable-root lineage correction
+
+Authorization migration `0039_accountable_representation_lineage` corrects #197:
+the older completeness and historical assignment/bundle validators recognized
+only Executive Board ceremony evidence even though ADR 0080 already admitted
+Maru operators. The correction preserves each original Board branch and adds
+the exact existing Maru-operator name, version, 22-capability set, matching
+representation and membership label. Independent controls, current containment,
+historical evidence, recursion limits and ordinary persistent-authority checks
+remain unchanged. No capability or profile is added.
+
+The migration verifies frozen predecessor function source/metadata, preserves
+function identity/owner/ACL/search path, and changes no retained business rows.
+Readiness requires its migration and the three actually observed fingerprints;
+count-only graph inspection recognizes both exact code-owned definitions.
+Reversal locks the authority records and refuses if a Maru-operator bundle has
+been used. See [representation recovery](../operations/executive-board-migration-and-recovery.md).
 
 ## Dormant Programme operational-role contracts
 
@@ -31,7 +72,19 @@ is not a grant, role-bundle insertion, route or Programme activation.
 [ADR 0108](../architecture/decisions/0108-purpose-controlled-programme-exit-archive.md).
 Its `archive_requests` and `source_lineage` fields admit the extra bulk-export
 purpose, not owner content, private files, another person's task or downloads.
-Independent source rights remain mandatory. Existing recipe digests, ordinary
+Independent source rights remain mandatory. The restricted exit's
+`authorization.programme-exit@1` section declares only the selected exact profile's
+admitted immutable Programme recipe definitions and policy version. Its explicit
+fields are profile code/version, policy version, and each admitted recipe's
+code/version/name/purpose, capability codes, target scopes, resource kind and
+definition digest. The source check independently requires Events basic profile
+code/version read authority; the catalog is public code, not assignment history.
+Unadmitted recipes, actual grants/assignments, named-person approval requests,
+private rationales and identity directories are excluded. Unknown profiles or
+catalog/recipe mismatches fail closed; the section never claims to retain or
+restore effective access. At most 100 recipes and 2 MiB are supported. Source and
+extra-purpose checks run again before its mandatory sensitive-read audit.
+Existing recipe digests, ordinary
 field ceilings, roots and all current profiles stay unchanged; the recipe is
 not yet admitted to a candidate or current manifest. Actual two-person approval
 is still required to issue it. No role or grant is inserted by registration.
@@ -411,6 +464,15 @@ role-bundle scope, and immutable bundle versions even when ORM validation is
 bypassed. Revoking any ancestor invalidates its delegated descendants.
 
 ## Public commands and decisions
+
+ADR 0112 keeps ordinary `decide` calls as fresh non-locking point-in-time
+observations, using the existing fingerprinted native exact-issuance validator
+instead of recursively loading ancestors over many ORM round trips. Every call
+still observes the marker/latch, resolves current scope and applies the same
+adoption, principal, role-purpose and field rules. No result is cached or
+transferred between owners. Database failure has no compatibility fallback.
+Writer source selection, locking checks and persistent-horizon proofs retain
+the independent Python validator; a policy decision does not replace them.
 
 - `decide(principal, capability_code, resource, requested_fields, at)`
 - `decide_verified_principal_exact_edition(...)`, the identifier-only adapter
@@ -924,6 +986,40 @@ consolidated full-suite and coverage totals are recorded in
 here.
 
 ## Limitations
+
+Programme stop-use preparation fences fresh direct grants, delegation and role
+assignments into a terminal Programme edition after target locking. Generic
+commands therefore cannot bypass the guided request boundary. Revocation and
+shared Organization authority remain separately governed; no assignment or root
+is automatically deleted or extended.
+
+Migration `0040_programme_stop_boundary` independently fences capability grants,
+role assignments, resource bindings and guided requests/decisions, checking both
+source and destination edition scope. Guided Organization-scope requests retain
+their Programme context and cannot be newly approved after it stops; an actual
+shared Organization grant is not implicitly revoked or frozen. Existing immutable
+issuance and current-authority rules continue to apply.
+
+Only an exact first revocation may change a retained stopped-scope grant or role:
+the revocation triplet and update timestamp, with every issuance field unchanged.
+A deferred native guard requires the matching actual actor, scope, object,
+operation and Audit witness from the same database transaction. The existing
+public commands lend that native audit evidence only for successful stopped-scope
+revocation, without a broader read or different authority requirement. Another
+record's audit, an old witness, a scope move or rewritten validity cannot pass.
+Other-profile/shared/denied audit paths retain their earlier behavior. Purpose-
+bounded role readiness and Events preparation pin the new functions/attachments;
+there is no new runtime helper EXECUTE grant. Used stop receipts fence reversal.
+
+An exact known Programme role request may be read after stop only by its currently
+authorized original author or named approver, with the same recipe/source checks,
+person ceiling and mandatory audit. This is not a terminal request inventory or
+recipient directory. Undecided intent is labelled unapproved at stop, not rewritten
+as a decision. The shared-shell detail is explicitly historical and hides creation,
+open-inventory and decision controls; POST is read-only. A retained approved
+assignment is original evidence, not proof of present operational authority.
+The complete native stop receipt/owner guards and integrated acceptance remain
+pending under #190; these reader/command components do not activate stop-use.
 
 Production legacy reconciliation/cutover, representative authority load,
 step-up execution,

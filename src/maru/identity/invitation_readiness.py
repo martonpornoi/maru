@@ -32,6 +32,10 @@ from maru.identity.invitation_token_keys import (
     invitation_token_keyring,
     invitation_token_keys_are_ready,
 )
+from maru.identity.invitation_writer_readiness import (
+    INVITATION_WRITER_GENERATION,
+    invitation_writer_generation_is_ready,
+)
 from maru.identity.models import (
     PlatformAccountInvitation,
     PlatformInvitationSchedulerRun,
@@ -44,9 +48,8 @@ if TYPE_CHECKING:
     from django.db.backends.utils import CursorWrapper
 
 PAGE10_INVITATION_ADDITIVE_SCHEMA_GENERATION: Final = "page10-invitations-additive-v10"
-# This is intentionally absent. Migration 0011 is additive and cannot provide
-# stopped-writer or downgrade-fence evidence for a future canonical cutover.
-PAGE10_INVITATION_STOPPED_WRITER_GENERATION: Final[str | None] = None
+# Expected version only. Readiness requires the observed native generation below.
+PAGE10_INVITATION_STOPPED_WRITER_GENERATION: Final = INVITATION_WRITER_GENERATION
 
 _SUPPORTED_DATABASE_SCHEMA: Final = "public"
 _SUPPORTED_POSTGRESQL_SERVER_MAJOR: Final = 17
@@ -111,7 +114,7 @@ class _TriggerContract:
     deferrable: bool = False
     initially_deferred: bool = False
     columns: tuple[str, ...] = ()
-    when_sha256: str | None = None
+    when_definition: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -398,8 +401,14 @@ _TRIGGER_CONTRACTS: Final[dict[str, _TriggerContract]] = {
         "identity_platformidentitydelivery",
         "identity_page10_delivery_version_guard()",
         _ROW_BEFORE_UPDATE,
-        when_sha256=(
-            "b18029d0a95dd425ae369dc640458126bacd1c2aab83d391c8254a1a97e8f417"
+        when_definition=(
+            "CREATE TRIGGER identity_page10_delivery_version BEFORE UPDATE ON "
+            "identity_platformidentitydelivery FOR EACH ROW WHEN (NOT "
+            "(old.provider_reference::text <> ''::text AND "
+            "old.provider_reference::text !~ '^disposed-provider-[0-9a-f]{32}$'::text "
+            "AND new.provider_reference::text ~ "
+            "'^disposed-provider-[0-9a-f]{32}$'::text)) "
+            "EXECUTE FUNCTION identity_page10_delivery_version_guard()"
         ),
     ),
     "identity_page10_late_outcome_immutable": _TriggerContract(
@@ -470,8 +479,17 @@ _TRIGGER_CONTRACTS: Final[dict[str, _TriggerContract]] = {
         "identity_platformidentitydelivery",
         "identity_page10_hardened_delivery_guard()",
         _ROW_BEFORE_UPDATE,
-        when_sha256=(
-            "c3bccbe822870ad45afcbb96cfc123bf8138ac4f62bcf71a84c43bcf485a6dec"
+        when_definition=(
+            "CREATE TRIGGER identity_page10_hardened_delivery_update BEFORE UPDATE ON "
+            "identity_platformidentitydelivery FOR EACH ROW WHEN "
+            "(NOT old.provider_reference::text IS DISTINCT FROM "
+            "new.provider_reference::text OR NOT "
+            "(old.provider_reference::text <> ''::text "
+            "AND old.provider_reference::text !~ "
+            "'^disposed-provider-[0-9a-f]{32}$'::text "
+            "AND new.provider_reference::text ~ "
+            "'^disposed-provider-[0-9a-f]{32}$'::text)) "
+            "EXECUTE FUNCTION identity_page10_hardened_delivery_guard()"
         ),
     ),
     "identity_page10_retention_provider_delivery_update": _TriggerContract(
@@ -1259,12 +1277,7 @@ def inspect_platform_invitation_additive_catalog() -> PlatformInvitationAdditive
                    trigger.tgdeferrable,
                    trigger.tginitdeferred,
                    CASE WHEN trigger.tgqual IS NULL THEN NULL ELSE
-                       pg_catalog.encode(
-                           pg_catalog.sha256(
-                               pg_catalog.convert_to(trigger.tgqual::text, 'UTF8')
-                           ),
-                           'hex'
-                       )
+                       pg_catalog.pg_get_triggerdef(trigger.oid, TRUE)
                    END,
                    trigger.tgnargs,
                    ARRAY(
@@ -1387,7 +1400,7 @@ def inspect_platform_invitation_additive_catalog() -> PlatformInvitationAdditive
             "O",
             contract.deferrable,
             contract.initially_deferred,
-            contract.when_sha256,
+            contract.when_definition,
             0,
             contract.columns,
         )
@@ -1805,9 +1818,7 @@ def _platform_invitation_production_gates(
         "invitation_retention_policy_and_job": (
             platform_invitation_retention_heartbeat_is_ready()
         ),
-        "stopped_writer_generation": (
-            PAGE10_INVITATION_STOPPED_WRITER_GENERATION is not None
-        ),
+        "stopped_writer_generation": invitation_writer_generation_is_ready(),
         "account_prefix_search_query_plan": (
             platform_account_prefix_query_plan_is_ready()
         ),
@@ -1866,9 +1877,7 @@ def build_platform_invitation_readiness_report() -> dict[str, object]:
         "status": additive_status,
         "production_status": ("ready" if all(production_gates.values()) else "blocked"),
         "writer_cutover_status": (
-            "active"
-            if PAGE10_INVITATION_STOPPED_WRITER_GENERATION is not None
-            else "inactive"
+            "active" if production_gates["stopped_writer_generation"] else "inactive"
         ),
         "integrity_review_scope": {
             "reviewed_migration": ".".join(_REVIEWED_INTEGRITY_MIGRATION),

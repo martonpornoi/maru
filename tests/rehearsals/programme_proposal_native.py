@@ -1,97 +1,96 @@
-"""Host-only call-to-private-item composition; uncollected/unexecuted while deferred."""
+"""Opt-in host-only populated Programme composition, separate from ordinary CI."""
 
+import time
+from functools import partial
 from uuid import uuid4
 
 import psycopg
 import pytest
 from psycopg import sql
 
+from tests.rehearsals.programme_archive_scenario import (
+    run_archive_phase,
+    verify_archive_http,
+)
 from tests.rehearsals.programme_continuity_scenario import verify_continuity_http
+from tests.rehearsals.programme_delivery_isolation import verify_delivery_isolation_http
+from tests.rehearsals.programme_journey_isolation import verify_journey_isolation_http
+from tests.rehearsals.programme_logical_restore import (
+    verify_incomplete_backup_rejected,
+    verify_logical_restore,
+)
+from tests.rehearsals.programme_object_isolation import verify_object_mutation_isolation
 from tests.rehearsals.programme_onsite_scenario import verify_onsite_http
 from tests.rehearsals.programme_runner import isolated_programme_application
 from tests.rehearsals.programme_runtime_environment import (
     require_programme_rehearsal_request,
 )
+from tests.rehearsals.programme_stop_scenario import verify_stop_runtime
+from tests.rehearsals.programme_stopped_restore import verify_stopped_logical_restore
 
 require_programme_rehearsal_request()
 pytestmark = pytest.mark.integration
 
 
+def _prepare_phase(fixture, record_result, operation, *sources):
+    started = time.monotonic()
+    state = "failed"
+    try:
+        outcome = operation(*sources)
+        fixture.verify_excluded_state()
+        state = "passed"
+        return outcome
+    finally:
+        prefix = "programme_phase_" + operation.__name__
+        record_result(prefix + "_state", state)
+        record_result(prefix + "_seconds", round(time.monotonic() - started, 3))
+
+
+def _record_archive_metrics(archive, record_result):
+    for name, value in (
+        ("generation_seconds", archive.generation_seconds),
+        ("artifact_bytes", archive.artifact_bytes),
+        ("python_peak_bytes", archive.python_peak_bytes),
+    ):
+        record_result("programme_archive_" + name, value)
+
+
+def _verify_p12(prepare, fixture, sources):
+    proposal, reviewed, items, planning, physical, staffing, _ = sources
+    scopes = prepare(
+        verify_journey_isolation_http,
+        fixture,
+        proposal,
+        reviewed,
+        items,
+        planning,
+        physical,
+        staffing,
+    )
+    prepare(verify_object_mutation_isolation, fixture, scopes, reviewed, items)
+
+
 def test_native_real_proposal_items_planning_and_independent_physical_approval(
     monkeypatch,
+    record_testsuite_property,
 ):
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_RUN_ID", uuid4().hex)
     monkeypatch.setenv("MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS", "3600")
     with isolated_programme_application(
-        setup_mode="new_foundation", with_scanner=True, with_continuity=True
+        setup_mode="new_foundation",
+        with_scanner=True,
+        with_continuity=True,
+        with_isolation=True,
     ) as fixture:
-        result = fixture.prepare_proposal()
-        assert result.organization_id == fixture.scenario.organization_id
-        assert result.lead.account_id != result.collaborator.account_id
-        # Independent read under genuine runtime login; no SQL/factory writes.
-        with psycopg.connect(
-            fixture.runtime.database_url, connect_timeout=5
-        ) as connection:
-            assert connection.execute(
-                "SELECT session_user, current_user"
-            ).fetchone() == ("maru_runtime", "maru_runtime")
-            assert connection.execute(
-                "SELECT state, submitted_revision_id "
-                "FROM public.applications_programmeproposal "
-                "WHERE id = %s AND organization_id = %s AND edition_id = %s",
-                (result.proposal_id, result.organization_id, result.edition_id),
-            ).fetchone() == ("submitted", result.revision_id)
-            assert connection.execute(
-                "SELECT count(*) FROM public.applications_programmefileintake "
-                "WHERE proposal_id = %s",
-                (result.proposal_id,),
-            ).fetchone() == (1,)
-        assert result.lead.password not in repr(result)
-        reviewed = fixture.prepare_review(result)
-        with psycopg.connect(
-            fixture.runtime.database_url, connect_timeout=5
-        ) as connection:
-            assert connection.execute(
-                "SELECT revision_id, decision_id, programme_item_id "
-                "FROM public.applications_programmeacceptedtransition "
-                "WHERE id = %s AND organization_id = %s AND edition_id = %s",
-                (reviewed.transition_id, reviewed.organization_id, reviewed.edition_id),
-            ).fetchone() == (result.revision_id, reviewed.decision_id, reviewed.item_id)
-            assert connection.execute(
-                "SELECT count(*) FROM public.programme_programmereadinessrequirement "
-                "WHERE item_id = %s",
-                (reviewed.item_id,),
-            ).fetchone() == (7,)
-            assert connection.execute(
-                "SELECT count(*) FROM public.applications_programmeacceptedtransition "
-                "WHERE revision_id = %s",
-                (result.revision_id,),
-            ).fetchone() == (1,)
-        items = fixture.prepare_items(result, reviewed)
-        with psycopg.connect(
-            fixture.runtime.database_url, connect_timeout=5
-        ) as connection:
-            for item, kind in (
-                (items.accepted, "accepted_proposal"),
-                (items.ceremony, "ceremony"),
-            ):
-                assert connection.execute(
-                    "SELECT kind, aggregate_version "
-                    "FROM public.programme_programmeitem "
-                    "WHERE id = %s AND organization_id = %s AND edition_id = %s",
-                    (item.item_id, items.organization_id, items.edition_id),
-                ).fetchone() == (kind, item.version)
-                assert connection.execute(
-                    "SELECT state, version, availability_state "
-                    "FROM public.programme_programmehostrelationship WHERE id = %s",
-                    (item.host_id,),
-                ).fetchone() == ("confirmed", item.host_version, "shared")
-            assert connection.execute(
-                "SELECT count(*) FROM public.applications_programmeacceptedtransition "
-                "WHERE programme_item_id = %s",
-                (items.ceremony.item_id,),
-            ).fetchone() == (0,)
-        planning = fixture.prepare_planning(result, reviewed, items)
+        prepare = partial(_prepare_phase, fixture, record_testsuite_property)
+        fixture.verify_excluded_state()
+        result = prepare(fixture.prepare_proposal)
+        _assert_native_proposal(fixture, result)
+        reviewed = prepare(fixture.prepare_review, result)
+        _assert_native_review(fixture, result, reviewed)
+        items = prepare(fixture.prepare_items, result, reviewed)
+        _assert_native_items(fixture, items)
+        planning = prepare(fixture.prepare_planning, result, reviewed, items)
         with psycopg.connect(
             fixture.runtime.database_url, connect_timeout=5
         ) as connection:
@@ -130,7 +129,7 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
                     ).format(sql.Identifier(table)),
                     (planning.organization_id, planning.edition_id),
                 ).fetchone() == (0,)
-        physical = fixture.prepare_physical(result, reviewed, items, planning)
+        physical = prepare(fixture.prepare_physical, result, reviewed, items, planning)
         with psycopg.connect(
             fixture.runtime.database_url, connect_timeout=5
         ) as connection:
@@ -177,7 +176,9 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
                     ).format(sql.Identifier(table)),
                     (physical.organization_id, physical.edition_id),
                 ).fetchone() == (0,)
-        staffing = fixture.prepare_staffing(result, reviewed, items, planning, physical)
+        staffing = prepare(
+            fixture.prepare_staffing, result, reviewed, items, planning, physical
+        )
         with psycopg.connect(
             fixture.runtime.database_url, connect_timeout=5
         ) as connection:
@@ -242,8 +243,14 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
                         sql.Identifier(table)
                     )
                 ).fetchone() == (0,)
-        released = fixture.prepare_release(
-            result, reviewed, items, planning, physical, staffing
+        released = prepare(
+            fixture.prepare_release,
+            result,
+            reviewed,
+            items,
+            planning,
+            physical,
+            staffing,
         )
         with psycopg.connect(
             fixture.runtime.database_url, connect_timeout=5
@@ -299,13 +306,21 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
                         sql.Identifier(table)
                     )
                 ).fetchone() == (0,)
-        changed = fixture.prepare_change(
-            result, reviewed, items, planning, physical, staffing, released
+        changed = prepare(
+            fixture.prepare_change,
+            result,
+            reviewed,
+            items,
+            planning,
+            physical,
+            staffing,
+            released,
         )
         _assert_native_change(
             fixture, changed, planning, staffing, items, physical, released
         )
-        verify_onsite_http(
+        prepare(
+            verify_onsite_http,
             fixture,
             result,
             reviewed,
@@ -316,10 +331,27 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             released,
             changed,
         )
+        # P10 deliberately withdraws and publishes another release. Verify the
+        # successor's live delivery layers before that transition, not against
+        # its stale release ID afterward.
+        prepare(
+            verify_delivery_isolation_http,
+            fixture,
+            result,
+            reviewed,
+            items,
+            planning,
+            physical,
+            staffing,
+            released,
+            changed,
+        )
+        fixture.verify_excluded_state()
         _assert_native_continuity(
             fixture,
             changed,
-            verify_continuity_http(
+            prepare(
+                verify_continuity_http,
                 fixture,
                 result,
                 reviewed,
@@ -334,8 +366,125 @@ def test_native_real_proposal_items_planning_and_independent_physical_approval(
             staffing,
             released,
         )
+        fixture.verify_excluded_state()
+        _verify_p12(
+            prepare,
+            fixture,
+            (result, reviewed, items, planning, physical, staffing, released),
+        )
+        archive = prepare(_assert_native_archive, fixture, result)
+        _record_archive_metrics(archive, record_testsuite_property)
+        prepare(
+            verify_logical_restore,
+            fixture,
+            result,
+            reviewed,
+            items,
+            planning,
+            physical,
+            staffing,
+            released,
+            changed,
+        )
+        prepare(verify_incomplete_backup_rejected, fixture)
+        prepare(verify_stop_runtime, fixture)
+        prepare(verify_stopped_logical_restore, fixture)
     # Maintained HTTP assertions are not browser/native-print or human evidence.
-    # P11-P12, real venue fitness and complete cross-tenant inventory remain open.
+    # P11 stop-use/recovery and complete cross-tenant/role/field P12 remain open.
+
+
+def _assert_native_review(fixture, result, reviewed):
+    with psycopg.connect(fixture.runtime.database_url, connect_timeout=5) as connection:
+        assert connection.execute(
+            "SELECT revision_id, decision_id, programme_item_id "
+            "FROM public.applications_programmeacceptedtransition "
+            "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+            (reviewed.transition_id, reviewed.organization_id, reviewed.edition_id),
+        ).fetchone() == (result.revision_id, reviewed.decision_id, reviewed.item_id)
+        assert connection.execute(
+            "SELECT count(*) FROM public.programme_programmereadinessrequirement "
+            "WHERE item_id = %s",
+            (reviewed.item_id,),
+        ).fetchone() == (7,)
+        assert connection.execute(
+            "SELECT count(*) FROM public.applications_programmeacceptedtransition "
+            "WHERE revision_id = %s",
+            (result.revision_id,),
+        ).fetchone() == (1,)
+
+
+def _assert_native_items(fixture, items):
+    with psycopg.connect(fixture.runtime.database_url, connect_timeout=5) as connection:
+        for item, kind in (
+            (items.accepted, "accepted_proposal"),
+            (items.ceremony, "ceremony"),
+        ):
+            assert connection.execute(
+                "SELECT kind, aggregate_version "
+                "FROM public.programme_programmeitem "
+                "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+                (item.item_id, items.organization_id, items.edition_id),
+            ).fetchone() == (kind, item.version)
+            assert connection.execute(
+                "SELECT state, version, availability_state "
+                "FROM public.programme_programmehostrelationship WHERE id = %s",
+                (item.host_id,),
+            ).fetchone() == ("confirmed", item.host_version, "shared")
+        assert connection.execute(
+            "SELECT count(*) FROM public.applications_programmeacceptedtransition "
+            "WHERE programme_item_id = %s",
+            (items.ceremony.item_id,),
+        ).fetchone() == (0,)
+
+
+def _assert_native_proposal(fixture, result):
+    assert result.organization_id == fixture.scenario.organization_id
+    assert result.lead.account_id != result.collaborator.account_id
+    # Independent read under genuine runtime login; no SQL/factory writes.
+    with psycopg.connect(fixture.runtime.database_url, connect_timeout=5) as connection:
+        assert connection.execute("SELECT session_user, current_user").fetchone() == (
+            "maru_runtime",
+            "maru_runtime",
+        )
+        assert connection.execute(
+            "SELECT state, submitted_revision_id "
+            "FROM public.applications_programmeproposal "
+            "WHERE id = %s AND organization_id = %s AND edition_id = %s",
+            (result.proposal_id, result.organization_id, result.edition_id),
+        ).fetchone() == ("submitted", result.revision_id)
+        assert connection.execute(
+            "SELECT count(*) FROM public.applications_programmefileintake "
+            "WHERE proposal_id = %s",
+            (result.proposal_id,),
+        ).fetchone() == (1,)
+    assert result.lead.password not in repr(result)
+
+
+def _assert_native_archive(fixture, result):
+    archive = run_archive_phase(fixture)
+    with psycopg.connect(fixture.runtime.database_url, connect_timeout=5) as connection:
+        files = connection.execute(
+            "SELECT file_receipt_id FROM public.applications_programmefileintake "
+            "WHERE proposal_id = %s AND organization_id = %s AND edition_id = %s",
+            (result.proposal_id, result.organization_id, result.edition_id),
+        ).fetchall()
+        assert len(files) == 1
+    disposed = verify_archive_http(
+        fixture, archive, expected_files=tuple(row[0] for row in files)
+    )
+    assert disposed.state == "cancelled"
+    with psycopg.connect(fixture.runtime.database_url, connect_timeout=5) as connection:
+        assert connection.execute(
+            "SELECT count(*) FROM public.programme_programmearchivechunk "
+            "WHERE task_id = %s",
+            (archive.task_id,),
+        ).fetchone() == (0,)
+        assert connection.execute(
+            "SELECT state FROM public.programme_programmearchivetaskevent "
+            "WHERE task_id = %s ORDER BY version",
+            (archive.task_id,),
+        ).fetchall() == [("queued",), ("running",), ("ready",), ("cancelled",)]
+    return archive
 
 
 def _assert_native_continuity(

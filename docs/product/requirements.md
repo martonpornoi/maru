@@ -141,6 +141,15 @@ architecture documents, implementation issues, tests, and release notes.
   authority, participation, registration, application, onboarding, workforce,
   or other convention relationship. Fixtures, tests, and tutorials may use
   only deterministic synthetic identities and reserved example domains.
+  Invitation writer readiness is an Identity-owned boundary, independent of
+  Registration configuration adoption. Public verification/recovery must reject
+  invitation challenges before performing generic issuance or consumption.
+  Canonical durable delivery is the sole invitation delivery writer; obsolete
+  challenge delivery fields must be frozen at the database boundary. Readiness
+  must observe the complete installed writer generation and existing invitation
+  integrity, keys, policy and worker gates, never a code flag alone. Historical
+  values remain honest legacy evidence; used generations require fix-forward
+  recovery rather than reopening retired writers (ADR 0110).
 - **IDN-014 — Purpose-bounded accounts and workspaces:** An active person
   account may receive authority or self-service access for one adopted purpose
   without an edition Participation row, attendee registration, payment,
@@ -207,6 +216,12 @@ architecture documents, implementation issues, tests, and release notes.
   change the original terms. Stop-use accounts for the exact resulting assignments,
   including any explicitly broader shared Venue authority. Existing root roles
   remain unchanged (ADR 0106).
+  Stop confirmation must bind the original actor, exact tenant/edition, retry
+  identity, displayed source versions and complete current impact preview to a
+  bounded accountable reason. Changed intent or changed impact requires deliberate
+  renewed confirmation; a retry must neither replay owner mutations nor restore
+  operational access. Historical read authority is not automatically revoked or
+  extended by stopping, and retained shared authority must remain explicit.
   The Programme exit archive must retain each owner's authorized field and
   retention ceiling, stable identifiers, portable schemas, source versions and
   audit references. Missing owners, unavailable sources and truncated histories

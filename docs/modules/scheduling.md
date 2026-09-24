@@ -7,6 +7,25 @@ and protected-delivery status; this guide is the owner contract, not a merge cla
 
 ## Ownership and adoption
 
+### Programme stop impact
+
+`programme_stop_queries.load_programme_stop_scheduling` reports minimized counts
+for all 27 edition-owned relations and the exact stored release pointer. Global
+or shared dependency keys are outside its edition inventory. An invalidated
+release remains an active pointer requiring actual withdrawal; filtered current
+output is not evidence of withdrawal. Never-published pointer version zero is
+distinct from a withdrawn retained version. Independent withdrawal authority is
+reported as a prerequisite, not borrowed from controller/stop permission. Private
+planning labels, notices, hosts and artifact bytes are not returned. See the
+[minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
+`programme_stop_references.resolve_programme_stop_release_people` supplies the
+complete retained-release Identity dependency union plus the actual actor. The
+composer first holds canonical shared authority/foundation/edition parents, then
+locks this bounded union before controller or narrower source locks. It includes
+historical people needed by actual withdrawal without disclosing a directory,
+locking the pointer first, granting withdrawal or replacing final authorization.
+
 ### Personal edition discovery (#108)
 
 The dormant `/my/programme/timetables/` chooser uses
@@ -305,6 +324,48 @@ The native editor and staffing continuation remain unmounted components. No
 Registration, Participation, payment or attendance record is created.
 
 ## Owned state and commands
+
+### Restricted exit history (#189)
+
+The archive-only Scheduling collector requires separate Programme
+`programme.export_archive/source_lineage` admission and the existing Scheduling
+planning, history and release-manifest field ceilings. It retains the complete
+current planning inventory, every candidate's immutable historical manifest,
+all original service-day/occurrence revisions, complete contiguous publication
+and withdrawal history, and independently verified identity-only canonical
+release artifacts. These are restricted historical evidence, not a currently
+valid timetable or permission to dereference another owner's identifiers.
+Withdrawn releases retain their canonical identity evidence but acquire no
+public-copy, host availability, worker calendar or operational-serving rights.
+The ordinary release reader's withdrawn/invalidated suppression is unchanged.
+
+Day revision columns are explicitly `id`, `day_id`, `sequence`, `label`,
+`starts_at`, `ends_at`, `precision_minutes`, `edition_version`, `lifecycle`,
+`actor_id`, `reason`, `occurred_at`; occurrence revision columns are `id`,
+`occurrence_id`, `sequence`, `group_key`, `group_sequence`, `lifecycle`, `actor_id`,
+`reason`, `occurred_at`. Candidate geometry/history remains the existing closed
+owner DTO, never a model dump. Each canonical release record retains release,
+approval, original candidate revision, source digest, predecessor and original
+pointer version plus the checked identity-only artifact contract/digest/bytes.
+No private owner body, dependency directory, command retry key or source secret
+is added to these projections.
+
+The complete collection refuses more than 20,000 candidate revisions, 250,000
+historical placement memberships, 100,000 day/occurrence revisions, 10,000
+pointer-history entries or 64 MiB of canonical artifacts. These are explicit
+archive budgets, not silent truncation of the larger planning history limits.
+Sequence gaps, changed current inventories, incomplete artifacts, any independent
+source denial or required audit failure leave no complete result. Canonical
+parent/edition locks cover owned writes; the full cross-owner archive must
+establish its complete Department/person/physical closure before child reads.
+No live dependency-validity claim is made by exporting historical identities.
+Its portable `scheduling.programme-exit@1` JSON declares that historical-only
+purpose, carries explicit day/occurrence column names and closed typed planning,
+geometry, history and release records, and forbids undeclared fields. Canonical
+artifact payloads are lossless UTF-8 JSON strings; re-encoding the string as UTF-8
+must reproduce the recorded digest/byte count. Arbitrary binary values remain
+forbidden. The owner JSON budget is 128 MiB/two million values, including the
+escaped canonical payloads; encoding failure refuses the whole section.
 
 The isolated #108 fixture now prepares first publication through actual owner
 preflight, independent approval and separate publication commands, exact retries
@@ -1190,6 +1251,10 @@ contract or adopted-but-denied/unavailable/moving data fails closed. Independent
 Venue wayfinding covers only approved own host rooms. Workforce-only needs no
 Programme or release query. No returned layer edits accepted work, creates an
 attendee relationship or claims attendance.
+For a stopped Programme edition, Events withholds the personal timetable context
+even when retained work still exists. Both discovery and current composition are
+unavailable; independently admitted owner history remains separate. Withdrawal of
+one release is not this terminal stop state and retains its existing semantics.
 
 `personal_output_rendering` provides `scheduling.personal-timetable@1` JSON and
 private RFC 5545 calendar snapshots. It accepts only the closed private DTO graph,
@@ -1417,6 +1482,18 @@ and [atomic-release extension](../operations/programme-atomic-release-migration-
 describe exact schema/readiness, runtime ACLs and populated contraction fences.
 The native editor and staffing were delivered dormant through #85 and #88.
 Neither release eligibility nor dormant approval/publication adds a live workflow.
+
+Migration `0023_programme_stop_boundary` adds an invoker-security guard to the
+explicit 25-table operational inventory. It locks both old and new Events scopes
+in deterministic order and refuses writes for exact Programme editions that are
+archived/cancelled; unknown scope, unsupported Programme versions or a stale
+snapshot isolation level fail closed. Existing evidence, scope and immutable-row
+guards remain mandatory. Withdraw the current release through its authorized
+command **before** terminal stop. Dependency keys/changes retain their independent
+native rules so shared Identity/security changes can still invalidate retained
+history. No new helper EXECUTE privilege is needed. Exact readiness includes the
+new attachments, and used stop receipts prevent removing the fence.
+
 Role-specific outputs, on-site continuity, logical-restore compatibility (#97),
 guided activation and integrated acceptance remain mandatory #48 work.
 #87 is delivered; representative-human

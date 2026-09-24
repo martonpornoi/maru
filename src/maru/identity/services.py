@@ -385,7 +385,21 @@ def issue_identity_challenge(
     -------
     ChallengeDispatch
         The issued identity challenge.
+
+    Raises
+    ------
+    ValidationError
+        If the purpose is not ordinary email verification or account recovery.
+        Invitations must use their dedicated versioned command boundary.
     """
+    if purpose not in (
+        IdentityChallenge.Purpose.VERIFY_EMAIL,
+        IdentityChallenge.Purpose.RECOVER_ACCOUNT,
+    ):
+        raise ValidationError(
+            "Use the dedicated invitation workflow for that challenge purpose.",
+            code="identity_challenge_purpose_invalid",
+        )
     enforce_abuse_limit(flow=purpose, subject_digest=fingerprint)
     challenge_id = uuid4()
     raw_token = _raw_challenge_token(
@@ -552,6 +566,14 @@ def consume_identity_challenge(
     ValidationError
         If the submitted state or input violates a domain invariant.
     """
+    if purpose not in (
+        IdentityChallenge.Purpose.VERIFY_EMAIL,
+        IdentityChallenge.Purpose.RECOVER_ACCOUNT,
+    ):
+        raise ValidationError(
+            "Use the dedicated invitation workflow for that challenge purpose.",
+            code="identity_challenge_purpose_invalid",
+        )
     token_digest = _digest(raw_token, purpose="identity-challenge")
     now = timezone.now()
     with transaction.atomic():

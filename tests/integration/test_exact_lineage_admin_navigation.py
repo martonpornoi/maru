@@ -1035,3 +1035,73 @@ def test_expanded_executive_board_bundle_fails_closed_in_shell_and_validators(
         ) == (False,)
         _assert_scoped_shell_hidden(client=_client(graph.direct_recipient), graph=graph)
         transaction.set_rollback(True)
+
+
+@pytest.mark.parametrize("authority_kind", ["direct", "role"])
+@pytest.mark.parametrize("scope_kind", ["organization", "edition"])
+def test_policy_native_observation_matches_python_without_caching_revoked_ancestry(
+    settings, monkeypatch, authority_kind, scope_kind
+):
+    graph = _exact_navigation_graph()
+    settings.REQUIRE_EXACT_AUTHORITY_PROVENANCE = True
+    _activate_exact_contract()
+    principal = (
+        graph.direct_recipient if authority_kind == "direct" else graph.role_recipient
+    )
+    source = graph.direct_source if authority_kind == "direct" else graph.role_source
+    assert source is not None
+    organization_target = resolve_organization_target(
+        organization_id=graph.organization.id
+    )
+    target = (
+        organization_target
+        if scope_kind == "organization"
+        else resolve_edition_target(
+            organization_id=graph.organization.id, edition_id=graph.edition.id
+        )
+    )
+    arguments = {
+        "principal": principal,
+        "capability_code": "events.view_basic",
+        "resource": target,
+        "requested_fields": frozenset({"name", "lifecycle", "email"}),
+    }
+
+    def python_checks(*, checks, evaluated_at):
+        return _python_current_results(checks, evaluated_at=evaluated_at)
+
+    def compare(*, expected_allowed):
+        evaluated_at = timezone.now()
+        with CaptureQueriesContext(connection) as observed:
+            native = policy.decide(**arguments, at=evaluated_at)
+        with monkeypatch.context() as patch:
+            patch.setattr(policy, "authority_issuances_are_current", python_checks)
+            independent = policy.decide(**arguments, at=evaluated_at)
+        assert native == independent
+        assert native.allowed is expected_allowed
+        assert native.fields == (
+            frozenset({"name", "lifecycle"}) if expected_allowed else frozenset()
+        )
+        assert (
+            sum(
+                "public.maru_authority_issuance_valid_v1" in query["sql"]
+                for query in observed
+            )
+            == 1
+        )
+        # A fresh ordinary decision has constant client round trips even though
+        # its exact source has historical and current controller ancestry.
+        assert len(observed) <= 10
+
+    compare(expected_allowed=True)
+    revoke_capability_grant(
+        actor=graph.actor,
+        target=organization_target,
+        grant_id=source.id,
+        reason="Synthetic point-in-time policy ancestor revocation.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    # The controller still has broader Board authority. Neither policy engine
+    # may substitute it for the revoked source recorded in the child issuance.
+    compare(expected_allowed=False)

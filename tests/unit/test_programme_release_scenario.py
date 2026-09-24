@@ -32,7 +32,7 @@ def _result(setup, planning):
         planning.candidate_revision_id,
         planning.placement_ids,
         _person("release-reviewer"),
-        tuple(uuid4() for _ in range(13)),
+        tuple(uuid4() for _ in range(12)),
         uuid4(),
         uuid4(),
         1,

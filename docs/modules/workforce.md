@@ -1,5 +1,15 @@
 # Workforce module
 
+## Programme stop impact
+
+`programme_stop_queries.load_programme_stop_workforce` reports minimized state
+counts across 22 edition-owned/derived relations, including retained demands,
+commitments, assignments, onboarding and Availability plans. It does not return
+people, document bytes, private reasons or calendar periods. Shared Position
+templates remain outside this inventory. No counted claim, assignment or Shift is
+completed, removed or converted to Participation by a preview or stop. See the
+[minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
 ## Dormant Programme Volunteer starter
 
 HR-012 and [ADR 0107](../architecture/decisions/0107-programme-volunteer-starter-approval.md)
@@ -55,6 +65,21 @@ authority is added; readiness pins its source and requires its marker
 alongside Scheduling 0022. Populated contraction requires fix-forward or
 consistent recovery, not partial removal of a supposedly unused feature.
 
+Migration 0029 separately prepares the native Position-assignment guard for the
+exact `programme_operations@1` pair. Like Workforce-only, that pair requires
+Workforce role/receipt evidence without a Participation capacity; Full Convention
+keeps its existing Participation requirement. Every other version/code still
+fails closed. Independent approval, scope, status/version and immutable command
+evidence predicates are unchanged. This changes no selectable profile, edition
+constraint, runtime permission or existing row. Native provenance readiness pins
+the observed function metadata and requires the migration marker. Reversal locks
+  editions and assignments and refuses if any Programme edition exists. It also
+  runs the inherited shared execution fence before replacement, preserving used
+  starter, reviewed-copy, native release and operator/change-authority evidence.
+  Only an unused boundary restores the exact predecessor with OID/owner/ACL intact.
+The [assignment continuation checkpoint](../checkpoints/2026-09-20-programme-native-assignment-preparation.md)
+records the actual P06 failure and focused evidence, not full integrated acceptance.
+
 The [starter task](../product/page-contracts/programme-volunteer-starter.md)
 adds audited complete own-request review (100 pending requests or unavailable),
 exact original history, signed original-person preview/confirmation and the
@@ -81,7 +106,9 @@ locks full coverage. It uses actual owner commands, not direct fixture writes,
 authority substitutions or inferred Participation. See the
 [staffing preparation checkpoint](../checkpoints/2026-09-19-programme-staffing-fixture-preparation.md).
 Schema-only observations do not certify actual command rollback, races or runtime
-permissions. Maintained PostgreSQL cases remain uncollected/unexecuted under #102;
+permissions. PostgreSQL acceptance is restored through #102/PR #195. The actual
+isolated journey now reaches the independently approved starter and subsequent
+assignment continuation; complete P06/native journey evidence remains #109,
 human comprehension remains #92 and promotion still requires #97/#109.
 
 ## Existing owner boundaries
@@ -860,6 +887,29 @@ Restricted actor references and rationale appear only in that historical purpose
 they confer no personnel directory, private commitment or Scheduling authority.
 Both reads retain canonical scope, reauthorize and audit before disclosure.
 
+The #189 Programme exit collector joins **all retained edition binding lineages**
+through these two existing readers, with additional
+`programme.export_archive/source_lineage` admission. Every current binding and
+every contiguous historical revision is retained, including demand predecessor
+links. The explicit portable schema contains item ID, the closed binding fields
+and their eight-field Programme staffing source, and history actor ID, rationale
+and time. Source and demand identifiers confer no right to follow them into
+private personnel records. This is Programme's Shift-link archive, not a complete
+Workforce export: unrelated demands, volunteer identities, availability calendars
+and private commitment reasons are never loaded. Work terms remain in the
+independently authorized Programme requirement history; an old link is not a
+current staffing or coverage promise.
+
+The complete owner inventory is bounded at 10,000 binding lineages and 100,000
+retained binding revisions. Current and historical source fields plus Workforce
+work-field admission remain required even for an empty result. Complete binding
+inventory, exact item scope, contiguous versions and final current-source checks
+must agree under the canonical parent/edition fence; denial, changed source,
+missing evidence, audit failure or overflow returns no successful partial result.
+The full archive composer must acquire its complete cross-owner Department and
+person closure before invoking these audited reads. JSON uses canonical UUID
+strings and UTC instants, explicit field allowlists and a 64 MiB section budget.
+
 `programme_navigation.programme_shift_links` constructs only optional exact-demand
 destinations from current bindings already admitted and audited by their owner.
 It requires all `SHIFT_ORGANIZER_REQUIRED_FIELDS`, including holder labels;
@@ -1571,3 +1621,20 @@ history is not attendance. Ended assignments do not erase retained commitments.
 No planner identity, confirmation/removal rationale or availability calendar is
 fetched. Missing owner joins and overflow are unavailable, not partial success.
 This input does not itself mount a personal calendar or activate Programme.
+
+## Programme terminal writer preparation
+
+Migration `0030_programme_stop_boundary` freezes ordinary writes in archived or
+cancelled `programme_operations@1` editions without completing, removing or
+rewriting retained work. Its literal inventory covers 17 directly scoped and
+five parent-derived tables; shared Organization-owned Position templates stay
+outside it. Availability remains person-owned **and edition-scoped**: other
+editions stay usable. Existing owner contracts already limit corrections to
+their permitted nonterminal lifecycles; this guard introduces no new correction
+privilege. It preserves all existing assignment, staffing, provenance and receipt
+guards, locks both source/destination Events parents, and rejects unresolved
+scope or unsupported Programme isolation/version. The starter probe includes
+its two added attachments; Events' stop-preparation probe verifies the complete
+22-table fence. Native trigger functions gain no new runtime EXECUTE grant.
+Retained stop receipts prevent ordinary reversal before the guards are removed.
+This component is not the complete stop command, preview or P11 acceptance.

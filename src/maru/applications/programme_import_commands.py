@@ -104,6 +104,7 @@ from maru.applications.programme_inputs import (
     require_programme_expected_version,
     require_programme_uuid,
 )
+from maru.applications.programme_stop_audit import _append_cleanup_audit
 from maru.applications.programme_write_scope import (
     ApplicationsProgrammeWriteScopeUnavailableError,
     lock_programme_edition_write_scope,
@@ -992,7 +993,7 @@ def _record_success(
         if item is not None
         else "applications.programme_import_batch"
     )
-    audit = append_audit(
+    audit = _append_cleanup_audit(
         AuditRecord(
             principal_kind="account",
             principal_id=scope.actor_id,
@@ -1013,6 +1014,7 @@ def _record_success(
             retention_class="applications-programme-import-restricted",
         ),
         occurred_at=occurred_at,
+        retry_key=retry_key,
     )
     if item is not None:
         aggregate_type = "applications.programme_import_item"

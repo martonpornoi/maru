@@ -19,6 +19,7 @@ from maru.authorization.programme_role_inputs import (
 )
 from maru.authorization.programme_role_recipes import PROGRAMME_ROLE_RECIPES
 from maru.authorization.services import AuthorizationDenied
+from maru.events.programme_stop_queries import ProgrammeStopReference
 from maru.identity.models import Account
 
 NOW = datetime(2026, 9, 17, 20, tzinfo=UTC)
@@ -72,6 +73,9 @@ def world(monkeypatch):
         "_require_integrity": None,
         "_resolve_scope": object(),
         "_lock_scope": object(),
+        "resolve_programme_stop_reference": ProgrammeStopReference(
+            applies=True, is_stopped=False, version=1
+        ),
         "_lock_people": {actor.id: actor},
         "_require_current_controller": None,
         "lock_retired_department_authority_boundaries": None,
@@ -165,6 +169,39 @@ def test_exact_retained_detail_does_not_depend_on_open_inventory(world):
     assert result.requests[0].state == "expired"
     assert result.requests[0].can_cancel
     assert world.mocks["append_audit"].call_args.args[0].target_id == world.row.id
+
+
+def test_stopped_exact_own_request_is_read_only_not_a_new_decision(world):
+    world.mocks[
+        "resolve_programme_stop_reference"
+    ].return_value = ProgrammeStopReference(applies=True, is_stopped=True, version=2)
+    result = load(world, request_id=world.row.id)
+    assert result.is_historical
+    row = result.requests[0]
+    assert row.state == "stopped"
+    assert row.state_label == "Unapproved when Programme stopped"
+    assert not row.can_approve
+    assert not row.can_decline
+    assert not row.can_cancel
+    world.mocks["_lock_scope"].assert_called_once_with(world.scope, historical=True)
+    assert world.mocks["_require_current_controller"].call_count == 2
+    world.mocks["append_audit"].assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "reference",
+    [
+        None,
+        ProgrammeStopReference(applies=False, is_stopped=False, version=1),
+        ProgrammeStopReference(applies=True, is_stopped=True, version=2),
+    ],
+)
+def test_unavailable_or_stopped_context_has_no_open_inventory(world, reference):
+    world.mocks["resolve_programme_stop_reference"].return_value = reference
+    with pytest.raises(AuthorizationDenied):
+        load(world)
+    world.request_filter.assert_not_called()
+    world.mocks["active_verified_person_account_display_labels"].assert_not_called()
 
 
 def test_empty_inventory_is_audited_without_person_lookup(world):

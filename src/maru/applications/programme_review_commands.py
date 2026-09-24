@@ -80,6 +80,7 @@ from maru.applications.programme_writer_boundary import (
 from maru.applications.retry_namespace import lock_applications_retry_namespace
 from maru.audit.services import AuditRecord, append_audit
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.programme_stop_queries import resolve_programme_stop_reference
 from maru.identity.queries import resolve_active_verified_person_reference
 
 if TYPE_CHECKING:
@@ -686,6 +687,33 @@ def _record(
     return _result(receipt, replayed=False)
 
 
+def _require_review_lifecycle(
+    scope: AuthorizedProgrammeReviewScope, action: ProgrammeReviewAction
+) -> None:
+    """Keep live acknowledgement separate from planning, but never bypass stop.
+
+    Parameters
+    ----------
+    scope : AuthorizedProgrammeReviewScope
+        Independently admitted owner context with current lifecycle evidence.
+    action : ProgrammeReviewAction
+        Exact command purpose; acknowledgement does not grant planning writes.
+
+    Raises
+    ------
+    ProgrammeReviewConflictError
+        If lifecycle evidence is unavailable or the requested work is closed.
+    """
+    if action is ProgrammeReviewAction.ACKNOWLEDGED:
+        reference = resolve_programme_stop_reference(
+            organization_id=scope.organization_id, edition_id=scope.edition_id
+        )
+        if reference is None or reference.is_stopped:
+            raise ProgrammeReviewConflictError
+    elif not scope.accepts_private_planning_writes:
+        raise ProgrammeReviewConflictError
+
+
 @transaction.atomic
 def _execute(
     *,
@@ -765,11 +793,7 @@ def _execute(
         capability_code=_CAPABILITIES[command.action],
         authorizer=authorizer,
     )
-    if (
-        command.action != ProgrammeReviewAction.ACKNOWLEDGED
-        and not scope.accepts_private_planning_writes
-    ):
-        raise ProgrammeReviewConflictError
+    _require_review_lifecycle(scope, command.action)
     with programme_application_database_writer():
         case = None
         if command.action == ProgrammeReviewAction.POLICY_CREATED:

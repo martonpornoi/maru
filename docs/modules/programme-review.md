@@ -208,6 +208,126 @@ it; accepted/rejected cases cannot reopen. Fresh work then needs a new seal.
 
 ## Commands and protected reads
 
+### Archive-only complete case collection
+
+For #189, `programme_exit_review_queries.load_programme_exit_review_case`
+requires the extra exact-edition `programme.export_archive/source_lineage`
+purpose **and** independent exact-Department `applications.decide_programme`
+authority for `review_context`, `review_answers` and `review_evidence`.
+Contributor/reviewer/moderator independence, sensitive-content admission,
+stage question allowlists and anonymous SQL omissions remain the existing
+reader's responsibility and are not widened. Summary or manager access cannot
+use this complete private-history boundary.
+
+The closed projection includes case ID/version, proposal/sealed-revision/policy/
+call/Department IDs, the ordinary authorized context and answer JSON, all
+contiguous case-version evidence pages, and `(entry_id, version, occurred_at)`
+lineage. IDs do not authorize foreign dereferencing. Existing ordinary DTOs and
+queries remain unchanged. Canonical owner locks cover paging; fixed source
+version, complete sequences and final source/purpose rechecks precede mandatory
+audit and disclosure. The collector refuses more than 20,000 entries, changed
+source, missing/repeated/gapped evidence or audit failure without partial success.
+Selected answers must remain within C1–C3; unknown/higher classification is
+unavailable, not relabelled C3. Original question withholding remains explicit
+in the policy context, never reconstructed by reading hidden answers. This
+component also collects complete outgoing decision messages through the existing
+decider-only reader, preserving original IDs/versions/timestamps/outcomes/text and
+acknowledgement policy without adding recipient-directory or receipt-state fields.
+Every message page must retain the selected case version, ascending unique
+versions/IDs and a consistent cursor. This is not all proposals, files or the whole Applications
+archive; those additional independently authorized owner components remain #189.
+Cross-owner composition must lock its complete Department and person closure
+before invoking audited case readers.
+
+`programme_exit_file_queries.load_programme_exit_review_file` is the separate
+archive-only attachment purpose under ADRs 0104/0105/0108. It requires the extra
+archive purpose plus an independent current decider with exactly `review_answers`
+for the exact retained case and current owner Department. It reads only an answer
+still disclosed by the ordinary protected history reader: stage allowlists,
+sensitive authority and anonymous SQL omissions run **before** file lookup.
+This archival source is the original immutable reviewed seal, including an older
+seal when its case history remains authorized today; it does not pretend that an
+old seal is the current proposal. Ordinary browser attachment readers keep their
+current-seal requirement unchanged. A stale browser URL is not archive authority.
+
+The explicit projection is `file_id`, `case_id`, `revision_id`, `question_id`,
+`question_key`, `answer_version`, `size_bytes`, `sha256` and private `data` bytes.
+No storage key, uploader directory, original filename or receipt-only selector
+is exposed. The actual shared Applications exact-answer custody reader checks
+proposal/question/source-version binding, CLEAN PDF status, scanner provenance,
+10 MiB bound, length and digest. Final source/purpose checks and a fresh custody
+metadata/digest comparison precede mandatory sensitive-read audit and return.
+Missing, corrupt, denied, withheld or no-longer-clean data refuses the source;
+no obsolete byte copy or generic media reader is a fallback. Retained file bytes
+and holds are not deleted or weakened. Whole-archive retrieval must repeat this
+source admission; prior packaging is never permanent file-read permission.
+
+`programme_exit_configuration_queries.load_programme_exit_configuration` owns
+the separate exact-Department configuration collection: all retained calls in
+the existing complete 100-call manager bound, their closed typed configuration,
+and every contiguous immutable review-policy version through the existing
+`review_setup` reader. The archive lineage projection explicitly adds only the
+call ID, call aggregate/definition version, policy ID/version and creation time
+already selected through those owner readers. Both call-management and review
+setup permissions remain mandatory even for an empty collection. A call with no
+policy legitimately has an empty policy list; a missing intermediate version,
+more than 1,000 policies per call or 5,000 policies per Department, denied source,
+changed configuration or audit failure is unavailable, not an omitted record.
+The canonical Department scope is held throughout collection; final call and
+policy inventories are compared before return. This component contains no
+proposal answers, people directory, invitation data or approval rationale.
+
+The Department archive composition joins that configuration with **every retained
+review case** in the manager's complete UUID-paged inventory. Each case still
+requires independent decider authority for its full retained review history;
+one denied case makes the collection unavailable, not silently partial. It
+includes each case's currently disclosed original sealed answers and each
+nonempty disclosed safe-file answer through the archive-only custody reader.
+Configuration manager authority does not acquire access to private drafts,
+unreviewed submissions, contributor invitation secrets or withheld answers.
+Those purpose-excluded categories are explicitly declared in the archive schema
+and inspection guide; no hidden count or identity is queried to describe them.
+The result is the complete declared **reviewed-proposal** scope, not a claim to
+all private Applications data. This preserves ordinary source authority rather
+than treating bulk export as impersonation of contributors.
+
+`programme_exit_department_queries.load_programme_exit_department` bounds this
+composition at 2,000 cases, 100,000 case-history entries, 1,000 answer/file
+bindings and 256 MiB of projected supporting bytes per Department. Duplicate
+file use remains a distinct authorized answer binding and counts toward these
+resource limits. It never truncates a page or drops an oversized file. Its
+final complete inventory, case-version comparisons, source-purpose checks and
+mandatory audit must succeed before returning data. These are collection
+budgets, not yet the separate background artifact custody/expiry contract.
+
+The Applications portable serializer uses a closed per-record field list for
+these configuration, policy, case, outgoing-message and attachment-binding
+projections. Its root declares `reviewed-proposals@1`, exact organization/edition,
+the selected Department records and fixed purpose exclusions. File metadata is
+JSON; private file bytes are separate members, never base64 or inline content.
+The JSON schema forbids undeclared record fields; arbitrary objects, model dumps,
+new DTO fields and file storage references are not discovered. Decimal form
+bounds use finite exact decimal strings; UUIDs are canonical strings and instants
+are UTC ISO-8601. Owner JSON is bounded at 64 MiB/two million projected values.
+The serializer grants no authority and does not by itself establish complete
+edition Department coverage; that remains the full owner's collection duty.
+
+`programme_exit_queries.load_programme_exit_applications` discovers the complete
+call-owning Department set from exact owner-scoped identifiers while holding the
+canonical parent/edition fence. It validates each Department's call-management,
+review-management and independent-decider scopes, then locks **all Departments
+in UUID order before the requester**, before any child sensitive-read audit.
+Every retained call ID must appear exactly once in the composed configuration;
+the final identifier inventory must still match. No caller-selected Department
+subset can be labelled complete. Empty Applications configuration remains an
+authorized, audited empty owner result, without inventing proposal discovery.
+The owner envelope is 100 Departments/2,000 calls/5,000 reviewed cases/200,000
+history entries/2,000 file bindings/512 MiB supporting bytes, with the narrower
+per-Department limits retained. Any overflow or inaccessible Department fails
+the complete owner result. Cross-owner composition must prelock its still-larger
+Department/person closure before this boundary; the Applications closure alone
+does not cover Programme hosts or Workforce assignees.
+
 `programme_review_commands.apply_programme_review_command` accepts a closed
 `ProgrammeReviewCommandInput`, exact actor/tenant/Department scope, expected
 version, retry key, reason, correlation ID, and registered source channel.
@@ -352,6 +472,10 @@ Recipients are the exact included contributors from the reviewed seal, not
 the latest roster. Later removal, withdrawal, or owner retirement does not
 erase their addressed message or prevent their own required acknowledgement.
 Acknowledgement means receipt, not agreement, contributor consent, or hosting.
+Terminal Programme stop is distinct from those live-workflow changes: a fresh
+acknowledgement rechecks the exact Events stop state under the canonical owner
+locks and is refused after stop. Existing decision/acknowledgement evidence and
+authorized historical reads remain; replay returns only its original evidence.
 
 The seven review relations use the existing
 `applications-programme-restricted` purpose. This is voluntary proposal

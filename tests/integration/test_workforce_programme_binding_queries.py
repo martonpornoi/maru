@@ -1,5 +1,6 @@
 """Real binding projections keep source identity, field ceilings and history stable."""
 
+import json
 from dataclasses import asdict, replace
 from functools import partial
 from uuid import uuid4
@@ -7,12 +8,18 @@ from uuid import uuid4
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from jsonschema import Draft202012Validator
 
 from maru.audit.models import AuditEvent
+from maru.programme import archive_authorization
 from maru.programme.authorization import ProgrammeAuthorizationDeniedError
 from maru.programme.queries import ProgrammeQueryUnavailableError
 from maru.workforce import programme_binding_queries as queries
+from maru.workforce import programme_exit_queries as archive
 from maru.workforce import programme_staffing_queries as work_queries
+from maru.workforce.programme_exit_serialization import (
+    serialize_programme_exit_bindings,
+)
 from maru.workforce.programme_impact import ProgrammeStaffingAction as Action
 from maru.workforce.programme_staffing_inputs import ProgrammeStaffingBindingChange
 from maru.workforce.programme_staffing_queries import (
@@ -58,6 +65,38 @@ def reconcile(scope, result):
             result.demand_id,
             result.demand_version,
         ),
+    )
+
+
+def test_native_complete_exit_binding_history_keeps_original_work_links(
+    binding_world, monkeypatch
+):
+    scope = binding_world
+    monkeypatch.setattr(
+        archive_authorization, "profile_allows_adapter", lambda *_: True
+    )
+    original = create(scope)
+    reconcile(scope, original)
+    request = scope.selection.request
+    result = archive.load_programme_exit_bindings(
+        actor_id=request.actor_id,
+        organization_id=request.organization_id,
+        edition_id=request.edition_id,
+        correlation_id=uuid4(),
+        authorizer=scope.selection.policy,
+    )
+    assert len(result) == 1
+    assert result[0].item_id == request.item_id
+    assert result[0].current.binding_id == original.binding_id
+    assert [row.binding.version for row in result[0].history] == [1, 2]
+    assert all(row.binding.demand_id == original.demand_id for row in result[0].history)
+    section = serialize_programme_exit_bindings(result)
+    Draft202012Validator(json.loads(section.schema)).validate(json.loads(section.data))
+    assert (
+        AuditEvent.objects.filter(
+            operation="workforce.programme_binding.exit_owner"
+        ).count()
+        == 1
     )
 
 

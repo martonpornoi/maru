@@ -7,6 +7,13 @@ Last updated: 2026-09-07
 
 ## Purpose and boundary
 
+`programme_stop_queries.load_programme_stop_venues` reports minimized counts for
+nine edition-owned selection/booking/evidence relations. Shared property facts,
+contacts, accommodation inventory and other editions are not read by this purpose.
+Booking lifecycle counts do not imply cancellation, publication withdrawal or
+release of a physical obligation; those retain their actual owner commands. See
+the [minimized stop purpose](events.md#minimized-programme-stop-impact-190-in-progress).
+
 The #96 native release work joins property location/lifecycle, selection
 availability and booking reschedule/approval/cancellation to existing Scheduling
 dependency generations in the same owner transaction. Exact native receipts and
@@ -249,6 +256,21 @@ ownership is unavailable, not a partial room list. Exact scope, final
 authorization and required minimized audit precede disclosure. These labels
 are not proof of physical availability or permission to reserve a space.
 
+For #189, `programme_exit_queries.load_programme_exit_venues` composes that
+complete retained room inventory with separate Programme archive-purpose
+admission. Its closed `venues.programme-exit@1` schema includes only those nine
+existing room/Venue identity, version, label and lifecycle fields, with explicit
+purpose `programme-room-wayfinding@1`. It is not a full reusable-property export
+or a historical capacity/availability assertion. Contacts, layout/security/access
+documents, opening restrictions, unrelated bookings and foreign busy calendars
+remain deliberately excluded; Programme exit authority does not grant them.
+The same real workspace field policy, complete 256-room bound and mandatory
+source audit run before return, including for an empty inventory. Canonical
+parent/edition locking, a second complete source comparison and final archive
+admission prevent a changed or denied list becoming a success. JSON/schema are
+bounded to 2 MiB; unknown DTOs, duplicate room IDs and overflow fail closed.
+The whole archive must establish its larger Department/person closure first.
+
 `programme_output_queries.load_released_room_wayfinding` supplies ADR 0097's
 separate public Programme wayfinding boundary. It independently resolves the
 exact-profile-admitted current Programme release, then reads only selected
@@ -283,6 +305,27 @@ purpose. These internal references are not permission tokens or user-facing
 directories. Scheduling compares complete sources and performs its required
 `scheduling.operator_entry.read` audit before releasing choices. No configuration,
 layout, contact, personnel, availability or instruction content is selected.
+
+For #190 stop-use preparation, fresh edition selection, room availability,
+booking/rescheduling, approval and publication commands recheck Events' exact
+Programme stop consequence after canonical parent locking. The Scheduling
+reservation adapter independently does the same before loading its live intent.
+Stopped/unavailable context admits no fresh operation. Ordinary shared
+Organization catalog commands do not acquire this edition restriction. Existing
+reasoned booking cancellation and publication withdrawal remain explicit retained-
+obligation corrections, with both current policy checks, original receipt/version
+rules and native evidence intact; stop itself performs neither action for them.
+Migration 0009 additionally locks old/new exact Events scope for all nine
+edition-owned relations. Terminal Programme permits only unchanged-envelope
+booking cancellation/publication withdrawal, cancellation-only occupancy removal,
+and their exact immutable history and receipts. Deferred native constraints bind
+the original version, actor, canonical Unicode reason/intent, operation, capability,
+field delta and same-transaction Audit witness. The physical-release source helper
+remains unchanged: publication withdrawal is not a physical booking change.
+Shared catalog operations and independently enforced linked-booking rules remain
+unchanged. Native readiness includes every additive guard; used stop evidence
+fences downgrade before any guard is removed. These owner components do not enable
+Stop Programme without the complete Events and other-owner closure.
 
 Remaining work includes integrated editor acceptance,
 Programme release-output reconciliation, equipment/qualification checks,

@@ -113,6 +113,12 @@ the system.
 | [0106](0106-scoped-programme-operational-approval.md) | Accepted; implementation pending | Keep accountable roots unchanged and approve exact scoped Programme operational roles through immutable intent and actual independent-person decisions |
 | [0107](0107-programme-volunteer-starter-approval.md) | Accepted; implementation pending | Retain an independent person's own decision on the one minimal shared Volunteer Position template needed by blank Programme setup |
 | [0108](0108-purpose-controlled-programme-exit-archive.md) | Accepted; implementation pending | Require separate restricted Programme export purpose plus independent source rights, explicit lineage and requester-bound asynchronous artifact handling |
+| [0109](0109-bounded-programme-archive-custody.md) | Accepted; implementation pending | Bound requester-only background Programme archives, private chunk custody, current retrieval checks and derived-artifact expiry without widening source access |
+| [0110](0110-identity-invitation-writer-cutover.md) | Accepted; implementation pending | Complete the independently observed Identity invitation writer generation without adopting Registration or weakening Programme rehearsal readiness |
+| [0111](0111-accountable-programme-stop-use.md) | Accepted | Reuse Events' archived state through a separate accountable Programme stop boundary with exact owner guards, retained-purpose exceptions and no full-convention side effects or unrelated authority revocation |
+| [0112](0112-native-point-in-time-policy-observation.md) | Accepted; implementation pending | Remove recursive client round trips from fresh policy observations using the existing exact native validator while preserving independent locking writer proofs |
+| [0113](0113-logical-restore-enum-cast-canonicalization.md) | Accepted | Recognize only exact PostgreSQL enum-array cast reparsing while retaining pinned schema hashes and every independent recovery gate |
+| [0114](0114-restore-stable-identity-trigger-predicates.md) | Accepted | Preserve exact reviewed Identity trigger predicates across logical restore without pinning internal cast-format flags |
 
 New ADRs use the next four-digit number and contain:
 

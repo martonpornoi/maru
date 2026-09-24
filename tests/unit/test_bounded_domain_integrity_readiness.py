@@ -49,12 +49,12 @@ def test_bounded_context_contracts_are_closed_and_derived_from_migrations() -> N
         )
         for contract in CONTRACTS
     ] == [
-        ("applications_integrity", True, 148, 34, 2),
+        ("applications_integrity", True, 200, 36, 3),
         ("charities_integrity", True, 7, 5, 1),
         ("catalog_integrity", True, 7, 2, 1),
-        ("venues_integrity", True, 38, 56, 32),
-        ("programme_integrity", True, 67, 64, 32),
-        ("scheduling_integrity", True, 81, 53, 32),
+        ("venues_integrity", True, 51, 58, 33),
+        ("programme_integrity", True, 101, 71, 35),
+        ("scheduling_integrity", True, 106, 54, 33),
     ]
     for contract in CONTRACTS:
         relations = set(integrity.bounded_context_relation_names(contract.app_label))
@@ -230,6 +230,7 @@ def test_applications_readiness_imports_only_public_core_integrity_seams() -> No
         "DatabaseIntegrityContract",
         "build_database_integrity_contract",
         "database_integrity_contract_is_ready",
+        "extend_database_integrity_contract",
         "parse_database_integrity_sql_contracts",
     }
     assert all(not name.startswith("_") for name in direct_imports)

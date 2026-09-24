@@ -111,14 +111,16 @@ def test_native_boundary_is_source_derived_and_complete_not_authorization_wide()
         ("authorization", "0035_programme_role_approval_audit"),
         ("authorization", "0036_programme_room_operations_recipe"),
         ("authorization", "0038_programme_archive_recipe"),
+        ("authorization", "0040_programme_stop_boundary"),
     }
-    assert len(CONTRACT.triggers) == 4
+    assert len(CONTRACT.triggers) == 6
     assert set(CONTRACT.functions) == {
         "maru_programme_role_recipe(text, integer)",
         "maru_programme_role_scope_current(uuid, uuid, uuid, uuid)",
         "maru_programme_role_request_guard()",
         "maru_programme_role_decision_guard()",
         "maru_programme_role_refuse_truncate()",
+        "maru_authorization_programme_stop_guard()",
     }
     assert not CONTRACT.runtime_executable_functions
     assert all(

@@ -140,6 +140,9 @@ def prepare_rooms(setup, items, catalog_person, planner):
             kind="venue",
             legal_name="Fictional rehearsal property",
             public_name="Fictional convention venue",
+            location_name="Fictional rehearsal town",
+            postal_address="1 Fictional Rehearsal Road",
+            country_code="HU",
         ),
     )
     _venue_command(

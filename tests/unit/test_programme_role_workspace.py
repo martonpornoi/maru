@@ -150,6 +150,29 @@ def decision_data(action="approve"):
     }
 
 
+def test_stopped_detail_has_history_but_no_operational_controls_or_links(page):
+    page.loader.return_value = replace(page.workspace, is_historical=True)
+    response = call(page)
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.content, "html.parser")
+    assert "Programme has stopped" in soup.get_text()
+    assert "Synthetic recipient" in soup.get_text()
+    assert not soup.select("form[data-programme-command]")
+    assert not soup.find("a", string="Prepare a new access request in this exact scope")
+    assert not soup.find("a", string="Back to my open requests in this scope")
+    page.command.assert_not_called()
+    assert page.loader.call_count == 2
+
+
+def test_post_to_stopped_detail_cannot_attempt_a_fresh_or_replayed_decision(page):
+    page.loader.return_value = replace(page.workspace, is_historical=True)
+    response = call(page, decision_data())
+    assert response.status_code == 409
+    assert b"read-only history" in response.content
+    assert b"Synthetic recipient" not in response.content
+    page.command.assert_not_called()
+
+
 def test_detail_shows_scope_consequences_and_independent_own_decision(page):
     response = call(page)
     assert response.status_code == 200

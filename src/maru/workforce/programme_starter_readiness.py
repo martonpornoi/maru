@@ -13,6 +13,7 @@ from django.db import DatabaseError
 from maru.core.database_integrity_readiness import (
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
 )
 from maru.core.relation_schema_readiness import relation_schema_is_current
 
@@ -71,6 +72,21 @@ PROGRAMME_STARTER_INTEGRITY_CONTRACT = replace(
         ("scheduling", "0022_change_notice_integrity"),
     ),
     owned_relations=PROGRAMME_STARTER_RELATIONS,
+)
+_WITH_STOP = extend_database_integrity_contract(
+    PROGRAMME_STARTER_INTEGRITY_CONTRACT,
+    migration_module="maru.workforce.migrations.0030_programme_stop_boundary",
+    source_sha256="941e61a22e56dab7129df2a5ef35445752d93f92e2a5814f73489af778d46eb5",
+)
+PROGRAMME_STARTER_INTEGRITY_CONTRACT = replace(
+    _WITH_STOP,
+    # This existing purpose-bounded probe owns only starter request/decision.
+    # Events' preparation contract independently verifies the other attachments.
+    triggers={
+        name: trigger
+        for name, trigger in _WITH_STOP.triggers.items()
+        if trigger.table in PROGRAMME_STARTER_RELATIONS
+    },
 )
 # Observed from empty PostgreSQL 17.11 schema only; not workflow acceptance.
 PROGRAMME_STARTER_SCHEMA_SHA256: Final[dict[str, str]] = {

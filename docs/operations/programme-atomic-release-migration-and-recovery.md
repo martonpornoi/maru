@@ -48,6 +48,24 @@ permission to normalize away physical drift or recalculate a deployed pin.
 
 ## Reverse only while genuinely unused
 
+The Programme exit extension keeps this whole-generation contract. Events 0017
+fences the joined Events 0016 owner graph on retained native Audit witnesses or
+Scheduling dependency keys before any exit/stop successor reverses. Empty reversal
+is still permitted; exact stop readiness remains false until the required fence
+is reapplied. Do not reverse individual newer guards and then interpret a later
+predecessor refusal as unchanged recovery. Use the complete graph, preserve used
+evidence, and fix forward. The archive also retains its independent native fence.
+See the [recovery-fence evidence](../checkpoints/2026-09-21-programme-exit-recovery-fence.md).
+
+Events 0018 extends this preflight to the other frozen retained Programme boundaries,
+including grants that were subsequently revoked, role meanings, setup/approval/starter
+intent, notices, archive custody and domain history. It invokes original owner
+preflights before any successor reverses, retaining their locks and refusal behavior.
+Both new source pins are required for stop readiness. Run recovery in offline
+maintenance with application writers stopped; never weaken a refusal by deleting
+retained evidence, removing recorder entries or bypassing the whole graph. Unused
+reversal remains a tested recovery path, not a production uninstall workflow.
+
 Authorization 0030 adds the five operator-purpose read capabilities under
 [ADR 0099](../architecture/decisions/0099-purpose-scoped-programme-operator-outputs.md).
 It replaces the exact native capability-scope function without changing its
@@ -129,13 +147,45 @@ and pointer version. In a separately identified same-image disposable environmen
    then stop only the exact ID/label-verified disposable clone. Preserve minimized
    evidence of both successful and failed stages.
 
-Logical `pg_dump`/`pg_restore` currently fails exact schema readiness even on
-the same image: PostgreSQL reparses some array cast CHECK expressions into
-equivalent but differently rendered catalog definitions. Native functions,
-triggers, ACLs and recorders passed the focused diagnostic; schema fingerprints
-did not. [#97](https://github.com/martonpornoi/maru/issues/97) owns resolving
-that mismatch with negative weakened-constraint tests before activation or the
-director pilot. Do not waive readiness or accept arbitrary restored hashes.
+Logical `pg_dump`/`pg_restore` previously failed exact schema readiness even on
+the same image: PostgreSQL reparses some enum array casts into equivalent but
+differently rendered catalog definitions. [ADR 0113](../architecture/decisions/0113-logical-restore-enum-cast-canonicalization.md)
+recognizes only the documented literal enum-cast equivalence in CHECK,
+exclusion and index definitions. Reviewed hashes, physical column positions,
+native functions, ACLs and recorders remain unchanged. Authorization's conditional
+receipt triggers use the same exact enum rule. [ADR 0114](../architecture/decisions/0114-restore-stable-identity-trigger-predicates.md)
+separately pins the two Identity conditional triggers' complete reviewed deparsed
+definitions instead of internal cast-format metadata; the trigger predicates and
+independent attachment checks remain exact. The focused
+schema, populated component and genuine restored-runtime checks pass. The
+[pinned populated run](../checkpoints/2026-09-20-programme-pinned-logical-recovery.md)
+also rejects an actual backup missing nonempty release-journal data before
+restored worker admission. Exact-head protected acceptance remains tracked in
+[#97](https://github.com/martonpornoi/maru/issues/97). Do not
+waive readiness or accept arbitrary restored hashes.
+
+The maintained isolated Programme rehearsal additionally attempts a complete
+custom-format `pg_dump` and `pg_restore --exit-on-error` into a new UUID-named
+database in its exact ID/nonce-verified disposable container. It retains owner
+and ACL restoration, recreates the explicit database-level runtime CONNECT-only
+contract, and does not disable triggers or use data-only restoration. This is a
+same-image logical recovery check, not cluster-role backup, production PITR or
+a provider restore guarantee.
+
+Before permitting restored commands, compare all copied public-table counts
+and fingerprints, run the real worker and candidate-runtime readiness checks,
+and validate the current authorized manifest and immutable artifact. Exercise a
+new copy withdrawal and its exact retry, inspect the single journal consequence,
+and confirm the checked manifest withholds selections. Verify the original
+database remains unchanged. Delete only the newly created restore database;
+never force-drop sessions, replace the source, or extend the original rehearsal
+lease to make a failed restore pass. Preserve failures as failures alongside the
+[recovery checkpoint](../checkpoints/2026-09-20-programme-logical-schema-recovery.md).
+The [native recovery checkpoint](../checkpoints/2026-09-20-programme-logical-native-catalog-recovery.md)
+records the actual restored worker, changed-authority refusal and reversible
+clone-only unsafe-ACL/function negatives. Invalidation retains the pointer to
+the original immutable release but withholds selections; only explicit release
+withdrawal/replacement changes that pointer.
 
 ## Resume owner behavior and checked reads
 
@@ -153,8 +203,9 @@ It proves only identity/version and never authorizes serving artifact content.
 Reasoned withdrawal retains history, advances the pointer and does not restore a
 predecessor. Do not use retained approval/history pages as an unsafe-content
 fallback. No database migration, runtime privilege grant or schema-only exception
-is needed for these HTTP/discovery additions. PostgreSQL and recovery acceptance
-remain deferred gates, not replaced by synthetic browser or unit evidence.
+is needed for these HTTP/discovery additions. PostgreSQL checks are restored;
+recovery acceptance remains a distinct gate, not replaced by browser or unit
+evidence.
 
 Recheck the exact current pointer through the audited release-manifest query.
 Missing artifacts, malformed bytes, incomplete dependency ranges, wrong scope

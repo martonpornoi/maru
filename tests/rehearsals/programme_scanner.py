@@ -8,7 +8,7 @@ import re
 import secrets
 import socket
 import time
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
@@ -18,6 +18,8 @@ from tests.rehearsals.programme_https import remaining_lease
 from tests.rehearsals.programme_runtime_environment import (
     require_programme_rehearsal_request,
 )
+from tests.rehearsals.programme_scanner_signatures import refreshed_signatures
+from tests.rehearsals.programme_scanner_transport import scanner_loopback_transport
 
 # Official image metadata resolved 2026-09-18; no mutable tag is launched.
 # Preloaded definitions avoid a full FreshClam download on every short fixture.
@@ -127,25 +129,16 @@ def _owned_container(value, *, name, request, owner, identifier=None):
     return value["id"]
 
 
-def _port(value):
+def _require_unpublished(value):
     ports = value.get("ports")
-    if not isinstance(ports, dict) or set(ports) - {"3310/tcp", "7357/tcp"}:
-        raise ProgrammeScannerError("scanner_port_scope_changed")
-    # The upstream image declares milter, but it is never launched or published.
-    if ports.get("7357/tcp") is not None:
-        raise ProgrammeScannerError("scanner_port_scope_changed")
-    binding = ports.get("3310/tcp")
     if (
-        not isinstance(binding, list)
-        or len(binding) != 1
-        or not isinstance(binding[0], dict)
-        or binding[0].get("HostIp") != "127.0.0.1"
-        or not isinstance(binding[0].get("HostPort"), str)
-        or re.fullmatch(r"[1-9][0-9]{3,4}", binding[0]["HostPort"]) is None
-        or not 1024 <= int(binding[0]["HostPort"]) <= 65535
+        not isinstance(ports, dict)
+        or "3310/tcp" not in ports
+        or set(ports) - {"3310/tcp", "7357/tcp"}
     ):
         raise ProgrammeScannerError("scanner_port_scope_changed")
-    return int(binding[0]["HostPort"])
+    if any(binding not in (None, []) for binding in ports.values()):
+        raise ProgrammeScannerError("scanner_port_scope_changed")
 
 
 def _reply(port, command, *, deadline):
@@ -168,7 +161,7 @@ def _reply(port, command, *, deadline):
             remaining_lease(expires)
     except OSError:
         raise ProgrammeScannerError("scanner_health_unavailable") from None
-    if len(result) > 1024:
+    if not result or len(result) > 1024:
         raise ProgrammeScannerError("scanner_health_unavailable")
     return bytes(result)
 
@@ -281,7 +274,7 @@ def isolated_programme_scanner(*, deadline):
     if docker.inspect(name) is not None or _network(docker, network_name) is not None:
         raise ProgrammeScannerError("scanner_resource_already_exists")
     owner = secrets.token_hex(16)
-    container_id = network_id = None
+    container_id, network_id, sources = None, None, ExitStack()
     try:
         created = docker.call(
             "network",
@@ -311,6 +304,23 @@ def isolated_programme_scanner(*, deadline):
         if seconds < 1:
             raise ProgrammeScannerError("scanner_startup_expired")
         expires_epoch = int(time.time() + remaining_lease(deadline))
+        signatures = sources.enter_context(
+            refreshed_signatures(
+                docker,
+                image=SCANNER_IMAGE,
+                run_id=request.run_id,
+                owner=owner,
+                deadline=deadline,
+            )
+        )
+        signature_mount = (
+            (
+                "--mount",
+                f"type=volume,source={signatures},target=/var/lib/clamav,readonly,volume-nocopy",
+            )
+            if signatures is not None
+            else ()
+        )
         created = docker.call(
             "run",
             "--pull",
@@ -325,8 +335,6 @@ def isolated_programme_scanner(*, deadline):
             f"{_OWNER}={owner}",
             "--network",
             network_id,
-            "--publish",
-            "127.0.0.1::3310",
             "--read-only",
             "--user",
             "clamav",
@@ -355,6 +363,7 @@ def isolated_programme_scanner(*, deadline):
             f"MARU_SCANNER_EXPIRES_EPOCH={expires_epoch}",
             "--entrypoint",
             "sh",
+            *signature_mount,
             SCANNER_IMAGE,
             "-c",
             _LEASE_COMMAND,
@@ -367,7 +376,7 @@ def isolated_programme_scanner(*, deadline):
         _owned_container(
             value, name=name, request=request, owner=owner, identifier=container_id
         )
-        port = _port(value)
+        _require_unpublished(value)
         _owned_network(
             _network(docker, network_name),
             name=network_name,
@@ -376,26 +385,32 @@ def isolated_programme_scanner(*, deadline):
             identifier=network_id,
             containers=(container_id,),
         )
-        engine_version, signature_version, signatures_at = _ready(
-            port, deadline=deadline
-        )
-        yield ProgrammeScannerLease(
-            request.run_id,
-            container_id,
-            network_id,
-            owner,
-            port,
-            engine_version,
-            signature_version,
-            signatures_at,
-        )
+        with scanner_loopback_transport(
+            docker, container_id, deadline=deadline
+        ) as port:
+            engine_version, signature_version, signatures_at = _ready(
+                port, deadline=deadline
+            )
+            yield ProgrammeScannerLease(
+                request.run_id,
+                container_id,
+                network_id,
+                owner,
+                port,
+                engine_version,
+                signature_version,
+                signatures_at,
+            )
     finally:
-        _cleanup(
-            docker,
-            name=name,
-            network_name=network_name,
-            request=request,
-            owner=owner,
-            container_id=container_id,
-            network_id=network_id,
-        )
+        try:
+            _cleanup(
+                docker,
+                name=name,
+                network_name=network_name,
+                request=request,
+                owner=owner,
+                container_id=container_id,
+                network_id=network_id,
+            )
+        finally:
+            sources.close()

@@ -27,7 +27,6 @@ from maru.authorization.models import (
 from maru.authorization.provenance import (
     AuthorityIssuanceCurrentCheck,
     ControlHorizonMode,
-    authority_issuance_is_current,
     authority_issuances_are_current,
 )
 from maru.events.adoption import (
@@ -971,16 +970,23 @@ def _exact_issuance_allows(
         issuance_ordinal = authority.authority_issuance.ordinal
     except ObjectDoesNotExist:
         return False
-    return authority_issuance_is_current(
-        issuance_ordinal=issuance_ordinal,
-        principal_id=principal.id,
-        capability_code=capability_code,
-        target=resource,
-        requested_effective_from=evaluation_time,
-        requested_expires_at=None,
+    # This is a fresh non-locking policy observation, not a writer's control
+    # source or horizon proof. Keep every decision and exact ordinal independent
+    # while avoiding recursive ORM round trips (ADR 0112).
+    return authority_issuances_are_current(
+        checks=(
+            AuthorityIssuanceCurrentCheck(
+                issuance_ordinal=issuance_ordinal,
+                principal_id=principal.id,
+                capability_code=capability_code,
+                target=resource,
+                requested_effective_from=evaluation_time,
+                requested_expires_at=None,
+                horizon_mode=ControlHorizonMode.POINT_IN_TIME,
+            ),
+        ),
         evaluated_at=evaluation_time,
-        horizon_mode=ControlHorizonMode.POINT_IN_TIME,
-    )
+    )[0]
 
 
 def _purpose_bounded_role_matches_target(

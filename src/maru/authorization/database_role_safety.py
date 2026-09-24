@@ -105,6 +105,7 @@ RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4: Final[tuple[str, ...]] = (
 RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.django_migrations",
     "public.events_programmeadoptionsetupreceipt",
+    "public.events_programmestopreceipt",
     "public.authorization_programmerolerequest",
     "public.authorization_programmeroledecisionrecord",
     "public.authorization_authorityprovenanceactivation",
@@ -112,6 +113,9 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.identity_platforminvitationretentionpolicycontrol",
     "public.audit_auditnativemutationwitness",
     "public.programme_programmepublicrenditionwithdrawal",
+    "public.programme_programmearchivetask",
+    "public.programme_programmearchivetaskevent",
+    "public.programme_programmearchivechunk",
     "public.applications_programmecall",
     "public.applications_programmecalltrack",
     "public.applications_programmecallformat",

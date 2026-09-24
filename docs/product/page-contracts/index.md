@@ -19,6 +19,7 @@ contract for the surface being changed, and compare its status with the
 
 ## Contracts by purpose
 
+- [Programme exit archive](programme-exit-archive.md)
 - [Platform administration home](01-platform-administration-home.md)
 - [Create organization](02-create-organization.md)
 - [Organization record](03-organization-record.md)
@@ -105,4 +106,6 @@ programme-reviewer-work
 programme-moderation
 programme-decision-composition
 programme-accepted-conversion
+programme-exit-archive
+programme-stop-use
 ```

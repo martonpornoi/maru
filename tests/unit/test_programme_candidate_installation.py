@@ -22,7 +22,7 @@ from tests.rehearsals.programme_runtime_environment import (
 
 RUN = "1234567890abcdef1234567890abcdef"
 OVERLAY = "tests.rehearsals.programme_event_migrations"
-LEAF = ("events", "0015_isolated_programme_candidate")
+LEAF = ("events", "0019_isolated_programme_candidate")
 
 
 def _serialized_model(state):
@@ -84,7 +84,7 @@ def test_overlay_preserves_entire_real_graph_and_changes_only_candidate_state(se
 
 def test_forward_and_reverse_fences_run_before_schema_changes():
     migration = importlib.import_module(
-        f"{OVERLAY}.0015_isolated_programme_candidate"
+        f"{OVERLAY}.0019_isolated_programme_candidate"
     ).Migration
     assert migration.atomic is True
     assert migration.operations[0].code is schema.require_empty_current_schema

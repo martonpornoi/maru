@@ -17,8 +17,10 @@ from maru.core.database_integrity_readiness import (
     DatabaseIntegrityContract,
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
     parse_database_integrity_sql_contracts,
 )
+from maru.core.postgresql_schema_canonicalization import schema_definition_sha256
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -251,7 +253,7 @@ _CONVERSION_TRIGGERS, _CONVERSION_FUNCTIONS = parse_database_integrity_sql_contr
 _FILE_TRIGGERS, _FILE_FUNCTIONS = parse_database_integrity_sql_contracts(
     _FILE_MIGRATION.FORWARD_SQL
 )
-APPLICATIONS_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
+_OWNED_INTEGRITY_CONTRACT = replace(
     _REVIEW_INTEGRITY_CONTRACT,
     source_migration=("applications", "0020_programme_file_integrity"),
     source_migration_module=(
@@ -280,6 +282,15 @@ APPLICATIONS_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = replace(
         and _conversion_migration_contract_is_current()
         and _file_migration_contract_is_current()
     ),
+)
+
+
+APPLICATIONS_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
+    extend_database_integrity_contract(
+        _OWNED_INTEGRITY_CONTRACT,
+        migration_module="maru.applications.migrations.0023_programme_stop_boundary",
+        source_sha256="75a144aa28cde54510e643f825ca52680841883b25ce631c6922f1fa746e54f8",
+    )
 )
 
 
@@ -540,8 +551,8 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # deliberately keeps Applications readiness blocked.
 APPLICATIONS_SCHEMA_CATALOG_SHA256: Final[Mapping[str, tuple[int, str]]] = {
     "constraint:": (
-        474,
-        "9e65c723d031f87274dc574bb0eb5cee1aeb8741dce5f18d23873ef3c5f82b76",
+        483,
+        "08dca73ea2ee54a1c245b4947df32df14304dfedb59e13bed861004731f96b85",
     ),
     "index:": (
         324,
@@ -640,18 +651,7 @@ def _schema_definition_rows(
                constraint_record.confupdtype::text,
                constraint_record.confdeltype::text,
                constraint_record.confmatchtype::text,
-               pg_catalog.encode(
-                   pg_catalog.sha256(
-                       pg_catalog.convert_to(
-                           pg_catalog.pg_get_constraintdef(
-                               constraint_record.oid,
-                               TRUE
-                           ),
-                           'UTF8'
-                       )
-                   ),
-                   'hex'
-               )
+               pg_catalog.pg_get_constraintdef(constraint_record.oid, TRUE)
           FROM pg_catalog.pg_constraint AS constraint_record
           JOIN pg_catalog.pg_class AS relation
             ON relation.oid = constraint_record.conrelid
@@ -675,7 +675,10 @@ def _schema_definition_rows(
             str(row[7]),
             str(row[8]),
         )
-        rows[key] = (_metadata_sha256(constraint_metadata), str(row[9]))
+        rows[key] = (
+            _metadata_sha256(constraint_metadata),
+            schema_definition_sha256(str(row[9]), pretty=True),
+        )
 
     cursor.execute(
         """
@@ -694,15 +697,7 @@ def _schema_definition_rows(
                index_record.indpred IS NOT NULL,
                index_record.indnkeyatts,
                index_record.indnatts,
-               pg_catalog.encode(
-                   pg_catalog.sha256(
-                       pg_catalog.convert_to(
-                           pg_catalog.pg_get_indexdef(index_record.indexrelid),
-                           'UTF8'
-                       )
-                   ),
-                   'hex'
-               )
+               pg_catalog.pg_get_indexdef(index_record.indexrelid)
           FROM pg_catalog.pg_index AS index_record
           JOIN pg_catalog.pg_class AS index_relation
             ON index_relation.oid = index_record.indexrelid
@@ -739,7 +734,10 @@ def _schema_definition_rows(
             int(row[13]),
             int(row[14]),
         )
-        rows[key] = (_metadata_sha256(index_metadata), str(row[15]))
+        rows[key] = (
+            _metadata_sha256(index_metadata),
+            schema_definition_sha256(str(row[15])),
+        )
     return rows
 
 

@@ -1,0 +1,48 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}Stop Programme · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'programme/workbench.css' %}">{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">Administration / Stop Programme</div>{% endblock %}
+{% block content %}
+<div class="programme-workbench">
+  <h1>Stop Programme</h1>
+  <details class="maru-access-summary"><summary><strong>Access</strong> · Accountable controller</summary>
+    <p>Organization {{ scope.organization_id }} · Edition {{ scope.edition_id }}</p>
+    <p>Current ordinary role-controller authority and independent Events transition permission are required. This view grants no private proposal, review, file, calendar or export access.</p>
+  </details>
+  <section aria-labelledby="stop-consequence"><h2 id="stop-consequence">What stopping means</h2>
+    <p>This archives this Programme adoption. It does not cancel the convention or shut down Maru. An active timetable must first be withdrawn through your independent Scheduling authority.</p>
+    <p>Source records, approval evidence and accountable history remain. Shifts and physical commitments are not completed, cancelled or erased. Shared roles, other editions and platform accounts remain available for their independently authorized purposes. No external notice is sent.</p>
+    <p>Retained edition rights do not reopen operational writes. Already downloaded files cannot be recalled; disconnected copies are historical and retain their original expiry. Online known-stop verification prevents operational use.</p>
+    <p>Stop is terminal in ordinary operation. Recovery requires governed fix-forward or a consistent supported restore, not a profile toggle. Archive retrieval remains independently authorized and source-checked.</p>
+  </section>
+  {% if receipt or stopped %}
+  <section aria-labelledby="stop-result"><h2 id="stop-result">Programme is stopped</h2>
+    <p>This is retained, read-only context. There is no reopen or ordinary planning action here.</p>
+    {% if receipt %}<dl><dt>Your receipt</dt><dd>{{ receipt.receipt_id }}</dd><dt>Your recorded reason</dt><dd>{{ receipt.reason }}</dd><dt>Terminal edition version</dt><dd>{{ receipt.aggregate_version }}</dd><dt>Terminal lifecycle version</dt><dd>{{ receipt.lifecycle_version }}</dd><dt>Release withdrawn by this stop</dt><dd>{{ receipt.release_withdrawn|yesno:"Yes,No active release required withdrawal" }}</dd></dl>{% endif %}
+  </section>
+  {% else %}
+    {% if preview %}
+    <section aria-labelledby="stop-preview"><h2 id="stop-preview">Complete impact preview</h2>
+      <p>Current state: {{ preview.lifecycle }}. Edition version {{ preview.aggregate_version }}; lifecycle version {{ preview.lifecycle_version }}.</p>
+      <p>Stored active release: {{ preview.scheduling.active_release_id|default:"None" }}. Pointer version {{ preview.scheduling.pointer_version }}. Withdrawal permission: {{ preview.scheduling.withdrawal_authorized|yesno:"Available,Not available or not required" }}.</p>
+      <h3>Authority retained</h3>
+      <p>Pending requests: {{ preview.authority.pending_requests }}. Expired requests: {{ preview.authority.expired_requests }}. Decided requests: {{ preview.authority.decided_requests }}.</p>
+      <p>Historical assignments retain only independently authorized history and privacy purposes; shared assignments serve other adopted work. Already inactive or separately revoked rights are not new revocations performed by stop.</p>
+      {% for assignment in preview.authority.assignments %}<details><summary>{{ assignment.kind }} {{ assignment.id }} — {{ assignment.disposition }}</summary><p>Scope {{ assignment.scope_level }} · Department {{ assignment.department_id|default:"None" }} · Resource {{ assignment.resource_binding_id|default:"None" }}</p></details>{% empty %}<p>No affected authority outputs.</p>{% endfor %}
+      <h3>Retained Scheduling records</h3>
+      {% for collection in preview.scheduling.inventory.collections %}<p>{{ collection.code }}: {{ collection.total }}{% for state, count in collection.states %}; {{ state }} {{ count }}{% endfor %}</p>{% endfor %}
+      {% for inventory in preview.inventories %}<details><summary>{{ inventory.owner }} — complete retained inventory</summary>{% for collection in inventory.collections %}<p>{{ collection.code }}: {{ collection.total }}{% for state, count in collection.states %}; {{ state }} {{ count }}{% endfor %}</p>{% endfor %}</details>{% endfor %}
+    </section>
+    {% endif %}
+    {% if submitted %}<p role="alert" tabindex="-1">No result has been confirmed by this response. Original input and retry identity remain below; no newer preview was silently substituted.</p>{% endif %}
+    {% if form %}<section aria-labelledby="stop-confirm"><h2 id="stop-confirm">Confirm this exact preview</h2>
+      <form method="post" action="{{ root_url }}">{% csrf_token %}{{ form.as_p }}<button type="submit">Stop Programme and retain history</button></form>
+    </section>{% else %}<p role="alert">An active timetable needs current withdrawal authority before this stop can be confirmed. Ask an independently authorized controller to arrange the required permission, then reload the preview.</p>{% endif %}
+    <p><a href="{{ root_url }}">Deliberately reload and review a new preview</a>. This discards the displayed confirmation identity; keep the original form for an uncertain-result retry.</p>
+  {% endif %}
+</div>
+{% endblock %}

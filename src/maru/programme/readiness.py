@@ -17,10 +17,13 @@ from maru.core.database_integrity_readiness import (
     DatabaseIntegrityContract,
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
     parse_database_integrity_sql_contracts,
 )
+from maru.core.postgresql_schema_canonicalization import schema_definition_sha256
 from maru.scheduling.release_integrity import with_native_release_integrity
 
+from .archive_integrity import ARCHIVE_SCHEMA_OBJECT_SHA256, with_archive_integrity
 from .catalogs import (
     ProgrammeReadinessDisposition,
     ProgrammeReadinessEvidenceState,
@@ -233,7 +236,7 @@ def _placement_decision_migration_contract_is_current() -> bool:
 _DECISION_TRIGGERS, _DECISION_FUNCTIONS = parse_database_integrity_sql_contracts(
     _PLACEMENT_DECISION_MIGRATION.FORWARD_SQL
 )
-PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
+_ARCHIVE_INTEGRITY_CONTRACT = with_archive_integrity(
     with_native_release_integrity(
         replace(
             _STAFFING_INTEGRITY_CONTRACT,
@@ -247,6 +250,15 @@ PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
                 and _placement_decision_migration_contract_is_current()
             ),
         )
+    )
+)
+
+
+PROGRAMME_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
+    extend_database_integrity_contract(
+        _ARCHIVE_INTEGRITY_CONTRACT,
+        migration_module="maru.programme.migrations.0022_programme_stop_boundary",
+        source_sha256="3165ab6aa857a62ae26c388a8bd4988bffecbf4c37d816efc6b3065f8dc95699",
     )
 )
 
@@ -295,6 +307,9 @@ class ProgrammeSchemaCatalog:
 PROGRAMME_RELATION_SEMANTICS: Final[
     Mapping[str, tuple[str, str, bool, bool, bool, str]]
 ] = {
+    "programme_programmearchivetask": ("r", "p", False, False, False, "d"),
+    "programme_programmearchivetaskevent": ("r", "p", False, False, False, "d"),
+    "programme_programmearchivechunk": ("r", "p", False, False, False, "d"),
     "programme_programmecommandreceipt": ("r", "p", False, False, False, "d"),
     "programme_programmedeliveryrevision": ("r", "p", False, False, False, "d"),
     "programme_programmedepartmentdiscussionentry": (
@@ -378,6 +393,38 @@ _DEFAULT_COLLATION_IDENTITY: Final = (
 # digest from pg_get_constraintdef(..., TRUE) or pg_get_indexdef(...).
 # An incomplete mapping deliberately keeps Programme readiness blocked.
 PROGRAMME_SCHEMA_OBJECT_SHA256: Final[Mapping[str, tuple[str, str]]] = {
+    **ARCHIVE_SCHEMA_OBJECT_SHA256,
+    "constraint:programme_programmeitem:programme_stop_privacy_0": (
+        "bbf4b5d78de32a5afa6224d1fea8895c94b2909eede6b94d130b8c00f6fef2af",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmereadinessrequirement:programme_stop_privacy_1": (
+        "301b9f40ca0e5b9f6ed37e35fe2af83452a3bc7239f7709e3e9db27c217ba524",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmehostrelationship:programme_stop_privacy_2": (
+        "12353d0a4126841d3e07646775e366388047d52fad93b5306499b5ac3dba214a",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmehostrevision:programme_stop_privacy_3": (
+        "c2139125470af915e90ffc4cfe882a0f32c89e804ea8896ed022eb80404df4a6",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmehostavailabilitywindow:programme_stop_privacy_4": (
+        "722a47fd5e87cb6a8cdcc524277ad118fee3b001eba1ec009c43a88850f5d302",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    (
+        "constraint:programme_programmepublicrenditionwithdrawal:"
+        "programme_stop_privacy_5"
+    ): (
+        "a377d91f512a8e45e947d1c03bd946f33841ae8cac6c3cce13e0289ccfd4cd54",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
+    "constraint:programme_programmecommandreceipt:programme_stop_privacy_6": (
+        "10b2a0b352900ef0fca94ea78e2276c8609a569a7ca425b31f6823ff65c3c2c1",
+        "698fc09045e7267eeb19c5b09473ec8c40f237145be8c1cbd97b9dde2451ddc1",
+    ),
     (
         "constraint:"
         "programme_programmepublicrenditionwithdrawal:"
@@ -2974,18 +3021,7 @@ def _schema_definition_rows(
                constraint_record.confupdtype::text,
                constraint_record.confdeltype::text,
                constraint_record.confmatchtype::text,
-               pg_catalog.encode(
-                   pg_catalog.sha256(
-                       pg_catalog.convert_to(
-                           pg_catalog.pg_get_constraintdef(
-                               constraint_record.oid,
-                               TRUE
-                           ),
-                           'UTF8'
-                       )
-                   ),
-                   'hex'
-               )
+               pg_catalog.pg_get_constraintdef(constraint_record.oid, TRUE)
           FROM pg_catalog.pg_constraint AS constraint_record
           JOIN pg_catalog.pg_class AS relation
             ON relation.oid = constraint_record.conrelid
@@ -3009,7 +3045,10 @@ def _schema_definition_rows(
             str(row[7]),
             str(row[8]),
         )
-        rows[key] = (_metadata_sha256(constraint_metadata), str(row[9]))
+        rows[key] = (
+            _metadata_sha256(constraint_metadata),
+            schema_definition_sha256(str(row[9]), pretty=True),
+        )
 
     cursor.execute(
         """
@@ -3028,15 +3067,7 @@ def _schema_definition_rows(
                index_record.indpred IS NOT NULL,
                index_record.indnkeyatts,
                index_record.indnatts,
-               pg_catalog.encode(
-                   pg_catalog.sha256(
-                       pg_catalog.convert_to(
-                           pg_catalog.pg_get_indexdef(index_record.indexrelid),
-                           'UTF8'
-                       )
-                   ),
-                   'hex'
-               )
+               pg_catalog.pg_get_indexdef(index_record.indexrelid)
           FROM pg_catalog.pg_index AS index_record
           JOIN pg_catalog.pg_class AS index_relation
             ON index_relation.oid = index_record.indexrelid
@@ -3073,7 +3104,10 @@ def _schema_definition_rows(
             int(row[13]),
             int(row[14]),
         )
-        rows[key] = (_metadata_sha256(index_metadata), str(row[15]))
+        rows[key] = (
+            _metadata_sha256(index_metadata),
+            schema_definition_sha256(str(row[15])),
+        )
     return rows
 
 

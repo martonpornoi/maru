@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 
 from django.db import connection
 
+from maru.core.postgresql_schema_canonicalization import canonical_schema_definition
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
@@ -114,6 +116,13 @@ def collect_relation_schema_fingerprints(
     for name, metadata in rows:
         # Django may return JSONB as text or decoded objects.
         payload = json.loads(metadata) if isinstance(metadata, str) else metadata
+        # ADR 0113 recognizes only the exact pg_dump enum-cast reparse. Every
+        # other field, including physical column positions, remains unchanged.
+        for constraint in payload["constraints"]:
+            if constraint[1] in {"c", "x"}:
+                constraint[2] = canonical_schema_definition(constraint[2])
+        for index in payload["indexes"]:
+            index[2] = canonical_schema_definition(index[2])
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
         fingerprints[str(name)] = hashlib.sha256(encoded).hexdigest()
     return fingerprints

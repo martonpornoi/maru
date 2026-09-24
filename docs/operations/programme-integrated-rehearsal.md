@@ -1,20 +1,117 @@
 # Programme setup-to-on-site rehearsal
 
+**Audience:** Maintainers, independent Programme evaluators and recovery operators\
+**Outcome:** Reproduce the synthetic journey and collect the separate #109/#92 evidence\
+**Status:** Executed bounded native continuation; complete integrated/human acceptance remains open
+
+For the shorter participant handoff, use the
+[human-acceptance session cards](programme-human-acceptance.md). Maintained status
+is in [CURRENT](../project/CURRENT.md); the preparation sections below also retain
+the earlier component boundaries, not instructions to skip now-required testing.
+
+## Current executable entry and evidence
+
+Use the [P01–P12 evidence map](programme-acceptance-evidence.md) to distinguish
+the recorded automated assertions from remaining human and integrated gates.
+
+The complete populated host-only entrypoint is
+`tests/rehearsals/programme_proposal_native.py`. It starts a new synthetic foundation
+with actual restricted runtime roles, independent synthetic decisions, the real
+scanner, continuity signing and excluded-owner observation. It proceeds through
+all eighteen recorded phases: proposal, review, items/readiness, planning, physical
+approval, staffing, release/change, on-site outputs, delivery-layer isolation,
+continuity, scope and object-mutation isolation, archive, active restore,
+incomplete-backup refusal, stop and stopped-state restore.
+
+Run from a pinned clean checkout in a task-specific PowerShell session with the
+locked repository environment and Docker Desktop available. Do not run alongside
+a full eight-database certification pool. The resource boundary refuses a deferred
+policy and does not adopt an existing database or use production credentials.
+
+```powershell
+$env:CI = 'true'
+$env:MARU_PROGRAMME_REHEARSAL = 'isolated'
+$env:MARU_PROGRAMME_REHEARSAL_RUN_ID = [guid]::NewGuid().ToString('N')
+$env:MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS = '3600'
+$env:MARU_PROGRAMME_SCANNER_REFRESH = 'isolated'
+New-Item -ItemType Directory -Path .tools -Force | Out-Null
+$programmeReport = '.tools/programme-populated-' + [guid]::NewGuid().ToString('N') + '.xml'
+git rev-parse HEAD
+& .venv/Scripts/python.exe -m pytest tests/rehearsals/programme_proposal_native.py -q --junitxml=$programmeReport
+```
+
+The test allocates its own fresh resource nonce; do not infer resource ownership
+from the report filename or the initial environment nonce. Retain the exact source,
+JUnit phase properties and inspected task-owned resource/cleanup evidence. The
+signature-refresh opt-in uses the existing bounded updater and a new owned volume;
+it neither disables freshness checks nor authorizes arbitrary network access.
+
+[Populated run26](../checkpoints/2026-09-21-programme-retained-recovery-verification.md)
+at `ad6192993ff6d9eab6c6117f9081dd2a47713833` passed in 1,058.92s. It includes 49
+real scope/purpose responses, field-limited on-site outputs, all 97 excluded-table
+baselines after each phase, active/stopped logical recovery and owned cleanup.
+Run25's omitted refresh option failed safely and remains a failure. The expanded
+[eighteen-phase run](../checkpoints/2026-09-23-programme-acceptance-recovery.md)
+at `c063f70731b43574c0b7263f7564c8fd24e87a6c` passed in 1,336.35s with all seven
+delivery-field subsets, immediate revocation and actual cross-scope object POSTs.
+Its first attempt failed before journey setup because the new checkout lacked
+`.tools`; create that ignored directory as shown above. Both reports are retained.
+This host-only journey remains separate from ordinary exact-head certification.
+
+This command completes automated synthetic tasks, not a human session. It neither
+proves every possible state/field combination nor supplies genuine browser zoom,
+printing, screen-reader use or operational-owner acceptance. Use the participant
+cards with a suitable fresh state and a trusted browser origin for #92. Keep
+#109/#108/#48 open until their actual criteria and protected delivery are complete.
+
+## Incremental implementation context
+
+The following component notes explain ownership and earlier preparation limits.
+Use the executed checkpoints above for current evidence, not older unexecuted
+component descriptions as a blanket statement about the populated run.
+
 The #175 backend and dormant audited own-person starter screen prepare the fixed
 Volunteer definition. Positions has a separately admitted contextual entry and
 platform setup explains the ordinary-controller handoff. The actual blank-setup/
 P06 owner-command connection is now prepared; no screen/unit result is native acceptance.
 Do not seed a PositionTemplate directly or treat a selected approver as a decision.
-The candidate table inventory grows from 82 to **84**: starter request INSERT/UPDATE
+The starter candidate table inventory grew from 82 to **84**: starter request INSERT/UPDATE
 for canonical row locking, terminal decision INSERT only. Both tables are
 SELECT-only in the canonical production ACL source, whose candidate checksum is
 updated with the exact new revokes. The fourteen helper grants are unchanged.
-Startup additionally requires actual starter native/table readiness. This remains
-preparation; no PostgreSQL test or complete candidate startup is claimed.
+Startup additionally requires actual starter native/table readiness. The archive
+continuation admitted **87** table classes, adding request INSERT/UPDATE, event
+INSERT and chunk INSERT/DELETE only to the isolated candidate. Default runtime
+archive tables stay SELECT-only. A genuine fresh setup-to-empty-owner-archive
+runtime check passed on 2026-09-20 in 270.15s, including requester-only HTTPS
+download and cancellation. This is not the populated P01–P12 acceptance, a browser
+rehearsal or a production activation claim.
 
-**Audience:** Maintainers preparing #108, independent Programme evaluators and recovery operators\
-**Outcome:** Prepare one reproducible journey and collect evidence for #109/#92 without confusing component delivery with acceptance\
-**Status:** Preparation protocol; the complete fixture and setup are not yet implemented or accepted
+Accountable stop adds only INSERT on Events' immutable stop receipt, for **88**
+explicit candidate writable relations. Production keeps that relation SELECT-only.
+Startup now also requires Events 0016's exact terminal/receipt native readiness
+and Events 0017/0018's source-pinned joined native/retained recovery fences.
+The populated runner's final `verify_stop_runtime` phase checks actual missing
+withdrawal denial, independent publisher approval, stale original preview refusal,
+withdrawal/terminal rollback, committed stop and exact reauthorized retry while
+retaining release artifact bytes. Its private child uses bounded stdin, closed
+phase-only failure codes and the original finite lease; no credentials or source
+records are logged. This is command composition, not HTTP/browser stop or stopped-
+state logical restore. The stop screen is mounted only in the isolated URLconf.
+
+The separate opt-in `tests/rehearsals/programme_stop_native.py` now executes real
+HTTPS confirmation, original retry and receipt denial, real two-connection
+stop/draft races in both orders, same-key stop contention, and logical recovery
+of the stopped foundation. It requires `MARU_PROGRAMME_REHEARSAL=isolated`, a fresh
+32-hex `MARU_PROGRAMME_REHEARSAL_RUN_ID` and the bounded
+`MARU_PROGRAMME_REHEARSAL_LEASE_SECONDS=3600`. Run with the repository Python and
+`-m pytest tests/rehearsals/programme_stop_native.py -q`; it is intentionally outside
+routine test discovery. Clones use genuine restricted runtime connections and
+readiness, preserve the source snapshot and dispose only owned resources.
+The successful blank-foundation run took 279.78s. It does not replace the populated
+journey, browser/human acceptance or exact-head certification. The populated runner
+also invokes `verify_stopped_logical_restore` after its actual stop; record that
+extended execution separately rather than inheriting the older populated result.
 
 ## Entry conditions and authority
 
@@ -24,9 +121,9 @@ ADR 0081, NFR-013, IDN-011/012, PRG-001 through PRG-011, SCH-001 through SCH-012
 OPS-009, INT-007 and UX-029 as the owning boundaries. Current status belongs in
 [CURRENT](../project/CURRENT.md), not in a copied readiness percentage.
 
-While ADR 0100 defers PostgreSQL, prepare fixture code, role scripts, assertions
-and documentation, but do not collect or execute database tests. Mocked browser
-observations remain component evidence. A fixture lease ending successfully is
+PostgreSQL acceptance is required again through #102 / PR #195. Historical
+deferral-era preparation notes below are not a current instruction to skip native
+checks. Mocked browser observations remain component evidence. A fixture lease ending successfully is
 cleanup evidence, not a successful journey. Do not enable the production profile,
 add runtime grants, provision production keys or use personal data to make a demo.
 
@@ -34,11 +131,11 @@ Before executing final acceptance:
 
 - pin the candidate commit, dependency locks, supported PostgreSQL image and
   exact isolated candidate profile/role definitions;
-- restore required PostgreSQL verification under #102 and establish #97's
-  supported logical-recovery procedure;
-- provide an explicit opt-in launcher with a dedicated database, loopback URL,
-  bounded lease and verified task-owned cleanup; **no complete integrated launcher
-  exists yet**, so there is no launch command in this protocol;
+- retain required PostgreSQL verification restored under #102 and establish
+  #97's supported logical-recovery procedure;
+- use the maintained explicit opt-in host-only entrypoints with a dedicated
+  database, loopback URL, bounded lease and verified task-owned cleanup; record
+  which P11/P12 contracts were observed rather than inheriting a blanket pass;
 - use real owning commands and permissions for acceptance, not an always-allow
   authorizer, direct status edits, disabled guards or fabricated approval;
 - record synthetic scanner/signing/delivery adapters and their limits separately
@@ -46,8 +143,8 @@ Before executing final acceptance:
 - preserve existing profiles and the unadopted product boundaries throughout.
 
 Existing `tests/rehearsals/programme_*.py` files exercise individual components.
-Some require PostgreSQL and synthetic authority substitutions. They must not be
-launched during deferral or relabelled as the complete fixture.
+Some require PostgreSQL and synthetic authority substitutions. Do not relabel
+those component checks as the genuine restricted-runtime integrated fixture.
 
 ## Prepare the fixture and distinct sessions
 
@@ -76,10 +173,10 @@ also validate catalog completeness, explicit exclusions and import purity. These
 are preparation checks, not requests against a running server, native authority,
 schema installation, genuine-person acceptance or P01–P12 results.
 
-The eventual opt-in fixture must separately establish its disposable database and
+The opt-in fixture must separately establish its disposable database and
 actual approved runtime boundary. A test-only candidate object is neither a launcher
 nor a migration, and does not satisfy P01–P12 by itself. Never launch it under the
-deferred policy; retain explicit not-run status until restored acceptance.
+deferred policy; distinguish unexecuted scenarios from the recorded native runs.
 
 ### Prepared runtime resource boundary
 
@@ -109,10 +206,10 @@ its database child after ten further seconds. These process/expiry semantics
 remain **unexecuted native debt**, not a guarantee inferred from mocked tests.
 
 The returned `postgres` administrator transport is only for isolated provisioning;
-it must never serve application traffic or count as runtime-role proof. Separate
-migration/runtime roles, candidate schema installation, guarded application startup,
-realistic setup/roles and P01–P12 remain unfinished. No complete launch command is
-available. The current deferred policy refuses native resource startup.
+it must never serve application traffic or count as runtime-role proof. The
+populated entrypoint above composes separate migration/runtime roles, candidate
+schema installation, guarded startup and synthetic setup/roles. The tracked
+required policy permits that explicit owned startup; deferred mode still refuses it.
 
 Four maintained host-only cases in `programme_database_native.py` cover real
 database identity/normal cleanup, body-failure cleanup, live-controller expiry and
@@ -167,8 +264,8 @@ available yet.
 `programme_candidate_schema_settings.py` is a non-serving, explicit migration
 child. It inherits the guarded provisioning settings and uses an Events-only
 migration overlay in `programme_event_migrations/`. The overlay discovers every
-unchanged owner migration, then appends `0015_isolated_programme_candidate` after
-the current `0014` leaf. It registers no application profile, so normal owner
+unchanged owner migration, then appends `0019_isolated_programme_candidate` after
+the current `0018` Events leaf. It registers no application profile, so normal owner
 checks still run against the unchanged current profiles; no check is skipped or
 silenced. Production migration files/settings remain unchanged.
 
@@ -241,10 +338,11 @@ candidate migration history and a validated exact physical profile constraint,
 then genuine core health, Programme setup integrity and role integrity. The
 declared PG17 constraint expression is **not an observed fingerprint**: native
 acceptance must confirm it, and any mismatch fails without normalization. The
-maintained candidate provisioning case additionally expects unactivated authority
-to refuse startup. That case and positive startup remain unexecuted #102 debt;
-database-free doubles prove control flow only. Restore the tracked PostgreSQL
-policy through protected delivery after preparation, before any native run.
+maintained candidate provisioning case distinguishes schema-only helper-permission
+refusal from the later inactive-authority refusal reached with candidate writes.
+Both must remain unready. Native evidence and any remaining limits are recorded
+in the current checkpoints; database-free doubles prove control flow only.
+PostgreSQL policy is required, restored through PR #195.
 
 ### Prepared candidate runtime privileges
 
@@ -282,6 +380,12 @@ Issue #180 also declares fourteen literal helper signatures, with independent
 source digests and full native metadata. Thirteen SECURITY INVOKER helpers validate
 review stages, exact role definitions/scopes, conflict evidence, release dependency
 membership, independent approval, artifacts, personal obligations and change notices.
+The continued native journey adds UPDATE only for the existing retained
+`programme_programmepublicrendition` candidate table: the already-allowlisted
+release source helper needs it for `SELECT FOR UPDATE`. Native history remains
+immutable and DELETE remains denied. The later stop addition brings the exact
+relation inventory to 88. The fourteen additional helper signatures remain
+unchanged; production grants are not widened.
 The sole additional SECURITY DEFINER helper is the existing
 `maru_workforce_page9_try_scope_mutex(bigint)`: its entire pinned body only attempts
 a transaction-scoped advisory lock and raises SQLSTATE 40001 on contention. It
@@ -441,13 +545,35 @@ logical recovery #97, integrated #109 and representative humans #92 remain requi
 
 The optional `with_scanner=True` runner preparation supplies the real dependency
 required by P02/ADR 0104. It uses a cached immutable official ClamAV 1.5.4 image,
-an owned internal bridge, loopback publication and an independently expiring,
+an owned internal bridge, closed host-loopback relay and an independently expiring,
 non-root/read-only resource-bounded daemon. There is no test-clean implementation,
-external endpoint, persistent host data or automatic image/signature download.
+external endpoint, application-data mount or automatic image/signature download.
 Actual bounded PING/VERSION evidence requires the pinned engine and signatures no
 older than seven days; every PDF still passes through the unchanged owner scanner.
 An old pin must be deliberately refreshed and verified, not accepted through a
-stale-signature exception. Budget 4 GiB for the daemon plus the database/application.
+stale-signature exception. The image remains immutable; when its bundled signatures
+are stale, explicitly set `MARU_PROGRAMME_SCANNER_REFRESH=isolated` for an opted-in
+rehearsal. A separate non-root FreshClam updater uses only a new nonce-owned local
+volume containing public signatures from that image, no application bytes or
+credentials, and a maximum 180-second update. It alone has temporary network access
+and exits before scanning. The offline daemon mounts those definitions read-only;
+the unchanged seven-day real VERSION check still decides freshness. Cleanup removes
+the exact updater and volume after the scanner, never prunes or adopts an existing
+volume. Without that explicit flag, stale signatures still refuse startup.
+
+Docker Desktop's internal-only bridge produced no published endpoint during actual
+execution. The daemon therefore publishes no container port and retains its internal
+network. A host listener binds only `127.0.0.1` and permits at most two bounded
+PING/VERSION/INSTREAM exchanges through a fixed Docker exec to the exact owned
+container's local daemon. It limits total data to 10 MiB, wire overhead to 64 KiB,
+replies to 1,024 bytes, and each exchange to 12 seconds. Unsupported control commands
+are never forwarded, private bytes go only on stdin, and backend errors never become
+clean verdicts. The normal Applications preparer retains its own tighter deadline
+and exact response checks. The relay closes before daemon disposal. See
+[Docker network/port semantics](https://docs.docker.com/engine/network/port-publishing/).
+
+Budget 4 GiB for the daemon plus the database/application; the sequential updater
+is capped at 2 GiB and has no retained service or private-data store.
 Normal cleanup verifies exact nonce/IDs and empty network; controller-crash recovery
 may need removal of that exact labelled empty network after auto-expiry, not pruning.
 
@@ -455,8 +581,9 @@ Both fixture transports now require a recognized stable Docker engine version 28
 or newer and pin commands to the inspected local endpoint. This prevents the older
 localhost-publication exposure and a concurrent default-context switch. These
 preconditions change no Docker configuration or unrelated resources. One host-only
-`programme_scanner_native.py` actual daemon/public-preparer case is maintained but
-uncollected/unexecuted. See the
+`programme_scanner_native.py` actual daemon/public-preparer case passed with explicit
+fresh signatures in 15.81s on 2026-09-20. This proves real scanner preparation and
+owned cleanup, not the entire populated Programme journey. See the
 [scanner checkpoint](../checkpoints/2026-09-18-programme-real-scanner-preparation.md)
 for source metadata, limits and unverified native debt.
 
@@ -468,16 +595,19 @@ same original fixture deadline. They require the exact owned setup; proposal
 preparation additionally requires the owned real scanner. Private account material
 uses bounded fixed stdin/stdout protocols, not command arguments, logs, files,
 worker signing keys or public health. Each attributed action authenticates its
-own synthetic person through the actual backend. These paths are prepared, not
-native-executed, and do not replace real HTTPS form/browser acceptance.
+own synthetic person through the actual backend. The populated native run on
+2026-09-20 now passes proposal, review, conversion and item preparation before
+failing in planning. This partial result does not replace complete integrated
+acceptance or real browser observations.
 
 The proposal scenario creates one complete call through the intake persona,
 discovers it through the lead's actual public query, creates typed private answers
 and scans a small valid synthetic PDF through the unchanged Applications upload
 command. It checks original body-free upload receipt replay without rescanning,
 then independently accepts the collaborator invitation, supplies that person's
-profile/consent, seals, reads each person's own frozen profile, acknowledges the
-same exact revision and submits it. Neither contributor becomes an attendee or
+profile/consent, has the lead seal, and reads the collaborator's own frozen
+profile. Only that collaborator acknowledges the exact seal; the lead then
+submits it and inspects the frozen result. Neither contributor becomes an attendee or
 Programme host through this composition.
 
 Review creates six separately authenticated ordinary staff people. Existing
@@ -683,7 +813,13 @@ first-publication rollback/races and P08–P12 remain separate acceptance. See t
 
 `ProgrammeRunningFixture.prepare_change(proposal, review, items, planning, physical,
 staffing, release)` validates all eight original source documents before its fixed
-private child. Genuine startup, original lease and 180-second stage ceiling remain
+private child. Genuine startup and the original lease remain mandatory. The P08
+composite child has a 600-second ceiling for retained-work succession, full
+republication and three independent prepare/review/handoff/acknowledgement flows;
+it never extends the original fixture lease or any individual owner/database limit.
+The populated JUnit report records each preparation phase's elapsed time and
+passed/failed state, including on failure. This host-only fixture ceiling does
+not change CI shard/job budgets. The other existing stage ceilings remain
 mandatory. Original controllers approve nine existing source/notice recipes,
 including a run-sheet role for exactly the first room and its original physical
 reviewer. Both notice decision permissions deliberately exercise self-review denial;
@@ -780,8 +916,9 @@ no-store/nosniff, scope/time-zone and source/expiry warnings. Own shell identity
 permitted; private discussion, passwords and other people's contacts are not. The
 room operator cannot request technical fields or edition scope. Anonymous personal
 access, actor substitution and repeated parameters fail; unavailable signing remains
-explicit in the unsigned P01 variants. This is maintained **unexecuted** native preparation, not a P09 PASS or
-proof of native printing, layout, accessibility, performance or human comprehension.
+explicit in the unsigned P01 variants. This phase was initially unexecuted
+preparation and is now included in the recorded populated run24. Its automated HTTP
+results do not prove native printing, layout, accessibility or human comprehension.
 See the [P09 checkpoint](../checkpoints/2026-09-19-programme-onsite-fixture-preparation.md).
 
 Use repository-owned fictional convention names, synthetic people and reserved
@@ -796,7 +933,7 @@ rewriting immutable history to reuse one world.
 | Platform administrator | Provision foundations; never become a controller, member, host or volunteer. |
 | Two accountable people | Accept their own invitations in separate sessions; reuse truthful existing representation where present. |
 | Programme organizer | Configure a call or core item, readiness and deliberate host invitations. |
-| Proposal lead and collaborator | Independently own profiles/consent and acknowledge the exact sealed proposal. Neither is automatically a host. |
+| Proposal lead and collaborator | Independently own profiles/consent. The lead seals/submits; the collaborator acknowledges the exact seal. Neither is automatically a host. |
 | Reviewer, moderator and decision maker | Exercise exact assignments, field ceilings, recusal and independent decisions. |
 | Planner, Venue owner and release approver/publisher | Use separately admitted owner tasks; preserve every required independent approval. |
 | Volunteer and Workforce organizer | Own claim versus independent confirmation; neither becomes an attendee. |
@@ -831,21 +968,75 @@ module and replay affected checkpoints, including downstream consequences.
 
 P11 archive preparation follows ADR 0108: require the separately approved
 `exit-archive@1` purpose and every existing owner source/history/file permission.
-The current implementation only reserves this dormant boundary; it creates no
-export task or downloadable artifact. Check source lineage independently from
+The local exit bundle implements the dormant eight-owner composition and bounded
+requester-owned task/chunk custody; protected delivery and populated P11 acceptance
+remain pending. Check source lineage independently from
 ordinary history access, anonymous/file withholding before lookup, requester-only
 execution/retrieval, revocation, source drift, complete scope, expiry and audit.
-Native migration/scope/recipe cases remain #102 debt under ADR 0100. A schema-only
-metadata observation, if separately approved, is not P11 or PostgreSQL workflow
-acceptance. No current manifest may be activated from these preparations.
+Native migration/scope/recipe acceptance was restored through #102 / PR #195;
+the new complete bundle needs its own exact-head certification. A schema-only
+metadata observation is not P11 or PostgreSQL workflow acceptance. No current
+manifest may be activated from these preparations.
 
 P12 is an assertion at every relevant checkpoint, not just a final count. Absence
 of a navigation link does not prove absence of writes, authority, jobs or effects.
+The populated host-only fixture opts into `with_isolation=True`: it retains one
+pre-setup, read-only baseline for all 97 excluded-owner tables and checks it after
+every implemented phase. Native SHA-256 row fingerprints detect additions, edits
+and removals without returning row contents; inventory/source/role drift, a
+10,000-row per-table limit or database timeout refuses the checkpoint. Each check
+also rejects out-of-manifest event/version or delivery routes and excluded-owner
+grant/bundle capabilities. The baseline is never refreshed after a difference.
+This observer remains test-only and does not prove the denial matrix by itself;
+see its [evidence and limits](../checkpoints/2026-09-20-programme-excluded-state-inventory.md).
 Include wrong-tenant direct requests, revoked authority, stale versions, exact
 retries, unavailable dependencies, rollback and empty/overflow responses. Retain
 both positive and denial/audit evidence without logging private answer contents.
 
+The opt-in `tests/rehearsals/programme_isolation_native.py` exit-route probe creates
+real sibling and foreign foundations through public setup commands, then exercises
+anonymous, wrong-scope, mixed-scope and wrong-requester HTTP access with real
+authentication. Its 258.82s native result and 32 observer units are recorded in the
+[scope-isolation checkpoint](../checkpoints/2026-09-21-programme-exit-real-scope-isolation.md).
+An Organization-scoped Maru operator can legitimately preview a sibling edition's
+stop, but its visible scope must be correct; archive purpose remains separately
+approved. Do not replace this positive control with a blanket sibling denial.
+This focused matrix complements, but does not complete, integrated P12.
+
+The maintained populated entry also prepares explicit connected-role delivery
+and real-object mutation phases. Their exact positive controls, current-version
+and CSRF requirements, field subsets, revocation boundary and affected-state
+comparisons are described in the
+[P12 evidence map](programme-acceptance-evidence.md). They are not yet native passes;
+the earlier recorded sixteen-phase runs do not include these additions. Preserve
+each run's actual phase results instead of attributing new checks to old evidence.
+
+The populated-run phase, `verify_journey_isolation_http`, adds seven
+literal owning-route cases with genuine independently authorized actors: personal
+proposal, accountable decision, private item, timetable planning, Volunteer starter,
+room output and Department output. It checks original-scope positive controls,
+real foreign/sibling/mixed-scope refusals, anonymous handling and confirmed-volunteer
+denial. The native planner deliberately returns 403 where the other owning routes
+use login redirects and non-disclosing 404; the observer preserves those contracts.
+Fifteen database-free observer units pass. The first extended populated execution
+failed its planner positive control after 850.29s; it is not an accepted P12 run.
+The fixture now deliberately requests independent `content` and `venue-selection`
+roles for its planner before P05, using both real synthetic controllers' separate
+request/approval actions. The ordinary `planner` recipe is unchanged and does not
+implicitly confer either source purpose. Content approval is no longer duplicated
+later at publication. Seventy focused observer/planning/release units pass. Corrected
+native run24 at `8e3c02c2fb95cda9c252f188d48c436b6109ca82` passes in 1,039.27s:
+all 49 scope/purpose response assertions pass in 45.891s, followed by the populated
+archive, active restore, stop and stopped-state restore. See its
+[exact execution record](../checkpoints/2026-09-21-programme-populated-isolation-execution.md).
+No acceptance is inherited from the earlier failed run. This bounded evidence does
+not replace full exact-head certification, a complete every-state isolation matrix,
+or human/browser acceptance.
+
 ## Human and accessibility session (#92)
+
+Use the [participant cards and evidence form](programme-human-acceptance.md) for the
+actual session; the technical protocol below retains its required acceptance scope.
 
 Prepare a short participant script from P01 through P11. A representative organizer
 and distinct host/volunteer must complete their own tasks without developer

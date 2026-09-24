@@ -5,7 +5,81 @@ Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
 profile-scoped unified-shell context, and dormant Programme and Applications
 reference seams; Programme Operations remains inactive
-Last updated: 2026-09-16
+Last updated: 2026-09-21
+
+## Minimized Programme stop impact (#190, in progress)
+
+ADR 0111's stop purpose requires a currently verified ordinary controller with
+real `authorization.manage_roles` provenance **and** independent exact-edition
+`events.transition` permission. Platform status, root representation alone,
+export permission or a visible destination is insufficient. Authorization owns
+this assertion; owning consequences such as release withdrawal still reauthorize.
+
+Owner-controlled `programme_stop_queries` now project Applications, Programme,
+Scheduling, Workforce, Venues, Effects and exact Authorization output accounting.
+The first six select only literal metadata columns, stream one bounded collection
+at a time and return totals/closed states plus a scope-bound source fingerprint.
+The common Events encoder permits at most 64 collections, 10,000 rows per
+collection and 8 MiB of serialized metadata per owner. It rejects overflow,
+duplicates, malformed rows and unknown encodings; it never returns a partial
+inventory. These are stored-state counts, not effective access, task completion,
+artifact availability or a claim that physical obligations were cancelled.
+
+No private proposal/review text, file/archive bytes, person labels, calendars,
+reasons, contact details or effect payloads are disclosed by this purpose.
+Every owner rechecks admission and audits before returning. Complete composition
+must hold canonical foundation/edition/person locks, rebuild all owner projections
+and compare the original preview before mutation. Effects additionally locks
+existing outbox rows while counting, without processing or cancelling them.
+Global security and independently adopted/shared work remain independent.
+
+`programme_stop_composition.load_programme_stop_preview` now collects all seven
+owners under canonical shared-authority, representation, parent/structure and
+complete retained-release-person locks. Its immutable UTF-8 snapshot binds actual
+actor, exact scope, both Events versions and every minimized owner projection,
+with a 4 MiB complete-preview ceiling. Independent owner reads remain audited.
+
+`programme_stop_commands.stop_programme` rebuilds that snapshot before acting.
+If an active pointer exists, the actual actor must also pass Scheduling's existing
+release-withdrawal command; its real outcome is retained beside the original
+preview. It then archives directly, writes the ordinary Events transition,
+native audit/release-invalidation evidence, internal domain event and immutable
+stop receipt atomically. No intermediate lifecycle, blanket grant revocation,
+Participation snapshot or completed work is manufactured. Exact current-authority
+retry returns the original receipt; changed intent cannot reuse its key.
+
+Events 0017 extends the existing native-evidence used-downgrade fence across this
+joined generation before any successor guard can reverse. Exact stop readiness
+requires its source-pinned recorder. Events 0018 additionally composes the frozen
+retained authority, setup, approval, starter, notice, archive and Programme owner
+preflights before any joined successor reverses. Original owner locks/refusals are
+preserved, including revoked authority; no runtime registry is inferred. Both
+forwards are no-ops. Empty reverse/reapply remains supported in offline maintenance,
+including when only unrelated ordinary authority exists.
+
+Events 0016 depends on all six native owner boundaries. It binds terminal changes
+reciprocally to same-transaction receipt, original UTF-8 intent, complete bounded
+preview, actual withdrawal, Audit witness and domain event. The generic transition
+path refuses Programme archive/cancel; raw terminal updates without a receipt
+cannot commit. Used stop evidence prevents downgrade. Readiness checks the complete
+receipt relation plus both exact terminal attachments, not a permissive subset
+claim about unrelated legacy Events guards. No production profile or route is
+activated. Real restricted-runtime composition proves active-release withdrawal,
+rollback, original retry and retained artifacts. Separate HTTPS confirmation and
+three observed two-connection races pass, as does populated stopped-state logical
+recovery; the [executed evidence](../checkpoints/2026-09-21-programme-stop-http-races-recovery.md)
+and [populated continuation](../checkpoints/2026-09-21-programme-populated-isolation-execution.md)
+retain their exact source revisions. Fresh exact-head certification, visible-browser
+and human acceptance, and complete integrated P11/P12 closure remain separate gates.
+
+The dormant `programme_stop_views` screen uses strict original-version/digest/key
+forms and actual signed-in/route scope, not a newly substituted preview on POST.
+Missing withdrawal authority offers no confirmation. Errors preserve original
+input for deliberate retry; terminal context has no operating/reopen controls.
+`programme_stop_receipt_queries.load_programme_stop_receipt` restricts minimized
+historical detail to the original actor with current controller prerequisites,
+auditing before disclosure without revealing another actor's reason or sources.
+See the [Stop Programme page contract](../product/page-contracts/programme-stop-use.md).
 
 ## Purpose and requirements
 
@@ -41,6 +115,31 @@ edition in canonical order before narrower owner rows. Programme staffing uses
 this seam through Workforce rather than loading Events models privately.
 
 ## Owned data and invariants
+
+### Programme exit configuration projection
+
+For EVT-007/INT-007 and ADR 0108, `programme_exit_queries` owns the closed
+`events.programme-exit@1` archive section. Additional
+`programme.export_archive/source_lineage` admission does not replace
+`events.view_basic` or its field ceiling. The section contains only edition
+`id`, `organization_id`, `series_id`, `slug`, `name`, `lifecycle`,
+`aggregate_version`, `adoption_profile_code`, `adoption_profile_version`,
+`time_zone`, `language_codes`, `starts_on` and `ends_on`. Dates are ISO calendar
+strings, UUIDs canonical strings and languages an ordered array. No currencies,
+other-edition inventory, parent private information, lifecycle rationale,
+creation/setup receipt, security key or named-person approval is included.
+Those omissions are explicit: this is the current edition configuration, not
+an Events audit-history or whole-database export. Programme profile permissions
+and recipes are Authorization's separate section.
+
+The reader checks both authorities before any owned content, locks coherent
+Organization/Series/Edition ownership, checks authority again under the lock,
+and repeats admission before returning its explicit JSON/schema. Mandatory
+sensitive-read audit is in the same transaction. Denied, wrong-scope, changed or
+unavailable sources cannot return a partial section. This owner reads no person
+labels and does not lock an actor ahead of the composing archive's full person
+closure. Its section is neither a usable eight-owner archive nor later-download
+authority, and the current profile manifests remain unchanged.
 
 - organization and convention-series scope;
 - immutable code-owned adoption-profile code and version;
@@ -354,6 +453,33 @@ adoption: version 1 must pin its continuity artifacts, regeneration, restore,
 stop-use, and expansion behavior before activation. It does not gain every
 present or future `exports` capability merely because continuity is required.
 
+Stop confirmation has a dormant database-free input boundary in
+`programme_stop_inputs`: exact original actor/organization/edition/retry UUIDs,
+aggregate and lifecycle versions, complete preview fingerprint and a required
+240-character accountable reason form one purpose-separated request digest.
+It performs no discovery, authorization, profile registration or transition.
+The composed preview and owner/native command described above implement
+[ADR 0111](../architecture/decisions/0111-accountable-programme-stop-use.md);
+input validation alone never supplies stop authority or native readiness.
+
+Migration `0015_programme_stop_receipt` adds immutable, select-only retained
+storage binding original actor/key, intent/preview digests, expected lifecycle
+and aggregate versions, transition, audit and impact document. Its initial native
+guard refuses **all** inserts until migration 0016 installs complete terminal
+admission; the ORM writer context cannot bypass either rule. Used receipts fence
+normal downgrade before storage or guards can be removed. Full command readiness
+pins both migration sources, receipt schema and exact native terminal attachments.
+Every owner independently checks its required stop fence during composition;
+storage or profile registration alone never enables a stop.
+
+`programme_stop_queries.resolve_programme_stop_reference` supplies a minimized
+exact-owner observation for those owner checks: whether the version-one Programme
+rule applies, whether its lifecycle is Archived/Cancelled, and its aggregate
+version. Invalid scope, unregistered/future Programme versions and unknown state
+are unavailable. Another registered profile retains its existing lifecycle rules.
+Writers hold canonical parents through commit; a non-stopped observation grants
+neither authority nor an exception to any stricter owner lifecycle.
+
 The accepted future setup location is
 `/admin/platform/setup/programme-operations/`, but that route is deliberately
 inactive in this contract-only change. It must provision an independently
@@ -581,6 +707,10 @@ attribution and the stable edition code, name and aggregate version for own-purp
 choice. The consumer must hold canonical parents and prove a real authorized
 retained purpose first; final source checks and disclosure audit remain mandatory.
 It is not a general edition directory.
+Both personal timetable references exclude terminal `programme_operations@1`
+within their exact owner query. Retained work does not make a stopped edition a
+current timetable destination; this does not delete independently authorized
+historical work or change Workforce-only behavior.
 
 The internal `resolve_personal_timetable_edition_label` reference supplies only
 the current edition name and aggregate version. The personal timetable compositor

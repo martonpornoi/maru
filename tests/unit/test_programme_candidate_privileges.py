@@ -1,11 +1,13 @@
 """Database-free candidate ACL preparation, never native permission evidence."""
 
+import re
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 import psycopg
 import pytest
 
+from maru.scheduling.readiness import SCHEDULING_INTEGRITY_CONTRACT
 from tests.rehearsals import programme_candidate_acl as acl
 from tests.rehearsals import programme_runtime_privileges as contract
 from tests.rehearsals.programme_runtime_environment import (
@@ -15,7 +17,7 @@ from tests.rehearsals.programme_runtime_environment import (
 
 def test_literal_inventory_preserves_all_unrelated_native_limits():
     projected = contract.candidate_relation_classes()
-    assert len(contract.PRIVILEGES) == 84
+    assert len(contract.PRIVILEGES) == 88
     assert set(projected[0]) == {
         "public.django_migrations",
         "public.authorization_authorityprovenanceactivation",
@@ -38,6 +40,38 @@ def test_literal_inventory_preserves_all_unrelated_native_limits():
     assert contract.PRIVILEGES[
         "public.applications_programmeproposalcontributorprofilerevision"
     ] == ("INSERT", "UPDATE")
+    assert contract.PRIVILEGES["public.programme_programmearchivetask"] == (
+        "INSERT",
+        "UPDATE",
+    )
+    assert contract.PRIVILEGES["public.programme_programmearchivetaskevent"] == (
+        "INSERT",
+    )
+    assert contract.PRIVILEGES["public.programme_programmearchivechunk"] == (
+        "INSERT",
+        "DELETE",
+    )
+
+
+def test_every_native_release_source_can_be_locked_without_new_delete_rights():
+    identity = "maru_scheduling_lock_release_source(text, uuid, uuid, uuid)"
+    source = SCHEDULING_INTEGRITY_CONTRACT.functions[identity].source
+    tables = {
+        "public." + table
+        for table in re.findall(r"WHEN '[a-z_]+' THEN '([a-z_]+)'", source)
+    }
+    assert "public.programme_programmepublicrendition" in tables
+    classes = contract.candidate_relation_classes()
+    # The ordinary class also supports UPDATE; candidate additions there are
+    # only the two declared call vocabulary tables, not release history.
+    updatable = set(classes[2]) | set(classes[3])
+    restricted = set().union(*classes)
+    assert tables & restricted <= updatable
+    assert contract.PRIVILEGES["public.programme_programmepublicrendition"] == (
+        "INSERT",
+        "UPDATE",
+    )
+    assert "public." + identity.replace(" ", "") in contract._FUNCTIONS
 
 
 @pytest.mark.parametrize("defect", ["unknown", "overlap", "other_class"])
@@ -166,7 +200,7 @@ def test_reference_guard_uses_complete_table_and_column_boundary(result):
     assert "has_column_privilege" in query
     assert "pg_has_role(current_user, reachable.oid, 'SET')" in query
     assert "reachable.oid, relation.oid" in query
-    assert parameters == [84, sorted(contract.PRIVILEGES)]
+    assert parameters == [88, sorted(contract.PRIVILEGES)]
 
 
 @pytest.fixture
@@ -210,7 +244,7 @@ def test_grant_plane_changes_only_literal_table_operations_after_preflight(grant
         text.startswith("GRANT ") and text.endswith(" TO maru_runtime")
         for text in grants
     )
-    assert sum(text.count('"public".') for text in grants) == 84
+    assert sum(text.count('"public".') for text in grants) == 88
     assert not any(
         "ALL " in text or "FUNCTION" in text or "WITH GRANT" in text for text in grants
     )

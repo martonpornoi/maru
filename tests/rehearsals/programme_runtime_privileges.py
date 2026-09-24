@@ -32,7 +32,7 @@ def _tables(groups):
 # Retained evidence never updated or locked by the mounted owner commands.
 INSERT = _tables(
     {
-        "events": ("programmeadoptionsetupreceipt",),
+        "events": ("programmeadoptionsetupreceipt", "programmestopreceipt"),
         "authorization": ("programmeroledecisionrecord",),
         "applications": (
             "programmeproposalselectionrevision",
@@ -50,8 +50,8 @@ INSERT = _tables(
             "programmefilecontent",
         ),
         "programme": (
+            "programmearchivetaskevent",
             "programmeitemsourcebinding",
-            "programmepublicrendition",
             "programmepublicrenditionwithdrawal",
             "programmehostinvitation",
             "programmehostrevision",
@@ -108,6 +108,10 @@ INSERT_UPDATE = _tables(
             "programmereviewassignment",
         ),
         "programme": (
+            "programmearchivetask",
+            # Native release source capture locks the retained copy FOR UPDATE.
+            # Its existing native immutable-history guard still rejects edits.
+            "programmepublicrendition",
             "programmeeditioncontrol",
             "programmeitem",
             "programmeworkingrevision",
@@ -134,7 +138,7 @@ INSERT_UPDATE = _tables(
 INSERT_DELETE = _tables(
     {
         "applications": ("programmecallcontributorfield",),
-        "programme": ("programmehostavailabilitywindow",),
+        "programme": ("programmehostavailabilitywindow", "programmearchivechunk"),
     }
 )
 # Draft replacement deletes track/format rows; proposal admission locks them.
