@@ -42,6 +42,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added an explicitly opted-in, local-only Programme rehearsal for a single
+  maintainer, with disposable fictional data and assisted normal account switching.
+  It requires no certificate installation and does not count as trusted HTTPS,
+  independent-person acceptance, or production activation.
+
 - Added a dormant permission-controlled Programme exit archive with complete owner
   records, original clean files, retained schemas and audit lineage, bounded private
   custody and requester-only retrieval. It is not a database backup or public export.

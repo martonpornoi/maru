@@ -20,6 +20,11 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0115](0115-local-only-assisted-programme-rehearsal.md) permits an explicitly
+approved synthetic loopback HTTP browser bridge over the genuine pinned-HTTPS
+fixture. Production settings, account authority and truthful human evidence remain
+unchanged; no trust store, public hosting or certificate bypass is involved.
+
 [ADR 0114](0114-restore-stable-identity-trigger-predicates.md) replaces two
 Identity conditional-trigger parse-tree hashes with exact reviewed complete
 deparsed definitions, retaining independent attachment and native-function checks.

@@ -41,6 +41,28 @@ equality. This closes the component/recovery issues, not the human-dependent
 
 ## Independent supporting evidence
 
+The [September 27 assistant-operated browser record](../checkpoints/2026-09-27-programme-assistant-browser-rehearsal.md)
+adds actual ordinary-form P02 evidence over ADR 0115's local bridge: a new proposal,
+real scanned PDF upload, separate-account collaboration, exact acknowledgement,
+submission and refusal to reuse an old acknowledgement after reopening/resealing.
+It also records discovery/usability gaps and the limited responsive observations.
+The replacement fixture adds fresh separate-account review/recusal/moderation/
+decision, conversion, hosting and public-copy actions, plus limited planning,
+release-preflight and audience-specific output checks. A later counter-enabled
+session identified the placement refusal as the fixture's missing independent
+hosting prerequisite. Explicit controller request/approval restored editor access;
+private preview/save and distinct reviewer approval/planner publication then passed.
+A newly created requirement proceeded through explicit work preview/create, own
+volunteer claim, refused premature lock, organizer confirmation and coverage lock.
+Old work remained unchanged. Source-invalidated continuity HTML and its print copy
+withheld old geometry. Queue-link behavior remains unresolved. Notice permission
+submission was blocked by the tool safety reviewer and stayed unsubmitted; new
+notice, archive/stop and complete disconnected-browser checks remain unperformed.
+All completed browser sessions were disposed normally. Native fixture repair and
+exact-head delivery evidence remain separate from these browser observations.
+Prepared data, assistant decisions and this single-browser session do not satisfy
+the independent-person or specialist-accessibility column above.
+
 - [Exit-route isolation](../checkpoints/2026-09-21-programme-exit-real-scope-isolation.md)
   exercised actual foreign/sibling foundations and other-requester denials in
   258.82s. Organization-scoped sibling stop-preview rights remain legitimately
@@ -125,8 +147,10 @@ retain concrete gaps under #109 rather than implying a universal isolation pass.
 
 #92 needs representative people, screen-reader evidence and independent
 operational-owner acceptance. The earlier browser attempt stopped before login at
-`ERR_CERT_AUTHORITY_INVALID`; an approved trusted rehearsal origin is still needed.
-Do not bypass TLS or count an assistant operating both accounts as two people.
+`ERR_CERT_AUTHORITY_INVALID`; ADR 0115 now permits explicitly approved synthetic
+loopback HTTP for local-only testing. A browser-trusted HTTPS environment is still
+needed before cross-computer or convention pilot work. Do not bypass TLS or count
+an assistant operating both accounts as two people.
 Only completed #97/#102/#92/#109 acceptance permits #108's separately verified
 profile promotion. That promotion is not a production deployment, and #48 remains
 open until its actual integrated criteria are satisfied.

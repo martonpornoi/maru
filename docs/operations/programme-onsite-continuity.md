@@ -11,9 +11,10 @@ not an activated Programme profile or permission to use real personal data.
 An isolated fixture must admit `scheduling.programme-continuity@1` and the
 independently required source adapters. No current profile pins it, and normal
 production routing does not mount these pages. #108 connects normal departmental
-task selection; #102/#97/#92/#109 remain database, recovery, human and integrated
-acceptance gates. Do not enable a profile or provision a production signing key
-merely to follow this guide.
+task selection. Database and logical-recovery prerequisites #102/#97 are delivered;
+#92/#109 human and integrated acceptance remain open. Use CURRENT for exact
+verification rather than inheriting an earlier receipt. Do not enable a profile
+or provision a production signing key merely to follow this guide.
 
 Department users read the shared public, My Maru or Administration pages.
 An accountable operator owns key provisioning, exact offline scope, device and
@@ -196,8 +197,10 @@ archive. #109 coordinates that broader #48 stop-use and recovery outcome.
 The [integrated rehearsal](programme-integrated-rehearsal.md#signed-continuity-preparation)
 maintains dedicated ephemeral test-key issuance, independent trust, six scoped
 downloads, actual offline CLI/history handling, controlled-clock refusals and
-owner-command withdrawal/republication. PostgreSQL execution remains deferred;
-database-free component results do not certify native issuance or operational use.
+owner-command withdrawal/republication. PostgreSQL acceptance is required again;
+the integrated guide and CURRENT distinguish recorded native results from still
+unperformed human and operational acceptance. Database-free component results alone
+do not certify native issuance or operational use.
 Its owned temporary synthetic files and network-denied verifier prove neither
 encrypted device custody nor secure erasure of external copies. The accountable
 event trust, history, clock, replacement and disposal procedures above still apply.

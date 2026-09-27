@@ -1,6 +1,6 @@
 # Stop Programme
 
-Status: Candidate implementation; no production profile or route admission.
+Status: Delivered dormant through PR #199; no production profile or route admission.
 Requirements: EVT-007, ARC-003/005, AUD-001, NFR-013 and UX-005–008.
 ADR 0111 governs the terminal contract; #190 supplies #108/#109/P11 within #48.
 

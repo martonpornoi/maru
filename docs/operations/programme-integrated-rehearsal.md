@@ -11,6 +11,12 @@ the earlier component boundaries, not instructions to skip now-required testing.
 
 ## Current executable entry and evidence
 
+For the explicitly approved single-maintainer local browser session, use the
+[local session instructions](programme-human-acceptance.md#approved-single-maintainer-local-session)
+and ADR 0115. Its HTTP bridge wraps the genuine owned HTTPS fixture without
+changing native readiness or production security. This is not a certificate
+bypass, external deployment or replacement for the automated entry below.
+
 Use the [P01–P12 evidence map](programme-acceptance-evidence.md) to distinguish
 the recorded automated assertions from remaining human and integrated gates.
 The combined source is protected through [PR #199](https://github.com/martonpornoi/maru/pull/199),
@@ -676,7 +682,10 @@ P05–P12 or full isolation acceptance. See the
 `ProgrammeRunningFixture.prepare_planning(proposal, review, items)` carries the
 same verified private source chain into a fixed bounded child. Guarded candidate
 startup and original lease remain mandatory. A new synthetic planner receives
-only the Edition planning recipe; another person receives the explicit
+separately approved Edition planning, content, hosting and Venue-selection recipes;
+these are independent prerequisites, not implicit planner permissions. Preparation
+must read all three placement-editor host rosters as that actual planner before
+returning its strict eight-assignment handoff. Another person receives the explicit
 Organization Venue catalog and Edition selection recipes. Ordinary Venue commands
 create and activate the fictional property and select two configured rooms.
 The room configuration identifier is discovered from the authorized existing

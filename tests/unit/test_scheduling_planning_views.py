@@ -759,6 +759,8 @@ class NativeFormShape(HTMLParser):
         if tag == "form":
             self.nested |= self.current is not None
             self.current = {
+                "id": attributes.get("id"),
+                "hidden_values": QueryDict(mutable=True),
                 "fields": [],
                 "buttons": [],
                 "planning": "data-planning-navigation" in attributes
@@ -769,12 +771,43 @@ class NativeFormShape(HTMLParser):
         elif self.current is not None and "name" in attributes:
             if tag in {"input", "select", "textarea"}:
                 self.current["fields"].append(attributes["name"])
+                if tag == "input" and attributes.get("type") == "hidden":
+                    self.current["hidden_values"].appendlist(
+                        attributes["name"], attributes.get("value", "")
+                    )
             elif tag == "button":
                 self.current["buttons"].append(attributes["name"])
 
     def handle_endtag(self, tag):
         if tag == "form":
             self.current = None
+
+
+@pytest.mark.parametrize("form_id", ["planning-destination", "planning-tools"])
+def test_rendered_selection_post_opens_placement_without_a_command(
+    http_world, monkeypatch, form_id
+):
+    writer = Mock()
+    monkeypatch.setattr(views, "_submit", writer)
+    _request, selected = request_page(http_world, selected_post(http_world))
+    assert selected.status_code == 200
+    parsed = NativeFormShape(rendered(selected))
+    data = next(form for form in parsed.forms if form["id"] == form_id)[
+        "hidden_values"
+    ].copy()
+    if form_id == "planning-destination":
+        data["ui_occurrence_id"] = str(http_world["selection"].occurrence_id)
+        data["ui_day_id"] = str(http_world["snapshot"].days[0].id)
+        data["ui_space_id"] = str(selected.context_data["complete_board"].spaces[0].id)
+    else:
+        data["ui_mode"] = "placement"
+    assert data.getlist("action") == ["select"]
+    _request, opened = request_page(http_world, data)
+    assert opened.status_code == 200
+    assert opened.context_data["selection"].mode == "placement"
+    assert opened.context_data["control"].form is not None
+    assert "Preview changes" in rendered(opened)
+    writer.assert_not_called()
 
 
 @pytest.mark.parametrize(

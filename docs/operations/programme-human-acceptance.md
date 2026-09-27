@@ -9,6 +9,69 @@ fixture and P01–P12 contracts. This shorter guide is the participant handoff.
 Automated setup, separate synthetic accounts or an assistant completing these
 cards do not establish human acceptance. No production use is authorized.
 
+## Approved single-maintainer local session
+
+On 2026-09-25 the maintainer requested assisted local testing without additional
+participants and explicitly approved loopback-only HTTP. [ADR 0115](../architecture/decisions/0115-local-only-assisted-programme-rehearsal.md)
+and #203 define the bounded browser bridge and interactive launcher. This is an
+alternative to the trusted-browser HTTPS prerequisite below, not permission to
+bypass certificate warnings or change production settings. The underlying native
+fixture still verifies its own HTTPS certificate and all normal owner boundaries.
+
+The facilitator may manage ordinary login/logout between the fictional organizer,
+approver, host and volunteer accounts. Verify the displayed identity and intended
+scope after each switch; ordinary tabs share cookies. Never use impersonation or
+relax self-approval refusal. Keep passwords private. Ask the maintainer to complete
+one visible task and explain its result before moving on when collecting human
+evidence; record any assistance.
+
+On 2026-09-27 the maintainer approved assistant-operated functional continuation.
+For that mode, the assistant performs ordinary UI actions and account switching,
+records results as assistant-operated, and asks only for decisions or controls it
+cannot operate. Do not repeatedly request human confirmation of routine redirects.
+This does not satisfy or remove independent-person, screen-reader or owner gates.
+A prepared `items` fixture may support a new, additional proposal through ordinary
+call discovery and creation. Its pre-existing submitted proposal and accepted item
+remain automated prerequisites, not evidence that the new browser journey passed.
+
+Use `tests.rehearsals.programme_local_session` with the explicit native opt-in,
+finite lease and `MARU_PROGRAMME_LOCAL_HTTP=synthetic-loopback-only`. Its required
+`--recipient-public-key` is an ephemeral RSA-2048 public DER key encoded as base64;
+only the supervising facilitator holds the private key. Stdout emits stage markers
+and encrypted handoff, never plaintext accounts. Stdin accepts `refresh`, `stop`
+or `diagnostics` (ephemeral aggregate method/status counts only);
+EOF, unknown input or original expiry ends the session. Do not save the private
+key, decrypted handoff, passwords or raw task pages in public evidence. Diagnostic
+counts do not certify a domain command or prove that the browser received a response.
+
+`--stage team` prepares only the genuine synthetic foundation/initial roles;
+`items` additionally prepares intake/review/items; `published` prepares a released
+synthetic timetable and dedicated continuity key. The latter two require the real
+scanner prerequisite. None of those completed prerequisite steps is a human pass.
+The encrypted handoff includes the existing independently provisioned review,
+moderation, decision and conversion personas for `items`; `published` also exposes
+its prepared planner, Catalog organizer, physical reviewer, volunteer and release
+reviewer. This adds no grants and does not replay their prepared decisions as
+browser evidence.
+The planning prerequisite separately approves the existing hosting recipe needed
+by placement editors and verifies their real roster reads before handoff. It does
+not widen the production planner recipe. The focused host-only checks live in
+`tests/rehearsals/programme_browser_gateway_native.py`; run them with the same
+explicit unique run identity, finite lease and scanner-refresh opt-in as the
+integrated entry, separately from an eight-database certification pool.
+Start with `team` for guided discovery and record subsequent preparation explicitly.
+
+The HTTP bridge has separate run-namespaced cookies and no shared backend cookie
+jar. It changes only browser-side transport; exports retain their original bytes
+and may name the backend's HTTPS origin. Keep this session on this computer with
+fictional data. It proves neither public HTTPS nor access from another device.
+
+Distinguish **maintainer observed**, **assistant operated**, **automated**, and
+**not run** for each task. Genuine independent-person, specialist screen-reader
+and operational-owner acceptance remain unperformed when no such person acts.
+Reconcile any change to activation-versus-pilot scope explicitly in #92/#109/#108
+and #48; this local exception does not silently close their remaining gates.
+
 ## Facilitator: establish the session first
 
 Record the exact candidate commit, fixture lease, browser/version, operating

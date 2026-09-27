@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-24
+Last updated: 2026-09-27
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -11,7 +11,14 @@ the release baseline.
 
 ## Protected baseline and testing policy
 
-[PR #201](https://github.com/martonpornoi/maru/pull/201) subsequently delivered
+[PR #202](https://github.com/martonpornoi/maru/pull/202) delivered the seven
+local-only redirect fixes at protected squash `314d593dc98fde705e834ef6374d001d25051942`.
+All 71 local/hosted PostgreSQL shards passed, with 18,432 Python cases and 91.74%
+coverage. The fresh main CodeQL scan marked alerts 13–19 fixed, not dismissed;
+zero open alerts remained. Clean local main was synchronized. Final exact-head
+evidence is on PR #202; no manual Programme acceptance was claimed.
+
+[PR #201](https://github.com/martonpornoi/maru/pull/201) previously delivered
 the custody clock-fixture repair and exit delivery record as protected squash
 `eff8286b2c7dcff00e51159d76d70d61e7cd4745`; its tree equals certified `906f9e0`.
 Local and hosted affected-history acceptance passed 31 PostgreSQL shards,
@@ -142,38 +149,81 @@ follow-up's protected PR, not an inherited PR #199 receipt.
 
 ## Next actions and remaining closure gates
 
-The maintainer requested resolving the seven open medium CodeQL redirect alerts
-#13–#19 before the next human session. The focused candidate adds one domain-neutral
-local-only redirect boundary, applies it to all seven reported sinks, and replaces
-three request-path continuations with canonical scoped destinations. It does not
-dismiss alerts, change scanner/ruleset policy, alter schema or authorization,
-or activate Programme. Focused HTTP/helper tests pass **445 / 3.49s**, and complete
-database-free units pass **13,351 / 71.17s** with three existing Django warnings;
-Ruff passes.
-Complete exact-commit local acceptance and hosted CodeQL/protected acceptance are
-still required. The [redirect checkpoint](../checkpoints/2026-09-24-programme-local-redirects.md)
-records scope, test iterations and remaining evidence. This security maintenance
-does not close or substitute for #92/#109/#108/#48.
+#203 is the active local-assisted rehearsal candidate on protected base
+`314d593dc98fde705e834ef6374d001d25051942`. ADR 0115 permits explicit synthetic
+loopback HTTP over the unchanged pinned native HTTPS fixture, without machine
+trust, TLS bypass, production changes or impersonation. Finite leases, ordinary
+login/logout, run-specific cookies, encrypted handoff and owned cleanup remain
+mandatory. PostgreSQL acceptance is required; no full certification is running.
 
-1. Complete #109's joined evidence with #92's genuine representative-person,
-   screen-reader and materially changed browser observations. The
-   [participant cards](../operations/programme-human-acceptance.md) supply tasks and
-   an evidence form, not a human pass.
-2. #97 and #102 are delivered. Only after #92/#109 also pass, implement and
-   separately verify #108's final profile
-   promotion. Close #48 only when the decomposition and integrated criteria pass.
+### Verified observations and repairs
 
-The browser rejected the temporary HTTPS certificate before login
-(`ERR_CERT_AUTHORITY_INVALID`). An approved trusted rehearsal origin and actual
-independent participants remain necessary. No TLS bypass or machine trust change
-was made. Preserve unchanged #87/PR #90 native Cancel, actual 200% Chrome zoom,
-visible keyboard focus and the user's disabled Windows Animation effects.
-Pinned HTTP/parsed HTML and synthetic actors do not supply human acceptance.
+- The [September 25 maintainer checkpoint](../checkpoints/2026-09-25-programme-local-assisted-rehearsal.md)
+  records assisted workspace selection, Start planning, separate-account access
+  request/approval and call draft/activation. The bridge's signed feedback-cookie
+  repair fixed the misleading error after a committed workspace switch. The
+  maintainer reported difficult discovery, dense forms and unclear success
+  hierarchy; these remain UX findings, not unaided or two-person acceptance.
+- The [September 27 assistant checkpoint](../checkpoints/2026-09-27-programme-assistant-browser-rehearsal.md)
+  records fresh P02 proposal/PDF/collaboration/acknowledgement/submission and stale
+  acknowledgement refusal; P03 review/recusal/moderation/decision; and P04
+  conversion/delivery/hosting/private-then-shared availability/public copy.
+  The narrow bridge PDF PUT/intent-header repair retains the real scanner and
+  byte limits. Already-prepared examples do not count as fresh browser writes.
+- P05 placement returned 403 because the fixture omitted separate hosting
+  authority. An explicit bounded request and independent-account approval made
+  the real editor work. Preparation now includes that existing recipe and checks
+  all editor roster reads. Private preview/save advanced only the comparison
+  draft v4 to v5; old accepted work remained unchanged and its coverage was stale.
+- Fresh P06 staffing passed explicit requirement/work preview and creation, own
+  volunteer claim, refused premature lock, separate organizer confirmation and
+  coverage lock. P07 passed separate reviewer approval and planner publication of
+  that exact approval, retaining both releases. Author approval returned 403.
+- Audience-specific outputs and limited responsive observations remain separately
+  recorded. After staffing changed the source, continuity HTML and its print copy
+  withheld old geometry without cancelling retained work. This is not native
+  printing, offline verification, actual zoom or screen-reader acceptance.
+- Queue links sometimes left the old page visible; direct destinations worked.
+  In-app 403 responses also retained the prior DOM. Chrome comparison returned
+  `ERR_BLOCKED_BY_CLIENT`; no browser security preference was changed.
 
-Real twenty-minute process expiry and deployment workload/capacity are not yet
-proved; archive Python-tracked peak is not RSS. Production/PITR, supervision,
-privacy/safeguarding, training and go/no-go remain separate gates. No production
-profile, routes, deployment or data have been activated.
+Complete inexpensive units pass **13,454 / 88.26s**, with three existing Django
+URL-field warnings; repository-wide Ruff, documentation and whitespace checks pass.
+Both focused native bridge/planner checks pass **2 / 617.04s**, including fresh
+restricted-runtime planner preparation with the real independent host-roster read.
+Their first invocation stopped at
+collection for an omitted required run identity, before creating a fixture; the
+corrected invocation used a fresh explicit identity. No exact-head receipt or
+protected delivery is claimed yet for this candidate.
+
+All completed browser fixtures are disposed: normal stop/exit 0, exact owned
+containers/certificate directories/listeners absent, owned tabs closed and ordinary
+logout performed. No live browser URL remains. Preserve unrelated resources.
+The latest notice permission request stayed unsubmitted after a tool-safety
+refusal; explicit permission for the three fictional notice tasks was requested.
+No workaround, new notice grant or fresh notice/archive/stop browser pass is claimed.
+
+### Smallest next actions
+
+1. Certify the clean final #203 bundle and deliver through its exact protected gate.
+2. Continue feasible assistant-operated P08/P10/P11 and outstanding interaction
+   checks with explicitly admitted synthetic roles. Keep missing permission and
+   unobserved controls separate from application defects.
+3. #92 still needs representative independent-person, specialist screen-reader and
+   operational-owner acceptance. The [session cards](../operations/programme-human-acceptance.md)
+   and evidence map are not passes. A future cross-computer or convention pilot
+   also needs approved browser-trusted HTTPS; local HTTP does not satisfy that.
+4. #97 and #102 are delivered. Only after actual #92/#109 acceptance, implement
+   and separately verify #108's final profile promotion; close #48 only when its
+   decomposition and integrated criteria pass. Any move of existing activation
+   gates to a later pilot requires an explicit documented scope decision.
+
+Preserve unchanged #87/PR #90 native Cancel, actual 200% Chrome zoom, visible
+keyboard focus and the user's disabled Windows Animation effects. Separate
+accounts controlled by one person or an assistant are not independent people.
+Real twenty-minute process expiry and deployment capacity remain unproved;
+archive Python-tracked peak is not RSS. Production/PITR, safeguarding, training
+and go/no-go remain separate. No production profile, routes or data are activated.
 
 ## Continuation boundaries
 
