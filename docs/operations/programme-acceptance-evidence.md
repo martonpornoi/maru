@@ -55,11 +55,22 @@ private preview/save and distinct reviewer approval/planner publication then pas
 A newly created requirement proceeded through explicit work preview/create, own
 volunteer claim, refused premature lock, organizer confirmation and coverage lock.
 Old work remained unchanged. Source-invalidated continuity HTML and its print copy
-withheld old geometry. Queue-link behavior remains unresolved. Notice permission
-submission was blocked by the tool safety reviewer and stayed unsubmitted; new
-notice, archive/stop and complete disconnected-browser checks remain unperformed.
-All completed browser sessions were disposed normally. Native fixture repair and
-exact-head delivery evidence remain separate from these browser observations.
+withheld old geometry. Queue-link behavior remains unresolved. After the original
+notice permission submission was blocked, the maintainer explicitly approved only
+three temporary synthetic notice grants. A fresh interactive session requested and
+independently approved them through ordinary forms. Rejection remained final;
+separate work notices passed independent-account review, explicitly simulated local
+link handoff and exact-recipient acknowledgement. A real fictional withdrawal
+withheld old geometry, invalidated the old notice and required fresh notice evidence
+without changing three accepted work intervals. Recipient views withheld private
+rationale and denied a different person. These are fresh P08 functional observations,
+not provider delivery, independent-human decisions or a full P10 pass.
+Archive/stop and complete disconnected/native-print browser checks remain unperformed.
+The successful sessions were disposed normally. A non-interactive launch lost its
+listener before browser use; its final process metadata was not preserved, but owned
+resources were confirmed absent. An unused internal error tab was left untouched
+after browser URL-policy refusal. Native fixture repair and exact-head delivery
+evidence remain separate from these browser observations.
 Prepared data, assistant decisions and this single-browser session do not satisfy
 the independent-person or specialist-accessibility column above.
 

@@ -472,3 +472,83 @@ existing warnings. Its separate XML report is
 `.tools/programme-notice-reconciled-r2-units.xml`. Scoped Ruff lint/format,
 documentation validation and whitespace checks pass. This is focused/pre-commit
 feedback, not the interrupted candidate's missing certification receipt.
+
+### Fresh P08 notice and withdrawal browser journey
+
+The next ordinary browser session used exact source `2d6f6f1717464c475eda4981afed386fbeb794a3`
+and disposable run `177e4bf35b664ca4b584840715d91332`, with automated `published`
+prerequisites. Those pre-completed steps are not new browser passes. The original
+finite lease was not extended. Controller A requested and controller B independently
+approved exactly the maintainer-authorized edition tasks: notice preparation and
+handoff for the planner, notice review for the release reviewer. All three expired
+at 21:50 UTC, before the original fixture deadline. No production grant, host-review
+permission, external provider or additional archive/stop authority was introduced.
+
+The assistant then performed these fresh ordinary-form actions, switching accounts
+through normal logout/login and verifying the displayed identity each time:
+
+- Planner selected the opening ceremony and its exact confirmed work holder through
+  the guided chooser, previewed pointer v1 and prepared notice `4209e9f1...`.
+  Reviewer rejected it at evidence v2. The resulting page explicitly prohibited
+  handoff and acknowledgement; neither existed. Repreparing the same source was
+  refused, consistent with exact-package uniqueness. This did not create a new
+  package or circumvent final rejection. The volunteer's inventory omitted it,
+  and entering its exact reference returned no package content.
+- Planner selected workshop occurrence 2 and its 10:15–11:45 UTC accepted work,
+  preparing distinct notice `3a6fcbf3...`. Reviewer approval produced evidence v2
+  with no handoff/acknowledgement. Planner retained only its recipient link and
+  recorded an explicitly labelled **simulated local-only link handoff**, v3.
+  No external communication or independent-human receipt was claimed. The actual
+  fictional volunteer account opened that link and acknowledged the exact package,
+  v4. Its page omitted the private preparation/review canaries and planner/reviewer
+  identities. Acknowledgement neither accepted new work nor recorded attendance.
+- Planner used existing publisher authority to inspect and explicitly confirm
+  withdrawal with a reason. Receipt `67127fa0...` recorded result v2, command
+  sequence 25, for release `8584ed13...`. No predecessor was restored and no notice
+  was sent automatically. The old notice disappeared from the current inventory.
+- A fresh guided preview for the same workshop work showed **Withdrawn**, pointer
+  v2 and no previous geometry. New notice `44bac175...` started at evidence v1 with
+  no inherited approval, handoff or acknowledgement. Distinct reviewer approval,
+  separately labelled simulated handoff and the volunteer's fresh acknowledgement
+  advanced it to v4. Before acknowledgement, the recipient explicitly saw that this
+  exact change was not acknowledged. Private rationale, the old room identifier
+  and old delivery interval were absent. Reopening the old acknowledged notice
+  refused stale content; opening the new notice as the ceremony host refused all
+  package content.
+- The volunteer's own timetable still showed all three confirmed work intervals:
+  09:15–10:45, 10:45–12:15 and 12:15–13:45 on October 4 in Europe/Budapest. Each
+  retained work v2 and current locked instructions v3. The screen distinguished
+  retained commitment times and current instructions from Programme geometry and
+  automatic relocation. Withdrawal/notice acknowledgement did not cancel work.
+
+The controller's admitted ordinary navigation did not offer archive or stop. This
+session did not invent a route, broaden its grants or count those cards as passed.
+The P08 results supplement automated evidence; they do not replace #92's independent
+people, comprehension, screen-reader, native print or operational-owner acceptance.
+
+### Interactive supervision and cleanup
+
+An earlier `published` launch omitted interactive terminal input. It emitted a
+ready handoff, then its listener was gone before the browser could connect
+(`ERR_CONNECTION_REFUSED`). This is consistent with the launcher's intentional
+stdin-EOF cleanup. Its final completion metadata was not preserved, so no observed
+exit code is asserted. Exact-run containers, certificate directory and listener
+were independently confirmed absent. The unused browser error tab could not be
+closed because the browser tool refused its internal error-page URL; it was left
+untouched, without a bypass or any login in that failed session.
+
+A bounded PTY probe confirmed live stdin before the successful replacement. The
+PTY redrew 57 line-boundary characters in the encrypted stdout handoff; the first
+simple ANSI-stripping attempt correctly failed AES-GCM authentication. Reconstructing
+only those observed terminal overwrites produced an authenticated handoff. No
+unauthenticated plaintext was accepted, and neither passwords nor private keys
+were saved in evidence. The operator guide now requires a persistent input channel,
+live-process verification and retention of completion metadata.
+
+After the successful browser journey, ordinary logout was verified and its owned
+tab closed. Supervisor terminal 40080 received `stop`, emitted `disposed` and
+exited 0, including the final excluded-owner verification, before expiry. Exact-run
+containers, certificate directory and listener 53848 were absent afterward.
+The first Docker cleanup observation was blocked by the shell sandbox and was
+repeated as a permitted read-only check; that denial was not a resource leak.
+Unrelated resources and the maintainer's browser/OS preferences were preserved.

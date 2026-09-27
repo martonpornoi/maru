@@ -43,6 +43,12 @@ or `diagnostics` (ephemeral aggregate method/status counts only);
 EOF, unknown input or original expiry ends the session. Do not save the private
 key, decrypted handoff, passwords or raw task pages in public evidence. Diagnostic
 counts do not certify a domain command or prove that the browser received a response.
+Keep the supervising input channel open: use an interactive terminal/PTY for a
+supervised browser session. A non-interactive command runner may close stdin and
+correctly trigger cleanup immediately after preparation. Before opening the
+reported URL, verify the launcher is still running; a `ready` handoff followed by
+disposal is not a live session. Preserve terminal completion metadata as well as
+the encrypted handoff.
 
 `--stage team` prepares only the genuine synthetic foundation/initial roles;
 `items` additionally prepares intake/review/items; `published` prepares a released

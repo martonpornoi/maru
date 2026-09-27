@@ -183,6 +183,17 @@ mandatory. PostgreSQL acceptance is required; no full certification is running.
   recorded. After staffing changed the source, continuity HTML and its print copy
   withheld old geometry without cancelling retained work. This is not native
   printing, offline verification, actual zoom or screen-reader acceptance.
+- Fresh P08 browser work used the explicitly approved three temporary notice
+  grants, requested and approved by the two ordinary synthetic controllers. A
+  rejected package stayed final and could not be recreated unchanged. A different
+  work notice passed independent-account approval, explicitly simulated local
+  link handoff and its exact volunteer's acknowledgement; private rationale and
+  other actor identities were absent from the recipient page.
+- A reasoned withdrawal advanced the pointer to v2. Its fresh notice withheld
+  old geometry, inherited no approval/handoff/acknowledgement, then passed its own
+  separate review/handoff/acknowledgement. The old notice became unavailable,
+  another person was denied, and all three confirmed work intervals stayed intact.
+  These are assistant-operated facts, not human or external-delivery evidence.
 - Queue links sometimes left the old page visible; direct destinations worked.
   In-app 403 responses also retained the prior DOM. Chrome comparison returned
   `ERR_BLOCKED_BY_CLIENT`; no browser security preference was changed.
@@ -207,18 +218,19 @@ Production duplicate-grant refusal and permissions are unchanged.
 Fresh complete unit feedback passes **13,457 / 71.39s** with three existing
 warnings, after correcting one remaining test's old nine-grant expectation.
 
-All completed browser fixtures are disposed: normal stop/exit 0, exact owned
-containers/certificate directories/listeners absent, owned tabs closed and ordinary
-logout performed. No live browser URL remains. Preserve unrelated resources.
-The latest notice permission request stayed unsubmitted after a tool-safety
-refusal. The maintainer subsequently explicitly approved three temporary fictional
-tasks: planner notice preparation/handoff and reviewer notice review, within the
-original disposable lease. No workaround, new notice grant or fresh notice/archive/
-stop browser pass is claimed yet.
+No browser fixture is left running. The latest successful notice session used an
+interactive terminal, ordinary logout and normal stop/exit 0; its exact owned
+containers/certificate directory/listener are absent. An earlier non-interactive
+launch stopped before browser connection (consistent with stdin EOF); final exit
+metadata was not retained, but its resources were separately confirmed absent.
+Its unused internal error tab could not be closed through the browser's URL policy
+and was left untouched. Preserve unrelated resources. Archive/stop and complete
+disconnected/native-print browser cards remain unperformed; this session did not
+add their separate authority or admission.
 
 ### Smallest next actions
 
-1. Finish feasible assistant-operated P08/P10/P11 and outstanding interaction
+1. Finish remaining assistant-operated P10/P11 and outstanding interaction
    checks with explicitly admitted synthetic roles. Keep missing permission and
    unobserved controls separate from application defects.
 2. Certify the clean final #203 bundle and deliver through its exact protected gate.
