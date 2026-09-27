@@ -55,7 +55,9 @@ reviewer. This adds no grants and does not replay their prepared decisions as
 browser evidence.
 The planning prerequisite separately approves the existing hosting recipe needed
 by placement editors and verifies their real roster reads before handoff. It does
-not widen the production planner recipe. The focused host-only checks live in
+not widen the production planner recipe. Later notice preparation retains this
+existing hosting assignment and requests only its new notice-stage roles; an
+active duplicate remains correctly refused. The focused host-only checks live in
 `tests/rehearsals/programme_browser_gateway_native.py`; run them with the same
 explicit unique run identity, finite lease and scanner-refresh opt-in as the
 integrated entry, separately from an eight-database certification pool.

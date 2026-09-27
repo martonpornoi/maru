@@ -32,7 +32,7 @@ def _rejects(error, code, command, *args, **kwargs):
 
 
 def approve_notice_roles(setup, planning, physical, release):
-    """Approve existing separate sender/source roles and one exact-room operator."""
+    """Add notice roles without repeating planning's approved hosting access."""
     from maru.authorization.catalog import ScopeLevel  # noqa: PLC0415
     from maru.authorization.programme_role_scope_choices import (  # noqa: PLC0415
         load_programme_role_scope_choices,
@@ -50,7 +50,7 @@ def approve_notice_roles(setup, planning, physical, release):
         for person, codes in (
             (
                 planning.planner,
-                ("hosting", "notice-preparation", "notice-review", "notice-handoff"),
+                ("notice-preparation", "notice-review", "notice-handoff"),
             ),
             (
                 release.reviewer,

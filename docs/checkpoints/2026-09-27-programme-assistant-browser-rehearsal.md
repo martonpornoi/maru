@@ -425,3 +425,50 @@ receipt and reports remain preserved under
 certify this changed candidate. Final clean-commit local and hosted acceptance
 remain required before merge. #92/#109/#108/#48 stay open; #203 owns this bounded
 rehearsal facility and honest evidence, not those remaining acceptance gates.
+
+### Notice-stage reconciliation before final certification
+
+The maintainer explicitly approved edition-scoped notice preparation and handoff
+for the fictional planner and notice review for the fictional reviewer, using the
+two ordinary synthetic controllers and expiry within the original disposable
+fixture lease. This resolves the specific tool-permission blocker; it does not
+authorize production grants, external message delivery or fabricated human proof.
+
+Exact-commit certification started at `1e61a5e` against `314d593`. Static, frontend
+(103 cases) and unit feedback (13,454 cases / 179.55s with three existing warnings)
+passed. During read-only preparation for the notice browser card, review found a
+fixture-sequencing error: planning now independently grants the existing hosting
+recipe, but `approve_notice_roles` still attempted to grant that same active
+recipe. The owning authorization command correctly refuses duplicate active
+assignments. This was not a production permission defect or a database timeout.
+
+The assistant deliberately cancelled this attempt through the pool's supported
+stop flag before changing source. Fifteen shards completed successfully and eight
+active shards were interrupted. All 23 recorded containers were removed; an exact
+container-identity comparison found none remaining. No certification receipt was
+created. The complete interrupted artifact directory was preserved at
+`.tools/certification-evidence/programme-local-1e61a5e-interrupted`, with matching
+pool-result hash. These partial results will not certify a later commit.
+
+A new database-free regression reproduced the duplicate assignment before the
+fix. Notice preparation now adds only its eight genuinely new grants, retaining
+planning's existing hosting authority. The strict handoff decoder and fixture
+data require eight distinct new IDs, and separate tests reject extra or repeated
+IDs. This neither catches authorization refusal nor makes granting idempotent:
+the production dual-control commands and duplicate-assignment guard are unchanged.
+The 43 focused planning/notice cases passed. Initial test-only style findings
+were corrected without lint exemptions; scoped lint and format now pass. Complete
+unit feedback and fresh browser notice execution are the next checks before a new
+exact-commit certification; no fresh notice browser result is claimed here.
+
+Complete unit feedback then exposed one additional old nine-grant expectation:
+13,456 passed and that single fixture test failed in 77.47s. Its expectation was
+reconciled to eight and strengthened to explicitly reject a repeated planner
+hosting grant. The original failure report remains retained; this changes only
+the test fixture's stage ownership, not production policy.
+
+The corrected complete unit run passes **13,457 / 71.39s**, with the same three
+existing warnings. Its separate XML report is
+`.tools/programme-notice-reconciled-r2-units.xml`. Scoped Ruff lint/format,
+documentation validation and whitespace checks pass. This is focused/pre-commit
+feedback, not the interrupted candidate's missing certification receipt.

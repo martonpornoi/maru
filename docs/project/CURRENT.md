@@ -196,19 +196,32 @@ collection for an omitted required run identity, before creating a fixture; the
 corrected invocation used a fresh explicit identity. No exact-head receipt or
 protected delivery is claimed yet for this candidate.
 
+Certification of `1e61a5e` was deliberately interrupted after review found the
+notice fixture trying to repeat the hosting grant now made during planning.
+Fifteen shards passed; eight active shards were interrupted, not test failures
+or timeouts. All 23 owned containers were removed and the incomplete evidence
+was preserved; no success receipt exists. The fixture now requests eight new
+notice-stage grants, retaining the earlier hosting assignment. A regression first
+reproduced the duplicate and now passes; extra/duplicate handoff IDs remain refused.
+Production duplicate-grant refusal and permissions are unchanged.
+Fresh complete unit feedback passes **13,457 / 71.39s** with three existing
+warnings, after correcting one remaining test's old nine-grant expectation.
+
 All completed browser fixtures are disposed: normal stop/exit 0, exact owned
 containers/certificate directories/listeners absent, owned tabs closed and ordinary
 logout performed. No live browser URL remains. Preserve unrelated resources.
 The latest notice permission request stayed unsubmitted after a tool-safety
-refusal; explicit permission for the three fictional notice tasks was requested.
-No workaround, new notice grant or fresh notice/archive/stop browser pass is claimed.
+refusal. The maintainer subsequently explicitly approved three temporary fictional
+tasks: planner notice preparation/handoff and reviewer notice review, within the
+original disposable lease. No workaround, new notice grant or fresh notice/archive/
+stop browser pass is claimed yet.
 
 ### Smallest next actions
 
-1. Certify the clean final #203 bundle and deliver through its exact protected gate.
-2. Continue feasible assistant-operated P08/P10/P11 and outstanding interaction
+1. Finish feasible assistant-operated P08/P10/P11 and outstanding interaction
    checks with explicitly admitted synthetic roles. Keep missing permission and
    unobserved controls separate from application defects.
+2. Certify the clean final #203 bundle and deliver through its exact protected gate.
 3. #92 still needs representative independent-person, specialist screen-reader and
    operational-owner acceptance. The [session cards](../operations/programme-human-acceptance.md)
    and evidence map are not passes. A future cross-computer or convention pilot
