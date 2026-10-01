@@ -15,6 +15,10 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Development tooling now requires urllib3 2.8.0 or later within major version 2
+  for its transitive Requests dependency, addressing three upstream HTTPS-proxy
+  and response-streaming vulnerabilities without adding a runtime dependency.
+
 - Programme's dormant post-action continuations now enforce local-only redirect
   destinations and reconstruct approval/notice routes from their original scope.
   External and browser-ambiguous targets are refused without weakening CodeQL,

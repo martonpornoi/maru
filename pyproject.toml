@@ -49,6 +49,11 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.uv]
+# Security floor for the Requests dependency used by development tooling.
+# CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689 are fixed in 2.8.0.
+constraint-dependencies = ["urllib3>=2.8.0,<3"]
+
 [tool.setuptools.package-data]
 "*" = ["templates/**/*.html", "static/**/*"]
 

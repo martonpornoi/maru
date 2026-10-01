@@ -235,6 +235,18 @@ survival was not. The certification command, policy and coverage gates are uncha
 The final documentation follow-up passes **13,457 units / 78.30s**, with the same
 three warnings, documentation validation, changed-rehearsal lint and whitespace.
 
+Certification of documentation head `c9a440a` then failed its required dependency
+audit: urllib3 2.7.0 has three newly reported CVEs. The eight started database
+workers were cancelled through the maintained pool control and removed normally;
+13,457 units passed, but there is no certification receipt. All 820 artifacts were
+preserved and SHA-256 compared. The [narrow dependency repair](../checkpoints/2026-10-01-programme-verification-dependency-repair.md)
+constrains urllib3 to `>=2.8.0,<3` and updates only its lock entry to 2.8.0.
+It remains a development-tool transitive dependency, not a new runtime requirement.
+Locked synchronization/check and the unchanged vulnerability audit now pass.
+Complete fast units pass **13,457 / 74.45s**, with three existing warnings;
+repository-wide Ruff, formatting and documentation validation also pass.
+Fresh final-head certification and protected delivery remain required.
+
 No browser fixture is left running. The latest successful notice session used an
 interactive terminal, ordinary logout and normal stop/exit 0; its exact owned
 containers/certificate directory/listener are absent. An earlier non-interactive
