@@ -18,6 +18,9 @@ rather than replace the curated summary.
 - Development tooling now requires urllib3 2.8.0 or later within major version 2
   for its transitive Requests dependency, addressing three upstream HTTPS-proxy
   and response-streaming vulnerabilities without adding a runtime dependency.
+- Staff Console development tooling now pins advisory-fixed Undici 7.29.1 and
+  brace-expansion 2.1.7 through bounded overrides, retaining the existing runtime
+  dependencies and required vulnerability-audit thresholds.
 
 - Programme's dormant post-action continuations now enforce local-only redirect
   destinations and reconstruct approval/notice routes from their original scope.

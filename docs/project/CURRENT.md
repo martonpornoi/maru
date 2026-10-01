@@ -247,6 +247,19 @@ Complete fast units pass **13,457 / 74.45s**, with three existing warnings;
 repository-wide Ruff, formatting and documentation validation also pass.
 Fresh final-head certification and protected delivery remain required.
 
+The subsequent `5179164` run passed the Python audit but failed the required
+JavaScript audit on thirteen advisories in two development-only dependencies.
+Its eight native shards were cancelled normally and removed; **13,457 units /
+164.08s** passed, with no certification receipt. All 820 artifacts were preserved
+and hash-compared. The [frontend-tool repair](../checkpoints/2026-10-01-programme-frontend-tool-audit-repair.md)
+updates only Undici **7.29.0 -> 7.29.1** and brace-expansion **2.1.4 -> 2.1.7**
+with bounded overrides. Both audits now report no known vulnerabilities; complete
+fast units pass **13,457 / 74.24s** (three existing warnings and one non-fatal local
+pytest-cache write warning). Complete non-database checks pass **326.96s**, including
+103 frontend tests, fresh warning-fatal Sphinx and unchanged generated contracts/
+assets. Fresh exhaustive exact-head certification remains required; no audit
+threshold, runtime dependency or CI policy changes.
+
 No browser fixture is left running. The latest successful notice session used an
 interactive terminal, ordinary logout and normal stop/exit 0; its exact owned
 containers/certificate directory/listener are absent. An earlier non-interactive
