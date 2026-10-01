@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-27
+Last updated: 2026-10-01
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -154,7 +154,8 @@ follow-up's protected PR, not an inherited PR #199 receipt.
 loopback HTTP over the unchanged pinned native HTTPS fixture, without machine
 trust, TLS bypass, production changes or impersonation. Finite leases, ordinary
 login/logout, run-specific cookies, encrypted handoff and owned cleanup remain
-mandatory. PostgreSQL acceptance is required; no full certification is running.
+mandatory. PostgreSQL acceptance is required. The interrupted run is not a
+certification; the final clean bundle still needs fresh exact-head acceptance.
 
 ### Verified observations and repairs
 
@@ -218,6 +219,22 @@ Production duplicate-grant refusal and permissions are unchanged.
 Fresh complete unit feedback passes **13,457 / 71.39s** with three existing
 warnings, after correcting one remaining test's old nine-grant expectation.
 
+The [October 1 recovery checkpoint](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
+records the later `0d2a3aa` certification interruption: 47 shards passed, five
+closed abruptly and three more started without final results. There is no final
+pool result or success receipt. All 4,495 surviving artifact files were preserved
+and SHA-256 compared before another run could replace `.local-ci`.
+The full joined rehearsal at that same clean head now passes **all eighteen
+phases / 1,265.44s**, including the composed notice-grant repair, scope/field/object
+isolation, archive, both logical restores and stop. Its process exited 0; owned
+database/scanner resources and certificate directory are absent. This is automated
+native evidence, not browser or human acceptance and not whole-commit certification.
+A one-shot hidden worker retains logs and process completion independently of its
+launching tool session; launcher-exit survival was observed, app-restart/reboot
+survival was not. The certification command, policy and coverage gates are unchanged.
+The final documentation follow-up passes **13,457 units / 78.30s**, with the same
+three warnings, documentation validation, changed-rehearsal lint and whitespace.
+
 No browser fixture is left running. The latest successful notice session used an
 interactive terminal, ordinary logout and normal stop/exit 0; its exact owned
 containers/certificate directory/listener are absent. An earlier non-interactive
@@ -230,10 +247,12 @@ add their separate authority or admission.
 
 ### Smallest next actions
 
-1. Finish remaining assistant-operated P10/P11 and outstanding interaction
+1. Certify the clean final #203 bundle and deliver through its exact protected gate.
+   Use the preserved joined result without repeating it for documentation-only
+   follow-up; the changed commit still requires fresh ordinary certification.
+2. Finish remaining assistant-operated P10/P11 and outstanding interaction
    checks with explicitly admitted synthetic roles. Keep missing permission and
    unobserved controls separate from application defects.
-2. Certify the clean final #203 bundle and deliver through its exact protected gate.
 3. #92 still needs representative independent-person, specialist screen-reader and
    operational-owner acceptance. The [session cards](../operations/programme-human-acceptance.md)
    and evidence map are not passes. A future cross-computer or convention pilot
@@ -261,7 +280,9 @@ authority remain mandatory. Notice acknowledgement is not provider delivery or
 acceptance of replacement work; signed fallback remains historical read-only.
 
 Unattended bundled delivery and protected merge are authorized, single-agent.
-No new schedules, policy bypass, production deployment or broad Docker cleanup.
+On October 1 the maintainer approved one temporary 30-minute check-in for #203
+through protected merge, then deletion. It stays quiet on unchanged state; no
+other schedule, policy bypass, production deployment or broad Docker cleanup.
 Preserve unrelated worktrees/stashes/resources; remove only verified task-owned
 resources. Applied stashes `5b6851f` and `dd651ef` must not be reapplied;
 preserve unrelated `3cc5df` / `9fecfe`, the #96 repair checkout and both isolated

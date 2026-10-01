@@ -9,10 +9,15 @@ the [executable rehearsal](programme-integrated-rehearsal.md) for technical setu
 and the [participant cards](programme-human-acceptance.md) for genuine people.
 It implements #48/#109's existing NFR-013, OPS-009, INT-007 and UX-029 boundaries.
 
-The latest populated source is `c063f70731b43574c0b7263f7564c8fd24e87a6c`:
+The latest populated source is `0d2a3aa5c862e70f2741cceb6aedc0f03b2042af`:
+[the October 1 joined rehearsal](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
+passed all eighteen phases in 1,265.44s, including the reconciled planning/notice
+grants and normal owned cleanup. This run is separate from the interrupted
+whole-commit certification and does not provide browser or human acceptance.
+The earlier source `c063f70731b43574c0b7263f7564c8fd24e87a6c` supplied
 [the expanded native journey](../checkpoints/2026-09-23-programme-acceptance-recovery.md)
-passed all eighteen phases in 1,336.35s using the restricted native runtime.
-It extends [populated run26](../checkpoints/2026-09-21-programme-retained-recovery-verification.md)
+with all eighteen phases passing in 1,336.35s using the restricted native runtime.
+It extended [populated run26](../checkpoints/2026-09-21-programme-retained-recovery-verification.md)
 with connected delivery-layer and object-mutation isolation. The earlier bundle
 at `ef7b17743b183f2875d015381e9ba836f181f02a` separately passed full certification;
 neither result transfers whole-commit certification to a changed bundle.

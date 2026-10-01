@@ -70,6 +70,15 @@ Its first attempt failed before journey setup because the new checkout lacked
 `.tools`; create that ignored directory as shown above. Both reports are retained.
 This host-only journey remains separate from ordinary exact-head certification.
 
+The [October 1 repeat](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
+at clean `0d2a3aa5c862e70f2741cceb6aedc0f03b2042af` passed all eighteen phases in
+1,265.44s after reconciling the planning and notice-stage hosting grants. Normal
+process exit and owned cleanup were verified. A task-specific hidden PowerShell
+worker retained logs and lifecycle metadata after its launcher exited; that
+metadata is not a certification receipt. Preserve the preceding no-tests-run
+wrapper argument failure. Use the [long-run handling guidance](../development/local-certification.md#long-running-local-processes)
+without adding an alternate acceptance path or running alongside the full pool.
+
 This command completes automated synthetic tasks, not a human session. It neither
 proves every possible state/field combination nor supplies genuine browser zoom,
 printing, screen-reader use or operational-owner acceptance. Use the participant
