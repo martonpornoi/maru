@@ -517,9 +517,11 @@ def test_only_html_fixture_origin_and_local_redirect_are_mapped(bridge):
     )
     assert status == 302
     assert dict(values)["Location"] == "/admin/"
-    assert bridge.origin.encode() in body
-    assert bridge.backend.encode() not in body
-    assert b"https://other.invalid/" in body
+    expected = (
+        f'<a href="{bridge.origin}/admin/">work</a>'
+        '<a href="https://other.invalid/">other</a>'
+    ).encode()
+    assert body == expected
     assert dict(values)["Cache-Control"] == "private, no-store"
     assert int(dict(values)["Content-Length"]) == len(body)
 

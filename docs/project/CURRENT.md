@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-01
+Last updated: 2026-10-02
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -259,6 +259,20 @@ pytest-cache write warning). Complete non-database checks pass **326.96s**, incl
 103 frontend tests, fresh warning-fatal Sphinx and unchanged generated contracts/
 assets. Fresh exhaustive exact-head certification remains required; no audit
 threshold, runtime dependency or CI policy changes.
+
+[PR #204](https://github.com/martonpornoi/maru/pull/204) opened after exact clean
+`9b51c6e` certification passed all ten gates: **18,538 Python cases (13,457 units
+and 5,081 native cases), 103 frontend cases, 71 exhaustive shards and 91.73%
+coverage / 4h18m52s**. Every shard passed headroom/cleanup; all 5,043 evidence
+files were preserved and hash-compared. Hosted CodeQL then flagged a substring
+assertion in the HTML-mapping unit test, not a runtime URL authorization check.
+The [exact-HTML follow-up](../checkpoints/2026-10-02-programme-codeql-html-expectation.md)
+strengthens it to complete expected-response equality. No alert was dismissed,
+query suppressed or security rule changed. The superseded hosted run was
+cancelled; its partial results are not acceptance. The stronger test and session
+checks pass **100 / 1.10s**, and complete inexpensive units pass **13,457 / 84.56s**
+with three existing warnings. Fresh exact-head local/hosted acceptance remains
+required. The earlier complete receipt certifies only `9b51c6e`.
 
 No browser fixture is left running. The latest successful notice session used an
 interactive terminal, ordinary logout and normal stop/exit 0; its exact owned
