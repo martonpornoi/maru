@@ -21,6 +21,11 @@ rather than replace the curated summary.
   hands off its independently prepared public verifier policy without issuer
   secrets, new permissions, longer expiry or production activation.
 
+- Two activated runtime-helper migration-refusal tests now use the existing
+  transaction-rollback isolation to avoid redundant forward reconstruction.
+  Both real refusal checks remain, with added exact restoration assertions;
+  required PostgreSQL history, timing limits and coverage policy are unchanged.
+
 - Development tooling now requires urllib3 2.8.0 or later within major version 2
   for its transitive Requests dependency, addressing three upstream HTTPS-proxy
   and response-streaming vulnerabilities without adding a runtime dependency.

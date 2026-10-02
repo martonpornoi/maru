@@ -207,6 +207,20 @@ pass **13,489 / 79.59s** with three existing warnings. Exact bundle certificatio
 and protected delivery are next; no live offline, native print or human pass is
 inferred from the stop result.
 
+The first exact `eb620d4` certification failed its unchanged local timing gate:
+shard 34 reached **3,200.657s**, cancelling seven other active shards. Thirty-eight
+shards and 13,489 units passed, but no certification receipt exists. All 46 owned
+containers were removed; 4,419 artifacts and all three worker files were copied
+and SHA-256 verified. The [timing repair checkpoint](../checkpoints/2026-10-02-programme-exit-certification-headroom.md)
+records the stale migration-group estimate and scoped use of existing rollback
+isolation for two single-connection downgrade-refusal variants. Complete cheap
+units pass **13,489 / 91.21s**; Ruff, format, docs and whitespace checks pass.
+The entire repaired shard 34 passed **78 cases / 26m46s** with the identical
+selection, unchanged source and independently verified cleanup. This one-database
+diagnostic is not eight-worker timing or certification. Fresh complete exact-head
+certification remains required. No timeout, group split, history selection,
+coverage or production migration changed.
+
 ### Verified observations and repairs
 
 - The [September 25 maintainer checkpoint](../checkpoints/2026-09-25-programme-local-assisted-rehearsal.md)
@@ -369,8 +383,9 @@ acceptance of replacement work; signed fallback remains historical read-only.
 
 Unattended bundled delivery and protected merge are authorized, single-agent.
 The approved temporary 30-minute check-in for #203 was deleted after its verified
-protected merge on October 2. No replacement schedule exists; no
-other schedule, policy bypass, production deployment or broad Docker cleanup.
+protected merge on October 2. The maintainer subsequently approved temporary
+30-minute check-ins for #205 through its protected merge; delete them afterwards.
+No other schedule, policy bypass, production deployment or broad Docker cleanup.
 Preserve unrelated worktrees/stashes/resources; remove only verified task-owned
 resources. Applied stashes `5b6851f` and `dd651ef` must not be reapplied;
 preserve unrelated `3cc5df` / `9fecfe`, the #96 repair checkout and both isolated
