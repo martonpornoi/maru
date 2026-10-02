@@ -16,6 +16,7 @@ from maru.scheduling import (
     evaluation_commands,
     occurrence_commands,
     placement_commands,
+    planning_hosts,
     planning_review,
 )
 from maru.scheduling.command_support import (
@@ -60,7 +61,7 @@ def _result(setup, items):
         uuid4(),
         _person("planner"),
         _person("venue"),
-        tuple(uuid4() for _ in range(7)),
+        tuple(uuid4() for _ in range(8)),
     )
 
 
@@ -354,11 +355,14 @@ def test_preparation_uses_guarded_startup_then_real_narrow_role_recipes(monkeypa
         )
     )
     monkeypatch.setattr(scenario, "_compose_plan", Mock(return_value=plan))
+    editor_check = Mock()
+    monkeypatch.setattr(scenario, "_verify_host_editor", editor_check)
     result = scenario.prepare_planning_scenario(*sources)
     assert order == [
         "guard",
         "planner",
         "content",
+        "hosting",
         "venue-selection",
         "venue-catalog",
         "venue-selection",
@@ -367,11 +371,40 @@ def test_preparation_uses_guarded_startup_then_real_narrow_role_recipes(monkeypa
         ScopeLevel.EDITION,
         ScopeLevel.EDITION,
         ScopeLevel.EDITION,
+        ScopeLevel.EDITION,
         ScopeLevel.ORGANIZATION,
         ScopeLevel.EDITION,
     ]
     assert all(c.kwargs["people"] == setup.controllers for c in grant.call_args_list)
     assert result.candidate_id == expected.candidate_id
+    editor_check.assert_called_once_with(setup, result)
+
+
+def test_preparation_checks_every_editor_roster_as_actual_planner(monkeypatch):
+    setup, _, _, items = _sources()
+    planning = _result(setup, items)
+    scope = object()
+    request = Mock(return_value=scope)
+    reader = Mock()
+    monkeypatch.setattr(scenario, "_request", request)
+    monkeypatch.setattr(planning_hosts, "load_scheduling_host_requirements", reader)
+    scenario._verify_host_editor(setup, planning)
+    assert request.call_count == 3
+    for call in request.call_args_list:
+        assert call.args == (setup, planning.planner)
+        assert call.kwargs == {"read": True}
+    assert [call.kwargs for call in reader.call_args_list] == [
+        {
+            "candidate_id": planning.candidate_id,
+            "expected_version": planning.candidate_version,
+            "occurrence_id": occurrence,
+        }
+        for occurrence in planning.occurrence_ids
+    ]
+    assert all(call.args == (scope,) for call in reader.call_args_list)
+    reader.side_effect = RuntimeError("synthetic roster refused")
+    with pytest.raises(RuntimeError, match="synthetic roster refused"):
+        scenario._verify_host_editor(setup, planning)
 
 
 def test_policy_fence_precedes_framework_people_or_actions(monkeypatch):

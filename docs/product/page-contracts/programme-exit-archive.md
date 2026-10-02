@@ -1,6 +1,7 @@
 # Programme exit archive
 
-Status: Dormant candidate; no production route or profile admission. Requirements:
+Status: Delivered dormant through PR #199; no production route or profile admission.
+Requirements:
 INT-007, QRY-006–008, AUD-001/003, PRI-001/003, UX-005–008 and NFR-013.
 ADRs 0108/0109 govern the declared scope and custody; #189 supplies #108/P11.
 

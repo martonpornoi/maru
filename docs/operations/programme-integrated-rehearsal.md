@@ -11,6 +11,12 @@ the earlier component boundaries, not instructions to skip now-required testing.
 
 ## Current executable entry and evidence
 
+For the explicitly approved single-maintainer local browser session, use the
+[local session instructions](programme-human-acceptance.md#approved-single-maintainer-local-session)
+and ADR 0115. Its HTTP bridge wraps the genuine owned HTTPS fixture without
+changing native readiness or production security. This is not a certificate
+bypass, external deployment or replacement for the automated entry below.
+
 Use the [P01–P12 evidence map](programme-acceptance-evidence.md) to distinguish
 the recorded automated assertions from remaining human and integrated gates.
 The combined source is protected through [PR #199](https://github.com/martonpornoi/maru/pull/199),
@@ -63,6 +69,15 @@ delivery-field subsets, immediate revocation and actual cross-scope object POSTs
 Its first attempt failed before journey setup because the new checkout lacked
 `.tools`; create that ignored directory as shown above. Both reports are retained.
 This host-only journey remains separate from ordinary exact-head certification.
+
+The [October 1 repeat](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
+at clean `0d2a3aa5c862e70f2741cceb6aedc0f03b2042af` passed all eighteen phases in
+1,265.44s after reconciling the planning and notice-stage hosting grants. Normal
+process exit and owned cleanup were verified. A task-specific hidden PowerShell
+worker retained logs and lifecycle metadata after its launcher exited; that
+metadata is not a certification receipt. Preserve the preceding no-tests-run
+wrapper argument failure. Use the [long-run handling guidance](../development/local-certification.md#long-running-local-processes)
+without adding an alternate acceptance path or running alongside the full pool.
 
 This command completes automated synthetic tasks, not a human session. It neither
 proves every possible state/field combination nor supplies genuine browser zoom,
@@ -676,7 +691,10 @@ P05–P12 or full isolation acceptance. See the
 `ProgrammeRunningFixture.prepare_planning(proposal, review, items)` carries the
 same verified private source chain into a fixed bounded child. Guarded candidate
 startup and original lease remain mandatory. A new synthetic planner receives
-only the Edition planning recipe; another person receives the explicit
+separately approved Edition planning, content, hosting and Venue-selection recipes;
+these are independent prerequisites, not implicit planner permissions. Preparation
+must read all three placement-editor host rosters as that actual planner before
+returning its strict eight-assignment handoff. Another person receives the explicit
 Organization Venue catalog and Edition selection recipes. Ordinary Venue commands
 create and activate the fictional property and select two configured rooms.
 The room configuration identifier is discovered from the authorized existing

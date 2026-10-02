@@ -140,8 +140,9 @@ the existing governed notice/recovery process.
 Use database-free tests for payload shape, exact audience ceilings, source versions,
 deterministic encoding, time-zone/interval boundaries, now/next ties, signatures,
 expiry, malformed/oversized files, known overlays, key rotation and failure states.
-Maintain owner-authorized integration and isolated database cases for #102 without
-running PostgreSQL under ADR 0100. Browser evidence uses only synthetic fixtures
+Run owner-authorized integration and isolated database cases under the required
+PostgreSQL policy restored by #102 / PR #195; ADR 0100's deferral is historical.
+Browser evidence uses only synthetic fixtures
 and honestly distinguishes mocked owner data from native acceptance.
 
 Exercise 320, 390, 768, 958, 1024, 1280 and 1920 CSS-pixel widths, keyboard order,

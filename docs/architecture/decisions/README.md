@@ -119,6 +119,7 @@ the system.
 | [0112](0112-native-point-in-time-policy-observation.md) | Accepted; implementation pending | Remove recursive client round trips from fresh policy observations using the existing exact native validator while preserving independent locking writer proofs |
 | [0113](0113-logical-restore-enum-cast-canonicalization.md) | Accepted | Recognize only exact PostgreSQL enum-array cast reparsing while retaining pinned schema hashes and every independent recovery gate |
 | [0114](0114-restore-stable-identity-trigger-predicates.md) | Accepted | Preserve exact reviewed Identity trigger predicates across logical restore without pinning internal cast-format flags |
+| [0115](0115-local-only-assisted-programme-rehearsal.md) | Accepted | Allow an explicitly opted-in synthetic loopback HTTP browser bridge without changing native HTTPS or production authority |
 
 New ADRs use the next four-digit number and contain:
 

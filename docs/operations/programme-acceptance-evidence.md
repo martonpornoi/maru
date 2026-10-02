@@ -9,10 +9,15 @@ the [executable rehearsal](programme-integrated-rehearsal.md) for technical setu
 and the [participant cards](programme-human-acceptance.md) for genuine people.
 It implements #48/#109's existing NFR-013, OPS-009, INT-007 and UX-029 boundaries.
 
-The latest populated source is `c063f70731b43574c0b7263f7564c8fd24e87a6c`:
+The latest populated source is `0d2a3aa5c862e70f2741cceb6aedc0f03b2042af`:
+[the October 1 joined rehearsal](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
+passed all eighteen phases in 1,265.44s, including the reconciled planning/notice
+grants and normal owned cleanup. This run is separate from the interrupted
+whole-commit certification and does not provide browser or human acceptance.
+The earlier source `c063f70731b43574c0b7263f7564c8fd24e87a6c` supplied
 [the expanded native journey](../checkpoints/2026-09-23-programme-acceptance-recovery.md)
-passed all eighteen phases in 1,336.35s using the restricted native runtime.
-It extends [populated run26](../checkpoints/2026-09-21-programme-retained-recovery-verification.md)
+with all eighteen phases passing in 1,336.35s using the restricted native runtime.
+It extended [populated run26](../checkpoints/2026-09-21-programme-retained-recovery-verification.md)
 with connected delivery-layer and object-mutation isolation. The earlier bundle
 at `ef7b17743b183f2875d015381e9ba836f181f02a` separately passed full certification;
 neither result transfers whole-commit certification to a changed bundle.
@@ -40,6 +45,39 @@ equality. This closes the component/recovery issues, not the human-dependent
 | P12 — Isolation and excluded effects | Original 97-table fingerprints checked after each phase; capability/effect inventory guards; 49 genuine scope/purpose responses across seven routes; all seven independently authorized delivery-layer subsets and immediate revocation; four actual foreign/sibling object POST denials between successful owner controls. | Reconcile each relevant state with its owning tests and genuine session evidence; a finite matrix is not every possible state or proof against all transient effects. |
 
 ## Independent supporting evidence
+
+The [September 27 assistant-operated browser record](../checkpoints/2026-09-27-programme-assistant-browser-rehearsal.md)
+adds actual ordinary-form P02 evidence over ADR 0115's local bridge: a new proposal,
+real scanned PDF upload, separate-account collaboration, exact acknowledgement,
+submission and refusal to reuse an old acknowledgement after reopening/resealing.
+It also records discovery/usability gaps and the limited responsive observations.
+The replacement fixture adds fresh separate-account review/recusal/moderation/
+decision, conversion, hosting and public-copy actions, plus limited planning,
+release-preflight and audience-specific output checks. A later counter-enabled
+session identified the placement refusal as the fixture's missing independent
+hosting prerequisite. Explicit controller request/approval restored editor access;
+private preview/save and distinct reviewer approval/planner publication then passed.
+A newly created requirement proceeded through explicit work preview/create, own
+volunteer claim, refused premature lock, organizer confirmation and coverage lock.
+Old work remained unchanged. Source-invalidated continuity HTML and its print copy
+withheld old geometry. Queue-link behavior remains unresolved. After the original
+notice permission submission was blocked, the maintainer explicitly approved only
+three temporary synthetic notice grants. A fresh interactive session requested and
+independently approved them through ordinary forms. Rejection remained final;
+separate work notices passed independent-account review, explicitly simulated local
+link handoff and exact-recipient acknowledgement. A real fictional withdrawal
+withheld old geometry, invalidated the old notice and required fresh notice evidence
+without changing three accepted work intervals. Recipient views withheld private
+rationale and denied a different person. These are fresh P08 functional observations,
+not provider delivery, independent-human decisions or a full P10 pass.
+Archive/stop and complete disconnected/native-print browser checks remain unperformed.
+The successful sessions were disposed normally. A non-interactive launch lost its
+listener before browser use; its final process metadata was not preserved, but owned
+resources were confirmed absent. An unused internal error tab was left untouched
+after browser URL-policy refusal. Native fixture repair and exact-head delivery
+evidence remain separate from these browser observations.
+Prepared data, assistant decisions and this single-browser session do not satisfy
+the independent-person or specialist-accessibility column above.
 
 - [Exit-route isolation](../checkpoints/2026-09-21-programme-exit-real-scope-isolation.md)
   exercised actual foreign/sibling foundations and other-requester denials in
@@ -125,8 +163,10 @@ retain concrete gaps under #109 rather than implying a universal isolation pass.
 
 #92 needs representative people, screen-reader evidence and independent
 operational-owner acceptance. The earlier browser attempt stopped before login at
-`ERR_CERT_AUTHORITY_INVALID`; an approved trusted rehearsal origin is still needed.
-Do not bypass TLS or count an assistant operating both accounts as two people.
+`ERR_CERT_AUTHORITY_INVALID`; ADR 0115 now permits explicitly approved synthetic
+loopback HTTP for local-only testing. A browser-trusted HTTPS environment is still
+needed before cross-computer or convention pilot work. Do not bypass TLS or count
+an assistant operating both accounts as two people.
 Only completed #97/#102/#92/#109 acceptance permits #108's separately verified
 profile promotion. That promotion is not a production deployment, and #48 remains
 open until its actual integrated criteria are satisfied.

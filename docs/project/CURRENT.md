@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-09-24
+Last updated: 2026-10-02
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -11,7 +11,14 @@ the release baseline.
 
 ## Protected baseline and testing policy
 
-[PR #201](https://github.com/martonpornoi/maru/pull/201) subsequently delivered
+[PR #202](https://github.com/martonpornoi/maru/pull/202) delivered the seven
+local-only redirect fixes at protected squash `314d593dc98fde705e834ef6374d001d25051942`.
+All 71 local/hosted PostgreSQL shards passed, with 18,432 Python cases and 91.74%
+coverage. The fresh main CodeQL scan marked alerts 13–19 fixed, not dismissed;
+zero open alerts remained. Clean local main was synchronized. Final exact-head
+evidence is on PR #202; no manual Programme acceptance was claimed.
+
+[PR #201](https://github.com/martonpornoi/maru/pull/201) previously delivered
 the custody clock-fixture repair and exit delivery record as protected squash
 `eff8286b2c7dcff00e51159d76d70d61e7cd4745`; its tree equals certified `906f9e0`.
 Local and hosted affected-history acceptance passed 31 PostgreSQL shards,
@@ -142,38 +149,164 @@ follow-up's protected PR, not an inherited PR #199 receipt.
 
 ## Next actions and remaining closure gates
 
-The maintainer requested resolving the seven open medium CodeQL redirect alerts
-#13–#19 before the next human session. The focused candidate adds one domain-neutral
-local-only redirect boundary, applies it to all seven reported sinks, and replaces
-three request-path continuations with canonical scoped destinations. It does not
-dismiss alerts, change scanner/ruleset policy, alter schema or authorization,
-or activate Programme. Focused HTTP/helper tests pass **445 / 3.49s**, and complete
-database-free units pass **13,351 / 71.17s** with three existing Django warnings;
-Ruff passes.
-Complete exact-commit local acceptance and hosted CodeQL/protected acceptance are
-still required. The [redirect checkpoint](../checkpoints/2026-09-24-programme-local-redirects.md)
-records scope, test iterations and remaining evidence. This security maintenance
-does not close or substitute for #92/#109/#108/#48.
+#203 is the active local-assisted rehearsal candidate on protected base
+`314d593dc98fde705e834ef6374d001d25051942`. ADR 0115 permits explicit synthetic
+loopback HTTP over the unchanged pinned native HTTPS fixture, without machine
+trust, TLS bypass, production changes or impersonation. Finite leases, ordinary
+login/logout, run-specific cookies, encrypted handoff and owned cleanup remain
+mandatory. PostgreSQL acceptance is required. The interrupted run is not a
+certification; the final clean bundle still needs fresh exact-head acceptance.
 
-1. Complete #109's joined evidence with #92's genuine representative-person,
-   screen-reader and materially changed browser observations. The
-   [participant cards](../operations/programme-human-acceptance.md) supply tasks and
-   an evidence form, not a human pass.
-2. #97 and #102 are delivered. Only after #92/#109 also pass, implement and
-   separately verify #108's final profile
-   promotion. Close #48 only when the decomposition and integrated criteria pass.
+### Verified observations and repairs
 
-The browser rejected the temporary HTTPS certificate before login
-(`ERR_CERT_AUTHORITY_INVALID`). An approved trusted rehearsal origin and actual
-independent participants remain necessary. No TLS bypass or machine trust change
-was made. Preserve unchanged #87/PR #90 native Cancel, actual 200% Chrome zoom,
-visible keyboard focus and the user's disabled Windows Animation effects.
-Pinned HTTP/parsed HTML and synthetic actors do not supply human acceptance.
+- The [September 25 maintainer checkpoint](../checkpoints/2026-09-25-programme-local-assisted-rehearsal.md)
+  records assisted workspace selection, Start planning, separate-account access
+  request/approval and call draft/activation. The bridge's signed feedback-cookie
+  repair fixed the misleading error after a committed workspace switch. The
+  maintainer reported difficult discovery, dense forms and unclear success
+  hierarchy; these remain UX findings, not unaided or two-person acceptance.
+- The [September 27 assistant checkpoint](../checkpoints/2026-09-27-programme-assistant-browser-rehearsal.md)
+  records fresh P02 proposal/PDF/collaboration/acknowledgement/submission and stale
+  acknowledgement refusal; P03 review/recusal/moderation/decision; and P04
+  conversion/delivery/hosting/private-then-shared availability/public copy.
+  The narrow bridge PDF PUT/intent-header repair retains the real scanner and
+  byte limits. Already-prepared examples do not count as fresh browser writes.
+- P05 placement returned 403 because the fixture omitted separate hosting
+  authority. An explicit bounded request and independent-account approval made
+  the real editor work. Preparation now includes that existing recipe and checks
+  all editor roster reads. Private preview/save advanced only the comparison
+  draft v4 to v5; old accepted work remained unchanged and its coverage was stale.
+- Fresh P06 staffing passed explicit requirement/work preview and creation, own
+  volunteer claim, refused premature lock, separate organizer confirmation and
+  coverage lock. P07 passed separate reviewer approval and planner publication of
+  that exact approval, retaining both releases. Author approval returned 403.
+- Audience-specific outputs and limited responsive observations remain separately
+  recorded. After staffing changed the source, continuity HTML and its print copy
+  withheld old geometry without cancelling retained work. This is not native
+  printing, offline verification, actual zoom or screen-reader acceptance.
+- Fresh P08 browser work used the explicitly approved three temporary notice
+  grants, requested and approved by the two ordinary synthetic controllers. A
+  rejected package stayed final and could not be recreated unchanged. A different
+  work notice passed independent-account approval, explicitly simulated local
+  link handoff and its exact volunteer's acknowledgement; private rationale and
+  other actor identities were absent from the recipient page.
+- A reasoned withdrawal advanced the pointer to v2. Its fresh notice withheld
+  old geometry, inherited no approval/handoff/acknowledgement, then passed its own
+  separate review/handoff/acknowledgement. The old notice became unavailable,
+  another person was denied, and all three confirmed work intervals stayed intact.
+  These are assistant-operated facts, not human or external-delivery evidence.
+- Queue links sometimes left the old page visible; direct destinations worked.
+  In-app 403 responses also retained the prior DOM. Chrome comparison returned
+  `ERR_BLOCKED_BY_CLIENT`; no browser security preference was changed.
 
-Real twenty-minute process expiry and deployment workload/capacity are not yet
-proved; archive Python-tracked peak is not RSS. Production/PITR, supervision,
-privacy/safeguarding, training and go/no-go remain separate gates. No production
-profile, routes, deployment or data have been activated.
+Complete inexpensive units pass **13,454 / 88.26s**, with three existing Django
+URL-field warnings; repository-wide Ruff, documentation and whitespace checks pass.
+Both focused native bridge/planner checks pass **2 / 617.04s**, including fresh
+restricted-runtime planner preparation with the real independent host-roster read.
+Their first invocation stopped at
+collection for an omitted required run identity, before creating a fixture; the
+corrected invocation used a fresh explicit identity. No exact-head receipt or
+protected delivery is claimed yet for this candidate.
+
+Certification of `1e61a5e` was deliberately interrupted after review found the
+notice fixture trying to repeat the hosting grant now made during planning.
+Fifteen shards passed; eight active shards were interrupted, not test failures
+or timeouts. All 23 owned containers were removed and the incomplete evidence
+was preserved; no success receipt exists. The fixture now requests eight new
+notice-stage grants, retaining the earlier hosting assignment. A regression first
+reproduced the duplicate and now passes; extra/duplicate handoff IDs remain refused.
+Production duplicate-grant refusal and permissions are unchanged.
+Fresh complete unit feedback passes **13,457 / 71.39s** with three existing
+warnings, after correcting one remaining test's old nine-grant expectation.
+
+The [October 1 recovery checkpoint](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
+records the later `0d2a3aa` certification interruption: 47 shards passed, five
+closed abruptly and three more started without final results. There is no final
+pool result or success receipt. All 4,495 surviving artifact files were preserved
+and SHA-256 compared before another run could replace `.local-ci`.
+The full joined rehearsal at that same clean head now passes **all eighteen
+phases / 1,265.44s**, including the composed notice-grant repair, scope/field/object
+isolation, archive, both logical restores and stop. Its process exited 0; owned
+database/scanner resources and certificate directory are absent. This is automated
+native evidence, not browser or human acceptance and not whole-commit certification.
+A one-shot hidden worker retains logs and process completion independently of its
+launching tool session; launcher-exit survival was observed, app-restart/reboot
+survival was not. The certification command, policy and coverage gates are unchanged.
+The final documentation follow-up passes **13,457 units / 78.30s**, with the same
+three warnings, documentation validation, changed-rehearsal lint and whitespace.
+
+Certification of documentation head `c9a440a` then failed its required dependency
+audit: urllib3 2.7.0 has three newly reported CVEs. The eight started database
+workers were cancelled through the maintained pool control and removed normally;
+13,457 units passed, but there is no certification receipt. All 820 artifacts were
+preserved and SHA-256 compared. The [narrow dependency repair](../checkpoints/2026-10-01-programme-verification-dependency-repair.md)
+constrains urllib3 to `>=2.8.0,<3` and updates only its lock entry to 2.8.0.
+It remains a development-tool transitive dependency, not a new runtime requirement.
+Locked synchronization/check and the unchanged vulnerability audit now pass.
+Complete fast units pass **13,457 / 74.45s**, with three existing warnings;
+repository-wide Ruff, formatting and documentation validation also pass.
+Fresh final-head certification and protected delivery remain required.
+
+The subsequent `5179164` run passed the Python audit but failed the required
+JavaScript audit on thirteen advisories in two development-only dependencies.
+Its eight native shards were cancelled normally and removed; **13,457 units /
+164.08s** passed, with no certification receipt. All 820 artifacts were preserved
+and hash-compared. The [frontend-tool repair](../checkpoints/2026-10-01-programme-frontend-tool-audit-repair.md)
+updates only Undici **7.29.0 -> 7.29.1** and brace-expansion **2.1.4 -> 2.1.7**
+with bounded overrides. Both audits now report no known vulnerabilities; complete
+fast units pass **13,457 / 74.24s** (three existing warnings and one non-fatal local
+pytest-cache write warning). Complete non-database checks pass **326.96s**, including
+103 frontend tests, fresh warning-fatal Sphinx and unchanged generated contracts/
+assets. Fresh exhaustive exact-head certification remains required; no audit
+threshold, runtime dependency or CI policy changes.
+
+[PR #204](https://github.com/martonpornoi/maru/pull/204) opened after exact clean
+`9b51c6e` certification passed all ten gates: **18,538 Python cases (13,457 units
+and 5,081 native cases), 103 frontend cases, 71 exhaustive shards and 91.73%
+coverage / 4h18m52s**. Every shard passed headroom/cleanup; all 5,043 evidence
+files were preserved and hash-compared. Hosted CodeQL then flagged a substring
+assertion in the HTML-mapping unit test, not a runtime URL authorization check.
+The [exact-HTML follow-up](../checkpoints/2026-10-02-programme-codeql-html-expectation.md)
+strengthens it to complete expected-response equality. No alert was dismissed,
+query suppressed or security rule changed. The superseded hosted run was
+cancelled; its partial results are not acceptance. The stronger test and session
+checks pass **100 / 1.10s**, and complete inexpensive units pass **13,457 / 84.56s**
+with three existing warnings. Fresh exact-head local/hosted acceptance remains
+required. The earlier complete receipt certifies only `9b51c6e`.
+
+No browser fixture is left running. The latest successful notice session used an
+interactive terminal, ordinary logout and normal stop/exit 0; its exact owned
+containers/certificate directory/listener are absent. An earlier non-interactive
+launch stopped before browser connection (consistent with stdin EOF); final exit
+metadata was not retained, but its resources were separately confirmed absent.
+Its unused internal error tab could not be closed through the browser's URL policy
+and was left untouched. Preserve unrelated resources. Archive/stop and complete
+disconnected/native-print browser cards remain unperformed; this session did not
+add their separate authority or admission.
+
+### Smallest next actions
+
+1. Certify the clean final #203 bundle and deliver through its exact protected gate.
+   Use the preserved joined result without repeating it for documentation-only
+   follow-up; the changed commit still requires fresh ordinary certification.
+2. Finish remaining assistant-operated P10/P11 and outstanding interaction
+   checks with explicitly admitted synthetic roles. Keep missing permission and
+   unobserved controls separate from application defects.
+3. #92 still needs representative independent-person, specialist screen-reader and
+   operational-owner acceptance. The [session cards](../operations/programme-human-acceptance.md)
+   and evidence map are not passes. A future cross-computer or convention pilot
+   also needs approved browser-trusted HTTPS; local HTTP does not satisfy that.
+4. #97 and #102 are delivered. Only after actual #92/#109 acceptance, implement
+   and separately verify #108's final profile promotion; close #48 only when its
+   decomposition and integrated criteria pass. Any move of existing activation
+   gates to a later pilot requires an explicit documented scope decision.
+
+Preserve unchanged #87/PR #90 native Cancel, actual 200% Chrome zoom, visible
+keyboard focus and the user's disabled Windows Animation effects. Separate
+accounts controlled by one person or an assistant are not independent people.
+Real twenty-minute process expiry and deployment capacity remain unproved;
+archive Python-tracked peak is not RSS. Production/PITR, safeguarding, training
+and go/no-go remain separate. No production profile, routes or data are activated.
 
 ## Continuation boundaries
 
@@ -186,7 +319,9 @@ authority remain mandatory. Notice acknowledgement is not provider delivery or
 acceptance of replacement work; signed fallback remains historical read-only.
 
 Unattended bundled delivery and protected merge are authorized, single-agent.
-No new schedules, policy bypass, production deployment or broad Docker cleanup.
+On October 1 the maintainer approved one temporary 30-minute check-in for #203
+through protected merge, then deletion. It stays quiet on unchanged state; no
+other schedule, policy bypass, production deployment or broad Docker cleanup.
 Preserve unrelated worktrees/stashes/resources; remove only verified task-owned
 resources. Applied stashes `5b6851f` and `dd651ef` must not be reapplied;
 preserve unrelated `3cc5df` / `9fecfe`, the #96 repair checkout and both isolated

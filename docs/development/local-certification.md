@@ -1,7 +1,7 @@
 # Local exact-commit certification
 
 Status: Required contributor evidence; GitHub independently verifies pull requests
-Last updated: 2026-09-14
+Last updated: 2026-10-01
 
 Routine PR, full CI and local documentation acceptance use the same warning-fatal,
 fresh-environment Sphinx HTML build with `-j auto`. This requests platform-supported
@@ -139,6 +139,33 @@ deletes only that verified, repository-contained artifact directory and its own
 same non-database gates and audits, followed by the complete Python suite unless
 `-SkipPythonTests` is supplied. It does not replace the isolated certification
 receipt.
+
+## Long-running local processes
+
+Keep a long local run independent of a transient interactive tool session. On
+Windows, a one-shot `Start-Process` launch with `-WindowStyle Hidden` can run a
+task-specific, non-interactive PowerShell wrapper. The wrapper should pin the
+clean head and exact base, set `CI=true` and the pinned pnpm path, invoke this
+unchanged certification command, and write its console log plus PID, start/end
+times and exit status to a fresh ignored task directory. Recheck the clean head
+at completion. Process metadata is diagnostic, never a certification receipt;
+only the ordinary command can produce `.local-ci/certification.json`.
+
+First verify the chosen launcher with a short harmless child that completes
+after the launching shell exits. This proves that bounded case, not survival
+through an app crash, machine sleep, reboot or power loss. Keep the computer and
+Docker running. Do not change power/security settings, install a service or
+schedule work merely to detach the process. A chat check-in requires separate
+authorization and does not keep the underlying computer or test process alive.
+
+After an interruption, inspect the actual recorded process and owned resources
+before starting a replacement. Missing completion metadata is not success.
+Preserve the entire existing `.local-ci` and console log outside `.local-ci`,
+verify the copied files, and retain failures as failures. Do not synthesize a
+receipt from passing subsets or combine different commits. Never overlap two
+certifications, or the populated Programme rehearsal and the full eight-database
+pool. The next clean candidate still requires complete risk-selected acceptance,
+the unchanged coverage/headroom gates and independent protected GitHub checks.
 
 ## Diagnostic whole-file cost calibration
 

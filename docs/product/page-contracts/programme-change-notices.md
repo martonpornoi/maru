@@ -167,7 +167,8 @@ Refresh/discard loses only unsaved input; immutable saved evidence is retained.
 
 Maintain owner-authorized ordinary, denied, foreign, stale, retry, rollback,
 concurrent-decision, native integrity and recovery cases. Run non-database form,
-transport, disclosure and rendering tests under ADR 0100; maintained PostgreSQL
-cases remain explicitly unexecuted #102 debt. Rehearse synthetic role/state and
+transport, disclosure and rendering tests, and the required PostgreSQL acceptance
+restored through #102 / PR #195. ADR 0100's deferral is historical; use CURRENT
+for exact executed evidence. Rehearse synthetic role/state and
 responsive keyboard behavior without enabling production routes. Genuine zoom,
 screen-reader and human comprehension belong to #92/#48, not a fabricated pass.

@@ -69,7 +69,7 @@ def test_notice_roles_are_existing_recipes_and_exact_room_not_catch_all(
     else:
         assert (
             len(preparation.approve_notice_roles(setup, planning, physical, release))
-            == 9
+            == 8
         )
         room = grant.call_args.kwargs
         assert room["recipient"] == physical.reviewer
@@ -80,6 +80,11 @@ def test_notice_roles_are_existing_recipes_and_exact_room_not_catch_all(
         )
     assert all(
         call.kwargs["people"] == setup.controllers for call in grant.call_args_list
+    )
+    assert not any(
+        call.kwargs["recipient"] == planning.planner
+        and call.kwargs["code"] == "hosting"
+        for call in grant.call_args_list
     )
 
 

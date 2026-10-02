@@ -106,8 +106,8 @@ def _decode(document, *, setup, staffing, release):
                 isinstance(value, UUID) and not value.int
                 for value in (*values.values(), *asdict(result.work).values())
             )
-            or len(result.role_assignment_ids) != 9
-            or len(set(result.role_assignment_ids)) != 9
+            or len(result.role_assignment_ids) != 8
+            or len(set(result.role_assignment_ids)) != 8
             or len(result.notice_ids) != 3
             or len(set(result.notice_ids)) != 3
             or any(

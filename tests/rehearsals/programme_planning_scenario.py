@@ -74,6 +74,21 @@ def _snapshot(setup, planner, candidate=None):
     )
 
 
+def _verify_host_editor(setup, planning):
+    """Require the actual placement editor's separate roster read before handoff."""
+    from maru.scheduling.planning_hosts import (  # noqa: PLC0415
+        load_scheduling_host_requirements,
+    )
+
+    for occurrence in planning.occurrence_ids:
+        load_scheduling_host_requirements(
+            _request(setup, planning.planner, read=True),
+            candidate_id=planning.candidate_id,
+            expected_version=planning.candidate_version,
+            occurrence_id=occurrence,
+        )
+
+
 def _selected(snapshot, candidate_id):
     matching = [c for c in snapshot.candidates if c.id == candidate_id]
     if len(matching) != 1 or snapshot.selected_candidate_id != candidate_id:
@@ -327,6 +342,9 @@ def prepare_planning_scenario(setup, proposal, review, items):
             # edition Venue choices. These are deliberate synthetic approvals,
             # not authority implicitly granted by the planner role itself.
             (planner, "content", ScopeLevel.EDITION),
+            # Editing explicit presence uses the independently authorized roster,
+            # not the planner recipe's minimized conflict dependencies alone.
+            (planner, "hosting", ScopeLevel.EDITION),
             (planner, "venue-selection", ScopeLevel.EDITION),
             (catalog_person, "venue-catalog", ScopeLevel.ORGANIZATION),
             (catalog_person, "venue-selection", ScopeLevel.EDITION),
@@ -334,7 +352,7 @@ def prepare_planning_scenario(setup, proposal, review, items):
     )
     rooms, room_grants = prepare_rooms(setup, items, catalog_person, planner)
     plan = _compose_plan(setup, items, planner, rooms)
-    return ProgrammePlanningScenario(
+    result = ProgrammePlanningScenario(
         setup.organization_id,
         setup.edition_id,
         (items.accepted.item_id, items.ceremony.item_id),
@@ -344,6 +362,8 @@ def prepare_planning_scenario(setup, proposal, review, items):
         catalog_person,
         (*grants, *room_grants),
     )
+    _verify_host_editor(setup, result)
+    return result
 
 
 def _decode_planning(document, *, setup, proposal, review, items):
@@ -385,7 +405,7 @@ def _decode_planning(document, *, setup, proposal, review, items):
                 ("room_ids", 2),
                 ("occurrence_ids", 3),
                 ("placement_ids", 3),
-                ("role_assignment_ids", 7),
+                ("role_assignment_ids", 8),
             )
         )
         or len({p.account_id for p in people}) != 15

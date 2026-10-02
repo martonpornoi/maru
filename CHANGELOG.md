@@ -15,6 +15,13 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Development tooling now requires urllib3 2.8.0 or later within major version 2
+  for its transitive Requests dependency, addressing three upstream HTTPS-proxy
+  and response-streaming vulnerabilities without adding a runtime dependency.
+- Staff Console development tooling now pins advisory-fixed Undici 7.29.1 and
+  brace-expansion 2.1.7 through bounded overrides, retaining the existing runtime
+  dependencies and required vulnerability-audit thresholds.
+
 - Programme's dormant post-action continuations now enforce local-only redirect
   destinations and reconstruct approval/notice routes from their original scope.
   External and browser-ambiguous targets are refused without weakening CodeQL,
@@ -41,6 +48,11 @@ rather than replace the curated summary.
   avoids repeatedly rendering the entire archive in every page's sidebar.
 
 ### Added
+
+- Added an explicitly opted-in, local-only Programme rehearsal for a single
+  maintainer, with disposable fictional data and assisted normal account switching.
+  It requires no certificate installation and does not count as trusted HTTPS,
+  independent-person acceptance, or production activation.
 
 - Added a dormant permission-controlled Programme exit archive with complete owner
   records, original clean files, retained schemas and audit lineage, bounded private

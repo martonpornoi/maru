@@ -3,11 +3,15 @@
 import io
 import json
 from dataclasses import asdict, replace
+from types import SimpleNamespace
 from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
 
+from maru.authorization import programme_role_scope_choices
+from maru.authorization.catalog import ScopeLevel
+from maru.venues.bindings import edition_space_binding_id
 from tests.rehearsals import programme_change_scenario as scenario
 from tests.rehearsals import (
     programme_notice_preparation,
@@ -45,7 +49,7 @@ def _result(sources):
         uuid4(),
         "f" * 64,
         2,
-        tuple(uuid4() for _ in range(9)),
+        tuple(uuid4() for _ in range(8)),
         tuple(uuid4() for _ in range(3)),
     )
 
@@ -70,6 +74,58 @@ def test_full_chain_and_exact_lineage_round_trip():
         )
         == sources
     )
+
+
+def test_notice_roles_do_not_repeat_the_planners_existing_hosting_grant(monkeypatch):
+    """Keep the planning-to-notice boundary compatible with duplicate refusal."""
+    setup, _, _, _, planning, physical, _, release = _sources()
+    scope = SimpleNamespace(
+        level=ScopeLevel.RESOURCE,
+        department_id=setup.department_id,
+        resource_kind="venue.edition_space",
+        resource_binding_id=edition_space_binding_id(planning.room_ids[0]),
+    )
+    monkeypatch.setattr(
+        type(setup.controllers[0]),
+        "authenticate",
+        lambda person: SimpleNamespace(id=person.account_id),
+    )
+    monkeypatch.setattr(
+        programme_role_scope_choices,
+        "load_programme_role_scope_choices",
+        Mock(return_value=SimpleNamespace(choices=(SimpleNamespace(scope=scope),))),
+    )
+    seen = {(planning.planner.account_id, "hosting", ScopeLevel.EDITION)}
+    grants = []
+
+    def approve(_setup, **kwargs):
+        key = (kwargs["recipient"].account_id, kwargs["code"], kwargs["level"])
+        assert key not in seen, "active matching role assignment already exists"
+        assert _setup == setup
+        assert kwargs["people"] == setup.controllers
+        seen.add(key)
+        result = uuid4()
+        grants.append((kwargs, result))
+        return result
+
+    monkeypatch.setattr(programme_notice_preparation, "approve_synthetic_role", approve)
+    result = programme_notice_preparation.approve_notice_roles(
+        setup, planning, physical, release
+    )
+    assert result == tuple(identifier for _, identifier in grants)
+    assert len(result) == len(set(result)) == 8
+    assert [(row["recipient"].account_id, row["code"]) for row, _ in grants] == [
+        (planning.planner.account_id, "notice-preparation"),
+        (planning.planner.account_id, "notice-review"),
+        (planning.planner.account_id, "notice-handoff"),
+        (release.reviewer.account_id, "hosting"),
+        (release.reviewer.account_id, "run-sheet"),
+        (release.reviewer.account_id, "notice-preparation"),
+        (release.reviewer.account_id, "notice-review"),
+        (physical.reviewer.account_id, "run-sheet"),
+    ]
+    assert grants[-1][0]["resource_binding_id"] == scope.resource_binding_id
+    assert grants[-1][0]["department_id"] == setup.department_id
 
 
 @pytest.mark.parametrize(
@@ -127,6 +183,18 @@ def test_decoder_rejects_forged_changed_or_ambiguous_handles(fault):
         document["authority"] = True
     else:
         document.pop("pointer_version")
+    with pytest.raises(scenario.ProgrammeChangeScenarioError, match="result_invalid"):
+        _decode(document, sources)
+
+
+@pytest.mark.parametrize("fault", ["extra", "duplicate"])
+def test_decoder_rejects_extra_or_duplicate_notice_grants(fault):
+    sources = _sources()
+    document = _document(_result(sources))
+    if fault == "extra":
+        document["role_assignment_ids"].append(str(uuid4()))
+    else:
+        document["role_assignment_ids"][1] = document["role_assignment_ids"][0]
     with pytest.raises(scenario.ProgrammeChangeScenarioError, match="result_invalid"):
         _decode(document, sources)
 
