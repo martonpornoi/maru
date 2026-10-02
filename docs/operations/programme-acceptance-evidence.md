@@ -9,6 +9,15 @@ the [executable rehearsal](programme-integrated-rehearsal.md) for technical setu
 and the [participant cards](programme-human-acceptance.md) for genuine people.
 It implements #48/#109's existing NFR-013, OPS-009, INT-007 and UX-029 boundaries.
 
+The [October 2 browser exit follow-up](../checkpoints/2026-10-02-programme-exit-form-browser-repair.md)
+records operator/stop-preview layouts, a separate publisher withdrawal and an
+initially unconfirmed stop. #205 corrects the independently reproduced HTML referrer/CSRF
+incompatibility and hands off existing public continuity trust. Expired downloads,
+native browser controls, archive authority and genuine human gates remain distinct;
+the subsequent fresh browser run passed reasoned stop, terminal receipt, seven-width
+layout, logout and original-actor receipt isolation. Its 13,489 passing units do
+not close all P10/P11 cells or replace exact certification.
+
 The latest populated source is `0d2a3aa5c862e70f2741cceb6aedc0f03b2042af`:
 [the October 1 joined rehearsal](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
 passed all eighteen phases in 1,265.44s, including the reconciled planning/notice

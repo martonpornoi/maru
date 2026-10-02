@@ -132,6 +132,7 @@ def test_static_preview_is_deliberate_private_and_has_one_heading_without_source
     assert html.select_one('input[name="request_key"][type="hidden"]')
     assert "restricted C3" in html.get_text()
     assert "private, no-store" in response["Cache-Control"]
+    assert response["Referrer-Policy"] == "same-origin"
     page.read.assert_not_called()
     page.queue.assert_not_called()
 
@@ -144,6 +145,7 @@ def test_task_html_only_offers_current_phase_actions(page, state):
     response = call(page, task=True)
     html = BeautifulSoup(response.content, "html.parser")
     assert response.status_code == 200
+    assert response["Referrer-Policy"] == "same-origin"
     assert bool(html.select('a[href$="download/"]')) == (state == "ready")
     assert html.select_one('input[name="action"]')["value"] == (
         "cancel" if state in {"queued", "running", "ready"} else "retry"
@@ -207,6 +209,7 @@ def test_submission_failure_preserves_same_key_without_private_exception_details
         page, data={"action": "request", "request_key": key, "confirm": "on"}
     )
     assert response.status_code == status
+    assert response["Referrer-Policy"] == "same-origin"
     html = BeautifulSoup(response.content, "html.parser")
     assert html.select_one('input[name="request_key"]')["value"] == key
     assert "PRIVATE" not in html.get_text()

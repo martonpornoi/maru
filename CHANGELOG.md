@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Programme's dormant stop and exit-archive forms now preserve same-origin
+  browser evidence for CSRF-protected submissions and logout, while keeping
+  private archive downloads referrer-free. The local published rehearsal also
+  hands off its independently prepared public verifier policy without issuer
+  secrets, new permissions, longer expiry or production activation.
+
 - Development tooling now requires urllib3 2.8.0 or later within major version 2
   for its transitive Requests dependency, addressing three upstream HTTPS-proxy
   and response-streaming vulnerabilities without adding a runtime dependency.

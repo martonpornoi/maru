@@ -77,12 +77,15 @@ def _html(
 ) -> HttpResponse:
     shell = dict(admin.site.each_context(request))
     shell.update(has_permission=True, title="Programme exit archive", **context)
-    return _secure(
+    response = _secure(
         HttpResponse(
             render_to_string("programme/archive.html", shell, request=request),
             status=status,
         )
     )
+    # Preserve native form CSRF evidence; attachments retain no-referrer below.
+    response["Referrer-Policy"] = "same-origin"
+    return response
 
 
 def _input(request: HttpRequest, form: Form) -> None:

@@ -52,12 +52,15 @@ def _html(
 ) -> HttpResponse:
     shell = dict(admin.site.each_context(request))
     shell.update(has_permission=True, title="Stop Programme", **context)
-    return _secure(
+    response = _secure(
         HttpResponse(
             render_to_string("events/programme_stop.html", shell, request=request),
             status=status,
         )
     )
+    # Native form POSTs need an origin; never disclose the referrer cross-origin.
+    response["Referrer-Policy"] = "same-origin"
+    return response
 
 
 def _submit(request: HttpRequest, scope: dict[str, UUID], root: str) -> HttpResponse:

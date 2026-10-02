@@ -167,14 +167,14 @@ login/logout, run-specific cookies, encrypted handoff and owned cleanup remain
 mandatory. PostgreSQL acceptance remains required. Interrupted runs are not
 certification; the final clean #203 bundle received fresh acceptance above.
 
-The next #92/#109 bundle is on `codex/programme-exit-browser-acceptance`.
+The next #92/#109 bundle is #205 on `codex/programme-exit-browser-acceptance`.
 Fresh assistant-operated public and volunteer continuity views passed the seven
 required width checks with one H1/main and no page overflow. Public keyboard and
 print-copy navigation worked. A volunteer snapshot downloaded, but subsequent
 printing/logout reached an expired fixture after a multi-hour wall-clock gap;
 these are unperformed checks, not passes or product failures. Normal disposal,
 exit zero and absence of the exact owned containers/processes/listener were verified.
-Temporary viewport overrides were reset. No replacement fixture is running.
+Temporary viewport overrides were reset. That first fixture is fully disposed.
 
 The launcher now prepares an encrypted handoff of the fixture's independently
 generated **public** continuity policy, restricted to its exact tenant/edition/run.
@@ -184,10 +184,28 @@ prerequisite for separately verifying an actual browser download; it is not a
 completed offline rehearsal. Focused launcher tests pass **36 / 0.35s**, with Ruff
 and formatting checks passing. Complete database-free feedback now passes
 **13,477 / 75.69s**, with three existing Django warnings; documentation validation
-and whitespace checks pass. Native use and exact bundle delivery remain pending;
+and whitespace checks pass. A second published native handoff successfully supplied
+the validated public policy; exact bundle delivery remains pending;
 do not reuse #203's receipt for these changed files. The
 [browser follow-up checkpoint](../checkpoints/2026-10-02-programme-continuity-browser-follow-up.md)
 preserves the expiry and temporary-directory failures separately from successful checks.
+
+The [second browser checkpoint](../checkpoints/2026-10-02-programme-exit-form-browser-repair.md)
+records seven-width operator/stop-preview checks, keyboard layer selection, a
+reasoned publisher withdrawal and required-reason validation. Final stop was
+**not confirmed**. An isolated real-browser probe then reproduced `Origin: null`
+from the stop/archive HTML `no-referrer` policy. The scoped repair uses
+`same-origin` on HTML only, retaining private archive download headers and every
+CSRF/origin guard. Regression-first checks passed **68 / 1.28s**, Ruff and format.
+The second fixture is disposed; its separately trusted but expired public download
+failed closed, with no offline output. A third populated browser run then passed
+separate publisher withdrawal, required-reason validation, keyboard stop submission,
+retained terminal receipt, seven-width layout and ordinary logout from the repaired
+page. Another controller could not read the original actor's receipt. All owned
+resources were normally disposed; no fixture remains. Complete inexpensive units
+pass **13,489 / 79.59s** with three existing warnings. Exact bundle certification
+and protected delivery are next; no live offline, native print or human pass is
+inferred from the stop result.
 
 ### Verified observations and repairs
 
@@ -306,23 +324,23 @@ checks pass **100 / 1.10s**, and complete inexpensive units pass **13,457 / 84.5
 with three existing warnings. Fresh exact-head local/hosted acceptance remains
 required. The earlier complete receipt certifies only `9b51c6e`.
 
-No browser fixture is left running. The latest successful notice session used an
+The historical successful notice session used an
 interactive terminal, ordinary logout and normal stop/exit 0; its exact owned
 containers/certificate directory/listener are absent. An earlier non-interactive
 launch stopped before browser connection (consistent with stdin EOF); final exit
 metadata was not retained, but its resources were separately confirmed absent.
 Its unused internal error tab could not be closed through the browser's URL policy
-and was left untouched. Preserve unrelated resources. Archive/stop and complete
-disconnected/native-print browser cards remain unperformed; this session did not
-add their separate authority or admission.
+and was left untouched. Preserve unrelated resources. Archive and complete
+disconnected/native-print browser cards remain unperformed; the October 2 stop
+correction/result is recorded above. Neither session added archive authority or
+production admission.
 
 ### Smallest next actions
 
-1. Verify the narrow public-trust handoff preparation and finish remaining
-   assistant-operated P10/P11 and outstanding interaction
-   checks with explicitly admitted synthetic roles. Keep missing permission and
-   unobserved controls separate from application defects. Bundle related evidence
-   and repairs before one fresh exact-commit local/hosted certification.
+1. Certify and deliver #205's coherent public-trust/exit-form repair and browser
+   evidence once through clean exact-commit local/hosted checks. Then finish
+   remaining admitted P10/P11 interactions. Keep missing archive permission and
+   unobserved print/offline controls separate from application defects.
 2. #92 still needs representative independent-person, specialist screen-reader and
    operational-owner acceptance. The [session cards](../operations/programme-human-acceptance.md)
    and evidence map are not passes. A future cross-computer or convention pilot
