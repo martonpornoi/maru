@@ -70,6 +70,33 @@ def _person(role, person):
     }
 
 
+def continuity_handoff(fixture, stage):
+    """Hand off only this fixture's independent public policy, never issuer secrets."""
+    if stage != "published":
+        return {}
+    from maru.scheduling.continuity_offline import (  # noqa: PLC0415
+        decode_continuity_trust_policy,
+    )
+    from maru.scheduling.continuity_protocol import (  # noqa: PLC0415
+        ContinuityInvalidError,
+    )
+
+    policy = fixture.continuity_trust_policy
+    if type(policy) is not bytes:
+        raise ValueError("invalid_continuity_handoff")
+    try:
+        keys = decode_continuity_trust_policy(policy)
+        if len(keys) != 1 or (
+            keys[0].organization_id != fixture.scenario.organization_id
+            or keys[0].edition_id != fixture.scenario.edition_id
+            or keys[0].key_id != "fixture-" + fixture.run_id
+        ):
+            raise ValueError("invalid_continuity_handoff")
+        return {"continuity_trust_policy": policy.decode("utf-8")}
+    except (ContinuityInvalidError, UnicodeError):
+        raise ValueError("invalid_continuity_handoff") from None
+
+
 def prepare_stage(fixture, stage):
     """Prepare explicitly labelled synthetic prerequisites, never human results."""
     setup = fixture.scenario
@@ -170,6 +197,7 @@ def run_session(*, recipient, stage):
                 "entry_path": "/admin/",
                 "people": people,
                 "preparation": "Automated prerequisites; not human acceptance",
+                **continuity_handoff(fixture, stage),
             }
             _emit(seal_handoff(document, recipient))
             next_refresh = time.monotonic() + 120

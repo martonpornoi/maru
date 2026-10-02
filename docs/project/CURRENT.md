@@ -11,6 +11,16 @@ the release baseline.
 
 ## Protected baseline and testing policy
 
+[PR #204](https://github.com/martonpornoi/maru/pull/204) delivered #203 at protected
+squash `911002068dd5acb89ac4e4a8c46b60c1081c6097`; its tree equals certified
+`df9e094`. Local and hosted acceptance passed **18,538 Python cases, 103 frontend
+cases and all 71 PostgreSQL shards**, with **91.74% local / 91.73% hosted** coverage.
+Hosted native jobs finished in **7m15s–57m29s**; the slowest retained **62m31s**
+of timeout headroom. Exact-head PR gate, CodeQL and resolved conversations were
+verified before match-head squash. Clean local main was synchronized; the temporary
+#203 check-in was deleted. See the [delivery checkpoint](../checkpoints/2026-10-02-programme-local-assisted-protected-delivery.md).
+No human acceptance or production activation was claimed.
+
 [PR #202](https://github.com/martonpornoi/maru/pull/202) delivered the seven
 local-only redirect fixes at protected squash `314d593dc98fde705e834ef6374d001d25051942`.
 All 71 local/hosted PostgreSQL shards passed, with 18,432 Python cases and 91.74%
@@ -149,13 +159,35 @@ follow-up's protected PR, not an inherited PR #199 receipt.
 
 ## Next actions and remaining closure gates
 
-#203 is the active local-assisted rehearsal candidate on protected base
-`314d593dc98fde705e834ef6374d001d25051942`. ADR 0115 permits explicit synthetic
+#203 is delivered through PR #204; the earlier verification narrative below
+preserves failed and superseded attempts, not current blockers. ADR 0115 permits explicit synthetic
 loopback HTTP over the unchanged pinned native HTTPS fixture, without machine
 trust, TLS bypass, production changes or impersonation. Finite leases, ordinary
 login/logout, run-specific cookies, encrypted handoff and owned cleanup remain
-mandatory. PostgreSQL acceptance is required. The interrupted run is not a
-certification; the final clean bundle still needs fresh exact-head acceptance.
+mandatory. PostgreSQL acceptance remains required. Interrupted runs are not
+certification; the final clean #203 bundle received fresh acceptance above.
+
+The next #92/#109 bundle is on `codex/programme-exit-browser-acceptance`.
+Fresh assistant-operated public and volunteer continuity views passed the seven
+required width checks with one H1/main and no page overflow. Public keyboard and
+print-copy navigation worked. A volunteer snapshot downloaded, but subsequent
+printing/logout reached an expired fixture after a multi-hour wall-clock gap;
+these are unperformed checks, not passes or product failures. Normal disposal,
+exit zero and absence of the exact owned containers/processes/listener were verified.
+Temporary viewport overrides were reset. No replacement fixture is running.
+
+The launcher now prepares an encrypted handoff of the fixture's independently
+generated **public** continuity policy, restricted to its exact tenant/edition/run.
+Closed-schema checks reject private-key fields and mismatched scope. No signing
+secret, new authority or production setting is added. This repairs the missing
+prerequisite for separately verifying an actual browser download; it is not a
+completed offline rehearsal. Focused launcher tests pass **36 / 0.35s**, with Ruff
+and formatting checks passing. Complete database-free feedback now passes
+**13,477 / 75.69s**, with three existing Django warnings; documentation validation
+and whitespace checks pass. Native use and exact bundle delivery remain pending;
+do not reuse #203's receipt for these changed files. The
+[browser follow-up checkpoint](../checkpoints/2026-10-02-programme-continuity-browser-follow-up.md)
+preserves the expiry and temporary-directory failures separately from successful checks.
 
 ### Verified observations and repairs
 
@@ -286,17 +318,16 @@ add their separate authority or admission.
 
 ### Smallest next actions
 
-1. Certify the clean final #203 bundle and deliver through its exact protected gate.
-   Use the preserved joined result without repeating it for documentation-only
-   follow-up; the changed commit still requires fresh ordinary certification.
-2. Finish remaining assistant-operated P10/P11 and outstanding interaction
+1. Verify the narrow public-trust handoff preparation and finish remaining
+   assistant-operated P10/P11 and outstanding interaction
    checks with explicitly admitted synthetic roles. Keep missing permission and
-   unobserved controls separate from application defects.
-3. #92 still needs representative independent-person, specialist screen-reader and
+   unobserved controls separate from application defects. Bundle related evidence
+   and repairs before one fresh exact-commit local/hosted certification.
+2. #92 still needs representative independent-person, specialist screen-reader and
    operational-owner acceptance. The [session cards](../operations/programme-human-acceptance.md)
    and evidence map are not passes. A future cross-computer or convention pilot
    also needs approved browser-trusted HTTPS; local HTTP does not satisfy that.
-4. #97 and #102 are delivered. Only after actual #92/#109 acceptance, implement
+3. #97 and #102 are delivered. Only after actual #92/#109 acceptance, implement
    and separately verify #108's final profile promotion; close #48 only when its
    decomposition and integrated criteria pass. Any move of existing activation
    gates to a later pilot requires an explicit documented scope decision.
@@ -319,8 +350,8 @@ authority remain mandatory. Notice acknowledgement is not provider delivery or
 acceptance of replacement work; signed fallback remains historical read-only.
 
 Unattended bundled delivery and protected merge are authorized, single-agent.
-On October 1 the maintainer approved one temporary 30-minute check-in for #203
-through protected merge, then deletion. It stays quiet on unchanged state; no
+The approved temporary 30-minute check-in for #203 was deleted after its verified
+protected merge on October 2. No replacement schedule exists; no
 other schedule, policy bypass, production deployment or broad Docker cleanup.
 Preserve unrelated worktrees/stashes/resources; remove only verified task-owned
 resources. Applied stashes `5b6851f` and `dd651ef` must not be reapplied;

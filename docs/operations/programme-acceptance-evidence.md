@@ -46,6 +46,16 @@ equality. This closes the component/recovery issues, not the human-dependent
 
 ## Independent supporting evidence
 
+The [October 2 protected delivery](../checkpoints/2026-10-02-programme-local-assisted-protected-delivery.md)
+closed #203 with exact local/hosted acceptance; it does not close these human gates.
+The [fresh continuity browser follow-up](../checkpoints/2026-10-02-programme-continuity-browser-follow-up.md)
+adds public and volunteer seven-width geometry checks, public keyboard/print-copy
+navigation and an actual personal snapshot download. A wall-clock gap outlasted
+the disposable fixture; subsequent print/logout were not performed. Independent
+offline verification was unavailable because the interactive handoff lacked its
+public trust policy. The narrow preparation repair has focused tests, not yet a
+native browser/offline pass or exact bundle certification.
+
 The [September 27 assistant-operated browser record](../checkpoints/2026-09-27-programme-assistant-browser-rehearsal.md)
 adds actual ordinary-form P02 evidence over ADR 0115's local bridge: a new proposal,
 real scanned PDF upload, separate-account collaboration, exact acknowledgement,
