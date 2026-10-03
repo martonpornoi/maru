@@ -11,6 +11,17 @@ cards do not establish human acceptance. No production use is authorized.
 
 ## Approved single-maintainer local session
 
+The [maintainer walkthrough](programme-maintainer-walkthrough.md) provides a short
+local candidate journey without a facilitator. Its private-terminal entrypoint,
+`python -m tests.rehearsals.programme_hands_on --stage team`, supervises the same
+finite encrypted child and shows the generated synthetic accounts only on an
+interactive terminal. It refuses redirected input/output and saves no passwords
+or private handoff key. The published stage writes only its validated independent
+public continuity trust into a fresh run-specific folder, never overwriting known
+history; its printed verifier command still requires an actual timely download.
+It adds no grants, profile, lease renewal or persistent server. See that guide's
+verification status before treating it as a completed handoff.
+
 On 2026-09-25 the maintainer requested assisted local testing without additional
 participants and explicitly approved loopback-only HTTP. [ADR 0115](../architecture/decisions/0115-local-only-assisted-programme-rehearsal.md)
 and #203 define the bounded browser bridge and interactive launcher. This is an

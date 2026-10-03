@@ -60,6 +60,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- Added a private-terminal Programme rehearsal launcher and a short maintainer
+  walkthrough with generated test accounts, copy-ready form values, current
+  interface labels, expected results and disposal instructions. Windows setup
+  no longer lets noninteractive provisioning children inherit the live command
+  pipe. This is local evaluation tooling, not Programme activation or completed
+  human acceptance.
+
 - Added an explicitly opted-in, local-only Programme rehearsal for a single
   maintainer, with disposable fictional data and assisted normal account switching.
   It requires no certificate installation and does not count as trusted HTTPS,

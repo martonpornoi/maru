@@ -12,6 +12,10 @@ or permission to use production personal data.
 
 ## Explore safely
 
+- [Programme maintainer walkthrough](programme-maintainer-walkthrough.md) is the
+  local candidate handoff with generated test accounts and a
+  simple Worked / Confusing / Blocked notes table. Check its verification status.
+
 - [Programme integrated rehearsal](programme-integrated-rehearsal.md) describes
   the maintained isolated native fixture and setup-to-on-site evidence boundaries;
   it is not completed human acceptance or production activation.
@@ -84,6 +88,7 @@ analogy.
 maru-hands-on-tutorial
 programme-acceptance-evidence
 programme-human-acceptance
+programme-maintainer-walkthrough
 programme-integrated-rehearsal
 programme-output-evaluation
 programme-onsite-continuity

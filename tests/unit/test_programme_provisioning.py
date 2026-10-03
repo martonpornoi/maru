@@ -516,6 +516,16 @@ def test_child_transport_failure_is_minimized(failure, monkeypatch):
     assert str(caught.value) == "provisioning_process_unavailable"
 
 
+def test_noninteractive_provisioning_does_not_inherit_live_command_pipe(monkeypatch):
+    run = Mock(return_value=SimpleNamespace(returncode=0, stdout="marker\n"))
+    monkeypatch.setattr(provisioning.subprocess, "run", run)
+    provisioning._child(
+        ["-c", provisioning._PROBE], {}, timeout=5, expected_output="marker"
+    )
+    assert run.call_args.kwargs["stdin"] == subprocess.DEVNULL
+    assert run.call_args.kwargs["timeout"] == 5
+
+
 @pytest.mark.parametrize(
     ("returncode", "output"),
     [(1, "secret"), (0, "almost verified"), (0, "marker\nsecret")],

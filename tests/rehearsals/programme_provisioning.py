@@ -210,6 +210,7 @@ def _child(arguments, environment, *, timeout, expected_output=None):
             [sys.executable, *arguments],
             cwd=ROOT,
             env=environment,
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             timeout=timeout,
