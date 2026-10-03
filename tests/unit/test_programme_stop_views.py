@@ -142,6 +142,7 @@ def test_actual_preview_html_binds_complete_original_identity_and_counts(page):
     )
     assert html.select_one('input[name="confirm"][required]')
     assert "private, no-store" in response["Cache-Control"]
+    assert response["Referrer-Policy"] == "same-origin"
     page.stop.assert_not_called()
 
 
@@ -191,6 +192,7 @@ def test_uncertain_or_stale_result_preserves_original_form_and_key(page, error, 
     page.stop.side_effect = error
     response = call(page, submitted=original)
     assert response.status_code == status
+    assert response["Referrer-Policy"] == "same-origin"
     html = BeautifulSoup(response.content, "html.parser")
     for key in (
         "idempotency_key",

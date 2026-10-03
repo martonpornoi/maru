@@ -59,6 +59,16 @@ moderation, decision and conversion personas for `items`; `published` also expos
 its prepared planner, Catalog organizer, physical reviewer, volunteer and release
 reviewer. This adds no grants and does not replay their prepared decisions as
 browser evidence.
+The published handoff also carries `continuity_trust_policy`, the independently
+prepared public verification policy for this exact fixture/organization/edition.
+The launcher checks the closed public schema and exact run key; it never hands
+off the issuer's private signing policy or learns trust from a downloaded pack.
+The facilitator provisions this public policy separately from the browser download,
+chooses expected purpose/person/scope from the intended task, and initializes a
+new protected known-state file while connected. Keep that history between checks;
+do not reset it to accept an old pack. Non-published stages provide no trust policy.
+The five-minute synthetic pack expiry and original fixture lease are unchanged.
+This preparation enables a verifier rehearsal; it is not itself offline acceptance.
 The planning prerequisite separately approves the existing hosting recipe needed
 by placement editors and verifies their real roster reads before handoff. It does
 not widen the production planner recipe. Later notice preparation retains this

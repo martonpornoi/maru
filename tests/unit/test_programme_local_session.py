@@ -6,6 +6,7 @@ import json
 from contextlib import contextmanager
 from types import SimpleNamespace
 from unittest.mock import Mock
+from uuid import UUID
 
 import pytest
 from cryptography.hazmat.primitives import hashes, serialization
@@ -14,6 +15,84 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from tests.rehearsals import programme_local_session as session
 from tests.rehearsals import programme_runner as runner
+
+
+def _continuity_fixture():
+    organization_id = UUID("10000000-0000-4000-8000-000000000001")
+    edition_id = UUID("20000000-0000-4000-8000-000000000002")
+    run_id = "a" * 32
+    policy = {
+        "contract": "scheduling.programme-continuity-trust@1",
+        "keys": [
+            {
+                "organization_id": str(organization_id),
+                "edition_id": str(edition_id),
+                "key_id": "fixture-" + run_id,
+                "public_key_b64": base64.b64encode(b"p" * 32).decode(),
+                "not_before": "2026-10-02T08:00:00+00:00",
+                "not_after": "2026-10-02T09:00:00+00:00",
+            }
+        ],
+    }
+    fixture = SimpleNamespace(
+        run_id=run_id,
+        scenario=SimpleNamespace(
+            organization_id=organization_id, edition_id=edition_id
+        ),
+        continuity_trust_policy=json.dumps(
+            policy, sort_keys=True, separators=(",", ":")
+        ).encode(),
+    )
+    return fixture, policy
+
+
+def test_published_handoff_uses_only_independently_prepared_public_trust():
+    fixture, policy = _continuity_fixture()
+    result = session.continuity_handoff(fixture, "published")
+    assert json.loads(result["continuity_trust_policy"]) == policy
+    assert result["continuity_trust_policy"].encode() == fixture.continuity_trust_policy
+    assert "private_key" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("stage", ["team", "items"])
+def test_other_stages_do_not_read_or_hand_off_continuity_material(stage):
+    assert session.continuity_handoff(object(), stage) == {}
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "missing",
+        "malformed",
+        "private",
+        "foreign",
+        "other-edition",
+        "other-run",
+        "two-keys",
+    ],
+)
+def test_handoff_refuses_missing_secret_or_cross_fixture_trust(change):
+    fixture, policy = _continuity_fixture()
+    key = policy["keys"][0]
+    if change == "private":
+        key["private_key_b64"] = "must-not-be-handed-off"
+    elif change == "foreign":
+        key["organization_id"] = "30000000-0000-4000-8000-000000000003"
+    elif change == "other-edition":
+        key["edition_id"] = "30000000-0000-4000-8000-000000000003"
+    elif change == "other-run":
+        key["key_id"] = "fixture-" + "b" * 32
+    elif change == "two-keys":
+        policy["keys"].append(dict(key))
+    fixture.continuity_trust_policy = json.dumps(
+        policy, sort_keys=True, separators=(",", ":")
+    ).encode()
+    if change == "missing":
+        fixture.continuity_trust_policy = None
+    elif change == "malformed":
+        fixture.continuity_trust_policy = b"not JSON"
+    with pytest.raises(ValueError, match="invalid_continuity_handoff"):
+        session.continuity_handoff(fixture, "published")
 
 
 def test_handoff_is_encrypted_and_round_trips_only_for_recipient():
@@ -195,22 +274,25 @@ def test_handoff_contains_exact_existing_personas_for_prepared_stages(stage):
 @pytest.mark.parametrize(
     "input_text", ["", "stop\n", "unknown\n", "refresh\n", "diagnostics\n"]
 )
+@pytest.mark.parametrize("stage", ["team", "items", "published"])
 def test_interactive_input_keeps_original_lease_and_disposes_owned_contexts(
-    monkeypatch, input_text
+    monkeypatch, input_text, stage
 ):
     events = []
+    provisioned, _ = _continuity_fixture()
     fixture = Mock(
         deadline=3600.0,
-        run_id="fictional-run",
-        scenario=SimpleNamespace(organization_id="organization", edition_id="edition"),
+        run_id=provisioned.run_id,
+        scenario=provisioned.scenario,
+        continuity_trust_policy=provisioned.continuity_trust_policy,
     )
 
     @contextmanager
     def application(**options):
         assert options == {
             "setup_mode": "new_foundation",
-            "with_scanner": False,
-            "with_continuity": False,
+            "with_scanner": stage != "team",
+            "with_continuity": stage == "published",
             "with_isolation": True,
         }
         try:
@@ -246,7 +328,7 @@ def test_interactive_input_keeps_original_lease_and_disposes_owned_contexts(
     emitted = []
     monkeypatch.setattr(session, "_emit", emitted.append)
 
-    session.run_session(recipient="public key", stage="team")
+    session.run_session(recipient="public key", stage=stage)
 
     assert events == ["browser disposed", "application disposed"]
     assert [item["state"] for item in emitted] == [
@@ -262,5 +344,13 @@ def test_interactive_input_keeps_original_lease_and_disposes_owned_contexts(
         }
     assert fixture.deadline == 3600.0
     assert handoff.call_args.args[0]["remaining_seconds"] == 3500
+    handed_off = handoff.call_args.args[0]
+    if stage == "published":
+        assert (
+            handed_off["continuity_trust_policy"].encode()
+            == provisioned.continuity_trust_policy
+        )
+    else:
+        assert "continuity_trust_policy" not in handed_off
     assert fixture.refresh_workers.call_count == (1 if input_text == "refresh\n" else 0)
     assert fixture.verify_excluded_state.call_count == 2

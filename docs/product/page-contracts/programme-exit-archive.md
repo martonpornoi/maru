@@ -15,6 +15,11 @@ There is no directory, other-person selection, impersonation, bearer sharing,
 email delivery or automatic polling. No production navigation link is installed
 before final Programme promotion. Each reserved destination reauthorizes itself.
 
+HTML forms use `Referrer-Policy: same-origin` so browsers retain same-origin
+CSRF evidence while disclosing no referrer cross-origin. Attachment responses
+retain `no-referrer`; CSRF tokens, exact-origin checks, no-store and custody
+protections are unchanged. Do not allow null or foreign origins to repair a form.
+
 Static preview explains eight owner sections, reviewed-proposal scope, private
 clean files, exclusions, limits, independent permissions and restricted custody.
 It reveals no source labels or identities. Extra archive-request authority admits

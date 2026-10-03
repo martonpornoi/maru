@@ -9,6 +9,7 @@ from uuid import uuid4
 import pytest
 from django.db import connection, transaction
 from django.db.migrations.executor import MigrationExecutor
+from django.db.migrations.recorder import MigrationRecorder
 from django.test import override_settings
 from django.utils import timezone
 
@@ -28,7 +29,11 @@ from tests.factories import (
     RoleBundleFactory,
 )
 from tests.support.authority import activate_synthetic_board
-from tests.support.migrations import workforce_migration_targets
+from tests.support.migrations import (
+    migrate_test_targets,
+    rollback_migration_case,
+    workforce_migration_targets,
+)
 from tests.workforce_helpers import (
     create_department_for_test,
     save_position_assignment_for_test,
@@ -156,7 +161,9 @@ CALLER_RELATIONS = {
 
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
-    executor.migrate(workforce_migration_targets(executor, *targets))
+    migrate_test_targets(
+        executor, list(workforce_migration_targets(executor, *targets))
+    )
     return executor
 
 
@@ -517,13 +524,24 @@ def test_readiness_rejects_persistent_caller_trigger_detachment_and_shape() -> N
 def test_activated_database_refuses_runtime_helper_downgrade(
     target: tuple[str, str],
 ) -> None:
-    _activate()
+    activation = _activate()
+    baseline_migrations = set(MigrationRecorder(connection).applied_migrations())
+    baseline_functions = _function_contract()
 
-    with pytest.raises(RuntimeError, match="runtime-executable"):
-        _migrate(target)
+    # Assert the real refusal and retained protection before cleanup can undo DDL.
+    # Neither case observes another connection, callbacks or commit visibility.
+    with rollback_migration_case():
+        with pytest.raises(RuntimeError, match="runtime-executable"):
+            _migrate(target)
 
-    assert AuthorityProvenanceActivation.objects.filter(singleton=True).exists()
-    _assert_hardened(_function_contract())
+        assert AuthorityProvenanceActivation.objects.filter(pk=activation.pk).exists()
+        _assert_hardened(_function_contract())
+
+    assert (
+        set(MigrationRecorder(connection).applied_migrations()) == baseline_migrations
+    )
+    assert _function_contract() == baseline_functions
+    assert AuthorityProvenanceActivation.objects.filter(pk=activation.pk).exists()
 
 
 def test_owning_fence_survives_a_missing_convergence_migration_record() -> None:

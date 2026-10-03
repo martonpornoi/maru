@@ -101,6 +101,16 @@ both success and failure, discarded callbacks, deferred-constraint enforcement,
 and rejection of nested baselines. Unit tests reject unsafe database boundaries
 and non-atomic plans in either direction.
 
+The two parameter variants of the activated runtime-helper downgrade refusal
+also use this existing isolation boundary. Activation is committed first; each
+real migration plan must raise its original refusal and retain the activation
+and hardened helpers **before** cleanup rolls anything back. Afterwards, exact
+migration-recorder membership, helper definitions/OIDs/ACLs and the activation
+are checked again. This removes repeated forward reconstruction after a negative
+case, not migration execution or assertions. Parameter variants stay together;
+the ordinary full-graph restoration fixture, committed recovery tests and all
+non-atomic/other-connection cases remain unchanged.
+
 The Registration profile-extension-value pilot applies the same opt-in boundary
 to twelve serial ACL-retirement, backfill, and invalid-history cases. Its
 module fixture creates synthetic Account, EventEdition, and Participation

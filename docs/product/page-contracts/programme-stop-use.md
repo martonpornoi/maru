@@ -55,6 +55,10 @@ Malformed/duplicate/foreign posted fields are rejected. Unknown scope and missin
 authority share a non-disclosing response. Stale versions/source identity yield
 actionable conflict feedback. Database/source failure gives an unavailable result
 without private exception text or a success claim. Responses are private/no-store.
+HTML uses `Referrer-Policy: same-origin`: native form submissions retain their
+same-origin CSRF evidence without sending a referrer to another origin.
+`no-referrer` on a form document can instead produce `Origin: null` and a rejected
+POST. Null/foreign origins remain denied; do not weaken CSRF or the local bridge.
 The form is CSRF-protected and no GET mutates adoption state. There is no polling,
 bulk stop, impersonation or browser-supplied actor/tenant selection.
 

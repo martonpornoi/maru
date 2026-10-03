@@ -9,6 +9,15 @@ the [executable rehearsal](programme-integrated-rehearsal.md) for technical setu
 and the [participant cards](programme-human-acceptance.md) for genuine people.
 It implements #48/#109's existing NFR-013, OPS-009, INT-007 and UX-029 boundaries.
 
+The [October 2 browser exit follow-up](../checkpoints/2026-10-02-programme-exit-form-browser-repair.md)
+records operator/stop-preview layouts, a separate publisher withdrawal and an
+initially unconfirmed stop. #205 corrects the independently reproduced HTML referrer/CSRF
+incompatibility and hands off existing public continuity trust. Expired downloads,
+native browser controls, archive authority and genuine human gates remain distinct;
+the subsequent fresh browser run passed reasoned stop, terminal receipt, seven-width
+layout, logout and original-actor receipt isolation. Its 13,489 passing units do
+not close all P10/P11 cells or replace exact certification.
+
 The latest populated source is `0d2a3aa5c862e70f2741cceb6aedc0f03b2042af`:
 [the October 1 joined rehearsal](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
 passed all eighteen phases in 1,265.44s, including the reconciled planning/notice
@@ -45,6 +54,16 @@ equality. This closes the component/recovery issues, not the human-dependent
 | P12 — Isolation and excluded effects | Original 97-table fingerprints checked after each phase; capability/effect inventory guards; 49 genuine scope/purpose responses across seven routes; all seven independently authorized delivery-layer subsets and immediate revocation; four actual foreign/sibling object POST denials between successful owner controls. | Reconcile each relevant state with its owning tests and genuine session evidence; a finite matrix is not every possible state or proof against all transient effects. |
 
 ## Independent supporting evidence
+
+The [October 2 protected delivery](../checkpoints/2026-10-02-programme-local-assisted-protected-delivery.md)
+closed #203 with exact local/hosted acceptance; it does not close these human gates.
+The [fresh continuity browser follow-up](../checkpoints/2026-10-02-programme-continuity-browser-follow-up.md)
+adds public and volunteer seven-width geometry checks, public keyboard/print-copy
+navigation and an actual personal snapshot download. A wall-clock gap outlasted
+the disposable fixture; subsequent print/logout were not performed. Independent
+offline verification was unavailable because the interactive handoff lacked its
+public trust policy. The narrow preparation repair has focused tests, not yet a
+native browser/offline pass or exact bundle certification.
 
 The [September 27 assistant-operated browser record](../checkpoints/2026-09-27-programme-assistant-browser-rehearsal.md)
 adds actual ordinary-form P02 evidence over ADR 0115's local bridge: a new proposal,
