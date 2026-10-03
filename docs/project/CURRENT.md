@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-03
+Last updated: 2026-10-04
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -172,7 +172,7 @@ follow-up's protected PR, not an inherited PR #199 receipt.
 
 ## Next actions and remaining closure gates
 
-The post-#205 continuation has a local private-terminal facilitator and
+The post-#205 continuation has a local Windows desktop facilitator and
 [maintainer walkthrough](../operations/programme-maintainer-walkthrough.md).
 Its short core creates a fictional call draft using browser-checked labels and
 complete supplied values; a separate prepared session covers public/personal
@@ -183,13 +183,27 @@ startup hang; the supervisor handles stop/EOF and broken-pipe disposal explicitl
 No production schema/profile/route or grant changes. See the
 [continuation checkpoint](../checkpoints/2026-10-03-programme-maintainer-facilitator.md).
 
+Draft PR #207's first head `f69d6a5` failed CodeQL for plaintext password
+logging. The repair removes credential output, using an in-memory account
+window with deliberate clipboard copying, Windows history/cloud exclusions,
+30-second expiry and ownership-checked cleanup. It does not dismiss the
+finding or weaken scanning. Applied repair feedback passes **104 focused cases**
+and **13,529 complete units / 79.65s**, with three existing Django warnings.
+Repository-wide Ruff/format, 714-document validation and whitespace checks pass.
+Native Windows checks verify copying, all exclusion formats, actual clipboard
+removal, window disposal and normal child shutdown through the new GUI stop path.
+Original `f69d6a5` local certification passed **18,585 Python cases, 71 shards and
+91.73% coverage / 4h14m44s**; all 5,045 archived files were hash-verified before
+applying the repair. That receipt does not certify the revised candidate, which
+still requires clean-head local certification and hosted acceptance. See the
+[credential repair checkpoint](../checkpoints/2026-10-03-programme-credential-delivery.md).
+
 New browser evidence includes a timely actual public download, successful offline
 verification/recheck, a separately withdrawn pack advancing known state and refusal
 of the earlier still-unexpired pack. Reasoned withdrawal, terminal stop receipt,
 ordinary logout, call-draft creation and generated volunteer login also passed.
 Native print preview and visual inspection of local HTML remain unperformed.
-Focused feedback passes **115 cases**; final complete units passed
-**13,504 / 73.75s** with three existing Django warnings. Native normal stop confirmed
+Earlier native terminal-facilitator normal stop confirmed
 DISPOSED, COMPLETE and exit zero; no helper process or owned container remains.
 A harmless final-helper process probe confirms stop/interrupt child cleanup;
 PowerShell still reports Ctrl+C as an interrupted command. Use written `stop`.

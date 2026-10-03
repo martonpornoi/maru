@@ -60,9 +60,12 @@ rather than replace the curated summary.
 
 ### Added
 
-- Added a private-terminal Programme rehearsal launcher and a short maintainer
+- Added a Windows desktop Programme rehearsal launcher and a short maintainer
   walkthrough with generated test accounts, copy-ready form values, current
-  interface labels, expected results and disposal instructions. Windows setup
+  interface labels, expected results and disposal instructions. Its account
+  window keeps passwords out of logs and files, with deliberate temporary
+  copies excluded from Windows clipboard history and cloud synchronization.
+  Windows setup
   no longer lets noninteractive provisioning children inherit the live command
   pipe. This is local evaluation tooling, not Programme activation or completed
   human acceptance.

@@ -1,6 +1,6 @@
-"""Private terminal facilitator for a fresh, finite synthetic Programme session.
+"""Desktop facilitator for a fresh, finite synthetic Programme session.
 
-Run directly in a terminal, never through a transcript or redirected output.
+Run from an interactive Windows terminal with the local account window.
 The child retains the existing native setup, encrypted pipe and owned cleanup.
 """
 
@@ -23,6 +23,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+from tests.rehearsals.programme_credentials import CredentialWindow
 from tests.rehearsals.programme_local_session import _AAD
 
 
@@ -43,7 +44,7 @@ def open_handoff(envelope, private_key):
 
 
 def session_card(document):
-    """Render only the session's ephemeral browser accounts for its local owner."""
+    """Render nonsecret session links; credentials never enter terminal output."""
     origin = document["url"]
     organization = document["organization_id"]
     edition = document["edition_id"]
@@ -62,16 +63,7 @@ def session_card(document):
                 f"My programme: {origin}/my/{organization}/{edition}/programme-now/",
             )
         )
-    lines.extend(("", "PRIVATE TEST ACCOUNTS - do not copy these into issue reports:"))
-    for person in document["people"]:
-        lines.extend(
-            (
-                f"  Role: {person['role']}",
-                f"  Email: {person['email']}",
-                f"  Password: {person['password']}",
-                "",
-            )
-        )
+    lines.extend(("", "Accounts are in the Programme test accounts window."))
     lines.extend(
         (
             "Keep this terminal open. Type stop and press Enter to finish.",
@@ -129,10 +121,11 @@ def provision_public_trust(document):
     )
 
 
-def ready_card(envelope, private_key):
+def ready_card(envelope, private_key, window):
     """Validate and provision before making any ephemeral account visible."""
     document = open_handoff(envelope, private_key)
     trust_instructions = provision_public_trust(document)
+    window.show_accounts(document["people"])
     return session_card(document) + "\n" + trust_instructions + "\n"
 
 
@@ -147,7 +140,7 @@ def child_environment():
     }
 
 
-def interruptible_messages(stream, send):
+def interruptible_messages(stream, send, tick=lambda: None):
     """Request cleanup on Ctrl+C without interrupting a Windows pipe read."""
     messages = queue.Queue()
 
@@ -163,6 +156,7 @@ def interruptible_messages(stream, send):
     threading.Thread(target=read, daemon=True).start()
     while True:
         try:
+            tick()
             message = messages.get(timeout=0.5)
         except queue.Empty:
             continue
@@ -191,8 +185,32 @@ def recipient_keypair():
 
 
 def supervise(stage):
-    """Keep the encrypted child alive until normal stop, EOF or original expiry."""
-    private_key, public_key = recipient_keypair()
+    """Require the desktop recipient before creating any session resources."""
+    window = CredentialWindow()
+    try:
+        result = _supervise(stage, window)
+    finally:
+        window.close()
+    if result == 0:
+        sys.stdout.write(
+            "COMPLETE - child exited normally and disposal was confirmed.\n"
+        )
+    return result
+
+
+def receive_stop(send):
+    """Read explicit stop or EOF without a buffered-input shutdown lock."""
+    for line in iter(sys.stdin.buffer.raw.readline, b""):
+        if line.strip() == b"stop":
+            send("stop")
+            return
+        sys.stdout.write("Type stop to finish; other input is ignored.\n")
+        sys.stdout.flush()
+    send("stop")
+
+
+def session_child(stage, public_key):
+    """Launch only the existing isolated child with encrypted handoff pipes."""
     command = [
         sys.executable,
         "-m",
@@ -209,7 +227,7 @@ def supervise(stage):
         if os.name == "nt"
         else {"start_new_session": True}
     )
-    with subprocess.Popen(  # noqa: S603 - fixed module in this interpreter
+    return subprocess.Popen(  # noqa: S603 - fixed module in this interpreter
         command,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
@@ -218,10 +236,18 @@ def supervise(stage):
         encoding="utf-8",
         env=child_environment(),
         **options,
-    ) as child:
+    )
+
+
+def _supervise(stage, window):
+    """Keep the encrypted child alive until normal stop, EOF or original expiry."""
+    private_key, public_key = recipient_keypair()
+    with session_child(stage, public_key) as child:
         write_lock = threading.Lock()
+        stopping = threading.Event()
 
         def send(value):
+            stopping.set()
             with write_lock:
                 if child.poll() is None:
                     try:
@@ -234,29 +260,26 @@ def supervise(stage):
                 with suppress(OSError, ValueError):
                     child.stdin.close()
 
-        def receive():
-            # A raw terminal reader holds no BufferedReader shutdown lock when
-            # the finite child expires or the main thread handles Ctrl+C.
-            for line in iter(sys.stdin.buffer.raw.readline, b""):
-                value = line.strip()
-                if value == b"stop":
-                    send("stop")
-                    return
-                sys.stdout.write("Type stop to finish; other input is ignored.\n")
-                sys.stdout.flush()
-            send("stop")
+        threading.Thread(target=receive_stop, args=(send,), daemon=True).start()
 
-        threading.Thread(target=receive, daemon=True).start()
+        def tick():
+            if stopping.is_set() and not window.stop_requested:
+                window.request_stop()
+            window.pump()
+            if window.stop_requested and not stopping.is_set():
+                send("stop")
+
         disposed = False
         try:
-            for line in interruptible_messages(child.stdout, send):
+            for line in interruptible_messages(child.stdout, send, tick):
                 message = json.loads(line)
                 state = message.get("state")
                 if state == "ready":
-                    sys.stdout.write(ready_card(message, private_key))
+                    sys.stdout.write(ready_card(message, private_key, window))
                 elif state == "preparing":
                     sys.stdout.write("Preparing fresh test data; wait for READY.\n")
                 elif state == "disposed":
+                    window.request_stop()
                     disposed = True
                     with write_lock, suppress(BrokenPipeError):
                         child.stdin.close()
@@ -270,16 +293,16 @@ def supervise(stage):
             # An exited child no longer consumes the stop request.
             with write_lock, suppress(BrokenPipeError):
                 child.stdin.close()
+            window.request_stop()
         result = child.wait()
     if result != 0 or not disposed:
         sys.stderr.write("Session did not complete normally; record this message.\n")
         return 1
-    sys.stdout.write("COMPLETE - child exited normally and disposal was confirmed.\n")
     return 0
 
 
 def main():
-    """Refuse redirected credentials and launch the selected synthetic stage."""
+    """Require interactive stop control and launch the selected synthetic stage."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--stage", choices=("team", "items", "published"), default="team"

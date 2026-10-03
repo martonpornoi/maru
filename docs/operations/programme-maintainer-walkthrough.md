@@ -12,16 +12,23 @@ complication if you prefer; that is useful feedback, not an incomplete assignmen
 ## Version and prerequisites
 
 The application baseline is protected commit
-`1fa3bb8359fde77e5eebdfd70fde379c4f2d1ae3` (PR #206). The new private-terminal
+`1fa3bb8359fde77e5eebdfd70fde379c4f2d1ae3` (PR #206). The new desktop
 launcher below is a local follow-up, not yet a protected release. Record the exact
 commit printed by the startup command with your observations; protected delivery
 must be confirmed in [CURRENT](../project/CURRENT.md) before a release is claimed.
 
-Use this computer's existing Maru checkout, locked `.venv` and Docker Desktop.
+Use this computer's existing Maru checkout, locked `.venv`, Python's Tk desktop
+runtime and Docker Desktop. The account window requires Windows; unavailable
+desktop support fails before any test database is created.
 Use only fictional data. The test server listens on this computer, not the LAN.
 The commands create a fresh disposable database and real test accounts through
 the maintained native setup; they do not activate Programme in your normal database.
-There is no shared permanent test password.
+There is no shared permanent test password. Credentials remain in memory;
+only a deliberate copy places one value on the local clipboard. The window
+uses [Windows history and cloud exclusions](https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats).
+Other local applications may read the clipboard while it is present. Paste
+only into this test site's login; do not save these passwords in your browser.
+If the process crashes or clipboard cleanup fails, copy harmless text yourself.
 
 ## Start the server and create the test accounts
 
@@ -40,10 +47,17 @@ There is no shared permanent test password.
    several minutes. A preparing message is not readiness. If startup fails,
    record the stage and message; do not change your production settings or
    disable security checks to continue.
-5. The terminal supplies the exact **Administration** address and an account
-   card for each role, with **Email** and **Password**. These are newly generated
-   for this session. Copy them only into this local test site's login form.
-6. Leave the terminal open. The displayed remaining time includes preparation.
+5. The terminal supplies the exact **Administration** address. A separate
+   **Programme test accounts** window opens. Select the required **Role**,
+   choose **Copy email**, and paste into **Email address or username** on
+   this local site's login page. Return to the account window, choose
+   **Copy password**, and paste into **Password**. The window shows the
+   email; it never displays the password or writes it to the terminal.
+6. Paste each copy within 30 seconds. Expiry, changing roles or stopping
+   clears the window's unchanged clipboard copy. If you copied something
+   else meanwhile, that newer copy is preserved. On **Copy failed**, close
+   other clipboard tools and try the button again.
+7. Leave the terminal and account window open. Remaining time includes preparation.
    The original lease is one hour; worker refresh does not extend it.
 
 The `team` stage has already created the fictional organization, series, edition,
@@ -55,9 +69,10 @@ Neither their labels nor being a controller grants every Programme permission.
 
 ## Switching accounts
 
-Use the ordinary **Log out** control before using the next account card. On the
-login page, fill **Email address or username** and **Password**, then choose
-**Open Administration**. Check the displayed signed-in identity after each switch.
+Use the ordinary **Log out** control before switching **Role** in the account
+window. Copy and paste the newly selected email and password separately,
+then choose **Open Administration**. Check the displayed signed-in identity
+after each switch.
 Ordinary tabs share login state; opening a second tab is not a second account.
 
 If a task is missing, record which account you used and what you could see.
@@ -256,6 +271,8 @@ accounts does not count as several independent participants.
    invitation links or raw private downloads into your report.
 2. Log out in the browser.
 3. In the original PowerShell terminal, type `stop` and press Enter.
+   Closing **Programme test accounts** requests the same session cleanup.
+   Account copying stops immediately; wait for terminal completion.
 4. Wait for **DISPOSED - the test session has ended.**, then
    **COMPLETE - child exited normally and disposal was confirmed.** and the
    terminal prompt. Record an error or missing completion message rather than

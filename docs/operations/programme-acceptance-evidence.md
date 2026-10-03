@@ -181,7 +181,11 @@ verification sequence, including refusal of a still-unexpired older pack after
 known withdrawal. It also records the local maintainer facilitator and call-draft
 walkthrough. These bounded observations do not close native printing, local HTML
 visual inspection, private custody, restricted archives or genuine-person gates;
-the follow-up still needs its own protected delivery.
+the follow-up still needs its own protected delivery. The
+[credential-delivery repair](../checkpoints/2026-10-03-programme-credential-delivery.md)
+supersedes its initial plaintext terminal account delivery after CodeQL
+rejected it. Native desktop/copy observations do not establish specialist
+accessibility or human acceptance.
 
 The source bundle has passed its own clean exact-head local certification,
 independent hosted gates and protected merge through PR #199. Supporting issue

@@ -16,9 +16,11 @@ from tests.rehearsals.programme_local_session import seal_handoff
 
 @pytest.fixture
 def synchronous_child(monkeypatch):
+    window = Mock(stop_requested=False)
+    monkeypatch.setattr(hands_on, "CredentialWindow", Mock(return_value=window))
     monkeypatch.setattr(hands_on.threading, "Thread", Mock())
     monkeypatch.setattr(
-        hands_on, "interruptible_messages", lambda stream, _send: stream
+        hands_on, "interruptible_messages", lambda stream, _send, _tick: stream
     )
 
 
@@ -142,8 +144,9 @@ def test_card_never_exposes_issuer_or_private_handoff_keys():
             "continuity_trust_policy": "not-account-material",
         }
     )
-    assert "test@example.invalid" in card
-    assert "Password: synthetic" in card
+    assert "test@example.invalid" not in card
+    assert "synthetic" not in card
+    assert "Programme test accounts window" in card
     assert "must-not-render" not in card
     assert "not-account-material" not in card
     assert "40 minutes" in card
@@ -202,3 +205,96 @@ def test_malformed_child_output_still_requests_owned_cleanup(
         hands_on.supervise("team")
     child.stdin.write.assert_called_with("stop\n")
     assert child.stdin.close.called
+
+
+def test_ready_protocol_keeps_password_out_of_both_output_streams(
+    monkeypatch, synchronous_child, capsys
+):
+    key, public = hands_on.recipient_keypair()
+    people = [
+        {
+            "role": "organizer",
+            "email": "demo@example.invalid",
+            "password": "private-canary",
+        }
+    ]
+    document = {
+        "people": people,
+        "url": "http://127.0.0.1:54321",
+        "stage": "team",
+        "organization_id": "org",
+        "edition_id": "edition",
+        "remaining_seconds": 2400,
+    }
+    envelope = {**seal_handoff(document, key.public_key()), "state": "ready"}
+    child = Mock()
+    child.__enter__ = Mock(return_value=child)
+    child.__exit__ = Mock(return_value=False)
+    child.stdout = io.StringIO(json.dumps(envelope) + '\n{"state":"disposed"}\n')
+    child.wait.return_value = 0
+    monkeypatch.setattr(hands_on.subprocess, "Popen", Mock(return_value=child))
+    monkeypatch.setattr(hands_on, "recipient_keypair", lambda: (key, public))
+    assert hands_on.supervise("team") == 0
+    hands_on.CredentialWindow.return_value.show_accounts.assert_called_once_with(people)
+    hands_on.CredentialWindow.return_value.close.assert_called_once()
+    captured = capsys.readouterr()
+    assert "private-canary" not in captured.out + captured.err
+    assert "demo@example.invalid" not in captured.out + captured.err
+    assert "READY" in captured.out
+    assert "COMPLETE" in captured.out
+
+
+@pytest.mark.parametrize("failure", ["authentication", "scope"])
+def test_invalid_handoff_never_reaches_account_window(monkeypatch, failure):
+    key, _public = hands_on.recipient_keypair()
+    document = _public_handoff()
+    document["people"] = [{"password": "private-canary"}]
+    if failure == "scope":
+        document["edition_id"] = "30000000-0000-4000-8000-000000000003"
+    envelope = seal_handoff(document, key.public_key())
+    if failure == "authentication":
+        envelope["ciphertext"] = base64.b64encode(
+            b"invalid authenticated bytes"
+        ).decode()
+    window = Mock()
+    with pytest.raises((InvalidTag, ValueError)):
+        hands_on.ready_card(envelope, key, window)
+    window.show_accounts.assert_not_called()
+
+
+def test_missing_desktop_prevents_native_fixture_creation(monkeypatch):
+    monkeypatch.setattr(
+        hands_on, "CredentialWindow", Mock(side_effect=OSError("no desktop"))
+    )
+    launch = Mock()
+    monkeypatch.setattr(hands_on.subprocess, "Popen", launch)
+    with pytest.raises(OSError, match="no desktop"):
+        hands_on.supervise("team")
+    launch.assert_not_called()
+
+
+def test_clipboard_cleanup_failure_cannot_print_complete(monkeypatch, capsys):
+    window = Mock()
+    window.close.side_effect = OSError("clipboard busy")
+    monkeypatch.setattr(hands_on, "CredentialWindow", lambda: window)
+    monkeypatch.setattr(hands_on, "_supervise", lambda _stage, _window: 0)
+    with pytest.raises(OSError, match="clipboard busy"):
+        hands_on.supervise("team")
+    assert "COMPLETE" not in capsys.readouterr().out
+
+
+def test_window_failure_still_sends_stop_before_waiting_for_child(
+    monkeypatch, synchronous_child
+):
+    child = Mock()
+    child.__enter__ = Mock(return_value=child)
+    child.__exit__ = Mock(return_value=False)
+    child.stdout = io.StringIO('{"state":"disposed"}\n')
+    child.poll.return_value = None
+    window = hands_on.CredentialWindow.return_value
+    window.request_stop.side_effect = RuntimeError("desktop failed")
+    monkeypatch.setattr(hands_on.subprocess, "Popen", Mock(return_value=child))
+    with pytest.raises(RuntimeError, match="desktop failed"):
+        hands_on.supervise("team")
+    child.stdin.write.assert_called_with("stop\n")
+    window.close.assert_called_once()
