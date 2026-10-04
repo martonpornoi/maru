@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-02
+Last updated: 2026-10-04
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -10,6 +10,19 @@ preserve history, and the [production ledger](PRODUCTION_CONSOLIDATION.md) retai
 the release baseline.
 
 ## Protected baseline and testing policy
+
+[PR #206](https://github.com/martonpornoi/maru/pull/206) delivered #205 at protected
+squash `1fa3bb8359fde77e5eebdfd70fde379c4f2d1ae3`; its tree equals certified
+`722462e`. Local and hosted acceptance passed **18,570 Python cases and all 71
+PostgreSQL shards**, with **91.73%** combined coverage; local frontend acceptance
+passed **103 cases**. Local certification took **4h13m36s**, hosted acceptance
+**4h27m48s**. Hosted native jobs finished in **6m21s–58m52s**, retaining at least
+**61m08s** of the unchanged two-hour limit. Exact-head PR gate, CodeQL,
+up-to-date mergeability and resolved conversations passed before match-head squash.
+Clean local main was synchronized; #205 and its supporting #48 item are complete.
+The temporary #205 check-in was deleted. See the
+[delivery checkpoint](../checkpoints/2026-10-03-programme-exit-browser-protected-delivery.md).
+No human acceptance, archive authority or production activation was claimed.
 
 [PR #204](https://github.com/martonpornoi/maru/pull/204) delivered #203 at protected
 squash `911002068dd5acb89ac4e4a8c46b60c1081c6097`; its tree equals certified
@@ -159,6 +172,46 @@ follow-up's protected PR, not an inherited PR #199 receipt.
 
 ## Next actions and remaining closure gates
 
+The post-#205 continuation has a local Windows desktop facilitator and
+[maintainer walkthrough](../operations/programme-maintainer-walkthrough.md).
+Its short core creates a fictional call draft using browser-checked labels and
+complete supplied values; a separate prepared session covers public/personal
+output, print/offline observations, withdrawal and stop. It retains the original
+finite fixture, generated accounts, independent authority and owned cleanup.
+Noninteractive provisioning now disconnects inherited stdin to avoid a Windows
+startup hang; the supervisor handles stop/EOF and broken-pipe disposal explicitly.
+No production schema/profile/route or grant changes. See the
+[continuation checkpoint](../checkpoints/2026-10-03-programme-maintainer-facilitator.md).
+
+Draft PR #207's first head `f69d6a5` failed CodeQL for plaintext password
+logging. The repair removes credential output, using an in-memory account
+window with deliberate clipboard copying, Windows history/cloud exclusions,
+30-second expiry and ownership-checked cleanup. It does not dismiss the
+finding or weaken scanning. Applied repair feedback passes **104 focused cases**
+and **13,529 complete units / 79.65s**, with three existing Django warnings.
+Repository-wide Ruff/format, 714-document validation and whitespace checks pass.
+Native Windows checks verify copying, all exclusion formats, actual clipboard
+removal, window disposal and normal child shutdown through the new GUI stop path.
+Original `f69d6a5` local certification passed **18,585 Python cases, 71 shards and
+91.73% coverage / 4h14m44s**; all 5,045 archived files were hash-verified before
+applying the repair. That receipt does not certify the revised candidate, which
+still requires clean-head local certification and hosted acceptance. See the
+[credential repair checkpoint](../checkpoints/2026-10-03-programme-credential-delivery.md).
+
+New browser evidence includes a timely actual public download, successful offline
+verification/recheck, a separately withdrawn pack advancing known state and refusal
+of the earlier still-unexpired pack. Reasoned withdrawal, terminal stop receipt,
+ordinary logout, call-draft creation and generated volunteer login also passed.
+Native print preview and visual inspection of local HTML remain unperformed.
+Earlier native terminal-facilitator normal stop confirmed
+DISPOSED, COMPLETE and exit zero; no helper process or owned container remains.
+A harmless final-helper process probe confirms stop/interrupt child cleanup;
+PowerShell still reports Ctrl+C as an interrupted command. Use written `stop`.
+Finish clean exact-head certification and hosted gates;
+earlier receipts are not its evidence. The guide is not yet the protected final
+handoff. Remaining archive, independent-person, accessibility and owner gates
+under #92/#109 still precede #108 promotion and #48 closure.
+
 #203 is delivered through PR #204; the earlier verification narrative below
 preserves failed and superseded attempts, not current blockers. ADR 0115 permits explicit synthetic
 loopback HTTP over the unchanged pinned native HTTPS fixture, without machine
@@ -167,7 +220,8 @@ login/logout, run-specific cookies, encrypted handoff and owned cleanup remain
 mandatory. PostgreSQL acceptance remains required. Interrupted runs are not
 certification; the final clean #203 bundle received fresh acceptance above.
 
-The next #92/#109 bundle is #205 on `codex/programme-exit-browser-acceptance`.
+The #92/#109 supporting repair bundle #205 is delivered through PR #206.
+The following observations retain their original evidence boundaries.
 Fresh assistant-operated public and volunteer continuity views passed the seven
 required width checks with one H1/main and no page overflow. Public keyboard and
 print-copy navigation worked. A volunteer snapshot downloaded, but subsequent
@@ -185,8 +239,8 @@ completed offline rehearsal. Focused launcher tests pass **36 / 0.35s**, with Ru
 and formatting checks passing. Complete database-free feedback now passes
 **13,477 / 75.69s**, with three existing Django warnings; documentation validation
 and whitespace checks pass. A second published native handoff successfully supplied
-the validated public policy; exact bundle delivery remains pending;
-do not reuse #203's receipt for these changed files. The
+the validated public policy. The new bundle subsequently received its own clean
+exact-head certification and protected delivery above; #203's receipt was not reused. The
 [browser follow-up checkpoint](../checkpoints/2026-10-02-programme-continuity-browser-follow-up.md)
 preserves the expiry and temporary-directory failures separately from successful checks.
 
@@ -204,7 +258,7 @@ retained terminal receipt, seven-width layout and ordinary logout from the repai
 page. Another controller could not read the original actor's receipt. All owned
 resources were normally disposed; no fixture remains. Complete inexpensive units
 pass **13,489 / 79.59s** with three existing warnings. Exact bundle certification
-and protected delivery are next; no live offline, native print or human pass is
+and protected delivery subsequently passed as recorded above; no live offline, native print or human pass is
 inferred from the stop result.
 
 The first exact `eb620d4` certification failed its unchanged local timing gate:
@@ -218,7 +272,7 @@ units pass **13,489 / 91.21s**; Ruff, format, docs and whitespace checks pass.
 The entire repaired shard 34 passed **78 cases / 26m46s** with the identical
 selection, unchanged source and independently verified cleanup. This one-database
 diagnostic is not eight-worker timing or certification. Fresh complete exact-head
-certification remains required. No timeout, group split, history selection,
+certification subsequently passed independently at `722462e`. No timeout, group split, history selection,
 coverage or production migration changed.
 
 ### Verified observations and repairs
@@ -351,9 +405,9 @@ production admission.
 
 ### Smallest next actions
 
-1. Certify and deliver #205's coherent public-trust/exit-form repair and browser
-   evidence once through clean exact-commit local/hosted checks. Then finish
-   remaining admitted P10/P11 interactions. Keep missing archive permission and
+1. #205 is delivered. Continue remaining admitted P10/P11 browser interactions
+   from protected `1fa3bb8`, carrying this post-merge delivery record in the next
+   coherent acceptance follow-up. Keep missing archive permission and
    unobserved print/offline controls separate from application defects.
 2. #92 still needs representative independent-person, specialist screen-reader and
    operational-owner acceptance. The [session cards](../operations/programme-human-acceptance.md)
@@ -383,8 +437,8 @@ acceptance of replacement work; signed fallback remains historical read-only.
 
 Unattended bundled delivery and protected merge are authorized, single-agent.
 The approved temporary 30-minute check-in for #203 was deleted after its verified
-protected merge on October 2. The maintainer subsequently approved temporary
-30-minute check-ins for #205 through its protected merge; delete them afterwards.
+protected merge on October 2. The approved temporary #205 check-in was deleted
+after verified protected delivery and main synchronization on October 3.
 No other schedule, policy bypass, production deployment or broad Docker cleanup.
 Preserve unrelated worktrees/stashes/resources; remove only verified task-owned
 resources. Applied stashes `5b6851f` and `dd651ef` must not be reapplied;

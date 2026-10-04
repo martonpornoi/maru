@@ -1879,6 +1879,18 @@ architecture documents, implementation issues, tests, and release notes.
 - **OPS-008 — Rehearsal:** Editions must support drills or simulations using
   production-like configuration without notifying real audiences or corrupting
   production history.
+  A local maintainer walkthrough must identify its tested version, use current
+  interface wording, supply fictional inputs and ordinary account-switching
+  instructions, and document startup, finite lifetime, disposal and restart.
+  Prepared fixture steps remain distinct from participant actions. A private
+  local facilitator may present newly generated synthetic credentials to the
+  maintainer; credentials and private keys must not enter published guidance,
+  evidence, stdout/stderr or persistent handoff files. Local desktop delivery
+  must keep passwords out of visible widgets, require deliberate copying,
+  exclude Windows clipboard history/cloud synchronization, expire its own
+  unchanged copy and stop copying on session disposal. Clipboard failures
+  must not fall back to logging or erase another application's later copy.
+  Observations may stop at the first confusing or blocked step.
 - **OPS-009 — Published-timetable continuity:** Hosts, volunteers, Programme
   staff, departments, and rooms must receive minimized now/next and run-sheet
   projections from the exact active release, with source age and version
