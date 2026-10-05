@@ -29,8 +29,13 @@ delivery completes the testing handoff; it does not complete these human cards.
 On 2026-10-05 the maintainer reported that the walkthrough's core call-draft
 journey went well with no issues, and separately requested 24-hour deadline entry
 because AM/PM was confusing. The [feedback checkpoint](../checkpoints/2026-10-05-programme-24-hour-deadlines.md)
-records this single-maintainer report and the local interface correction. No
-optional-session, independent-person or specialist accessibility result is inferred.
+records this single-maintainer report and the local interface correction.
+The maintainer subsequently confirmed that both native browser print preview and
+the generated verified `initial.html` displayed correctly, and that the instructions
+were followable. The [output-check record](../checkpoints/2026-10-05-programme-step1-native-and-maintainer-outputs.md)
+retains that bounded report without inventing a browser/version, startup commit or
+detailed pagination measurements. Independent-person, specialist accessibility,
+private-copy custody and operational-owner acceptance remain separate.
 
 On 2026-09-25 the maintainer requested assisted local testing without additional
 participants and explicitly approved loopback-only HTTP. [ADR 0115](../architecture/decisions/0115-local-only-assisted-programme-rehearsal.md)

@@ -79,6 +79,16 @@ metadata is not a certification receipt. Preserve the preceding no-tests-run
 wrapper argument failure. Use the [long-run handling guidance](../development/local-certification.md#long-running-local-processes)
 without adding an alternate acceptance path or running alongside the full pool.
 
+The [October 5 repeat](../checkpoints/2026-10-05-programme-step1-native-and-maintainer-outputs.md)
+at clean `569e8c3dfc448728c63181fda08d91fb8576bbcf` passed all eighteen phases in
+1,288.64s. The populated archive included all eight owner record/schema contracts
+and the original supporting file, with requester-only download, digest/schema
+validation, cancellation and retained audit checked. Active/stopped restores,
+incomplete-backup refusal, stop and isolation also passed. Original process exit
+and owned cleanup were verified; five evidence files were copied and SHA-256
+verified before subsequent documentation edits. This is distinct from the
+maintainer's reported print/offline observations and pending whole-commit delivery.
+
 This command completes automated synthetic tasks, not a human session. It neither
 proves every possible state/field combination nor supplies genuine browser zoom,
 printing, screen-reader use or operational-owner acceptance. Use the participant

@@ -22,15 +22,22 @@ cases**. Lint, typing, docstrings, documentation validation, a fresh warning-fat
 Sphinx build and a component browser rehearsal passed; the
 [feedback checkpoint](../checkpoints/2026-10-05-programme-24-hour-deadlines.md)
 records the checks and their limits.
-The maintainer authorized finishing step 1: technical archive checks and protected
-delivery, followed by the two human print/offline observations. The walkthrough
-now opens with that shorter published-stage handoff. Next: run the existing
-populated native archive/recovery journey on a clean candidate, then complete
-fresh exact-head local/hosted certification and protected delivery. Do not overlap
-the populated rehearsal or a maintainer session with the full eight-database pool.
-This remains a local follow-up above `dec2ca5` until those gates pass. Restart a
-disposable session to see the changed Python form controls; independent-person,
-specialist accessibility and operational acceptance remain open.
+The maintainer also confirmed that the browser print preview and generated
+`initial.html` both displayed correctly and that the instructions were followable.
+These two short output checks are complete as maintainer-reported observations;
+the report did not identify the browser/version or startup commit.
+Clean `569e8c3dfc448728c63181fda08d91fb8576bbcf` passed the unchanged populated
+native journey: all eighteen phases in **1,288.64s**, including private archive
+content/custody/cancellation, active/stopped restore, stop and isolation. Original
+process exit, owned resource cleanup and SHA-256-verified evidence preservation
+were confirmed. The [step 1 checkpoint](../checkpoints/2026-10-05-programme-step1-native-and-maintainer-outputs.md)
+separates native proof from the maintainer's report.
+[PR #208](https://github.com/martonpornoi/maru/pull/208) remains draft pending fresh
+exact-head local certification, then independent hosted acceptance and protected
+delivery. The native result does not certify the subsequent documentation commit.
+Do not overlap a populated rehearsal or maintainer session with the full
+eight-database pool. Independent-person, specialist accessibility and operational
+acceptance under #92, #109 reconciliation and #108 activation remain open.
 
 [PR #207](https://github.com/martonpornoi/maru/pull/207) delivered the Windows
 Programme rehearsal launcher and maintainer walkthrough at protected squash

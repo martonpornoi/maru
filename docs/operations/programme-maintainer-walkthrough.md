@@ -2,17 +2,20 @@
 
 **Audience:** The maintainer testing alone on the local Windows computer\
 **Outcome:** Try a small fictional Programme workflow and record where it becomes confusing\
-**Status:** Core journey reported passed on 2026-10-05; print preview and offline HTML observations remain open
+**Status:** Core journey, print preview and offline HTML reported passed by the maintainer on 2026-10-05
 
 This guide is for coached-by-document maintainer testing. It does not replace the
 independent-person, specialist accessibility or operational-owner session in
 [the human acceptance cards](programme-human-acceptance.md). Stop at the first
 complication if you prefer; that is useful feedback, not an incomplete assignment.
 
-## Your next session: two output checks
+## Short session: two output checks
 
-The core call-draft journey already passed. For this follow-up, start Docker
-Desktop and open a new PowerShell terminal in the prepared checkout:
+The maintainer confirmed that both outputs displayed correctly and that these
+instructions were followable. The [recorded observation](../checkpoints/2026-10-05-programme-step1-native-and-maintainer-outputs.md)
+completes this short follow-up; it does not require repeating the successful core
+journey. The steps below remain available to reproduce the two checks. Start
+Docker Desktop and open a new PowerShell terminal in the prepared checkout:
 
 ```powershell
 Set-Location 'C:\Users\TheMw\Documents\Maru'
@@ -56,19 +59,19 @@ Its source tree equals the locally certified `73692da7` candidate; independent
 hosted acceptance, PR gate and CodeQL passed before merge. See the
 [delivery record](../checkpoints/2026-10-04-programme-maintainer-protected-delivery.md).
 Record the exact commit printed at startup with your observations. The commands
-below use this computer's prepared checkout and locked environment. The local
+below use this computer's prepared checkout and locked environment. The
 [October 5 follow-up](../checkpoints/2026-10-05-programme-24-hour-deadlines.md)
-changes the deadline controls described below; it has not yet been delivered
-through a protected PR. Record `git status --short` alongside the startup commit
-when evaluating these local changes. A commit alone does not identify a modified
-working tree.
+changes the deadline controls described below and is awaiting exact-head
+certification and protected delivery in [PR #208](https://github.com/martonpornoi/maru/pull/208).
+Record `git status --short` alongside the startup commit when evaluating a local
+candidate. A commit alone does not identify a modified working tree.
 This remains synthetic evaluation, not a production release or independent human acceptance.
 
 The maintainer reported: “The core journey went well. No issues.” The accompanying
 feedback requested 24-hour entry because AM/PM made noon and midnight confusing.
-That is a successful single-maintainer core journey, not completion of the optional
-sessions or the independent acceptance cards. You do not need to repeat the whole
-journey to comment on the new clock control.
+The later report confirms the two output checks above. These are single-maintainer
+observations; other optional sessions and the independent acceptance cards remain
+separate. You do not need to repeat the whole journey to comment on the new clock.
 
 Use this computer's existing Maru checkout, locked `.venv`, Python's Tk desktop
 runtime and Docker Desktop. The account window requires Windows; unavailable
@@ -228,8 +231,8 @@ refresh. Wait for READY and use this session's new accounts and URLs.
    scope, source time and saved-copy warnings remain readable.
 5. Press Ctrl+P. Inspect the browser's print preview, including later pages;
    cancel it when finished. Record clipping, missing text and the browser used.
-   This native print-dialog check remains for you: the assistant verified only
-   the print-friendly web page.
+   This native print-dialog check is maintainer-operated. The October 5 report
+   confirmed correct display; the assistant did not operate that native dialog.
 6. Optional: sign in through **Administration** with **volunteer**, then open
    **My programme** from the terminal. Expect **My Programme now and next** and
    three **Fictional room preparation and session support** entries marked
@@ -256,8 +259,8 @@ or password is written to that folder. Verification files remain after disposal.
    Run them promptly: this fixture's signed snapshot lasts **five minutes**.
 4. Expect successful verification and an `initial.html` file. Open that local
    file in your browser. Check its historical-copy warning, scope, source time
-   and timetable. Visual inspection of this local HTML remains for you because
-   the assistant's browser cannot open local files.
+   and timetable. The October 5 maintainer report confirmed correct display of
+   this local HTML; it remains a human observation rather than an automated check.
 5. If the verifier refuses the file, stop using it. Record the message. An expired
    download is recoverable by taking a fresh snapshot and trying again before
    expiry. Do not change your clock, reset history or disable verification.
