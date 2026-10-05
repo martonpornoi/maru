@@ -55,6 +55,20 @@ equality. This closes the component/recovery issues, not the human-dependent
 
 ## Independent supporting evidence
 
+The [October 5 maintainer feedback](../checkpoints/2026-10-05-programme-24-hour-deadlines.md)
+records a reported pass of the short call-draft core journey and the requested
+24-hour deadline correction. Component browser checks and local automated checks
+cover the changed controls separately. This does not certify a new protected
+commit or complete the remaining P01–P12 human-dependent cells.
+
+The [October 4 protected delivery](../checkpoints/2026-10-04-programme-maintainer-protected-delivery.md)
+records PR #207's launcher and self-contained maintainer walkthrough. Its repaired
+credential delivery passed CodeQL, exact-head local and hosted acceptance before
+merge; passwords no longer enter terminal logs. The guide now pins protected
+`dec2ca5`. This is a testing handoff, not a human, accessibility or operational-owner
+acceptance result. Native print preview and local HTML visual inspection remain
+unperformed. Private-copy custody and archive authority remain separate.
+
 The [October 2 protected delivery](../checkpoints/2026-10-02-programme-local-assisted-protected-delivery.md)
 closed #203 with exact local/hosted acceptance; it does not close these human gates.
 The [fresh continuity browser follow-up](../checkpoints/2026-10-02-programme-continuity-browser-follow-up.md)
@@ -62,8 +76,12 @@ adds public and volunteer seven-width geometry checks, public keyboard/print-cop
 navigation and an actual personal snapshot download. A wall-clock gap outlasted
 the disposable fixture; subsequent print/logout were not performed. Independent
 offline verification was unavailable because the interactive handoff lacked its
-public trust policy. The narrow preparation repair has focused tests, not yet a
-native browser/offline pass or exact bundle certification.
+public trust policy. That first session remains incomplete. The later
+[protected repair](../checkpoints/2026-10-03-programme-exit-browser-protected-delivery.md)
+and [maintainer continuation](../checkpoints/2026-10-03-programme-maintainer-facilitator.md)
+separately record exact bundle certification and timely downloaded-pack
+verification/recheck, subsequent withdrawal refusal, ordinary logout and stop.
+They do not retroactively turn the expired session into a pass.
 
 The [September 27 assistant-operated browser record](../checkpoints/2026-09-27-programme-assistant-browser-rehearsal.md)
 adds actual ordinary-form P02 evidence over ADR 0115's local bridge: a new proposal,

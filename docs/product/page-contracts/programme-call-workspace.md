@@ -51,6 +51,14 @@ Metadata edits preserve stored deadlines, including sub-minute precision.
 Changing the window is a separate confirmed replacement of all three instants
 with whole-minute values in the edition's own displayed IANA zone. Nonexistent
 or ambiguous daylight-saving times are refused, never guessed or rounded.
+Creation and window editing retain the native **Date** calendar and use a separate
+**Time (24-hour)** text control in `HH:MM` format, from `00:00` through `23:59`.
+Visible guidance identifies midnight as `00:00` and noon as `12:00`; the browser's
+AM/PM preference cannot change clock entry. Each subcontrol has a deadline-specific
+accessible name, retains its submitted value after validation failure, and carries
+the parent field's required, help and error associations. The controls work without
+JavaScript. This presentation implements NFR-006 without changing stored instants,
+the edition-version fence or deadline inclusivity.
 
 ## Create and compose a draft
 

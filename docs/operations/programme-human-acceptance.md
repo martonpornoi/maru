@@ -12,7 +12,8 @@ cards do not establish human acceptance. No production use is authorized.
 ## Approved single-maintainer local session
 
 The [maintainer walkthrough](programme-maintainer-walkthrough.md) provides a short
-local candidate journey without a facilitator. Its Windows desktop entrypoint,
+local journey without a facilitator, delivered through
+[PR #207](https://github.com/martonpornoi/maru/pull/207). Its Windows desktop entrypoint,
 `python -m tests.rehearsals.programme_hands_on --stage team`, supervises the same
 finite encrypted child. An in-memory **Programme test accounts** window offers
 deliberate, temporary **Copy email** and **Copy password** actions, with Windows
@@ -22,8 +23,14 @@ requests ordinary cleanup. It refuses redirected input/output and saves no
 private handoff key. The published stage writes only its validated independent
 public continuity trust into a fresh run-specific folder, never overwriting known
 history; its printed verifier command still requires an actual timely download.
-It adds no grants, profile, lease renewal or persistent server. See that guide's
-verification status before treating it as a completed handoff.
+It adds no grants, profile, lease renewal or persistent server. Its protected
+delivery completes the testing handoff; it does not complete these human cards.
+
+On 2026-10-05 the maintainer reported that the walkthrough's core call-draft
+journey went well with no issues, and separately requested 24-hour deadline entry
+because AM/PM was confusing. The [feedback checkpoint](../checkpoints/2026-10-05-programme-24-hour-deadlines.md)
+records this single-maintainer report and the local interface correction. No
+optional-session, independent-person or specialist accessibility result is inferred.
 
 On 2026-09-25 the maintainer requested assisted local testing without additional
 participants and explicitly approved loopback-only HTTP. [ADR 0115](../architecture/decisions/0115-local-only-assisted-programme-rehearsal.md)

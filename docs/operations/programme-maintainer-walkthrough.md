@@ -2,20 +2,73 @@
 
 **Audience:** The maintainer testing alone on the local Windows computer\
 **Outcome:** Try a small fictional Programme workflow and record where it becomes confusing\
-**Status:** Local candidate; visible core labels checked on 2026-10-03
+**Status:** Core journey reported passed on 2026-10-05; print preview and offline HTML observations remain open
 
 This guide is for coached-by-document maintainer testing. It does not replace the
 independent-person, specialist accessibility or operational-owner session in
 [the human acceptance cards](programme-human-acceptance.md). Stop at the first
 complication if you prefer; that is useful feedback, not an incomplete assignment.
 
+## Your next session: two output checks
+
+The core call-draft journey already passed. For this follow-up, start Docker
+Desktop and open a new PowerShell terminal in the prepared checkout:
+
+```powershell
+Set-Location 'C:\Users\TheMw\Documents\Maru'
+git rev-parse HEAD
+git status --short
+.\.venv\Scripts\python.exe -m tests.rehearsals.programme_hands_on --stage published
+```
+
+Wait for **READY - fictional local test environment**. Keep the terminal and
+account window open. This stage creates the fictional published timetable for
+you; you do not need to repeat call creation. Use its newly printed **Public
+programme** URL. Both checks use public output and need no account sign-in:
+
+1. Follow the **Print-friendly complete copy** and Ctrl+P steps in
+   [read the prepared timetable](#optional-second-session-read-the-prepared-timetable).
+   Inspect every preview page for clipped or missing activities, room names,
+   dates and saved-copy warnings. Cancel printing when finished.
+2. Follow [public offline copy](#optional-public-offline-copy): download the new
+   snapshot, use this session's exact **PUBLIC OFFLINE CHECK** commands and open
+   the generated `initial.html`. Check that the timetable, scope, source time
+   and historical-copy warning are readable and understandable. Complete the
+   download/verification within its five-minute validity; if it expires, take
+   a fresh download rather than changing the clock or bypassing verification.
+
+Record the printed commit, browser/version, and **worked**, **confusing** or
+**blocked** for each check, with the exact error or a short description if needed.
+Do not include passwords or signing material. Withdrawal, stop-use and personal
+account checks are optional later work, not extra tasks in this follow-up.
+Save your notes and follow [stop and disposal](#stop-restart-and-preserve-your-notes).
+The session's disposable data is removed at stop or expiry.
+
+Do not run a rehearsal alongside the full eight-database local certification
+pool. If technical certification is still in progress, wait for its completion
+before starting this session.
+
 ## Version and prerequisites
 
-The application baseline is protected commit
-`1fa3bb8359fde77e5eebdfd70fde379c4f2d1ae3` (PR #206). The new desktop
-launcher below is a local follow-up, not yet a protected release. Record the exact
-commit printed by the startup command with your observations; protected delivery
-must be confirmed in [CURRENT](../project/CURRENT.md) before a release is claimed.
+The application and desktop launcher are available at protected commit
+`dec2ca5f52613eb7706f37388ba0283a9596481c` ([PR #207](https://github.com/martonpornoi/maru/pull/207)).
+Its source tree equals the locally certified `73692da7` candidate; independent
+hosted acceptance, PR gate and CodeQL passed before merge. See the
+[delivery record](../checkpoints/2026-10-04-programme-maintainer-protected-delivery.md).
+Record the exact commit printed at startup with your observations. The commands
+below use this computer's prepared checkout and locked environment. The local
+[October 5 follow-up](../checkpoints/2026-10-05-programme-24-hour-deadlines.md)
+changes the deadline controls described below; it has not yet been delivered
+through a protected PR. Record `git status --short` alongside the startup commit
+when evaluating these local changes. A commit alone does not identify a modified
+working tree.
+This remains synthetic evaluation, not a production release or independent human acceptance.
+
+The maintainer reported: “The core journey went well. No issues.” The accompanying
+feedback requested 24-hour entry because AM/PM made noon and midnight confusing.
+That is a successful single-maintainer core journey, not completion of the optional
+sessions or the independent acceptance cards. You do not need to repeat the whole
+journey to comment on the new clock control.
 
 Use this computer's existing Maru checkout, locked `.venv`, Python's Tk desktop
 runtime and Docker Desktop. The account window requires Windows; unavailable
@@ -39,6 +92,7 @@ If the process crashes or clipboard cleanup fails, copy harmless text yourself.
    ```powershell
    Set-Location 'C:\Users\TheMw\Documents\Maru'
    git rev-parse HEAD
+   git status --short
    docker info --format '{{.ServerVersion}}'
    .\.venv\Scripts\python.exe -m tests.rehearsals.programme_hands_on --stage team
    ```
@@ -127,9 +181,11 @@ you can stop after it. You will not need to invent users, policy codes or reason
    'Closes (exclusive): ' + $programmeToday.AddDays(2).AddHours(12).ToString('yyyy-MM-dd HH:mm')
    ```
 
-   Enter the printed date and time into each matching field. The browser may
-   display dates in your computer's format; these are **Europe/Budapest** local
-   times. Noon avoids the ambiguous overnight clock-change hour.
+   Under each matching deadline, choose the printed date in **Date** and type
+   `12:00` in **Time (24-hour)**. The clock uses `00:00`–`23:59`: midnight is
+   `00:00`, noon is `12:00`. The browser may display the calendar date in your
+   computer's format; these are **Europe/Budapest** local times. Noon avoids
+   the ambiguous overnight clock-change hour.
 8. Check **Create this draft with the displayed title/description questions and
    contributor-name policy.**, then press **Create this call draft**.
 9. Expect the heading **Moonlit Makers: panels and workshops**, the state
@@ -284,6 +340,12 @@ its disposable data. Running the command again creates a new URL, database and
 passwords. Resume your testing at the appropriate prepared stage, recording the
 new session separately. Old downloads and links do not become current again.
 Do not delete unrelated Docker containers to reset this test.
+
+The rehearsal server does not reload Python form changes automatically. To see
+the 24-hour controls, save your notes, finish and dispose any older session using
+the steps above, then start a fresh `--stage team` session from this checkout.
+Refreshing an old page alone is insufficient. You can inspect **Create a call
+draft** without submitting another draft if you only want to check the clock.
 
 ## Your notes
 

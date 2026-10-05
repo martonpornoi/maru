@@ -1,0 +1,6 @@
+<div class="application-local-minute" role="group" aria-label="{{ widget.label }}">
+  {% for child in widget.subwidgets %}
+  <div><label for="{{ child.attrs.id }}">{{ child.label }}</label>{% include child.template_name with widget=child %}</div>
+  {% endfor %}
+  <small class="application-clock-help">Use 00:00–23:59. Midnight is 00:00; noon is 12:00.</small>
+</div>

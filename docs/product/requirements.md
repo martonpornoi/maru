@@ -2055,7 +2055,9 @@ architecture documents, implementation issues, tests, and release notes.
   for slow, intermittent, or unavailable network access.
 - **NFR-006 — International operation:** Data and interfaces must support
   Unicode, localization, edition time zones, and European address and payment
-  realities.
+  realities. Programme call deadline entry must use explicitly labelled 24-hour
+  `HH:MM` controls (`00:00` through `23:59`), independent of the browser's AM/PM
+  preference, while retaining the edition's authoritative time zone.
 - **NFR-007 — Data portability:** Organizers and users must have documented,
   permission-controlled export and deletion processes.
 - **NFR-008 — Recoverability:** Backups, restoration, reconciliation, and

@@ -413,7 +413,7 @@ def _request_scope(
     if request.method == "POST":
         if call_id is None or task not in _FORMS:
             raise ValueError
-        allowed = {*_FORMS[task].base_fields, "csrfmiddlewaretoken"}
+        allowed = {*_FORMS[task].input_names(), "csrfmiddlewaretoken"}
         if set(request.POST) - allowed or any(
             len(values) != 1 or len(values[0]) > _MAX_INPUT_LENGTH
             for _, values in request.POST.lists()

@@ -254,10 +254,20 @@ def test_creation_get_has_explicit_starting_policy_and_no_mutation(page):
     assert all(not writer.called for writer in page.writers.values())
 
 
-def test_creation_dispatches_existing_owner_inside_zone_fence(page, monkeypatch):
+@pytest.mark.parametrize("split_clock", [False, True])
+def test_creation_dispatches_existing_owner_inside_zone_fence(
+    page, monkeypatch, split_clock
+):
     writer = Mock(return_value=SimpleNamespace(target_id=page.source.summary.call_id))
     monkeypatch.setattr(views.commands, "create_programme_call", writer)
-    response = _request(page, data=_new_data())
+    data = _new_data()
+    if split_clock:
+        for name in ("opens_at", "applicant_edit_until", "closes_at"):
+            data[f"{name}_date"], data[f"{name}_time"] = data.pop(name).split("T")
+        data["opens_at_time"] = "00:00"
+        data["applicant_edit_until_time"] = "12:00"
+        data["closes_at_time"] = "23:59"
+    response = _request(page, data=data)
     assert response.status_code == 302, response.content.decode()
     assert writer.call_count == page.lock.call_count == 1
     assert writer.call_args.kwargs["expected_version"] == 0
@@ -266,6 +276,11 @@ def test_creation_dispatches_existing_owner_inside_zone_fence(page, monkeypatch)
     )
     assert "confirm" not in writer.call_args.kwargs
     assert page.edition_query.call_count == 2
+    if split_clock:
+        definition = writer.call_args.kwargs["definition_input"]
+        assert definition.opens_at.hour == 0
+        assert definition.applicant_edit_until.hour == 12
+        assert (definition.closes_at.hour, definition.closes_at.minute) == (23, 59)
 
 
 def test_creation_zone_change_refuses_before_writer_and_retains_input(
@@ -285,7 +300,8 @@ def test_creation_zone_change_refuses_before_writer_and_retains_input(
     soup = BeautifulSoup(response.content, "html.parser")
     assert soup.select_one('[name="expected_edition_version"]')["value"] == "3"
     assert soup.select_one('[name="retry_key"]')["value"] == data["retry_key"]
-    assert soup.select_one('[name="opens_at"]')["value"] == data["opens_at"]
+    assert soup.select_one('[name="opens_at_date"]')["value"] == "2027-01-01"
+    assert soup.select_one('[name="opens_at_time"]')["value"] == "10:00"
 
 
 @pytest.mark.parametrize("row", range(17))

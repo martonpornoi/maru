@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Applications deadline forms, including Programme call creation and editing,
+  now keep the date calendar alongside explicit 24-hour time entry. Midnight
+  is `00:00` and noon is `12:00`, regardless of the browser's AM/PM preference;
+  edition time zones and daylight-saving validation remain unchanged.
+
 - Programme's dormant stop and exit-archive forms now preserve same-origin
   browser evidence for CSRF-protected submissions and logout, while keeping
   private archive downloads referrer-free. The local published rehearsal also
