@@ -18,7 +18,18 @@ the subsequent fresh browser run passed reasoned stop, terminal receipt, seven-w
 layout, logout and original-actor receipt isolation. Its 13,489 passing units do
 not close all P10/P11 cells or replace exact certification.
 
-The latest populated source is `0d2a3aa5c862e70f2741cceb6aedc0f03b2042af`:
+The latest populated source is `569e8c3dfc448728c63181fda08d91fb8576bbcf`:
+[the October 5 step 1 record](../checkpoints/2026-10-05-programme-step1-native-and-maintainer-outputs.md)
+passed all eighteen unchanged phases in 1,288.64s, including private archive
+content/custody/cancellation, active/stopped recovery, stop and isolation.
+Owned cleanup and SHA-256-verified evidence preservation were confirmed. That
+record separately retains the maintainer's successful print-preview and generated
+offline-HTML observations; neither result supplies independent-person acceptance
+or whole-commit certification for PR #208's later candidates. The
+[October 6 dependency repair](../checkpoints/2026-10-06-programme-step1-dependency-security.md)
+records the failed hosted security gate and a patched frontend lock; fresh
+exact-head certification and protected delivery remain necessary.
+The preceding populated source is `0d2a3aa5c862e70f2741cceb6aedc0f03b2042af`:
 [the October 1 joined rehearsal](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
 passed all eighteen phases in 1,265.44s, including the reconciled planning/notice
 grants and normal owned cleanup. This run is separate from the interrupted
@@ -55,6 +66,27 @@ equality. This closes the component/recovery issues, not the human-dependent
 
 ## Independent supporting evidence
 
+The [October 5 maintainer feedback](../checkpoints/2026-10-05-programme-24-hour-deadlines.md)
+records a reported pass of the short call-draft core journey and the requested
+24-hour deadline correction. Component browser checks and local automated checks
+cover the changed controls separately. The later
+[step 1 record](../checkpoints/2026-10-05-programme-step1-native-and-maintainer-outputs.md)
+adds explicit maintainer confirmation that native print preview and generated
+`initial.html` both displayed correctly and that the instructions were followable.
+These two short checks are reported passed; browser/version, startup commit and
+detailed measurements were not supplied. This does not certify a new protected
+commit or complete the remaining P01–P12 independent-human cells.
+
+The [October 4 protected delivery](../checkpoints/2026-10-04-programme-maintainer-protected-delivery.md)
+records PR #207's launcher and self-contained maintainer walkthrough. Its repaired
+credential delivery passed CodeQL, exact-head local and hosted acceptance before
+merge; passwords no longer enter terminal logs. The guide now pins protected
+`dec2ca5`. This is a testing handoff, not a human, accessibility or operational-owner
+acceptance result. Native print preview and local HTML visual inspection were
+still unperformed at that delivery; the October 5 report above supplies the later
+single-maintainer observations. Private-copy custody and archive authority remain
+separate.
+
 The [October 2 protected delivery](../checkpoints/2026-10-02-programme-local-assisted-protected-delivery.md)
 closed #203 with exact local/hosted acceptance; it does not close these human gates.
 The [fresh continuity browser follow-up](../checkpoints/2026-10-02-programme-continuity-browser-follow-up.md)
@@ -62,8 +94,12 @@ adds public and volunteer seven-width geometry checks, public keyboard/print-cop
 navigation and an actual personal snapshot download. A wall-clock gap outlasted
 the disposable fixture; subsequent print/logout were not performed. Independent
 offline verification was unavailable because the interactive handoff lacked its
-public trust policy. The narrow preparation repair has focused tests, not yet a
-native browser/offline pass or exact bundle certification.
+public trust policy. That first session remains incomplete. The later
+[protected repair](../checkpoints/2026-10-03-programme-exit-browser-protected-delivery.md)
+and [maintainer continuation](../checkpoints/2026-10-03-programme-maintainer-facilitator.md)
+separately record exact bundle certification and timely downloaded-pack
+verification/recheck, subsequent withdrawal refusal, ordinary logout and stop.
+They do not retroactively turn the expired session into a pass.
 
 The [September 27 assistant-operated browser record](../checkpoints/2026-09-27-programme-assistant-browser-rehearsal.md)
 adds actual ordinary-form P02 evidence over ADR 0115's local bridge: a new proposal,
@@ -89,7 +125,8 @@ withheld old geometry, invalidated the old notice and required fresh notice evid
 without changing three accepted work intervals. Recipient views withheld private
 rationale and denied a different person. These are fresh P08 functional observations,
 not provider delivery, independent-human decisions or a full P10 pass.
-Archive/stop and complete disconnected/native-print browser checks remain unperformed.
+Archive/stop and complete disconnected/native-print browser checks were unperformed
+in that September 27 session; later records above add only their stated observations.
 The successful sessions were disposed normally. A non-interactive launch lost its
 listener before browser use; its final process metadata was not preserved, but owned
 resources were confirmed absent. An unused internal error tab was left untouched

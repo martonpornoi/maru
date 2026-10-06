@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-04
+Last updated: 2026-10-06
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -10,6 +10,60 @@ preserve history, and the [production ledger](PRODUCTION_CONSOLIDATION.md) retai
 the release baseline.
 
 ## Protected baseline and testing policy
+
+The maintainer reported a successful core call-draft journey on October 5 and
+requested 24-hour deadline entry. The local follow-up keeps the date calendar and
+uses **Time (24-hour)** with `00:00` for midnight and `12:00` for noon in shared
+Applications deadline forms. NFR-006 and the call workspace contract now make that
+format explicit. Existing edition-zone/DST validation, owner authorization, retry
+and version fences remain in place; no migration or new ADR is needed.
+All **13,559 unit cases** passed in **90.37s**, including **332 focused form/view
+cases**. Lint, typing, docstrings, documentation validation, a fresh warning-fatal
+Sphinx build and a component browser rehearsal passed; the
+[feedback checkpoint](../checkpoints/2026-10-05-programme-24-hour-deadlines.md)
+records the checks and their limits.
+The maintainer also confirmed that the browser print preview and generated
+`initial.html` both displayed correctly and that the instructions were followable.
+These two short output checks are complete as maintainer-reported observations;
+the report did not identify the browser/version or startup commit.
+Clean `569e8c3dfc448728c63181fda08d91fb8576bbcf` passed the unchanged populated
+native journey: all eighteen phases in **1,288.64s**, including private archive
+content/custody/cancellation, active/stopped restore, stop and isolation. Original
+process exit, owned resource cleanup and SHA-256-verified evidence preservation
+were confirmed. The [step 1 checkpoint](../checkpoints/2026-10-05-programme-step1-native-and-maintainer-outputs.md)
+separates native proof from the maintainer's report.
+[PR #208](https://github.com/martonpornoi/maru/pull/208) returned to draft for a
+focused dependency-security repair. Clean `64d08a35` passed local certification:
+all ten gates, 18,491 Python cases, 103 frontend cases, 30 required PostgreSQL
+shards, 91.61% combined coverage, headroom and cleanup, in **1h04m47s**. Its
+complete evidence is preserved and SHA-256-verified. The first hosted attempt
+could not acquire a runner; the October 6 full retry reached acceptance and
+identified GHSA-68fv-2mgg-jv7q in transitive `source-map-js` 1.2.1. The failed
+attempt finished and its evidence was preserved before source changes.
+The lock now selects patched 1.2.2 without changing direct dependencies,
+overrides or audit thresholds. The audit reports zero vulnerabilities; all
+103 frontend tests, type/build checks and 13,559 units (**73.14s**) passed. See the
+[repair checkpoint](../checkpoints/2026-10-06-programme-step1-dependency-security.md).
+The repaired candidate needs fresh exact-head local certification, independent
+hosted acceptance and protected delivery; older source evidence cannot certify it.
+Do not overlap a populated rehearsal or maintainer session with the full
+eight-database pool. Independent-person, specialist accessibility and operational
+acceptance under #92, #109 reconciliation and #108 activation remain open.
+
+[PR #207](https://github.com/martonpornoi/maru/pull/207) delivered the Windows
+Programme rehearsal launcher and maintainer walkthrough at protected squash
+`dec2ca5f52613eb7706f37388ba0283a9596481c`; its tree equals certified `73692da7`.
+Local and hosted acceptance passed **18,610 Python cases, 103 frontend cases and
+all 71 PostgreSQL shards**, with **91.74% local / 91.73% hosted** combined coverage.
+Local certification took **4h10m01s**, hosted acceptance **4h36m57s**. Exact-head
+PR gate, CodeQL, current-base mergeability and resolved conversations passed
+before match-head squash. Clean main was fast-forwarded to the protected result.
+The [delivery checkpoint](../checkpoints/2026-10-04-programme-maintainer-protected-delivery.md)
+records preserved evidence and the distinction between the merged source and
+these post-merge documentation updates. The
+[walkthrough](../operations/programme-maintainer-walkthrough.md) is ready for
+maintainer testing; the October 5 core report above adds limited maintainer
+feedback, not independent human acceptance or production activation.
 
 [PR #206](https://github.com/martonpornoi/maru/pull/206) delivered #205 at protected
 squash `1fa3bb8359fde77e5eebdfd70fde379c4f2d1ae3`; its tree equals certified
@@ -183,7 +237,7 @@ startup hang; the supervisor handles stop/EOF and broken-pipe disposal explicitl
 No production schema/profile/route or grant changes. See the
 [continuation checkpoint](../checkpoints/2026-10-03-programme-maintainer-facilitator.md).
 
-Draft PR #207's first head `f69d6a5` failed CodeQL for plaintext password
+PR #207's first head `f69d6a5` failed CodeQL for plaintext password
 logging. The repair removes credential output, using an in-memory account
 window with deliberate clipboard copying, Windows history/cloud exclusions,
 30-second expiry and ownership-checked cleanup. It does not dismiss the
@@ -194,8 +248,9 @@ Native Windows checks verify copying, all exclusion formats, actual clipboard
 removal, window disposal and normal child shutdown through the new GUI stop path.
 Original `f69d6a5` local certification passed **18,585 Python cases, 71 shards and
 91.73% coverage / 4h14m44s**; all 5,045 archived files were hash-verified before
-applying the repair. That receipt does not certify the revised candidate, which
-still requires clean-head local certification and hosted acceptance. See the
+applying the repair. The revised `73692da7` subsequently received its own clean
+local certification, hosted acceptance and protected delivery recorded above;
+the old receipt was not reused. See the
 [credential repair checkpoint](../checkpoints/2026-10-03-programme-credential-delivery.md).
 
 New browser evidence includes a timely actual public download, successful offline
@@ -207,10 +262,13 @@ Earlier native terminal-facilitator normal stop confirmed
 DISPOSED, COMPLETE and exit zero; no helper process or owned container remains.
 A harmless final-helper process probe confirms stop/interrupt child cleanup;
 PowerShell still reports Ctrl+C as an interrupted command. Use written `stop`.
-Finish clean exact-head certification and hosted gates;
-earlier receipts are not its evidence. The guide is not yet the protected final
-handoff. Remaining archive, independent-person, accessibility and owner gates
-under #92/#109 still precede #108 promotion and #48 closure.
+Start with the walkthrough's short call-draft journey, then record results or
+stop at the first complication. Its supplied roles, field values and reason text
+require no improvised grants or production changes. Remaining archive,
+independent-person, accessibility and owner gates under #92/#109 still precede
+#108 promotion and #48 closure. These post-merge delivery notes are a local
+documentation follow-up to carry in the next coherent change; they are not an
+inherited certification receipt for a new candidate.
 
 #203 is delivered through PR #204; the earlier verification narrative below
 preserves failed and superseded attempts, not current blockers. ADR 0115 permits explicit synthetic

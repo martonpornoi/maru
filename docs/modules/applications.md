@@ -271,6 +271,16 @@ displayed Events aggregate version again under the shared canonical edition lock
 through owner-command completion, preventing a concurrent zone change from
 reinterpreting the editor's original local-time intent.
 
+Applications deadline forms, including Programme call creation and window editing,
+render a native date calendar plus an explicitly labelled 24-hour `HH:MM` clock.
+`00:00` means midnight and `12:00` means noon, regardless of browser locale. The
+shared widget joins those two controls for the existing edition-local validator;
+it does not interpret the time or choose a zone. HTTP adapters admit only declared
+date/time subcontrols. Duplicate parts, unknown inputs and mixed scalar/split
+representations are rejected; existing canonical scalar submissions remain
+supported when split controls are absent. No migration, additional permission or
+new cross-module write is involved.
+
 `get_managed_programme_call_department` uses Workforce's exact current name-only
 reference after call-management authorization, then reauthorizes and appends
 required protected-read audit before returning. It lists no other Departments,

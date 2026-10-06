@@ -22,6 +22,7 @@ from maru.applications.models import (
     ApplicationQuestionType,
     ReviewDecisionKind,
 )
+from maru.applications.widgets import EditionLocalMinuteWidget
 from maru.core.forms import (
     CanonicalUUIDField,
     StrictBase10IntegerField,
@@ -50,6 +51,54 @@ class RetryForm(StrictInputForm):
 
     retry_key = CanonicalUUIDField(widget=forms.HiddenInput)
 
+    @classmethod
+    def input_names(cls) -> set[str]:
+        """List declared controls for request filtering, including deadline parts.
+
+        Returns
+        -------
+        set[str]
+            Exact canonical and split names, without any additional authority inputs.
+        """
+        names = set(cls.base_fields)
+        for name, field in cls.base_fields.items():
+            if isinstance(field.widget, EditionLocalMinuteWidget):
+                names.update(f"{name}{suffix}" for suffix in field.widget.widgets_names)
+        return names
+
+    def clean(self) -> dict[str, Any] | None:
+        """Admit only declared date/time parts, rejecting duplicate or mixed encodings.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            Cleaned inputs under the unchanged strict command form contract.
+
+        Raises
+        ------
+        ValidationError
+            If a date/time part repeats or mixes scalar and split representations.
+        """
+        parts: set[str] = set()
+        getlist = getattr(self.data, "getlist", None)
+        for name, field in self.fields.items():
+            if not isinstance(field.widget, EditionLocalMinuteWidget):
+                continue
+            names = {f"{name}{suffix}" for suffix in field.widget.widgets_names}
+            if getlist is not None and any(len(getlist(part)) > 1 for part in names):
+                raise ValidationError(
+                    "Submit each date and time field at most once.",
+                    code="invalid_input_cardinality",
+                )
+            if name in self.data and names.intersection(self.data):
+                raise ValidationError(
+                    "Submit either the date and time controls or one combined value.",
+                    code="invalid_input_cardinality",
+                )
+            parts.update(names)
+        self.transport_field_names = type(self).transport_field_names | parts
+        return super().clean()
+
 
 class EditionLocalDateTimeField(forms.Field):
     """Parse one real, unambiguous minute in an explicit edition zone."""
@@ -75,10 +124,7 @@ class EditionLocalDateTimeField(forms.Field):
         """
         kwargs.setdefault(
             "widget",
-            forms.DateTimeInput(
-                format=_DATE_TIME_FORMAT,
-                attrs={"type": "datetime-local", "step": "60"},
-            ),
+            EditionLocalMinuteWidget(label=kwargs.get("label", "Date and time")),
         )
         super().__init__(*args, **kwargs)
         self.zone = ZoneInfo(zone_name)

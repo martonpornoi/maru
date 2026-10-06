@@ -14,3 +14,6 @@
 .programme-calls :focus-visible { outline: 3px solid var(--link-fg); outline-offset: 3px; }
 .programme-calls [aria-current="page"] { font-weight: 700; text-decoration-thickness: 0.15em; }
 .programme-calls .call-consequence { border-inline-start: 0.25rem solid var(--link-fg); padding-inline-start: 1rem; }
+.programme-calls .application-local-minute { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
+.programme-calls .application-local-minute > div { flex: 1 1 10rem; min-width: 0; }
+.programme-calls .application-clock-help { flex-basis: 100%; }

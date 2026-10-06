@@ -230,8 +230,15 @@ def test_metadata_post_preserves_all_other_graph_values(page) -> None:
     assert str(kwargs["retry_key"]) == data["retry_key"]
 
 
-def test_window_holds_canonical_edition_scope_through_owner_dispatch(page) -> None:
-    response = call(page, "window", _window_data())
+@pytest.mark.parametrize("split_clock", [False, True])
+def test_window_holds_canonical_edition_scope_through_owner_dispatch(
+    page, split_clock
+) -> None:
+    data = _window_data()
+    if split_clock:
+        for name in ("opens_at", "applicant_edit_until", "closes_at"):
+            data[f"{name}_date"], data[f"{name}_time"] = data.pop(name).split("T")
+    response = call(page, "window", data)
     assert response.status_code == 302
     page.lock.assert_called_once_with(
         actor_id=page.actor,
@@ -252,7 +259,9 @@ def test_timezone_change_after_form_validation_refuses_writer(page) -> None:
     response = call(page, "window", _window_data())
     assert response.status_code == 409
     page.writers["configure_programme_call"].assert_not_called()
-    assert "2027-01-01T10:00" in response.content.decode()
+    soup = BeautifulSoup(response.content, "html.parser")
+    assert soup.select_one('[name="opens_at_date"]')["value"] == "2027-01-01"
+    assert soup.select_one('[name="opens_at_time"]')["value"] == "10:00"
 
 
 @pytest.mark.parametrize(

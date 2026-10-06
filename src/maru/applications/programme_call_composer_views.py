@@ -187,7 +187,7 @@ def _request_shape(
     )
     if task.startswith("remove-"):
         evidence_type = ProgrammeCallConfirmationForm
-    allowed = {*evidence_type.base_fields, "csrfmiddlewaretoken", "intent"}
+    allowed = {*evidence_type.input_names(), "csrfmiddlewaretoken", "intent"}
     if task == "section":
         allowed.update(
             f"section-{name}" for name in controls.ProgrammeSectionForm.base_fields
@@ -543,7 +543,7 @@ def _create(
     edition: SchedulingEditionReference,
 ) -> HttpResponse:
     form = controls.ProgrammeCallCreationForm(
-        _data(request, set(controls.ProgrammeCallCreationForm.base_fields)),
+        _data(request, controls.ProgrammeCallCreationForm.input_names()),
         initial={
             "expected_version": 0,
             "expected_edition_version": edition.version,
