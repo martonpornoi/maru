@@ -15,6 +15,10 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Staff Console development tooling now locks `source-map-js` 1.2.2, addressing
+  an upstream source-map denial-of-service vulnerability while retaining the
+  existing dependency-security checks.
+
 - Applications deadline forms, including Programme call creation and editing,
   now keep the date calendar alongside explicit 24-hour time entry. Midnight
   is `00:00` and noon is `12:00`, regardless of the browser's AM/PM preference;

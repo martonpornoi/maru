@@ -25,7 +25,10 @@ content/custody/cancellation, active/stopped recovery, stop and isolation.
 Owned cleanup and SHA-256-verified evidence preservation were confirmed. That
 record separately retains the maintainer's successful print-preview and generated
 offline-HTML observations; neither result supplies independent-person acceptance
-or whole-commit certification for PR #208's later documentation candidate.
+or whole-commit certification for PR #208's later candidates. The
+[October 6 dependency repair](../checkpoints/2026-10-06-programme-step1-dependency-security.md)
+records the failed hosted security gate and a patched frontend lock; fresh
+exact-head certification and protected delivery remain necessary.
 The preceding populated source is `0d2a3aa5c862e70f2741cceb6aedc0f03b2042af`:
 [the October 1 joined rehearsal](../checkpoints/2026-10-01-programme-rehearsal-verification-recovery.md)
 passed all eighteen phases in 1,265.44s, including the reconciled planning/notice

@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-05
+Last updated: 2026-10-06
 Phase: Progressive adoption and pre-production release evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -32,9 +32,20 @@ content/custody/cancellation, active/stopped restore, stop and isolation. Origin
 process exit, owned resource cleanup and SHA-256-verified evidence preservation
 were confirmed. The [step 1 checkpoint](../checkpoints/2026-10-05-programme-step1-native-and-maintainer-outputs.md)
 separates native proof from the maintainer's report.
-[PR #208](https://github.com/martonpornoi/maru/pull/208) remains draft pending fresh
-exact-head local certification, then independent hosted acceptance and protected
-delivery. The native result does not certify the subsequent documentation commit.
+[PR #208](https://github.com/martonpornoi/maru/pull/208) returned to draft for a
+focused dependency-security repair. Clean `64d08a35` passed local certification:
+all ten gates, 18,491 Python cases, 103 frontend cases, 30 required PostgreSQL
+shards, 91.61% combined coverage, headroom and cleanup, in **1h04m47s**. Its
+complete evidence is preserved and SHA-256-verified. The first hosted attempt
+could not acquire a runner; the October 6 full retry reached acceptance and
+identified GHSA-68fv-2mgg-jv7q in transitive `source-map-js` 1.2.1. The failed
+attempt finished and its evidence was preserved before source changes.
+The lock now selects patched 1.2.2 without changing direct dependencies,
+overrides or audit thresholds. The audit reports zero vulnerabilities; all
+103 frontend tests, type/build checks and 13,559 units (**73.14s**) passed. See the
+[repair checkpoint](../checkpoints/2026-10-06-programme-step1-dependency-security.md).
+The repaired candidate needs fresh exact-head local certification, independent
+hosted acceptance and protected delivery; older source evidence cannot certify it.
 Do not overlap a populated rehearsal or maintainer session with the full
 eight-database pool. Independent-person, specialist accessibility and operational
 acceptance under #92, #109 reconciliation and #108 activation remain open.
