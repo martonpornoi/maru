@@ -53,7 +53,7 @@ the system.
 | [0046](0046-nondelegable-runtime-database-login.md) | Accepted | Require a genuine non-delegable PostgreSQL runtime login, select-only cutover controls, and trigger-integrity ACL proof |
 | [0047](0047-governed-registration-setup-and-platform-account-invitations.md) | Accepted | Govern registration setup and optional recipient-owned platform account invitations through strict shared commands and staged direct-writer retirement |
 | [0048](0048-automatic-browser-department-ordering.md) | Accepted | Keep Department sibling order automatic in the browser while preserving explicit bounded API ordering |
-| [0049](0049-coherent-navigation-personal-surface-and-access-preview.md) | Accepted | Flatten selected-edition navigation, add one searchable/pinnable registry and My Maru, and provide capped read-only access preview |
+| [0049](0049-coherent-navigation-personal-surface-and-access-preview.md) | Partially superseded | Flatten selected-edition navigation, add one searchable/pinnable registry and My Maru, and provide capped read-only access preview |
 | [0050](0050-governed-admission-upgrades-capacity-and-edition-commerce.md) | Accepted | Use held exact-delta admission replacements, append-only bounded capacity, strict FIFO offers, and a separate edition catalog |
 | [0051](0051-typed-applications-and-policy-governed-profile-extensions.md) | Accepted | Copy immutable starters into owned drafts, use closed profile audiences, and keep contribution forms in typed application workflows |
 | [0052](0052-governed-charity-partners-and-edition-publication.md) | Accepted | Keep reusable charity partners separate from tenants and govern each edition decision and public snapshot independently |
@@ -120,6 +120,7 @@ the system.
 | [0113](0113-logical-restore-enum-cast-canonicalization.md) | Accepted | Recognize only exact PostgreSQL enum-array cast reparsing while retaining pinned schema hashes and every independent recovery gate |
 | [0114](0114-restore-stable-identity-trigger-predicates.md) | Accepted | Preserve exact reviewed Identity trigger predicates across logical restore without pinning internal cast-format flags |
 | [0115](0115-local-only-assisted-programme-rehearsal.md) | Accepted | Allow an explicitly opted-in synthetic loopback HTTP browser bridge without changing native HTTPS or production authority |
+| [0116](0116-approachable-convention-work.md) | Accepted | Present authorized work in purpose groups, use plain activity language, disclose advanced details progressively, and prioritize furry-convention newcomers. |
 
 New ADRs use the next four-digit number and contain:
 

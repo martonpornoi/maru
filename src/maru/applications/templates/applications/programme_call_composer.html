@@ -1,14 +1,15 @@
 {% extends "applications/programme_calls.html" %}
 {% block call_body %}
-<nav aria-label="Call composition"><a href="{{ root_url }}">Department calls</a>{% if source %} · <a href="{{ call_url }}overview/">Complete call configuration</a>{% endif %}</nav>
+<nav aria-label="Activity request setup"><a href="{{ root_url }}">Collect activity ideas</a>{% if source %} · <a href="{{ call_url }}overview/">Request settings</a>{% endif %}</nav>
 <h2>{{ task_label }}</h2>
 {% if selected_label %}<p>Current entry at this position: {{ selected_label }}</p>{% endif %}
-{% if source %}<p>Current call aggregate version {{ source.summary.aggregate_version }} · {{ source.summary.status }}</p>{% endif %}
+{% if source %}<p>{{ source.summary.status|capfirst }}</p><details><summary>Technical details</summary><p>Call aggregate version {{ source.summary.aggregate_version }}</p></details>{% endif %}
 {% if creating %}
-<section aria-labelledby="starting-call"><h3 id="starting-call">Starting configuration to review</h3>
-  <p>This creates an editable draft, not an open or published call. No policy or person is created.</p>
-  <ul><li>One Programme proposal section with required Proposed title (short text) and Proposal description (long text) questions.</li><li>Both answers use your chosen call classification and default retention, for understanding and reviewing the proposed Programme item.</li><li>Public display name is required for the lead and optional for collaborators. Each person still owns their profile and consent; no Programme host relationship follows.</li><li>One initial track and format, supplied below. All draft sections, questions and catalogs can be edited afterward.</li></ul>
-  <p>Deadline zone: {{ zone_name }}. Opening is inclusive and closing exclusive; the edit deadline is within that window. Ambiguous or nonexistent local minutes are refused.</p>
+<section aria-labelledby="starting-call"><h3 id="starting-call">Start with a simple activity form</h3>
+  <p>Ask people to suggest talks, panels, workshops or other convention activities. First create a private draft, then review its questions and rules before activating it.</p>
+  <ul><li>The starting form asks for an activity title and description. You can add or change questions while it is a draft.</li><li>Both answers use the information sensitivity and retention rules you choose below.</li><li>The person leading the idea must provide a public display name before preparing it for confirmation; helpers may provide one. Each person controls their own profile and consent. This does not confirm anyone as an activity host.</li><li>Add one topic and activity type below. You can add more later.</li></ul>
+  <p>Times use {{ zone_name }}. People can start at the opening time and edit through the edit deadline, but must submit before the closing time. Maru will ask you to correct a time that is missing or repeated when the clocks change.</p>
+  <p>Rules references identify your convention's existing content, consent and retention rules. Ask the person responsible for those rules for the references; this form does not write or approve policies.</p>
 </section>
 {% endif %}
 {% if removing %}<p class="call-consequence">Remove this exact draft entry{% if task == "remove-section" %} and all its questions{% endif %}. The resulting form must remain complete. Dependent conditions are not silently rewritten or removed. Active and historical configurations are not changed.</p>{% endif %}
@@ -22,8 +23,10 @@
   {% if option_added %}<p role="status">Another unsaved option row is available. No call change has been saved.</p>{% endif %}
   {% for group in composer_forms %}
   {% if not forloop.last %}
+  {% if group.advanced %}<details{% if group.expanded %} open{% endif %}><summary>{{ group.legend }}</summary>{% endif %}
   <fieldset><legend>{{ group.legend }}</legend>{{ group.form.non_field_errors }}
   {% for field in group.fields %}{% if field.is_hidden %}{{ field }}{{ field.errors }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}</fieldset>
+  {% if group.advanced %}</details>{% endif %}
   {% endif %}{% endfor %}
   {% if options %}
   <fieldset><legend>Choice options</legend><p>For single or multiple choice only. Keep at least two distinct code/label pairs. Leave an unused row completely blank; mark an existing row for removal deliberately. Maximum 100 rows.</p>
@@ -37,7 +40,7 @@
   {% for field in group.fields %}{% if field.is_hidden %}{{ field }}{{ field.errors }}{% else %}<div>{{ field.label_tag }}{{ field }}{% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}</fieldset>
   {% endif %}{% endfor %}
   <p data-call-dirty role="status" hidden>Changes are not yet confirmed as saved. Review the current call before leaving a failed or uncertain attempt.</p>
-  <button type="submit" name="intent" value="save">{% if creating %}Create this call draft{% elif removing %}Confirm removal{% else %}Save this draft change{% endif %}</button>
+  <button type="submit" name="intent" value="save">{% if creating %}Create draft request{% elif removing %}Confirm removal{% else %}Save this draft change{% endif %}</button>
 </form>
 {% else %}<p>This form is read-only in the current call or edition state.</p>{% endif %}
 {% endblock %}

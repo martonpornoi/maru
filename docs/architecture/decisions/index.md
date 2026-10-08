@@ -20,6 +20,12 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0116](0116-approachable-convention-work.md) makes everyday convention work
+understandable through purpose-based navigation, plain activity language and
+progressively disclosed technical details. It retains the authorized registry,
+canonical routes, approval boundaries and the six-hub contributor site.
+
+
 [ADR 0115](0115-local-only-assisted-programme-rehearsal.md) permits an explicitly
 approved synthetic loopback HTTP browser bridge over the genuine pinned-HTTPS
 fixture. Production settings, account authority and truthful human evidence remain

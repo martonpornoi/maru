@@ -40,16 +40,53 @@ _DESTINATION_CODE_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,159}$")
 _PROFILE_PAIR_LENGTH = 2
 _SECTION_ORDER = (
     "Pinned",
-    "Convention work",
-    "Convention tools",
-    "Organizations",
-    "Platform",
+    "Overview",
+    "People & teams",
+    "Registration & shop",
+    "Applications",
+    "Places & equipment",
+    "Settings",
     "Account",
     "Actions",
-    "Specialist records",
+    "Advanced records",
     "Personal",
     "Work",
 )
+_TASK_SECTIONS = {
+    "work.today": "Overview",
+    "work.setup": "Overview",
+    "work.people": "People & teams",
+    "work.workforce": "People & teams",
+    "work.attendee-service": "Registration & shop",
+    "work.reports": "Registration & shop",
+    "work.security": "Account",
+}
+_EDITION_TASK_SECTIONS = {
+    "structure": "People & teams",
+    "registration": "Registration & shop",
+    "registration-commerce": "Registration & shop",
+    "catalog": "Registration & shop",
+    "charities": "Registration & shop",
+    "application-studio": "Applications",
+    "application-review": "Applications",
+    "venues": "Places & equipment",
+    "logistics": "Places & equipment",
+    "programme-applications": "Applications",
+    "programme-items": "Overview",
+    "programme-timetable": "Overview",
+    "programme-release": "Overview",
+    "programme-notices": "Overview",
+    "programme-operators": "Overview",
+    "programme-access": "Settings",
+}
+_TASK_LABELS = {
+    "application-studio": "Application forms",
+    "application-review": "Review applications",
+    "catalog": "Shop & orders",
+    "logistics": "Equipment & storage",
+    "overview": "Event settings",
+    "programme-applications": "Collect activity ideas",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -471,12 +508,13 @@ def _management_items(
         _workspace_item(
             request,
             code="work.workforce",
-            label="Workforce",
+            label="Team workspace",
             view="workforce",
             description=(
                 "Review Departments, Positions, assignments, Availability, and Shifts."
             ),
             keywords=(
+                "workforce",
                 "staff",
                 "volunteers",
                 "teams",
@@ -1191,13 +1229,19 @@ def _platform_items(request: HttpRequest) -> list[NavigationItem]:
         ),
         NavigationItem(
             code="platform.workforce-setup",
-            label="Set up Workforce",
+            label="Set up a volunteer team",
             url=reverse("workforce-adoption-setup"),
             section="Platform",
             description=(
                 "Create or reuse the minimum foundation for volunteer operations."
             ),
-            keywords=("volunteers", "staff", "progressive adoption", "onboarding"),
+            keywords=(
+                "workforce",
+                "volunteers",
+                "staff",
+                "progressive adoption",
+                "onboarding",
+            ),
             current=_route_is(request, "workforce-adoption-setup"),
         ),
         NavigationItem(
@@ -1432,11 +1476,45 @@ def _decorate_navigation_item(item: NavigationItem) -> NavigationItem:
 def _deduplicate(items: Iterable[NavigationItem]) -> list[NavigationItem]:
     by_code: dict[str, NavigationItem] = {}
     for raw_item in items:
-        item = _decorate_navigation_item(raw_item)
+        item = _present_navigation_item(_decorate_navigation_item(raw_item))
         existing = by_code.get(item.code)
         if existing is None or (item.current and not existing.current):
             by_code[item.code] = item
     return list(by_code.values())
+
+
+def _present_navigation_item(item: NavigationItem) -> NavigationItem:
+    """Group an already-authorized destination by task without changing scope.
+
+    Parameters
+    ----------
+    item : NavigationItem
+        Authorized item with its stable route, context, and search metadata.
+
+    Returns
+    -------
+    NavigationItem
+        Presentation-only replacement retaining all authorization-derived fields.
+    """
+    if item.code.startswith("my.") or item.kind == "action":
+        return item
+    namespace, _, tail = item.code.partition(".")
+    task = tail.rsplit(".", maxsplit=1)[-1]
+    section = _TASK_SECTIONS.get(item.code, item.section)
+    if namespace == "record":
+        section = "Advanced records"
+    elif namespace in {"platform", "organization", "series"}:
+        section = "Settings"
+    elif namespace == "edition":
+        section = _EDITION_TASK_SECTIONS.get(task, "Settings")
+    label = _TASK_LABELS.get(task, item.label) if namespace == "edition" else item.label
+    return replace(
+        item,
+        label=label,
+        section=section,
+        context_label="Platform" if namespace == "platform" else item.context_label,
+        keywords=(*item.keywords, item.label) if label != item.label else item.keywords,
+    )
 
 
 def project_shell_navigation(
@@ -1551,15 +1629,7 @@ def project_shell_navigation(
         {
             "label": label,
             "items": tuple(grouped[label]),
-            "collapsed": label
-            in {
-                "Account",
-                "Actions",
-                "Convention tools",
-                "Organizations",
-                "Platform",
-                "Specialist records",
-            },
+            "collapsed": label not in {"Pinned", "Overview", "Personal", "Work"},
             "search_only": label == "Actions",
             "current": any(item.current for item in grouped[label]),
         }

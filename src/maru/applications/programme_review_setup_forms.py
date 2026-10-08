@@ -262,10 +262,15 @@ class ReviewPolicySaveForm(ReviewProposedForm):
     """Confirm one complete policy through the existing immutable owner command."""
 
     reason = forms.CharField(
-        max_length=2000, widget=forms.Textarea, label="Reason for this policy version"
+        max_length=2000,
+        widget=forms.Textarea,
+        label="Why are you saving these review rules?",
     )
     confirm = forms.BooleanField(
-        label="Save this complete policy for deliberately opened future review cases"
+        label=(
+            "Save these rules for new reviews; "
+            "existing reviews keep their current rules"
+        )
     )
 
     def policy(self) -> ProgrammeReviewPolicyInput:

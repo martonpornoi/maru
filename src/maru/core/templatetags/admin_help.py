@@ -13,8 +13,8 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
         "account",
     ): (
         "Use this read-only specialist page to inspect minimized identity "
-        "facts. Invite person accounts through Platform administration > "
-        "Accounts; create the first platform administrator only with the "
+        "facts. Invite person accounts through Settings > User accounts; "
+        "create the first platform administrator only with the "
         "createsuperuser management command. For example: confirm the login "
         "handle of an existing account without changing its credentials, "
         "privileges, lifecycle, or convention relationships."
@@ -829,21 +829,19 @@ def admin_page_help(
 
     if not help_text and normalized_path.rstrip("/") == "/admin":
         help_text = (
-            "Use this administration home for Workforce operations in the "
-            "selected convention. For example: open Workforce to continue "
-            "Departments, Positions, assignments, Availability, or Shifts."
+            "Open Team workspace to plan departments, team roles, availability, "
+            "and shifts for this event."
             if str(adoption_primary_module or "") == "workforce"
             else (
-                "Use this administration home for convention work and specialist "
-                "records. For example: open Registration desk to help an attendee "
-                "or Registration to edit the convention's setup."
+                "Choose a task from the menu or search for a page. "
+                "For example: open Registration desk to help an attendee "
+                "or Registration to edit the event's setup."
             )
         )
     elif not help_text and normalized_path.rstrip("/") == "/admin/workspace":
         help_text = (
-            "Use this page for capability-checked convention work inside the "
-            "administration shell. For example: serve an attendee, review a "
-            "report, or continue guided setup."
+            "Work on the selected event. For example: help an attendee, "
+            "review a report, or continue guided setup."
         )
     elif not help_text and "password_change" in normalized_path:
         help_text = (

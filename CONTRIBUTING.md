@@ -1,151 +1,98 @@
 # Contributing to Maru
 
-Thank you for improving Maru. The project is open for public collaboration,
-but its security, privacy, tenant-isolation, and audit boundaries already apply
-to every change.
+Maru welcomes code, tests, documentation, accessibility observations, and
+experience from furry convention operations. Start with one problem you can
+explain and verify; you do not need to learn the whole platform first.
 
-## Before you start
-
-1. Search existing issues and discussions before proposing overlapping work.
-2. Open an issue for behavior changes or architectural work. Small documentation
-   and clearly isolated fixes may go directly to a pull request.
-3. Never report a vulnerability in a public issue; follow [SECURITY.md](SECURITY.md).
-4. Read [the development setup](docs/development/setup.md),
-   [testing strategy](docs/quality/testing-strategy.md), and
-   [documentation standards](docs/quality/documentation-standards.md).
-5. If a coding agent will participate, read the
-   [agent-assisted workflow guide](docs/development/agent-workflows.md) and keep
-   the same human review and evidence obligations.
-
-## Development workflow
-
-- Branch from current `main`; do not work directly on `main`.
-- Use a descriptive branch name such as `feature/registration-export` or
-  `fix/readiness-timeout`.
-- Keep one coherent outcome per pull request and include tests and documentation.
-- Add or update a stable product requirement identifier for product behavior.
-- Record durable architecture decisions as ADRs; never rewrite an accepted ADR.
-- Add externally meaningful changes to the appropriate **Unreleased** category
-  in [`CHANGELOG.md`](CHANGELOG.md); write `Not user-visible` in the pull-request
-  release-note field only when no evaluator, operator, user, or contributor
-  behavior changes.
-- Use synthetic data only. Never commit production data, secrets, credentials,
-  private keys, tokens, or customer-identifying examples.
-- Use NumPy-style Python docstrings and keep parameters, returns, yields, raises,
-  notes, and examples meaningful where they help a contributor.
-
-Activate the repository-managed push guard once after cloning:
-
-```powershell
-./scripts/install_git_hooks.ps1
-```
-
-Run the local acceptance command before requesting review:
-
-```powershell
-./scripts/certify.ps1
-```
-
-For a focused change, run the smallest relevant tests during development. The
-scope-selected local command remains the contributor's pre-review obligation, but its
-receipt is not a server trust boundary. Every ready pull request independently
-satisfies the repository-owned `PR gate` on isolated GitHub-hosted runners.
-Every code PR keeps current-schema PostgreSQL behavior. Domain schema changes add
-affected historical boundaries and real whole-graph recovery; global safety,
-dependency and test-harness changes require exhaustive history. ADR 0090 and the
-[local certification guide](docs/development/local-certification.md) define
-the shared local/hosted selection policy. Use `-Mode Full` for explicit exhaustive
-certification; `CurrentDiagnostic` is a benchmark, not pre-review evidence.
-
-Open unfinished work as a draft. Draft updates run only the cheap locked-input
-and automation-policy feedback and intentionally keep `PR gate` red. After the
-complete local certification passes, choose **Ready for review** to start the
-authoritative hosted path. Converting back to draft cancels obsolete acceptance.
-
-## Agent-assisted contributions
-
-Repository-root [`AGENTS.md`](AGENTS.md) is the always-on project contract.
-Maru also provides focused playbooks under `.agents/skills/` for change
-mapping, product planning, browser rehearsal, and protected pull-request
-delivery. Use the smallest matching set and load routed references only when
-the task needs them.
-
-These playbooks do not grant authority to implement, push, merge, deploy,
-change repository settings, or use personal data. They do not turn generated
-output into accepted behavior. The contributor remains responsible for
-checking current requirements and ADRs, inspecting the actual diff, running
-appropriate tests, documenting the outcome, and satisfying the protected
-`PR gate`.
+For a guided route, use [Make a first contribution](docs/start-here/first-contribution.md).
+For application setup, use [Run Maru locally](docs/start-here/run-locally.md).
 
 ## Issue triage and newcomer work
 
-Requirements and accepted ADRs remain the product and architecture authority.
-`ROADMAP.md` sets direction, while `CURRENT.md` records the maintained handoff.
-GitHub Issues are the bounded execution queue: each accepted issue should name
-one observable outcome, affected roles and states, explicit non-goals,
-dependencies, safety implications, and acceptance evidence. Closing an issue
-does not silently change a requirement or decision; the corresponding pull
-request updates those documents when needed.
+- Search [Issues](https://github.com/martonpornoi/maru/issues) for existing bugs
+  and bounded proposals. Small documentation corrections and isolated fixes
+  may go directly to a pull request.
+- Use [Discussions](https://github.com/martonpornoi/maru/discussions) for setup
+  help and ideas that still need exploration. Discuss substantial behavior or
+  architecture changes before implementing them.
+- Report vulnerabilities privately through [SECURITY.md](SECURITY.md).
+- Use synthetic data only. Do not include real convention records, personal
+  data, secrets, or private material in issues, screenshots, tests, or fixtures.
 
-Use Discussions for setup help and ideas that still need exploration. Do not
-copy every historical backlog note into GitHub or use Issues as a second
-roadmap. Convert maintained next actions only when they are sufficiently
-bounded to implement, review, and close.
+An issue earns `good first issue` only when it has a bounded outcome, observable
+acceptance criteria, usable setup and verification commands, and no private data,
+maintainer-only access, or hidden cross-module prerequisites. The list may be
+empty. `help wanted` can cover broader work; neither label reserves a task,
+promises scheduling, or pre-approves a design. Support is best effort.
 
-Use the feature-proposal form for one independently closable outcome. Use the
-umbrella-proposal form only after one end-to-end outcome is bounded but requires
-multiple dependent child issues. An umbrella is a planning contract, not
-implementation authorization, and remains open until its children and final
-integrated acceptance are complete.
+Requirements and accepted ADRs own product and architecture decisions.
+[ROADMAP](docs/project/ROADMAP.md) sets direction, and
+[CURRENT](docs/project/CURRENT.md) records the active handoff. Issues are the
+execution queue, not a second roadmap. Use the feature-proposal form for one
+independently closable outcome; use the umbrella form for a bounded outcome
+that requires dependent child issues. The native GitHub sub-issue relationships record
+membership, while the umbrella describes scope, dependencies, and integrated
+acceptance. Update that contract when a split changes.
 
-Every child uses GitHub's native sub-issue relationship, cites its parent and
-the exact decomposition item and acceptance criteria it owns, states its
-prerequisites and successors, and preserves the umbrella's non-goals. Replace
-the matching umbrella checklist item with the child link. If discovery changes
-the split, update the umbrella before creating detached work; the native GitHub
-sub-issue hierarchy records membership and progress, while the umbrella body
-records scope and dependency truth.
+## Make one coherent change
 
-New bug reports and proposals start with the `triage` label. The maintainer may
-request a synthetic reproduction, redirect a support question to Discussions,
-link a duplicate, or decline work that does not fit the roadmap. Labels express
-current classification, not a promise of scheduling or a response-time SLA.
+Fork the repository if needed, branch from current `main`, and use a descriptive
+name such as `docs/clearer-setup` or `fix/readiness-timeout`.
 
-An issue receives `good first issue` only when it is independently bounded,
-contains observable acceptance criteria and relevant setup or verification
-commands, needs no private data or maintainer-only access, and avoids hidden
-security, migration, or cross-module prerequisites. `help wanted` may identify
-broader work that still needs design discussion. Comment before investing in a
-large implementation, because a label is not a reservation or pre-approval of
-a particular design.
+For material work, follow the reading order in [`AGENTS.md`](AGENTS.md): current
+state, roadmap, relevant requirements and module docs, accepted ADRs, then
+current code and tests. Preserve organization/edition scope, deny-by-default
+access, auditability, recovery, and module ownership.
 
-## Pull requests
+Keep implementation, tests, and documentation together. Product behavior maps
+to a stable requirement; durable architecture decisions need an ADR. Update
+`CURRENT.md` for material work and add a checkpoint for milestones and externally
+visible features. Add contributor- or user-visible changes under **Unreleased**
+in [CHANGELOG.md](CHANGELOG.md). Use `Not user-visible` in the pull-request
+release-note field only when no evaluator, operator, user, or contributor
+behavior changes.
 
-Complete the pull request template. Explain the user or operator outcome,
-security/privacy implications, migrations and recovery, tests, documentation,
-and any intentionally deferred work. Resolve review conversations and use
-squash merge so `main` remains linear.
+Follow [documentation standards](docs/quality/documentation-standards.md),
+including meaningful NumPy-style Python docstrings. Agent-assisted work follows
+the same rules; the [agent workflow guide](docs/development/agent-workflows.md)
+explains the focused playbooks. Tools and generated output grant no additional
+authority, and the contributor remains responsible for the diff and evidence.
 
-Large deletions and any deletion or rename of source, tests, repository
-automation, governance records, or critical root policy/deployment files
-require the repository owner to apply `destructive-change-reviewed`. Under the
-current sole-maintainer policy, automation accepts approval only on that exact
-owner label-application event for the current head; every other pull-request
-action treats an existing label as stale. A trusted metadata workflow also
-removes the stale label after a head change, so the owner must inspect the new
-scope and reapply it. Readiness and reopen transitions clear stale approval too.
-Mark a destructive pull request ready before applying the label. Automation
-must not be weakened
-merely to make a check green. If a check is wrong, fix its contract and explain
-why.
+## Verify and request review
 
-Eligible contribution-code `pull_request` runs from a first-time fork
-contributor may wait for a maintainer to approve execution. That permits
-untrusted code to run with read-only authority on an isolated hosted runner; it
-does not approve the pull request or its changes. The trusted base-branch
-metadata cleanup is not subject to fork-code approval and never checks out the
-contribution.
+Run focused checks while developing, then install the push guard and complete
+local certification of a clean commit before marking the pull request ready:
 
-By submitting a contribution, you agree that it is licensed under the
-[Apache License 2.0](LICENSE) and that the [Code of Conduct](CODE_OF_CONDUCT.md)
-applies to project spaces.
+```powershell
+./scripts/install_git_hooks.ps1
+./scripts/certify.ps1
+```
+
+The [local certification guide](docs/development/local-certification.md) defines
+prerequisites, scope selection, evidence preservation, and the shared
+local/hosted policy. Current-schema PostgreSQL behavior remains required for
+code changes; relevant historical and recovery checks follow the change's risk.
+`-Mode Full` explicitly requests exhaustive history. Diagnostic runs do not
+replace certification.
+
+Open unfinished work as a draft. Draft updates run cheap feedback and
+intentionally leave `PR gate` red. After local certification passes, **Ready for
+review** starts independent hosted acceptance. First-time fork runs may await a
+maintainer's execution approval; that is not approval of the contribution.
+
+Complete the pull-request template with the outcome, security/privacy impact,
+migrations/recovery, checks, documentation, and remaining work. Resolve review
+conversations. The repository uses protected squash merges; local evidence does
+not replace GitHub's `PR gate`.
+
+Large deletions and deletion or rename of protected source, test, automation,
+governance, or critical root files require the owner's exact-head
+`destructive-change-reviewed` label event. A stale label is not approval. The
+[repository governance guide](docs/development/repository-governance.md) owns
+that policy and the full protected workflow. Do not weaken checks to make a
+change pass.
+
+By contributing, you agree that your contribution is licensed under
+[Apache-2.0](LICENSE) and that the [Code of Conduct](CODE_OF_CONDUCT.md) applies
+to project spaces. [Governance](GOVERNANCE.md) explains maintainer authority and
+continuity.

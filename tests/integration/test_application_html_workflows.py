@@ -9,6 +9,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 import pytest
+from bs4 import BeautifulSoup
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -279,8 +280,21 @@ def test_organizer_html_copy_configure_lifecycle_and_shell_are_executable() -> (
 
     assert workspace.status_code == 200
     content = workspace.content.decode()
-    assert "Shared form studio" in content
-    assert "Review and copy" in content
+    workspace_html = BeautifulSoup(content, "html.parser")
+    assert workspace_html.find("h1").get_text(strip=True) == "Application forms"
+    assert (
+        workspace_html.select_one(".maru-personal-kicker").get_text(strip=True)
+        == "Collect applications and responses"
+    )
+    starter_link = workspace_html.find(
+        "a",
+        href=reverse(
+            "application-starter-copy-page",
+            args=(edition.organization_id, edition.id, "feedback"),
+        ),
+    )
+    assert starter_link is not None
+    assert starter_link.get_text(strip=True) == "Use this template"
     assert "My applications" not in content
     assert "My Maru" in content
     assert 'data-navigation-group="personal"' not in content
@@ -314,8 +328,18 @@ def test_organizer_html_copy_configure_lifecycle_and_shell_are_executable() -> (
     )
     detail = client.get(detail_url)
     assert detail.status_code == 200
-    assert "Lifecycle and provenance" in detail.content.decode()
-    assert "Save complete draft configuration" in detail.content.decode()
+    detail_html = BeautifulSoup(detail.content, "html.parser")
+    assert detail_html.find("h2", string="Form status and history") is not None
+    configure_url = reverse(
+        "application-definition-configure",
+        args=(edition.organization_id, edition.id, definition.id),
+    )
+    configure_form = detail_html.find("form", action=configure_url)
+    assert configure_form is not None
+    assert (
+        configure_form.find("button", type="submit").get_text(strip=True)
+        == "Save form settings"
+    )
 
     department = create_department_for_test(
         edition=edition,
@@ -351,10 +375,6 @@ def test_organizer_html_copy_configure_lifecycle_and_shell_are_executable() -> (
         "reviewer_emails": "",
         "reason": "Set exact owners and immutable reviewer role version.",
     }
-    configure_url = reverse(
-        "application-definition-configure",
-        args=(edition.organization_id, edition.id, definition.id),
-    )
     closed = client.post(
         configure_url,
         {**configure_payload, "unexpected_preview_person": str(manager.id)},
@@ -388,8 +408,22 @@ def test_organizer_html_copy_configure_lifecycle_and_shell_are_executable() -> (
     definition.refresh_from_db()
     assert definition.status == "active"
     active_page = client.get(detail_url).content.decode()
-    assert "Save complete draft configuration" not in active_page
-    assert "Create a successor" in active_page
+    active_html = BeautifulSoup(active_page, "html.parser")
+    assert active_html.find("form", action=configure_url) is None
+    assert "Save form settings" not in active_page
+    assert active_html.find("h2", string="Make a new draft copy") is not None
+    successor_form = active_html.find(
+        "form",
+        action=reverse(
+            "application-definition-successor",
+            args=(edition.organization_id, edition.id, definition.id),
+        ),
+    )
+    assert successor_form is not None
+    assert (
+        successor_form.find("button", type="submit").get_text(strip=True)
+        == "Create draft copy"
+    )
 
     retired = client.post(
         reverse(

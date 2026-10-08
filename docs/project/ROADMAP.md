@@ -8,6 +8,43 @@ Use [CURRENT](CURRENT.md) for the active handoff and delivery evidence, the
 the owning requirements, module contracts, and ADRs for durable behavior. This
 roadmap records outcomes and dependencies, not a second branch-status log.
 
+## Active direction: approachable furry-convention operations
+
+The maintainer authorized this direction on 2026-10-08 and delegated routine
+product choices. Completion of Programme umbrella #48 is deferred. Its retained
+acceptance, recovery, and activation gates remain open; deferment does not promote
+a profile or invalidate preserved evidence. The next work makes everyday Maru
+understandable before expanding the number of operational destinations.
+
+1. **Approachable work and contributor entry:** purpose-based navigation, plain
+   language, accessible advanced details, verified local setup, and a concise
+   furry-convention introduction (UX-031 and ADR 0116).
+2. **Announcements:** compose, approve, prepare channel copy, record manual
+   publication, correct, and export one canonical announcement (ANN-001–006).
+   Add external delivery adapters individually when their operating needs are
+   known. This workflow must stand alone without Programme or Registration.
+3. **Guidance and help desk:** governed runbooks/FAQs first, then owned requests,
+   replies, escalation, handover, and lost-and-found custody (KNO, MSG, OPS-007).
+4. **Volunteer and attendee services:** training, coverage exceptions, meals,
+   rewards, fursuit/quiet-space services, and purpose-scoped accessibility work
+   (HR, FUR-007, SAF-007). Restricted specialist case work retains its own review.
+5. **Commercial and charity journeys:** dealers and table allocation, then one
+   complete art/auction format through intake, bidding, settlement evidence,
+   collection, and reporting (FUR-001–005).
+6. **Arrival and fulfilment:** controlled registration exceptions, badges,
+   merchandise pickup/refunds, and degraded operation (REG, ACC, FUR-006).
+7. **Hospitality and annual continuity:** guest/room/travel obligations, spending
+   and sponsor commitments, creative contributions, reviewed lessons and handover
+   (VEN, FIN, PLN, KNO, FUR-008–010), prioritized by a concrete adopting team.
+
+Each stage consists of coherent complete journeys, not one oversized commit or a
+requirement to enable earlier modules. Reuse shared foundations without creating
+unrelated records. Keep required policy decisions, export, recovery, documentation,
+and focused human walkthroughs in the owning increment. Batch related changes for
+one final clean-commit certification and independent hosted acceptance; do not
+weaken coverage or reuse evidence after a source change. Calendar estimates follow
+bounded scope and measured work rather than the size of the remaining wishlist.
+
 ## Progressive adoption strategy
 
 Maru earns trust through useful, bounded adoption rather than an all-or-nothing

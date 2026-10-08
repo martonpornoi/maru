@@ -10,6 +10,25 @@
 
 ## Purpose and authority
 
+### Everyday presentation
+
+Under UX-031, the primary organizer task is **Collect activity ideas**, with
+**Ask for activity ideas** for creation. A call is presented as a **request for
+activity ideas**, explained with talks, panels, workshops and other convention
+activities. Tracks are **Topics**, formats are **Activity types**, and the
+overview is **Request settings**. Canonical routes, identifiers, domain terms,
+authorization and stored source evidence remain unchanged.
+
+Creation leads with the request, deadlines and initial activity choices. Required
+content, consent and collaboration-history retention references stay visible and
+explicit: they identify existing organizer rules and never create a policy or
+receive an invented default. Optional audience and idea-retention references sit
+under **Additional rules (optional)**, expanded on validation error. Technical
+versions, codes and detailed question constraints remain available in labelled
+disclosures. Original retry/version proof and input survive the same error paths.
+Activation is labelled **Activate and lock this form** and explains both the
+locked form and its lack of publication, discovery or production activation.
+
 Give the exact Department's call editor a labelled call inventory, complete
 configuration preview and small explicit editing tasks. Applications owns every
 query and command. The existing typed form engine, immutable graph validation,
@@ -65,7 +84,8 @@ the edition-version fence or deadline inclusivity.
 Creation belongs beside the exact Department's inventory. The operator explicitly
 supplies call metadata, collection policies, edition-local deadlines, one initial
 track and one initial format with duration bounds. A displayed starting form has
-one "Programme proposal" section with required title and description questions;
+one "Activity idea" section with required "Activity title" and "Activity
+description" questions; existing drafts keep their saved labels;
 both use the chosen call classification and default retention. The operator must
 confirm this starting configuration and the required lead public-display-name
 collection policy (optional for collaborators). This creates one editable Draft

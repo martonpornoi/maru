@@ -1,7 +1,7 @@
 # Development setup
 
-Status: Production-consolidation M1.1/M2.1 locally migrated and smoke-verified
-Last updated: 2026-08-30
+Status: Development reference; first-run commands live in Run Maru locally
+Last updated: 2026-10-08
 
 ## Prerequisites
 
@@ -24,21 +24,15 @@ the protected pull-request gate.
 
 ## First setup
 
-```powershell
-uv sync --all-groups
-docker compose up -d postgres
-$env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/maru_rebuild_empty"
-uv run python src/manage.py migrate
-uv run python src/manage.py runserver
-```
+Follow [Run Maru locally](../start-here/run-locally.md) for the maintained
+clone, locked-dependency, PostgreSQL, migration, bootstrap-account, and server
+commands. That guide is the canonical first-run sequence.
 
-The controlled rebuild uses the separately named
-`maru_rebuild_empty` database. Local defaults still connect to
-`postgresql://maru:maru@127.0.0.1:5432/maru` when the environment variable is
-omitted, so keep `MARU_DATABASE_URL` set in the server terminal.
-Override settings with environment variables described in `.env.example`.
-Maru does not automatically read `.env`; a shell or supervised runtime supplies
-configuration.
+Compose creates a database named `maru`. Historical exercises may use a
+separately created database such as `maru_rebuild_empty`; setting a URL does not
+create it. Keep `MARU_DATABASE_URL` set in each server or management-command
+terminal. Maru does not automatically read `.env`; a shell or supervised
+runtime supplies the settings documented in `.env.example`.
 
 This editable `runserver` path is deliberately separate from release-image
 evidence. To exercise the published immutable candidate with isolated
@@ -164,20 +158,27 @@ existing accounts; use the isolated synthetic hands-on tutorial after applying
 all current migrations. The final consolidated suite, representative
 deployment/PITR rehearsal, accessibility, and owner tutorial remain open.
 
-The verified local baseline contains only:
+A fresh installation has no predefined account or password. Historical
+machine-specific baseline credentials are recorded only in the
+[empty-experience runbook](../operations/empty-experience-baseline.md); they are
+not installed by the setup commands. Do not assume that an existing named
+database is empty or remove owner-created records. The
+[hands-on tutorial](../operations/maru-hands-on-tutorial.md) uses a separately
+prepared synthetic environment.
 
-```text
-Database: maru_rebuild_empty
-Username: admin
-Email: admin@maru.local
-Password: M4rucon-Rehearsal-2031!
-```
+### Local invitation boundary
 
-See the
-[empty-experience runbook](../operations/empty-experience-baseline.md). Do not
-assume the named database is still empty or delete owner-created records. The
-[hands-on tutorial](../operations/maru-hands-on-tutorial.md) uses clearly
-synthetic records.
+Without dedicated invitation encryption configuration, `check` and `runserver`
+report `identity.W001`. The basic local shell and bootstrap-administrator route
+can run, but person-invitation commands fail closed. A successful first login
+does not establish invitation delivery or a complete multi-person journey.
+
+The `.env.example` file lists the separate public encryption, digest-key, and
+retention-policy settings. The [deployment reference](../operations/deployment-and-service-objectives.md)
+owns their complete contract; private decryption keys belong only to the
+delivery worker. Use a tutorial's explicit synthetic fixture configuration when
+it provides one. Do not silence the check or reuse the Django secret key to
+make an invitation exercise appear complete.
 
 ### M1 migration boundary
 

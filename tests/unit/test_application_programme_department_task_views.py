@@ -58,11 +58,11 @@ def test_real_conversion_entry_and_final_owner_revocation(monkeypatch, change):
     html = BeautifulSoup(response.content, "html.parser")
     if change is not None:
         assert response.status_code == 404
-        assert "Convert accepted proposals" not in html.get_text()
+        assert "Create activities from accepted ideas" not in html.get_text()
         assert "Assigned role" not in html.get_text()
         return
     assert response.status_code == 200
-    link = html.find("a", string="Convert accepted proposals")
+    link = html.find("a", string="Create activities from accepted ideas")
     assert link["href"].endswith(f"/{world.ids[0]}/conversion/")
     assert (
         "Direct permission (Applications); Assigned role (Programme)" in html.get_text()
@@ -149,9 +149,7 @@ def test_empty_and_readonly_are_truthful_without_hidden_counts(page):
     response = _request(page)
     assert response.status_code == 200
     text = BeautifulSoup(response.content, "html.parser").get_text()
-    assert (
-        "No Programme call, review or conversion tasks are currently available" in text
-    )
+    assert "No activity idea or review tasks are currently available" in text
     assert "Private planning is read-only" in text
     assert "Programme <synthetic>" not in text
 

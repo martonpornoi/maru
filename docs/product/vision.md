@@ -5,7 +5,12 @@ Last updated: 2026-08-26
 
 ## The promise
 
-Maru is the calm operating system for recurring community conventions.
+Maru is the calm operating system for recurring furry conventions.
+
+Furry conventions are the primary design audience: volunteer organizers,
+attendees, artists, dealers, performers, and the people who care for them. Shared
+event-management capabilities remain reusable, while examples, priorities, and
+everyday language start with this community.
 
 It gives every person one trusted place to answer:
 

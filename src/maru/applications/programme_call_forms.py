@@ -44,7 +44,10 @@ def _policy(label: str, *, required: bool = True) -> forms.RegexField:
         label=label,
         max_length=120,
         required=required,
-        help_text="Exact documented policy code; this does not create a policy.",
+        help_text=(
+            "Enter the reference supplied by your convention's policy owner. "
+            "It identifies an existing set of rules; it does not create the rules."
+        ),
     )
 
 
@@ -113,25 +116,35 @@ class ProgrammeCallTaskForm(RetryForm):
 class ProgrammeCallMetadataForm(ProgrammeCallTaskForm):
     """Collect the shared explicit metadata and policy of a Programme call."""
 
-    name = forms.CharField(label="Call name", max_length=160)
+    name = forms.CharField(label="Request name", max_length=160)
     description = forms.CharField(
-        label="Call guidance",
+        label="Instructions for people suggesting an activity",
         max_length=4000,
         required=False,
         widget=forms.Textarea(attrs={"rows": 4}),
     )
-    purpose = forms.CharField(label="Why these proposals are collected", max_length=500)
-    classification = forms.ChoiceField(choices=_CLASSIFICATIONS)
-    maximum_submissions_per_person = StrictBase10IntegerField(
-        min_value=1, max_value=100
+    purpose = forms.CharField(
+        label="Why you are collecting activity ideas", max_length=500
     )
-    audience_policy_code = _policy("Audience policy", required=False)
-    retention_policy_code = _policy("Proposal retention policy", required=False)
-    maximum_collaborators = StrictBase10IntegerField(min_value=0, max_value=16)
-    content_policy_code = _policy("Proposal content policy")
-    contributor_consent_policy_code = _policy("Contributor consent policy")
+    classification = forms.ChoiceField(
+        choices=_CLASSIFICATIONS, label="How sensitive is the information?"
+    )
+    maximum_submissions_per_person = StrictBase10IntegerField(
+        min_value=1, max_value=100, label="Ideas allowed per person"
+    )
+    audience_policy_code = _policy(
+        "Audience rules reference (optional)", required=False
+    )
+    retention_policy_code = _policy(
+        "Idea retention rules reference (optional)", required=False
+    )
+    maximum_collaborators = StrictBase10IntegerField(
+        min_value=0, max_value=16, label="People who can help with each idea"
+    )
+    content_policy_code = _policy("Content rules reference")
+    contributor_consent_policy_code = _policy("Consent rules reference")
     collaboration_retention_policy_code = _policy(
-        "Collaboration evidence retention policy"
+        "Collaboration history retention rules reference"
     )
 
 
@@ -211,11 +224,11 @@ class ProgrammeCallWindowForm(ProgrammeCallTaskForm):
     expected_edition_version = StrictBase10IntegerField(
         min_value=1, widget=forms.HiddenInput
     )
-    opens_at = EditionLocalDateTimeField(label="Opens (inclusive)")
+    opens_at = EditionLocalDateTimeField(label="People can start sending ideas from")
     applicant_edit_until = EditionLocalDateTimeField(
-        label="Applicant edit deadline (inclusive)"
+        label="People can edit their ideas until (including this time)"
     )
-    closes_at = EditionLocalDateTimeField(label="Closes (exclusive)")
+    closes_at = EditionLocalDateTimeField(label="Ideas must be submitted before")
     confirm = forms.BooleanField(
         label="Replace these deadlines with the whole-minute times shown."
     )
@@ -282,7 +295,7 @@ class ProgrammeCallTrackForm(ProgrammeCallTaskForm):
         max_length=80,
         help_text="Stable lower-case code using words separated by hyphens.",
     )
-    label = forms.CharField(label="Track name", max_length=160)
+    label = forms.CharField(label="Topic name", max_length=160)
     description = forms.CharField(
         required=False, max_length=4000, widget=forms.Textarea(attrs={"rows": 3})
     )
@@ -328,7 +341,7 @@ class ProgrammeCallTrackForm(ProgrammeCallTaskForm):
 class ProgrammeCallFormatForm(ProgrammeCallTrackForm):
     """Describe one format and its explicit minimum, default and maximum duration."""
 
-    label = forms.CharField(label="Format name", max_length=160)
+    label = forms.CharField(label="Activity type", max_length=160)
     position = StrictBase10IntegerField(min_value=1, max_value=32)
     minimum_duration_minutes = StrictBase10IntegerField(min_value=1, max_value=1440)
     default_duration_minutes = StrictBase10IntegerField(min_value=1, max_value=1440)

@@ -104,7 +104,7 @@ const destinationLabels: Record<Destination, string> = {
   today: "Today",
   "my-registration": "My registration",
   people: "People",
-  workforce: "Workforce",
+  workforce: "Team workspace",
   commerce: "Registration desk",
   reports: "Reports & badges",
   security: "Security history",
@@ -528,7 +528,7 @@ function EmptyContext({ context }: { context: MyContext }) {
       </p>
       {context.can_access_advanced_records && (
         <a className="primary-button" href="/admin/">
-          Open Specialist records
+          Open Advanced records
         </a>
       )}
       <button
@@ -554,12 +554,10 @@ function UnsupportedEditionContext({ edition }: { edition: EditionContext }) {
       <p className="eyebrow">{edition.edition_name}</p>
       <h1>Workspace unavailable in this release</h1>
       <p>
-        The {edition.adoption_profile_label} profile returned no destination this
-        Staff Console can present. No broader convention workflow was assumed.
+        There are no available tools for this event in the current workspace.
       </p>
       <p className="muted-copy">
-        Choose another convention workspace or ask an administrator to confirm
-        the edition profile and application version.
+        Choose another event or ask an administrator to check its enabled tools.
       </p>
     </CenterState>
   );
@@ -661,7 +659,7 @@ function Sidebar({
                 }
                 onClick={() => onNavigate("workforce")}
               >
-                <Icon>⌘</Icon> Workforce
+                <Icon>⌘</Icon> Team workspace
               </button>
             )}
             {canManageAccess && (
@@ -719,7 +717,7 @@ function Sidebar({
                 className="nav-item"
                 href="/admin/?records=open#maru-specialist-heading"
               >
-                <Icon>↗</Icon> Specialist records
+                <Icon>↗</Icon> Advanced records
               </a>
             )}
           </details>
@@ -1048,8 +1046,8 @@ function TodayView({
           {!hasCommerce ? (
             <p className="muted-copy">
               {hasWorkforce
-                ? "Continue in Workforce with the Structure, assignment, Availability, and Shift tools pinned by this edition profile. Registration and payment queues are absent."
-                : "Continue with the destinations pinned by this edition profile. Registration and payment queues are absent."}
+                ? "Open Team workspace to organize departments, assign volunteers, and plan shifts."
+                : "Use the available tools below to continue setting up your event."}
             </p>
           ) : actionsDenied ? (
             <p className="muted-copy">
@@ -1097,7 +1095,7 @@ function TodayView({
             <div className="panel-heading">
               <div>
                 <p className="section-kicker">People</p>
-                <h2 id="shape-heading">Edition shape</h2>
+                <h2 id="shape-heading">People at this event</h2>
               </div>
             </div>
             {peopleDenied ? (
@@ -1130,16 +1128,16 @@ function TodayView({
               <p className="section-kicker">
                 {hasSelfRegistration || hasCommerce
                   ? "Published workflows"
-                  : "Workforce entry points"}
+                  : "Team workspace entry points"}
               </p>
               <h2 id="forms-heading">
                 {hasSelfRegistration || hasCommerce
                   ? "Forms"
-                  : "Workforce forms"}
+                  : "Volunteer forms"}
               </h2>
               <p className="muted-copy">
                 {hasSelfRegistration || hasCommerce
-                  ? "Registration and the other workflows pinned by this edition profile stay together here. Newly published forms will appear in this section."
+                  ? "Find registration and other forms for this event here. Newly published forms will appear below."
                   : "Volunteer applications and onboarding documents stay together here without creating attendee registration or payment work."}
               </p>
             </div>
@@ -2632,7 +2630,7 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "The Workforce workspace could not be loaded.",
+            : "The team workspace could not be loaded.",
         );
       });
     return () => {
@@ -2665,10 +2663,10 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
       <div className="page-heading compact">
         <div>
           <p className="eyebrow">Teams &amp; volunteer operations</p>
-          <h1>Workforce</h1>
+          <h1>Team workspace</h1>
           <PageHelp
-            purpose="Use this page to understand how departments become staffed positions, shared availability, and workable shifts."
-            examples="review a vacancy, confirm its active holder, or plan a Shift from current assignments and deliberately shared availability"
+            purpose="Organize your teams, find volunteers for open roles, and plan when people will work."
+            examples="find an unfilled role, see who has joined a team, or plan a shift using the times people have shared"
           />
         </div>
         {workspace?.structure.state === "complete" && (
@@ -2682,17 +2680,16 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
       {denied ? (
         <section className="permission-state">
           <span className="permission-lock" aria-hidden="true">◇</span>
-          <h2>Workforce structure is not available for your role</h2>
+          <h2>You do not have access to this team overview</h2>
           <p>
-            Maru did not expose Department names, positions, assignments, or
-            staffing counts. Ask an organizer for exact-edition Workforce view
-            authority if this is part of your duties.
+            Ask an organizer for access to the team overview for this event if you
+            need it for your work.
           </p>
         </section>
       ) : error ? (
         <section className="permission-state" role="alert">
           <span className="permission-lock" aria-hidden="true">!</span>
-          <h2>Workforce could not be loaded</h2>
+          <h2>The team overview could not be loaded</h2>
           <p>{error}</p>
           <button
             className="primary-button"
@@ -2704,17 +2701,17 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
       ) : !workspace ? (
         <section className="panel workforce-loading" role="status">
           <span className="table-progress" />
-          <p>Loading the complete authorized Workforce structure…</p>
+          <p>Loading your team overview…</p>
         </section>
       ) : (
         <>
           {workspace.structure.state === "structure_limit_exceeded" && (
             <section className="permission-state" role="alert">
               <span className="permission-lock" aria-hidden="true">!</span>
-              <h2>The complete structure is too large to show safely</h2>
+              <h2>There are too many teams to show at once</h2>
               <p>
-                Maru did not substitute a partial hierarchy. Ask a platform
-                operator to review the edition before continuing.
+                Ask an administrator to review the team structure. No incomplete
+                overview is shown.
               </p>
             </section>
           )}
@@ -2726,17 +2723,16 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
             >
               <div className="panel-heading">
                 <div>
-                  <p className="section-kicker">Operational sequence</p>
+                  <p className="section-kicker">Plan your team</p>
                   <h2 id="workforce-journey-title">
-                    From structure to a workable rota
+                    From teams to a shift plan
                   </h2>
                 </div>
-                <span className="quiet-badge">One connected journey</span>
+                <span className="quiet-badge">Five steps</span>
               </div>
               <p className="muted-copy workforce-journey-intro">
-                Each stage depends on the one before it. Maru shows implemented
-                records as working steps and labels unavailable continuations
-                plainly instead of presenting dead controls.
+                Start with your teams and roles, then choose people and plan their
+                shifts. Each step shows the tools you can use.
               </p>
               <ol className="workforce-journey">
                 <li>
@@ -2747,9 +2743,8 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                     <span className="workforce-step-state ready">Available</span>
                     <h3>Structure</h3>
                     <p>
-                      {activeDepartments} active Department
-                      {activeDepartments === 1 ? "" : "s"} place accountable work
-                      beneath {workspace.governance.label}.
+                      {activeDepartments} active department
+                      {activeDepartments === 1 ? " reports" : "s report"} to {workspace.governance.label}.
                     </p>
                   </div>
                   <a
@@ -2767,10 +2762,9 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                     <span className="workforce-step-state ready">Available</span>
                     <h3>Positions</h3>
                     <p>
-                      {positions.length} defined position
-                      {positions.length === 1 ? "" : "s"} describe responsibility,
-                      reporting, approved headcount, and the authority bundle an
-                      appointment would receive.
+                      {positions.length} team role
+                      {positions.length === 1 ? " is" : "s are"} defined. Each role sets out
+                      the work, team leader, number of places, and access the person will receive.
                     </p>
                   </div>
                   <a
@@ -2794,12 +2788,11 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                     <span className="workforce-step-state ready">Available</span>
                     <h3>Assignments</h3>
                     <p>
-                      {activeAssignments} active assignment
-                      {activeAssignments === 1 ? "" : "s"} fill those positions;{" "}
-                      {vacancies} approved place
-                      {vacancies === 1 ? " is" : "s are"} currently unfilled.
-                      Activation remains a two-person, prerequisite-checked
-                      decision.
+                      {activeAssignments} role assignment
+                      {activeAssignments === 1 ? " is" : "s are"} active;{" "}
+                      {vacancies} place{vacancies === 1 ? " is" : "s are"} still open.
+                      Another organizer must approve each appointment after its
+                      required checks are complete.
                     </p>
                   </div>
                   <a
@@ -2825,9 +2818,9 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                     </span>
                     <h3>Availability</h3>
                     <p>
-                      Assigned people own their current workable periods and
-                      decide when to share them. Private drafts remain hidden,
-                      and no availability is inferred from an assignment.
+                      Team members choose when they can work and when to share
+                      those times. Private drafts stay private. Joining a team
+                      does not mark someone as available.
                     </p>
                   </div>
                   {workspace.can_view_availability && (
@@ -2849,9 +2842,9 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                     </span>
                     <h3>Shifts</h3>
                     <p>
-                      Position demand becomes published work, person-owned claims,
-                      independently confirmed coverage, and an explicit lock.
-                      Availability is checked without assigning anyone automatically.
+                      List the shifts you need to fill. Volunteers can offer to work
+                      a shift, then an organizer confirms the plan and locks it.
+                      Maru checks shared availability and never assigns someone automatically.
                     </p>
                   </div>
                   {workspace.can_view_shifts && (
@@ -2967,7 +2960,7 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
             <div className="panel-heading">
               <div>
                 <p className="section-kicker">Continue the work</p>
-                <h2 id="workforce-tools-title">Current Workforce tools</h2>
+                <h2 id="workforce-tools-title">Manage your teams</h2>
               </div>
             </div>
             <div className="workforce-tool-grid">
@@ -2975,7 +2968,7 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                 <span className="form-card-icon" aria-hidden="true">⌘</span>
                 <span>
                   <strong>Department structure</strong>
-                  <small>Manage the exact edition-owned hierarchy</small>
+                  <small>Organize the departments for this event</small>
                 </span>
                 <span aria-hidden="true">↗</span>
               </a>
@@ -3004,8 +2997,8 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                   <span>
                     <strong>Assignment management</strong>
                     <small>
-                      Propose known people, review onboarding readiness, and
-                      make independently controlled decisions
+                      Choose people for roles, check their required documents, and
+                      ask another organizer to approve appointments
                     </small>
                   </span>
                   <span aria-hidden="true">↗</span>
@@ -3020,8 +3013,7 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                   <span>
                     <strong>Availability planning</strong>
                     <small>
-                      Review only current periods deliberately shared by people
-                      with open assignments
+                      See when team members have chosen to be available
                     </small>
                   </span>
                   <span aria-hidden="true">↗</span>
@@ -3033,7 +3025,7 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                   <span>
                     <strong>Shift planning</strong>
                     <small>
-                      Publish demand, review claims, confirm coverage, and lock work
+                      List shifts, review volunteers, and confirm who will work
                     </small>
                   </span>
                   <span aria-hidden="true">↗</span>
@@ -3042,8 +3034,8 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
               <a className="form-link-card" href={`/volunteer/${edition.edition_id}/`}>
                 <span className="form-card-icon" aria-hidden="true">♡</span>
                 <span>
-                  <strong>Published opportunities</strong>
-                  <small>See the applicant-facing position openings</small>
+                  <strong>Volunteer openings</strong>
+                  <small>See the roles people can apply for</small>
                 </span>
                 <span aria-hidden="true">↗</span>
               </a>
@@ -3053,8 +3045,8 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
               >
                 <span className="form-card-icon" aria-hidden="true">▤</span>
                 <span>
-                  <strong>My onboarding documents</strong>
-                  <small>Complete agreements requested from this account</small>
+                  <strong>My volunteer documents</strong>
+                  <small>Read and complete your requested agreements</small>
                 </span>
                 <span aria-hidden="true">↗</span>
               </a>
@@ -3062,21 +3054,21 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
             {!workspace.can_manage_assignments && (
               <p className="privacy-note workforce-owner-boundary">
                 {workspace.can_manage_positions
-                  ? "Position management is available, but assignment decisions also require current scoped assignment and role authority."
-                  : "This workspace is safe for viewing. Position editing and assignment activation require additional authority, so Maru does not link this account to inaccessible specialist screens."}
+                  ? "You can edit team roles. Choosing people for those roles requires additional permission for this event."
+                  : "You can view the team overview. Editing roles and confirming appointments require additional permission for this event."}
               </p>
             )}
           </section>
 
           <aside className="setup-note workforce-boundary" aria-labelledby="workforce-boundary-title">
             <div>
-              <p className="section-kicker">Authority boundary</p>
-              <h2 id="workforce-boundary-title">Appointment is not ordinary access</h2>
+              <p className="section-kicker">Team roles and permissions</p>
+              <h2 id="workforce-boundary-title">Assigning a role and sharing access</h2>
               <p>
                 {assignmentUsesParticipation
-                  ? "A Workforce assignment can require documents, headcount, a distinct approver, a scoped role, and Participation capacity."
-                  : "A Workforce assignment can require documents, headcount, a distinct approver, and a scoped role. This edition profile creates no attendee Registration, attendance, payment, or Participation record."}{" "}
-                Sharing a software-access group does not fill a Position.
+                  ? "Appointing a team member can require agreements, an available place, approval by another organizer, and the right event eligibility."
+                  : "Appointing a team member can require agreements, an available place, and approval by another organizer. Team-only use does not register anyone as an attendee or create a payment."}{" "}
+                Giving someone access to tools does not appoint them to a team role.
               </p>
             </div>
           </aside>
@@ -3524,7 +3516,7 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
               <a
                 href={workforceWorkspacePath()}
               >
-                Continue to Workforce: positions, assignments, availability, and shifts ↗
+                Continue to Team workspace: positions, assignments, availability, and shifts ↗
               </a>
             </div>
           )}
@@ -4418,7 +4410,7 @@ function SetupView({
       {
         title: "Assignments",
         summary:
-          "Place volunteers in approved Positions under this profile's exact assignment boundary.",
+          "Choose volunteers for roles and complete the required approvals.",
         href: workforceAssignmentsPath(edition),
       },
       {
@@ -4438,7 +4430,7 @@ function SetupView({
   steps.push({
     title: "Teams & access",
     summary:
-      "Share system capabilities without treating access as a workforce appointment.",
+      "Choose who can use each tool. Team appointments are managed separately.",
     action: "access",
   });
   if (hasCloseoutReadiness) {
@@ -4457,10 +4449,10 @@ function SetupView({
           <p className="eyebrow">Convention setup</p>
           <h1>Setup guide</h1>
           <PageHelp
-            purpose={`Use this ordered guide for the tools pinned by the ${edition.adoption_profile_label} profile.`}
+            purpose={`Follow these steps to set up the tools enabled for this event.`}
             examples={hasWorkforce
-              ? "define Positions before assigning volunteers"
-              : "review the edition before opening its adopted workflows"}
+              ? "create team roles before assigning volunteers"
+              : "check event details before opening registration"}
           />
         </div>
       </div>
@@ -4469,6 +4461,11 @@ function SetupView({
         edition={edition}
         onTransitioned={onTransitioned}
       />
+      <details className="panel technical-setup-details">
+        <summary>Technical setup details</summary>
+        <p>Enabled workflow: {edition.adoption_profile_label}</p>
+        <p>These details help an administrator identify the event configuration.</p>
+      </details>
       <>
         <ol className="setup-steps">
           {steps.map((step, index) => (
@@ -4498,8 +4495,7 @@ function SetupView({
               <span className="quiet-badge">Not available yet</span>
             </div>
             <p className="muted-copy">
-              These areas have an intentional home in Maru, but they are not
-              links until their workflows and authorization contracts are ready.
+              These tools are planned for future versions of Maru.
             </p>
             <ul className="planned-capability-list">
               {upcomingDestinations.map((label) => (
@@ -4512,7 +4508,7 @@ function SetupView({
           <section className="setup-note">
             <div>
               <p className="section-kicker">Occasional maintenance</p>
-              <h2>Specialist records</h2>
+              <h2>Advanced records</h2>
               <p>
                 The record directory holds specialist and historical data that
                 should not clutter everyday convention work.
@@ -4522,15 +4518,15 @@ function SetupView({
               className="primary-button"
               href="/admin/?records=open#maru-specialist-heading"
             >
-              Browse specialist records
+              Browse advanced records
             </a>
           </section>
         ) : (
           <section className="permission-state compact-permission">
             <span className="permission-lock" aria-hidden="true">◇</span>
-            <h2>Specialist records are restricted</h2>
+            <h2>Advanced records are restricted</h2>
             <p>
-              Your purpose-built setup pages remain available. Account staff
+              Your event setup pages remain available. Administrator
               status is required only for the low-frequency record directory.
             </p>
           </section>
@@ -4965,12 +4961,12 @@ function AccessDrawer({
           </span>
         </div>
         <div className="access-safety-note access-purpose-note">
-          <strong>Access is not a workforce appointment.</strong>
+          <strong>Tool access and team roles are separate.</strong>
           <span>
             {assignmentUsesParticipation
-              ? "Use a Position assignment when someone must fill a hierarchy role, satisfy an agreement, receive capacities, or appear with an official convention title."
-              : "Use a Position assignment when someone must fill a hierarchy role, satisfy an agreement, or appear with an official convention title. This edition profile does not create attendee Participation capacities."}{" "}
-            Sharing here grants only the selected system capabilities.
+              ? "Use team assignments to appoint someone to a role, complete their agreements, and confirm event eligibility."
+              : "Use team assignments to appoint someone to a role and complete their agreements. Team-only use does not register them as an attendee."}{" "}
+            Sharing here gives access to the selected tools.
           </span>
         </div>
         {preview ? (
@@ -4979,7 +4975,7 @@ function AccessDrawer({
           <section className="access-preview-launcher" aria-labelledby="preview-heading">
             <div className="panel-heading">
               <div>
-                <p className="section-kicker">Read-only policy simulation</p>
+                <p className="section-kicker">Check someone’s access</p>
                 <h3 id="preview-heading">Preview access</h3>
               </div>
               <span className="quiet-badge">No impersonation</span>

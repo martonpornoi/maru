@@ -380,7 +380,7 @@ def application_definition_workspace(
             request,
             edition=edition,
             personal=False,
-            title="Applications",
+            title="Application forms",
             definitions=definitions,
             starters=application_starters(
                 actor=_actor(request),
@@ -1621,7 +1621,7 @@ def application_review_workspace(
             request,
             edition=edition,
             personal=False,
-            title="Application review",
+            title="Review applications",
             submissions=submissions,
         ),
     )

@@ -281,10 +281,20 @@ class DefinitionConfigureForm(RetryForm):
         required=False,
         widget=forms.Textarea(attrs={"rows": 3}),
     )
-    purpose = forms.CharField(max_length=500, widget=forms.Textarea(attrs={"rows": 2}))
-    classification = forms.ChoiceField(choices=ApplicationClassification.choices)
-    eligibility_kind = forms.ChoiceField(choices=ApplicationEligibilityKind.choices)
-    maximum_submissions = StrictBase10IntegerField(min_value=1, max_value=100)
+    purpose = forms.CharField(
+        max_length=500,
+        widget=forms.Textarea(attrs={"rows": 2}),
+        label="Why you are collecting these answers",
+    )
+    classification = forms.ChoiceField(
+        choices=ApplicationClassification.choices, label="Information sensitivity"
+    )
+    eligibility_kind = forms.ChoiceField(
+        choices=ApplicationEligibilityKind.choices, label="Who can use this form?"
+    )
+    maximum_submissions = StrictBase10IntegerField(
+        min_value=1, max_value=100, label="Applications allowed per person"
+    )
     opens_at = _date_time_field("Opens")
     closes_at = _date_time_field("Closes")
     applicant_edit_until = _date_time_field("Applicant edit deadline")
@@ -293,30 +303,41 @@ class DefinitionConfigureForm(RetryForm):
         _POLICY_PATTERN,
         required=False,
         max_length=120,
+        label="Audience rules reference (optional)",
+        help_text="Use the existing convention policy reference supplied by its owner.",
     )
     retention_policy_code = forms.RegexField(
         _POLICY_PATTERN,
         required=False,
         max_length=120,
+        label="Data retention rules reference (optional)",
+        help_text="Identifies the rules for how long these answers are kept.",
     )
     age_policy_code = forms.RegexField(
         _POLICY_PATTERN,
         required=False,
         max_length=120,
+        label="Age rules reference (optional)",
+        help_text="Identifies the existing age rules; this does not create a policy.",
     )
     owner_department_ids = forms.MultipleChoiceField(
         choices=(),
         widget=forms.CheckboxSelectMultiple,
+        label="Responsible Departments",
     )
     reviewer_role_bundle_ids = forms.MultipleChoiceField(
         choices=(),
         required=False,
         widget=forms.CheckboxSelectMultiple,
+        label="Reviewer roles",
     )
     reviewer_emails = forms.CharField(
         required=False,
         max_length=8_000,
-        help_text="Enter exact active-person emails, one per line.",
+        label="Named reviewers (optional)",
+        help_text=(
+            "Enter the exact account email of each active reviewer, one per line."
+        ),
         widget=forms.Textarea(attrs={"rows": 3}),
     )
     reason = forms.CharField(max_length=240)

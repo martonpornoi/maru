@@ -1,0 +1,27 @@
+/* Native details and links remain available when the menu enhancement cannot run. */
+#container #toggle-nav-sidebar,
+.maru-navigation-search,
+.maru-navigation-drawer-header {
+  display: none;
+}
+
+#container #main {
+  display: block;
+}
+
+#container #main > #nav-sidebar {
+  position: static;
+  display: block;
+  width: auto;
+  max-height: none;
+  margin: 0;
+  visibility: visible;
+  transform: none;
+  box-shadow: none;
+}
+
+#container #main > #nav-sidebar + .content {
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+}

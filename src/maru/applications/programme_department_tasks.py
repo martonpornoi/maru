@@ -90,7 +90,11 @@ class _Task:
 
 _TASKS = (
     _Task(
-        "calls", "Manage calls", APPLICATIONS_MANAGE_PROGRAMME_CALLS, frozenset(), ""
+        "calls",
+        "Collect activity ideas",
+        APPLICATIONS_MANAGE_PROGRAMME_CALLS,
+        frozenset(),
+        "",
     ),
     _Task("setup", "Set up review", MANAGE_REVIEW, frozenset({"review_setup"}), ""),
     _Task(
@@ -119,7 +123,7 @@ _TASKS = (
     ),
     _Task(
         "conversion",
-        "Convert accepted proposals",
+        "Create activities from accepted ideas",
         CONVERT_PROGRAMME_ACCEPTANCE,
         frozenset(),
         "conversion/",

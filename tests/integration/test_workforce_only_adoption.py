@@ -807,7 +807,7 @@ def test_operator_context_and_menu_are_focused_without_participation_side_effect
     )
     deep_link_content = deep_link.content.decode()
     assert deep_link.status_code == 200
-    assert "Workforce" in deep_link_content
+    assert "Team workspace" in deep_link_content
     assert "Registration desk" not in deep_link_content
     assert "Reports &amp; badges" not in deep_link_content
 
@@ -817,7 +817,7 @@ def test_operator_context_and_menu_are_focused_without_participation_side_effect
     menu = web_client.get(reverse("admin:index"))
     content = menu.content.decode()
     assert menu.status_code == 200
-    assert "Workforce" in content
+    assert "<strong>Team workspace</strong>" in content
     assert "Setup guide" in content
     assert "Registration desk" not in content
     assert "Reports &amp; badges" not in content
@@ -995,8 +995,8 @@ def test_guided_setup_page_explains_the_boundary_and_redirects_to_accountability
     session.save()
     focused_home = client.get(reverse("admin:index"))
     specialist_home = client.get(f"{reverse('admin:index')}?records=open")
-    assert "Need a technical record?" not in focused_home.content.decode()
-    assert "Need a technical record?" in specialist_home.content.decode()
+    assert "Open advanced records" not in focused_home.content.decode()
+    assert "Open advanced records" in specialist_home.content.decode()
 
 
 def test_guided_setup_requires_platform_administration() -> None:

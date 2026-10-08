@@ -190,10 +190,8 @@ html[data-theme="dark"] {
 .maru-navigation-group h2 {
   margin: 0;
   color: var(--body-quiet-color);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 750;
 }
 
 details.maru-navigation-group--collapsible {
@@ -201,17 +199,38 @@ details.maru-navigation-group--collapsible {
 }
 
 .maru-navigation-group--collapsible > summary {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 0.75rem;
   align-items: center;
   padding: 0.75rem;
   color: var(--body-quiet-color);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: 0.82rem;
+  font-weight: 750;
   cursor: pointer;
-  text-transform: uppercase;
+  list-style: none;
+}
+
+.maru-navigation-group--collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.maru-navigation-group--collapsible > summary::after {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  content: "";
+  transform: rotate(-45deg);
+}
+
+.maru-navigation-group--collapsible[open] > summary::after {
+  transform: rotate(45deg);
+}
+
+.maru-navigation-group[data-navigation-current="true"] > summary {
+  color: var(--body-fg);
+  border-inline-start: 3px solid var(--link-fg);
 }
 
 .maru-navigation-group--collapsible > summary:hover,
@@ -284,11 +303,18 @@ details.maru-navigation-group--collapsible > ul {
   align-items: stretch;
 }
 
+.maru-navigation-group .maru-navigation-item {
+  list-style: none;
+}
+
 .maru-navigation-row > a {
   display: grid;
   gap: 0.1rem;
   min-width: 0;
   padding: 0.42rem 0.55rem;
+  min-height: 2.35rem;
+  align-content: center;
+  box-sizing: border-box;
   border-radius: 0.35rem;
   color: var(--body-fg);
   font-weight: 650;
@@ -303,16 +329,28 @@ details.maru-navigation-group--collapsible > ul {
 }
 
 .maru-navigation-row small {
-  overflow: hidden;
   color: var(--body-quiet-color);
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   font-weight: 500;
   line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+.maru-navigation-description {
+  display: none;
+}
+
+#nav-sidebar.maru-navigation-searching .maru-navigation-description,
+#nav-sidebar.maru-navigation-searching .maru-navigation-context,
+.maru-navigation-customize[open] + .maru-navigation-groups .maru-navigation-description,
+[data-navigation-group="settings"] .maru-navigation-context,
+[data-navigation-group="pinned"] .maru-navigation-context,
+[data-navigation-group-kind="advanced"] .maru-navigation-context {
+  display: block;
 }
 
 .maru-navigation-row .maru-navigation-context {
+  display: block;
   color: var(--link-fg);
 }
 

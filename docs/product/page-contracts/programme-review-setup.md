@@ -8,6 +8,14 @@ and the [review module](../../modules/programme-review.md).
 
 ## Purpose and independent scope
 
+The UX-031 entry is **Set up activity reviews**. The interface describes a policy
+as **review rules**, and a policy version as one fixed saved set of those rules.
+It explains that existing reviews keep the version with which they started and
+that scores never automatically rank, accept or reject an idea. A deliberate
+refresh after another save remains available under the recovery details; its
+original starting version, unchanged draft and new retry intent remain explicit.
+This is presentation only: no rule, threshold, reference or version is inferred.
+
 Delivery is incremental: policy configuration/history, the labelled exact-seal
 chooser and confirmed case opening are implemented. Named assignment and
 reviewer/moderator/decision/conversion remain the next #108 increments; no

@@ -63,39 +63,39 @@ _CATALOGS = {
     "contributor-field": "contributor_fields",
 }
 _LABELS = {
-    "overview": "Complete call configuration",
-    "details": "Call details and policy",
-    "window": "Replace deadlines",
-    "track": "Edit track",
-    "format": "Edit format",
-    "contributor-field": "Contributor collection policy",
-    "activate": "Activate domain call",
-    "retire": "Retire call",
-    "successor": "Create successor draft",
-    "remove-track": "Remove track",
-    "remove-format": "Remove format",
+    "overview": "Request settings",
+    "details": "Request details and rules",
+    "window": "Change deadlines",
+    "track": "Edit topic",
+    "format": "Edit activity type",
+    "contributor-field": "Profile information to ask for",
+    "activate": "Activate and lock this form",
+    "retire": "Retire this request",
+    "successor": "Copy into a new draft",
+    "remove-track": "Remove topic",
+    "remove-format": "Remove activity type",
     "remove-contributor-field": "Remove contributor field",
 }
 _BUTTONS = {
-    "details": "Save details and policy",
+    "details": "Save details and rules",
     "window": "Replace these deadlines",
-    "track": "Save track",
-    "format": "Save format",
-    "contributor-field": "Save collection policy",
+    "track": "Save topic",
+    "format": "Save activity type",
+    "contributor-field": "Save profile questions",
 }
 _CONSEQUENCES = {
     "activate": (
-        "Make this complete call configuration immutable. This does not publish "
-        "or discover the call, enable a profile, or mount a production route."
+        "Lock this form so its questions and rules can no longer be edited. "
+        "This does not publish or list the request, make the workflow available "
+        "to people, or enable it in production."
     ),
     "retire": (
-        "Retire this domain call. Retained proposals and historical evidence are "
-        "not erased. A new successor draft is a separate action."
+        "Stop using this request for new activity ideas. Existing ideas and their "
+        "history are kept. You can separately copy the form into a new draft."
     ),
     "successor": (
-        "Copy this retired call's complete configuration into an independent "
-        "successor draft. The original stays retired and historical proposals "
-        "stay with it."
+        "Copy this retired request's form and settings into a new draft. "
+        "The original stays retired, and its activity ideas stay with it."
     ),
     "window": (
         "Replace all three deadlines with the displayed whole-minute local "

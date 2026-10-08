@@ -1,5 +1,6 @@
 import pytest
 from django.test import Client
+from django.test.html import parse_html
 from django.urls import resolve, reverse
 
 from tests.factories import (
@@ -40,7 +41,7 @@ def test_platform_administrator_can_reach_the_step_by_step_workflow() -> None:
     assert 'data-page="platform-administration-home"' in content
     assert 'href="/admin/"' in content
     assert 'href="/admin/workspace/"' in content
-    assert "Convention work" in content
+    assert 'data-navigation-group="overview"' in content
 
 
 def test_admin_home_exposes_searchable_platform_navigation_destinations() -> None:
@@ -54,8 +55,8 @@ def test_admin_home_exposes_searchable_platform_navigation_destinations() -> Non
     content = response.content.decode()
     assert content.count('id="nav-sidebar"') == 1
     assert content.count('id="nav-filter"') == 1
-    assert 'data-navigation-group="platform"' in content
-    assert "<span>Platform</span>" in content
+    assert 'data-navigation-group="settings"' in content
+    assert "<span>Settings</span>" in content
     assert (
         'data-navigation-search="organizations find and continue setting up' in content
     )
@@ -128,7 +129,7 @@ def test_platform_navigation_flattens_the_exact_edition_context() -> None:
     assert "Synthetic Marucon 2031" in content
     assert "Organization record" in content
     assert "Series record" in content
-    assert "<span>Edition overview</span>" in content
+    assert "Event settings" in parse_html(content)
     assert f'value="organization.{organization.id}.record"' in content
     assert f'value="series.{series.id}.record"' in content
     assert f'value="edition.{edition.id}.overview"' in content
@@ -169,7 +170,7 @@ def test_platform_navigation_is_hidden_from_ordinary_accounts() -> None:
     assert "Platform administration" not in admin_content
     assert admin_content.count('id="nav-filter"') == 1
     assert 'type="search"' in admin_content
-    assert "Find a task or record" in admin_content
+    assert "Find a page" in admin_content
     assert platform_response.status_code == 403
 
 

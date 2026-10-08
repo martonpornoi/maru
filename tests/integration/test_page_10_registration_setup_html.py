@@ -253,8 +253,8 @@ def test_registration_workspace_is_canonical_private_same_shell_navigation() -> 
     _assert_private_no_store(response)
     assert 'data-page="registration-setup"' in content
     assert content.count('aria-current="page"') == 1
-    assert "Convention work" in content
-    assert "Specialist records" in content
+    assert 'data-navigation-group="overview"' in content
+    assert "Advanced records" in content
     assert "Quick start" not in content
     assert "Not configured" in content
     assert "Choose a starting point" in content

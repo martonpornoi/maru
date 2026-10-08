@@ -41,7 +41,7 @@ def test_baseline_sign_in_is_plain_and_focused() -> None:
     assert "Email or username" in content
     assert "Use your Maru account to continue." in content
     assert "Convention work" not in content
-    assert "Specialist records" not in content
+    assert 'data-navigation-group="advanced-records"' not in content
     assert "Quick Start" not in content
 
 
@@ -83,7 +83,7 @@ def test_platform_administrator_reaches_the_platform_home() -> None:
     assert "Platform access, not participation" in content
     assert "Maru Administrator" in content
     assert "Convention work" not in content
-    assert "Specialist records" not in content
+    assert 'data-navigation-group="advanced-records"' not in content
     assert "Recent actions" not in content
     assert "Convention workspace" not in content
 

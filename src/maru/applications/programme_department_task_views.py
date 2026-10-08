@@ -45,7 +45,7 @@ def _render(
     context.update(
         has_permission=True,
         maru_csp_nonce=nonce,
-        title="Programme calls, review and conversion",
+        title="Activity ideas and review",
         organization_id=organization_id,
         edition_id=edition_id,
         department_tasks=initial.tasks,

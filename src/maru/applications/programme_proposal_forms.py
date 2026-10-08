@@ -39,13 +39,15 @@ class ProgrammeProposalStartForm(ProgrammeCallTaskForm):
     expected_definition_version = StrictBase10IntegerField(
         min_value=1, widget=forms.HiddenInput
     )
-    track = forms.ChoiceField(label="Track")
-    format = forms.ChoiceField(label="Format")
+    track = forms.ChoiceField(label="Topic")
+    format = forms.ChoiceField(label="Activity type")
     duration = StrictBase10IntegerField(
-        label="Requested duration in whole minutes", min_value=1, max_value=1440
+        label="How long would the activity take? (whole minutes)",
+        min_value=1,
+        max_value=1440,
     )
     publication_choice = forms.ChoiceField(
-        label="Do I propose my populated profile values for later publication?",
+        label="May organizers review these profile details for later publication?",
         choices=(
             ("", "Choose explicitly"),
             ("no", "No — save a blank, non-public profile for now"),
@@ -79,22 +81,22 @@ class ProgrammeProposalStartForm(ProgrammeCallTaskForm):
         self.selection: ProgrammeProposalSelectionInput | None = None
         self.profile: ProgrammeProposalContributorProfileInput | None = None
         cast("forms.ChoiceField", self.fields["track"]).choices = (
-            ("", "Choose the track"),
+            ("", "Choose a topic"),
             *(
                 (str(row.track_id), f"{row.label} ({row.code})")
                 for row in source.tracks
             ),
         )
         cast("forms.ChoiceField", self.fields["format"]).choices = (
-            ("", "Choose the format"),
+            ("", "Choose an activity type"),
             *(
                 (str(row.format_id), f"{row.label} ({row.code})")
                 for row in source.formats
             ),
         )
         self.fields["consent_acknowledged"].label = (
-            "I have reviewed and acknowledge the organizer-supplied contributor "
-            f"policy {source.contributor_consent_policy_code}"
+            "I have read and acknowledge the organizer's consent rules: "
+            f"{source.contributor_consent_policy_code}"
         )
         visible = []
         for row in source.contributor_fields:
