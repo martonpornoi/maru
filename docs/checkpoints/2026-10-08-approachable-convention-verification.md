@@ -34,3 +34,29 @@ The unpublished candidate is amended as one coherent usability batch; its prior
 source remains recoverable from the verified bundle. The new head requires a
 complete clean-commit run and independent hosted acceptance. Earlier passing
 shards cannot certify its new head.
+
+## Second candidate: transient Windows connection failure
+
+Candidate `b85db332388ed9412be72fc3663193db3f271ba5` passed every non-database
+gate and 23 PostgreSQL shards, including the repaired Applications shard. After
+48m18s, shard 24 stopped on one Windows `WSAENOBUFS/10055` socket-allocation
+error while opening a connection for a Registration test fixture. The tested
+activation command and injected receipt-write failure had not started. All 27
+later cases in that shard passed; its complete result was 174 passed and one
+failed. Six other shards were interrupted. No combined coverage is accepted.
+
+All 30 recorded containers were independently verified absent. Complete evidence
+(4,306 files), five wrapper files and the source bundle were copied and SHA-256
+verified under `.tools/certification-evidence/approachable-local-b85db33-host-failed`
+in the primary repository. Post-run memory and socket observations were healthy
+but cannot establish the precise failure-time resource condition. A prior Windows
+port-exhaustion event does not prove this incident had the same cause.
+
+All four parameters of the affected rollback test passed once against a fresh
+disposable PostgreSQL database in 171.04 seconds. The owned diagnostic container,
+network and volume were removed; container and volume absence was verified. No
+application code, test expectation, connection retry, Windows setting, worker
+limit, timeout or coverage rule changes. The next clean candidate records this
+follow-up and must repeat complete certification with the required eight workers.
+Final source, delivery state and local/hosted results belong to
+[PR #209](https://github.com/martonpornoi/maru/pull/209).

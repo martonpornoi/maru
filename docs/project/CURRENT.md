@@ -31,10 +31,11 @@ activation, API identifier, or cross-module side effect is introduced. Policy
 reference codes with no approved choice catalog still require explicit input;
 this change explains them rather than inventing a default. The
 [batch checkpoint](../checkpoints/2026-10-08-approachable-convention-work.md)
-records evidence and remaining limits. Exact-commit certification and independent
-protected checks must pass before this batch is delivered.
+records implementation evidence and remaining limits. [PR #209](https://github.com/martonpornoi/maru/pull/209)
+owns the final source, delivery status, exact-commit certification and independent
+protected-check evidence. Both local and hosted acceptance are required for delivery.
 
-## Verified baseline and current feedback
+## Starting baseline and verification
 
 [PR #208](https://github.com/martonpornoi/maru/pull/208) merged on October 6 at
 `1fc8a216c96a7a42e7ab1f3bcec206eae50a1426`. It delivered 24-hour deadline entry
@@ -53,8 +54,13 @@ active shards were interrupted, not accepted. All 29 started databases were remo
 and complete failed evidence plus source were preserved. The
 [verification follow-up](../checkpoints/2026-10-08-approachable-convention-verification.md)
 records the bounded expectation repair: all 14 affected Applications integration
-cases pass, and their owned database and volume are removed. A fresh complete
-certification remains required. No production behavior, timeout, coverage threshold
+cases pass, and their owned database and volume are removed. The second candidate
+`b85db33` passed 23 database shards, including the repaired Applications shard,
+before one Windows socket-allocation error interrupted acceptance. The other six
+shards were cancelled; all 30 containers were removed and complete failed evidence
+was preserved. All four affected rollback variants then passed on a fresh database.
+The socket condition was transient; its precise host cause remains unproven.
+A fresh complete certification remains required. No production behavior, timeout, coverage threshold
 or authorization test is relaxed. A fresh disposable database applied migrations;
 ordinary sign-in, event selection, Team workspace, and technical setup disclosure
 were checked in a real local browser. Synthetic template checks cover seven widths
@@ -92,8 +98,9 @@ Purpose-specific authority, owning commands and independent approval still apply
 
 ## Smallest next actions
 
-1. Finish exact-commit local certification and protected review for the coherent
-   usability/contributor batch; record the final head and delivery evidence.
+1. Check [PR #209](https://github.com/martonpornoi/maru/pull/209) for the final
+   exact-commit local and protected hosted evidence for this usability batch.
+   Its implementation checkpoint does not substitute for those delivery gates.
 2. Define and deliver a bounded announcements workflow, followed by convention
    knowledge/helpdesk and volunteer, fursuit and accessibility services. Each needs
    its own complete journey and modular-adoption contract before implementation.
