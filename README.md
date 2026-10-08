@@ -2,219 +2,91 @@
 
 # Maru
 
-**The calm operating system for recurring community conventions.**
+**Open-source operations software for furry conventions.**
+
+Maru is being built for the people who organize recurring furry conventions:
+volunteer coordinators, programme teams, department leads, and the people
+keeping an event running. The aim is to connect work that otherwise lives in
+spreadsheets, forms, inboxes, and separate tools, while keeping each organizer's
+data and authority clearly scoped. Other community conventions can use the
+same foundations.
 
 [Documentation](https://martonpornoi.github.io/maru/) ·
-[Product tour](https://martonpornoi.github.io/maru/start-here/product-tour.html) ·
+[Run locally](docs/start-here/run-locally.md) ·
+[Contribute](CONTRIBUTING.md) ·
 [Roadmap](docs/project/ROADMAP.md) ·
-[Releases](https://github.com/martonpornoi/maru/releases) ·
-[Issues](https://github.com/martonpornoi/maru/issues) ·
-[Discussions](https://github.com/martonpornoi/maru/discussions) ·
-[Contributing](CONTRIBUTING.md) ·
-[Support](SUPPORT.md) ·
-[Security](SECURITY.md)
+[Discussions](https://github.com/martonpornoi/maru/discussions)
 
 [![PR gate](https://github.com/martonpornoi/maru/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/martonpornoi/maru/actions/workflows/ci.yml)
 [![Contributor documentation](https://github.com/martonpornoi/maru/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/martonpornoi/maru/actions/workflows/pages.yml)
 
 > [!IMPORTANT]
-> Maru is public, actively developed, pre-production software. It is not yet a
-> supported hosted service or PyPI package and must not receive production
-> personal data. Use synthetic data while evaluating or contributing.
+> Maru is under active development. It is not a production-ready release or a
+> supported hosted service. Use synthetic data for local exploration and
+> contributions; do not use real convention or personal records.
 
-Maru gives attendees, volunteers, hosts, dealers, staff, and organizers one
-account and one coherent, permission-controlled experience across independently
-operated conventions. It connects operational work that otherwise lives in
-forms, spreadsheets, inboxes, schedules, and disconnected specialist tools.
+## Start with one useful workflow
 
-Implemented, tested slices include a unified management shell, convention and
-edition administration, bounded Registration and onsite operations, and the
-complete first Workforce journey from organization structure through governed
-Shift commitments. A convention can also evaluate Workforce as its only
-adopted Maru capability without silently creating Registration, payment,
-attendance, or unrelated participation records.
+A convention should be able to adopt one complete workflow, keep its existing
+systems, and expand only when it chooses. A volunteer account must not silently
+create an attendee registration or a payment obligation. Imports, exports,
+printable fallbacks, and clear exit paths are part of that design.
 
-Browse the [public contributor documentation](https://martonpornoi.github.io/maru/)
-for the maintained product, architecture, development, operations, and security
-guides plus the statically analysed Python API reference. Read
-[the current project state](docs/project/CURRENT.md) for exact implemented
-behavior, verification, limitations, and next actions.
+The repository contains these concrete starting points:
 
-The primary release artifact is an immutable Django application image in
-GitHub Container Registry with source provenance, SBOM, documentation,
-OpenAPI, dependency locks, and checksums. Evaluate the published candidate's
-database/runtime boundary through the isolated
+| Area | What is available to explore |
+| --- | --- |
+| Organizer setup | A shared management shell, fictional organizations, recurring convention series, and dated editions with explicit authority. |
+| Volunteer coordination | Tested Workforce workflows for structure, positions, assignments, availability, and shifts, including a Workforce-only adoption path. |
+| Programme Operations | Implemented planning, publication, continuity, and recovery work under isolated synthetic evaluation; activation and human acceptance remain separate gates. |
+| Other modules | Bounded Registration, Venue, Logistics, and other slices; consult the module contracts before treating one as a complete workflow. |
+
+These are development and evaluation surfaces. The
+[current state](docs/project/CURRENT.md) owns active priorities and verification;
+the [maturity guide](docs/start-here/current-maturity.md) explains their limits.
+Fictional **MaruCon** and **MaruDance** examples are not customers or endorsements.
+
+## Explore or contribute
+
+| I want to… | Start here |
+| --- | --- |
+| Understand the idea | [What is Maru?](docs/start-here/what-is-maru.md) — five minutes. |
+| Run the application | [Local setup](docs/start-here/run-locally.md) — Python, uv, Docker Compose, and a disposable database. |
+| Try a coherent journey | [Product tour](docs/start-here/product-tour.md) — synthetic organizer setup through an event edition. |
+| Make a small improvement | [First contribution](docs/start-here/first-contribution.md) — documentation, reproduction, tests, or a scoped fix. |
+| Understand the code | [Architecture](docs/architecture/overview.md), [module ownership](docs/modules/index.md), and [generated Python reference](https://martonpornoi.github.io/maru/autoapi/index.html). |
+
+You do not need to understand the entire platform to contribute. Clear bug
+reproductions, corrections to setup instructions, accessibility observations,
+and focused tests are useful. [Contributing](CONTRIBUTING.md) explains how to
+choose work and prepare it for review. Use
+[Discussions](https://github.com/martonpornoi/maru/discussions) for setup help and
+early ideas, and [Issues](https://github.com/martonpornoi/maru/issues) for bugs
+and bounded proposals. Support is best effort.
+
+## Technical foundations
+
+- Python 3.12–3.14, Django 5.2 LTS, and PostgreSQL.
+- A modular monolith: modules own their data and expose documented services.
+- Django REST Framework, versioned OpenAPI, and embedded React/TypeScript.
+- Deny-by-default organization and edition boundaries, audit trails, and
+  explicit approval for privileged work.
+- Tested migration, recovery, and degraded-operation contracts.
+
+The primary release artifact is an immutable application image in GitHub
+Container Registry. [Releases](https://github.com/martonpornoi/maru/releases)
+and the [changelog](CHANGELOG.md) describe published candidates; they do not
+replace deployment or production acceptance. The
+[operations catalog](docs/operations/index.md) contains the evaluator runbooks.
+Evaluate candidate images with the
 [synthetic OCI runtime rehearsal](docs/operations/synthetic-oci-runtime-rehearsal.md)
-and its already-collected assets and dynamic proxy boundary through the
-[synthetic OCI static delivery rehearsal](docs/operations/synthetic-oci-static-delivery-rehearsal.md).
-Both are synthetic evaluator evidence, not deployment approval.
-Curated changes live in the
-[changelog](CHANGELOG.md) and become the human-facing notes on the
-[GitHub Releases tab](https://github.com/martonpornoi/maru/releases).
+and [synthetic OCI static delivery rehearsal](docs/operations/synthetic-oci-static-delivery-rehearsal.md).
+Both use synthetic data and provide evaluator evidence, not deployment approval.
 
-Contributions are licensed under [Apache-2.0](LICENSE), follow the
-[Code of Conduct](CODE_OF_CONDUCT.md), and use the authority and continuity
-model in [GOVERNANCE.md](GOVERNANCE.md). Bundled third-party components retain
-the licenses recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+## Project policies
 
-Each occurrence of a convention is a first-class event edition, for example
-the fictional `MaruCon 2026` or `MaruDance 2026`. Historical editions remain available so
-people can see their past participation and organizers can retain an accurate,
-permission-controlled operational record.
-
-## Technical direction
-
-- Python and Django 5.2 LTS
-- Django REST Framework
-- PostgreSQL as the system of record
-- A modular monolith with strongly enforced module boundaries
-- Versioned REST APIs and generated OpenAPI clients
-- Embedded React/TypeScript Convention work and separately deployable future
-  clients; ADR 0039 integrates the preserved workflow into one coherent
-  `/admin/` shell while current services and APIs remain authoritative
-- Background workers for delivery, exports, imports, and other slow operations
-
-Reflex is not part of the platform core. The active browser milestone is one
-task-oriented `/admin/` shell with Administration home, embedded Convention
-work, permission-filtered specialist records, and collision-safe platform
-routes. Platform administration remains separate from convention
-participation. Exact implemented behavior, current repository evidence, and
-remaining accessibility, recovery, deployment, and owner gates are maintained
-in [CURRENT.md](docs/project/CURRENT.md) and the
-[production-consolidation ledger](docs/project/PRODUCTION_CONSOLIDATION.md).
-Dated test, coverage, migration, and vulnerability evidence stays in those
-maintained handoff documents instead of being duplicated here.
-
-Maru establishes convention authority through verified recipient-owned
-accounts, explicit multi-person accountability, exact scoped assignments, and
-audited containment. Full-convention organizations use the Executive Board
-ceremony; Workforce-only organizations may instead use two independently
-activated Maru operators without inventing a broader governance structure.
-Organization, edition, Department, and typed-resource authorization remain
-deny-by-default without implicit hierarchy inheritance. Repository fixtures
-and tutorials are synthetic-only. See the
-[authorization model](docs/security/authorization-model.md),
-[management shell contract](docs/product/page-contracts/00-management-experience-shell.md),
-and maintained ledgers for the exact mounted behavior and residual production
-gates.
-
-## Local quick start
-
-Install Python 3.12 through 3.14, `uv`, Docker with Compose, and Git. From the
-repository root:
-
-```powershell
-uv sync --all-groups
-docker compose up -d postgres
-$env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/maru_rebuild_empty"
-uv run python src/manage.py migrate
-uv run python src/manage.py runserver
-```
-
-Open <http://127.0.0.1:8000/>. ADR 0039 places platform setup and the
-organization-scoped management spine under `/admin/platform/` inside the
-shared `/admin/` shell. Each route rechecks its own platform, organization,
-edition, Department, or typed-resource policy; a selected context or nearby
-navigation entry never grants access. Specialist records also retain their
-independent Django staff/model permissions.
-After signing in as the platform administrator, browse the searchable API
-reference at <http://127.0.0.1:8000/api/v1/docs/> or the reading-focused ReDoc
-view at <http://127.0.0.1:8000/api/v1/redoc/>. Tooling uses the canonical
-machine-readable schema at <http://127.0.0.1:8000/api/v1/schema>. All three
-render the same contract; see [development setup](docs/development/setup.md)
-for the generation and security boundary.
-For a new empty database, create one
-bootstrap administrator with:
-
-```powershell
-uv run python src/manage.py createsuperuser
-```
-
-This management command is the only generic bootstrap path for the first
-platform administrator. The Django **User accounts** specialist record is
-inspection-only: it cannot create people, set or reset passwords, change
-platform privileges or lifecycle, or attach convention relationships. After
-bootstrap, invite ordinary person accounts from **Platform administration >
-User accounts > Invite** so each recipient chooses their own password.
-
-The local baseline prepared during ADR 0030 uses:
-
-```text
-Username: admin
-Email: admin@maru.local
-Password: M4rucon-Rehearsal-2031!
-```
-
-These are local-only credentials. The preserved demo and Marucon fixtures may
-still populate backend reference data. Do not treat a reachable preserved
-screen as production-ready before the remaining browser and deployment gates.
-The synthetic fixture command remains:
-
-```powershell
-uv run python src/manage.py seed_demo_data
-```
-
-The demo administrator is `demo.admin@maru.invalid`. Every synthetic account
-uses the documented local-only password `Z7!maru-demo-fixture-2026`. The
-fixture is local-only, idempotent, uses reserved `.invalid` addresses, and
-establishes each synthetic organization's two-controller Executive Board by
-calling the real Page 8 services. It must never be used as production data or
-credentials.
-See [development setup](docs/development/setup.md) for configuration, checks,
-troubleshooting, fixture details, the empty-experience runbook, and preserved
-rehearsals.
-Follow the [hands-on tutorial](docs/operations/maru-hands-on-tutorial.md) for the
-synthetic organization → representation → series → edition journey. Local
-migration, restore, and responsive smoke evidence pass; the owner-led tutorial
-rehearsal remains a release gate.
-
-## Product principles
-
-- One account does not imply that every organizer can see all account data.
-- Every operational record has a clear organization and event-edition scope.
-- Archived history is immutable by default and understandable years later.
-- Authorization is explicit, scoped, deny-by-default, and tested.
-- Modules communicate through documented contracts rather than shared internals.
-- Communication, announcements, reporting, and exports are platform features.
-- Common staff tasks must be fast, searchable, accessible, and bulk-friendly.
-- Privacy-aware auditability is required; indiscriminate surveillance is not.
-- Important workflows must continue safely during degraded venue connectivity.
-
-## Documentation map
-
-- **Start here:** [product tour](https://martonpornoi.github.io/maru/start-here/product-tour.html),
-  [run locally](https://martonpornoi.github.io/maru/start-here/run-locally.html),
-  [current project state](docs/project/CURRENT.md), and
-  [complete generated documentation](https://martonpornoi.github.io/maru/).
-- **Understand the product:** [vision](docs/product/vision.md),
-  [requirements](docs/product/requirements.md),
-  [capability map](docs/product/capability-map.md),
-  [domain model](docs/domain/domain-model.md), and
-  [implemented modules](docs/modules/README.md).
-- **Understand the design:** [architecture overview](docs/architecture/overview.md),
-  [accepted decisions](docs/architecture/decisions/README.md),
-  [authorization](docs/security/authorization-model.md),
-  [data classification and retention](docs/security/data-classification-and-retention.md),
-  and [threat model](docs/security/threat-model.md).
-- **Build and contribute:** [contribution guide](CONTRIBUTING.md),
-  [development setup](docs/development/setup.md),
-  [testing strategy](docs/quality/testing-strategy.md),
-  [documentation standards](docs/quality/documentation-standards.md), and
-  [protected repository workflow](docs/development/repository-governance.md).
-- **Operate and release:** [operations catalog](docs/operations/index.md),
-  [deployment and service objectives](docs/operations/deployment-and-service-objectives.md),
-  [observability and readiness](docs/operations/observability-and-readiness.md),
-  [release process](docs/operations/release-process.md),
-  [changelog](CHANGELOG.md), and
-  [GitHub Releases](https://github.com/martonpornoi/maru/releases).
-- **Plan and reconstruct:** [roadmap](docs/project/ROADMAP.md),
-  [delivery plan](docs/project/DELIVERY_PLAN.md),
-  [production-consolidation ledger](docs/project/PRODUCTION_CONSOLIDATION.md),
-  and [checkpoint archive](docs/checkpoints/README.md).
-
-The product and architecture baseline plus substantial bounded Registration,
-Workforce, Venue, and Logistics slices are implemented. Provider certification,
-target infrastructure, representative load and recovery evidence, partner
-policy review, accessibility acceptance, and edition go/no-go are still
-required before production personal data. The current-state handoff owns the
-exact tested and residual boundaries.
+Maru-owned code is licensed under [Apache-2.0](LICENSE). Bundled components keep
+their [third-party licenses](THIRD_PARTY_NOTICES.md). Contributions follow the
+[Code of Conduct](CODE_OF_CONDUCT.md) and [governance](GOVERNANCE.md).
+Report vulnerabilities through [Security](SECURITY.md), not public issues;
+[Support](SUPPORT.md) explains the available help channels.

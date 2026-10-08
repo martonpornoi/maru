@@ -20,6 +20,7 @@
 {% block responsive %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'core/admin-responsive.css' %}">
+  <noscript><link rel="stylesheet" href="{% static 'core/navigation-no-script.css' %}"></noscript>
 {% endblock %}
 
 {% block branding %}
@@ -68,18 +69,18 @@
             <span aria-hidden="true">/</span>
             <strong>{{ maru_edition_context.selected.name }}</strong>
           {% else %}
-            <strong>All foundation data</strong>
+            <strong>No event selected</strong>
           {% endif %}
         </p>
         <details class="maru-edition-context-switcher">
-          <summary>Change</summary>
+          <summary>Change event</summary>
           <form method="post" action="{% url 'admin-edition-context' %}">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
             <label class="maru-edition-context-picker" for="maru-edition-context">
-              <span>Choose a workspace</span>
+              <span>Choose an event</span>
               <select id="maru-edition-context" name="edition_id">
-                <option value=""{% if not edition and not maru_edition_context.selected %} selected{% endif %}>All foundation data</option>
+                <option value=""{% if not edition and not maru_edition_context.selected %} selected{% endif %}>No event selected</option>
                 {% for available_edition in maru_edition_context.editions %}
                   <option
                     value="{{ available_edition.id }}"
@@ -279,6 +280,12 @@
       });
       closeButton.addEventListener("click", () => closeDrawer());
       backdrop.addEventListener("click", () => closeDrawer());
+      document.querySelectorAll("[data-navigation-specialist-gateway]").forEach((gateway) => {
+        gateway.addEventListener("click", () => {
+          returnFocus = gateway;
+          setExpanded(true, { persist: false });
+        });
+      });
       sidebar.addEventListener("click", (event) => {
         if (
           drawerWidth.matches &&
@@ -296,6 +303,10 @@
             return;
           }
           if (event.key === "Escape") {
+            const search = document.getElementById("nav-filter");
+            if (event.target === search && search.value) {
+              return;
+            }
             event.preventDefault();
             event.stopPropagation();
             closeDrawer();

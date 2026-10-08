@@ -22,7 +22,7 @@ def test_navigation_filter_covers_every_projected_menu_item() -> None:
     assert "[data-navigation-item]" in script
     assert "dataset.navigationSearch" in script
     assert "event.key !== 'Escape'" in script
-    assert "technical record" in script
+    assert "Advanced records" in script
     assert "sessionStorage.removeItem" in script
     assert "sessionStorage.setItem" not in script
     assert "sessionStorage.getItem" not in script
@@ -52,9 +52,9 @@ def test_navigation_template_has_stable_accessible_text_and_glyphs() -> None:
 
     assert chr(0xC2) not in base_site
 
-    assert 'placeholder="Search tasks and records..."' in sidebar
-    assert "Find a task or record" in sidebar
-    assert "Customize navigation" in sidebar
+    assert 'placeholder="Search this menu..."' in sidebar
+    assert "Find a page" in sidebar
+    assert "Choose pinned pages" in sidebar
     assert 'class="maru-navigation-pin"' in sidebar
     assert "available pages" not in sidebar
     assert "&#9733;" in sidebar
@@ -64,3 +64,27 @@ def test_navigation_template_has_stable_accessible_text_and_glyphs() -> None:
     assert (
         "{{ available_edition.name }} · {{ available_edition.organization.name }}"
     ) in base_site
+
+
+def test_navigation_remains_available_without_javascript() -> None:
+    sidebar = _template_text("admin/nav_sidebar.html")
+    base_site = _template_text("admin/base_site.html")
+    fallback = _static_text("core/navigation-no-script.css")
+
+    assert "<noscript>" in base_site
+    assert "core/navigation-no-script.css" in base_site
+    assert "{% if group.current %}open{% endif %}" in sidebar
+    assert 'href="{{ item.url }}"' in sidebar
+    assert "position: static;" in fallback
+    assert "visibility: visible;" in fallback
+    assert "transform: none;" in fallback
+
+
+def test_compact_navigation_keeps_scoped_context_visible() -> None:
+    source = _static_text("core/admin-help.css")
+    context_rule = source.split(
+        ".maru-navigation-row .maru-navigation-context {", maxsplit=1
+    )[1].split("}", maxsplit=1)[0]
+
+    assert "display: block;" in context_rule
+    assert "display: none;" not in context_rule

@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
 {% load static %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'applications/programme_calls.css' %}">{% endblock %}
-{% block content_title %}<h1>Programme calls, review and conversion</h1>{% endblock %}
+{% block content_title %}<h1>Activity ideas and review</h1>{% endblock %}
 {% block maru_page_access %}{% endblock %}
 {% block content %}
 <div class="programme-calls">
@@ -18,7 +18,7 @@
     <li><h2>{{ department.list.0.department_label }} ({{ department.list.0.department_code }})</h2>
       <ul>{% for task in department.list %}<li><a href="{{ task.url }}">{{ task.task_label }}</a> <span>· {{ task.policy_label }}</span></li>{% endfor %}</ul>
     </li>
-    {% empty %}<li>No Programme call, review or conversion tasks are currently available to you in this edition. Accountable setup manages access separately; this is not a count of Departments or proposals.</li>{% endfor %}
+    {% empty %}<li>No activity idea or review tasks are currently available to you in this edition. Access is managed separately; this does not tell you whether other Departments or ideas exist.</li>{% endfor %}
   </ul>
 </div>
 {% endblock %}

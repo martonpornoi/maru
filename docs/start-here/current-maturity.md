@@ -1,48 +1,58 @@
 # What works today?
 
 **Audience:** Evaluators, contributors, and operators\
-**Outcome:** Distinguish current behavior from partial, proposed, and historical
-material\
-**Reading time:** 7 minutes
+**Outcome:** Choose an appropriate local exploration path and distinguish it
+from production readiness\
+**Reading time:** 5 minutes
 
-Maru is under active development. It is not yet a supported hosted service, a
-PyPI package, or approved for production personal data. A green repository gate
-proves the checked behavior described by that gate; it does not by itself prove
-deployment readiness, accessibility, recovery, or operational ownership.
+Maru is under active development. You can explore it locally with synthetic
+data and contribute to the repository. It is not a supported hosted service,
+a PyPI package, or a production-ready release.
 
-## How to read status claims
+## What you can explore
+
+| Area | Current boundary |
+| --- | --- |
+| Organizer setup | The shared management shell and synthetic organization → authority → convention series → edition journey provide the introductory route. |
+| Workforce | Tested structure, positions, assignments, availability, and shift workflows include a bounded Workforce-only adoption path. |
+| Programme Operations | Planning, publication, on-site continuity, archive, and recovery work is implemented under isolated synthetic evaluation. The ordinary local setup does not activate this dormant profile. |
+| Registration, Venue, Logistics, and other modules | Substantial bounded slices exist. A module or endpoint alone does not establish a complete operational journey. |
+
+Start with [local setup](run-locally.md) and the [product tour](product-tour.md).
+For deeper work, the [module catalog](../modules/index.md) identifies owning
+contracts. Programme's specialist protocols live in the
+[operations catalog](../operations/index.md); follow the current handoff before
+choosing one as an active task.
+
+## What the evidence means
+
+Automated tests establish the specific behavior they exercise. They do not
+replace people completing a journey, accessibility acceptance, representative
+deployment/recovery evidence, or an accountable operational owner. Production
+use requires those separate decisions and checks.
 
 | Term | Meaning |
 | --- | --- |
-| **Implemented or mounted** | Executable behavior exists in the current application and has the stated repository evidence. |
-| **API-only** | A supported service or endpoint exists, but a complete current browser journey may not. |
-| **Partial** | A useful slice exists, while named workflows or acceptance evidence remain open. |
-| **Preserved or historical** | Material remains as design or behavior evidence but is not the supported current route. |
-| **Proposed or planned** | Direction or acceptance intent, not implemented behavior. |
-| **Deployment-gated** | Repository behavior exists, but production-shaped operational evidence remains incomplete. |
+| **Implemented or mounted** | Executable behavior exists with the stated evidence; “mounted” means its route is available in the named configuration. |
+| **API-only** | A service or endpoint exists, but a complete browser journey may not. |
+| **Partial** | A bounded slice exists; named behavior or acceptance remains incomplete. |
+| **Dormant** | Implementation is retained for controlled evaluation and is not active in the ordinary product profile. |
+| **Historical** | A record explains earlier decisions or verification, rather than current instructions. |
+| **Planned** | Intended behavior or acceptance, not an implementation claim. |
+| **Deployment-gated** | Repository behavior exists, but operational acceptance remains incomplete. |
 
-## Current shape
+## Find the current answer
 
-The current application has a tested Django/PostgreSQL foundation, scoped
-authorization, audit and outbox boundaries, one management shell, generated
-OpenAPI and Python references, and several implemented product slices. Important
-production gates remain open, including broader authenticated accessibility and
-visual evidence, representative recovery and point-in-time recovery, deployment
-rehearsal, and accountable production ownership.
+1. [Current state](../project/CURRENT.md) names active priorities, the last
+   completed outcome, remaining gates, and next actions.
+2. [Roadmap](../project/ROADMAP.md) owns sequencing and explicit deferrals.
+3. [Production-consolidation ledger](../project/PRODUCTION_CONSOLIDATION.md)
+   retains the detailed implementation and production baseline.
+4. [Requirements](../product/requirements.md) define intended behavior and
+   stable acceptance identifiers.
 
-Use these maintained sources instead of inferring status from an old tutorial or
-checkpoint:
-
-1. [Current project state](../project/CURRENT.md) — the maintained handoff and
-   most recent verification.
-2. [Production-consolidation ledger](../project/PRODUCTION_CONSOLIDATION.md) —
-   the detailed implemented/API-only/partial/absent/deployment-gated inventory.
-3. [Roadmap](../project/ROADMAP.md) — outcome sequence and remaining work.
-4. [Requirements](../product/requirements.md) — stable behavior and acceptance
-   intent.
-
-Decision records and checkpoints explain *why* the project reached a state;
-they do not override these current sources. Find them in
-[reference and history](../reference/index.md).
+ADRs and checkpoints preserve reasons and evidence. Read them when a change
+needs that history; they do not override the current handoff. They remain
+reachable through [reference and history](../reference/index.md).
 
 **Next:** [Run Maru locally](run-locally.md).

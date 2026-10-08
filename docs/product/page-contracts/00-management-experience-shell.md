@@ -6,8 +6,8 @@
   state-matrix, width/zoom, and release accessibility evidence remains pending
 - Canonical authenticated route: `/admin/`
 - Requirements: UX-001 through UX-013, UX-019, UX-020, UX-024, UX-026, UX-027,
-  UX-029, and NFR-001 through NFR-004
-- Decisions: ADRs 0026, 0027, 0039, 0040, 0049, and 0055
+  UX-029, UX-031, and NFR-001 through NFR-004
+- Decisions: ADRs 0026, 0027, 0039, 0040, 0049, 0055, and 0116
 
 ## Purpose and boundaries
 
@@ -15,7 +15,7 @@ The management shell gives each authenticated operator a small, teachable set
 of authorized tasks without creating a second administration product. It
 retains the canonical `/admin/` route family, server-owned authorization,
 selected organization and edition context, purpose-built workflows, and
-authorized Django specialist records.
+authorized Django advanced records.
 
 Presentation never grants authority. Every link is resolved and authorized on
 the server before disclosure, every destination authorizes again, and selected
@@ -38,7 +38,7 @@ and one of these presentation kinds:
   resource, remain discoverable in the **Actions** search group, and are not
   pinnable; and
 - authorized technical destinations remain searchable and appear behind one
-  collapsed **Specialist records** disclosure and one home-page gateway.
+  collapsed **Advanced records** disclosure and one home-page gateway.
 
 Search matches tokens across labels, descriptions, and generic task keywords.
 Ordinary vocabulary such as `users`, `accounts`, `staff`, `volunteers`, and
@@ -46,7 +46,7 @@ Ordinary vocabulary such as `users`, `accounts`, `staff`, `volunteers`, and
 tenant, person, or record values. Search and pins never expose a destination
 that the current request is not authorized to load. Search leads with matched
 tasks and reports authorized technical-record matches separately; the
-**Specialist records** results stay collapsed until the operator asks for
+**Advanced records** results stay collapsed until the operator asks for
 them. Escape clears the current query. Pin and unpin controls are hidden behind
 **Customize navigation** until requested, and search state is not persisted as
 an accidental future filter.
@@ -60,7 +60,7 @@ leads with registration, applications, schedule, and **My Workforce**, then
 presents lower-frequency personal destinations under **More from Maru**. My
 Workforce remains one searchable and pinnable **Work** destination throughout
 its Positions, Availability, and Shifts continuations. It does not show
-Platform, Specialist records, or administrative context as personal menu
+Platform, Advanced records, or administrative context as personal menu
 groups.
 
 Every converted page has one `main` landmark, one H1, purpose guidance where
@@ -70,6 +70,34 @@ content explains the current principal's permitted actions and source without
 turning the page into a manually maintained ACL. The embedded React workspace
 owns this disclosure inside each active view so the Django host does not render
 a duplicate before the application root.
+
+## Plain language and purpose groups
+
+ADR 0116 groups the existing authorized registry into Overview, People & teams,
+Registration & shop, Applications, Places & equipment, and Settings. Account
+controls and Advanced records are secondary. Empty groups are omitted; the current
+group opens automatically. Native disclosure headings remain operable without
+JavaScript. Search reveals matching ordinary tasks and preserves its separate
+advanced-record disclosure. Clearing search restores the normal menu state.
+Pins remain independently reauthorized shortcuts, never a second scope selector.
+
+Use Team workspace for the Workforce overview and Application forms for generic
+form setup. Activity intake uses Collect activity ideas, Ask for activity ideas,
+Suggest an activity, and Activity idea. Old domain words remain search synonyms.
+A new organizer must be able to understand the next action from the label and a
+short concrete explanation. Domain identifiers and API names are unchanged.
+
+Optional technical identifiers, versions, and policy evidence belong in labelled
+advanced details. Required inputs, errors, consequential choices, and approval
+responsibilities remain visible. A failed form must expose its invalid section;
+progressive disclosure never hides required unresolved work. Links may use button
+styling for primary navigation while retaining anchor semantics. Buttons perform
+commands or change interface state. Do not add tab semantics to unrelated links.
+
+The embedded Team workspace and Setup guide use the same language. The enabled
+workflow label remains available under Technical setup details rather than leading
+the ordinary setup instructions. Browser testing must distinguish actual selected-
+event pages from template-only synthetic menu fixtures.
 
 ## Context and responsive shell
 

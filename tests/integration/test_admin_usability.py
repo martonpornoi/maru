@@ -155,8 +155,8 @@ def test_admin_branding_and_domain_language_are_clear() -> None:
     content = response.content.decode()
     assert response.status_code == 200
     assert "Maru Administration" in content
-    assert "Convention work" in content
-    assert "Specialist records" in content
+    assert 'data-navigation-group="overview"' in content
+    assert "Advanced records" in content
     assert content.count('aria-label="Administration"') == 1
     assert content.index("/static/admin/css/responsive.css") < content.index(
         "/static/core/admin-responsive.css"
@@ -165,8 +165,7 @@ def test_admin_branding_and_domain_language_are_clear() -> None:
     assert f"{reverse('management-console')}?view=setup" in content
     assert "Quick start" not in content
     assert 'class="maru-admin-quick-start"' not in content
-    assert "Need a technical record?" in content
-    assert "Open specialist records" in content
+    assert "Open advanced records" in content
     assert "Recent work" in content
     assert "All administration areas" not in content
     assert "First convention setup" not in content
@@ -197,8 +196,8 @@ def test_admin_home_keeps_one_specialist_gateway_without_duplicating_directory()
     content = response.content.decode()
     assert "Quick start" not in content
     assert "All administration areas" not in content
-    assert content.count("Open specialist records") == 1
-    assert "Need a technical record?" in content
+    assert content.count("Open advanced records") == 1
+    assert '<h2 id="maru-specialist-heading">Advanced records</h2>' in content
     assert f"{reverse('management-console')}?view=setup" in content
     assert reverse("management-console") in content
 
@@ -231,9 +230,9 @@ def test_specialist_gateway_replaces_directory_and_help_covers_registered_items(
     assert all("For example:" in MODEL_PAGE_HELP[key] for key in registered_models)
 
     content = response.content.decode()
-    assert "Need a technical record?" in content
+    assert '<h2 id="maru-specialist-heading">Advanced records</h2>' in content
     assert "data-navigation-specialist-gateway" in content
-    assert 'data-navigation-group="specialist-records"' in content
+    assert 'data-navigation-group="advanced-records"' in content
     assert "maru-admin-app--foundation" not in content
 
 

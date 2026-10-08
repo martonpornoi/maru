@@ -12,7 +12,7 @@ def test_admin_page_help_covers_utility_and_fallback_pages() -> None:
     assert "Registration desk to help an attendee" in home_help
     assert "Registration configurations" not in home_help
     workforce_help = admin_page_help("/admin/", "", "", "workforce")
-    assert "Departments, Positions, assignments" in workforce_help
+    assert "Team workspace to plan departments, team roles" in workforce_help
 
 
 def test_account_help_explains_inspection_and_invitation_boundaries() -> None:
@@ -23,7 +23,7 @@ def test_account_help_explains_inspection_and_invitation_boundaries() -> None:
     )
 
     assert "read-only specialist page" in help_text
-    assert "Platform administration > Accounts" in help_text
+    assert "Settings > User accounts" in help_text
     assert "createsuperuser" in help_text
     assert "without changing its credentials" in help_text
 

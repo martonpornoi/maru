@@ -1,32 +1,44 @@
 # Follow a product tour
 
-**Audience:** Evaluators and new contributors with a running local environment\
-**Outcome:** Understand one coherent Maru workflow from platform oversight to an
-event edition\
-**Reading time:** 10 minutes\
-**Hands-on time:** About 30–45 minutes
+**Audience:** Evaluators and contributors exploring the management interface\
+**Outcome:** Understand one synthetic organizer-to-edition journey and the
+roles involved\
+**Reading time:** 5 minutes\
+**Hands-on time:** Allow 30–45 minutes after preparing the tutorial database
 
-The most useful first tour is not a model-by-model browse. Follow one synthetic
-journey:
+The introductory journey creates a fictional organizer, establishes its
+accountable leadership, and creates a recurring convention and one edition.
+It teaches the shared foundation used by later workflows. It does not activate
+every module or establish production readiness.
 
-1. A non-participating platform administrator creates a fictional organizer.
-2. Two synthetic people accept responsibility through the governed Executive
-   Board ceremony.
-3. The organizer creates a recurring fictional convention series.
-4. The organizer creates a dated event edition and selects it as working
-   context.
-5. Scoped navigation and access explanations show what each person may see and
-   change.
+## The journey
 
-Use **MaruCon** or **MaruDance** for fictional convention examples and reserved
-`.invalid` addresses for synthetic accounts. Never copy a real convention
-roster, public profile, staff handle, or contact into fixtures or tutorial data.
+| Step | Person acting | Observable result |
+| --- | --- | --- |
+| Create a fictional organizer | Platform administrator | An organization exists in Draft without invented members or participation. |
+| Establish representation | Two synthetic recipients and the platform operator | Exact people respond to invitations and an accountable Executive Board is activated. |
+| Create a convention series | Authorized organizer | The recurring fictional convention belongs to that organizer. |
+| Create an event edition | Authorized organizer | A dated edition exists and can be selected as working context. |
+| Inspect the navigation | Each signed-in role | Available destinations reflect that person's authority; selecting a context alone grants nothing. |
 
-The [hands-on tutorial](../operations/maru-hands-on-tutorial.md) contains the
-exact safe sequence and its current evidence boundary. The
-[management experience shell](../product/page-contracts/00-management-experience-shell.md)
-explains how that journey fits the shared interface. If a page is described as
-preserved, partial, or deployment-gated, return to the
-[maturity guide](current-maturity.md) before treating it as current behavior.
+Use the [hands-on tutorial](../operations/maru-hands-on-tutorial.md) for the
+exact commands, accounts, fields, and expected results. Its first section
+creates a separate database. Do not seed an empty tutorial database or assume
+that a database from an earlier experiment is still empty.
+
+Use **MaruCon** or **MaruDance** and reserved `.invalid` contact addresses for
+fictional examples. They do not represent a real convention or endorsement.
+
+## Read the result honestly
+
+If a step is confusing or fails, record the page, acting role, action, and
+sanitized result. That observation can become a focused documentation or bug
+contribution. Follow the tutorial's evidence limits: repository tests and earlier
+rehearsals do not mean this particular manual journey has been completed by you.
+
+The [management shell contract](../product/page-contracts/00-management-experience-shell.md)
+explains how the journey fits the interface. The
+[maturity guide](current-maturity.md) separates this introductory route from
+dormant Programme evaluation and deployment work.
 
 **Next:** [Prepare a first contribution](first-contribution.md).

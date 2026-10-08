@@ -10,6 +10,22 @@
 
 ## Outcome and increment boundary
 
+The personal interface uses **My activity ideas** and **Suggest an activity**
+under UX-031. An activity idea is explained as a talk, panel, workshop or other
+activity the person would like to run. The underlying proposal and call domain
+contracts, URLs and proof fields are unchanged. Technical references and change
+versions are available under labelled details instead of leading the page.
+
+The action **Prepare this version for confirmation** is the existing seal:
+it keeps a fixed copy of shared answers, activity choices and included profiles.
+It does not submit the idea. Every included helper responds to that exact version
+before the lead can use **Submit idea**. **Reopen the idea for editing** explains
+that earlier versions and responses remain, current submission status is removed,
+and a new fixed version and confirmations are needed. Consent is never preselected
+or inferred from the simpler labels. Submission still means neither acceptance,
+publication, scheduling nor a confirmed host relationship. The interface explains
+the next human task without exposing issue numbers or rehearsal implementation.
+
 A verified person can find an available call, deliberately start their own private
 proposal with labelled track/format/duration and their own proposed-public profile,
 then return to their personal inventory and exact proposal overview. This is

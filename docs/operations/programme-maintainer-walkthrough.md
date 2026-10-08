@@ -135,53 +135,75 @@ Ordinary tabs share login state; opening a second tab is not a second account.
 If a task is missing, record which account you used and what you could see.
 Do not improvise grants or switch to an administrator to make it work.
 
-## Core journey: create one call draft
+## Current interface labels
+
+The instructions below use the current UX-031 wording. The October 5 observations
+and protected commit references above remain evidence for the earlier interface;
+this source-checked label update does not repeat those manual checks or certify a
+new candidate. Record the startup commit and working-tree status for this session.
+Older builds may still show the labels in the left column.
+
+| Earlier label | Current label |
+| --- | --- |
+| Change / Choose a workspace | Change event / Choose an event |
+| Programme calls, review and conversion | Collect activity ideas in navigation; Activity ideas and review on the page |
+| Manage calls | Collect activity ideas |
+| Create a call draft | Ask for activity ideas |
+| Starting configuration to review | Start with a simple activity form |
+| Create this call draft | Create draft request |
+| Complete configured questions | Questions on the form |
+| Activate domain call | Activate and lock this form |
+
+## Core journey: create one activity request draft
 
 Allow roughly 15–25 minutes after READY. This is a small form-and-navigation test;
 you can stop after it. You will not need to invent users, policy codes or reasons.
 
 1. Open **Administration** from the terminal and sign in with **intake-organizer**.
-2. Beside **Workspace**, choose **Change**. In **Choose a workspace**, select
+2. Beside **Workspace**, choose **Change event**. In **Choose an event**, select
    **Synthetic Programme rehearsal · Synthetic Programme organizer**, then
    press **Switch**. Selection alone does not switch the workspace.
-3. In **Find a task or record**, enter `Programme` and press Enter.
-4. Open **Programme calls, review and conversion**, then **Manage calls** under
-   **Programme (programme)**, then **Create a call draft**.
-5. Read **Starting configuration to review**. The draft starts with two questions
-   and one contributor-name policy; creating it does not open a public call.
-6. Fill every field below. Policy references are the fixture's synthetic policy
-   codes, not approval to reuse those policies at a real event.
+3. Open **Applications** in the navigation menu. If the menu is closed, choose
+   **Menu** first.
+4. Choose **Collect activity ideas**. On **Activity ideas and review**, choose
+   **Collect activity ideas** under **Programme (programme)**, then **Ask for
+   activity ideas**.
+5. Read **Start with a simple activity form**. The draft starts with two questions
+   and name and consent rules; creating it does not open a public request.
+6. Fill every field below. Expand **Additional rules (optional)** for the two
+   optional references. All references here are the fixture's synthetic policy
+   codes, not approval to reuse those rules at a real event.
 
 | Visible field | Copy or choose this value |
 | --- | --- |
-| Stable call code | `moonlit-makers` |
-| Call name | Moonlit Makers: panels and workshops |
-| Call guidance | A fictional convention call for friendly creative sessions. |
-| Why these proposals are collected | Practise reviewing and scheduling a fictional Programme proposal. |
-| Classification | C2 - Personal |
-| Maximum submissions per person | `4` |
-| Maximum collaborators | `4` |
-| Audience policy | `applications.programme.audience.v1` |
-| Proposal retention policy | `applications.programme.retention.v1` |
-| Proposal content policy | `applications.programme.content.v1` |
-| Contributor consent policy | `applications.programme.contributor-consent.v1` |
-| Collaboration evidence retention policy | `applications.programme.collaboration-retention.v1` |
-| Initial track code | `creative` |
-| Initial track name | Creative workshops |
-| Initial format code | `workshop` |
-| Initial format name | Workshop |
-| Minimum duration minutes | `30` |
-| Default duration minutes | `60` |
-| Maximum duration minutes | `90` |
-| Reason | Create a fictional call to evaluate the Programme workflow. |
+| Request reference | `moonlit-makers` |
+| Request name | Moonlit Makers: panels and workshops |
+| Instructions for people suggesting an activity | A fictional request for friendly creative sessions. |
+| Why you are collecting activity ideas | Practise reviewing and scheduling a fictional activity idea. |
+| How sensitive is the information? | C2 - Personal |
+| Ideas allowed per person | `4` |
+| People who can help with each idea | `4` |
+| Audience rules reference (optional) | `applications.programme.audience.v1` |
+| Idea retention rules reference (optional) | `applications.programme.retention.v1` |
+| Content rules reference | `applications.programme.content.v1` |
+| Consent rules reference | `applications.programme.contributor-consent.v1` |
+| Collaboration history retention rules reference | `applications.programme.collaboration-retention.v1` |
+| First topic reference | `creative` |
+| First topic name | Creative workshops |
+| First activity type reference | `workshop` |
+| First activity type | Workshop |
+| Shortest activity (minutes) | `30` |
+| Suggested activity length (minutes) | `60` |
+| Longest activity (minutes) | `90` |
+| Reason | Create a fictional activity request to evaluate the Programme workflow. |
 
 7. For the three deadline fields, open a **second** PowerShell terminal and run:
 
    ```powershell
    $programmeToday = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTime]::UtcNow, 'Central Europe Standard Time').Date
-   'Opens (inclusive): ' + $programmeToday.AddDays(-1).AddHours(12).ToString('yyyy-MM-dd HH:mm')
-   'Applicant edit deadline (inclusive): ' + $programmeToday.AddDays(1).AddHours(12).ToString('yyyy-MM-dd HH:mm')
-   'Closes (exclusive): ' + $programmeToday.AddDays(2).AddHours(12).ToString('yyyy-MM-dd HH:mm')
+   'People can start sending ideas from: ' + $programmeToday.AddDays(-1).AddHours(12).ToString('yyyy-MM-dd HH:mm')
+   'People can edit their ideas until (including this time): ' + $programmeToday.AddDays(1).AddHours(12).ToString('yyyy-MM-dd HH:mm')
+   'Ideas must be submitted before: ' + $programmeToday.AddDays(2).AddHours(12).ToString('yyyy-MM-dd HH:mm')
    ```
 
    Under each matching deadline, choose the printed date in **Date** and type
@@ -190,18 +212,19 @@ you can stop after it. You will not need to invent users, policy codes or reason
    computer's format; these are **Europe/Budapest** local times. Noon avoids
    the ambiguous overnight clock-change hour.
 8. Check **Create this draft with the displayed title/description questions and
-   contributor-name policy.**, then press **Create this call draft**.
+   the name and consent rules described above.**, then press **Create draft request**.
 9. Expect the heading **Moonlit Makers: panels and workshops**, the state
-   **draft**, your Creative workshops track, Workshop format with 30/60/90 minutes,
-   and **Proposed title** and **Proposal description** under **Complete configured
-   questions**. Deadlines are displayed with explicit offsets; they can appear as
+   **Draft**, your Creative workshops topic, Workshop activity type with 30/60/90
+   minutes, and **Activity title** and **Activity description** under **Questions
+   on the form**. Deadlines are displayed with explicit offsets; they can appear as
    UTC instants representing the same local time you entered.
-10. Save your observations. Leave **Activate domain call** alone for this short
+10. Save your observations. Leave **Activate and lock this form** alone for this short
     journey. Follow the disposal steps below.
 
 If a validation error appears, copy its exact text and stop or correct a typing
 mistake. Do not submit repeatedly after an uncertain result; first inspect whether
-the named draft already exists under **Department calls**.
+the named draft already exists under **Collect activity ideas** or **All activity
+requests** when viewing a saved request.
 
 ## Optional second session: read the prepared timetable
 
@@ -275,9 +298,9 @@ complete disconnected operation or archive acceptance.
 ## Optional withdrawal and Programme stop
 
 1. Sign in through **Administration** as **planner**, select the same synthetic
-   workspace using **Change** → **Choose a workspace** → **Switch**, and search
-   **Find a task or record** for `Programme`.
-2. Open **Release timetable**, then **Withdraw the active timetable**.
+   workspace using **Change event** → **Choose an event** → **Switch**.
+2. Choose **Release timetable** from the navigation menu, then **Withdraw the active
+   timetable**. If needed, use **Find a page** to filter the menu.
 3. In **Reason for this change**, paste:
 
    > Withdraw the fictional timetable before testing Programme stop.
@@ -315,8 +338,8 @@ does not supply archive authority or ask you to retrieve a restricted archive.
 
 ## What this short guide leaves for later
 
-The core covers call creation; the prepared session covers output, withdrawal and
-stop. Proposal collaboration, review decisions, planning edits, publication,
+The core covers activity request creation; the prepared session covers output,
+withdrawal and stop. Proposal collaboration, review decisions, planning edits, publication,
 restricted archives, independent-person observation and specialist screen-reader
 acceptance remain separate checks in the
 [acceptance evidence map](programme-acceptance-evidence.md). A further `--stage items`
@@ -347,8 +370,8 @@ Do not delete unrelated Docker containers to reset this test.
 The rehearsal server does not reload Python form changes automatically. To see
 the 24-hour controls, save your notes, finish and dispose any older session using
 the steps above, then start a fresh `--stage team` session from this checkout.
-Refreshing an old page alone is insufficient. You can inspect **Create a call
-draft** without submitting another draft if you only want to check the clock.
+Refreshing an old page alone is insufficient. You can inspect **Ask for activity
+ideas** without submitting another draft if you only want to check the clock.
 
 ## Your notes
 
@@ -359,7 +382,7 @@ Leave later steps untested when you stop.
 | --- | --- | --- | --- |
 | Startup | | | |
 | Login and workspace | | | |
-| Create call draft | | | |
+| Create activity request draft | | | |
 | Optional prepared public view | | | |
 | Volunteer view / print | | | |
 | Optional continuity / exit | | | |

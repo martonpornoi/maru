@@ -248,8 +248,8 @@ def test_creation_get_has_explicit_starting_policy_and_no_mutation(page):
     assert response.status_code == 200
     soup = BeautifulSoup(response.content, "html.parser")
     assert len(soup.select("h1")) == len(soup.select("main")) == 1
-    assert "Starting configuration to review" in soup.get_text()
-    assert "optional for collaborators" in soup.get_text()
+    assert "Start with a simple activity form" in soup.get_text()
+    assert "helpers may provide one" in soup.get_text()
     assert soup.select_one('[name="expected_version"]')["value"] == "0"
     assert all(not writer.called for writer in page.writers.values())
 
@@ -701,14 +701,48 @@ def test_creation_groups_and_all_labels_are_unique(page):
     ids = [element["id"] for element in soup.select("[id]")]
     assert len(ids) == len(set(ids))
     assert [legend.get_text() for legend in form.select("legend")] == [
-        "Call identity and collection",
-        "Explicit policy references",
-        "Edition-local deadlines",
-        "Initial track and format",
+        "1. Describe what you are looking for",
+        "2. Set the deadlines",
+        "3. Add the first topic and activity type",
+        "4. Identify the rules people must follow",
+        "5. Set the references for this request",
+        "Additional rules (optional)",
         "Confirm this starting draft",
     ]
     for field in form.select("input:not([type=hidden]), select, textarea"):
         assert soup.find("label", attrs={"for": field["id"]}) is not None
+
+
+def test_optional_rules_are_collapsed_but_required_rules_remain_visible(page):
+    """Progressive disclosure cannot conceal a required policy decision."""
+    soup = BeautifulSoup(_request(page).content, "html.parser")
+    for name in (
+        "content_policy_code",
+        "contributor_consent_policy_code",
+        "collaboration_retention_policy_code",
+    ):
+        field = soup.select_one(f'[name="{name}"]')
+        assert field.has_attr("required")
+        assert field.find_parent("details") is None
+        assert not field.get("value")
+    optional = soup.select_one('[name="audience_policy_code"]')
+    assert not optional.has_attr("required")
+    assert not optional.find_parent("details").has_attr("open")
+
+
+def test_optional_rule_errors_expand_and_keep_original_request_evidence(page):
+    """A refused advanced value stays reachable without changing retry identity."""
+    data = {**_new_data(), "audience_policy_code": "invalid reference!"}
+    response = _request(page, data=data)
+    assert response.status_code == 400
+    soup = BeautifulSoup(response.content, "html.parser")
+    field = soup.select_one('[name="audience_policy_code"]')
+    assert field["value"] == data["audience_policy_code"]
+    assert field.find_parent("details").has_attr("open")
+    assert soup.select_one('[role="alert"] a[href="#id_audience_policy_code"]')
+    for name in ("expected_version", "expected_edition_version", "retry_key"):
+        assert soup.select_one(f'[name="{name}"]')["value"] == data[name]
+    assert all(not writer.called for writer in page.writers.values())
 
 
 def test_partial_option_error_links_to_the_exact_control(page):

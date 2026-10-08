@@ -73,9 +73,9 @@ def test_non_staff_board_controller_gets_scoped_shell_not_specialist_admin() -> 
     content = home.content.decode()
     assert "Maru Convention Planning" in content
     assert 'href="/admin/workspace/"' in content
-    assert "Convention work" in content
+    assert 'data-navigation-group="overview"' in content
     assert _selector_edition_ids(home) == {edition.id}
-    assert "Specialist records" not in content
+    assert 'data-navigation-group="advanced-records"' not in content
     assert "Platform administration" not in content
     assert f'href="{reverse("baseline-admin-home")}"' not in content
     assert f'href="{reverse("baseline-create-organization")}"' not in content

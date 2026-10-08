@@ -84,39 +84,48 @@ class _Bundle:
         values: list[dict[str, Any]] = []
         if isinstance(self.evidence, controls.ProgrammeCallCreationForm):
             groups = {
-                "Call identity and collection": (
-                    "code",
+                "1. Describe what you are looking for": (
                     "name",
                     "description",
                     "purpose",
-                    "classification",
                     "maximum_submissions_per_person",
                     "maximum_collaborators",
                 ),
-                "Explicit policy references": (
-                    "audience_policy_code",
-                    "retention_policy_code",
-                    "content_policy_code",
-                    "contributor_consent_policy_code",
-                    "collaboration_retention_policy_code",
-                ),
-                "Edition-local deadlines": (
+                "2. Set the deadlines": (
                     "opens_at",
                     "applicant_edit_until",
                     "closes_at",
                 ),
-                "Initial track and format": (
-                    "track_code",
+                "3. Add the first topic and activity type": (
                     "track_label",
-                    "format_code",
                     "format_label",
                     "minimum_duration_minutes",
                     "default_duration_minutes",
                     "maximum_duration_minutes",
                 ),
+                "4. Identify the rules people must follow": (
+                    "classification",
+                    "content_policy_code",
+                    "contributor_consent_policy_code",
+                    "collaboration_retention_policy_code",
+                ),
+                "5. Set the references for this request": (
+                    "code",
+                    "track_code",
+                    "format_code",
+                ),
+                "Additional rules (optional)": (
+                    "audience_policy_code",
+                    "retention_policy_code",
+                ),
             }
             values.extend(
-                {"legend": legend, "fields": [self.evidence[name] for name in names]}
+                {
+                    "legend": legend,
+                    "fields": [self.evidence[name] for name in names],
+                    "advanced": legend == "Additional rules (optional)",
+                    "expanded": any(self.evidence[name].errors for name in names),
+                }
                 for legend, names in groups.items()
             )
             values.append(
@@ -636,7 +645,7 @@ def _serve(
         "pending": request.method == "POST",
         "zone_name": edition.zone_name,
         "task_label": {
-            "create": "Create a call draft",
+            "create": "Ask for activity ideas",
             "section": "Compose section",
             "question": "Compose question",
             "remove-section": "Remove section and its questions",

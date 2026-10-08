@@ -28,17 +28,24 @@
         </h2>
         {% if maru_home_edition_context.selected_profile %}
           <p>
-            {{ maru_home_edition_context.selected_profile.description }}
+            {% if maru_home_edition_context.selected_profile.primary_module == "workforce" %}
+              Plan your volunteer team's roles, availability, and shifts.
+            {% else %}
+              Use the tools below to set up and run this event.
+            {% endif %}
           </p>
+          <details class="maru-admin-profile-details">
+            <summary>Technical setup details</summary>
+            <p>{{ maru_home_edition_context.selected_profile.description }}</p>
+          </details>
         {% elif maru_home_edition_context.selected %}
           <p>
-            This release does not recognize the edition's exact adoption
-            profile. Choose another workspace or update Maru before continuing.
+            This event uses tools that this version of Maru cannot open.
+            Choose another event or ask an administrator to check its setup.
           </p>
         {% else %}
           <p>
-            Choose an exact edition workspace before opening edition-scoped
-            convention tools.
+            Choose the event you want to work on.
           </p>
         {% endif %}
       </div>
@@ -62,8 +69,8 @@
         {% endif %}
         {% if maru_home_edition_context.selected_profile and "workforce" in maru_home_edition_context.selected_profile.destination_codes %}
         <a href="{% url 'management-console' %}?view=workforce">
-          <strong>Workforce</strong>
-          <span>Continue Departments, Positions, assignments, Availability, and Shifts.</span>
+          <strong>Team workspace</strong>
+          <span>Plan departments, team roles, availability, and shifts.</span>
         </a>
         {% endif %}
         {% if maru_home_edition_context.selected_profile and "security" in maru_home_edition_context.selected_profile.destination_codes %}
@@ -87,13 +94,13 @@
         {% if maru_home_edition_context.selected_profile and "reports" in maru_home_edition_context.selected_profile.destination_codes %}
         <a href="{% url 'management-console' %}?view=reports">
           <strong>Reports &amp; badges</strong>
-          <span>Review attendance and export minimized badge data.</span>
+          <span>Review attendance and prepare information for badges.</span>
         </a>
         {% endif %}
         {% if request.user.is_platform_administrator %}
           <a href="{% url 'platform-account-inventory' %}">
             <strong>User accounts</strong>
-            <span>Find login identities and review invitation status.</span>
+            <span>Find people who can sign in and check their invitations.</span>
           </a>
         {% endif %}
       </div>
@@ -118,16 +125,16 @@
     {% if app_list %}
     {% if maru_home_edition_context.show_specialist_gateway %}
     <section class="maru-admin-directory maru-specialist-gateway" aria-labelledby="maru-specialist-heading">
-      <h2 id="maru-specialist-heading">Need a technical record?</h2>
+      <h2 id="maru-specialist-heading">Advanced records</h2>
       <p>
-        Low-frequency framework records remain available to authorized
-        specialists without filling the home page or primary navigation.
+        Open detailed records for support and administration.
+        The menu shows only records you are allowed to use.
       </p>
       <a
-        href="#nav-specialist-records"
+        href="#nav-advanced-records"
         class="maru-admin-directory-link"
         data-navigation-specialist-gateway
-      >Open specialist records</a>
+      >Open advanced records</a>
     </section>
     {% endif %}
     {% endif %}

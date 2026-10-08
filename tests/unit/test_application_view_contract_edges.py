@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
+from bs4 import BeautifulSoup
 from django import forms
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import Http404, HttpResponse
@@ -385,6 +386,92 @@ def test_definition_mutations_render_conflicts_on_the_active_form() -> None:
                 operation=operation,
             )
         assert response.status_code == 409
+
+
+@pytest.mark.parametrize("kind", ["section", "question"])
+@pytest.mark.parametrize("error_kind", ["field", "command"])
+def test_refused_definition_addition_opens_its_disclosure(kind, error_kind) -> None:
+    """Real refused forms keep their errors and original input visible."""
+    definition = _definition()
+    definition.status = "draft"
+    definition.created_by = _actor()
+    definition.sections = MagicMock()
+    section = SimpleNamespace(id=uuid4(), title="Activity details")
+    definition.sections.order_by.return_value = (section,)
+    definition.sections.all.return_value = ()
+    data = {
+        "retry_key": str(uuid4()),
+        "expected_version": "2",
+        "key": "equipment",
+        "reason": "Collect activity equipment needs.",
+    }
+    if kind == "section":
+        field_name = "title"
+        data["title"] = "Equipment"
+    else:
+        field_name = "label"
+        data.update(
+            section_id=str(section.id),
+            field_type="short_text",
+            label="Equipment needed",
+            purpose="Prepare the activity room.",
+            classification="C2",
+        )
+    if error_kind == "field":
+        data[field_name] = ""
+    request = _request("post", data)
+    edition = definition.edition
+    with (
+        patch.object(
+            views,
+            "_definition_for_post",
+            return_value=(request.user, edition, definition),
+        ),
+        patch.object(views, "_departments", return_value=()),
+        patch.object(views, "_reviewer_roles", return_value=()),
+        patch.object(views.admin.site, "each_context", return_value={}),
+        patch(
+            "maru.events.templatetags.admin_edition_context.admin_edition_options",
+            return_value={},
+        ),
+        patch(
+            "maru.events.templatetags.admin_edition_context.admin_organization_navigation",
+            return_value=(),
+        ),
+        patch(
+            "maru.events.templatetags.admin_edition_context.admin_shell_access",
+            return_value={"workspace_available": False},
+        ),
+        patch(
+            "maru.events.templatetags.admin_edition_context.project_shell_navigation",
+            return_value={},
+        ),
+        patch.object(
+            views, f"add_{kind}", side_effect=ApplicationStateConflict()
+        ) as writer,
+    ):
+        response = getattr(views, f"application_{kind}_add")(
+            request, edition.organization_id, edition.id, definition.id
+        )
+        response.render()
+    assert response.status_code == (400 if error_kind == "field" else 409)
+    assert writer.call_count == (0 if error_kind == "field" else 1)
+    soup = BeautifulSoup(response.content, "html.parser")
+    submitted = soup.select_one(f'form[action$="/{kind}s/"]')
+    assert submitted is not None
+    assert submitted.find_parent("details").has_attr("open")
+    other_kind = "question" if kind == "section" else "section"
+    other = soup.select_one(f'form[action$="/{other_kind}s/"]')
+    assert not other.find_parent("details").has_attr("open")
+    errors = submitted.select_one(".errorlist")
+    assert errors is not None
+    assert (
+        "This field is required."
+        if error_kind == "field"
+        else "The application workflow changed. Reload before trying again."
+    ) in errors.get_text()
+    for name in ("retry_key", "expected_version", "key", "reason"):
+        assert submitted.select_one(f'[name="{name}"]')["value"] == data[name]
 
 
 def test_submission_and_review_mutations_close_malformed_and_conflict_paths() -> None:

@@ -139,7 +139,7 @@ def test_call_discovery_is_labelled_bounded_and_independently_authorized(page):
     assert len(html.find_all("h1")) == len(html.find_all("main")) == 1
     assert not html.find("a", string="Manage review cases and named reviewers")
     assert html.find("script", string="attack") is None
-    assert html.find("a", string="Next page of calls")["href"].endswith(
+    assert html.find("a", string="More activity requests")["href"].endswith(
         f"?after={UUID(int=20)}"
     )
     assert page.calls.call_count == 3
@@ -285,10 +285,10 @@ def test_policy_history_exposes_reason_and_explicit_neighbors_without_write(page
     html = soup(response)
     assert response.status_code == 200
     assert "Deliberate policy reason" in html.get_text()
-    assert html.find("a", string="Previous policy version")["href"].endswith(
+    assert html.find("a", string="Previous rules version")["href"].endswith(
         "/policies/2/"
     )
-    assert html.find("a", string="Next policy version")["href"].endswith("/policies/4/")
+    assert html.find("a", string="Next rules version")["href"].endswith("/policies/4/")
     assert html.find("form", attrs={"data-call-command": True}) is None
     page.command.assert_not_called()
 
@@ -335,7 +335,7 @@ def test_late_render_revocation_discards_prepared_configuration(page, target):
 
 def test_dependency_failure_and_empty_discovery_are_truthful(page):
     page.calls.return_value = queries.ReviewSetupCallPage((), None)
-    assert "No calls" in soup(request(call=False)).get_text()
+    assert "No activity requests" in soup(request(call=False)).get_text()
     page.source.side_effect = DatabaseError
     response = request()
     assert response.status_code == 503

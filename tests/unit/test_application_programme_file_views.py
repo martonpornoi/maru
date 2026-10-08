@@ -139,7 +139,10 @@ def test_fresh_upload_has_original_proof_native_control_guidance_and_no_receipt(
     assert doc.select_one('input[name="csrfmiddlewaretoken"]')
     assert "64 MiB" in doc.get_text()
     assert "10 MiB" in doc.get_text()
-    assert "JavaScript" in doc.select_one("noscript").get_text()
+    assert (
+        "Uploading and checking an original upload result need JavaScript."
+        in root.select_one("noscript").get_text()
+    )
     assert "My current answer" not in doc.get_text()
     world.outcome.assert_not_called()
     assert world.admit.call_count >= 3

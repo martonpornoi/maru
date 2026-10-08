@@ -767,7 +767,7 @@ def test_activated_controller_can_complete_pages_3_through_7() -> None:
     assert 'data-page="organization-record"' in record_content
     assert "Organization record" in record_content
     assert "Representation &amp; access" in record_content
-    assert "Convention work" in record_content
+    assert 'data-navigation-group="overview"' in record_content
     assert "Save changes" in record_content
     assert "Delete organization" not in record_content
 

@@ -59,21 +59,21 @@ _MANAGE = APPLICATIONS_MANAGE_PROGRAMME_PROPOSAL_SELF
 _INVITATION = APPLICATIONS_RESPOND_PROGRAMME_INVITATION_SELF
 _SUBMIT = APPLICATIONS_SUBMIT_PROGRAMME_PROPOSAL_SELF
 _ACTIONS = {
-    "selection": ("Change track, format or duration", _MANAGE),
-    "profile": ("Revise my proposed public profile", _EDIT),
-    "answer": ("Revise this shared answer", _EDIT),
-    "invite": ("Invite a known collaborator", _MANAGE),
-    "reinvite": ("Reinvite a previous collaborator", _MANAGE),
-    "remove": ("Remove this collaborator", _MANAGE),
+    "selection": ("Change topic, activity type or length", _MANAGE),
+    "profile": ("Edit my profile for possible publication", _EDIT),
+    "answer": ("Edit this shared answer", _EDIT),
+    "invite": ("Invite someone to help with this idea", _MANAGE),
+    "reinvite": ("Invite a previous helper again", _MANAGE),
+    "remove": ("Remove this helper", _MANAGE),
     "accept-invitation": ("Accept my invitation", _INVITATION),
     "decline-invitation": ("Decline my invitation", _INVITATION),
-    "leave": ("Leave this collaboration", _EDIT),
-    "seal": ("Seal this exact draft", _MANAGE),
-    "reopen": ("Reopen for a new draft revision", _MANAGE),
-    "acknowledge": ("Acknowledge my exact sealed contribution", _EDIT),
-    "decline-revision": ("Decline my exact sealed contribution", _EDIT),
-    "submit": ("Submit this acknowledged seal", _SUBMIT),
-    "withdraw": ("Withdraw this proposal", _SUBMIT),
+    "leave": ("Stop helping with this idea", _EDIT),
+    "seal": ("Prepare this version for confirmation", _MANAGE),
+    "reopen": ("Reopen the idea for editing", _MANAGE),
+    "acknowledge": ("Confirm my contribution to this version", _EDIT),
+    "decline-revision": ("Decline my contribution to this version", _EDIT),
+    "submit": ("Submit idea", _SUBMIT),
+    "withdraw": ("Withdraw this idea", _SUBMIT),
 }
 _SIMPLE_COMMANDS = {
     "accept-invitation": "accept_programme_proposal_invitation",
@@ -90,14 +90,18 @@ _WORKFLOW_FIELDS = _BASE_FIELDS | {"workflow_context"}
 _MAX_VALUES = 100
 _MAX_VALUE_LENGTH = 65536
 _MESSAGES = {
-    "seal": "Sealing freezes shared answers, selection and included profiles. "
-    "Every included collaborator must respond for themselves. This does not submit.",
-    "reopen": "Reopening retains prior seals and responses but removes current "
-    "submission status. A new seal and new collaborator responses are required.",
-    "submit": "Submission sends only the current acknowledged seal for later review. "
-    "It does not accept, publish, schedule or create a Programme item or host.",
-    "withdraw": "Withdrawal ends this proposal's current submission candidacy. "
-    "Attributable proposal history remains; this is not deletion.",
+    "seal": "Keep a fixed copy of the answers, activity choices and included profiles. "
+    "Each included helper must confirm their own contribution before you can "
+    "submit it. This step does not submit the idea.",
+    "reopen": "Reopening keeps earlier fixed versions and responses, but the idea is "
+    "no longer submitted. Prepare a new fixed version and ask every included "
+    "helper to respond again before submitting.",
+    "submit": "Send this fixed version, with its contributors' confirmations, "
+    "for review. "
+    "This does not accept or publish the idea, schedule an activity, or confirm "
+    "anyone as its host.",
+    "withdraw": "Withdraw this idea from consideration. The idea and its history, "
+    "including who made each change, are kept; this does not delete them.",
     "leave": "Leaving ends your collaboration access. Your prior evidence remains.",
     "remove": "Removal ends collaboration access, retaining prior evidence.",
     "accept-invitation": "Accepting joins this private proposal. You separately "

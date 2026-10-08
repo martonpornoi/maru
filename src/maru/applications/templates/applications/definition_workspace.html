@@ -1,28 +1,28 @@
 {% extends "admin/base_site.html" %}
 
-{% block title %}Applications &middot; {{ edition.name }}{% endblock %}
+{% block title %}Application forms &middot; {{ edition.name }}{% endblock %}
 {% block content_title %}{% endblock %}
 {% block maru_page_access %}{% endblock %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
-    {{ edition.organization.name }} &rsaquo; {{ edition.name }} &rsaquo; Applications
+    {{ edition.organization.name }} &rsaquo; {{ edition.name }} &rsaquo; Application forms
   </div>
 {% endblock %}
 
 {% block content %}
   <div id="content-main">
     <header>
-      <p class="maru-personal-kicker">Shared form studio</p>
-      <h1>Applications</h1>
+      <p class="maru-personal-kicker">Collect applications and responses</p>
+      <h1>Application forms</h1>
       <p>
-        Copy one reviewed code-owned starter into an independent edition draft.
-        Registration remains its own one-per-attendee workflow.
+        Choose a template, review its questions and rules, then activate the form
+        when it is ready. Registration has its own setup.
       </p>
     </header>
     {% include "core/_page_access_mount.html" %}
 
     <section class="module">
-      <h2>Definition versions</h2>
+      <h2>Your forms</h2>
       {% if definitions %}
         <ul>
           {% for definition in definitions %}
@@ -30,25 +30,27 @@
               <a href="{% url 'application-definition-detail' edition.organization_id edition.id definition.id %}">
                 <strong>{{ definition.name }}</strong>
               </a>
-              &middot; {{ definition.code }} v{{ definition.version }}
               &middot; {{ definition.get_status_display }}
-              &middot; expected version {{ definition.aggregate_version }}
-              &middot; {{ definition.get_target_adapter_kind_display }}
+              <details><summary>Form history and technical details</summary>
+                {{ definition.code }} &middot; Form version {{ definition.version }}
+                &middot; Change version {{ definition.aggregate_version }}
+                &middot; {{ definition.get_target_adapter_kind_display }}
+              </details>
             </li>
           {% endfor %}
         </ul>
       {% else %}
-        <p>No application definition has been copied into this edition.</p>
+        <p>You have no application forms yet. Choose a template below to create your first draft.</p>
       {% endif %}
     </section>
 
     <section class="module">
-      <h2>Start from a code-owned workflow</h2>
+      <h2>Start from a template</h2>
       <ul>
         {% for starter in starters %}
           <li>
             <strong>{{ starter.name }}</strong>
-            &middot; {{ starter.classification }}
+
             {% if starter.is_external %}
               &middot; managed by {{ starter.owner_module }}
               {% if starter.code == "registration" %}
@@ -56,9 +58,9 @@
                 <a href="{% url 'registration-setup' edition.organization.slug edition.series.slug edition.slug %}">Open registration setup</a>
               {% endif %}
             {% else %}
-              &middot; {{ starter.target_adapter_kind }}
+
               &middot;
-              <a href="{% url 'application-starter-copy-page' edition.organization_id edition.id starter.code %}">Review and copy</a>
+              <a href="{% url 'application-starter-copy-page' edition.organization_id edition.id starter.code %}">Use this template</a>
             {% endif %}
             <br>{{ starter.description }}
           </li>

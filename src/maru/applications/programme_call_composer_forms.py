@@ -48,27 +48,48 @@ class ProgrammeCallCreationForm(ProgrammeCallMetadataForm):
     expected_edition_version = StrictBase10IntegerField(
         min_value=1, widget=forms.HiddenInput
     )
-    code = forms.RegexField(_SLUG_PATTERN, max_length=80, label="Stable call code")
-    opens_at = EditionLocalDateTimeField(label="Opens (inclusive)")
+    code = forms.RegexField(
+        _SLUG_PATTERN,
+        max_length=80,
+        label="Request reference",
+        help_text=(
+            "A short unique reference, using lowercase letters, numbers and hyphens."
+        ),
+    )
+    opens_at = EditionLocalDateTimeField(label="People can start sending ideas from")
     applicant_edit_until = EditionLocalDateTimeField(
-        label="Applicant edit deadline (inclusive)"
+        label="People can edit their ideas until (including this time)"
     )
-    closes_at = EditionLocalDateTimeField(label="Closes (exclusive)")
+    closes_at = EditionLocalDateTimeField(label="Ideas must be submitted before")
     track_code = forms.RegexField(
-        _SLUG_PATTERN, max_length=80, label="Initial track code"
+        _SLUG_PATTERN, max_length=80, label="First topic reference"
     )
-    track_label = forms.CharField(max_length=160, label="Initial track name")
+    track_label = forms.CharField(
+        max_length=160,
+        label="First topic name",
+        help_text="A group of related activities, such as Art or Fursuiting.",
+    )
     format_code = forms.RegexField(
-        _SLUG_PATTERN, max_length=80, label="Initial format code"
+        _SLUG_PATTERN, max_length=80, label="First activity type reference"
     )
-    format_label = forms.CharField(max_length=160, label="Initial format name")
-    minimum_duration_minutes = StrictBase10IntegerField(min_value=1, max_value=1440)
-    default_duration_minutes = StrictBase10IntegerField(min_value=1, max_value=1440)
-    maximum_duration_minutes = StrictBase10IntegerField(min_value=1, max_value=1440)
+    format_label = forms.CharField(
+        max_length=160,
+        label="First activity type",
+        help_text="For example, a talk, panel or workshop.",
+    )
+    minimum_duration_minutes = StrictBase10IntegerField(
+        min_value=1, max_value=1440, label="Shortest activity (minutes)"
+    )
+    default_duration_minutes = StrictBase10IntegerField(
+        min_value=1, max_value=1440, label="Suggested activity length (minutes)"
+    )
+    maximum_duration_minutes = StrictBase10IntegerField(
+        min_value=1, max_value=1440, label="Longest activity (minutes)"
+    )
     confirm = forms.BooleanField(
         label=(
             "Create this draft with the displayed title/description questions "
-            "and contributor-name policy."
+            "and the name and consent rules described above."
         )
     )
 
@@ -146,8 +167,8 @@ class ProgrammeCallCreationForm(ProgrammeCallMetadataForm):
             )
             for position, (key, label, field_type) in enumerate(
                 (
-                    ("title", "Proposed title", "short_text"),
-                    ("description", "Proposal description", "long_text"),
+                    ("title", "Activity title", "short_text"),
+                    ("description", "Activity description", "long_text"),
                 ),
                 1,
             )
@@ -156,7 +177,7 @@ class ProgrammeCallCreationForm(ProgrammeCallMetadataForm):
             **{name: values[name] for name in definition_names},
             sections=(
                 ProgrammeCallSectionInput(
-                    "programme-proposal", "Programme proposal", "", 1, questions
+                    "programme-proposal", "Activity idea", "", 1, questions
                 ),
             ),
         )

@@ -1,11 +1,11 @@
 {% extends "admin/base_site.html" %}
 
-{% block title %}{{ definition.name }} &middot; Applications{% endblock %}
+{% block title %}{{ definition.name }} &middot; Application forms{% endblock %}
 {% block content_title %}{% endblock %}
 {% block maru_page_access %}{% endblock %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
-    <a href="{% url 'application-definition-workspace' edition.organization_id edition.id %}">Applications</a>
+    <a href="{% url 'application-definition-workspace' edition.organization_id edition.id %}">Application forms</a>
     &rsaquo; {{ definition.name }} v{{ definition.version }}
   </div>
 {% endblock %}
@@ -13,40 +13,41 @@
 {% block content %}
   <div id="content-main">
     <header>
-      <p class="maru-personal-kicker">{{ definition.get_status_display }} definition</p>
+      <p class="maru-personal-kicker">{{ definition.get_status_display }} form</p>
       <h1>{{ definition.name }}</h1>
       <p>{{ definition.description }}</p>
     </header>
     {% include "core/_page_access_mount.html" %}
     <section class="module">
-      <h2>Lifecycle and provenance</h2>
+      <h2>Form status and history</h2>
+      <details><summary>History and technical details</summary>
       <dl>
-        <dt>Definition lineage</dt><dd>{{ definition.code }} v{{ definition.version }}</dd>
-        <dt>Expected aggregate version</dt><dd>{{ definition.aggregate_version }}</dd>
-        <dt>Typed target adapter</dt><dd>{{ definition.get_target_adapter_kind_display }}</dd>
+        <dt>Form reference and version</dt><dd>{{ definition.code }} v{{ definition.version }}</dd>
+        <dt>Change version</dt><dd>{{ definition.aggregate_version }}</dd>
+        <dt>Related workflow</dt><dd>{{ definition.get_target_adapter_kind_display }}</dd>
         <dt>Created</dt><dd>{{ definition.created_at }} by {{ definition.created_by.display_name|default:definition.created_by.email }}</dd>
         <dt>Activated</dt><dd>{% if definition.activated_at %}{{ definition.activated_at }} by {{ definition.activated_by.display_name|default:definition.activated_by.email }}{% else %}Not activated{% endif %}</dd>
         <dt>Retired</dt><dd>{% if definition.retired_at %}{{ definition.retired_at }} by {{ definition.retired_by.display_name|default:definition.retired_by.email }}{% else %}Not retired{% endif %}</dd>
-      </dl>
+      </dl></details>
       <p>
-        This edition-owned version never live-updates. Active and retired schema
-        rows are immutable; later changes use an explicit successor Draft.
+        This form belongs to this edition. Once activated, its questions and rules
+        are locked. To change them later, make a new draft copy.
       </p>
     </section>
     <section class="module">
-      <h2>Ownership and review queue</h2>
-      <p><strong>Owning Departments:</strong>
+      <h2>Who manages and reviews this form?</h2>
+      <p><strong>Responsible Departments:</strong>
         {% for link in definition.owner_department_links.all %}{{ link.department.name }}{% if not forloop.last %}, {% endif %}{% empty %}None assigned{% endfor %}
       </p>
-      <p><strong>Immutable reviewer role versions:</strong>
+      <p><strong>Reviewer roles (fixed versions):</strong>
         {% for link in definition.reviewer_roles.all %}{{ link.role_bundle.name }} v{{ link.role_bundle.version }}{% if not forloop.last %}, {% endif %}{% empty %}None assigned{% endfor %}
       </p>
-      <p><strong>Exact named reviewers:</strong>
+      <p><strong>Named reviewers:</strong>
         {% for link in definition.reviewer_people.all %}{{ link.account.display_name|default:link.account.email }}{% if not forloop.last %}, {% endif %}{% empty %}None assigned{% endfor %}
       </p>
     </section>
     <section class="module">
-      <h2>Schema and field policy</h2>
+      <h2>Questions and who can see the answers</h2>
       {% for section in definition.sections.all %}
         <article>
           <h3>{{ section.title }} <small>{{ section.key }}</small></h3>
@@ -75,23 +76,23 @@
     {% if definition.status == "draft" %}
       <section class="module">
         <details open>
-          <summary><strong>Configure draft and assignments</strong></summary>
+          <summary><strong>Edit form settings and reviewers</strong></summary>
           <form method="post" action="{% url 'application-definition-configure' edition.organization_id edition.id definition.id %}">
             {% csrf_token %}{{ configuration_form.as_p }}
-            <button type="submit">Save complete draft configuration</button>
+            <button type="submit">Save form settings</button>
           </form>
         </details>
       </section>
       <section class="module">
-        <details>
+        <details{% if section_form.errors %} open{% endif %}>
           <summary><strong>Add section</strong></summary>
           <form method="post" action="{% url 'application-section-add' edition.organization_id edition.id definition.id %}">
             {% csrf_token %}{{ section_form.as_p }}
             <button type="submit">Add section</button>
           </form>
         </details>
-        <details>
-          <summary><strong>Add typed question</strong></summary>
+        <details{% if question_form.errors %} open{% endif %}>
+          <summary><strong>Add a question</strong></summary>
           <form method="post" action="{% url 'application-question-add' edition.organization_id edition.id definition.id %}">
             {% csrf_token %}{{ question_form.as_p }}
             <button type="submit">Add question</button>
@@ -99,10 +100,10 @@
         </details>
       </section>
       <section class="module">
-        <h2>Activate reviewed definition</h2>
+        <h2>Activate this form</h2>
         <form method="post" action="{% url 'application-definition-activate' edition.organization_id edition.id definition.id %}">
           {% csrf_token %}{{ lifecycle_form.as_p }}
-          <button type="submit">Activate</button>
+          <button type="submit">Activate and lock this form</button>
         </form>
       </section>
     {% elif definition.status == "active" %}
@@ -117,11 +118,11 @@
 
     {% if definition.status != "draft" %}
       <section class="module">
-        <h2>Create a successor</h2>
-        <p>The successor is a new independent Draft with copied schema and assignments.</p>
+        <h2>Make a new draft copy</h2>
+        <p>This makes a new draft with the same questions and reviewer assignments. The original form and its history are kept.</p>
         <form method="post" action="{% url 'application-definition-successor' edition.organization_id edition.id definition.id %}">
           {% csrf_token %}{{ successor_form.as_p }}
-          <button type="submit">Create successor draft</button>
+          <button type="submit">Create draft copy</button>
         </form>
       </section>
     {% endif %}

@@ -59,8 +59,8 @@ class ProgrammePersonalTaskForm(ProgrammeCallTaskForm):
 class ProgrammePersonalSelectionForm(ProgrammePersonalTaskForm):
     """Collect a lead's labelled selection without changing other proposal layers."""
 
-    track = forms.ChoiceField(label="Track")
-    format = forms.ChoiceField(label="Format")
+    track = forms.ChoiceField(label="Topic")
+    format = forms.ChoiceField(label="Activity type")
     duration = StrictBase10IntegerField(
         label="Duration in whole minutes", min_value=1, max_value=1440
     )
@@ -83,14 +83,14 @@ class ProgrammePersonalSelectionForm(ProgrammePersonalTaskForm):
         self.context = context
         self.selection: ProgrammeProposalSelectionInput | None = None
         cast("forms.ChoiceField", self.fields["track"]).choices = (
-            ("", "Choose the track"),
+            ("", "Choose a topic"),
             *(
                 (str(row.track_id), f"{row.label} ({row.code})")
                 for row in context.tracks
             ),
         )
         cast("forms.ChoiceField", self.fields["format"]).choices = (
-            ("", "Choose the format"),
+            ("", "Choose an activity type"),
             *(
                 (str(row.format_id), f"{row.label} ({row.code})")
                 for row in context.formats
@@ -147,7 +147,7 @@ class ProgrammePersonalProfileForm(ProgrammePersonalTaskForm):
     """Collect only subject-owned, role-visible proposed-public profile values."""
 
     publication_choice = forms.ChoiceField(
-        label="Do I propose these values for later publication?",
+        label="May organizers review these profile details for later publication?",
         choices=(
             ("", "Choose explicitly"),
             ("no", "No — retain a blank private profile"),

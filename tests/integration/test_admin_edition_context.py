@@ -345,7 +345,8 @@ def test_admin_home_fails_closed_for_unresolved_profile(
         '<div class="maru-admin-workspace-grid">',
         maxsplit=1,
     )[1].split("</div>", maxsplit=1)[0]
-    assert "does not recognize the edition's exact adoption" in content
+    assert "This event uses tools that this version of Maru cannot open." in content
+    assert "Choose another event or ask an administrator to check its setup." in content
     for destination in (
         "setup",
         "workforce",
@@ -355,7 +356,7 @@ def test_admin_home_fails_closed_for_unresolved_profile(
         "reports",
     ):
         assert f"?view={destination}" not in workspace_grid
-    assert "Need a technical record?" not in content
+    assert "Open advanced records" not in content
     registration_list_url = reverse(
         "admin:registration_registrationconfiguration_changelist"
     )
@@ -491,7 +492,7 @@ def test_admin_selector_persists_and_clears_the_selected_edition() -> None:
 
     index_response = client.get(reverse("admin:index"))
     content = index_response.content.decode()
-    assert "Choose a workspace" in content
+    assert "Choose an event" in content
     assert re.search(
         rf'value="{reference.current_edition.id}"\s+selected',
         content,
@@ -1024,7 +1025,7 @@ def test_non_staff_active_scope_can_use_selector_without_staff_promotion() -> No
     )
 
     assert index_response.status_code == 200
-    assert "Choose a workspace" in index_response.content.decode()
+    assert "Choose an event" in index_response.content.decode()
     assert _selector_edition_ids(index_response) == {edition.id}
     assert options["available"] is True
     assert {item.id for item in options["editions"]} == {edition.id}

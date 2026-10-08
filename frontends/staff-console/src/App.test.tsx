@@ -636,7 +636,7 @@ describe("Management Console", () => {
       await screen.findByRole("heading", { name: "No convention workspace yet" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Open Specialist records" }),
+      screen.getByRole("link", { name: "Open Advanced records" }),
     ).toHaveAttribute("href", "/admin/");
     expect(screen.queryByText("Administration Quick Start")).not.toBeInTheDocument();
     expect(
@@ -693,7 +693,7 @@ describe("Management Console", () => {
     expect(
       await screen.findByRole("heading", { name: "MaruCon 2026" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Workforce" }))
+    expect(screen.getByRole("button", { name: "Team workspace" }))
       .toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "People" }))
       .not.toBeInTheDocument();
@@ -705,28 +705,28 @@ describe("Management Console", () => {
       .not.toBeInTheDocument();
     expect(screen.queryByText("Currency", { selector: ".metric-label" }))
       .not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Workforce forms" }))
+    expect(screen.getByRole("heading", { name: "Volunteer forms" }))
       .toBeInTheDocument();
     expect(screen.getByText("Volunteer applications")).toBeInTheDocument();
     expect(screen.getByText("Onboarding documents")).toBeInTheDocument();
     expect(screen.queryByText("Attendee registration")).not.toBeInTheDocument();
     expect(screen.queryByText("Registration staff intake"))
       .not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Specialist records" }))
+    expect(screen.getByRole("link", { name: "Advanced records" }))
       .toHaveAttribute(
         "href",
         "/admin/?records=open#maru-specialist-heading",
       );
 
-    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    await user.click(screen.getByRole("button", { name: "Team workspace" }));
 
     expect(
       await screen.findByRole("heading", {
-        name: "Appointment is not ordinary access",
+        name: "Assigning a role and sharing access",
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/creates no attendee Registration, attendance, payment/i),
+      screen.getByText(/Team-only use does not register anyone as an attendee or create a payment/i),
     ).toBeInTheDocument();
     expect(screen.queryByText(/participation capacity/i)).not.toBeInTheDocument();
 
@@ -752,6 +752,14 @@ describe("Management Console", () => {
       .not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Planned capabilities" }))
       .not.toBeInTheDocument();
+    const technicalSummary = screen.getByText("Technical setup details", { selector: "summary" });
+    const technicalDetails = technicalSummary.closest("details")!;
+    expect(technicalDetails.open).toBe(false);
+    await user.click(technicalSummary);
+    expect(technicalDetails.open).toBe(true);
+    expect(within(technicalDetails).getByText("Enabled workflow: Workforce only")).toBeVisible();
+    await user.click(technicalSummary);
+    expect(technicalDetails.open).toBe(false);
     await expectNoAccessibilityViolations(
       document.querySelector<HTMLElement>(".shell")!,
     );
@@ -769,18 +777,18 @@ describe("Management Console", () => {
 
     render(<App />);
 
-    await user.click(await screen.findByRole("button", { name: "Workforce" }));
+    await user.click(await screen.findByRole("button", { name: "Team workspace" }));
     expect(
-      await screen.findByText(/This edition profile creates no attendee/i),
+      await screen.findByText(/Team-only use does not register anyone as an attendee/i),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/and Participation capacity\./i))
+    expect(screen.queryByText(/and the right event eligibility/i))
       .not.toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: "Manage access" }));
-    const drawer = screen.getByRole("dialog", { name: "Access to Workforce" });
+    const drawer = screen.getByRole("dialog", { name: "Access to Team workspace" });
     expect(
       within(drawer).getByText(
-        /This edition profile does not create attendee Participation capacities/i,
+        /Team-only use does not register them as an attendee/i,
       ),
     ).toBeInTheDocument();
     expect(within(drawer).queryByText(/receive capacities/i))
@@ -803,7 +811,7 @@ describe("Management Console", () => {
       await screen.findByRole("heading", { name: "MaruCon 2026" }),
     ).toBeInTheDocument();
     expect(screen.getAllByText("Programme operations")).toHaveLength(2);
-    expect(screen.getByRole("button", { name: "Workforce" }))
+    expect(screen.getByRole("button", { name: "Team workspace" }))
       .toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "People" }))
       .not.toBeInTheDocument();
@@ -840,13 +848,13 @@ describe("Management Console", () => {
         name: "Workspace unavailable in this release",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/No broader convention workflow was assumed/))
+    expect(screen.getByText(/There are no available tools for this event/))
       .toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Today" }))
       .not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Workforce" }))
+    expect(screen.queryByRole("button", { name: "Team workspace" }))
       .not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Specialist records" }))
+    expect(screen.queryByRole("link", { name: "Advanced records" }))
       .not.toBeInTheDocument();
     expect(fetch).toHaveBeenCalledTimes(1);
   });
@@ -946,10 +954,10 @@ describe("Management Console", () => {
       ),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    await user.click(screen.getByRole("button", { name: "Team workspace" }));
     expect(
       await screen.findByText(
-        "Use this page to understand how departments become staffed positions, shared availability, and workable shifts.",
+        "Organize your teams, find volunteers for open roles, and plan when people will work.",
       ),
     ).toBeInTheDocument();
 
@@ -1065,13 +1073,13 @@ describe("Management Console", () => {
     render(<App />);
     await screen.findByRole("heading", { name: "MaruCon 2026" });
 
-    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    await user.click(screen.getByRole("button", { name: "Team workspace" }));
 
     expect(
-      await screen.findByRole("heading", { name: "Workforce" }),
+      await screen.findByRole("heading", { name: "Team workspace" }),
     ).toBeInTheDocument();
     const journey = screen
-      .getByRole("heading", { name: "From structure to a workable rota" })
+      .getByRole("heading", { name: "From teams to a shift plan" })
       .closest("section");
     expect(journey).not.toBeNull();
     for (const stage of [
@@ -1150,20 +1158,20 @@ describe("Management Console", () => {
     render(<App />);
     await screen.findByRole("heading", { name: "MaruCon 2026" });
 
-    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    await user.click(screen.getByRole("button", { name: "Team workspace" }));
 
     expect(
       await screen.findByRole("heading", {
-        name: "The complete structure is too large to show safely",
+        name: "There are too many teams to show at once",
       }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", {
-        name: "From structure to a workable rota",
+        name: "From teams to a shift plan",
       }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Morgan Registration Lead")).not.toBeInTheDocument();
-    expect(screen.queryByText(/active Department/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/active department/)).not.toBeInTheDocument();
   });
 
   it("gives a non-staff owner purpose workspaces without specialist records", async () => {
@@ -1181,9 +1189,9 @@ describe("Management Console", () => {
     render(<App />);
     await screen.findByRole("heading", { name: "MaruCon 2026" });
 
-    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    await user.click(screen.getByRole("button", { name: "Team workspace" }));
     await screen.findByRole("heading", {
-      name: "From structure to a workable rota",
+      name: "From teams to a shift plan",
     });
 
     expect(
@@ -1218,18 +1226,18 @@ describe("Management Console", () => {
     render(<App />);
     await screen.findByRole("heading", { name: "MaruCon 2026" });
 
-    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    await user.click(screen.getByRole("button", { name: "Team workspace" }));
 
     expect(
       await screen.findByRole("heading", {
-        name: "Workforce structure is not available for your role",
+        name: "You do not have access to this team overview",
       }),
     ).toBeInTheDocument();
     expect(screen.queryByText("Attendee Operations")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Morgan Registration Lead"),
     ).not.toBeInTheDocument();
-    expect(screen.queryByText(/active Department/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/active department/)).not.toBeInTheDocument();
   });
 
   it("keeps the registration and Workforce journeys free of automated accessibility violations", async () => {
@@ -1243,9 +1251,9 @@ describe("Management Console", () => {
       document.querySelector<HTMLElement>(".shell")!,
     );
 
-    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    await user.click(screen.getByRole("button", { name: "Team workspace" }));
     await screen.findByRole("heading", {
-      name: "From structure to a workable rota",
+      name: "From teams to a shift plan",
     });
     await expectNoAccessibilityViolations(
       document.querySelector<HTMLElement>(".shell")!,
@@ -1409,7 +1417,7 @@ describe("Management Console", () => {
     expect(steps.some((step) => step.textContent?.includes("Organization")))
       .toBe(true);
     expect(
-      screen.getByRole("link", { name: "Browse specialist records" }),
+      screen.getByRole("link", { name: "Browse advanced records" }),
     ).toHaveAttribute(
       "href",
       "/admin/?records=open#maru-specialist-heading",

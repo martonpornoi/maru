@@ -49,6 +49,16 @@ data repair or Programme activation follows from this comparison.
 
 ## Purpose and boundary
 
+The shared interface uses the UX-031 task names **Application forms**, **Start
+from a template** and **Review applications**. Generic form history and technical
+provenance remain inspectable under details; responsible Departments and reviewers
+use labelled controls. The dormant Programme paths use **Collect activity ideas**,
+**My activity ideas** and **Set up activity reviews**, with everyday topic/activity
+type labels and explicit fixed-version confirmation before submission. Required
+rules references and consent remain visible, unchanged owner commands and exact
+source proofs still govern every action, and no production route or profile is
+activated by these presentation changes.
+
 `maru.applications` implements REG-023, PRG-001, PRG-002, PRG-009, IDN-014,
 and a bounded intake/review slice of KNO-009. PRG-010 and ADR 0083 define the
 implemented dormant preview-first Programme-import boundary; PRG-011 and ADR

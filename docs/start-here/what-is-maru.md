@@ -1,47 +1,63 @@
 # What is Maru?
 
 **Audience:** Product evaluators and new contributors\
-**Outcome:** Understand Maru's promise, users, and deliberate boundaries\
+**Outcome:** Understand Maru's purpose, users, and deliberate boundaries\
 **Reading time:** 5 minutes
 
-Maru is intended to be the calm operating system for recurring community
-conventions. It gives attendees and organizers one trusted place to understand
-what they need to do, what changed, who owns a decision, and what they may see
-or change.
+Maru is open-source operations software being built primarily for furry
+conventions. It connects the work of volunteers, programme teams, department
+leads, and organizers across recurring event editions. Other community
+conventions can use the same foundations.
 
-Maru treats an event as an interconnected operating system rather than a set of
-unrelated forms. Registration affects entitlements; staffing affects access and
-schedules; programme changes affect rooms, equipment, signs, and
-communications; decisions and outcomes remain understandable after the event.
+A room change can affect the programme, volunteer shifts, equipment, signs,
+and announcements. Next year's team needs to understand what happened and why.
+Maru's aim is to keep those relationships clear without requiring people to
+reconstruct them from unrelated forms, spreadsheets, and chat history.
+
+## Begin with one workflow
+
+A convention should be able to use Maru for one complete job while keeping its
+existing systems. Volunteer coordination, for example, should not require
+moving attendee registration or payments into Maru. A host or volunteer account
+must not silently make that person an attendee or collect unrelated data.
+
+That principle guides the architecture; it is not a claim that every proposed
+workflow is ready. The [maturity guide](current-maturity.md) distinguishes
+current exploration paths from future scope.
 
 ## Who it serves
 
-- **Attendees and participants** need one account, clear status, relevant
-  messages, a personal schedule, and privacy-respecting history.
-- **Volunteers and staff** need role-aware work, training, assignments,
-  handovers, and safe escalation.
-- **Department leads and directors** need ownership, dependencies, readiness,
-  capacity, risk, and durable decisions.
-- **Technical operators** need one authorization vocabulary, observable jobs,
-  stable APIs, recovery procedures, and explicit module ownership.
+- **Volunteers and staff** need clear assignments, shifts, handovers, and
+  explanations of what they can see or change.
+- **Programme teams and hosts** need proposals, room and time planning,
+  conflict explanations, publication, and usable on-site outputs.
+- **Department leads and organizers** need accountable decisions, readiness,
+  capacity, and history that survives team turnover.
+- **Attendees and other participants** need clear status, relevant information,
+  and privacy-respecting relationships with each organizer.
+- **Technical operators and contributors** need documented boundaries,
+  observable failures, stable APIs, and recovery procedures.
 
-## The design in one paragraph
+Furry convention needs include dealer and artist workflows, fursuit facilities,
+charity activities, and age/content boundaries. These appear in the
+[requirements](../product/requirements.md); their presence there describes
+product intent, not a promise that each is implemented.
 
-Maru is a Django and PostgreSQL modular monolith. Its modules own their data and
-communicate through documented commands, queries, and events. Authorization is
-deny-by-default and scoped by organization, event edition, Department, object,
-and field where needed. External providers remain adapters instead of becoming
-the source of truth.
+## The design
 
-## Deliberate boundaries
+Maru uses Django and PostgreSQL as a modular monolith. Each module owns its
+data and exposes documented commands, queries, and events. Authorization is
+deny-by-default and scoped by organizer, event edition, role, object, and field
+where needed. One account does not give every organizer access to that person's
+information.
+
+Imports, portable exports, printable fallbacks, and explicit stop-use boundaries
+make gradual adoption and coexistence with other tools possible. External
+providers remain adapters; they do not become Maru's source of truth.
 
 Maru does not aim to become a social network, an unstructured chat replacement,
-a statutory accounting system, or an opaque automated decision maker. It
-integrates specialist services when rebuilding them would add risk without
-improving the convention journey.
-
-For more depth, read the [product vision](../product/vision.md), then consult
-the [capability map](../product/capability-map.md) only when you need the full
-product horizon.
+a statutory accounting system, or an opaque automated decision maker. The
+[product vision](../product/vision.md) and [capability map](../product/capability-map.md)
+explain the longer-term scope.
 
 **Next:** [Learn what works today](current-maturity.md).

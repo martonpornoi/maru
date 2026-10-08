@@ -180,8 +180,8 @@ def test_real_personal_shell_one_heading_and_protected_headers(page, task):
     assert "no-store" in response["Cache-Control"]
     assert response["X-Content-Type-Options"] == "nosniff"
     assert "form-action 'self'" in response["Content-Security-Policy"]
-    assert "Unknown reference kinds remain unavailable" in soup.get_text()
-    assert "private supporting PDFs have dedicated tasks" in soup.get_text()
+    assert "Submitting an idea does not mean it has been accepted" in soup.get_text()
+    assert "does not confirm anyone as a host" in soup.get_text()
     assert not soup.select('a[href*="/admin/applications/"]')
 
 
@@ -381,7 +381,7 @@ def test_closed_planning_preserves_history_but_disallows_creation(page):
     assert request(page).status_code == 200
     response = request(page, "calls")
     assert response.status_code == 200
-    assert "creation is closed" in response.content.decode()
+    assert "cannot start new activity ideas" in response.content.decode()
     assert request(page, "start").status_code == 404
     page.readers["available_programme_calls"].assert_not_called()
 

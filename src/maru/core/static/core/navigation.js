@@ -38,6 +38,7 @@
         function applyFilter() {
             const query = normalizeSearchText(filter.value);
             const queryTerms = query.split(/\s+/).filter(Boolean);
+            sidebar.classList.toggle('maru-navigation-searching', Boolean(query));
             if (query && !filtering) {
                 for (const group of groups) {
                     const collapsible = collapsibleFor(group);
@@ -70,6 +71,14 @@
                 const isCurrent = group.dataset.navigationCurrent === 'true';
                 const isAdvanced = group.dataset.navigationGroupKind === 'advanced';
                 group.hidden = !hasMatch || (!query && isSearchOnly && !isCurrent);
+                const count = group.querySelector('[data-navigation-group-count]');
+                if (count) {
+                    const matchCount = group.querySelectorAll(
+                        '[data-navigation-item]:not([hidden])'
+                    ).length;
+                    count.textContent = String(matchCount);
+                    count.setAttribute('aria-label', `${matchCount} page${matchCount === 1 ? '' : 's'}`);
+                }
                 const collapsible = collapsibleFor(group);
                 if (collapsible && query) {
                     collapsible.open = Boolean(
@@ -90,8 +99,8 @@
                 status.hidden = !query;
                 status.textContent = query
                     ? [
-                        `${taskCount} task${taskCount === 1 ? '' : 's'}`,
-                        `${advancedCount} technical record${advancedCount === 1 ? '' : 's'} in Specialist records`,
+                        `${taskCount} page${taskCount === 1 ? '' : 's'}`,
+                        `${advancedCount} in Advanced records`,
                     ].join(' · ')
                     : '';
             }
@@ -118,7 +127,7 @@
         )) {
             gateway.addEventListener('click', (event) => {
                 const specialistGroup = groups.find(
-                    (group) => group.dataset.navigationGroup === 'specialist-records'
+                    (group) => group.dataset.navigationGroupKind === 'advanced'
                 );
                 if (!specialistGroup) {
                     return;
@@ -131,8 +140,14 @@
                 if (collapsible) {
                     collapsible.open = true;
                 }
-                specialistGroup.scrollIntoView({block: 'nearest'});
-                filter.focus();
+                // The shell opens its drawer before this focus move on narrow screens.
+                requestAnimationFrame(() => {
+                    specialistGroup.scrollIntoView({block: 'nearest'});
+                    const summary = specialistGroup.querySelector('summary');
+                    if (summary) {
+                        summary.focus();
+                    }
+                });
             });
         }
     }

@@ -10,6 +10,20 @@ mutation-role, state-matrix, width/zoom, and release accessibility evidence
 pending
 Last updated: 2026-09-07
 
+## Approachable convention work
+
+The current usability batch applies [ADR 0116](../architecture/decisions/0116-approachable-convention-work.md)
+and UX-031: six purpose groups over the same authorized menu registry, an
+Advanced records gateway, concrete activity-idea language, and optional technical
+configuration behind accessible disclosures. Team workspace is the visible name
+of the Workforce overview. Exact implementation and browser evidence belong in
+[CURRENT](../project/CURRENT.md); presentation does not activate Programme.
+
+Furry conventions are the primary audience. New and occasional volunteers should
+find a useful task without learning policy versions or backend module names.
+The [shell contract](page-contracts/00-management-experience-shell.md) owns the
+interaction details and required exception/accessibility behavior.
+
 ## Current executable experience
 
 ADR 0030 established the two-page baseline. ADRs 0031–0038 and M1 restored the

@@ -13,6 +13,19 @@ rather than replace the curated summary.
 
 ## [Unreleased]
 
+### Changed
+
+- Management navigation groups available work by purpose and keeps advanced
+  records secondary, with searchable familiar terms, current-page discovery,
+  and a usable narrow-screen menu when JavaScript is unavailable.
+- Activity intake uses concrete labels such as **Suggest an activity** and
+  **Activity idea**. Optional technical details are progressively disclosed;
+  required decisions and errors remain visible. The staff overview is now
+  **Team workspace**.
+- The public introduction focuses on furry conventions and gives new contributors
+  a shorter route to a working local instance with corrected database setup.
+
+
 ### Fixed
 
 - Staff Console development tooling now locks `source-map-js` 1.2.2, addressing

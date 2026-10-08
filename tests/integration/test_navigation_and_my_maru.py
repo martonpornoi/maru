@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from django.test import Client
+from django.test.html import parse_html
 from django.urls import reverse
 from django.utils import timezone
 
@@ -43,7 +44,7 @@ def test_default_login_enters_the_focused_my_maru_surface() -> None:
     assert 'aria-label="My Maru"' in content
     assert content.count('id="nav-sidebar"') == 1
     assert content.count('id="nav-filter"') == 1
-    assert 'placeholder="Search tasks and records..."' in content
+    assert 'placeholder="Search this menu..."' in content
     assert "More from Maru" in content
     assert "Start here" not in content
     assert "data-personal-destination-kind" not in content
@@ -198,7 +199,7 @@ def test_admin_navigation_is_task_first_searchable_and_keeps_explicit_context() 
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Find a task or record" in content
+    assert "Find a page" in content
     assert "Selected edition" not in content
     assert 'class="maru-admin-nav-section"' not in content
     assert (
@@ -209,7 +210,7 @@ def test_admin_navigation_is_task_first_searchable_and_keeps_explicit_context() 
     assert content.count('data-navigation-code="work.workforce"') == 1
     assert f"{reverse('management-console')}?view=workforce" in content
     assert 'data-navigation-group="personal"' not in content
-    assert "Customize navigation" in content
+    assert "Choose pinned pages" in content
     assert edition.organization.name in content
     assert edition.series.name in content
     assert edition.name in content
@@ -371,7 +372,7 @@ def test_logistics_navigation_requires_the_exact_edition_capability() -> None:
     assert with_grant.status_code == 200
     content = with_grant.content.decode()
     assert content.count(f'value="edition.{edition.id}.logistics"') == 1
-    assert content.count(">Logistics<") == 1
+    assert parse_html(content).count("Equipment & storage") == 1
 
 
 def test_revoked_destination_disappears_while_its_preference_remains_private() -> None:

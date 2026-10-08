@@ -991,8 +991,9 @@ architecture documents, implementation issues, tests, and release notes.
 
 - **UX-027 — Coherent navigation and personal surface:** Once an organization,
   series, and edition are selected, every currently authorized destination
-  must appear in one searchable, non-duplicated navigation list rather than a
-  second hierarchy of folder-like scope menus. The selected context remains
+  must belong to one searchable, non-duplicated navigation registry. Human-purpose
+  groups may progressively disclose that registry under UX-031; they must not
+  recreate nested organization/series/edition folder menus. The selected context remains
   explicit in the header and route. An active person may pin only a stable,
   code-owned destination; every render must resolve and authorize the pin
   again, and a revoked, stale, malformed, deleted, or foreign target must
@@ -1066,6 +1067,23 @@ architecture documents, implementation issues, tests, and release notes.
   links, public volunteer pages, and personal My Workforce pages must retain
   that same purpose focus even when no prior workspace selection exists. Two
   distinct operator invitees must still accept before initial activation.
+
+- **UX-031 — Approachable convention work:** Everyday interfaces must use short,
+  concrete task language understandable to a new furry-convention volunteer and
+  to people using English as an additional language. Domain identifiers, policy
+  versions, evidence references, and implementation terminology belong in labelled
+  advanced details unless needed to make the current decision. Required choices,
+  validation errors, consequences, and approval responsibilities must remain
+  visible; presentation must never invent policy or conceal a blocking condition.
+  One authorized navigation registry may group destinations by human purpose.
+  The current group and search matches must be discoverable, with usable native
+  disclosures and a narrow-screen fallback when JavaScript is unavailable.
+  Search must retain familiar legacy terms. Links navigate; buttons perform
+  actions; prominent navigation links may be styled as buttons. Tabs are used
+  only for related views with correct selection, focus, and keyboard behavior.
+  Technical domain names and public API identifiers remain stable. Current task
+  guidance and tutorials must explain UI wording without making readers learn
+  implementation vocabulary first.
 
 ### Registration, orders, and attendee service
 

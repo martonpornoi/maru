@@ -29,7 +29,7 @@ def test_admin_is_the_preferred_authenticated_route() -> None:
     assert "Your Maru account" in content
     assert "My governance invitations" in content
     assert "Convention work" not in content
-    assert "Specialist records" not in content
+    assert 'data-navigation-group="advanced-records"' not in content
     assert "/static/staff-console/app.js" not in content
 
 
@@ -51,7 +51,7 @@ def test_workflows_are_embedded_under_the_original_admin_shell() -> None:
     assert "/static/staff-console/app.js" in content
     assert "csrf-token" in content
     assert "Convention work" in content
-    assert "Workforce" in content
+    assert "Team workspace" in content
     assert f"{reverse('management-console')}?view=workforce" in content
     assert "maru-embedded-page-access-template" not in content
     assert '<details class="maru-access-summary' not in content
@@ -150,7 +150,7 @@ def test_local_login_lands_workspace_less_admin_in_admin_workspace() -> None:
 
     assert response.status_code == 200
     assert response.request["PATH_INFO"] == "/admin/"
-    assert "Convention work" in response.content.decode()
+    assert 'data-navigation-group="overview"' in response.content.decode()
 
 
 def test_local_login_accepts_non_admin_platform_account() -> None:
