@@ -102,9 +102,49 @@ MARU_OPERATORS = RepresentationDefinition(
     ),
 )
 
+ANNOUNCEMENTS_OPERATOR_CAPABILITIES = (
+    "organizations.view_basic",
+    "organizations.change_profile",
+    "organizations.create_series",
+    "organizations.change_series",
+    "organizations.manage_representation",
+    "events.view_basic",
+    "events.create",
+    "authorization.delegate",
+    "authorization.grant_direct",
+    "authorization.revoke",
+    "authorization.manage_roles",
+    "audit.view_security",
+    "events.change_profile",
+    "events.transition",
+    "announcements.view",
+    "announcements.compose",
+    "announcements.review",
+    "announcements.record_publication",
+    "announcements.manage_settings",
+    "announcements.export_evidence",
+)
+
+ANNOUNCEMENTS_OPERATORS = RepresentationDefinition(
+    code="announcements_operators",
+    name="Announcements operators",
+    controller_label="Announcements operator",
+    membership_label="Announcements operator",
+    role_code="announcements-operators",
+    role_name="Announcements operators",
+    role_version=1,
+    capability_codes=ANNOUNCEMENTS_OPERATOR_CAPABILITIES,
+    purpose=(
+        "Identifies the people accountable for operating Maru's Announcements "
+        "workflow. It does not claim a legal or executive office or authority "
+        "over other convention tools."
+    ),
+)
+
 REPRESENTATION_DEFINITIONS = {
     EXECUTIVE_BOARD.code: EXECUTIVE_BOARD,
     MARU_OPERATORS.code: MARU_OPERATORS,
+    ANNOUNCEMENTS_OPERATORS.code: ANNOUNCEMENTS_OPERATORS,
 }
 
 REPRESENTATION_CODE_CHOICES = tuple(

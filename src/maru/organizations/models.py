@@ -17,6 +17,7 @@ from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug, validate_time_zone
 from maru.identity.policies import validate_convention_subject
 from maru.organizations.representation_catalog import (
+    ANNOUNCEMENTS_OPERATORS,
     EXECUTIVE_BOARD,
     MARU_OPERATORS,
     REPRESENTATION_CODE_CHOICES,
@@ -370,6 +371,10 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
                     | models.Q(
                         code=MARU_OPERATORS.code,
                         name=MARU_OPERATORS.name,
+                    )
+                    | models.Q(
+                        code=ANNOUNCEMENTS_OPERATORS.code,
+                        name=ANNOUNCEMENTS_OPERATORS.name,
                     )
                 ),
                 name="organization_representation_type_supported",

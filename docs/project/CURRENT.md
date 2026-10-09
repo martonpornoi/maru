@@ -1,7 +1,7 @@
 # Current project state
 
-Last updated: 2026-10-08
-Phase: Approachable convention workflows and pre-production evaluation.
+Last updated: 2026-10-09
+Phase: Standalone Announcements implementation and pre-production evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready release or supported hosted service. Furry conventions are the
@@ -16,56 +16,52 @@ broader convention roadmap. First make everyday work understandable to occasiona
 volunteers, including people whose first language is not English. Continue with
 complete optional workflows instead of requiring a convention to adopt all modules.
 
-The first coherent batch implements [UX-031](../product/requirements.md)
-and [ADR 0116](../architecture/decisions/0116-approachable-convention-work.md):
+The approachable-work batch is delivered through
+[PR #209](https://github.com/martonpornoi/maru/pull/209), protected main
+`e77fae5b94dbee3e7f2e9d64b2f768be95888738`. It groups authorized navigation, makes
+activity/application language clearer, hides technical details progressively and
+shortens the furry-first contributor path under UX-031 and ADR 0116.
 
-- One authorized menu, grouped by purpose; clear current event, search, pins,
-  current-group expansion, and secondary Advanced records.
-- Team workspace and activity-idea language; technical details are expandable.
-  Required choices, consent, approvals, errors, and event scope remain visible.
-- A shorter furry-convention introduction, truthful maturity guidance, and one
-  verified newcomer setup path. Existing ADRs and checkpoints are retained.
+The current batch is [standalone Announcements](../modules/announcements.md):
+guided purpose-specific setup, write, independent review, manual publication reports,
+corrections and portable downloads. [ADR 0117](../architecture/decisions/0117-standalone-manual-announcements.md)
+and ANN-007 through ANN-009 define the boundary. The profile adopts Announcements
+plus foundations only, with no Registration, Participation, payment, attendance,
+Workforce, Programme or recipient-notification effects. Ordinary publication needs
+a different reviewer of the exact draft; copying is not publication. Existing
+profile versions and Workforce operator authority remain unchanged.
 
-This is presentation and documentation work. No schema, permission, profile
-activation, API identifier, or cross-module side effect is introduced. Policy
-reference codes with no approved choice catalog still require explicit input;
-this change explains them rather than inventing a default. The
-[batch checkpoint](../checkpoints/2026-10-08-approachable-convention-work.md)
-records implementation evidence and remaining limits. [PR #209](https://github.com/martonpornoi/maru/pull/209)
-owns the final source, delivery status, exact-commit certification and independent
-protected-check evidence. Both local and hosted acceptance are required for delivery.
+Implementation and the bounded synthetic browser journey are complete locally;
+exact-commit certification and protected delivery remain. The
+[Announcements checkpoint](../checkpoints/2026-10-09-standalone-announcements.md)
+records actual roles, widths, repairs and remaining acceptance limits. The final
+native Announcements domain/migration batch passes
+27 cases, including real concurrent retries, competing edits, receipt-to-state
+integrity, unused uninstall/reapply and retained-history downgrade refusal.
+A separate 33-case native foundation batch includes genuine restricted-login
+setup, operator acceptance/activation and the approved-copy/report/export workflow.
+
+The final combined database-free suite passed 13,806 cases in 75.81 seconds;
+108 frontend cases and generated contracts also passed. Full strict typing, Ruff,
+formatting and semantic Python documentation checks passed. Browser verification
+used separate synthetic writer/reviewer accounts and a genuine restricted runtime.
+The scripts-blocked correction/report/stopped-use path, private/public download
+separation and integrity, 320–1,920 pixel layouts, error focus and normal mobile
+menu return were verified. A final shared-shell fallback repair passed nine focused
+cases after the whole unit run; final certification will include it. Native print,
+200-percent zoom, specialist and independent-person acceptance remain open.
+Exact-commit certification and hosted acceptance still remain; these development results are not production activation or independent
+human acceptance.
 
 ## Starting baseline and verification
 
-[PR #208](https://github.com/martonpornoi/maru/pull/208) merged on October 6 at
-`1fc8a216c96a7a42e7ab1f3bcec206eae50a1426`. It delivered 24-hour deadline entry
-and the bounded source-map-js security repair. Its exact source `5b53f21` passed
-local and hosted acceptance: 18,491 Python cases, 103 frontend cases, 30 required
-PostgreSQL shards, and 91.61% combined coverage. That evidence certifies the
-previous source, not this batch. Earlier PRs #199, #201, #202, #204, #206 and #207
-remain delivered; their historical attempts must not be restarted as current work.
-
-Current development feedback passes all 13,588 Python units and 108 frontend
-cases. Expanded database feedback passed 129 cases; its one stale label assertion
-was corrected and the remaining case passed separately. The first exact candidate
-`40bac23` passed every non-database gate but stopped when an Applications journey
-still expected the old form-studio label. Twenty-one database shards passed; seven
-active shards were interrupted, not accepted. All 29 started databases were removed
-and complete failed evidence plus source were preserved. The
-[verification follow-up](../checkpoints/2026-10-08-approachable-convention-verification.md)
-records the bounded expectation repair: all 14 affected Applications integration
-cases pass, and their owned database and volume are removed. The second candidate
-`b85db33` passed 23 database shards, including the repaired Applications shard,
-before one Windows socket-allocation error interrupted acceptance. The other six
-shards were cancelled; all 30 containers were removed and complete failed evidence
-was preserved. All four affected rollback variants then passed on a fresh database.
-The socket condition was transient; its precise host cause remains unproven.
-A fresh complete certification remains required. No production behavior, timeout, coverage threshold
-or authorization test is relaxed. A fresh disposable database applied migrations;
-ordinary sign-in, event selection, Team workspace, and technical setup disclosure
-were checked in a real local browser. Synthetic template checks cover seven widths
-and keyboard navigation. These observations are assistant-operated and do not
-prove independent-person comprehension or specialist accessibility acceptance.
+PR #209 passed complete local and independent hosted acceptance before protected
+merge; source, tested merge and squash trees matched. Its site deployment and
+signed-out newcomer path were verified. The
+[implementation checkpoint](../checkpoints/2026-10-08-approachable-convention-work.md)
+and [verification follow-up](../checkpoints/2026-10-08-approachable-convention-verification.md)
+retain exact commits, counts, timings and failed-attempt evidence. Those results
+certify PR #209, not the Announcements candidate.
 
 Follow [local certification](../development/local-certification.md): focused
 feedback, complete inexpensive units, then one clean exact-commit required run
@@ -98,14 +94,15 @@ Purpose-specific authority, owning commands and independent approval still apply
 
 ## Smallest next actions
 
-1. Check [PR #209](https://github.com/martonpornoi/maru/pull/209) for the final
-   exact-commit local and protected hosted evidence for this usability batch.
-   Its implementation checkpoint does not substitute for those delivery gates.
-2. Define and deliver a bounded announcements workflow, followed by convention
-   knowledge/helpdesk and volunteer, fursuit and accessibility services. Each needs
-   its own complete journey and modular-adoption contract before implementation.
-3. Continue dealers, charity auctions, arrival exceptions, hospitality and
-   continuity in the [roadmap](ROADMAP.md), carrying the same plain-language rules.
+1. Freeze the coherent Announcements batch and run one clean exact-commit
+   required certification, then independent protected delivery. Preserve previous
+   evidence before replacing local receipts; keep the populated fixture stopped.
+2. Resolve the explicit adoption-expansion and purpose-specific authority contract
+   alongside Guidance so an existing event can add that workflow safely. Do not
+   widen a v1 manifest, grant new control implicitly or duplicate an event.
+3. Continue guidance/help desk, volunteer and fursuit/accessibility services, then
+   the remaining [roadmap](ROADMAP.md) journeys. The maintainer has requested
+   continuous work until explicitly stopped; routine product choices are delegated.
 
 The original Programme checkout and unrelated worktrees, stashes and resources
 must remain untouched. In particular, do not reapply already-applied stashes

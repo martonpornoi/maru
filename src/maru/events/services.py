@@ -45,6 +45,7 @@ from maru.organizations.models import (
     Organization,
     OrganizationRepresentation,
 )
+from maru.organizations.representation_catalog import representation_definition
 from maru.scheduling.release_changes import record_events_release_change
 
 MAX_EDITION_NAME_LENGTH = 160
@@ -433,22 +434,24 @@ def create_event_edition(
             adoption_profile_code=profile.code.value,
             adoption_profile_version=profile.version,
         )
-        if (
-            profile.code == AdoptionProfileCode.FULL_CONVENTION
-            and not actor.is_platform_administrator
-            and OrganizationRepresentation.objects.filter(
+        representation_code = (
+            OrganizationRepresentation.objects.filter(
                 organization=organization,
-                code=OrganizationRepresentation.MARU_OPERATORS_CODE,
-            ).exists()
+            )
+            .values_list("code", flat=True)
+            .first()
+        )
+        representation = representation_definition(representation_code or "")
+        if (
+            not actor.is_platform_administrator
+            and representation is not None
+            and representation.role_code not in profile.root_role_codes
         ):
             raise ValidationError(
                 {
                     "adoption_profile_code": ValidationError(
-                        (
-                            "Expanding a Maru-operator organization beyond "
-                            "Workforce requires an explicit platform-administrator "
-                            "setup decision."
-                        ),
+                        "Adding tools outside this operator group's purpose requires "
+                        "an explicit platform setup decision.",
                         code="edition_adoption_expansion_requires_platform_oversight",
                     )
                 }

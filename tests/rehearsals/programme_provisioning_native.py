@@ -114,7 +114,7 @@ def test_native_migration_runtime_separation_and_reprovision_refusal(
             assert "workforce_only" in definition
             assert connection.execute(
                 "SELECT EXISTS (SELECT 1 FROM public.django_migrations "
-                "WHERE app = 'events' AND name = '0019_isolated_programme_candidate')"
+                "WHERE app = 'events' AND name = '0022_isolated_programme_candidate')"
             ).fetchone() == (candidate_schema,)
             with (
                 pytest.raises(psycopg.errors.InsufficientPrivilege),
@@ -402,7 +402,7 @@ with connection.cursor() as cursor:
                 "django",
                 "migrate",
                 "events",
-                "0018_programme_retained_recovery_fence",
+                "0021_announcements_setup_downgrade_fence",
                 "--noinput",
             ],
             environment,

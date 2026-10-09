@@ -84,9 +84,17 @@ def test_conversion_capability_is_additive_exact_department_nondelegable():
     assert current.ORGANIZATION_CAPABILITIES == previous.ORGANIZATION_CAPABILITIES
     assert current.EDITION_CAPABILITIES == previous.EDITION_CAPABILITIES
     assert current.RESOURCE_CAPABILITIES == previous.RESOURCE_CAPABILITIES
-    assert {
-        code for code, capability in CAPABILITIES.items() if capability.persistable
-    } - {
+    assert (
+        {code for code, capability in CAPABILITIES.items() if capability.persistable}
+        - {
+            "announcements.view",
+            "announcements.compose",
+            "announcements.review",
+            "announcements.record_publication",
+            "announcements.manage_settings",
+            "announcements.export_evidence",
+        }
+    ) - {
         "programme.manage_hosts",
         "programme.view_hosts",
         "programme.manage_staffing",

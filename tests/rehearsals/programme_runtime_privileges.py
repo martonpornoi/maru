@@ -162,7 +162,7 @@ _NAMES = (
 )
 _BASELINE = tuple(getattr(owner, name) for name in _NAMES)
 _QUERY = owner._RUNTIME_DATABASE_ROLE_SAFETY_QUERY
-_FUNCTIONS = owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4
+_FUNCTIONS = owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5
 
 
 class ProgrammePrivilegeError(RuntimeError):
@@ -204,7 +204,7 @@ def install_isolated_candidate_privilege_contract():
         is not PROGRAMME_REHEARSAL_PROFILE
         or tuple(getattr(owner, name) for name in _NAMES) != _BASELINE
         or owner._RUNTIME_DATABASE_ROLE_SAFETY_QUERY != _QUERY
-        or owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4 != _FUNCTIONS
+        or owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5 != _FUNCTIONS
     ):
         raise ProgrammePrivilegeError("candidate_privilege_baseline_changed")
     classes = candidate_relation_classes()
@@ -212,7 +212,7 @@ def install_isolated_candidate_privilege_contract():
     functions = (*_FUNCTIONS, *("public." + identity for identity in sorted(HELPERS)))
     for name, relations in zip(_NAMES, classes, strict=True):
         setattr(owner, name, relations)
-    owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4 = functions
+    owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5 = functions
     for module, attribute, _original, projected in function_contracts:
         setattr(module, attribute, projected)
 

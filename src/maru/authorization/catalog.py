@@ -83,7 +83,7 @@ EDITION_BASIC_FIELD_CEILING = frozenset(
 )
 
 
-CAPABILITY_DEFINITIONS = (
+CAPABILITY_DEFINITIONS: tuple[Capability, ...] = (
     Capability(
         code="organizations.view_basic",
         description="View the organizer profile and its recurring convention brands.",
@@ -1896,11 +1896,69 @@ CAPABILITY_DEFINITIONS = (
     ),
 )
 
+
+CAPABILITY_DEFINITIONS += (
+    Capability(
+        code="announcements.view",
+        description="Read announcements and approved publishing copy.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("announcement", "approved_copy", "history")),
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        delegable=True,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="announcements.compose",
+        description="Write announcements and prepare corrections.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("announcement",)),
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        delegable=True,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="announcements.review",
+        description="Independently review exact announcement copy.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("announcement", "review")),
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        delegable=True,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="announcements.record_publication",
+        description="Record an operator report of external publication.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("publication",)),
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        delegable=True,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="announcements.manage_settings",
+        description="Confirm announcement channel and record-keeping settings.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("settings",)),
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        delegable=True,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="announcements.export_evidence",
+        description="Export privileged announcement handover evidence.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("evidence",)),
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        delegable=True,
+        obligations=frozenset({"audit"}),
+    ),
+)
+
 CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINITIONS}
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-09-05.1"
+POLICY_VERSION = "2026-10-09.1"
 
 
 def capability(code: str) -> Capability | None:

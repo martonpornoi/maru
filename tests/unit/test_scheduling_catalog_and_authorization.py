@@ -180,9 +180,17 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
         *current.EDITION_CAPABILITIES,
         *current.DEPARTMENT_CAPABILITIES,
         *current.RESOURCE_CAPABILITIES,
-    } == {
-        code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - {
+    } == (
+        {code for code, definition in CAPABILITIES.items() if definition.persistable}
+        - {
+            "announcements.view",
+            "announcements.compose",
+            "announcements.review",
+            "announcements.record_publication",
+            "announcements.manage_settings",
+            "announcements.export_evidence",
+        }
+    ) - {
         "programme.manage_staffing",
         "programme.export_archive",
         "programme.view_staffing",
@@ -221,9 +229,17 @@ def test_release_migration_adds_only_four_independent_edition_capabilities():
         *current.EDITION_CAPABILITIES,
         *current.DEPARTMENT_CAPABILITIES,
         *current.RESOURCE_CAPABILITIES,
-    } == {
-        code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - OPERATOR_CAPABILITIES - auth.CHANGE_COMMUNICATION_CAPABILITIES - {
+    } == (
+        {code for code, definition in CAPABILITIES.items() if definition.persistable}
+        - {
+            "announcements.view",
+            "announcements.compose",
+            "announcements.review",
+            "announcements.record_publication",
+            "announcements.manage_settings",
+            "announcements.export_evidence",
+        }
+    ) - OPERATOR_CAPABILITIES - auth.CHANGE_COMMUNICATION_CAPABILITIES - {
         "programme.export_archive"
     }
 

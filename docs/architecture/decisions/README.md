@@ -121,6 +121,7 @@ the system.
 | [0114](0114-restore-stable-identity-trigger-predicates.md) | Accepted | Preserve exact reviewed Identity trigger predicates across logical restore without pinning internal cast-format flags |
 | [0115](0115-local-only-assisted-programme-rehearsal.md) | Accepted | Allow an explicitly opted-in synthetic loopback HTTP browser bridge without changing native HTTPS or production authority |
 | [0116](0116-approachable-convention-work.md) | Accepted | Present authorized work in purpose groups, use plain activity language, disclose advanced details progressively, and prioritize furry-convention newcomers. |
+| [0117](0117-standalone-manual-announcements.md) | Accepted; implementation in progress | Keep Announcements standalone with exact independent review, honest manual publication reports and purpose-specific operator authority. |
 
 New ADRs use the next four-digit number and contain:
 

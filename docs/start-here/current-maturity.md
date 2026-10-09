@@ -15,6 +15,7 @@ a PyPI package, or a production-ready release.
 | --- | --- |
 | Organizer setup | The shared management shell and synthetic organization → authority → convention series → edition journey provide the introductory route. |
 | Workforce | Tested structure, positions, assignments, availability, and shift workflows include a bounded Workforce-only adoption path. |
+| Announcements | A standalone manual publishing workflow supports two-person review, channel copies, posting records, corrections and downloads. Existing websites and social channels publish the posts; Maru stores the approved text and your records. Follow the [workflow guide](../operations/announcements.md) with synthetic data. |
 | Programme Operations | Planning, publication, on-site continuity, archive, and recovery work is implemented under isolated synthetic evaluation. The ordinary local setup does not activate this dormant profile. |
 | Registration, Venue, Logistics, and other modules | Substantial bounded slices exist. A module or endpoint alone does not establish a complete operational journey. |
 

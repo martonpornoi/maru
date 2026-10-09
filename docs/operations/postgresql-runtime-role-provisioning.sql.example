@@ -115,6 +115,34 @@ GRANT SELECT ON TABLE public.events_programmeadoptionsetupreceipt TO maru_runtim
 REVOKE ALL ON TABLE public.events_programmestopreceipt FROM maru_runtime, PUBLIC;
 GRANT SELECT ON TABLE public.events_programmestopreceipt TO maru_runtime;
 
+-- ADR 0117: Announcements is mounted only in its explicit standalone profile.
+-- Aggregate cursors may advance; settings/content/review/report/receipt history
+-- is append-only. Neither class permits runtime deletion or REFERENCES grants.
+REVOKE ALL ON TABLE
+    public.events_announcementsadoptionsetupreceipt,
+    public.announcements_announcementsettingsrevision,
+    public.announcements_announcementrevision,
+    public.announcements_announcementvariant,
+    public.announcements_announcementreview,
+    public.announcements_announcementpublicationreport,
+    public.announcements_announcementcommandreceipt
+    FROM maru_runtime, PUBLIC;
+GRANT SELECT, INSERT ON TABLE
+    public.events_announcementsadoptionsetupreceipt,
+    public.announcements_announcementsettingsrevision,
+    public.announcements_announcementrevision,
+    public.announcements_announcementvariant,
+    public.announcements_announcementreview,
+    public.announcements_announcementpublicationreport,
+    public.announcements_announcementcommandreceipt
+    TO maru_runtime;
+REVOKE ALL ON TABLE
+    public.announcements_announcementcontrol,
+    public.announcements_announcement FROM maru_runtime, PUBLIC;
+GRANT SELECT, INSERT, UPDATE ON TABLE
+    public.announcements_announcementcontrol,
+    public.announcements_announcement TO maru_runtime;
+
 -- Programme operational approval evidence remains dormant under #108.
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.authorization_programmerolerequest,
@@ -849,7 +877,7 @@ REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role FROM PUBLIC;
 REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role
     FROM maru_runtime;
 
--- Functions are executable by PUBLIC by default. The ADR 0096 v4 allowlist
+-- Functions are executable by PUBLIC by default. The ADR 0096/0117 v5 allowlist
 -- below is the complete non-trigger helper closure used by Maru's current
 -- runtime SQL and database triggers. A change must update code, migration
 -- evidence, this file, and the genuine-login service smoke together.
@@ -879,6 +907,8 @@ GRANT EXECUTE ON FUNCTION
     public.maru_assert_active_executive_board_v0009(uuid),
     public.maru_assert_active_maru_operators(uuid),
     public.maru_assert_active_maru_operators_v0009(uuid),
+    public.maru_assert_active_announcements_operators(uuid),
+    public.maru_assert_active_announcements_operators_v0009(uuid),
     public.maru_assert_authority_issuance_complete(bigint),
     public.maru_assert_authority_issuance_complete_internal(
         bigint,

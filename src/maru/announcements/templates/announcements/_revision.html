@@ -1,0 +1,13 @@
+{% load localization %}
+<section aria-labelledby="{{ heading_id }}">
+  <h2 id="{{ heading_id }}">{{ heading }}</h2>
+  <p>Language: {{ revision.language_code|language_name }}</p>
+  <h3>{{ revision.headline }}</h3>
+  <pre>{{ revision.body }}</pre>
+  <h3>Text for each channel</h3>
+  <ul class="announcements-cards">
+    {% for copy in revision.variants %}
+    <li><h4>{{ copy.channel_label }} · {{ copy.language_code|language_name }}</h4><p><strong>{{ copy.headline }}</strong></p><pre>{{ copy.body }}</pre></li>
+    {% endfor %}
+  </ul>
+</section>

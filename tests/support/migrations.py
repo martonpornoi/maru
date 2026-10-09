@@ -154,6 +154,15 @@ def registration_migration_targets(
                 "authorization",
                 "0028_programme_staffing_capabilities",
             )
+        # These later owners depend on the current authority/edition graph.
+        # Keeping their leaves would silently reintroduce the rewound owner.
+        if "announcements" in targets_by_app:
+            targets_by_app["announcements"] = ("announcements", None)
+        if "organizations" in targets_by_app:
+            targets_by_app["organizations"] = (
+                "organizations",
+                "0014_purpose_bounded_representation",
+            )
     return tuple(sorted(targets_by_app.values()))
 
 
@@ -185,6 +194,15 @@ def identity_migration_targets(
             targets_by_app["authorization"] = (
                 "authorization",
                 "0028_programme_staffing_capabilities",
+            )
+        # These later owners depend on the current authority/edition graph.
+        # Keeping their leaves would silently reintroduce the rewound owner.
+        if "announcements" in targets_by_app:
+            targets_by_app["announcements"] = ("announcements", None)
+        if "organizations" in targets_by_app:
+            targets_by_app["organizations"] = (
+                "organizations",
+                "0014_purpose_bounded_representation",
             )
     return tuple(sorted(targets_by_app.values()))
 

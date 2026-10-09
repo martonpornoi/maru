@@ -1,0 +1,18 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block title %}{{ title }} · Maru{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'core/baseline.css' %}"><link rel="stylesheet" href="{% static 'announcements/workspace.css' %}">{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs">{% if workspace_url %}<a href="{{ workspace_url }}">Announcements</a>{% else %}{{ breadcrumb_root|default:"Platform administration" }}{% endif %} / {{ title }}</div>{% endblock %}
+{% block content %}
+<div class="announcements-workspace baseline-page">
+  <header class="baseline-page-heading">
+    {% if scope_label %}<p class="baseline-kicker">{{ scope_label }}</p>{% endif %}
+    <h1>{{ title }}</h1>
+    {% include "core/_page_access_mount.html" %}
+  </header>
+  {% block announcements_content %}{% endblock %}
+</div>
+{% endblock %}

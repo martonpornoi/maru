@@ -17,7 +17,11 @@ from tests.rehearsals.programme_runtime_environment import (
     require_programme_runtime_environment,
 )
 
-_CURRENT_KEYS = (("full_convention", 1), ("workforce_only", 1))
+_CURRENT_KEYS = (
+    ("full_convention", 1),
+    ("workforce_only", 1),
+    ("announcements_only", 1),
+)
 # Capture the real immutable objects before explicit child registration. The
 # startup verifier must compare installed baseline entries by identity as well
 # as validate their owner contracts; it must not infer safety from candidate errors.
@@ -25,10 +29,11 @@ BASELINE_PROFILES = MappingProxyType(dict(adoption.ADOPTION_PROFILES))
 
 
 class IsolatedAdoptionProfileCode(StrEnum):
-    """Preserve both current code values alongside one explicit isolated candidate."""
+    """Preserve all current code values alongside one explicit isolated candidate."""
 
     FULL_CONVENTION = "full_convention"
     WORKFORCE_ONLY = "workforce_only"
+    ANNOUNCEMENTS_ONLY = "announcements_only"
     PROGRAMME_OPERATIONS = "programme_operations"
 
 

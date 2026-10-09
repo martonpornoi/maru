@@ -1,0 +1,93 @@
+{% extends "announcements/base.html" %}
+{% load localization %}
+{% block announcements_content %}
+{% if action == "inventory" %}
+  <p>Write an announcement, ask someone else to check it, then post it yourself.</p>
+  <p>Maru does not post messages for you.</p>
+  {% if settings.stopped %}<p class="announcements-panel" role="status">New work is stopped. People with access can still read earlier announcements and their history.</p>{% elif not inventory.settings_ready %}<p class="announcements-panel">Before anyone writes, an operator needs to confirm the record-keeping rules and add the channels in Announcements settings.</p>{% endif %}
+  <nav class="announcements-actions" aria-label="Announcement tasks">
+    {% if inventory.can_compose and inventory.settings_ready and not settings.stopped %}<a href="{{ links.new }}">Write an announcement</a>{% endif %}
+    {% if inventory.can_manage_settings %}<a href="{{ links.settings }}">Announcements settings</a>{% endif %}
+  </nav>
+  <ul class="announcements-cards">
+    {% for item, url, state in inventory_rows %}<li><h2><a href="{{ url }}">{{ item.headline }}</a></h2><p>Writing status: <strong>{{ state }}</strong></p><p>Updated {{ item.updated_at|date:"Y-m-d H:i T" }}. Open the announcement for its separate publication reports.</p></li>{% empty %}<li>No announcements yet.</li>{% endfor %}
+  </ul>
+  {% if next_url %}<p><a href="{{ next_url }}">Next announcements</a></p>{% endif %}
+{% elif action == "settings" %}
+  <p>Record your organization's rules for keeping messages, private review notes and posting history. Maru records your decision; it does not approve the rules or delete records automatically.</p>
+  <p>Name each place where your team will post messages. These are manual destinations; you do not connect accounts here.</p>
+  <p>To stop using a channel, clear its name and link. Its earlier messages and reports stay in history.</p>
+  <p>If a channel has no link, changing its name creates a new destination. Earlier reports stay with the original destination.</p>
+  {% include "announcements/_form.html" %}
+  <nav class="announcements-actions" aria-label="Workspace controls">{% if settings.stopped %}<a href="{{ links.resume }}">Resume announcement work</a>{% else %}<a href="{{ links.stop }}">Stop new announcement work</a>{% endif %}</nav>
+{% elif action == "detail" %}
+  <p>Writing status: <strong>{{ status_label }}</strong></p>
+  {% if detail.stopped %}<p role="status">New work is stopped. Earlier messages and reports are still available.</p>{% endif %}
+  {% if detail.approved and detail.draft.id != detail.approved.id %}<p>A correction is being prepared. The last approved message and its recorded posts are still shown below.</p>{% endif %}
+  {% if detail.review_note %}<section class="announcements-panel"><h2>Review notes (private)</h2><p>{{ detail.review_note|linebreaksbr }}</p></section>{% endif %}
+  <nav class="announcements-actions" aria-label="Announcement actions">
+    {% if detail.can_compose and not detail.stopped and detail.status != "cancelled" %}<a href="{{ links.edit }}">{% if detail.approved and detail.draft.id == detail.approved.id %}Write a correction{% else %}Edit draft{% endif %}</a>{% if detail.status == "draft" %}<a href="{{ links.request_review }}">Ask for review</a>{% endif %}<a href="{{ links.cancel }}">Cancel announcement</a>{% endif %}
+    {% if detail.can_review and detail.status == "in_review" and not detail.stopped %}<a href="{{ links.review }}">Review announcement</a>{% endif %}
+    {% if detail.approved %}<a href="{{ links.copy }}">Copy approved text</a>{% if detail.can_record_publication %}<a href="{{ links.report }}">Record publication</a>{% endif %}{% endif %}
+  </nav>
+  {% if detail.status == "in_review" and not detail.can_review %}<p>This version needs someone else with review access. Anyone who helped write it cannot approve it.</p>{% endif %}
+  {% if detail.status == "changes_requested" %}<p>Edit the draft and save a new version before asking for review again. The earlier feedback stays in history.</p>{% endif %}
+  {% if detail.stopped or detail.status == "cancelled" %}<p>You can still record an earlier publication of approved text or correct a mistaken report. This does not reopen writing or review.</p>{% endif %}
+  {% include "announcements/_revision.html" with revision=detail.draft heading="Latest version" heading_id="current-writing" %}
+  <section aria-labelledby="publication-heading"><h2 id="publication-heading">Publication reports</h2>
+    <p>These reports were entered by your team. They do not confirm that anyone read the message.</p>
+    {% if detail.status == "cancelled" %}<p>This announcement is cancelled. Posts already made elsewhere have not been changed or removed.</p>{% endif %}
+    <ul class="announcements-cards">
+    {% for row in copy_rows %}<li><h3>{{ row.copy.channel_label }} · {{ row.copy.language_code|language_name }}</h3><p><strong>{{ row.status }}</strong></p>
+      {% if row.copy.publication_published_at %}<p>Reported posted {{ row.copy.publication_published_at|date:"Y-m-d H:i T" }}{% if row.copy.publication_reporter_label %} by {{ row.copy.publication_reporter_label }}{% endif %}.</p>{% endif %}
+      {% if row.copy.publication_recorded_at %}<p>Recorded in Maru {{ row.copy.publication_recorded_at|date:"Y-m-d H:i T" }}.</p>{% endif %}
+      {% if row.copy.publication_url %}<p><a href="{{ row.copy.publication_url }}" rel="noreferrer">Open reported post</a></p>{% endif %}
+      {% if row.copy.publication_status == "update_needed" %}<p>The approved message changed. Update the post yourself, then record the new publication.</p><div class="announcements-comparison"><section><h4>Previously posted text</h4><p><strong>{{ row.copy.reported_headline }}</strong></p><pre>{{ row.copy.reported_body }}</pre></section><section><h4>New approved text</h4><p><strong>{{ row.copy.headline }}</strong></p><pre>{{ row.copy.body }}</pre></section></div>{% endif %}
+      {% if row.correct_url %}<p><a href="{{ row.correct_url }}">Correct this report</a></p>{% endif %}
+    </li>{% empty %}<li>No approved channel copy yet.</li>{% endfor %}</ul>
+  </section>
+  {% if publication_history %}
+  <details class="announcements-panel"><summary>Publication history and earlier reports</summary>
+    <p>Every report and correction is retained here, including destinations no longer used. Correcting an earlier report does not replace a later publication report.</p>
+    <ol>{% for report, correct_url in publication_history %}
+      <li id="report-{{ report.id }}">
+        <h3>{{ report.channel_label }} · {{ report.language_code|language_name }} · copy version {{ report.revision_number }}</h3>
+        <p>{% if report.withdrawn %}<strong>Report withdrawn.</strong>{% elif report.publication_published_at %}Reported posted {{ report.publication_published_at|date:"Y-m-d H:i T" }}.{% else %}Publication reported; posting time was not recorded.{% endif %}</p>
+        <p>Recorded {{ report.publication_recorded_at|date:"Y-m-d H:i T" }} by {{ report.publication_reporter_label }}.</p>
+        {% if report.channel_url %}<p><a href="{{ report.channel_url }}" rel="noreferrer">Destination for this copy</a></p>{% endif %}
+        {% if report.publication_url %}<p><a href="{{ report.publication_url }}" rel="noreferrer">Reported post</a></p>{% endif %}
+        {% if report.reason %}<p>{{ report.reason|linebreaksbr }}</p>{% endif %}
+        {% if report.supersedes_report_id %}<p><a href="#report-{{ report.supersedes_report_id }}">Earlier report corrected by this entry</a></p>{% endif %}
+        {% if correct_url %}<p><a href="{{ correct_url }}">Correct this retained report</a></p>{% endif %}
+      </li>
+    {% endfor %}</ol>
+  </details>
+  {% endif %}
+  <section aria-labelledby="history-heading"><h2 id="history-heading">History</h2><ol>{% for entry, label in history %}<li><strong>{{ label }}</strong> · {{ entry.occurred_at|date:"Y-m-d H:i T" }}{% if entry.actor_label %} · {{ entry.actor_label }}{% endif %}{% if entry.reason %}<p>{{ entry.reason|linebreaksbr }}</p>{% endif %}</li>{% empty %}<li>No history is available.</li>{% endfor %}</ol></section>
+  {% if detail.can_export_evidence %}<p><a href="{{ links.evidence }}">Download full history</a> — includes private review notes. Share only with people allowed to read them.</p>{% endif %}
+  <details><summary>Technical details</summary><dl><dt>Announcement reference</dt><dd>{{ detail.id }}</dd><dt>Current revision</dt><dd>{{ detail.draft.number }}</dd></dl></details>
+{% else %}
+  <p><a href="{% if detail %}{{ links.detail }}{% else %}{{ links.inventory }}{% endif %}">Back to {% if detail %}announcement{% else %}Announcements{% endif %}</a></p>
+  {% if action == "new" or action == "edit" %}
+    <p>Choose where this message will be posted. Reuse the main message or enter different text for each channel. Write any translations yourself. Saving leaves it as a draft.</p>
+    {% if detail.approved %}<p>The last approved message and its reports stay available while someone checks this correction.</p>{% endif %}
+  {% elif action == "request-review" or action == "review" %}
+    <p>Check the main message and the text for every channel. Approval means someone can post it; Maru will not post it for you.</p>
+    {% include "announcements/_revision.html" with revision=detail.draft heading="Text for review" heading_id="review-copy" %}
+  {% elif action == "report" %}
+    <p>Do this after posting the approved text. Choose the channel and say when you posted it. Maru records your report; it does not check the post or whether anyone read it.</p>
+    {% if detail.stopped or detail.status == "cancelled" %}<p>Writing and review are stopped. Record only a publication that already happened; this does not reopen the announcement.</p>{% endif %}
+    {% include "announcements/_revision.html" with revision=detail.approved heading="Approved copy" heading_id="approved-copy" %}
+  {% elif action == "correct-report" %}
+    <p>Fix a wrong date or link, or say that this post was never made. The original report stays in history. This does not change or remove the post itself.</p>
+    {% if selected_report %}<p>Selected report: {{ selected_report.channel_label }} · {{ selected_report.language_code|language_name }} · copy version {{ selected_report.revision_number }}{% if selected_report.publication_published_at %}, reported as published {{ selected_report.publication_published_at|date:"Y-m-d H:i T" }}{% endif %}.</p>{% if not selected_report.can_correct %}<p>A later correction is already retained. Only an exact retry of your earlier saved action can complete from this form.</p>{% endif %}{% endif %}
+  {% elif action == "cancel" %}
+    <p>Stop further writing and review for this announcement. Its approved message and history stay available. You can still record earlier publications and correct mistaken reports. Posts already made elsewhere will not be changed or removed.</p>
+  {% elif action == "stop" %}
+    <p>Stop new writing and reviews for this event. People with access can still record earlier publications of approved text, correct mistaken reports, read announcements and download their history. Nothing is deleted, and posts elsewhere stay where they are.</p>
+  {% elif action == "resume" %}
+    <p>Allow announcement work again. Your record-keeping rules and everyone's existing access still apply.</p>
+  {% endif %}
+  {% include "announcements/_form.html" %}
+{% endif %}
+{% endblock %}

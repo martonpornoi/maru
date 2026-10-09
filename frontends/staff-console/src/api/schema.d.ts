@@ -8672,9 +8672,10 @@ export interface components {
         /**
          * @description * `full_convention` - Full convention
          *     * `workforce_only` - Workforce only
+         *     * `announcements_only` - Announcements only
          * @enum {string}
          */
-        AdoptionProfileCodeEnum: "full_convention" | "workforce_only";
+        AdoptionProfileCodeEnum: "full_convention" | "workforce_only" | "announcements_only";
         /** @description Serialize and validate application answer projection data. */
         ApplicationAnswerProjection: {
             /** Format: uuid */

@@ -20,6 +20,7 @@ from maru.authorization.programme_role_models import (
 from maru.core.models import UUIDTimeStampedModel
 from maru.identity.policies import validate_convention_subject
 from maru.organizations.representation_catalog import (
+    ANNOUNCEMENTS_OPERATORS,
     MARU_OPERATORS,
     RepresentationDefinition,
     representation_definition_for_role,
@@ -1038,11 +1039,11 @@ class RoleAssignment(UUIDTimeStampedModel):
                         )
                     }
                 )
-            purpose_bounded_root = (
-                self.edition_id is None
-                and self.role_bundle.code == MARU_OPERATORS.role_code
+            purpose_bounded_root = self.edition_id is None and any(
+                self.role_bundle.code == definition.role_code
                 and tuple(self.role_bundle.capability_codes)
-                == MARU_OPERATORS.capability_codes
+                == definition.capability_codes
+                for definition in (MARU_OPERATORS, ANNOUNCEMENTS_OPERATORS)
             )
             for code in self.role_bundle.capability_codes:
                 if not purpose_bounded_root:

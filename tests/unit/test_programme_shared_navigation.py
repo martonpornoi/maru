@@ -125,6 +125,7 @@ def links(world, **changes):
     [
         ("full_convention", 1),
         ("workforce_only", 1),
+        ("announcements_only", 1),
         ("programme_operations", 2),
         ("unknown", 1),
         ("programme_operations", True),

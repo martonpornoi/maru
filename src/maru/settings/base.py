@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "maru.audit",
     "maru.effects",
     "maru.communications",
+    "maru.announcements",
     "maru.registration",
     "maru.catalog",
     "maru.charities",

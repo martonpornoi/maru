@@ -51,6 +51,7 @@ ACKNOWLEDGED_INTERNAL_EVENTS = frozenset(
         "registration.checked_in.v1",
         "registration.guardian.accepted.v1",
         "applications.definition.changed.v1",
+        "announcements.changed.v1",
         "applications.submission.changed.v1",
         "charities.partner.changed.v1",
         "charities.media.changed.v1",

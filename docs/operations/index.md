@@ -12,6 +12,10 @@ or permission to use production personal data.
 
 ## Explore safely
 
+- [Announcements with existing channels](announcements.md) covers standalone
+  setup, reviewed manual publishing, corrections and handover. Implementation and
+  browser verification are in progress.
+
 - [Programme maintainer walkthrough](programme-maintainer-walkthrough.md) is the
   local candidate handoff with generated test accounts and a
   simple Worked / Confusing / Blocked notes table. Check its verification status.
@@ -86,6 +90,7 @@ analogy.
 :maxdepth: 1
 
 maru-hands-on-tutorial
+announcements
 programme-acceptance-evidence
 programme-human-acceptance
 programme-maintainer-walkthrough

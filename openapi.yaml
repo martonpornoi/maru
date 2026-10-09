@@ -16527,10 +16527,12 @@ components:
       enum:
       - full_convention
       - workforce_only
+      - announcements_only
       type: string
       description: |-
         * `full_convention` - Full convention
         * `workforce_only` - Workforce only
+        * `announcements_only` - Announcements only
     ApplicationAnswerProjection:
       type: object
       description: Serialize and validate application answer projection data.

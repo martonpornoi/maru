@@ -6,6 +6,7 @@ from importlib import import_module
 from uuid import uuid4
 
 import pytest
+from django.apps import apps
 from django.db import connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
@@ -23,10 +24,15 @@ from maru.authorization.provenance_readiness import (
     build_authority_provenance_readiness_report,
 )
 from maru.authorization.services import AuthorizationDenied
+from maru.organizations.models import OrganizationRepresentation
 from maru.organizations.representation import (
     emergency_remove_executive_board_controller,
 )
 from tests.factories import AccountFactory, OrganizationFactory
+from tests.integration.test_announcements_adoption import (
+    activate_announcements_operators,
+    setup_announcements,
+)
 from tests.integration.test_authority_provenance_activation import _activate
 from tests.integration.test_authorization_provenance_runtime import _activate_board
 from tests.integration.test_workforce_only_adoption import (
@@ -44,11 +50,17 @@ _MIGRATION = import_module(
 )
 
 
-@pytest.fixture(params=["maru_operators", "executive_board"])
+@pytest.fixture(params=["maru_operators", "executive_board", "announcements_operators"])
 def active_root(settings, request):
     settings.REQUIRE_EXACT_AUTHORITY_PROVENANCE = True
     _activate(AccountFactory(is_staff=True, is_superuser=True))
-    if request.param == "maru_operators":
+    if request.param == "announcements_operators":
+        administrator, _key, result = setup_announcements()
+        representation = OrganizationRepresentation.objects.get(
+            id=result.representation_id
+        )
+        appointments = activate_announcements_operators(administrator, representation)
+    elif request.param == "maru_operators":
         administrator, _key, result = _set_up_new_foundation()
         representation = result.representation
         appointments = _activate_maru_operators(administrator, representation)
@@ -151,7 +163,7 @@ def test_roots_can_issue_ordinary_dual_control_without_self_approval(active_root
 
 @pytest.mark.usefixtures("restores_current_migration_graph")
 def test_unused_native_lineage_reversal_and_reapply_preserves_identity():
-    current = ("authorization", "0039_accountable_representation_lineage")
+    current = ("authorization", "0042_announcements_operator_lineage")
     previous = ("authorization", "0038_programme_archive_recipe")
     with connection.cursor() as cursor:
         before = {
@@ -171,13 +183,26 @@ def test_unused_native_lineage_reversal_and_reapply_preserves_identity():
 
 def test_downgrade_fence_distinguishes_existing_board_from_operator_use(active_root):
     representation, _appointments = active_root
-    if representation.code == "maru_operators":
-        with pytest.raises(RuntimeError, match="fix-forward"), transaction.atomic():
+    successor = import_module(
+        "maru.authorization.migrations.0042_announcements_operator_lineage"
+    )
+    if representation.code == "announcements_operators":
+        with pytest.raises(RuntimeError, match="fix forward"), transaction.atomic():
+            successor.refuse_used_downgrade(apps, connection.schema_editor())
+    elif representation.code == "maru_operators":
+
+        def restore_previous():
+            successor.restore(None, connection.schema_editor())
             _MIGRATION.restore_lineage(None, connection.schema_editor())
+
+        with pytest.raises(RuntimeError, match="fix-forward"), transaction.atomic():
+            restore_previous()
     else:
         with transaction.atomic():
+            successor.restore(None, connection.schema_editor())
             _MIGRATION.restore_lineage(None, connection.schema_editor())
             _MIGRATION.install_lineage(None, connection.schema_editor())
+            successor.install(None, connection.schema_editor())
     report = build_authority_provenance_readiness_report()
     assert report["production_status"] == "ready", report
 

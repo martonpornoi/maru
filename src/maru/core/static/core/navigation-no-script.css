@@ -1,15 +1,16 @@
-/* Native details and links remain available when the menu enhancement cannot run. */
-#container #toggle-nav-sidebar,
-.maru-navigation-search,
-.maru-navigation-drawer-header {
+/* Use native navigation until enhancement succeeds, including CSP-blocked scripts. */
+html:not(.maru-navigation-enhanced) #container #toggle-nav-sidebar,
+html:not(.maru-navigation-enhanced) .maru-navigation-search,
+html:not(.maru-navigation-enhanced) .maru-navigation-drawer-header,
+html:not([data-theme]) .theme-toggle {
   display: none;
 }
 
-#container #main {
+html:not(.maru-navigation-enhanced) #container #main {
   display: block;
 }
 
-#container #main > #nav-sidebar {
+html:not(.maru-navigation-enhanced) #container #main > #nav-sidebar {
   position: static;
   display: block;
   width: auto;
@@ -20,7 +21,7 @@
   box-shadow: none;
 }
 
-#container #main > #nav-sidebar + .content {
+html:not(.maru-navigation-enhanced) #container #main > #nav-sidebar + .content {
   width: auto;
   max-width: 100%;
   margin: 0;

@@ -22,7 +22,7 @@ from tests.rehearsals.programme_runtime_environment import (
 
 RUN = "1234567890abcdef1234567890abcdef"
 OVERLAY = "tests.rehearsals.programme_event_migrations"
-LEAF = ("events", "0019_isolated_programme_candidate")
+LEAF = ("events", "0022_isolated_programme_candidate")
 
 
 def _serialized_model(state):
@@ -59,6 +59,7 @@ def test_overlay_preserves_entire_real_graph_and_changes_only_candidate_state(se
     assert list(new.fields["adoption_profile_code"].choices) == [
         ("full_convention", "Full convention"),
         ("workforce_only", "Workforce only"),
+        ("announcements_only", "Announcements only"),
         ("programme_operations", PROGRAMME_REHEARSAL_PROFILE.label),
     ]
     for key in state.models:
@@ -74,7 +75,12 @@ def test_overlay_preserves_entire_real_graph_and_changes_only_candidate_state(se
     assert condition.connector == "OR"
     assert [dict(child.children) for child in condition.children] == [
         {"adoption_profile_code": code, "adoption_profile_version": 1}
-        for code in ("full_convention", "workforce_only", "programme_operations")
+        for code in (
+            "full_convention",
+            "workforce_only",
+            "announcements_only",
+            "programme_operations",
+        )
     ]
     original_constraints.pop(profile_constraint)
     assert constraints == original_constraints
@@ -84,7 +90,7 @@ def test_overlay_preserves_entire_real_graph_and_changes_only_candidate_state(se
 
 def test_forward_and_reverse_fences_run_before_schema_changes():
     migration = importlib.import_module(
-        f"{OVERLAY}.0019_isolated_programme_candidate"
+        f"{OVERLAY}.0022_isolated_programme_candidate"
     ).Migration
     assert migration.atomic is True
     assert migration.operations[0].code is schema.require_empty_current_schema

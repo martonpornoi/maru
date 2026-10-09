@@ -133,9 +133,12 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0031_programme_change_communication_capabilities"),
     ("authorization", "0037_programme_archive_capability"),
     ("authorization", "0039_accountable_representation_lineage"),
+    ("authorization", "0041_announcements_capabilities"),
+    ("authorization", "0042_announcements_operator_lineage"),
     ("events", "0010_workforce_adoption_profile"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("organizations", "0014_purpose_bounded_representation"),
+    ("organizations", "0015_announcements_representation"),
     ("workforce", "0005_runtime_executable_function_hardening"),
     ("workforce", "0006_edition_structure_schema"),
     ("workforce", "0007_structure_write_integrity"),
@@ -1127,6 +1130,9 @@ _CORE_FUNCTIONS = (
     "maru_assert_active_executive_board_v0009(uuid)",
     "maru_assert_active_maru_operators(uuid)",
     "maru_assert_active_maru_operators_v0009(uuid)",
+    "maru_assert_active_announcements_operators(uuid)",
+    "maru_assert_active_announcements_operators_v0009(uuid)",
+    "maru_validate_representation_appointment()",
     ("maru_workforce_role_evidence_matches_position(uuid,uuid,uuid,uuid,uuid,uuid)"),
     "maru_deferred_validate_board_membership_from_representation()",
     "maru_deferred_validate_board_membership_from_appointment()",
@@ -1249,10 +1255,10 @@ _FUNCTION_DEFINITION_SHA256 = {
         "3f48371907ea1a45e56bbebf69a92f695fa27dcf95032d55e39afdd6f4158a15"
     ),
     "maru_assert_active_board_membership_provenance(uuid)": (
-        "74cc0516256e96229324e2d79039278ab96c06ef95e651e2be42d552ec1e4752"
+        "7b60de229d568cceb0f1f371f6e33360b7bc7fe9f4156efbc80f303192ef3c54"
     ),
     "maru_assert_active_executive_board(uuid)": (
-        "48f701b6745b3bda7f96cbd9a47527b8797224977b74a518c68686535f05acee"
+        "fbb9ec00dc7f4c19783b36100e96a33cf381a100bc8ec05c7e0c8f687b5d4a48"
     ),
     "maru_assert_active_executive_board_v0009(uuid)": (
         "40715e8c46e578175cc095c4ea912396e9243d20a00d63ff83bb108e815be482"
@@ -1354,7 +1360,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1d4ef9c453acc221e452c08d09a8d9f45c70618e3c2ea0c7fbcdfb8781d7bece"
     ),
     "maru_authorization_capability_min_scope(text)": (
-        "4ffc155738d573f520b36af47b1b38de3da4202fe31fe9a2d11c6afb70f74cfe"
+        "c80e6287339ce11e13e46be710f86895a854068a2a2faa3077c80edafee72225"
     ),
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)": (
         "093a2f3a81a16d7a09bc782c23711aa4b108274ee7a9baf8fa955e52d82cc481"
@@ -1366,7 +1372,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "17766670063a235c5c45dffd4bbf8c1339e434dd5056bc2ae0628825c07f3375"
     ),
     "maru_assert_authority_issuance_complete_internal(bigint,bigint[],integer)": (
-        "a9e175180cfee167d71f804585063617f674596e588a757e1307e202dd2d89ef"
+        "0d8f4ccbb3ac9f97761c877afc13d2b9adf5162d68f0b725785197cc50cdd47e"
     ),
     "maru_assert_authority_provenance_activation()": (
         "1677e1c5de59ca5e884ffbc0bba0036e656900962caaad0375d1569cda6bf779"
@@ -1378,13 +1384,13 @@ _FUNCTION_DEFINITION_SHA256 = {
         "798326146c48661860bff7c4d7441ac5f03b624557d4f23d003b36cd9d2310b3"
     ),
     "maru_authority_bundle_historical_v1(uuid,timestamptz,uuid,bigint[],integer)": (
-        "9c0df10b42c815684d16a5b0083e8a2fbeef0a4a4cb95e080713ac941200341d"
+        "5b4c071d1bb355e3f08e57a6cc0637c2229a4a5b2e73703642e359e136755a5c"
     ),
     (
         "maru_authority_issuance_valid_v1(bigint,uuid,character varying,uuid,uuid,"
         "uuid,uuid,timestamptz,timestamptz,timestamptz,boolean,boolean,bigint[],"
         "integer)"
-    ): "08e8fd5409b837c5afe6c62d26950670a6ee3097179f2dfcacb2dfd8deb734e0",
+    ): "ae71338dbbdad9e7c82845dee447d550a46360ab49b1f3aef7538b5af4c31d20",
     "maru_authority_provenance_is_active()": (
         "9af8bca6b827ec9e97f8046d0089d6885cc6655aac333570e5246f1516113da4"
     ),
@@ -1461,10 +1467,10 @@ _FUNCTION_DEFINITION_SHA256 = {
         "199f6fed15e24d855f070adf990494410999bb6c60f6a9423f6c6c6f10e0ed93"
     ),
     "maru_validate_authority_control_insert()": (
-        "12bc5c99ffad88ad4231ee91301fe971c9a68e16b8c9fa658afd9e518b6a648a"
+        "f65c8291ffa1b38aec7a4612be60cc7c3e19103b256a824f9acfa17170f2fd27"
     ),
     "maru_validate_representation_control_type_insert()": (
-        "b06e54ea1e424e08d705b7744e503af713e6ae4a8e9e58835ea35221b2028f71"
+        "38b73f3da3114961253bab707f66129f8f4abb61aafc35d28302615ca312f558"
     ),
     "maru_validate_authority_issuance_insert()": (
         "be7ca045f7f38b30c2d65002cd8c50a4e9c2408008f15273d4f823e48132ff40"
@@ -1476,10 +1482,10 @@ _FUNCTION_DEFINITION_SHA256 = {
         "74033ee90f0120d0d5aea12bcbbb30bc7438a75a6f5d79403579edad2f1ced85"
     ),
     "maru_validate_role_assignment()": (
-        "a656e41a4ac5864f3089a2f1894d28ad769e4afaaa04df877398e23cdb3982c8"
+        "cda9aa7d671fc831d4efeaa6aff42b975bf48271db6f801fd701762c22281d7a"
     ),
     "maru_validate_profile_bound_role_assignment_scope()": (
-        "db4f30f9ea7b1d02195ff708810010e6b4f9658c2f561adf0ab7da529101c67e"
+        "94c8528e0fd74d0de302390d8fbec0561e462f67b344eec1ec78949d819d29bb"
     ),
     "maru_validate_role_bundle_catalog()": (
         "1699be8a8d6178919ba7f14e354c9df2341dcc0da9d5bd4dae2e56aab7e69a34"
@@ -1543,6 +1549,15 @@ _FUNCTION_DEFINITION_SHA256 = {
     ),
     "maru_workforce_page9_writer_barrier()": (
         "a5ca2897e19293a78e805a1a8fb4484f6822def7713c35141c0e7f2fbb4ad429"
+    ),
+    "maru_validate_representation_appointment()": (
+        "019c67581632cebc92b083c565e861e363c10d63bac7afe219f736fae0b1e9a9"
+    ),
+    "maru_assert_active_announcements_operators(uuid)": (
+        "8de4f0d536f30fb495ad4a04d6cc9ec58f9891253cc4da5d9728d944876053f2"
+    ),
+    "maru_assert_active_announcements_operators_v0009(uuid)": (
+        "a734bd64b8235dd976d3b42d9a0d8f78f00624ea31866096ff918f69812ea3b3"
     ),
 }
 
@@ -1664,6 +1679,8 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_assert_active_executive_board_v0009(uuid)",
         "maru_assert_active_maru_operators(uuid)",
         "maru_assert_active_maru_operators_v0009(uuid)",
+        "maru_assert_active_announcements_operators(uuid)",
+        "maru_assert_active_announcements_operators_v0009(uuid)",
         (
             "maru_workforce_role_evidence_matches_position(uuid,uuid,uuid,uuid,"
             "uuid,uuid)"

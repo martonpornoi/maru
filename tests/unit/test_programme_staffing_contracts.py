@@ -48,7 +48,17 @@ def test_staffing_capabilities_are_exact_additive_and_independently_ceilinged():
         "RESOURCE_CAPABILITIES",
     ):
         assert getattr(current, field) == getattr(previous, field)
-    assert {code for code, value in CAPABILITIES.items() if value.persistable} == {
+    assert (
+        {code for code, value in CAPABILITIES.items() if value.persistable}
+        - {
+            "announcements.view",
+            "announcements.compose",
+            "announcements.review",
+            "announcements.record_publication",
+            "announcements.manage_settings",
+            "announcements.export_evidence",
+        }
+    ) == {
         "programme.export_archive",
         *OPERATOR_CAPABILITIES,
         *(

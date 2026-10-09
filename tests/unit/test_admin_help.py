@@ -9,8 +9,10 @@ def test_admin_page_help_covers_utility_and_fallback_pages() -> None:
     )
     assert "search and filters" in admin_page_help("/admin/unknown/")
     home_help = admin_page_help("/admin/")
-    assert "Registration desk to help an attendee" in home_help
-    assert "Registration configurations" not in home_help
+    assert "Choose a task from the menu or search for a page." in home_help
+    assert "selected event and your access" in home_help
+    assert "Registration" not in home_help
+    assert admin_page_help("/admin/", "", "", "announcements") == home_help
     workforce_help = admin_page_help("/admin/", "", "", "workforce")
     assert "Team workspace to plan departments, team roles" in workforce_help
 

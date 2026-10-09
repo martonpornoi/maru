@@ -9,6 +9,7 @@ _PROFILE_CODE_PATTERN = re.compile(r"[a-z][a-z0-9_]*\Z")
 _PERSISTED_ADOPTION_PROFILE_KEY_DECLARATIONS = (
     ("full_convention", 1),
     ("workforce_only", 1),
+    ("announcements_only", 1),
 )
 
 if len(frozenset(_PERSISTED_ADOPTION_PROFILE_KEY_DECLARATIONS)) != len(

@@ -288,9 +288,17 @@ def test_native_scope_vocabulary_adds_only_the_archive_edition_capability():
         # Earlier native floors retain legacy Organization authority while some
         # current policy ceilings are Edition. Do not rewrite that history here.
     assert CAPABILITIES["programme.export_archive"].maximum_scope is ScopeLevel.EDITION
-    assert declared == {
-        code for code, definition in CAPABILITIES.items() if definition.persistable
-    }
+    assert declared == (
+        {code for code, definition in CAPABILITIES.items() if definition.persistable}
+        - {
+            "announcements.view",
+            "announcements.compose",
+            "announcements.review",
+            "announcements.record_publication",
+            "announcements.manage_settings",
+            "announcements.export_evidence",
+        }
+    )
     assert "RETURN -1;" in migration.FORWARD_SQL
     assert migration.REVERSE_SQL == previous.FORWARD_SQL
     assert migration.Migration.operations[1].reverse_code is (

@@ -13,6 +13,16 @@ rather than replace the curated summary.
 
 ## [Unreleased]
 
+### Added
+
+- Standalone Announcements lets a convention write messages, have another person
+  check them, copy approved text into existing channels, and keep posting records
+  and corrections together. Guided setup creates only the foundations this work
+  needs; registration, payments and volunteer workflows remain separate choices.
+- Announcement text can be downloaded or printed. Authorized organizers can also
+  download the full private history for handover, and stop new work without losing
+  existing records. Maru does not post messages to external channels automatically.
+
 ### Changed
 
 - Management navigation groups available work by purpose and keeps advanced

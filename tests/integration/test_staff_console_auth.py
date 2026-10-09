@@ -65,8 +65,12 @@ def test_local_login_explains_why_and_how_to_use_it() -> None:
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Use this page to open the convention workspaces" in content
-    assert "For example:" in content
+    assert (
+        "Sign in to continue your convention work and manage your account." in content
+    )
+    assert '<button type="submit">Sign in</button>' in content
+    assert "Use your account's email address or username." in content
+    assert "rehearsal credentials" not in content
 
 
 def test_active_account_without_scope_gets_a_personal_admin_landing() -> None:

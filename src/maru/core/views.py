@@ -25,6 +25,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from maru.activity.queries import record_activity
+from maru.announcements.readiness import announcements_database_integrity_is_ready
 from maru.applications.readiness import applications_database_integrity_is_ready
 from maru.authorization.database_role_safety import (
     RuntimeDatabaseRoleProbeError,
@@ -63,6 +64,9 @@ from maru.events.adoption import (
     AdoptionProfileCode,
     adoption_profile,
     profile_allows_shell_destination,
+)
+from maru.events.announcements_setup_readiness import (
+    announcements_setup_database_integrity_is_ready,
 )
 from maru.events.forms import (
     EventEditionCreationForm,
@@ -2018,6 +2022,11 @@ def _append_bounded_domain_integrity_readiness(
         otherwise `False`.
     """
     probes = (
+        ("announcements_integrity", announcements_database_integrity_is_ready),
+        (
+            "announcements_setup_integrity",
+            announcements_setup_database_integrity_is_ready,
+        ),
         ("applications_integrity", applications_database_integrity_is_ready),
         ("charities_integrity", charities_database_integrity_is_ready),
         ("catalog_integrity", catalog_database_integrity_is_ready),
