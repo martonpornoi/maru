@@ -952,6 +952,7 @@ def test_later_same_transaction_coauthor_does_not_invalidate_previous_review(wor
             expected_version=decision.version,
             expected_settings_version=1,
             draft=draft(body="Ask the help desk beside the main entrance."),
+            reason="Clarify the synthetic help desk location after review.",
         )
         # Validate both decisions together: deferred review checks must preserve
         # who had edited at that review, rather than including later coauthors.

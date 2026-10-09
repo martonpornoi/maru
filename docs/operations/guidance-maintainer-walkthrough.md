@@ -2,8 +2,9 @@
 
 Status: Proposed synthetic acceptance journey; not yet run
 
-Use an isolated synthetic event and three separate browser sessions: two accepted
-Guidance operators, A and B, and one person C with Guidance reader access only.
+Use an isolated synthetic event and three separate browser sessions. A and B are
+the two accepted organization controllers. C has a verified synthetic Maru account
+and no Guides access. Steps 1 and 2 give them their Guides roles.
 Use generated task-local credentials, never real convention data or passwords in
 this document. The content journey starts with an already provisioned Announcements
 event and separately recorded platform setup oversight. Initial Guidance access and
@@ -40,16 +41,21 @@ name is **Guides**; Guidance remains the technical contract name.
    explains that a review date is needed before asking for review. Add a future
    date and select **Writing announcements** under **Where to show this guide**.
    Save the exact draft, then ask for review. A cannot approve their own writing.
-6. B reviews the text and all visible choices, then selects **Approve and make
-   available**. C searches for “fursuit lounge” and reads the approved copy without
+6. B opens **Guides** (**Drafts & reviews**), selects the guide, then **Review
+   guide**. Check the text and all visible choices, choose **Approve and make
+   available**, confirm the exact version was checked, then select **Save review
+   decision**. C searches for “fursuit lounge” and reads the approved copy without
    editorial controls or private notes. B follows **Guides for this task** from
    the Announcements writing page and sees the same approved version.
 
 ## Replace, expire and withdraw
 
-1. A changes the draft to add: “Ask the lounge lead to confirm the reopening
-   information again before preparing a follow-up notice.” While review is
-   pending, C and the contextual link still receive the prior approved text.
+1. A opens **Edit draft** and adds: “Ask the lounge lead to confirm the reopening
+   information again before preparing a follow-up notice.” Enter “Clarify the
+   reopening check” under **What changed and why?**, then select **Save changes**.
+   Select **Ask for review**, confirm the guide is ready, then **Request review**.
+   While review is pending, C and the contextual link still receive the prior
+   approved text.
 2. B approves the replacement. Confirm the same reader URL now shows the new
    version, while private feedback and the earlier version remain in separately
    authorized history. C cannot download full history or open working deep links.

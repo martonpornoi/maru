@@ -1,7 +1,7 @@
 # Guides approval event identities
 
 - Date: 2026-10-09
-- Status: Identity repair passed initial native cases; transition routing repair in progress
+- Status: Focused native routing/recovery and genuine restricted-runtime commands pass; browser and full certification remain open
 - Requirements: EVT-008, KNO-012, KNO-013
 - Contract: [ADR 0119](../architecture/decisions/0119-guidance-adoption-and-purpose-authority.md)
 
@@ -74,3 +74,100 @@ before/after source inventories match. These results cover the repaired inherite
 empty-observation unit assumption and the main-path certification-runner repair.
 A fresh warning-fatal handbook build is next; native, restricted-runtime and
 browser acceptance remain pending.
+
+## 2026-10-10: Native workflow continuation
+
+After Announcements released local capacity, clean snapshot
+`c49bb5bd5db05516a24dfde3fc12d317d18afb26` reached 42 passing native cases before
+`test_later_same_transaction_coauthor_does_not_invalidate_previous_review` failed
+because its `revise_guidance` call omitted the required `reason`. The target
+coauthor invariant was not exercised; this is a fixture defect, not a successful
+native result. The earlier existing-Announcements expansion case passed.
+
+Pytest reported 419.64 seconds; the complete wrapper took 425.906 seconds with
+unchanged source and exact owned-container removal. The full failed logs and
+inventories remain in
+`.tools/guidance-development/native-routes-20261009T222749Z-0c923f89/`.
+Repair the caller without relaxing the production command, then rerun the selected
+foundation, Knowledge domain and transition tests in a fresh owned database.
+Recovery and genuine restricted-login/browser proof remain separate pending gates.
+
+The fixture now supplies an explicit synthetic revision reason. An audit of 332
+command calls found no other missing required arguments; all 44 real fixture
+closures collect with zero setup or database calls. Scoped lint, formatting and
+whitespace checks pass, and all 1,438 production files remain unchanged. The
+original failed evidence and test-only repair freeze are retained; the corrected
+native case has not yet run.
+
+## 2026-10-10: Native and genuine restricted-runtime evidence
+
+The corrected selection passed all 44 cases in `test_guidance_foundation.py`,
+`test_knowledge_domain.py` and `test_guidance_transition_effects.py`: pytest
+431.76 seconds, complete wrapper 438.062 seconds. The separate foundation and
+Knowledge migration/recovery selection passed eight cases: pytest 350.78 seconds,
+wrapper 357.156 seconds. Both before/after source inventories match and each
+runner removed only its exact owned container. The earlier failed fixtures remain
+preserved. These selections use the established owner-login native test harness;
+they do not themselves establish a restricted-login boundary.
+
+The successful native artifacts are:
+
+- `.tools/guidance-development/native-routes-20261009T224358Z-4ce63004/`;
+- `.tools/guidance-development/native-recovery-20261009T225211Z-30e55dbe/`.
+
+A separate reviewed V6 fixture then provisioned a nonsuperuser migration owner and
+the genuine `maru_runtime` login using the unchanged canonical ACL script. Actual
+runtime probes passed all 25 constituent role/ACL flags plus the derived
+current-session check. Knowledge, Guides foundation/authority and Announcements
+owner/setup integrity were true; exact provenance was ready with zero blockers;
+health returned HTTP 200. Django and migration checks passed. Real Identity
+challenges, representation invitations and each person's acceptance established
+separate synthetic Announcements and Guides-only scopes. The independently
+accepted reader has current-copy permission and is denied the six private/write
+Knowledge capabilities, Announcements and access management. No test authorizer,
+raw authority grant or owner operational fallback was used.
+
+The initial content helper committed synthetic rules, one draft and its review
+request, then failed because it supplied `create_guidance.object_id` (the item)
+as the revision ID. Its earlier self-review refusal used the same wrong revision
+and is **not independence evidence**. The entire failed execution remains in
+`.tools/guidance-development/genuine-runtime-continuation-20261010/execution/`.
+No production source or existing row was repaired, erased or reset to hide it.
+
+The separately reviewed recovery bound the sole retained pending item, exact
+rules/control cursors, original authored content/date, one revision, three
+receipts and zero reviews through authorized owner queries. It then exercised
+self-review against the correct pending revision, proving unchanged working and
+private evidence. The independently authenticated reviewer approved copy one;
+the reader obtained that copy while a replacement draft and review remained
+pending. A second independent approval made copy two current. Withdrawal removed
+current reading, download and search while authorized retained history remained.
+The reader's private draft/history/export access was denied throughout. Real
+runtime/provenance/integrity probes passed before and after. This recovery passed
+without source change; its 1,443 provisioned source hashes remained identical.
+
+The Announcements edition remained `announcements_only@1`; its approved-copy
+SHA256 remained
+`6f361bbca987c721a5ee4979b9fdee82c6976fec54081311c2fe28bb03416f8f`.
+It received no Guides activation or content mutation. The fixture's original
+combined `verify-journey` was not invoked or counted. Successful recovery result,
+completion, stages, runtime probes and source observations are retained in
+`.tools/guidance-development/genuine-runtime-recovery-20261010/execution/`;
+provisioning and seed results remain in `browser-fixture/` under the same parent.
+
+The exact `maru-guidance-dev-20261009` container was stopped after this work; its
+owned volume and synthetic accounts were retained, not removed. The recorded
+web port is free and no running containers remain in the recorded check. See
+`.tools/guidance-development/browser-resource-stop-20261010/result.json`.
+All observations above are synthetic command-driven evidence. No authenticated
+browser/human journey, combined browser expansion, complete accessibility,
+production acceptance or full Guides certification is claimed. Credential entry
+remains an unresolved browser boundary. Later checkouts inherit no native pins,
+runtime approval or successful workflow claim from these local results.
+
+
+The source-reviewed maintainer walkthrough now starts C without Guides access,
+names the actual content-review screen and submission actions, and includes the
+required change explanation plus separate replacement review request. Its existing
+unrun status remains. Documentation references and scoped whitespace checks pass;
+no additional unit, handbook or browser result is inferred from these prose edits.
