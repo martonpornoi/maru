@@ -104,6 +104,19 @@ RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5: Final[tuple[str, ...]] = (
     "public.maru_assert_active_announcements_operators_v0009(uuid)",
 )
 
+# ADRs 0118 and 0119 preserve v5 and add only the foundation and exact-purpose
+# Guidance helpers. None grants content access merely for operating the platform.
+RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6: Final[tuple[str, ...]] = (
+    *RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5,
+    "public.maru_assert_active_workspace_operators(uuid)",
+    "public.maru_assert_active_workspace_operators_v0009(uuid)",
+    "public.maru_guidance_recipe_capabilities(character varying)",
+    "public.maru_guidance_required_control(character varying,uuid)",
+    "public.maru_guidance_expected_source(character varying,uuid,character varying)",
+    "public.maru_guidance_actor_allowed(uuid,uuid,uuid,text)",
+    "public.maru_guidance_team_ready(uuid,uuid,uuid,uuid)",
+)
+
 # These control relations are deliberately readable, but never writable, by
 # the application login. Their mutations belong to the controlled
 # migration/cutover owner described in ADR-0046. The Programme schema is also
@@ -224,6 +237,20 @@ RUNTIME_DATABASE_SELECT_INSERT_RELATIONS: Final[tuple[str, ...]] = (
     "public.announcements_announcementreview",
     "public.announcements_announcementpublicationreport",
     "public.announcements_announcementcommandreceipt",
+    "public.events_guidanceadoptionsetupreceipt",
+    "public.events_guidanceactivationrequest",
+    "public.events_guidanceactivationdecision",
+    "public.events_guidanceactivationreceipt",
+    "public.authorization_guidanceteam",
+    "public.authorization_guidanceauthoritysetupreceipt",
+    "public.authorization_guidancerecipequalification",
+    "public.authorization_guidanceaccessrequest",
+    "public.authorization_guidanceaccessdecision",
+    "public.authorization_guidancerevocationreceipt",
+    "public.knowledge_guidancesettingsrevision",
+    "public.knowledge_guidancerevision",
+    "public.knowledge_guidancereview",
+    "public.knowledge_guidancecommandreceipt",
     "public.workforce_editionstructurecommandreceipt",
     "public.workforce_positionassignmentcommandreceipt",
     "public.workforce_personavailabilitycommandreceipt",
@@ -288,6 +315,8 @@ RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
 RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
     "public.announcements_announcementcontrol",
     "public.announcements_announcement",
+    "public.knowledge_guidancecontrol",
+    "public.knowledge_guidanceitem",
     "public.workforce_editionstructurecontrol",
     "public.workforce_positionassignment",
     "public.workforce_personavailabilityplan",
@@ -1194,7 +1223,7 @@ def probe_runtime_database_role_safety(
                 list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
-                list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5),
+                list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6),
             ],
         )
         row = cursor.fetchone()

@@ -1954,11 +1954,87 @@ CAPABILITY_DEFINITIONS += (
     ),
 )
 
+
+CAPABILITY_DEFINITIONS += (
+    Capability(
+        code="knowledge.view_current",
+        description="Read current approved internal guidance.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("current_summary", "current_copy")),
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="knowledge.view_working",
+        description="Read Guidance drafts and private review history.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("draft", "review_notes", "history")),
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="knowledge.compose",
+        description="Write and revise internal guidance.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("draft",)),
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="knowledge.review",
+        description="Independently review exact Guidance versions.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("review",)),
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="knowledge.withdraw",
+        description="Withdraw approved Guidance from current availability.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("availability",)),
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="knowledge.manage_settings",
+        description="Confirm Guidance collection and retention settings.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("settings",)),
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="knowledge.export_evidence",
+        description="Download private Guidance handover evidence.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset(("evidence",)),
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="authorization.manage_guidance_access",
+        description="Manage independently approved Guidance access in one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=frozenset({"guidance_access"}),
+        sensitivity_ceiling=Sensitivity.SECURITY_CRITICAL,
+        delegable=False,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+)
+
 CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINITIONS}
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-10-09.1"
+POLICY_VERSION = "2026-10-09.2"
 
 
 def capability(code: str) -> Capability | None:

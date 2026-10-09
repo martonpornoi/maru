@@ -268,7 +268,9 @@ def test_registration_history_does_not_reintroduce_later_workforce_dependencies(
     assert ("scheduling", None) in targets
     assert ("venues", "0002_venue_write_integrity") in targets
     state = migration_project_state(SimpleNamespace(loader=loader), targets)
-    assert not any(app in {"scheduling", "announcements"} for app, _ in state.models)
+    assert not any(
+        app in {"scheduling", "announcements", "knowledge"} for app, _ in state.models
+    )
     assert ("organizations", "0014_purpose_bounded_representation") in targets
     assert ("registration", "registrationconfiguration") in state.models
     for selected in targets:

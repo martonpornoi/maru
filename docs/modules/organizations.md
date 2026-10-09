@@ -6,7 +6,28 @@ access lifecycle, Board emergency containment, minimized Organization
 structure accountability anchor, and account-to-representation handoff;
 complete rendered owner acceptance remains open and mounted Department
 mutations remain Workforce-owned
-Last updated: 2026-08-26
+Last updated: 2026-10-09
+
+## Foundation-only Workspace operators
+
+[ADR 0119](../architecture/decisions/0119-guidance-adoption-and-purpose-authority.md)
+adds the truthful `workspace_operators` representation for fresh Guides setup.
+Its exact ten-capability `workspace-operators@1` root owns foundation stewardship
+only: organization/series/edition setup and security audit. It grants no generic
+access management or content permission. Existing Board, Maru operators and
+Announcements operators retain their original exact meanings. A Workspace root
+cannot use an ordinary creation path to select another product profile.
+
+The existing invitation, actual self-acceptance and two-person activation commands
+remain the organization authority boundary. `guidance_setup_references` provides
+bounded foundation choices and an original snapshot to independently admitted
+setup. `guidance_activation_references.guidance_accountable_foundation` returns
+exact representation state/version and linked accepted-root identities; Authorization
+independently validates their current lineage. These references create no team or
+authority. Separate Guides responsibility is accepted through Events and issued
+by Authorization; it does not mutate organization membership or widen this root.
+See [Events](events.md#guides-adoption-and-public-scope-boundaries) and
+[Authorization](authorization.md#purpose-qualified-guides-responsibility).
 
 ## Purpose and requirements
 

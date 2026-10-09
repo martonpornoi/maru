@@ -156,8 +156,9 @@ def registration_migration_targets(
             )
         # These later owners depend on the current authority/edition graph.
         # Keeping their leaves would silently reintroduce the rewound owner.
-        if "announcements" in targets_by_app:
-            targets_by_app["announcements"] = ("announcements", None)
+        for dependent_owner in ("announcements", "knowledge"):
+            if dependent_owner in targets_by_app:
+                targets_by_app[dependent_owner] = (dependent_owner, None)
         if "organizations" in targets_by_app:
             targets_by_app["organizations"] = (
                 "organizations",
@@ -197,8 +198,9 @@ def identity_migration_targets(
             )
         # These later owners depend on the current authority/edition graph.
         # Keeping their leaves would silently reintroduce the rewound owner.
-        if "announcements" in targets_by_app:
-            targets_by_app["announcements"] = ("announcements", None)
+        for dependent_owner in ("announcements", "knowledge"):
+            if dependent_owner in targets_by_app:
+                targets_by_app[dependent_owner] = (dependent_owner, None)
         if "organizations" in targets_by_app:
             targets_by_app["organizations"] = (
                 "organizations",

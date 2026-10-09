@@ -12,6 +12,7 @@ from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5,
+    RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6,
     RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
@@ -24,6 +25,7 @@ from maru.authorization.database_role_safety import (
 
 _BOUNDED_DOMAIN_APP_LABELS = (
     "announcements",
+    "knowledge",
     "applications",
     "charities",
     "catalog",
@@ -192,6 +194,20 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.announcements_announcementreview",
         "public.announcements_announcementpublicationreport",
         "public.announcements_announcementcommandreceipt",
+        "public.events_guidanceadoptionsetupreceipt",
+        "public.events_guidanceactivationrequest",
+        "public.events_guidanceactivationdecision",
+        "public.events_guidanceactivationreceipt",
+        "public.authorization_guidanceteam",
+        "public.authorization_guidanceauthoritysetupreceipt",
+        "public.authorization_guidancerecipequalification",
+        "public.authorization_guidanceaccessrequest",
+        "public.authorization_guidanceaccessdecision",
+        "public.authorization_guidancerevocationreceipt",
+        "public.knowledge_guidancesettingsrevision",
+        "public.knowledge_guidancerevision",
+        "public.knowledge_guidancereview",
+        "public.knowledge_guidancecommandreceipt",
         "public.workforce_editionstructurecommandreceipt",
         "public.workforce_positionassignmentcommandreceipt",
         "public.workforce_personavailabilitycommandreceipt",
@@ -247,6 +263,8 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
     assert RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS == (
         "public.announcements_announcementcontrol",
         "public.announcements_announcement",
+        "public.knowledge_guidancecontrol",
+        "public.knowledge_guidanceitem",
         "public.workforce_editionstructurecontrol",
         "public.workforce_positionassignment",
         "public.workforce_personavailabilityplan",
@@ -372,8 +390,8 @@ def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
         if identity.split(".", 1)[1].startswith(_BOUNDED_DOMAIN_APP_LABELS)
     }
 
-    assert len(append_only_relations) == 24
-    assert len(retained_aggregate_relations) == 26
+    assert len(append_only_relations) == 28
+    assert len(retained_aggregate_relations) == 28
     assert not append_only_relations & retained_aggregate_relations
     assert bounded_relations == (
         append_only_relations
@@ -460,6 +478,25 @@ def test_v5_preserves_v4_and_adds_only_announcements_operator_helpers() -> None:
     )
     assert len(set(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5)) == len(
         RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5
+    )
+
+
+def test_v6_preserves_v5_and_adds_only_purpose_qualified_guidance_helpers() -> None:
+    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6[:-7] == (
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5
+    )
+    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6[-7:] == (
+        "public.maru_assert_active_workspace_operators(uuid)",
+        "public.maru_assert_active_workspace_operators_v0009(uuid)",
+        "public.maru_guidance_recipe_capabilities(character varying)",
+        "public.maru_guidance_required_control(character varying,uuid)",
+        "public.maru_guidance_expected_source("
+        "character varying,uuid,character varying)",
+        "public.maru_guidance_actor_allowed(uuid,uuid,uuid,text)",
+        "public.maru_guidance_team_ready(uuid,uuid,uuid,uuid)",
+    )
+    assert len(set(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6)) == len(
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6
     )
 
 
@@ -558,7 +595,7 @@ def test_probe_binds_the_role_and_required_function_identities(
         list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
-        list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5),
+        list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6),
     ]
     configured_connections.__getitem__.assert_called_once_with("security")
     assert result.current_session_is_safe

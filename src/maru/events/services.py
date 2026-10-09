@@ -374,10 +374,33 @@ def create_event_edition(
         )
         if existing_receipt is not None:
             retained_edition = existing_receipt.edition
-            retained_profile = adoption_profile(
-                retained_edition.adoption_profile_code,
-                retained_edition.adoption_profile_version,
+            from maru.events.guidance_activation_models import (  # noqa: PLC0415
+                GuidanceActivationReceipt,
             )
+
+            original_transition = (
+                GuidanceActivationReceipt.objects.filter(
+                    organization_id=retained_edition.organization_id,
+                    edition_id=retained_edition.id,
+                )
+                .order_by("result_adoption_revision")
+                .values(
+                    "request__source_profile_code", "request__source_profile_version"
+                )
+                .first()
+            )
+            original_pair = (
+                (
+                    original_transition["request__source_profile_code"],
+                    original_transition["request__source_profile_version"],
+                )
+                if original_transition is not None
+                else (
+                    retained_edition.adoption_profile_code,
+                    retained_edition.adoption_profile_version,
+                )
+            )
+            retained_profile = adoption_profile(*original_pair)
             if retained_profile is None:
                 raise ValidationError(
                     {
@@ -442,6 +465,19 @@ def create_event_edition(
             .first()
         )
         representation = representation_definition(representation_code or "")
+        if (
+            representation is not None
+            and representation.code == "workspace_operators"
+            and profile.key != ("guidance_only", 1)
+        ):
+            raise ValidationError(
+                {
+                    "adoption_profile_code": (
+                        "This workspace foundation supports Guidance only."
+                    )
+                },
+                code="workspace_operator_profile_unavailable",
+            )
         if (
             not actor.is_platform_administrator
             and representation is not None

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from django.db import transaction
+from django.db.models import Q
 
 from maru.events.models import EventEdition
 from maru.events.queries import resolve_edition_series_identity
@@ -19,7 +20,7 @@ class AnnouncementsEditionScope:
     organization_id, series_id, edition_id
         Exact coherent owner identities.
     adoption_profile_code, adoption_profile_version
-        The exact supported standalone adoption pair.
+        The actual accepted standalone or combined adoption pair.
     edition_version
         Current edition aggregate version for optimistic source fencing.
     lifecycle
@@ -86,16 +87,18 @@ def resolve_announcements_edition_scope(
     ):
         return None
     query = EventEdition.objects.filter(
+        Q(adoption_profile_code="announcements_only", adoption_profile_version=1)
+        | Q(adoption_profile_code="announcements_guidance", adoption_profile_version=1),
         id=edition_id,
         organization_id=organization_id,
         series_id=series_id,
         series__organization_id=organization_id,
-        adoption_profile_code="announcements_only",
-        adoption_profile_version=1,
     )
     if for_update:
         query = query.select_for_update(of=("self",))
     row = query.values(
+        "adoption_profile_code",
+        "adoption_profile_version",
         "aggregate_version",
         "lifecycle",
         "language_codes",
@@ -109,8 +112,8 @@ def resolve_announcements_edition_scope(
         organization_id=organization_id,
         series_id=series_id,
         edition_id=edition_id,
-        adoption_profile_code="announcements_only",
-        adoption_profile_version=1,
+        adoption_profile_code=row["adoption_profile_code"],
+        adoption_profile_version=row["adoption_profile_version"],
         edition_version=row["aggregate_version"],
         lifecycle=row["lifecycle"],
         language_codes=tuple(row["language_codes"]),

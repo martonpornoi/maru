@@ -84,6 +84,42 @@ and must preserve the integrity of retained decisions. Tests use synthetic rules
 people and channels only.
 
 
+### Internal Guidance
+
+ADRs 0118 and 0119 define two distinct purposes: approved operational guidance for
+an edition's authorized readers, and accountable setup/access evidence. The
+`guidance-evidence` audit marker names the first purpose; it is not a retention
+period or lawful basis. The organization's actual recorded rules and custodian
+must cover text, private review, attribution, exported copies and recovery before
+new content is collected. Free text can contain more sensitive information than
+this baseline; the plain-text workflow does not authorize conduct, medical or
+other restricted case material.
+
+| Records/fields | Source, owner and purpose | Classification and recipients | Retention, correction and exit |
+| --- | --- | --- | --- |
+| Title, body, language, review date and fixed task placements | Organizer-authored versions owned by the accepted edition Guidance team; purpose is internal convention guidance | C1 internal baseline; current readers receive only approved available copy, while separately authorized editors receive working history | Immutable revisions and exact approval retain historical meaning; replacement is reviewed, withdrawal removes current discovery/downloads, and saved copies remain subject to their custodian's rules |
+| Author/reviewer identifiers, private feedback, withdrawal and stop/resume reasons | Actual authenticated actions establishing accountability | C2 attribution and potentially more sensitive free text; working-history and private-export authority are separate from reading | Retain under actual rules and applicable holds; corrections append, subject-rights handling is controlled, and private evidence never enters reader text/print output |
+| Rules name/reference/description, records custodian, review date and confirmation | Actual organizer decision about collection and custody | Internal governance, C2 where a person is named; settings managers and separately authorized evidence exports | Bind content to the settings actually seen; overdue rules block new collection/review rather than hiding retained history; no automatic disposal or invented duration |
+| Scope, team/activation reference, version, retry digest, receipt, audit, event and integrity links | System-generated minimized evidence joining decisions to exact state | C2 accountability; opaque identifiers do not become a general people directory | Preserve the mutually consistent graph through backup, restore, holds and authorized export; no body or feedback in routine logs, metrics or internal event payloads |
+| Setup/expansion proposals, person-owned acceptances, exact controller sources and access/revocation receipts | Events and Authorization decisions adding one purpose and issuing bounded access | C2 security governance under the existing authority-evidence custody rules; only independently admitted setup/access actors | Pending consent grants nothing; changed terms require renewed consent; recovery appends new decisions and never rewrites original authority or implies past acceptance |
+
+Guidance creates no read receipts, tracking pixels, analytics, attendance or
+unrelated membership. Search is an authorized current-copy projection without an
+external index. Contextual tasks request the same reader ceiling; they neither
+cache hidden content nor inherit Knowledge access from their own permissions.
+Stop-use suppresses current readers and context; resuming requires a fresh
+confirmation of the retained current versions and never revives withdrawn items.
+
+Private exports have their own permission and integrity manifest. Plain-text and
+print copies are internal, contain no private feedback and warn that saved copies
+may be out of date. Neither artifact grants future access. The deploying
+organization controls copies after download, backup expiry, holds, correction,
+restriction and subject-rights fulfillment. No new disposal executor or general
+PrivacyOps case workflow is claimed. Used installations fix forward or restore a
+consistent owner graph; stop-use is not deletion. Tests and tutorials use synthetic
+people, organizational rules and convention instructions only.
+
+
 ADR 0107's Workforce-owned Programme starter request and terminal decision are
 C2 person-linked governance evidence; free-text rationale is restricted, not
 public timetable content. Retain only exact scope, fixed definition/digest,

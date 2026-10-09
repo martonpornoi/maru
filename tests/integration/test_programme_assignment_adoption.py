@@ -125,6 +125,7 @@ def test_unused_assignment_guard_reverse_reapply_preserves_native_identity():
 
 
 def test_any_retained_programme_edition_fences_assignment_downgrade(programme_world):
+    recorded = set(MigrationExecutor(connection).loader.applied_migrations)
     with connection.cursor() as cursor:
         original = _MIGRATION._state(cursor)
     with pytest.raises(RuntimeError, match=r"fix[- ]forward"), transaction.atomic():
@@ -133,9 +134,7 @@ def test_any_retained_programme_edition_fences_assignment_downgrade(programme_wo
         )
     with connection.cursor() as cursor:
         assert _MIGRATION._state(cursor) == original
-    assert ("workforce", "0029_programme_assignment_adoption") in (
-        MigrationExecutor(connection).loader.applied_migrations
-    )
+    assert set(MigrationExecutor(connection).loader.applied_migrations) == recorded
 
 
 def test_shared_non_programme_authority_also_fences_before_successor_removal():

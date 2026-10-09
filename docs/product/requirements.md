@@ -184,10 +184,13 @@ architecture documents, implementation issues, tests, and release notes.
   formats, and local policy configuration. Persist IANA time-zone identifiers,
   ISO language/country codes, and currency codes rather than display labels;
   show human-readable names and UTC/DST offsets at data-entry boundaries.
-- **EVT-006 — Immutable edition adoption profile:** Every new edition must
+- **EVT-006 — Exact edition adoption profile:** Every new edition must
   store one versioned, code-owned adoption profile describing its enabled
-  module namespaces and visible destinations. The profile is immutable for the
-  edition and enforced before platform policy, direct grants, role assignments,
+  module namespaces and visible destinations. Manifest meanings are immutable;
+  ordinary edition writes cannot change the selected pair. Only an explicitly
+  contracted, independently approved transition with a platform setup decision
+  and native receipt-to-state evidence may replace it (EVT-008). The current
+  exact pair is enforced before platform policy, direct grants, role assignments,
   API disclosure, navigation, or background side effects. Expanding beyond a
   Maru-operator organization's bounded profile requires an explicit platform-
   administrator setup decision; it cannot follow from ordinary operator
@@ -234,6 +237,22 @@ architecture documents, implementation issues, tests, and release notes.
   widened. Task metadata and downloads remain requester-bound, with execution and
   retrieval rechecks, explicit limits, expiry and audit; large exports use the
   asynchronous boundary in QRY-006 (ADR 0108).
+
+- **EVT-008 — Deliberate Guidance adoption:** Fresh `guidance_only@1` setup and
+  the one-way `announcements_only@1` to `announcements_guidance@1` transition
+  must reuse eligible foundations and preserve event identity, prior records,
+  original creation/setup receipts and every existing manifest/root meaning.
+  Two current accepted organization-root controllers separately accept their
+  own exact Guidance responsibilities and approve the other's; a platform
+  administrator independently approves setup. Applying rechecks the exact
+  approved preview, parent lifecycle, identities, source authority, edition
+  cursor and manifest fingerprints under locks, and atomically retains the
+  transition and purpose-qualified authority outputs. Pending, changed,
+  cancelled, declined or expired intent grants nothing. Existing Announcements
+  roles do not gain Knowledge control implicitly. Ordinary profile edits,
+  other expansion edges and fresh combined-profile creation remain unavailable.
+  Stop-use does not downgrade adoption. Retained transition or authority
+  evidence requires fix-forward or a mutually consistent restore.
 
 ### Archival history
 
@@ -1878,6 +1897,67 @@ architecture documents, implementation issues, tests, and release notes.
   Generic response sheets are not the source of truth after a submission
   advances into its typed programme, commercial, artwork, workforce, document,
   or service record.
+
+- **KNO-010 — Standalone internal guidance:** An edition may adopt a bounded
+  Guidance workflow for plain-text FAQs and runbooks without Registration,
+  Participation, Workforce, payment, attendance or recipient notifications.
+  Its accepted operator team owns the guidance; current edition-scoped readers
+  are the initial audience. Exact independent approval covers text, language,
+  review date and allowed task placements. Everyone who edited the draft round
+  is ineligible to approve it. An unfinished draft may omit its review date;
+  requesting review may not. A replacement draft leaves the current approved
+  copy available until another version is approved. An overdue review date is
+  visible and never silently withdraws or renews the copy.
+- **KNO-011 — Guidance reading and contextual disclosure:** Search, task context,
+  read, print and current-copy downloads must select only approved available
+  content after current scope and reading authorization. Reading authority does
+  not disclose drafts, private review notes, reviewer identities or settings
+  descriptions. Initial reviewed placements are writing guidance and, only in
+  the deliberately combined profile, writing announcements. Hidden or denied
+  guidance exposes no titles or counts. Saved internal copies identify edition,
+  language, version, generation and review dates and warn that they may be out
+  of date. Reading and downloading collect no acknowledgement or analytics.
+- **KNO-012 — Guidance withdrawal, continuity and exit:** Authorized reasoned
+  withdrawal removes guidance from current reader surfaces while preserving
+  separately authorized history. Stale approval cannot undo it. Stop-use hides
+  current reading and context and blocks new writing/review without stopping
+  Announcements; history, private evidence export and withdrawal remain under
+  their own authority. Resume explicitly confirms the exact retained current
+  versions against a fresh preview; withdrawn guidance stays withdrawn.
+  Record-keeping rules require an actual readable organizational confirmation;
+  overdue rules block new collection and review, not retained history or
+  withdrawal. A per-guide private export retains that guide's complete
+  integrity-linked versions, decisions and commands, the current edition control
+  snapshot, and all edition rules/settings and stop/resume evidence. It excludes
+  unrelated guide content and commands, explicitly identifying that scope and
+  any resulting gaps in the shared command sequence. Complete control history
+  and the export envelope are bounded; overflow fails without truncation.
+  Private exports remain separate from current-copy downloads. Unused
+  reversal is supported; retained content or adoption evidence requires
+  fix-forward or a mutually consistent restore, without invented retention
+  periods, automatic disposal or deletion claims.
+
+- **KNO-013 — Explicit Guidance responsibility and access:** Fresh foundations
+  may use a foundation-only workspace-operator representation; it contains no
+  generic product grant/manage/delegate/revoke or Knowledge capability.
+  Existing representations remain unchanged. Both Guidance entry paths use
+  the same separately accepted exact-edition controller role and closed
+  content recipes, including a reader-only recipe. The controller capability
+  cannot be directly granted, delegated, organization-wide or placed in mixed
+  roles. Its initial issuance requires typed qualification linking actual
+  setup decisions to exact earlier organization-root sources and outputs.
+  Content access is issued only after current Guidance controllers exist;
+  conditional cross-approval is explicit and recipients cannot approve their
+  own access. All protected Guidance capabilities reject generic direct grants
+  and delegation; controller assignments remain ceremony-only. Later content
+  assignments use canonical typed role requests and the named approver's actual
+  authenticated decision, with two current Guidance controllers and complete
+  source/scope/time containment; revocation requires one current
+  Guidance controller with source-backed reasoned evidence. Generic prior
+  authority and platform policy do not bypass this purpose boundary. Current
+  validity follows both exact source chains without rebinding, and recovery
+  requires new actual decisions and replacement authority rather than reused
+  consent. No attendee, volunteer or unrelated membership is inferred.
 
 ### Workflow automation and responsible assistance
 

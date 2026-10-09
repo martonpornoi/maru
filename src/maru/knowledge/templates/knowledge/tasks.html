@@ -1,0 +1,26 @@
+{% extends "knowledge/base.html" %}
+{% block guidance_content %}
+<p>Review each request before deciding. Opening a page does not accept responsibilities or approve access.</p>
+<h2>Set up Guides</h2>
+<ul class="guidance-cards" role="list">
+  {% for item, url in setup_rows %}
+    <li aria-labelledby="setup-request-{{ forloop.counter }}">
+      <h3 id="setup-request-{{ forloop.counter }}">{{ item.edition_name }}</h3>
+      <p>{{ item.organization_name }}</p>
+      <p>{% if item.can_apply %}Both people accepted. Review and apply the agreed setup.{% else %}Decide whether to accept your responsibilities and approve the other person's assignment.{% endif %}</p>
+      <p class="guidance-actions"><a href="{{ url }}" aria-describedby="setup-request-{{ forloop.counter }}">Review setup request</a></p>
+    </li>
+  {% empty %}<li>No setup decisions need your answer.</li>{% endfor %}
+</ul>
+<h2>Access to guides</h2>
+<ul class="guidance-cards" role="list">
+  {% for item, url in access_rows %}
+    <li aria-labelledby="access-request-{{ forloop.counter }}">
+      <h3 id="access-request-{{ forloop.counter }}">{{ item.recipient.label }} · {{ item.edition_name }}</h3>
+      <p>{{ item.requested_by.label }} asked you to review this access.</p>
+      <p class="guidance-actions"><a href="{{ url }}" aria-describedby="access-request-{{ forloop.counter }}">Review access request</a></p>
+    </li>
+  {% empty %}<li>No access requests need your answer.</li>{% endfor %}
+</ul>
+<details><summary>Other requests and previous decisions</summary><p><a href="{{ setup_history_url }}">Your setup requests</a></p><p><a href="{{ access_history_url }}">Your access requests</a></p></details>
+{% endblock %}

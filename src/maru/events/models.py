@@ -27,6 +27,18 @@ from maru.events.adoption_persistence import PERSISTED_ADOPTION_PROFILE_KEYS
 from maru.events.announcements_setup_models import (
     AnnouncementsAdoptionSetupReceipt as AnnouncementsAdoptionSetupReceipt,  # noqa: PLC0414 - Django model discovery
 )
+from maru.events.guidance_activation_models import (
+    GuidanceActivationDecision as GuidanceActivationDecision,  # noqa: PLC0414 - Django discovery
+)
+from maru.events.guidance_activation_models import (
+    GuidanceActivationReceipt as GuidanceActivationReceipt,  # noqa: PLC0414 - Django discovery
+)
+from maru.events.guidance_activation_models import (
+    GuidanceActivationRequest as GuidanceActivationRequest,  # noqa: PLC0414 - Django discovery
+)
+from maru.events.guidance_setup_models import (
+    GuidanceAdoptionSetupReceipt as GuidanceAdoptionSetupReceipt,  # noqa: PLC0414 - Django model discovery
+)
 from maru.events.programme_setup_models import (
     ProgrammeAdoptionSetupReceipt as ProgrammeAdoptionSetupReceipt,  # noqa: PLC0414 - explicit typed re-export and Django discovery
 )
@@ -100,6 +112,7 @@ class EventEdition(UUIDTimeStampedModel):
         db_default=AdoptionProfileCode.FULL_CONVENTION,
         editable=False,
     )
+    adoption_revision = models.PositiveBigIntegerField(default=0, editable=False)
     adoption_profile_version = models.PositiveIntegerField(
         default=DEFAULT_ADOPTION_PROFILE_VERSION,
         db_default=DEFAULT_ADOPTION_PROFILE_VERSION,
@@ -197,6 +210,7 @@ class EventEdition(UUIDTimeStampedModel):
                     "lifecycle",
                     "adoption_profile_code",
                     "adoption_profile_version",
+                    "adoption_revision",
                 )
                 .first()
             )
@@ -208,6 +222,7 @@ class EventEdition(UUIDTimeStampedModel):
             if current is not None and (
                 current["adoption_profile_code"] != self.adoption_profile_code
                 or current["adoption_profile_version"] != self.adoption_profile_version
+                or current["adoption_revision"] != self.adoption_revision
             ):
                 raise ValidationError(
                     "An edition adoption profile is immutable after creation.",

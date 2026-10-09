@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
@@ -17,8 +17,10 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.policy import (
     AuthorizedScopeProjection,
+    decide_verified_principal_exact_edition,
     project_active_authority_scopes,
     projected_scope_allows_profile,
 )
@@ -32,6 +34,8 @@ from maru.events.models import EventEdition
 from maru.events.queries import adoption_profile_filter_for_capabilities
 from maru.identity.models import Account
 from maru.organizations.models import ConventionSeries, Organization
+
+_MAX_GUIDANCE_DISCOVERY_CANDIDATES = 256
 
 if TYPE_CHECKING:
     from django import forms
@@ -450,6 +454,86 @@ def _programme_admin_edition_ids(request: HttpRequest) -> frozenset[UUID]:
         return frozenset()
 
 
+def _guidance_admin_edition_ids(request: HttpRequest) -> frozenset[UUID]:
+    """Admit reader-only edition discovery before resolving any tenant names.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated request carrying the selector scope.
+
+    Returns
+    -------
+    frozenset[UUID]
+        The admitted immutable result; it grants no additional authority.
+    """
+    actor = _active_account(request)
+    if actor is None or actor.is_platform_administrator:
+        return frozenset()
+    candidates = authorized_admin_edition_ids(
+        request,
+        capability_codes=frozenset(
+            {"knowledge.view_current", "knowledge.view_working"}
+        ),
+    )
+    if len(candidates) > _MAX_GUIDANCE_DISCOVERY_CANDIDATES:
+        return frozenset()
+    raw_trace = getattr(request, "correlation_id", None)
+    try:
+        trace = UUID(str(raw_trace)) if raw_trace is not None else uuid4()
+    except (TypeError, ValueError):
+        return frozenset()
+    admitted: set[UUID] = set()
+    for edition_id, organization_id in (
+        EventEdition.objects.filter(id__in=candidates)
+        .order_by("id")
+        .values_list("id", "organization_id")
+    ):
+        for code, field in (
+            ("knowledge.view_current", "current_summary"),
+            ("knowledge.view_working", "draft"),
+        ):
+            decision = decide_verified_principal_exact_edition(
+                principal_id=actor.id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                capability_code=code,
+                requested_fields=frozenset({field}),
+            )
+            if not decision.allowed or field not in decision.fields:
+                continue
+            final = decide_verified_principal_exact_edition(
+                principal_id=actor.id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                capability_code=code,
+                requested_fields=frozenset({field}),
+            )
+            if not final.allowed or field not in final.fields:
+                break
+            append_audit(
+                AuditRecord(
+                    principal_kind="account",
+                    principal_id=actor.id,
+                    principal_context_id=None,
+                    organization_id=organization_id,
+                    event_edition_id=edition_id,
+                    capability_code=code,
+                    operation="events.guidance.workspace_discover",
+                    target_type="events.edition",
+                    target_id=edition_id,
+                    outcome="allow",
+                    reason_code=final.reason_code,
+                    correlation_id=trace,
+                    source_channel="html",
+                    obligations=("audit_sensitive_read",),
+                )
+            )
+            admitted.add(edition_id)
+            break
+    return frozenset(admitted)
+
+
 def _authorized_admin_editions(request: HttpRequest) -> QuerySet[EventEdition]:
     """Scope selector candidates before any edition row is evaluated.
 
@@ -483,6 +567,7 @@ def _authorized_admin_editions(request: HttpRequest) -> QuerySet[EventEdition]:
             capability_codes=_EDITION_WORKSPACE_NAVIGATION_CAPABILITIES,
         )
         authorized_ids |= _programme_admin_edition_ids(request)
+        authorized_ids |= _guidance_admin_edition_ids(request)
         authorized_editions = (
             editions.filter(id__in=authorized_ids)
             if authorized_ids

@@ -13,12 +13,17 @@ from enum import StrEnum
 from typing import Protocol, TypeVar
 from uuid import UUID
 
+from django.core.exceptions import ValidationError
 from django.db import DatabaseError, connection, models
 from django.db.models import Q, QuerySet
 from django.db.transaction import TransactionManagementError
 from django.utils import timezone
 
 from maru.authorization.catalog import ScopeLevel
+from maru.authorization.guidance_target_contracts import (
+    guidance_control_source_matches,
+    required_target_control_capability,
+)
 from maru.authorization.models import (
     AuthorityControl,
     AuthorityIssuance,
@@ -669,6 +674,10 @@ def _validate_ordinary_controls(
     path: frozenset[int],
     depth: int,
 ) -> bool:
+    try:
+        required_capability = required_target_control_capability(target)
+    except ValidationError:
+        return False
     controls = _controls_by_role(context, issuance)
     if controls is None:
         return False
@@ -686,7 +695,10 @@ def _validate_ordinary_controls(
     ):
         control = controls[role]
         if (
-            control.principal_id != expected_principal_id
+            not guidance_control_source_matches(
+                target=target, role=role, ordinal=control.source_issuance_id
+            )
+            or control.principal_id != expected_principal_id
             or control.basis != AuthorityControl.Basis.PERSISTENT_AUTHORITY
             or control.source_issuance_id is None
             or control.source_issuance_id >= issuance.ordinal
@@ -861,6 +873,10 @@ def _ordinary_bundle_ceremony_is_historical(
     bundle: RoleBundle,
     evaluated_at: datetime,
 ) -> bool:
+    try:
+        required_capability = required_target_control_capability(bundle)
+    except ValidationError:
+        return False
     controls = _controls_by_role(context, issuance)
     if controls is None or issuance.evaluated_at > evaluated_at:
         return False
@@ -874,7 +890,10 @@ def _ordinary_bundle_ceremony_is_historical(
     ):
         control = controls[role]
         if (
-            control.principal_id != principal_id
+            not guidance_control_source_matches(
+                target=bundle, role=role, ordinal=control.source_issuance_id
+            )
+            or control.principal_id != principal_id
             or control.basis != AuthorityControl.Basis.PERSISTENT_AUTHORITY
             or control.source_issuance_id is None
             or control.source_issuance_id >= issuance.ordinal
@@ -888,7 +907,7 @@ def _ordinary_bundle_ceremony_is_historical(
             ordinal=control.source_issuance_id,
             expectation=_Expectation(
                 principal_id=principal_id,
-                capability_code=_ROLE_CONTROL_CAPABILITY,
+                capability_code=required_capability,
                 target_scope=expectation_scope,
                 requested_effective_from=issuance.evaluated_at,
                 requested_expires_at=None,
@@ -1182,6 +1201,10 @@ def _validate_ordinary_controls_historical(
     path: frozenset[int],
     depth: int,
 ) -> bool:
+    try:
+        required_capability = required_target_control_capability(target)
+    except ValidationError:
+        return False
     controls = _controls_by_role(context, issuance)
     if controls is None:
         return False
@@ -1199,7 +1222,10 @@ def _validate_ordinary_controls_historical(
     ):
         control = controls[role]
         if (
-            control.principal_id != principal_id
+            not guidance_control_source_matches(
+                target=target, role=role, ordinal=control.source_issuance_id
+            )
+            or control.principal_id != principal_id
             or control.basis != AuthorityControl.Basis.PERSISTENT_AUTHORITY
             or control.source_issuance_id is None
             or control.source_issuance_id >= issuance.ordinal

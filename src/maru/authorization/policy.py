@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from maru.authorization.bindings import resource_binding_target_exists
 from maru.authorization.catalog import POLICY_VERSION, ScopeLevel, capability
+from maru.authorization.guidance_catalog import GUIDANCE_PROTECTED_CAPABILITIES
 from maru.authorization.models import (
     AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
     AUTHORITY_PROVENANCE_ACTIVE_GENERATION,
@@ -1512,7 +1513,10 @@ def current_role_assignment_ids(
         return frozenset(
             assignment.id
             for assignment in assignments
-            if (
+            if not GUIDANCE_PROTECTED_CAPABILITIES.intersection(
+                assignment.role_bundle.capability_codes
+            )
+            and (
                 target := target_cache.get(
                     (
                         assignment.organization_id,
@@ -1714,6 +1718,12 @@ def project_active_authority_scopes(  # noqa: PLR0912
             target,
             _persistable_authority_capability_codes(authority),
         )
+        if not exact_lineage_active:
+            capability_codes = tuple(
+                code
+                for code in capability_codes
+                if code not in GUIDANCE_PROTECTED_CAPABILITIES
+            )
         if not capability_codes:
             continue
         purpose_role_code = (
@@ -1917,6 +1927,17 @@ def decide(  # noqa: PLR0911
 
     if (
         principal.is_platform_administrator
+        and capability_code in GUIDANCE_PROTECTED_CAPABILITIES
+    ):
+        return PolicyDecision(
+            allowed=False,
+            fields=frozenset(),
+            obligations=frozenset(),
+            reason_code="guidance_purpose_authority_required",
+        )
+
+    if (
+        principal.is_platform_administrator
         and not definition.allow_self
         and not definition.requires_break_glass
     ):
@@ -1929,6 +1950,13 @@ def decide(  # noqa: PLR0911
 
     evaluation_time = at or timezone.now()
     marker_present, exact_lineage_active = _exact_lineage_policy_state()
+    if capability_code in GUIDANCE_PROTECTED_CAPABILITIES and not exact_lineage_active:
+        return PolicyDecision(
+            allowed=False,
+            fields=frozenset(),
+            obligations=frozenset(),
+            reason_code="guidance_purpose_authority_required",
+        )
     if (
         marker_present or settings.REQUIRE_EXACT_AUTHORITY_PROVENANCE
     ) and not exact_lineage_active:

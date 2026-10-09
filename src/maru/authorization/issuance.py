@@ -9,6 +9,10 @@ from django.db import transaction
 from django.utils import timezone
 
 from maru.authorization.catalog import POLICY_VERSION
+from maru.authorization.guidance_target_contracts import (
+    guidance_control_source_matches,
+    required_target_control_capability,
+)
 from maru.authorization.models import (
     AuthorityControl,
     AuthorityIssuance,
@@ -78,20 +82,20 @@ def _target_attribution(
             target.granted_by_id,
             target.approved_by_id,
             target.principal_id,
-            _GRANT_CAPABILITY,
+            required_target_control_capability(target),
         )
     if isinstance(target, RoleBundle):
         return (
             target.created_by_id,
             target.approved_by_id,
             None,
-            _ROLE_CAPABILITY,
+            required_target_control_capability(target),
         )
     return (
         target.granted_by_id,
         target.approved_by_id,
         target.principal_id,
-        _ROLE_CAPABILITY,
+        required_target_control_capability(target),
     )
 
 
@@ -293,6 +297,15 @@ def create_persistent_dual_control_issuance(
         _raise_validation(
             "The authority recipient cannot approve their own issuance.",
             code="recipient_cannot_approve",
+        )
+    if not guidance_control_source_matches(
+        target=locked_target, role="actor", ordinal=actor_source.ordinal
+    ) or not guidance_control_source_matches(
+        target=locked_target, role="approver", ordinal=approver_source.ordinal
+    ):
+        _raise_validation(
+            "Use the exact accepted Guidance authority sources.",
+            code="guidance_source_mismatch",
         )
     effective_evaluation = evaluated_at or timezone.now()
     for principal_id, source in (

@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-10-09
-Phase: Standalone Announcements implementation and pre-production evaluation.
+Phase: Announcements delivery verification and internal Guidance implementation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready release or supported hosted service. Furry conventions are the
@@ -53,6 +53,63 @@ cases after the whole unit run; final certification will include it. Native prin
 Exact-commit certification and hosted acceptance still remain; these development results are not production activation or independent
 human acceptance.
 
+Announcements candidates `633fab42736d8d34d3112bac23947d19d449b27a` and
+`94646aa5180e532d6854d1e16c447e12005cef76` failed full certification on separate
+joined recovery preflight ordering paths. Complete failed evidence is preserved;
+no successful receipt exists. The first repair passes 65 units and 20 native cases;
+its fresh full run passed the original failing archive case and twelve native
+shards, then exposed a bare retained Programme edition reaching schema reversal
+before the older Workforce refusal. The complete repair now also preflights bare
+Programme editions and retained Announcements representation/access before any
+successor reversal. Its focused final batch passes seven native cases and
+65 units; an earlier focused repair batch passes 27 native cases. Commit
+`0eabf43b421804aed1ef7db7bec0c5603f7c299c` is running fresh full certification.
+This Guides tree includes that verified repair. The
+[recovery checkpoint](../checkpoints/2026-10-09-announcements-recovery-fence.md)
+records evidence without implying protected delivery or Programme acceptance.
+
+## Guidance work in progress
+
+A separate checkout is implementing internal Guidance while the Announcements
+candidate remains frozen. [ADR 0118](../architecture/decisions/0118-reviewed-internal-guidance.md)
+and KNO-010 through KNO-012 define plain-text FAQs/runbooks, independent review,
+current-only reading, contextual placement, withdrawal and portable outputs.
+A replacement draft keeps the last approved copy available; overdue review is a
+visible warning, not automatic withdrawal. Private feedback and settings do not
+enter reader projections.
+
+[ADR 0119](../architecture/decisions/0119-guidance-adoption-and-purpose-authority.md),
+EVT-008 and KNO-013 contract fresh `guidance_only@1` setup and one deliberate
+Announcements-to-combined transition. Existing event identity, records, manifest
+meanings and roots remain unchanged. New Guidance responsibility is separately
+accepted and issued through purpose-qualified exact-edition authority. This is
+implementation work, not profile activation or production acceptance. Focused
+data-free content, UI, adoption, navigation and historical-migration checks pass.
+The complete database-free feedback suite passes 14,017 cases in 108.30 seconds
+with fresh task-local temporary files. Earlier failed feedback is retained; its
+source, fixture and Windows temporary-folder failures are repaired. Cross-owner
+review also repaired deferred review authorship, exact schema-pin completeness
+and inactive-parent access admission without widening native authority. New
+native regression cases remain unrun.
+
+Strict typing passes all 880 source files; Ruff and formatting pass. Generated
+API types distinguish fresh setup from retained combined profiles; 108 frontend
+tests, type checking and production build pass without a generated application
+change. Python-contract checks and a fresh warning-fatal Sphinx handbook build
+pass. The module index now points to current status and historical evidence instead
+of repeating a dated verification narrative; its follow-up link check passes.
+A synthetic static preview of six real templates fits 320- and
+1,280-pixel widths, with additional phone visual inspection. It prompted clearer
+access labels, explicit inbox action buttons and a card-marker repair. Shared
+navigation and owner queries were fixture projections, so this is layout evidence
+only, not authenticated workflow or accessibility acceptance.
+
+No Guides database or authenticated browser journey has run. Native schema pins
+remain deliberately unobserved and refuse use. The Announcements certification
+pool has priority. Guides has its own prepared environment, a reviewed fresh-schema
+observation helper and an isolated browser fixture harness awaiting actual
+resource allocation and native verification.
+
 ## Starting baseline and verification
 
 PR #209 passed complete local and independent hosted acceptance before protected
@@ -97,9 +154,10 @@ Purpose-specific authority, owning commands and independent approval still apply
 1. Freeze the coherent Announcements batch and run one clean exact-commit
    required certification, then independent protected delivery. Preserve previous
    evidence before replacing local receipts; keep the populated fixture stopped.
-2. Resolve the explicit adoption-expansion and purpose-specific authority contract
-   alongside Guidance so an existing event can add that workflow safely. Do not
-   widen a v1 manifest, grant new control implicitly or duplicate an event.
+2. Once native capacity is released, migrate a fresh owned Guides database and
+   independently review its schema observations before setting readiness pins.
+   Run focused native regressions, then the real restricted-runtime setup and
+   browser journey with retained Announcements history and a separate reader.
 3. Continue guidance/help desk, volunteer and fursuit/accessibility services, then
    the remaining [roadmap](ROADMAP.md) journeys. The maintainer has requested
    continuous work until explicitly stopped; routine product choices are delegated.

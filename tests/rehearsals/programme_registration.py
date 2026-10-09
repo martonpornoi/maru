@@ -21,7 +21,10 @@ _CURRENT_KEYS = (
     ("full_convention", 1),
     ("workforce_only", 1),
     ("announcements_only", 1),
+    ("guidance_only", 1),
+    ("announcements_guidance", 1),
 )
+_CURRENT_SELECTABLE_KEYS = _CURRENT_KEYS[:-1]
 # Capture the real immutable objects before explicit child registration. The
 # startup verifier must compare installed baseline entries by identity as well
 # as validate their owner contracts; it must not infer safety from candidate errors.
@@ -34,6 +37,8 @@ class IsolatedAdoptionProfileCode(StrEnum):
     FULL_CONVENTION = "full_convention"
     WORKFORCE_ONLY = "workforce_only"
     ANNOUNCEMENTS_ONLY = "announcements_only"
+    GUIDANCE_ONLY = "guidance_only"
+    ANNOUNCEMENTS_GUIDANCE = "announcements_guidance"
     PROGRAMME_OPERATIONS = "programme_operations"
 
 
@@ -74,15 +79,20 @@ def register_isolated_programme_candidate() -> None:
     choices = tuple(
         (key[0], profiles[key].label) for key in _CURRENT_KEYS if key in profiles
     )
+    selectable_choices = tuple(
+        (key[0], profiles[key].label)
+        for key in _CURRENT_SELECTABLE_KEYS
+        if key in profiles
+    )
     if (
         tuple(profiles) != _CURRENT_KEYS
         or tuple(adoption_persistence.PERSISTED_ADOPTION_PROFILE_KEYS) != _CURRENT_KEYS
         or tuple(code.value for code in adoption.AdoptionProfileCode)
         != tuple(key[0] for key in _CURRENT_KEYS)
         or dict(adoption.SELECTABLE_ADOPTION_PROFILE_KEYS)
-        != {key[0]: key for key in _CURRENT_KEYS}
+        != {key[0]: key for key in _CURRENT_SELECTABLE_KEYS}
         or tuple(adoption.PERSISTED_ADOPTION_PROFILE_CHOICES) != choices
-        or tuple(adoption.SELECTABLE_ADOPTION_PROFILE_CHOICES) != choices
+        or tuple(adoption.SELECTABLE_ADOPTION_PROFILE_CHOICES) != selectable_choices
         or any(profiles[key].key != key for key in _CURRENT_KEYS)
     ):
         raise ProgrammeRegistrationError("candidate_registration_baseline_changed")
@@ -106,7 +116,10 @@ def register_isolated_programme_candidate() -> None:
     adoption.ADOPTION_PROFILES = extended
     adoption.SELECTABLE_ADOPTION_PROFILE_KEYS = selectors
     adoption.PERSISTED_ADOPTION_PROFILE_CHOICES = extended_choices
-    adoption.SELECTABLE_ADOPTION_PROFILE_CHOICES = extended_choices
+    adoption.SELECTABLE_ADOPTION_PROFILE_CHOICES = (
+        *selectable_choices,
+        (candidate.code.value, candidate.label),
+    )
     adoption_persistence.PERSISTED_ADOPTION_PROFILE_KEYS = (
         *_CURRENT_KEYS,
         candidate.key,

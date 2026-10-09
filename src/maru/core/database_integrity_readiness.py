@@ -47,7 +47,7 @@ _FUNCTION_RE: Final = re.compile(
     rf"CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+"
     rf"(?P<schema>{_IDENTIFIER})\.(?P<name>{_IDENTIFIER})\s*"
     r"\((?P<arguments>.*?)\)\s*"
-    r"RETURNS\s+(?P<result>TABLE\s*\([^()]+\)|[a-z0-9_.\s\"]+?)\s+AS\s+"
+    r"RETURNS\s+(?P<result>TABLE\s*\([^()]+\)|[a-z0-9_.\s\"]+?(?:\[\])?)\s+AS\s+"
     r"(?P<delimiter>\$[a-z0-9_]*\$)"
     r"(?P<source>.*?)"
     r"(?P=delimiter)\s+LANGUAGE\s+"
@@ -228,6 +228,10 @@ class DatabaseIntegrityContract:
         Optional explicit nonempty owned-relation subset for a purpose-specific
         contract. None retains the whole-app boundary. Every selected relation
         must have a primary trigger contract; this never certifies omitted tables.
+    supporting_owned_relations
+        Explicit same-app relations outside the selected subset carrying named
+        supporting triggers. Their other guards remain their owner's contract;
+        this certifies only the declared attachments, never the omitted tables.
     """
 
     status_key: str
@@ -242,6 +246,7 @@ class DatabaseIntegrityContract:
     supporting_migrations: tuple[tuple[str, str], ...] = ()
     supporting_triggers: Mapping[str, TriggerContract] = field(default_factory=dict)
     owned_relations: tuple[str, ...] | None = None
+    supporting_owned_relations: tuple[str, ...] = ()
 
     @property
     def required_migrations(self) -> tuple[tuple[str, str], ...]:
@@ -708,7 +713,10 @@ def bounded_context_relation_names(app_label: str) -> tuple[str, ...]:
 def _contract_relation_names(contract: DatabaseIntegrityContract) -> tuple[str, ...]:
     owned = bounded_context_relation_names(contract.app_label)
     selected = contract.owned_relations
+    additional = contract.supporting_owned_relations
     if selected is None:
+        if additional != ():
+            raise ValueError("supporting owned relations require an explicit subset")
         return owned
     if (
         not isinstance(selected, tuple)
@@ -717,10 +725,16 @@ def _contract_relation_names(contract: DatabaseIntegrityContract) -> tuple[str, 
         or len(selected) != len(set(selected))
         or not set(selected) <= set(owned)
         or set(selected) != {trigger.table for trigger in contract.triggers.values()}
-        or any(
-            trigger.table in owned and trigger.table not in selected
+        or not isinstance(additional, tuple)
+        or any(not isinstance(name, str) for name in additional)
+        or len(additional) != len(set(additional))
+        or not set(additional) <= set(owned) - set(selected)
+        or set(additional)
+        != {
+            trigger.table
             for trigger in contract.supporting_triggers.values()
-        )
+            if trigger.table in owned and trigger.table not in selected
+        }
     ):
         raise ValueError("purpose-specific integrity relation scope is invalid")
     return tuple(sorted(selected))

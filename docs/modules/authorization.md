@@ -6,7 +6,41 @@ Maru-operator roots, provenance writing, profile-compatible access management,
 and guarded exact-lineage policy/runtime activation; dormant Applications
 Programme capabilities remain unadopted and production legacy reconciliation
 and cutover remain gates
-Last updated: 2026-09-21
+Last updated: 2026-10-09
+
+## Purpose-qualified Guides responsibility
+
+KNO-013 and [ADR 0119](../architecture/decisions/0119-guidance-adoption-and-purpose-authority.md)
+add a closed Guides qualification path inside ordinary exact-lineage authority.
+`guidance_bootstrap` issues separately accepted controller assignments before the
+initial content assignments. The immutable team keeps its original activation
+reference; recovery issues new descendants from new current sources and never
+rebinds old access. `guidance_authority_queries.guidance_team_reference` exposes
+only that stable owner reference and separately computed current readiness.
+
+All eight protected capabilities reject generic grants and delegation. The
+controller role is ceremony-only. Later `guidance_access` requests use the closed
+reader, editor, reviewer or operator recipe and retain exact requester/approver
+sources. Only the actual named approver can accept or decline; the recipient
+cannot approve their own assignment. A controller role contains no content
+permission, and content recipes contain no access-management permission. Platform
+status grants no Guides content access. Private evidence and settings remain
+separately checked capabilities, even when the operator recipe includes them.
+
+`guidance_access_queries` admits purpose before scope/person labels, and uses a
+participant-filtered narrow locator before private request terms. A replaced
+source makes the old pending request unavailable even if equivalent new authority
+exists. `has_current_guidance_tasks` exposes only an admitted task-existence
+boolean for personal navigation. Native guards retain the reciprocal assignment,
+actual audit witness and minimized event/outbox relationship. The Guidance
+readiness check is data-free; operational entry also requires activated exact
+provenance. The [Guides module](knowledge.md) owns content policy and lifecycle.
+Native verification of this new batch remains pending.
+
+Guides access management requires an active organization and convention series.
+This applies to access inventory and revocation as well as new access requests.
+A terminal event edition within active parents still permits purpose-qualified
+revocation; it does not reopen new access assignment or content writing.
 
 ## Programme stop-purpose accounting
 
@@ -1024,10 +1058,10 @@ pending under #190; these reader/command components do not activate stop-use.
 Production legacy reconciliation/cutover, representative authority load,
 step-up execution,
 service/device principals,
-asynchronous approval workflow, grant review reminders, purpose binding, and
-policy caching are not implemented. The synchronous independent approver
-argument is a command invariant, not yet an approval inbox or pending request
-state. Representation & access replaces the old operations-only first-controller procedure and
+generic asynchronous approval, grant review reminders, generic purpose binding,
+and policy caching are not implemented. Guides has the bounded actual-person
+approval and purpose-qualified flow described above; it does not turn the generic
+synchronous approver argument into an authenticated approval inbox. Representation & access replaces the old operations-only first-controller procedure and
 its initial backend security matrix passes. The reusable
 enforcement contracts must be adopted
 and extended with each domain slice; they are not a generic shortcut around

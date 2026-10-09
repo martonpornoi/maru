@@ -10,6 +10,8 @@ _PERSISTED_ADOPTION_PROFILE_KEY_DECLARATIONS = (
     ("full_convention", 1),
     ("workforce_only", 1),
     ("announcements_only", 1),
+    ("guidance_only", 1),
+    ("announcements_guidance", 1),
 )
 
 if len(frozenset(_PERSISTED_ADOPTION_PROFILE_KEY_DECLARATIONS)) != len(

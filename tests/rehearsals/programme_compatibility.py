@@ -37,8 +37,11 @@ _BASELINE_KEYS = (
     ("full_convention", 1),
     ("workforce_only", 1),
     ("announcements_only", 1),
+    ("guidance_only", 1),
+    ("announcements_guidance", 1),
 )
 _EXPECTED_KEYS = (*_BASELINE_KEYS, ("programme_operations", 1))
+_SELECTABLE_KEYS = (*_BASELINE_KEYS[:-1], ("programme_operations", 1))
 _OWNER_PROBLEMS = {
     check_programme_dormancy: (
         "programme.E001",
@@ -98,13 +101,16 @@ def validate_installed_candidate() -> None:
         or tuple(code.value for code in adoption.AdoptionProfileCode)
         != tuple(key[0] for key in _EXPECTED_KEYS)
         or dict(adoption.SELECTABLE_ADOPTION_PROFILE_KEYS)
-        != {key[0]: key for key in _EXPECTED_KEYS}
+        != {key[0]: key for key in _SELECTABLE_KEYS}
     ):
         raise ProgrammeCompatibilityError("candidate_registry_changed")
     choices = tuple((key[0], profiles[key].label) for key in _EXPECTED_KEYS)
+    selectable_choices = tuple(
+        (key[0], profiles[key].label) for key in _SELECTABLE_KEYS
+    )
     if (
         choices != adoption.PERSISTED_ADOPTION_PROFILE_CHOICES
-        or choices != adoption.SELECTABLE_ADOPTION_PROFILE_CHOICES
+        or selectable_choices != adoption.SELECTABLE_ADOPTION_PROFILE_CHOICES
     ):
         raise ProgrammeCompatibilityError("candidate_choices_changed")
     if adoption_manifest_catalog_problem_codes(

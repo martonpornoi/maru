@@ -1,0 +1,110 @@
+# Guides maintainer walkthrough
+
+Status: Proposed synthetic acceptance journey; not yet run
+
+Use an isolated synthetic event and three separate browser sessions: two accepted
+Guidance operators, A and B, and one person C with Guidance reader access only.
+Use generated task-local credentials, never real convention data or passwords in
+this document. The content journey starts with an already provisioned Announcements
+event and separately recorded platform setup oversight. Initial Guidance access and
+adoption also require a platform administrator's proposal and apply actions; do not
+silently count that actor as an organizer. Fresh Guidance-only foundation setup is
+a separate variant using the same supplemental access ceremony. The visible product
+name is **Guides**; Guidance remains the technical contract name.
+
+## Add the workflow and write one guide
+
+1. A platform administrator proposes adding Guides for A and B in the existing
+   event. Each organizer separately accepts their own named responsibilities
+   and approves the other person's exact assignment. The platform administrator
+   applies only that fully accepted proposal.
+   Confirm the organization, series and event retain their IDs and Announcements
+   history. Before activation, the proposal grants no new operational access.
+2. C must have a verified synthetic Maru account. A opens **Manage access to
+   guides**, then **Request access for someone**. Enter C's synthetic account
+   email, select **Read guides**, choose B as the approver and use the reason
+   “Read the synthetic convention FAQs.” Leave the end date empty only when the
+   fixture intentionally needs no planned end. Submit the request and confirm
+   C still has no Guides access. B opens **Guides decisions**, checks the
+   exact person, event and reading-only responsibility, and approves it through
+   B's own session. Confirm C can now reach Guides but cannot reach
+   Announcements, drafts, settings or access management.
+3. A records the fixture's explicitly synthetic record-keeping rules. The content
+   owner is the actual accepted Guidance team; do not invent an individual owner,
+   broader department or real policy approval.
+4. A selects **Write a guide** and writes **How to announce a fursuit lounge
+   closure**. Suggested synthetic text: “Ask the lounge lead to confirm the room
+   and reopening information. Prepare a short notice and ask another organizer
+   to check it before posting through the convention's existing channels.”
+5. Save a draft without a review date. Confirm it remains private and the page
+   explains that a review date is needed before asking for review. Add a future
+   date and select **Writing announcements** under **Where to show this guide**.
+   Save the exact draft, then ask for review. A cannot approve their own writing.
+6. B reviews the text and all visible choices, then selects **Approve and make
+   available**. C searches for “fursuit lounge” and reads the approved copy without
+   editorial controls or private notes. B follows **Guides for this task** from
+   the Announcements writing page and sees the same approved version.
+
+## Replace, expire and withdraw
+
+1. A changes the draft to add: “Ask the lounge lead to confirm the reopening
+   information again before preparing a follow-up notice.” While review is
+   pending, C and the contextual link still receive the prior approved text.
+2. B approves the replacement. Confirm the same reader URL now shows the new
+   version, while private feedback and the earlier version remain in separately
+   authorized history. C cannot download full history or open working deep links.
+3. In the isolated synthetic event, save and independently approve a new revision
+   with yesterday's review date to exercise an already overdue guide. Do not
+   change the host clock or rewrite retained evidence. Confirm **Review overdue**
+   appears with the responsible team and
+   date, including contextual results and saved-copy output. It must not imply
+   fresh approval or silently erase the last approved text.
+4. An authorized operator withdraws the guide with the synthetic reason “This
+   rehearsal guide is no longer suitable for current use.” It disappears from
+   search and task recommendations. A reader's old link returns the safe
+   unavailable response; it does not reveal private history or old instructions.
+
+## Stop, resume and portable copies
+
+Create and independently approve a second synthetic FAQ, **Where is the fursuit
+lounge?**, using clearly fictional room information. An operator selects **Stop using Guides**.
+Reader pages and contextual copy become unavailable; writing and review pause.
+Private history, withdrawal and separately permitted export remain available.
+
+Preview **Resume Guides**. The preview must list exactly the non-withdrawn
+current versions that will return. Confirming it must bind the workspace version;
+a changed preview needs a fresh confirmation. The withdrawn closure guide must
+not reappear. Announcements access and records remain unchanged throughout.
+
+Exercise native print and approved text download as C, then private full-history
+export as an authorized operator. Verify the reader output contains only approved
+content and useful version/date context. Private notes belong only in the private
+export, along with the event's record-keeping and stop/resume history. Other
+guides' text must not appear in that artifact. Printing, reading and downloading
+record no policy acknowledgement.
+
+Repeat the core read, edit, review, error and stop/resume path with scripts blocked,
+keyboard-only interaction, narrow widths and zoom. Record actual viewport, browser,
+roles, date fixture, observed results and stop points. Assistant-operated sessions
+are not independent people, specialist accessibility or production acceptance.
+
+Retain failed evidence and the final synthetic database through the owning recovery
+procedure. Do not change migration records, bypass native guards or run a populated
+rehearsal alongside the full certification database pool.
+
+## Fresh Guides-only variant
+
+A platform administrator opens **Set up Guides**, creates one clearly synthetic
+organization, convention and event, and chooses the real event time zone and
+guide languages. The continuation page keeps the exact new event while linking
+to organizer responsibilities. Invite A and B through the existing foundation
+ceremony, have each accept from their own account, and activate the organization.
+Return to the same continuation page, propose the two Guides responsibilities,
+collect both personal decisions and apply the accepted setup. The platform
+account must not receive a Guides content link merely for doing setup.
+
+Continue with the reader-access and writing steps above. Only **Writing guides**
+is offered as a task placement in this variant; there must be no Announcements
+link, capability or records created by this journey. No actor, approver or scope
+identifier is typed into an ordinary form, and no visible choice substitutes for
+the separate person's actual acceptance.

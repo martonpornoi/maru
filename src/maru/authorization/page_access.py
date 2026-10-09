@@ -123,9 +123,9 @@ class PageAccessSummary:
 
 
 _POLICY_LABELS: dict[PageAccessPolicy, str] = {
-    "scoped": "Scoped authority",
+    "scoped": "Access for this area",
     "platform": "Platform authority",
-    "self": "Own-record policy",
+    "self": "Your own records",
     "public": "Published audience policy",
     "attendee_audience": "Attendee audience policy",
     "representation": "Representation governance",

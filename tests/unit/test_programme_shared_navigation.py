@@ -434,13 +434,19 @@ def test_selector_unions_new_admission_with_unchanged_legacy_candidates(
 ):
     w = context_world
     legacy_id = uuid4()
+    guidance_id = uuid4()
     legacy = Mock(return_value=frozenset({legacy_id}))
+    guidance = Mock(return_value=frozenset({guidance_id}))
     monkeypatch.setattr(admin_context, "authorized_admin_edition_ids", legacy)
+    monkeypatch.setattr(admin_context, "_guidance_admin_edition_ids", guidance)
     queryset = w.manager.all.return_value
     assert admin_context._authorized_admin_editions(w.request) is (
         queryset.filter.return_value.select_related.return_value
     )
-    queryset.filter.assert_called_once_with(id__in=frozenset({legacy_id, EDITION}))
+    queryset.filter.assert_called_once_with(
+        id__in=frozenset({legacy_id, EDITION, guidance_id})
+    )
+    guidance.assert_called_once_with(w.request)
     assert legacy.call_args.kwargs["capability_codes"] == (
         admin_context._EDITION_WORKSPACE_NAVIGATION_CAPABILITIES
     )

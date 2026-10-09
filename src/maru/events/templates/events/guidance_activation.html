@@ -1,0 +1,36 @@
+{% extends "knowledge/base.html" %}
+{% block guidance_content %}
+<p><a href="{{ tasks_url }}">Your Guides setup decisions</a></p>
+{% if start %}
+  {% if start.guidance_ready %}
+    <p>Guides responsibilities are already set up for this event. The two people who accepted can now confirm record-keeping rules and start writing guides.</p>
+    {% if content_url %}<p><a href="{{ content_url }}">Open Guides</a></p>{% endif %}
+  {% elif not start.foundation_ready %}
+    <h2>Finish the organizer workspace</h2>
+    <p>Invite the people responsible for this organizer workspace, have each person accept their own invitation, and activate the organization. Then return here to set up their separate Guides responsibilities.</p>
+    <nav class="guidance-actions"><a href="{{ representation_url }}">Open organizer responsibilities</a><a href="{{ request.path }}">Check whether the workspace is ready</a></nav>
+  {% elif not start.can_propose %}
+    <p>Guides setup needs two currently accepted people responsible for this organizer workspace and an active event that allows setup. Check these before continuing.</p>
+    <p><a href="{{ representation_url }}">Open organizer responsibilities</a></p>
+  {% else %}
+    {% if start.source_profile_code == "announcements_only" %}<p>Add Guides to this existing event. Its identity, Announcements access and Announcements records stay the same.</p>{% else %}<p>Choose the two people who will take responsibility for Guides in this event.</p>{% endif %}
+    {% if start.purpose == "recovery" %}<p>This replaces missing Guides responsibilities through a new accepted setup. It does not restore old assignments automatically.</p>{% endif %}
+  {% endif %}
+  {% if form %}{% include "events/_guidance_responsibilities.html" %}{% include "knowledge/_form.html" %}{% endif %}
+  <details><summary>Technical details</summary><dl><dt>Event reference</dt><dd>{{ start.edition_id }}</dd><dt>Organization responsibility state</dt><dd>{{ start.representation_state }}</dd><dt>Current workflow</dt><dd>{{ start.source_profile_code }}</dd><dt>Requested workflow</dt><dd>{{ start.target_profile_code }}</dd></dl></details>
+{% elif proposal %}
+  <p><strong>{{ state_label }}</strong>. {{ proposal.accepted_count }} of 2 people accepted.</p>
+  <p><strong>People responsible for Guides:</strong> {{ proposal.operator_a.label }} and {{ proposal.operator_b.label }}.</p>
+  <p><strong>Reason:</strong> {{ proposal.reason }}</p>
+  <p><strong>Decide before:</strong> {{ proposal.expires_at|date:"Y-m-d H:i T" }}.</p>
+  {% if proposal.source_profile_code == "announcements_only" %}<p>This adds Guides to the existing event. Announcements access and records stay the same.</p>{% endif %}
+  {% include "events/_guidance_responsibilities.html" %}
+  {% if proposal.own_answer == True %}<p>You accepted this request.</p>{% elif proposal.own_answer == False %}<p>You declined this request.</p>{% endif %}
+  {% if proposal.state == "applied" %}<p>The accepted setup was applied. Ask {{ proposal.operator_a.label }} and {{ proposal.operator_b.label }} to continue from their own accounts.</p>{% if content_url %}<p><a href="{{ content_url }}">Open Guides</a></p>{% endif %}{% elif proposal.state == "declined" or proposal.state == "expired" or proposal.state == "changed" %}<p>This request cannot grant new access. A platform administrator must prepare a fresh request if setup should continue.</p>{% endif %}
+  {% if form %}{% include "knowledge/_form.html" %}<p><a href="{{ request_url }}">Back to request</a></p>{% else %}<nav class="guidance-actions">{% if proposal.can_answer %}<a href="{{ answer_url }}">Decide about these responsibilities</a>{% endif %}{% if proposal.can_apply %}<a href="{{ apply_url }}">Apply accepted setup</a>{% endif %}</nav>{% endif %}
+  <details><summary>Technical details</summary><dl><dt>Request reference</dt><dd>{{ proposal.request_id }}</dd><dt>Request fingerprint</dt><dd>{{ proposal.request_digest }}</dd><dt>Current workflow</dt><dd>{{ proposal.source_profile_code }}</dd><dt>Requested workflow</dt><dd>{{ proposal.target_profile_code }}</dd><dt>Canonical roles for each person</dt><dd>guidance-access-controller@1 and guidance-operator@1</dd></dl></details>
+{% else %}
+  <p>These are your own setup requests and the setup decisions addressed to you. Reading a request does not accept it.</p>
+  <ul class="guidance-cards" role="list">{% for item, url, state in task_rows %}<li><h2><a href="{{ url }}">{{ item.edition_name }}</a></h2><p>{{ item.organization_name }} · {{ state }}</p><p>{{ item.operator_a.label }} and {{ item.operator_b.label }}</p></li>{% empty %}<li>No Guides setup decisions are available to you.</li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

@@ -24,6 +24,8 @@ _PROFILE_CHECK = (
             "full_convention",
             "workforce_only",
             "announcements_only",
+            "guidance_only",
+            "announcements_guidance",
             "programme_operations",
         )
     )
@@ -95,7 +97,7 @@ def _require_native_readiness(environment):
             raise ProgrammeStartupError("candidate_runtime_identity_mismatch")
         cursor.execute(
             "SELECT EXISTS (SELECT 1 FROM public.django_migrations "
-            "WHERE app = 'events' AND name = '0022_isolated_programme_candidate')"
+            "WHERE app = 'events' AND name = '0025_isolated_programme_candidate')"
         )
         if cursor.fetchone() != (True,):
             raise ProgrammeStartupError("candidate_schema_not_installed")

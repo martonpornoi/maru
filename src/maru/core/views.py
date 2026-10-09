@@ -31,6 +31,9 @@ from maru.authorization.database_role_safety import (
     RuntimeDatabaseRoleProbeError,
     probe_runtime_database_role_safety,
 )
+from maru.authorization.guidance_readiness import (
+    guidance_authority_database_integrity_is_ready,
+)
 from maru.authorization.models import (
     AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
     AUTHORITY_PROVENANCE_ACTIVE_GENERATION,
@@ -73,6 +76,9 @@ from maru.events.forms import (
     EventEditionUpdateForm,
     WorkforceAdoptionSetupForm,
 )
+from maru.events.guidance_setup_readiness import (
+    guidance_setup_database_integrity_is_ready,
+)
 from maru.events.models import EventEdition
 from maru.events.queries import adoption_profile_filter_for_capabilities
 from maru.events.services import (
@@ -89,6 +95,7 @@ from maru.identity.navigation_preferences import (
     pin_navigation_destination,
     unpin_navigation_destination,
 )
+from maru.knowledge.readiness import knowledge_database_integrity_is_ready
 from maru.logistics.readiness import logistics_current_session_is_ready
 from maru.organizations.forms import (
     ConventionSeriesCreationForm,
@@ -2023,6 +2030,12 @@ def _append_bounded_domain_integrity_readiness(
     """
     probes = (
         ("announcements_integrity", announcements_database_integrity_is_ready),
+        ("knowledge_integrity", knowledge_database_integrity_is_ready),
+        (
+            "guidance_authority_integrity",
+            guidance_authority_database_integrity_is_ready,
+        ),
+        ("guidance_setup_integrity", guidance_setup_database_integrity_is_ready),
         (
             "announcements_setup_integrity",
             announcements_setup_database_integrity_is_ready,

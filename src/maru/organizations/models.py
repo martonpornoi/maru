@@ -21,6 +21,7 @@ from maru.organizations.representation_catalog import (
     EXECUTIVE_BOARD,
     MARU_OPERATORS,
     REPRESENTATION_CODE_CHOICES,
+    WORKSPACE_OPERATORS,
     representation_definition,
 )
 
@@ -375,6 +376,10 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
                     | models.Q(
                         code=ANNOUNCEMENTS_OPERATORS.code,
                         name=ANNOUNCEMENTS_OPERATORS.name,
+                    )
+                    | models.Q(
+                        code=WORKSPACE_OPERATORS.code,
+                        name=WORKSPACE_OPERATORS.name,
                     )
                 ),
                 name="organization_representation_type_supported",

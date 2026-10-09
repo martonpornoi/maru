@@ -21,7 +21,7 @@
         <p class="maru-admin-section-kicker">Current work</p>
         <h2 id="maru-work-heading">
           {% if maru_home_edition_context.selected %}
-            {% if maru_home_edition_context.selected_profile.primary_module == "announcements" %}
+            {% if maru_home_edition_context.selected_profile.primary_module == "announcements" or maru_home_edition_context.selected_profile.primary_module == "knowledge" %}
             Continue work on {{ maru_home_edition_context.selected.name }}
             {% else %}
             Continue setting up {{ maru_home_edition_context.selected.name }}
@@ -36,6 +36,8 @@
               Plan your volunteer team's roles, availability, and shifts.
             {% elif maru_home_edition_context.selected_profile.primary_module == "announcements" %}
               Prepare announcements together and keep track of where they were posted.
+            {% elif maru_home_edition_context.selected_profile.primary_module == "knowledge" %}
+              Find approved guides and answers for your convention team.
             {% else %}
               Use the tools below to set up and run this event.
             {% endif %}
@@ -56,11 +58,11 @@
         {% endif %}
       </div>
       <div class="maru-admin-workspace-grid">
-        {% if maru_home_edition_context.selected_profile and "edition.announcements" in maru_home_edition_context.selected_profile.shell_destination_kinds %}
+        {% if "edition.announcements" in maru_home_edition_context.selected_profile.shell_destination_kinds or "edition.guidance" in maru_home_edition_context.selected_profile.shell_destination_kinds %}
           {% maru_shell_navigation as maru_home_navigation %}
           {% for group in maru_home_navigation.groups %}
             {% for item in group.items %}
-              {% if item.profile_destination_kind == "edition.announcements" %}
+              {% if item.profile_destination_kind == "edition.announcements" or item.profile_destination_kind == "edition.guidance" %}
                 <a class="maru-admin-workspace-primary" href="{{ item.url }}">
                   <strong>{{ item.label }}</strong>
                   <span>{{ item.description }}</span>

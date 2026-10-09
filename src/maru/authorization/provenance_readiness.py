@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import DatabaseError, connection
 from django.utils import timezone
 
@@ -65,8 +66,13 @@ from maru.organizations.representation_catalog import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
-    from datetime import datetime
+    from collections.abc import (
+        Iterable,
+        Mapping,
+    )
+    from datetime import (
+        datetime,
+    )
     from uuid import UUID
 
 BLOCKER_KEYS = (
@@ -135,10 +141,16 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0039_accountable_representation_lineage"),
     ("authorization", "0041_announcements_capabilities"),
     ("authorization", "0042_announcements_operator_lineage"),
+    ("authorization", "0043_guidance_capabilities"),
+    ("authorization", "0044_workspace_operator_lineage"),
+    ("authorization", "0045_guidance_authority_records"),
+    ("authorization", "0046_guidance_authority_integrity"),
+    ("authorization", "0047_guidance_qualified_lineage"),
     ("events", "0010_workforce_adoption_profile"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("organizations", "0014_purpose_bounded_representation"),
     ("organizations", "0015_announcements_representation"),
+    ("organizations", "0016_workspace_representation"),
     ("workforce", "0005_runtime_executable_function_hardening"),
     ("workforce", "0006_edition_structure_schema"),
     ("workforce", "0007_structure_write_integrity"),
@@ -1132,6 +1144,8 @@ _CORE_FUNCTIONS = (
     "maru_assert_active_maru_operators_v0009(uuid)",
     "maru_assert_active_announcements_operators(uuid)",
     "maru_assert_active_announcements_operators_v0009(uuid)",
+    "maru_assert_active_workspace_operators(uuid)",
+    "maru_assert_active_workspace_operators_v0009(uuid)",
     "maru_validate_representation_appointment()",
     ("maru_workforce_role_evidence_matches_position(uuid,uuid,uuid,uuid,uuid,uuid)"),
     "maru_deferred_validate_board_membership_from_representation()",
@@ -1561,6 +1575,30 @@ _FUNCTION_DEFINITION_SHA256 = {
     ),
 }
 
+
+# Unobserved replacement fingerprints deliberately fail closed until an approved
+# fresh PostgreSQL migration supplies the complete native metadata observation.
+_GUIDANCE_REPLACED_FUNCTION_SHA256 = {
+    "maru_authorization_capability_min_scope(text)": "",
+    "maru_assert_active_workspace_operators(uuid)": "",
+    "maru_assert_active_workspace_operators_v0009(uuid)": "",
+    "maru_assert_active_executive_board(uuid)": "",
+    "maru_assert_active_board_membership_provenance(uuid)": "",
+    "maru_validate_representation_appointment()": "",
+    "maru_assert_authority_target_complete(character varying,uuid)": "",
+    "maru_authority_bundle_historical_v1(uuid,timestamptz,uuid,bigint[],integer)": "",
+    (
+        "maru_authority_issuance_valid_v1(bigint,uuid,character "
+        "varying,uuid,uuid,uuid,uuid,timestamptz,timestamptz,tim"
+        "estamptz,boolean,boolean,bigint[],integer)"
+    ): "",
+    "maru_validate_role_assignment()": "",
+    "maru_validate_profile_bound_role_assignment_scope()": "",
+    "maru_validate_representation_control_type_insert()": "",
+    "maru_validate_authority_control_insert()": "",
+}
+_FUNCTION_DEFINITION_SHA256.update(_GUIDANCE_REPLACED_FUNCTION_SHA256)
+
 _DOWNGRADE_FENCE_TRIGGER_NAMES = frozenset(
     {
         "authorization_capability_grant_guard",
@@ -1681,6 +1719,8 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_assert_active_maru_operators_v0009(uuid)",
         "maru_assert_active_announcements_operators(uuid)",
         "maru_assert_active_announcements_operators_v0009(uuid)",
+        "maru_assert_active_workspace_operators(uuid)",
+        "maru_assert_active_workspace_operators_v0009(uuid)",
         (
             "maru_workforce_role_evidence_matches_position(uuid,uuid,uuid,uuid,"
             "uuid,uuid)"
@@ -2619,16 +2659,54 @@ class _AuthorityGraph:
         kind: str,
         target: Mapping[str, Any],
     ) -> tuple[object, object, object, str]:
-        if kind == "bundle":
-            return (
-                target["created_by_id"],
-                target["approved_by_id"],
-                None,
-                _ROLE_CONTROL_CAPABILITY,
-            )
+        from maru.authorization.guidance_catalog import (  # noqa: PLC0415
+            GUIDANCE_PROTECTED_CAPABILITIES,
+            GUIDANCE_ROLE_RECIPES,
+        )
+        from maru.authorization.guidance_target_contracts import (  # noqa: PLC0415
+            required_target_control_capability,
+        )
+
         required = (
             _GRANT_CONTROL_CAPABILITY if kind == "grant" else _ROLE_CONTROL_CAPABILITY
         )
+        bundle = (
+            target
+            if kind == "bundle"
+            else self.bundles.get(target.get("role_bundle_id"))
+        )
+        protected = target.get(
+            "capability_code"
+        ) in GUIDANCE_PROTECTED_CAPABILITIES or (
+            bundle is not None
+            and (
+                bundle["code"] in GUIDANCE_ROLE_RECIPES
+                or bool(
+                    GUIDANCE_PROTECTED_CAPABILITIES.intersection(
+                        bundle["capability_codes"]
+                    )
+                )
+            )
+        )
+        if protected:
+            model = (
+                RoleBundle
+                if kind == "bundle"
+                else CapabilityGrant
+                if kind == "grant"
+                else RoleAssignment
+            )
+            instance = model.objects.filter(pk=target["id"]).first()
+            try:
+                required = (
+                    required_target_control_capability(instance)
+                    if instance is not None
+                    else "guidance.target_unavailable"
+                )
+            except (ValidationError, TypeError, ValueError):
+                required = "guidance.target_unavailable"
+        if kind == "bundle":
+            return target["created_by_id"], target["approved_by_id"], None, required
         return (
             target["granted_by_id"],
             target["approved_by_id"],

@@ -7,11 +7,14 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import DatabaseError
 from django.urls import reverse
 
 from maru.announcements.authorization import authorize_announcements_scope
 from maru.announcements.contracts import AnnouncementReadRequest
 from maru.announcements.errors import AnnouncementDeniedError
+from maru.authorization.guidance_access_queries import has_current_guidance_tasks
 from maru.authorization.policy import (
     decide,
     resolve_edition_target,
@@ -28,9 +31,13 @@ from maru.events.admin_context import (
 )
 from maru.events.adoption import profile_allows_shell_destination
 from maru.events.announcements_workspace_queries import AnnouncementsWorkspaceReference
+from maru.events.knowledge_workspace_queries import KnowledgeWorkspaceReference
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.identity.navigation_preferences import navigation_pin_codes
+from maru.knowledge.authorization import authorize_guidance_scope
+from maru.knowledge.contracts import GuidanceReadRequest
+from maru.knowledge.errors import GuidanceDeniedError
 from maru.organizations.models import Organization
 
 if TYPE_CHECKING:
@@ -68,6 +75,7 @@ _TASK_SECTIONS = {
 }
 _EDITION_TASK_SECTIONS = {
     "announcements": "Overview",
+    "guidance": "Overview",
     "structure": "People & teams",
     "registration": "Registration & shop",
     "registration-commerce": "Registration & shop",
@@ -249,7 +257,9 @@ def _workspace_item(
 def _profile_filtered_items(
     *,
     items: Iterable[NavigationItem],
-    edition: EventEdition | AnnouncementsWorkspaceReference,
+    edition: EventEdition
+    | AnnouncementsWorkspaceReference
+    | KnowledgeWorkspaceReference,
 ) -> list[NavigationItem]:
     """Remove edition destinations absent from the exact profile manifest.
 
@@ -257,7 +267,7 @@ def _profile_filtered_items(
     ----------
     items : Iterable[NavigationItem]
         Already-authorized navigation candidates.
-    edition : EventEdition | AnnouncementsWorkspaceReference
+    edition : EventEdition|AnnouncementsWorkspaceReference|KnowledgeWorkspaceReference
         Already-authorized edition or public route reference whose exact profile
         governs discovery; it never changes the user's selected edition.
 
@@ -269,7 +279,9 @@ def _profile_filtered_items(
     """
     profile_code, profile_version = (
         (edition.profile_code, edition.profile_version)
-        if isinstance(edition, AnnouncementsWorkspaceReference)
+        if isinstance(
+            edition, (AnnouncementsWorkspaceReference, KnowledgeWorkspaceReference)
+        )
         else (edition.adoption_profile_code, edition.adoption_profile_version)
     )
     return [
@@ -326,6 +338,44 @@ def _personal_profile_pairs(
             ):
                 pairs.add((pair[0], pair[1]))
     return tuple(sorted(pairs))
+
+
+def _guidance_decision_items(request: HttpRequest) -> list[NavigationItem]:
+    actor = getattr(request, "user", None)
+    if not isinstance(actor, Account) or not actor.is_active:
+        return []
+    attribute = "_maru_guidance_task_navigation"
+    available = getattr(request, attribute, None)
+    if available is None:
+        try:
+            available = (
+                has_current_guidance_tasks(actor=actor, correlation_id=uuid4()) is True
+            )
+        except (PermissionDenied, ValidationError, DatabaseError):
+            available = False
+        setattr(request, attribute, available)
+    if available is not True:
+        return []
+    return [
+        NavigationItem(
+            code="my.guidance-decisions",
+            label="Guides decisions",
+            url=reverse("guidance-tasks"),
+            section="Personal",
+            description="Review guide responsibilities and access requests.",
+            keywords=("guides", "setup", "access", "approval"),
+            current=_route_is(
+                request,
+                "guidance-tasks",
+                "guidance-activation-tasks",
+                "guidance-activation-detail",
+                "guidance-activation-answer",
+                "guidance-access-tasks",
+                "guidance-access-detail",
+                "guidance-access-answer",
+            ),
+        )
+    ]
 
 
 def _personal_items(
@@ -468,6 +518,7 @@ def _personal_items(
             for profile_code, profile_version in profile_pairs
         )
     ]
+    items.extend(_guidance_decision_items(request))
     if _route_is(
         request,
         "my-workforce-assignments",
@@ -481,6 +532,28 @@ def _personal_items(
         focused_codes = {"my.home", "my.workforce"}
         return [item for item in items if item.code in focused_codes]
     return items
+
+
+def _routed_work_items(
+    items: list[NavigationItem], page_context: Mapping[str, Any]
+) -> list[NavigationItem] | None:
+    if "guidance_scope" in page_context:
+        reference = page_context["guidance_scope"]
+        if not isinstance(
+            reference, KnowledgeWorkspaceReference
+        ) or not _supported_guidance_reference(reference):
+            return [item for item in items if not item.profile_destination_kind]
+        return _profile_filtered_items(items=items, edition=reference)
+    if "announcements_scope" in page_context:
+        reference = page_context["announcements_scope"]
+        if not isinstance(
+            reference, AnnouncementsWorkspaceReference
+        ) or not _supported_announcements_reference(reference):
+            return [item for item in items if not item.profile_destination_kind]
+        # This reference comes from the independently admitted route. It only
+        # narrows generic work links; selected-event links keep their own scope.
+        return _profile_filtered_items(items=items, edition=reference)
+    return None
 
 
 def _management_items(
@@ -583,15 +656,9 @@ def _management_items(
             section="Account",
         ),
     ]
-    if "announcements_scope" in page_context:
-        reference = page_context["announcements_scope"]
-        if not isinstance(
-            reference, AnnouncementsWorkspaceReference
-        ) or not _supported_announcements_reference(reference):
-            return [item for item in items if not item.profile_destination_kind]
-        # This reference comes from the independently admitted route. It only
-        # narrows generic work links; selected-event links keep their own scope.
-        return _profile_filtered_items(items=items, edition=reference)
+    routed_items = _routed_work_items(items, page_context)
+    if routed_items is not None:
+        return routed_items
     routed_edition = page_context.get("edition")
     selected = (
         routed_edition
@@ -634,10 +701,10 @@ def _programme_destinations(
 
 
 def _supported_announcements_reference(
-    reference: AnnouncementsWorkspaceReference,
+    reference: AnnouncementsWorkspaceReference | KnowledgeWorkspaceReference,
 ) -> bool:
     return (
-        reference.profile_code == "announcements_only"
+        reference.profile_code in {"announcements_only", "announcements_guidance"}
         and type(reference.profile_version) is int
         and reference.profile_version == 1
         and all(
@@ -651,7 +718,8 @@ def _supported_announcements_reference(
 
 
 def _announcements_destinations(
-    request: HttpRequest, reference: AnnouncementsWorkspaceReference
+    request: HttpRequest,
+    reference: AnnouncementsWorkspaceReference | KnowledgeWorkspaceReference,
 ) -> list[NavigationItem]:
     if not isinstance(request.user, Account) or not _supported_announcements_reference(
         reference
@@ -688,6 +756,63 @@ def _announcements_destinations(
             ),
             keywords=("news", "publishing", "channel", "social", "post", "message"),
             profile_destination_kind="edition.announcements",
+            current=request.path.startswith(url),
+        )
+    ]
+
+
+def _supported_guidance_reference(
+    reference: KnowledgeWorkspaceReference | AnnouncementsWorkspaceReference,
+) -> bool:
+    return (
+        reference.profile_code in {"guidance_only", "announcements_guidance"}
+        and type(reference.profile_version) is int
+        and reference.profile_version == 1
+        and all(
+            isinstance(value, UUID) and value.int != 0
+            for value in (reference.organization_id, reference.edition_id)
+        )
+        and profile_allows_shell_destination(
+            reference.profile_code, reference.profile_version, "edition.guidance"
+        )
+    )
+
+
+def _guidance_destinations(
+    request: HttpRequest,
+    reference: KnowledgeWorkspaceReference | AnnouncementsWorkspaceReference,
+) -> list[NavigationItem]:
+    if not isinstance(request.user, Account) or not _supported_guidance_reference(
+        reference
+    ):
+        return []
+    scope = GuidanceReadRequest(
+        request.user.id, reference.organization_id, reference.edition_id, uuid4()
+    )
+    for capability in ("knowledge.view_current", "knowledge.view_working"):
+        try:
+            authorize_guidance_scope(scope, capability=capability)
+        except GuidanceDeniedError:
+            continue
+        break
+    else:
+        return []
+    url = reverse(
+        "guidance-inventory", args=(reference.organization_id, reference.edition_id)
+    )
+    return [
+        NavigationItem(
+            code=f"edition.{reference.edition_id}.guidance",
+            label="Guides",
+            url=url,
+            section="Overview",
+            context_label=(
+                f"{reference.organization_name} / {reference.series_name} / "
+                f"{reference.edition_name}"
+            ),
+            description="Find approved answers and instructions for this convention.",
+            keywords=("help", "FAQ", "runbook", "checklist", "instructions", "guide"),
+            profile_destination_kind="edition.guidance",
             current=request.path.startswith(url),
         )
     ]
@@ -975,6 +1100,21 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
                 edition.organization.name,
                 edition.series.name,
                 edition.name,
+                edition.adoption_profile_code,
+                edition.adoption_profile_version,
+            ),
+        )
+    )
+    items.extend(
+        _guidance_destinations(
+            request,
+            KnowledgeWorkspaceReference(
+                edition.organization_id,
+                edition.id,
+                edition.organization.name,
+                edition.series.name,
+                edition.name,
+                edition.time_zone,
                 edition.adoption_profile_code,
                 edition.adoption_profile_version,
             ),
@@ -1349,6 +1489,15 @@ def _platform_items(request: HttpRequest) -> list[NavigationItem]:
             current=request.path.startswith(reverse("announcements-setup")),
         ),
         NavigationItem(
+            code="platform.guidance-setup",
+            label="Set up Guides",
+            url=reverse("guidance-setup"),
+            section="Platform",
+            description="Start a shared home for approved guides and FAQs.",
+            keywords=("guides", "FAQ", "instructions", "onboarding"),
+            current=request.path.startswith(reverse("guidance-setup")),
+        ),
+        NavigationItem(
             code="platform.organizations-add",
             label="Add organization",
             url=reverse("baseline-create-organization"),
@@ -1626,7 +1775,22 @@ def _announcements_route_items(
 ) -> list[NavigationItem]:
     reference = page_context.get("announcements_scope")
     if isinstance(reference, AnnouncementsWorkspaceReference):
-        return _announcements_destinations(request, reference)
+        return [
+            *_announcements_destinations(request, reference),
+            *_guidance_destinations(request, reference),
+        ]
+    return []
+
+
+def _guidance_route_items(
+    request: HttpRequest, page_context: Mapping[str, Any]
+) -> list[NavigationItem]:
+    reference = page_context.get("guidance_scope")
+    if isinstance(reference, KnowledgeWorkspaceReference):
+        return [
+            *_guidance_destinations(request, reference),
+            *_announcements_destinations(request, reference),
+        ]
     return []
 
 
@@ -1676,6 +1840,7 @@ def project_shell_navigation(
             *_scoped_organization_items(request),
             *_page_context_items(request, page_context),
             *_announcements_route_items(request, page_context),
+            *_guidance_route_items(request, page_context),
             *_platform_items(request),
             *_specialist_items(request, available_apps),
         )

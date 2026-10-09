@@ -2,6 +2,15 @@
 
 from pathlib import Path
 
+import pytest
+from django.template.loader import render_to_string
+
+from maru.authorization.page_access import (
+    build_page_access_summary,
+    fixed_page_access,
+    scoped_page_access,
+)
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -35,6 +44,38 @@ def test_access_summary_is_compact_until_the_reader_requests_details() -> None:
     assert '<summary id="maru-access-heading">' in source
     assert "<strong>Access</strong>" in source
     assert '<h2 id="maru-access-heading">' not in source
+
+
+@pytest.mark.parametrize(
+    ("personal", "expected_label"),
+    [(False, "Access for this area"), (True, "Your own records")],
+)
+def test_plain_access_labels_keep_exact_scope_and_details_without_management(
+    personal: bool, expected_label: str
+) -> None:
+    scope = "Synthetic Foxglove / Evening & late-night team"
+    explanation = "Your current event access controls what you can read or change."
+    spec = (
+        fixed_page_access(policy="self", scope_label=scope, explanation=explanation)
+        if personal
+        else scoped_page_access(
+            target=None, scope_label=scope, intents=(), explanation=explanation
+        )
+    )
+    summary = build_page_access_summary(principal=object(), spec=spec)
+    rendered = render_to_string(
+        "core/_page_access_summary.html", {"maru_page_access": summary}
+    )
+
+    assert summary.policy == ("self" if personal else "scoped")
+    assert summary.scope_label == scope
+    assert summary.explanation == explanation
+    assert f'class="maru-access-summary__policy">{expected_label}</span>' in rendered
+    assert "Synthetic Foxglove / Evening &amp; late-night team" in rendered
+    assert explanation in rendered
+    assert "Manage access</a>" not in rendered
+    assert "Preview access</a>" not in rendered
+    assert not summary.can_manage
 
 
 def test_direct_page_mounts_follow_the_page_heading() -> None:
