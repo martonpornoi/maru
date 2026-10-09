@@ -92,6 +92,22 @@ policy cases and all 13,816 unit cases in 73.91 seconds; lint, formatting,
 documentation references and its Python documentation contract pass. A clean
 full certification and independent hosted acceptance remain. PR #210 stays draft.
 
+That fresh run at `7cb0a071c53787dbcbd580828e0e487185a4e2c8` exposed a separate
+execution defect: the runner validated the new plan but then repartitioned without
+its density constraint. Fifty-eight of 73 started shards selected different groups
+from the saved manifest. The run was orderly-cancelled after 65 passing subsets;
+eight workers were interrupted, four shards never started, and all owned databases
+were removed. Its complete 4,711-file evidence tree and exact source are preserved.
+No successful receipt exists. The runner now consumes the validated assignments
+directly; a main-path regression reproduces the original mismatch. The
+[execution checkpoint](../checkpoints/2026-10-09-frozen-shard-execution.md) records
+the repair and pending full acceptance. Its main-path and policy regression batch
+passes 122 cases; all 13,817 database-free units pass in 76.20 seconds. Canonical
+typing, lint, formatting, Python documentation and documentation references pass.
+Real CLI checks match four selected shards and all 374 planned assignments.
+The separately prepared Guides focused native work is using released capacity
+before the repaired Announcements candidate receives a fresh full run.
+
 ## Starting baseline and verification
 
 PR #209 passed complete local and independent hosted acceptance before protected

@@ -36,7 +36,10 @@ scope/group manifest and fingerprint from the exact candidate and base. Local
 execution queues the planned shards through eight workers, each shard receiving
 its own fresh disposable database. A manifest cannot choose a lesser acceptance
 scope or replace current source-derived collection. Final coverage requires all
-planned shards, with no missing, failed or skipped execution.
+planned shards, with no missing, failed or skipped execution. The execution
+runner resolves its required group objects directly from the validated manifest;
+it must not repartition after validation. The printed assignment and actual
+collection evidence must match that same shard, including every density limit.
 
 Retain exact selection and setup/call/teardown timing records incrementally, so
 an interrupted process still leaves diagnostic lower bounds. Only complete
