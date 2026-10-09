@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import partial
 from secrets import token_urlsafe
 from typing import TYPE_CHECKING, Never
+from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
 from django.contrib import admin, messages
@@ -22,12 +23,14 @@ from django.views.decorators.http import require_http_methods
 
 from maru.authorization import guidance_access as commands
 from maru.authorization.guidance_access_queries import (
+    GuidanceAccessRequestPage,
     GuidanceAccessRequestView,
     GuidanceAccessWorkspace,
-    list_my_guidance_access_requests,
+    list_my_guidance_access_requests_page,
     load_guidance_access_request,
     load_guidance_access_workspace,
 )
+from maru.authorization.guidance_readiness import GuidanceAuthorityUnavailable
 from maru.authorization.page_access import fixed_page_access
 from maru.identity.request_actor import RequestActor, authenticated_request_actor
 
@@ -61,9 +64,7 @@ _STATES = {
     "changed": "Responsibilities changed",
 }
 type AccessPage = (
-    GuidanceAccessWorkspace
-    | GuidanceAccessRequestView
-    | tuple[GuidanceAccessRequestView, ...]
+    GuidanceAccessWorkspace | GuidanceAccessRequestView | GuidanceAccessRequestPage
 )
 
 
@@ -126,9 +127,14 @@ def _content_url(
 
 def _input(request: HttpRequest, action: str) -> None:
     if (
-        request.GET
+        set(request.GET) - ({"cursor"} if action == "tasks" else set())
         or request.FILES
         or (request.method == "POST" and action not in {"new", "answer", "revoke"})
+    ):
+        raise ValueError
+    if any(
+        len(values) != 1 or any(len(value) > _MAX_INPUT_LENGTH for value in values)
+        for _, values in request.GET.lists()
     ):
         raise ValueError
     if len(request.POST) > _MAX_FORM_FIELDS or any(
@@ -266,7 +272,10 @@ def guidance_access_workspace(  # noqa: PLR0912, PLR0915 - closed native task di
             )
         elif action == "tasks":
             load = partial(
-                list_my_guidance_access_requests, actor=actor, correlation_id=uuid4()
+                list_my_guidance_access_requests_page,
+                actor=actor,
+                correlation_id=uuid4(),
+                cursor=request.GET.get("cursor") or None,
             )
         else:
             _deny()
@@ -442,10 +451,13 @@ def guidance_access_workspace(  # noqa: PLR0912, PLR0915 - closed native task di
                 else (),
                 task_rows=tuple(
                     (item, _request_url(item.request_id), _STATES[item.state])
-                    for item in page
+                    for item in page.items
                 )
-                if isinstance(page, tuple)
+                if isinstance(page, GuidanceAccessRequestPage)
                 else (),
+                next_url=request.path + "?" + urlencode({"cursor": page.next_cursor})
+                if isinstance(page, GuidanceAccessRequestPage) and page.next_cursor
+                else "",
                 state_label=_STATES[proposal.state] if proposal else "",
                 submit_label={
                     "new": "Request this access",
@@ -472,11 +484,16 @@ def guidance_access_workspace(  # noqa: PLR0912, PLR0915 - closed native task di
                 nonce,
             )
         return _secure(HttpResponse(content, status=status), nonce)
+    except (
+        ValidationError,
+        DatabaseError,
+        GuidanceError,
+        GuidanceAuthorityUnavailable,
+    ):
+        return _secure(HttpResponse(_UNAVAILABLE, status=503))
     except PermissionDenied:
         return _secure(
             HttpResponse("This Guides access page is unavailable.", status=404)
         )
     except ValueError:
         return _secure(HttpResponse("Unsupported Guides access input.", status=400))
-    except (ValidationError, DatabaseError, GuidanceError):
-        return _secure(HttpResponse(_UNAVAILABLE, status=503))

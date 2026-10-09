@@ -44,7 +44,7 @@ ANNOUNCEMENTS_SCHEMA_SHA256 = {
     ),
 }
 _GUIDANCE_SUCCESSOR_SHA256 = (
-    ""  # Pin after source formatting; no native schema changed.
+    "992c26023f05c8b3ae0fc3cf940dfa7debf863813dc64ebf3967203481413d25"
 )
 _FENCE_SHA256 = "28ac8350a5c4e2bc5719c10fef33aafc59b5253b7714345839ed636fb322a0b2"
 

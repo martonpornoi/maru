@@ -108,3 +108,35 @@ is offered as a task placement in this variant; there must be no Announcements
 link, capability or records created by this journey. No actor, approver or scope
 identifier is typed into an ordinary form, and no visible choice substitutes for
 the separate person's actual acceptance.
+
+
+## Additional Guides decision history cases — not yet run
+
+These are future authenticated browser acceptance cases, not completed evidence.
+Use only an explicitly prepared synthetic fixture, genuine public requests and
+actual named approvals; retain its setup provenance. Completed/repeated requests
+may exercise history size without creating hundreds of people or changing the
+existing assignment limit. Do not disable native guards or rewrite old evidence.
+
+1. Prepare more than 100 retained access requests across the two admitted Guides
+   profiles, with completed and currently pending requests. Open **Guides decisions**
+   and **Your access requests** in the named controller's session. Follow ordinary
+   next-page links; confirm newest-first order and no duplicate or missing entries
+   where timestamps tie. The old history ceiling must not hide a live later page.
+2. Prepare a bounded window of stale pending requests followed by a live request.
+   **Check Guides requests** must explain that remaining requests may be unavailable.
+   An empty admitted page still offers continuation until candidates are exhausted.
+   No total, name or event label comes from a denied request.
+3. Revoke an original controlling source through its public command while a cursor
+   is held. Follow that same cursor: it must recheck each request and expose no
+   stale labels or actions. A cursor copied to another account or switched between
+   pending and history modes must be rejected without disclosure.
+4. In a separately prepared setup-overflow fixture, confirm a generic setup notice
+   leaves the independent access page usable. Unavailable native protection must
+   produce a generic unavailable page, never an empty or partial result. Use only
+   an approved isolated readiness-failure rehearsal; do not alter a live database.
+   A person with no Guides candidates must retain their unrelated personal work.
+5. Repeat continuation with scripts disabled and keyboard only, at narrow and
+   desktop widths. Check visible focus, descriptive next-page links, one H1/main,
+   source changes during final release, and no horizontal page overflow. Record
+   actual source, roles and observations separately; these cases remain unrun.

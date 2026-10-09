@@ -199,6 +199,11 @@ architecture documents, implementation issues, tests, and release notes.
   and conflict adapter must resolve the exact immutable profile code and
   profile version. A later catalog entry or capability in an adopted module
   must not silently enter an existing profile version.
+  An explicitly contracted foundation transition may retain its own minimized
+  internal facts before adoption only through a closed, evidence-bound route:
+  exact tenant/edition, immutable owner row, original event envelope and recorded
+  source/target manifests. That exception grants no content or access effects
+  and does not change a profile meaning (ADR 0124).
 - **EVT-007 — Programme operations adoption profile:** An edition may adopt the
   immutable, code-owned `programme_operations@1` composite profile to operate
   Programme intake, review, accepted-item readiness, venue-aware scheduling,
@@ -251,6 +256,9 @@ architecture documents, implementation issues, tests, and release notes.
   cancelled, declined or expired intent grants nothing. Existing Announcements
   roles do not gain Knowledge control implicitly. Ordinary profile edits,
   other expansion edges and fresh combined-profile creation remain unavailable.
+  Pre-adoption proposals and actual decisions retain their own version-one
+  internal events through the exact evidence-bound route in ADR 0124. Delayed
+  delivery/replay verifies the original facts without inventing current authority.
   Stop-use does not downgrade adoption. Retained transition or authority
   evidence requires fix-forward or a mutually consistent restore.
 

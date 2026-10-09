@@ -13,7 +13,7 @@ _lineage = import_module(
 )
 
 FORWARD_SQL = r"""
-CREATE FUNCTION public.maru_guidance_recipe_capabilities(recipe varchar)
+CREATE FUNCTION public.maru_guidance_recipe_capabilities(recipe character varying)
 RETURNS character varying[] AS $$
 SELECT CASE recipe
  WHEN 'guidance-access-controller' THEN ARRAY['authorization.manage_guidance_access']::varchar[]
@@ -24,7 +24,7 @@ SELECT CASE recipe
  ELSE NULL END;
 $$ LANGUAGE sql IMMUTABLE SET search_path = pg_catalog, public, pg_temp;
 
-CREATE FUNCTION public.maru_guidance_required_control(target_kind varchar, target_id uuid)
+CREATE FUNCTION public.maru_guidance_required_control(target_kind character varying, target_id uuid)
 RETURNS character varying AS $$
 DECLARE bundle_code varchar; codes varchar[]; direct_code varchar;
 BEGIN
@@ -49,7 +49,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE SET search_path = pg_catalog, public, pg_temp;
 
-CREATE FUNCTION public.maru_guidance_expected_source(target_kind varchar, target_id uuid, control_role varchar)
+CREATE FUNCTION public.maru_guidance_expected_source(target_kind character varying, target_id uuid, control_role character varying)
 RETURNS bigint AS $$
 DECLARE bundle public.authorization_rolebundle%ROWTYPE; assignment public.authorization_roleassignment%ROWTYPE;
  setup public.authorization_guidanceauthoritysetupreceipt%ROWTYPE;
@@ -200,7 +200,7 @@ BEGIN
  IF TG_TABLE_NAME='authorization_guidanceaccessrequest' THEN
   event_actor:=NEW.requested_by_id; event_operation:='requested'; event_aggregate:=NEW.id; event_type:='authorization.guidance_access_request'; event_org:=NEW.organization_id; event_edition:=NEW.edition_id;
  ELSIF TG_TABLE_NAME='authorization_guidanceaccessdecision' THEN
-  event_actor:=NEW.actor_id; event_operation:=CASE WHEN NEW.accepted THEN 'accepted' ELSE 'declined' END; event_aggregate:=NEW.request_id; event_type:='authorization.guidance_access_request';
+  event_actor:=NEW.actor_id; event_operation:=CASE WHEN NEW.accepted THEN 'accepted' ELSE 'declined' END; event_aggregate:=NEW.id; event_type:='authorization.guidance_access_decision';
   SELECT organization_id,edition_id INTO event_org,event_edition FROM public.authorization_guidanceaccessrequest WHERE id=NEW.request_id;
  ELSIF TG_TABLE_NAME='authorization_guidancerevocationreceipt' THEN
   event_actor:=NEW.actor_id; event_operation:='revoked'; event_aggregate:=NEW.id; event_type:='authorization.guidance_revocation_receipt';
@@ -276,10 +276,10 @@ for _relation in (
 
 NEW_FUNCTION_IDENTITIES = (
     "maru_guidance_recipe_capabilities(character varying)",
-    "maru_guidance_required_control(character varying,uuid)",
-    "maru_guidance_expected_source(character varying,uuid,character varying)",
-    "maru_guidance_actor_allowed(uuid,uuid,uuid,text)",
-    "maru_guidance_team_ready(uuid,uuid,uuid,uuid)",
+    "maru_guidance_required_control(character varying, uuid)",
+    "maru_guidance_expected_source(character varying, uuid, character varying)",
+    "maru_guidance_actor_allowed(uuid, uuid, uuid, text)",
+    "maru_guidance_team_ready(uuid, uuid, uuid, uuid)",
 )
 
 _TRIGGER_IDENTITIES = (

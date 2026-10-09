@@ -176,19 +176,24 @@ def _request_sources(
 
 def _event(
     actor: Account,
-    request: GuidanceAccessRequest,
+    record: GuidanceAccessRequest | GuidanceAccessDecision,
     operation: str,
     audit_id: UUID,
     correlation_id: UUID,
 ) -> None:
+    request = record if isinstance(record, GuidanceAccessRequest) else record.request
     publish_guidance_authority_event(
         actor=actor,
         organization_id=request.organization_id,
         edition_id=request.edition_id,
         event_name="authorization.guidance_access.changed.v1",
         operation=operation,
-        aggregate_type="authorization.guidance_access_request",
-        aggregate_id=request.id,
+        aggregate_type=(
+            "authorization.guidance_access_request"
+            if isinstance(record, GuidanceAccessRequest)
+            else "authorization.guidance_access_decision"
+        ),
+        aggregate_id=record.id,
         correlation_id=correlation_id,
         audit_id=audit_id,
     )
@@ -492,7 +497,7 @@ def respond_to_guidance_access(
             ) as audit,
             _guidance_authority_writer(),
         ):
-            GuidanceAccessDecision.objects.create(
+            decision = GuidanceAccessDecision.objects.create(
                 id=decision_id,
                 request=request,
                 actor=actor,
@@ -522,7 +527,7 @@ def respond_to_guidance_access(
                 )
             _event(
                 actor,
-                request,
+                decision,
                 "accepted" if accept else "declined",
                 audit.audit_id,
                 correlation_id,

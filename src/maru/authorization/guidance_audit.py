@@ -75,7 +75,7 @@ def publish_guidance_authority_event(
     correlation_id: UUID,
     audit_id: UUID,
 ) -> None:
-    """Retain only the closed operation and existing event envelope.
+    """Retain one version-one event for the exact immutable owner evidence row.
 
     Parameters
     ----------
@@ -92,7 +92,8 @@ def publish_guidance_authority_event(
     aggregate_type : str
         Canonical owner type for the retained event envelope.
     aggregate_id : UUID
-        Opaque identity of the original event aggregate.
+        Exact immutable request, decision or receipt identity; never its parent.
+        Separate evidence rows retain separate aggregate identities at version one.
     correlation_id : UUID
         Non-empty audit trace for this attempt.
     audit_id : UUID

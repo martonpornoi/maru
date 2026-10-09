@@ -12,9 +12,11 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.test import RequestFactory
 from django.utils import timezone
 
+from maru.authorization import guidance_readiness, provenance_readiness
 from maru.authorization.guidance_access_queries import (
     GuidanceAccessAssignment,
     GuidanceAccessPerson,
+    GuidanceAccessRequestPage,
     GuidanceAccessRequestView,
     GuidanceAccessWorkspace,
 )
@@ -80,7 +82,9 @@ def access_page(monkeypatch):
     monkeypatch.setattr(views, "load_guidance_access_workspace", workspace_query)
     monkeypatch.setattr(views, "load_guidance_access_request", request_query)
     monkeypatch.setattr(
-        views, "list_my_guidance_access_requests", Mock(return_value=(proposal,))
+        views,
+        "list_my_guidance_access_requests_page",
+        Mock(return_value=GuidanceAccessRequestPage((proposal,), None)),
     )
     monkeypatch.setattr(
         views, "authorize_guidance_scope", Mock(side_effect=GuidanceDeniedError)
@@ -252,3 +256,45 @@ def test_final_access_change_releases_no_previously_rendered_labels(access_page)
     response = call(access_page)
     assert response.status_code == 409
     assert b"COMPLETE AUTHORIZED ACCESS PAGE" not in response.content
+
+
+@pytest.mark.parametrize("failure_at", [1, 2])
+def test_history_integrity_loss_returns_unavailable_without_rendered_labels(
+    access_page, monkeypatch, failure_at
+):
+    native = Mock(side_effect=[True] * (failure_at - 1) + [False])
+    monkeypatch.setattr(
+        guidance_readiness, "guidance_authority_database_integrity_is_ready", native
+    )
+    monkeypatch.setattr(
+        provenance_readiness,
+        "authority_provenance_runtime_contract_is_ready",
+        lambda: True,
+    )
+
+    def history(**_values):
+        guidance_readiness.require_guidance_authority_integrity()
+        return GuidanceAccessRequestPage((access_page.proposal,), None)
+
+    monkeypatch.setattr(views, "list_my_guidance_access_requests_page", history)
+    response = call(access_page, "tasks")
+    assert response.status_code == 503
+    assert b"COMPLETE AUTHORIZED ACCESS PAGE" not in response.content
+    assert b"protection" not in response.content
+    assert native.call_count == failure_at
+
+
+def test_access_history_preserves_cursor_and_empty_continuation(
+    access_page, monkeypatch
+):
+    query = Mock(return_value=GuidanceAccessRequestPage((), "signed-next"))
+    monkeypatch.setattr(views, "list_my_guidance_access_requests_page", query)
+    response = call(access_page, "tasks", query="?cursor=original-token")
+    assert response.status_code == 200
+    assert query.call_count == 2
+    assert all(
+        item.kwargs["cursor"] == "original-token" for item in query.call_args_list
+    )
+    context = access_page.render.call_args.args[1]
+    assert context["task_rows"] == ()
+    assert context["next_url"].endswith("?cursor=signed-next")

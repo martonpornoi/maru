@@ -24,12 +24,14 @@ from maru.authorization.guidance_access_queries import (
 from maru.authorization.guidance_authority_queries import guidance_team_reference
 from maru.authorization.models import (
     AuthorityIssuance,
+    GuidanceAccessDecision,
     GuidanceAccessRequest,
     GuidanceAuthoritySetupReceipt,
     GuidanceRevocationReceipt,
     RoleAssignment,
 )
 from maru.authorization.policy import decide, resolve_edition_target
+from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.admin_context import admin_edition_options, admin_shell_access
 from maru.events.announcements_scope import resolve_announcements_edition_scope
 from maru.events.guidance_activation import apply_guidance_activation
@@ -101,6 +103,31 @@ def reader_request(world, recipient=None):
 def test_ceremony_has_four_exact_outputs_and_strictly_earlier_controllers(world):
     platform, edition, first, second = world
     setup = GuidanceAuthoritySetupReceipt.objects.get(team__edition_id=edition.id)
+    receipt = GuidanceActivationReceipt.objects.get(edition_id=edition.id)
+    request = receipt.request
+    expected = [
+        (request, "events.guidance_activation_request", "proposed", platform.id),
+        (receipt, "events.guidance_activation_receipt", "activated", platform.id),
+        *[
+            (
+                decision,
+                "events.guidance_activation_decision",
+                "accepted",
+                decision.actor_id,
+            )
+            for decision in request.decisions.all()
+        ],
+    ]
+    assert len(expected) == 4
+    for row, aggregate_type, operation, actor_id in expected:
+        assert_evidence_event(
+            row,
+            aggregate_type,
+            operation,
+            actor_id,
+            edition,
+            event_name="events.guidance_adoption.changed.v1",
+        )
     ids = (
         setup.controller_a_id,
         setup.controller_b_id,
@@ -512,3 +539,102 @@ def test_removal_requires_active_parents_but_survives_terminal_edition(world, st
             GuidanceRevocationReceipt.objects.get(id=receipt_id).assignment_id
             == assignment.id
         )
+
+
+def assert_evidence_event(
+    row, aggregate_type, operation, actor_id, edition, *, event_name
+):
+    event = DomainEvent.objects.get(
+        aggregate_type=aggregate_type,
+        aggregate_id=row.id,
+        aggregate_version=1,
+    )
+    assert event.event_name == event_name
+    assert event.schema_version == 1
+    assert event.payload == {"operation": operation}
+    assert event.organization_id == edition.organization_id
+    assert event.event_edition_id == edition.id
+    assert event.actor_kind == "account"
+    assert event.actor_id == actor_id
+    assert event.causation_id == row.source_audit_id
+    assert event.correlation_id == row.correlation_id
+    assert AuditEvent.objects.filter(
+        id=row.source_audit_id,
+        principal_id=actor_id,
+        organization_id=edition.organization_id,
+        event_edition_id=edition.id,
+        correlation_id=row.correlation_id,
+        outcome="allow",
+    ).exists()
+    assert (
+        OutboxMessage.objects.filter(event=event, destination="internal").count() == 1
+    )
+
+
+@pytest.mark.parametrize("accepted", [True, False])
+def test_access_answer_and_revocation_events_bind_exact_evidence_and_replay_once(
+    world, accepted
+):
+    _platform, edition, first, second = world
+    _person, request = reader_request(world)
+    assert_evidence_event(
+        request,
+        "authorization.guidance_access_request",
+        "requested",
+        first.id,
+        edition,
+        event_name="authorization.guidance_access.changed.v1",
+    )
+    result = native(
+        respond_to_guidance_access,
+        actor=second,
+        request_id=request.id,
+        expected_digest=request.request_digest,
+        accept=accepted,
+        correlation_id=uuid4(),
+    )
+    decision = GuidanceAccessDecision.objects.get(request=request)
+    assert_evidence_event(
+        decision,
+        "authorization.guidance_access_decision",
+        "accepted" if accepted else "declined",
+        second.id,
+        edition,
+        event_name="authorization.guidance_access.changed.v1",
+    )
+    before = DomainEvent.objects.count(), OutboxMessage.objects.count()
+    replay = native(
+        respond_to_guidance_access,
+        actor=second,
+        request_id=request.id,
+        expected_digest=request.request_digest,
+        accept=accepted,
+        correlation_id=uuid4(),
+    )
+    assert replay.replayed
+    assert replay.assignment_id == result.assignment_id
+    assert (DomainEvent.objects.count(), OutboxMessage.objects.count()) == before
+    if accepted:
+        arguments = {
+            "actor": first,
+            "organization_id": edition.organization_id,
+            "edition_id": edition.id,
+            "assignment_id": result.assignment_id,
+            "reason": "Remove synthetic reader access.",
+        }
+        receipt_id = native(revoke_guidance_access, **arguments, correlation_id=uuid4())
+        receipt = GuidanceRevocationReceipt.objects.get(id=receipt_id)
+        assert_evidence_event(
+            receipt,
+            "authorization.guidance_revocation_receipt",
+            "revoked",
+            first.id,
+            edition,
+            event_name="authorization.guidance_access.changed.v1",
+        )
+        before = DomainEvent.objects.count(), OutboxMessage.objects.count()
+        assert (
+            native(revoke_guidance_access, **arguments, correlation_id=uuid4())
+            == receipt_id
+        )
+        assert (DomainEvent.objects.count(), OutboxMessage.objects.count()) == before

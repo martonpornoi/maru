@@ -9,6 +9,14 @@ Last updated: 2026-10-09
 
 ## Guides adoption and public scope boundaries
 
+`guidance_effects.guidance_adoption_effect_reference` is the minimized machine
+routing query for ADR 0124. It resolves exact immutable transition evidence,
+original actor/audit/correlation and saved manifest digests; it grants no current
+authority and does not disclose setup terms. Effects uses the same reference at
+publish, enqueue, execution and replay. Native and historical acceptance remain
+separate from this source contract.
+
+
 EVT-008 and [ADR 0119](../architecture/decisions/0119-guidance-adoption-and-purpose-authority.md)
 add fresh `guidance_only@1` setup and the single accepted
 `announcements_only@1` to `announcements_guidance@1` expansion. New combined
@@ -35,6 +43,14 @@ Events 0022–0024 retain setup, proposal, actual decisions and adoption results
 Native reciprocal guards require the exact actor, audit witness, minimized event,
 qualified authority outputs and persisted edition head. Readiness covers the
 original aggregate BEFORE attachment as well as the new supporting head guard.
+Events 0023 explicitly revokes PUBLIC execution of the inherited
+`maru_validate_edition_aggregate_version()` trigger before 0024 replaces its body.
+The trigger needs no direct runtime EXECUTE grant. The replacement preserves its
+OID, owner, ACL and behavior-bearing attributes. Unused reversal restores the
+predecessor body and keeps this owner-only ACL; it neither drops the inherited
+function nor grants PUBLIC execution again. Unexpected additional grants still
+fail readiness. This is an intentional persistent security hardening, not a
+change to the runtime allowlist or an exception to exact-source checks.
 The newest joined downgrade preflight locks edition and retained evidence before
 checking, then composes the frozen predecessor refusals before any successor can
 reverse. Used evidence requires preservation and fix-forward recovery. See the

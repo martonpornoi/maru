@@ -9,6 +9,7 @@ from uuid import UUID
 import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import QueryDict
+from django.template.loader import render_to_string
 from django.test import RequestFactory
 
 from maru.events import guidance_activation_views as views
@@ -331,3 +332,33 @@ def test_new_foundation_handoff_preserves_the_exact_event(activation, monkeypatc
         in response["Location"]
     )
     assert command.call_args.kwargs["details"].language_codes == ("en", "hu")
+
+
+def test_finish_access_setup_is_an_explicit_unsubmitted_confirmation(
+    activation, monkeypatch
+):
+    monkeypatch.setattr(
+        "maru.events.templatetags.admin_edition_context.admin_shell_access",
+        lambda _request: {"workspace_available": False},
+    )
+    monkeypatch.setattr(
+        "maru.events.templatetags.admin_edition_context.admin_edition_options",
+        lambda _request: {},
+    )
+    monkeypatch.setattr(
+        "maru.events.templatetags.admin_edition_context.project_shell_navigation",
+        lambda *_args, **_kwargs: {},
+    )
+    activation.render.side_effect = render_to_string
+    activation.detail_query.return_value = replace(
+        activation.proposal, state="accepted", accepted_count=2, can_apply=True
+    )
+    response = activation_call(activation, "apply")
+    assert response.status_code == 200
+    context = activation.render.call_args.args[1]
+    assert context["submit_label"] == "Finish access setup"
+    assert b'<button type="submit">Finish access setup</button>' in response.content
+    assert b"Finishing access setup gives both people" in response.content
+    assert context["form"]["confirmed"].value() is None
+    for command in activation.commands.values():
+        command.assert_not_called()

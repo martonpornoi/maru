@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from maru.effects.adoption import (
     EFFECT_PROFILE_NOT_ALLOWED,
+    EffectEventIdentity,
     effect_delivery_is_allowed,
 )
 from maru.effects.models import DomainEvent, OutboxMessage
@@ -325,6 +326,16 @@ def run_claimed_effect(  # noqa: PLR0911 - terminal worker states stay explicit
         event_name=message.event.event_name,
         destination=message.destination,
         payload=message.event.payload,
+        identity=EffectEventIdentity(
+            schema_version=message.event.schema_version,
+            aggregate_type=message.event.aggregate_type,
+            aggregate_id=message.event.aggregate_id,
+            aggregate_version=message.event.aggregate_version,
+            actor_kind=message.event.actor_kind,
+            actor_id=message.event.actor_id,
+            causation_id=message.event.causation_id,
+            correlation_id=message.event.correlation_id,
+        ),
     ):
         return _mark_permanent(
             claim,

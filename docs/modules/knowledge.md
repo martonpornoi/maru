@@ -67,6 +67,12 @@ Actual separate acceptances establish the initial team. Later canonical access
 requests need the named approver's authenticated decision; a recipient cannot
 approve their own assignment. Current pinned source authority remains mandatory.
 
+Each append-only setup or access request, actual decision and activation or
+revocation receipt emits its own version-one domain event using that row's
+canonical type and ID. Parent request IDs remain relationships, not reused event
+aggregate slots. Exact actor, scope, correlation, source audit and internal outbox
+stay bound atomically; an exact replay emits no additional event.
+
 ## Retained evidence, availability and recovery
 
 Settings record the organization's actual readable record-keeping rules, owner,

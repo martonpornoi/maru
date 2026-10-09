@@ -489,3 +489,12 @@ def test_removed_language_get_explains_correction_without_an_unusable_form(
     assert b"Ask an event organizer to restore the language" in response.content
     assert b"Its already approved version remains available" in response.content
     assert b'name="idempotency_key"' not in response.content
+
+
+def test_stop_explains_guides_consequence_without_promising_another_workflow(page):
+    response = call(page, "stop")
+    assert response.status_code == 200
+    assert b"Hide all guides from readers and task pages" in response.content
+    assert b"Other event work is unchanged" not in response.content
+    assert b"Announcements stays available" not in response.content
+    page.commands["stop_guidance"].assert_not_called()

@@ -137,15 +137,32 @@ def test_guidance_route_context_keeps_generic_unadopted_work_hidden(
     ]
 
 
-@pytest.mark.parametrize("available", [False, None, 1, "true", True])
+@pytest.mark.parametrize(
+    "available",
+    [
+        False,
+        None,
+        1,
+        "true",
+        True,
+        navigation.GuidanceTaskDiscovery(has_current_work=False, access_cursor=None),
+        navigation.GuidanceTaskDiscovery(has_current_work=True, access_cursor=None),
+        navigation.GuidanceTaskDiscovery(
+            has_current_work=False, access_cursor="signed-next"
+        ),
+    ],
+)
 def test_personal_decisions_require_actual_current_task_admission(
     request_actor, monkeypatch, available
 ):
     query = Mock(return_value=available)
-    monkeypatch.setattr(navigation, "has_current_guidance_tasks", query)
+    monkeypatch.setattr(navigation, "discover_guidance_tasks", query)
     items = navigation._guidance_decision_items(request_actor)
     assert [item.code for item in items] == (
-        ["my.guidance-decisions"] if available is True else []
+        ["my.guidance-decisions"]
+        if isinstance(available, navigation.GuidanceTaskDiscovery)
+        and (available.has_current_work or available.access_cursor)
+        else []
     )
     assert query.call_args.kwargs["actor"] is request_actor.user
     assert navigation._guidance_decision_items(request_actor) == items
@@ -161,7 +178,7 @@ def test_unavailable_personal_decisions_do_not_break_ordinary_navigation(
 ):
     monkeypatch.setattr(
         navigation,
-        "has_current_guidance_tasks",
+        "discover_guidance_tasks",
         Mock(side_effect=error("Private failure")),
     )
     assert navigation._guidance_decision_items(request_actor) == []
@@ -170,6 +187,24 @@ def test_unavailable_personal_decisions_do_not_break_ordinary_navigation(
 def test_inactive_person_has_no_guidance_decision_lookup(request_actor, monkeypatch):
     request_actor.user.is_active = False
     query = Mock()
-    monkeypatch.setattr(navigation, "has_current_guidance_tasks", query)
+    monkeypatch.setattr(navigation, "discover_guidance_tasks", query)
     assert navigation._guidance_decision_items(request_actor) == []
     query.assert_not_called()
+
+
+def test_unexamined_candidates_use_truthful_signed_personal_continuation(
+    request_actor, monkeypatch
+):
+    monkeypatch.setattr(
+        navigation,
+        "discover_guidance_tasks",
+        Mock(
+            return_value=navigation.GuidanceTaskDiscovery(
+                has_current_work=False, access_cursor="signed-next"
+            )
+        ),
+    )
+    (item,) = navigation._guidance_decision_items(request_actor)
+    assert item.label == "Check Guides requests"
+    assert "cursor=signed-next" in item.url
+    assert "Some may no longer be available" in item.description

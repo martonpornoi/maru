@@ -23,14 +23,30 @@ GUIDANCE_SETUP_RELATIONS = (
 )
 # EventEdition carries the new immutable adoption revision and exact pair constraint.
 GUIDANCE_SETUP_SCHEMA_RELATIONS = (*GUIDANCE_SETUP_RELATIONS, "events_eventedition")
-# Intentionally unobserved until the first approved fresh PostgreSQL migration.
-GUIDANCE_SETUP_SCHEMA_SHA256: dict[str, str] = {}
+# Observed from the isolated PostgreSQL 17.11 fresh schema on 2026-10-09.
+GUIDANCE_SETUP_SCHEMA_SHA256: dict[str, str] = {
+    "events_eventedition": (
+        "44d54921e563ab839bb9ae15685dd0768fdf48ab5e5e0c327ce1a9679d4b4d47"
+    ),
+    "events_guidanceactivationdecision": (
+        "3e48e1c42c42625b845e13b96350e00b41a16f6a073d3c9b63175dedea11fe8d"
+    ),
+    "events_guidanceactivationreceipt": (
+        "7a685aa3598f0f3a9940dc3625c1c4662977ea5f3202d963e8469e7631bd9172"
+    ),
+    "events_guidanceactivationrequest": (
+        "fa8c1380cb57b100da289b6434897c8e6de55ceb8c49f89e982fd7a88d79b2f7"
+    ),
+    "events_guidanceadoptionsetupreceipt": (
+        "e2670721d793778f4366424d7bf606fa27d007155c27131e162305a42f687be8"
+    ),
+}
 _GUIDANCE_SOURCE_SHA256: dict[str, str] = {
     "maru.events.migrations.0022_guidance_adoption_profiles": (
         "c35e5287337e6d865420965b597a171f236632b47ad99bfd3135d0c216694810"
     ),
     "maru.events.migrations.0023_guidance_adoption_integrity": (
-        "cd6ac2e5fc04957a422dc78003c341970c5f35e3863837ca7e8da949f3ae304c"
+        "79a8765a3edc1cb63fc8ffc2b6659b35e7a820640c7ba8c738d8d42445c8b5a6"
     ),
     "maru.events.migrations.0024_guidance_adoption_downgrade_fence": (
         "3e75eee14a19641e6b645e6f7b8a44da37fd0cb221481d69e00b9d933b3d7444"
@@ -122,13 +138,17 @@ def guidance_setup_database_integrity_is_ready() -> bool:
         return False
 
 
+class GuidanceSetupUnavailable(PermissionDenied):
+    """Installed Guides protection is unavailable, rather than an actor being denied."""
+
+
 def require_guidance_setup_integrity() -> None:
     """Fail closed before any Guidance setup or decision data can be used.
 
     Raises
     ------
-    PermissionDenied
+    GuidanceSetupUnavailable
         If the installed native source, schema or trigger protection is unavailable.
     """
     if not guidance_setup_database_integrity_is_ready():
-        raise PermissionDenied("Guidance setup protection is unavailable.")
+        raise GuidanceSetupUnavailable("Guidance setup protection is unavailable.")

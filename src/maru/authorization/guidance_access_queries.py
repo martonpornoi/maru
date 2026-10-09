@@ -4,11 +4,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.utils import timezone
 
 from maru.audit.services import AuditRecord, append_audit
+from maru.authorization import guidance_readiness
 from maru.authorization.guidance_catalog import (
     GUIDANCE_CONTROL_CAPABILITY,
     GUIDANCE_CONTROLLER_ROLE_CODE,
@@ -34,10 +36,14 @@ from maru.events.knowledge_workspace_queries import (
     knowledge_workspace_reference,
 )
 from maru.identity.models import Account
-from maru.identity.queries import active_verified_person_account_display_labels
+from maru.identity.queries import (
+    active_verified_person_account_display_labels,
+    resolve_active_verified_account_reference,
+)
 
 _MAX_ACCESS_ASSIGNMENTS = 256
 _MAX_RETAINED_TASKS = 100
+_MAX_PAGE_CURSOR_LENGTH = 4096
 
 
 @dataclass(frozen=True, slots=True)
@@ -556,51 +562,307 @@ def list_my_guidance_access_requests(
     return tuple(result)
 
 
-def has_current_guidance_tasks(*, actor: Account, correlation_id: UUID) -> bool:
-    """Expose only whether this actual person has an admitted pending setup decision.
+@dataclass(frozen=True, slots=True)
+class GuidanceAccessRequestPage:
+    """Bounded own decisions, with explicit continuation after unavailable rows.
+
+    Attributes
+    ----------
+    items : tuple[GuidanceAccessRequestView, ...]
+        Independently admitted original requests; no submitted labels are used.
+    next_cursor : str | None
+        Signed continuation bound to the actual person and pending/history mode.
+    """
+
+    items: tuple[GuidanceAccessRequestView, ...]
+    next_cursor: str | None
+
+
+def _page_signer() -> signing.Signer:
+    return signing.Signer(salt="authorization.guidance-access-tasks-page@2")
+
+
+def _continuation(
+    *, actor_id: UUID, pending_only: bool, created_at: datetime, request_id: UUID
+) -> str:
+    return _page_signer().sign_object(
+        {
+            "binding": [str(actor_id), pending_only],
+            "after": [created_at.isoformat(), str(request_id)],
+        }
+    )
+
+
+def _cursor_position(
+    *, cursor: str, actor_id: UUID, pending_only: bool
+) -> tuple[datetime, UUID]:
+    if not isinstance(cursor, str) or not 1 <= len(cursor) <= _MAX_PAGE_CURSOR_LENGTH:
+        raise ValidationError("Restart your exact access-decision page.")
+    try:
+        value = _page_signer().unsign_object(cursor)
+        binding = value["binding"]
+        created_at, request_id = value["after"]
+        after_time = datetime.fromisoformat(created_at)
+        after_id = UUID(request_id)
+    except (signing.BadSignature, KeyError, TypeError, ValueError) as exc:
+        raise ValidationError("Restart your exact access-decision page.") from exc
+    if (
+        binding != [str(actor_id), pending_only]
+        or not timezone.is_aware(after_time)
+        or after_id.int == 0
+    ):
+        raise ValidationError("Restart your exact access-decision page.")
+    return after_time, after_id
+
+
+def list_my_guidance_access_requests_page(
+    *,
+    actor: Account,
+    correlation_id: UUID,
+    cursor: str | None = None,
+    pending_only: bool = False,
+    page_size: int = 100,
+) -> GuidanceAccessRequestPage:
+    """Page actual participant requests, independently of profile or history size.
 
     Parameters
     ----------
     actor : Account
-        Actual authenticated person; a submitted identity cannot replace this actor.
+        Actual active participant; every request reauthorizes current authority.
     correlation_id : UUID
-        Non-empty audit trace for this attempt.
+        Nonempty audit trace for admitted private task reads.
+    cursor : str | None, default=None
+        Signed actor/mode-bound descending creation-time and identity position.
+    pending_only : bool, default=False
+        Show only current decisions addressed to this actual named approver.
+    page_size : int, default=100
+        At most one hundred original requests in each bounded scan.
 
     Returns
     -------
-    bool
-        Whether the complete exact contract is currently satisfied.
+    GuidanceAccessRequestPage
+        Current admitted requests and explicit continuation, including empty scans.
+
+    Raises
+    ------
+    guidance_readiness.GuidanceAuthorityUnavailable
+        If installed protection fails during admission or the final candidate check.
+    PermissionDenied
+        If the actual active person is unavailable.
+    ValidationError
+        If bounds, trace or cursor binding is invalid.
+    """
+    if not isinstance(actor, Account) or not actor.is_active:
+        raise PermissionDenied
+    if (
+        type(page_size) is not int
+        or not 1 <= page_size <= _MAX_RETAINED_TASKS
+        or type(pending_only) is not bool
+        or not isinstance(correlation_id, UUID)
+        or correlation_id.int == 0
+    ):
+        raise ValidationError("Use a supported access page and trace.")
+    selected = GuidanceAccessRequest.objects.filter(
+        Q(requested_by_id=actor.id) | Q(approver_id=actor.id)
+    )
+    if cursor is not None:
+        after_time, after_id = _cursor_position(
+            cursor=cursor, actor_id=actor.id, pending_only=pending_only
+        )
+        selected = selected.filter(
+            Q(created_at__lt=after_time) | Q(created_at=after_time, id__lt=after_id)
+        )
+    if pending_only:
+        selected = selected.filter(
+            approver_id=actor.id,
+            decision__isnull=True,
+            decision_deadline__gt=timezone.now(),
+        )
+    positions = tuple(
+        selected.order_by("-created_at", "-id").values_list("id", "created_at")[
+            : page_size + 1
+        ]
+    )
+    items = []
+    for identifier, _created_at in positions[:page_size]:
+        try:
+            item = load_guidance_access_request(
+                actor=actor, request_id=identifier, correlation_id=correlation_id
+            )
+        except guidance_readiness.GuidanceAuthorityUnavailable:
+            raise
+        except PermissionDenied:
+            continue
+        if not pending_only or item.can_answer:
+            items.append(item)
+    if positions:
+        guidance_readiness.require_guidance_authority_integrity()
+    return GuidanceAccessRequestPage(
+        tuple(items),
+        _continuation(
+            actor_id=actor.id,
+            pending_only=pending_only,
+            created_at=positions[page_size - 1][1],
+            request_id=positions[page_size - 1][0],
+        )
+        if len(positions) > page_size
+        else None,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class GuidanceTaskDiscovery:
+    """Distinguish proven decisions from a bounded, still incomplete scan.
+
+    Attributes
+    ----------
+    has_current_work : bool
+        Whether an independently admitted current decision was found.
+    access_cursor : str | None
+        Signed personal continuation after checked candidates; it does not prove
+        remaining requests actionable and discloses no labels or counts.
+    """
+
+    has_current_work: bool
+    access_cursor: str | None
+
+
+def _scope_is_admitted(actor: Account, organization_id: UUID, edition_id: UUID) -> bool:
+    try:
+        require_guidance_access_actor(
+            actor=actor, organization_id=organization_id, edition_id=edition_id
+        )
+    except guidance_readiness.GuidanceAuthorityUnavailable:
+        raise
+    except PermissionDenied:
+        return False
+    return True
+
+
+def discover_guidance_tasks(
+    *, actor: Account, correlation_id: UUID
+) -> GuidanceTaskDiscovery:
+    """Inspect at most one hundred access candidates for personal navigation.
+
+    Parameters
+    ----------
+    actor : Account
+        Actual authenticated account; current identity is checked before discovery.
+    correlation_id : UUID
+        Nonempty trace used only for independently admitted administrative reads.
+
+    Returns
+    -------
+    GuidanceTaskDiscovery
+        Proven current work or a generic continuation for unexamined own requests.
+        The existing setup probe retains its separate bounded owner check.
+
+    Raises
+    ------
+    ValidationError
+        If the trace is invalid.
     """
     from maru.events.guidance_activation_queries import (  # noqa: PLC0415
         has_current_guidance_activation_tasks,
     )
 
-    if not actor.is_active:
-        return False
+    empty = GuidanceTaskDiscovery(has_current_work=False, access_cursor=None)
+    if not isinstance(actor, Account) or not actor.is_active:
+        return empty
+    if not isinstance(correlation_id, UUID) or correlation_id.int == 0:
+        raise ValidationError("Use a non-empty trace.")
+    if resolve_active_verified_account_reference(account_id=actor.id) is None:
+        return empty
     if has_current_guidance_activation_tasks(
         actor=actor, correlation_id=correlation_id
     ):
-        return True
-    candidates = (
+        return GuidanceTaskDiscovery(has_current_work=True, access_cursor=None)
+    # Only the actual named approver's minimal locator precedes purpose admission.
+    locators = tuple(
         GuidanceAccessRequest.objects.filter(
             approver_id=actor.id,
             decision__isnull=True,
             decision_deadline__gt=timezone.now(),
         )
-        .only("id", "organization_id", "edition_id")
-        .order_by("created_at", "id")
+        .order_by("-created_at", "-id")
+        .values_list("id", "organization_id", "edition_id", "created_at")[
+            : _MAX_RETAINED_TASKS + 1
+        ]
     )
-    for request in candidates[:256]:
-        try:
-            require_guidance_access_actor(
-                actor=actor,
-                organization_id=request.organization_id,
-                edition_id=request.edition_id,
+    admitted_scopes: dict[tuple[UUID, UUID], bool] = {}
+    for request_id, organization_id, edition_id, _created_at in locators[
+        :_MAX_RETAINED_TASKS
+    ]:
+        scope = (organization_id, edition_id)
+        if scope not in admitted_scopes:
+            admitted_scopes[scope] = _scope_is_admitted(
+                actor, organization_id, edition_id
             )
-        except PermissionDenied:
+        if not admitted_scopes[scope]:
             continue
-        if not _request_sources_are_current(request):
-            continue
-        _audit(actor, request.organization_id, request.edition_id, correlation_id)
-        return True
-    return False
+        request = (
+            GuidanceAccessRequest.objects.filter(
+                id=request_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                approver_id=actor.id,
+                decision__isnull=True,
+                decision_deadline__gt=timezone.now(),
+            )
+            .only(
+                "id",
+                "organization_id",
+                "edition_id",
+                "recipient_id",
+                "requested_by_id",
+                "approver_id",
+                "actor_source_id",
+                "approver_source_id",
+                "effective_from",
+                "expires_at",
+            )
+            .first()
+        )
+        if request is not None and _request_sources_are_current(request):
+            _audit(actor, organization_id, edition_id, correlation_id)
+            return GuidanceTaskDiscovery(has_current_work=True, access_cursor=None)
+    if locators:
+        guidance_readiness.require_guidance_authority_integrity()
+    if (
+        len(locators) <= _MAX_RETAINED_TASKS
+        or resolve_active_verified_account_reference(account_id=actor.id) is None
+    ):
+        return empty
+    request_id, _organization_id, _edition_id, created_at = locators[
+        _MAX_RETAINED_TASKS - 1
+    ]
+    return GuidanceTaskDiscovery(
+        has_current_work=False,
+        access_cursor=_continuation(
+            actor_id=actor.id,
+            pending_only=True,
+            created_at=created_at,
+            request_id=request_id,
+        ),
+    )
+
+
+def has_current_guidance_tasks(*, actor: Account, correlation_id: UUID) -> bool:
+    """Return only positively proven work, without claiming the scan is complete.
+
+    Parameters
+    ----------
+    actor : Account
+        Actual authenticated account supplied by the caller.
+    correlation_id : UUID
+        Nonempty trace for admitted administrative reads.
+
+    Returns
+    -------
+    bool
+        True only for a currently admitted decision in the bounded scan.
+        Menu consumers use the structured facade to preserve continuation.
+    """
+    return discover_guidance_tasks(
+        actor=actor, correlation_id=correlation_id
+    ).has_current_work

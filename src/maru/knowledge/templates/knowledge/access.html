@@ -37,6 +37,7 @@
   <details><summary>Technical details</summary><dl><dt>Request reference</dt><dd>{{ proposal.request_id }}</dd><dt>Request fingerprint</dt><dd>{{ proposal.request_digest }}</dd><dt>Canonical role</dt><dd>{{ proposal.recipe_code }}@1</dd></dl></details>
 {% else %}
   <p>These requests were made by you or need your approval. Reading a request does not approve it.</p>
-  <ul class="guidance-cards" role="list">{% for item, url, state in task_rows %}<li><h2><a href="{{ url }}">{{ item.recipient.label }} · {{ item.edition_name }}</a></h2><p>{{ state }} · Decision for {{ item.approver.label }}</p></li>{% empty %}<li>No Guides access decisions are available to you.</li>{% endfor %}</ul>
+  <ul class="guidance-cards" role="list">{% for item, url, state in task_rows %}<li><h2><a href="{{ url }}">{{ item.recipient.label }} · {{ item.edition_name }}</a></h2><p>{{ state }} · Decision for {{ item.approver.label }}</p></li>{% empty %}<li>{% if next_url %}No available decisions on this page. Continue to check the remaining requests.{% else %}No more Guides access decisions are available to you.{% endif %}</li>{% endfor %}</ul>
 {% endif %}
+{% if next_url %}<div class="guidance-actions"><a href="{{ next_url }}">Next page</a></div>{% endif %}
 {% endblock %}

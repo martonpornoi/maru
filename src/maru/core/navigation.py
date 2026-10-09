@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -14,7 +15,10 @@ from django.urls import reverse
 from maru.announcements.authorization import authorize_announcements_scope
 from maru.announcements.contracts import AnnouncementReadRequest
 from maru.announcements.errors import AnnouncementDeniedError
-from maru.authorization.guidance_access_queries import has_current_guidance_tasks
+from maru.authorization.guidance_access_queries import (
+    GuidanceTaskDiscovery,
+    discover_guidance_tasks,
+)
 from maru.authorization.policy import (
     decide,
     resolve_edition_target,
@@ -340,29 +344,46 @@ def _personal_profile_pairs(
     return tuple(sorted(pairs))
 
 
+_GUIDANCE_TASKS_NOT_INSPECTED = object()
+
+
 def _guidance_decision_items(request: HttpRequest) -> list[NavigationItem]:
     actor = getattr(request, "user", None)
     if not isinstance(actor, Account) or not actor.is_active:
         return []
     attribute = "_maru_guidance_task_navigation"
-    available = getattr(request, attribute, None)
-    if available is None:
+    available = getattr(request, attribute, _GUIDANCE_TASKS_NOT_INSPECTED)
+    if available is _GUIDANCE_TASKS_NOT_INSPECTED:
         try:
-            available = (
-                has_current_guidance_tasks(actor=actor, correlation_id=uuid4()) is True
-            )
+            available = discover_guidance_tasks(actor=actor, correlation_id=uuid4())
         except (PermissionDenied, ValidationError, DatabaseError):
-            available = False
+            available = GuidanceTaskDiscovery(
+                has_current_work=False, access_cursor=None
+            )
         setattr(request, attribute, available)
-    if available is not True:
+    if not isinstance(available, GuidanceTaskDiscovery) or not (
+        available.has_current_work or available.access_cursor
+    ):
         return []
+    continuation = (
+        not available.has_current_work and available.access_cursor is not None
+    )
     return [
         NavigationItem(
             code="my.guidance-decisions",
-            label="Guides decisions",
-            url=reverse("guidance-tasks"),
+            label="Check Guides requests" if continuation else "Guides decisions",
+            url=reverse("guidance-tasks")
+            + (
+                "?" + urlencode({"cursor": available.access_cursor})
+                if continuation
+                else ""
+            ),
             section="Personal",
-            description="Review guide responsibilities and access requests.",
+            description=(
+                "Check the remaining requests. Some may no longer be available."
+                if continuation
+                else "Review guide responsibilities and access requests."
+            ),
             keywords=("guides", "setup", "access", "approval"),
             current=_route_is(
                 request,

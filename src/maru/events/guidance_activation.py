@@ -196,19 +196,31 @@ def _audit(
 
 def _event(
     actor: Account,
-    request: GuidanceActivationRequest,
+    record: GuidanceActivationRequest
+    | GuidanceActivationDecision
+    | GuidanceActivationReceipt,
     operation: str,
     audit_id: UUID,
     correlation_id: UUID,
 ) -> None:
+    if isinstance(record, GuidanceActivationRequest):
+        request = record
+        aggregate_type = "events.guidance_activation_request"
+    else:
+        request = record.request
+        aggregate_type = (
+            "events.guidance_activation_decision"
+            if isinstance(record, GuidanceActivationDecision)
+            else "events.guidance_activation_receipt"
+        )
     publish_guidance_authority_event(
         actor=actor,
         organization_id=request.organization_id,
         edition_id=request.edition_id,
         event_name="events.guidance_adoption.changed.v1",
         operation=operation,
-        aggregate_type="events.guidance_activation_request",
-        aggregate_id=request.id,
+        aggregate_type=aggregate_type,
+        aggregate_id=record.id,
         correlation_id=correlation_id,
         audit_id=audit_id,
     )
@@ -519,7 +531,7 @@ def respond_to_guidance_activation(
             ) as audit,
             _guidance_setup_writer(),
         ):
-            GuidanceActivationDecision.objects.create(
+            decision = GuidanceActivationDecision.objects.create(
                 request=request,
                 actor=actor,
                 accepted=accept,
@@ -529,7 +541,7 @@ def respond_to_guidance_activation(
             )
             _event(
                 actor,
-                request,
+                decision,
                 "accepted" if accept else "declined",
                 audit.audit_id,
                 correlation_id,
@@ -643,7 +655,7 @@ def apply_guidance_activation(
             establish_guidance_responsibilities(activation_id=receipt.id)
             _event(
                 actor,
-                request,
+                receipt,
                 "recovered" if request.purpose == "recovery" else "activated",
                 audit.audit_id,
                 correlation_id,

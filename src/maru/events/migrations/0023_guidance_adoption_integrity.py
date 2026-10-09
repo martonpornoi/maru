@@ -65,15 +65,15 @@ $$ LANGUAGE plpgsql SET search_path = pg_catalog, public, pg_temp;
 CREATE FUNCTION public.maru_guidance_activation_graph_guard()
 RETURNS trigger AS $$
 DECLARE plan public.events_guidanceactivationrequest%ROWTYPE; latest public.events_guidanceactivationreceipt%ROWTYPE;
- edition public.events_eventedition%ROWTYPE; audit_id uuid; trace uuid; operation varchar; v_aggregate_id uuid; event_actor uuid;
+ edition public.events_eventedition%ROWTYPE; audit_id uuid; trace uuid; operation varchar; v_aggregate_id uuid; event_actor uuid; event_type varchar;
 BEGIN
  IF TG_TABLE_NAME='events_eventedition' THEN SELECT * INTO edition FROM public.events_eventedition WHERE id=NEW.id;
  ELSE
   IF TG_TABLE_NAME='events_guidanceactivationrequest' THEN plan:=NEW; ELSE SELECT * INTO plan FROM public.events_guidanceactivationrequest WHERE id=NEW.request_id; END IF;
   SELECT * INTO edition FROM public.events_eventedition WHERE id=plan.edition_id;
-  audit_id:=NEW.source_audit_id; trace:=NEW.correlation_id; v_aggregate_id:=plan.id;
-  IF TG_TABLE_NAME='events_guidanceactivationrequest' THEN event_actor:=NEW.proposed_by_id; operation:='proposed'; ELSIF TG_TABLE_NAME='events_guidanceactivationdecision' THEN event_actor:=NEW.actor_id; operation:=CASE WHEN NEW.accepted THEN 'accepted' ELSE 'declined' END; ELSE event_actor:=NEW.applied_by_id; operation:=CASE WHEN plan.purpose='recovery' THEN 'recovered' ELSE 'activated' END; END IF;
-  IF NOT EXISTS(SELECT 1 FROM public.effects_domainevent e JOIN public.effects_outboxmessage o ON o.event_id=e.id AND o.destination='internal' WHERE e.event_name='events.guidance_adoption.changed.v1' AND e.schema_version=1 AND e.aggregate_version=1 AND e.actor_kind='account' AND e.actor_id=event_actor AND e.causation_id=audit_id AND e.correlation_id=trace AND e.organization_id=plan.organization_id AND e.event_edition_id=plan.edition_id AND e.aggregate_type='events.guidance_activation_request' AND e.aggregate_id=v_aggregate_id AND e.payload=jsonb_build_object('operation',operation)) THEN RAISE EXCEPTION 'Guidance activation requires its minimized event and outbox' USING ERRCODE='23514'; END IF;
+  audit_id:=NEW.source_audit_id; trace:=NEW.correlation_id; v_aggregate_id:=NEW.id;
+  IF TG_TABLE_NAME='events_guidanceactivationrequest' THEN event_actor:=NEW.proposed_by_id; event_type:='events.guidance_activation_request'; operation:='proposed'; ELSIF TG_TABLE_NAME='events_guidanceactivationdecision' THEN event_actor:=NEW.actor_id; event_type:='events.guidance_activation_decision'; operation:=CASE WHEN NEW.accepted THEN 'accepted' ELSE 'declined' END; ELSE event_actor:=NEW.applied_by_id; event_type:='events.guidance_activation_receipt'; operation:=CASE WHEN plan.purpose='recovery' THEN 'recovered' ELSE 'activated' END; END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.effects_domainevent e JOIN public.effects_outboxmessage o ON o.event_id=e.id AND o.destination='internal' WHERE e.event_name='events.guidance_adoption.changed.v1' AND e.schema_version=1 AND e.aggregate_version=1 AND e.actor_kind='account' AND e.actor_id=event_actor AND e.causation_id=audit_id AND e.correlation_id=trace AND e.organization_id=plan.organization_id AND e.event_edition_id=plan.edition_id AND e.aggregate_type=event_type AND e.aggregate_id=v_aggregate_id AND e.payload=jsonb_build_object('operation',operation)) THEN RAISE EXCEPTION 'Guidance activation requires its minimized event and outbox' USING ERRCODE='23514'; END IF;
   IF TG_TABLE_NAME='events_guidanceactivationreceipt' THEN
    IF NOT EXISTS(SELECT 1 FROM public.authorization_guidanceauthoritysetupreceipt s JOIN public.authorization_guidanceteam t ON t.id=s.team_id WHERE s.activation_id=NEW.id AND t.organization_id=NEW.organization_id AND t.edition_id=NEW.edition_id) THEN RAISE EXCEPTION 'Guidance adoption receipt requires its actual qualified authority outputs' USING ERRCODE='23514'; END IF;
    IF NEW.result_adoption_revision>1 AND NOT EXISTS(SELECT 1 FROM public.events_guidanceactivationreceipt previous JOIN public.events_guidanceactivationrequest p ON p.id=previous.request_id WHERE previous.edition_id=NEW.edition_id AND previous.result_adoption_revision=NEW.result_adoption_revision-1 AND previous.result_edition_version<=plan.expected_edition_version AND p.target_profile_code=plan.source_profile_code AND p.target_profile_version=plan.source_profile_version) THEN RAISE EXCEPTION 'Guidance adoption revisions require their exact retained predecessor' USING ERRCODE='23514'; END IF;
@@ -120,6 +120,15 @@ for _identity in (
 ):
     FORWARD_SQL += f"REVOKE ALL ON FUNCTION public.{_identity} FROM PUBLIC;\n"
     REVERSE_SQL += f"DROP FUNCTION public.{_identity};\n"
+
+
+# This predecessor trigger is invoked by PostgreSQL, not by the runtime login.
+# Keep this hardening on unused reversal: the predecessor function survives, and
+# restoring its older body must not reopen default PUBLIC execution.
+FORWARD_SQL += (
+    "REVOKE ALL ON FUNCTION "
+    "public.maru_validate_edition_aggregate_version() FROM PUBLIC;\n"
+)
 
 
 def previous_source() -> str:

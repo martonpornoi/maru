@@ -124,6 +124,7 @@ the system.
 | [0117](0117-standalone-manual-announcements.md) | Accepted; implementation in progress | Keep Announcements standalone with exact independent review, honest manual publication reports and purpose-specific operator authority. |
 | [0118](0118-reviewed-internal-guidance.md) | Accepted; implementation in progress | Keep internal FAQs and runbooks independently reviewed, searchable and available beside authorized convention tasks. |
 | [0119](0119-guidance-adoption-and-purpose-authority.md) | Accepted; implementation in progress | Add Guidance to the same edition through reviewed adoption and separately accepted purpose-specific authority. |
+| [0124](0124-evidence-bound-adoption-transition-effects.md) | Accepted; implementation in progress | Retain exact adoption-transition foundation events without widening existing manifests or content authority. |
 
 New ADRs use the next four-digit number and contain:
 

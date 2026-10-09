@@ -83,7 +83,10 @@ The test phase uses one database-free unit process and a bounded local worker
 pool executing the same budgeted shard manifest as GitHub. At most eight
 PostgreSQL containers run concurrently; each shard receives a fresh database.
 The planner permits up to 128 sequentially scheduled shards as the inventory
-grows; this does not raise concurrency or any per-shard budget. The one-hour
+grows; this does not raise concurrency or any per-shard budget. A shard holds at
+most two complete historical groups as well as satisfying its cost budget; shared
+baselines and parameterized functions remain indivisible. The frozen manifest
+binds this density limit without changing the selected inventory. The one-hour
 predicted target, slowdown/overhead allowance, measured acceptance headroom and
 two-hour hosted kill limit remain unchanged. An indivisible over-budget group
 still requires measurement or optimization, never automatic timeout extension.

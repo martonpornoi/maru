@@ -332,7 +332,7 @@ def guidance_activation_workspace(
             submit_label={
                 "start": "Request this setup",
                 "answer": "Save my decision",
-                "apply": "Apply accepted setup",
+                "apply": "Finish access setup",
             }.get(action, ""),
             baseline_hide_admin_scoped_navigation=True,
         )

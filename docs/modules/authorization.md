@@ -1078,3 +1078,27 @@ through current product profiles and platform roots. A future operator-facing
 ceremony requires its own accepted activation, independent approval, step-up,
 time bound, notification/review, and exact-ID UI contract; this dormant schema
 declaration is not that ceremony.
+
+
+### Bounded personal Guides decisions
+
+The paged Guides access-decision and history facade applies across the existing
+admitted profiles without changing manifests, canonical roles or field authority.
+The original unpaged owner API retains its 100-request complete-or-unavailable
+contract, and the existing access-workspace assignment limit remains unchanged.
+Personal pages scan at most 100 requests plus one locator lookahead, newest first
+with a signed actor/mode-bound `(created_at, id)` cursor. Every disclosed row
+rechecks current exact source authority. An empty scan keeps **Next access
+requests** or **Next page** when candidates remain; it does not claim completion.
+
+Shared navigation distinguishes proven current work (**Guides decisions**) from
+unexamined candidates (**Check Guides requests**). The latter continues a bounded
+scan without labels, counts or a promise that remaining requests are actionable.
+Only the existing setup owner's explicit capacity condition can leave an
+independently admitted access section available with a generic setup notice.
+Native protection failures, including final rechecks, produce an unavailable
+response rather than false emptiness or continuation. Ordinary denied rows remain
+hidden. No matching personal candidates means no Guides readiness check, so an
+unused Guides workflow cannot block unrelated personal work. Compatible owner
+integrity exceptions remain subclasses of `PermissionDenied`. No history-wide
+scope scan, new storage limit, cached authority or Reading capability is added.

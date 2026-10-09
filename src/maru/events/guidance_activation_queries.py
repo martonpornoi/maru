@@ -16,6 +16,7 @@ from maru.authorization.guidance_authority_queries import (
     guidance_root_sources,
     guidance_team_reference,
 )
+from maru.events import guidance_setup_readiness
 from maru.events.adoption import adoption_profile
 from maru.events.guidance_activation_models import GuidanceActivationRequest
 from maru.events.guidance_activation_references import guidance_manifest_digest
@@ -513,6 +514,8 @@ def list_my_guidance_activation_requests(
 
     Raises
     ------
+    guidance_setup_readiness.GuidanceSetupUnavailable
+        If native protection is unavailable for actual participant candidates.
     PermissionDenied
         If current actor, purpose, scope or native protection is unavailable.
     ValidationError
@@ -533,9 +536,12 @@ def list_my_guidance_activation_requests(
         .order_by("-created_at", "-id")
         .values_list("id", flat=True)[:101]
     )
+    if ids:
+        guidance_setup_readiness.require_guidance_setup_integrity()
     if len(ids) > _MAX_RETAINED_TASKS:
         raise ValidationError(
-            "Too many retained setup requests; open the exact request."
+            "Too many retained setup requests; open the exact request.",
+            code="guidance_setup_capacity",
         )
     result = []
     for request_id in ids:
@@ -545,8 +551,12 @@ def list_my_guidance_activation_requests(
                     actor=actor, request_id=request_id, correlation_id=correlation_id
                 )
             )
+        except guidance_setup_readiness.GuidanceSetupUnavailable:
+            raise
         except PermissionDenied:
             continue
+    if ids:
+        guidance_setup_readiness.require_guidance_setup_integrity()
     return tuple(result)
 
 
@@ -569,6 +579,11 @@ def has_current_guidance_activation_tasks(
     -------
     bool
         Whether the complete exact contract is currently satisfied.
+
+    Raises
+    ------
+    guidance_setup_readiness.GuidanceSetupUnavailable
+        If native protection fails during admission or the final candidate check.
     """
     from django.db.models import (  # noqa: PLC0415
         Q,
@@ -595,9 +610,12 @@ def has_current_guidance_activation_tasks(
         )
         .order_by("created_at", "id")
     )
-    for locator in candidates[:256]:
+    bounded_candidates = tuple(candidates[:256])
+    for locator in bounded_candidates:
         try:
             _admit_request(actor, locator)
+        except guidance_setup_readiness.GuidanceSetupUnavailable:
+            raise
         except PermissionDenied:
             continue
         request = GuidanceActivationRequest.objects.get(id=locator.id)
@@ -638,4 +656,6 @@ def has_current_guidance_activation_tasks(
                 correlation_id=correlation_id,
             )
             return True
+    if bounded_candidates:
+        guidance_setup_readiness.require_guidance_setup_integrity()
     return False

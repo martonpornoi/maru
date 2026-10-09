@@ -33,9 +33,28 @@ KNOWLEDGE_SCHEMA_RELATIONS = (
 )
 
 # Populated only from the fresh PostgreSQL schema observation after migration.
-# Empty pins deliberately refuse use during source-only implementation.
-KNOWLEDGE_SCHEMA_SHA256: dict[str, str] = {}
-_FENCE_SHA256 = ""
+# Verified against the isolated PostgreSQL 17.11 catalog on 2026-10-09.
+KNOWLEDGE_SCHEMA_SHA256: dict[str, str] = {
+    "knowledge_guidancecommandreceipt": (
+        "b3f8794df4f9a3bc091dbcc4bb060d6b9eaee2af3174f063596ed2a66a5b6248"
+    ),
+    "knowledge_guidancecontrol": (
+        "0f425abda46e7d2eebdc33730df6985171fc16644fc245c852d96ceecff8bff1"
+    ),
+    "knowledge_guidanceitem": (
+        "16e555dbe9d775475b67d2840cc63e95527379068000a433dc253e80b5946bca"
+    ),
+    "knowledge_guidancereview": (
+        "236d733b445bc91a4d40fe7222e83074ee9ebe4058c273d2b08918ec098de35e"
+    ),
+    "knowledge_guidancerevision": (
+        "7aed362956dd6e5d82f2f72c1990c3ad0a9b1f7da61e87c2cc19796867a5d528"
+    ),
+    "knowledge_guidancesettingsrevision": (
+        "cf73b78f52a1d45d25be4ac7a9a205963095cdc9e2763ff07ce85a5ab8296c85"
+    ),
+}
+_FENCE_SHA256 = "8918489c3e935d795d48772770307bfad4611e1518f9ae55a724e44b870bb340"
 
 
 def knowledge_database_integrity_is_ready() -> bool:
