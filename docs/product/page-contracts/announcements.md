@@ -20,6 +20,10 @@ publish them through your existing channels." No unrelated adoption is suggested
 Setup names the foundation it creates or reuses and continues into accountable
 access when the two operators have not yet accepted and activated their roles.
 
+Setup, decisions and workspace pages use the shared admin theme, including its
+body background, text, event-context line and breadcrumb colors. Light and dark
+appearances must remain legible without changing the page's authorized content or actions.
+
 ## Authority and disclosure
 
 The exact edition profile and current authority are checked before private labels,

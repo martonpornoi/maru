@@ -423,7 +423,7 @@ def _target_and_label(
                 selected,
             )
     if not isinstance(organization_id, UUID):
-        return None, "Record-specific authority"
+        return None, "This page"
     if isinstance(edition_id, UUID):
         typed = _typed_target(
             request=request,
@@ -475,9 +475,8 @@ def _inferred_spec(
             policy="fixed",
             scope_label=scope_label,
             explanation=(
-                "This record type is governed by its code-owned specialist "
-                "policy. Choose an exact organizer record before changing "
-                "underlying scoped assignments."
+                "This page has its own access rules. You cannot change who "
+                "has access from this page."
             ),
         )
     opts = context.get("opts")

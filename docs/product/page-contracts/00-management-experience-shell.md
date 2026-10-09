@@ -71,6 +71,12 @@ turning the page into a manually maintained ACL. The embedded React workspace
 owns this disclosure inside each active view so the Django host does not render
 a duplicate before the application root.
 
+A fixed-policy summary says **Rules for this page**. It explains the existing
+owner's rules, without claiming that the page cannot offer its own approved
+access-request, decision or removal actions. Only the unresolved-scope fallback
+uses **This page** and explains that access cannot be changed from that page;
+it reveals no guessed organizer label or generic management link.
+
 ## Plain language and purpose groups
 
 ADR 0116 groups the existing authorized registry into Overview, People & teams,

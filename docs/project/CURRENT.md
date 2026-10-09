@@ -57,8 +57,9 @@ recovery and complete native workflow acceptance remain pending.
 [ADRs 0118-0119](../architecture/decisions/0118-reviewed-internal-guidance.md)
 and KNO-010-013/EVT-008 define internal reviewed guides, current-only reading,
 contextual placement, withdrawal, portable outputs and separately accepted
-responsibility. Source snapshot `edb19dd0b000913f94b891bac8a085c93ba6d9da` has
-subsequent uncommitted pagination, observation and native repairs.
+responsibility. Local preservation snapshot
+`4c4393ec4cba6607f6c08cf725ebb8ad12689ec1` retains the pagination, observation,
+native and usability repairs. It is not native or protected delivery acceptance.
 
 Earlier combined feedback passed 14,090 database-free cases, typing across 880
 source files, lint, Python documentation, fresh warning-fatal handbook and 108
@@ -75,10 +76,39 @@ The stopped schema-observation resource and earlier failed evidence remain intac
 Static preview evidence is not authenticated workflow, complete accessibility,
 print, specialist or independent-person acceptance.
 
+## Theme follow-up
+
+The Guides and inherited Announcements bases use the standard admin body class;
+shared breadcrumbs and event-context text now follow the selected theme. Existing
+focused presentation/brand checks pass: 98 cases in 2.51 seconds. The parent
+browser check passed 24 synthetic cases: twelve real-template pages at 320 and
+1280 pixels, each 800 pixels high, with their light/dark settings. UTF-8, one
+H1/main landmark, labelled controls, no horizontal overflow and native
+Access-disclosure keyboard behavior were checked. Workspace action links are
+44 pixels high; setup/back text links retain their smaller text-link geometry.
+Owned preview tabs/servers were closed and no form was submitted. See the
+[theme checkpoint](../checkpoints/2026-10-09-guides-admin-theme.md).
+These projections prove no authorization or live workflow. Native source,
+observed pins, runtime permissions and the Announcements certification checkout
+remain unchanged.
+
+## Shared Access wording
+
+The generic unresolved-scope explanation now uses **This page** and plain
+language. The fixed-policy label is **Rules for this page**, preserving the
+separate access-request, approval and removal actions on actual Guides access
+pages. Scope, policy values, signed tokens and permissions are unchanged.
+Sixty-two focused rendering/token/Guides-access cases pass in 1.70 seconds.
+The changed components passed eight synthetic browser combinations at 320/1280
+pixels in light/dark: readable summaries, native keyboard disclosure, no overflow
+and unchanged dedicated request/removal links. No actions were submitted; the
+owned tab/server were closed. The earlier 24 theme checks remain bound to their
+pre-copy source. See the [Access wording checkpoint](../checkpoints/2026-10-09-guides-access-language.md).
+
 ## Smallest next actions
 
-1. Integrate the bounded usability corrections and verify their affected
-   journeys. Keep native failures and owned-resource records intact.
+1. Preserve the coherent theme/Access-copy follow-up and its distinct source
+   and component evidence. Keep native failures and acceptance gaps intact.
 2. When Announcements releases capacity, run fresh Guides workflow and recovery
    regressions, then genuine restricted-runtime setup and separate-person browser
    roles with retained Announcements history and a third reader.

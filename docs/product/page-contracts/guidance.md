@@ -27,6 +27,10 @@ settings and stopped-use controls belong beside the working inventory. There is 
 shared shell, selected event, page H1 and main landmark. Reader pages do not
 present an editorial dashboard or imply access to Announcements.
 
+Setup, decisions and workspace pages use the shared admin theme, including its
+body background, text, event-context line and breadcrumb colors. Light and dark
+appearances must remain legible without changing the page's authorized content or actions.
+
 ## Setup and access
 
 Fresh setup starts at `/admin/platform/setup/guidance/`. Creation redirects to

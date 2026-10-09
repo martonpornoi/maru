@@ -131,7 +131,7 @@ _POLICY_LABELS: dict[PageAccessPolicy, str] = {
     "representation": "Representation governance",
     "safeguarding": "Safeguarding policy",
     "security": "Security policy",
-    "fixed": "Fixed system policy",
+    "fixed": "Rules for this page",
 }
 
 

@@ -21,6 +21,7 @@ from maru.authorization.guidance_access_queries import (
     GuidanceAccessWorkspace,
 )
 from maru.authorization.guidance_catalog import GUIDANCE_ROLE_RECIPES
+from maru.authorization.page_access import build_page_access_summary
 from maru.events.knowledge_workspace_queries import KnowledgeWorkspaceReference
 from maru.identity.models import Account
 from maru.knowledge import access_views as views
@@ -183,7 +184,17 @@ def test_access_admission_precedes_email_parsing_and_command(access_page):
 def test_content_reading_is_not_required_for_independent_access_management(access_page):
     response = call(access_page)
     assert response.status_code == 200
-    assert access_page.render.call_args.args[1]["content_url"] == ""
+    context = access_page.render.call_args.args[1]
+    assert context["content_url"] == ""
+    summary = build_page_access_summary(
+        principal=access_page.actor, spec=context["maru_page_access_spec"]
+    )
+    assert summary.policy == "fixed"
+    assert summary.policy_label == "Rules for this page"
+    assert not summary.can_manage
+    assert context["new_url"].endswith("/access/new/")
+    assert context["assignment_rows"][0][2]
+    assert "A named second person must approve" in summary.explanation
 
 
 def test_access_request_passes_actual_actor_exact_scope_and_named_approver(access_page):

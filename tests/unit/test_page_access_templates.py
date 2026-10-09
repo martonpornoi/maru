@@ -1,15 +1,19 @@
 """Static contract checks for the shared every-page Access component."""
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
+from django.template import Context
 from django.template.loader import render_to_string
+from django.test import RequestFactory
 
 from maru.authorization.page_access import (
     build_page_access_summary,
     fixed_page_access,
     scoped_page_access,
 )
+from maru.core.templatetags import page_access
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -47,17 +51,21 @@ def test_access_summary_is_compact_until_the_reader_requests_details() -> None:
 
 
 @pytest.mark.parametrize(
-    ("personal", "expected_label"),
-    [(False, "Access for this area"), (True, "Your own records")],
+    ("policy", "expected_label"),
+    [
+        ("scoped", "Access for this area"),
+        ("self", "Your own records"),
+        ("fixed", "Rules for this page"),
+    ],
 )
 def test_plain_access_labels_keep_exact_scope_and_details_without_management(
-    personal: bool, expected_label: str
+    policy: str, expected_label: str
 ) -> None:
     scope = "Synthetic Foxglove / Evening & late-night team"
     explanation = "Your current event access controls what you can read or change."
     spec = (
-        fixed_page_access(policy="self", scope_label=scope, explanation=explanation)
-        if personal
+        fixed_page_access(policy=policy, scope_label=scope, explanation=explanation)
+        if policy != "scoped"
         else scoped_page_access(
             target=None, scope_label=scope, intents=(), explanation=explanation
         )
@@ -67,7 +75,7 @@ def test_plain_access_labels_keep_exact_scope_and_details_without_management(
         "core/_page_access_summary.html", {"maru_page_access": summary}
     )
 
-    assert summary.policy == ("self" if personal else "scoped")
+    assert summary.policy == policy
     assert summary.scope_label == scope
     assert summary.explanation == explanation
     assert f'class="maru-access-summary__policy">{expected_label}</span>' in rendered
@@ -76,6 +84,37 @@ def test_plain_access_labels_keep_exact_scope_and_details_without_management(
     assert "Manage access</a>" not in rendered
     assert "Preview access</a>" not in rendered
     assert not summary.can_manage
+
+
+def test_unresolved_access_scope_does_not_reveal_an_unverified_context(monkeypatch):
+    monkeypatch.setattr(page_access, "selected_admin_edition", lambda _request: None)
+    request = RequestFactory().get("/admin/unresolved/")
+    request.user = object()
+    context = Context(
+        {
+            "request": request,
+            "organization": SimpleNamespace(name="PRIVATE <organizer> & details"),
+        }
+    )
+
+    summary = page_access.maru_page_access(context)
+    rendered = render_to_string(
+        "core/_page_access_summary.html", {"maru_page_access": summary}
+    )
+
+    assert summary.policy == "fixed"
+    assert summary.scope_label == "This page"
+    assert summary.explanation == (
+        "This page has its own access rules. You cannot change who "
+        "has access from this page."
+    )
+    assert "Rules for this page" in rendered
+    assert "PRIVATE" not in rendered
+    assert not summary.can_manage
+    assert not summary.manage_url
+    assert not summary.preview_url
+    assert "Manage access</a>" not in rendered
+    assert "Preview access</a>" not in rendered
 
 
 def test_direct_page_mounts_follow_the_page_heading() -> None:
