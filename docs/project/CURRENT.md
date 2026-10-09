@@ -53,6 +53,17 @@ cases after the whole unit run; final certification will include it. Native prin
 Exact-commit certification and hosted acceptance still remain; these development results are not production activation or independent
 human acceptance.
 
+The first full certification of `633fab42736d8d34d3112bac23947d19d449b27a`
+stopped on a retained-recovery ordering regression. Its 13,806 unit and 108
+frontend cases and repository quality gates passed; nine PostgreSQL shards
+completed before one failure cancelled seven in-flight shards. No successful
+certification receipt was issued. The complete failed artifacts, exact source
+bundle and verified hashes are preserved. New Announcements/Events successors
+must call the frozen joined recovery preflight before any newer guard or migration
+record can reverse. The focused repair passes 65 unit cases and 20 native cases (384.47 seconds);
+a fresh exact-commit full certification and hosted acceptance remain mandatory. See the
+[repair checkpoint](../checkpoints/2026-10-09-announcements-recovery-fence.md).
+
 ## Starting baseline and verification
 
 PR #209 passed complete local and independent hosted acceptance before protected

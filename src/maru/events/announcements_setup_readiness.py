@@ -20,7 +20,7 @@ _MIGRATION_SOURCE_SHA256: Final = {
         "e66794f16f6f142774021d35149ec2182f61f693d9cc41cfa4fe1d74951ef6b2"
     ),
     "0021_announcements_setup_downgrade_fence": (
-        "564fb977f1cfacdf6adb8a8e67cce91bad2e530e2fbb366357309629b0d88ed6"
+        "6432c8d1d9642f2d218ac311d70e8128c6cfcd3d358e4429bb2d89c1dd9b21fa"
     ),
 }
 

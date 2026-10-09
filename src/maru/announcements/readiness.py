@@ -40,7 +40,7 @@ ANNOUNCEMENTS_SCHEMA_SHA256 = {
         "35d5ff9e836a2aa4caf4ef52a2f69f634abf1c0171eb5e9e0c3dd5d3d4d40c00"
     ),
 }
-_FENCE_SHA256 = "4bde955b40e9563f8159c14d89124e48d3519f556ae0dbed9530d16b51eaeb28"
+_FENCE_SHA256 = "28ac8350a5c4e2bc5719c10fef33aafc59b5253b7714345839ed636fb322a0b2"
 
 
 def announcements_database_integrity_is_ready() -> bool:
