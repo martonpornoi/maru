@@ -1,1010 +1,182 @@
 # Roadmap
 
-The roadmap is outcome-based. Dates are intentionally omitted until a team and
-first convention partner are known.
+Maru is built for furry conventions that want to adopt one useful workflow at a
+time. This page explains the direction and remaining outcomes. It is not a list
+of features that are ready for production.
 
-Use [CURRENT](CURRENT.md) for the active handoff and delivery evidence, the
-[checkpoint archive](../checkpoints/index.md) for historical verification, and
-the owning requirements, module contracts, and ADRs for durable behavior. This
-roadmap records outcomes and dependencies, not a second branch-status log.
+[CURRENT](CURRENT.md) records the active work and verified state.
+[Requirements](../product/requirements.md) define the product contracts;
+[module documentation](../modules/index.md), [architecture decisions](../architecture/decisions/index.md)
+and [checkpoints](../checkpoints/index.md) retain implementation detail and history.
+Dates depend on the scope, measured work and the first adopting convention.
 
 ## Active direction: approachable furry-convention operations
 
-The maintainer authorized this direction on 2026-10-08 and delegated routine
-product choices. Completion of Programme umbrella #48 is deferred. Its retained
-acceptance, recovery, and activation gates remain open; deferment does not promote
-a profile or invalidate preserved evidence. The next work makes everyday Maru
-understandable before expanding the number of operational destinations.
+The maintainer authorized this direction on 2026-10-08. Programme umbrella #48
+is deferred, with its acceptance and activation gates still open. Everyday work
+should be understandable to volunteers without event-management experience,
+including people who use English as a second language. Advanced configuration
+must remain accessible without dominating ordinary tasks (UX-031).
 
-1. **Approachable work and contributor entry:** purpose-based navigation, plain
-   language, accessible advanced details, verified local setup, and a concise
-   furry-convention introduction (UX-031 and ADR 0116; delivered in PR #209).
-2. **Announcements:** compose, approve, prepare channel copy, record manual
-   publication, correct, and export one canonical announcement (ANN-001–009,
-   ADR 0117; implemented, protected delivery pending).
-   Add external delivery adapters individually when their operating needs are
-   known. This workflow must stand alone without Programme or Registration.
-3. **Guidance and help desk:** governed runbooks/FAQs first, then owned requests,
-   replies, escalation, handover, and lost-and-found custody (KNO, MSG, OPS-007).
-4. **Volunteer and attendee services:** training, coverage exceptions, meals,
-   rewards, fursuit/quiet-space services, and purpose-scoped accessibility work
-   (HR, FUR-007, SAF-007). Restricted specialist case work retains its own review.
-5. **Commercial and charity journeys:** dealers and table allocation, then one
-   complete art/auction format through intake, bidding, settlement evidence,
-   collection, and reporting (FUR-001–005).
-6. **Arrival and fulfilment:** controlled registration exceptions, badges,
-   merchandise pickup/refunds, and degraded operation (REG, ACC, FUR-006).
-7. **Hospitality and annual continuity:** guest/room/travel obligations, spending
-   and sponsor commitments, creative contributions, reviewed lessons and handover
-   (VEN, FIN, PLN, KNO, FUR-008–010), prioritized by a concrete adopting team.
+The following sequence guides development. It does not require a convention to
+adopt an earlier workflow before using a later one.
 
-Each stage consists of coherent complete journeys, not one oversized commit or a
-requirement to enable earlier modules. Reuse shared foundations without creating
-unrelated records. Keep required policy decisions, export, recovery, documentation,
-and focused human walkthroughs in the owning increment. Batch related changes for
-one final clean-commit certification and independent hosted acceptance; do not
-weaken coverage or reuse evidence after a source change. Calendar estimates follow
-bounded scope and measured work rather than the size of the remaining wishlist.
+| Focus | Complete outcome | Owning requirements |
+| --- | --- | --- |
+| Understandable work and contributor entry | Find a task, understand the next action, discover advanced settings when needed, and follow a clear contributor setup path. | UX-031, NFR-013 |
+| Announcements | Write, independently review, prepare channel copy, record manual publication, correct mistakes and export the history while using existing publishing channels. | ANN-001–009 |
+| Guides and help desk | Maintain reviewed instructions and FAQs, confirm required reading, and handle requests through replies, escalation, handover and lost-and-found custody. | KNO, MSG, OPS-007 |
+| Volunteer and attendee services | Handle training, coverage exceptions, meals and rewards; keep useful fursuit-lounge and quiet-room information current. Restricted specialist case work needs its own review. | HR, FUR-007, SAF-007 |
+| Dealers and charity | Allocate dealer tables, then complete one art or charity-auction format from item intake through bids, settlement evidence, collection and reporting. | FUR-001–005 |
+| Arrival and collection | Handle registration exceptions, badges, merchandise pickup, refunds and degraded operation. | REG, ACC, FUR-006 |
+| Hospitality and next-year handover | Coordinate guest, room and travel obligations, spending and sponsor commitments, creative contributions and reviewed lessons. | VEN, FIN, PLN, KNO, FUR-008–010 |
+
+Approachable navigation and contributor entry were delivered through
+[PR #209](https://github.com/martonpornoi/maru/pull/209). Consult CURRENT before
+describing later workflows as available. External delivery adapters follow the
+manual Announcements workflow individually, when their operating needs are known.
+
+Each increment includes setup, ordinary use, exceptions, history, export and
+recovery. Batch related changes for one final clean-commit certification and
+independent hosted acceptance. Reuse neither older results nor a source preview
+as evidence that a later workflow is accepted.
 
 ## Progressive adoption strategy
 
-Maru earns trust through useful, bounded adoption rather than an all-or-nothing
-replacement. NFR-013 requires an organization to be able to operate one
-complete workflow without turning on registration, payments, attendance, or
-unrelated modules. Shared identity, organization and edition scope,
-authorization, audit, recovery, and export remain trustworthy foundations, but
-they must not create participation or operational side effects in capabilities
-the organization has not selected.
+NFR-013 makes partial adoption a supported product choice. A convention may use
+Maru for volunteers, communications, an auction or another complete workflow
+while keeping its existing registration, payments and other systems.
 
-Each product increment therefore defines an adoption profile: what foundations
-it needs, which destinations and roles become visible, which records and
-notifications it creates, how existing systems import or exchange data, what
-print or manual fallback exists, and how the organization can expand or stop
-using it. A bidder, event host, volunteer, or communications operator remains a
-purpose-specific relationship unless another capability is deliberately
-adopted.
+Each adoption profile defines its required foundations, visible tasks, roles,
+records and notifications; imports, exports and printable/manual fallbacks;
+recovery and retention; and the explicit action needed to expand or stop using it.
+Unselected capabilities must create no unrelated records or operational duties.
+A volunteer, host, bidder or communications account does not imply attendance,
+registration, payment tracking or unrelated data collection.
 
-The first executable profile is **Workforce-only**, building on the current
-Structure through Shifts journey without attendee Participation, Registration,
-payment, or attendance state. ADR 0081 now contracts the next composite
-profile, **Programme Operations**, from calls and review through an approved
-timetable, staffing projections, and on-site continuity. It remains
-non-executable until the exact-version manifest, bounded authority, activated
-Programme and a real Scheduling module, adapters, and acceptance gates are
-implemented. **Announcements for manual publishing** is the current bounded
-increment. **Internal guidance** follows, with an explicit contract for adding a
-second workflow to an existing edition before claiming combined adoption. Charity
-art auction and Registration without payments retain their later roadmap scope.
-Each profile needs complete import, export, print, degraded-operation and recovery
-contracts. Workforce-only now provides guided activation and enforced
-coexistence, but safe production cutover still requires the open portability,
-offline/manual fallback, retention, recovery, deployment, and partner-
-acceptance gates.
+Keep profile versions exact. Adding a catalog entry must not silently expand an
+existing edition's authority, navigation or effects. Cross-module work uses the
+owning commands and queries, with explicit scope and current permission checks.
+External integrations remain adapters rather than the source of truth.
 
-## Current progressive-adoption outcome
+### Current progressive-adoption outcome
 
-ADR 0080 implements `workforce_only@1` as an immutable EventEdition boundary.
-**Set up Workforce** creates or reuses only Organization → Convention series →
-Event edition, provisions truthful Maru operators only when no accountable
-representation exists, and redirects through two-person accountability into
-the complete Workforce journey. Existing editions become
-`full_convention@1`; existing Executive Board organizations and evidence are
-unchanged.
+`workforce_only@1` supports the Structure through Shifts journey with guided
+setup and enforced coexistence. `full_convention@1` retains its existing meaning.
+Assignment evidence must match the immutable edition profile: Workforce-only
+creates no attendee Participation; incompatible evidence is an integrity conflict.
+See [Workforce adoption and recovery](../operations/workforce-only-adoption-and-recovery.md).
 
-The current `full_convention@1`, `workforce_only@1` and additive
-`announcements_only@1` manifests pin literal
-capabilities, destinations, shell kinds, effect routes, catalog entries,
-adapters, conflict sources, and reserved roots as exact code/version pairs.
-Independent typed owner catalogs declare adapter result and fail-closed
-semantics, while deployment checks require every literal, selectable pair, and
-database-supported pair to agree without widening an existing v1 manifest.
-Exact-edition authorization rejects an unpinned capability before self,
-platform, grant, or role policy. Context, Django navigation, Convention work,
-generic access management, Registration discovery, Applications starters and
-providers, Effects delivery, and Position-assignment evidence consume that same
-exact pair and fail closed for an unknown version. A Workforce-only assignment
-retains responsibility and exact authority but creates no Participation or
-attendance capacity. This enforcement foundation does not declare or activate
-`programme_operations@1`.
+[ADR 0117](../architecture/decisions/0117-standalone-manual-announcements.md)
+defines the optional `announcements_only@1` workflow. Reviewed Guides follow
+with explicit expansion of an existing edition. Later profiles must preserve
+earlier records, authorities and profile meanings. Current implementation and
+acceptance status belong in CURRENT rather than this roadmap.
 
-ADR 0117 adds the standalone Announcements journey and a purpose-specific
-Announcements operators representation. Guided setup, independent review, manual
-publication reports, corrections and portable text/history use only the new exact
-profile. Existing channels remain the places where people publish; current
-verification and delivery status belong in [CURRENT](CURRENT.md).
-
-Issue #61 installs a dormant Programme private-domain foundation.
-Canonical edition items, separated working/delivery/discussion layers,
-explainable readiness evidence, reviewed public-copy renditions,
-receipt-backed commands, strict queries/events, database guards, and read-only
-runtime ACLs are implemented without a route or current-profile permission.
-This moves Programme's owned-data contract forward while preserving the same
-non-executable composite profile boundary.
-
-Issue #63 adds the matching dormant Applications intake foundation. Programme
-calls facet existing typed definitions, and collaborative proposals facet
-submissions while reusing append-only answer revisions and one aggregate
-version. Exact sealed revisions bind call schema, selection, answer revisions
-or absences, roster, contributor-owned profile revisions, policies, and exact
-included-collaborator acknowledgements. Every generic review/target seam remains closed, all
-new relations are runtime `SELECT`-only, and both current profile fingerprints
-remain unchanged. No route, API, UI, review, decision, target, Programme item,
-host relationship, publication, Scheduling, or staffing behavior is active.
-
-Issue #66 adds the dormant preview-first import boundary around that intake
-foundation. One strict bounded JSON package can be staged for an exact current
-Department without creating call or proposal state; organizer preview remains
-non-disclosing, while call commit and exact-lead proposal claim reuse only the
-protected Issue #63 commands. Applying or explicitly disposing an item clears
-its private payload, and permanent source binding makes replay deterministic.
-The adapter, two delegable capabilities, and minimized event are declared but
-absent from both current manifests; every import relation remains runtime
-`SELECT`-only and no route, API, UI, worker, connector, schedule, review,
-Programme item, host, or publication is active. Issue #64 adds dormant
-Department ownership continuity, shared retirement locking, explicit call/batch
-reassignment, and exact-ID historical recovery under ADR 0084 and PRG-011.
-
-Issue #71, delivered through PR #72, adds the dormant Applications boundary:
-exact-seal review cases, explicit versioned stage/rubric/template policies,
-independent review and
-moderation, accountable decisions, and exact-recipient acknowledgement under
-ADR 0085. Review-side acceptance does not create a target receipt or Programme
-item. Issue #77, delivered through PR #78, adds explicit accepted-item
-conversion. Issue #79, delivered through PR #80, adds independent host relationships and
-availability. Issue #81, delivered through PR #82, adds Scheduling candidates,
-conflict evidence and governed Venue binding. Issue #85 delivered the
-[accessible timetable editor](../product/page-contracts/programme-timetable-planning.md)
-under ADR 0092, before staffing, releases, continuity, and integrated
-Programme-only rehearsal. Native HTTP, pointer-assisted exact placement and
-unsaved-input guards merged through PR #86 after full protected acceptance.
-The three browser checks deferred in #87 now have
-[bounded assisted evidence](../checkpoints/2026-09-10-programme-browser-assisted-observations.md):
-native Cancel/discard, populated genuine 200% zoom with visible keyboard focus,
-and usable interaction with Windows Animation effects off. Browser-control
-readback limitations remain explicit. Protected PR #90 delivered that evidence
-and closed #87; its [delivery checkpoint](../checkpoints/2026-09-11-programme-browser-protected-delivery.md)
-records the maintainer-approved split-run local verification and green hosted gate. Umbrella
-#48 remains open; no current profile or surface is activated by this kernel.
-
-Issue #88, delivered through PR #89, adds Programme-owned staffing requirements,
-explicit exact-source Workforce bindings, minimized coverage/history and native
-work-impact preview/apply under ADR 0093. Retained volunteer commitments are
-never silently rewritten by timetable movement. Personal Workforce inputs are
-proved compositionally without Participation; combined published personal
-projections remain part of atomic release/outputs. Release, on-site continuity
-and guided integrated adoption remain mandatory.
-
-Profile v1 declares incumbent-system coexistence and the current manual,
-copy-on-write structure setup. General partner import, complete continuity
-export, print/offline packs, automated decommissioning, profile expansion,
-post-edition retention execution, and production recovery remain the next
-trust-building outcomes rather than implied capabilities.
-
-The release outcome is now split under #48: #91 defines and tests complete
-exact-snapshot eligibility under ADR 0094 and is delivered through PR #93.
-Child #94 is delivered through PR #95 with authenticated owner collection and
-missing fit/no-staffing evidence under ADR 0095. Child #96 is delivered through
-PR #98 with dormant independent approval, release-warning evidence, atomic
-publication and governing invalidation under ADR 0096. Child #99 is delivered
-through PR #101 and supplies shared
-release-derived public and personal projections, combined host/work timetables
-and output formats. Child #100 is delivered through PR #103 with independently
-authorized room/Department/edition operator run sheets. #104 owns detailed change
-impact, governed communication and exact-recipient acknowledgement. Its native
-child #105 is delivered through PR #106 with dormant read-only comparisons across
-planner, host, operator and volunteer purposes plus sender-authorized host/work
-recipient references under ADR 0101. #104 is delivered through PR #110 with
-operator recipient selection, governed preparation/review/manual handoff,
-immutable acknowledgement and dormant shared-shell user surfaces under ADR
-0102. #107 is delivered through PR #111 with dormant now/next, complete run sheets,
-print, signed continuity and preprovisioned offline known-state verification under
-ADR 0103. Guided owning-task selections are implemented but remain dormant;
-#92 retains human acceptance. This does not complete the #48 operational journey.
-The visible #48 decomposition is the maintainer's first priority. Remaining
-outcomes are #108 guided departmental surfaces/gated activation and #109
-integrated rehearsal. #102 restored required database acceptance; #97 logical
-recovery is delivered through PR #199. #92 human acceptance remains mandatory.
-Document discovered prerequisites under their owning item and defer unrelated
-ideas. #108's dormant fixture enables acceptance before its final promotion.
-Its first guided item-workspace increment, delivered through PR #112, supplies
-labelled core-item work,
-separate delivery/readiness/public-copy tasks and protected history. PR #114 adds
-explicit readiness evidence, Department discussion, public-copy withdrawal and
-separate organizer/person-owned hosting tasks. Applications intake/review/conversion,
-starting with the dedicated call workspace delivered through PR #115 and the
-creation/section/question/condition composer delivered through PR #116,
-now includes protected Department selection/reassignment through PR #117.
-Personal proposal intake/overview is protected through PR #118; collaboration
-and review/conversion,
-ordinary task continuations and accountable setup remain required increments;
-none is replaced by specialist records or closure of a supporting PR. #113 records
-the measured non-database quality-runtime margin. PR #116's original quality job
-exceeded 30 minutes. Its protected repair aligned routine Sphinx parallelism with
-full/local checks and passed hosted quality in 26m35s. This clears that blocker,
-but the observed 3m25s margin is modest; #113 remains open for profiling and
-stronger future headroom while this decomposition resumes.
-Delivered with #99, ADR 0098 adds budgeted CI assignments and measured
-headroom to address recurring historical-test timeouts without weakening safety
-selection or coverage. Its complete hosted run passed all 39 jobs below 50
-minutes each. This is timeout resilience, not a total-work reduction or
-Programme adoption.
-An eligible rule result is not approval, publication or profile activation.
-Child #97 delivered exact-readiness compatibility after logical PostgreSQL restore
-through PR #199, including active/stopped recovery and partial-backup refusal.
-ADR 0100's temporary PostgreSQL development deferral is historical. #102 / PR #195
-restored required native acceptance with unchanged coverage and timing gates.
-Related Programme outcomes may share a coherent PR, but its final exact head needs
-complete local and independent hosted acceptance; older results do not certify it.
-Its recorded synthetic logical recovery is not production/PITR acceptance;
-same-image physical recovery is not a substitute for either boundary.
-
-ADR 0081 accepts `programme_operations@1` as an exact target contract. Its
-adopted product modules are Applications, Programme, Scheduling, Venues, and
-Workforce over shared Identity, Organizations, Events, Authorization, Audit,
-Effects, and Privacy namespaces, with mandatory pinned recovery and export
-continuity contracts. It excludes attendee
-Participation, Registration, payments, attendance, accreditation, and
-unrelated modules. The exact profile version must pin its capability,
-destination, writer/effect, and adapter/conflict catalogs so later catalog
-growth cannot silently expand an existing edition. No setup route, navigation,
-authority, Programme runtime route, adapter implementation, Scheduling module,
-or publication behavior is activated by the contract milestone or dormant
-Programme foundation.
+`programme_operations@1` is the accepted target in
+[ADR 0081](../architecture/decisions/0081-composite-programme-operations-adoption.md).
+It combines Applications, Programme, Scheduling, Venues and Workforce over
+shared foundations, excluding attendee Participation, Registration, payments,
+attendance and unrelated modules. Its dormant implementation and isolated
+evaluation do not activate it. Charity auction and Registration without payments
+remain future independently adoptable outcomes.
 
 ## Current contributor-documentation outcome
 
-ADRs 0073 and 0074 add a newcomer-first public documentation layer without
-removing comprehensive reference evidence. The Sphinx root now has six curated
-hubs and one five-step entry journey; nested catalogs retain product contracts,
-runbooks, modules, research, ADRs, checkpoints, and generated Python reference.
-The repository rejects orphaned pages and root-navigation drift.
+Keep one short newcomer path: understand Maru, see its current maturity, run a
+synthetic example and make a first contribution. Everyday tutorials should use
+current UI wording. Deep reference, architecture and historical evidence remain
+available through the documentation hubs, without becoming mandatory first reading.
 
-Repository-controlled examples now use MaruCon, MaruDance, synthetic people,
-and reserved domains. The external-roster compatibility surface is removed,
-the source-derived Workforce starter is replaced by the independently authored
-`marucon-reference@1`, and migration `0009` refuses to relabel incompatible
-immutable receipts. PR #15 merged as exact protected-main commit `2b78934`, and
-GitHub Pages run `32624208484` published that exact commit successfully. The
-next documentation outcome is to keep this finite entry path current while
-adding role guides and verified screenshots only as corresponding interfaces
-become stable.
+Examples use fictional conventions and people. Add role guides and verified
+screenshots as the corresponding interfaces become stable. Remove duplicated
+status prose instead of maintaining competing project summaries.
 
 ## Current production-consolidation discipline
 
-ADR 0030 established and preserved the accepted empty-experience baseline while
-retaining the tested backend and APIs. ADR 0039 now supersedes that decision's
-default URL configuration: the active milestone uses one coherent
-`/admin/` shell with Convention work, specialist records, and the purpose-built
-platform setup record journey under the collision-safe `/admin/platform/`
-route space. Backend route, permission,
-schema-drift, frontend build, populated/fresh migration, local restore-drill,
-and desktop/390-pixel smoke evidence passes. The final consolidated local
-backend invocation passes 792 tests in 329.21 seconds with 90.01 percent
-coverage and no warnings. Accessibility, representative recovery/PITR,
-complete visual-state, and owner evidence remain. ADR 0031 restored
-**Platform administration home** as a platform-administrator-only organization
-inventory without adding convention participation. ADRs 0032 and 0033 define
-the audited Draft command and complete optional profile in **Create
-organization**. ADR 0034 adds the linked **Organization record**, compact
-**Organizations**/**+ Add** navigation, audited profile updates, and protected
-empty-Draft deletion. ADR 0035 adds organization-scoped **Create convention
-series**. M1 adds **Convention series record**, audited and idempotent **Create
-event edition**, and **Event edition record** with explicit working context.
-ADR 0036
-makes navigation progressive: global pages remain
-global while selected-organization pages appear in a named contextual section,
-and the desktop sidebar aligns to ordinary viewport padding. All retain the
-no-governance and no-participation side-effect boundary. The
-phase descriptions below are capability evidence and future outcomes, not a
-list of currently mounted pages. ADR 0037 now groups page contracts into
-executable vertical milestones so that complete journeys can advance without a
-mandatory pause after every isolated page. Each page still requires UX-013's
-scope, states, authorization, navigation, test, documentation, desktop, and
-narrow-viewport evidence. ADR 0038 records that the locally verified M1 record
-spine precedes M2 governance and computed scoped access; it does not weaken the
-full ADR 0037 outcome. ADR 0039 selects the richer pre-reset record-oriented
-visual grammar without restoring a second menu, Quick Start, direct
-cross-domain saves, or legacy domain assumptions. ADR 0040 now starts M2.1 with
-Representation & access's explicit Executive Board representation lifecycle:
-exact verified accounts accept their own invitations, at least two distinct controllers
-cross-approve root authority, activation moves the Draft organization to
-Active atomically, and the platform administrator remains external. Its
-initial schema, service, HTML, authorization, and synthetic-fixture lifecycle
-are backend-verified alongside the M1.1 shell. ADR 0041 implements exact
-department/typed-resource scope without implicit hierarchy inheritance through
-sealed targets, policy, commands, immutable bindings, and database guards.
-ADR 0049 now mounts the contextual Access explanation, scoped assignment
-workspace, and read-only exact-person/immutable-role preview; deployment-
-shaped responsive/accessibility/load and owner evidence remain. ADR 0042 makes repository
-fixtures synthetic-only and removes the public-roster rehearsal implementation. ADR 0043 adds
-global platform emergency containment when a Board controller must be removed.
-ADR 0044 accepts exact actor/approver authority-source lineage, deterministic
-least-authority pinning, a non-cyclic initial Board ceremony, and staged legacy
-reconciliation. Its additive ledger, compatible writers, recursive validators,
-count-only readiness, provable-only Board/delegation backfill, concurrent
-distinct-controller boundary, completeness guards, one-way marker, policy
-switch, runtime-role proof, and recovery behavior are implemented and locally
-verified with synthetic data. Production has not been cut over: explicit
-ordinary legacy recreation, representative candidate-cardinality load,
-deployment restore/PITR, and the real activation ceremony remain gates before
-production approval.
-ADR 0080 preserves that Board history and adds truthful Maru-operator
-representation for bounded adoption with the same two-person controls.
-The Organization structure read projection mounts the canonical read-only page and
-strict GET API. It composes the minimized accountable-representation anchor
-with one version-fenced bounded, complete edition tree, validates holder role
-lineage and active-person state before labels, audits the sensitive read before
-disclosure, retries one aggregate movement, and removes the duplicate React
-structure destination. Department management's aggregate, immutable template application,
-Department command services, repository-owned writer reconciliation, and
-workforce `0006`/`0007` stopped-writer trigger contract are implemented and
-first repository-verified by the pre-adapter 1,471-test baseline at 90.13
-percent branch coverage. The
-immutable, repository-owned 22-Department `marucon-reference@1` fictional
-starter pins Convention Coordination as sole root and contains no Executive
-Board Department. Department management now mounts same-shell child forms and
-five strict API mutation operations for template application and Department
-create/update/reparent/reorder/retire/protected-delete. ADR 0048 keeps the
-browser's sibling order server-owned: create and reparent append under the
-aggregate lock, unique placement survives ordinary edits, and saving an old
-duplicate uses the nearest following free position. The strict API retains
-explicit bounded ordering. The definitive
-adapter-expanded repository gate passes 1,693 tests in 1,653.43 seconds at
-90.50 percent total branch-inclusive coverage. Its 118 targeted new cases
-comprise 59 HTML, 50 API/contract, and 9 immutable-template invariant cases;
-the adjacent API/contract batch passes 152 tests in 73.90 seconds. The
-authenticated responsive-browser matrix remains pending. Production authority
-reconciliation,
-cutover, representative restore/PITR, accessibility, and owner evidence remain
-gates.
+The application uses one coherent administration shell with task-focused
+Convention work and secondary specialist records. The
+[capability ledger](PRODUCTION_CONSOLIDATION.md#honest-capability-ledger) distinguishes
+mounted, API-only, unmounted, partial, absent and deployment-gated work.
+Code, tests and a visible page do not by themselves establish a complete journey.
 
-ADR 0055 starts the management-experience recovery without replacing the
-canonical shell or authorization boundary. Its first repository-verified slice
-adds task-oriented navigation and administration home, code-owned natural-
-language search, progressive specialist-record disclosure, an accessible
-intermediate/narrow drawer, a shrinkable convention-context control, and a
-coherent User accounts -> invitation -> Executive Board progression. Focused
-static and 56-of-56 integration behaviors pass.
-
-The completed focused hierarchy slice turns that shell into a clearer product
-hierarchy:
-navigation search leads with tasks and separates technical records, pin controls
-move behind **Customize navigation**, My Maru and Administration use independent
-registries, the workspace context becomes compact, and converted pages share
-one H1 plus one page-local computed **Access** disclosure. Attendee service is
-now **Registration desk** with a searchable/filterable/paginated queue before
-configuration; canonical edition setup is **Registration**, and capacity
-policy is **Capacity & waitlist**. Setup guide uses exact purpose-built routes
-and gives Programme, inbox, and live operations one truthful
-non-interactive roadmap home. The 390-pixel desk renders labelled attendee
-cards without page overflow. Synthetic demo editions receive honest legacy
-setup controls so the canonical reader works without fabricating Registration setup and account onboarding
-provenance or writer-cutover evidence.
-
-The owner-role read slice reconciles the embedded and host edition
-contexts, gives person/attendee/access drawers one modal keyboard contract, and
-connects Registration to one durable **Workforce** destination. Workforce reads
-the existing exact-edition bounded structure projection and presents Structure,
-Positions, Assignments, Availability, and Shifts as one dependent sequence.
-All five stages now have current purpose-built records or continuations.
-Non-staff owners are not sent to inaccessible Django model records.
-
-ADR 0075 and HR-012 now complete the next Workforce slice: **Position
-management** is a purpose-built, owner-facing exact-edition workflow. One
-governed command creates a planned Position, private draft volunteer
-opportunity, immutable RoleBundle/template provenance, typed resource binding,
-aggregate version, audit/event/outbox evidence, and retained organizer reason.
-Authorized managers may completely replace operational Position details,
-publish or close the opportunity, and close an unused Position through shared
-HTML/API commands. Closure is one-way and refuses assignments, direct reports,
-unfinished Shift demand, or current/future Position-scoped authority. Migration
-`0010` makes specialist
-Position and opportunity records inspection-only in practice by rejecting
-direct mutation without exact command receipts. The preserved recovery
-bootstrap uses the same Position command under one exact initial-Chair
-provenance exception, and internally consistent legacy rows begin evidence at
-their first real governed change without fabricated creation history.
-
-ADR 0076 and HR-013 now complete the owner-safe **Assignment management**
-continuation. A relationship-bounded known person may be proposed for a current
-Position with an effective interval, directly inspectable reason, onboarding
-readiness, and reserved headcount but no authority. A genuinely different
-currently authorized controller must use a fresh authenticated session to
-approve or reject. Approval rechecks onboarding, headcount, lifecycle,
-RoleBundle provenance, and both controllers before atomically activating the
-linked role and only the evidence required by the immutable edition profile.
-For `full_convention@1`, that includes configured Participation capacities and
-a non-null assignment pointer. For `workforce_only@1`, approval and ending
-create or touch no Participation evidence and the pointer remains null. Ending
-requires fresh revocation authority, atomically revokes the role, completes
-only unused full-convention capacities, and retains history. The opposite
-pointer state is an integrity conflict in either profile. Shared strict
-HTML/API commands, immutable receipts, and
-Workforce migration `0011` enforce the same lifecycle; **My Workforce** gives
-the subject a reason-minimized personal state view.
-
-ADR 0077 and HR-014 now complete the person-owned **Availability management**
-continuation. A person with a proposed or active Position may keep a private
-draft or deliberately share a complete exact-edition set of non-overlapping
-available or preferred periods. Unknown, explicitly unavailable, shared, and
-withdrawn states remain distinct. Browser input uses the edition IANA time zone
-and rejects ambiguous or nonexistent minutes; strict API input carries an
-offset. An independently capability-authorized organizer sees only people with
-open assignments, operational Position labels, current shared consequences,
-and submitted periods; absent and draft plans are both **Not shared**. Shared
-commands replace the complete set with optimistic versions and idempotency,
-withdrawal deletes current exact periods, and migrations `0017`/`0012` add the
-capability, minimized receipts, database interval/evidence guards, runtime ACL
-profile, and fix-forward boundary.
-
-ADR 0078 and HR-009 now complete the first **Shift planning** and **My shifts**
-journey. An organizer creates immutable-after-publication Position demand with
-time, place, briefing, headcount, break, rest, and supervision expectations. A
-person sees only currently suitable unfinished work and their own retained
-claims and commitments; withdrawal requires confirmation but no personal
-explanation. A different organizer confirms after fresh Position,
-Availability-version, overlap, rest, and capacity checks. Coverage locks only
-after every active claim is current and confirmed, and underfill requires an
-explicit reasoned acceptance. Reopen, cancellation, and post-end completion
-retain truthful evidence. Migrations `0018`/`0013` add exact capabilities,
-strict shared commands, immutable receipts, audit/event/outbox evidence,
-PostgreSQL capacity/rest and state guards, Position closure protection, runtime
-ACLs, and fix-forward recovery.
-
-The complete authenticated width/zoom, keyboard, automated-accessibility,
-screen-reader, owner, and visual-state matrix remains required, as does
-task-oriented conversion of Venues, Logistics, and other recurring management
-journeys. The next highest-impact Workforce outcomes are a full Shift
-mutation-role/accessibility rehearsal and then explicit check-in, late/absent
-coverage escalation, handover, and actual-time boundaries; general
-qualifications, maximum-hours, lone-work, accommodation, notification, and
-schedule-publication contracts must not be inferred from the first Shift
-slice. Availability also still needs an organization-approved post-edition
-disposal policy and worker. Focused two-human Assignment, person-owner
-Availability, and Shift claimant/reviewer rehearsals must precede treating
-those workflows as release evidence.
-
-The 2026-08-11 canonical repository acceptance supersedes those earlier
-focused counts as the current whole-tree gate: Ruff formatting/lint over 624
-files, strict mypy over 355 source files, deterministic frontend/OpenAPI,
-zero migration drift, and 4,067 of 4,067 collected tests pass in 15,558.23
-seconds (4:19:18) at 90.78 percent total branch-aware coverage. Behavior and
-security coverage repair in Registration and Identity retained the configured
-threshold and exclusions policy and exposed two real defects: Registration
-setup dependency failures now preserve `503` ordering, and canonical UUID forms
-follow the documented lower-case hyphenated version-agnostic shape. Installed
-module readiness, least-privilege ACL/runtime-role, and migration-graph checks
-pass. An authenticated read-only Logistics browser journey also passes at
-1,920- and 390-pixel widths. This accepts the repository gate and that scoped
-browser slice only; deployment/stopped-writer cutover, broader visual and
-mutation-role coverage, keyboard/automated accessibility, representative
-restore/PITR, and owner/governance gates remain.
-
-ADR 0090 supersedes ADRs 0060/0061/0063/0066's selection and grouping rules:
-documentation changes use no PostgreSQL; every code PR runs all current-schema
-cases; domain schema changes add affected owner/dependent history and committed
-whole-graph recovery; global safety/harness and destructive changes require
-exhaustive history. Changed-revision nightly acceptance and releases retain
-full history. ADR 0098 subsequently replaces fixed shard counts with source-bound,
-budgeted complete-group assignments shared by local and hosted execution. At most
-eight isolated databases run concurrently, with unchanged per-job limits and
-measured headroom. Shared historical baselines remain indivisible.
-Coverage retains its 90-percent threshold and exclusions, with two-decimal
-reporting and measurement starting before application initialization.
-Draft-light feedback, fail-closed preflight, protected `PR gate` and no duplicate
-acceptance on the identical-tree squash remain. A head update clears prior
-destructive-review evidence before the revised scope can run. Issue #83 delivered
-this policy through PR #84. ADR 0091 integrates Scheduling's historical ownership
-and retains earlier whole-file calibration as diagnostic tooling only. Exact
-acceptance and delivery evidence belongs in CURRENT and the checkpoints.
-Draft pull
-request 9 proved that the first Workforce header edit did not restore CodeQL
-extraction even though the job stayed green. ADR 0069 now uses an equivalent
-bounded `TypeVar` for that one union-bounded generic and rejects the two header
-shapes known to omit files; only a fresh zero-diagnostic managed log can prove
-coverage. Managed run `32485597468` supplies that proof by explicitly extracting
-the Workforce file with zero raw diagnostic. A manual exact-source release
-workflow publishes a CalVer-tagged immutable GHCR image with SBOM/provenance and
-GitHub evidence assets. Repository-owned bounded exact-candidate runtime and
-static-delivery evaluator procedures now define their separate synthetic
-contracts. Pull-request browser smoke, nightly compatibility/concurrency/visual matrices,
-production-shaped deployment and recovery, and release recovery rehearsal
-remain next testing-infrastructure outcomes; ephemeral Actions databases and
-the bounded evaluators do not satisfy production restore/PITR or target
-infrastructure certification.
-
-ADR 0062's private-repository self-hosted interval is superseded by ADR 0063
-after the 2026-08-20 public transition. Public pull requests now use only
-standard GitHub-hosted runners under an exact immutable Action allowlist. Active
-no-bypass main and release-tag rulesets make the up-to-date `PR gate`, pull-
-request-only squash history, resolved conversations, deletion prevention, and
-non-fast-forward prevention server-enforced. Complete local certification
-remains required pre-review evidence but is not trusted as the GitHub result.
-Secret scanning, push protection, private vulnerability reporting, and managed
-default CodeQL are enabled. GH-000 accepts security-only grouped Dependabot for
-the native `uv`, npm, and GitHub Actions ecosystems, quarterly maintainer-owned
-routine updates, and a fail-fast lockfile/Action-allowlist preflight before full
-acceptance. GH-001 adds active CodeQL merge protection for errors and medium-or-
-higher security findings while retaining `PR gate` as the sole required status.
-Pull request 2's remediation of the twelve initial findings is accepted, and
-the default branch now reports zero open CodeQL alerts. ADR 0065 records the
-enabled immutable-release setting and GH-002's merged repository boundary: exact
-draft asset/commit verification precedes publication, and immutable release,
-asset, tag, OCI digest, and attestation reconciliation follows it without a
-persistent administrator credential. ADR 0067 completes GH-003's bounded
-one-time audit over all then-public refs, current candidate material, public
-metadata, assets, and locked dependency licenses. It leaves standard secret
-scanning and push protection live, defers unavailable validity/generic controls,
-accepts prior public author metadata without rewriting history, and ships the
-MIT notice required by the compiled Staff Console. ADR 0068 now reconciles the
-public collaboration surface: stable evidence links replace brittle README
-counts, sole-maintainer continuity and best-effort channels are explicit, and
-the accepted topics, feature switches, and newcomer-label boundary are recorded
-without inventing a committee. The Code of Conduct truthfully records that Maru
-has no private project-specific conduct channel or independent reviewer; it
-neither publishes the owner's personal address nor creates an unattended
-placeholder.
-ADR 0070 supersedes ADR 0068's ambiguous **Pre-production** wording; the
-active-development description's separately authorized mutation and exact
-readback now complete GH-004.
-GH-003 through GH-007 are accepted and merged. GH-005's final
-ready-state run `32504876594` and managed CodeQL run `32504873965` passed. The
-explicitly authorized first candidate rehearsal, multi-maintainer governance,
-and remaining demand-triggered-control review stay open under GH-002, GH-008,
-and GH-009. ADR 0071 accepts GH-006's bounded,
-ready-only, read-only dependency-diff step in the existing classification
-runner. The live twelfth Action pattern was reconciled exactly. Ready-state run
-`32531845794` then passed the pinned dependency review, complete selected
-acceptance, and `PR gate`; pull request 11 squash-merged as `0d8af12`, and post-
-merge CodeQL run `32553943756` passed all three languages. The workflow checked
-out the synthetic merge candidate while dependency review compared the pull
-request's base and head; neither result expands the control to licenses or
-container bases.
-
-ADR 0072 implements GH-007's repository candidate: a locked, warning-fatal
-Sphinx/AutoAPI rebuild from protected `main` with immediate pre-build and pre-
-deploy current-main checks, isolated read-only build and Pages-write/OIDC
-deployment jobs, fresh generated-only output, pyproject-derived visible
-versioning, and an exact 16-reference direct/nested Action policy. Its diagram
-runtime pins Mermaid and D3 to exact-version jsDelivr paths and disables unused
-ELK. Pull request 13 passed complete ready-state acceptance and squash-merged as
-`b50e665`; exact-main Pages run `32565940418` then built and deployed the public
-site. Exact-SHA API, HTTP, content, asset, canonical-link, and real-browser
-diagram checks passed. The separately authorized homepage now matches the
-returned Pages URL, Wiki remains off, and the append-only closure checkpoint
-records the stable live evidence.
-
-`PRODUCTION_CONSOLIDATION.md`
-is the authoritative
-mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
-milestone checklist.
+Every accepted workflow needs tested tenant and edition isolation, object- and
+field-level permissions, accountable mutations, recovery and useful failure
+behavior. UI acceptance includes relevant roles, empty/error/stale states,
+keyboard operation and narrow layouts. Native database, restricted-runtime,
+browser, independent-human and deployment-owner evidence remain separate.
+Production cutover additionally needs representative recovery/PITR, retention,
+operational ownership and a convention partner's acceptance.
 
 ## Phase 0: Discovery and risk framing
 
-Outcomes:
-
-- validated department workflows and terminology;
-- first convention and edition configuration;
-- data classification and retention matrix;
-- threat model and permission matrix;
-- architecture prototype for tenant and edition scoping;
-- prioritized first vertical slice.
-
-Exit criterion: Registration, HR, Programme, Front Desk, and IT can each confirm
-that their critical workflow and access boundaries are represented.
-
-Repository status: the research-based baseline, capability map, personas,
-workflows, data model, authorization, privacy, threat, resilience, integration,
-and delivery design are complete. Partner interviews and jurisdiction-specific
-review remain required before this phase can be considered externally
-validated. Foundation implementation may proceed without pretending that
-validation already occurred.
+Validate department workflows and terminology, data classifications, retention,
+threats and access boundaries with a first convention. Existing research and
+design support implementation; partner interviews and jurisdiction-specific
+review are still needed for external validation. Each selected workflow needs a
+bounded adoption and exit story before its implementation is treated as complete.
 
 ## Phase 1: Platform foundation
 
-Outcomes:
-
-- Django project, development environment, CI, and documentation automation;
-- accounts, organizations, convention series, event editions, memberships;
-- capability-based scoped authorization;
-- audit foundation and transactional outbox;
-- OpenAPI conventions and generated client;
-- reference convention test dataset;
-- initial administration shell with embedded convention workflows.
-
-Exit criterion: Automated tests demonstrate tenant isolation and edition
-scoping through API, queries, administration, and audit.
-
-Repository status: the backend foundation and preserved former `/admin/` shell
-with embedded Convention work,
-generated API types,
-reference dataset, authority/audit/outbox spine, supervised worker, and recovery
-drill are implemented. Verified identity, session security, scoped restrictions,
-service notification delivery, safe media processing, privacy operations, and
-closure evidence now extend that foundation. Guided tenant/series metadata,
-searchable ISO/IANA locale setup and a contextual Setup guide reduce
-clean-environment operator error without occupying global administration
-chrome. One collapsible administration navigation, record-oriented Convention
-work inner pages, a separate Forms home section, integrated specialist records,
-and exact-person convention-group access sharing replace the visible
-staff/admin split without introducing page ACLs or Django Groups.
-Active scoped non-staff accounts enter that shell without gaining specialist
-model access; effective grants/assignments drive organization and edition
-navigation, while Django staff/model permission remains a separate boundary.
-The preserved one-shot first-authority operator command/service is no longer
-the normal establishment path under ADR 0040. Its browser ceremony and
-management API are retired; recovery use requires an explicit legacy-
-reconciliation procedure. Authorized leaders can still move editions through
-valid, explained lifecycle transitions without directly editing lifecycle
-fields.
-ADR 0039 reintroduces that shell as the single management surface. Its
-current services, APIs, policy checks, audit, and effects remain authoritative;
-pre-reset screens supply layout and interaction grammar rather than a parallel
-domain implementation. Backend route ordering, platform/scoped-nonstaff/staff
-permissions, sidebar behavior, Convention work, specialist-record gating, and
-frontend checks pass. The pre-hardening isolated suite/coverage baseline,
-populated/fresh migrations, local restore through the representation boundary,
-clean dependency audits, responsive smoke, and the final 792-test/90.01-percent
-coverage gate pass locally without warnings. Accessibility, representative
-restore/PITR, and complete visual-state evidence remain open. Broad user/staff activity
-projections beyond the implemented registration actions also remain before
-this phase is treated as complete across the whole product.
-
-The accepted platform setup record journey implements **Platform administration
-home** organization inventory, complete Draft creation through **Create
-organization**, **Organization record** maintenance for public identity,
-legal/imprint, contact, and locale defaults, **Create convention series** for a
-recurring public convention brand, versioned **Convention series record**
-maintenance and edition inventory, shared HTML/API **Create event edition**, and
-versioned **Event edition record** maintenance plus explicit working context. A
-confirmed empty Draft can be deleted, but a created series or any other
-protected relationship refuses deletion. Series creation generates scoped
-identity and audit evidence only. Edition creation starts one Draft identity
-with idempotency receipt, audit, domain event, and outbox; it does not create
-registration, programme, venue, people, or workforce records. The Access
-component now resolves platform, Board, exact-edition, exact Department, typed
-resource, self, attendee/public, safeguarding, security, and fixed-policy
-contexts. Named relationship reads are audited, and signed exact-person or
-immutable-role preview is capped and read-only; it never creates page ACLs or
-changes the session principal. Draft organizations created during this interval
-must be brought under the IDN-012 truthful accountable-representation invariant
-before activation.
-
-The accepted Representation & access contract is the first Phase 1 scope-v2 slice. It separates
-the accountable representation aggregate from membership, departments,
-participation, and generic role sharing; requires existing active verified
-person accounts and invitee-owned versioned decisions; and defines atomic
-two-or-more-controller activation with value-minimized audit/outbox evidence.
-The local-only synthetic demo establishes two controllers per organization
-through these real services rather than forcing Active state.
-The working-tree implementation passes schema drift, tenant/principal non-
-disclosure, core concurrency/replay, platform exclusion, cross-approval,
-rollback, scoped-shell, populated/fresh migration, local restore through
-organizations `0009`, bounded sensitive-read/denial audit, IDN-011 database
-subject guards through organizations `0012` plus participation `0004`,
-registration `0031`, and workforce `0003`, and desktop/390-pixel smoke gates.
-The readiness/core focus passes 10 tests, the representation/platform matrix
-passes 126 tests, the ordered migration-contamination regression passes 26
-tests, and the final consolidated backend gate passes 792 tests in 329.21
-seconds with 90.01 percent coverage and no warnings. A separate behavior run
-passes the same 792 tests in 291.86 seconds. Representative restore/PITR,
-accessibility, complete visual-state, and owner-rehearsal gates remain.
-
-The later ADR 0041 implementation supersedes that backend baseline: all 876
-tests pass in 458.05 seconds with 90.43 percent branch coverage. The populated
-synthetic database applies the three-migration scope sequence with zero scope
-or representation blockers, and platform/Board browser smoke preserves exact
-foreign-organization denial. ADR 0044's exact-source schema/writer/backfill and
-guarded activation stages are locally verified with synthetic data. Ordinary
-legacy reconciliation, representative unbounded candidate-cardinality load,
-deployment restore/PITR, and an actual production cutover remain open before
-production approval and the contextual hierarchy editor.
-Appointment expiry, routine replacement/removal,
-planned suspension/reactivation, invitation delivery, and the remaining
-specialist relationship resolvers remain later M2 work. The contextual Access
-component and scoped assignment/preview workspace are mounted; deployment-
-shaped accessibility, load, and owner evidence remain.
-
-The Organization structure read projection adds one exact-edition read beneath that
-foundation. Platform oversight remains non-participating; ordinary users need
-edition-wide `workforce.view_structure`, and manage-only, Department-only,
-staff, Board placement, or selected context is insufficient. The page/API show
-one version-fenced complete bounded hierarchy or explicit no-partial overflow,
-retry one aggregate movement, and require a minimized sensitive-read audit
-before disclosure. Focused backend/OpenAPI/frontend/static checks, the
-historical 1,239-test read-projection full suite at 90.35 percent branch
-coverage, and authenticated desktop smoke pass. Department management adds the implemented
-aggregate/receipt schema, stopped-writer migration, template and Department
-commands, shared writer order, snapshot retry, exact runtime trigger-readiness,
-same-shell child forms, and five strict API mutations. Its pre-adapter
-definitive current-graph gate passes 1,471 tests at 90.13 percent branch
-coverage and the mutation API focus passes 48 tests. The adapter-expanded
-definitive repository gate passes 1,693 tests in 1,653.43 seconds at 90.50
-percent total branch-inclusive coverage. Reliable narrow-viewport,
-accessibility, owner,
-production cutover, and recovery evidence remain open.
-
-The committed M1 spine is locally verified across the complete suite, migration rehearsal,
-OpenAPI/client regeneration, deployment-shaped checks, and desktop/390-pixel
-visual smoke. Owner rehearsal, automated accessibility analysis, reliable
-keyboard traversal, and the remaining visual state matrix stay open and no
-production-readiness claim follows from M1. M1.1 repeated backend/frontend,
-coverage, populated-migration, and responsive-smoke evidence after the unified-
-shell migration. The later integrity tree now passes the final consolidated
-local suite and coverage gate; accessibility, complete visual-state,
-representative recovery, and owner evidence remain before release acceptance.
+Maintain reproducible development, scoped identity/organization/edition records,
+authorization, Audit, reliable effects, OpenAPI clients, synthetic fixtures and
+the shared shell. Demonstrate tenant and edition isolation through commands,
+queries, APIs, administration and Audit. The historical
+[foundation backlog](BACKLOG.md) records its original acceptance contracts;
+it is not the active work queue.
 
 ## Phase 2: Registration vertical slice
 
-Outcomes:
-
-- products and entitlements;
-- registration lifecycle;
-- payment-provider adapter;
-- badge generation;
-- check-in and degraded-operation design;
-- Front Desk and Registration search;
-- exports and personal history foundation;
-- edition closing and archival rehearsal.
-
-Exit criterion: A synthetic convention can register, pay, check in, close,
-archive, and display participation history end to end.
-
-Repository status: versioned forms, phased volunteer/early-bird/normal offers,
-payment reservations and expiry, FIFO waitlists, controlled deadlines and
-waivers, complete headless submission, hosted payment intent/authenticated
-webhook, operational finance/receipts/refund/dispute/settlement, canonical
-inbox/email delivery, entitlement, minor/guardian flow, safe moderated media,
-privacy correction/retention receipts, credentials, signed offline check-in,
-closure manifest, public reference definition, explicit prior-profile
-suggestions, current-edition profile self-service, structured
-pronoun/language/fursuit data, separately consented public country and
-authoritative attendee labels, minimized public attendee list, staff
-reconciliation, attendance/country reporting, and badge-data CSV are
-implemented. The `/admin/` workspace now provides the five-gate closeout review
-without raw organization/reviewer IDs or manual timestamps; the corresponding
-Advanced-record table is inspection-only. Staff-assisted intake can
-exact-match an active identity or
-explicitly and atomically create a previously unseen unverified account; draft
-form items are removable, and telephone entry is country-aware with E.164
-storage. Reviewed post-submission profile extensions let attendees or
-registration staff append missing edition information under per-field writer
-policy without changing the immutable submission. Authoritative Infinity,
-payment, entitlement, capacity, role, and restriction facts cannot be
-reintroduced as extension fields.
-
-ADR 0047 and the Registration setup and account onboarding contract remain the canonical remount and writer-
-cutover target. The working tree now mounts the platform Accounts inventory,
-recipient-owned invitation and delivery flow, one edition-scoped Registration
-workspace, copy-on-write blank/prior/template setup, the immutable
-`convention-registration` starter, governed definition/lifecycle commands, and
-closed profile-extension reader and writer policies. Profile values use
-sequence-fenced append-only revisions, exact self/staff/Department policy,
-audited projections, strict API adapters, and same-shell self/staff editing.
-Direct compatibility-writer retirement, stopped-writer activation, the final
-configuration successor/cutover stages, and approved invitation-retention
-activation remain open and must not be inferred from the mounted journeys.
-
-ADR 0050 adds the bounded admission-commerce slice: same-attendee upward tier
-replacement with target hold and authenticated exact-difference payment,
-append-only effective capacity under hard ceilings, and operator-selected
-batch size with strict FIFO people selection. A separate edition-owned catalog
-supports merchandise, donations, confirmed-charity beneficiaries, finite
-supporter stock, owned orders, payment evidence, and staff activity without
-turning catalog items into admission entitlements. These are executable
-same-shell/API journeys, not a claim that refunds, exchange, shipping,
-fulfilment, charity settlement, or statutory accounting are complete.
-
-The repository-controlled registration slices are substantial, but the phase
-exit criterion is not an automatic production approval. A real payment
-provider and webhook credentials must be certified; workers, SMTP, object
-storage/scanning, telemetry, relay, devices/printers, and approved retention
-policies must be provisioned; representative load must be measured; and
-partner privacy, finance, security, safeguarding, jurisdiction, operations,
-accessibility, recovery, and go/no-go review must pass. Admission transfer and
-downgrade, unpaid-order expiry/cancellation, refunds/exchanges, badge
-layout/printing, and broader fulfilment remain explicit product gaps.
+Complete products and entitlements, registration, an optional payment adapter,
+badges, check-in, Front Desk search, personal history, exports and edition closing.
+Acceptance follows a synthetic person through the selected journey, including
+exceptions, degraded operation, closure and archive. Existing backend kernels
+do not establish complete ordinary-person, provider or production acceptance.
+Registration without payments must remain a valid independent adoption choice.
 
 ## Phase 3: Programme and workforce
 
-Outcomes:
+Complete optional Programme setup, event submissions and review, accepted content,
+conflict-aware scheduling, volunteer recruitment/onboarding, qualifications,
+availability, shifts and work records. Include useful public, personal,
+department, room and print projections and team communications.
 
-- a progressively adoptable Programme Operations profile from setup through
-  on-site continuity;
-- programme submission and review;
-- HR application and onboarding pipeline;
-- qualifications, availability, shifts, and work records;
-- shared conflict-aware timetable;
-- attendee, personal, department, venue, and print projections;
-- internal messaging and team inboxes.
-
-Exit criterion: A Programme department can start without attendee systems,
-move a proposal through reviewed accepted content into one approved timetable,
-staff it with purpose-scoped volunteers, use accessible public/personal/
-department/venue/print projections on site, and recover or stop safely with
-complete history.
-
-Repository status: the first workforce onboarding slice is implemented:
-one-shot empty-organization chair bootstrap, reusable furry-convention
-position templates, edition department/reporting hierarchy, publishable
-position opportunities, applications, reviewed PDF agreements, headcount, and
-dual-controlled role activation with profile-matched Participation evidence.
-The old one-shot bootstrap remains
-only as an operator command/service for an approved legacy reconciliation; its
-guarded browser ceremony and management API are retired. The canonical
-Organization structure page shows the minimized accountable-representation
-anchor above nested Departments, Positions, current permitted holders, and
-multi-department roles under exact edition scope. The old duplicate Convention
-work destination is removed. The Department management aggregate, built-in-template
-application, Department create/update/reparent/reorder/retire/protected-delete
-commands, writer reconciliation, versioned read retry, and database/runtime
-trigger contract are now exposed through strict same-shell HTML and versioned
-API adapters. The browser assigns sibling placement automatically while the API
-retains explicit bounded ordering. Their definitive adapter-expanded repository
-and coverage gate passes; authenticated responsive acceptance is still pending.
-Position management now provides purpose-built creation, complete operational
-editing, volunteer-opportunity publication, protected one-way closure, direct
-reason history, shared strict HTML/API commands, and database-enforced command
-evidence. Assignment management now provides relationship-bounded proposal,
-separate stepped-up approval or rejection, atomic activation, retained ending,
-subject self-service, shared strict HTML/API commands, and database-enforced
-command evidence. Qualifications, person-owned availability, shifts, work
-records, notifications, and the programme/schedule side of this phase remain.
-
-ADR 0051 now supplies a bounded typed Applications studio with immutable
-platform starters copied into edition-owned drafts, closed field vocabularies,
-eligibility/cardinality/windows, exact owner Departments, named or immutable-
-role reviewers, append-only answers/decisions, and organizer/applicant/reviewer
-same-shell journeys. Acceptance writes a typed transition receipt only; actual
-programme, workforce, SecOps, merchandise, and other target adapters remain
-separate work. Configurable staff answer-correction windows, full structured
-review rubrics/conflict handling, and the shared programme/workforce lifecycle
-therefore remain open.
-
-ADR 0053 supplies the reusable venue catalog and an operational booking slice:
-edition space selections snapshot physical members, hard availability and
-configured/fire capacities are enforced, setup/effective/teardown conflicts
-are transactionally checked, and independent approval/publication feeds a
-minimized public and participant-scoped My schedule. It is not yet the shared
-programme timetable: programme ownership, release comparison, person/
-equipment/qualification conflicts, operational layers, and calendar/signage/
-print exports remain open.
-
-ADR 0081 now fixes the Programme Operations ownership and adoption contract
-before implementation. Applications retains proposals and review evidence;
-Programme owns accepted items, hosts, readiness, operational layers, and
-approved public copy; Scheduling owns service days, occurrences, placements,
-candidate/conflict evidence, immutable releases, and projections; Venues owns
-physical-space approval and occupancy; Workforce owns staffing relationships,
-Availability, Shifts, and work history. Programme-linked Venue bookings cannot
-publish a competing public schedule, and Workforce profiles without attendee
-Participation must retain null assignment-capacity evidence. The first
-contract child is issue #57 under umbrella #48. Issue #59 completed the exact-
-manifest prerequisite. Issue #61 implements the dormant private Programme
-item/readiness foundation, including organizer-created core-item semantics and
-public-copy approval, while both current profiles deny its commands and its
-runtime database role remains read-only. Issue #63 adds dormant Applications-
-owned calls, purpose-scoped proposal collaboration, exact sealed revisions, and
-included-collaborator acknowledgements without creating hosts. Issue #66 adds
-dormant preview-first call/proposal staging, non-disclosing preview, protected
-apply, exact-self claim, permanent source binding, and continuity disposal
-without mounting an import surface. Issue #64 implements Department-retirement
-coordination and governed ownership recovery. Issue #71 implements dormant
-staged review and accountable decisions. Issue #77 adds the dedicated accepted
-Applications adapter: one exact effective acceptance produces one private
-source-bound item with seven initially required readiness concerns, without
-activating a profile or creating hosts. Issue #79 delivers Programme-owned host
-relationships and deliberately shared availability under ADR 0087. Issue #81
-delivers Scheduling candidates, conflict evaluation and governed Venue binding.
-Issue #85 delivers the dormant accessible editor; #87 records assisted
-pre-activation browser checks delivered through PR #90. Issue #88 delivers
-governed staffing. Issues #91/#94/#96 deliver release preparation, review and
-atomic publication/invalidation. Issue #99 delivers public and exact-person
-output; #100 adds independently authorized room, Department and edition operator
-run sheets under ADR 0099. #104 adds governed change communication and exact-self
-acknowledgement under ADR 0102. #107 delivers on-site continuity; #108's dormant
-guided item, Applications, review, file and owner-task connections are delivered.
-Atomic setup, optional scoped role definitions and retained independent-approval
-storage are dormant foundations. Actual-person request/decision commands now
-compose exact existing authority owners. Required native acceptance is restored;
-its current candidate-specific results belong in CURRENT and the checkpoints.
-Protected own-request readers and actual-person review controls are implemented
-dormant. The guided foundation creation/reuse screen and original-actor receipt
-now hand off to existing truthful representation controls. Guided operational
-request creation previews exact known people and scope before retaining original
-intent for the named approver's own decision. A dormant labelled scope chooser now
-connects independently admitted Department, Edition, shared Organization Venue and
-selected-room access requests/reviews without pasted identifiers. Dormant shared-shell
-entry composition now independently admits fixed Programme tasks and discovers
-narrow-role edition contexts; search and pins reuse the same current projection.
-Neither current profile nor production routing changes. Shared navigation is delivered
-through PR #163. The isolated fixture now composes accountable setup through
-on-site outputs, continuity, archive, active/stopped logical recovery and stop-use.
-Its recorded native continuation and bounded isolation probes do not replace
-complete exact-head acceptance, representative humans or visible-browser evidence.
-PR #199 delivered this bundle with full exact-head local and hosted acceptance;
-the eighteen-phase host-only journey supplies its separately attributed automated
-proof. This is not an activated departmental workflow. Complete #92's genuine
-human acceptance and reconcile the joined #109 evidence before #108's final
-profile promotion. The
-[integrated rehearsal protocol](../operations/programme-integrated-rehearsal.md)
-defines the evidence sequence and links exact executed results and their limits.
-Each child keeps explicit verification and closure criteria, including when
-several related outcomes share one protected delivery bundle.
-
-The reviewed legacy prototype supplies behavior-level acceptance input for
-this phase: proposal revision history; an explicit approved-to-programme
-transition; service days, layers, recurrence and ordered groups; shared
-attendee/person/department/venue/print projections; conflict explanations;
-and transactional volunteer demand, claim, confirmation, removal, lock and
-completion states. These are to be implemented in current owning modules and
-must not import the prototype's global-project or cross-domain-save design.
+The Programme outcome is one approved timetable that a department can staff and
+operate on site without attendee systems, then recover or stop using safely.
+Issue #48 remains deferred. Its open #92 human acceptance, #109 integrated
+evaluation and #108 final activation must be reconciled before promotion.
+Use the [acceptance evidence map](../operations/programme-acceptance-evidence.md)
+and [maintainer walkthrough](../operations/programme-maintainer-walkthrough.md)
+when resuming. Logical restore evidence does not replace production/PITR proof.
 
 ## Phase 4: Operational platform
 
-Outcomes:
+Complete dealer/table planning, Announcements and selected external delivery,
+signage, stage technical planning, operations requests, assets/lost and found,
+safe department reporting and portable runbooks. For each adopted workflow,
+people must be able to rely on its records through a real handover and degraded
+operation, without maintaining a second authoritative spreadsheet.
 
-- dealers and table planning;
-- canonical announcements and external connectors;
-- signage;
-- stage technical planning;
-- operations cases, assets, and lost and found;
-- safe query builder and department dashboards;
-- mature export templates and runbooks.
-
-Exit criterion: Core onsite departments can operate from Maru without parallel
-spreadsheets being their authoritative source.
-
-Behavior-level inputs retained from the legacy prototype include reusable
-venue facts with explicit edition selection and overrides, canonical scheduled
-announcements with per-channel delivery evidence, credentialed minimized read
-projections, rotation/access telemetry, preview-first imports, and archive
-views. Current tenancy, authorization, privacy, audit, connector, and closure
-requirements remain authoritative.
-
-Repository status: reusable properties, sites, buildings, spaces,
-configurations/combinations, reviewed media/layout references, accommodation
-room-night inventory, edition selections, hard availability, and physical
-occupancy are now current module behavior rather than prototype-only input.
-The bounded Logistics module implements person-owned equipment offers,
-restricted retention-bound contacts, typed acyclic storage/vehicle/venue
-nodes, serialized assets and stock lots, physical keys and keyholders,
-loan/rental return obligations, kits, manifests, append-only movement/custody
-events, discrepancies, Stage Tech receiving, and bounded offline
-reconciliation. Demand/reservation planning, driver/route optimization,
-supplier invoice linkage, low-stock/wastage policy, and complete loss/disposal
-workflows remain partial or absent; broader Phase 4 operations still cannot
-discard their spreadsheets solely because this kernel exists.
-Its installed migration/auth/API/UI, readiness, runtime-role, navigation, and
-demo-seed acceptance matrix passes 26 of 26 cases. The canonical repository
-gate and scoped authenticated read-only browser journey at 1,920 and 390 pixels
-also pass; broader mutation-role, visual-state, keyboard/accessibility, restore/
-PITR, owner, and deployment evidence remain separate gates.
+Existing Venue and Logistics kernels supply reusable facts and bounded inventory,
+custody and movement behavior. Demand/reservation planning, transport routing,
+supplier-invoice links, low-stock/wastage rules and full loss/disposal workflows
+still need complete selected journeys. A kernel does not make all of on-site
+operations ready to adopt.
 
 ## Phase 5: Extended convention ecosystem
 
-Possible outcomes, prioritized by partner need:
+Choose the next complete capability according to a convention's need: merchandise
+and fulfilment; charity and art auctions; activities; guests and travel; volunteer
+meals and rewards; accounting/logistics integrations; or supported extensions.
+Define acceptance separately for each choice rather than promising every feature.
 
-- merchandise and fulfilment;
-- charity and art auctions;
-- activities and achievements;
-- guest and travel coordination;
-- volunteer rewards and meals;
-- deeper accounting and logistics integrations;
-- supported extension SDK.
+The charity directory and edition catalog are bounded foundations. Campaigns,
+donation/settlement reconciliation, auctions, refunds/exchanges, supplier and
+shipping fulfilment, handover and accounting export retain their separate scope.
+Media/layout references do not constitute an upload, malware-scanning, object
+storage or rendition service. Regulated payment processing, statutory accounting,
+emergency services and specialist creative tools remain integration boundaries.
 
-Exit criterion: Defined per selected capability; this phase is not a promise to
-implement every possible feature.
-
-Repository status: reusable governed charity partners and independently
-reviewed edition publication now satisfy the bounded FUR-011 directory
-workflow, and the edition catalog provides an owned ordering/stock/payment
-slice. Charity campaigns, donated-value/cost/settlement reconciliation,
-auctions, refunds/exchanges, supplier and shipping fulfilment, handover, and
-accounting export remain future workflows. Media and layout records retain
-governed source/rendition references; they do not constitute the production
-object-storage, upload, malware-scanning, or rendition pipeline.
-
-The more detailed, vertical sequence is maintained in
-[`DELIVERY_PLAN.md`](DELIVERY_PLAN.md); implementation-ready foundation work is
-in [`BACKLOG.md`](BACKLOG.md).
+The [delivery plan](DELIVERY_PLAN.md) retains the broader lifecycle catalogue;
+the [capability map](../product/capability-map.md) describes the product horizon.
+Neither supersedes the active priorities or acceptance boundaries above.

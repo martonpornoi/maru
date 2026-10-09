@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-09
+Last updated: 2026-10-10
 Phase: Guides native repair and Announcements certification.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -45,8 +45,9 @@ closure verified without setup or database access. All 14,156 database-free case
 now pass in 121.41 seconds, with typing across 881 files, lint, formatting, Python
 documentation and reference checks. Source inventories match and the fresh
 handbook build passed. A later punctuation-only encoding repair passes all 19
-documentation-policy cases and reference checks; final documentation verification
-will follow the integrated usability changes. Native gates remain open.
+documentation-policy cases and reference checks. Fresh documentation verification
+of the saved usability changes and roadmap cleanup passed as recorded below.
+Native gates remain open.
 The [identity/routing checkpoint](../checkpoints/2026-10-09-guides-event-identity.md)
 and [ACL checkpoint](../checkpoints/2026-10-09-guides-aggregate-execute-hardening.md)
 retain actual failures, timings and acceptance limits. Genuine runtime/browser,
@@ -59,7 +60,10 @@ and KNO-010-013/EVT-008 define internal reviewed guides, current-only reading,
 contextual placement, withdrawal, portable outputs and separately accepted
 responsibility. Local preservation snapshot
 `4c4393ec4cba6607f6c08cf725ebb8ad12689ec1` retains the pagination, observation,
-native and usability repairs. It is not native or protected delivery acceptance.
+native and usability repairs. The follow-up usability snapshot
+`aaa74c44da4bd01dfac84397e750d3efaaf9fc10` is also committed and preserved with a
+verified bundle and updated Announcements-to-Guides patch. Neither snapshot is
+native or protected delivery acceptance.
 
 Earlier combined feedback passed 14,090 database-free cases, typing across 880
 source files, lint, Python documentation, fresh warning-fatal handbook and 108
@@ -105,10 +109,23 @@ and unchanged dedicated request/removal links. No actions were submitted; the
 owned tab/server were closed. The earlier 24 theme checks remain bound to their
 pre-copy source. See the [Access wording checkpoint](../checkpoints/2026-10-09-guides-access-language.md).
 
+## Roadmap focus
+
+The roadmap now presents seven priorities, progressive adoption and the six
+historical phases in 182 lines, replacing duplicated PR/test chronology. Exact
+profile meanings, Programme deferral and separate acceptance gates remain explicit;
+requirements, owning contracts and checkpoints retain their authority. No code,
+profile, runtime permission or verification gate changes. The
+[roadmap checkpoint](../checkpoints/2026-10-10-roadmap-focus.md) records this cleanup.
+All 19 documentation-policy cases pass in 0.49 seconds; reference validation covers
+732 Markdown files, four skills and 223 requirement IDs. A fresh warning-fatal
+handbook build passed in 213.422 seconds with all 3,180 inventoried source files
+unchanged. The later result-prose update is separately hash-bound.
+
 ## Smallest next actions
 
-1. Preserve the coherent theme/Access-copy follow-up and its distinct source
-   and component evidence. Keep native failures and acceptance gaps intact.
+1. Preserve the verified three-file documentation follow-up.
+   The earlier source/usability snapshots and their evidence are already saved.
 2. When Announcements releases capacity, run fresh Guides workflow and recovery
    regressions, then genuine restricted-runtime setup and separate-person browser
    roles with retained Announcements history and a third reader.
