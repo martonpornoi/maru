@@ -58,3 +58,46 @@ required certification of its exact source. Do not reuse the failed candidate's
 partial results as acceptance. Draft PR #210 remains blocked until full local
 and independent hosted acceptance succeed. Independent human, specialist
 accessibility, native-print and production acceptance remain separate.
+
+## Follow-up: retain a Programme edition before successor DDL
+
+The fresh full run for `94646aa5180e532d6854d1e16c447e12005cef76`
+passed the previously failing archive case and twelve native shards, plus
+13,806 units. Shard 13 exposed a second joined reversal boundary:
+`test_any_retained_programme_edition_fences_assignment_downgrade` reached a new
+Events constraint alteration before Workforce 0029 could refuse the retained
+Programme edition. PostgreSQL correctly rejected DDL with pending trigger events.
+This was a failure, not a successful rollback rehearsal or a timing shortage.
+Seven running shards were cancelled. All twenty started shard containers were
+removed; no aggregate coverage or successful receipt exists for that source.
+
+The complete failed artifact tree, log and source bundle were preserved before
+repair; SHA256 verification covered 4,280 files and 174,521,351 bytes. The new
+preflight locks event editions and retains a bare Programme edition even before
+assignment evidence exists. It copies only the older data-only refusal, never
+calls the older mutating reverse operation, and keeps its original message.
+The original native test now also requires the entire migration recorder to
+remain unchanged. The Events source fingerprint was refreshed accordingly.
+
+Focused readiness/recovery units pass 65 cases. An expanded native batch covering
+both failures, assignment reversal, retained authority and Announcements recovery
+is in progress. A new full exact-commit run and independent hosted acceptance are
+still required after the final coherent repair is frozen.
+
+The expanded PostgreSQL 17.11 batch passed 27 cases in 436.79 seconds. Reviewing
+the complete new predecessor set then added the frozen Organizations 0015 and
+Authorization 0041/0042 preflights, protecting representation and access evidence
+that can exist before any Announcements edition. Two new native tests use no
+outer rollback, so an earlier committed successor reversal cannot be hidden by
+the test harness. They require the entire recorder and native readiness to remain
+unchanged after refusal.
+
+The final focused batch passed seven native cases in 278.43 seconds: both original
+certification failures, unused assignment reversal, unused/used Announcements
+reversal, and the two pre-edition foundation refusals. Final readiness/recovery
+units pass 65 cases in 1.07 seconds. Both disposable databases were removed.
+The final Events 0021 source pin is
+`f0fb832ba3a4495dc4ca7bcfad3f15a66dc28fa02e94de546ad55097cef19ff0`.
+No previous owner SQL, runtime privilege, quality threshold or timeout changed.
+A new complete certification still has to certify the frozen repair; these
+focused results do not certify the failed candidate or close Programme #48.

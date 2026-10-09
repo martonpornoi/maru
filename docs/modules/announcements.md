@@ -148,6 +148,10 @@ The Announcements leaf runs its own retained-history refusal, the frozen
 Announcements setup preflight and the complete frozen Events 0018 recovery
 preflight before any successor reverses. A downgrade aimed at an older joined
 Programme owner must not first remove unused Announcements guards or migration
-records. Existing owner refusal messages and locks remain authoritative. Empty
+records. It also retains a bare Programme edition covered by Workforce 0029,
+before any assignment exists; no mutating reverse operation is called to perform
+that data-only check. The new Organizations and Authorization preflights also
+protect Announcements representation and access records created before any edition.
+Existing owner refusal messages and locks remain authoritative. Empty
 joined installations can reverse and reapply; retained joined evidence requires
 fix-forward or a consistent restore. This does not activate Programme.

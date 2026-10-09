@@ -53,16 +53,24 @@ cases after the whole unit run; final certification will include it. Native prin
 Exact-commit certification and hosted acceptance still remain; these development results are not production activation or independent
 human acceptance.
 
-The first full certification of `633fab42736d8d34d3112bac23947d19d449b27a`
-stopped on a retained-recovery ordering regression. Its 13,806 unit and 108
-frontend cases and repository quality gates passed; nine PostgreSQL shards
-completed before one failure cancelled seven in-flight shards. No successful
-certification receipt was issued. The complete failed artifacts, exact source
-bundle and verified hashes are preserved. New Announcements/Events successors
-must call the frozen joined recovery preflight before any newer guard or migration
-record can reverse. The focused repair passes 65 unit cases and 20 native cases (384.47 seconds);
-a fresh exact-commit full certification and hosted acceptance remain mandatory. See the
-[repair checkpoint](../checkpoints/2026-10-09-announcements-recovery-fence.md).
+Two exact-commit certification attempts have exposed joined recovery ordering
+regressions; complete failed artifacts and source bundles are preserved. Candidate
+`633fab42736d8d34d3112bac23947d19d449b27a` failed when retained Programme history
+was checked only after newer Announcements guards had reversed. The first repair
+passed 65 units and 20 native cases. Its fresh full run at
+`94646aa5180e532d6854d1e16c447e12005cef76` passed that original failure and twelve
+native shards, then a bare Programme edition reached Events constraint reversal
+before Workforce's existing refusal. PostgreSQL rejected pending trigger events.
+No successful certification receipt or aggregate coverage exists for either run.
+
+The follow-up preflight retains that edition before schema alteration; it does not
+flush pending triggers or call a mutating reverse operation to check for evidence.
+The expanded native batch passed 27 cases; the completed preflight then passed
+seven final native cases in 278.43 seconds, including retained representation and
+access records before event setup. Final readiness/recovery units pass 65 cases.
+Both disposable databases were removed. Freeze the complete repair for a fresh
+full certification and independent hosted acceptance; [the repair checkpoint](../checkpoints/2026-10-09-announcements-recovery-fence.md)
+retains exact failure and repair evidence.
 
 ## Starting baseline and verification
 
