@@ -144,3 +144,66 @@ def test_incremental_phases_survive_without_a_successful_final_report(tmp_path):
     assert not evidence.exists()
     with pytest.raises(FileExistsError):
         runner.CollectionBoundary({}, (), (), evidence)
+
+
+def test_historical_density_is_bounded_even_when_cost_estimates_are_small():
+    selected = groups(33, 1) + tuple(
+        replace(group, key="current-" + group.key, historical=False, weight=300)
+        for group in groups(20)
+    )
+    shards = budget.budget_partition(selected)
+    assert budget.MAX_HISTORICAL_GROUPS_PER_SHARD == 2
+    assert all(sum(group.historical for group in shard) <= 2 for shard in shards)
+    assert Counter(group.key for shard in shards for group in shard) == Counter(
+        group.key for group in selected
+    )
+    assert shards == budget.budget_partition(tuple(reversed(selected)))
+    assert all(shards)
+    assert all(budget.predicted_seconds(shard) <= 3600 for shard in shards)
+
+
+def test_historical_density_cannot_exceed_total_bounded_shard_capacity():
+    with pytest.raises(ValueError, match="capacity"):
+        budget.budget_partition(groups(257, 1))
+    assert len(budget.budget_partition(groups(256, 1))) == 128
+    assert budget.MAX_WORKERS == 8
+
+
+def test_current_only_inventory_retains_the_existing_budgeted_assignments():
+    selected = tuple(replace(group, historical=False) for group in groups(24))
+    shards = budget.budget_partition(selected)
+    assert shards == budget.partition_groups(selected, 8)
+
+
+def test_historical_density_is_bound_into_the_frozen_manifest(monkeypatch):
+    monkeypatch.setattr(budget, "source_fingerprint", lambda _: "a" * 64)
+    selected = groups(4, 1)
+    before = budget.execution_plan(selected, history="all", base="b" * 40)
+    assert before["max_historical_groups_per_shard"] == 2
+    monkeypatch.setattr(budget, "MAX_HISTORICAL_GROUPS_PER_SHARD", 1)
+    after = budget.execution_plan(selected, history="all", base="b" * 40)
+    assert before["shards"] == after["shards"]
+    assert before["fingerprint"] != after["fingerprint"]
+
+
+@pytest.mark.parametrize("limit", [0, -1, True, 1.5, "2"])
+def test_invalid_historical_capacity_fails_before_execution(limit):
+    with pytest.raises(ValueError, match="historical group capacity"):
+        budget.partition_groups(groups(2), 2, max_historical_groups=limit)
+
+
+def test_capacity_preserves_indivisible_shared_baselines_and_parameter_groups():
+    shared = Group(
+        "tests/integration/test_shared.py::history",
+        "tests/integration/test_shared.py",
+        historical=True,
+        weight=400,
+    )
+    selected = (shared, *groups(5, 100))
+    shards = budget.partition_groups(selected, 3, max_historical_groups=2)
+    assert sum(group is shared for shard in shards for group in shard) == 1
+    assert Counter(group.key for shard in shards for group in shard) == Counter(
+        group.key for group in selected
+    )
+    with pytest.raises(ValueError, match="historical group capacity"):
+        budget.partition_groups(selected, 2, max_historical_groups=2)

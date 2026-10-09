@@ -51,6 +51,23 @@ success receipt and push readiness even when assertions pass. Replan or optimize
 before retrying. A successful local receipt still does not replace GitHub's
 independent exact-head gate or guarantee a particular hosted runner speed.
 
+## Historical work density refinement (2026-10-09)
+
+Keep at most two complete historical work groups in a budgeted shard, in addition
+to the existing cost limit. Raise the minimum partition size only as required by
+that capacity. A reviewed shared baseline or parameterized function remains one
+indivisible group. The deterministic frozen manifest includes this limit, so local
+and hosted planning independently agree on the same assignments and policy.
+The 128-shard ceiling, eight workers, estimates, timeout and measured headroom
+remain unchanged. Too many groups fail planning instead of dropping work.
+
+The Announcements candidate passed 63 full-run shards before shard 64 reached
+its 3,200-second measured limit during final restoration. All three historical
+test bodies had passed. The unchanged isolated diagnostic then completed in
+2,279.203 seconds. That result supports reducing serial migration density; it
+does not establish the sole cause or certify the concurrent plan. The refinement
+requires a fresh full run. Partial evidence does not refresh the timing map.
+
 ## Consequences
 
 Suite growth changes the number of bounded jobs rather than silently consuming

@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 MAX_WORKERS = 8
 MAX_SHARDS = 128
+MAX_HISTORICAL_GROUPS_PER_SHARD = 2
 TARGET_SECONDS = 3600
 OVERHEAD_SECONDS = 600
 SLOWDOWN_FACTOR = 1.5
@@ -54,10 +55,17 @@ def budget_partition(
     ]
     if oversized:
         raise ValueError(f"indivisible groups exceed the runtime budget: {oversized}")
-    minimum = min(MAX_WORKERS, len(groups))
+    minimum = max(
+        min(MAX_WORKERS, len(groups)),
+        math.ceil(
+            sum(group.historical for group in groups) / MAX_HISTORICAL_GROUPS_PER_SHARD
+        ),
+    )
     maximum = min(MAX_SHARDS, len(groups))
     for count in range(minimum, maximum + 1):
-        shards = partition_groups(groups, count)
+        shards = partition_groups(
+            groups, count, max_historical_groups=MAX_HISTORICAL_GROUPS_PER_SHARD
+        )
         if all(predicted_seconds(shard) <= TARGET_SECONDS for shard in shards):
             return shards
     raise ValueError(
@@ -163,6 +171,7 @@ def execution_plan(
         "base": base or None,
         "source_fingerprint": source_fingerprint(root),
         "max_workers": MAX_WORKERS,
+        "max_historical_groups_per_shard": MAX_HISTORICAL_GROUPS_PER_SHARD,
         "target_seconds": TARGET_SECONDS,
         "overhead_seconds": OVERHEAD_SECONDS,
         "slowdown_factor": SLOWDOWN_FACTOR,

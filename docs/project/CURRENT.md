@@ -72,6 +72,26 @@ Both disposable databases were removed. Freeze the complete repair for a fresh
 full certification and independent hosted acceptance; [the repair checkpoint](../checkpoints/2026-10-09-announcements-recovery-fence.md)
 retains exact failure and repair evidence.
 
+## Announcements scheduling repair
+
+Commit `0eabf43b421804aed1ef7db7bec0c5603f7c299c` failed full certification
+on measured timing headroom after 63 native shards passed. Shard 64 passed all
+three test bodies but exceeded 3,200 seconds during final restoration. Its full
+4,694-file evidence tree, console and exact source archive are preserved and
+hash-verified; no successful receipt exists. An unchanged single-shard diagnostic
+then passed all three cases and cleanup in 2,279.203 seconds, removing its owned
+container. That diagnostic does not replace full concurrent acceptance.
+
+ADR 0098 now limits each budgeted shard to two complete historical groups as well
+as its existing cost budget. The same 374 groups, including 106 historical groups,
+produce 77 rather than 74 jobs; maximum concurrency remains eight and every
+runtime/coverage requirement remains unchanged. The estimates and provenance map
+are untouched. [The scheduling checkpoint](../checkpoints/2026-10-09-historical-shard-density.md)
+records the diagnostic and preserved failure. The repair passes 121 focused
+policy cases and all 13,816 unit cases in 73.91 seconds; lint, formatting,
+documentation references and its Python documentation contract pass. A clean
+full certification and independent hosted acceptance remain. PR #210 stays draft.
+
 ## Starting baseline and verification
 
 PR #209 passed complete local and independent hosted acceptance before protected
