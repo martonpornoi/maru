@@ -14,7 +14,11 @@ At the start of every material task:
 5. Inspect the current code and tests before proposing implementation.
 
 Do not infer current state from conversation history when the repository
-contains a newer checkpoint.
+contains a newer checkpoint. Read the roadmap's active direction and the sections
+relevant to the task; search stable requirement identifiers and ADR subjects
+before loading unrelated history. Keep one active delivery outcome, use focused
+checks during iteration, and exercise visible changes in the browser early.
+The full certification and protected delivery requirements remain unchanged.
 
 ## Repository skill routing
 
