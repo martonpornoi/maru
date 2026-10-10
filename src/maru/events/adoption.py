@@ -918,6 +918,15 @@ SELECTABLE_ADOPTION_PROFILE_CHOICES = tuple(
 )
 
 
+# Dedicated setup remains selectable, but generic creation cannot retain its
+# purpose-specific representation and complete setup evidence.
+GENERIC_EDITION_ADOPTION_PROFILE_CHOICES = tuple(
+    (code, label)
+    for code, label in SELECTABLE_ADOPTION_PROFILE_CHOICES
+    if code != AdoptionProfileCode.ANNOUNCEMENTS_ONLY
+)
+
+
 def _validate_manifest(profile: AdoptionProfile) -> None:
     """Reject an internally inconsistent code-owned adoption manifest.
 

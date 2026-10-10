@@ -323,7 +323,9 @@ architecture documents, implementation issues, tests, and release notes.
   writing, independent review, per-channel manual reports, corrections and exit
   must work without attendee, Registration, payment, Workforce, Programme or
   recipient-notification records. Existing profile versions and unrelated external
-  systems remain unchanged.
+  systems remain unchanged. New Announcements editions and their setup retries
+  must use the dedicated setup boundary; generic edition creation must not bypass
+  purpose-specific representation and complete setup evidence.
 - **ANN-008 — Copy, history and exit:** Authorized users must be able to preview,
   print and download exact approved copy without private review notes. Separately
   authorized handover exports retain version relationships, review and publication

@@ -56,6 +56,11 @@ The new purpose-specific Announcements operators use the existing truthful,
 two-person accountable representation controls; existing Workforce operators and
 exact profile versions retain their previous meaning. Guided setup creates or
 reuses only Organization, Convention series and Event edition foundations.
+The profile is available only through **Set up Announcements**, including exact
+setup retries. Generic edition forms and API creation choices omit it, and their
+shared command rejects crafted requests before persistence. The dedicated command
+admits its child edition creation within the same atomic setup that provisions
+the truthful representation and retains the complete setup receipt.
 
 ## Data, retention and external effects
 

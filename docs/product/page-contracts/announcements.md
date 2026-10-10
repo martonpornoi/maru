@@ -19,6 +19,8 @@ always visible. The starting explanation is: "Prepare announcements here, then
 publish them through your existing channels." No unrelated adoption is suggested.
 Setup names the foundation it creates or reuses and continues into accountable
 access when the two operators have not yet accepted and activated their roles.
+Announcements editions must be created and retried through this dedicated setup;
+the generic edition page and API cannot skip its representation and setup receipt.
 
 ## Authority and disclosure
 

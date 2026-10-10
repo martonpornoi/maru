@@ -190,6 +190,18 @@ codes and still accept a retired code when an HTTP/form retry reaches its
 existing receipt. A new key uses the current selectable version and current
 expansion policy.
 
+Announcements is a dedicated-setup profile: generic HTML/API choices omit it,
+and `create_event_edition` refuses it before persistence unless the owning
+`set_up_announcements_adoption` command has entered its private setup scope.
+The service/API error is `edition_adoption_profile_requires_setup`; the browser
+directs the caller to **Set up Announcements**. This also refuses generic replay
+of its child edition receipt. Exact Announcements retries instead use the complete
+setup receipt, retaining current actor admission and supported-profile checks while
+remaining independent of new-profile selection. Persisted choices, read projections
+and the immutable `announcements_only@1` manifest remain supported. The scope is
+an application admission guard; native receipt integrity and runtime grants remain
+authoritative and unchanged.
+
 Creation also validates and persists the requested adoption profile. A Maru-
 operator organization may create only Workforce-only editions through ordinary
 operator authority; creating a full-convention edition requires explicit

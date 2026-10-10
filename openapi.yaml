@@ -16523,16 +16523,6 @@ components:
         * `completed` - Completed
         * `expired` - Expired
         * `cancelled` - Cancelled
-    AdoptionProfileCodeEnum:
-      enum:
-      - full_convention
-      - workforce_only
-      - announcements_only
-      type: string
-      description: |-
-        * `full_convention` - Full convention
-        * `workforce_only` - Workforce only
-        * `announcements_only` - Announcements only
     ApplicationAnswerProjection:
       type: object
       description: Serialize and validate application answer projection data.
@@ -19312,7 +19302,7 @@ components:
           $ref: '#/components/schemas/EditionLifecycleEnum'
         adoption_profile_code:
           allOf:
-          - $ref: '#/components/schemas/AdoptionProfileCodeEnum'
+          - $ref: '#/components/schemas/EditionContextAdoptionProfileCodeEnum'
           readOnly: true
         adoption_profile_version:
           type: integer
@@ -19383,6 +19373,16 @@ components:
       - series_slug
       - starts_on
       - time_zone
+    EditionContextAdoptionProfileCodeEnum:
+      enum:
+      - full_convention
+      - workforce_only
+      - announcements_only
+      type: string
+      description: |-
+        * `full_convention` - Full convention
+        * `workforce_only` - Workforce only
+        * `announcements_only` - Announcements only
     EditionCreateRequest:
       type: object
       description: Serialize and validate edition create request data.
@@ -19418,7 +19418,7 @@ components:
           format: uuid
         adoption_profile_code:
           allOf:
-          - $ref: '#/components/schemas/AdoptionProfileCodeEnum'
+          - $ref: '#/components/schemas/EditionCreateRequestAdoptionProfileCodeEnum'
           default: full_convention
       required:
       - currency_codes
@@ -19428,6 +19428,14 @@ components:
       - series_id
       - starts_on
       - time_zone
+    EditionCreateRequestAdoptionProfileCodeEnum:
+      enum:
+      - full_convention
+      - workforce_only
+      type: string
+      description: |-
+        * `full_convention` - Full convention
+        * `workforce_only` - Workforce only
     EditionLifecycleEnum:
       enum:
       - draft

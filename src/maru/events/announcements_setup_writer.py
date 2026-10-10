@@ -18,6 +18,25 @@ def _announcements_setup_writer() -> Iterator[None]:
         _WRITER.reset(token)
 
 
+def _require_announcements_edition_setup() -> None:
+    """Reject edition creation outside the dedicated Announcements setup.
+
+    Raises
+    ------
+    ValidationError
+        Unless the dedicated command owns the current private writer scope.
+    """
+    if not _WRITER.get():
+        raise ValidationError(
+            {
+                "adoption_profile_code": ValidationError(
+                    "Use Set up Announcements to create this edition.",
+                    code="edition_adoption_profile_requires_setup",
+                )
+            }
+        )
+
+
 def _require_announcements_setup_writer() -> None:
     if not _WRITER.get():
         raise ValidationError(

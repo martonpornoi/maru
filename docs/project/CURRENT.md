@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-09
+Last updated: 2026-10-10
 Phase: Standalone Announcements implementation and pre-production evaluation.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -31,8 +31,9 @@ Workforce, Programme or recipient-notification effects. Ordinary publication nee
 a different reviewer of the exact draft; copying is not publication. Existing
 profile versions and Workforce operator authority remain unchanged.
 
-Implementation and the bounded synthetic browser journey are complete locally;
-exact-commit certification and protected delivery remain. The
+Implementation and the bounded synthetic browser journey are complete locally.
+The earlier development evidence below precedes the successful certification and
+current review repair recorded later in this handoff. The
 [Announcements checkpoint](../checkpoints/2026-10-09-standalone-announcements.md)
 records actual roles, widths, repairs and remaining acceptance limits. The final
 native Announcements domain/migration batch passes
@@ -48,12 +49,12 @@ used separate synthetic writer/reviewer accounts and a genuine restricted runtim
 The scripts-blocked correction/report/stopped-use path, private/public download
 separation and integrity, 320–1,920 pixel layouts, error focus and normal mobile
 menu return were verified. A final shared-shell fallback repair passed nine focused
-cases after the whole unit run; final certification will include it. Native print,
+cases after the whole unit run and was included in later full acceptance. Native print,
 200-percent zoom, specialist and independent-person acceptance remain open.
-Exact-commit certification and hosted acceptance still remain; these development results are not production activation or independent
-human acceptance.
+These development results and subsequent commit-specific acceptance are not
+production activation or independent human acceptance.
 
-Two exact-commit certification attempts have exposed joined recovery ordering
+Two earlier exact-commit certification attempts exposed joined recovery ordering
 regressions; complete failed artifacts and source bundles are preserved. Candidate
 `633fab42736d8d34d3112bac23947d19d449b27a` failed when retained Programme history
 was checked only after newer Announcements guards had reversed. The first repair
@@ -68,8 +69,8 @@ flush pending triggers or call a mutating reverse operation to check for evidenc
 The expanded native batch passed 27 cases; the completed preflight then passed
 seven final native cases in 278.43 seconds, including retained representation and
 access records before event setup. Final readiness/recovery units pass 65 cases.
-Both disposable databases were removed. Freeze the complete repair for a fresh
-full certification and independent hosted acceptance; [the repair checkpoint](../checkpoints/2026-10-09-announcements-recovery-fence.md)
+Both disposable databases were removed. These focused repairs preceded the
+successful full run recorded below; [the repair checkpoint](../checkpoints/2026-10-09-announcements-recovery-fence.md)
 retains exact failure and repair evidence.
 
 ## Announcements scheduling repair
@@ -89,8 +90,8 @@ runtime/coverage requirement remains unchanged. The estimates and provenance map
 are untouched. [The scheduling checkpoint](../checkpoints/2026-10-09-historical-shard-density.md)
 records the diagnostic and preserved failure. The repair passes 121 focused
 policy cases and all 13,816 unit cases in 73.91 seconds; lint, formatting,
-documentation references and its Python documentation contract pass. A clean
-full certification and independent hosted acceptance remain. PR #210 stays draft.
+documentation references and its Python documentation contract passed. At that
+stage, full certification and hosted acceptance remained and PR #210 was draft.
 
 That fresh run at `7cb0a071c53787dbcbd580828e0e487185a4e2c8` exposed a separate
 execution defect: the runner validated the new plan but then repartitioned without
@@ -101,12 +102,37 @@ were removed. Its complete 4,711-file evidence tree and exact source are preserv
 No successful receipt exists. The runner now consumes the validated assignments
 directly; a main-path regression reproduces the original mismatch. The
 [execution checkpoint](../checkpoints/2026-10-09-frozen-shard-execution.md) records
-the repair and pending full acceptance. Its main-path and policy regression batch
+the repair and its then-pending full acceptance. Its main-path and policy regression batch
 passes 122 cases; all 13,817 database-free units pass in 76.20 seconds. Canonical
 typing, lint, formatting, Python documentation and documentation references pass.
 Real CLI checks match four selected shards and all 374 planned assignments.
-The separately prepared Guides focused native work is using released capacity
-before the repaired Announcements candidate receives a fresh full run.
+Candidate `dccd7dcd9c43198b7864b9aed135e667c394d43b` subsequently passed the
+complete local required certification in 17,220.652 seconds: all 77 PostgreSQL
+shards, at most eight concurrent databases, and 91.586053% combined coverage.
+Independent hosted acceptance also passed all 77 PostgreSQL jobs, PR gate and
+CodeQL. Its successful local evidence is preserved in the original checkout under
+`.tools/certification-evidence/announcements-local-dccd7dc-success/preservation.json`.
+PR #210 is now non-draft. The maintainer has authorized protected merge after the
+new review repair passes fresh exact-head local and hosted gates.
+
+## Announcements review repair
+
+PR #210's review repair closes generic edition creation for `announcements_only@1`.
+The dedicated setup retains its current profile checks, purpose-specific operator
+provisioning and complete retry receipt. Generic HTML/API choices omit it and the
+shared command refuses crafted requests before persistence. The Events 0019
+description now accurately states its persisted profile and receipt changes.
+ANN-007 and ADR 0117 remain the governing contract; no migration operation,
+runtime grant or existing profile manifest changes.
+
+The repair passes 257 focused database-free cases, including both actual adapters,
+the real dedicated/child command composition with mocked persistence, exact replay
+and scope reset after failure. Focused strict typing, Ruff, generated API contracts
+and TypeScript checking pass. Native UI/API regression cases are added but remain
+unexecuted at this checkpoint. [The review checkpoint](../checkpoints/2026-10-10-announcements-setup-admission.md)
+records the boundary and evidence. This source change requires a fresh full
+exact-commit certification and independent hosted acceptance; earlier receipts
+cannot certify it. Preserve all earlier evidence before proceeding.
 
 ## Starting baseline and verification
 
