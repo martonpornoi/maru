@@ -11,6 +11,8 @@ MAX_ITEMS = 500
 MAX_PAGE_SIZE = 100
 MAX_QUERY = 120
 MAX_STORED_TEXT_BYTES = 8 * 1024 * 1024
+# One bounded receipt; included within the existing total, never added to it.
+WITHDRAWAL_RECEIPT_RESERVE_BYTES = 8 * 1024
 MAX_EXPORT_BYTES = 16 * 1024 * 1024
 PURPOSE = "internal convention guidance"
 AUDIENCE_LABEL = "People with access to guides for this event"

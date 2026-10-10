@@ -287,7 +287,7 @@ class WithdrawForm(CommandForm):
     """Explain withdrawal while preserving the original item version."""
 
     reason = forms.CharField(
-        label="Why are you withdrawing this guide?",
+        label="Why are you removing this guide from readers?",
         max_length=MAX_NOTE,
         widget=forms.Textarea(attrs={"rows": 3}),
     )

@@ -10,12 +10,13 @@ from .catalog import (
     MAX_HISTORY,
     MAX_REVISIONS,
     MAX_STORED_TEXT_BYTES,
+    WITHDRAWAL_RECEIPT_RESERVE_BYTES,
 )
 from .errors import GuidanceLimitError
 
 
 def require_complete_evidence_bound(item_id: UUID | None) -> None:
-    """Count UTF-8 evidence bytes including every referenced rules confirmation.
+    """Keep complete evidence within its cap, reserving one future withdrawal.
 
     Parameters
     ----------
@@ -25,7 +26,7 @@ def require_complete_evidence_bound(item_id: UUID | None) -> None:
     Raises
     ------
     GuidanceLimitError
-        If complete retained evidence exceeds the per-item export budget.
+        If evidence or its still-required withdrawal reserve exceeds the cap.
     """
     if item_id is None:
         return
@@ -48,11 +49,15 @@ def require_complete_evidence_bound(item_id: UUID | None) -> None:
                     FROM knowledge_guidancecommandreceipt row, selected
                     WHERE row.item_id=selected.id
                        OR row.id IN (SELECT command_receipt_id FROM rules)
-            ) SELECT coalesce(sum(octet_length(record::text)), 0) FROM records
+            ) SELECT coalesce(sum(octet_length(record::text)), 0),
+                (SELECT status FROM knowledge_guidanceitem
+                 WHERE id=(SELECT id FROM selected)) FROM records
             """,
             [item_id],
         )
-        if cursor.fetchone()[0] > MAX_STORED_TEXT_BYTES:
+        retained_bytes, status = cursor.fetchone()
+        reserve = 0 if status == "withdrawn" else WITHDRAWAL_RECEIPT_RESERVE_BYTES
+        if status is None or retained_bytes + reserve > MAX_STORED_TEXT_BYTES:
             raise GuidanceLimitError
 
 

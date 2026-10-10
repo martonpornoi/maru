@@ -197,7 +197,7 @@ def normalize_draft(value: GuidanceDraftInput) -> GuidanceDraftInput:
         or len(set(value.placements)) != len(value.placements)
     ):
         raise ValidationError(
-            "Choose a supported task placement.", code="invalid_placement"
+            "Choose where to show this guide.", code="invalid_placement"
         )
     return GuidanceDraftInput(
         title=text(value.title, maximum=MAX_TITLE),

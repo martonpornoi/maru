@@ -291,5 +291,6 @@
   "tests/integration/test_workforce_structure_write_integrity_migration.py": 703.136,
   "tests/integration/test_workforce_timetable_outputs.py": 29.955,
   "tests/integration/test_workforce_writer_boundary.py": 8.417,
-  "tests/integration/test_guidance_transition_effects.py": 6288.322
+  "tests/integration/test_guidance_transition_effects.py": 6288.322,
+  "tests/integration/test_knowledge_withdrawal_reserve.py": 6288.322
 }

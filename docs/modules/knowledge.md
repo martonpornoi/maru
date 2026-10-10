@@ -29,6 +29,16 @@ The browser and other modules use the same owning commands and separately
 admitted queries. Request values identify the actual actor, organization, event,
 correlation and retry; possession of identifiers grants nothing.
 
+Command `source_channel` is canonical, nonempty plain text of at most 40 Unicode
+characters, matching the existing Audit record field. Overlong attribution is
+rejected before the owning transaction or retry lookup. Noncanonical text keeps
+its existing idempotency-conflict error; no normalization or error reclassification
+is introduced. Accepted attribution remains part of the exact retry intent
+without truncation.
+The browser supplies the fixed `knowledge-html` value. The historical receipt
+column still allows 80 characters, and conservative storage/reserve accounting
+keeps that bound; it is not the new-command admission ceiling.
+
 | Public boundary | Operations |
 | --- | --- |
 | `knowledge.contracts` | Immutable request/input/result and reader, working-copy, resume-preview and download projections |
@@ -90,6 +100,23 @@ and blocks writing and review, leaving Announcements unchanged. Resume requires
 a confirmation bound to the complete retained-current inventory and control
 sequence. Every intervening command invalidates that preview; withdrawn guides
 stay withdrawn.
+
+Each guide's retained evidence is limited to 8 MiB. Every non-withdrawn
+item keeps 8 KiB inside that total for one withdrawal receipt, including
+the maximum permitted reason and source text. Further writing fails
+without replacing the current copy when it would spend this allowance.
+Withdrawal may consume it; subsequent writing must reserve it again.
+Native deferred checks use the actual final item receipt, so an ordinary
+write followed by withdrawal in the same transaction needs one allowance.
+The 256-revision and 4,096-item-command limits remain unchanged. The
+current state machine permits at most four item commands per revision,
+so its byte reserve does not require a separate command-count allowance.
+
+This admission rule cannot retroactively fund an already full immutable
+history. An existing installation needs a locked retained-state review
+before stronger guards are deployed; deficient history needs an explicit
+fix-forward decision. Editing a recorded migration does not install a
+new guard. Neither history deletion nor a larger cap is an implied repair.
 
 Current text and print outputs identify their event, language, copy number,
 review date and generation time, and warn that saved copies may become outdated.

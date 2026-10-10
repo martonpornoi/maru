@@ -15,6 +15,10 @@ rather than replace the curated summary.
 
 ### Added
 
+- Internal Guides, available for synthetic evaluation, can be adopted independently
+  and reviewed by another person before readers see them. The prior approved copy
+  stays available during changes; removing a guide from readers keeps its history
+  and authorized exports.
 - Standalone Announcements lets a convention write messages, have another person
   check them, copy approved text into existing channels, and keep posting records
   and corrections together. Guided setup creates only the foundations this work

@@ -115,6 +115,9 @@ BEGIN
         ) THEN
             RAISE EXCEPTION 'Guidance review requires a currently configured language' USING ERRCODE='23514';
         END IF;
+        IF NEW.operation='withdraw' AND octet_length(body::text)>8192 THEN
+            RAISE EXCEPTION 'Guidance withdrawal evidence exceeds its reserved budget' USING ERRCODE='23514';
+        END IF;
         IF NEW.operation IN ('revise','withdraw','stop','resume') AND length(btrim(NEW.reason))=0 THEN
             RAISE EXCEPTION 'Guidance changes require an accountable reason' USING ERRCODE='23514';
         END IF;
@@ -352,6 +355,11 @@ BEGIN
             ) retained;
             IF retained_bytes>8388608 THEN
                 RAISE EXCEPTION 'Guidance evidence exceeds its complete export budget' USING ERRCODE='23514';
+            END IF;
+            -- Every deferred receipt checks the final persisted head. An earlier
+            -- ordinary command must not demand a second reserve after withdrawal.
+            IF head_receipt.operation<>'withdraw' AND retained_bytes+8192>8388608 THEN
+                RAISE EXCEPTION 'Guidance must retain space for one reasoned withdrawal' USING ERRCODE='23514';
             END IF;
         END IF;
         IF (SELECT count(*) FROM public.knowledge_guidanceitem WHERE edition_id=NEW.edition_id)>500 THEN

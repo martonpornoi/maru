@@ -1927,7 +1927,12 @@ architecture documents, implementation issues, tests, and release notes.
   of date. Reading and downloading collect no acknowledgement or analytics.
 - **KNO-012 — Guidance withdrawal, continuity and exit:** Authorized reasoned
   withdrawal removes guidance from current reader surfaces while preserving
-  separately authorized history. Stale approval cannot undo it. Stop-use hides
+  separately authorized history. Stale approval cannot undo it. New retained
+  item work must leave capacity within the existing evidence limit for one
+  later withdrawal with any permitted reason; reaching the ordinary writing
+  limit must not strand a current copy. Withdrawal consumes that allowance,
+  and later work must establish it again without enlarging the total limit.
+  Stop-use hides
   current reading and context and blocks new writing/review without stopping
   Announcements; history, private evidence export and withdrawal remain under
   their own authority. Resume explicitly confirms the exact retained current

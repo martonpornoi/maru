@@ -1,7 +1,7 @@
 {% extends "knowledge/base.html" %}
 {% load localization %}
 {% block guidance_content %}
-{% if draft_language_unavailable %}<p class="guidance-panel" role="status">This guide uses a language that is no longer set up for the event. Ask an event organizer to restore the language before editing or reviewing it.{% if detail.current %} Its already approved version remains available until withdrawn.{% endif %}</p>{% endif %}
+{% if draft_language_unavailable %}<p class="guidance-panel" role="status">This guide uses a language that is no longer set up for the event. Ask an event organizer to restore the language before editing or reviewing it.{% if detail.current %} Its already approved version remains available until removed from readers.{% endif %}</p>{% endif %}
 {% if action == "library" %}
   <p>Find guides your team has checked and made available for this event.</p>
   <nav class="guidance-actions" aria-label="Guides tasks">
@@ -35,22 +35,22 @@
   <p>Write a useful guide, then ask another editor to check it before readers can use it.</p>
   {% if blocking_reasons %}<section class="guidance-panel" aria-labelledby="guidance-next-step"><h2 id="guidance-next-step">Before writing or review can continue</h2><ul>{% for reason in blocking_reasons %}<li>{{ reason }}</li>{% endfor %}</ul></section>{% endif %}
   {% if options.stopped %}<p>Private history and permitted exports remain available.</p>{% endif %}
-  <nav class="guidance-actions" aria-label="Editorial tasks">
+  <nav class="guidance-actions" aria-label="Writing and review">
     {% if actions.can_compose and options.rules_current and not options.stopped %}<a href="{{ links.new }}">Write a guide</a>{% endif %}
     {% if actions.can_view_current and not options.stopped %}<a href="{{ links.library }}">Read guides</a>{% endif %}
     {% if actions.can_manage_settings %}<a href="{{ links.settings }}">Guides settings</a>{% endif %}
     {% if manage_access_url %}<a href="{{ manage_access_url }}">Manage access to guides</a>{% endif %}
   </nav>
-  <ul class="guidance-cards" role="list">{% for item, url, state in work_rows %}<li><h2><a href="{{ url }}">{{ item.title }}</a></h2><p>Writing status: <strong>{{ state }}</strong> · {{ item.language_code|language_name }}.</p><p>{% if item.withdrawn %}Withdrawn from readers.{% elif options.stopped %}Hidden while Guides are stopped.{% elif item.current_number %}Readers can use approved version {{ item.current_number }}.{% else %}Not available to readers yet.{% endif %}</p></li>{% empty %}<li>No guides yet.{% if actions.can_compose and options.rules_current %} Start with one useful FAQ or runbook.{% endif %}</li>{% endfor %}</ul>
+  <ul class="guidance-cards" role="list">{% for item, url, state in work_rows %}<li><h2><a href="{{ url }}">{{ item.title }}</a></h2><p>Writing status: <strong>{{ state }}</strong> · {{ item.language_code|language_name }}.</p><p>{% if item.withdrawn %}Removed from readers.{% elif options.stopped %}Hidden while Guides are stopped.{% elif item.current_number %}Readers can use approved version {{ item.current_number }}.{% else %}Not available to readers yet.{% endif %}</p></li>{% empty %}<li>No guides yet.{% if actions.can_compose and options.rules_current %} Start with one useful guide with instructions or answers to common questions.{% endif %}</li>{% endfor %}</ul>
   {% if next_url %}<p><a href="{{ next_url }}">Next drafts and reviews</a></p>{% endif %}
 {% elif action == "detail" %}
   <p>Writing status: <strong>{{ status_label }}</strong>.</p>
-  {% if options.stopped %}<p class="guidance-panel" role="status">Guides are stopped. This private history is still available, but readers cannot see the guide.</p>{% elif detail.withdrawn %}<p class="guidance-panel">This guide is withdrawn. Save and review a new version before making it available again.</p>{% elif detail.current %}<p>Readers can use approved version {{ detail.current.summary.number }}.{% if detail.draft.id != detail.current.summary.revision_id %} It stays available while a replacement is prepared.{% endif %}</p>{% else %}<p>This guide is not available to readers yet.</p>{% endif %}
+  {% if options.stopped %}<p class="guidance-panel" role="status">Guides are stopped. This private history is still available, but readers cannot see the guide.</p>{% elif detail.withdrawn %}<p class="guidance-panel">This guide is removed from readers. Save and review a new version before making it available again.</p>{% elif detail.current %}<p>Readers can use approved version {{ detail.current.summary.number }}.{% if detail.draft.id != detail.current.summary.revision_id %} It stays available while a replacement is prepared.{% endif %}</p>{% else %}<p>This guide is not available to readers yet.</p>{% endif %}
   <nav class="guidance-actions" aria-label="Guide actions">
     {% if actions.can_compose and not options.stopped %}<a href="{{ links.edit }}">Edit draft</a>{% if detail.status == "draft" %}{% if detail.draft.review_by %}<a href="{{ links.request_review }}">Ask for review</a>{% else %}<a href="{{ links.edit }}">Set a review date</a>{% endif %}{% endif %}{% endif %}
     {% if actions.can_review and not options.stopped and detail.status == "in_review" %}<a href="{{ links.review }}">Review guide</a>{% endif %}
     {% if detail.current and actions.can_view_current %}<a href="{{ links.current }}">Read available guide</a>{% endif %}
-    {% if actions.can_withdraw %}<a href="{{ links.withdraw }}">Withdraw guide</a>{% endif %}
+    {% if actions.can_withdraw %}<a href="{{ links.withdraw }}">Remove guide from readers</a>{% endif %}
     <a href="{{ links.work }}">Back to drafts &amp; reviews</a>
   </nav>
   {% if detail.status == "in_review" and not actions.can_review and not draft_language_unavailable and options.rules_current %}<p>This version needs another eligible editor. Everyone who helped write it needs someone else to approve it.</p>{% endif %}
@@ -66,15 +66,15 @@
 {% else %}
   <p><a href="{% if detail %}{{ links.detail }}{% else %}{{ links.inventory }}{% endif %}">Back to {% if detail %}guide{% else %}Guides{% endif %}</a></p>
   {% if action == "new" or action == "edit" %}
-    <p>Write a useful FAQ or runbook in plain text. Saving leaves it as a private draft.</p>
+    <p>Write a useful guide with instructions or answers to common questions in plain text. Saving leaves it as a private draft.</p>
     {% if blocking_reasons %}<section class="guidance-panel" aria-labelledby="guidance-next-step"><h2 id="guidance-next-step">Before writing can continue</h2><ul>{% for reason in blocking_reasons %}<li>{{ reason }}</li>{% endfor %}</ul>{% if actions.can_manage_settings %}<p><a href="{{ links.settings }}">Guides settings</a></p>{% endif %}</section>{% endif %}
     <p><strong>Responsible team:</strong> {{ options.owner_label }}. <strong>Who can read approved guides:</strong> {{ options.audience_label }}.</p>
     {% if fixed_language %}<p><strong>Language:</strong> {{ fixed_language }}.</p>{% endif %}
     {% if detail.last_approved %}<p>Saving a draft does not replace the last approved version. Another editor must review your changes.</p>{% endif %}
     {% include "knowledge/_contextual.html" %}
   {% elif action == "request-review" or action == "review" %}
-    <p>Check the text, language, review date and task placement. Approval makes this exact version available to Guides readers.</p>
-    {% if detail.withdrawn %}<p><strong>This guide is withdrawn.</strong> Approving a new version will restore it for readers.</p>{% endif %}
+    <p>Check the text, language, review date and where the guide will appear. Approval makes this exact version available to Guides readers.</p>
+    {% if detail.withdrawn %}<p><strong>This guide is removed from readers.</strong> Approving a new version will restore it for readers.</p>{% endif %}
     {% include "knowledge/_revision.html" with revision=detail.draft heading="Version for review" heading_id="review-copy" %}
     <p><strong>Responsible team:</strong> {{ options.owner_label }}. <strong>Readers:</strong> {{ options.audience_label }}.</p>
     <p><strong>Where it will appear:</strong> Guides library{% for placement in draft_placements %}; {{ placement }}{% endfor %}.</p>
@@ -84,11 +84,21 @@
     <p>The content belongs to {{ options.owner_label }}. The person or team named below looks after these records. This does not change who is responsible for the guide text.</p>
     {% if options.configured %}<nav class="guidance-actions" aria-label="Guides availability">{% if options.stopped %}<a href="{{ links.resume }}">Review and resume Guides</a>{% else %}<a href="{{ links.stop }}">Stop using Guides</a>{% endif %}</nav>{% endif %}
   {% elif action == "withdraw" %}
-    <p>Remove this guide from reader search and task pages. Private versions, feedback and history are kept. Resuming Guides will not restore a withdrawn guide.</p>
+    <section class="guidance-panel" aria-labelledby="withdraw-guide-target">
+      <h2 id="withdraw-guide-target">Guide to remove</h2>
+      <dl>
+        <dt>Working title</dt><dd>{{ detail.draft.title }}</dd>
+        <dt>Language</dt><dd>{{ detail.draft.language_code|language_name }}</dd>
+        {% if detail.current %}<dt>Title readers see</dt><dd>{{ detail.current.summary.title }}</dd><dt>Available version</dt><dd>{{ detail.current.summary.number }}</dd>{% elif detail.last_approved %}<dt>Last approved title</dt><dd>{{ detail.last_approved.title }}</dd><dt>Last approved version</dt><dd>{{ detail.last_approved.number }}</dd>{% endif %}
+      </dl>
+    </section>
+    {% if detail.withdrawn %}<p>This guide is already removed from readers.</p>{% elif options.stopped %}<p>Readers cannot see this guide while Guides are stopped. Removing it also keeps it hidden when Guides resume.</p>{% elif detail.current %}<p>Remove the available guide from reader search and task pages.</p>{% else %}<p>This guide has not been made available to readers. Removing it keeps it unavailable.</p>{% endif %}
+    {% if detail.status == "in_review" %}<p>This also ends the review in progress. Making the guide available later will require a new saved version and a new review.</p>{% endif %}
+    <p>Private versions, feedback and history are kept. Resuming Guides will not restore this guide. To make it available again, save a new version and ask for a new review.</p>
   {% elif action == "stop" %}
-    {% if options.configured %}<p>Hide all guides from readers and task pages, and pause writing and review. People with the required access can still read private history, export it and withdraw guides.</p>{% else %}<p>Guides have not been set up yet. There is no content to hide and writing is already unavailable. <a href="{{ links.settings }}">Return to Guides settings</a>.</p>{% endif %}
+    {% if options.configured %}<p>Hide all guides from readers and task pages, and pause writing and review. People with the required access can still read private history, export it and remove guides from readers.</p>{% else %}<p>Guides have not been set up yet. There is no content to hide and writing is already unavailable. <a href="{{ links.settings }}">Return to Guides settings</a>.</p>{% endif %}
   {% elif action == "resume" %}
-    <p>Confirm the exact approved versions below before showing them to readers again. Withdrawn guides will stay withdrawn.</p>
+    <p>Confirm the exact approved versions below before showing them to readers again. Guides removed from readers will stay hidden.</p>
     {% if resume_preview_current %}<ul class="guidance-cards" role="list">{% for item in resume.items %}<li><strong>{{ item.title }}</strong> · {{ item.language_code|language_name }} · approved version {{ item.number }}<p>Review by {{ item.review_by|date:"Y-m-d" }}.{% if item.review_due %} <strong>Review overdue.</strong>{% endif %}</p></li>{% empty %}<li>No approved versions will return. Resuming will allow writing and review again.</li>{% endfor %}</ul>{% else %}<p class="guidance-panel" role="alert">The list changed. This form still refers to the earlier list. <a href="{{ links.resume }}">Open a fresh resume page</a> to review the current versions before making a new decision.</p>{% endif %}
     {% if blocking_reasons %}<section class="guidance-panel" aria-labelledby="guidance-next-step"><h2 id="guidance-next-step">Before Guides can resume</h2><ul>{% for reason in blocking_reasons %}<li>{{ reason }}</li>{% endfor %}</ul><p><a href="{{ links.settings }}">Guides settings</a></p></section>{% endif %}
   {% endif %}

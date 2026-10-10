@@ -34,7 +34,8 @@ class GuidanceCommandRequest(GuidanceReadRequest):
     idempotency_key
         Actor-scoped retry reference; changed intent must use a different key.
     source_channel
-        Bounded adapter attribution retained by the receipt and audit.
+        Canonical adapter attribution of at most 40 Unicode characters, retained
+        unchanged by the receipt and audit; not a browser-entered field.
     """
 
     idempotency_key: UUID

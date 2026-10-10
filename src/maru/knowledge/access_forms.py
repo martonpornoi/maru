@@ -24,7 +24,7 @@ CAPABILITY_LABELS = {
     "knowledge.view_working": "Read private drafts, feedback and history",
     "knowledge.compose": "Write guides and ask for review",
     "knowledge.review": "Review versions written by other people",
-    "knowledge.withdraw": "Withdraw guides from readers",
+    "knowledge.withdraw": "Remove guides from readers",
     "knowledge.manage_settings": (
         "Confirm record-keeping rules and stop or resume Guides"
     ),

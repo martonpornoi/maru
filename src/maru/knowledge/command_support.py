@@ -30,6 +30,9 @@ from .models import GuidanceCommandReceipt, GuidanceControl
 from .readiness import require_knowledge_integrity
 from .writer_boundary import guidance_writer
 
+# AuditRecord has no public limit constant; match its existing source field.
+_MAX_AUDIT_SOURCE_CHANNEL = 40
+
 
 @dataclass(frozen=True, slots=True)
 class CommandContext:
@@ -152,7 +155,7 @@ def execute(
     """
     capability = OPERATION_CAPABILITIES[operation]
     identifier(request.idempotency_key)
-    source = text(request.source_channel, maximum=80)
+    source = text(request.source_channel, maximum=_MAX_AUDIT_SOURCE_CHANNEL)
     if source != request.source_channel:
         raise GuidanceIdempotencyConflictError
     request_digest = digest(

@@ -125,6 +125,19 @@ independent review, immutable evidence, allowed transitions and both directions
 of receipt-to-persisted-state correspondence. A well-shaped receipt cannot stand
 in for a mutation that did not happen.
 
+The 8 MiB retained-evidence cap includes an 8 KiB allowance for one
+maximum-input withdrawal receipt while an item is not withdrawn. Normal
+work cannot consume that allowance; refusal leaves the current approved
+copy unchanged. Withdrawal uses it without raising the total cap, and
+later work must reserve it again. Deferred checks use the final persisted
+receipt, allowing an ordinary write and withdrawal in one transaction.
+Exact retries retain their original result without new capacity use.
+This is an admission guarantee for funded history, not permission to
+discard old records or a retroactive repair for already full history.
+Existing schemas require a locked retained-state preflight and an explicit
+fix-forward choice; the pre-release source repair itself changes no
+already installed database.
+
 Runtime grants admit only the reviewed relations and exact helper closure. Native
 readiness and fingerprints participate in deployment checks. Unused installation
 may reverse; retained Guidance or adoption evidence requires fix-forward or a

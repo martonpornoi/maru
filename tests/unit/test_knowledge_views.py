@@ -498,3 +498,67 @@ def test_stop_explains_guides_consequence_without_promising_another_workflow(pag
     assert b"Other event work is unchanged" not in response.content
     assert b"Announcements stays available" not in response.content
     page.commands["stop_guidance"].assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("state", "stopped", "approved", "available", "expected_state"),
+    [
+        ("in_review", False, True, True, "Remove the available guide"),
+        ("in_review", True, True, False, "while Guides are stopped"),
+        ("draft", False, False, False, "has not been made available"),
+        ("withdrawn", False, True, False, "already removed from readers"),
+    ],
+)
+def test_withdrawal_identifies_admitted_target_and_review_consequence_without_bodies(
+    page, state, stopped, approved, available, expected_state
+):
+    working_title = "Revised <script>working</script> & directions"
+    approved_title = "Original <b>approved</b> & entrance"
+    retained = replace(
+        page.detail.draft,
+        id=page.current.summary.revision_id,
+        number=page.current.summary.number,
+        title=approved_title,
+        body="PRIVATE RETAINED BODY",
+    )
+    current = replace(
+        page.current, summary=replace(page.current.summary, title=approved_title)
+    )
+    page.private_query.return_value = replace(
+        page.detail,
+        status=state,
+        withdrawn=state == "withdrawn",
+        draft=replace(page.detail.draft, title=working_title),
+        last_approved=retained if approved else None,
+        current=current if available else None,
+        options=replace(page.options, stopped=stopped),
+    )
+    page.current_query.side_effect = AssertionError(
+        "Independent reader query forbidden"
+    )
+    response = call(page, "withdraw")
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert "Revised &lt;script&gt;working&lt;/script&gt; &amp; directions" in html
+    assert "<dt>Language</dt><dd>English</dd>" in html
+    assert ("Original &lt;b&gt;approved&lt;/b&gt; &amp; entrance" in html) is approved
+    assert ("Title readers see" in html) is available
+    assert ("Last approved title" in html) is (approved and not available)
+    assert expected_state in html
+    assert "Remove guide from readers" in html
+    assert ">Guide to remove</h2>" in html
+    assert "Why are you removing this guide from readers?" in html
+    assert "Private versions, feedback and history are kept" in html
+    assert "save a new version and ask for a new review" in html
+    assert ("ends the review in progress" in html) is (state == "in_review")
+    for forbidden in (
+        "<script>working</script>",
+        "<b>approved</b>",
+        "PRIVATE WORKING TEXT",
+        "PRIVATE RETAINED BODY",
+        "APPROVED CURRENT TEXT",
+        "PRIVATE FEEDBACK",
+    ):
+        assert forbidden not in html
+    page.current_query.assert_not_called()
+    page.commands["withdraw_guidance"].assert_not_called()

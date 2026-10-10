@@ -48,7 +48,7 @@ name is **Guides**; Guidance remains the technical contract name.
    editorial controls or private notes. B follows **Guides for this task** from
    the Announcements writing page and sees the same approved version.
 
-## Replace, expire and withdraw
+## Replace, expire and remove a guide from readers
 
 1. A opens **Edit draft** and adds: “Ask the lounge lead to confirm the reopening
    information again before preparing a follow-up notice.” Enter “Clarify the
@@ -65,8 +65,9 @@ name is **Guides**; Guidance remains the technical contract name.
    appears with the responsible team and
    date, including contextual results and saved-copy output. It must not imply
    fresh approval or silently erase the last approved text.
-4. An authorized operator withdraws the guide with the synthetic reason “This
-   rehearsal guide is no longer suitable for current use.” It disappears from
+4. An authorized operator selects **Remove guide from readers**, enters “This
+   rehearsal guide is no longer suitable for current use.” as the reason, confirms
+   the consequence, then selects **Remove guide from readers**. It disappears from
    search and task recommendations. A reader's old link returns the safe
    unavailable response; it does not reveal private history or old instructions.
 
@@ -75,12 +76,12 @@ name is **Guides**; Guidance remains the technical contract name.
 Create and independently approve a second synthetic FAQ, **Where is the fursuit
 lounge?**, using clearly fictional room information. An operator selects **Stop using Guides**.
 Reader pages and contextual copy become unavailable; writing and review pause.
-Private history, withdrawal and separately permitted export remain available.
+Private history, **Remove guide from readers** and permitted exports remain available.
 
-Preview **Resume Guides**. The preview must list exactly the non-withdrawn
-current versions that will return. Confirming it must bind the workspace version;
-a changed preview needs a fresh confirmation. The withdrawn closure guide must
-not reappear. Announcements access and records remain unchanged throughout.
+Preview **Resume Guides**. The preview must list exactly the current versions
+that will return to readers. Confirming it must bind the workspace version;
+a changed preview needs a fresh confirmation. The closure guide removed from
+readers must not reappear. Announcements access and records remain unchanged.
 
 Exercise native print and approved text download as C, then private full-history
 export as an authorized operator. Verify the reader output contains only approved

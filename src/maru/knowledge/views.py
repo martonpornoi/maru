@@ -117,7 +117,7 @@ _STATUS = {
     "in_review": "Waiting for review",
     "changes_requested": "Changes requested",
     "approved": "Approved",
-    "withdrawn": "Withdrawn",
+    "withdrawn": "Removed from readers",
 }
 _HISTORY = {
     "settings_update": "Record-keeping rules saved",
@@ -128,14 +128,14 @@ _HISTORY = {
     "request_review": "Review requested",
     "approve": "Approved and made available",
     "changes_requested": "Changes requested",
-    "withdraw": "Guide withdrawn",
+    "withdraw": "Guide removed from readers",
 }
 _CONFIRMATIONS = {
     "new": "Draft saved.",
     "edit": "Changes saved. Ask for review when the guide is ready.",
     "request-review": "Review requested. Another editor can now check this version.",
     "review": "Review decision saved.",
-    "withdraw": "Guide withdrawn. Its history is kept.",
+    "withdraw": "Guide removed from readers. Its history is kept.",
     "settings": "Guides settings saved.",
     "stop": "Guides are hidden from readers. Writing and review are paused.",
     "resume": (
@@ -612,7 +612,7 @@ def _render(
         "edit": ("Edit guide", "Save changes"),
         "request-review": ("Ask for review", "Request review"),
         "review": ("Review guide", "Save review decision"),
-        "withdraw": ("Withdraw guide", "Withdraw guide"),
+        "withdraw": ("Remove guide from readers", "Remove guide from readers"),
         "settings": ("Guides settings", "Save settings"),
         "stop": ("Stop using Guides", "Stop using Guides"),
         "resume": ("Resume Guides", "Resume Guides"),
@@ -635,7 +635,7 @@ def _render(
             ("knowledge.view_working", "Read drafts and private history"),
             ("knowledge.compose", "Write a guide"),
             ("knowledge.review", "Review guide"),
-            ("knowledge.withdraw", "Withdraw guide"),
+            ("knowledge.withdraw", "Remove guide from readers"),
             ("knowledge.manage_settings", "Manage Guides settings"),
             ("knowledge.export_evidence", "Download full history"),
         )
