@@ -26,6 +26,22 @@ and independent hosted delivery remain outstanding; no PR exists for this batch.
 Detailed evidence and limits are tracked in the
 [workflow checkpoint](../checkpoints/2026-10-10-developer-workflow.md).
 
+## Testing-policy follow-up
+
+The maintainer requested including testing-efficiency work in this same branch
+before creating its PR. The existing nightly/manual full workflow and release
+gate are retained. The standalone preview launcher now selects current behavior
+instead of unrelated exhaustive history; unknown scripts and shared safety/test
+machinery remain exhaustive. Routine guidance uses Auto rather than forcing Full.
+This policy-changing candidate still needs new exact-commit exhaustive evidence.
+The previous a4bb1e8 exhaustive run passed all 77 database batches, all ten
+gates and 91.59% branch coverage in 4h28m; its artifacts remain baseline evidence,
+never certification of the changed source. The 178 focused classifier, history,
+nightly and preview tests passed. Final exact-commit certification and hosted
+delivery of the policy follow-up remain pending.
+Database template/cloning optimizations remain proposals, not implemented gains.
+Demo coverage is unaffected by this policy change.
+
 ## Incremental demo coverage
 
 The maintainer wants one ongoing and one future fictional edition, eventually
