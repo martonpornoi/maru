@@ -62,6 +62,17 @@ Before declaring a material task complete:
 `CURRENT.md` is a concise handoff, not a diary. Checkpoint files preserve
 historical detail.
 
+## Maintained interactive demos
+
+For every commit, consider the ongoing and future fictional convention demos.
+When a change adds or changes a UI journey, extend its representative sample data
+and role walkthrough alongside that feature when feasible; otherwise record the
+specific demo gap in CURRENT.md or the owning module. Unrelated changes can state
+that demo coverage is unaffected. Grow coverage incrementally; do not delay more
+important work to build every fixture at once. Never claim that all UI functions
+are prefilled until each owning workflow has verified coverage. See
+[demo data](docs/modules/demo-data.md#maintained-interactive-demo-direction).
+
 ## Decision discipline
 
 - Record durable architecture decisions as ADRs in

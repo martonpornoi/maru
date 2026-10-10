@@ -61,3 +61,13 @@ certification and
 independent hosted acceptance are not implied by the startup smoke. Other
 worktrees and fixtures are out of scope. A forced host/terminal shutdown can leave
 an owned container; inspect its printed ID and label before exact cleanup.
+
+## Maintainer follow-up: incremental demo coverage
+
+The maintainer requested ongoing and future fictional editions with items for
+all available UI functions, then explicitly deferred bulk implementation in favor
+of incremental coverage alongside higher-priority work. AGENTS and the demo module
+now retain that direction for every commit. No seed or running demo changed.
+Documentation/reference and focused documentation-policy checks cover this update;
+it does not add browser or feature acceptance evidence. Full certification of the
+combined workflow candidate remains required.

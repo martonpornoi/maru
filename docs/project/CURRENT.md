@@ -26,6 +26,16 @@ and independent hosted delivery remain outstanding; no PR exists for this batch.
 Detailed evidence and limits are tracked in the
 [workflow checkpoint](../checkpoints/2026-10-10-developer-workflow.md).
 
+## Incremental demo coverage
+
+The maintainer wants one ongoing and one future fictional edition, eventually
+prefilled for every available UI function. Extend this coverage with each relevant
+feature, or state its remaining gap; unrelated commits should note no effect.
+The [demo direction](../modules/demo-data.md#maintained-interactive-demo-direction)
+owns that accepted intent. This batch records the maintenance rule only: no seed,
+event date, running preview or feature data has changed. Guides is the next
+product journey to consider for sample coverage after workflow certification.
+
 ## Delivered baseline
 
 [PR #209](https://github.com/martonpornoi/maru/pull/209) delivered purpose-based
