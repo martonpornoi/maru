@@ -33,9 +33,17 @@ def test_host_capabilities_add_only_exact_edition_manager_authority():
         *current.EDITION_CAPABILITIES,
         *current.DEPARTMENT_CAPABILITIES,
         *current.RESOURCE_CAPABILITIES,
-    } == {
-        code for code, capability in CAPABILITIES.items() if capability.persistable
-    } - {
+    } == (
+        {code for code, capability in CAPABILITIES.items() if capability.persistable}
+        - {
+            "announcements.view",
+            "announcements.compose",
+            "announcements.review",
+            "announcements.record_publication",
+            "announcements.manage_settings",
+            "announcements.export_evidence",
+        }
+    ) - {
         "programme.manage_staffing",
         "programme.view_staffing",
         *SCHEDULING_CAPABILITIES,

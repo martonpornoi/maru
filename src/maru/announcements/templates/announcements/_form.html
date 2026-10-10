@@ -1,0 +1,23 @@
+{% if form.errors %}
+  <div class="announcements-errors" role="alert" tabindex="-1" autofocus>
+    <h2>Check your answers</h2>
+    {{ form.non_field_errors }}
+    <ul>{% for field in form %}{% for error in field.errors %}<li>{% if field.is_hidden %}{{ error }}{% else %}<a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a>{% endif %}</li>{% endfor %}{% endfor %}</ul>
+    <p>Your answers are still in this form. Nothing is submitted automatically.</p>
+  </div>
+{% endif %}
+<form method="post" action="{{ request.path }}" class="announcements-form baseline-form">
+  {% csrf_token %}
+  {% for field in form %}
+    {% if field.is_hidden %}{{ field }}{% else %}
+    <div class="announcements-field">
+      {% if field.use_fieldset %}<fieldset{% if field.aria_describedby %} aria-describedby="{{ field.aria_describedby }}"{% endif %}><legend>{{ field.label }}{% if field.field.required %} (required){% endif %}</legend>{% else %}<label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %}>{{ field.label }}{% if field.field.required %} <span>(required)</span>{% endif %}</label>{% endif %}
+      {{ field.errors }}{{ field }}
+      {% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+      {% if field.use_fieldset %}</fieldset>{% endif %}
+    </div>
+    {% endif %}
+  {% endfor %}
+  <button type="submit">{{ submit_label }}</button>
+  {% if action == "new" or action == "edit" %}<button type="submit" name="add_copy" value="1" formnovalidate>Add another channel copy</button>{% elif action == "settings" %}<button type="submit" name="add_channel" value="1" formnovalidate>Add another channel</button>{% endif %}
+</form>

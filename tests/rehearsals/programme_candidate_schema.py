@@ -18,6 +18,7 @@ from tests.rehearsals.programme_runtime_environment import (
 _CURRENT = """
     (adoption_profile_code = 'full_convention' AND adoption_profile_version = 1)
     OR (adoption_profile_code = 'workforce_only' AND adoption_profile_version = 1)
+    OR (adoption_profile_code = 'announcements_only' AND adoption_profile_version = 1)
 """
 _CANDIDATE = (
     _CURRENT

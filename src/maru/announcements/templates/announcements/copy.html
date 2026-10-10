@@ -1,0 +1,16 @@
+{% extends "announcements/base.html" %}
+{% load localization %}
+{% block announcements_content %}
+  <p class="announcements-no-print">Copy this text into the matching channel. After posting, return to the announcement and record it. Copying, printing or downloading does not mark it as posted.</p>
+  <p>Approved text, version {{ approved.number }}. Saved or printed copies may become out of date.</p>
+  <nav class="announcements-actions" aria-label="Copy downloads"><a href="{{ links.text_download }}">Download text</a>{% if detail_allowed %}<a href="{{ links.detail }}">Back to announcement</a>{% endif %}</nav>
+  <details class="announcements-no-print"><summary>More download options</summary><p><a href="{{ links.download }}">Download public copy as JSON</a></p></details>
+  {% for copy in approved.variants %}
+    <section class="announcements-panel">
+      <h2>{{ copy.channel_label }} · {{ copy.language_code|language_name }}</h2>
+      <label class="announcements-no-print" for="copy-{{ forloop.counter }}">Text to copy</label>
+      <textarea class="announcements-copy" id="copy-{{ forloop.counter }}" readonly>{{ copy.headline }}&#10;&#10;{{ copy.body }}</textarea>
+      <pre class="announcements-print-copy">{{ copy.headline }}&#10;&#10;{{ copy.body }}</pre>
+    </section>
+  {% endfor %}
+{% endblock %}

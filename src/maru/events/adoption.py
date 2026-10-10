@@ -105,13 +105,16 @@ class AdoptionProfileCode(StrEnum):
 
     FULL_CONVENTION = "full_convention"
     WORKFORCE_ONLY = "workforce_only"
+    ANNOUNCEMENTS_ONLY = "announcements_only"
 
 
 FULL_CONVENTION_PROFILE_VERSION = 1
 WORKFORCE_ONLY_PROFILE_VERSION = 1
+ANNOUNCEMENTS_ONLY_PROFILE_VERSION = 1
 DEFAULT_ADOPTION_PROFILE_VERSION = FULL_CONVENTION_PROFILE_VERSION
 
 _ADOPTION_MODULE_NAMESPACE_DECLARATIONS = (
+    "announcements",
     "audit",
     "authorization",
     "effects",
@@ -435,6 +438,7 @@ _WORKFORCE_ONLY_DESTINATIONS = _build_unique_tuple(
 
 SHELL_DESTINATION_KIND_CATALOG = _freeze_unique(
     (
+        "edition.announcements",
         "edition.application-review",
         "edition.application-studio",
         "edition.catalog",
@@ -797,6 +801,86 @@ ADOPTION_PROFILES = _build_unique_mapping(
                 primary_module="workforce",
             ),
         ),
+        (
+            (
+                AdoptionProfileCode.ANNOUNCEMENTS_ONLY.value,
+                ANNOUNCEMENTS_ONLY_PROFILE_VERSION,
+            ),
+            AdoptionProfile(
+                code=AdoptionProfileCode.ANNOUNCEMENTS_ONLY,
+                version=ANNOUNCEMENTS_ONLY_PROFILE_VERSION,
+                label="Announcements only",
+                description=(
+                    "Prepare approved announcements and record manual "
+                    "publication through your existing channels."
+                ),
+                modules=frozenset(
+                    (
+                        "audit",
+                        "authorization",
+                        "effects",
+                        "events",
+                        "identity",
+                        "organizations",
+                        "privacy",
+                        "announcements",
+                    )
+                ),
+                capability_codes=frozenset(
+                    (
+                        "organizations.view_basic",
+                        "organizations.change_profile",
+                        "organizations.create_series",
+                        "organizations.change_series",
+                        "organizations.manage_representation",
+                        "events.view_basic",
+                        "events.create",
+                        "events.change_profile",
+                        "events.transition",
+                        "authorization.delegate",
+                        "authorization.grant_direct",
+                        "authorization.revoke",
+                        "authorization.manage_roles",
+                        "audit.view_security",
+                        "announcements.view",
+                        "announcements.compose",
+                        "announcements.review",
+                        "announcements.record_publication",
+                        "announcements.manage_settings",
+                        "announcements.export_evidence",
+                    )
+                ),
+                destination_codes=("security",),
+                shell_destination_kinds=frozenset(
+                    ("edition.overview", "edition.announcements", "work.security")
+                ),
+                effect_routes=_build_effect_routes(
+                    internal_event_names=(
+                        "authorization.capability.delegated.v1",
+                        "authorization.capability.direct_granted.v1",
+                        "authorization.capability.revoked.v1",
+                        "authorization.role.assigned.v1",
+                        "authorization.role.revoked.v1",
+                        "authorization.role_bundle.version_created.v1",
+                        "events.edition.created.v1",
+                        "events.edition.details_updated.v1",
+                        "events.edition.lifecycle_transitioned.v1",
+                        "identity.account_restriction.applied.v1",
+                        "organizations.convention_series.created.v1",
+                        "organizations.convention_series.updated.v1",
+                        "organizations.representation.changed.v1",
+                        "announcements.changed.v1",
+                    )
+                ),
+                catalog_entries=frozenset(),
+                adapter_codes=frozenset(),
+                conflict_source_codes=frozenset(),
+                root_role_codes=frozenset(
+                    ("executive-board", "announcements-operators")
+                ),
+                primary_module="announcements",
+            ),
+        ),
     ),
     declaration="Adoption profile registry keys",
 )
@@ -817,6 +901,7 @@ SELECTABLE_ADOPTION_PROFILE_KEYS = _build_unique_mapping(
                 WORKFORCE_ONLY_PROFILE_VERSION,
             ),
         ),
+        (AdoptionProfileCode.ANNOUNCEMENTS_ONLY, ("announcements_only", 1)),
     ),
     declaration="Selectable adoption profile keys",
 )
@@ -830,6 +915,15 @@ PERSISTED_ADOPTION_PROFILE_CHOICES = tuple(
 SELECTABLE_ADOPTION_PROFILE_CHOICES = tuple(
     (code.value, ADOPTION_PROFILES[key].label)
     for code, key in SELECTABLE_ADOPTION_PROFILE_KEYS.items()
+)
+
+
+# Dedicated setup remains selectable, but generic creation cannot retain its
+# purpose-specific representation and complete setup evidence.
+GENERIC_EDITION_ADOPTION_PROFILE_CHOICES = tuple(
+    (code, label)
+    for code, label in SELECTABLE_ADOPTION_PROFILE_CHOICES
+    if code != AdoptionProfileCode.ANNOUNCEMENTS_ONLY
 )
 
 

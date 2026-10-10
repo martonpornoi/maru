@@ -20,7 +20,12 @@ _PROFILE_CHECK = (
         "(((adoption_profile_code)::text = '"
         + code
         + "'::text) AND (adoption_profile_version = 1))"
-        for code in ("full_convention", "workforce_only", "programme_operations")
+        for code in (
+            "full_convention",
+            "workforce_only",
+            "announcements_only",
+            "programme_operations",
+        )
     )
     + "))"
 )
@@ -90,7 +95,7 @@ def _require_native_readiness(environment):
             raise ProgrammeStartupError("candidate_runtime_identity_mismatch")
         cursor.execute(
             "SELECT EXISTS (SELECT 1 FROM public.django_migrations "
-            "WHERE app = 'events' AND name = '0019_isolated_programme_candidate')"
+            "WHERE app = 'events' AND name = '0022_isolated_programme_candidate')"
         )
         if cursor.fetchone() != (True,):
             raise ProgrammeStartupError("candidate_schema_not_installed")

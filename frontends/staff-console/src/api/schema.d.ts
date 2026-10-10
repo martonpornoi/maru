@@ -8669,12 +8669,6 @@ export interface components {
          * @enum {string}
          */
         AdmissionTierReplacementStatusEnum: "payment_pending" | "completed" | "expired" | "cancelled";
-        /**
-         * @description * `full_convention` - Full convention
-         *     * `workforce_only` - Workforce only
-         * @enum {string}
-         */
-        AdoptionProfileCodeEnum: "full_convention" | "workforce_only";
         /** @description Serialize and validate application answer projection data. */
         ApplicationAnswerProjection: {
             /** Format: uuid */
@@ -9740,7 +9734,7 @@ export interface components {
             edition_slug: string;
             edition_name: string;
             lifecycle: components["schemas"]["EditionLifecycleEnum"];
-            readonly adoption_profile_code: components["schemas"]["AdoptionProfileCodeEnum"];
+            readonly adoption_profile_code: components["schemas"]["EditionContextAdoptionProfileCodeEnum"];
             readonly adoption_profile_version: number;
             readonly adoption_profile_label: string;
             readonly adopted_modules: string[];
@@ -9757,6 +9751,13 @@ export interface components {
             capacities: components["schemas"]["CapacityContext"][];
             readonly can_transition: boolean;
         };
+        /**
+         * @description * `full_convention` - Full convention
+         *     * `workforce_only` - Workforce only
+         *     * `announcements_only` - Announcements only
+         * @enum {string}
+         */
+        EditionContextAdoptionProfileCodeEnum: "full_convention" | "workforce_only" | "announcements_only";
         /** @description Serialize and validate edition create request data. */
         EditionCreateRequest: {
             name: string;
@@ -9770,8 +9771,14 @@ export interface components {
             /** Format: uuid */
             series_id: string;
             /** @default full_convention */
-            adoption_profile_code: components["schemas"]["AdoptionProfileCodeEnum"];
+            adoption_profile_code: components["schemas"]["EditionCreateRequestAdoptionProfileCodeEnum"];
         };
+        /**
+         * @description * `full_convention` - Full convention
+         *     * `workforce_only` - Workforce only
+         * @enum {string}
+         */
+        EditionCreateRequestAdoptionProfileCodeEnum: "full_convention" | "workforce_only";
         /**
          * @description * `draft` - Draft
          *     * `preparing` - Preparing

@@ -58,6 +58,8 @@ pre-reset implementation unless the paragraph explicitly identifies the ADR
   manifests, restricted operational contacts, and append-only custody
 - [`workforce`](workforce.md) - departments, positions, volunteer openings,
   reviewed agreements, assignments, and scoped access activation
+- [`announcements`](announcements.md) - standalone reviewed manual publishing
+  under implementation; exact profile and verification tracked in CURRENT
 - [`communications`](communications.md) - canonical service inbox and email
   delivery evidence
 - [`accreditation`](accreditation.md) - credentials and bounded offline check-in

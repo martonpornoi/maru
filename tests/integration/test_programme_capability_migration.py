@@ -199,10 +199,19 @@ def test_archive_capability_addition_and_unused_reverse_are_exact() -> None:
     ):
         assert all(_minimum_scope(code) == level for code in codes)
     assert _minimum_scope("programme.future_unregistered") == -1
-    assert (
-        _installed_scope_function_fingerprint()
-        == _FUNCTION_DEFINITION_SHA256["maru_authorization_capability_min_scope(text)"]
+    # This test is deliberately at historical 0037, before Announcements.
+    assert _installed_scope_function_fingerprint() == (
+        "4ffc155738d573f520b36af47b1b38de3da4202fe31fe9a2d11c6afb70f74cfe"
     )
+    for code in (
+        "announcements.view",
+        "announcements.compose",
+        "announcements.review",
+        "announcements.record_publication",
+        "announcements.manage_settings",
+        "announcements.export_evidence",
+    ):
+        assert _minimum_scope(code) == -1
     _migrate(before)
     assert _minimum_scope("programme.export_archive") == -1
     assert _installed_scope_function_fingerprint() == old_fingerprint

@@ -1,0 +1,25 @@
+{% extends "announcements/base.html" %}
+{% block announcements_content %}
+  <p>Write announcements, ask someone else to check them, then record where you posted them.</p>
+  <p>Set up Announcements for one convention. Keep using your other tools for registration, volunteers and everything else.</p>
+  <p>A new organization starts with <strong>Announcements operators</strong>. Invite at least two people; each must accept their own invitation before you activate access. Creating this workspace does not sign in or accept for another person.</p>
+  {% if choices.foundation %}
+    <section class="announcements-panel"><h2>Selected organization and convention</h2><p>Organization: {{ choices.foundation.organization_name }}</p>{% if choices.foundation.series_name %}<p>Convention: {{ choices.foundation.series_name }}</p>{% endif %}<p>Existing names and operator responsibilities stay unchanged.</p></section>
+  {% endif %}
+  {% if not mode %}
+    <h2>What already exists in Maru?</h2>
+    <p><a href="{{ new_url }}">Start a new organization and convention</a></p>
+    <h3>Reuse an organization</h3>
+    <ul class="announcements-cards">{% for item, url in organization_links %}<li><a href="{{ url }}">{{ item.name }}</a></li>{% empty %}<li>No reusable organization is available.</li>{% endfor %}</ul>
+  {% else %}<p><a href="{{ root_url }}">Choose another organization or convention</a></p>{% endif %}
+  {% if mode == "existing_organization" %}
+    <h2>Reuse a convention</h2>
+    <ul class="announcements-cards">{% for item, url in series_links %}<li><a href="{{ url }}">{{ item.name }}</a></li>{% empty %}<li>No reusable convention is available in this organization.</li>{% endfor %}</ul>
+    <p>To create a new convention in this organization, complete the form below.</p>
+  {% endif %}
+  {% if form %}
+    <h2>Create an Announcements workspace</h2>
+    <p>This creates one new event edition. Once the operators have accepted and their access is active, one of them needs to confirm the record-keeping rules and channels before anyone writes.</p>
+    {% include "announcements/_form.html" %}
+  {% endif %}
+{% endblock %}

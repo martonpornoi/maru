@@ -33,7 +33,11 @@ from tests.rehearsals.programme_runtime_environment import (
     require_programme_runtime_environment,
 )
 
-_BASELINE_KEYS = (("full_convention", 1), ("workforce_only", 1))
+_BASELINE_KEYS = (
+    ("full_convention", 1),
+    ("workforce_only", 1),
+    ("announcements_only", 1),
+)
 _EXPECTED_KEYS = (*_BASELINE_KEYS, ("programme_operations", 1))
 _OWNER_PROBLEMS = {
     check_programme_dormancy: (

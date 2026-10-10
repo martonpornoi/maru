@@ -15,8 +15,8 @@ from maru.core.forms import StrictInputForm
 from maru.core.localization import grouped_language_choices, grouped_time_zone_choices
 from maru.core.validators import validate_currency_codes, validate_language_codes
 from maru.events.adoption import (
+    GENERIC_EDITION_ADOPTION_PROFILE_CHOICES,
     PERSISTED_ADOPTION_PROFILE_CHOICES,
-    SELECTABLE_ADOPTION_PROFILE_CHOICES,
     AdoptionProfileCode,
     profile_adopts_module,
 )
@@ -223,7 +223,7 @@ class EventEditionCreationForm(EventEditionDetailsForm):
 
     adoption_profile_code = RetainedAdoptionProfileChoiceField(
         label="How will this edition use Maru?",
-        choices=SELECTABLE_ADOPTION_PROFILE_CHOICES,
+        choices=GENERIC_EDITION_ADOPTION_PROFILE_CHOICES,
         help_text=(
             "Choose only the tools this convention is ready to adopt. This "
             "boundary cannot be changed casually after creation."

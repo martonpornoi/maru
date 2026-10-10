@@ -71,13 +71,29 @@ def test_navigation_remains_available_without_javascript() -> None:
     base_site = _template_text("admin/base_site.html")
     fallback = _static_text("core/navigation-no-script.css")
 
-    assert "<noscript>" in base_site
+    assert "<noscript>" not in base_site
     assert "core/navigation-no-script.css" in base_site
     assert "{% if group.current %}open{% endif %}" in sidebar
     assert 'href="{{ item.url }}"' in sidebar
     assert "position: static;" in fallback
     assert "visibility: visible;" in fallback
     assert "transform: none;" in fallback
+    assert (
+        "html:not(.maru-navigation-enhanced) #container #main > #nav-sidebar"
+        in fallback
+    )
+    assert (
+        "html:not(.maru-navigation-enhanced) #container #toggle-nav-sidebar" in fallback
+    )
+    assert "html:not(.maru-navigation-enhanced) .maru-navigation-search" in fallback
+    assert (
+        "html:not(.maru-navigation-enhanced) .maru-navigation-drawer-header" in fallback
+    )
+    assert "html:not([data-theme]) .theme-toggle" in fallback
+    assert (
+        "updateLayoutMode();\n"
+        '      document.documentElement.classList.add("maru-navigation-enhanced");'
+    ) in base_site
 
 
 def test_compact_navigation_keeps_scoped_context_visible() -> None:

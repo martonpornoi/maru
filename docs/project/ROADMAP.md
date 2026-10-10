@@ -18,9 +18,10 @@ understandable before expanding the number of operational destinations.
 
 1. **Approachable work and contributor entry:** purpose-based navigation, plain
    language, accessible advanced details, verified local setup, and a concise
-   furry-convention introduction (UX-031 and ADR 0116).
+   furry-convention introduction (UX-031 and ADR 0116; delivered in PR #209).
 2. **Announcements:** compose, approve, prepare channel copy, record manual
-   publication, correct, and export one canonical announcement (ANN-001–006).
+   publication, correct, and export one canonical announcement (ANN-001–009,
+   ADR 0117; implemented, protected delivery pending).
    Add external delivery adapters individually when their operating needs are
    known. This workflow must stand alone without Programme or Registration.
 3. **Guidance and help desk:** governed runbooks/FAQs first, then owned requests,
@@ -70,10 +71,12 @@ profile, **Programme Operations**, from calls and review through an approved
 timetable, staffing projections, and on-site continuity. It remains
 non-executable until the exact-version manifest, bounded authority, activated
 Programme and a real Scheduling module, adapters, and acceptance gates are
-implemented. Later profiles are **Communications publishing**, **Charity art
-auction**, and **Registration without payments**, ordered by partner need and
-the completeness of their import, export, print, degraded-operation, and
-recovery contracts. Workforce-only now provides guided activation and enforced
+implemented. **Announcements for manual publishing** is the current bounded
+increment. **Internal guidance** follows, with an explicit contract for adding a
+second workflow to an existing edition before claiming combined adoption. Charity
+art auction and Registration without payments retain their later roadmap scope.
+Each profile needs complete import, export, print, degraded-operation and recovery
+contracts. Workforce-only now provides guided activation and enforced
 coexistence, but safe production cutover still requires the open portability,
 offline/manual fallback, retention, recovery, deployment, and partner-
 acceptance gates.
@@ -88,12 +91,13 @@ the complete Workforce journey. Existing editions become
 `full_convention@1`; existing Executive Board organizations and evidence are
 unchanged.
 
-The current `full_convention@1` and `workforce_only@1` manifests now pin literal
+The current `full_convention@1`, `workforce_only@1` and additive
+`announcements_only@1` manifests pin literal
 capabilities, destinations, shell kinds, effect routes, catalog entries,
 adapters, conflict sources, and reserved roots as exact code/version pairs.
 Independent typed owner catalogs declare adapter result and fail-closed
 semantics, while deployment checks require every literal, selectable pair, and
-database-supported pair to agree without widening either v1 manifest.
+database-supported pair to agree without widening an existing v1 manifest.
 Exact-edition authorization rejects an unpinned capability before self,
 platform, grant, or role policy. Context, Django navigation, Convention work,
 generic access management, Registration discovery, Applications starters and
@@ -102,6 +106,12 @@ exact pair and fail closed for an unknown version. A Workforce-only assignment
 retains responsibility and exact authority but creates no Participation or
 attendance capacity. This enforcement foundation does not declare or activate
 `programme_operations@1`.
+
+ADR 0117 adds the standalone Announcements journey and a purpose-specific
+Announcements operators representation. Guided setup, independent review, manual
+publication reports, corrections and portable text/history use only the new exact
+profile. Existing channels remain the places where people publish; current
+verification and delivery status belong in [CURRENT](CURRENT.md).
 
 Issue #61 installs a dormant Programme private-domain foundation.
 Canonical edition items, separated working/delivery/discussion layers,

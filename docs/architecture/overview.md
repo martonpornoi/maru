@@ -199,6 +199,12 @@ configuration; they do not point at mutable records from an older edition.
 This is a target map, not permission to scaffold every module immediately.
 Modules are introduced through vertical product slices.
 
+[ADR 0117](decisions/0117-standalone-manual-announcements.md) introduces the
+Announcements vertical slice for reviewed manual publishing. Canonical authoring
+and publication reports belong to Announcements; Communications remains the
+recipient-specific service inbox. The standalone profile does not adopt external
+sending or change existing exact profile versions.
+
 ## Module contracts
 
 Each module exposes three possible contract types:

@@ -33,6 +33,7 @@ from maru.events.adoption import (
     profile_adopts_module,
     selectable_adoption_profile,
 )
+from maru.events.announcements_setup_writer import _require_announcements_edition_setup
 from maru.events.models import (
     MAX_EDITION_SPAN_DAYS,
     EditionCreationReceipt,
@@ -45,6 +46,7 @@ from maru.organizations.models import (
     Organization,
     OrganizationRepresentation,
 )
+from maru.organizations.representation_catalog import representation_definition
 from maru.scheduling.release_changes import record_events_release_change
 
 MAX_EDITION_NAME_LENGTH = 160
@@ -337,6 +339,7 @@ def create_event_edition(
         The closed channel code identifying where the request originated.
     adoption_profile_code : str, default=AdoptionProfileCode.FULL_CONVENTION
         The immutable code-owned adoption profile for the new edition.
+        Announcements requires its dedicated setup command, including retries.
 
     Returns
     -------
@@ -353,6 +356,8 @@ def create_event_edition(
         capability_code="events.create",
         organization_id=organization_id,
     )
+    if adoption_profile_code == AdoptionProfileCode.ANNOUNCEMENTS_ONLY:
+        _require_announcements_edition_setup()
     normalized = _normalize_edition_details(details)
     submitted_profile_code = str(adoption_profile_code)
 
@@ -433,22 +438,24 @@ def create_event_edition(
             adoption_profile_code=profile.code.value,
             adoption_profile_version=profile.version,
         )
-        if (
-            profile.code == AdoptionProfileCode.FULL_CONVENTION
-            and not actor.is_platform_administrator
-            and OrganizationRepresentation.objects.filter(
+        representation_code = (
+            OrganizationRepresentation.objects.filter(
                 organization=organization,
-                code=OrganizationRepresentation.MARU_OPERATORS_CODE,
-            ).exists()
+            )
+            .values_list("code", flat=True)
+            .first()
+        )
+        representation = representation_definition(representation_code or "")
+        if (
+            not actor.is_platform_administrator
+            and representation is not None
+            and representation.role_code not in profile.root_role_codes
         ):
             raise ValidationError(
                 {
                     "adoption_profile_code": ValidationError(
-                        (
-                            "Expanding a Maru-operator organization beyond "
-                            "Workforce requires an explicit platform-administrator "
-                            "setup decision."
-                        ),
+                        "Adding tools outside this operator group's purpose requires "
+                        "an explicit platform setup decision.",
                         code="edition_adoption_expansion_requires_platform_oversight",
                     )
                 }

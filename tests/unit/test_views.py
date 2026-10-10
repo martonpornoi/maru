@@ -45,6 +45,12 @@ def _default_logistics_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
         lambda: True,
     )
     monkeypatch.setattr(views, "scheduling_database_integrity_is_ready", lambda: True)
+    monkeypatch.setattr(
+        views, "announcements_setup_database_integrity_is_ready", lambda: True
+    )
+    monkeypatch.setattr(
+        views, "announcements_database_integrity_is_ready", lambda: True
+    )
 
 
 _READY_BOUNDED_DOMAIN_DEPENDENCIES = {
@@ -53,6 +59,8 @@ _READY_BOUNDED_DOMAIN_DEPENDENCIES = {
     "catalog_integrity": "ok",
     "programme_integrity": "ok",
     "scheduling_integrity": "ok",
+    "announcements_integrity": "ok",
+    "announcements_setup_integrity": "ok",
     "venues_integrity": "ok",
 }
 
@@ -591,6 +599,11 @@ def test_readiness_minimizes_logistics_helper_errors(
         ("catalog_database_integrity_is_ready", "catalog_integrity"),
         ("programme_database_integrity_is_ready", "programme_integrity"),
         ("scheduling_database_integrity_is_ready", "scheduling_integrity"),
+        ("announcements_database_integrity_is_ready", "announcements_integrity"),
+        (
+            "announcements_setup_database_integrity_is_ready",
+            "announcements_setup_integrity",
+        ),
         ("venues_database_integrity_is_ready", "venues_integrity"),
     ],
 )

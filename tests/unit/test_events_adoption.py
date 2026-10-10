@@ -106,6 +106,10 @@ _EXPECTED_WORKFORCE_ONLY_V1_SHELL_DESTINATION_KINDS = frozenset(
 )
 
 _EXPECTED_MANIFEST_LITERAL_FINGERPRINTS = {
+    (
+        "announcements_only",
+        1,
+    ): "146fd9b92aa95d69580fe5cb007f6dbc7f09a9124e5f7997d9b648da00e252eb",
     ("full_convention", 1): (
         "e0081b116f8af045fd5a9195c1f4f3295b20d3c57163e8ef0a3547f86861df81"
     ),
@@ -192,7 +196,7 @@ def test_retained_profile_choices_are_independent_from_new_selection() -> None:
     retired_selection = (SELECTABLE_ADOPTION_PROFILE_CHOICES[0],)
     retained_codes = {code for code, _label in PERSISTED_ADOPTION_PROFILE_CHOICES}
 
-    assert retained_codes == {"full_convention", "workforce_only"}
+    assert retained_codes == {"full_convention", "workforce_only", "announcements_only"}
     assert tuple(EventEdition._meta.get_field("adoption_profile_code").choices) == (
         PERSISTED_ADOPTION_PROFILE_CHOICES
     )
@@ -243,6 +247,7 @@ def test_current_manifest_identities_and_catalogs_are_exact() -> None:
     assert PERSISTED_ADOPTION_PROFILE_KEYS == (
         ("full_convention", 1),
         ("workforce_only", 1),
+        ("announcements_only", 1),
     )
     assert len(full.capability_codes) == 85
     assert len(workforce.capability_codes) == 29
@@ -516,6 +521,7 @@ def test_every_manifest_effect_route_resolves_a_registered_handler() -> None:
         profile.key: len(profile.effect_routes)
         for profile in ADOPTION_PROFILES.values()
     } == {
+        ("announcements_only", 1): 14,
         ("full_convention", 1): 65,
         ("workforce_only", 1): 24,
     }
@@ -540,3 +546,47 @@ def test_effect_route_builder_rejects_duplicate_literal_pins() -> None:
                 "system.effect.probe_requested.v1",
             )
         )
+
+
+def test_announcements_profile_is_independent_and_has_only_internal_effects():
+    profile = adoption_profile("announcements_only", 1)
+    assert profile is not None
+    assert profile.modules == {
+        "audit",
+        "authorization",
+        "effects",
+        "events",
+        "identity",
+        "organizations",
+        "privacy",
+        "announcements",
+    }
+    assert profile.primary_module == "announcements"
+    assert len(profile.capability_codes) == 20
+    assert profile.destination_codes == ("security",)
+    assert profile.root_role_codes == {"executive-board", "announcements-operators"}
+    assert profile.shell_destination_kinds == {
+        "edition.overview",
+        "edition.announcements",
+        "work.security",
+    }
+    assert all(route.destination == "internal" for route in profile.effect_routes)
+    assert profile_allows_effect(
+        "announcements_only", 1, "announcements.changed.v1", "internal"
+    )
+    assert not profile_allows_effect(
+        "announcements_only", 1, "announcements.changed.v1", "notifications"
+    )
+    for code in (
+        "programme.view",
+        "workforce.view_structure",
+        "registration.check_in",
+        "participation.view_staff_summary",
+        "effects.replay",
+        "privacy.manage_requests",
+    ):
+        assert not profile_allows_capability("announcements_only", 1, code)
+    for code in ("full_convention", "workforce_only"):
+        assert not profile_allows_capability(code, 1, "announcements.compose")
+        assert not profile_allows_role(code, 1, "announcements-operators")
+    assert not profile_allows_role("announcements_only", 1, "maru-operators")

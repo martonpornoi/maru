@@ -12,8 +12,8 @@ from maru.core.validators import (
     validate_time_zone,
 )
 from maru.events.adoption import (
+    GENERIC_EDITION_ADOPTION_PROFILE_CHOICES,
     PERSISTED_ADOPTION_PROFILE_CHOICES,
-    SELECTABLE_ADOPTION_PROFILE_CHOICES,
     AdoptionProfileCode,
 )
 from maru.events.models import (
@@ -261,7 +261,7 @@ class EditionCreateRequestSerializer(EditionDetailsRequestSerializer):
 
     series_id = serializers.UUIDField()
     adoption_profile_code = RetainedAdoptionProfileChoiceField(
-        choices=SELECTABLE_ADOPTION_PROFILE_CHOICES,
+        choices=GENERIC_EDITION_ADOPTION_PROFILE_CHOICES,
         default=AdoptionProfileCode.FULL_CONVENTION,
     )
 

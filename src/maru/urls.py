@@ -15,6 +15,7 @@ from maru.accreditation.api import (
     StaffOfflineConflictListView,
     StaffOfflineManifestView,
 )
+from maru.announcements.urls import urlpatterns as announcements_urlpatterns
 from maru.audit.api import AuditEventListView
 from maru.authorization.api import (
     EditionAccessAssignmentView,
@@ -56,6 +57,9 @@ from maru.core.views import (
     workforce_adoption_setup,
 )
 from maru.events.admin_context import change_admin_edition_context
+from maru.events.announcements_setup_urls import (
+    urlpatterns as announcements_setup_urlpatterns,
+)
 from maru.events.api import (
     EditionAutocompleteView,
     EditionBasicDetailView,
@@ -308,6 +312,8 @@ from maru.workforce.views import (
 )
 
 urlpatterns: list[URLPattern | URLResolver] = [
+    *announcements_urlpatterns,
+    *announcements_setup_urlpatterns,
     path("", include("maru.charities.urls")),
     path("", include("maru.applications.urls")),
     path("", include("maru.registration.commerce_urls")),
@@ -2240,6 +2246,8 @@ urlpatterns: list[URLPattern | URLResolver] = [
 # other preserved HTML routes above remain recovery evidence outside
 # ``maru.baseline_urls``.
 _BASELINE_PLATFORM_ROUTE_PREFIXES = (
+    "admin/announcements/",
+    "admin/platform/setup/announcements/",
     "accounts/invitations/",
     "admin/account/step-up/",
     "admin/access/",

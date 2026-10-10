@@ -1,7 +1,7 @@
 # Data classification and retention
 
 Status: Baseline requiring jurisdiction-specific review  
-Last updated: 2026-09-17
+Last updated: 2026-10-09
 
 This is a product and engineering control model, not legal advice. Each
 deploying organization must document its roles, purposes, lawful bases,
@@ -53,6 +53,36 @@ Every persistent field or typed attachment must register:
 Schema review fails if this metadata is absent.
 
 ## Purpose partitions
+
+### Announcements manual publishing
+
+ADR 0117's Announcements records have one edition-scoped purpose: prepare approved
+public text and retain accountable review/publication/correction evidence.
+`announcement-evidence` is the audit classification marker for this purpose, not a
+retention duration. Before collecting content, the settings operator records the
+real organizational rules, responsible owner, review date and explicit confirmation.
+Each content version binds that immutable settings revision. An expired review date
+blocks new collection until rules are reviewed; it must not hide retained evidence
+or prevent recording what happened to already-approved external copy.
+
+| Records/fields | Source and purpose | Classification and recipients | Retention and exit |
+| --- | --- | --- | --- |
+| Canonical headline/body/language and channel variants | Organizer-authored drafts and reviewed publication renditions | C1 private operational source, higher if free text contains personal data; only exact approved copy is C0 publishing output | Retain immutable revisions under the recorded rules; corrections append; approved-copy export omits private evidence |
+| Authors, review decisions/notes, reporter/claimed-publication/report times | Actual authenticated decisions and external publication claims | C2 accountability evidence; free-text notes may raise sensitivity; exact edition readers only, private export separately authorized | Preserve lineage and holds; no public notes/people directory; subject requests require purpose-scoped review |
+| Channel labels/URLs and external post references | Explicit organizer choices, never scraped recipients or provider verification | Internal setup and attributable report; safe public references may accompany approved copy | No credentials stored or automatic provider deletion; external channel owner handles external corrections/removal |
+| Rules name/reference/description, responsible owner, review date and confirmation | Authorized organizer's statement of existing applicable rules | C1/C2 internal governance; settings readers and separately authorized evidence export | Bind exact revision; no invented legal basis, duration, policy certification or automated disposal |
+| Receipt/digest/version/scope/retry/audit/event links | System-generated atomic integrity and recovery evidence | C2/security accountability, minimized metadata; technical details secondary | Retain mutually consistent recovery graph; no text/notes in events, logs, metrics or general search |
+
+This increment collects no recipient list, activity analytics, tracking pixel,
+provider secret or unrelated convention relationship. Search is limited to the
+currently authorized Announcements workspace. Exports inherit custody obligations;
+private source and review notes never enter approved-copy downloads. Backups and
+restores preserve the same purpose partition. There is no destructive self-service
+uninstall or generic retention executor: disposal, minimization, holds, backup expiry
+and subject-rights fulfillment need the deploying organization's documented procedure
+and must preserve the integrity of retained decisions. Tests use synthetic rules,
+people and channels only.
+
 
 ADR 0107's Workforce-owned Programme starter request and terminal decision are
 C2 person-linked governance evidence; free-text rationale is restricted, not

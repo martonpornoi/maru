@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import secrets
 from contextlib import contextmanager
 from copy import deepcopy
@@ -17,11 +18,20 @@ from django.utils import timezone
 from psycopg import sql
 from rest_framework.test import APIClient
 
+from maru.announcements import commands as announcement_commands
+from maru.announcements import queries as announcement_queries
+from maru.announcements.contracts import (
+    AnnouncementCommandRequest,
+    AnnouncementReadRequest,
+)
+from maru.announcements.errors import AnnouncementDeniedError
+from maru.announcements.models import AnnouncementCommandReceipt
 from maru.applications import commands as application_commands
 from maru.authorization.activation import activate_authority_provenance
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4,
+    RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5,
     RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
@@ -38,7 +48,13 @@ from maru.authorization.policy import (
 from maru.authorization.provenance_readiness import (
     build_authority_provenance_readiness_report,
 )
-from maru.organizations.models import Organization
+from maru.events.announcements_adoption import set_up_announcements_adoption
+from maru.organizations.models import Organization, OrganizationRepresentation
+from maru.organizations.representation import (
+    activate_representation,
+    invite_representation_controller,
+    respond_to_representation_invitation,
+)
 from maru.organizations.services import (
     OrganizationCreationDetails,
     create_draft_organization,
@@ -50,6 +66,11 @@ from maru.workforce.models import (
     EditionStructureControl,
 )
 from tests.factories import AccountFactory, EventEditionFactory, OrganizationFactory
+from tests.integration.test_announcements_adoption import (
+    setup_details,
+    unrelated_counts,
+)
+from tests.integration.test_announcements_domain import draft, rules
 from tests.support.authority import activate_synthetic_board
 
 if TYPE_CHECKING:
@@ -195,6 +216,8 @@ _BOUNDED_DOMAIN_PROFILE_REPRESENTATIVES = (
     ),
 )
 _BOUNDED_DOMAIN_GRANT_OPTION_REPRESENTATIVES = (
+    "public.announcements_announcement",
+    "public.announcements_announcementcommandreceipt",
     "public.applications_applicationdefinition",
     "public.charities_charitypartner",
     "public.catalog_editioncatalog",
@@ -419,7 +442,7 @@ def _provision_runtime_role(
             ).format(role)
         )
         if grant_function_allowlist:
-            for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4:
+            for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5:
                 cursor.execute(
                     _function_privilege_statement(
                         action="GRANT",
@@ -1035,7 +1058,7 @@ def test_page9_trigger_helpers_do_not_expand_runtime_execute_closure() -> None:
     _provision_runtime_role(role_name)
 
     assert not set(_PAGE9_TRIGGER_HELPER_IDENTITIES) & set(
-        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5
     )
     with connection.cursor() as cursor:
         cursor.execute(
@@ -1298,9 +1321,10 @@ def test_unsafe_database_privileges_are_rejected(privilege: str) -> None:
     ("allowlist", "expected_available"),
     [
         (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3, False),
-        (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4, True),
+        (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4, False),
+        (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5, True),
     ],
-    ids=["obsolete-v3", "current-v4"],
+    ids=["obsolete-v3", "obsolete-v4", "current-v5"],
 )
 def test_public_only_function_execute_is_rejected(
     allowlist: tuple[str, ...], expected_available: bool
@@ -1326,7 +1350,7 @@ def test_public_only_function_execute_is_rejected(
 
 
 @pytest.mark.parametrize(
-    "denied_identity", RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4
+    "denied_identity", RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5
 )
 def test_every_required_function_needs_explicit_effective_execute(
     denied_identity: str,
@@ -2175,6 +2199,8 @@ def test_genuine_runtime_login_is_safe_and_persistent_replica_setting_is_not() -
                     "dependencies": {
                         "database": "ok",
                         "authority_provenance": "ok",
+                        "announcements_setup_integrity": "ok",
+                        "announcements_integrity": "ok",
                         "applications_integrity": "ok",
                         "charities_integrity": "ok",
                         "catalog_integrity": "ok",
@@ -2241,6 +2267,178 @@ def test_genuine_runtime_login_is_safe_and_persistent_replica_setting_is_not() -
                     sql.Identifier(database_name),
                 )
             )
+            cursor.execute(
+                sql.SQL("DROP OWNED BY {}").format(sql.Identifier(role_name))
+            )
+            cursor.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role_name)))
+            _restore_public_privileges(public_snapshot)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_genuine_runtime_login_completes_standalone_announcements_workflow() -> None:  # noqa: PLR0915
+    """Run public setup, two-person authority and the workflow under v5 grants."""
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    writer, reviewer = AccountFactory(), AccountFactory()
+    before = unrelated_counts()
+    public_snapshot = _public_privilege_snapshot()
+    password = secrets.token_urlsafe(36)
+    role_name = _create_role(password=password)
+    try:
+        with transaction.atomic():
+            _prepare_least_privilege_boundary()
+            _provision_runtime_role(role_name)
+        with override_settings(
+            REQUIRE_EXACT_AUTHORITY_PROVENANCE=True,
+            RUNTIME_DATABASE_ROLE=role_name,
+        ):
+            activation = activate_authority_provenance(
+                actor=administrator,
+                reason="Activate exact authority for the synthetic runtime rehearsal.",
+                correlation_id=uuid4(),
+                acknowledge_processes_stopped=True,
+                source_channel="test",
+            )
+            assert activation.activated
+            with _password_authenticated_default_database(
+                role_name=role_name, password=password
+            ):
+                safety = probe_runtime_database_role_safety(role_name=role_name)
+                assert safety.current_session_is_safe
+                assert safety.current_user_matches
+                assert safety.session_user_matches
+                assert safety.authenticated_user_matches
+                setup = set_up_announcements_adoption(
+                    actor=administrator,
+                    details=setup_details(),
+                    idempotency_key=uuid4(),
+                    correlation_id=uuid4(),
+                    source_channel="test",
+                )
+                representation = OrganizationRepresentation.objects.get(
+                    id=setup.representation_id
+                )
+                assert representation.code == "announcements_operators"
+                for operator in (writer, reviewer):
+                    invitation = invite_representation_controller(
+                        actor=administrator,
+                        representation_id=representation.id,
+                        account_id=operator.id,
+                        reason="Invite a synthetic Announcements operator.",
+                        correlation_id=uuid4(),
+                        source_channel="test",
+                    )
+                    respond_to_representation_invitation(
+                        actor=operator,
+                        appointment_id=invitation.id,
+                        expected_version=invitation.invitation_version,
+                        accept=True,
+                        correlation_id=uuid4(),
+                        source_channel="test",
+                    )
+                representation.refresh_from_db()
+                appointments = activate_representation(
+                    actor=administrator,
+                    representation_id=representation.id,
+                    expected_version=representation.aggregate_version,
+                    reason="Activate the two synthetic Announcements operators.",
+                    correlation_id=uuid4(),
+                    source_channel="test",
+                ).appointments
+                assert {item.account_id for item in appointments} == {
+                    writer.id,
+                    reviewer.id,
+                }
+
+                def command_request(actor):
+                    return AnnouncementCommandRequest(
+                        actor_id=actor.id,
+                        organization_id=setup.organization_id,
+                        edition_id=setup.edition_id,
+                        correlation_id=uuid4(),
+                        idempotency_key=uuid4(),
+                        source_channel="test",
+                    )
+
+                announcement_commands.update_announcement_settings(
+                    command_request(writer), settings=rules(), expected_version=0
+                )
+                create_request = command_request(writer)
+                created = announcement_commands.create_announcement(
+                    create_request,
+                    draft=draft(),
+                    expected_settings_version=1,
+                )
+                replay = announcement_commands.create_announcement(
+                    create_request,
+                    draft=draft(),
+                    expected_settings_version=1,
+                )
+                assert replay.replayed
+                assert replay.receipt_id == created.receipt_id
+                pending = announcement_commands.request_announcement_review(
+                    command_request(writer),
+                    announcement_id=created.announcement_id,
+                    expected_version=created.version,
+                )
+                with pytest.raises(AnnouncementDeniedError):
+                    announcement_commands.review_announcement(
+                        command_request(writer),
+                        announcement_id=pending.announcement_id,
+                        revision_id=pending.object_id,
+                        expected_version=pending.version,
+                        decision="approve",
+                    )
+                approved = announcement_commands.review_announcement(
+                    command_request(reviewer),
+                    announcement_id=pending.announcement_id,
+                    revision_id=pending.object_id,
+                    expected_version=pending.version,
+                    decision="approve",
+                )
+                read = AnnouncementReadRequest(
+                    actor_id=writer.id,
+                    organization_id=setup.organization_id,
+                    edition_id=setup.edition_id,
+                    correlation_id=uuid4(),
+                )
+                detail = announcement_queries.load_announcement(
+                    read, announcement_id=approved.announcement_id
+                )
+                assert detail.status == "approved"
+                assert detail.approved is not None
+                variant = detail.approved.variants[0]
+                publication = announcement_commands.record_announcement_publication(
+                    command_request(writer),
+                    announcement_id=approved.announcement_id,
+                    variant_id=variant.id,
+                    expected_version=approved.version,
+                    publication_url="https://example.test/posted",
+                    published_at=timezone.now(),
+                )
+                evidence = json.loads(
+                    announcement_queries.export_announcement_evidence(
+                        read, announcement_id=approved.announcement_id
+                    ).content
+                )["payload"]
+                assert len(evidence["reviews"]) == 1
+                assert len(evidence["publication_reports"]) == 1
+                assert publication.version == approved.version + 1
+                assert (
+                    AnnouncementCommandReceipt.objects.filter(
+                        edition_id=setup.edition_id
+                    ).count()
+                    == 5
+                )
+                # Native retained receipts have no UPDATE privilege even when
+                # no row matches; no broad grant is needed for retry or export.
+                with pytest.raises(DatabaseError) as denied, transaction.atomic():
+                    AnnouncementCommandReceipt.objects.filter(id=uuid4()).update(
+                        operation="create"
+                    )
+                assert _sqlstate(denied.value) == "42501"
+                assert unrelated_counts() == before
+    finally:
+        with transaction.atomic(), connection.cursor() as cursor:
             cursor.execute(
                 sql.SQL("DROP OWNED BY {}").format(sql.Identifier(role_name))
             )

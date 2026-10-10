@@ -20,7 +20,7 @@
 {% block responsive %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'core/admin-responsive.css' %}">
-  <noscript><link rel="stylesheet" href="{% static 'core/navigation-no-script.css' %}"></noscript>
+  <link rel="stylesheet" href="{% static 'core/navigation-no-script.css' %}">
 {% endblock %}
 
 {% block branding %}
@@ -346,6 +346,7 @@
       };
       drawerWidth.addEventListener("change", updateLayoutMode);
       updateLayoutMode();
+      document.documentElement.classList.add("maru-navigation-enhanced");
     }, { once: true });
   </script>
 {% endblock %}

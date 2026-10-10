@@ -20,6 +20,10 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0117](0117-standalone-manual-announcements.md) defines the standalone
+Announcements workflow, purpose-specific setup and reviewed manual publication.
+Implementation and verification are in progress.
+
 [ADR 0116](0116-approachable-convention-work.md) makes everyday convention work
 understandable through purpose-based navigation, plain activity language and
 progressively disclosed technical details. It retains the authorized registry,

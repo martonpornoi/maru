@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <meta name="theme-color" content="#071B3A">
-    <title>Sign in · Maru Administration</title>
+    <title>Sign in · Maru</title>
     <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
     <link rel="apple-touch-icon" href="{% static 'core/brand/apple-touch-icon.png' %}">
     <link rel="manifest" href="{% static 'core/brand/site.webmanifest' %}">
@@ -121,9 +121,7 @@
       >
       <h1>Welcome back</h1>
       <p class="intro">
-        Use this page to open the convention workspaces assigned to an account.
-        For example: sign in as a chair to manage registration or as an
-        attendee to complete it.
+        Sign in to continue your convention work and manage your account.
       </p>
 
       {% if form.non_field_errors %}
@@ -139,12 +137,11 @@
         <label for="{{ form.password.id_for_label }}">Password</label>
         {{ form.password }}
         {{ form.password.errors }}
-        <button type="submit">Open Administration</button>
+        <button type="submit">Sign in</button>
       </form>
 
       <p class="note">
-        Use the email address or username assigned to this account. Shared
-        rehearsal credentials are for local and test environments only.
+        Use your account's email address or username.
       </p>
     </main>
   </body>

@@ -19,7 +19,6 @@ from scripts.ci_test_policy import (
     build_groups,
     case_group,
     load_history_inventory,
-    partition_groups,
     select_groups,
 )
 
@@ -315,7 +314,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     groups = build_groups()
     required = select_groups(groups, inventory, history, owners, changed)
     plan = _resolve_plan(args, parser, required, history)
-    shards = partition_groups(required, args.shard_count)
+    required_by_key = {group.key: group for group in required}
+    shards = tuple(
+        tuple(required_by_key[key] for key in assignment)
+        for assignment in plan["shards"]
+    )
     if not 1 <= args.shard_index <= args.shard_count:
         parser.error("shard index is outside the requested partition")
     selected = shards[args.shard_index - 1]

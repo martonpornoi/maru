@@ -834,8 +834,7 @@ def admin_page_help(
             if str(adoption_primary_module or "") == "workforce"
             else (
                 "Choose a task from the menu or search for a page. "
-                "For example: open Registration desk to help an attendee "
-                "or Registration to edit the event's setup."
+                "The available tools match the selected event and your access."
             )
         )
     elif not help_text and normalized_path.rstrip("/") == "/admin/workspace":

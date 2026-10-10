@@ -122,7 +122,8 @@ def _validate_organization_representation_changed(payload: dict[str, object]) ->
     action = payload["action"]
     if (
         not isinstance(action, str)
-        or payload["representation_code"] not in {"executive_board", "maru_operators"}
+        or payload["representation_code"]
+        not in {"executive_board", "maru_operators", "announcements_operators"}
         or expected_states.get(action) != payload["state"]
     ):
         raise ValidationError(
@@ -911,7 +912,28 @@ def _validate_workforce_structure_changed(payload: dict[str, object]) -> None:
             )
 
 
+def _validate_announcements_changed(payload: dict[str, object]) -> None:
+    """Validate the owner-defined, content-free announcement event.
+
+    Parameters
+    ----------
+    payload : dict[str, object]
+        Untrusted durable event payload.
+    """
+    from maru.announcements.events import (  # noqa: PLC0415
+        validate_announcement_changed_payload,
+    )
+
+    validate_announcement_changed_payload(payload)
+
+
 EVENT_DEFINITIONS = (
+    EventDefinition(
+        name="announcements.changed.v1",
+        schema_version=1,
+        description="Announcement copy or attributed operational evidence changed.",
+        validator=_validate_announcements_changed,
+    ),
     EventDefinition(
         name="organizations.representation.changed.v1",
         schema_version=1,

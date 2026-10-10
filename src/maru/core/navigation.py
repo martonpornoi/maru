@@ -5,9 +5,13 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
+from uuid import UUID, uuid4
 
 from django.urls import reverse
 
+from maru.announcements.authorization import authorize_announcements_scope
+from maru.announcements.contracts import AnnouncementReadRequest
+from maru.announcements.errors import AnnouncementDeniedError
 from maru.authorization.policy import (
     decide,
     resolve_edition_target,
@@ -23,6 +27,7 @@ from maru.events.admin_context import (
     selected_admin_profile_allows_app,
 )
 from maru.events.adoption import profile_allows_shell_destination
+from maru.events.announcements_workspace_queries import AnnouncementsWorkspaceReference
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.identity.navigation_preferences import navigation_pin_codes
@@ -62,6 +67,7 @@ _TASK_SECTIONS = {
     "work.security": "Account",
 }
 _EDITION_TASK_SECTIONS = {
+    "announcements": "Overview",
     "structure": "People & teams",
     "registration": "Registration & shop",
     "registration-commerce": "Registration & shop",
@@ -243,7 +249,7 @@ def _workspace_item(
 def _profile_filtered_items(
     *,
     items: Iterable[NavigationItem],
-    edition: EventEdition,
+    edition: EventEdition | AnnouncementsWorkspaceReference,
 ) -> list[NavigationItem]:
     """Remove edition destinations absent from the exact profile manifest.
 
@@ -251,8 +257,9 @@ def _profile_filtered_items(
     ----------
     items : Iterable[NavigationItem]
         Already-authorized navigation candidates.
-    edition : EventEdition
-        Edition whose immutable profile code and version govern discovery.
+    edition : EventEdition | AnnouncementsWorkspaceReference
+        Already-authorized edition or public route reference whose exact profile
+        governs discovery; it never changes the user's selected edition.
 
     Returns
     -------
@@ -260,14 +267,17 @@ def _profile_filtered_items(
         Non-edition items plus explicitly pinned edition destinations. Unknown
         exact profiles disclose no profile-scoped destination.
     """
+    profile_code, profile_version = (
+        (edition.profile_code, edition.profile_version)
+        if isinstance(edition, AnnouncementsWorkspaceReference)
+        else (edition.adoption_profile_code, edition.adoption_profile_version)
+    )
     return [
         item
         for item in items
         if not item.profile_destination_kind
         or profile_allows_shell_destination(
-            edition.adoption_profile_code,
-            edition.adoption_profile_version,
-            item.profile_destination_kind,
+            profile_code, profile_version, item.profile_destination_kind
         )
     ]
 
@@ -573,6 +583,15 @@ def _management_items(
             section="Account",
         ),
     ]
+    if "announcements_scope" in page_context:
+        reference = page_context["announcements_scope"]
+        if not isinstance(
+            reference, AnnouncementsWorkspaceReference
+        ) or not _supported_announcements_reference(reference):
+            return [item for item in items if not item.profile_destination_kind]
+        # This reference comes from the independently admitted route. It only
+        # narrows generic work links; selected-event links keep their own scope.
+        return _profile_filtered_items(items=items, edition=reference)
     routed_edition = page_context.get("edition")
     selected = (
         routed_edition
@@ -610,6 +629,66 @@ def _programme_destinations(
             profile_code=edition.adoption_profile_code,
             profile_version=edition.adoption_profile_version,
             urlconf=getattr(request, "urlconf", None),
+        )
+    ]
+
+
+def _supported_announcements_reference(
+    reference: AnnouncementsWorkspaceReference,
+) -> bool:
+    return (
+        reference.profile_code == "announcements_only"
+        and type(reference.profile_version) is int
+        and reference.profile_version == 1
+        and all(
+            isinstance(value, UUID) and value.int != 0
+            for value in (reference.organization_id, reference.edition_id)
+        )
+        and profile_allows_shell_destination(
+            reference.profile_code, reference.profile_version, "edition.announcements"
+        )
+    )
+
+
+def _announcements_destinations(
+    request: HttpRequest, reference: AnnouncementsWorkspaceReference
+) -> list[NavigationItem]:
+    if not isinstance(request.user, Account) or not _supported_announcements_reference(
+        reference
+    ):
+        return []
+    try:
+        authorize_announcements_scope(
+            AnnouncementReadRequest(
+                request.user.id,
+                reference.organization_id,
+                reference.edition_id,
+                uuid4(),
+            ),
+            capability="announcements.view",
+        )
+    except AnnouncementDeniedError:
+        return []
+    url = reverse(
+        "announcements-inventory",
+        args=(reference.organization_id, reference.edition_id),
+    )
+    return [
+        NavigationItem(
+            code=f"edition.{reference.edition_id}.announcements",
+            label="Announcements",
+            url=url,
+            section="Overview",
+            context_label=(
+                f"{reference.organization_name} / {reference.series_name} / "
+                f"{reference.edition_name}"
+            ),
+            description=(
+                "Write, review and record announcements published in your channels."
+            ),
+            keywords=("news", "publishing", "channel", "social", "post", "message"),
+            profile_destination_kind="edition.announcements",
+            current=request.path.startswith(url),
         )
     ]
 
@@ -887,6 +966,20 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
             )
         )
     items.extend(_programme_destinations(request, edition, context_label))
+    items.extend(
+        _announcements_destinations(
+            request,
+            AnnouncementsWorkspaceReference(
+                edition.organization_id,
+                edition.id,
+                edition.organization.name,
+                edition.series.name,
+                edition.name,
+                edition.adoption_profile_code,
+                edition.adoption_profile_version,
+            ),
+        )
+    )
     return _profile_filtered_items(items=items, edition=edition)
 
 
@@ -1245,6 +1338,17 @@ def _platform_items(request: HttpRequest) -> list[NavigationItem]:
             current=_route_is(request, "workforce-adoption-setup"),
         ),
         NavigationItem(
+            code="platform.announcements-setup",
+            label="Set up Announcements",
+            url=reverse("announcements-setup"),
+            section="Platform",
+            description=(
+                "Create a standalone announcement writing and review workspace."
+            ),
+            keywords=("news", "publishing", "onboarding", "progressive adoption"),
+            current=request.path.startswith(reverse("announcements-setup")),
+        ),
+        NavigationItem(
             code="platform.organizations-add",
             label="Add organization",
             url=reverse("baseline-create-organization"),
@@ -1517,6 +1621,15 @@ def _present_navigation_item(item: NavigationItem) -> NavigationItem:
     )
 
 
+def _announcements_route_items(
+    request: HttpRequest, page_context: Mapping[str, Any]
+) -> list[NavigationItem]:
+    reference = page_context.get("announcements_scope")
+    if isinstance(reference, AnnouncementsWorkspaceReference):
+        return _announcements_destinations(request, reference)
+    return []
+
+
 def project_shell_navigation(
     request: HttpRequest,
     *,
@@ -1562,6 +1675,7 @@ def project_shell_navigation(
             *_selected_edition_items(request),
             *_scoped_organization_items(request),
             *_page_context_items(request, page_context),
+            *_announcements_route_items(request, page_context),
             *_platform_items(request),
             *_specialist_items(request, available_apps),
         )

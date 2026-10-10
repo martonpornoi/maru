@@ -385,7 +385,7 @@ def test_import_relations_are_runtime_select_only_without_function_execute() -> 
 def test_import_capability_scopes_and_self_field_ceiling_are_exact() -> None:
     """Import authority is Department-bound while disposal is Edition-bound."""
 
-    assert POLICY_VERSION == "2026-09-05.1"
+    assert POLICY_VERSION == "2026-10-09.1"
     assert capability("applications.import_programme").maximum_scope is (
         ScopeLevel.DEPARTMENT
     )

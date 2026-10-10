@@ -102,7 +102,7 @@ def isolated_contract(monkeypatch):
     fake_owner = SimpleNamespace(
         **dict(zip(contract._NAMES, contract._BASELINE, strict=True)),
         _RUNTIME_DATABASE_ROLE_SAFETY_QUERY=contract._QUERY,
-        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4=contract._FUNCTIONS,
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5=contract._FUNCTIONS,
     )
     monkeypatch.setattr(contract, "owner", fake_owner)
     monkeypatch.setattr(contract, "require_programme_runtime_environment", Mock())
@@ -143,7 +143,7 @@ def test_installation_changes_only_declared_input_classes_not_probe(isolated_con
     assert (
         *contract._FUNCTIONS,
         *("public." + identity for identity in sorted(contract.HELPERS)),
-    ) == fake_owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4
+    ) == fake_owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5
     for (
         module,
         attribute,
@@ -166,7 +166,7 @@ def test_changed_baseline_cannot_be_overwritten(defect, isolated_contract):
     elif defect == "query":
         fake_owner._RUNTIME_DATABASE_ROLE_SAFETY_QUERY = "SELECT true"
     else:
-        fake_owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4 = ()
+        fake_owner.RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5 = ()
     before = vars(fake_owner).copy()
     with pytest.raises(contract.ProgrammePrivilegeError):
         contract.install_isolated_candidate_privilege_contract()

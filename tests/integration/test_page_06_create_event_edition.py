@@ -287,3 +287,23 @@ def test_creation_runtime_write_failure_is_safe_and_atomic(
     assert not AuditEvent.objects.exists()
     assert not DomainEvent.objects.exists()
     assert not OutboxMessage.objects.exists()
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_generic_page_hides_and_refuses_announcements_without_partial_setup():
+    _, client = _administrator_client()
+    series = ConventionSeriesFactory()
+    page = client.get(_create_url(series))
+    assert page.status_code == 200
+    assert 'value="announcements_only"' not in page.content.decode()
+    response = client.post(
+        _create_url(series),
+        _payload(adoption_profile_code="announcements_only"),
+    )
+    assert response.status_code == 200
+    assert "Use Set up Announcements" in response.content.decode()
+    assert not EventEdition.objects.exists()
+    assert not EditionCreationReceipt.objects.exists()
+    assert not AuditEvent.objects.exists()
+    assert not DomainEvent.objects.exists()
+    assert not OutboxMessage.objects.exists()

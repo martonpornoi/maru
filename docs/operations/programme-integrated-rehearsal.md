@@ -295,8 +295,8 @@ available yet.
 `programme_candidate_schema_settings.py` is a non-serving, explicit migration
 child. It inherits the guarded provisioning settings and uses an Events-only
 migration overlay in `programme_event_migrations/`. The overlay discovers every
-unchanged owner migration, then appends `0019_isolated_programme_candidate` after
-the current `0018` Events leaf. It registers no application profile, so normal owner
+unchanged owner migration, then appends `0022_isolated_programme_candidate` after
+the current `0021` Events leaf. It registers no application profile, so normal owner
 checks still run against the unchanged current profiles; no check is skipped or
 silenced. Production migration files/settings remain unchanged.
 
@@ -316,7 +316,7 @@ still requires exact owned-resource cleanup, not a retry/adoption path.
 `programme_registration.py` separately prepares explicit pre-model registration
 for a fresh runtime child. Import alone is pure; calling it first checks the
 tracked policy and isolated runtime environment, rejects previously loaded Events
-consumers/models and changed baseline keys/choices/selectors, and preserves both
+consumers/models and changed baseline keys/choices/selectors, and preserves all three
 current manifest objects while extending immutable mappings with the closed
 candidate. No route, handler, authority, role or check is changed by this function.
 The isolated runtime settings invoke it before model imports. The three owner

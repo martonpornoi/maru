@@ -11,6 +11,7 @@ from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4,
+    RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5,
     RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
@@ -22,6 +23,7 @@ from maru.authorization.database_role_safety import (
 )
 
 _BOUNDED_DOMAIN_APP_LABELS = (
+    "announcements",
     "applications",
     "charities",
     "catalog",
@@ -183,6 +185,13 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
         "public.effects_effectreplayreceipt",
         "public.events_workforceadoptionsetupreceipt",
+        "public.events_announcementsadoptionsetupreceipt",
+        "public.announcements_announcementsettingsrevision",
+        "public.announcements_announcementrevision",
+        "public.announcements_announcementvariant",
+        "public.announcements_announcementreview",
+        "public.announcements_announcementpublicationreport",
+        "public.announcements_announcementcommandreceipt",
         "public.workforce_editionstructurecommandreceipt",
         "public.workforce_positionassignmentcommandreceipt",
         "public.workforce_personavailabilitycommandreceipt",
@@ -236,6 +245,8 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.identity_platformaccountinventorycontrol",
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS == (
+        "public.announcements_announcementcontrol",
+        "public.announcements_announcement",
         "public.workforce_editionstructurecontrol",
         "public.workforce_positionassignment",
         "public.workforce_personavailabilityplan",
@@ -361,8 +372,8 @@ def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
         if identity.split(".", 1)[1].startswith(_BOUNDED_DOMAIN_APP_LABELS)
     }
 
-    assert len(append_only_relations) == 18
-    assert len(retained_aggregate_relations) == 24
+    assert len(append_only_relations) == 24
+    assert len(retained_aggregate_relations) == 26
     assert not append_only_relations & retained_aggregate_relations
     assert bounded_relations == (
         append_only_relations
@@ -437,6 +448,19 @@ def test_v4_preserves_v3_and_limits_release_writes_to_native_journal() -> None:
         "public.scheduling_schedulingreleasedependencychange",
         "public.programme_programmepublicrenditionwithdrawal",
     } <= set(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS)
+
+
+def test_v5_preserves_v4_and_adds_only_announcements_operator_helpers() -> None:
+    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5[:-2] == (
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4
+    )
+    assert RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5[-2:] == (
+        "public.maru_assert_active_announcements_operators(uuid)",
+        "public.maru_assert_active_announcements_operators_v0009(uuid)",
+    )
+    assert len(set(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5)) == len(
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5
+    )
 
 
 def _result(**overrides: bool) -> RuntimeDatabaseRoleSafety:
@@ -534,7 +558,7 @@ def test_probe_binds_the_role_and_required_function_identities(
         list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
-        list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4),
+        list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5),
     ]
     configured_connections.__getitem__.assert_called_once_with("security")
     assert result.current_session_is_safe

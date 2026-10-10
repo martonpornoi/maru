@@ -96,6 +96,14 @@ RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4: Final[tuple[str, ...]] = (
     "timestamp with time zone,uuid)",
 )
 
+# ADR 0117 preserves the release-era closure and adds only the helpers reached
+# by the independent, purpose-specific Announcements operator representation.
+RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5: Final[tuple[str, ...]] = (
+    *RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4,
+    "public.maru_assert_active_announcements_operators(uuid)",
+    "public.maru_assert_active_announcements_operators_v0009(uuid)",
+)
+
 # These control relations are deliberately readable, but never writable, by
 # the application login. Their mutations belong to the controlled
 # migration/cutover owner described in ADR-0046. The Programme schema is also
@@ -209,6 +217,13 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
 RUNTIME_DATABASE_SELECT_INSERT_RELATIONS: Final[tuple[str, ...]] = (
     "public.effects_effectreplayreceipt",
     "public.events_workforceadoptionsetupreceipt",
+    "public.events_announcementsadoptionsetupreceipt",
+    "public.announcements_announcementsettingsrevision",
+    "public.announcements_announcementrevision",
+    "public.announcements_announcementvariant",
+    "public.announcements_announcementreview",
+    "public.announcements_announcementpublicationreport",
+    "public.announcements_announcementcommandreceipt",
     "public.workforce_editionstructurecommandreceipt",
     "public.workforce_positionassignmentcommandreceipt",
     "public.workforce_personavailabilitycommandreceipt",
@@ -271,6 +286,8 @@ RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
 # IdentityChallenge is shared with recovery and verification; every current
 # writer creates or advances it and its retention remains controlled.
 RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
+    "public.announcements_announcementcontrol",
+    "public.announcements_announcement",
     "public.workforce_editionstructurecontrol",
     "public.workforce_positionassignment",
     "public.workforce_personavailabilityplan",
@@ -1177,7 +1194,7 @@ def probe_runtime_database_role_safety(
                 list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
-                list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4),
+                list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5),
             ],
         )
         row = cursor.fetchone()

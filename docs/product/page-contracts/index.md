@@ -78,6 +78,7 @@ assignment-management
 availability-management
 shift-planning-and-my-shifts
 workforce-only-adoption-setup
+announcements
 programme-operations-adoption-setup
 programme-volunteer-starter
 programme-calls-and-acknowledged-proposals

@@ -409,10 +409,14 @@ a reviewed refresh; no existing measured weights are lowered.
 ADR 0098 replaces fixed routine/exhaustive counts with deterministic budgeted
 partitions of the same required groups. The planner targets at most sixty
 minutes per job after a 1.5 slowdown multiplier and ten-minute overhead reserve.
-It selects between eight and sixty-four shards (or fewer only when the whole
+It selects between eight and 128 shards (or fewer only when the whole
 scope contains fewer groups), preserving at most eight simultaneous isolated
 databases and the unchanged 120-minute hosted limit. An indivisible oversized
 group or infeasible complete partition fails preflight; it never drops tests.
+Each shard also contains at most two complete historical groups. The planner
+records this limit in the source-bound manifest and preserves shared baselines
+and every parameter variant without splitting them. It does not raise concurrency
+or replace measured headroom with a count-based acceptance claim.
 Local certification executes the exact same source-bound assignments through a
 worker queue, with a fresh database per shard and one serial test process inside.
 More shards add startup overhead and do not promise a faster exhaustive suite.

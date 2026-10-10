@@ -24,6 +24,9 @@ from maru.events.adoption import (
     adoption_profile,
 )
 from maru.events.adoption_persistence import PERSISTED_ADOPTION_PROFILE_KEYS
+from maru.events.announcements_setup_models import (
+    AnnouncementsAdoptionSetupReceipt as AnnouncementsAdoptionSetupReceipt,  # noqa: PLC0414 - Django model discovery
+)
 from maru.events.programme_setup_models import (
     ProgrammeAdoptionSetupReceipt as ProgrammeAdoptionSetupReceipt,  # noqa: PLC0414 - explicit typed re-export and Django discovery
 )

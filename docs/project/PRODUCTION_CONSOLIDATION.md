@@ -903,8 +903,14 @@ extend information; governed documents are served by context and classification.
   venue deployment, return/discrepancy handling, person offers, and actionable
   Stage Tech receiving.
 - [ ] Add route/driver optimization and supplier invoice linkage.
-- [ ] Department inboxes, threads, assignments, announcements, acknowledgement
-  and delivery adapters.
+- [x] Implement the bounded standalone Announcements workflow: reviewed channel
+  copy, truthful manual publication reports, corrections, downloads and stopped
+  use, with purpose-specific accountable setup. Verification and remaining
+  delivery/acceptance gates are recorded in the
+  [Announcements checkpoint](../checkpoints/2026-10-09-standalone-announcements.md)
+  and [CURRENT](CURRENT.md).
+- [ ] Department inboxes, threads, assignments, automatic announcement delivery,
+  acknowledgements and provider adapters.
 - [x] Bounded expiring offline Logistics batches reconcile against current
   server state; the installed migration/auth/API/UI/readiness/runtime-role gate
   passed in the 26/26 acceptance matrix.

@@ -360,7 +360,7 @@ def select_groups(
 
 
 def partition_groups(
-    groups: Sequence[TestGroup], count: int
+    groups: Sequence[TestGroup], count: int, *, max_historical_groups: int | None = None
 ) -> tuple[tuple[TestGroup, ...], ...]:
     """Balance complete indivisible groups without duplicating or dropping work.
 
@@ -370,6 +370,8 @@ def partition_groups(
         Required groups and measured cost estimates.
     count : int
         Number of isolated serial work groups, each required to be nonempty.
+    max_historical_groups : int | None, default=None
+        Optional maximum complete historical groups per shard; never splits a group.
 
     Returns
     -------
@@ -387,14 +389,29 @@ def partition_groups(
         or len({group.key for group in groups}) != len(groups)
     ):
         raise ValueError("invalid shard count or duplicate work group")
+    if max_historical_groups is not None and (
+        type(max_historical_groups) is not int
+        or max_historical_groups < 1
+        or sum(group.historical for group in groups) > count * max_historical_groups
+    ):
+        raise ValueError("invalid historical group capacity")
     buckets: list[list[TestGroup]] = [[] for _ in range(count)]
     costs = [0.0] * count
+    historical_counts = [0] * count
     for group in sorted(groups, key=lambda group: (-group.weight, group.key)):
         if not math.isfinite(group.weight) or group.weight <= 0:
             raise ValueError("invalid work group duration")
-        index = min(range(count), key=lambda index: (costs[index], index))
+        eligible = (
+            index
+            for index in range(count)
+            if not group.historical
+            or max_historical_groups is None
+            or historical_counts[index] < max_historical_groups
+        )
+        index = min(eligible, key=lambda index: (costs[index], index))
         buckets[index].append(group)
         costs[index] += group.weight
+        historical_counts[index] += group.historical
     return tuple(
         tuple(sorted(bucket, key=lambda group: group.key)) for bucket in buckets
     )

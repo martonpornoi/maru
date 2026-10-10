@@ -38,6 +38,7 @@ The repository contains these concrete starting points:
 | --- | --- |
 | Organizer setup | A shared management shell, fictional organizations, recurring convention series, and dated editions with explicit authority. |
 | Volunteer coordination | Tested Workforce workflows for structure, positions, assignments, availability, and shifts, including a Workforce-only adoption path. |
+| Announcements | A standalone workflow for writing, independent review, manual posting records and corrections while keeping your existing website and social channels. [Try the workflow](docs/operations/announcements.md). |
 | Programme Operations | Implemented planning, publication, continuity, and recovery work under isolated synthetic evaluation; activation and human acceptance remain separate gates. |
 | Other modules | Bounded Registration, Venue, Logistics, and other slices; consult the module contracts before treating one as a complete workflow. |
 

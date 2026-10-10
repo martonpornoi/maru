@@ -34,9 +34,17 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
         *current.DEPARTMENT_CAPABILITIES,
         *current.RESOURCE_CAPABILITIES,
     }
-    assert listed == {
-        code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - {
+    assert listed == (
+        {code for code, definition in CAPABILITIES.items() if definition.persistable}
+        - {
+            "announcements.view",
+            "announcements.compose",
+            "announcements.review",
+            "announcements.record_publication",
+            "announcements.manage_settings",
+            "announcements.export_evidence",
+        }
+    ) - {
         "applications.convert_programme_acceptance",
         "programme.manage_hosts",
         "programme.view_hosts",
@@ -53,8 +61,16 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
 def test_review_scope_declaration_matches_the_runtime_readiness_fingerprint() -> None:
     """Catch stale capability-function pins without a PostgreSQL matrix run."""
     current = import_module(
+        "maru.authorization.migrations.0041_announcements_capabilities"
+    )
+    previous = import_module(
         "maru.authorization.migrations.0037_programme_archive_capability"
     )
+    assert current.REVERSE_SQL == previous.FORWARD_SQL
+    assert (
+        *previous.EDITION_CAPABILITIES,
+        *current.ANNOUNCEMENTS_CAPABILITIES,
+    ) == current.EDITION_CAPABILITIES
     declaration = current.FORWARD_SQL
     assert "$$ LANGUAGE plpgsql IMMUTABLE STRICT" in declaration
     assert "SET search_path = pg_catalog, public, pg_temp;" in declaration
@@ -129,9 +145,17 @@ def test_authorization_min_scope_is_prior_catalog_plus_exact_department_code() -
         *current.DEPARTMENT_CAPABILITIES,
         *current.RESOURCE_CAPABILITIES,
     }
-    assert listed == {
-        code for code, definition in CAPABILITIES.items() if definition.persistable
-    } - {
+    assert listed == (
+        {code for code, definition in CAPABILITIES.items() if definition.persistable}
+        - {
+            "announcements.view",
+            "announcements.compose",
+            "announcements.review",
+            "announcements.record_publication",
+            "announcements.manage_settings",
+            "announcements.export_evidence",
+        }
+    ) - {
         "applications.import_programme",
         "applications.dispose_programme_import",
         "programme.export_archive",

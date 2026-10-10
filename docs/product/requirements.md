@@ -302,15 +302,46 @@ architecture documents, implementation issues, tests, and release notes.
   available.
 - **ANN-003 — Workflow:** Announcements must support drafts, previews,
   localization, approvals, scheduling, immediate emergency publication, and
-  cancellation.
+  cancellation. Ordinary publication requires a different authorized reviewer of
+  the exact text and channel/language variants; every editor of that draft counts
+  as an author. Edits require fresh review. Scheduling and emergency authority
+  remain separate explicit increments, never an implied ordinary-review bypass.
 - **ANN-004 — Delivery state:** Each channel delivery must record attempts,
   remote identifiers, success, failure, retry state, and the published form.
+  Manual publication reports must remain distinguishable from provider evidence
+  and recipient acknowledgement. Copying, printing or downloading never records
+  publication. Corrections retain the old text and reports, identify channels
+  needing changed copy, and correct mistaken reports with append-only evidence.
 - **ANN-005 — Adapter isolation:** External networks must be adapters. Their
   outages, limits, removals, or API changes must not damage the canonical
   announcement.
 - **ANN-006 — Audience targeting:** Internal announcements may target edition,
   registration tier, role, department, venue, shift, or saved audience, subject
   to authorization and communication preferences.
+- **ANN-007 — Standalone manual publishing:** An edition may adopt Announcements
+  with shared foundations only. Guided setup, purpose-specific accountable access,
+  writing, independent review, per-channel manual reports, corrections and exit
+  must work without attendee, Registration, payment, Workforce, Programme or
+  recipient-notification records. Existing profile versions and unrelated external
+  systems remain unchanged. New Announcements editions and their setup retries
+  must use the dedicated setup boundary; generic edition creation must not bypass
+  purpose-specific representation and complete setup evidence.
+- **ANN-008 — Copy, history and exit:** Authorized users must be able to preview,
+  print and download exact approved copy without private review notes. Separately
+  authorized handover exports retain version relationships, review and publication
+  evidence with a portable format and integrity metadata. Stopping new work retains
+  authorized historical access under the applicable retention rules. Stopping or
+  cancelling prevents new writing and review, while authorized operators may still
+  report earlier publication of approved copy and correct retained reports. These
+  actions never delete evidence or remove posts from external channels.
+- **ANN-009 — Understandable settings and evidence:** Settings must record the
+  organizer-confirmed record-keeping rules, responsible owner and review date
+  before content collection. Retain the exact confirmation and settings version
+  without inventing legal authority, policy approval or automatic disposal. Human
+  pages separate writing status from publication reports, show actor/time where
+  relevant, and disclose technical versions progressively under UX-031. Draft saves
+  bind the settings version the writer saw; changed settings require a fresh decision
+  while an exact authorized retry recovers the original saved result.
 
 ### HR, staffing, and onboarding
 
