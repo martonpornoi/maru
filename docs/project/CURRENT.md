@@ -130,9 +130,27 @@ the real dedicated/child command composition with mocked persistence, exact repl
 and scope reset after failure. Focused strict typing, Ruff, generated API contracts
 and TypeScript checking pass. Native UI/API regression cases are added but remain
 unexecuted at this checkpoint. [The review checkpoint](../checkpoints/2026-10-10-announcements-setup-admission.md)
-records the boundary and evidence. This source change requires a fresh full
-exact-commit certification and independent hosted acceptance; earlier receipts
-cannot certify it. Preserve all earlier evidence before proceeding.
+records the boundary and evidence.
+
+The fresh full run at `c5f053661bd989e5c719c09e5983e513fdc3595d` failed after
+721.109 seconds. All 13,825 database-free units and non-database gates passed,
+but 25 Announcements native setup cases refused a stale whole-source migration
+fingerprint. The earlier documentation correction changed Events 0019's two
+docstrings without updating its reviewed source pin. The eight owned pool
+containers were removed; failed evidence remains retained, with no successful
+receipt or aggregate coverage for that run.
+
+The bounded follow-up updates only that reviewed source fingerprint. Comparison
+with `dccd7dcd` confirms identical migration operations after removing only the
+two docstrings; native SQL/catalog hashes and grants are unchanged. Three new
+unmocked source-contract checks reproduce the stale pin before repair. The repaired
+focused batch passes 312 cases in 2.57 seconds, plus strict focused typing, Ruff,
+formatting and Python documentation checks. The
+[source-pin checkpoint](../checkpoints/2026-10-10-announcements-migration-source-pin.md)
+records the audit and limits. Fresh full exact-commit local certification and
+independent hosted acceptance remain required before the authorized protected
+merge. Preserve failed artifacts before replacing `.local-ci/`; older passing
+receipts cannot certify this repair.
 
 ## Starting baseline and verification
 
