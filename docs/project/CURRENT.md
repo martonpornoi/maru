@@ -47,6 +47,21 @@ The single-connection test now isolates its real DDL with the existing rollback
 helper and asserts restored schema and readiness. All 16 focused history-plus-current
 cases passed in 492.60 seconds, with unchanged source and owned cleanup;
 see the [schema isolation checkpoint](../checkpoints/2026-10-11-guides-schema-isolation.md).
+Full `6d732f5` passed the repaired Guides batch, then stopped after 52m57s on
+an older orphan-recovery test using current models after schema reversal. Failed
+evidence is preserved. Creating calls before reversal was correctly rejected by
+the retained-evidence downgrade fence in a focused failed attempt. The fixture
+now creates its old call graph with historical models and native guards enabled,
+then restores all current leaves before exercising recovery. A focused attempt
+exposed generic historical question visibility defaults; the fixture now sets
+the closed Programme flags explicitly. The next native check identified missing
+activation actor/time, now retained alongside the exact receipt. Creation and
+activation then passed, but current-model loading in the retirement helper failed
+against the old schema. Retirement now also uses historical models with exact
+structure version, actor/time and receipt under native guards; the former
+dependency-probe monkeypatch is removed. Both focused native cases passed in
+418.60 seconds with unchanged source and verified owned cleanup. Full exact-commit
+certification remains required; see the [orphan fixture checkpoint](../checkpoints/2026-10-11-guides-orphan-fixture.md).
 The existing synthetic runtime fixture remains stopped and preserved.
 
 ## Guides scope and verified outcome

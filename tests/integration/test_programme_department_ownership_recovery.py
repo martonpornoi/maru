@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
 from datetime import timedelta
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import connection
+from django.db import connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 
@@ -19,13 +19,8 @@ from maru.applications.models import (
     ProgrammeCommandReceipt,
 )
 from maru.applications.programme_commands import (
-    activate_programme_call,
-    create_programme_call,
     recover_orphaned_programme_call_reassignment,
     recover_orphaned_programme_call_retirement,
-)
-from maru.applications.programme_department_dependencies import (
-    ProgrammeDepartmentDependencyState,
 )
 from maru.applications.programme_inputs import (
     ProgrammeCallClassification,
@@ -40,15 +35,15 @@ from maru.applications.programme_inputs import (
     ProgrammeContributorFieldCode,
     ProgrammeContributorFieldRequirement,
 )
+from maru.applications.programme_writer_boundary import (
+    programme_application_database_writer,
+)
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent
-from maru.workforce import structure_commands as workforce_structure_commands
 from tests.factories import AccountFactory, EventEditionFactory
-from tests.workforce_helpers import (
-    create_department_for_test,
-    retire_department_for_test,
-)
+from tests.support.migrations import restore_current_migration_graph
+from tests.workforce_helpers import create_department_for_test
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -293,9 +288,186 @@ def _migrate_workforce(target: tuple[str, str]) -> MigrationExecutor:
     return executor
 
 
-def _seed_historical_orphans(
-    monkeypatch: pytest.MonkeyPatch,
-) -> _HistoricalOrphanWorld:
+def _historical_call(historical_apps, *, edition, actor, department, code, active):
+    """Seed the old graph through historical models with every native guard enabled."""
+
+    def model(name):
+        return historical_apps.get_model("applications", name)
+
+    definition_values = asdict(_definition(code=code))
+    sections = definition_values.pop("sections")
+    definition_values["max_submissions_per_person"] = definition_values.pop(
+        "maximum_submissions_per_person"
+    )
+    configuration = asdict(_configuration(department.id))
+    tracks = configuration.pop("tracks")
+    formats = configuration.pop("formats")
+    fields = configuration.pop("contributor_fields")
+    configuration["max_collaborators"] = configuration.pop("maximum_collaborators")
+    scope = {"organization_id": edition.organization_id, "edition_id": edition.id}
+    with transaction.atomic(), programme_application_database_writer():
+        definition = model("ApplicationDefinition").objects.create(
+            **scope,
+            **definition_values,
+            version=1,
+            aggregate_version=1,
+            status="draft",
+            target_adapter_kind="programme_item",
+            created_by_id=actor.id,
+        )
+        call = model("ProgrammeCall").objects.create(
+            **scope,
+            **configuration,
+            definition_id=definition.id,
+        )
+        model("ApplicationOwnerDepartment").objects.create(
+            definition_id=definition.id,
+            department_id=department.id,
+        )
+        for section_values in sections:
+            questions = section_values.pop("questions")
+            section = model("ApplicationSection").objects.create(
+                definition_id=definition.id,
+                **section_values,
+            )
+            for question in questions:
+                question["options"] = list(question["options"])
+                question["condition"] = question["condition"] or {}
+                # These are fixed properties of ProgrammeCallQuestionInput,
+                # not dataclass fields included by asdict(). Match that closed
+                # Programme audience instead of generic historical defaults.
+                question.update(
+                    applicant_visible=True,
+                    applicant_writable=True,
+                    staff_visible=False,
+                    staff_writable=False,
+                    reviewer_visible=False,
+                    public_after_approval=False,
+                    api_projection=False,
+                )
+                model("ApplicationQuestion").objects.create(
+                    definition_id=definition.id,
+                    section_id=section.id,
+                    **question,
+                )
+        for track in tracks:
+            model("ProgrammeCallTrack").objects.create(
+                **scope, call_id=call.id, **track
+            )
+        for format_values in formats:
+            format_values["min_duration_minutes"] = format_values.pop(
+                "minimum_duration_minutes"
+            )
+            format_values["max_duration_minutes"] = format_values.pop(
+                "maximum_duration_minutes"
+            )
+            model("ProgrammeCallFormat").objects.create(
+                **scope, call_id=call.id, **format_values
+            )
+        for field in fields:
+            model("ProgrammeCallContributorField").objects.create(
+                **scope, call_id=call.id, **field
+            )
+        model("ProgrammeCommandReceipt").objects.create(
+            **scope,
+            definition_id=definition.id,
+            actor_id=actor.id,
+            aggregate_kind="call",
+            action="call_created",
+            retry_key=uuid4(),
+            request_digest="1" * 64,
+            reason="Synthetic historical call creation.",
+            correlation_id=uuid4(),
+            source_channel="test",
+            target_id=call.id,
+            result_kind="call",
+            expected_version=0,
+            resulting_version=1,
+        )
+        with connection.cursor() as cursor:
+            cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+    if active:
+        with transaction.atomic(), programme_application_database_writer():
+            definition.status = "active"
+            definition.aggregate_version = 2
+            definition.activated_at = timezone.now()
+            definition.activated_by_id = actor.id
+            definition.save(
+                update_fields=[
+                    "status",
+                    "aggregate_version",
+                    "activated_at",
+                    "activated_by",
+                    "updated_at",
+                ]
+            )
+            model("ProgrammeCommandReceipt").objects.create(
+                **scope,
+                definition_id=definition.id,
+                actor_id=actor.id,
+                aggregate_kind="call",
+                action="call_activated",
+                retry_key=uuid4(),
+                request_digest="2" * 64,
+                reason="Synthetic historical call activation.",
+                correlation_id=uuid4(),
+                source_channel="test",
+                target_id=call.id,
+                result_kind="call",
+                expected_version=1,
+                resulting_version=2,
+            )
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+    return call.id, definition.id, definition.aggregate_version
+
+
+def _retire_historical_department(historical_apps, *, edition, actor, department):
+    """Seed old retirement evidence with every historical native guard enabled."""
+    control_model = historical_apps.get_model("workforce", "EditionStructureControl")
+    department_model = historical_apps.get_model("workforce", "Department")
+    receipt_model = historical_apps.get_model(
+        "workforce", "EditionStructureCommandReceipt"
+    )
+    scope = {"organization_id": edition.organization_id, "edition_id": edition.id}
+    with transaction.atomic():
+        control = control_model.objects.select_for_update().get(**scope)
+        retired = department_model.objects.select_for_update().get(
+            **scope, id=department.id
+        )
+        control.aggregate_version += 1
+        control.save(update_fields=["aggregate_version", "updated_at"])
+        retired.retired_at = timezone.now()
+        retired.retired_by_id = actor.id
+        retired.retired_in_structure_version = control.aggregate_version
+        retired.last_changed_in_structure_version = control.aggregate_version
+        retired.save(
+            update_fields=[
+                "retired_at",
+                "retired_by",
+                "retired_in_structure_version",
+                "last_changed_in_structure_version",
+                "updated_at",
+            ]
+        )
+        receipt_model.objects.create(
+            **scope,
+            structure_id=control.id,
+            actor_id=actor.id,
+            action="department_retired",
+            resulting_version=control.aggregate_version,
+            reason="Synthetic historical Department retirement.",
+            correlation_id=uuid4(),
+            source_channel="test",
+            changed_fields=["retirement"],
+            affected_department_ids=[department.id],
+        )
+        with connection.cursor() as cursor:
+            cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+    return retired
+
+
+def _seed_historical_orphans() -> _HistoricalOrphanWorld:
     edition = EventEditionFactory()
     actor = AccountFactory(display_name="Programme recovery operator")
     source = create_department_for_test(
@@ -318,57 +490,31 @@ def _seed_historical_orphans(
         not in MigrationExecutor(connection).loader.applied_migrations
     )
 
-    draft = create_programme_call(
-        actor_id=actor.id,
-        organization_id=edition.organization_id,
-        edition_id=edition.id,
-        definition_input=_definition(code="historical-draft-orphan"),
-        configuration=_configuration(source.id),
-        expected_version=0,
-        reason="Create the draft before the retirement backstop existed.",
-        retry_key=uuid4(),
-        correlation_id=uuid4(),
-        source_channel="test",
-        authorizer=_AUTHORIZER,
+    draft_id, draft_definition_id, draft_version = _historical_call(
+        historical_apps,
+        edition=edition,
+        actor=actor,
+        department=source,
+        code="historical-draft-orphan",
+        active=False,
     )
-    active = create_programme_call(
-        actor_id=actor.id,
-        organization_id=edition.organization_id,
-        edition_id=edition.id,
-        definition_input=_definition(code="historical-active-orphan"),
-        configuration=_configuration(source.id),
-        expected_version=0,
-        reason="Create the active call before the retirement backstop existed.",
-        retry_key=uuid4(),
-        correlation_id=uuid4(),
-        source_channel="test",
-        authorizer=_AUTHORIZER,
-    )
-    activated = activate_programme_call(
-        actor_id=actor.id,
-        organization_id=edition.organization_id,
-        edition_id=edition.id,
-        call_id=active.target_id,
-        owner_department_id=source.id,
-        expected_version=active.resulting_version,
-        reason="Activate the historical recovery fixture.",
-        retry_key=uuid4(),
-        correlation_id=uuid4(),
-        source_channel="test",
-        authorizer=_AUTHORIZER,
+    active_id, active_definition_id, active_version = _historical_call(
+        historical_apps,
+        edition=edition,
+        actor=actor,
+        department=source,
+        code="historical-active-orphan",
+        active=True,
     )
 
-    monkeypatch.setattr(
-        workforce_structure_commands,
-        "programme_department_retirement_dependency_state",
-        lambda **_kwargs: ProgrammeDepartmentDependencyState.CLEAR,
+    retired_source = _retire_historical_department(
+        historical_apps, edition=edition, actor=actor, department=source
     )
-    retired_source = retire_department_for_test(department=source)
     historical_department = historical_apps.get_model("workforce", "Department")
     assert retired_source.retired_at is not None
     assert historical_department.objects.get(id=source.id).retired_at is not None
 
-    _migrate_workforce(_WORKFORCE_OWNERSHIP_CONTRACT)
+    restore_current_migration_graph()
     assert (
         _WORKFORCE_OWNERSHIP_CONTRACT
         in MigrationExecutor(connection).loader.applied_migrations
@@ -379,12 +525,12 @@ def _seed_historical_orphans(
         actor_id=actor.id,
         source_department_id=source.id,
         destination_department_id=destination.id,
-        draft_call_id=draft.target_id,
-        draft_definition_id=draft.definition_id,
-        draft_version=draft.resulting_version,
-        active_call_id=active.target_id,
-        active_definition_id=active.definition_id,
-        active_version=activated.resulting_version,
+        draft_call_id=draft_id,
+        draft_definition_id=draft_definition_id,
+        draft_version=draft_version,
+        active_call_id=active_id,
+        active_definition_id=active_definition_id,
+        active_version=active_version,
     )
 
 
@@ -424,7 +570,7 @@ def _assert_recovery_evidence(
 def test_historical_orphans_recover_by_exact_id_with_break_glass_evidence(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    world = _seed_historical_orphans(monkeypatch)
+    world = _seed_historical_orphans()
     draft_retry_key = uuid4()
     draft_correlation_id = uuid4()
     draft_reason = "Recover the exact draft into the current Events Department."
