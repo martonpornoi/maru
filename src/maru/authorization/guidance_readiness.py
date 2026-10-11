@@ -62,7 +62,7 @@ _GUIDANCE_SOURCE_SHA256: dict[str, str] = {
         "4bbe6d2ac0ad08869326779f147014a87812ec013d7cc0c64af5eaa1dd3f1b19"
     ),
     "maru.authorization.migrations.0046_guidance_authority_integrity": (
-        "406f96b217800c17236e2d3ed5a21f7f062d6ad071060d467b27552444928823"
+        "dfb0bb65e19cef0ad3c402526a21ee740c6ba232e2ed3818b9339ae669d087cf"
     ),
     "maru.authorization.migrations.0047_guidance_qualified_lineage": (
         "31b9db0ea10ea280af30b8e1d0f55b11615931787af6a6e3b731aaf986466eb7"

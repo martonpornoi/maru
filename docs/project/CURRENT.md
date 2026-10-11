@@ -71,6 +71,15 @@ repair keeps the Guides guards enabled and evaluates them immediately in these
 fixtures. All six focused cases passed in 205.10 seconds, with unchanged source
 and verified owned cleanup. Fresh full certification remains required; see the
 [constraint checkpoint](../checkpoints/2026-10-11-guides-lineage-fixture-constraints.md).
+Full `614e6a2` passed 44 batches, then stopped after 1h36m28s because the new
+Guides source check masked the established unknown-control-role rejection.
+Seven other batches were interrupted; all owned containers were removed and
+evidence preserved. The unmerged source helper now identifies ordinary authority before checking
+Guides roles, leaving ordinary unknown roles to the existing rejection. All 16 focused
+native regression and Guides foundation cases passed in 253.92 seconds, with
+unchanged source and verified owned cleanup. Fresh full certification remains
+required; see the
+[validation-order checkpoint](../checkpoints/2026-10-11-guides-control-validation-order.md).
 The existing synthetic runtime fixture remains stopped and preserved.
 
 ## Guides scope and verified outcome

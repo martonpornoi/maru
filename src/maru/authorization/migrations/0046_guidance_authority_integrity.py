@@ -59,8 +59,8 @@ DECLARE bundle public.authorization_rolebundle%ROWTYPE; assignment public.author
  team public.authorization_guidanceteam%ROWTYPE;
  is_a boolean; expected_name varchar; result bigint;
 BEGIN
- IF control_role NOT IN ('actor','approver') THEN RETURN NULL; END IF;
  IF public.maru_guidance_required_control(target_kind,target_id) IN ('authorization.grant_direct','authorization.manage_roles') THEN RETURN 0; END IF;
+ IF control_role NOT IN ('actor','approver') THEN RETURN NULL; END IF;
  IF target_kind = 'capability_grant' THEN RETURN NULL; END IF;
  IF target_kind = 'role_bundle' THEN SELECT * INTO bundle FROM public.authorization_rolebundle WHERE id=target_id;
  ELSE
