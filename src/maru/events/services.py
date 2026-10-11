@@ -33,6 +33,7 @@ from maru.events.adoption import (
     profile_adopts_module,
     selectable_adoption_profile,
 )
+from maru.events.announcements_setup_writer import _require_announcements_edition_setup
 from maru.events.models import (
     MAX_EDITION_SPAN_DAYS,
     EditionCreationReceipt,
@@ -338,6 +339,7 @@ def create_event_edition(
         The closed channel code identifying where the request originated.
     adoption_profile_code : str, default=AdoptionProfileCode.FULL_CONVENTION
         The immutable code-owned adoption profile for the new edition.
+        Announcements requires its dedicated setup command, including retries.
 
     Returns
     -------
@@ -354,6 +356,8 @@ def create_event_edition(
         capability_code="events.create",
         organization_id=organization_id,
     )
+    if adoption_profile_code == AdoptionProfileCode.ANNOUNCEMENTS_ONLY:
+        _require_announcements_edition_setup()
     normalized = _normalize_edition_details(details)
     submitted_profile_code = str(adoption_profile_code)
 

@@ -180,3 +180,9 @@ emergency services and specialist creative tools remain integration boundaries.
 The [delivery plan](DELIVERY_PLAN.md) retains the broader lifecycle catalogue;
 the [capability map](../product/capability-map.md) describes the product horizon.
 Neither supersedes the active priorities or acceptance boundaries above.
+
+## Contributor workflow baseline
+
+PR #211 delivered disposable preview startup and clarified routine risk-selected
+testing. Guides remains the next product outcome; exhaustive testing is still
+required for global safety and test infrastructure changes.

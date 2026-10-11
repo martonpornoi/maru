@@ -19436,13 +19436,11 @@ components:
       enum:
       - full_convention
       - workforce_only
-      - announcements_only
       - guidance_only
       type: string
       description: |-
         * `full_convention` - Full convention
         * `workforce_only` - Workforce only
-        * `announcements_only` - Announcements only
         * `guidance_only` - Guides only
     EditionLifecycleEnum:
       enum:

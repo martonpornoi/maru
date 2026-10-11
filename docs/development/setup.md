@@ -294,6 +294,12 @@ and release evidence pass.
 
 ## Synthetic demonstration data
 
+For a new evaluator, prefer the [disposable preview](../start-here/run-locally.md#2-try-the-fictional-conventions):
+`uv run --locked python scripts/try_maru.py` creates and cleans up its own
+loopback-only database. Use `--check` to detect setup problems before startup and
+`--smoke` to verify startup and then stop. The commands below are the persistent,
+manually configured alternative; identify the selected database before seeding.
+
 For local exploration, create the deterministic two-convention fixture:
 
 ```powershell

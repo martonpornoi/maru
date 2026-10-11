@@ -101,3 +101,38 @@ discoverability metadata, linked progressive-disclosure references, unfinished
 placeholders, and normal Markdown links. Changes under `.agents/` also route to
 documentation acceptance, and deleting a repository skill is treated as a
 protected deletion requiring explicit review.
+
+## A short feedback loop for each change
+
+Keep one active delivery outcome at a time. Define it as a person completing a
+journey: role, starting state, action, visible result, and what remains unavailable.
+Use code or documentation tasks where a browser journey does not apply. This is
+working procedure under ADR 0079, not a new acceptance policy.
+
+1. Read `CURRENT.md`, the roadmap's active direction and relevant section, then
+   the matching requirements, module contract and ADRs in the required order.
+   Search headings and stable identifiers; load historical checkpoints only to
+   resolve a concrete question. Keep current status out of skills.
+2. Start with the smallest meaningful check: lint, focused unit regression, or
+   prerequisites. For local discovery, use `scripts/try_maru.py --check`; its
+   `--smoke` mode proves disposable startup only. Print or retain elapsed times
+   so setup, implementation feedback and full certification costs remain distinct.
+3. For visible changes, open the browser early, before a broad batch accumulates.
+   Exercise a happy path, an invalid or denied action, and the relevant narrow
+   layout and keyboard behavior using the browser playbook. Use purpose-specific
+   fixtures when a workflow requires them; the general demo cannot establish
+   exact authority provenance. State untested roles and states explicitly.
+4. Run focused checks while iterating. Once the coherent change is ready, perform
+   the existing full exact-commit certification and independent hosted acceptance
+   required by the protected delivery flow. Stop populated previews first; preserve
+   failed evidence. Neither a fast smoke check nor more tokens permits skipping
+   migration history, tenant isolation, coverage or permission checks.
+5. Leave a concise `CURRENT.md`: active outcome, delivered baseline, verification,
+   blockers and next action. Move detailed evidence into an append-only checkpoint
+   and link it. Report completed journeys and observed limitations, not module
+   percentages or the number of files written.
+
+Parallel help, when authorized and useful, needs bounded ownership and isolated
+worktrees. More agents are not a prerequisite for this loop. Agent settings and
+local permissions stay outside the repository; no full-access permission mode is
+required to use these tools.

@@ -454,3 +454,22 @@ def test_edition_management_openapi_declares_problem_responses() -> None:
     assert "errors" not in denied_body
     assert set(problem_component["required"]) <= set(denied_body)
     assert set(denied_body) <= set(problem_component["properties"])
+
+
+def test_generic_api_refuses_announcements_without_partial_setup():
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    series = ConventionSeriesFactory()
+    response = _client(administrator).post(
+        _url(series.organization),
+        _payload(series_id=series.id, adoption_profile_code="announcements_only"),
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert response.status_code == 400
+    assert response.json()["code"] == "edition_adoption_profile_requires_setup"
+    assert "Use Set up Announcements" in response.content.decode()
+    assert not EventEdition.objects.exists()
+    assert not EditionCreationReceipt.objects.exists()
+    assert not AuditEvent.objects.exists()
+    assert not DomainEvent.objects.exists()
+    assert not OutboxMessage.objects.exists()

@@ -20,7 +20,12 @@ staffing records.
 Creation deliberately selects one immutable adoption profile. The generic page
 supports full-convention and Workforce-only creation; the shorter **Set up
 Workforce** workflow is preferred when volunteer management is the only adopted
-purpose.
+purpose. Announcements uses **Set up Announcements** exclusively. It is absent
+from this page's choices and the generic API request schema. Crafted HTML/API or
+direct service requests fail before persistence with
+`edition_adoption_profile_requires_setup`, including generic retries of a retained
+Announcements child receipt. Its dedicated setup route owns complete setup replay;
+existing Announcements records remain readable through the retained profile.
 
 The browser permits an active Maru platform administrator.
 ADR 0040/0080's active accountable representation also carries `events.create`

@@ -17,7 +17,7 @@ from maru.core.relation_schema_readiness import relation_schema_is_current
 ANNOUNCEMENTS_SETUP_RELATION: Final = "events_announcementsadoptionsetupreceipt"
 _MIGRATION_SOURCE_SHA256: Final = {
     "0019_announcements_adoption_profile": (
-        "e66794f16f6f142774021d35149ec2182f61f693d9cc41cfa4fe1d74951ef6b2"
+        "a805f78d4ba073dd9dc43dcb062be374cd58862d9d65ce8928267c7d4473096e"
     ),
     "0021_announcements_setup_downgrade_fence": (
         "f0fb832ba3a4495dc4ca7bcfad3f15a66dc28fa02e94de546ad55097cef19ff0"

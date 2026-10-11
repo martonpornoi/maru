@@ -9778,11 +9778,10 @@ export interface components {
         /**
          * @description * `full_convention` - Full convention
          *     * `workforce_only` - Workforce only
-         *     * `announcements_only` - Announcements only
          *     * `guidance_only` - Guides only
          * @enum {string}
          */
-        EditionCreateRequestAdoptionProfileCodeEnum: "full_convention" | "workforce_only" | "announcements_only" | "guidance_only";
+        EditionCreateRequestAdoptionProfileCodeEnum: "full_convention" | "workforce_only" | "guidance_only";
         /**
          * @description * `draft` - Draft
          *     * `preparing` - Preparing

@@ -270,3 +270,29 @@ durable capacity codes for other not-yet-implemented domains.
 Provider, mail, media, credential, and offline records are intentionally inert
 synthetic evidence: `.invalid` hosts, disabled provider accounts, hashed
 placeholder tokens, and no reusable secret or real stored image are included.
+
+## Maintained interactive demo direction
+
+The maintainer requested two rich, reusable fictional editions on 2026-10-10:
+one currently ongoing and one in the future. Each should eventually contain
+representative items for every available UI function so an evaluator can open,
+change and complete real workflows instead of encountering only empty pages.
+This is an accepted incremental direction, not current fixture coverage or a
+request to implement all modules immediately. The fixed 2025–2027 fixture above
+has not yet been replaced or date-shifted.
+
+Review this direction with every commit. Product UI increments should add their
+sample records and a short role-based trial when feasible, or record an explicit
+remaining gap. Changes with no demo effect should say so. The two editions and
+sample timelines must remain useful as time advances; define and verify that
+behavior when implementing them rather than silently rewriting an existing
+preview or historical evidence. No live preview is retroactively altered.
+
+The aim is complete interactive coverage, not a single all-powerful login.
+Preserve separate reader, editor and approver roles, denied states, tenant and
+edition scope, owning commands and real approval boundaries. Synthetic examples
+must not fabricate audit, approval, payment, delivery or authority-provenance
+receipts. Populate each feature through its supported fixture and domain boundary;
+copying historical database rows is not evidence that a new event is valid.
+Keep this educational coverage distinct from restricted-runtime and production
+acceptance. No real convention data or external delivery is needed.

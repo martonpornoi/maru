@@ -1,7 +1,7 @@
 # Current project state
 
-Last updated: 2026-10-10
-Phase: Guides native reserve proof passed; source-channel admission aligned for certification.
+Last updated: 2026-10-11
+Phase: Guides integration with delivered workflow baseline; verification pending.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready release or supported hosted service. Furry conventions are the
@@ -17,13 +17,20 @@ Approachable navigation and contributor entry are delivered through
 [PR #209](https://github.com/martonpornoi/maru/pull/209), protected main
 `e77fae5b94dbee3e7f2e9d64b2f768be95888738`.
 
-Standalone Announcements at `dccd7dcd9c43198b7864b9aed135e667c394d43b`
-passed full exact-commit local certification. Its receipt remains in that
-checkout's `.local-ci`; failed predecessors remain in the
-[execution checkpoint](../checkpoints/2026-10-09-frozen-shard-execution.md).
-[PR #210](https://github.com/martonpornoi/maru/pull/210) carries that head with
-owner review; hosted run `37999511945` is active. No protected merge is claimed.
-Guides inherits the runner repair, not Announcements' certification.
+Standalone Announcements PR #210 and developer workflow PR #211 are delivered.
+PR #211 merged on 2026-10-11 at 06:46 UTC as
+`bc09e8b63e4142c712178a067a123c61b0924e2f`, after exact-head local and hosted
+acceptance including all 77 PostgreSQL batches, PR gate and CodeQL. Its merged
+tree matched the certified source and the clean main checkout was synchronized.
+There were no submitted reviews or unresolved conversations. Guides inherits
+the code, not those certification results.
+
+Guides is now integrating that protected baseline using the shared Announcements
+source `633fab4` to account for squash history. API contracts were regenerated. All 14,239 unit tests passed in 89.10 seconds;
+strict typing passed for 881 source files, and lint/format/documentation checks
+passed. No new native or browser result is claimed. Full exact-commit
+certification of the integrated source is the next automated gate.
+The existing synthetic runtime fixture remains stopped and preserved.
 
 ## Guides scope and verified outcome
 
@@ -139,3 +146,9 @@ stashes `5b6851f`/`dd651ef`/`3cc5df`/`9fecfe`, plus isolated P12/#96 work. Keep
 Windows Animation effects disabled. No production deployment, broad Docker
 cleanup or new automation is authorized by this batch. Repository metadata is a
 separate settings change.
+
+## Maintained demo coverage
+
+Extend ongoing/future fictional editions with Guides samples when its browser
+fixture is safe and verified. Current demo dates and seed remain unchanged; no
+complete UI coverage is claimed.

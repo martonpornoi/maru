@@ -223,24 +223,25 @@ def _create_setup(
         correlation_id=correlation_id,
         source_channel=source_channel,
     )
-    edition_result = create_event_edition(
-        actor=actor,
-        organization_id=foundation.organization_id,
-        series_id=foundation.series_id,
-        details=EventEditionDetails(
-            name=details.edition_name,
-            time_zone=details.time_zone,
-            language_codes=foundation.language_codes,
-            currency_codes=("XXX",),
-            starts_on=details.starts_on,
-            ends_on=details.ends_on,
-        ),
-        idempotency_key=idempotency_key,
-        correlation_id=correlation_id,
-        request_id=correlation_id,
-        source_channel=source_channel,
-        adoption_profile_code=_PROFILE_KEY[0],
-    )
+    with _announcements_setup_writer():
+        edition_result = create_event_edition(
+            actor=actor,
+            organization_id=foundation.organization_id,
+            series_id=foundation.series_id,
+            details=EventEditionDetails(
+                name=details.edition_name,
+                time_zone=details.time_zone,
+                language_codes=foundation.language_codes,
+                currency_codes=("XXX",),
+                starts_on=details.starts_on,
+                ends_on=details.ends_on,
+            ),
+            idempotency_key=idempotency_key,
+            correlation_id=correlation_id,
+            request_id=correlation_id,
+            source_channel=source_channel,
+            adoption_profile_code=_PROFILE_KEY[0],
+        )
     edition = edition_result.edition
     if (
         edition_result.replayed

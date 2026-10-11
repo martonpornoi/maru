@@ -1,4 +1,4 @@
-"""Install standalone retained setup evidence without adding an adoption profile."""
+"""Add persisted Announcements profile choices, constraint and setup receipts."""
 
 import uuid
 from typing import ClassVar
@@ -10,7 +10,7 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    """Add immutable receipt storage, not setup permission or a current writer."""
+    """Support announcements_only@1 and retain immutable setup receipt storage."""
 
     dependencies: ClassVar[list[tuple[str, str]]] = [
         ("audit", "0009_native_mutation_witness"),
