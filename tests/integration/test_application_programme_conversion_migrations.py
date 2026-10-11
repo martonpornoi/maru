@@ -19,6 +19,11 @@ from maru.applications.readiness import (
 )
 from maru.audit.models import AuditNativeMutationWitness
 from maru.core.database_integrity_readiness import inspect_database_integrity_catalog
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.events.guidance_setup_readiness import (
+    GUIDANCE_SETUP_SCHEMA_RELATIONS,
+    guidance_setup_database_integrity_is_ready,
+)
 from maru.programme.host_commands import invite_programme_host
 from maru.programme.host_inputs import ProgrammeHostInvitationInput
 from maru.programme.models import (
@@ -41,6 +46,7 @@ from tests.integration.test_programme_commands import (
     _create,
     _TrustedProgrammeAuthorizer,
 )
+from tests.support.migrations import migrate_test_targets, rollback_migration_case
 
 pytestmark = [
     pytest.mark.integration,
@@ -52,26 +58,38 @@ pytestmark = [
 
 
 def test_empty_conversion_reversal_preserves_the_old_source_column_and_reinstalls():
-    executor = MigrationExecutor(connection)
-    current = executor.loader.graph.leaf_nodes()
-    executor.migrate([("applications", "0015_programme_review_downgrade_fence")])
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT to_regclass('public.applications_programmeacceptedtransition')"
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    # This empty, single-connection round trip still executes real migrations.
+    # Roll back its DDL afterward so dropped-column slots cannot contaminate
+    # the exact physical schema required by later current-state cases.
+    with rollback_migration_case():
+        executor = MigrationExecutor(connection)
+        current = executor.loader.graph.leaf_nodes()
+        migrate_test_targets(
+            executor, [("applications", "0015_programme_review_downgrade_fence")]
         )
-        assert cursor.fetchone() == (None,)
-        cursor.execute(
-            "SELECT count(*) FROM information_schema.columns "
-            "WHERE table_schema='public' "
-            "AND table_name='programme_programmeitemsourcebinding' "
-            "AND column_name='source_object_id'"
-        )
-        assert cursor.fetchone() == (1,)
-    assert not applications_database_integrity_is_ready()
-    assert not programme_database_integrity_is_ready()
-    MigrationExecutor(connection).migrate(current)
-    assert applications_database_integrity_is_ready()
-    assert programme_database_integrity_is_ready()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT to_regclass('public.applications_programmeacceptedtransition')"
+            )
+            assert cursor.fetchone() == (None,)
+            cursor.execute(
+                "SELECT count(*) FROM information_schema.columns "
+                "WHERE table_schema='public' "
+                "AND table_name='programme_programmeitemsourcebinding' "
+                "AND column_name='source_object_id'"
+            )
+            assert cursor.fetchone() == (1,)
+        assert not applications_database_integrity_is_ready()
+        assert not programme_database_integrity_is_ready()
+        migrate_test_targets(MigrationExecutor(connection), current)
+        assert applications_database_integrity_is_ready()
+        assert programme_database_integrity_is_ready()
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
 
 
 def test_organizer_item_native_evidence_fences_conversion_downgrade():

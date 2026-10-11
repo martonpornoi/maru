@@ -37,12 +37,22 @@ Evidence is preserved. Scoped test-setup repairs retain all original assertions;
 all five selected native cases passed in 596.17 seconds with unchanged source
 and verified owned-container cleanup. A new full exact-commit certification
 remains required. See the [repair checkpoint](../checkpoints/2026-10-11-guides-historical-test-repair.md).
+The next full run on `34a3103` stopped after 37 minutes: 13 batches passed,
+then Guides foundation checks failed after an empty historical migration round
+trip. Seven other active batches were interrupted; all owned containers were
+removed. Complete failed evidence is preserved. A fresh-versus-roundtrip probe
+confirmed that dropping and recreating `adoption_revision` leaves a dropped
+physical column slot, which the unchanged exact schema contract correctly rejects.
+The single-connection test now isolates its real DDL with the existing rollback
+helper and asserts restored schema and readiness. All 16 focused history-plus-current
+cases passed in 492.60 seconds, with unchanged source and owned cleanup;
+see the [schema isolation checkpoint](../checkpoints/2026-10-11-guides-schema-isolation.md).
 The existing synthetic runtime fixture remains stopped and preserved.
 
 ## Guides scope and verified outcome
 
-[ADRs 0118â€“0119](../architecture/decisions/0118-reviewed-internal-guidance.md)
-and KNO-010â€“013/EVT-008 define independently reviewed internal guides,
+[ADRs 0118–0119](../architecture/decisions/0118-reviewed-internal-guidance.md)
+and KNO-010–013/EVT-008 define independently reviewed internal guides,
 current-only reading and contextual placement, replacement, withdrawal, portable
 outputs and separately accepted responsibility. Fresh `guidance_only@1` and
 explicit Announcements expansion preserve unrelated workflows. Platform status
@@ -82,7 +92,7 @@ the revised native guard.
 Ordinary writes now retain 8 KiB for one reasoned withdrawal inside the unchanged
 8 MiB history cap. The native check uses the final persisted head, including an
 ordinary write followed by withdrawal in one transaction. The **Remove guide from readers** page
-identifies the affected copy and explains that pending review ends. KNO-011â€“012,
+identifies the affected copy and explains that pending review ends. KNO-011–012,
 ADR 0118 and the [reserve checkpoint](../checkpoints/2026-10-10-guides-withdrawal-reserve.md)
 record the contract, capacity limits and exact evidence.
 
