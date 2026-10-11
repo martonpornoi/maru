@@ -28,14 +28,21 @@ the code, not those certification results.
 Guides is now integrating that protected baseline using the shared Announcements
 source `633fab4` to account for squash history. API contracts were regenerated. All 14,239 unit tests passed in 89.10 seconds;
 strict typing passed for 881 source files, and lint/format/documentation checks
-passed. No new native or browser result is claimed. Full exact-commit
-certification of the integrated source is the next automated gate.
+passed. No new browser result is claimed. Full exact-commit
+certification of a6fd408 failed in the first database batch: three historical
+lineage cases assumed Announcements was the final function successor, and one
+Participation migration case created a current event after rolling its schema
+back. The other active batches were interrupted, not independently failed.
+Evidence is preserved. Scoped test-setup repairs retain all original assertions;
+all five selected native cases passed in 596.17 seconds with unchanged source
+and verified owned-container cleanup. A new full exact-commit certification
+remains required. See the [repair checkpoint](../checkpoints/2026-10-11-guides-historical-test-repair.md).
 The existing synthetic runtime fixture remains stopped and preserved.
 
 ## Guides scope and verified outcome
 
-[ADRs 0118–0119](../architecture/decisions/0118-reviewed-internal-guidance.md)
-and KNO-010–013/EVT-008 define independently reviewed internal guides,
+[ADRs 0118â€“0119](../architecture/decisions/0118-reviewed-internal-guidance.md)
+and KNO-010â€“013/EVT-008 define independently reviewed internal guides,
 current-only reading and contextual placement, replacement, withdrawal, portable
 outputs and separately accepted responsibility. Fresh `guidance_only@1` and
 explicit Announcements expansion preserve unrelated workflows. Platform status
@@ -75,7 +82,7 @@ the revised native guard.
 Ordinary writes now retain 8 KiB for one reasoned withdrawal inside the unchanged
 8 MiB history cap. The native check uses the final persisted head, including an
 ordinary write followed by withdrawal in one transaction. The **Remove guide from readers** page
-identifies the affected copy and explains that pending review ends. KNO-011–012,
+identifies the affected copy and explains that pending review ends. KNO-011â€“012,
 ADR 0118 and the [reserve checkpoint](../checkpoints/2026-10-10-guides-withdrawal-reserve.md)
 record the contract, capacity limits and exact evidence.
 
