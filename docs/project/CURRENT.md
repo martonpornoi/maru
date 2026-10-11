@@ -80,6 +80,16 @@ native regression and Guides foundation cases passed in 253.92 seconds, with
 unchanged source and verified owned cleanup. Fresh full certification remains
 required; see the
 [validation-order checkpoint](../checkpoints/2026-10-11-guides-control-validation-order.md).
+Full `f9c91480` passed 51 batches, then stopped after 2h18m52s when the
+Registration audience migration fixture created a current event after reversing
+its schema. Seven active batches were interrupted; all owned containers were
+removed and complete evidence preserved. Both that fixture and the same setup
+order found in retired-Department authority now create ordinary event/account
+records before the genuine rollback. Migration and refusal assertions remain
+unchanged. All three focused native cases passed in 1679.85 seconds, with
+unchanged source and verified owned cleanup. Fresh full certification remains
+required; see the
+[fixture-order checkpoint](../checkpoints/2026-10-11-guides-historical-event-fixtures.md).
 The existing synthetic runtime fixture remains stopped and preserved.
 
 ## Guides scope and verified outcome

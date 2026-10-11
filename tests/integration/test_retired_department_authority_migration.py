@@ -50,9 +50,10 @@ def test_guard_installation_precedes_the_count_only_preflight() -> None:
 
 
 def test_preflight_and_reverse_fence_preserve_closed_authority() -> None:
-    _migrate(AUTHORIZATION_BEFORE)
+    # Current factories require current columns; only legacy rows follow rollback.
     edition = EventEditionFactory()
     actor = AccountFactory()
+    _migrate(AUTHORIZATION_BEFORE)
     department = Department.objects.create(
         organization=edition.organization,
         edition=edition,
