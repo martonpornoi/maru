@@ -32,6 +32,18 @@ systems, and expand only when it chooses. A volunteer account must not silently
 create an attendee registration or a payment obligation. Imports, exports,
 printable fallbacks, and clear exit paths are part of that design.
 
+To try the fictional conventions after installing the [prerequisites](docs/start-here/run-locally.md):
+
+```sh
+uv sync --locked --all-groups
+uv run --locked python scripts/try_maru.py
+```
+
+Open the printed browser link and sign in with the displayed demo account.
+**Ctrl+C deletes this disposable preview.** For prerequisite checks, startup
+verification, a short browser journey, or a persistent setup, follow
+[Run locally](docs/start-here/run-locally.md).
+
 The repository contains these concrete starting points:
 
 | Area | What is available to explore |

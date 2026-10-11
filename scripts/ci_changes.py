@@ -41,6 +41,10 @@ FULL_INTEGRATION_PREFIXES = (
     "src/maru/authorization/",
     "src/maru/identity/",
 )
+# Reviewed standalone developer entrypoints; never a directory-wide exemption.
+# They retain all current PostgreSQL tests and every other ordinary code gate.
+# New scripts and changes to this classifier still require exhaustive history.
+CURRENT_HISTORY_SCRIPTS = frozenset({"scripts/try_maru.py"})
 PROTECTED_DELETION_PREFIXES = (
     ".agents/",
     ".github/",
@@ -323,7 +327,7 @@ def historical_scope(
         "src/maru/core/database_integrity_readiness.py",
     }
     if destructive or any(
-        path.startswith(global_prefixes)
+        (path.startswith(global_prefixes) and path not in CURRENT_HISTORY_SCRIPTS)
         or (
             path.startswith("tests/")
             and not path.startswith(("tests/unit/", "tests/integration/"))

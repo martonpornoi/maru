@@ -99,6 +99,36 @@ local Docker resources, not eight GitHub-hosted runners. An unreachable unit
 database URL makes accidental database use fail instead of silently changing
 the unit boundary.
 
+## Choose the routine or exhaustive lane
+
+Use the default `Auto` mode for ordinary pre-review certification. Do not add
+`-Mode Full` by habit: Auto retains every current-schema PostgreSQL case and
+selects migration history from the exact diff. The standalone `scripts/try_maru.py`
+preview launcher is explicitly reviewed as current-history scope. Unknown scripts,
+the classifier itself, test machinery, shared security and runtime configuration
+still require exhaustive history; a mixed diff takes the strongest required scope.
+Deletion and rename review remain unchanged.
+
+| Occasion | Required history |
+| --- | --- |
+| Ordinary code, including the standalone preview launcher | All current behavior |
+| Models, migrations and historical integration cases | Affected owners/dependents and recovery |
+| Global security, test machinery, unknown scripts or destructive scope | Exhaustive before merge |
+| Nightly, manual full run and release | Exhaustive |
+
+The existing **Full acceptance** GitHub workflow runs nightly at 02:17 UTC on
+`main`. It skips an exact revision already fully passed or actively being tested;
+a failed attempt requires investigation rather than automatic repeated retries.
+To request a deliberate full run, use **Actions → Full acceptance → Run workflow**
+and select the intended branch. A manual run does not use nightly deduplication.
+The release workflow independently requires exhaustive acceptance of its exact
+source. These workflows run on GitHub runners without a local computer or agent.
+
+This classification change itself requires exhaustive local and hosted evidence.
+It neither changes the eight-worker limit nor removes tests, coverage, CodeQL,
+protected merge requirements or migration assertions. Runtime improvements are
+unmeasured until the corresponding lane completes; no fixed duration is promised.
+
 ## Run it directly
 
 Start Docker Desktop, make the working tree clean, and run:
