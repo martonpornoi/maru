@@ -16,12 +16,17 @@ acceptance, recovery, and activation gates remain open; deferment does not promo
 a profile or invalidate preserved evidence. The next work makes everyday Maru
 understandable before expanding the number of operational destinations.
 
+Before continuing Guidance, improve the contributor feedback loop: disposable
+fictional browser startup, prerequisite and startup checks, early browser
+rehearsals, and concise handoffs. Keep the existing exact-commit certification,
+permissions and protected delivery gates (NFR-001, NFR-002, NFR-003 and NFR-011).
+
 1. **Approachable work and contributor entry:** purpose-based navigation, plain
    language, accessible advanced details, verified local setup, and a concise
    furry-convention introduction (UX-031 and ADR 0116; delivered in PR #209).
 2. **Announcements:** compose, approve, prepare channel copy, record manual
    publication, correct, and export one canonical announcement (ANN-001–009,
-   ADR 0117; implemented, protected delivery pending).
+   ADR 0117; delivered in PR #210).
    Add external delivery adapters individually when their operating needs are
    known. This workflow must stand alone without Programme or Registration.
 3. **Guidance and help desk:** governed runbooks/FAQs first, then owned requests,

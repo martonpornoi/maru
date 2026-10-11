@@ -1,8 +1,8 @@
 # Run Maru locally
 
 **Audience:** New contributors and technical evaluators\
-**Outcome:** Sign in to an empty local Maru instance using your own synthetic
-administrator\
+**Outcome:** Try fictional conventions in a disposable browser preview, or
+create an empty development database\
 **Reading time:** 5 minutes\
 **Hands-on time:** Usually 15–30 minutes after prerequisites are installed
 
@@ -30,7 +30,70 @@ If you already have a Maru database or Compose volume, identify it before
 applying migrations. The [hands-on tutorial](../operations/maru-hands-on-tutorial.md)
 explains how to create a separate tutorial database without overwriting one.
 
-## 2. Start PostgreSQL and create the first account
+## 2. Try the fictional conventions
+
+From the repository root, the same commands work in PowerShell, Bash and Zsh:
+
+```sh
+uv run --locked python scripts/try_maru.py --check
+uv run --locked python scripts/try_maru.py
+```
+
+The first command checks Python, dependencies, Docker and the web port without
+creating resources. The second creates its own temporary PostgreSQL container,
+runs migrations and system checks, seeds the existing fictional data, and starts
+Maru. It prints each command's elapsed time and a **Ready** link when the normal
+login form responds. The first run may also download PostgreSQL. Keep this
+terminal open; startup can take several minutes.
+
+Open <http://127.0.0.1:8765/admin/>. Sign in with the **Email** and **Password**
+printed in the terminal. These are public, synthetic fixture credentials.
+
+Try this short browser journey:
+
+1. Sign in and find **Choose an organization** in the management shell.
+2. Open the Organizations page. Find **Maru Community Events (Demo)** and
+   **Maru Arts Collective (Demo)**, the fictional organizers of MaruCon and
+   MaruDance, and inspect their event series and editions.
+3. Sign out. Reload a protected management page and check that sign-in is
+   required again.
+4. Press **Ctrl+C** in the terminal. The server stops and this run's database
+   and anonymous volume are deleted. Changes made in this preview are disposable.
+   An unattended preview also cleans up after 60 browser minutes; use
+   `--minutes 15` (1–240) to choose another limit.
+
+The platform administrator is separate from convention membership. Some actions
+require another role or explicit purpose-specific setup. The educational fixture
+contains no Programme rows and does not activate every workflow. It is not the
+restricted-runtime acceptance fixture for Announcements or authority provenance.
+See [demo data](../modules/demo-data.md) for the exact dataset and limits.
+
+For a repeatable startup check without leaving a server running:
+
+```sh
+uv run --locked python scripts/try_maru.py --smoke
+```
+
+This checks migration, seed, system-check and HTTP login-form startup, then cleans
+up. It does **not** test authenticated journeys, replace browser acceptance,
+certify a commit, or relax any required CI check. For a busy web port, add
+`--port 8766` to either command and use the printed URL. Both web and database
+ports bind only to loopback. The launcher ignores inherited Maru/Django/database
+settings and never uses an existing database or Compose volume. Email stays in
+the console; invitation delivery remains unavailable without its required keys.
+
+If the terminal is forcibly killed or Docker becomes unavailable during cleanup,
+the printed container ID and `org.maru.local-preview` label identify this run.
+Inspect that exact resource before removing it; never use a general Docker prune
+or delete another rehearsal's volume. Stop previews before full certification so
+they do not compete with its database pool.
+
+## Optional: start with an empty, persistent database
+
+Use the manual route below when you want to keep your work or follow the organizer
+creation tour. Do not run it inside the disposable preview's database.
+
+### Start PostgreSQL and create the first account
 
 In PowerShell:
 
@@ -58,7 +121,7 @@ Follow `createsuperuser`'s prompts. Use a synthetic address such as
 bootstrap account is a platform administrator, separate from convention
 participation.
 
-## 3. Sign in
+### Sign in
 
 ```powershell
 uv run python src/manage.py runserver
@@ -74,13 +137,13 @@ reference at <http://127.0.0.1:8000/api/v1/docs/> or
 <http://127.0.0.1:8000/api/v1/redoc/>. The canonical schema is at
 <http://127.0.0.1:8000/api/v1/schema>.
 
-For pre-populated fictional records, stop the server with Ctrl+C, then follow
-[the demonstration-data instructions](../development/setup.md#fictional-demonstration-data).
-Use the empty database when following the manual organizer-setup tour.
+Use the empty database when following the manual organizer-setup tour. For
+persistent fictional records, see [demonstration data](../development/setup.md#synthetic-demonstration-data).
 
 ## Stop or troubleshoot
 
-Stop Django with Ctrl+C. `docker compose stop postgres` stops this project's
+For the disposable preview, Ctrl+C cleans up only its owned resources.
+For the manual route, stop Django with Ctrl+C. `docker compose stop postgres` stops this project's
 PostgreSQL service and keeps its database. Do not delete a volume to resolve a
 setup problem without identifying the data it contains.
 

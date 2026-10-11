@@ -6,6 +6,17 @@ Last updated: 2026-09-14
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
 
+## Routine and scheduled acceptance
+
+Use risk-selected `Auto` certification for ordinary changes, with all current
+PostgreSQL behavior and the existing coverage/security gates. Exhaustive history
+remains required before merging global safety or harness changes, nightly on
+changed `main`, on demand, and before release. The reviewed standalone preview
+launcher is ordinary tooling; all unreviewed scripts remain exhaustive. Adding
+another exception requires review of its dependencies and effects, plus tests
+that mixed high-risk diffs cannot inherit the exception. See the
+[lane and workflow instructions](../development/local-certification.md#choose-the-routine-or-exhaustive-lane).
+
 ## Fast feedback and retained documentation acceptance
 
 Run inexpensive complete unit feedback before expensive exact-head certification.
