@@ -62,6 +62,15 @@ structure version, actor/time and receipt under native guards; the former
 dependency-probe monkeypatch is removed. Both focused native cases passed in
 418.60 seconds with unchanged source and verified owned cleanup. Full exact-commit
 certification remains required; see the [orphan fixture checkpoint](../checkpoints/2026-10-11-guides-orphan-fixture.md).
+Full `29f9c57` passed 30 database batches, including the repaired orphan case,
+then failed six Board lineage corruption fixtures after 1h14m45s. New Guides
+constraint events blocked restoration of the fixtures' existing guards before
+the intended lineage assertions. Seven active batches were interrupted; every
+owned container was removed and complete evidence preserved. The test-only
+repair keeps the Guides guards enabled and evaluates them immediately in these
+fixtures. All six focused cases passed in 205.10 seconds, with unchanged source
+and verified owned cleanup. Fresh full certification remains required; see the
+[constraint checkpoint](../checkpoints/2026-10-11-guides-lineage-fixture-constraints.md).
 The existing synthetic runtime fixture remains stopped and preserved.
 
 ## Guides scope and verified outcome

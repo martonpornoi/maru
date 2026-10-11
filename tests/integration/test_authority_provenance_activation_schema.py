@@ -1580,6 +1580,11 @@ def test_sql_lineage_rejects_malformed_executive_board_bundle(
                     authorization_role_bundle_deferred_board_integrity
                 """
             )
+            # Keep the Guides graph guard enabled and execute its non-Guides
+            # check immediately so no queued event blocks restoring the guards.
+            cursor.execute(
+                "SET CONSTRAINTS authorization_rolebundle_guidance_graph IMMEDIATE"
+            )
             cursor.execute(mutation_sql, [bundle.id])
             cursor.execute(
                 """
@@ -1651,11 +1656,12 @@ def test_sql_lineage_rejects_malformed_current_board_assignment(
                     "ALTER TABLE public.authorization_roleassignment "
                     f"DISABLE TRIGGER {trigger_name}"
                 )
-            # Keep the stop guard enabled. Its shared-Organization no-op must run
-            # now so this corruption fixture can restore the original guards
+            # Keep the stop and Guides graph guards enabled. Their non-Programme/
+            # non-Guides checks must run now to restore the original guards
             # without a queued deferred event blocking ALTER TABLE.
             cursor.execute(
-                "SET CONSTRAINTS authorization_programme_stop_revoke_1 IMMEDIATE"
+                "SET CONSTRAINTS authorization_programme_stop_revoke_1, "
+                "authorization_roleassignment_guidance_graph IMMEDIATE"
             )
             cursor.execute(mutation_sql, [assignment.id])
             for trigger_name in (
