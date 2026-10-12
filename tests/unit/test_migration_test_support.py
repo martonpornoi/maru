@@ -9,6 +9,7 @@ from django.db.migrations.loader import MigrationLoader
 from tests.support.migrations import (
     flush_then_restore_current_migration_graph,
     identity_migration_targets,
+    isolated_migration_database,
     migrate_test_targets,
     migration_project_state,
     registration_migration_targets,
@@ -364,3 +365,28 @@ def test_restore_is_still_attempted_when_historical_flush_fails() -> None:
         flush_then_restore_current_migration_graph()
 
     restore.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    ("vendor", "name", "autocommit", "in_atomic"),
+    [
+        ("sqlite", "test_synthetic", True, False),
+        ("postgresql", "maru", True, False),
+        ("postgresql", "test_synthetic", False, False),
+        ("postgresql", "test_synthetic", True, True),
+    ],
+)
+def test_committed_history_refuses_unsafe_database_before_creation(
+    vendor: str, name: str, autocommit: bool, in_atomic: bool
+) -> None:
+    with patch("tests.support.migrations.connection") as database:
+        database.vendor = vendor
+        database.settings_dict = {"NAME": name}
+        database.get_autocommit.return_value = autocommit
+        database.in_atomic_block = in_atomic
+        with (
+            pytest.raises(RuntimeError, match="idle PostgreSQL test database"),
+            isolated_migration_database(),
+        ):
+            pytest.fail("Unsafe database isolation was accepted.")
+        database.cursor.assert_not_called()

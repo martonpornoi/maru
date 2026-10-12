@@ -27,8 +27,14 @@ from maru.authorization.models import (
     AuthorityProvenanceActivationLatch,
 )
 from maru.authorization.policy import resolve_organization_target
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.events.guidance_setup_readiness import (
+    GUIDANCE_SETUP_SCHEMA_RELATIONS,
+    guidance_setup_database_integrity_is_ready,
+)
 from tests.factories import AccountFactory, OrganizationFactory
 from tests.support.authority import activate_synthetic_board
+from tests.support.migrations import isolated_migration_database, migrate_test_targets
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -59,7 +65,7 @@ AUTHORIZATION_WITH_ACTIVATION = (
 
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
-    executor.migrate(list(targets))
+    migrate_test_targets(executor, list(targets))
     return executor
 
 
@@ -314,53 +320,62 @@ def test_audit_reverse_restores_prior_owned_append_only_function() -> None:
 
 
 def test_authorization_function_acl_hardening_preserves_preexisting_acl_state() -> None:
-    sentinel = "public.maru_acl_preservation_sentinel()"
-    _migrate(AUTHORIZATION_BEFORE_ACTIVATION)
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "DROP FUNCTION IF EXISTS public.maru_acl_preservation_sentinel()"
-        )
-        cursor.execute(
-            """
-            CREATE FUNCTION public.maru_acl_preservation_sentinel()
-            RETURNS integer
-            LANGUAGE sql
-            AS 'SELECT 1'
-            """
-        )
-    baseline = _function_acl_contract(sentinel)
-    assert baseline == (None, True)
-
-    try:
-        _migrate(AUTHORIZATION_WITH_ACTIVATION)
-        assert _function_acl_contract(sentinel) == baseline
-        exact_policy_acl = _function_acl_contract(
-            "public.maru_authority_issuance_valid_v1("
-            "bigint,uuid,character varying,uuid,uuid,uuid,uuid,"
-            "timestamp with time zone,timestamp with time zone,"
-            "timestamp with time zone,boolean,boolean,bigint[],integer)"
-        )
-        assert exact_policy_acl is not None
-        assert exact_policy_acl[1] is False
-
-        _migrate(AUTHORIZATION_BEFORE_ACTIVATION)
-        assert _function_acl_contract(sentinel) == baseline
-        assert (
-            _function_acl_contract(
-                "public.maru_authority_issuance_valid_v1("
-                "bigint,uuid,character varying,uuid,uuid,uuid,uuid,"
-                "timestamp with time zone,timestamp with time zone,"
-                "timestamp with time zone,boolean,boolean,bigint[],integer)"
-            )
-            is None
-        )
-    finally:
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    # Keep committed historical DDL in its own empty database. The caller's
+    # current schema, including physical column slots, remains untouched.
+    with isolated_migration_database():
+        sentinel = "public.maru_acl_preservation_sentinel()"
         _migrate(AUTHORIZATION_BEFORE_ACTIVATION)
         with connection.cursor() as cursor:
             cursor.execute(
                 "DROP FUNCTION IF EXISTS public.maru_acl_preservation_sentinel()"
             )
-        _migrate(AUTHORIZATION_WITH_ACTIVATION)
+            cursor.execute(
+                """
+                CREATE FUNCTION public.maru_acl_preservation_sentinel()
+                RETURNS integer
+                LANGUAGE sql
+                AS 'SELECT 1'
+                """
+            )
+        baseline = _function_acl_contract(sentinel)
+        assert baseline == (None, True)
+
+        try:
+            _migrate(AUTHORIZATION_WITH_ACTIVATION)
+            assert _function_acl_contract(sentinel) == baseline
+            exact_policy_acl = _function_acl_contract(
+                "public.maru_authority_issuance_valid_v1("
+                "bigint,uuid,character varying,uuid,uuid,uuid,uuid,"
+                "timestamp with time zone,timestamp with time zone,"
+                "timestamp with time zone,boolean,boolean,bigint[],integer)"
+            )
+            assert exact_policy_acl is not None
+            assert exact_policy_acl[1] is False
+
+            _migrate(AUTHORIZATION_BEFORE_ACTIVATION)
+            assert _function_acl_contract(sentinel) == baseline
+            assert (
+                _function_acl_contract(
+                    "public.maru_authority_issuance_valid_v1("
+                    "bigint,uuid,character varying,uuid,uuid,uuid,uuid,"
+                    "timestamp with time zone,timestamp with time zone,"
+                    "timestamp with time zone,boolean,boolean,bigint[],integer)"
+                )
+                is None
+            )
+        finally:
+            _migrate(AUTHORIZATION_BEFORE_ACTIVATION)
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "DROP FUNCTION IF EXISTS public.maru_acl_preservation_sentinel()"
+                )
+            _migrate(AUTHORIZATION_WITH_ACTIVATION)
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
 
 
 def test_authorization_reverse_refuses_a_missing_latch() -> None:

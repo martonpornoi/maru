@@ -2,11 +2,13 @@
 
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
+from uuid import uuid4
 
 from django.core.management import call_command
 from django.db import connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.state import ProjectState
+from psycopg import sql
 
 _REGISTRATION_DEPARTMENT_FK_MIGRATION = (
     "registration",
@@ -54,6 +56,66 @@ _APPLICATIONS_BEFORE_PROGRAMME_CALLS = (
 )
 _APPLICATIONS_ZERO: tuple[str, None] = ("applications", None)
 _PROGRAMME_BEFORE_ACCEPTED_CONVERSION = ("programme", "0003_downgrade_fence")
+
+
+@contextmanager
+def isolated_migration_database() -> Iterator[str]:
+    """Run a serial committed history case in one fresh, empty test database.
+
+    The caller applies real historical migrations inside this context. No schema,
+    migration record or row is cloned. Concurrent indexes retain autocommit.
+    Only the database created here is removed, after checking its name, OID and
+    owner; failures still restore the original connection. No force-drop or
+    termination of other connections is permitted. This is not for multi-thread
+    tests or processes that retain another connection to Django's default alias.
+    """
+
+    original_name = connection.settings_dict["NAME"]
+    if (
+        connection.vendor != "postgresql"
+        or not str(original_name).startswith("test_")
+        or not connection.get_autocommit()
+        or connection.in_atomic_block
+    ):
+        msg = "Committed history isolation requires an idle PostgreSQL test database."
+        raise RuntimeError(msg)
+    name = "test_maru_history_" + uuid4().hex
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT current_database()")
+        if cursor.fetchone() != (original_name,):
+            msg = "The connected test database differs from its configured name."
+            raise RuntimeError(msg)
+        cursor.execute(
+            sql.SQL("CREATE DATABASE {} TEMPLATE template0").format(
+                sql.Identifier(name)
+            )
+        )
+        cursor.execute("SELECT oid, datdba FROM pg_database WHERE datname = %s", [name])
+        identity = cursor.fetchone()
+    try:
+        if identity is None:
+            msg = "The newly created history database has no catalog identity."
+            raise RuntimeError(msg)
+        connection.close()
+        connection.settings_dict["NAME"] = name
+        connection.ensure_connection()
+        yield name
+    finally:
+        connection.close()
+        connection.settings_dict["NAME"] = original_name
+        connection.ensure_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT oid, datdba FROM pg_database WHERE datname = %s", [name]
+            )
+            if identity is None or cursor.fetchone() != identity:
+                msg = "History database ownership changed; refusing cleanup."
+                raise RuntimeError(msg)
+            cursor.execute(sql.SQL("DROP DATABASE {}").format(sql.Identifier(name)))
+            cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", [name])
+            if cursor.fetchone() is not None:
+                msg = "The owned history database was not removed."
+                raise RuntimeError(msg)
 
 
 @contextmanager

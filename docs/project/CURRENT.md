@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-11
+Last updated: 2026-10-12
 Phase: Guides integration with delivered workflow baseline; verification pending.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -90,6 +90,24 @@ unchanged. All three focused native cases passed in 1679.85 seconds, with
 unchanged source and verified owned cleanup. Fresh full certification remains
 required; see the
 [fixture-order checkpoint](../checkpoints/2026-10-11-guides-historical-event-fixtures.md).
+Full `548658b` passed 81 database batches, then stopped after 4h56m53s on
+one genuine-runtime health check reporting Knowledge integrity unavailable.
+Five active batches were interrupted; all 87 owned containers were removed and
+the complete failed run is preserved. The focused diagnostic passed the original
+runtime assertions on a fresh schema, then reproduced the failure after the
+preceding historical ACL migration case: the EventEdition schema fingerprint
+changed while the fresh runtime contract passed. Transactional isolation was
+correctly refused because this graph includes concurrent-index migrations; that
+failed attempt is preserved. The historical ACL case now runs its real committed
+migration sequence in a fresh, empty database on the same test server, with exact
+owned cleanup and original connection restoration. All ACL and runtime assertions
+remain, with added schema preservation and cleanup-on-failure tests. No production
+checks or pins changed. All four focused native cases passed in 207.34 seconds,
+with identical source inventories and exact owned cleanup. Complete database-free
+unit feedback passed 14,243 cases in 74.68 seconds using a task-owned temp directory;
+the earlier shared-temp permission failure is preserved. Fresh full exact-commit
+certification remains required. See the
+[runtime diagnostic checkpoint](../checkpoints/2026-10-12-guides-runtime-readiness.md).
 The existing synthetic runtime fixture remains stopped and preserved.
 
 ## Guides scope and verified outcome

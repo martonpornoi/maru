@@ -6,7 +6,10 @@ import pytest
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.recorder import MigrationRecorder
 
-from tests.support.migrations import rollback_migration_case
+from tests.support.migrations import (
+    isolated_migration_database,
+    rollback_migration_case,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
@@ -65,3 +68,44 @@ def test_nested_transaction_cannot_masquerade_as_a_committed_baseline() -> None:
         rollback_migration_case(),
     ):
         pytest.fail("Nested historical baseline was accepted.")
+
+
+@pytest.mark.parametrize("fail", [False, True])
+def test_committed_history_database_restores_source_and_cleans_up(fail: bool) -> None:
+    original_name = connection.settings_dict["NAME"]
+    with connection.cursor() as cursor:
+        cursor.execute("CREATE TABLE migration_database_sentinel (value integer)")
+        cursor.execute("INSERT INTO migration_database_sentinel VALUES (73)")
+    try:
+        with (
+            pytest.raises(ValueError, match="synthetic") if fail else nullcontext(),
+            isolated_migration_database() as isolated_name,
+        ):
+            assert isolated_name != original_name
+            assert connection.get_autocommit()
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT to_regclass('migration_database_sentinel')")
+                assert cursor.fetchone() == (None,)
+                cursor.execute("CREATE TABLE migration_database_sentinel (value text)")
+                cursor.execute(
+                    "CREATE INDEX CONCURRENTLY migration_database_index "
+                    "ON migration_database_sentinel (value)"
+                )
+                cursor.execute(
+                    "INSERT INTO migration_database_sentinel VALUES ('isolated')"
+                )
+            if fail:
+                raise ValueError("synthetic committed history failure")
+        assert connection.settings_dict["NAME"] == original_name
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT current_database()")
+            assert cursor.fetchone() == (original_name,)
+            cursor.execute("SELECT value FROM migration_database_sentinel")
+            assert cursor.fetchall() == [(73,)]
+            cursor.execute(
+                "SELECT 1 FROM pg_database WHERE datname = %s", [isolated_name]
+            )
+            assert cursor.fetchone() is None
+    finally:
+        with connection.cursor() as cursor:
+            cursor.execute("DROP TABLE migration_database_sentinel")
