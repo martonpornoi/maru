@@ -5,6 +5,8 @@ from unittest.mock import Mock
 from uuid import UUID
 
 import pytest
+from django.contrib.auth.models import AnonymousUser
+from django.template.loader import render_to_string
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -157,7 +159,7 @@ def test_personal_decisions_require_actual_current_task_admission(
 ):
     query = Mock(return_value=available)
     monkeypatch.setattr(navigation, "discover_guidance_tasks", query)
-    items = navigation._guidance_decision_items(request_actor)
+    items = navigation.guidance_decision_items(request_actor)
     assert [item.code for item in items] == (
         ["my.guidance-decisions"]
         if isinstance(available, navigation.GuidanceTaskDiscovery)
@@ -165,7 +167,7 @@ def test_personal_decisions_require_actual_current_task_admission(
         else []
     )
     assert query.call_args.kwargs["actor"] is request_actor.user
-    assert navigation._guidance_decision_items(request_actor) == items
+    assert navigation.guidance_decision_items(request_actor) == items
     query.assert_called_once()
 
 
@@ -181,14 +183,14 @@ def test_unavailable_personal_decisions_do_not_break_ordinary_navigation(
         "discover_guidance_tasks",
         Mock(side_effect=error("Private failure")),
     )
-    assert navigation._guidance_decision_items(request_actor) == []
+    assert navigation.guidance_decision_items(request_actor) == []
 
 
 def test_inactive_person_has_no_guidance_decision_lookup(request_actor, monkeypatch):
     request_actor.user.is_active = False
     query = Mock()
     monkeypatch.setattr(navigation, "discover_guidance_tasks", query)
-    assert navigation._guidance_decision_items(request_actor) == []
+    assert navigation.guidance_decision_items(request_actor) == []
     query.assert_not_called()
 
 
@@ -204,7 +206,36 @@ def test_unexamined_candidates_use_truthful_signed_personal_continuation(
             )
         ),
     )
-    (item,) = navigation._guidance_decision_items(request_actor)
+    (item,) = navigation.guidance_decision_items(request_actor)
     assert item.label == "Check Guides requests"
     assert "cursor=signed-next" in item.url
     assert "Some may no longer be available" in item.description
+
+
+def test_home_continuation_does_not_claim_an_unproved_pending_decision(
+    request_actor, monkeypatch
+):
+    monkeypatch.setattr(
+        navigation,
+        "discover_guidance_tasks",
+        Mock(
+            return_value=navigation.GuidanceTaskDiscovery(
+                has_current_work=False, access_cursor="signed-next"
+            )
+        ),
+    )
+    template_request = RequestFactory().get("/my/")
+    template_request.user = AnonymousUser()
+    template_request.session = {}
+    html = render_to_string(
+        "core/my_maru.html",
+        {
+            "request": template_request,
+            "maru_personal_surface": True,
+            "guidance_decisions": navigation.guidance_decision_items(request_actor),
+        },
+    )
+    assert "Guides requests</h2>" in html
+    assert "Check Guides requests" in html
+    assert "Some may no longer be available" in html
+    assert "Waiting for your decision" not in html

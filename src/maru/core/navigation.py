@@ -347,7 +347,19 @@ def _personal_profile_pairs(
 _GUIDANCE_TASKS_NOT_INSPECTED = object()
 
 
-def _guidance_decision_items(request: HttpRequest) -> list[NavigationItem]:
+def guidance_decision_items(request: HttpRequest) -> list[NavigationItem]:
+    """Project current personal Guides work once for this response.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Actual authenticated account and request-local discovery cache.
+
+    Returns
+    -------
+    list[NavigationItem]
+        Admitted decisions or a signed bounded continuation, without private terms.
+    """
     actor = getattr(request, "user", None)
     if not isinstance(actor, Account) or not actor.is_active:
         return []
@@ -539,7 +551,7 @@ def _personal_items(
             for profile_code, profile_version in profile_pairs
         )
     ]
-    items.extend(_guidance_decision_items(request))
+    items.extend(guidance_decision_items(request))
     if _route_is(
         request,
         "my-workforce-assignments",

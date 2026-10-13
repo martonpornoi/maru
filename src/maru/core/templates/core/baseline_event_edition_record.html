@@ -61,6 +61,14 @@
             </p>
           </aside>
 
+          {% if guidance_setup_url %}
+            <section class="baseline-panel" aria-labelledby="edition-guides-setup-title">
+              <h2 id="edition-guides-setup-title">Guides for this event</h2>
+              <p>Set up shared instructions and FAQs with two named people responsible for them. Review the plan before anyone receives access.</p>
+              <a class="baseline-primary-button" href="{{ guidance_setup_url }}">Set up Guides for this event</a>
+            </section>
+          {% endif %}
+
           {% if edition_editable %}
             {% include "core/_baseline_access_summary.html" with access_operation="view and change this event-edition record" %}
           {% else %}

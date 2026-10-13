@@ -244,7 +244,7 @@ class GuidanceRevision(_Evidence):
     body = models.TextField(max_length=MAX_BODY)
     language_code = models.CharField(max_length=35)
     review_by = models.DateField(null=True, blank=True)
-    placements = models.JSONField(default=list)
+    placements = models.JSONField(default=list, blank=True)
     text_bytes = models.PositiveIntegerField()
 
     class Meta:

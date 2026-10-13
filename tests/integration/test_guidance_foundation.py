@@ -5,8 +5,9 @@ from uuid import uuid4
 import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError, connection, transaction
-from django.test import RequestFactory
+from django.test import Client, RequestFactory
 from django.test.utils import CaptureQueriesContext
+from django.urls import reverse
 from django.utils import timezone
 
 from maru.announcements.models import AnnouncementRevision
@@ -18,6 +19,7 @@ from maru.authorization.guidance_access import (
     revoke_guidance_access,
 )
 from maru.authorization.guidance_access_queries import (
+    discover_guidance_tasks,
     load_guidance_access_request,
     load_guidance_access_workspace,
 )
@@ -34,7 +36,11 @@ from maru.authorization.policy import decide, resolve_edition_target
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.admin_context import admin_edition_options, admin_shell_access
 from maru.events.announcements_scope import resolve_announcements_edition_scope
-from maru.events.guidance_activation import apply_guidance_activation
+from maru.events.guidance_activation import (
+    apply_guidance_activation,
+    propose_guidance_activation,
+    respond_to_guidance_activation,
+)
 from maru.events.guidance_setup_readiness import (
     guidance_setup_database_integrity_is_ready,
 )
@@ -638,3 +644,84 @@ def test_access_answer_and_revocation_events_bind_exact_evidence_and_replay_once
             == receipt_id
         )
         assert (DomainEvent.objects.count(), OutboxMessage.objects.count()) == before
+
+
+def _home(account):
+    client = Client()
+    client.force_login(account)
+    response = client.get(reverse("my-maru-home"))
+    assert response.status_code == 200
+    return response.content.decode()
+
+
+@pytest.mark.parametrize("verified_platform", [True, False])
+def test_pending_setup_is_discoverable_from_actual_personal_home(
+    guidance_runtime, verified_platform
+):
+    platform = (
+        guidance_runtime
+        if verified_platform
+        else AccountFactory(is_staff=True, is_superuser=True, email_verified_at=None)
+    )
+    platform, edition, first, second = create_guidance_foundation(platform=platform)
+    proposal = native(
+        propose_guidance_activation,
+        actor=platform,
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        expected_edition_version=edition.aggregate_version,
+        operator_ids=(first.id, second.id),
+        reason="Review the exact synthetic Guides responsibilities.",
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    marker = 'data-personal-destination-kind="my.guidance-decisions"'
+    assert discover_guidance_tasks(actor=first, correlation_id=uuid4()).has_current_work
+    assert marker in _home(first)
+    assert marker in _home(second)
+    assert marker not in _home(AccountFactory())
+    assert marker not in _home(platform)
+    for person in (first, second):
+        native(
+            respond_to_guidance_activation,
+            actor=person,
+            request_id=proposal.request_id,
+            expected_version=proposal.version,
+            accept=True,
+            correlation_id=uuid4(),
+        )
+        assert marker not in _home(person)
+    assert marker in _home(platform)
+    native(
+        apply_guidance_activation,
+        actor=platform,
+        request_id=proposal.request_id,
+        expected_version=proposal.version,
+        correlation_id=uuid4(),
+    )
+    assert marker not in _home(platform)
+
+
+def test_announcements_event_offers_owning_guides_setup_to_platform(guidance_runtime):
+    platform, _key, setup = setup_announcements()
+    representation = OrganizationRepresentation.objects.get(id=setup.representation_id)
+    activate_announcements_operators(platform, representation)
+    edition = EventEdition.objects.select_related("series", "organization").get(
+        id=setup.edition_id
+    )
+    client = Client()
+    client.force_login(platform)
+    response = client.get(
+        reverse(
+            "baseline-event-edition-record",
+            args=(edition.organization.slug, edition.series.slug, edition.slug),
+        )
+    )
+    assert response.status_code == 200
+    destination = reverse(
+        "guidance-activation-start", args=(edition.organization_id, edition.id)
+    )
+    assert f'href="{destination}"' in response.content.decode()
+    assert client.get(destination).status_code == 200
+    edition.refresh_from_db()
+    assert edition.adoption_profile_code == "announcements_only"

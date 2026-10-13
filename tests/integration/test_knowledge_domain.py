@@ -973,3 +973,21 @@ def test_later_same_transaction_coauthor_does_not_invalidate_previous_review(wor
         with pytest.raises(GuidanceStateConflictError):
             approve(world, next_review, actor=author)
     assert GuidanceReview.objects.count() == before
+
+
+def test_empty_placements_survive_create_revision_and_independent_approval(world):
+    item = created(world, placements=())
+    revised = native(
+        commands.revise_guidance,
+        request(world),
+        item_id=item.item_id,
+        expected_version=item.version,
+        expected_settings_version=1,
+        reason="Clarify the fictional directions without recommending a task.",
+        draft=draft(body="Ask the fictional help desk for directions.", placements=()),
+    )
+    result = approve(world, submit(world, revised))
+    current = queries.load_current_guidance(read_request(world), item_id=result.item_id)
+    assert current.placements == ()
+    assert current.summary.number == 2
+    assert current.body == "Ask the fictional help desk for directions."

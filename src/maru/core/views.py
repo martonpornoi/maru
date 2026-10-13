@@ -2,7 +2,7 @@
 
 import logging
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from django import forms
 from django.conf import settings
@@ -52,7 +52,7 @@ from maru.authorization.services import AuthorizationDenied
 from maru.catalog.readiness import catalog_database_integrity_is_ready
 from maru.charities.readiness import charities_database_integrity_is_ready
 from maru.core.forms import StrictInputForm
-from maru.core.navigation import destination_code_is_supported
+from maru.core.navigation import destination_code_is_supported, guidance_decision_items
 from maru.core.personal_discovery import personal_shell_profile_pairs
 from maru.events.admin_context import (
     ADMIN_EDITION_SESSION_KEY,
@@ -76,6 +76,7 @@ from maru.events.forms import (
     EventEditionUpdateForm,
     WorkforceAdoptionSetupForm,
 )
+from maru.events.guidance_activation_queries import load_guidance_activation_start
 from maru.events.guidance_setup_readiness import (
     guidance_setup_database_integrity_is_ready,
 )
@@ -1491,6 +1492,7 @@ def baseline_event_edition_record(
             "convention_series": series,
             "edition": edition,
             "edition_profile": edition_profile,
+            "guidance_setup_url": _guidance_setup_url(actor, edition),
             "edition_adopts_registration": bool(
                 edition_profile and "registration" in edition_profile.modules
             ),
@@ -1502,6 +1504,32 @@ def baseline_event_edition_record(
             "edition_record_load_failed": False,
         },
         status=status,
+    )
+
+
+def _guidance_setup_url(actor: Account, edition: EventEdition) -> str:
+    if not actor.is_platform_administrator or (
+        edition.adoption_profile_code,
+        edition.adoption_profile_version,
+    ) not in {
+        ("guidance_only", 1),
+        ("announcements_only", 1),
+        ("announcements_guidance", 1),
+    }:
+        return ""
+    try:
+        setup = load_guidance_activation_start(
+            actor=actor,
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            correlation_id=uuid4(),
+        )
+    except (PermissionDenied, ValidationError, DatabaseError):
+        return ""
+    if setup.guidance_ready:
+        return ""
+    return reverse(
+        "guidance-activation-start", args=(edition.organization_id, edition.id)
     )
 
 
@@ -1760,6 +1788,7 @@ def my_maru_home(request: HttpRequest) -> TemplateResponse:
             "title": "My Maru",
             "has_permission": True,
             "maru_personal_surface": True,
+            "guidance_decisions": guidance_decision_items(request),
             "maru_personal_profile_pairs": profile_pairs,
             "maru_personal_destination_kinds": personal_destination_kinds,
             "has_personal_start_destination": bool(

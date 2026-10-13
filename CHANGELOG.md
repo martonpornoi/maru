@@ -42,6 +42,10 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Guides now accepts drafts without optional task placements, shows pending setup
+  and access work on My Maru, and offers setup from eligible event records. The
+  narrow-screen menu no longer covers Save or Resume buttons.
+
 - Staff Console development tooling now locks `source-map-js` 1.2.2, addressing
   an upstream source-map denial-of-service vulnerability while retaining the
   existing dependency-security checks.

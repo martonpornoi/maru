@@ -248,3 +248,10 @@ drawer background isolation, focus return, one H1 and one `main`, no duplicate
 identifiers, and no horizontal overflow. The complete rendered width/zoom and state matrices,
 representative screen-reader evidence, mutation-role rehearsals, and release
 accessibility acceptance remain open gates.
+
+### Narrow navigation opener
+
+At drawer widths the Menu opener occupies its own row before page content. It
+must not float over fields or submit buttons. Opening still uses the existing
+modal drawer, focus containment, Escape and return-focus behavior; without
+scripts native navigation remains available.

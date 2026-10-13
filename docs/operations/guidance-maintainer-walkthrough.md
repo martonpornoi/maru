@@ -1,6 +1,17 @@
 # Guides maintainer walkthrough
 
-Status: Proposed synthetic acceptance journey; not yet run
+Status: Partially rehearsed in the browser; not fully accepted. The
+[2026-10-13 checkpoint](../checkpoints/2026-10-13-guides-browser-handoff.md)
+records completed steps, defects and remaining checks. Separate actual accounts
+were operated by the assistant, initially after human sign-in and later through
+an explicitly approved local synthetic sign-in helper. This is not independent-person
+acceptance. The reviewed replacement, overdue, withdrawal and stop/resume browser
+paths have been exercised. The [UI repair checkpoint](../checkpoints/2026-10-13-guides-ui-repairs.md)
+also records the repaired continuations, no-script path, measured widths and
+fresh Guides-only setup/write/review/read journey. Native print/200 percent zoom,
+complete keyboard, independent-human and specialist/operational acceptance remain
+open. The fresh variant did not add a second Reader grant; the existing other-event
+Reader was correctly denied.
 
 Use an isolated synthetic event and three separate browser sessions. A and B are
 the two accepted organization controllers. C has a verified synthetic Maru account
@@ -12,6 +23,15 @@ adoption also require a platform administrator's proposal and apply actions; do 
 silently count that actor as an organizer. Fresh Guidance-only foundation setup is
 a separate variant using the same supplemental access ceremony. The visible product
 name is **Guides**; Guidance remains the technical contract name.
+
+For repeated assistant-operated role checks, explicitly authorize the named
+fixture credential source, exact local sign-in destination and allowed accounts.
+A scoped helper may then fill the ordinary form without printing credentials or
+copying them into evidence. Verify the signed-in identity after each switch.
+Keep the same permissions and real sign-in flow; do not inject sessions or
+reinterpret this as approval to retrieve other credentials. An approval refusal
+must be resolved for that exact method before retrying. Manual sign-in remains
+available, but repeated manual switches are unnecessary once the method is approved.
 
 ## Add the workflow and write one guide
 

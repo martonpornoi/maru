@@ -206,3 +206,15 @@ hidden. No matching personal candidates means no Guides readiness check, so an
 unused Guides workflow cannot block unrelated personal work. Compatible owner
 integrity exceptions remain subclasses of `PermissionDenied`. No history-wide
 scope scan, new storage limit, cached authority or Reading capability is added.
+
+### Browser-discovered continuations
+
+Task placements are optional: an approved guide without a placement remains in
+the current library. Pending setup/access decisions appear on My Maru through the
+same admitted projection as personal navigation. An eligible event record offers
+Set up Guides for this event only after owning platform setup admission; the
+destination authorizes again and no link creates access. The neutral Guides
+requests home-card heading also covers unexamined bounded continuations. Setup
+discovery uses its owner's existing bootstrap-platform admission before the
+separate verified-account access-request check; ordinary participants retain
+their own verified-account and exact-source requirements.

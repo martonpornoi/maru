@@ -771,12 +771,15 @@ def discover_guidance_tasks(
         return empty
     if not isinstance(correlation_id, UUID) or correlation_id.int == 0:
         raise ValidationError("Use a non-empty trace.")
-    if resolve_active_verified_account_reference(account_id=actor.id) is None:
-        return empty
+    # Setup admission owns the bootstrap platform-account contract. It also
+    # verifies ordinary participants independently; access requests below retain
+    # their separate verified-account requirement.
     if has_current_guidance_activation_tasks(
         actor=actor, correlation_id=correlation_id
     ):
         return GuidanceTaskDiscovery(has_current_work=True, access_cursor=None)
+    if resolve_active_verified_account_reference(account_id=actor.id) is None:
+        return empty
     # Only the actual named approver's minimal locator precedes purpose admission.
     locators = tuple(
         GuidanceAccessRequest.objects.filter(

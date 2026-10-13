@@ -156,3 +156,8 @@ notifications and external indexing remain later work. Automated and synthetic
 browser results do not establish independent-person comprehension, specialist
 accessibility or production acceptance. Current evidence belongs in
 [CURRENT](../project/CURRENT.md), not this interface contract.
+
+Task placements are optional. An empty selection keeps a guide in its authorized
+reading library without recommending it beside a task. Knowledge 0004 records
+that validation choice in migration state; it changes no physical column or
+native permission/integrity contract.

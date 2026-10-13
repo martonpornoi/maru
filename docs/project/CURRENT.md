@@ -1,229 +1,94 @@
 # Current project state
 
-Last updated: 2026-10-12
-Phase: Guides integration with delivered workflow baseline; verification pending.
+Last updated: 2026-10-13
+Phase: Bounded first Guides delivery; synthetic browser repairs verified, final certification pending.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready release or supported hosted service. Furry conventions are the
-primary audience. Occasional volunteers need plain language, accessible controls
-and secondary technical settings. Each workflow must work without unrelated
-modules. Continuous work and routine product choices are authorized; Programme
-#48 remains deferred. [ROADMAP](ROADMAP.md) owns sequencing and the
-[checkpoint archive](../checkpoints/index.md) retains history.
+primary audience. Use plain language, accessible controls and secondary technical
+settings. Each workflow must work without unrelated modules. [ROADMAP](ROADMAP.md)
+owns sequencing; [checkpoints](../checkpoints/index.md) retain historical evidence.
 
-## Delivered baseline and active acceptance
+## Delivered baseline
 
-Approachable navigation and contributor entry are delivered through
-[PR #209](https://github.com/martonpornoi/maru/pull/209), protected main
-`e77fae5b94dbee3e7f2e9d64b2f768be95888738`.
+Standalone Announcements PR #210 and developer workflow PR #211 are merged.
+Protected main is `bc09e8b63e4142c712178a067a123c61b0924e2f`; the merged tree was
+verified and the clean main checkout synchronized. Guides inherits the code,
+not those checks. Its first slice covers plain-text instructions and FAQs,
+independent review, approved reading/search/download, withdrawal, stop/resume
+and separately authorized retained history. Files, OCR, acknowledgements and
+the broader document-governance umbrella (#53) remain separate work.
 
-Standalone Announcements PR #210 and developer workflow PR #211 are delivered.
-PR #211 merged on 2026-10-11 at 06:46 UTC as
-`bc09e8b63e4142c712178a067a123c61b0924e2f`, after exact-head local and hosted
-acceptance including all 77 PostgreSQL batches, PR gate and CodeQL. Its merged
-tree matched the certified source and the clean main checkout was synchronized.
-There were no submitted reviews or unresolved conversations. Guides inherits
-the code, not those certification results.
+## Guides evidence and current repair
 
-Guides is now integrating that protected baseline using the shared Announcements
-source `633fab4` to account for squash history. API contracts were regenerated. All 14,239 unit tests passed in 89.10 seconds;
-strict typing passed for 881 source files, and lint/format/documentation checks
-passed. No new browser result is claimed. Full exact-commit
-certification of a6fd408 failed in the first database batch: three historical
-lineage cases assumed Announcements was the final function successor, and one
-Participation migration case created a current event after rolling its schema
-back. The other active batches were interrupted, not independently failed.
-Evidence is preserved. Scoped test-setup repairs retain all original assertions;
-all five selected native cases passed in 596.17 seconds with unchanged source
-and verified owned-container cleanup. A new full exact-commit certification
-remains required. See the [repair checkpoint](../checkpoints/2026-10-11-guides-historical-test-repair.md).
-The next full run on `34a3103` stopped after 37 minutes: 13 batches passed,
-then Guides foundation checks failed after an empty historical migration round
-trip. Seven other active batches were interrupted; all owned containers were
-removed. Complete failed evidence is preserved. A fresh-versus-roundtrip probe
-confirmed that dropping and recreating `adoption_revision` leaves a dropped
-physical column slot, which the unchanged exact schema contract correctly rejects.
-The single-connection test now isolates its real DDL with the existing rollback
-helper and asserts restored schema and readiness. All 16 focused history-plus-current
-cases passed in 492.60 seconds, with unchanged source and owned cleanup;
-see the [schema isolation checkpoint](../checkpoints/2026-10-11-guides-schema-isolation.md).
-Full `6d732f5` passed the repaired Guides batch, then stopped after 52m57s on
-an older orphan-recovery test using current models after schema reversal. Failed
-evidence is preserved. Creating calls before reversal was correctly rejected by
-the retained-evidence downgrade fence in a focused failed attempt. The fixture
-now creates its old call graph with historical models and native guards enabled,
-then restores all current leaves before exercising recovery. A focused attempt
-exposed generic historical question visibility defaults; the fixture now sets
-the closed Programme flags explicitly. The next native check identified missing
-activation actor/time, now retained alongside the exact receipt. Creation and
-activation then passed, but current-model loading in the retirement helper failed
-against the old schema. Retirement now also uses historical models with exact
-structure version, actor/time and receipt under native guards; the former
-dependency-probe monkeypatch is removed. Both focused native cases passed in
-418.60 seconds with unchanged source and verified owned cleanup. Full exact-commit
-certification remains required; see the [orphan fixture checkpoint](../checkpoints/2026-10-11-guides-orphan-fixture.md).
-Full `29f9c57` passed 30 database batches, including the repaired orphan case,
-then failed six Board lineage corruption fixtures after 1h14m45s. New Guides
-constraint events blocked restoration of the fixtures' existing guards before
-the intended lineage assertions. Seven active batches were interrupted; every
-owned container was removed and complete evidence preserved. The test-only
-repair keeps the Guides guards enabled and evaluates them immediately in these
-fixtures. All six focused cases passed in 205.10 seconds, with unchanged source
-and verified owned cleanup. Fresh full certification remains required; see the
-[constraint checkpoint](../checkpoints/2026-10-11-guides-lineage-fixture-constraints.md).
-Full `614e6a2` passed 44 batches, then stopped after 1h36m28s because the new
-Guides source check masked the established unknown-control-role rejection.
-Seven other batches were interrupted; all owned containers were removed and
-evidence preserved. The unmerged source helper now identifies ordinary authority before checking
-Guides roles, leaving ordinary unknown roles to the existing rejection. All 16 focused
-native regression and Guides foundation cases passed in 253.92 seconds, with
-unchanged source and verified owned cleanup. Fresh full certification remains
-required; see the
-[validation-order checkpoint](../checkpoints/2026-10-11-guides-control-validation-order.md).
-Full `f9c91480` passed 51 batches, then stopped after 2h18m52s when the
-Registration audience migration fixture created a current event after reversing
-its schema. Seven active batches were interrupted; all owned containers were
-removed and complete evidence preserved. Both that fixture and the same setup
-order found in retired-Department authority now create ordinary event/account
-records before the genuine rollback. Migration and refusal assertions remain
-unchanged. All three focused native cases passed in 1679.85 seconds, with
-unchanged source and verified owned cleanup. Fresh full certification remains
-required; see the
-[fixture-order checkpoint](../checkpoints/2026-10-11-guides-historical-event-fixtures.md).
-Full `548658b` passed 81 database batches, then stopped after 4h56m53s on
-one genuine-runtime health check reporting Knowledge integrity unavailable.
-Five active batches were interrupted; all 87 owned containers were removed and
-the complete failed run is preserved. The focused diagnostic passed the original
-runtime assertions on a fresh schema, then reproduced the failure after the
-preceding historical ACL migration case: the EventEdition schema fingerprint
-changed while the fresh runtime contract passed. Transactional isolation was
-correctly refused because this graph includes concurrent-index migrations; that
-failed attempt is preserved. The historical ACL case now runs its real committed
-migration sequence in a fresh, empty database on the same test server, with exact
-owned cleanup and original connection restoration. All ACL and runtime assertions
-remain, with added schema preservation and cleanup-on-failure tests. No production
-checks or pins changed. All four focused native cases passed in 207.34 seconds,
-with identical source inventories and exact owned cleanup. Complete database-free
-unit feedback passed 14,243 cases in 74.68 seconds using a task-owned temp directory;
-the earlier shared-temp permission failure is preserved. Fresh full exact-commit
-certification remains required. See the
-[runtime diagnostic checkpoint](../checkpoints/2026-10-12-guides-runtime-readiness.md).
-The existing synthetic runtime fixture remains stopped and preserved.
+Full certification of `c51814681ffff58ee4a60e37c01a5aec3c5b9a63` passed all ten
+gates and 87 PostgreSQL batches, with 91.20 percent coverage against the unchanged
+90 percent gate in 5h18m16s. At most eight instances ran simultaneously and all
+87 owned containers were removed. Historical-test repairs and all prior failed
+evidence remain preserved. See the [certification checkpoint](../checkpoints/2026-10-12-guides-full-certification.md).
+This result predates the current uncommitted UI repairs and does not certify them.
 
-## Guides scope and verified outcome
+The [browser checkpoint](../checkpoints/2026-10-13-guides-browser-handoff.md)
+records actual synthetic combined-event setup, separate Author/Reviewer decisions,
+reader-only access, approved-copy search/download, pending replacement isolation,
+overdue warnings, withdrawal, stop/resume, retained exports and unchanged approved
+Announcements content. Assistant-operated accounts are not independent-human
+acceptance. The exact current-fixture file-to-normal-sign-in method was expressly
+approved; automatic role switching works without manual nudges. Old V6 resources
+and credentials remain untouched.
 
-[ADRs 0118–0119](../architecture/decisions/0118-reviewed-internal-guidance.md)
-and KNO-010–013/EVT-008 define independently reviewed internal guides,
-current-only reading and contextual placement, replacement, withdrawal, portable
-outputs and separately accepted responsibility. Fresh `guidance_only@1` and
-explicit Announcements expansion preserve unrelated workflows. Platform status
-does not grant content access. [ADR 0124](../architecture/decisions/0124-evidence-bound-adoption-transition-effects.md)
-adds an evidence-bound transition route without changing old profile meanings.
+The browser found four scoped defects. Repairs now permit empty optional task
+placements with a forward model-state migration, expose admitted pending Guides
+decisions on My Maru, add an independently authorized setup entry to eligible
+event records, and place the narrow-screen Menu control in its own layout row.
+Three focused native cases passed with exact source/cleanup proof. The complete
+unit suite passed 14,248 cases. Actual empty-placement save/revision, independent
+approval, Reader disclosure, no-script review and stop/resume, narrow pointer
+Save/Resume and seven measured widths passed. See the
+[repair checkpoint](../checkpoints/2026-10-13-guides-ui-repairs.md).
 
-Before this reserve repair, the corrected workflow/routing selection passed 44 native cases in 431.76 seconds
-(wrapper 438.062). Migration/recovery passes eight in 350.78 seconds (wrapper
-357.156). Both source inventories matched and exact owned containers were removed.
-These owner-login selections are separate from the genuine runtime proof below.
+Fresh synthetic Guides-only creation, separately approved organizer and Guides
+activation, record rules, draft, independent-account review and approved reading
+passed. Only Writing guides placement was offered. Platform's accepted request
+was discoverable on My Maru and disappeared after application, without a content
+link. Setup-owner admission now precedes the separate verified access-request
+check; no account, owner permission or native protection changed. The card uses
+the neutral Guides requests heading for bounded continuations. Sixty affected
+units and four native cases passed (205.59 seconds, exact source/owned cleanup).
+The prior wrapper's stale three-case expectation is retained as failed evidence.
+The Foxglove-only Reader was denied Cedar and retained Foxglove access. Unrelated
+workflow table fingerprints and migration inventory remained unchanged.
 
-The isolated V6 fixture passed real `maru_runtime` provisioning: all 25 role/ACL
-flags plus the derived current-session check, all five owning integrity gates,
-provenance ready with zero blockers, health HTTP 200, and Django/migration checks.
-Actual synthetic people accepted separate Announcements and Guides-only scopes.
-The corrected command continuation independently approved two guide copies, kept
-the first current during replacement review, withdrew the second, and proved
-self-review and reader private-history refusals. Announcements remains unexpanded
-and its approved copy unchanged. Runtime/provenance checks passed before and after.
-
-The original helper confused an item ID with a revision ID. Its failed run and
-invalid self-review evidence remain preserved and are not counted as success.
-The exact fixture container is stopped, its volume/accounts retained and web port
-free. No authenticated browser or human journey occurred. Credential entry and
-the combined browser expansion remain unresolved; full Guides certification,
-complete accessibility, print and operational acceptance are still open.
-
-The [identity/routing checkpoint](../checkpoints/2026-10-09-guides-event-identity.md)
-and [ACL checkpoint](../checkpoints/2026-10-09-guides-aggregate-execute-hardening.md)
-retain exact source inventories, prior failures, timings and runtime artifacts.
-The preserved `ba5c83e1` source passed 14,160 units in 76.25 seconds. Those full
-units, handbook, native and runtime results predate this batch; they do not prove
-the revised native guard.
-
-## Withdrawal reserve and focused feedback
-
-Ordinary writes now retain 8 KiB for one reasoned withdrawal inside the unchanged
-8 MiB history cap. The native check uses the final persisted head, including an
-ordinary write followed by withdrawal in one transaction. The **Remove guide from readers** page
-identifies the affected copy and explains that pending review ends. KNO-011–012,
-ADR 0118 and the [reserve checkpoint](../checkpoints/2026-10-10-guides-withdrawal-reserve.md)
-record the contract, capacity limits and exact evidence.
-
-Focused feedback passed 117 units, then 60 affected presentation cases after the
-final wording refinement. The fresh native reserve selection then passed **two
-cases in 326.98 seconds** (333.219-second wrapper), with unchanged source and
-exact owned-container cleanup. This owner-login evidence proves the selected
-reserve boundaries; it predates the later source-channel admission correction.
-The isolated timing does not recalibrate the complete planner: its explicitly
-unmeasured conservative fallback remains unchanged.
-
-New Guides command attribution now fits Audit's existing 40-character ceiling
-before any owner writes or retry lookup. Noncanonical text keeps its original
-error; exact retries and fixed `knowledge-html` UI attribution are unchanged.
-The historical receipt field and reserve bound remain 80 characters. No model,
-migration, SQL, pin, runtime permission or route changed for this correction.
-Installed focused feedback passed **79 units in 0.75 seconds**, with zero database
-calls; scoped lint, formatting, typing, Python-docstring and documentation checks
-passed. This is focused source feedback, not a new full-suite result.
-The stopped genuine-runtime fixture and its seven harness inputs remain untouched.
-Already-full legacy histories cannot gain a reserve retroactively; old installed
-K0002 does not acquire this pre-release guard edit without fresh migration.
-
-## Preserved source and presentation
-
-The [decisions](../checkpoints/2026-10-09-guides-bounded-decisions.md),
-[theme](../checkpoints/2026-10-09-guides-admin-theme.md),
-[Access](../checkpoints/2026-10-09-guides-access-language.md) and
-[roadmap](../checkpoints/2026-10-10-roadmap-focus.md) checkpoints retain prior
-source and synthetic presentation evidence, not authenticated acceptance.
-
-## Other active checkouts
-
-Each checkout owns its independently reviewed observations, native and runtime
-evidence. Help desk, Reading and Service retain their own unfinished-work gates;
-none inherits this reserve change, the Guides runtime result or permission to
-activate unfinished work. Propagation requires separate source and native review.
+The exact populated fixture is stopped, with accounts, volume and original proof
+preserved. Forward receipts record the optional-placement migration and cache
+version without data loss. No source changes underneath a serving process and no
+populated fixture overlaps native certification.
 
 ## Smallest next actions
 
-1. Preserve the passed native reserve evidence and later admission-fix feedback.
-   Resolve browser credential entry before the genuinely unrun combined expansion;
-   retain the stopped fixture.
-2. Follow the corrected [Guides walkthrough](../operations/guidance-maintainer-walkthrough.md)
-   for the browser/manual journey. Source review corrected initial roles, the
-   review screen path and replacement submission; the walkthrough is still unrun.
-3. Freeze Guides, then run its complete exact-commit certification and protected
-   hosted acceptance. Verify dependent workflows against their own boundaries.
+1. Certify the final clean exact commit, create the PR, resolve reviews, verify
+   required hosted checks and CodeQL, protected-squash-merge into actual default
+   main, verify its tree and synchronize only clean main.
+2. Keep native print/200 percent zoom, complete keyboard, independent-human,
+   specialist accessibility and operational/production acceptance explicitly open.
+   The broader decision-history browser cases remain in the walkthrough.
+3. Select a bounded next convention outcome; do not expand this slice into the
+   full document-governance umbrella or infer production acceptance.
 
-## Verification and retained boundaries
+## Preserved boundaries
 
-Follow [local certification](../development/local-certification.md): focused
-feedback, complete inexpensive units, then one clean required run with `CI=true`,
-pinned pnpm 11.9.0 and unchanged coverage/timing gates. Hosted acceptance is
-independent. Announcements released the local pool; its hosted checks are separate.
-Keep local native fixtures sequential and never overlap full local certification.
-Preserve failed evidence; stop or remove only exact owned resources.
+Follow [local certification](../development/local-certification.md), retaining
+coverage, workers, native guards, permissions and timing/headroom gates. Preserve
+failed evidence and all unrelated worktrees, stashes and stopped fixtures.
+Help desk, Dealer, Service, Reading and Programme work is not resumed by this batch.
+The earlier delivery monitors are paused. The task-local handoff owns resource IDs
+and exact local sign-in approval, not product documentation or credentials.
 
-Programme #48, #92, #109 and #108 remain open. Return through its
-[evidence map](../operations/programme-acceptance-evidence.md),
-[maintainer walkthrough](../operations/programme-maintainer-walkthrough.md),
-[human session cards](../operations/programme-human-acceptance.md) and
-[archive runbook](../operations/programme-exit-archive.md). Deferral changes no
-Programme manifest or activation/independent-person/specialist acceptance gate.
-
-Preserve the original Programme checkout, unrelated worktrees/resources and
-stashes `5b6851f`/`dd651ef`/`3cc5df`/`9fecfe`, plus isolated P12/#96 work. Keep
-Windows Animation effects disabled. No production deployment, broad Docker
-cleanup or new automation is authorized by this batch. Repository metadata is a
-separate settings change.
+Live GitHub inspection found #48 closed, although its acceptance evidence still
+has unresolved boundaries. #92, #108 and #109 remain open; closure is not acceptance.
+Return through the [Programme evidence map](../operations/programme-acceptance-evidence.md)
+before making any readiness claim. Preserve stashes `5b6851f`/`dd651ef`/`3cc5df`/
+`9fecfe`, original Programme and isolated P12/#96 work, and host accessibility settings.
 
 ## Maintained demo coverage
 

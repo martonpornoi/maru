@@ -22,6 +22,19 @@
       </p>
     </header>
     {% include "core/_page_access_mount.html" %}
+    {% if guidance_decisions %}
+      <section class="maru-personal-primary" aria-labelledby="maru-guides-decisions-title">
+        <h2 id="maru-guides-decisions-title">Guides requests</h2>
+        <div class="maru-admin-workspace-grid">
+          {% for decision in guidance_decisions %}
+            <a data-personal-destination-kind="my.guidance-decisions" href="{{ decision.url }}">
+              <strong>{{ decision.label }}</strong>
+              <span>{{ decision.description }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
     {% if has_personal_start_destination %}
       <section class="maru-personal-primary" aria-labelledby="maru-personal-start-title">
         <h2 id="maru-personal-start-title">Start here</h2>

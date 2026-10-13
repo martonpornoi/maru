@@ -486,7 +486,7 @@ def test_no_guides_candidates_leave_unrelated_personal_navigation_available(
     assert page(store).items == ()
     request = RequestFactory().get("/my/")
     request.user = store.actor
-    assert navigation._guidance_decision_items(request) == []
+    assert navigation.guidance_decision_items(request) == []
     assert queries.discover_guidance_tasks(
         actor=store.actor, correlation_id=uuid4()
     ) == queries.GuidanceTaskDiscovery(has_current_work=False, access_cursor=None)
@@ -507,3 +507,28 @@ def test_exact_provenance_unavailability_is_not_filtered_as_ordinary_denial(
     with pytest.raises(guidance_readiness.GuidanceAuthorityUnavailable):
         page(store)
     assert store.load.call_count == 1
+
+
+@pytest.mark.parametrize("setup_available", [True, False])
+def test_bootstrap_setup_discovery_uses_its_owner_before_access_identity(
+    store, discovery, monkeypatch, setup_available
+):
+    store.actor.is_superuser = True
+    store.actor.is_staff = True
+    store.identity.return_value = None
+    setup = Mock(return_value=setup_available)
+    monkeypatch.setattr(
+        "maru.events.guidance_activation_queries.has_current_guidance_activation_tasks",
+        setup,
+    )
+    result = queries.discover_guidance_tasks(actor=store.actor, correlation_id=uuid4())
+    assert result == queries.GuidanceTaskDiscovery(
+        has_current_work=setup_available, access_cursor=None
+    )
+    setup.assert_called_once()
+    if setup_available:
+        store.identity.assert_not_called()
+    else:
+        store.identity.assert_called_once()
+    discovery.admission.assert_not_called()
+    discovery.current.assert_not_called()
