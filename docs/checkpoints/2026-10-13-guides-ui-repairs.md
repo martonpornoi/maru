@@ -142,3 +142,36 @@ directory archived as interrupted evidence. No success, test regression or timin
 failure is inferred from the intentional interruption. A new clean candidate
 requires fresh full certification. The protected test rename must receive the
 required exact-head owner-applied review label during PR delivery.
+
+
+## Optional-placement successor recovery repair
+
+Full certification of `1bc7c175` failed after 949.782 seconds with unchanged clean
+source. All 14,251 unit cases passed; one native batch passed, two assertions in
+another batch failed, and seven active batches were interrupted by pool fail-fast.
+The two retained Announcements foundation cases correctly detected that Knowledge
+0004 had already reversed before the frozen joined fence refused the operation.
+Their no-outer-transaction recorder equality assertions are unchanged. All nine
+owned containers were independently verified absent, and the complete .local-ci
+directory was archived with the failed run. No success receipt is claimed.
+
+Knowledge 0004 now invokes the existing frozen 0003 joined preflight before its
+reverse field-state operation or recorder removal. Readiness also requires the
+exact applied successor and normalized source fingerprint. No physical schema,
+runtime privilege, content or earlier migration source changes. Tests retain
+empty full reversal/reapplication, add empty leaf reversal/readiness checks and
+direct used-leaf refusal, and reject a changed successor source pin. The original
+bare Announcements and Guides foundation refusals remain the regression oracle.
+Focused native validation and fresh full exact-commit certification are pending.
+
+
+The eleven-case focused native run passed in 487.64 seconds (494.954 seconds
+including its wrapper). It exercised the unchanged failing Announcements cases,
+both bare Guides foundation refusals, used leaf/full reversal refusal, empty leaf
+and full reversal/reapplication, and changed-source readiness denial. Before,
+pre-execution and after source inventories match exactly, and the owned container
+was removed and independently verified absent. All 14,251 database-free units
+passed in 76.53 seconds with three existing Django warnings. Lint, formatting,
+documentation (748 files, four skills, 223 requirements) and whitespace checks
+passed. These results support the scoped repair; they do not replace certification
+of the new clean commit or add browser/human/production acceptance.

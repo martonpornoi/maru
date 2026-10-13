@@ -139,7 +139,9 @@ text, private notes or contact data. No external delivery route or reading
 analytics is added.
 
 Knowledge owns six tables and migrations `0001_initial` through
-`0003_downgrade_fence`. Native guards check both receipt-to-state and
+`0004_optional_guidance_placements`. The optional-placement successor preserves
+the frozen joined downgrade preflight before its own model state or migration
+record reverses; readiness requires its exact applied source. Native guards check both receipt-to-state and
 state-to-receipt correspondence. Runtime may insert/update control and item rows,
 and only insert immutable settings, revisions, review and command receipts.
 Used Guidance, adoption or joined predecessor evidence refuses downgrade before

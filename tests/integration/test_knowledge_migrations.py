@@ -5,6 +5,7 @@ from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.recorder import MigrationRecorder
 
+from maru.knowledge import readiness
 from maru.knowledge.models import GuidanceCommandReceipt, GuidanceItem, GuidanceRevision
 from maru.knowledge.readiness import knowledge_database_integrity_is_ready
 from tests.integration.guidance_test_support import guidance_runtime
@@ -21,7 +22,11 @@ def test_unused_knowledge_fully_reverses_and_reapplies_native_contract(
     with rollback_migration_case():
         executor = MigrationExecutor(connection)
         leaves = executor.loader.graph.leaf_nodes()
-        executor.migrate([("knowledge", "0001_initial")])
+        executor.migrate([("knowledge", "0003_downgrade_fence")])
+        assert not knowledge_database_integrity_is_ready()
+        MigrationExecutor(connection).migrate(leaves)
+        assert knowledge_database_integrity_is_ready()
+        MigrationExecutor(connection).migrate([("knowledge", "0001_initial")])
         assert not knowledge_database_integrity_is_ready()
         with connection.cursor() as cursor:
             cursor.execute(
@@ -38,7 +43,10 @@ def test_unused_knowledge_fully_reverses_and_reapplies_native_contract(
     assert knowledge_database_integrity_is_ready()
 
 
-def test_used_knowledge_refuses_before_any_migration_or_owner_evidence_changes(world):
+@pytest.mark.parametrize("target", [None, "0003_downgrade_fence"])
+def test_used_knowledge_refuses_before_any_migration_or_owner_evidence_changes(
+    world, target
+):
     approved(world)
 
     def snapshot():
@@ -52,7 +60,7 @@ def test_used_knowledge_refuses_before_any_migration_or_owner_evidence_changes(w
     before = snapshot()
     with rollback_migration_case():
         with pytest.raises(RuntimeError):
-            MigrationExecutor(connection).migrate([("knowledge", None)])
+            MigrationExecutor(connection).migrate([("knowledge", target)])
         # Check before the isolation fixture rolls back: a late refusal must not
         # hide earlier recorder or schema changes behind the outer rollback.
         assert snapshot() == before
@@ -75,3 +83,13 @@ def test_unused_owner_still_fences_retained_foundation_before_successor_reversal
         assert set(MigrationRecorder(connection).applied_migrations()) == before
         assert knowledge_database_integrity_is_ready()
     assert set(MigrationRecorder(connection).applied_migrations()) == before
+
+
+def test_changed_optional_placement_successor_source_refuses_readiness(
+    guidance_runtime, monkeypatch
+):
+    assert knowledge_database_integrity_is_ready()
+    with monkeypatch.context() as changed:
+        changed.setattr(readiness, "_PLACEMENTS_SUCCESSOR_SHA256", "0" * 64)
+        assert not knowledge_database_integrity_is_ready()
+    assert knowledge_database_integrity_is_ready()

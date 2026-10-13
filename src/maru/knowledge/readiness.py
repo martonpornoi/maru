@@ -15,6 +15,7 @@ from maru.authorization.provenance_readiness import (
 from maru.core.database_integrity_readiness import (
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
 )
 from maru.core.relation_schema_readiness import relation_schema_is_current
 from maru.events.guidance_setup_readiness import (
@@ -56,6 +57,10 @@ KNOWLEDGE_SCHEMA_SHA256: dict[str, str] = {
 }
 _FENCE_SHA256 = "8918489c3e935d795d48772770307bfad4611e1518f9ae55a724e44b870bb340"
 
+_PLACEMENTS_SUCCESSOR_SHA256 = (
+    "0bde789da6ede1110af2437fc4aa5734db10cfa905a28e572ccf7ac37454f76b"
+)
+
 
 def knowledge_database_integrity_is_ready() -> bool:
     """Require the exact installed native owner contract and observed relation shapes.
@@ -81,8 +86,13 @@ def knowledge_database_integrity_is_ready() -> bool:
             status_key="knowledge_integrity",
             app_label="knowledge",
             source_migration=("knowledge", "0002_integrity"),
-            terminal_migration=("knowledge", "0003_downgrade_fence"),
+            terminal_migration=("knowledge", "0004_optional_guidance_placements"),
             source_migration_module="maru.knowledge.migrations.0002_integrity",
+        )
+        contract = extend_database_integrity_contract(
+            contract,
+            migration_module="maru.knowledge.migrations.0004_optional_guidance_placements",
+            source_sha256=_PLACEMENTS_SUCCESSOR_SHA256,
         )
         fence = import_module("maru.knowledge.migrations.0003_downgrade_fence")
         return (

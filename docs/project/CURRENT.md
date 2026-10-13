@@ -26,7 +26,7 @@ gates and 87 PostgreSQL batches, with 91.20 percent coverage against the unchang
 90 percent gate in 5h18m16s. At most eight instances ran simultaneously and all
 87 owned containers were removed. Historical-test repairs and all prior failed
 evidence remain preserved. See the [certification checkpoint](../checkpoints/2026-10-12-guides-full-certification.md).
-This result predates the current uncommitted UI repairs and does not certify them.
+This result predates the committed UI repairs and does not certify them.
 
 The [browser checkpoint](../checkpoints/2026-10-13-guides-browser-handoff.md)
 records actual synthetic combined-event setup, separate Author/Reviewer decisions,
@@ -69,7 +69,15 @@ by the new Events leaf. Its owning rehearsal instructions now name the actual
 successor without changing or activating that workflow. The first UI-candidate
 certification was cancelled through its existing pool signal before completion;
 all eight started containers were removed and full interrupted evidence retained.
-It supplies no certification result. The final candidate needs a fresh full run.
+It supplies no certification result. Full certification of `1bc7c175` then failed
+after 15m50s: two retained Announcements foundation checks caught the new optional
+placement migration reversing before its predecessor refused the downgrade.
+The complete failed evidence is archived; all nine owned containers are absent.
+The successor now runs that same frozen preflight first, and readiness checks its
+exact source and applied record. All refusal assertions remain. All eleven focused native cases passed in 487.64 seconds, with identical source
+inventories and verified owned cleanup. All 14,251 units passed in 76.53 seconds;
+lint, formatting, documentation and whitespace checks passed. A new clean
+exact-commit full run remains required.
 The protected test rename requires the exact-head owner review label on the PR.
 
 ## Smallest next actions
