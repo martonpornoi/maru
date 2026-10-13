@@ -123,3 +123,22 @@ complete keyboard, independent-human, specialist accessibility, broader decision
 history and operational/production acceptance remain explicit gaps. This bounded
 synthetic slice does not close the document-governance umbrella. Final exact-head
 certification and protected hosted review/merge are still required.
+
+
+## Owning rehearsal documentation and certification restart
+
+Final PR scope inspection found the required isolated test migration rename from
+0022 to 0025 after Events 0024, with its consumers already updated but an owning
+rehearsal paragraph still naming the old file and leaf. The paragraph now matches
+the real graph and no longer hardcodes the old count of manifest objects. This
+changes no product behavior, guard, profile or Programme activation status.
+
+Certification of 02917a8 was already running its database pool alongside static
+checks. The initial no-database interruption guard refused to kill any process.
+The existing cancel-pool signal then stopped the eight started shards and each
+reported exact owned-container cleanup. After confirming no running containers,
+the remaining owned static process tree was stopped and the complete .local-ci
+directory archived as interrupted evidence. No success, test regression or timing
+failure is inferred from the intentional interruption. A new clean candidate
+requires fresh full certification. The protected test rename must receive the
+required exact-head owner-applied review label during PR delivery.

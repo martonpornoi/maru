@@ -64,6 +64,14 @@ preserved. Forward receipts record the optional-placement migration and cache
 version without data loss. No source changes underneath a serving process and no
 populated fixture overlaps native certification.
 
+PR preparation also checked the isolated Programme test-migration rename required
+by the new Events leaf. Its owning rehearsal instructions now name the actual
+successor without changing or activating that workflow. The first UI-candidate
+certification was cancelled through its existing pool signal before completion;
+all eight started containers were removed and full interrupted evidence retained.
+It supplies no certification result. The final candidate needs a fresh full run.
+The protected test rename requires the exact-head owner review label on the PR.
+
 ## Smallest next actions
 
 1. Certify the final clean exact commit, create the PR, resolve reviews, verify
