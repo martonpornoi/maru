@@ -867,6 +867,50 @@ GRANT SELECT, INSERT, UPDATE ON TABLE
     public.logistics_offlinescanbatch
     TO maru_runtime;
 
+-- Guides: immutable foundation decisions and content evidence are insert-only.
+REVOKE ALL ON TABLE
+    public.events_guidanceadoptionsetupreceipt,
+    public.events_guidanceactivationrequest,
+    public.events_guidanceactivationdecision,
+    public.events_guidanceactivationreceipt,
+    public.authorization_guidanceteam,
+    public.authorization_guidanceauthoritysetupreceipt,
+    public.authorization_guidancerecipequalification,
+    public.authorization_guidanceaccessrequest,
+    public.authorization_guidanceaccessdecision,
+    public.authorization_guidancerevocationreceipt,
+    public.knowledge_guidancesettingsrevision,
+    public.knowledge_guidancerevision,
+    public.knowledge_guidancereview,
+    public.knowledge_guidancecommandreceipt
+    FROM maru_runtime, PUBLIC;
+GRANT SELECT, INSERT ON TABLE
+    public.events_guidanceadoptionsetupreceipt,
+    public.events_guidanceactivationrequest,
+    public.events_guidanceactivationdecision,
+    public.events_guidanceactivationreceipt,
+    public.authorization_guidanceteam,
+    public.authorization_guidanceauthoritysetupreceipt,
+    public.authorization_guidancerecipequalification,
+    public.authorization_guidanceaccessrequest,
+    public.authorization_guidanceaccessdecision,
+    public.authorization_guidancerevocationreceipt,
+    public.knowledge_guidancesettingsrevision,
+    public.knowledge_guidancerevision,
+    public.knowledge_guidancereview,
+    public.knowledge_guidancecommandreceipt
+    TO maru_runtime;
+
+-- Only the owning Guides control and item aggregates may advance.
+REVOKE ALL ON TABLE
+    public.knowledge_guidancecontrol,
+    public.knowledge_guidanceitem
+    FROM maru_runtime, PUBLIC;
+GRANT SELECT, INSERT, UPDATE ON TABLE
+    public.knowledge_guidancecontrol,
+    public.knowledge_guidanceitem
+    TO maru_runtime;
+
 -- setval() is authorized by UPDATE and changes a sequence outside ordinary
 -- MVCC rollback.  Runtime needs USAGE/SELECT only.
 REVOKE UPDATE ON ALL SEQUENCES IN SCHEMA public FROM maru_runtime;
@@ -877,7 +921,7 @@ REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role FROM PUBLIC;
 REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role
     FROM maru_runtime;
 
--- Functions are executable by PUBLIC by default. The ADR 0096/0117 v5 allowlist
+-- Functions are executable by PUBLIC by default. The ADR 0118/0119 v6 allowlist
 -- below is the complete non-trigger helper closure used by Maru's current
 -- runtime SQL and database triggers. A change must update code, migration
 -- evidence, this file, and the genuine-login service smoke together.
@@ -909,6 +953,13 @@ GRANT EXECUTE ON FUNCTION
     public.maru_assert_active_maru_operators_v0009(uuid),
     public.maru_assert_active_announcements_operators(uuid),
     public.maru_assert_active_announcements_operators_v0009(uuid),
+    public.maru_assert_active_workspace_operators(uuid),
+    public.maru_assert_active_workspace_operators_v0009(uuid),
+    public.maru_guidance_recipe_capabilities(character varying),
+    public.maru_guidance_required_control(character varying,uuid),
+    public.maru_guidance_expected_source(character varying,uuid,character varying),
+    public.maru_guidance_actor_allowed(uuid,uuid,uuid,text),
+    public.maru_guidance_team_ready(uuid,uuid,uuid,uuid),
     public.maru_assert_authority_issuance_complete(bigint),
     public.maru_assert_authority_issuance_complete_internal(
         bigint,

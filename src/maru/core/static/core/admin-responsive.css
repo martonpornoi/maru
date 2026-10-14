@@ -18,12 +18,19 @@
     overflow: hidden;
   }
 
+  .main {
+    flex-direction: column;
+  }
+
   #toggle-nav-sidebar {
-    position: fixed;
+    position: relative;
     z-index: 38;
     top: auto;
-    bottom: 0.9rem;
-    left: 0.9rem;
+    bottom: auto;
+    left: auto;
+    align-self: flex-start;
+    flex-shrink: 0;
+    margin: 0.75rem 0.9rem;
     display: flex;
     gap: 0.45rem;
     width: auto;
@@ -125,7 +132,7 @@
   }
 
   [dir="rtl"] #toggle-nav-sidebar {
-    right: 0.9rem;
+    right: auto;
     left: auto;
   }
 

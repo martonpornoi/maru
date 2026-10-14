@@ -19378,11 +19378,15 @@ components:
       - full_convention
       - workforce_only
       - announcements_only
+      - guidance_only
+      - announcements_guidance
       type: string
       description: |-
         * `full_convention` - Full convention
         * `workforce_only` - Workforce only
         * `announcements_only` - Announcements only
+        * `guidance_only` - Guides only
+        * `announcements_guidance` - Announcements and Guides
     EditionCreateRequest:
       type: object
       description: Serialize and validate edition create request data.
@@ -19432,10 +19436,12 @@ components:
       enum:
       - full_convention
       - workforce_only
+      - guidance_only
       type: string
       description: |-
         * `full_convention` - Full convention
         * `workforce_only` - Workforce only
+        * `guidance_only` - Guides only
     EditionLifecycleEnum:
       enum:
       - draft

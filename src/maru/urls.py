@@ -70,6 +70,7 @@ from maru.events.api import (
     EditionReadinessGateReviewView,
     EditionTransitionView,
 )
+from maru.events.guidance_setup_urls import urlpatterns as guidance_setup_urlpatterns
 from maru.identity.api import (
     CsrfTokenView,
     MyRestrictionAppealView,
@@ -108,6 +109,7 @@ from maru.identity.invitation_views import (
 )
 from maru.identity.step_up_views import account_step_up
 from maru.identity.views import recover_account, verify_email
+from maru.knowledge.urls import urlpatterns as guidance_urlpatterns
 from maru.organizations.api import (
     ConventionSeriesDetailView,
     ConventionSeriesListView,
@@ -313,6 +315,8 @@ from maru.workforce.views import (
 
 urlpatterns: list[URLPattern | URLResolver] = [
     *announcements_urlpatterns,
+    *guidance_urlpatterns,
+    *guidance_setup_urlpatterns,
     *announcements_setup_urlpatterns,
     path("", include("maru.charities.urls")),
     path("", include("maru.applications.urls")),
@@ -2247,7 +2251,11 @@ urlpatterns: list[URLPattern | URLResolver] = [
 # ``maru.baseline_urls``.
 _BASELINE_PLATFORM_ROUTE_PREFIXES = (
     "admin/announcements/",
+    "admin/guidance/",
+    "admin/guidance-access/",
+    "admin/guidance-tasks/",
     "admin/platform/setup/announcements/",
+    "admin/platform/setup/guidance/",
     "accounts/invitations/",
     "admin/account/step-up/",
     "admin/access/",

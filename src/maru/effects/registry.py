@@ -123,7 +123,12 @@ def _validate_organization_representation_changed(payload: dict[str, object]) ->
     if (
         not isinstance(action, str)
         or payload["representation_code"]
-        not in {"executive_board", "maru_operators", "announcements_operators"}
+        not in {
+            "executive_board",
+            "maru_operators",
+            "announcements_operators",
+            "workspace_operators",
+        }
         or expected_states.get(action) != payload["state"]
     ):
         raise ValidationError(
@@ -927,7 +932,64 @@ def _validate_announcements_changed(payload: dict[str, object]) -> None:
     validate_announcement_changed_payload(payload)
 
 
+def _validate_guidance_changed(payload: dict[str, object]) -> None:
+    """Validate the Knowledge owner's closed content-free operation.
+
+    Parameters
+    ----------
+    payload : dict[str, object]
+        Untrusted durable event payload.
+    """
+    from maru.knowledge.events import (  # noqa: PLC0415
+        validate_guidance_changed_payload,
+    )
+
+    validate_guidance_changed_payload(payload)
+
+
+def _validate_guidance_adoption_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(payload, fields=frozenset({"operation"}))
+    if payload["operation"] not in {
+        "proposed",
+        "accepted",
+        "declined",
+        "activated",
+        "recovered",
+    }:
+        raise ValidationError(
+            "Guides setup event operation is not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_guidance_access_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(payload, fields=frozenset({"operation"}))
+    if payload["operation"] not in {"requested", "accepted", "declined", "revoked"}:
+        raise ValidationError(
+            "Guides access event operation is not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
 EVENT_DEFINITIONS = (
+    EventDefinition(
+        name="events.guidance_adoption.changed.v1",
+        schema_version=1,
+        description="An explicit Guides setup decision or activation was recorded.",
+        validator=_validate_guidance_adoption_changed,
+    ),
+    EventDefinition(
+        name="authorization.guidance_access.changed.v1",
+        schema_version=1,
+        description="A purpose-specific Guides access decision was recorded.",
+        validator=_validate_guidance_access_changed,
+    ),
+    EventDefinition(
+        name="knowledge.changed.v1",
+        schema_version=1,
+        description="Internal guidance or its retained governance evidence changed.",
+        validator=_validate_guidance_changed,
+    ),
     EventDefinition(
         name="announcements.changed.v1",
         schema_version=1,

@@ -3,31 +3,16 @@
 Implemented bounded modules appear here. Each guide states whether its behavior
 is mounted, API-only, deployment-gated, or deliberately dormant.
 
-ADR 0030 retained these backend modules while the controlled interface mounted
-Sign in and the platform setup record journey. ADR 0039 now integrates that spine, Convention work,
-and specialist records into one `/admin/` shell, ADR 0040 implements Representation & access
-Executive Board activation, and Organization structure mounts the canonical bounded
-Organization structure workflow. Its read uses the implemented edition
-aggregate/version fence and one complete retry. Department management's workforce
-`0006`/`0007` stopped-writer database boundary, immutable template application,
-Department command core, repository-owned writer reconciliation, and pinned
-runtime trigger catalog are also implemented and focused-verified. ADR 0075
-and Workforce `0010` add purpose-built Position creation, operational editing,
-opportunity publication, protected closure, exact command receipts, and
-inspection-only specialist records. The
-2026-08-11 canonical current-tree gate passed 4,067 of 4,067 tests at 90.78
-percent total branch-aware coverage. A bounded authenticated read-only Logistics
-journey also passed at 1,920 and 390 CSS pixels. Broader mutation-role browser
-states, keyboard and automated accessibility evidence, owner rehearsal,
-production authority reconciliation, cutover, and representative restore/PITR
-remain open. ADR 0037 and
-`docs/project/PRODUCTION_CONSOLIDATION.md` distinguish mounted,
-API-only, preserved/unmounted, partial, absent, and deployment-gated
-capabilities. ADR 0041's exact Department/resource scope prerequisite is
-implemented below the current UI. References in module documents to Convention work, Specialist
-records, registration pages, or other HTML surfaces describe the preserved
-pre-reset implementation unless the paragraph explicitly identifies the ADR
-0039 migration and its current evidence.
+Use [CURRENT](../project/CURRENT.md) for verified delivery and next actions,
+the [production ledger](../project/PRODUCTION_CONSOLIDATION.md) for release
+readiness, and [checkpoints](../checkpoints/index.md) for historical evidence.
+This index is an ownership map, not a claim that every workflow is available.
+
+The current interface uses one `/admin/` shell under
+[ADR 0039](../architecture/decisions/0039-unified-admin-shell-and-platform-route-space.md).
+Some older module guides also describe preserved interfaces from before that
+transition. Follow the owning [page contract](../product/page-contracts/index.md)
+and CURRENT for supported entry points and their actual verification scope.
 
 - [`core`](core.md) - platform-neutral runtime primitives
 - [`identity`](identity.md) - platform account boundary
@@ -60,6 +45,8 @@ pre-reset implementation unless the paragraph explicitly identifies the ADR
   reviewed agreements, assignments, and scoped access activation
 - [`announcements`](announcements.md) - standalone reviewed manual publishing
   under implementation; exact profile and verification tracked in CURRENT
+- [`knowledge`](knowledge.md) - internal Guides and FAQs with reviewed current
+  copy and separately accepted event access; implementation in progress
 - [`communications`](communications.md) - canonical service inbox and email
   delivery evidence
 - [`accreditation`](accreditation.md) - credentials and bounded offline check-in

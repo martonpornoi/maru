@@ -22,6 +22,10 @@ access when the two operators have not yet accepted and activated their roles.
 Announcements editions must be created and retried through this dedicated setup;
 the generic edition page and API cannot skip its representation and setup receipt.
 
+Setup, decisions and workspace pages use the shared admin theme, including its
+body background, text, event-context line and breadcrumb colors. Light and dark
+appearances must remain legible without changing the page's authorized content or actions.
+
 ## Authority and disclosure
 
 The exact edition profile and current authority are checked before private labels,

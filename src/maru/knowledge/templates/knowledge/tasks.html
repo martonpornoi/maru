@@ -1,0 +1,29 @@
+{% extends "knowledge/base.html" %}
+{% block guidance_content %}
+<p>Review each request before deciding. Opening a page does not accept responsibilities or approve access.</p>
+<h2>Set up Guides</h2>
+{% if setup_unavailable %}<p>Setup requests cannot be listed here. Open the exact setup request to continue. Access requests below remain available.</p>{% else %}
+<ul class="guidance-cards" role="list">
+  {% for item, url in setup_rows %}
+    <li aria-labelledby="setup-request-{{ forloop.counter }}">
+      <h3 id="setup-request-{{ forloop.counter }}">{{ item.edition_name }}</h3>
+      <p>{{ item.organization_name }}</p>
+      <p>{% if item.can_apply %}Both people accepted. Review and apply the agreed setup.{% else %}Decide whether to accept your responsibilities and approve the other person's assignment.{% endif %}</p>
+      <p class="guidance-actions"><a href="{{ url }}" aria-describedby="setup-request-{{ forloop.counter }}">Review setup request</a></p>
+    </li>
+  {% empty %}<li>No setup decisions need your answer.</li>{% endfor %}
+</ul>
+{% endif %}
+<h2>Access to guides</h2>
+<ul class="guidance-cards" role="list">
+  {% for item, url in access_rows %}
+    <li aria-labelledby="access-request-{{ forloop.counter }}">
+      <h3 id="access-request-{{ forloop.counter }}">{{ item.recipient.label }} · {{ item.edition_name }}</h3>
+      <p>{{ item.requested_by.label }} asked you to review this access.</p>
+      <p class="guidance-actions"><a href="{{ url }}" aria-describedby="access-request-{{ forloop.counter }}">Review access request</a></p>
+    </li>
+  {% empty %}<li>{% if next_url %}No available access requests on this page. Continue to check the remaining requests.{% else %}No more access requests need your answer.{% endif %}</li>{% endfor %}
+</ul>
+<nav class="guidance-actions" aria-label="Access decision pages">{% if next_url %}<a href="{{ next_url }}">Next access requests</a>{% endif %}{% if first_url %}<a href="{{ first_url }}">Back to first page</a>{% endif %}</nav>
+<details><summary>Other requests and previous decisions</summary><p><a href="{{ setup_history_url }}">Your setup requests</a></p><p><a href="{{ access_history_url }}">Your access requests</a></p></details>
+{% endblock %}

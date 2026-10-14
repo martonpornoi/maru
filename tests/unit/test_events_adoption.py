@@ -106,6 +106,12 @@ _EXPECTED_WORKFORCE_ONLY_V1_SHELL_DESTINATION_KINDS = frozenset(
 )
 
 _EXPECTED_MANIFEST_LITERAL_FINGERPRINTS = {
+    ("guidance_only", 1): (
+        "f9d3bd0f89e83ad7fb7ae2f3aa47216a1dd05d52616488fc4d5f597cdc844fd7"
+    ),
+    ("announcements_guidance", 1): (
+        "389fd96e56059e7e3a77e994ff5231790e642c6811628af3c2d070bbeba28a81"
+    ),
     (
         "announcements_only",
         1,
@@ -196,7 +202,13 @@ def test_retained_profile_choices_are_independent_from_new_selection() -> None:
     retired_selection = (SELECTABLE_ADOPTION_PROFILE_CHOICES[0],)
     retained_codes = {code for code, _label in PERSISTED_ADOPTION_PROFILE_CHOICES}
 
-    assert retained_codes == {"full_convention", "workforce_only", "announcements_only"}
+    assert retained_codes == {
+        "full_convention",
+        "workforce_only",
+        "announcements_only",
+        "guidance_only",
+        "announcements_guidance",
+    }
     assert tuple(EventEdition._meta.get_field("adoption_profile_code").choices) == (
         PERSISTED_ADOPTION_PROFILE_CHOICES
     )
@@ -248,6 +260,8 @@ def test_current_manifest_identities_and_catalogs_are_exact() -> None:
         ("full_convention", 1),
         ("workforce_only", 1),
         ("announcements_only", 1),
+        ("guidance_only", 1),
+        ("announcements_guidance", 1),
     )
     assert len(full.capability_codes) == 85
     assert len(workforce.capability_codes) == 29
@@ -522,6 +536,8 @@ def test_every_manifest_effect_route_resolves_a_registered_handler() -> None:
         for profile in ADOPTION_PROFILES.values()
     } == {
         ("announcements_only", 1): 14,
+        ("guidance_only", 1): 15,
+        ("announcements_guidance", 1): 17,
         ("full_convention", 1): 65,
         ("workforce_only", 1): 24,
     }
@@ -590,3 +606,48 @@ def test_announcements_profile_is_independent_and_has_only_internal_effects():
         assert not profile_allows_capability(code, 1, "announcements.compose")
         assert not profile_allows_role(code, 1, "announcements-operators")
     assert not profile_allows_role("announcements_only", 1, "maru-operators")
+
+
+@pytest.mark.parametrize("code", ["guidance_only", "announcements_guidance"])
+def test_guides_profiles_adopt_only_the_declared_workflows_and_internal_effects(code):
+    profile = adoption_profile(code, 1)
+    assert profile is not None
+    assert profile.modules == {
+        "audit",
+        "authorization",
+        "effects",
+        "events",
+        "identity",
+        "organizations",
+        "privacy",
+        "knowledge",
+    } | ({"announcements"} if code == "announcements_guidance" else set())
+    assert all(route.destination == "internal" for route in profile.effect_routes)
+    assert not profile.catalog_entries
+    assert not profile.adapter_codes
+    assert not profile.conflict_source_codes
+    assert profile.destination_codes == ("security",)
+    assert not {
+        capability.partition(".")[0] for capability in profile.capability_codes
+    } & {"registration", "participation", "workforce", "programme", "scheduling"}
+
+
+def test_combined_guides_preserve_the_old_announcements_manifest():
+    announcements = adoption_profile("announcements_only", 1)
+    combined = adoption_profile("announcements_guidance", 1)
+    assert announcements is not None
+    assert combined is not None
+    added = {
+        "authorization.manage_guidance_access",
+        "knowledge.view_current",
+        "knowledge.view_working",
+        "knowledge.compose",
+        "knowledge.review",
+        "knowledge.withdraw",
+        "knowledge.manage_settings",
+        "knowledge.export_evidence",
+    }
+    assert combined.capability_codes == announcements.capability_codes | added
+    assert not announcements.capability_codes & added
+    assert "announcements_guidance" not in dict(SELECTABLE_ADOPTION_PROFILE_CHOICES)
+    assert "guidance_only" in dict(SELECTABLE_ADOPTION_PROFILE_CHOICES)

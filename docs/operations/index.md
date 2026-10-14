@@ -16,6 +16,10 @@ or permission to use production personal data.
   setup, reviewed manual publishing, corrections and handover. Implementation and
   browser verification are in progress.
 
+- [Guides and FAQs](guidance-maintainer-walkthrough.md) follows standalone setup,
+  accepted responsibilities, writing, review and current-only reading. The
+  implementation and walkthrough are awaiting verification.
+
 - [Programme maintainer walkthrough](programme-maintainer-walkthrough.md) is the
   local candidate handoff with generated test accounts and a
   simple Worked / Confusing / Blocked notes table. Check its verification status.
@@ -91,6 +95,7 @@ analogy.
 
 maru-hands-on-tutorial
 announcements
+guidance-maintainer-walkthrough
 programme-acceptance-evidence
 programme-human-acceptance
 programme-maintainer-walkthrough

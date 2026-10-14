@@ -71,6 +71,12 @@ turning the page into a manually maintained ACL. The embedded React workspace
 owns this disclosure inside each active view so the Django host does not render
 a duplicate before the application root.
 
+A fixed-policy summary says **Rules for this page**. It explains the existing
+owner's rules, without claiming that the page cannot offer its own approved
+access-request, decision or removal actions. Only the unresolved-scope fallback
+uses **This page** and explains that access cannot be changed from that page;
+it reveals no guessed organizer label or generic management link.
+
 ## Plain language and purpose groups
 
 ADR 0116 groups the existing authorized registry into Overview, People & teams,
@@ -242,3 +248,10 @@ drawer background isolation, focus return, one H1 and one `main`, no duplicate
 identifiers, and no horizontal overflow. The complete rendered width/zoom and state matrices,
 representative screen-reader evidence, mutation-role rehearsals, and release
 accessibility acceptance remain open gates.
+
+### Narrow navigation opener
+
+At drawer widths the Menu opener occupies its own row before page content. It
+must not float over fields or submit buttons. Opening still uses the existing
+modal drawer, focus containment, Escape and return-focus behavior; without
+scripts native navigation remains available.

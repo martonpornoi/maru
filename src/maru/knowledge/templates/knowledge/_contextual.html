@@ -1,0 +1,7 @@
+{% load localization %}
+{% if guidance_links %}
+<aside class="guidance-context" aria-labelledby="guidance-context-heading">
+  <h2 id="guidance-context-heading">Guides for this task</h2>
+  <ul>{% for guide, url in guidance_links %}<li><a href="{{ url }}">{{ guide.title }}</a> · {{ guide.language_code|language_name }}{% if guide.review_due %} — <strong>Review overdue</strong>{% endif %}</li>{% endfor %}</ul>
+</aside>
+{% endif %}

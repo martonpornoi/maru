@@ -1,0 +1,43 @@
+{% extends "knowledge/base.html" %}
+{% block guidance_content %}
+<nav class="guidance-actions" aria-label="Guides access tasks">
+  {% if access_url %}<a href="{{ access_url }}">Manage access to guides</a>{% endif %}
+  <a href="{{ tasks_url }}">Your access decisions</a>
+  <a href="{{ setup_tasks_url }}">Your setup decisions</a>
+  {% if content_url %}<a href="{{ content_url }}">Open Guides</a>{% endif %}
+</nav>
+{% if action == "workspace" %}
+  <p>Request one clearly defined responsibility for someone. A named second person must approve it from their own account before access begins.</p>
+  {% if access_workspace.approvers %}<p><a href="{{ new_url }}">Request access for someone</a></p>{% else %}<p>No other person is currently available to approve Guides access. A platform administrator can help restore the accepted Guides responsibilities.</p>{% endif %}
+  <h2>Access assignments</h2>
+  <p>Removing one assignment does not remove access someone may hold through another assignment.</p>
+  <ul class="guidance-cards" role="list">{% for item, label, url in assignment_rows %}<li><h3>{{ item.recipient.label }}</h3><p>{{ label }} · {% if item.revoked %}Removed{% elif item.current %}Current{% else %}Not currently available{% endif %}</p><p>{% if item.expires_at %}Ends {{ item.expires_at|date:"Y-m-d H:i T" }}.{% else %}No planned end date.{% endif %}</p>{% if not item.revoked %}<a href="{{ url }}">Remove this assignment</a>{% endif %}</li>{% empty %}<li>No Guides assignments are available.</li>{% endfor %}</ul>
+{% elif action == "new" %}
+  <p>The person must already have a verified Maru account. Creating this request sends no invitation and grants no access.</p>
+  <p><strong>Time zone for the access end date:</strong> {{ access_workspace.scope.time_zone }}.</p>
+  <section aria-labelledby="guidance-role-heading"><h2 id="guidance-role-heading">What the responsibilities include</h2>
+  {% for label, capabilities in recipe_rows %}<h3>{{ label }}</h3><ul>{% for capability in capabilities %}<li>{{ capability }}</li>{% endfor %}</ul>{% endfor %}</section>
+  <p>These roles do not include managing other people's access. Everyone who helps write a guide still needs someone else to approve that version.</p>
+  {% if form %}{% include "knowledge/_form.html" %}{% else %}<p>No other person is currently available to approve this request. Ask a platform administrator to help restore the Guides responsibilities.</p>{% endif %}
+{% elif action == "revoke" %}
+  <p>Remove <strong>{{ assignment_label }}</strong> from <strong>{{ assignment.recipient.label }}</strong> for this event. The recorded history will remain.</p>
+  {% if assignment.recipe_code == "guidance-access-controller" %}<p class="guidance-panel"><strong>This can affect other people too.</strong> Removing this access-management responsibility can disable assignments that rely on it. A platform administrator may need to arrange a new accepted setup before Guides work can continue.</p>{% else %}<p>Other assignments held by this person stay in place.</p>{% endif %}
+  {% include "knowledge/_form.html" %}
+{% elif proposal %}
+  <p><strong>{{ state_label }}</strong>.</p>
+  <p><strong>Person receiving access:</strong> {{ proposal.recipient.label }}.</p>
+  <p><strong>Responsibility:</strong> {{ recipe_label }}.</p>
+  <ul>{% for power in powers %}<li>{{ power }}</li>{% endfor %}</ul>
+  <p><strong>Requested by:</strong> {{ proposal.requested_by.label }}. <strong>Decision for:</strong> {{ proposal.approver.label }}.</p>
+  <p><strong>Reason:</strong> {{ proposal.reason }}</p>
+  <p>{% if proposal.expires_at %}<strong>Access ends:</strong> {{ proposal.expires_at|date:"Y-m-d H:i T" }}.{% else %}<strong>Access end:</strong> No planned end date.{% endif %}</p>
+  <p><strong>Decide before:</strong> {{ proposal.decision_deadline|date:"Y-m-d H:i T" }}.</p>
+  {% if proposal.state == "accepted" %}<p>The request was approved. The current assignments page shows whether this access is still available.</p>{% elif proposal.state == "waiting" %}<p>Only {{ proposal.approver.label }} can approve or decline this request through their own account.</p>{% elif proposal.state == "changed" %}<p>Responsibilities changed. Ask for a new request.</p>{% elif proposal.state == "declined" or proposal.state == "expired" %}<p>This request cannot grant access. Prepare a new request if access is still needed.</p>{% endif %}
+  {% if form %}{% include "knowledge/_form.html" %}<p><a href="{{ request_url }}">Back to request</a></p>{% elif proposal.can_answer %}<p><a href="{{ answer_url }}">Decide about this access</a></p>{% endif %}
+  <details><summary>Technical details</summary><dl><dt>Request reference</dt><dd>{{ proposal.request_id }}</dd><dt>Request fingerprint</dt><dd>{{ proposal.request_digest }}</dd><dt>Canonical role</dt><dd>{{ proposal.recipe_code }}@1</dd></dl></details>
+{% else %}
+  <p>These requests were made by you or need your approval. Reading a request does not approve it.</p>
+  <ul class="guidance-cards" role="list">{% for item, url, state in task_rows %}<li><h2><a href="{{ url }}">{{ item.recipient.label }} · {{ item.edition_name }}</a></h2><p>{{ state }} · Decision for {{ item.approver.label }}</p></li>{% empty %}<li>{% if next_url %}No available decisions on this page. Continue to check the remaining requests.{% else %}No more Guides access decisions are available to you.{% endif %}</li>{% endfor %}</ul>
+{% endif %}
+{% if next_url %}<div class="guidance-actions"><a href="{{ next_url }}">Next page</a></div>{% endif %}
+{% endblock %}

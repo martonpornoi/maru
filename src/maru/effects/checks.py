@@ -36,7 +36,10 @@ def check_governed_effect_routes(
 
     # Both imports remain inside the check so Events can own the manifests
     # without taking an eager dependency on Effects handler construction.
-    from maru.effects.adoption import NON_EDITION_EFFECT_ROUTES  # noqa: PLC0415
+    from maru.effects.adoption import (  # noqa: PLC0415
+        NON_EDITION_EFFECT_ROUTES,
+        TRANSITION_EFFECT_ROUTES,
+    )
     from maru.effects.handlers import built_in_handler_registry  # noqa: PLC0415
     from maru.effects.registry import event_definition  # noqa: PLC0415
     from maru.events.adoption import ADOPTION_PROFILES  # noqa: PLC0415
@@ -46,11 +49,15 @@ def check_governed_effect_routes(
     except ValidationError:
         return [_unresolved_effect_route_error()]
 
-    routes = set(NON_EDITION_EFFECT_ROUTES) | {
-        (route.event_name, route.destination)
-        for profile in ADOPTION_PROFILES.values()
-        for route in profile.effect_routes
-    }
+    routes = (
+        set(NON_EDITION_EFFECT_ROUTES)
+        | set(TRANSITION_EFFECT_ROUTES)
+        | {
+            (route.event_name, route.destination)
+            for profile in ADOPTION_PROFILES.values()
+            for route in profile.effect_routes
+        }
+    )
     if any(
         event_definition(event_name) is None
         or handlers.resolve(

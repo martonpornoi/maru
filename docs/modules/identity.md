@@ -82,6 +82,12 @@ registrants, volunteers, onboarding subjects, or workforce assignees.
 
 ## Public contracts
 
+- `request_actor.authenticated_request_actor(request)`, the native adapter seam
+  that returns only the actual active authenticated Identity account already
+  attached to the request, or raises `PermissionDenied`. It performs no account
+  lookup or substitution and grants no tenant or product authority; owning
+  commands and queries still reauthorize current scope. `RequestActor` is its
+  public annotation alias so adapters need not import Identity's private model;
 - `Account`
 - `AccountManager.create_user`
 - `AccountManager.create_superuser`

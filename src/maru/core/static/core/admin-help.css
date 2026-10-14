@@ -52,6 +52,8 @@ html[data-theme="dark"] {
   --body-quiet-color: var(--maru-navy-200);
   --body-loud-color: var(--maru-ivory-50);
   --header-bg: var(--maru-navy-900);
+  --breadcrumbs-fg: var(--maru-ivory-100);
+  --breadcrumbs-link-fg: var(--maru-gold-300);
   --breadcrumbs-bg: var(--maru-navy-800);
   --link-fg: var(--maru-gold-300);
   --link-hover-color: var(--maru-gold-100);

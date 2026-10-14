@@ -189,6 +189,14 @@ def test_scope_migration_adds_only_exact_scheduling_and_owner_dependency_codes()
             "announcements.record_publication",
             "announcements.manage_settings",
             "announcements.export_evidence",
+            "knowledge.view_current",
+            "knowledge.view_working",
+            "knowledge.compose",
+            "knowledge.review",
+            "knowledge.withdraw",
+            "knowledge.manage_settings",
+            "knowledge.export_evidence",
+            "authorization.manage_guidance_access",
         }
     ) - {
         "programme.manage_staffing",
@@ -238,6 +246,14 @@ def test_release_migration_adds_only_four_independent_edition_capabilities():
             "announcements.record_publication",
             "announcements.manage_settings",
             "announcements.export_evidence",
+            "knowledge.view_current",
+            "knowledge.view_working",
+            "knowledge.compose",
+            "knowledge.review",
+            "knowledge.withdraw",
+            "knowledge.manage_settings",
+            "knowledge.export_evidence",
+            "authorization.manage_guidance_access",
         }
     ) - OPERATOR_CAPABILITIES - auth.CHANGE_COMMUNICATION_CAPABILITIES - {
         "programme.export_archive"

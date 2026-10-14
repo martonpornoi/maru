@@ -1,0 +1,21 @@
+{% extends "knowledge/base.html" %}
+{% block guidance_content %}
+  <p>Give your team one place for checked FAQs and runbooks, without adding registration or volunteer work.</p>
+  <p>A new organization starts with <strong>People responsible for this workspace</strong>. Invite at least two people; each must accept their own invitation before the organizer workspace is ready. This does not give them access to Guides content.</p>
+  <p>Guides access is a separate decision: a platform administrator requests setup for two responsible people, each accepts their own Guides responsibilities and approves the other, then the administrator applies the agreed setup.</p>
+  {% if choices.foundation %}<section class="guidance-panel"><h2>Selected organization and convention</h2><p>Organization: {{ choices.foundation.organization_name }}</p>{% if choices.foundation.series_name %}<p>Convention: {{ choices.foundation.series_name }}</p>{% endif %}<p>Existing names and responsibilities stay unchanged.</p></section>{% endif %}
+  {% if not mode %}
+    <h2>What already exists in Maru?</h2>
+    <p>Already using Announcements for an event? Open that event record in Platform administration and choose <strong>Set up Guides for this event</strong>.</p>
+    <p><a href="{{ new_url }}">Start a new organization and convention</a></p>
+    <h3>Reuse an organization</h3><ul class="guidance-cards">{% for item, url in organization_links %}<li><a href="{{ url }}">{{ item.name }}</a></li>{% empty %}<li>No organization is available for a new Guides event here.</li>{% endfor %}</ul>
+  {% else %}<p><a href="{{ root_url }}">Choose another organization or convention</a></p>{% endif %}
+  {% if mode == "existing_organization" %}
+    <h2>Reuse a convention</h2><ul class="guidance-cards">{% for item, url in series_links %}<li><a href="{{ url }}">{{ item.name }}</a></li>{% empty %}<li>No reusable convention is available in this organization.</li>{% endfor %}</ul>
+    <p>To create a new convention in this organization, complete the form below.</p>
+  {% endif %}
+  {% if form %}
+    <h2>Create a Guides event</h2><p>This creates one new event. Complete the organizer workspace and separate Guides access before anyone writes or reads guides.</p>
+    {% include "knowledge/_form.html" %}
+  {% endif %}
+{% endblock %}

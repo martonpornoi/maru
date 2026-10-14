@@ -104,6 +104,18 @@ migrations, or recovery behavior. Those tests retain committed execution and
 the ordinary full-graph restoration fixture. Never fake migrations, cache a
 rendered Django model graph, disable guards, or skip historical cases for speed.
 
+For a serial historical case that must commit and would alter the current
+physical schema, `isolated_migration_database()` offers a separate empty
+`test_maru_history_*` database inside the same owned PostgreSQL server. The case
+applies its real migration targets there; no schema, records or migration markers
+are cloned or faked. Concurrent indexes retain autocommit. Cleanup restores the
+original connection and drops only the created name/OID/owner match, without
+force or terminating other connections. The helper rejects non-test databases
+and active transactions before creating anything. It adds no container or worker
+and does not replace concurrency, whole-graph recovery or current-runtime tests.
+Use it only for a serial case with no retained secondary connections; native
+regressions must prove source preservation and cleanup after success and failure.
+
 The initial adopters are the Workforce structure-write historical boundary,
 historical organization governance, and historical authorization scope-v2
 activation. Their current-state tests remain separate, all original cases are

@@ -1,4 +1,32 @@
 {
+  "tests/integration/test_guidance_foundation_migrations.py": {
+    "owners": [
+      "announcements",
+      "authorization",
+      "events",
+      "knowledge",
+      "organizations"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_bare_used_foundation_refuses_before_any_successor_recorder_changes",
+      "test_unused_guidance_reverse_reapply_preserves_hardened_predecessor"
+    ]
+  },
+  "tests/integration/test_knowledge_migrations.py": {
+    "owners": [
+      "announcements",
+      "authorization",
+      "events",
+      "knowledge"
+    ],
+    "shared_baseline": false,
+    "tests": [
+      "test_unused_knowledge_fully_reverses_and_reapplies_native_contract",
+      "test_unused_owner_still_fences_retained_foundation_before_successor_reversal",
+      "test_used_knowledge_refuses_before_any_migration_or_owner_evidence_changes"
+    ]
+  },
   "tests/integration/test_programme_role_schema.py": {
     "owners": ["audit", "authorization", "events", "identity", "organizations", "venues", "workforce"],
     "shared_baseline": false,

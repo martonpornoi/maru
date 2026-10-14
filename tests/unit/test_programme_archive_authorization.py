@@ -297,6 +297,14 @@ def test_native_scope_vocabulary_adds_only_the_archive_edition_capability():
             "announcements.record_publication",
             "announcements.manage_settings",
             "announcements.export_evidence",
+            "knowledge.view_current",
+            "knowledge.view_working",
+            "knowledge.compose",
+            "knowledge.review",
+            "knowledge.withdraw",
+            "knowledge.manage_settings",
+            "knowledge.export_evidence",
+            "authorization.manage_guidance_access",
         }
     )
     assert "RETURN -1;" in migration.FORWARD_SQL

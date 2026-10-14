@@ -141,10 +141,41 @@ ANNOUNCEMENTS_OPERATORS = RepresentationDefinition(
     ),
 )
 
+
+WORKSPACE_OPERATOR_CAPABILITIES = (
+    "organizations.view_basic",
+    "organizations.change_profile",
+    "organizations.create_series",
+    "organizations.change_series",
+    "organizations.manage_representation",
+    "events.view_basic",
+    "events.create",
+    "events.change_profile",
+    "events.transition",
+    "audit.view_security",
+)
+
+WORKSPACE_OPERATORS = RepresentationDefinition(
+    code="workspace_operators",
+    name="Workspace operators",
+    controller_label="Workspace operator",
+    membership_label="Workspace operator",
+    role_code="workspace-operators",
+    role_name="Workspace operators",
+    role_version=1,
+    capability_codes=WORKSPACE_OPERATOR_CAPABILITIES,
+    purpose=(
+        "Identifies the people responsible for the shared Maru workspace. "
+        "Workflow access requires separately accepted edition responsibilities; "
+        "this does not claim an executive office or grant content access."
+    ),
+)
+
 REPRESENTATION_DEFINITIONS = {
     EXECUTIVE_BOARD.code: EXECUTIVE_BOARD,
     MARU_OPERATORS.code: MARU_OPERATORS,
     ANNOUNCEMENTS_OPERATORS.code: ANNOUNCEMENTS_OPERATORS,
+    WORKSPACE_OPERATORS.code: WORKSPACE_OPERATORS,
 }
 
 REPRESENTATION_CODE_CHOICES = tuple(

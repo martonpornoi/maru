@@ -139,13 +139,13 @@ The additive foundation changes belong to Organizations `0015`, Authorization
 source and `0021` fences removal of used setup evidence. Readiness checks the native
 source and installed guards for both setup and the Announcements store.
 
-The current runtime helper closure is v5: it preserves frozen v4 and adds only
+The standalone Announcements runtime helper generation is v5: it preserves v4 and adds only
 `maru_assert_active_announcements_operators(uuid)` and its `_v0009` implementation.
 Runtime writes are limited to insert/update of the control and announcement
 aggregates and insert-only immutable settings, copy, variant, review, publication
 report and command receipt rows. Delete, truncate and schema ownership are not
-runtime permissions. The isolated Programme test overlay retains all three current
-profile manifests unchanged and appends its separately fenced test candidate.
+runtime permissions. The isolated Programme test overlay retains every current production
+profile manifest unchanged and appends its separately fenced test candidate.
 
 ### Joined recovery preflight
 
@@ -160,3 +160,16 @@ protect Announcements representation and access records created before any editi
 Existing owner refusal messages and locks remain authoritative. Empty
 joined installations can reverse and reapply; retained joined evidence requires
 fix-forward or a consistent restore. This does not activate Programme.
+
+### Adding Guides to the same event
+
+[ADR 0119](../architecture/decisions/0119-guidance-adoption-and-purpose-authority.md)
+introduces one explicit, accepted transition to `announcements_guidance@1`.
+It preserves original setup receipts, edition identity, announcement history and
+Announcements access; it does not widen the original profile's manifest.
+The writing page may show up to three approved guide links through the public
+Knowledge query. Independent guide-reading permission is required, and a final
+page snapshot check catches withdrawal, replacement or access loss before release.
+Unavailable or denied guides leave announcement writing usable without hidden
+content. Stopping Guides does not stop Announcements. This extension is under
+implementation; it does not inherit standalone verification automatically.

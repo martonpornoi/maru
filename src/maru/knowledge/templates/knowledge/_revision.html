@@ -1,0 +1,8 @@
+{% load localization %}
+<section class="guidance-panel" aria-labelledby="{{ heading_id }}">
+  <h2 id="{{ heading_id }}">{{ heading }}</h2>
+  <h3>{{ revision.title }}</h3>
+  <p>{{ revision.language_code|language_name }} · version {{ revision.number }}</p>
+  <div class="guidance-text">{{ revision.body }}</div>
+  <p><strong>Review by:</strong> {% if revision.review_by %}{{ revision.review_by|date:"Y-m-d" }}{% else %}Not set. Save a review date before asking for review.{% endif %}</p>
+</section>

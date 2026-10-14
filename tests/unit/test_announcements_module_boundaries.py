@@ -27,6 +27,12 @@ def test_announcements_imports_no_foreign_private_models_or_unadopted_modules() 
                 if not module.startswith("maru."):
                     continue
                 owner = module.split(".")[1]
+                if module in {
+                    "maru.knowledge.contracts",
+                    "maru.knowledge.errors",
+                    "maru.knowledge.queries",
+                }:
+                    continue
                 if owner == "announcements":
                     continue
                 if owner not in _FOUNDATIONS or (

@@ -298,6 +298,14 @@ def test_new_sender_capability_is_dormant_and_native_catalog_is_additive():
             "announcements.record_publication",
             "announcements.manage_settings",
             "announcements.export_evidence",
+            "knowledge.view_current",
+            "knowledge.view_working",
+            "knowledge.compose",
+            "knowledge.review",
+            "knowledge.withdraw",
+            "knowledge.manage_settings",
+            "knowledge.export_evidence",
+            "authorization.manage_guidance_access",
         }
     ) - {"programme.export_archive"}
     definition = CAPABILITIES[VIEW_CHANGE_RECIPIENTS]

@@ -9755,9 +9755,11 @@ export interface components {
          * @description * `full_convention` - Full convention
          *     * `workforce_only` - Workforce only
          *     * `announcements_only` - Announcements only
+         *     * `guidance_only` - Guides only
+         *     * `announcements_guidance` - Announcements and Guides
          * @enum {string}
          */
-        EditionContextAdoptionProfileCodeEnum: "full_convention" | "workforce_only" | "announcements_only";
+        EditionContextAdoptionProfileCodeEnum: "full_convention" | "workforce_only" | "announcements_only" | "guidance_only" | "announcements_guidance";
         /** @description Serialize and validate edition create request data. */
         EditionCreateRequest: {
             name: string;
@@ -9776,9 +9778,10 @@ export interface components {
         /**
          * @description * `full_convention` - Full convention
          *     * `workforce_only` - Workforce only
+         *     * `guidance_only` - Guides only
          * @enum {string}
          */
-        EditionCreateRequestAdoptionProfileCodeEnum: "full_convention" | "workforce_only";
+        EditionCreateRequestAdoptionProfileCodeEnum: "full_convention" | "workforce_only" | "guidance_only";
         /**
          * @description * `draft` - Draft
          *     * `preparing` - Preparing

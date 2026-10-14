@@ -163,7 +163,7 @@ def test_roots_can_issue_ordinary_dual_control_without_self_approval(active_root
 
 @pytest.mark.usefixtures("restores_current_migration_graph")
 def test_unused_native_lineage_reversal_and_reapply_preserves_identity():
-    current = ("authorization", "0042_announcements_operator_lineage")
+    current = ("authorization", "0047_guidance_qualified_lineage")
     previous = ("authorization", "0038_programme_archive_recipe")
     with connection.cursor() as cursor:
         before = {
@@ -186,12 +186,18 @@ def test_downgrade_fence_distinguishes_existing_board_from_operator_use(active_r
     successor = import_module(
         "maru.authorization.migrations.0042_announcements_operator_lineage"
     )
+    later_successors = (
+        import_module("maru.authorization.migrations.0047_guidance_qualified_lineage"),
+        import_module("maru.authorization.migrations.0044_workspace_operator_lineage"),
+    )
     if representation.code == "announcements_operators":
         with pytest.raises(RuntimeError, match="fix forward"), transaction.atomic():
             successor.refuse_used_downgrade(apps, connection.schema_editor())
     elif representation.code == "maru_operators":
 
         def restore_previous():
+            for later in later_successors:
+                later.restore(None, connection.schema_editor())
             successor.restore(None, connection.schema_editor())
             _MIGRATION.restore_lineage(None, connection.schema_editor())
 
@@ -199,10 +205,14 @@ def test_downgrade_fence_distinguishes_existing_board_from_operator_use(active_r
             restore_previous()
     else:
         with transaction.atomic():
+            for later in later_successors:
+                later.restore(None, connection.schema_editor())
             successor.restore(None, connection.schema_editor())
             _MIGRATION.restore_lineage(None, connection.schema_editor())
             _MIGRATION.install_lineage(None, connection.schema_editor())
             successor.install(None, connection.schema_editor())
+            for later in reversed(later_successors):
+                later.install(None, connection.schema_editor())
     report = build_authority_provenance_readiness_report()
     assert report["production_status"] == "ready", report
 

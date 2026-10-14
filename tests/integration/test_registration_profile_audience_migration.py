@@ -66,9 +66,10 @@ def _legacy_field(
 
 
 def test_profile_audience_backfill_and_compatible_reverse_are_exact() -> None:
-    before = _migrate(REGISTRATION_BEFORE)
+    # Current factories require current columns; only legacy rows follow rollback.
     edition = EventEditionFactory()
     actor = AccountFactory()
+    before = _migrate(REGISTRATION_BEFORE)
     legacy_field = migration_project_state(
         before, _targets(before, REGISTRATION_BEFORE)
     ).apps.get_model("registration", "RegistrationProfileExtensionField")

@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
     """Keep native profile enforcement and refuse installation or reversal on use."""
 
     dependencies: ClassVar[list[tuple[str, str]]] = [
-        ("events", "0021_announcements_setup_downgrade_fence"),
+        ("events", "0024_guidance_adoption_downgrade_fence"),
     ]
     operations: ClassVar[list[object]] = [
         migrations.RunPython(require_empty_current_schema, migrations.RunPython.noop),
@@ -40,6 +40,14 @@ class Migration(migrations.Migration):
                         adoption_profile_version=1,
                     )
                     | models.Q(
+                        adoption_profile_code="guidance_only",
+                        adoption_profile_version=1,
+                    )
+                    | models.Q(
+                        adoption_profile_code="announcements_guidance",
+                        adoption_profile_version=1,
+                    )
+                    | models.Q(
                         adoption_profile_code="programme_operations",
                         adoption_profile_version=1,
                     )
@@ -55,6 +63,8 @@ class Migration(migrations.Migration):
                     ("full_convention", "Full convention"),
                     ("workforce_only", "Workforce only"),
                     ("announcements_only", "Announcements only"),
+                    ("guidance_only", "Guides only"),
+                    ("announcements_guidance", "Announcements and Guides"),
                     (
                         "programme_operations",
                         "Programme Operations — isolated candidate, not accepted",

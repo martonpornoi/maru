@@ -88,6 +88,7 @@
   {% elif action == "resume" %}
     <p>Allow announcement work again. Your record-keeping rules and everyone's existing access still apply.</p>
   {% endif %}
+  {% include "knowledge/_contextual.html" %}
   {% include "announcements/_form.html" %}
 {% endif %}
 {% endblock %}

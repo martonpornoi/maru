@@ -56,14 +56,16 @@ def _strict_settings():
 def candidate_registry(monkeypatch):
     profiles = {**adoption.ADOPTION_PROFILES, PROFILE.key: PROFILE}
     choices = tuple((key[0], value.label) for key, value in profiles.items())
+    selectable_keys = (*adoption.SELECTABLE_ADOPTION_PROFILE_KEYS.values(), PROFILE.key)
+    selectable_choices = tuple((key[0], profiles[key].label) for key in selectable_keys)
     double = SimpleNamespace(
         ADOPTION_PROFILES=MappingProxyType(profiles),
         AdoptionProfileCode=IsolatedAdoptionProfileCode,
         SELECTABLE_ADOPTION_PROFILE_KEYS=MappingProxyType(
-            {IsolatedAdoptionProfileCode(key[0]): key for key in profiles}
+            {IsolatedAdoptionProfileCode(key[0]): key for key in selectable_keys}
         ),
         PERSISTED_ADOPTION_PROFILE_CHOICES=choices,
-        SELECTABLE_ADOPTION_PROFILE_CHOICES=choices,
+        SELECTABLE_ADOPTION_PROFILE_CHOICES=selectable_choices,
     )
     monkeypatch.setattr(compatibility, "adoption", double)
     monkeypatch.setattr(
@@ -90,7 +92,16 @@ def test_independent_candidate_catalog_and_original_profile_dormancy(
 
 
 @pytest.mark.parametrize(
-    "mutation", ["missing", "extra", "replaced", "selector", "choices", "persisted"]
+    "mutation",
+    [
+        "missing",
+        "extra",
+        "replaced",
+        "selector",
+        "combined_selector",
+        "choices",
+        "persisted",
+    ],
 )
 def test_baseline_or_candidate_registry_drift_fails(mutation, candidate_registry):
     profiles = dict(candidate_registry.ADOPTION_PROFILES)
@@ -105,6 +116,11 @@ def test_baseline_or_candidate_registry_drift_fails(mutation, candidate_registry
         )
     elif mutation == "selector":
         candidate_registry.SELECTABLE_ADOPTION_PROFILE_KEYS = {}
+    elif mutation == "combined_selector":
+        candidate_registry.SELECTABLE_ADOPTION_PROFILE_KEYS = {
+            **candidate_registry.SELECTABLE_ADOPTION_PROFILE_KEYS,
+            "announcements_guidance": ("announcements_guidance", 1),
+        }
     elif mutation == "choices":
         candidate_registry.SELECTABLE_ADOPTION_PROFILE_CHOICES = ()
     else:

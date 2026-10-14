@@ -11,6 +11,24 @@ from django.db import models
 from django.utils import timezone
 
 from maru.authorization.catalog import ScopeLevel, capability
+from maru.authorization.guidance_authority_models import (
+    GuidanceAccessDecision as GuidanceAccessDecision,  # noqa: PLC0414 - Django discovery and typed public model
+)
+from maru.authorization.guidance_authority_models import (
+    GuidanceAccessRequest as GuidanceAccessRequest,  # noqa: PLC0414 - Django discovery and typed public model
+)
+from maru.authorization.guidance_authority_models import (
+    GuidanceAuthoritySetupReceipt as GuidanceAuthoritySetupReceipt,  # noqa: PLC0414 - Django discovery and typed public model
+)
+from maru.authorization.guidance_authority_models import (
+    GuidanceRecipeQualification as GuidanceRecipeQualification,  # noqa: PLC0414 - Django discovery and typed public model
+)
+from maru.authorization.guidance_authority_models import (
+    GuidanceRevocationReceipt as GuidanceRevocationReceipt,  # noqa: PLC0414 - Django discovery and typed public model
+)
+from maru.authorization.guidance_authority_models import (
+    GuidanceTeam as GuidanceTeam,  # noqa: PLC0414 - Django discovery and typed public model
+)
 from maru.authorization.programme_role_models import (
     ProgrammeRoleDecisionRecord as ProgrammeRoleDecisionRecord,  # noqa: PLC0414 - Django discovery and typed public model
 )
@@ -22,6 +40,7 @@ from maru.identity.policies import validate_convention_subject
 from maru.organizations.representation_catalog import (
     ANNOUNCEMENTS_OPERATORS,
     MARU_OPERATORS,
+    WORKSPACE_OPERATORS,
     RepresentationDefinition,
     representation_definition_for_role,
 )
@@ -744,8 +763,22 @@ class CapabilityGrant(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
-        """Validate and normalize the record."""
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the immutable intent, version, acceptance or retained evidence conflicts.
+        """
         super().clean()
+        from maru.authorization.guidance_catalog import (  # noqa: PLC0415
+            GUIDANCE_PROTECTED_CAPABILITIES,
+        )
+
+        if self.capability_code in GUIDANCE_PROTECTED_CAPABILITIES:
+            raise ValidationError(
+                "Guidance capabilities require an accepted role recipe."
+            )
         if self.principal_id:
             validate_convention_subject(self.principal, field_name="principal")
         _validate_capability_scope(
@@ -868,6 +901,19 @@ class RoleBundle(UUIDTimeStampedModel):
         ValidationError
             If the submitted state or input violates a domain invariant.
         """
+        from maru.authorization.guidance_catalog import (  # noqa: PLC0415
+            GUIDANCE_PROTECTED_CAPABILITIES,
+            GUIDANCE_ROLE_RECIPES,
+        )
+        from maru.authorization.guidance_writer import (  # noqa: PLC0415
+            _require_guidance_authority_writer,
+        )
+
+        if (
+            GUIDANCE_PROTECTED_CAPABILITIES.intersection(self.capability_codes)
+            or self.code in GUIDANCE_ROLE_RECIPES
+        ):
+            _require_guidance_authority_writer()
         if not self._state.adding:
             raise ValidationError(
                 "Role bundle versions are immutable; create a new version.",
@@ -1043,7 +1089,11 @@ class RoleAssignment(UUIDTimeStampedModel):
                 self.role_bundle.code == definition.role_code
                 and tuple(self.role_bundle.capability_codes)
                 == definition.capability_codes
-                for definition in (MARU_OPERATORS, ANNOUNCEMENTS_OPERATORS)
+                for definition in (
+                    MARU_OPERATORS,
+                    ANNOUNCEMENTS_OPERATORS,
+                    WORKSPACE_OPERATORS,
+                )
             )
             for code in self.role_bundle.capability_codes:
                 if not purpose_bounded_root:
@@ -1069,6 +1119,21 @@ class RoleAssignment(UUIDTimeStampedModel):
         **kwargs : Any
             Keyword arguments forwarded to the framework implementation.
         """
+        from maru.authorization.guidance_catalog import (  # noqa: PLC0415
+            GUIDANCE_PROTECTED_CAPABILITIES,
+            GUIDANCE_ROLE_RECIPES,
+        )
+        from maru.authorization.guidance_writer import (  # noqa: PLC0415
+            _require_guidance_authority_writer,
+        )
+
+        if (
+            GUIDANCE_PROTECTED_CAPABILITIES.intersection(
+                self.role_bundle.capability_codes
+            )
+            or self.role_bundle.code in GUIDANCE_ROLE_RECIPES
+        ):
+            _require_guidance_authority_writer()
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -1523,11 +1588,16 @@ class AuthorityControl(UUIDTimeStampedModel):
                 }
             )
         target = self.issuance.target
-        required_capability = (
-            "authorization.grant_direct"
-            if isinstance(target, CapabilityGrant)
-            else "authorization.manage_roles"
+        from maru.authorization.guidance_target_contracts import (  # noqa: PLC0415
+            guidance_control_source_matches,
+            required_target_control_capability,
         )
+
+        required_capability = required_target_control_capability(target)
+        if not guidance_control_source_matches(
+            target=target, role=self.role, ordinal=self.source_issuance_id
+        ):
+            raise ValidationError("Use the exact accepted Guidance authority source.")
         source_capabilities = (
             {source_target.capability_code}
             if isinstance(source_target, CapabilityGrant)

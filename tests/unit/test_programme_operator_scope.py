@@ -96,6 +96,14 @@ def test_native_operator_catalog_is_additive_dormant_and_independently_ceilinged
             "announcements.record_publication",
             "announcements.manage_settings",
             "announcements.export_evidence",
+            "knowledge.view_current",
+            "knowledge.view_working",
+            "knowledge.compose",
+            "knowledge.review",
+            "knowledge.withdraw",
+            "knowledge.manage_settings",
+            "knowledge.export_evidence",
+            "authorization.manage_guidance_access",
         }
     ) - CHANGE_COMMUNICATION_CAPABILITIES - {"programme.export_archive"}
     for code in scope.OPERATOR_CAPABILITIES:

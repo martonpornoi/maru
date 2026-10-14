@@ -5,7 +5,57 @@ Workforce-only adoption profiles, guided Workforce setup, shared
 creation/profile commands, Event edition record, authorized lifecycle kernel,
 profile-scoped unified-shell context, and dormant Programme and Applications
 reference seams; Programme Operations remains inactive
-Last updated: 2026-09-21
+Last updated: 2026-10-09
+
+## Guides adoption and public scope boundaries
+
+`guidance_effects.guidance_adoption_effect_reference` is the minimized machine
+routing query for ADR 0124. It resolves exact immutable transition evidence,
+original actor/audit/correlation and saved manifest digests; it grants no current
+authority and does not disclose setup terms. Effects uses the same reference at
+publish, enqueue, execution and replay. Native and historical acceptance remain
+separate from this source contract.
+
+
+EVT-008 and [ADR 0119](../architecture/decisions/0119-guidance-adoption-and-purpose-authority.md)
+add fresh `guidance_only@1` setup and the single accepted
+`announcements_only@1` to `announcements_guidance@1` expansion. New combined
+editions cannot be created directly. `guidance_adoption.set_up_guidance_adoption`
+creates or reuses an explicitly selected foundation; it does not assign Guides
+content access. The actual named-person decisions and atomic application belong
+to `guidance_activation`, with admitted previews/tasks in
+`guidance_activation_queries`. General edition saves, bulk writes and ordinary
+profile commands cannot change adoption. The ceremony preserves edition identity
+and retained Announcements records and advances an independent adoption revision.
+Original edition-creation retries compare the retained source profile.
+
+`knowledge_scope.resolve_knowledge_edition_scope` returns only coherent exact
+organization/series/edition IDs, accepted profile pair, version, lifecycle,
+languages, time zone and write availability. Its optional locking branch acquires
+Organization, series and edition in that order. It grants no content or setup
+permission. An independently admitted consumer can use
+`knowledge_workspace_queries.knowledge_workspace_reference` for scope labels and
+must recheck before release. Reader-only edition discovery checks the actual
+Guides field ceiling, audits identifying disclosure and exposes only the reader's
+current authorized editions; it does not require an unrelated organization role.
+
+Events 0022–0024 retain setup, proposal, actual decisions and adoption results.
+Native reciprocal guards require the exact actor, audit witness, minimized event,
+qualified authority outputs and persisted edition head. Readiness covers the
+original aggregate BEFORE attachment as well as the new supporting head guard.
+Events 0023 explicitly revokes PUBLIC execution of the inherited
+`maru_validate_edition_aggregate_version()` trigger before 0024 replaces its body.
+The trigger needs no direct runtime EXECUTE grant. The replacement preserves its
+OID, owner, ACL and behavior-bearing attributes. Unused reversal restores the
+predecessor body and keeps this owner-only ACL; it neither drops the inherited
+function nor grants PUBLIC execution again. Unexpected additional grants still
+fail readiness. This is an intentional persistent security hardening, not a
+change to the runtime allowlist or an exception to exact-source checks.
+The newest joined downgrade preflight locks edition and retained evidence before
+checking, then composes the frozen predecessor refusals before any successor can
+reverse. Used evidence requires preservation and fix-forward recovery. See the
+[Guides owner contract](knowledge.md) for content behavior. This batch's native
+verification is pending; source checks are not workflow acceptance.
 
 ## Minimized Programme stop impact (#190, in progress)
 
@@ -142,7 +192,8 @@ closure. Its section is neither a usable eight-owner archive nor later-download
 authority, and the current profile manifests remain unchanged.
 
 - organization and convention-series scope;
-- immutable code-owned adoption-profile code and version;
+- exact code-owned adoption-profile code and version, with only the accepted
+  Guides ceremony permitted to advance adoption;
 - case-insensitively series-scoped slug and display name;
 - IANA time zone, ordered language/currency codes, and date range;
 - draft, preparing, ready, live, closing, archived, and cancelled states;
@@ -166,8 +217,10 @@ ORM, or SQL paths
 governed by the application database role.
 
 Existing editions migrate additively to `full_convention@1`. A new edition
-chooses `full_convention@1` or `workforce_only@1`; its profile cannot be
-changed by model save, bulk ORM, or direct SQL. Workforce-only stores `XXX` as
+chooses a currently selectable exact profile: full convention, Workforce-only,
+Announcements-only or Guides-only. Ordinary model save, bulk ORM and direct SQL
+cannot change adoption; only the accepted Guides ceremony can apply its one
+explicit expansion edge. Workforce-only stores `XXX` as
 an internal no-currency sentinel and rejects later currency configuration.
 
 ## Commands and API

@@ -6,7 +6,6 @@ from django.db import migrations
 
 from maru.authorization.catalog import CAPABILITIES
 from maru.authorization.provenance_readiness import (
-    _FUNCTION_DEFINITION_SHA256,
     _function_definition_fingerprint,
 )
 from maru.scheduling.authorization import SCHEDULING_CAPABILITIES
@@ -43,6 +42,14 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
             "announcements.record_publication",
             "announcements.manage_settings",
             "announcements.export_evidence",
+            "knowledge.view_current",
+            "knowledge.view_working",
+            "knowledge.compose",
+            "knowledge.review",
+            "knowledge.withdraw",
+            "knowledge.manage_settings",
+            "knowledge.export_evidence",
+            "authorization.manage_guidance_access",
         }
     ) - {
         "applications.convert_programme_acceptance",
@@ -58,8 +65,10 @@ def test_review_scope_catalog_preserves_every_existing_capability() -> None:
     }
 
 
-def test_review_scope_declaration_matches_the_runtime_readiness_fingerprint() -> None:
-    """Catch stale capability-function pins without a PostgreSQL matrix run."""
+def test_announcements_scope_declaration_keeps_its_reviewed_native_fingerprint() -> (
+    None
+):
+    """Preserve the observed predecessor independently of later live replacements."""
     current = import_module(
         "maru.authorization.migrations.0041_announcements_capabilities"
     )
@@ -90,10 +99,15 @@ def test_review_scope_declaration_matches_the_runtime_readiness_fingerprint() ->
             "smallint",
         )
     )
-    assert (
-        fingerprint
-        == _FUNCTION_DEFINITION_SHA256["maru_authorization_capability_min_scope(text)"]
+    assert fingerprint == (
+        "c80e6287339ce11e13e46be710f86895a854068a2a2faa3077c80edafee72225"
     )
+    guidance = import_module("maru.authorization.migrations.0043_guidance_capabilities")
+    assert guidance.REVERSE_SQL == current.FORWARD_SQL
+    assert (
+        *current.EDITION_CAPABILITIES,
+        *guidance.GUIDANCE_CAPABILITIES,
+    ) == guidance.EDITION_CAPABILITIES
 
 
 def test_programme_schema_depends_on_earliest_complete_workforce_shape() -> None:
@@ -154,6 +168,14 @@ def test_authorization_min_scope_is_prior_catalog_plus_exact_department_code() -
             "announcements.record_publication",
             "announcements.manage_settings",
             "announcements.export_evidence",
+            "knowledge.view_current",
+            "knowledge.view_working",
+            "knowledge.compose",
+            "knowledge.review",
+            "knowledge.withdraw",
+            "knowledge.manage_settings",
+            "knowledge.export_evidence",
+            "authorization.manage_guidance_access",
         }
     ) - {
         "applications.import_programme",

@@ -28,6 +28,9 @@ from maru.events.announcements_workspace_queries import (
     AnnouncementsWorkspaceReference,
     announcements_workspace_reference,
 )
+from maru.knowledge.contracts import GuidanceCurrentSummary, GuidanceReadRequest
+from maru.knowledge.errors import GuidanceError
+from maru.knowledge.queries import load_context_guidance
 
 from . import services
 from .authorization import authorize_announcements_scope
@@ -140,6 +143,7 @@ class _Page:
     reference: AnnouncementsWorkspaceReference
     detail: AnnouncementDetail | None = None
     inventory: AnnouncementPage | None = None
+    guidance: tuple[GuidanceCurrentSummary, ...] = ()
 
 
 def _secure(response: HttpResponse, nonce: str = "") -> HttpResponse:
@@ -168,6 +172,35 @@ def _url(
     return reverse(f"announcements-{action}", kwargs=kwargs)
 
 
+def _guidance_for_writer(
+    scope: AnnouncementReadRequest,
+    reference: AnnouncementsWorkspaceReference,
+    action: str,
+) -> tuple[GuidanceCurrentSummary, ...]:
+    if (
+        action not in {"new", "edit"}
+        or reference.profile_code != "announcements_guidance"
+        or type(reference.profile_version) is not int
+        or reference.profile_version != 1
+    ):
+        return ()
+    try:
+        return load_context_guidance(
+            GuidanceReadRequest(
+                scope.actor_id,
+                scope.organization_id,
+                scope.edition_id,
+                scope.correlation_id,
+            ),
+            context="announcements.compose",
+            limit=3,
+        ).items
+    except (GuidanceError, DatabaseError):
+        # Guidance has its own adoption, reading and availability boundary.
+        # Its absence must not grant access or prevent the adopted writing task.
+        return ()
+
+
 def _load(
     scope: AnnouncementReadRequest,
     action: str,
@@ -191,7 +224,13 @@ def _load(
     inventory = (
         list_announcements(scope, after=after) if action == "inventory" else None
     )
-    return _Page(settings, reference, detail, inventory)
+    return _Page(
+        settings,
+        reference,
+        detail,
+        inventory,
+        _guidance_for_writer(scope, reference, action),
+    )
 
 
 def _admit(scope: AnnouncementReadRequest, action: str) -> None:
@@ -694,6 +733,16 @@ def _render(
         if page.detail
         else (),
         selected_report=_selected_report(page.detail, report_id),
+        guidance_links=tuple(
+            (
+                guide,
+                reverse(
+                    "guidance-current",
+                    args=(scope.organization_id, scope.edition_id, guide.id),
+                ),
+            )
+            for guide in page.guidance
+        ),
     )
     return render_to_string(
         "announcements/workspace.html", context, request=request

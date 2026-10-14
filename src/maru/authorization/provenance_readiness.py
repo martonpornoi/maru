@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import DatabaseError, connection
 from django.utils import timezone
 
@@ -65,8 +66,13 @@ from maru.organizations.representation_catalog import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
-    from datetime import datetime
+    from collections.abc import (
+        Iterable,
+        Mapping,
+    )
+    from datetime import (
+        datetime,
+    )
     from uuid import UUID
 
 BLOCKER_KEYS = (
@@ -135,10 +141,16 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0039_accountable_representation_lineage"),
     ("authorization", "0041_announcements_capabilities"),
     ("authorization", "0042_announcements_operator_lineage"),
+    ("authorization", "0043_guidance_capabilities"),
+    ("authorization", "0044_workspace_operator_lineage"),
+    ("authorization", "0045_guidance_authority_records"),
+    ("authorization", "0046_guidance_authority_integrity"),
+    ("authorization", "0047_guidance_qualified_lineage"),
     ("events", "0010_workforce_adoption_profile"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("organizations", "0014_purpose_bounded_representation"),
     ("organizations", "0015_announcements_representation"),
+    ("organizations", "0016_workspace_representation"),
     ("workforce", "0005_runtime_executable_function_hardening"),
     ("workforce", "0006_edition_structure_schema"),
     ("workforce", "0007_structure_write_integrity"),
@@ -1132,6 +1144,8 @@ _CORE_FUNCTIONS = (
     "maru_assert_active_maru_operators_v0009(uuid)",
     "maru_assert_active_announcements_operators(uuid)",
     "maru_assert_active_announcements_operators_v0009(uuid)",
+    "maru_assert_active_workspace_operators(uuid)",
+    "maru_assert_active_workspace_operators_v0009(uuid)",
     "maru_validate_representation_appointment()",
     ("maru_workforce_role_evidence_matches_position(uuid,uuid,uuid,uuid,uuid,uuid)"),
     "maru_deferred_validate_board_membership_from_representation()",
@@ -1561,6 +1575,57 @@ _FUNCTION_DEFINITION_SHA256 = {
     ),
 }
 
+
+# Unobserved replacement fingerprints deliberately fail closed until an approved
+# fresh PostgreSQL migration supplies the complete native metadata observation.
+_GUIDANCE_REPLACED_FUNCTION_SHA256 = {
+    ("maru_assert_authority_issuance_complete_internal(bigint,bigint[],integer)"): (
+        "4cbd8c4a43cd5e210910aea54a0275e361056eda955d4e0389cbbf4a18ea3e40"
+    ),
+    "maru_authorization_capability_min_scope(text)": (
+        "23a7744d5829a6e14a029ead157b3142e72f8d985b4a6741c04c0afaf530d1a3"
+    ),
+    "maru_assert_active_workspace_operators(uuid)": (
+        "47481da90ff83062cc2b74c66be147fabaee050cdd82ac5b2dc793d5069b610f"
+    ),
+    "maru_assert_active_workspace_operators_v0009(uuid)": (
+        "2215919dd5bfe7147f2435b0402deba45b17fc9cbd968632eda6f5ef6e7e4f20"
+    ),
+    "maru_assert_active_executive_board(uuid)": (
+        "bbc824a120c6a23ecea01c30c8ed172cd6c4d53e04d202c9000a275296b6967f"
+    ),
+    "maru_assert_active_board_membership_provenance(uuid)": (
+        "18e63aa7e9d2915be77406bbef297eeda63b25c7c15b741f965806d77034cdec"
+    ),
+    "maru_validate_representation_appointment()": (
+        "17cdb0be33660d1a1815035c68e7c75bac2ace0765bee5414658c3bc82352c29"
+    ),
+    "maru_assert_authority_target_complete(character varying,uuid)": (
+        "3d0373275ecaa3362b820ac6b3d18acc70b287120aa1d2efecab2f0af6c866ee"
+    ),
+    ("maru_authority_bundle_historical_v1(uuid,timestamptz,uuid,bigint[],integer)"): (
+        "822d4d1b29ddcc2a000e8ee925f117c236f5147aabd5f045c85bb9ccdaeb6a4a"
+    ),
+    (
+        "maru_authority_issuance_valid_v1(bigint,uuid,character varyi"
+        "ng,uuid,uuid,uuid,uuid,timestamptz,timestamptz,timestamptz,b"
+        "oolean,boolean,bigint[],integer)"
+    ): ("06c428f4c7c862205704c331e2410b2c37955884b25548933d20a8006d0523e9"),
+    "maru_validate_role_assignment()": (
+        "be35f9119f2adaa0c00901c956706ab09b0490d2e2737c7ab402447936ca2d39"
+    ),
+    "maru_validate_profile_bound_role_assignment_scope()": (
+        "7a563aede9aceb59983c33f08d5d2b35d5661b4f69c8da1d0aec5e76eac299d1"
+    ),
+    "maru_validate_representation_control_type_insert()": (
+        "4fdfdc0fbcc73f7e427e26653e50e4c4e16b56c412e7538160fbb16173bed87d"
+    ),
+    "maru_validate_authority_control_insert()": (
+        "2c114ae7ff199a9a3d959f296f97ccbed60d44887b042e911f043bcaa5899fd5"
+    ),
+}
+_FUNCTION_DEFINITION_SHA256.update(_GUIDANCE_REPLACED_FUNCTION_SHA256)
+
 _DOWNGRADE_FENCE_TRIGGER_NAMES = frozenset(
     {
         "authorization_capability_grant_guard",
@@ -1681,6 +1746,8 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_assert_active_maru_operators_v0009(uuid)",
         "maru_assert_active_announcements_operators(uuid)",
         "maru_assert_active_announcements_operators_v0009(uuid)",
+        "maru_assert_active_workspace_operators(uuid)",
+        "maru_assert_active_workspace_operators_v0009(uuid)",
         (
             "maru_workforce_role_evidence_matches_position(uuid,uuid,uuid,uuid,"
             "uuid,uuid)"
@@ -2619,16 +2686,54 @@ class _AuthorityGraph:
         kind: str,
         target: Mapping[str, Any],
     ) -> tuple[object, object, object, str]:
-        if kind == "bundle":
-            return (
-                target["created_by_id"],
-                target["approved_by_id"],
-                None,
-                _ROLE_CONTROL_CAPABILITY,
-            )
+        from maru.authorization.guidance_catalog import (  # noqa: PLC0415
+            GUIDANCE_PROTECTED_CAPABILITIES,
+            GUIDANCE_ROLE_RECIPES,
+        )
+        from maru.authorization.guidance_target_contracts import (  # noqa: PLC0415
+            required_target_control_capability,
+        )
+
         required = (
             _GRANT_CONTROL_CAPABILITY if kind == "grant" else _ROLE_CONTROL_CAPABILITY
         )
+        bundle = (
+            target
+            if kind == "bundle"
+            else self.bundles.get(target.get("role_bundle_id"))
+        )
+        protected = target.get(
+            "capability_code"
+        ) in GUIDANCE_PROTECTED_CAPABILITIES or (
+            bundle is not None
+            and (
+                bundle["code"] in GUIDANCE_ROLE_RECIPES
+                or bool(
+                    GUIDANCE_PROTECTED_CAPABILITIES.intersection(
+                        bundle["capability_codes"]
+                    )
+                )
+            )
+        )
+        if protected:
+            model = (
+                RoleBundle
+                if kind == "bundle"
+                else CapabilityGrant
+                if kind == "grant"
+                else RoleAssignment
+            )
+            instance = model.objects.filter(pk=target["id"]).first()
+            try:
+                required = (
+                    required_target_control_capability(instance)
+                    if instance is not None
+                    else "guidance.target_unavailable"
+                )
+            except (ValidationError, TypeError, ValueError):
+                required = "guidance.target_unavailable"
+        if kind == "bundle":
+            return target["created_by_id"], target["approved_by_id"], None, required
         return (
             target["granted_by_id"],
             target["approved_by_id"],

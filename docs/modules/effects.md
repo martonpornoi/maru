@@ -2,7 +2,7 @@
 
 Status: Implemented V02 worker boundary, exact-profile delivery guards, and
 value-minimized aggregate facts, including dormant Applications Programme facts
-Last updated: 2026-09-10
+Last updated: 2026-10-09
 
 ## Purpose and requirements
 
@@ -18,14 +18,16 @@ See the [minimized stop purpose](events.md#minimized-programme-stop-impact-190-i
 `maru.effects` implements ADR 0005 for INT-002, INT-003, AUT-002, EVT-006,
 NFR-004, and NFR-013. It prevents a committed canonical action from silently
 losing required asynchronous follow-up or delivering an edition-scoped effect
-outside that edition's immutable adoption manifest.
+outside that edition's immutable adoption manifest or the explicitly evidence-bound
+foundation transition in [ADR 0124](../architecture/decisions/0124-evidence-bound-adoption-transition-effects.md).
 
 ## Owned data and invariants
 
 - closed, versioned domain-event definitions and payload validators;
 - append-only domain event envelopes with aggregate version and correlation;
 - one durable outbox delivery per event and destination;
-- exact-profile permission for every edition-scoped event/destination route;
+- exact-profile permission for edition effects, with only the closed retained
+  foundation-transition exception defined in ADR 0124;
 - explicit pending, processing, succeeded, quarantined, and cancelled states;
 - bounded tenant/workload claims with expiring lease tokens;
 - append-only attempt outcomes and safe error codes;
@@ -57,8 +59,19 @@ work. Hybrid authorization facts additionally bind their validated
 `scope_level`: only `organization` may omit the edition, while edition,
 department, and resource scopes require one.
 
+The one additional foundation route retains Guides-adoption facts while an
+existing Announcements event is still awaiting adoption. It admits only the
+registered internal event for the exact recorded Announcements-to-combined edge,
+with Events-owned proof of the immutable request/decision/receipt and complete
+original envelope. It changes no manifest and cannot deliver content/access
+facts, notifications, null-scope facts or arbitrary transition claims. Publication,
+secondary enqueue, execution and replay use the same proof. Retained facts are
+not reauthorized against current roots, expiry or lifecycle; new mutations still
+require all of their ordinary admission checks.
+
 The `effects.E001` Django compatibility check resolves every route in both the
-exact adoption manifests and the closed non-edition catalog against the
+exact adoption manifests, the closed non-edition catalog and the explicit
+foundation-transition route against the
 versioned event registry and built-in handler registry. A missing event or
 destination is therefore a deployment error rather than durable poison work.
 

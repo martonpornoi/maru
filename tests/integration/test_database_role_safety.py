@@ -32,6 +32,7 @@ from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5,
+    RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6,
     RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
@@ -442,7 +443,7 @@ def _provision_runtime_role(
             ).format(role)
         )
         if grant_function_allowlist:
-            for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5:
+            for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6:
                 cursor.execute(
                     _function_privilege_statement(
                         action="GRANT",
@@ -1058,7 +1059,7 @@ def test_page9_trigger_helpers_do_not_expand_runtime_execute_closure() -> None:
     _provision_runtime_role(role_name)
 
     assert not set(_PAGE9_TRIGGER_HELPER_IDENTITIES) & set(
-        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6
     )
     with connection.cursor() as cursor:
         cursor.execute(
@@ -1322,9 +1323,10 @@ def test_unsafe_database_privileges_are_rejected(privilege: str) -> None:
     [
         (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3, False),
         (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V4, False),
-        (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5, True),
+        (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5, False),
+        (RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6, True),
     ],
-    ids=["obsolete-v3", "obsolete-v4", "current-v5"],
+    ids=["obsolete-v3", "obsolete-v4", "obsolete-v5", "current-v6"],
 )
 def test_public_only_function_execute_is_rejected(
     allowlist: tuple[str, ...], expected_available: bool
@@ -1350,7 +1352,7 @@ def test_public_only_function_execute_is_rejected(
 
 
 @pytest.mark.parametrize(
-    "denied_identity", RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V5
+    "denied_identity", RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V6
 )
 def test_every_required_function_needs_explicit_effective_execute(
     denied_identity: str,
@@ -2200,6 +2202,9 @@ def test_genuine_runtime_login_is_safe_and_persistent_replica_setting_is_not() -
                         "database": "ok",
                         "authority_provenance": "ok",
                         "announcements_setup_integrity": "ok",
+                        "knowledge_integrity": "ok",
+                        "guidance_authority_integrity": "ok",
+                        "guidance_setup_integrity": "ok",
                         "announcements_integrity": "ok",
                         "applications_integrity": "ok",
                         "charities_integrity": "ok",

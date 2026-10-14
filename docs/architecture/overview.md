@@ -205,6 +205,14 @@ and publication reports belong to Announcements; Communications remains the
 recipient-specific service inbox. The standalone profile does not adopt external
 sending or change existing exact profile versions.
 
+[ADR 0118](decisions/0118-reviewed-internal-guidance.md) introduces the bounded
+Knowledge slice shown as Guides: reviewed internal text, current-only reading,
+contextual help and retained private history. It adds no file library, recipient
+tracking or service-case intake. [ADR 0119](decisions/0119-guidance-adoption-and-purpose-authority.md)
+separately governs fresh Guides setup and an accepted addition to an existing
+Announcements edition. New literal manifests and purpose-qualified authority
+preserve existing event identities and previously accepted responsibilities.
+
 ## Module contracts
 
 Each module exposes three possible contract types:

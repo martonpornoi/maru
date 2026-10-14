@@ -22,7 +22,7 @@ from tests.rehearsals.programme_runtime_environment import (
 
 RUN = "1234567890abcdef1234567890abcdef"
 OVERLAY = "tests.rehearsals.programme_event_migrations"
-LEAF = ("events", "0022_isolated_programme_candidate")
+LEAF = ("events", "0025_isolated_programme_candidate")
 
 
 def _serialized_model(state):
@@ -60,6 +60,8 @@ def test_overlay_preserves_entire_real_graph_and_changes_only_candidate_state(se
         ("full_convention", "Full convention"),
         ("workforce_only", "Workforce only"),
         ("announcements_only", "Announcements only"),
+        ("guidance_only", "Guides only"),
+        ("announcements_guidance", "Announcements and Guides"),
         ("programme_operations", PROGRAMME_REHEARSAL_PROFILE.label),
     ]
     for key in state.models:
@@ -79,6 +81,8 @@ def test_overlay_preserves_entire_real_graph_and_changes_only_candidate_state(se
             "full_convention",
             "workforce_only",
             "announcements_only",
+            "guidance_only",
+            "announcements_guidance",
             "programme_operations",
         )
     ]
@@ -90,7 +94,7 @@ def test_overlay_preserves_entire_real_graph_and_changes_only_candidate_state(se
 
 def test_forward_and_reverse_fences_run_before_schema_changes():
     migration = importlib.import_module(
-        f"{OVERLAY}.0022_isolated_programme_candidate"
+        f"{OVERLAY}.0025_isolated_programme_candidate"
     ).Migration
     assert migration.atomic is True
     assert migration.operations[0].code is schema.require_empty_current_schema
@@ -251,6 +255,15 @@ def test_explicit_registration_extends_doubles_without_changing_real_profiles(
     assert (
         target.AdoptionProfileCode("programme_operations").value
         == "programme_operations"
+    )
+    assert "announcements_guidance" not in target.SELECTABLE_ADOPTION_PROFILE_KEYS
+    assert "announcements_guidance" not in dict(
+        target.SELECTABLE_ADOPTION_PROFILE_CHOICES
+    )
+    assert ("announcements_guidance", 1) in target.ADOPTION_PROFILES
+    assert target.SELECTABLE_ADOPTION_PROFILE_KEYS["guidance_only"] == (
+        "guidance_only",
+        1,
     )
     assert dict(adoption.ADOPTION_PROFILES) == before
     assert (

@@ -273,9 +273,9 @@ def test_organization_preflight_rejects_all_legacy_subjects() -> None:
 
 
 def test_participation_preflight_rejects_legacy_platform_subject() -> None:
+    edition = EventEditionFactory()
     _migrate(PARTICIPATION_BEFORE)
     administrator = AccountFactory(is_staff=True, is_superuser=True)
-    edition = EventEditionFactory()
     participation = Participation(
         account=administrator,
         organization=edition.organization,

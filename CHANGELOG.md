@@ -15,6 +15,10 @@ rather than replace the curated summary.
 
 ### Added
 
+- Internal Guides, available for synthetic evaluation, can be adopted independently
+  and reviewed by another person before readers see them. The prior approved copy
+  stays available during changes; removing a guide from readers keeps its history
+  and authorized exports.
 - Standalone Announcements lets a convention write messages, have another person
   check them, copy approved text into existing channels, and keep posting records
   and corrections together. Guided setup creates only the foundations this work
@@ -37,6 +41,10 @@ rather than replace the curated summary.
 
 
 ### Fixed
+
+- Guides now accepts drafts without optional task placements, shows pending setup
+  and access work on My Maru, and offers setup from eligible event records. The
+  narrow-screen menu no longer covers Save or Resume buttons.
 
 - Staff Console development tooling now locks `source-map-js` 1.2.2, addressing
   an upstream source-map denial-of-service vulnerability while retaining the

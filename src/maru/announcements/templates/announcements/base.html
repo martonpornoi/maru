@@ -1,5 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% load static %}
+{% block bodyclass %}{{ block.super }} baseline-unified-admin{% endblock %}
 {% block title %}{{ title }} · Maru{% endblock %}
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'core/baseline.css' %}"><link rel="stylesheet" href="{% static 'announcements/workspace.css' %}">{% endblock %}
 {% block content_title %}{% endblock %}

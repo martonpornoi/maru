@@ -1,6 +1,7 @@
 """Exact scope and edition-profile checks for durable effect delivery routes."""
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -74,20 +75,63 @@ NON_EDITION_EFFECT_ROUTES = validated_effect_route_catalog(
 )
 
 
-def effect_delivery_is_allowed(
+# This catalog does not change any immutable edition manifest. Every fallback
+# also requires an exact retained owner record and the complete event identity.
+TRANSITION_EFFECT_ROUTES = validated_effect_route_catalog(
+    (("events.guidance_adoption.changed.v1", "internal"),)
+)
+
+
+@dataclass(frozen=True, slots=True)
+class EffectEventIdentity:
+    """Carry the immutable event identity needed by retained transition routing.
+
+    Attributes
+    ----------
+    schema_version
+        Exact registered event schema version.
+    aggregate_type
+        Exact owning evidence family.
+    aggregate_id
+        Immutable owning record identifier, not its parent request.
+    aggregate_version
+        Version of that exact immutable evidence record.
+    actor_kind
+        Recorded principal kind, without present-day reauthorization.
+    actor_id
+        Recorded actual principal identifier.
+    causation_id
+        Original accepted mutation audit identifier.
+    correlation_id
+        Original immutable operation correlation identifier.
+    """
+
+    schema_version: int
+    aggregate_type: str
+    aggregate_id: UUID
+    aggregate_version: int
+    actor_kind: str
+    actor_id: UUID | None
+    causation_id: UUID | None
+    correlation_id: UUID
+
+
+def effect_delivery_is_allowed(  # noqa: PLR0911 - separate closed route families
     *,
     organization_id: UUID,
     event_edition_id: UUID | None,
     event_name: str,
     destination: str,
     payload: Mapping[str, object],
+    identity: EffectEventIdentity | None = None,
 ) -> bool:
     """Return whether one durable delivery is permitted for its exact scope.
 
     Platform- and organization-scoped facts declare that scope with a null
     edition identifier and retain their existing non-edition delivery policy.
     Edition-scoped facts must resolve an exact tenant-bound edition profile and
-    an explicitly pinned event/destination route.
+    an explicitly pinned event/destination route or the one evidence-backed
+    foundation transition declared separately under ADR 0124.
 
     Parameters
     ----------
@@ -102,12 +146,14 @@ def effect_delivery_is_allowed(
         The registered delivery destination.
     payload : Mapping[str, object]
         The validated event payload used to confirm hybrid authorization scope.
+    identity : EffectEventIdentity | None, default=None
+        Complete original identity; missing evidence cannot use a transition route.
 
     Returns
     -------
     bool
         ``True`` only for an explicit non-edition fact or a route pinned by the
-        exact persisted edition profile.
+        exact persisted edition profile, or exact retained transition evidence.
     """
     if event_name in _PAYLOAD_SCOPED_AUTHORIZATION_EVENTS:
         scope_level = payload.get("scope_level")
@@ -133,11 +179,53 @@ def effect_delivery_is_allowed(
         organization_id=organization_id,
         edition_id=event_edition_id,
     )
-    return profile is not None and profile_allows_effect(
+    if profile is None:
+        return False
+    if profile_allows_effect(
         profile.code,
         profile.version,
         event_name,
         destination,
+    ):
+        return True
+    if (
+        (event_name, destination) not in TRANSITION_EFFECT_ROUTES
+        or (profile.code, profile.version)
+        not in {("announcements_only", 1), ("announcements_guidance", 1)}
+        or type(identity) is not EffectEventIdentity
+        or type(identity.schema_version) is not int
+        or type(identity.aggregate_version) is not int
+        or identity.schema_version != 1
+        or identity.aggregate_version != 1
+        or not isinstance(identity.aggregate_type, str)
+        or not all(
+            isinstance(value, UUID)
+            for value in (
+                identity.aggregate_id,
+                identity.actor_id,
+                identity.causation_id,
+                identity.correlation_id,
+            )
+        )
+    ):
+        return False
+
+    from maru.events.guidance_effects import (  # noqa: PLC0415
+        guidance_adoption_effect_reference,
+    )
+
+    reference = guidance_adoption_effect_reference(
+        organization_id=organization_id,
+        edition_id=event_edition_id,
+        aggregate_type=identity.aggregate_type,
+        aggregate_id=identity.aggregate_id,
+    )
+    return reference is not None and (
+        identity.actor_kind == "account"
+        and identity.actor_id == reference.actor_id
+        and identity.causation_id == reference.source_audit_id
+        and identity.correlation_id == reference.correlation_id
+        and payload == {"operation": reference.operation}
     )
 
 
@@ -148,6 +236,7 @@ def require_effect_delivery_allowed(
     event_name: str,
     destination: str,
     payload: Mapping[str, object],
+    identity: EffectEventIdentity | None = None,
 ) -> None:
     """Reject a delivery route outside its exact scope and profile contract.
 
@@ -164,6 +253,8 @@ def require_effect_delivery_allowed(
         The registered delivery destination.
     payload : Mapping[str, object]
         The validated event payload used to confirm hybrid authorization scope.
+    identity : EffectEventIdentity | None, default=None
+        Complete original identity; missing evidence cannot use a transition route.
 
     Raises
     ------
@@ -177,6 +268,7 @@ def require_effect_delivery_allowed(
         event_name=event_name,
         destination=destination,
         payload=payload,
+        identity=identity,
     ):
         raise ValidationError(
             "The effect route is unavailable for this scope or edition profile.",

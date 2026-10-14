@@ -12,7 +12,7 @@ from django.db import transaction
 from django.db.models import F, Q
 from django.utils import timezone
 
-from maru.effects.adoption import require_effect_delivery_allowed
+from maru.effects.adoption import EffectEventIdentity, require_effect_delivery_allowed
 from maru.effects.models import (
     MAX_EFFECT_REPLAY_ADDITIONAL_ATTEMPTS,
     MAX_EFFECT_REPLAY_REASON_LENGTH,
@@ -271,6 +271,16 @@ def publish_domain_event(  # noqa: DOC503 - delegated validators raise Validatio
         event_name=record.event_name,
         destination=destination,
         payload=record.payload,
+        identity=EffectEventIdentity(
+            schema_version=record.schema_version,
+            aggregate_type=record.aggregate_type,
+            aggregate_id=record.aggregate_id,
+            aggregate_version=record.aggregate_version,
+            actor_kind=record.actor_kind,
+            actor_id=record.actor_id,
+            causation_id=record.causation_id,
+            correlation_id=record.correlation_id,
+        ),
     )
     event_values = asdict(record)
     event = DomainEvent.objects.create(
@@ -334,6 +344,14 @@ def enqueue_event_delivery(
             "event_edition_id",
             "organization_id",
             "payload",
+            "schema_version",
+            "aggregate_type",
+            "aggregate_id",
+            "aggregate_version",
+            "actor_kind",
+            "actor_id",
+            "causation_id",
+            "correlation_id",
         )
         .first()
     )
@@ -348,6 +366,16 @@ def enqueue_event_delivery(
         event_name=persisted_event.event_name,
         destination=destination,
         payload=persisted_event.payload,
+        identity=EffectEventIdentity(
+            schema_version=persisted_event.schema_version,
+            aggregate_type=persisted_event.aggregate_type,
+            aggregate_id=persisted_event.aggregate_id,
+            aggregate_version=persisted_event.aggregate_version,
+            actor_kind=persisted_event.actor_kind,
+            actor_id=persisted_event.actor_id,
+            causation_id=persisted_event.causation_id,
+            correlation_id=persisted_event.correlation_id,
+        ),
     )
     return OutboxMessage.objects.create(
         event=persisted_event,
@@ -755,6 +783,16 @@ def replay_quarantined_effect(
         event_name=message.event.event_name,
         destination=message.destination,
         payload=message.event.payload,
+        identity=EffectEventIdentity(
+            schema_version=message.event.schema_version,
+            aggregate_type=message.event.aggregate_type,
+            aggregate_id=message.event.aggregate_id,
+            aggregate_version=message.event.aggregate_version,
+            actor_kind=message.event.actor_kind,
+            actor_id=message.event.actor_id,
+            causation_id=message.event.causation_id,
+            correlation_id=message.event.correlation_id,
+        ),
     )
     previous_max_attempts = message.max_attempts
     new_max_attempts = previous_max_attempts + additional_attempts

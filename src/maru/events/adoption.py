@@ -106,6 +106,8 @@ class AdoptionProfileCode(StrEnum):
     FULL_CONVENTION = "full_convention"
     WORKFORCE_ONLY = "workforce_only"
     ANNOUNCEMENTS_ONLY = "announcements_only"
+    GUIDANCE_ONLY = "guidance_only"
+    ANNOUNCEMENTS_GUIDANCE = "announcements_guidance"
 
 
 FULL_CONVENTION_PROFILE_VERSION = 1
@@ -114,6 +116,7 @@ ANNOUNCEMENTS_ONLY_PROFILE_VERSION = 1
 DEFAULT_ADOPTION_PROFILE_VERSION = FULL_CONVENTION_PROFILE_VERSION
 
 _ADOPTION_MODULE_NAMESPACE_DECLARATIONS = (
+    "knowledge",
     "announcements",
     "audit",
     "authorization",
@@ -438,6 +441,8 @@ _WORKFORCE_ONLY_DESTINATIONS = _build_unique_tuple(
 
 SHELL_DESTINATION_KIND_CATALOG = _freeze_unique(
     (
+        "edition.guidance",
+        "edition.guidance_access",
         "edition.announcements",
         "edition.application-review",
         "edition.application-studio",
@@ -881,6 +886,176 @@ ADOPTION_PROFILES = _build_unique_mapping(
                 primary_module="announcements",
             ),
         ),
+        (
+            (AdoptionProfileCode.GUIDANCE_ONLY.value, 1),
+            AdoptionProfile(
+                code=AdoptionProfileCode.GUIDANCE_ONLY,
+                version=1,
+                label="Guides only",
+                description="Write, review and share approved internal guides.",
+                modules=frozenset(
+                    (
+                        "audit",
+                        "authorization",
+                        "effects",
+                        "events",
+                        "identity",
+                        "organizations",
+                        "privacy",
+                        "knowledge",
+                    )
+                ),
+                capability_codes=frozenset(
+                    (
+                        "organizations.view_basic",
+                        "organizations.change_profile",
+                        "organizations.create_series",
+                        "organizations.change_series",
+                        "organizations.manage_representation",
+                        "events.view_basic",
+                        "events.create",
+                        "events.change_profile",
+                        "events.transition",
+                        "audit.view_security",
+                        "authorization.manage_guidance_access",
+                        "knowledge.view_current",
+                        "knowledge.view_working",
+                        "knowledge.compose",
+                        "knowledge.review",
+                        "knowledge.withdraw",
+                        "knowledge.manage_settings",
+                        "knowledge.export_evidence",
+                    )
+                ),
+                destination_codes=("security",),
+                shell_destination_kinds=frozenset(
+                    (
+                        "edition.overview",
+                        "edition.guidance",
+                        "edition.guidance_access",
+                        "work.security",
+                    )
+                ),
+                effect_routes=_build_effect_routes(
+                    internal_event_names=(
+                        "authorization.capability.direct_granted.v1",
+                        "authorization.capability.revoked.v1",
+                        "authorization.role.assigned.v1",
+                        "authorization.role.revoked.v1",
+                        "authorization.role_bundle.version_created.v1",
+                        "events.edition.created.v1",
+                        "events.edition.details_updated.v1",
+                        "events.edition.lifecycle_transitioned.v1",
+                        "identity.account_restriction.applied.v1",
+                        "organizations.convention_series.created.v1",
+                        "organizations.convention_series.updated.v1",
+                        "organizations.representation.changed.v1",
+                        "events.guidance_adoption.changed.v1",
+                        "authorization.guidance_access.changed.v1",
+                        "knowledge.changed.v1",
+                    )
+                ),
+                catalog_entries=frozenset(),
+                adapter_codes=frozenset(),
+                conflict_source_codes=frozenset(),
+                root_role_codes=frozenset(("executive-board", "workspace-operators")),
+                primary_module="knowledge",
+            ),
+        ),
+        (
+            (AdoptionProfileCode.ANNOUNCEMENTS_GUIDANCE.value, 1),
+            AdoptionProfile(
+                code=AdoptionProfileCode.ANNOUNCEMENTS_GUIDANCE,
+                version=1,
+                label="Announcements and Guides",
+                description=(
+                    "Keep approved announcements and internal guides together."
+                ),
+                modules=frozenset(
+                    (
+                        "audit",
+                        "authorization",
+                        "effects",
+                        "events",
+                        "identity",
+                        "organizations",
+                        "privacy",
+                        "knowledge",
+                        "announcements",
+                    )
+                ),
+                capability_codes=frozenset(
+                    (
+                        "organizations.view_basic",
+                        "organizations.change_profile",
+                        "organizations.create_series",
+                        "organizations.change_series",
+                        "organizations.manage_representation",
+                        "events.view_basic",
+                        "events.create",
+                        "events.change_profile",
+                        "events.transition",
+                        "audit.view_security",
+                        "authorization.manage_guidance_access",
+                        "knowledge.view_current",
+                        "knowledge.view_working",
+                        "knowledge.compose",
+                        "knowledge.review",
+                        "knowledge.withdraw",
+                        "knowledge.manage_settings",
+                        "knowledge.export_evidence",
+                        "authorization.delegate",
+                        "authorization.grant_direct",
+                        "authorization.revoke",
+                        "authorization.manage_roles",
+                        "announcements.view",
+                        "announcements.compose",
+                        "announcements.review",
+                        "announcements.record_publication",
+                        "announcements.manage_settings",
+                        "announcements.export_evidence",
+                    )
+                ),
+                destination_codes=("security",),
+                shell_destination_kinds=frozenset(
+                    (
+                        "edition.overview",
+                        "edition.guidance",
+                        "edition.guidance_access",
+                        "work.security",
+                        "edition.announcements",
+                    )
+                ),
+                effect_routes=_build_effect_routes(
+                    internal_event_names=(
+                        "authorization.capability.direct_granted.v1",
+                        "authorization.capability.revoked.v1",
+                        "authorization.role.assigned.v1",
+                        "authorization.role.revoked.v1",
+                        "authorization.role_bundle.version_created.v1",
+                        "events.edition.created.v1",
+                        "events.edition.details_updated.v1",
+                        "events.edition.lifecycle_transitioned.v1",
+                        "identity.account_restriction.applied.v1",
+                        "organizations.convention_series.created.v1",
+                        "organizations.convention_series.updated.v1",
+                        "organizations.representation.changed.v1",
+                        "events.guidance_adoption.changed.v1",
+                        "authorization.guidance_access.changed.v1",
+                        "knowledge.changed.v1",
+                        "announcements.changed.v1",
+                        "authorization.capability.delegated.v1",
+                    )
+                ),
+                catalog_entries=frozenset(),
+                adapter_codes=frozenset(),
+                conflict_source_codes=frozenset(),
+                root_role_codes=frozenset(
+                    ("executive-board", "announcements-operators")
+                ),
+                primary_module="knowledge",
+            ),
+        ),
     ),
     declaration="Adoption profile registry keys",
 )
@@ -902,6 +1077,7 @@ SELECTABLE_ADOPTION_PROFILE_KEYS = _build_unique_mapping(
             ),
         ),
         (AdoptionProfileCode.ANNOUNCEMENTS_ONLY, ("announcements_only", 1)),
+        (AdoptionProfileCode.GUIDANCE_ONLY, ("guidance_only", 1)),
     ),
     declaration="Selectable adoption profile keys",
 )

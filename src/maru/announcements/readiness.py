@@ -2,6 +2,7 @@
 
 import hashlib
 import inspect
+from dataclasses import replace
 from importlib import import_module
 
 from django.db import DatabaseError
@@ -9,6 +10,8 @@ from django.db import DatabaseError
 from maru.core.database_integrity_readiness import (
     build_database_integrity_contract,
     database_integrity_contract_is_ready,
+    extend_database_integrity_contract,
+    parse_database_integrity_sql_contracts,
 )
 from maru.core.relation_schema_readiness import relation_schema_is_current
 
@@ -40,6 +43,9 @@ ANNOUNCEMENTS_SCHEMA_SHA256 = {
         "35d5ff9e836a2aa4caf4ef52a2f69f634abf1c0171eb5e9e0c3dd5d3d4d40c00"
     ),
 }
+_GUIDANCE_SUCCESSOR_SHA256 = (
+    "992c26023f05c8b3ae0fc3cf940dfa7debf863813dc64ebf3967203481413d25"
+)
 _FENCE_SHA256 = "28ac8350a5c4e2bc5719c10fef33aafc59b5253b7714345839ed636fb322a0b2"
 
 
@@ -56,9 +62,19 @@ def announcements_database_integrity_is_ready() -> bool:
             status_key="announcements_integrity",
             app_label="announcements",
             source_migration=("announcements", "0002_integrity"),
-            terminal_migration=("announcements", "0003_downgrade_fence"),
+            terminal_migration=("announcements", "0004_guidance_combined_admission"),
             source_migration_module="maru.announcements.migrations.0002_integrity",
         )
+        successor = import_module(
+            "maru.announcements.migrations.0004_guidance_combined_admission"
+        )
+        contract = extend_database_integrity_contract(
+            contract,
+            migration_module=successor.__name__,
+            source_sha256=_GUIDANCE_SUCCESSOR_SHA256,
+        )
+        _, functions = parse_database_integrity_sql_contracts(successor.CONTRACT_SQL)
+        contract = replace(contract, functions=functions)
         fence = import_module("maru.announcements.migrations.0003_downgrade_fence")
         return (
             database_integrity_contract_is_ready(contract)
