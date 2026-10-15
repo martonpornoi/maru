@@ -73,8 +73,17 @@ up. The final terminal interrupt terminated the launcher before its finalizer,
 so the exact container ID/name/ownership label was verified and that resource
 alone was removed. No preview container or server remains.
 
-The coherent implementation is ready for exact-commit certification and review;
-no final certification or hosted acceptance is claimed. See the
+The first exact-commit Auto run on `6ee62b6e` failed after 9m20s: all static
+repository gates passed, and 14,277 units passed with one failure because the new
+native test file was absent from the legacy whole-file timing inventory. Its
+complete evidence is retained; eight active database batches were cooperatively
+interrupted and all owned containers removed. No native batch or certification
+pass is claimed for that run. The missing diagnostic inventory entry now uses
+the existing median fallback (29.955 seconds), not a claimed measurement.
+The authoritative group map, largest-group fallback, tests and budgets are
+unchanged. All 133 focused inventory/selection/budget tests and the 751-file
+documentation validation passed. Fresh exact-head certification is next; no
+final or hosted acceptance is claimed. See the
 [demo checkpoint](../checkpoints/2026-10-15-convention-demo-browser-evidence.md).
 
 The legacy educational dataset does not supply exact authority-provenance

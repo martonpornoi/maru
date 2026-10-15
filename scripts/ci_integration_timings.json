@@ -66,6 +66,7 @@
   "tests/integration/test_charity_partners.py": 37.492,
   "tests/integration/test_communications_guardians.py": 12.589,
   "tests/integration/test_convention_bootstrap_api.py": 3.864,
+  "tests/integration/test_convention_demo.py": 29.955,
   "tests/integration/test_convention_series_api.py": 2.597,
   "tests/integration/test_database_role_safety.py": 448.797,
   "tests/integration/test_demo_seed_command.py": 31.499,
