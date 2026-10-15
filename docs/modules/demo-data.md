@@ -1,7 +1,7 @@
 # Synthetic demonstration data
 
-Status: Implemented repository-owned fictional fixture; roster importer removed
-Last updated: 2026-08-30
+Status: Disposable convention practice and a separate legacy educational fixture
+Last updated: 2026-10-15
 
 ## Purpose and requirements
 
@@ -172,7 +172,8 @@ ADR 0073 removes the former roster parser, external URL, and compatibility
 management command. There is no repository-owned command, parser, or supported
 adapter that can read a public convention directory into example data.
 
-Use `seed_demo_data` for every local educational journey. It creates only
+Use `seed_demo_data` for the legacy broad educational journey; use the disposable
+convention preview below for the current Announcements and Guides trial. It creates only
 synthetic `.invalid` identities and establishes active Executive Boards through
 the real Representation & access services. **Representation & access**,
 is the supported first-authority handoff; the platform administrator is the
@@ -296,3 +297,73 @@ receipts. Populate each feature through its supported fixture and domain boundar
 copying historical database rows is not evidence that a new event is valid.
 Keep this educational coverage distinct from restricted-runtime and production
 acceptance. No real convention data or external delivery is needed.
+
+## Disposable convention practice
+
+`scripts/try_maru.py` now defaults to a separate ongoing/future MaruCon scenario;
+`--scenario legacy` retains the older educational dataset. The new scenario uses
+one fresh owned database, real setup/acceptance/content commands, exact authority
+provenance and the restricted runtime login. See the
+[local trial](../start-here/run-locally.md) and
+[ADR 0125](../architecture/decisions/0125-disposable-convention-practice.md).
+
+Each edition has three Announcements and three Guides: a draft, work awaiting
+review, and an approved copy. Separate Author and Reviewer roles can work in both
+areas. Readers can read/download approved Guides only: the existing Announcements
+view permission also admits drafts/history, so this demo does not grant it to a
+Reader. Platform and setup-operator accounts receive no implied content access.
+There are nine generated accounts; only the six content accounts are shown.
+
+The creation anchor uses Europe/Budapest. Ongoing dates span yesterday through
+two days after the anchor; future dates are 90 through 93 days later. Reloads
+preserve dates, edits and history. Existing organizations/accounts cause setup to
+refuse; a failed content transaction rolls back its work. Restarting the launcher
+creates a new disposable database, not recovery of a previous preview. Cleanup
+is limited to the launcher's exact owned resource. The private acceptance
+facilitator and its stronger clipboard controls remain separate and unchanged.
+
+## Next bounded demo outcome
+
+Status: Implemented with focused native and browser evidence, 2026-10-15.
+Exact-commit certification and protected delivery are pending; see the
+[bounded evidence checkpoint](../checkpoints/2026-10-15-convention-demo-browser-evidence.md).
+
+The first maintained two-edition increment covers **Announcements and Guides**,
+using Maru's fictional convention namespace. It must let a newcomer choose an
+ongoing edition or a future edition, find useful example work and complete a
+short author/reviewer/reader journey. It does not promise every module or every
+UI function. This implements the accepted incremental direction under OPS-008,
+UX-031 and NFR-013, alongside ANN-001–009 and KNO-010–013.
+
+Acceptance is deliberately finite:
+
+1. A fresh disposable preview has exactly the two maintained editions for this
+   scenario: one genuinely underway at creation and one in the future. Record
+   the date anchor and timezone. Boundaries work across month, year and leap-day
+   changes without changing the host clock. Existing previews retain their
+   original dates, edits and history; a new preview gets a new current timeline.
+2. Both editions have usable Announcements and Guides examples: an editable
+   draft, work awaiting another person's review and an approved current copy.
+   Include practical furry-convention topics such as welcome-desk directions,
+   quiet-room information and a room-change notice. These are fictional practice
+   records, never actual safety or emergency advice for a live event.
+3. Separate Author, Reviewer and Reader accounts exercise real permission
+   boundaries. Authors cannot approve their own draft round; Readers cannot
+   see drafts, private review notes or settings. Platform oversight does not
+   become content access. Include cross-edition denial evidence.
+4. Build foundations, explicit combined adoption, accepted responsibilities,
+   content and reviews through their owning commands. Prepared synthetic
+   decisions must be labeled as fixture preparation, not independent-human
+   acceptance. Do not insert approval/history rows or copy legacy v6 authority
+   records. No unselected Registration, Participation, Workforce or payment
+   records and no real notifications are created.
+5. Reuse the local preview entry path with a short role-based trial, clear next
+   actions and truthful current coverage. A failed setup does not expose a
+   partially ready scenario. Retry, collision, restart and disposal behavior are
+   explicit, preserve user edits, and touch only verified owned resources.
+
+The older v6 educational dataset remains a separate fixture. It cannot be
+upgraded into exact provenance by copying rows or relabeling historical receipts.
+No production setting, migration guard, runtime permission or adoption manifest
+is weakened for convenience. New code and evidence must be verified separately
+from the delivered Guides candidate.

@@ -1,0 +1,82 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Try a convention · Maru</title>
+    <link rel="stylesheet" href="{% static 'demo/convention.css' %}">
+    <script src="{% static 'demo/convention.js' %}" defer></script>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">MARU · LOCAL PRACTICE</p>
+      <h1>Try running a convention</h1>
+      <p class="intro">Choose an event, then try writing, reviewing or reading. Everything here is fictional and disposable.</p>
+      <p>These examples cover <strong>Announcements and Guides</strong>. They include drafts, work waiting for review and approved copies. Nothing is sent or posted outside Maru.</p>
+      <nav aria-label="Choose a practice event">
+        <a class="button" href="#ongoing">Happening now</a>
+        <a class="button secondary" href="#future">Plan the next gathering</a>
+      </nav>
+      <section class="trial" aria-labelledby="trial-title">
+        <h2 id="trial-title">A short trial</h2>
+        <ol>
+          <li><strong>Author:</strong> edit “Preparing the welcome desk,” save it and ask for review.</li>
+          <li><strong>Reviewer:</strong> open the draft and approve it or ask for a change. An author cannot approve their own work.</li>
+          <li><strong>Reader:</strong> find the approved guide and download its text. Drafts and private notes stay hidden.</li>
+        </ol>
+        <p>Authors and Reviewers can also write and approve Announcements. Approved text is ready to copy; approval does not publish it anywhere.</p>
+        <p>Readers can open approved Guides only. Announcements currently needs staff access, which includes drafts and history, so the Reader has no access to that workspace. Each event has its own accounts. They cannot open the other event's content. The prepared approvals are synthetic practice, not independent human testing.</p>
+      </section>
+      {% if request.user.is_authenticated %}
+        <form method="post" action="{% url 'staff-logout' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'convention-demo' %}">
+          <p>Signed in as <strong>{{ request.user.display_name }}</strong>. Sign out before switching roles.</p>
+          <button type="submit">Sign out to switch roles</button>
+        </form>
+      {% endif %}
+      <p id="copy-status" role="status" aria-live="polite"></p>
+      <div class="editions">
+        {% for edition in editions %}
+          <section id="{{ edition.key }}" class="edition" aria-labelledby="{{ edition.key }}-title">
+            <p class="eyebrow">{% if edition.key == 'ongoing' %}HAPPENING NOW{% else %}IN THE FUTURE{% endif %}</p>
+            <h2 id="{{ edition.key }}-title">{{ edition.name }}</h2>
+            <p>{{ edition.starts_on }} to {{ edition.ends_on }} · {{ manifest.time_zone }}</p>
+            {% for role in edition.roles %}
+              <details>
+                <summary>Try as {{ role.name }}</summary>
+                <div class="account">
+                  <label for="{{ role.key }}-email">Practice email</label>
+                  <div class="copy-row">
+                    <input id="{{ role.key }}-email" value="{{ role.email }}" readonly autocomplete="off" spellcheck="false">
+                    <button type="button" data-copy="{{ role.key }}-email">Copy email</button>
+                  </div>
+                  <label for="{{ role.key }}-password">Practice password</label>
+                  <div class="copy-row">
+                    <input id="{{ role.key }}-password" type="password" value="{{ role.password }}" readonly autocomplete="off">
+                    <button type="button" data-copy="{{ role.key }}-password">Copy password</button>
+                  </div>
+                  <label class="show"><input type="checkbox" data-reveal="{{ role.key }}-password"> Show this practice password</label>
+                  <p>Copy works while the password is hidden. Paste the email and password into the normal sign-in form.</p>
+                  <a class="button" href="{{ role.sign_in }}">Sign in as {{ role.name }}</a>
+                </div>
+              </details>
+            {% endfor %}
+            <nav aria-label="{{ edition.name }} workspaces">
+              <a class="button secondary" href="{{ edition.guides }}">Open Guides</a>
+              <a class="button secondary" href="{{ edition.announcements }}">Announcements for Authors and Reviewers</a>
+            </nav>
+          </section>
+        {% endfor %}
+      </div>
+      <section aria-labelledby="keep-title">
+        <h2 id="keep-title">Your practice stays here</h2>
+        <p>Dates were set on {{ manifest.anchor }}. Reloading keeps your changes and their history; dates do not move while this preview is running. A new preview starts with a new timeline.</p>
+        <p>Keep the launcher running. When it stops or its time expires, it deletes only this preview's database. Existing fixtures are left alone. This preview is not production or accessibility certification.</p>
+        <p>Credentials are generated for this local preview and kept in memory. Keep this preview on your own computer and do not use these passwords elsewhere. Copying uses your normal clipboard and may remain in its history or synchronization. Clear it when finished.</p>
+        <button type="button" data-clear-clipboard>Clear copied practice data</button>
+      </section>
+    </main>
+  </body>
+</html>

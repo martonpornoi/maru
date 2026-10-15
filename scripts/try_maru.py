@@ -1,7 +1,8 @@
 """Run a disposable, loopback-only Maru demonstration with owned cleanup.
 
 This is a development convenience, not restricted-runtime acceptance or CI.
-The existing demo command supplies only fictional educational data.
+The default trial covers Announcements and Guides; --scenario legacy retains
+the separate older educational dataset. Both contain only fictional data.
 """
 
 from __future__ import annotations
@@ -255,6 +256,17 @@ class Preview:
                         'name="csrfmiddlewaretoken"' in page
                         and 'name="password"' in page
                     ):
+                        if "MARU_DEMO_MANIFEST" in self.environment:
+                            with opener.open(
+                                f"http://127.0.0.1:{self.port}/demo/", timeout=2
+                            ) as trial:
+                                if (
+                                    "Try running a convention"
+                                    not in trial.read().decode()
+                                ):
+                                    raise RuntimeError(
+                                        "The practice page is unavailable."
+                                    )
                         return
             except (urllib.error.URLError, TimeoutError):
                 pass
@@ -295,6 +307,46 @@ class Preview:
             self.container = ""
 
 
+def prepare_scenario(preview: Preview, scenario: str) -> tuple[str, str]:
+    """Prepare one explicit dataset before exposing the local web server.
+
+    Parameters
+    ----------
+    preview : Preview
+        Newly allocated database and exact owned child environment.
+    scenario : str
+        Closed convention or legacy CLI selection.
+
+    Returns
+    -------
+    tuple[str, str]
+        Ready page path and non-secret help (legacy retains its public password).
+    """
+    if scenario == "convention":
+        sys.path.insert(0, str(ROOT))
+        from scripts.convention_preview import (  # noqa: PLC0415 -- CLI-only preparation
+            prepare_convention_preview,
+        )
+
+        prepare_convention_preview(preview)
+        destination = "demo/"
+        account_help = "Choose an event and practice role on the local trial page.\n"
+    else:
+        preview.manage("migrate", "--noinput", "--verbosity", "0")
+        preview.manage("check")
+        preview.manage("seed_demo_data")
+        # The separate legacy fixture retains its documented educational login.
+        sys.path.insert(0, str(ROOT / "src"))
+        from maru.demo.constants import DEMO_ACCOUNT_PASSWORD  # noqa: PLC0415
+
+        destination = "admin/"
+        account_help = (
+            f"Email: demo.admin@maru.invalid\nPassword: {DEMO_ACCOUNT_PASSWORD}\n"
+            "Legacy educational data; not all modules are activated.\n"
+        )
+    return destination, account_help
+
+
 def main() -> int:
     """Start the demo or run prerequisite checks without creating resources.
 
@@ -305,6 +357,12 @@ def main() -> int:
     """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8765, metavar="PORT")
+    parser.add_argument(
+        "--scenario",
+        choices=("convention", "legacy"),
+        default="convention",
+        help="Two-edition Announcements/Guides practice, or the older broad dataset.",
+    )
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument(
         "--check", action="store_true", help="Check prerequisites only; create nothing."
@@ -338,19 +396,13 @@ def main() -> int:
             return 0
         preview = Preview(docker, args.port)
         preview.start_database()
-        preview.manage("migrate", "--noinput", "--verbosity", "0")
-        preview.manage("check")
-        preview.manage("seed_demo_data")
+        destination, account_help = prepare_scenario(preview, args.scenario)
         preview.start_server()
-        # Import the existing public fixture credential, not a second password source.
-        sys.path.insert(0, str(ROOT / "src"))
-        from maru.demo.constants import DEMO_ACCOUNT_PASSWORD  # noqa: PLC0415
-
         print(
-            f"\nReady in {time.monotonic() - started:.1f}s: http://127.0.0.1:{args.port}/admin/\n"
-            f"Email: demo.admin@maru.invalid\nPassword: {DEMO_ACCOUNT_PASSWORD}\n"
-            "Fictional educational data; not all modules are activated.\n"
-            "This is not restricted-runtime acceptance or certification.\n"
+            f"\nReady in {time.monotonic() - started:.1f}s: "
+            f"http://127.0.0.1:{args.port}/{destination}\n"
+            f"{account_help}"
+            "This preview is not certification or production acceptance.\n"
             "Ctrl+C stops the server and deletes this disposable database.\n"
             f"Automatic cleanup after {args.minutes} browser minutes.\n",
             flush=True,
