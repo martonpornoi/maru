@@ -9,9 +9,14 @@ document.querySelectorAll("[data-copy]").forEach((button) => {
       await navigator.clipboard.writeText(input.value);
       status.textContent = "Copied. Paste it into the normal sign-in form.";
     } catch {
-      input.focus();
-      input.select();
-      status.textContent = "Clipboard access was unavailable. The field is selected; copy it using your keyboard.";
+      if (input.type === "password") {
+        document.querySelector(`[data-reveal="${input.id}"]`).focus();
+        status.textContent = 'Clipboard access was unavailable. Choose "Show this practice password", then select the revealed password and copy it using your keyboard.';
+      } else {
+        input.focus();
+        input.select();
+        status.textContent = "Clipboard access was unavailable. The field is selected; copy it using your keyboard.";
+      }
     }
   });
 });

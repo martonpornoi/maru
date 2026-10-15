@@ -60,7 +60,7 @@ def test_trial_displays_six_scoped_content_accounts_and_never_operator_passwords
     assert text.count("Copy password</button>") == 6
     assert all(edition["edition_id"] in text for edition in manifest["editions"])
     assert "accounts/login/?next=" in text
-    assert "Copy works while the password is hidden" in text
+    assert "If your browser blocks copying, choose Show this practice password" in text
 
 
 @pytest.mark.parametrize(

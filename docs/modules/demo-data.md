@@ -313,6 +313,11 @@ areas. Readers can read/download approved Guides only: the existing Announcement
 view permission also admits drafts/history, so this demo does not grant it to a
 Reader. Platform and setup-operator accounts receive no implied content access.
 There are nine generated accounts; only the six content accounts are shown.
+Copy buttons read the actual value without revealing it. When clipboard access
+is unavailable, a masked password stays hidden and the page focuses **Show this
+practice password**, explaining deliberate reveal and manual selection/copying.
+Email and already-revealed fields remain selected for keyboard copying; failed
+copy/clear actions never claim success.
 
 The creation anchor uses Europe/Budapest. Ongoing dates span yesterday through
 two days after the anchor; future dates are 90 through 93 days later. Reloads

@@ -82,8 +82,29 @@ pass is claimed for that run. The missing diagnostic inventory entry now uses
 the existing median fallback (29.955 seconds), not a claimed measurement.
 The authoritative group map, largest-group fallback, tests and budgets are
 unchanged. All 133 focused inventory/selection/budget tests and the 751-file
-documentation validation passed. Fresh exact-head certification is next; no
-final or hosted acceptance is claimed. See the
+documentation validation passed. The repaired `82c29774` then passed all ten
+local gates in 4h32m49s: 14,278 units, 5,249 native cases in 89 batches, no failures,
+errors or skips, 91.25 percent combined coverage and all unchanged timing gates.
+All 89 owned containers were independently absent. Complete passing evidence was
+archived with matching hashes for all 5,438 files.
+
+[PR #213](https://github.com/martonpornoi/maru/pull/213) is open. Copilot identified
+a valid manual-copy fallback error: selecting a masked password cannot reliably
+be copied by a browser. The repair keeps it masked, focuses its reveal checkbox
+and explains deliberate reveal and selection. Email and already-revealed fields
+retain manual selection. Eight behavioral component tests and nine rendered-view
+units passed. Complete database-free feedback then passed all 14,278 units in
+75.09 seconds; frontend type checking, scoped lint/format, documentation and
+whitespace checks also passed. A browser component check with inert, non-account
+fields verified the injected-refusal guidance, masking, focus and selection;
+normal masked copying and clearing also passed. Native keyboard-copy readback
+was not established by the browser bridge and is not claimed. This narrow check
+does not repeat or replace the earlier genuine-runtime journeys.
+
+The original hosted run `38708933402` was cancelled as superseded, not recorded
+as a product failure or passing acceptance. Its CodeQL run had passed. The repair
+requires a new exact-head local certification and current hosted acceptance;
+no acceptance of the changed candidate is claimed yet. See the
 [demo checkpoint](../checkpoints/2026-10-15-convention-demo-browser-evidence.md).
 
 The legacy educational dataset does not supply exact authority-provenance
@@ -96,10 +117,10 @@ silently reseed existing data.
 
 ## Smallest next actions
 
-1. Commit this bounded demo outcome and run ordinary risk-selected certification
-   on its clean exact head against current main; preserve all earlier evidence.
-2. Create its PR after local acceptance, resolve valid review findings and obtain
-   current protected hosted acceptance before the authorized squash merge.
+1. Commit the reviewed clipboard repair and certify its
+   clean exact head against current main; preserve all earlier evidence.
+2. Push the certified repair to PR #213, resolve the reviewed conversation and
+   obtain current protected hosted acceptance before the authorized squash merge.
 3. Verify the merged tree and synchronize only the designated clean main checkout.
    Choose the next bounded outcome from the roadmap after delivery.
 

@@ -48,7 +48,10 @@ download PostgreSQL. Startup can take several minutes; keep this terminal open.
 Open the printed **Ready** link, normally <http://127.0.0.1:8765/demo/>.
 The page offers separate **Author**, **Reviewer** and **Reader** practice accounts
 for each event. Expand an account and use **Copy email** and **Copy password**;
-copying works while the password is hidden. Sign in through the normal form.
+the buttons can copy a hidden password when your browser allows clipboard access.
+If copying is blocked, choose **Show this practice password**, select the revealed
+password and copy it with your keyboard. Email and already-revealed fields are
+selected for manual copying. Sign in through the normal form.
 These generated credentials are intentionally available on this unshared local
 practice page. Do not expose it through a tunnel or use real data. Browser copying
 cannot exclude operating-system clipboard history or synchronization; use the

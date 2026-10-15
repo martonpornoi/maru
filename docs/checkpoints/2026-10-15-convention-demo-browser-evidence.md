@@ -99,3 +99,50 @@ accessibility, full 200-percent zoom/print, operational-owner or production
 acceptance. It does not establish all-module UI coverage or close the wider
 Knowledge document-governance scope. Exact-commit local certification, current
 hosted PR gate/CodeQL and protected review/merge remain the next delivery steps.
+
+
+## PR #213 certification and clipboard review follow-up
+
+Candidate `82c2977423fae3d75a8f368788ffce611c0c104d` passed all ten exact local gates
+against `c4a988d0808c6ee054c7ed7c726c5a111e934579` in 16,369.402 seconds. All 14,278
+units and 5,249 native cases across 89 database batches passed with no failures,
+errors or skips. Combined coverage was 91.25 percent; concurrency remained eight
+and all measured headroom gates passed. Every owned container was independently
+absent. The complete 5,438-file archive hash-matches the original evidence.
+PR #213 was opened through normal hooks and attached; its CodeQL run passed.
+
+Copilot's one finding correctly identified the denied-clipboard fallback: a
+still-masked password should not be selected with instructions claiming that
+keyboard copying will work. The repair retains masking, focuses the explicit
+reveal checkbox and explains reveal/select/manual copy. It does not reveal or
+copy automatically. Email and deliberately revealed fields retain the existing
+selection path; normal successful copying and explicit clearing are unchanged.
+Eight behavioral Vitest cases and nine rendered-view tests passed. Complete
+database-free feedback then passed all 14,278 units in 75.09 seconds. Frontend
+type checking, scoped Python lint/format, the 751-file documentation validator
+and whitespace checks passed. This feedback does not certify the new commit.
+
+A bounded loopback component harness rendered the actual local view, template
+and JavaScript with inert fields that are not live account credentials. It
+opened no database, created no accounts or grants and changed no browser or
+operating-system permission settings. An initial Permissions-Policy header did
+not induce refusal in the in-app browser, so that attempt is not refusal evidence.
+The replacement explicitly injected a rejecting clipboard dependency into the
+blocked route. That browser check verified unchanged clipboard contents after
+refusal, retained masking, unchecked/focused reveal control, Space activation,
+selection of revealed text and email, and truthful clear-failure guidance.
+The ordinary route verified exact masked-value copying and explicit clearing.
+
+The bridge's native keyboard-copy readback did not establish a successful manual
+copy and is not counted as one. Selection offsets and field types were checked
+without using redacted value length as evidence. This is component recovery
+proof, not a repeat of the genuine-runtime multi-role journey, an actual operating-
+system permission-denial acceptance, or independent-human/accessibility approval.
+Both harnesses stopped normally, their sockets closed, the temporary tab closed,
+browser visibility restored and the copied inert data cleared. The original
+passing source and all prior evidence remain preserved.
+
+The superseded hosted run `38708933402` was deliberately cancelled to avoid
+spending more work on a candidate with an accepted repair. Cancellation is neither
+a product failure nor a passing gate. Fresh clean-commit local certification and
+current hosted review, PR gate and CodeQL remain required before merge.

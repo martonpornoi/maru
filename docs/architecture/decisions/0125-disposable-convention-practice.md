@@ -34,8 +34,11 @@ six generated content accounts as public local practice credentials. It is not
 mounted in production. It rejects non-loopback peers/hosts, is not cacheable, and
 exposes no platform/setup password. Passwords remain in the launcher and child
 environment, never output logs or persistent files. Copying requires an explicit
-action and works while a password is masked; an optional reveal control and a
-manual clear button are provided. The page explains that browser copying cannot
+action and works while a password is masked when the browser permits clipboard
+access. On refusal, the password stays masked and the page focuses its deliberate
+reveal control, explaining how to reveal, select and manually copy it. Visible
+fields retain selection-based manual copying. A manual clear button is provided.
+The page explains that browser copying cannot
 exclude OS clipboard history/cloud synchronization. It does not automatically
 erase a later copy from another application.
 
