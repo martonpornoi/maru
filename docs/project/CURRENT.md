@@ -101,11 +101,31 @@ normal masked copying and clearing also passed. Native keyboard-copy readback
 was not established by the browser bridge and is not claimed. This narrow check
 does not repeat or replace the earlier genuine-runtime journeys.
 
-The original hosted run `38708933402` was cancelled as superseded, not recorded
-as a product failure or passing acceptance. Its CodeQL run had passed. The repair
-requires a new exact-head local certification and current hosted acceptance;
-no acceptance of the changed candidate is claimed yet. See the
-[demo checkpoint](../checkpoints/2026-10-15-convention-demo-browser-evidence.md).
+The clipboard repair `7ac2925c` passed all ten exact local gates in 4h33m46s:
+14,278 units and 5,249 native cases across 89 batches, zero failures/errors/skips,
+91.24 percent combined coverage and every unchanged timing gate. All owned
+containers were independently absent; 5,438 archived files hash-match the original.
+It was pushed through normal hooks. Current CodeQL passed and Copilot reviewed
+the exact commit with zero open findings; the original thread is resolved.
+
+Hosted run `38748503767` then found a timing-sensitive retention fixture in
+batch 52: 88 cases passed, but the receipt assertion saw the later completeness
+guard after its reused 250 ms future timestamp had elapsed. The completed job
+log and diagnostics are preserved; remaining jobs are still running. The scoped
+test repair samples the database clock inside each SQL statement, keeps the
+250 ms boundary and exact errors, and adds a deliberate-delay case. No production
+guard, migration, fingerprint or permission changes. All three source-pinned
+native cases passed in 192.42 seconds (199.765 including wrapper and cleanup),
+including the deliberate-delay case; complete source inventories matched and
+the owned container was independently absent. All 14,278 database-free units
+passed in 78.59 seconds, alongside scoped lint/format/docs/whitespace feedback.
+Fresh exact-commit local and hosted certification remain required; focused
+feedback is not repaired-head delivery acceptance.
+See the [browser checkpoint](../checkpoints/2026-10-15-convention-demo-browser-evidence.md)
+and [retention fixture checkpoint](../checkpoints/2026-10-15-convention-retention-clock-fixture.md).
+
+The earlier hosted run `38708933402` was cancelled as superseded, not recorded
+as a product failure or passing acceptance. All earlier evidence remains preserved.
 
 The legacy educational dataset does not supply exact authority-provenance
 evidence. The new examples must use the owning setup, acceptance and content
@@ -117,10 +137,10 @@ silently reseed existing data.
 
 ## Smallest next actions
 
-1. Commit the reviewed clipboard repair and certify its
-   clean exact head against current main; preserve all earlier evidence.
-2. Push the certified repair to PR #213, resolve the reviewed conversation and
-   obtain current protected hosted acceptance before the authorized squash merge.
+1. Commit the validated retention clock fixture repair and certify its clean exact
+   head against current main; preserve all earlier local and hosted evidence.
+2. Push the certified repair to PR #213 and obtain current review and protected
+   hosted acceptance before the authorized merge.
 3. Verify the merged tree and synchronize only the designated clean main checkout.
    Choose the next bounded outcome from the roadmap after delivery.
 

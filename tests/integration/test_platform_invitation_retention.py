@@ -972,15 +972,18 @@ def test_database_clock_rejects_plus_250ms_and_naive_policy_evidence(
     ):
         cursor.execute(
             """
+            WITH evidence AS MATERIALIZED (
+                SELECT clock_timestamp() AS at
+            )
             INSERT INTO identity_platforminvitationretentionpolicycontrol (
                 singleton, generation, policy_id, policy_version, policy_digest,
                 jurisdiction_code, policy_approved_by_reference,
                 policy_approved_at, trigger, retention_period_days, action,
                 activated_at
-            ) VALUES (
-                true, 'retention-policy-v1', %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s
             )
+            SELECT true, 'retention-policy-v1', %s, %s, %s, %s, %s,
+                   at + interval '250 milliseconds', %s, %s, %s, at
+              FROM evidence
             """,
             [
                 policy.policy_id,
@@ -988,11 +991,9 @@ def test_database_clock_rejects_plus_250ms_and_naive_policy_evidence(
                 policy.digest,
                 policy.jurisdiction_code,
                 policy.approved_by_reference,
-                future,
                 policy.trigger,
                 policy.period_days,
                 policy.action,
-                database_now,
             ],
         )
 
@@ -1048,10 +1049,12 @@ def test_database_clock_rejects_plus_250ms_and_naive_policy_evidence(
         )
 
 
+@pytest.mark.parametrize("receipt_delay", [0.0, 0.35], ids=["immediate", "delayed"])
 def test_database_clock_rejects_plus_250ms_hold_and_receipt(
     settings: object,
     platform_actor: Account,
     configured_invitation_crypto: None,
+    receipt_delay: float,
 ) -> None:
     policy = _configure_policy(settings)
     invitation, _challenge, _delivery = _create_revoked(
@@ -1059,8 +1062,6 @@ def test_database_clock_rejects_plus_250ms_hold_and_receipt(
         email="retention.strict-clock@example.invalid",
     )
     activate_configured_invitation_retention_policy()
-    database_now = _database_now_for_test()
-    future = database_now + timedelta(milliseconds=250)
     with (
         pytest.raises(DatabaseError, match="retention hold time is in the future"),
         transaction.atomic(),
@@ -1068,28 +1069,28 @@ def test_database_clock_rejects_plus_250ms_hold_and_receipt(
     ):
         cursor.execute(
             """
+            WITH evidence AS MATERIALIZED (
+                SELECT clock_timestamp() AS at
+            )
             INSERT INTO identity_platforminvitationretentionhold (
                 id, created_at, updated_at, invitation_id, reference_code,
                 reason_code, placed_at, placed_by_id, place_correlation_id,
                 active, released_at, released_by_id, release_reason_code,
                 release_correlation_id
-            ) VALUES (
-                %s, %s, %s, %s, 'future-hold', 'future-hold', %s, %s, %s,
-                true, NULL, NULL, '', NULL
             )
+            SELECT %s, at + interval '250 milliseconds',
+                   at + interval '250 milliseconds', %s,
+                   'future-hold', 'future-hold', at, %s, %s,
+                   true, NULL, NULL, '', NULL
+              FROM evidence
             """,
-            [
-                uuid4(),
-                future,
-                future,
-                invitation.id,
-                database_now,
-                platform_actor.id,
-                uuid4(),
-            ],
+            [uuid4(), invitation.id, platform_actor.id, uuid4()],
         )
     trigger_at = invitation.revoked_at
     assert trigger_at is not None
+    # The second write must sample its own database clock, even after the first
+    # write's 250 ms future window has elapsed on a busy runner.
+    time.sleep(receipt_delay)
     with (
         pytest.raises(
             DatabaseError,
@@ -1100,6 +1101,9 @@ def test_database_clock_rejects_plus_250ms_hold_and_receipt(
     ):
         cursor.execute(
             """
+            WITH evidence AS MATERIALIZED (
+                SELECT clock_timestamp() AS at
+            )
             INSERT INTO identity_platforminvitationretentionreceipt (
                 id, created_at, updated_at, inventory_control_id, invitation_id,
                 policy_id, policy_version, policy_digest, jurisdiction_code,
@@ -1107,16 +1111,16 @@ def test_database_clock_rejects_plus_250ms_hold_and_receipt(
                 retention_period_days, terminal_version, trigger_at, due_at,
                 action, applied_at, correlation_id, source_channel,
                 safe_result_code
-            ) VALUES (
-                %s, %s, %s, true, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, 'scheduler',
-                'abandoned_invitation_contact_anonymized'
             )
+            SELECT %s, at + interval '250 milliseconds',
+                   at + interval '250 milliseconds', true, %s,
+                   %s, %s, %s, %s, %s, %s, %s, %s,
+                   %s, %s, %s, %s, at, %s, 'scheduler',
+                   'abandoned_invitation_contact_anonymized'
+              FROM evidence
             """,
             [
                 uuid4(),
-                future,
-                future,
                 invitation.id,
                 policy.policy_id,
                 policy.version,
@@ -1130,7 +1134,6 @@ def test_database_clock_rejects_plus_250ms_hold_and_receipt(
                 trigger_at,
                 policy.due_at(trigger_at),
                 policy.action,
-                database_now,
                 uuid4(),
             ],
         )
