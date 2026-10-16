@@ -22,6 +22,11 @@ admin classes, or repositories.
 
 ### External API
 
+The [2026-10-16 inventory](../development/api-contract-inventory.md) records
+source-pinned schema coverage and a bounded follow-up for issue #36. It separates
+current declarations from runtime and production acceptance; the contract below
+is not evidence that every operation already meets every listed convention.
+
 The supported REST API provides:
 
 - edition- and organization-explicit routes;
