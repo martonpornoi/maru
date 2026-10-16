@@ -73,29 +73,50 @@ control after this browser pass; focused template rendering covers that copy.
 These are assistant-operated observations, not independent-human acceptance.
 See the [home checkpoint](../checkpoints/2026-10-16-truthful-admin-home.md).
 
-## Latest certification and repair
+## Latest certification and diagnosis
 
-Exact Auto certification of `6ce816ce` failed after 708.453 seconds. All 14,285
-units passed; four database batches passed, batch 8 had one old home-layout
-assertion fail with 49 other cases passing, and seven active batches were
-interrupted by fail-fast. This is not certification success. All twelve owned
-containers were independently absent and complete failed evidence was preserved.
+The prior home-section assertion repair passed four focused native cases with
+unchanged source and exact cleanup. Fresh Auto certification of `b22a5874`
+then failed after 2,751.625 seconds: all 14,285 units and 21 database batches
+passed; batch 22 had 150 passing cases and one setup error in the existing
+Programme archive cancellation regression. Seven active batches were interrupted
+by fail-fast. All 29 owned containers are independently absent; all 4,488 failed
+evidence files are hash-preserved. No success receipt exists.
 
-The assertion still expected Setup and Security history in the first work grid.
-The scoped test repair checks Setup in its secondary disclosure and Security
-history in the account section, retains exact allowed/denied destinations, and
-tests the unavailable work section directly instead of an unrelated later grid.
-No product behavior, permission or schema changed in this repair. All four
-focused native cases passed in 195.51 seconds (202.469 seconds including wrapper
-and cleanup). Source inventories were identical before and after; all 25 evidence
-files hash-match and the exact owned container is absent. Ruff, formatting and
-documentation validation passed. This focused result is not full certification.
+The native lifecycle guard rejected a queued event while its fixture requested
+an archive. That guard checks exact current audit/witness evidence and timestamp
+bounds; the request already reads PostgreSQL's clock. The saved failure does not
+identify which predicate rejected it. No production or test repair is inferred.
+The source-pinned replay of all 151 original batch cases passed in 497.02
+seconds (503.656 including cleanup); all 20 queued-event observations had true
+audit/time predicates. Source inventories and all 26 artifact hashes match; the
+exact owned container is absent. No matching Windows clock-change event was
+found. Observation SELECTs can change timing, so this establishes no fix.
+
+The second diagnostic removed all observation queries and passed 190 cases
+in 604.13 seconds (610.953 including cleanup): the 150 other original cases plus
+40 independent fixture repetitions of the original cancellation regression.
+All 25 artifact hashes and before/after source inventories match; exact owned
+cleanup is independently verified. There were no failures, errors or skips.
+
+The initial rejection remains unexplained and unreproduced, not fixed. No product
+or original test implementation change is justified by this evidence. A deliberate
+fresh complete Auto run will exercise the normal eight-worker environment and
+all gates, with this investigation recorded in the candidate. It is not an
+automatic retry loop: another rejection requires preserving and inspecting that
+attempt before further action. Original native guards, assertions, coverage,
+worker count, timing budgets and protected delivery requirements remain intact.
+See the [diagnostic checkpoint](../checkpoints/2026-10-16-home-archive-evidence-diagnosis.md).
 
 ## Smallest next actions
 
-1. Run fresh Auto exact-head certification of the coherent assertion repair
-   against current main. No earlier receipt certifies this repair.
-2. After applicable checks pass, complete protected PR review and authorized
+1. Commit the diagnostic evidence record and run fresh complete Auto
+   exact-head certification against live main with normal concurrency. No earlier
+   receipt certifies this candidate, and the unexplained prior rejection must
+   remain explicit in the PR evidence.
+2. If the native failure recurs, preserve the new evidence and investigate the
+   exact normal-pool conditions rather than changing a guard or retrying blindly.
+3. After applicable checks pass, complete protected PR review and authorized
    merge, verify the merged tree and synchronize the designated clean main.
    Broader state-aware work ordering, blockers and governed recent outcomes
    in issue #35 remain separate; this slice does not close that issue.
