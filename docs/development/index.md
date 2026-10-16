@@ -20,6 +20,8 @@ collaboration contracts\
 
 - [Dated API inventory](api-contract-inventory.md) maps the declared operations
   to source adapters and separates documentation gaps from runtime evidence.
+- [Catalog edition API review](catalog-edition-api-contract-review.md) traces
+  exactly two operations and records the remaining conformance decisions.
 
 ## Verify
 
@@ -43,6 +45,7 @@ a new [architecture decision](../architecture/decisions/index.md).
 setup
 agent-workflows
 api-contract-inventory
+catalog-edition-api-contract-review
 repository-governance
 local-certification
 docker-housekeeping

@@ -1,7 +1,7 @@
 # Current project state
 
-Last updated: 2026-10-16
-Phase: API inventory PR #215 under review; factual wording correction awaits fresh exact certification; Workforce browser acceptance remains blocked.
+Last updated: 2026-10-17
+Phase: API inventory delivered; bounded Catalog edition API source review completed locally, awaiting exact delivery checks. Workforce browser acceptance remains blocked.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and the owning requirements.
@@ -9,60 +9,52 @@ Keep one active delivery and preserve unrelated worktrees, stashes and evidence.
 
 ## Last completed outcome
 
-[PR #214](https://github.com/martonpornoi/maru/pull/214) delivered the truthful
-administration home: admitted event tools, secondary setup, clear event selection
-and no misleading admin-log recent-work feed. Protected squash
-`979de2a0e97bd43a33198e0e46c1237376033b7e` has certified tree
-`64601dca541116b038047d036e6d5ab0d014b116`; designated clean main was synchronized.
-Local Auto passed all ten gates, 14,285 units and 5,094 native cases in 38 batches,
-91.13% coverage and unchanged headroom/worker limits. Hosted PR gate and CodeQL
-passed with exact-head provenance; Copilot had zero findings. Broad #35 remains
-open for separately contracted state-aware guidance. Its completed monitor was
-deleted.
+[PR #215](https://github.com/martonpornoi/maru/pull/215) delivered the source-pinned
+[240-operation API inventory](../development/api-contract-inventory.md). Protected
+squash `c95bb69fe7b7cc308e030563fbd4856ea5201fd6` has exact certified tree
+`a81bf12fdefd70db4d61e34725f1228d62633ab3`; designated clean main was synchronized
+with a fast-forward only. All ten ordinary Auto gates passed the corrected exact
+head in 5,267.127 seconds: 14,285 units, 5,094 native cases in 38 batches, at most
+eight workers, 91.13% coverage and measured timing headroom. All 38 owned containers
+were independently absent; complete 5,082-file evidence was hash-preserved.
 
-The earlier archive audit-guard rejection remains unexplained and unreproduced,
-not fixed. Complete failure evidence, passing diagnostics and final local/hosted
-acceptance are preserved. Investigate a recurrence precisely, without blind retry.
-PRs #210–213 remain delivered; their old monitors stay paused. Ongoing/future
-fictional demos grow incrementally, with no all-workflows-prefilled claim.
+Exact-head hosted PR gate from the required app and CodeQL analyses/acceptance
+passed. One valid Copilot wording finding was corrected and its conversation
+resolved; the follow-up review reported no open issues. Current base, no-bypass
+ruleset and mergeability were verified before exact-head squash. The completed
+inventory monitor was deleted. See the
+[delivery and review checkpoint](../checkpoints/2026-10-17-catalog-api-contract-review.md).
+This inventory does not close issue #36 or establish runtime safety from schema
+metadata. No endpoint, schema, permission, test or gate changed.
+
+PRs #210–214 remain delivered. Broad home issue #35 stays open. The earlier home
+archive audit-guard rejection remains unexplained and unreproduced, not fixed;
+complete failure evidence, diagnostics and final local/hosted acceptance remain
+preserved. Investigate recurrence precisely without blind retry. Old paused
+monitors stay paused. Fictional demos grow incrementally, with no
+all-workflows-prefilled claim.
 
 ## Current bounded outcome
 
-[Issue #36](https://github.com/martonpornoi/maru/issues/36): a dated, source-pinned
-[API contract inventory](../development/api-contract-inventory.md), not endpoint
-implementation or completion of the umbrella. The complete 240-row schema index
-resolves every declared path to its current adapter. It records 210 paths,
-529 schemas, 197 operations with success-only declarations, 42 with problem media
-types and 235 with an empty response description. No operation has inline examples;
-12 component-property examples do exist. Missing schema metadata does not prove a
-missing runtime safeguard. No endpoint, permission, schema, dependency or gate
-changed. Requirements INT-001 and NFR-002/003/009/013 and accepted ADRs 0001, 0003
-and 0056 govern this documentation slice; no new architecture decision was made.
+The [Catalog edition API review](../development/catalog-edition-api-contract-review.md)
+completes exactly two source-evidence rows for issue #36: edition catalog GET and
+POST. It records self versus staff/platform authority, exact adopted profile,
+input normalization, projection, retry identity, mutation evidence, failure/cache/
+correlation behavior, consumers and test limits at the delivered main revision.
+Requirements INT-001, NFR-002/003/009/013, AUD-001 and the Catalog product requirements
+apply; accepted ADRs 0001/0003/0050/0056 remain unchanged. No new behavior or
+architecture policy is accepted by this review.
 
-Locked schema regeneration validates with zero errors and 23 retained enum-name
-warnings and reproduces the checked-in parsed contract. Forty-four existing
-schema/preflight/private-reference unit cases passed in 2.64 seconds. All 14,285
-database-free units also passed in 90.37 seconds. Documentation policy (758
-Markdown files), whitespace and the standard warning-fatal fresh Sphinx build
-passed. Generated HTML structure and the exact 240-row CSV download were checked.
-The first clean candidate `b7043e09` passed all ten ordinary Auto gates in
-5,313.413 seconds: 14,285 units, 5,094 native cases in 38 batches, 91.13% coverage
-and measured timing headroom. All 38 owned containers were independently absent;
-complete 5,082-file evidence was hash-preserved.
-
-[PR #215](https://github.com/martonpornoi/maru/pull/215) is open. Copilot identified
-one valid factual correction: readiness status 503 has no declared response media
-type. The report now says this explicitly; the schema, CSV, runtime and tests are
-unchanged. Prior results certify only the prior head. The corrected candidate
-requires fresh exact local and hosted acceptance before protected delivery. These
-results are not production acceptance. See the
-[inventory checkpoint](../checkpoints/2026-10-16-api-contract-inventory.md).
-
-The proposed next contract review is the two Catalog edition GET/POST operations,
-with explicit owner, authority, closure, failure, retry, audit and consumer evidence.
-Review those two rows before implementing any annotation/conformance change.
-No new API version, credentials, public documentation, general SDK or production
-readiness claim belongs in this slice. Existing demos are unaffected.
+The source review identifies explicit follow-up decisions: GET completeness and
+authority timing, its audit obligation, string/currency coercion, reason-excluding
+retry identity and safe declared failures. Five database-free serializer probes
+and exact schema/profile/source checks were recorded. The four existing focused
+unit files passed 115 cases in 1.64 seconds; all 14,285 units passed in 77.51
+seconds. Documentation policy (760 Markdown files) and whitespace passed.
+This is not native HTTP, concurrency,
+recovery or human acceptance. No runtime, schema, dependency, permission, original
+test or gate changed; demos are unaffected. Exact candidate certification and
+hosted acceptance remain pending.
 
 ## Preserved Workforce blocker
 
@@ -88,15 +80,16 @@ No files from that unfinished branch are folded into this documentation delivery
 
 ## Smallest next actions and limits
 
-1. Verify and commit the factual review correction, then run fresh ordinary
-   exact-head local certification against current main. Preserve prior evidence.
-2. After success, push normally to PR #215, close the addressed review conversation
-   and obtain exact-head hosted PR gate/CodeQL acceptance. Recheck base, all review
-   conversations and mergeability before authorized protected squash and ff-only
-   synchronization of the designated clean main checkout.
-3. Keep #36 and #42 open. An index is not the complete safety contract, and native
-   checks are not a complete human journey. Select later work within its stated
-   acceptance boundary, without resuming unrelated modules or agents.
+1. Finish documentation checks and review, commit this coherent two-operation
+   source review, and run ordinary exact-head certification against current main.
+   Preserve all previous receipts and evidence before the fresh run.
+2. After exact local success, push normally, open and attach a full-template PR,
+   resolve valid review findings and obtain exact-head hosted PR gate/CodeQL
+   acceptance. Recheck current base, all conversations and mergeability before
+   authorized protected squash and ff-only synchronization of designated clean main.
+3. Keep issues #36 and #42 open. The next proposed API scope is the two-operation
+   conformance plan, with explicit unresolved behavior and acceptance criteria;
+   do not silently convert this source review into endpoint changes.
 
 Preserve unrelated checkouts, stashes, stopped fixtures, private credentials and
 all failed/passing evidence. No deployment, external mail, account/authority
