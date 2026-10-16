@@ -49,3 +49,22 @@ One exact clean-head local certification, independent hosted checks/review and
 protected delivery remain the next gates. The evidence above does not establish
 those outcomes. Preserve prior failure archives and the separate uncommitted
 Workforce preparation; neither is part of this branch's source change.
+
+## Review correction
+
+Candidate `b7043e09cf1b4a8a8b5f7df278c4b4d696642f91` passed ordinary Auto exact
+certification against `979de2a0e97bd43a33198e0e46c1237376033b7e`: all ten gates,
+14,285 units, 5,094 native cases in 38 batches, 91.13% combined coverage and
+measured timing headroom, in 5,313.413 seconds. All 38 owned containers were
+independently absent; complete 5,082-file evidence was copied and hash-verified.
+Normal hooks and push preserved the exact head; PR #215 was opened and attached.
+
+Copilot's exact-head review found one factual wording error: the readiness 503
+response in `openapi.yaml` has a description but no `content` declaration. The
+inventory now says “503 without a response media type.” Direct parsed-schema
+inspection confirms that statement. No CSV count, schema, runtime, assertion or
+acceptance gate changed. The earlier receipt remains evidence only for its named
+commit. The corrected candidate must receive fresh exact local and independent
+hosted acceptance before merge; the review conversation stays open until the
+correction is pushed. Issues #36 and #42 remain open, with all prior evidence and
+the separate Workforce worktree preserved.

@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-10-16
-Phase: Administration home delivered; API inventory prepared for exact certification; Workforce browser acceptance remains blocked.
+Phase: API inventory PR #215 under review; factual wording correction awaits fresh exact certification; Workforce browser acceptance remains blocked.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and the owning requirements.
@@ -45,8 +45,17 @@ schema/preflight/private-reference unit cases passed in 2.64 seconds. All 14,285
 database-free units also passed in 90.37 seconds. Documentation policy (758
 Markdown files), whitespace and the standard warning-fatal fresh Sphinx build
 passed. Generated HTML structure and the exact 240-row CSV download were checked.
-Exact clean-head certification and independent hosted acceptance remain pending;
-these results are not production acceptance. See the
+The first clean candidate `b7043e09` passed all ten ordinary Auto gates in
+5,313.413 seconds: 14,285 units, 5,094 native cases in 38 batches, 91.13% coverage
+and measured timing headroom. All 38 owned containers were independently absent;
+complete 5,082-file evidence was hash-preserved.
+
+[PR #215](https://github.com/martonpornoi/maru/pull/215) is open. Copilot identified
+one valid factual correction: readiness status 503 has no declared response media
+type. The report now says this explicitly; the schema, CSV, runtime and tests are
+unchanged. Prior results certify only the prior head. The corrected candidate
+requires fresh exact local and hosted acceptance before protected delivery. These
+results are not production acceptance. See the
 [inventory checkpoint](../checkpoints/2026-10-16-api-contract-inventory.md).
 
 The proposed next contract review is the two Catalog edition GET/POST operations,
@@ -79,10 +88,10 @@ No files from that unfinished branch are folded into this documentation delivery
 
 ## Smallest next actions and limits
 
-1. Verify this inventory and documentation, commit one coherent documentation
-   candidate, then run ordinary exact-head local certification against current main.
-2. After success, push normally, create/attach the focused PR, address valid review
-   findings and obtain exact-head hosted PR gate/CodeQL acceptance. Recheck base,
+1. Verify and commit the factual review correction, then run fresh ordinary
+   exact-head local certification against current main. Preserve prior evidence.
+2. After success, push normally to PR #215, close the addressed review conversation
+   and obtain exact-head hosted PR gate/CodeQL acceptance. Recheck base, all review
    conversations and mergeability before authorized protected squash and ff-only
    synchronization of the designated clean main checkout.
 3. Keep #36 and #42 open. An index is not the complete safety contract, and native

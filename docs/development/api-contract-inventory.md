@@ -68,7 +68,7 @@ does not change the private runtime documentation boundary in
 | Paths / operations / component schemas | 210 / 240 / 529 | The earlier issue snapshot had 528 schemas. Neither count proves completeness. |
 | Unique operation IDs | 240 | No duplicate ID in this artifact. |
 | Operations declaring only success responses | 197 | No explicit 4xx, 5xx or default response; this does not mean runtime cannot reject. |
-| Operations declaring `application/problem+json` | 42 | A declared problem is not proof of all possible failures. Readiness declares 503 as JSON, accounting for the other non-success operation. |
+| Operations declaring `application/problem+json` | 42 | A declared problem is not proof of all possible failures. Readiness declares 503 without a response media type, accounting for the other non-success operation. |
 | Operations with at least one empty response description | 235 | A description may be missing even when a typed schema exists. |
 | Inline operation example locations | 0 | No `example` or nonempty `examples` within operation metadata. Referenced component properties contain 12 examples, so the whole schema is not example-free. |
 | Operations with declared request / response headers | 81 / 6 | These count parameter/response declarations, not actual HTTP traffic or all applicable headers. |
