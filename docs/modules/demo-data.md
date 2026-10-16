@@ -329,9 +329,10 @@ facilitator and its stronger clipboard controls remain separate and unchanged.
 
 ## Next bounded demo outcome
 
-Status: Implemented with focused native and browser evidence, 2026-10-15.
-Exact-commit certification and protected delivery are pending; see the
-[bounded evidence checkpoint](../checkpoints/2026-10-15-convention-demo-browser-evidence.md).
+Status: Delivered through protected [PR #213](https://github.com/martonpornoi/maru/pull/213),
+2026-10-16. Exact local and hosted certification passed; see the
+[delivery checkpoint](../checkpoints/2026-10-16-convention-demo-protected-delivery.md)
+and [bounded browser evidence](../checkpoints/2026-10-15-convention-demo-browser-evidence.md).
 
 The first maintained two-edition increment covers **Announcements and Guides**,
 using Maru's fictional convention namespace. It must let a newcomer choose an

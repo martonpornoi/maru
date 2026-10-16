@@ -184,8 +184,11 @@ Neither supersedes the active priorities or acceptance boundaries above.
 ## Contributor workflow baseline
 
 PR #211 delivered disposable preview startup and clarified routine risk-selected
-testing. PR #212 delivered the bounded first Guides workflow. The next increment
-makes ongoing/future fictional Announcements and Guides editions useful for
-newcomer trials; see the [demo contract](../modules/demo-data.md#next-bounded-demo-outcome).
+testing. PR #212 delivered the bounded first Guides workflow. PR #213 delivered
+ongoing/future fictional Announcements and Guides editions for newcomer trials;
+see the [demo contract](../modules/demo-data.md#next-bounded-demo-outcome).
+The next bounded home-entry repair removes unsupported setup/status implications
+and reuses authorized navigation. The broader state-aware operating home in #35
+requires separate domain projections and acceptance.
 Broader document governance and unrelated modules remain separate. Exhaustive
 testing is still required for global safety and test infrastructure changes.

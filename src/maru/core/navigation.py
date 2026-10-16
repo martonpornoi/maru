@@ -603,7 +603,7 @@ def _management_items(
             code="work.today",
             label="Today",
             view="today",
-            description="See current convention status, assigned work, and warnings.",
+            description="Open the event overview using your current access.",
             keywords=("home", "dashboard", "tasks", "deadlines", "actions"),
         ),
         _workspace_item(
@@ -670,7 +670,7 @@ def _management_items(
             code="work.setup",
             label="Setup guide",
             view="setup",
-            description="Continue the safe, ordered setup of this convention.",
+            description="Open the convention setup steps and their explanations.",
             keywords=(
                 "onboarding",
                 "checklist",

@@ -236,16 +236,28 @@ def test_admin_home_uses_exact_manifest_destinations() -> None:
 
     assert response.status_code == 200
     content = response.content.decode()
-    workspace_grid = content.split(
-        '<div class="maru-admin-workspace-grid">',
-        maxsplit=1,
+    work_section = content.split('aria-labelledby="maru-work-heading">', maxsplit=1)[
+        1
+    ].split("</section>", maxsplit=1)[0]
+    workspace_grid = work_section.split(
+        '<div class="maru-admin-workspace-grid">', maxsplit=1
     )[1].split("</div>", maxsplit=1)[0]
-    assert f"{reverse('management-console')}?view=setup" in workspace_grid
+    setup_section = work_section.split("<summary>Setup steps</summary>", maxsplit=1)[
+        1
+    ].split("</details>", maxsplit=1)[0]
+    account_section = content.split(
+        'aria-labelledby="maru-account-heading">', maxsplit=1
+    )[1].split("</section>", maxsplit=1)[0]
+    assert f"{reverse('management-console')}?view=setup" in setup_section
+    assert f"{reverse('management-console')}?view=setup" not in workspace_grid
     assert f"{reverse('management-console')}?view=workforce" in workspace_grid
-    assert f"{reverse('management-console')}?view=security" in workspace_grid
-    assert f"{reverse('management-console')}?view=people" not in workspace_grid
-    assert f"{reverse('management-console')}?view=commerce" not in workspace_grid
-    assert f"{reverse('management-console')}?view=reports" not in workspace_grid
+    assert f"{reverse('management-console')}?view=security" in account_section
+    assert f"{reverse('management-console')}?view=security" not in work_section
+    assert f"{reverse('management-console')}?view=people" not in work_section
+    assert f"{reverse('management-console')}?view=commerce" not in work_section
+    assert f"{reverse('management-console')}?view=reports" not in work_section
+    assert "Work on Purpose-scoped Workforce Edition" in work_section
+    assert "Continue setting up" not in work_section
     assert "Use Maru for volunteer structure" in content
 
 
@@ -341,10 +353,10 @@ def test_admin_home_fails_closed_for_unresolved_profile(
 
     assert response.status_code == 200
     content = response.content.decode()
-    workspace_grid = content.split(
-        '<div class="maru-admin-workspace-grid">',
-        maxsplit=1,
-    )[1].split("</div>", maxsplit=1)[0]
+    work_section = content.split('aria-labelledby="maru-work-heading">', maxsplit=1)[
+        1
+    ].split("</section>", maxsplit=1)[0]
+    assert 'class="maru-admin-workspace-grid"' not in work_section
     assert "This event uses tools that this version of Maru cannot open." in content
     assert "Choose another event or ask an administrator to check its setup." in content
     for destination in (
@@ -355,7 +367,7 @@ def test_admin_home_fails_closed_for_unresolved_profile(
         "commerce",
         "reports",
     ):
-        assert f"?view={destination}" not in workspace_grid
+        assert f"?view={destination}" not in work_section
     assert "Open advanced records" not in content
     registration_list_url = reverse(
         "admin:registration_registrationconfiguration_changelist"
