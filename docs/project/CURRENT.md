@@ -73,14 +73,29 @@ control after this browser pass; focused template rendering covers that copy.
 These are assistant-operated observations, not independent-human acceptance.
 See the [home checkpoint](../checkpoints/2026-10-16-truthful-admin-home.md).
 
+## Latest certification and repair
+
+Exact Auto certification of `6ce816ce` failed after 708.453 seconds. All 14,285
+units passed; four database batches passed, batch 8 had one old home-layout
+assertion fail with 49 other cases passing, and seven active batches were
+interrupted by fail-fast. This is not certification success. All twelve owned
+containers were independently absent and complete failed evidence was preserved.
+
+The assertion still expected Setup and Security history in the first work grid.
+The scoped test repair checks Setup in its secondary disclosure and Security
+history in the account section, retains exact allowed/denied destinations, and
+tests the unavailable work section directly instead of an unrelated later grid.
+No product behavior, permission or schema changed in this repair. All four
+focused native cases passed in 195.51 seconds (202.469 seconds including wrapper
+and cleanup). Source inventories were identical before and after; all 25 evidence
+files hash-match and the exact owned container is absent. Ruff, formatting and
+documentation validation passed. This focused result is not full certification.
+
 ## Smallest next actions
 
-1. Verify owned preview cleanup. Final template feedback passed all 17 cases;
-   documentation passed 754 files. All 5,194 prior workflow-certification files
-   are archived and hash-verified outside the next artifact directory.
-2. Commit this coherent home change and run ordinary Auto exact-head
-   certification against current main. The current candidate is not certified.
-3. After applicable checks pass, complete protected PR review and authorized
+1. Run fresh Auto exact-head certification of the coherent assertion repair
+   against current main. No earlier receipt certifies this repair.
+2. After applicable checks pass, complete protected PR review and authorized
    merge, verify the merged tree and synchronize the designated clean main.
    Broader state-aware work ordering, blockers and governed recent outcomes
    in issue #35 remain separate; this slice does not close that issue.
