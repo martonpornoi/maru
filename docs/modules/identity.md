@@ -352,6 +352,11 @@ data downgrade fence. The populated-upgrade rehearsal explicitly proves that
 a v7 receipt created under policy v1 still upgrades after the control advances
 monotonically to policy v2, without rewriting the historical policy evidence.
 
+Future-time refusal fixtures sample the PostgreSQL clock within each tested SQL
+statement. The 250-millisecond boundary and exact native error assertions remain
+unchanged; a deliberate delay between hold and receipt writes verifies that one
+expired fixture timestamp cannot turn the receipt check into a different refusal.
+
 ## Independent invitation writer generation
 
 ADR 0110 and Identity migration `0023_invitation_writer_cutover` close generic

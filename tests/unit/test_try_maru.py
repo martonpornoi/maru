@@ -114,7 +114,7 @@ def test_check_mode_never_creates_a_preview(monkeypatch):
 def test_startup_failure_or_interrupt_still_cleans_owned_resources(
     monkeypatch, failure
 ):
-    monkeypatch.setattr(try_maru.sys, "argv", ["try_maru"])
+    monkeypatch.setattr(try_maru.sys, "argv", ["try_maru", "--scenario", "legacy"])
     monkeypatch.setattr(try_maru, "preflight", lambda _: "docker")
     preview = Mock()
     preview.manage.side_effect = failure
@@ -125,7 +125,9 @@ def test_startup_failure_or_interrupt_still_cleans_owned_resources(
 
 
 def test_cleanup_failure_is_nonzero_even_after_successful_smoke(monkeypatch):
-    monkeypatch.setattr(try_maru.sys, "argv", ["try_maru", "--smoke"])
+    monkeypatch.setattr(
+        try_maru.sys, "argv", ["try_maru", "--smoke", "--scenario", "legacy"]
+    )
     monkeypatch.setattr(try_maru, "preflight", lambda _: "docker")
     preview = Mock()
     preview.close.side_effect = subprocess.CalledProcessError(1, ["docker", "rm"])
@@ -156,7 +158,9 @@ def test_preflight_refuses_remote_docker_before_allocating_resources(monkeypatch
 
 
 def test_browser_time_limit_cleans_up_normally(monkeypatch):
-    monkeypatch.setattr(try_maru.sys, "argv", ["try_maru", "--minutes", "1"])
+    monkeypatch.setattr(
+        try_maru.sys, "argv", ["try_maru", "--minutes", "1", "--scenario", "legacy"]
+    )
     monkeypatch.setattr(try_maru, "preflight", lambda _: "docker")
     preview = Mock()
     preview.server.wait.side_effect = subprocess.TimeoutExpired("runserver", 60)
@@ -187,3 +191,16 @@ def test_cleanup_kills_only_owned_child_if_graceful_stop_times_out(monkeypatch):
     preview.close()
     preview.server.kill.assert_called_once()
     command.assert_not_called()
+
+
+def test_default_convention_preparation_failure_cleans_up_before_server(monkeypatch):
+    monkeypatch.setattr(try_maru.sys, "argv", ["try_maru"])
+    monkeypatch.setattr(try_maru, "preflight", lambda _: "docker")
+    preview = Mock()
+    monkeypatch.setattr(try_maru, "Preview", Mock(return_value=preview))
+    preparation = Mock(side_effect=RuntimeError("Preparation unavailable"))
+    monkeypatch.setattr(try_maru, "prepare_scenario", preparation)
+    assert try_maru.main() == 1
+    preparation.assert_called_once_with(preview, "convention")
+    preview.close.assert_called_once()
+    preview.start_server.assert_not_called()

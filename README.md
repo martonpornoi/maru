@@ -39,7 +39,10 @@ uv sync --locked --all-groups
 uv run --locked python scripts/try_maru.py
 ```
 
-Open the printed browser link and sign in with the displayed demo account.
+Open the printed browser link to try an ongoing or future MaruCon. Each has
+drafts, work waiting for review and approved examples in Announcements and Guides.
+Copy a separate Author, Reviewer or Reader account from the local practice page;
+Readers see approved Guides only. Password copying works while they are hidden.
 **Ctrl+C deletes this disposable preview.** For prerequisite checks, startup
 verification, a short browser journey, or a persistent setup, follow
 [Run locally](docs/start-here/run-locally.md).
@@ -51,6 +54,7 @@ The repository contains these concrete starting points:
 | Organizer setup | A shared management shell, fictional organizations, recurring convention series, and dated editions with explicit authority. |
 | Volunteer coordination | Tested Workforce workflows for structure, positions, assignments, availability, and shifts, including a Workforce-only adoption path. |
 | Announcements | A standalone workflow for writing, independent review, manual posting records and corrections while keeping your existing website and social channels. [Try the workflow](docs/operations/announcements.md). |
+| Guides | Reviewed instructions and FAQs, approved reading and downloads, private working history and stop/resume. Try it beside Announcements in the disposable preview. |
 | Programme Operations | Implemented planning, publication, continuity, and recovery work under isolated synthetic evaluation; activation and human acceptance remain separate gates. |
 | Other modules | Bounded Registration, Venue, Logistics, and other slices; consult the module contracts before treating one as a complete workflow. |
 

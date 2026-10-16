@@ -15,6 +15,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- The disposable local preview now offers an ongoing and a future fictional
+  MaruCon with Announcements and Guides drafts, waiting reviews and approved
+  examples. Separate Author, Reviewer and Reader accounts are available on a
+  short practice page; copying works while passwords are hidden. Readers see
+  approved Guides only. The older educational tour remains an explicit option.
+
 - Internal Guides, available for synthetic evaluation, can be adopted independently
   and reviewed by another person before readers see them. The prior approved copy
   stays available during changes; removing a guide from readers keeps its history

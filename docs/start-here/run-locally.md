@@ -40,33 +40,44 @@ uv run --locked python scripts/try_maru.py
 ```
 
 The first command checks Python, dependencies, Docker and the web port without
-creating resources. The second creates its own temporary PostgreSQL container,
-runs migrations and system checks, seeds the existing fictional data, and starts
-Maru. It prints each command's elapsed time and a **Ready** link when the normal
-login form responds. The first run may also download PostgreSQL. Keep this
-terminal open; startup can take several minutes.
+creating resources. The second creates one temporary PostgreSQL container,
+applies migrations, prepares restricted runtime access and seeds two fictional
+MaruCon editions: happening now and a future gathering. The first run may also
+download PostgreSQL. Startup can take several minutes; keep this terminal open.
 
-Open <http://127.0.0.1:8765/admin/>. Sign in with the **Email** and **Password**
-printed in the terminal. These are public, synthetic fixture credentials.
+Open the printed **Ready** link, normally <http://127.0.0.1:8765/demo/>.
+The page offers separate **Author**, **Reviewer** and **Reader** practice accounts
+for each event. Expand an account and use **Copy email** and **Copy password**;
+the buttons can copy a hidden password when your browser allows clipboard access.
+If copying is blocked, choose **Show this practice password**, select the revealed
+password and copy it with your keyboard. Email and already-revealed fields are
+selected for manual copying. Sign in through the normal form.
+These generated credentials are intentionally available on this unshared local
+practice page. Do not expose it through a tunnel or use real data. Browser copying
+cannot exclude operating-system clipboard history or synchronization; use the
+explicit clear button when finished. Platform/setup passwords are not displayed.
 
 Try this short browser journey:
 
-1. Sign in and find **Choose an organization** in the management shell.
-2. Open the Organizations page. Find **Maru Community Events (Demo)** and
-   **Maru Arts Collective (Demo)**, the fictional organizers of MaruCon and
-   MaruDance, and inspect their event series and editions.
-3. Sign out. Reload a protected management page and check that sign-in is
-   required again.
-4. Press **Ctrl+C** in the terminal. The server stops and this run's database
-   and anonymous volume are deleted. Changes made in this preview are disposable.
-   An unattended preview also cleans up after 60 browser minutes; use
-   `--minutes 15` (1–240) to choose another limit.
+1. Choose **Happening now** and sign in as **Author**. Open the Guides draft
+   **Preparing the welcome desk**, edit it, save and ask for review.
+2. Return to `/demo/` and **Sign out to switch roles**. Sign in as **Reviewer**,
+   open the waiting guide and approve it or ask for a change.
+3. Switch to **Reader**, find an approved Guide and download its text. This role
+   cannot see drafts, private notes or Announcements. Authors and Reviewers can
+   also try writing/reviewing Announcements; nothing is posted outside Maru.
+4. Try the future event with its own accounts. Each account is limited to its
+   event. Reloading keeps edits and the original dates while the preview runs.
+5. Press **Ctrl+C** in the terminal. The server stops and this run's database
+   and anonymous volume are deleted. A new invocation starts fresh. An unattended
+   preview cleans up after 60 browser minutes; `--minutes 15` (1–240) changes this.
 
-The platform administrator is separate from convention membership. Some actions
-require another role or explicit purpose-specific setup. The educational fixture
-contains no Programme rows and does not activate every workflow. It is not the
-restricted-runtime acceptance fixture for Announcements or authority provenance.
-See [demo data](../modules/demo-data.md) for the exact dataset and limits.
+The initial examples cover Announcements and Guides only. Prepared decisions are
+synthetic setup, not independent human review. No attendee, payment, Programme,
+Workforce or external-message records are created. The original organizational
+tour remains available with `--scenario legacy`; it prints its public educational
+account and opens `/admin/`, and is not the exact-authority practice scenario.
+See [demo data](../modules/demo-data.md) for the two distinct datasets and limits.
 
 For a repeatable startup check without leaving a server running:
 
@@ -74,7 +85,7 @@ For a repeatable startup check without leaving a server running:
 uv run --locked python scripts/try_maru.py --smoke
 ```
 
-This checks migration, seed, system-check and HTTP login-form startup, then cleans
+This checks migration, seed, system checks, the login form and practice page, then cleans
 up. It does **not** test authenticated journeys, replace browser acceptance,
 certify a commit, or relax any required CI check. For a busy web port, add
 `--port 8766` to either command and use the printed URL. Both web and database

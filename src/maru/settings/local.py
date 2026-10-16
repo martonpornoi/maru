@@ -19,3 +19,8 @@ MARU_MEDIA_SCANNER = os.environ.get(
     "MARU_MEDIA_SCANNER",
     "local_rehearsal_clean",
 )
+
+# This route exposes only newly generated synthetic practice credentials. It is
+# absent from shared/production settings and refuses non-loopback requests.
+if os.environ.get("MARU_SYNTHETIC_CONVENTION_DEMO") == "true":
+    ROOT_URLCONF = "maru.demo.urls"

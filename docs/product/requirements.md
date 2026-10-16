@@ -2028,11 +2028,25 @@ architecture documents, implementation issues, tests, and release notes.
   local facilitator may present newly generated synthetic credentials to the
   maintainer; credentials and private keys must not enter published guidance,
   evidence, stdout/stderr or persistent handoff files. Local desktop delivery
+  for private acceptance fixtures
   must keep passwords out of visible widgets, require deliberate copying,
   exclude Windows clipboard history/cloud synchronization, expire its own
   unchanged copy and stop copying on session disposal. Clipboard failures
   must not fall back to logging or erase another application's later copy.
   Observations may stop at the first confusing or blocked step.
+  Maintained interactive examples must incrementally cover delivered workflows
+  in one ongoing and one future fictional edition. A fresh preview records its
+  date anchor and timezone; reopening preserves existing dates, user edits
+  and history. A new disposable invocation creates a fresh database; reseeding an
+  existing dataset must refuse without changing it. Separate reader, author and reviewer roles use the ordinary
+  authorization and command boundaries. Prepared synthetic decisions are fixture
+  evidence, not independent-human acceptance, and unselected workflows remain
+  untouched. The first bounded sample scope is Announcements and Guides. A
+  separate public local practice page may deliberately display generated,
+  disposable content-role credentials under ADR 0125. It must not expose
+  setup-operator or platform credentials, use production or shared hosting, or
+  claim browser clipboard history/synchronization exclusion. This does not
+  replace the private acceptance facilitator or its stronger clipboard rules.
 - **OPS-009 — Published-timetable continuity:** Hosts, volunteers, Programme
   staff, departments, and rooms must receive minimized now/next and run-sheet
   projections from the exact active release, with source age and version

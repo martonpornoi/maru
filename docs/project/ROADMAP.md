@@ -184,5 +184,8 @@ Neither supersedes the active priorities or acceptance boundaries above.
 ## Contributor workflow baseline
 
 PR #211 delivered disposable preview startup and clarified routine risk-selected
-testing. Guides remains the next product outcome; exhaustive testing is still
-required for global safety and test infrastructure changes.
+testing. PR #212 delivered the bounded first Guides workflow. The next increment
+makes ongoing/future fictional Announcements and Guides editions useful for
+newcomer trials; see the [demo contract](../modules/demo-data.md#next-bounded-demo-outcome).
+Broader document governance and unrelated modules remain separate. Exhaustive
+testing is still required for global safety and test infrastructure changes.
