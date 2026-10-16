@@ -16,6 +16,11 @@ collaboration contracts\
 - [Agent-assisted workflows](agent-workflows.md) explain Maru's always-on
   instructions, focused repository skills, and their authority boundaries.
 
+## API contract review
+
+- [Dated API inventory](api-contract-inventory.md) maps the declared operations
+  to source adapters and separates documentation gaps from runtime evidence.
+
 ## Verify
 
 - [Testing strategy](../quality/testing-strategy.md) explains layers, database
@@ -37,6 +42,7 @@ a new [architecture decision](../architecture/decisions/index.md).
 
 setup
 agent-workflows
+api-contract-inventory
 repository-governance
 local-certification
 docker-housekeeping
