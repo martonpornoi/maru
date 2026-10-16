@@ -1,11 +1,12 @@
 """Template access to the bootstrap-administration edition selector."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, cast
 
 from django import template
-from django.http import HttpRequest
 
-from maru.core.navigation import project_shell_navigation
+from maru.core.navigation import NavigationItem, project_shell_navigation
 from maru.events.admin_context import (
     admin_edition_options,
     admin_organization_navigation,
@@ -13,7 +14,9 @@ from maru.events.admin_context import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterable, Mapping
+
+    from django.http import HttpRequest
 
 register = template.Library()
 
@@ -93,3 +96,62 @@ def maru_admin_organization_navigation(
         A disclosure-safe mapping for maru admin organization navigation.
     """
     return admin_organization_navigation(request)
+
+
+@register.simple_tag
+def maru_home_navigation(
+    navigation: Mapping[str, object], selected_profile: object
+) -> dict[str, tuple[NavigationItem, ...]]:
+    """Select home shortcuts from the already authorized live registry.
+
+    Parameters
+    ----------
+    navigation : Mapping[str, object]
+        Current shell projection, including reauthorized pinned destinations.
+    selected_profile : object
+        Supported selected-event profile, or a false value when none is available.
+
+    Returns
+    -------
+    dict[str, tuple[NavigationItem, ...]]
+        Bounded work, setup, account and platform shortcuts. No new authority,
+        destination, record query or operational-completion state is inferred.
+    """
+    groups = cast("Iterable[Mapping[str, object]]", navigation.get("groups", ()))
+    items = {
+        item.code: item
+        for group in groups
+        for item in cast("Iterable[NavigationItem]", group["items"])
+        if item.kind == "destination"
+    }
+    work_kinds = (
+        "edition.guidance",
+        "edition.announcements",
+        "work.workforce",
+        "work.attendee-service",
+        "work.people",
+        "work.reports",
+        "work.today",
+    )
+    work = tuple(
+        item
+        for kind in work_kinds
+        for item in items.values()
+        if selected_profile and item.profile_destination_kind == kind
+    )
+    return {
+        "work": work,
+        "setup": tuple(
+            item
+            for code, item in items.items()
+            if selected_profile and code == "work.setup"
+        ),
+        "account": tuple(
+            item for code, item in items.items() if code == "work.security"
+        ),
+        "platform": tuple(
+            items[code]
+            for code in ("platform.organizations", "platform.accounts")
+            if code in items
+        ),
+    }

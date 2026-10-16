@@ -13,16 +13,25 @@ from django.urls import reverse
 
 from maru.announcements.errors import AnnouncementDeniedError
 from maru.core import navigation
+from maru.core.navigation import NavigationItem
 from maru.events.adoption import adoption_profile
 from maru.events.announcements_workspace_queries import AnnouncementsWorkspaceReference
+from maru.events.templatetags.admin_edition_context import maru_home_navigation
 from maru.identity.models import Account
 
 
-def _render_home(monkeypatch, profile, *, request=None):
+def _render_home(
+    monkeypatch, profile, *, request=None, items=(), selected=True, workspace=True
+):
+    if request is None:
+        monkeypatch.setattr(
+            "maru.events.templatetags.admin_edition_context.project_shell_navigation",
+            lambda *_a, **_kw: {"groups": ({"items": items},)},
+        )
     monkeypatch.setattr(
         "maru.events.templatetags.admin_edition_context.admin_edition_options",
         lambda _request: {
-            "selected": SimpleNamespace(name="Synthetic event"),
+            "selected": SimpleNamespace(name="Synthetic event") if selected else None,
             "selected_profile": profile,
         },
     )
@@ -39,43 +48,130 @@ def _render_home(monkeypatch, profile, *, request=None):
                 or SimpleNamespace(
                     user=SimpleNamespace(is_platform_administrator=False)
                 ),
-                "maru_shell_access": {"workspace_available": True},
+                "maru_shell_access": {"workspace_available": workspace},
             }
         )
     )
 
 
-@pytest.mark.parametrize(
-    ("profile_code", "purpose"),
-    [
-        ("full_convention", "Use the tools below to set up and run this event."),
-        (
-            "workforce_only",
-            "Plan your volunteer team's roles, availability, and shifts.",
+def _item(code, *, kind="destination", pinned=False):
+    return NavigationItem(
+        code=code,
+        label={"work.workforce": "Team workspace", "work.setup": "Setup guide"}.get(
+            code, code
         ),
-    ],
-)
-def test_supported_home_keeps_profile_explanation_in_closed_details(
-    monkeypatch, profile_code, purpose
+        url="/admitted/" + code + "/",
+        section="Pinned" if pinned else "Overview",
+        description="Authorized destination",
+        profile_destination_kind=code,
+        kind=kind,
+        pinned=pinned,
+    )
+
+
+@pytest.mark.parametrize("profile_code", ["full_convention", "workforce_only"])
+def test_supported_home_uses_admitted_links_and_secondary_setup(
+    monkeypatch, profile_code
 ):
     profile = adoption_profile(profile_code, 1)
     assert profile is not None
-
-    html = _render_home(monkeypatch, profile)
+    html = _render_home(
+        monkeypatch, profile, items=(_item("work.workforce"), _item("work.setup"))
+    )
 
     introduction, disclosure = html.split(
         '<details class="maru-admin-profile-details">', 1
     )
     details, _rest = disclosure.split("</details>", 1)
-    assert purpose in introduction
+    assert "Work on Synthetic event" in introduction
     assert profile.description not in introduction
     assert "<summary>Technical setup details</summary>" in details
-    assert profile.description in details
     assert html.count(profile.description) == 1
-    assert "Continue setup" in html
-    if profile_code == "workforce_only":
-        assert "Team workspace" in html
-        assert "Registration desk" not in html
+    assert "<summary>Setup steps</summary>" in html
+    assert "Team workspace" in html
+    assert 'href="/admitted/work.workforce/"' in html
+    assert 'href="/admitted/work.setup/"' in html
+    assert html.index("Team workspace") < html.index("Setup steps")
+    assert "Continue setup" not in html
+    assert "Continue setting up" not in html
+    assert "Registration desk" not in html
+
+
+@pytest.mark.parametrize("profile_code", ["full_convention", "workforce_only"])
+def test_profile_alone_does_not_create_home_permissions(monkeypatch, profile_code):
+    html = _render_home(monkeypatch, adoption_profile(profile_code, 1))
+    assert "No work tools are available on this home for your current access." in html
+    assert "Setup steps" not in html
+    assert "Team workspace" not in html
+    assert "Nothing to do" not in html
+    assert reverse("management-console") not in html
+
+
+@pytest.mark.parametrize("platform", [False, True])
+def test_no_event_has_safe_role_specific_recovery(monkeypatch, platform):
+    items = (_item("platform.organizations"),) if platform else ()
+    html = _render_home(monkeypatch, None, selected=False, items=items)
+    assert "Choose an event" in html
+    assert "Use Change event at the top of the page" in html
+    assert "ask an event organizer to check your access" in html
+    assert ("Open Organizations" in html) is platform
+    assert ('href="/admitted/platform.organizations/"' in html) is platform
+    assert "Continue convention setup" not in html
+    assert "Setup steps" not in html
+
+
+def test_no_workspace_does_not_project_work_or_platform_links(monkeypatch):
+    html = _render_home(
+        monkeypatch,
+        None,
+        selected=False,
+        workspace=False,
+        items=(_item("platform.organizations"),),
+    )
+    assert "Your Maru account" in html
+    assert "ask its organizer to check your access" in html
+    assert "/admitted/" not in html
+
+
+def test_home_projection_retains_exact_scoped_urls_and_reauthorized_pins():
+    guide = NavigationItem(
+        code="edition.synthetic.guidance",
+        label="Guides",
+        url="/admin/guidance/exact-organization/exact-edition/",
+        section="Pinned",
+        profile_destination_kind="edition.guidance",
+        pinned=True,
+    )
+    setup = _item("work.setup")
+    registry = {
+        "groups": (
+            {"items": (guide,)},
+            {
+                "items": (
+                    setup,
+                    _item("record.secret"),
+                    _item("work.people", kind="action"),
+                )
+            },
+        )
+    }
+    projected = maru_home_navigation(registry, object())
+    assert projected["work"] == (guide,)
+    assert projected["work"][0] is guide
+    assert projected["setup"] == (setup,)
+    assert maru_home_navigation(registry, None)["work"] == ()
+    assert maru_home_navigation(registry, None)["setup"] == ()
+    assert maru_home_navigation({"groups": ()}, object())["work"] == ()
+
+
+def test_home_does_not_read_or_disclose_admin_log_history():
+    template = get_template("admin/index.html").template
+    sidebar = next(
+        block
+        for block in template.nodelist.get_nodes_by_type(BlockNode)
+        if block.name == "sidebar"
+    )
+    assert sidebar.render(Context({})) == ""
 
 
 def test_unknown_home_setup_explains_next_step_without_offering_unavailable_work(
@@ -158,8 +254,8 @@ def test_home_announcements_continuation_reuses_current_authorized_registry(
     assert html.count(f'href="{url}"') == int(visible)
     assert ("<strong>Announcements</strong>" in html) is visible
     if visible:
-        assert "Continue work on Synthetic event" in html
-        assert "Prepare announcements together" in html
+        assert "Work on Synthetic event" in html
+        assert "Choose a tool to continue your event work." in html
         assert "Registration desk" not in html
         assert "Team workspace" not in html
     if profile_code == "announcements_only" and profile_version == 1 and active:

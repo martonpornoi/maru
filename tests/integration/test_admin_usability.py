@@ -161,12 +161,14 @@ def test_admin_branding_and_domain_language_are_clear() -> None:
     assert content.index("/static/admin/css/responsive.css") < content.index(
         "/static/core/admin-responsive.css"
     )
-    assert "Continue convention setup" in content
+    assert "Choose an event" in content
+    assert "Continue convention setup" not in content
     assert f"{reverse('management-console')}?view=setup" in content
     assert "Quick start" not in content
     assert 'class="maru-admin-quick-start"' not in content
     assert "Open advanced records" in content
-    assert "Recent work" in content
+    assert "Recent work" not in content
+    assert 'id="recent-actions-module"' not in content
     assert "All administration areas" not in content
     assert "First convention setup" not in content
     assert "/admin/auth/group/" not in content

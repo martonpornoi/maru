@@ -35,6 +35,9 @@ rather than replace the curated summary.
 
 ### Changed
 
+- The administration home offers tools available for the selected event and
+  your current access. Setup steps stay secondary, no-event guidance points to
+  Change event, and incomplete admin logs are no longer called recent work.
 - Management navigation groups available work by purpose and keeps advanced
   records secondary, with searchable familiar terms, current-page discovery,
   and a usable narrow-screen menu when JavaScript is unavailable.

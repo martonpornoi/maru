@@ -26,9 +26,28 @@ writer, audit boundary, or client-side source of truth.
 ## Task-oriented navigation and home
 
 The default navigation prioritizes durable, role- and context-relevant
-destinations. The administration home leads with current work and **Continue
-setup**, then recent work and a small set of primary destinations. It does not
-repeat the exhaustive Django application/model directory.
+destinations. The administration home offers a small set of links from that same
+live authorized registry, including reauthorized pins, without repeating the
+exhaustive Django model directory or reconstructing permission from an adoption
+profile. Labels, descriptions and exact URLs stay owned by the registry.
+
+With a selected supported event, the home says **Work on <event>** and presents
+available tools. It does not infer unfinished setup, completion, deadlines or a
+best next action from event existence or lifecycle. **Setup steps** is secondary
+and appears only when the current registry admits its destination. A supported
+event with no admitted home tools gets a neutral access explanation, never an
+all-clear or hidden-record count. An unknown profile gets the existing unavailable
+explanation without work links. Without a selected event, the home asks the user
+to choose one; only admitted platform links offer organization/account management.
+Scoped users get a safe organizer-access handoff, not a platform setup link.
+
+Django admin log entries are not an operational activity feed and are omitted
+from the home: they neither cover governed service/API outcomes nor establish
+current object disclosure. No new history query, analytics or task database is
+introduced. Existing advanced records remain behind their authorized gateway.
+This finite entry-point contract addresses part of issue #35. A true state-aware
+home with ordered domain work, explicit blockers and governed recent outcomes
+remains a separate contract and acceptance outcome.
 
 Navigation items have code-owned labels, descriptions, stable task keywords,
 and one of these presentation kinds:
