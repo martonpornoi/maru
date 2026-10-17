@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import timedelta
-from uuid import uuid4
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -49,6 +51,9 @@ from maru.registration.models import AdmissionProduct, Entitlement
 from maru.urls import urlpatterns as platform_urlpatterns
 from tests.factories import AccountFactory, EventEditionFactory
 from tests.workforce_helpers import create_department_for_test
+
+if TYPE_CHECKING:
+    from django.http import HttpResponse
 
 urlpatterns = [path("", include("maru.catalog.urls")), *platform_urlpatterns]
 
@@ -878,3 +883,302 @@ def test_catalog_command_evidence_and_schema_remain_separate() -> None:
     }
     assert "admission_product" not in catalog_fields
     assert "registration" not in line_fields
+
+
+def _catalog_api_evidence_counts() -> dict[str, int]:
+    return {
+        model._meta.label: model.objects.count()
+        for model in (
+            EditionCatalog,
+            CatalogProduct,
+            CatalogVariant,
+            CatalogCommandReceipt,
+            CatalogOrder,
+            CatalogPaymentIntent,
+            CatalogPaymentEvent,
+            CatalogStockAdjustment,
+            AuditEvent,
+            DomainEvent,
+            OutboxMessage,
+            AdmissionProduct,
+            Entitlement,
+        )
+    }
+
+
+def _assert_catalog_api_response(
+    response: HttpResponse, *, status: int, request_id: UUID
+) -> dict[str, object]:
+    assert response.status_code == status
+    assert response.headers["X-Request-ID"] == str(request_id)
+    assert {"private", "no-store"} <= {
+        part.strip() for part in response.headers["Cache-Control"].split(",")
+    }
+    payload = json.loads(response.content)
+    assert isinstance(payload, dict)
+    if status >= 400:
+        assert response.headers["Content-Type"] == "application/problem+json"
+        assert {"type", "title", "status", "detail", "code"} <= payload.keys()
+        assert payload["status"] == status
+        assert payload["request_id"] == str(request_id)
+    else:
+        assert response.headers["Content-Type"] == "application/json"
+    return payload
+
+
+@override_settings(ROOT_URLCONF=__name__)
+@pytest.mark.parametrize("method", ["GET", "POST"])
+@pytest.mark.parametrize("denial", ["anonymous", "inactive", "foreign", "unadopted"])
+def test_catalog_edition_api_denies_before_private_input(
+    method: str, denial: str
+) -> None:
+    edition = EventEditionFactory(
+        name="Hidden synthetic edition label",
+        adoption_profile_code="workforce_only"
+        if denial == "unadopted"
+        else "full_convention",
+        adoption_profile_version=1,
+    )
+    api = APIClient()
+    if denial != "anonymous":
+        actor = AccountFactory(
+            is_active=denial != "inactive",
+            is_staff=method == "POST",
+            is_superuser=method == "POST",
+        )
+        api.force_authenticate(user=actor)
+    organization_id = (
+        EventEditionFactory().organization_id
+        if denial == "foreign"
+        else edition.organization_id
+    )
+    url = reverse("catalog-api-detail", args=(organization_id, edition.id))
+    before = _catalog_api_evidence_counts()
+    request_id = uuid4()
+    response = api.generic(
+        method,
+        url + "?private_field=hidden-value",
+        data="{malformed-private-body",
+        content_type="application/json",
+        HTTP_IDEMPOTENCY_KEY="not-a-key",
+        HTTP_X_REQUEST_ID=str(request_id),
+    )
+    payload = _assert_catalog_api_response(response, status=403, request_id=request_id)
+    assert payload["code"] != "parse_error"
+    for hidden in (
+        edition.name,
+        "private_field",
+        "hidden-value",
+        "malformed-private-body",
+    ):
+        assert hidden not in response.content.decode()
+    assert _catalog_api_evidence_counts() == before
+
+
+@override_settings(ROOT_URLCONF=__name__)
+@pytest.mark.parametrize(
+    "invalid",
+    [
+        "missing-key",
+        "blank-key",
+        "uppercase-key",
+        "padded-key",
+        "unknown-body",
+        "unknown-query",
+        "malformed",
+        "short-currency",
+        "blank-reason",
+    ],
+)
+def test_catalog_edition_api_rejects_invalid_create_without_evidence(
+    invalid: str,
+) -> None:
+    edition = EventEditionFactory()
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    api = APIClient()
+    api.force_authenticate(user=administrator)
+    url = reverse("catalog-api-detail", args=(edition.organization_id, edition.id))
+    body = {"currency": "EUR", "reason": "Create the fictional catalog."}
+    key = "1ab23c45-6789-4def-8123-456789abcdef"
+    if invalid == "blank-key":
+        key = ""
+    elif invalid == "uppercase-key":
+        key = key.upper()
+    elif invalid == "padded-key":
+        key = " " + key + " "
+    elif invalid == "unknown-body":
+        body["organization_id"] = str(edition.organization_id)
+    elif invalid == "unknown-query":
+        url += "?unexpected=true"
+    elif invalid == "short-currency":
+        body["currency"] = "EU"
+    elif invalid == "blank-reason":
+        body["reason"] = "   "
+    request_id = uuid4()
+    before = _catalog_api_evidence_counts()
+    headers = {"HTTP_X_REQUEST_ID": str(request_id)}
+    if invalid != "missing-key":
+        headers["HTTP_IDEMPOTENCY_KEY"] = key
+    response = api.post(
+        url,
+        data="{" if invalid == "malformed" else json.dumps(body),
+        content_type="application/json",
+        **headers,
+    )
+    _assert_catalog_api_response(response, status=400, request_id=request_id)
+    assert _catalog_api_evidence_counts() == before
+
+
+@override_settings(ROOT_URLCONF=__name__)
+def test_catalog_edition_api_create_replay_preserves_atomic_evidence() -> None:
+    edition = EventEditionFactory()
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    api = APIClient()
+    api.force_authenticate(user=administrator)
+    url = reverse("catalog-api-detail", args=(edition.organization_id, edition.id))
+    body = {"currency": " eur ", "reason": "Reviewed fictional catalog creation."}
+    key, request_id = uuid4(), uuid4()
+    before = _catalog_api_evidence_counts()
+    response = api.post(
+        url,
+        body,
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(key),
+        HTTP_X_REQUEST_ID=str(request_id),
+    )
+    payload = _assert_catalog_api_response(response, status=201, request_id=request_id)
+    catalog = EditionCatalog.objects.get(
+        organization=edition.organization, edition=edition
+    )
+    assert payload == {
+        "target_id": str(catalog.id),
+        "resulting_version": 1,
+        "replayed": False,
+    }
+    assert catalog.status == EditionCatalog.Status.DRAFT
+    assert catalog.currency == "EUR"
+    receipt = CatalogCommandReceipt.objects.get(catalog=catalog)
+    assert receipt.actor_id == administrator.id
+    assert receipt.reason == body["reason"]
+    assert receipt.correlation_id == request_id
+    audit = AuditEvent.objects.get(operation="catalog.create", target_id=catalog.id)
+    assert audit.correlation_id == request_id
+    assert audit.request_id == request_id
+    event = DomainEvent.objects.get(
+        event_name="catalog.definition.changed.v1", aggregate_id=catalog.id
+    )
+    assert event.correlation_id == request_id
+    assert body["reason"] not in json.dumps(event.payload)
+    expected = before.copy()
+    for model in (
+        EditionCatalog,
+        CatalogCommandReceipt,
+        AuditEvent,
+        DomainEvent,
+        OutboxMessage,
+    ):
+        expected[model._meta.label] += 1
+    assert _catalog_api_evidence_counts() == expected
+    for changed_currency, status in ((False, 200), (True, 400)):
+        replay_request = uuid4()
+        response = api.post(
+            url,
+            {**body, "currency": "USD" if changed_currency else " eur "},
+            format="json",
+            HTTP_IDEMPOTENCY_KEY=str(key),
+            HTTP_X_REQUEST_ID=str(replay_request),
+        )
+        replay = _assert_catalog_api_response(
+            response, status=status, request_id=replay_request
+        )
+        if not changed_currency:
+            assert replay == {**payload, "replayed": True}
+        assert _catalog_api_evidence_counts() == expected
+    receipt.refresh_from_db()
+    assert receipt.reason == body["reason"]
+    assert receipt.correlation_id == request_id
+
+
+@override_settings(ROOT_URLCONF=__name__)
+def test_catalog_edition_api_self_projection_is_exact_and_private() -> None:
+    world = _active_catalog()
+    person = AccountFactory()
+    api = APIClient()
+    api.force_authenticate(user=person)
+    url = reverse(
+        "catalog-api-detail", args=(world.edition.organization_id, world.edition.id)
+    )
+    request_id = uuid4()
+    before = _catalog_api_evidence_counts()
+    response = api.get(url, HTTP_X_REQUEST_ID=str(request_id))
+    payload = _assert_catalog_api_response(response, status=200, request_id=request_id)
+    assert payload == {
+        "catalog_version": world.catalog.aggregate_version,
+        "currency": "EUR",
+        "products": [
+            {
+                "id": str(world.product.id),
+                "code": "con-shirt",
+                "kind": "merchandise",
+                "name": "Convention shirt",
+                "description": "",
+                "beneficiary": "convention",
+                "charity_name": None,
+                "sale_opens_at": None,
+                "sale_closes_at": None,
+                "preorder_allowed": False,
+                "fulfilment_mode": "pickup",
+                "per_order_limit": world.product.per_order_limit,
+                "variants": [
+                    {
+                        "id": str(world.variant.id),
+                        "sku": "shirt-m",
+                        "name": "Medium",
+                        "price_minor": 3000,
+                        "currency": "EUR",
+                        "stock_limited": True,
+                        "available_stock": 5,
+                        "preorder_allowed": False,
+                    }
+                ],
+            }
+        ],
+    }
+    assert _catalog_api_evidence_counts() == before
+    for method, actor, status in (
+        ("POST", person, 403),
+        ("GET", world.administrator, 403),
+    ):
+        api.force_authenticate(user=actor)
+        request_id = uuid4()
+        response = api.generic(
+            method,
+            url + "?unexpected=true",
+            data="{",
+            content_type="application/json",
+            HTTP_X_REQUEST_ID=str(request_id),
+        )
+        _assert_catalog_api_response(response, status=status, request_id=request_id)
+        assert _catalog_api_evidence_counts() == before
+
+
+@override_settings(ROOT_URLCONF=__name__)
+def test_catalog_edition_api_distinguishes_authorized_absence_and_bad_query() -> None:
+    edition = EventEditionFactory()
+    person = AccountFactory()
+    api = APIClient()
+    api.force_authenticate(user=person)
+    url = reverse("catalog-api-detail", args=(edition.organization_id, edition.id))
+    request_id = uuid4()
+    before = _catalog_api_evidence_counts()
+    response = api.get(url, HTTP_X_REQUEST_ID=str(request_id))
+    _assert_catalog_api_response(response, status=404, request_id=request_id)
+    assert _catalog_api_evidence_counts() == before
+    world = _active_catalog(edition=edition)
+    request_id = uuid4()
+    before = _catalog_api_evidence_counts()
+    response = api.get(url + "?unknown=true", HTTP_X_REQUEST_ID=str(request_id))
+    _assert_catalog_api_response(response, status=400, request_id=request_id)
+    assert _catalog_api_evidence_counts() == before
+    world.catalog.refresh_from_db()
+    assert world.catalog.status == EditionCatalog.Status.ACTIVE
