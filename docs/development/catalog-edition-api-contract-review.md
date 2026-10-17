@@ -245,3 +245,10 @@ reviewed implementation scope with requirements/ADR changes when needed. This
 document closes the two-row source review only. Issue #36, production acceptance,
 service-principal design, compatibility/version policy and consumer-complete
 OpenAPI across other operations all remain open. Existing demos are unaffected.
+
+## Subsequent conformance work
+
+The [two-operation conformance plan](catalog-edition-api-conformance-plan.md)
+separates a test-only existing-behavior baseline from the unresolved decisions
+above. Its current execution status belongs in CURRENT; this dated source review
+retains its original evidence and limits.

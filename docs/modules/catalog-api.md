@@ -6,7 +6,8 @@ Last updated: 2026-10-17
 The [dated edition GET/POST review](../development/catalog-edition-api-contract-review.md)
 records exact observed behavior, authentication modes, normalization, retry identity
 and remaining conformance decisions for that pair. This overview is not complete
-native HTTP acceptance.
+native HTTP acceptance. The [conformance plan](../development/catalog-edition-api-conformance-plan.md)
+records the bounded adapter baseline and remaining compatibility decisions.
 
 All routes are organization- and edition-explicit. They require an active Maru
 account and the operation's exact capability/relationship; the edition pair also

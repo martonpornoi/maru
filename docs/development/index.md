@@ -46,6 +46,7 @@ setup
 agent-workflows
 api-contract-inventory
 catalog-edition-api-contract-review
+catalog-edition-api-conformance-plan
 repository-governance
 local-certification
 docker-housekeeping
