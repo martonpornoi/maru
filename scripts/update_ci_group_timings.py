@@ -13,7 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-from scripts.ci_test_policy import ROOT, build_groups
+from scripts.ci_test_policy import MANIFEST, ROOT, TIMINGS, build_groups
 
 
 def _identity(node: str) -> tuple[str, str]:
@@ -147,6 +147,65 @@ def _merge_hosted_costs(
     return observed
 
 
+def _verify_sources(files: set[str], commit: str) -> None:
+    """Bind measured tests and inherited policy inputs to the source commit.
+
+    Parameters
+    ----------
+    files : set[str]
+        Repository-relative source paths whose content must be unchanged.
+    commit : str
+        Validated full commit identifier recorded by the measurement receipt.
+
+    Raises
+    ------
+    ValueError
+        If Git is unavailable or a measured source input changed.
+    """
+    git = shutil.which("git")
+    if git is None:
+        raise ValueError("Git is required to verify measured source provenance")
+    for file in sorted(files):
+        original = subprocess.run(  # noqa: S603 - validated commit and source inventory
+            [git, "show", f"{commit}:{file}"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+        ).stdout
+        if original.replace(b"\r\n", b"\n") != (ROOT / file).read_bytes().replace(
+            b"\r\n", b"\n"
+        ):
+            raise ValueError(f"measured test source changed: {file}")
+
+
+def _arguments() -> argparse.Namespace:
+    """Parse the evidence scope and require exact source identifiers.
+
+    Returns
+    -------
+    argparse.Namespace
+        Validated command-line inputs for the selected calibration scope.
+    """
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--local-evidence", type=Path, required=True)
+    parser.add_argument("--hosted-evidence", type=Path)
+    parser.add_argument("--exclude-hosted-file", action="append", default=[])
+    parser.add_argument("--commit", required=True)
+    parser.add_argument("--base", required=True)
+    parser.add_argument("--destination", type=Path, required=True)
+    parser.add_argument(
+        "--current-only",
+        action="store_true",
+        help="Refresh all current costs while preserving known and historical floors.",
+    )
+    args = parser.parse_args()
+    if not all(
+        re.fullmatch(r"[0-9a-f]{40}", value) for value in (args.commit, args.base)
+    ):
+        parser.error("full exact commit and base identifiers are required")
+    return args
+
+
 def main() -> int:
     """Write a complete cost map with exact receipt and file-hash provenance.
 
@@ -160,42 +219,29 @@ def main() -> int:
     ValueError
         If provenance, source identity, group coverage or observations differ.
     """
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--local-evidence", type=Path, required=True)
-    parser.add_argument("--hosted-evidence", type=Path)
-    parser.add_argument("--exclude-hosted-file", action="append", default=[])
-    parser.add_argument("--commit", required=True)
-    parser.add_argument("--base", required=True)
-    parser.add_argument("--destination", type=Path, required=True)
-    args = parser.parse_args()
-    if not all(
-        re.fullmatch(r"[0-9a-f]{40}", value) for value in (args.commit, args.base)
-    ):
-        parser.error("full exact commit and base identifiers are required")
+    args = _arguments()
     receipt_path = args.local_evidence / "certification.json"
     receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
     if (
         receipt.get("result"),
         receipt.get("commit"),
         receipt.get("base_commit"),
-        receipt.get("historical_scope"),
-    ) != ("success", args.commit, args.base, "all"):
+    ) != ("success", args.commit, args.base) or receipt.get("historical_scope") not in (
+        {"current", "affected"} if args.current_only else {"all"}
+    ):
         raise ValueError("cost refresh requires a complete exact-head local receipt")
-    required = build_groups()
-    git = shutil.which("git")
-    if git is None:
-        raise ValueError("Git is required to verify measured source provenance")
-    for file in {group.file for group in required}:
-        original = subprocess.run(  # noqa: S603 - validated commit and source inventory
-            [git, "show", f"{args.commit}:{file}"],
-            cwd=ROOT,
-            check=True,
-            capture_output=True,
-        ).stdout
-        if original.replace(b"\r\n", b"\n") != (ROOT / file).read_bytes().replace(
-            b"\r\n", b"\n"
-        ):
-            raise ValueError(f"measured test source changed: {file}")
+    inventory = build_groups()
+    required = tuple(
+        group for group in inventory if not args.current_only or not group.historical
+    )
+    source_files = {group.file for group in inventory}
+    baseline_path = ROOT / TIMINGS
+    baseline_provenance = baseline_path.with_suffix(".provenance.json")
+    if args.current_only:
+        source_files.update(
+            {MANIFEST, TIMINGS, baseline_provenance.relative_to(ROOT).as_posix()}
+        )
+    _verify_sources(source_files, args.commit)
     measured = {}
     local_nodes = set()
     inputs = [receipt_path]
@@ -214,7 +260,7 @@ def main() -> int:
         inputs.extend((report, selection))
     if measured.keys() != {group.key for group in required}:
         raise ValueError(
-            "local cost evidence does not cover every current and historical group"
+            "local cost evidence does not cover the exact required group scope"
         )
     exclusions = set(args.exclude_hosted_file)
     if not exclusions <= {group.file for group in required}:
@@ -226,7 +272,7 @@ def main() -> int:
         "schema_version": 1,
         "commit": args.commit,
         "base": args.base,
-        "historical_scope": "all",
+        "historical_scope": receipt["historical_scope"],
         "local_groups": len(measured),
         "hosted_observed_groups": len(observed),
         "excluded_hosted_files": sorted(exclusions),
@@ -239,11 +285,37 @@ def main() -> int:
             for path in inputs
         ],
     }
-    args.destination.write_text(
-        json.dumps(
-            {key: round(value, 3) for key, value in sorted(measured.items())}, indent=2
+    output_costs = {key: round(value, 3) for key, value in measured.items()}
+    if args.current_only:
+        existing = json.loads(baseline_path.read_text(encoding="utf-8"))
+        provenance.update(
+            schema_version=2,
+            calibration_scope="current",
+            preserved_groups=len(existing.keys() - measured.keys()),
+            baseline={
+                "commit": args.commit,
+                "path": TIMINGS,
+                "sha256": hashlib.sha256(baseline_path.read_bytes()).hexdigest(),
+                "provenance_path": baseline_provenance.relative_to(ROOT).as_posix(),
+                "provenance_sha256": hashlib.sha256(
+                    baseline_provenance.read_bytes()
+                ).hexdigest(),
+            },
+            method=(
+                "maximum existing/local/hosted current-group cost; unmeasured "
+                "historical costs preserved; planner separately adds slowdown "
+                "and overhead"
+            ),
         )
-        + "\n",
+        output_costs = {
+            **existing,
+            **{
+                key: max(value, existing.get(key, 0))
+                for key, value in output_costs.items()
+            },
+        }
+    args.destination.write_text(
+        json.dumps(dict(sorted(output_costs.items())), indent=2) + "\n",
         encoding="utf-8",
         newline="\n",
     )

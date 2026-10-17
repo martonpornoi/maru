@@ -71,6 +71,30 @@ test bodies had passed. The unchanged isolated diagnostic then completed in
 does not establish the sole cause or certify the concurrent plan. The refinement
 requires a fresh full run. Partial evidence does not refresh the timing map.
 
+## Complete current-scope calibration refinement (2026-10-17)
+
+A complete successful routine run can refresh only the current groups it
+measured. Require an explicit current-only mode, an exact successful current or
+affected receipt, every current group and no historical groups, and complete
+passing JUnit/selection identities. Failed, interrupted, skipped or diagnostic
+runs cannot supply this calibration. Exhaustive refresh remains the default.
+
+Preserve unmeasured historical costs and their inherited provenance. Missing
+historical costs retain the normal conservative fallback. For current groups,
+take the maximum existing, local and usable hosted observation: do not lower a
+known estimate. Bind all integration sources, the inherited history inventory,
+cost map and provenance to the measured commit. Record inherited commit/hashes
+and the actual calibration scope separately from receipt history scope.
+
+The 2026-10-17 refresh uses PR #217's complete local/hosted current scope. Its 37
+unmeasured current groups had each received the largest fallback, inflating the
+plan from actual costs. Refreshing all 275 current groups while retaining known
+floors reduces the projected current plan from 38 to 20 batches and exhaustive
+planning from 89 to 63. These are plan counts, not measured elapsed-time gains.
+Setup/call/teardown remain included; all test selection, isolation, coverage,
+eight-worker, density, budget and measured-headroom rules stay unchanged. The
+helper and timing change itself requires exhaustive acceptance.
+
 ## Consequences
 
 Suite growth changes the number of bounded jobs rather than silently consuming

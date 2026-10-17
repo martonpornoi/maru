@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-10-17
-Phase: Catalog source review delivered; bounded existing-behavior API test baseline in progress. Workforce browser acceptance remains blocked.
+Phase: Catalog adapter baseline delivered; conservative CI cost refresh and runtime benchmark in progress. Workforce browser acceptance remains blocked.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and owning requirements.
@@ -9,49 +9,46 @@ Keep one active delivery; preserve unrelated worktrees, stashes and evidence.
 
 ## Last completed outcome
 
-[PR #216](https://github.com/martonpornoi/maru/pull/216) delivered the two-operation
-[Catalog edition API source review](../development/catalog-edition-api-contract-review.md).
-Protected squash `de4fe1cf5ca205a1f34ce303e8baef88fc98eda3` has exact certified tree
-`97e8a53fb71e6267cd650b39ee402e10840f3454`; designated clean main was synchronized
-with a fast-forward only. All ten ordinary Auto gates passed in 5,292.976 seconds:
-14,285 units, 5,094 native cases in 38 batches, at most eight workers, 91.13%
+[PR #217](https://github.com/martonpornoi/maru/pull/217) delivered 20 existing-behavior
+[Catalog adapter cases and the bounded conformance plan](../development/catalog-edition-api-conformance-plan.md).
+Protected squash `98c2b7c02fc38e6df232f374848e42536e489ab3` has exact certified tree
+`7557834835af47b28c6de88a5f1d670bbc82aa89`; designated clean main was synchronized
+with a fast-forward only. All ten ordinary Auto gates passed in 5,311.588 seconds:
+14,285 units, 5,114 native cases in 38 batches, at most eight workers, 91.13%
 coverage and measured headroom. All 38 owned containers were independently absent;
-5,082 evidence files were hash-preserved. Fresh HTML structure and 17 local links
-were checked. Source review is not complete native HTTP or production acceptance.
+5,082 evidence files were hash-preserved. Exact-head hosted PR gate and CodeQL
+analyses/acceptance passed with verified provenance. Copilot had no findings;
+there were no unresolved conversations. The completed monitor was deleted.
 
-Exact-head hosted PR gate and CodeQL analyses/acceptance passed with verified app
-provenance. Copilot reported no findings; there were no review threads. Current
-base, live no-bypass protections, proposed merge tree and clean mergeability were
-verified. The completed monitor was deleted. PR #215's 240-operation inventory and
-PRs #210–214 remain delivered. Issues #35, #36 and #42 stay open.
+All 11 original commerce test definitions remained structurally unchanged. No
+runtime, schema, permission, migration or dependency changed. Currency/scalar
+compatibility, reason identity, read bounds/lifecycle, concurrent authority, read
+audit and dependency semantics remain open. In-process authenticated test
+principals do not establish real sign-in, CSRF, restricted-role or browser
+acceptance. PRs #210â€“216 remain delivered; issues #35, #36 and #42 stay open.
 
 The earlier home archive audit-guard rejection remains unexplained and
-unreproduced, not fixed. Preserve all failed and passing evidence and investigate
-any recurrence precisely. Old paused monitors stay paused. Fictional demos grow
+unreproduced, not fixed. Preserve failed and passing evidence and investigate any
+recurrence precisely. Old paused monitors stay paused. Fictional demos grow
 incrementally; no all-workflows-prefilled claim is made.
 
 ## Current bounded outcome
 
-The [Catalog conformance plan](../development/catalog-edition-api-conformance-plan.md)
-separates 20 new existing-behavior adapter cases from unresolved product choices.
-It covers denial before private input, organization/edition/profile isolation,
-closed creates and canonical keys, exact replay without duplicate evidence, public
-product projection, authorized absence, caching and correlation. The existing
-commerce test file is extended without removing or relaxing prior assertions.
+The maintainer approved the [conservative current-group cost refresh](../checkpoints/2026-10-17-current-group-cost-calibration.md)
+after inspecting PR #217's local and hosted timing evidence. Complete matching
+reports cover all 275 current groups and 5,114 native cases; two unstable-ID files
+retain local-only comparison. The helper adds explicit current-only calibration,
+preserving all 96 historical entries, 15 historical fallbacks and known current
+floors. Thirty-seven missing current measurements are added and 146 known costs
+increase. Current planning falls from 38 to 20 batches; exhaustive planning from
+89 to 63. These are projections, not a measured speedup.
 
-Requirements INT-001, NFR-009, NFR-013 and AUD-001 and existing ADRs apply. No new
-behavior or architecture policy is accepted. Runtime, schema, permissions,
-migrations, dependencies and gates are unchanged; demos are unaffected. In-process
-authenticated test principals do not establish real sign-in, CSRF, restricted-role
-runtime or browser acceptance. All 20 final native cases passed in 219.28 seconds
-with identical 3,236-file source inventories, 25 verified artifact hashes and
-independent exact owned cleanup. The earlier 19-case run and 14,285-unit pass
-(80.73 seconds) remain preserved; review retained the empty-header case and added
-an actually absent-header case. All 11 original definitions remain structurally
-unchanged. Lint, format, docs762 and whitespace passed. Complete exact-head local
-certification and hosted delivery remain pending. Currency/scalar compatibility,
-reason identity, read bounds/lifecycle, concurrent authority, read audit and
-dependency semantics remain open for separate review.
+NFR-001 and ADRs 0090/0098 govern this tooling-only change. Every test, fresh
+database boundary, eight-worker limit, historical density, coverage threshold,
+slowdown allowance, timing-headroom gate and protected check remains required.
+All 14,304 unit cases passed in 83.29 seconds, with three existing Django URL
+field deprecation warnings. Scoped lint/format, docstrings and docs763 passed;
+the current-scope benchmark and exhaustive exact-head certification remain pending. No production behavior or credential boundary changes.
 
 ## Preserved Workforce blocker
 
@@ -70,15 +67,16 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Commit the reviewed test/documentation slice and obtain fresh ordinary
-   exact-head certification against current main. Earlier receipts certify only
-   their own heads; no product behavior or credential path changes.
-2. Verify all gates, native counts, coverage, measured timing headroom and exact
-   owned cleanup, then hash-preserve the complete evidence. The previous 5,082-file
-   certification and archive were rehashed before its original was moved intact.
-3. Deliver through a full-template PR, exact-head review/hosted checks, protected
-   squash and ff-only clean designated main. Keep unresolved decisions explicit
-   and issues #36/#42 open. Do not convert characterization into new policy.
+1. Finish focused lint, documentation and unit feedback; review and commit one
+   coherent helper, timing-map and documentation candidate.
+2. Preserve the prior complete certification before running a labelled current
+   benchmark. Compare actual elapsed time and identical executed scope, then
+   preserve its evidence and run ordinary Auto exhaustive certification against
+   current main. No diagnostic result establishes acceptance.
+3. Verify all gates, actual counts, coverage, measured headroom and owned cleanup;
+   hash-preserve evidence, then deliver through normal hooks and a full-template
+   PR with exact-head review/hosted checks, protected squash and ff-only clean
+   designated main. Keep issues #36/#42 and unresolved product choices open.
 
 Preserve unrelated checkouts, stashes, stopped fixtures and private credentials.
 No deployment, external mail, credential/authority workaround, weakened safety,

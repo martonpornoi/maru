@@ -457,10 +457,17 @@ not the PR selection authority. Record comparable setup, execution and teardown,
 
 `scripts/update_ci_group_timings.py` refreshes active group costs from preserved
 complete local evidence, optionally taking the larger matching hosted observation.
-It checks the exact full-scope receipt/head/base, unchanged measured test files,
-complete selection/JUnit identity equality and no failures, errors, skips or
-duplicate groups. The sidecar `.provenance.json` records source and evidence
-hashes. Explicit diagnostic hosted-file exclusions are only for unusable
+By default it requires the exact exhaustive receipt/head/base. Explicit
+`--current-only` instead requires a successful exact-head current/affected receipt
+whose reports cover every current group and no historical groups. It preserves
+all unmeasured historical entries and missing-history fallbacks, and uses the
+maximum existing/local/usable-hosted cost for each current group. It cannot lower
+known costs or convert diagnostic success into certification. Both modes require
+unchanged measured test files, complete selection/JUnit identity equality and no
+failures, errors, skips or duplicate groups. The current-only mode also binds the
+inherited inventory, cost map and provenance to the measured source revision.
+The sidecar `.provenance.json` records source and evidence hashes; schema version 2
+adds calibration scope and the inherited map/provenance hashes and commit. Explicit diagnostic hosted-file exclusions are only for unusable
 cross-environment comparisons; their local costs and every test remain included.
 They cannot exclude a failed report or all hosted observations. The planner
 adds slowdown and overhead separately, never interpreting timings as acceptance.
