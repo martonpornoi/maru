@@ -133,6 +133,14 @@ original Applications reverse/forward readiness assertions and full restoration
 remain intact; added caller Guidance schema/readiness checks preserve the shared
 current database. Ordinary file-custody command and transport cases are unchanged.
 
+The provenance full-graph ownership round-trip uses the same explicit committed
+isolation. Its original reverse/forward ownership and latch assertions run after
+real current-graph setup, with complete leaf restoration before owned cleanup.
+An unchanged history-then-demo reproduction showed that ordinary restoration
+moves all three EventEdition adoption columns to new physical positions. Caller
+schema/readiness checks prevent that contamination without relaxing any pin.
+Other provenance history, ACL, current-state and concurrency tests are unchanged.
+
 The initial adopters are the Workforce structure-write historical boundary,
 historical organization governance, and historical authorization scope-v2
 activation. Their current-state tests remain separate, all original cases are

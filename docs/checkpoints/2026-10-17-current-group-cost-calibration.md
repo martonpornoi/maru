@@ -237,3 +237,67 @@ establish full acceptance or timing for the repaired source. Fresh ordinary Auto
 exhaustive certification, exact-head hosted checks/review and protected delivery
 remain required. Every original assertion, physical pin, guard, permission,
 selection, isolation, worker, timing and coverage boundary remains unchanged.
+
+## Third exhaustive failure: provenance full-graph history
+
+The ordinary Auto run on clean `bc5ee4f2d85df8239f3129ab82609fd47cf34900`
+failed at 20:25:38 UTC after 6,478.5 seconds. All 14,304 units passed in 233.66
+seconds. Shard 24 selected 48 of 5,270 collected native cases: 46 passed and both
+convention-demo cases raised GuidanceSetupUnavailable after the provenance
+full-graph historical test. Twenty-three batches passed; all 31 started batches
+retained headroom. Seven active siblings were interrupted and 32 never started.
+All 31 exact owned containers were independently absent. Complete 4,665-file
+original and archive copies were hash-verified; no acceptance receipt or push
+resulted. Earlier failures and their separately preserved originals remain failed.
+
+A fresh unchanged two-case reproduction passed the provenance history and failed
+the following demo case in 739.28 seconds (745.859-second wrapper). The current
+schema initially matched. The historical target correctly omitted later Guidance
+relations; after normal full-leaf teardown only EventEdition still differed.
+Its adoption profile code, profile version and revision moved from physical
+positions 16, 17 and 18 to 19, 20 and 21, leaving three dropped slots. Guidance
+authority and activated runtime readiness passed before the demo body; setup
+correctly refused its changed exact schema. All 3,238 before/pre-pytest/after/live
+source entries matched digest
+`107b0a0128573298bebe594aefcfe880210bb5451d218ab9b87ca917db2f9938`.
+All 26 public artifact hashes and independent exact container absence were
+verified before source release. The initial verifier expected the earlier
+single-column drift and stopped; inspecting the complete column array corrected
+that diagnostic expectation without changing source or rerunning the database.
+
+Only the reproduced provenance full-graph ownership case now opts into a local
+fixture using the existing committed empty-database helper. It installs the real
+current graph, retains the original reverse/forward targets, body, ownership/latch
+assertions and module restoration fixture, then flushes and restores every leaf
+before exact cleanup. Caller Guidance schema/readiness checks prove preservation.
+All other original function bodies, ACL and concurrency cases remain unchanged.
+No product guard, schema pin, permission, selection, isolation, worker, timing or
+coverage rule changes. Nine focused native regression cases and fresh ordinary
+exact exhaustive certification remain pending. Earlier timing gains remain a
+qualified observation on the earlier source, not a timing promise for this repair.
+
+## Provenance repair verified at 21:18 UTC
+
+All nine native regression cases passed in 965.85 seconds (972.281-second owned
+wrapper), without failures, errors or skips. The sequence retained the repaired
+provenance full-graph ownership round-trip, both previously failing convention-demo
+cases, and six existing migration-isolation success/failure cases. No observation
+plugin was loaded. All 21 original module function bodies remained structurally
+identical, including the reverse/forward targets, ownership and latch assertions;
+the module restoration fixture and other history, ACL and concurrency cases remain.
+
+All 3,237 before/pre-pytest/after/live source entries matched digest
+`3f36a3e8f5dde303034ce22418ec63048e209ae9f04f71982a9d095fbabed7d7`.
+All 25 public artifact hashes were verified, and the exact owned container was
+independently absent. The tested provenance module SHA256 is
+`3d1e1c4c77b9998d19a239a59f52bf35575404994ebd1445c25f90ebcccb0b12`.
+This releases the focused source pin; only CURRENT and this checkpoint change
+after verification for the next clean candidate.
+
+All three exhaustive failures remain failed and preserved. Focused passes do not
+establish full acceptance or timing for the repaired source. Fresh ordinary Auto
+exhaustive certification, exact-head hosted checks/review and protected delivery
+remain required. Original assertions, physical pins, guards, permissions,
+selection, isolation, worker, timing and coverage boundaries remain unchanged.
+Maintained demo data and browser coverage are unchanged; these native demo cases
+verify the existing behavior after isolated history, not human acceptance.

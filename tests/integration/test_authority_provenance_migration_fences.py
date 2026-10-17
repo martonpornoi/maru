@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from importlib import import_module
 from threading import Event
 from time import monotonic
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
@@ -34,7 +35,15 @@ from maru.events.guidance_setup_readiness import (
 )
 from tests.factories import AccountFactory, OrganizationFactory
 from tests.support.authority import activate_synthetic_board
-from tests.support.migrations import isolated_migration_database, migrate_test_targets
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    isolated_migration_database,
+    migrate_test_targets,
+    restore_current_migration_graph,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -61,6 +70,25 @@ AUTHORIZATION_WITH_ACTIVATION = (
     "authorization",
     "0008_runtime_latch_lock_helper",
 )
+
+
+@pytest.fixture
+def isolated_provenance_roundtrip_graph(transactional_db: None) -> Iterator[None]:
+    """Preserve the caller while committed provenance history rewinds the graph."""
+
+    del transactional_db
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    with isolated_migration_database():
+        restore_current_migration_graph()
+        try:
+            yield
+        finally:
+            flush_then_restore_current_migration_graph()
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
 
 
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
@@ -264,6 +292,7 @@ def _sqlstate(error: BaseException) -> str | None:
     return None
 
 
+@pytest.mark.usefixtures("isolated_provenance_roundtrip_graph")
 def test_full_graph_reverse_and_forward_preserve_migration_ownership() -> None:
     marker, latch, writer, audit_index, audit_guard = _regobjects()
     assert all(value is not None for value in (marker, latch, writer))
