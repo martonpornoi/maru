@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from importlib import import_module
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -12,12 +13,25 @@ from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.operations.special import RunPython, RunSQL
 from django.utils import timezone
 
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.events.guidance_setup_readiness import (
+    GUIDANCE_SETUP_SCHEMA_RELATIONS,
+    guidance_setup_database_integrity_is_ready,
+)
 from tests.factories import (
     CapabilityGrantFactory,
     EventEditionFactory,
     RoleBundleFactory,
 )
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    isolated_migration_database,
+    restore_current_migration_graph,
+)
 from tests.workforce_helpers import create_department_for_test
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -86,6 +100,28 @@ IMPORT_FUNCTIONS = (
     "maru_applications_validate_programme_import_contract",
     "maru_applications_refuse_programme_import_truncate",
 )
+
+
+@pytest.fixture
+def isolated_import_migration_graph(transactional_db: None) -> Iterator[None]:
+    """Keep committed import history from changing the caller's physical schema."""
+
+    del transactional_db
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    # Real forward/reverse migrations retain autocommit, including SET LOCAL
+    # replica setup scoped by the original tests' transactions. Full restoration
+    # alone cannot remove dropped PostgreSQL column slots from the caller.
+    with isolated_migration_database():
+        restore_current_migration_graph()
+        try:
+            yield
+        finally:
+            flush_then_restore_current_migration_graph()
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
 
 
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
@@ -442,6 +478,7 @@ def test_import_graph_and_fences_cover_the_exact_seven_relations() -> None:
         assert relation in persistence.REVERSE_PREFLIGHT_SQL
 
 
+@pytest.mark.usefixtures("isolated_import_migration_graph")
 def test_empty_slice_reverses_and_reapplies_with_dependent_contracts() -> None:
     """Rehearse an unused additive slice from predecessors to current leaves."""
 
@@ -467,6 +504,7 @@ def test_empty_slice_reverses_and_reapplies_with_dependent_contracts() -> None:
     assert forward_is_current
 
 
+@pytest.mark.usefixtures("isolated_import_migration_graph")
 def test_each_populated_relation_independently_blocks_terminal_downgrade() -> None:
     """Exercise all seven fences, including scrubbed and discarded evidence."""
 
@@ -494,6 +532,7 @@ def test_each_populated_relation_independently_blocks_terminal_downgrade() -> No
     _migrate(APPLICATIONS_AFTER)
 
 
+@pytest.mark.usefixtures("isolated_import_migration_graph")
 def test_populated_schema_preflight_refuses_after_guard_reversal() -> None:
     """Keep a payload-cleared item when the lower schema fence is reached."""
 
@@ -523,6 +562,7 @@ def test_populated_schema_preflight_refuses_after_guard_reversal() -> None:
         pytest.param("role", id="role-bundle"),
     ],
 )
+@pytest.mark.usefixtures("isolated_import_migration_graph")
 def test_capability_contraction_refuses_retained_authority(
     evidence_factory: str,
 ) -> None:
@@ -563,6 +603,7 @@ def test_capability_contraction_refuses_retained_authority(
         assert cursor.fetchone() == (1,)
 
 
+@pytest.mark.usefixtures("isolated_import_migration_graph")
 def test_workforce_contract_reverses_fail_closed_and_reapplies_exactly() -> None:
     """Remove and restore only the import batch Department dependency."""
 

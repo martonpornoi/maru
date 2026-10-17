@@ -120,3 +120,64 @@ helper remain as benchmarked; only this checkpoint and CURRENT are updated for
 the next clean candidate. Fresh ordinary Auto exhaustive certification, review,
 exact-head hosted PR gate/CodeQL and protected merge remain pending. Maintained
 fictional demos are unaffected.
+
+## Exhaustive failure and isolated reproduction
+
+The ordinary exhaustive Auto run on clean `ef2290ed67dc1b8a5fd51c710044dd3bcac48c87`
+failed at 15:59:57 UTC after 1,298.313 seconds. Its all-history plan retained 386
+groups and 111 historical groups in 63 batches. All 14,304 units passed in
+235.27 seconds. Shard 4 reported 44 passes and one failed initial Knowledge
+readiness assertion; the pool interrupted its other active workers. Every one
+of the 13 started batches retained timing headroom. Their exact owned containers
+were independently absent. The complete 4,513-file failed evidence tree was
+copied and both copies hash-verified; no success receipt exists.
+
+A fresh isolated two-test reproduction ran the unchanged Programme-import
+per-relation downgrade test followed by the unchanged Knowledge round-trip
+test. It reproduced the latter's initial failure (one pass, one failure) in
+470.81 seconds, with a 477.343-second owned wrapper. Read-only observations
+showed the fresh pinned schema initially matched. After real history and leaf
+restoration, only `events_eventedition` differed: position 18 was a dropped slot
+and `adoption_revision` had moved to position 19. Guidance setup readiness was
+false while Guidance authority and activated runtime readiness were true.
+All 3,238 before/pre-pytest/after/live source entries matched, all 26 public
+artifact hashes were verified, and the exact owned container was absent.
+
+The bounded repair opts the six serial committed Programme-import history cases
+into the existing `isolated_migration_database()` helper. It builds the actual
+current graph in a fresh empty database, retains the original test bodies and
+full restoration, then restores the caller connection and removes only its own
+database. Added schema/readiness assertions prove caller preservation. Real
+autocommit and the original local replica-setup transaction scopes are retained;
+an outer rollback would change those semantics. No product guard, physical pin,
+assertion, migration target, worker, timing, coverage or selection rule changes.
+The current contract-inspection case retains its ordinary database.
+
+Focused repair verification and fresh full exact-head acceptance are pending.
+The earlier measured current-scope improvement remains a single observation on
+the earlier source, not acceptance or a guaranteed timing for this repaired
+candidate. Failed evidence and both prior benchmark copies remain preserved.
+
+## Focused repair verified at 17:17 UTC
+
+The repaired source passed all 14 native cases in 2,709.55 seconds (owned wrapper
+2,716.157 seconds), without failures, errors or skips. The selection contained
+the complete seven-case Programme-import module, the previously failing
+Knowledge round-trip, and six existing native migration-isolation success and
+failure regressions. No observation plugin was loaded. All original six test
+function bodies were structurally identical, including migration targets and
+assertions; the ordinary current contract case was unchanged.
+
+Before/pre-pytest/after/live inventories matched all 3,237 source files with
+digest `6e75d5ec93f685cebefb50bb9626fc91e4112353f79ad9e9f55791515e510bf0`.
+All 25 public artifact hashes were verified, and the exact owned container was
+independently absent. The tested import module SHA256 is
+`c38fb099bfc1d30a168abc385445f76ad4f774e5d8d4e814d31c368c4c6c44b8`.
+This evidence releases the focused source pin; only status documentation is
+updated for the next clean candidate.
+
+This pass confirms the bounded repair and caller preservation in the selected
+sequence. It does not turn the failed exhaustive result into a pass, establish
+full-suite timing for the repaired source, or authorize push. Fresh ordinary
+Auto exhaustive certification and exact-head hosted acceptance remain required.
+All previous failed, diagnostic and passing evidence remains preserved.

@@ -116,6 +116,16 @@ and does not replace concurrency, whole-graph recovery or current-runtime tests.
 Use it only for a serial case with no retained secondary connections; native
 regressions must prove source preservation and cleanup after success and failure.
 
+The Programme-import executor's six committed history cases use this isolation.
+Each first installs the real current graph in the empty database, runs its
+unchanged migration targets and assertions, and flushes and restores all current
+leaves before cleanup. Additional before/after Guidance schema fingerprints and
+readiness checks prove the caller remains unchanged. A two-case reproduction
+showed that restoring leaves in the caller otherwise leaves a dropped
+`events_eventedition.adoption_revision` slot and shifts the recreated column.
+Do not relax physical-schema pins or reorder shards to hide that contamination.
+The ordinary current graph/contract case remains on the normal test database.
+
 The initial adopters are the Workforce structure-write historical boundary,
 historical organization governance, and historical authorization scope-v2
 activation. Their current-state tests remain separate, all original cases are

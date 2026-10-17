@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-10-17
-Phase: Catalog adapter baseline delivered; CI cost refresh benchmark verified; exhaustive certification pending. Workforce browser acceptance remains blocked.
+Phase: Catalog adapter baseline delivered; CI cost refresh benchmark verified; exhaustive failure isolated; focused test repair verified; fresh exhaustive acceptance pending. Workforce browser acceptance remains blocked.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and owning requirements.
@@ -61,6 +61,29 @@ the current-scope diagnostic subsequently passed. Fresh exhaustive exact-head
 certification and hosted delivery remain pending. No production behavior or
 credential boundary changes; maintained demo coverage is unaffected.
 
+The first exhaustive run on `ef2290e` failed after 1,298.313 seconds at the initial
+Knowledge readiness assertion in shard 4 (44 passes, one failure). All 14,304
+units passed; all 13 started batches had timing headroom and their exact owned
+containers were independently absent. All 4,513 failed evidence files were
+copied and hash-verified. No acceptance receipt or push resulted.
+
+A two-test unchanged reproduction confirmed that committed Programme-import
+history and leaf restoration leave a dropped EventEdition column slot, moving
+`adoption_revision` from physical position 18 to 19. Authority/runtime readiness
+passed; Guidance setup correctly rejected the changed exact schema. The six
+serial committed import-history cases now opt into the existing fresh empty
+database helper, retaining all original bodies, targets, assertions and full
+restoration. Added before/after schema/readiness checks protect the caller.
+All 14 focused native regression cases passed in 2,709.55 seconds: all seven
+import cases, the previously failing Knowledge case and six isolation
+success/failure cases. There were no failures, errors or skips. All 3,237
+before/pre-pytest/after/live source entries and 25 artifact hashes matched; the
+exact owned container was independently absent. All six original function
+bodies remain structurally unchanged. Fresh exhaustive clean-candidate
+certification and hosted acceptance remain pending. Product guards, schema pins
+and sharding rules remain unchanged. The earlier speed measurement predates
+this repair and is not a timing promise for the repaired source.
+
 ## Preserved Workforce blocker
 
 Issue #42's tutorial, route checks, inspector, empty browser launcher and evidence
@@ -78,17 +101,14 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Commit the measured evidence update, preserve the benchmark's complete original
-   and verified archive, then run fresh ordinary Auto certification against
-   current main. CI infrastructure changes require all 386 groups, including 111
-   historical groups, in the current 63-batch plan; diagnostic success is not
-   acceptance. Previous PR #217 evidence remains intact in its own archive.
-2. Verify every gate, actual counts, coverage, headroom and independent exact owned
-   cleanup, then hash-preserve complete evidence. Repair precise failures before
-   any deliberate further attempt; never blindly retry or weaken limits.
-3. Deliver through normal hooks and a full-template PR with exact-head
-   review/hosted checks, protected squash and ff-only clean designated main.
-   Keep issues #36/#42 and unresolved product choices open.
+1. Review and commit the focused repair and its verified evidence. Rehash both
+   failed exhaustive evidence copies and preserve the original intact before
+   fresh ordinary Auto certification against current main.
+2. Run every ordinary gate on the clean candidate with exhaustive history.
+   Focused, diagnostic and failed results cannot certify this candidate.
+3. Verify every full gate, actual scope/counts, coverage, headroom and owned cleanup;
+   preserve all evidence, then use normal hooks, exact-head PR review/hosted checks,
+   protected squash and ff-only clean designated main. Keep issues #36/#42 open.
 
 Preserve unrelated checkouts, stashes, stopped fixtures and private credentials.
 No deployment, external mail, credential/authority workaround, weakened safety,
