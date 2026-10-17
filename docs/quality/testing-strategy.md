@@ -126,6 +126,13 @@ showed that restoring leaves in the caller otherwise leaves a dropped
 Do not relax physical-schema pins or reorder shards to hide that contamination.
 The ordinary current graph/contract case remains on the normal test database.
 
+The single file-custody history round-trip also uses committed empty-database
+isolation. An unchanged two-case reproduction showed the same EventEdition
+physical-slot drift before the next import-history fixture could start. Its
+original Applications reverse/forward readiness assertions and full restoration
+remain intact; added caller Guidance schema/readiness checks preserve the shared
+current database. Ordinary file-custody command and transport cases are unchanged.
+
 The initial adopters are the Workforce structure-write historical boundary,
 historical organization governance, and historical authorization scope-v2
 activation. Their current-state tests remain separate, all original cases are

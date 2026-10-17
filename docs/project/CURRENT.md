@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-10-17
-Phase: Catalog adapter baseline delivered; CI cost refresh benchmark verified; exhaustive failure isolated; focused test repair verified; fresh exhaustive acceptance pending. Workforce browser acceptance remains blocked.
+Phase: CI cost refresh benchmark and both focused isolation repairs verified; fresh exhaustive acceptance pending. Workforce browser acceptance remains blocked.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and owning requirements.
@@ -84,6 +84,22 @@ certification and hosted acceptance remain pending. Product guards, schema pins
 and sharding rules remain unchanged. The earlier speed measurement predates
 this repair and is not a timing promise for the repaired source.
 
+The second exhaustive run on clean `d7102393` failed after 745.734 seconds:
+file-custody history passed, then the next import fixture rejected Guidance setup
+before its test body (one pass, one setup error). All 14,304 units passed; all
+eight started batches retained headroom and their exact containers were absent.
+Both complete 4,473-file failed evidence copies were hash-verified. A fresh,
+unchanged two-case reproduction confirmed the same EventEdition slot drift after
+file-custody history in 268.44 seconds; all 3,238 source entries, 26 artifact hashes
+and exact cleanup were verified. That single historical case now uses the same
+committed empty-database isolation with its original body and full restoration.
+All nine native regression cases passed in 968.55 seconds with no failures,
+errors or skips, including the previously blocked sequence and six isolation
+success/failure cases. All 3,237 source entries, 25 artifact hashes and exact owned
+cleanup were verified; all 26 original module function bodies remain unchanged.
+Only status documentation changed after source release. Fresh exhaustive
+certification and hosted acceptance remain pending.
+
 ## Preserved Workforce blocker
 
 Issue #42's tutorial, route checks, inspector, empty browser launcher and evidence
@@ -101,11 +117,11 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Review and commit the focused repair and its verified evidence. Rehash both
-   failed exhaustive evidence copies and preserve the original intact before
-   fresh ordinary Auto certification against current main.
-2. Run every ordinary gate on the clean candidate with exhaustive history.
-   Focused, diagnostic and failed results cannot certify this candidate.
+1. Commit the verified custody repair and status documentation after scoped checks.
+   Preserve both failed full runs and all focused source/report/cleanup evidence.
+2. Rehash and preserve the second failed original before fresh ordinary exhaustive
+   Auto certification against current main. Older focused, diagnostic and failed
+   results are not acceptance; verify the actual new source-derived scope.
 3. Verify every full gate, actual scope/counts, coverage, headroom and owned cleanup;
    preserve all evidence, then use normal hooks, exact-head PR review/hosted checks,
    protected squash and ff-only clean designated main. Keep issues #36/#42 open.

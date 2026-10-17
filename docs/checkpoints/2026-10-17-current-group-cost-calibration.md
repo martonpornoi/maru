@@ -181,3 +181,59 @@ sequence. It does not turn the failed exhaustive result into a pass, establish
 full-suite timing for the repaired source, or authorize push. Fresh ordinary
 Auto exhaustive certification and exact-head hosted acceptance remain required.
 All previous failed, diagnostic and passing evidence remains preserved.
+
+## Second exhaustive failure: file-custody history
+
+The ordinary Auto run on clean `d7102393ff37b26bcdba353f297cf9e789b5ebbb`
+failed at 17:35:50 UTC after 745.734 seconds. All 14,304 units passed in 231.39
+seconds. The 386-group/111-history/63-batch plan collected 5,270 native cases.
+Shard 1's file-custody historical round-trip passed; the next import-isolation
+fixture failed its initial Guidance setup assertion before the test body (one
+pass, one setup error). All eight started batches retained timing headroom;
+seven siblings were interrupted. Their exact owned containers were independently
+absent. All 4,473 failed evidence files were copied and both copies hash-verified;
+the original remains intact and no success receipt was issued.
+
+An unchanged fresh two-case reproduction confirmed this sequence in 268.44
+seconds (274.828-second wrapper). Before the file-custody call the exact schema
+matched; afterwards only `events_eventedition` differed: `adoption_revision`
+moved from physical slot 18 to 19 and left dropped slot 18. Guidance setup changed
+from ready to unavailable; authority remained ready. Activated-runtime readiness
+was unavailable both before and after under this fixture, not an additional
+regression. All 3,238 before/pre-pytest/after/live source entries matched digest
+`44ed4edd7fd3428f7af442803dff19288912ba5829b9d3fd49228197c03d3ea7`.
+All 26 public artifact hashes and independent exact container absence were
+verified before source release.
+
+Only the single file-custody history case now opts into the existing committed
+empty-database helper. It installs the real current graph, executes its original
+unchanged body and reverse/forward readiness assertions, and retains full
+restoration before exact cleanup. Additional before/after caller Guidance schema
+and readiness assertions retain the same physical-schema boundary. All original
+functions and ordinary custody tests remain unchanged. No product schema, pinned
+hash, guard, permission, selection, timing or coverage rule changes. Focused
+native regression and fresh exact exhaustive certification remain pending.
+
+## File-custody repair verified at 18:32 UTC
+
+All nine native regression cases passed in 968.55 seconds (974.906-second owned
+wrapper), without failures, errors or skips. The sequence retained the repaired
+file-custody history, the previously blocked import history, Knowledge readiness
+round-trip, and six existing migration-isolation success/failure cases. No
+observation plugin was loaded. All 26 original file-custody function bodies were
+structurally identical, including the historical migration targets and assertions;
+ordinary current tests and the original full-restoration fixture were retained.
+
+All 3,237 before/pre-pytest/after/live source entries matched digest
+`b5ce686a5eb16a911ad8b32e0346c2313cb5b3259841faebb28e9e4aac97b5d2`.
+All 25 public artifact hashes were verified, and the exact owned container was
+independently absent. The tested file-custody module SHA256 is
+`22837152d4fb589f0fe306f68c033b3f35fa9d52ee49315d1bd33997cdefa220`.
+This releases the focused source pin; only CURRENT and this checkpoint change
+after verification for the next clean candidate.
+
+Both exhaustive failures remain failed and preserved. The focused passes do not
+establish full acceptance or timing for the repaired source. Fresh ordinary Auto
+exhaustive certification, exact-head hosted checks/review and protected delivery
+remain required. Every original assertion, physical pin, guard, permission,
+selection, isolation, worker, timing and coverage boundary remains unchanged.
