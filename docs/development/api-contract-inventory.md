@@ -175,3 +175,10 @@ The CSV is review evidence at a named source revision, not a second live schema
 or a new required CI gate. Exact local and hosted delivery evidence is recorded
 separately in CURRENT and the
 [checkpoint](../checkpoints/2026-10-16-api-contract-inventory.md).
+
+## Subsequent bounded review
+
+The [Catalog edition GET/POST source review](catalog-edition-api-contract-review.md)
+completes the proposed two-row evidence review at a later named main revision.
+It preserves this dated inventory and records unresolved behavior separately from
+schema omissions. Neither document closes issue #36 or changes endpoint behavior.

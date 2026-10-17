@@ -1,11 +1,18 @@
 # Catalog API contract
 
 Status: mounted versioned adapter contract
-Last updated: 2026-08-09
+Last updated: 2026-10-17
+
+The [dated edition GET/POST review](../development/catalog-edition-api-contract-review.md)
+records exact observed behavior, authentication modes, normalization, retry identity
+and remaining conformance decisions for that pair. This overview is not complete
+native HTTP acceptance.
 
 All routes are organization- and edition-explicit. They require an active Maru
-person session, reject query parameters and unknown JSON fields, and resolve
-authorization inside the shared command/query service. Every mutation requires
+account and the operation's exact capability/relationship; the edition pair also
+inherits Basic authentication as detailed in the review. They reject query
+parameters and unknown JSON fields, and resolve authorization inside the shared
+command/query service. Every mutation requires
 one canonical UUID `Idempotency-Key`; versioned mutations also require the
 current positive aggregate version. Whitespace-padded or otherwise non-canonical
 keys are rejected rather than normalized. New resource commands return `201`;
