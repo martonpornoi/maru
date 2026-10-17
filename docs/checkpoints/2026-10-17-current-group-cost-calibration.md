@@ -75,3 +75,48 @@ changing, ordinary Auto must then run exhaustive history against current main,
 with independent hosted PR gate/CodeQL and review before protected delivery.
 Neither plan counts nor older receipts certify this candidate. Issues #36/#42
 remain open, and the separate Workforce recipient-password boundary is preserved.
+
+## Benchmark verified at 15:34 UTC
+
+The pending benchmark above completed on clean commit
+`e7f5c4d20fa89b318cf69663edb83d2dbacfa6c2`, tree
+`4aba1c4bec65e5f5acc61d1d0b1a82cd61af9cb1`, against base
+`98c2b7c02fc38e6df232f374848e42536e489ab3`. Ordinary `CurrentDiagnostic` returned
+`diagnostic_success` in 3,669.867 seconds (wrapper 3,670.094 seconds). It ran only
+unit, PostgreSQL and combined-coverage gates; all static and hosted acceptance
+remains required separately.
+
+| Comparable native measurement | Prior PR #217 | Refreshed plan |
+| --- | ---: | ---: |
+| Complete current groups | 275 | 275 |
+| Passing native cases | 5,114 | 5,114 |
+| Fresh database batches | 38 | 20 |
+| Maximum simultaneous workers | 8 | 8 |
+| Native execution window | 5,254.017 s | 3,615.559 s |
+| Aggregate first-case setup | 19,818.395 s | 9,653.047 s |
+
+The observed native window improved by 1,638.458 seconds (27m18s), or 31.18%.
+It uses the same earliest pytest-start to latest pytest-finish definition for
+both runs. This is one local before/after observation, not a controlled repeated
+benchmark or a guarantee for hosted runners. The earlier full certification
+took 5,311.588 seconds, but the new diagnostic total is not a like-for-like full
+certification comparison because it skips static gates and their contention.
+First-case setup includes migrations and other fixtures, not only migration SQL.
+
+All 14,304 units and 5,114 native cases passed with zero failures/errors/skips.
+Combined branch-aware coverage was 91.14% with the unchanged 90% gate. Every
+batch passed measured headroom; the longest was 2,235.109 seconds. All 20 exact
+owned containers were independently absent. The complete 1,628-file diagnostic
+archive was hashed and reverified against its original before source release.
+
+All 275 group memberships, per-group case counts and function variant counts
+match PR #217, and native runtime/test sources are unchanged. The two previously
+documented unstable parameter-ID files differ across runs; each run separately
+has exact complete JUnit/selection identity reconciliation. Their cases were
+retained and are not claimed to have byte-identical cross-run IDs.
+
+This diagnostic does not recalibrate costs or authorize push. The timing map and
+helper remain as benchmarked; only this checkpoint and CURRENT are updated for
+the next clean candidate. Fresh ordinary Auto exhaustive certification, review,
+exact-head hosted PR gate/CodeQL and protected merge remain pending. Maintained
+fictional demos are unaffected.
