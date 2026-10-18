@@ -41,11 +41,23 @@ from maru.authorization.models import (
     RoleBundle,
 )
 from maru.authorization.policy import resolve_organization_target
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.events.guidance_setup_readiness import (
+    GUIDANCE_SETUP_SCHEMA_RELATIONS,
+    guidance_setup_database_integrity_is_ready,
+)
 from maru.identity.models import Account
 from tests.factories import AccountFactory, CapabilityGrantFactory, OrganizationFactory
 from tests.support.authority import activate_synthetic_board
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    isolated_migration_database,
+    restore_current_migration_graph,
+)
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from maru.organizations.models import Organization
 
 pytestmark = [
@@ -510,6 +522,25 @@ EXPECTED_FUNCTIONS = {
     "maru_deferred_validate_provenance_activation",
     "maru_deferred_validate_provenance_latch",
 }
+
+
+@pytest.fixture
+def isolated_activation_history_graph(transactional_db: None) -> Iterator[None]:
+    """Preserve the caller while committed activation history rewinds the graph."""
+
+    del transactional_db
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    with isolated_migration_database():
+        restore_current_migration_graph()
+        try:
+            yield
+        finally:
+            flush_then_restore_current_migration_graph()
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
 
 
 def _migrate(target: tuple[str, str]) -> MigrationExecutor:
@@ -1253,6 +1284,7 @@ def test_temp_authority_tables_cannot_rebind_control_principal() -> None:
     assert not AuthorityControl.objects.filter(pk=forged_control_id).exists()
 
 
+@pytest.mark.usefixtures("isolated_activation_history_graph")
 def test_clean_reverse_and_forward_are_symmetric(
     restores_current_migration_graph: None,
 ) -> None:
@@ -1279,6 +1311,7 @@ def test_clean_reverse_and_forward_are_symmetric(
     ]
 
 
+@pytest.mark.usefixtures("isolated_activation_history_graph")
 def test_reverse_restores_prior_owned_issuance_function_definitions(
     restores_current_migration_graph: None,
 ) -> None:
@@ -1301,6 +1334,7 @@ def test_reverse_restores_prior_owned_issuance_function_definitions(
     _migrate(AUTHORIZATION_AFTER_ACTIVATION)
 
 
+@pytest.mark.usefixtures("isolated_activation_history_graph")
 def test_reverse_restores_foundational_authorization_function_definitions(
     restores_current_migration_graph: None,
 ) -> None:
@@ -1325,6 +1359,7 @@ def test_reverse_restores_foundational_authorization_function_definitions(
     _migrate(AUTHORIZATION_AFTER_ACTIVATION)
 
 
+@pytest.mark.usefixtures("isolated_activation_history_graph")
 def test_reverse_refuses_an_activated_latch(
     restores_current_migration_graph: None,
 ) -> None:

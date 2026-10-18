@@ -450,3 +450,75 @@ intact for a fresh ordinary Auto exact exhaustive run against current main.
 Focused success is not complete acceptance or a timing promise. Every ordinary
 gate, complete selection, physical schema pin, security assertion, coverage,
 headroom, worker limit, exact owned cleanup and hosted protection remains required.
+
+## Sixth exhaustive failure: activation-schema history
+
+Ordinary Auto certification on clean `9d4d0196b2c6b077643ae8969a6fe7f06cc1eefa`
+failed at 08:04:31 UTC on October 18 after 9,751.047 seconds. All 14,304 units
+passed in 231.72 seconds. Shard 38 selected 82 of 5,270 native cases: 53 passed
+and 29 Knowledge domain fixtures rejected Guidance setup. Thirty-five batches
+passed; all 43 started batches retained headroom. Seven siblings were interrupted
+and 20 never started. All 43 exact owned containers were independently absent.
+Both complete 4,761-file original and archive copies were hash-verified; the
+original remains intact until separate preservation before another full run.
+There is no success receipt or push; all six full failures remain failed.
+
+The unchanged activation-schema clean-reverse/forward test followed by the first
+Knowledge domain case reproduced one pass and one setup error in 701.77 seconds
+(708.187-second wrapper). These were adjacent in actual shard order; six earlier
+current Registration API cases were omitted from this minimal reproduction.
+After ordinary full-leaf restoration, only EventEdition's fingerprint differed:
+adoption code, version and revision moved from physical slots 16/17/18 to 19/20/21,
+leaving dropped slots. Every other captured physical column remained exact.
+Authority and activated runtime were ready; Guidance correctly refused setup.
+All 3,238 before/pre-pytest/after/live entries matched source digest
+`5da751fde7a9c5540b72bb55991a7ec51e6808c577ae307612c9ab68b896c362`.
+All 26 artifact hashes, exact selected/report identities and independent absence
+of the owned container were verified before source release. The read-only
+observer changed no assertion, schema, record or outcome. This is diagnostic
+evidence, not acceptance or timing-calibration input.
+
+A database-free audit of actual Django plans from the 316-node current graph
+found all three adoption-field reversals in all four serial activation-history
+tests. Authorization 0006 has 201 backward migrations; 0005 has 202. Field
+removals occur at zero-based plan indexes 10 and 172, before the runtime-latch
+downgrade fence at 198 in the activated-latch refusal plan. This is shared plan
+exposure, not four separately reproduced failures. The four histories now opt
+into the existing committed empty-database helper with real current-graph setup,
+original bodies/targets/assertions, flush/full restoration, exact cleanup and
+caller Guidance schema/readiness checks. Their original restoration fixture
+remains. Current catalog, guard and concurrent-writer cases keep their existing
+scope. No product, schema, pin, guard, permission, selection or gate changes.
+Two sequential focused regressions and fresh ordinary exact exhaustive
+certification remain pending. Earlier timing savings predate these repairs.
+
+## Activation history regressions verified on 2026-10-18
+
+Two sequential runs passed all 62 distinct native cases with zero failures,
+errors or skips and no observation plugin. Batch A passed 37 cases in 1,780.71
+seconds (1,787.266-second wrapper): clean symmetry history, all 29 previously
+blocked Knowledge domain cases, prior owned-definition history and six native
+isolation success/failure cases. Batch B passed 25 cases in 1,723.11 seconds
+(1,729.735-second wrapper): foundational-definition and activated-latch refusal
+histories, all 18 Guidance foundation cases, exact current catalog/dormant latch
+and three concurrent-writer cases. Each fresh owned database retained the
+1 GiB tmpfs, 2 GiB memory and one-hour limit. The second run began only after
+the first had complete source/artifact/case/cleanup verification.
+
+Both 3,237-entry before/pre-pytest/after/live inventories matched. A's digest is
+`31717c62792bff6b6d5ae6e921f330a60741899916dc86222a8cfb11056afb02`;
+B's is `c85d797e4ed60d59b4e0813b0e7aabde435c547e5f04c54c1ab514ca1eea27b8`.
+The 3,236 tracked/unignored entries are identical across runs; only ignored runner
+paths differ. All 25 artifact hashes per run and exact selected/JUnit identities
+were verified. All 49 original activation-module function bodies remain
+structurally identical; the tested file SHA256 is
+`22dff94dd74f0a6a26c51c285d78b0a1d5bd5f9bc5836ce1fa1aad2911a0e056`.
+Both exact owned containers were independently absent before source release.
+Only CURRENT and this append-only checkpoint change afterward for the candidate.
+
+All six exhaustive failures remain failed and preserved. The sixth 4,761-file
+original/archive and run logs must be rehashed before preserving the original
+intact for a fresh ordinary Auto exact exhaustive run against current main.
+Focused success is not full or hosted acceptance, or a timing promise. Every
+ordinary gate, complete selection, physical schema pin, security assertion,
+coverage/headroom threshold, worker limit, cleanup and hosted protection remains.

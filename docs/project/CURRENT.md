@@ -53,28 +53,32 @@ All 20 owned containers were absent and 1,628 evidence files hash-preserved.
 This predates the isolation repairs: it is not full/hosted acceptance, a repeated
 controlled benchmark or a timing promise for the repaired source.
 
-Five exhaustive attempts failed on historical tests contaminating the caller's
+Six exhaustive attempts failed on historical tests contaminating the caller's
 physical EventEdition schema despite full-leaf restoration. Unchanged
 reproductions proved dropped/recreated adoption-column slots after Programme-
-import, file-custody, provenance full-graph, missing-latch and invitation-token
-history. Exact Guidance pins correctly refused those schemas. The latest failed
-run passed 14,304 units and 34 batches; all 42 started batches retained headroom
-and their exact containers were absent. Every failed receipt, diagnostic and
-full original/archive remains preserved. The checkpoint records exact failure,
-reproduction and preservation evidence.
+import, file-custody, provenance full-graph, missing-latch, invitation-token and
+activation-schema history. Exact Guidance pins correctly refused those schemas.
+The latest failed run passed 14,304 units and 35 batches; all 43 started batches
+retained headroom and their exact containers were absent. Every failed receipt,
+diagnostic and full original/archive remains preserved. The checkpoint records
+exact failure, reproduction and preservation evidence.
 
 Test-only fixture opt-ins now run six import-history cases, the single custody
-round-trip, six serial provenance histories and two invitation-token histories
-in fresh empty databases using the existing committed-isolation helper. Real
-current-graph setup, original bodies, targets, ownership/latch assertions, full
-restoration and exact cleanup remain. Caller schema/readiness assertions protect
-the shared database. ACL history keeps its own isolation; current and
-concurrency cases remain unchanged. A database-free actual-plan audit supports
-the five remaining provenance opt-ins without claiming five separately
-reproduced failures. The invitation pair is supported by an unchanged native
-reproduction and actual plan exposure for both old Identity targets. No product
-schema, pin, guard or permission changes. All original affected function bodies
-remain unchanged.
+round-trip, six serial provenance histories, two invitation-token histories and
+four activation-schema histories in fresh empty databases using the existing
+committed-isolation helper. Real current-graph setup, original bodies, targets,
+ownership/latch assertions, full restoration and exact cleanup remain. Caller
+schema/readiness assertions protect the shared database. ACL history keeps its
+own isolation; current and concurrency cases remain unchanged. A database-free
+actual-plan audit supports the five remaining provenance opt-ins without
+claiming five separately reproduced failures. The invitation pair is supported
+by an unchanged native reproduction and actual plan exposure for both old
+Identity targets. No product schema, pin, guard or permission changes. All
+original affected function bodies remain unchanged. The activation family now
+has an unchanged native reproduction and actual-plan exposure audit, including
+field reversal before the runtime-latch downgrade fence. Its four original
+history bodies and existing restoration fixture remain intact; current and
+concurrent-writer tests keep their scope.
 
 Earlier focused repairs passed 14, nine and nine native cases. The final provenance
 family verification passed 27 cases in 2,432.28 seconds and nine in 2,419.87 seconds,
@@ -88,8 +92,17 @@ The invitation regression then passed all 11 cases in 1,343.66 seconds
 blocked Knowledge cases, one Guidance case and six native isolation regressions.
 All 3,237 before/pre-pytest/after/live entries, 25 artifact hashes, selected/report
 identities, four original function bodies and independent exact owned cleanup
-were verified, with zero failures, errors or skips. Source pins are released;
-only CURRENT and the checkpoint change afterward for the next clean candidate.
+were verified, with zero failures, errors or skips.
+
+The activation-family regression then passed 37 cases in 1,780.71 seconds and
+25 in 1,723.11 seconds, with zero failures, errors or skips. These 62 distinct
+cases cover all four histories, all 29 formerly blocked Knowledge domain cases,
+all 18 Guidance foundation cases, six native isolation cases and five current
+catalog/latch/concurrent-writer cases. Both 3,237-entry before/pre-pytest/after/live
+inventories, 25 artifact hashes each, exact identities, all 49 original function
+bodies and independent owned cleanup were verified. The 3,236 tracked/unignored
+entries match across both runs; only ignored runners differ. Source pins are
+released; only CURRENT and the checkpoint change afterward for the clean candidate.
 
 NFR-001 and ADRs 0090/0098 govern calibration; existing committed test isolation and
 exact schema boundaries remain in force. Every test, fresh database boundary,
@@ -97,7 +110,7 @@ eight-worker limit, historical density, coverage threshold, slowdown allowance,
 timing-headroom gate and protected check remains required. Scoped lint/format,
 docstrings and docs passed during implementation. Fresh ordinary Auto exhaustive
 certification on the clean candidate and exact-head hosted delivery remain pending.
-Focused passes and the five failed full attempts are not acceptance. Issues #36
+Focused passes and the six failed full attempts are not acceptance. Issues #36
 and #42 remain open; no production or human browser acceptance is claimed.
 
 ## Preserved Workforce blocker
@@ -117,8 +130,8 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Commit the focused-verified invitation repair and status documentation after
-   scoped checks. Rehash both 4,753-file copies of the fifth failed run and its
+1. Commit the focused-verified activation repair and status documentation after
+   scoped checks. Rehash both 4,761-file copies of the sixth failed run and its
    logs, then preserve the intact original under its run directory.
 2. Verify current main and run fresh ordinary Auto exhaustive certification on the
    clean exact candidate. Derive actual scope/counts; no older receipt certifies it.

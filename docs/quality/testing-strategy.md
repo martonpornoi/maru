@@ -159,6 +159,17 @@ downgrade fence and audit retry-uniqueness assertions remain unchanged. Real
 current-graph setup, flush/full restoration, exact cleanup and caller Guidance
 schema/readiness checks retain the same boundary as the earlier opt-ins.
 
+Four serial activation-schema histories use the same committed empty-database
+boundary. An unchanged clean-reverse/forward history followed by Knowledge setup
+reproduced all three EventEdition adoption columns moving to new physical slots
+after full-leaf restoration. Actual plans for Authorization 0005/0006 reverse
+those fields; the removals also precede the runtime-latch downgrade fence in the
+activated-latch refusal plan. This establishes shared exposure, not four separate
+native failure reproductions. Original symmetry, prior-owned and foundational
+function-definition restoration, and activated-latch refusal bodies and assertions
+remain intact, including their original full-graph restoration fixture. Current
+catalog, guard and concurrent-writer tests retain their existing database scope.
+
 The initial adopters are the Workforce structure-write historical boundary,
 historical organization governance, and historical authorization scope-v2
 activation. Their current-state tests remain separate, all original cases are
