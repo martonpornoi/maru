@@ -1,7 +1,7 @@
 # Current project state
 
-Last updated: 2026-10-17
-Phase: CI cost refresh benchmark and three focused isolation repairs verified;
+Last updated: 2026-10-18
+Phase: CI cost calibration and focused historical isolation repairs verified;
 fresh exhaustive acceptance pending. Workforce browser acceptance remains blocked.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -35,88 +35,60 @@ incrementally; no all-workflows-prefilled claim is made.
 
 ## Current bounded outcome
 
-The maintainer approved the [conservative current-group cost refresh](../checkpoints/2026-10-17-current-group-cost-calibration.md)
-after inspecting PR #217's local and hosted timing evidence. Complete matching
-reports cover all 275 current groups and 5,114 native cases; two unstable-ID files
-retain local-only comparison. The helper adds explicit current-only calibration,
-preserving all 96 historical entries, 15 historical fallbacks and known current
-floors. Thirty-seven missing current measurements are added and 146 known costs
-increase. Current planning falls from 38 to 20 batches; exhaustive planning from
-89 to 63. The clean current-scope benchmark now verifies 20 successful batches:
-the native test window fell from 5,254.017 to 3,615.559 seconds (87m34s to 60m16s),
-saving 1,638.458 seconds or 31.18% in this single local comparison. All 5,114
-native cases and 14,304 units passed; coverage was 91.14%, with measured headroom
-and at most eight workers. All 20 owned containers were independently absent;
-1,628 evidence files were hash-preserved. Group membership, per-group counts,
-function variant counts and native runtime/test sources match the prior run.
-The two known unstable-ID files still have exact within-run report reconciliation.
-The diagnostic wrapper took 3,669.867 seconds and skipped static gates. This is
-not full certification, a controlled repeated benchmark or hosted performance.
+The approved [conservative current-group cost refresh](../checkpoints/2026-10-17-current-group-cost-calibration.md)
+adds explicit source-bound current-only calibration from PR #217's complete local
+and hosted evidence. All 275 current groups remain; known costs never decrease,
+96 historical entries remain exact and 15 historical groups retain fallback.
+Thirty-seven missing current measurements are added and 146 known costs increase.
+The unchanged planner selects 20 current batches instead of 38, and 63 exhaustive
+batches instead of 89. Those plan counts alone are not elapsed-time measurements.
 
-NFR-001 and ADRs 0090/0098 govern this tooling-only change. Every test, fresh
-database boundary, eight-worker limit, historical density, coverage threshold,
-slowdown allowance, timing-headroom gate and protected check remains required.
-All 14,304 unit cases passed in 83.29 seconds, with three existing Django URL
-field deprecation warnings. Scoped lint/format, docstrings and docs763 passed;
-the current-scope diagnostic subsequently passed. Fresh exhaustive exact-head
-certification and hosted delivery remain pending. No production behavior or
-credential boundary changes; maintained demo coverage is unaffected.
+The earlier clean current-only diagnostic on `e7f5c4d` passed 5,114 native cases,
+14,304 units and all 20 batches, with 91.14% coverage, measured headroom and at most
+eight workers. Native elapsed fell from 5,254.017 to 3,615.559 seconds: 27m18s saved,
+31.18% in one local before/after observation. The 3,669.867-second wrapper skipped
+static gates. Matching group/function counts and unchanged native sources support
+that comparison; two unstable-ID files retain exact within-run reconciliation.
+All 20 owned containers were absent and 1,628 evidence files hash-preserved.
+This predates the isolation repairs: it is not full/hosted acceptance, a repeated
+controlled benchmark or a timing promise for the repaired source.
 
-The first exhaustive run on `ef2290e` failed after 1,298.313 seconds at the initial
-Knowledge readiness assertion in shard 4 (44 passes, one failure). All 14,304
-units passed; all 13 started batches had timing headroom and their exact owned
-containers were independently absent. All 4,513 failed evidence files were
-copied and hash-verified. No acceptance receipt or push resulted.
+Four exhaustive attempts failed on historical tests contaminating the caller's
+physical EventEdition schema despite full-leaf restoration. Unchanged reproductions
+proved dropped/recreated adoption-column slots after Programme-import, file-custody,
+provenance full-graph and missing-latch history. Exact Guidance pins correctly
+refused those schemas. The latest failed run passed 14,304 units and 29 batches;
+all 37 started batches retained headroom and their exact containers were absent.
+Every failed receipt, diagnostic and full original/archive remains preserved.
+The checkpoint records exact failure, reproduction and preservation evidence.
 
-A two-test unchanged reproduction confirmed that committed Programme-import
-history and leaf restoration leave a dropped EventEdition column slot, moving
-`adoption_revision` from physical position 18 to 19. Authority/runtime readiness
-passed; Guidance setup correctly rejected the changed exact schema. The six
-serial committed import-history cases now opt into the existing fresh empty
-database helper, retaining all original bodies, targets, assertions and full
-restoration. Added before/after schema/readiness checks protect the caller.
-All 14 focused native regression cases passed in 2,709.55 seconds: all seven
-import cases, the previously failing Knowledge case and six isolation
-success/failure cases. There were no failures, errors or skips. All 3,237
-before/pre-pytest/after/live source entries and 25 artifact hashes matched; the
-exact owned container was independently absent. All six original function
-bodies remain structurally unchanged. Fresh exhaustive clean-candidate
-certification and hosted acceptance remain pending. Product guards, schema pins
-and sharding rules remain unchanged. The earlier speed measurement predates
-this repair and is not a timing promise for the repaired source.
+Test-only fixture opt-ins now run six import-history cases, the single custody
+round-trip and six serial provenance histories in fresh empty databases using
+the existing committed-isolation helper. Real current-graph setup, original bodies,
+targets, ownership/latch assertions, full restoration and exact cleanup remain.
+Caller schema/readiness assertions protect the shared database. ACL history keeps
+its own isolation; current and concurrency cases remain unchanged. A database-free
+actual-plan audit supports the five remaining provenance opt-ins without claiming
+five separately reproduced failures. No product schema, pin, guard or permission
+changes. Original import, custody and provenance function bodies are unchanged.
 
-The second exhaustive run on clean `d7102393` failed after 745.734 seconds:
-file-custody history passed, then the next import fixture rejected Guidance setup
-before its test body (one pass, one setup error). All 14,304 units passed; all
-eight started batches retained headroom and their exact containers were absent.
-Both complete 4,473-file failed evidence copies were hash-verified. A fresh,
-unchanged two-case reproduction confirmed the same EventEdition slot drift after
-file-custody history in 268.44 seconds; all 3,238 source entries, 26 artifact hashes
-and exact cleanup were verified. That single historical case now uses the same
-committed empty-database isolation with its original body and full restoration.
-All nine native regression cases passed in 968.55 seconds with no failures,
-errors or skips, including the previously blocked sequence and six isolation
-success/failure cases. All 3,237 source entries, 25 artifact hashes and exact owned
-cleanup were verified; all 26 original module function bodies remain unchanged.
-Only status documentation changed after source release. Fresh exhaustive
-certification and hosted acceptance remain pending.
+Earlier focused repairs passed 14, nine and nine native cases. The final provenance
+family verification passed 27 cases in 2,432.28 seconds and nine in 2,419.87 seconds,
+without failures, errors or skips. These 36 distinct cases cover all 12 provenance
+cases, all 18 Guidance foundation cases and six native isolation regressions.
+Both 3,237-entry before/pre-pytest/after/live inventories, all 25 artifact hashes per
+run, exact case identities and independent owned cleanup were verified. The 3,236
+tracked/unignored entries matched across runs; only ignored runner paths differed.
+Source pins are released; only CURRENT and the checkpoint change afterward.
 
-The third exhaustive run on clean `bc5ee4f2` failed after 6,478.5 seconds:
-shard 24 had 46 passes and two demo failures at Guidance setup after provenance
-history. All 14,304 units passed; 23 batches passed and all 31 started batches
-retained headroom. Their exact owned containers were absent; both complete
-4,665-file failed evidence copies were hash-verified. An unchanged two-case
-reproduction passed history then failed the demo in 739.28 seconds. After full
-restoration, only EventEdition differed: its three adoption columns moved from
-positions 16–18 to 19–21, leaving dropped slots. All 3,238 source entries, 26
-artifact hashes and exact cleanup were verified. Only that history case now opts
-into committed empty-database isolation with its original body and full
-restoration. All nine native regression cases passed in 965.85 seconds with no
-failures, errors or skips: the repaired history, both demo cases and six existing
-isolation success/failure cases. All 3,237 source entries, 25 artifact hashes and
-exact owned cleanup were verified; all 21 original module function bodies remain
-unchanged. Only status documentation changed after source release. Fresh exhaustive
-certification and hosted acceptance remain pending.
+NFR-001 and ADRs 0090/0098 govern calibration; existing committed test isolation and
+exact schema boundaries remain in force. Every test, fresh database boundary,
+eight-worker limit, historical density, coverage threshold, slowdown allowance,
+timing-headroom gate and protected check remains required. Scoped lint/format,
+docstrings and docs passed during implementation. Fresh ordinary Auto exhaustive
+certification on the clean candidate and exact-head hosted delivery remain pending.
+Focused passes and the four failed full attempts are not acceptance. Issues #36
+and #42 remain open; no production or human browser acceptance is claimed.
 
 ## Preserved Workforce blocker
 
@@ -135,15 +107,14 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Commit the verified provenance repair and status documentation after scoped
-   checks. Preserve all three failed full runs and focused source/artifact/cleanup
-   evidence; the earlier speed observation does not certify repaired source.
-2. Rehash and preserve the third failed original before fresh ordinary exhaustive
-   Auto certification against current main. Derive the actual new scope/counts;
-   older focused, diagnostic or failed results are not acceptance.
-3. Verify every full gate, actual scope/counts, coverage, headroom and owned cleanup;
-   preserve all evidence, then use normal hooks, exact-head PR review/hosted checks,
-   protected squash and ff-only clean designated main. Keep issues #36/#42 open.
+1. Commit the verified family repair and status documentation after scoped checks.
+   Rehash both 4,713-file copies of the fourth failed run and its logs, then preserve
+   the intact original under its run directory. Earlier originals are already moved.
+2. Verify current main and run fresh ordinary Auto exhaustive certification on the
+   clean exact candidate. Derive actual scope/counts; no older receipt certifies it.
+3. Verify every full gate, coverage, headroom, scope and owned cleanup; preserve
+   evidence, then use normal hooks, exact-head PR review/hosted checks, protected
+   squash and ff-only clean designated main. Keep issues #36/#42 open.
 
 Preserve unrelated checkouts, stashes, stopped fixtures and private credentials.
 No deployment, external mail, credential/authority workaround, weakened safety,

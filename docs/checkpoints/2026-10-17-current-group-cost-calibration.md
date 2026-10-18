@@ -301,3 +301,89 @@ remain required. Original assertions, physical pins, guards, permissions,
 selection, isolation, worker, timing and coverage boundaries remain unchanged.
 Maintained demo data and browser coverage are unchanged; these native demo cases
 verify the existing behavior after isolated history, not human acceptance.
+
+## Fourth exhaustive failure and remaining provenance history family
+
+The ordinary Auto run on clean `8388566400331e8b8d682ef86ea07730c5a04636`
+failed at 23:21:35 UTC after 7,269.922 seconds. All 14,304 units passed in 232.76
+seconds. Shard 29 selected 44 cases: 26 passed, five failed and 13 had setup
+errors in Guidance foundation after missing-latch authorization reversal.
+Twenty-nine batches passed; all 37 started batches retained headroom. Seven
+siblings were interrupted and 26 never started. All 37 exact owned containers
+were independently absent. Complete 4,713-file original and archive copies were
+hash-verified; the original remains intact until preservation for another run.
+No acceptance receipt or push resulted. Prior failing shards 1, 4 and 24 passed,
+but this failed run does not certify the whole suite or a runtime improvement.
+
+An unchanged two-case reproduction passed the missing-latch history and failed
+the following direct-body Guidance setup case in 702.53 seconds (728.469-second
+wrapper). After ordinary full-leaf restoration, only EventEdition's fingerprint
+differed: adoption profile code, version and revision moved from physical
+positions 16, 17 and 18 to 19, 20 and 21, leaving dropped slots. Authority and
+activated runtime readiness passed; Guidance setup correctly refused the exact
+schema mismatch. All 3,238 before/pre-pytest/after/live entries matched digest
+`dd64db2542ecea5f791d953117f25c248b582e46a4ab87ed4de3dcc218937911`;
+all 26 public artifact hashes and independent exact owned cleanup were verified
+before source release. No guard, pin or diagnostic assertion was weakened.
+
+A read-only audit evaluated Django's actual migration plans from the complete
+current graph without a database. The first targets of authorization reverse,
+audit reverse and missing-latch reverse unwind all three adoption AddField
+operations. The two reserved-audit upgrade targets unwind adoption_revision only.
+All five therefore expose the shared current database to the observed physical
+slot mechanism. This is plan evidence, not five separately executed failures.
+An initial audit assertion expected three fields for every target and stopped
+before writing evidence; the exact plans corrected that expectation without
+database execution, source changes or a retry of the failing diagnostic.
+
+Those five historical cases now opt into the existing local committed-isolation
+fixture. Real current-graph setup in a fresh empty database, original bodies,
+targets, ownership/latch assertions, full restoration and exact cleanup remain.
+Caller Guidance schema/readiness assertions protect the shared database. The
+existing full-graph fixture body and ACL test's own isolated database are unchanged;
+current-state and concurrency tests also remain unchanged. All original module
+function bodies are structurally identical. No product schema, guard, pin,
+permission, selection, worker, timing, coverage or protected gate changed.
+
+Two sequential source-pinned focused runs are planned: missing-latch history,
+all Guidance foundation cases, authorization/audit history and six native
+isolation success/failure cases; then the remaining provenance module cases,
+including both reserved-audit histories, ACL, full-graph, current and concurrency
+coverage. Each uses a fresh owned database and the unchanged one-hour diagnostic
+limit. Focused and full exhaustive acceptance are pending. Every earlier failure
+stays failed and preserved; the earlier 31.18% observation predates these repairs
+and is not a repaired-source or hosted speed promise.
+
+## Complete provenance family verified on 2026-10-18
+
+Both sequential native regressions passed with unchanged tracked source. Batch A
+passed all 27 cases in 2,432.28 seconds (2,439.062-second wrapper): missing-latch
+history, all 18 Guidance foundation cases, authorization/audit history and six
+native isolation success/failure regressions. Batch B passed all nine remaining
+provenance cases in 2,419.87 seconds (2,445.969-second wrapper): reserved-audit
+histories, full-graph history, ACL history, current validation and concurrency.
+There were no failures, errors or skips and no observation plugin in either run.
+Selection/JUnit identities reconcile exactly. Together they cover 36 distinct
+cases: all 12 provenance module cases, all 18 Guidance foundation cases and all
+six native isolation cases. All 21 original provenance module function bodies
+remain structurally identical; the existing fixture body is also unchanged.
+
+Each run's 3,237 before/pre-pytest/after/live source entries matched. Batch A digest
+is `559d478f1c5cc8db3dd8cf2835e44aa7efbf834502de13187b3a75f2f48784ce`;
+batch B is `be1461cafaadca3ded2fff667e5ae27c35ecec7d9ed3ba6332c36bff33639c55`.
+All 3,236 tracked/unignored entries are identical across the two inventories;
+only their ignored runner paths differ. All 25 public artifact hashes per run
+were verified, and both exact owned containers were independently absent. The
+tested provenance module SHA256 remains
+`c6cb928e3142a9a28128abc51d749e425cd938b028a870641c9ddf790bc5e0a7`.
+Both source pins are released; only CURRENT and this append-only checkpoint
+change afterward for the next clean candidate.
+
+All four exhaustive failures stay failed and preserved. The fourth 4,713-file
+original and its archive must be rehashed against the saved manifest and the
+intact original preserved before another full run. These focused results do not
+establish full acceptance, repaired-source timing or hosted performance. Fresh
+ordinary Auto exact exhaustive certification against current main, all ten gates,
+complete selection, coverage, headroom, owned cleanup and protected hosted review
+remain required. No assertion, physical pin, guard, permission, isolation,
+selection, worker, timing, coverage, hook or protection is weakened.

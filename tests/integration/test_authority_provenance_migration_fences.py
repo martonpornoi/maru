@@ -318,6 +318,7 @@ def test_full_graph_reverse_and_forward_preserve_migration_ownership() -> None:
     ) == [(True, 0)]
 
 
+@pytest.mark.usefixtures("isolated_provenance_roundtrip_graph")
 def test_authorization_reverse_leaves_owned_audit_boundary_installed() -> None:
     _migrate(AUTHORIZATION_BEFORE_ACTIVATION)
     marker, latch, writer, audit_index, audit_guard = _regobjects()
@@ -334,6 +335,7 @@ def test_authorization_reverse_leaves_owned_audit_boundary_installed() -> None:
     assert trigger_count == 1
 
 
+@pytest.mark.usefixtures("isolated_provenance_roundtrip_graph")
 def test_audit_reverse_restores_prior_owned_append_only_function() -> None:
     _migrate(AUDIT_BEFORE_GUARDS)
     baseline = _function_definition_contract("maru_guard_audit_event()")
@@ -407,6 +409,7 @@ def test_authorization_function_acl_hardening_preserves_preexisting_acl_state() 
     assert guidance_setup_database_integrity_is_ready()
 
 
+@pytest.mark.usefixtures("isolated_provenance_roundtrip_graph")
 def test_authorization_reverse_refuses_a_missing_latch() -> None:
     _set_latch_row(present=False)
     try:
@@ -417,6 +420,7 @@ def test_authorization_reverse_refuses_a_missing_latch() -> None:
         _set_latch_row(present=True)
 
 
+@pytest.mark.usefixtures("isolated_provenance_roundtrip_graph")
 def test_reserved_audit_guard_upgrade_rejects_legacy_orphan() -> None:
     _migrate(AUTHORIZATION_WITH_BASE_ACTIVATION, AUDIT_WITH_GUARDS)
     _activation_audit_without_marker()
@@ -436,6 +440,7 @@ def test_reserved_audit_guard_upgrade_rejects_legacy_orphan() -> None:
         _migrate(AUTHORIZATION_WITH_ACTIVATION)
 
 
+@pytest.mark.usefixtures("isolated_provenance_roundtrip_graph")
 def test_reserved_audit_guard_accepts_exact_active_upgrade_and_fences_reverse() -> None:
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     _migrate(AUTHORIZATION_WITH_BASE_ACTIVATION, AUDIT_WITH_GUARDS)

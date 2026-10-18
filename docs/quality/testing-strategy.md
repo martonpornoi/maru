@@ -139,7 +139,15 @@ real current-graph setup, with complete leaf restoration before owned cleanup.
 An unchanged history-then-demo reproduction showed that ordinary restoration
 moves all three EventEdition adoption columns to new physical positions. Caller
 schema/readiness checks prevent that contamination without relaxing any pin.
-Other provenance history, ACL, current-state and concurrency tests are unchanged.
+The five remaining serial provenance history cases also opt into that fixture.
+An unchanged missing-latch history followed by Guidance foundation reproduced the
+same three-column drift. A database-free audit of Django's actual migration plans
+showed that authorization/audit reversals unwind all three adoption fields, while
+the two reserved-audit upgrade targets unwind only the revision field. This plan
+evidence supports isolating the affected historical family; it does not claim
+five separately reproduced failures. Every original body, committed target,
+ownership/latch assertion and full restoration remains intact. ACL history keeps
+its existing isolated database; current-state and concurrency tests are unchanged.
 
 The initial adopters are the Workforce structure-write historical boundary,
 historical organization governance, and historical authorization scope-v2
