@@ -1,9 +1,9 @@
 # Current project state
 
-Last updated: 2026-10-18
+Last updated: 2026-10-19
 Phase: CI calibration and focused historical isolation repairs verified;
-historical capacity tightened; shared-history database setup repair verified.
-Fresh exhaustive acceptance and Workforce browser acceptance remain pending.
+historical capacity, shared-history setup and Applications ACL history isolation
+repairs verified. Fresh exhaustive and Workforce browser acceptance remain pending.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and owning requirements.
@@ -169,6 +169,37 @@ selection, calibration, capacity, timing, worker, coverage or protected gate cha
 Fresh ordinary Auto exhaustive certification and protected delivery remain pending.
 Fictional demo coverage is unaffected.
 
+The ninth exhaustive run on clean `5a788949` failed after 13,307.828 seconds.
+All 14,304 units passed in 237.74 seconds; 59 batches passed, seven siblings were
+interrupted and 44 never started. All 67 started batches retained headroom and
+their exact containers were independently absent. The complete 4,968-file original
+and archive are hash-verified; the original remains intact in `.local-ci`.
+Shard 61 had 88 passes, five failures and 13 setup errors among 106 selected cases:
+all 18 Guidance foundation cases were affected after an Applications ACL history.
+
+An unchanged two-case diagnostic reproduced one pass and one setup error in
+563.78 seconds (570.203-second wrapper). All 3,238 source entries, 26 artifact
+hashes, exact identities and owned cleanup were verified. Full-leaf restoration
+inside the passing history still moved EventEdition `adoption_revision` from
+physical slot 18 to 19. Other captured columns stayed exact; Guidance correctly
+refused while authority and activated runtime were ready. Both old Applications
+targets reverse that field in actual Django plans. The first history has common
+plan exposure, not a separately reproduced native failure.
+
+Both serial Applications ACL histories now opt into the existing committed
+empty-database helper with real graph setup, full restoration and caller schema/
+readiness checks. All four original helper/test bodies and original assertions
+remain exact. The complete failed 106-case shard passed in its exact original
+order in 961.55 seconds; the other history, all Guidance and native isolation
+regressions passed 25 cases in 828.68 seconds. Both runs had zero failures,
+errors or skips. All 3,237-entry inventories, 50 artifact hashes, exact selected/
+JUnit order and identities, four original bodies and independent owned cleanup
+were verified. The common 3,236 tracked/unignored entries matched. Combined
+verification released source at 22:18:48 UTC on October 18 before status edits.
+These 131 executions cover 113 distinct cases, not ordinary full acceptance.
+Product, schema, pins, permissions, guards, selection, calibration, capacity and
+protected gates are unchanged; fictional demo coverage is unaffected.
+
 ## Preserved Workforce blocker
 
 Issue #42's tutorial, route checks, inspector, empty browser launcher and evidence
@@ -186,15 +217,17 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Verify the four standalone shared histories and a mixed database session,
-   preserve exact evidence, update status and commit the coherent repair. Rehash
-   both 4,673-file copies of the eighth failure and its logs, then preserve the
-   intact original under its run directory after checking absolute containment.
-2. Verify current main and run fresh ordinary Auto exhaustive certification on the
-   clean exact candidate. Derive actual scope/counts; no older receipt certifies it.
+1. Commit the reviewed Applications ACL repair normally, retaining its focused
+   source and evidence proofs. Rehash both 4,968-file ninth-failure copies and run
+   logs, check absolute containment, and preserve the original under its run.
+2. Verify current main and run fresh ordinary Auto exhaustive certification on
+   the clean exact candidate. Derive actual scope/counts and final tree; no older
+   receipt certifies it.
 3. Verify every full gate, coverage, headroom, scope and owned cleanup; preserve
    evidence, then use normal hooks, exact-head PR review/hosted checks, protected
    squash and ff-only clean designated main. Keep issues #36/#42 open.
+4. After verified delivery, select the next useful bounded task from fresh project
+   and live issue state under the maintainer's continuing authorization.
 
 Preserve unrelated checkouts, stashes, stopped fixtures and private credentials.
 No deployment, external mail, credential/authority workaround, weakened safety,

@@ -180,6 +180,16 @@ function-definition restoration, and activated-latch refusal bodies and assertio
 remain intact, including their original full-graph restoration fixture. Current
 catalog, guard and concurrent-writer tests retain their existing database scope.
 
+Both Applications function-ACL migration histories use the same explicit
+committed empty-database boundary. An unchanged programme-integrity reverse/forward
+case followed by Guidance setup reproduced the EventEdition revision column moving
+from physical slot 18 to 19 despite full-leaf restoration. Actual plans for both
+old Applications targets reverse that field; this is shared exposure, not two
+separately reproduced failures. Original public/owner-only EXECUTE, function-body,
+trigger-catalog, readiness and complete-restoration assertions remain intact.
+Caller Guidance schema/readiness checks detect contamination without changing
+product pins or current/concurrency test scope.
+
 The initial adopters are the Workforce structure-write historical boundary,
 historical organization governance, and historical authorization scope-v2
 activation. Their current-state tests remain separate, all original cases are

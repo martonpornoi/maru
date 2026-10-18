@@ -671,3 +671,85 @@ remain failed and preserved. These focused passes do not certify the ordinary
 pool, recalibrate costs or establish a new runtime improvement. Fresh clean-head
 ordinary Auto exhaustive certification against current main remains required.
 Fictional demo coverage is unaffected; issues #36 and #42 remain open.
+
+
+## Ninth exhaustive failure and Applications ACL history isolation (2026-10-18)
+
+The ordinary Auto run on clean `5a788949fdf27bbcba86f8f83c27fc2bfd4a9a1a`
+failed at 21:04:45 UTC after 13,307.828 seconds. All 14,304 units passed in
+237.74 seconds. The actual plan retained 386 groups, 111 historical groups and
+111 batches at most eight workers. Fifty-nine batches passed; seven siblings
+were interrupted and 44 never started. All 67 started batches retained headroom
+and every exact owned container was independently absent. All 4,968 original
+and archived evidence files were hash-verified, with run-log hashes retained in
+`ci-cost-certification-5a78894/failure-preservation.json`. The original has not
+moved from `.local-ci`. This remains a failed certification.
+
+Shard 61 selected 106 of the 5,270 collected cases and completed in 1,687.047
+seconds (pytest 1,676.67). Eighty-eight passed; all 18 Guidance foundation cases
+accounted for five failures and 13 setup errors, with zero skips. Actual order
+placed 68 current Page9 cases before the passing Applications programme-integrity
+ACL history, two Attendee reporting cases between it and Guidance, then current
+Registration commerce and Scheduling cases. The complete failed shard remains
+preserved and will be tested in its original order after repair.
+
+An unchanged minimal two-case diagnostic retained the history and first Guidance
+case at original positions 68 and 71, omitting the preceding/intervening current
+cases. It reproduced one pass and one setup error in 563.78 seconds, with a
+570.203-second wrapper. All 3,238 before/pre-pytest/after/live source entries,
+26 artifact hashes, collection/selection/JUnit identities and exact owned cleanup
+were verified before source release at 21:33:59 UTC. Proof is
+`ci-cost-applications-acl-order-probe-20261018/verified-failure.json`.
+
+Read-only observations show that full-leaf restoration inside the original
+passing history moves only EventEdition `adoption_revision` from physical slot
+18 to 19, leaving dropped slot 18. All other captured columns match. Authority
+and activated runtime are ready, while exact Guidance setup correctly refuses.
+A database-free actual-plan audit over 316 graph nodes finds 132 backward
+migrations for Applications 0002 and 131 for 0003; both reverse that field at
+plan index 10 through Events 0022. This establishes common plan exposure for
+the other ACL history, not a second native failure reproduction.
+
+Both serial histories now opt into the existing fresh empty committed database
+helper. Real current-graph setup, the four original helper/test bodies, original
+targets, public/owner-only EXECUTE assertions, function and trigger catalogs,
+readiness checks, committed semantics and ordinary full restoration remain.
+Additional caller schema/readiness checks protect the shared test database.
+No product/schema/pin/permission/guard/selection/calibration/capacity/worker/
+timing/coverage or protected-gate change; demos are unaffected. Focused full-shard
+and second-history/Guidance/isolation verification is pending. No diagnostic
+timing is calibration, no full acceptance or new speed claim is made.
+
+
+### Applications ACL focused verification and source release
+
+Both serial runs used fresh owned PostgreSQL, unchanged 1 GiB tmpfs, 2 GiB
+memory and the 3,600-second focused limit, without an observer:
+
+| Run | Scope | Cases | Pytest seconds | Wrapper seconds |
+| --- | --- | ---: | ---: | ---: |
+| A | Complete original failed shard 61 | 106 | 961.55 | 968.187 |
+| B | Other ACL history, Guidance and native isolation | 25 | 828.68 | 835.656 |
+
+Every case passed with zero failures, errors or skips. Run A's complete original
+collected/selected/JUnit order matches the preserved failed shard, including all
+68 preceding Page9 and two intervening Attendee reporting cases. The 131 total
+executions cover 113 distinct cases: both ACL histories, all formerly affected
+Guidance cases, the original current shard cases and six isolation regressions.
+
+Each run's 3,237-entry before/pre-pytest/after/live inventory, all 25 artifact
+hashes, exact selected/report identities and order, four original function bodies
+and independent exact container cleanup were verified. Both common 3,236
+tracked/unignored entries match; only the ignored runner path differs. The
+combined proof rehashed all 50 artifacts and confirmed both exact container
+absences before source release at 22:18:48 UTC on 2026-10-18. Proofs remain under
+`ci-cost-applications-acl-{a,b}-20261018`, with `combined-verification.json` in B.
+The tested Applications ACL module SHA256 is
+`634463f5c43c2824c2dec739ccd25ee0a28ca1e851718268d483e9766e0d2916`.
+
+Only CURRENT and this checkpoint change after focused source release. The final
+scoped Ruff/format, documentation, whitespace and coherent branch review precede
+the normal commit. All nine exhaustive failures remain failed and preserved.
+These focused passes do not establish ordinary pool headroom or acceptance,
+recalibrate costs or provide a new runtime-savings claim. Fresh clean-head
+ordinary Auto exhaustive certification against current main remains required.
