@@ -387,3 +387,66 @@ ordinary Auto exact exhaustive certification against current main, all ten gates
 complete selection, coverage, headroom, owned cleanup and protected hosted review
 remain required. No assertion, physical pin, guard, permission, isolation,
 selection, worker, timing, coverage, hook or protection is weakened.
+
+## Fifth exhaustive failure: invitation-token history
+
+The ordinary Auto run on clean `a47a890c8cdd66a487f6d293a9f0f7be8b45cf7d`
+failed at 04:23:09 UTC on October 18 after 9,620.516 seconds. All 14,304 units
+passed in 236.63 seconds. Shard 34 selected 54 of 5,270 native cases: 52 passed
+and two Knowledge withdrawal-reserve fixtures rejected Guidance setup after
+invitation-token digest-key history. Thirty-four batches passed; all 42 started
+batches retained headroom. Seven siblings were interrupted and 21 never started.
+All 42 exact owned containers were independently absent. Both complete 4,753-file
+original and archive copies were hash-verified; the original remains intact until
+its separately verified preservation before another full run. No success receipt
+or push resulted; all earlier failed and focused evidence remains preserved.
+
+The unchanged first two shard cases reproduced one pass and one setup error in
+505.04 seconds (511.672-second wrapper). Read-only observations after the failed
+fixture showed that full-leaf restoration left only EventEdition different:
+`adoption_revision` moved from physical slot 18 to 19, leaving dropped slot 18.
+All earlier columns stayed exact. Authority and activated runtime were ready;
+Guidance setup correctly refused the changed schema. All 3,238 before/pre-pytest/
+after/live entries matched digest
+`b8e90bb426ef0649365f92eb65563d8e40e898a1413e7cbc07e00e338187069a`.
+All 26 artifact hashes, exact case identities and independent absence of the
+owned container were verified before source release. This diagnostic is not
+acceptance or timing-calibration input.
+
+A database-free audit of Django's actual full-current migration plans found
+revision-field reversal in both serial tests' first Identity targets: 0013
+requires 135 backward migrations and 0012 requires 139. This is shared plan
+exposure, not a claim that both tests were separately reproduced as failures.
+Both tests now explicitly use the existing committed empty-database helper with
+real current-graph setup, original bodies and targets, full restoration, exact
+cleanup and caller Guidance schema/readiness checks. All four original functions
+remain structurally identical. Active legacy-token refusal, terminal-evidence
+upgrade, keyed-token downgrade refusal and audit retry uniqueness are preserved.
+No product, schema, pin, guard, permission, selection or gate changes. The focused
+native regression and fresh ordinary exact exhaustive certification are pending;
+earlier timing gains remain a limited observation on earlier source.
+
+## Invitation history regression verified on 2026-10-18
+
+All 11 focused native cases passed in 1,343.66 seconds (1,350.172-second wrapper),
+with zero failures, errors or skips and no observation plugin. The exact order
+retained the original first invitation history followed by both previously
+blocked Knowledge withdrawal-reserve cases, then the second invitation history,
+a Guidance foundation case and six native isolation success/failure regressions.
+The fresh owned database retained the 1 GiB tmpfs, 2 GiB memory and one-hour limit.
+
+All 3,237 before/pre-pytest/after/live source entries matched digest
+`641a0a89b31ee761aeb9193e78c28946fd47eedddf2077b27a92e5c840a97149`.
+All 25 artifact hashes and exact selected/JUnit case identities were verified.
+All four original invitation-module function bodies remain structurally identical;
+the tested file SHA256 is
+`b76f302bfd67a2207237a09605875d91debca9e028a66563cc65a21dbea7ef4e`.
+The exact owned container was independently absent before source release. Only
+CURRENT and this append-only checkpoint change afterward for the clean candidate.
+
+All five exhaustive failures remain failed and preserved. The fifth 4,753-file
+original/archive and run logs must be rehashed before preserving the original
+intact for a fresh ordinary Auto exact exhaustive run against current main.
+Focused success is not complete acceptance or a timing promise. Every ordinary
+gate, complete selection, physical schema pin, security assertion, coverage,
+headroom, worker limit, exact owned cleanup and hosted protection remains required.

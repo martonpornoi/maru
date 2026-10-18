@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from datetime import timedelta
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -9,6 +10,20 @@ from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.recorder import MigrationRecorder
 from django.utils import timezone
+
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.events.guidance_setup_readiness import (
+    GUIDANCE_SETUP_SCHEMA_RELATIONS,
+    guidance_setup_database_integrity_is_ready,
+)
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    isolated_migration_database,
+    restore_current_migration_graph,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -21,6 +36,25 @@ _TO = ("identity", "0013_invitation_token_digest_keys")
 _HARDENED = ("identity", "0014_invitation_delivery_integrity")
 
 
+@pytest.fixture
+def isolated_invitation_history_graph(transactional_db: None) -> Iterator[None]:
+    """Preserve the caller while committed invitation history rewinds the graph."""
+
+    del transactional_db
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    with isolated_migration_database():
+        restore_current_migration_graph()
+        try:
+            yield
+        finally:
+            flush_then_restore_current_migration_graph()
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
+
+
 def _migrate(target: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
     executor.migrate([target])
@@ -31,6 +65,7 @@ def _encoded(value: bytes) -> bytes:
     return base64.urlsafe_b64encode(value).rstrip(b"=")
 
 
+@pytest.mark.usefixtures("isolated_invitation_history_graph")
 def test_identity_0014_orders_and_enforces_audit_retry_uniqueness() -> None:
     _migrate(_TO)
     executor = MigrationExecutor(connection)
@@ -74,6 +109,7 @@ def test_identity_0014_orders_and_enforces_audit_retry_uniqueness() -> None:
         )
 
 
+@pytest.mark.usefixtures("isolated_invitation_history_graph")
 def test_upgrade_refuses_active_legacy_token_then_allows_terminal_evidence() -> (  # noqa: PLR0915
     None
 ):

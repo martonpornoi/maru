@@ -149,6 +149,16 @@ five separately reproduced failures. Every original body, committed target,
 ownership/latch assertion and full restoration remains intact. ACL history keeps
 its existing isolated database; current-state and concurrency tests are unchanged.
 
+Both invitation-token digest-key migration cases use committed empty-database
+isolation. An unchanged history-then-Knowledge reproduction showed that full-leaf
+restoration leaves a dropped EventEdition revision slot and moves the recreated
+column. Actual Django plans show that both old Identity targets reverse that
+field; this is shared plan exposure, not two separately reproduced failures.
+The original active-token preflight, terminal-evidence upgrade, keyed-token
+downgrade fence and audit retry-uniqueness assertions remain unchanged. Real
+current-graph setup, flush/full restoration, exact cleanup and caller Guidance
+schema/readiness checks retain the same boundary as the earlier opt-ins.
+
 The initial adopters are the Workforce structure-write historical boundary,
 historical organization governance, and historical authorization scope-v2
 activation. Their current-state tests remain separate, all original cases are

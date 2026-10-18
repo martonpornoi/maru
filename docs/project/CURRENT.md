@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-10-18
-Phase: CI cost calibration and focused historical isolation repairs verified;
+Phase: CI calibration and focused historical isolation repairs verified;
 fresh exhaustive acceptance pending. Workforce browser acceptance remains blocked.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -53,24 +53,28 @@ All 20 owned containers were absent and 1,628 evidence files hash-preserved.
 This predates the isolation repairs: it is not full/hosted acceptance, a repeated
 controlled benchmark or a timing promise for the repaired source.
 
-Four exhaustive attempts failed on historical tests contaminating the caller's
-physical EventEdition schema despite full-leaf restoration. Unchanged reproductions
-proved dropped/recreated adoption-column slots after Programme-import, file-custody,
-provenance full-graph and missing-latch history. Exact Guidance pins correctly
-refused those schemas. The latest failed run passed 14,304 units and 29 batches;
-all 37 started batches retained headroom and their exact containers were absent.
-Every failed receipt, diagnostic and full original/archive remains preserved.
-The checkpoint records exact failure, reproduction and preservation evidence.
+Five exhaustive attempts failed on historical tests contaminating the caller's
+physical EventEdition schema despite full-leaf restoration. Unchanged
+reproductions proved dropped/recreated adoption-column slots after Programme-
+import, file-custody, provenance full-graph, missing-latch and invitation-token
+history. Exact Guidance pins correctly refused those schemas. The latest failed
+run passed 14,304 units and 34 batches; all 42 started batches retained headroom
+and their exact containers were absent. Every failed receipt, diagnostic and
+full original/archive remains preserved. The checkpoint records exact failure,
+reproduction and preservation evidence.
 
 Test-only fixture opt-ins now run six import-history cases, the single custody
-round-trip and six serial provenance histories in fresh empty databases using
-the existing committed-isolation helper. Real current-graph setup, original bodies,
-targets, ownership/latch assertions, full restoration and exact cleanup remain.
-Caller schema/readiness assertions protect the shared database. ACL history keeps
-its own isolation; current and concurrency cases remain unchanged. A database-free
-actual-plan audit supports the five remaining provenance opt-ins without claiming
-five separately reproduced failures. No product schema, pin, guard or permission
-changes. Original import, custody and provenance function bodies are unchanged.
+round-trip, six serial provenance histories and two invitation-token histories
+in fresh empty databases using the existing committed-isolation helper. Real
+current-graph setup, original bodies, targets, ownership/latch assertions, full
+restoration and exact cleanup remain. Caller schema/readiness assertions protect
+the shared database. ACL history keeps its own isolation; current and
+concurrency cases remain unchanged. A database-free actual-plan audit supports
+the five remaining provenance opt-ins without claiming five separately
+reproduced failures. The invitation pair is supported by an unchanged native
+reproduction and actual plan exposure for both old Identity targets. No product
+schema, pin, guard or permission changes. All original affected function bodies
+remain unchanged.
 
 Earlier focused repairs passed 14, nine and nine native cases. The final provenance
 family verification passed 27 cases in 2,432.28 seconds and nine in 2,419.87 seconds,
@@ -79,7 +83,13 @@ cases, all 18 Guidance foundation cases and six native isolation regressions.
 Both 3,237-entry before/pre-pytest/after/live inventories, all 25 artifact hashes per
 run, exact case identities and independent owned cleanup were verified. The 3,236
 tracked/unignored entries matched across runs; only ignored runner paths differed.
-Source pins are released; only CURRENT and the checkpoint change afterward.
+The invitation regression then passed all 11 cases in 1,343.66 seconds
+(1,350.172-second wrapper), covering both invitation histories, both previously
+blocked Knowledge cases, one Guidance case and six native isolation regressions.
+All 3,237 before/pre-pytest/after/live entries, 25 artifact hashes, selected/report
+identities, four original function bodies and independent exact owned cleanup
+were verified, with zero failures, errors or skips. Source pins are released;
+only CURRENT and the checkpoint change afterward for the next clean candidate.
 
 NFR-001 and ADRs 0090/0098 govern calibration; existing committed test isolation and
 exact schema boundaries remain in force. Every test, fresh database boundary,
@@ -87,7 +97,7 @@ eight-worker limit, historical density, coverage threshold, slowdown allowance,
 timing-headroom gate and protected check remains required. Scoped lint/format,
 docstrings and docs passed during implementation. Fresh ordinary Auto exhaustive
 certification on the clean candidate and exact-head hosted delivery remain pending.
-Focused passes and the four failed full attempts are not acceptance. Issues #36
+Focused passes and the five failed full attempts are not acceptance. Issues #36
 and #42 remain open; no production or human browser acceptance is claimed.
 
 ## Preserved Workforce blocker
@@ -107,9 +117,9 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Commit the verified family repair and status documentation after scoped checks.
-   Rehash both 4,713-file copies of the fourth failed run and its logs, then preserve
-   the intact original under its run directory. Earlier originals are already moved.
+1. Commit the focused-verified invitation repair and status documentation after
+   scoped checks. Rehash both 4,753-file copies of the fifth failed run and its
+   logs, then preserve the intact original under its run directory.
 2. Verify current main and run fresh ordinary Auto exhaustive certification on the
    clean exact candidate. Derive actual scope/counts; no older receipt certifies it.
 3. Verify every full gate, coverage, headroom, scope and owned cleanup; preserve
