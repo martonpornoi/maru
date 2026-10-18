@@ -95,6 +95,16 @@ each case's rows, DDL, migration-recorder changes, and commit callbacks before
 the next case. It checks deferred constraints before rolling back a successful
 case so an invalid write cannot pass merely because cleanup discards it.
 
+Shared baselines explicitly request `_shared_history_database` before their
+module setup. Pytest-django's alias discovery only sees database markers and
+per-case database fixtures; a standalone shared-history selection has neither.
+If ordinary session setup leaves a non-`test_` database, this opt-in uses Django's
+normal fresh default test-database setup and owns its session teardown. When a
+mixed selection already has its ordinary test database, that owner is retained.
+No per-case transaction, flush, marker or baseline reset is added. Verify these
+modules alone as well as with ordinary database tests; a neighboring marked test
+must not be required for setup to work.
+
 This is an explicit opt-in, not a global replacement for migration execution.
 The helper requires PostgreSQL, a `test_` database, transactional DDL, and an
 idle connection. `migrate_test_targets()` passes Django's native plan unchanged

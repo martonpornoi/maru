@@ -579,3 +579,95 @@ Estimates and focused tests do not establish native headroom; fresh ordinary
 Auto exhaustive certification remains pending. Earlier local command setup
 errors (incorrect paths/settings and denied shared pytest temp storage) are
 preserved; no test assertion failure was hidden or retried unchanged.
+
+
+## Eighth exhaustive setup failure and shared-history repair (2026-10-18)
+
+Clean `b88e44f49b86b597fb2c6043964e837e9f2f7a9c` failed ordinary Auto exhaustive
+certification after 3,884.328 seconds. All 14,304 units passed in 238.60 seconds;
+23 batches passed, seven siblings were interrupted and 80 never started. All
+31 started batches retained measured headroom and their exact owned containers
+were independently absent. Complete 4,673-file original/archive copies and run
+logs were hash-preserved under `ci-cost-certification-b88e44f`. The original is
+still intact in `.local-ci`; all earlier seven originals are already preserved
+under their respective run directories. No successful receipt or push exists.
+
+Shard 28 selected the entire six-case Authorization scope-v2 shared history.
+Every setup failed at the idle PostgreSQL test-database guard; no test call ran.
+All six teardowns completed, including final module restoration. Shard elapsed
+was 515.734 seconds and pytest reported 505.53 seconds. This is a setup failure,
+not timing exhaustion or a schema assertion failure.
+
+The one unchanged complete frozen-shard reproduction used the ordinary coverage,
+collection, selection and incremental timing hooks, fresh PostgreSQL, 1 GiB
+tmpfs, 2 GiB memory and a 3,200-second ceiling. A read-only fixture hook observed
+metadata without SQL, connection changes, markers or outcome alteration. All six
+setups failed in 362.87 seconds (372.719-second wrapper). Before/pre-pytest/after/
+live inventories matched 3,242 entries, including installed pytest-django source,
+at digest `d798303ba08fc6783b5ca7e0f5beb5fbf533b0e022a79ff2e4152c7652053b54`.
+All 29 artifact hashes, exact 5,270-collected/six-selected/JUnit identities,
+12 setup/teardown phases, 17 observations and independent exact cleanup verified.
+Proof `ci-cost-shared-history-guard-probe-20261018/verified-failure.json` released
+source at 15:18:45 UTC before edits.
+
+Pytest-django selected no database aliases. Its ordinary setup left `NAME=maru`;
+at every isolation guard the connection was PostgreSQL, open, autocommit,
+transactional-DDL capable and outside an atomic block. Only the `test_` name
+predicate failed. The guard remains unchanged. The shared-baseline pattern also
+occurs in Organization representation, Registration profile-extension values
+and Workforce structure integrity. This is common source exposure, not three
+additional original failure reproductions.
+
+Under NFR-001 and the existing historical isolation contract, those four module
+baselines explicitly request a dedicated session fixture. When ordinary setup
+has not created a test database, it uses Django's normal fresh default database
+setup and teardown. When mixed tests already own their test database, the owner
+is retained. No per-case transaction, flush, database marker, target, assertion,
+original body or module restoration changes. All 49 original function bodies
+and the rollback-helper source remain exact. Current calibration/provenance,
+capacity, selection, workers, timing, coverage and protected gates are unchanged.
+Standalone and mixed native regressions are pending; no full/hosted acceptance
+or diagnostic recalibration is claimed. Issues #36/#42 remain open.
+
+
+### Shared-history focused verification and source release
+
+Five serial runs used fresh owned PostgreSQL containers, 1 GiB tmpfs, 2 GiB
+memory and the unchanged 3,600-second focused limit, without an observer.
+Every selected case passed with zero failures, errors or skips:
+
+| Run | Scope | Cases | Pytest seconds | Wrapper seconds |
+| --- | --- | ---: | ---: | ---: |
+| A | Standalone Authorization scope-v2 | 6 | 707.87 | 733.594 |
+| B | Standalone Organization representation | 8 | 713.75 | 720.687 |
+| C | Standalone Registration profile-extension history | 15 | 574.60 | 580.953 |
+| D | Standalone Workforce structure integrity | 6 | 691.79 | 698.157 |
+| E | Scope-v2, Guidance foundation and native isolation | 30 | 940.99 | 947.906 |
+
+Actual collection identified no ordinary database aliases for A-D and `default`
+for E. The 65 executions cover 59 distinct cases: all 35 shared-history cases,
+all 18 Guidance foundation cases and six native isolation cases. The six Scope-v2
+cases intentionally repeat across standalone fallback and ordinary mixed-session
+database ownership. This verifies both setup paths without adding a database
+marker, per-case transaction or flush, or changing the original restoration.
+
+Each run's 3,237-entry before/pre-pytest/after/live inventory and all 25 artifact
+hashes were verified, with exact selected/report identities. All 49 original
+shared-history function bodies and two original conftest bodies remain exact;
+the rollback helper remains unchanged. The common 3,236 tracked/unignored entries
+match across all five runs; only each ignored runner differs. All five exact
+owned containers were independently absent. The combined proof rechecked all
+125 artifact hashes and live source before releasing the source pin at
+17:18:23 UTC on 2026-10-18. Proofs remain under
+`ci-cost-shared-history-{a,b,c,d,e}-20261018`, with `combined-verification.json`
+in E. The tested conftest SHA256 is
+`830069ce0829e63af227a0d6ec06c2c6c632c0a397ac2bd2dbd13e230fdec86d`.
+
+Only CURRENT and this checkpoint change after focused source release. Scoped
+Ruff/format, documentation validation, whitespace and coherent branch review
+are required before the normal commit. Initial import-lint feedback remains
+preserved and was repaired before these runs. All eight failed exhaustive runs
+remain failed and preserved. These focused passes do not certify the ordinary
+pool, recalibrate costs or establish a new runtime improvement. Fresh clean-head
+ordinary Auto exhaustive certification against current main remains required.
+Fictional demo coverage is unaffected; issues #36 and #42 remain open.

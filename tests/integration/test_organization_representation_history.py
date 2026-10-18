@@ -42,6 +42,7 @@ IDENTITY_CURRENT = ("identity", "0010_account_kind")
 
 @pytest.fixture(scope="module")
 def historical_baseline(
+    _shared_history_database: None,
     django_db_setup: None,
     django_db_blocker: DjangoDbBlocker,
 ) -> Iterator[None]:

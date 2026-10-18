@@ -2,7 +2,8 @@
 
 Last updated: 2026-10-18
 Phase: CI calibration and focused historical isolation repairs verified;
-historical capacity tightened after a timing failure; fresh exhaustive acceptance pending. Workforce browser acceptance remains blocked.
+historical capacity tightened; shared-history database setup repair verified.
+Fresh exhaustive acceptance and Workforce browser acceptance remain pending.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and owning requirements.
@@ -110,7 +111,7 @@ eight-worker limit, historical density, coverage threshold, slowdown allowance,
 timing-headroom gate and protected check remains required. Scoped lint/format,
 docstrings and docs passed during implementation. Fresh ordinary Auto exhaustive
 certification on the clean candidate and exact-head hosted delivery remain pending.
-Focused passes and all seven failed full attempts are not acceptance. Issues #36
+Focused passes and all eight failed full attempts are not acceptance. Issues #36
 and #42 remain open; no production or human browser acceptance is claimed.
 
 The seventh exhaustive run on clean `e247d695` failed timing headroom in shard 34
@@ -136,6 +137,36 @@ exactly unchanged. The 169 focused planner/pool/calibration tests, scoped lint a
 format, documentation validation (763 files), whitespace and coherent branch
 review passed. Fresh ordinary exhaustive certification of the clean candidate
 remains required before protected delivery.
+The eighth exhaustive run on clean `b88e44f4` failed after 3,884.328 seconds.
+All 14,304 units passed; 23 batches passed, seven siblings were interrupted and
+80 never started. All 31 started batches retained headroom and their exact
+containers were absent. Both complete 4,673-file evidence copies were verified;
+the original remains intact pending preservation before the next full run.
+
+All six Authorization scope-v2 shared-history cases failed setup because no
+pytest-django database alias was selected. An unchanged frozen-shard diagnostic
+reproduced six setup errors in 362.87 seconds (372.719-second wrapper). All 3,242
+source entries, 29 artifact hashes, exact collection/selection/report/phase
+identities, 17 fixture observations and exact cleanup were verified. The guard
+correctly rejected `maru`; PostgreSQL, autocommit and transactional DDL were
+otherwise valid. No test body ran. Source was released before repair.
+
+A dedicated session fixture now explicitly creates the ordinary default test
+database when a standalone shared-history selection leaves it uninitialized.
+Four shared-baseline modules opt in; their 49 original function bodies, rollback
+guard, module restoration and per-case semantics remain exact. The other three
+modules share the same fixture exposure, not separately reproduced failures.
+Five serial native regressions passed 6, 8, 15, 6 and 30 cases in 707.87,
+713.75, 574.60, 691.79 and 940.99 seconds, with zero failures, errors or skips.
+They cover 59 distinct cases in 65 executions: all 35 shared-history cases,
+all 18 Guidance foundation cases and six native isolation cases. Scope-v2 runs
+on both standalone fallback and existing mixed-session database paths. All five
+3,237-entry inventories, 125 artifact hashes, exact case identities, original
+bodies and independent exact container cleanup were verified. Their common
+3,236 tracked/unignored entries matched; source was released only after final
+reconciliation. Only CURRENT/checkpoint status changed afterward. No product,
+selection, calibration, capacity, timing, worker, coverage or protected gate changes.
+Fresh ordinary Auto exhaustive certification and protected delivery remain pending.
 Fictional demo coverage is unaffected.
 
 ## Preserved Workforce blocker
@@ -155,9 +186,10 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Commit the focused-verified activation repair and status documentation after
-   scoped checks. Rehash both 4,761-file copies of the sixth failed run and its
-   logs, then preserve the intact original under its run directory.
+1. Verify the four standalone shared histories and a mixed database session,
+   preserve exact evidence, update status and commit the coherent repair. Rehash
+   both 4,673-file copies of the eighth failure and its logs, then preserve the
+   intact original under its run directory after checking absolute containment.
 2. Verify current main and run fresh ordinary Auto exhaustive certification on the
    clean exact candidate. Derive actual scope/counts; no older receipt certifies it.
 3. Verify every full gate, coverage, headroom, scope and owned cleanup; preserve

@@ -46,6 +46,7 @@ def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
 
 @pytest.fixture(scope="module")
 def historical_baseline(
+    _shared_history_database: None,
     django_db_setup: None,
     django_db_blocker: DjangoDbBlocker,
 ) -> Iterator[None]:
