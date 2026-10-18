@@ -2,7 +2,7 @@
 
 Last updated: 2026-10-18
 Phase: CI calibration and focused historical isolation repairs verified;
-fresh exhaustive acceptance pending. Workforce browser acceptance remains blocked.
+historical capacity tightened after a timing failure; fresh exhaustive acceptance pending. Workforce browser acceptance remains blocked.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and owning requirements.
@@ -110,8 +110,33 @@ eight-worker limit, historical density, coverage threshold, slowdown allowance,
 timing-headroom gate and protected check remains required. Scoped lint/format,
 docstrings and docs passed during implementation. Fresh ordinary Auto exhaustive
 certification on the clean candidate and exact-head hosted delivery remain pending.
-Focused passes and the six failed full attempts are not acceptance. Issues #36
+Focused passes and all seven failed full attempts are not acceptance. Issues #36
 and #42 remain open; no production or human browser acceptance is claimed.
+
+The seventh exhaustive run on clean `e247d695` failed timing headroom in shard 34
+after 10,267.218 seconds. All 14,304 units passed; 36 batches passed, seven siblings
+were interrupted and 19 never started. All 44 owned containers were independently
+absent and both complete 4,767-file evidence copies were hash-verified. The failed
+shard recorded 54 passing calls and 53 teardowns before the unchanged 3,200-second
+limit; its final Workforce teardown was incomplete, so it has no acceptance.
+
+One unchanged frozen-shard diagnostic then passed all 54 cases and all 162 phases
+in 2,406.72 seconds (2,436.687-second wrapper). All 3,239 source entries, 28 artifact
+hashes, exact 5,270-collected/54-selected identities and owned cleanup were
+verified before source release. Its isolated conditions do not establish the
+sole cause of slowdown or certify the eight-worker pool. No timing-map refresh.
+
+Under NFR-001 and ADR 0098, the planner now allows at most one complete historical
+group per shard. Test bodies, real migration work, restoration, all 386 groups,
+current-only assignments and acceptance limits remain unchanged. This is a
+capacity repair with more exhaustive batches and startup overhead, not a new
+runtime-savings claim. The source-derived plan retains all 386 groups (111
+historical), now in 111 exhaustive batches; all 20 current-only assignments are
+exactly unchanged. The 169 focused planner/pool/calibration tests, scoped lint and
+format, documentation validation (763 files), whitespace and coherent branch
+review passed. Fresh ordinary exhaustive certification of the clean candidate
+remains required before protected delivery.
+Fictional demo coverage is unaffected.
 
 ## Preserved Workforce blocker
 

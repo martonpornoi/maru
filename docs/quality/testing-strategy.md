@@ -490,7 +490,7 @@ It selects between eight and 128 shards (or fewer only when the whole
 scope contains fewer groups), preserving at most eight simultaneous isolated
 databases and the unchanged 120-minute hosted limit. An indivisible oversized
 group or infeasible complete partition fails preflight; it never drops tests.
-Each shard also contains at most two complete historical groups. The planner
+Each shard also contains at most one complete historical group. The planner
 records this limit in the source-bound manifest and preserves shared baselines
 and every parameter variant without splitting them. It does not raise concurrency
 or replace measured headroom with a count-based acceptance claim.

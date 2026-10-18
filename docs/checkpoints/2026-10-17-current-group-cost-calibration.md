@@ -522,3 +522,60 @@ intact for a fresh ordinary Auto exact exhaustive run against current main.
 Focused success is not full or hosted acceptance, or a timing promise. Every
 ordinary gate, complete selection, physical schema pin, security assertion,
 coverage/headroom threshold, worker limit, cleanup and hosted protection remains.
+
+
+## Seventh exhaustive timing failure and capacity repair (2026-10-18)
+
+Clean `e247d695920572df358add3ec9790677792e0a37` failed ordinary Auto exhaustive
+certification after 10,267.218 seconds. All 14,304 units passed in 233.21 seconds;
+36 native batches passed, seven siblings were interrupted and 19 never started.
+Shard 34 exceeded measured headroom at 3,201.625 seconds. Incremental evidence
+records all 54 calls and 53 teardowns passing; final Workforce structure-history
+teardown was incomplete. No final JUnit or success receipt exists for that shard.
+All 44 exact owned containers were independently absent. Both full 4,767-file
+original/archive copies and run logs were hash-verified; the original is retained
+until verified preservation before the next run. All seven failures stay failed.
+
+The single unchanged complete-shard diagnostic used the original frozen plan,
+ordinary coverage/acceptance runner and collection/timing hooks, a fresh database,
+1 GiB tmpfs, 2 GiB memory and a 3,200-second ceiling. All 54 cases passed in
+2,406.72 seconds (wrapper 2,436.687), with zero failures, errors or skips and all
+162 phases complete. The invitation history spent 714.467/332.117/199.704 seconds
+in setup/call/teardown; Workforce spent 0.002/560.822/321.754 seconds. The failed
+pool's partial timings remain lower bounds, not complete group costs.
+
+Before/pre-pytest/after/live inventories match all 3,239 entries at digest
+`37267c1d22c789eb4221eecfc2d9dbd58c4eadd14a7abaeeaa598cb983da681e`.
+All 28 artifact hashes, exact 5,270-collected/54-selected/report identities,
+original order and phases were verified; exact owned cleanup was independently
+confirmed. Proof is retained under `ci-cost-shard34-headroom-probe-20261018` as
+`verified-result.json`; source was released before edits. This isolated pass does
+not establish CPU/IO saturation, its sole cause, or concurrent/hosted acceptance.
+
+NFR-001 and ADR 0098 permit capacity replanning after measured headroom failure.
+Tighten the frozen historical density from two to one complete group per shard.
+Keep every test and original committed history/restoration operation; retain
+shared baselines and parameter groups intact. Current groups still share capacity
+under the existing cost budget. The complete former shard's unchanged order pass
+and prior isolation regressions remain preserved; repartitioning does not replace
+contamination repair. Cost map/provenance, workers, all timing limits, coverage,
+security, selection and protected checks remain unchanged. More exhaustive
+batches add startup overhead and are not a total-speed promise. Focused policy
+verification and fresh complete exact-head local/hosted acceptance are pending.
+Issues #36/#42 and the human Workforce boundary remain open and unchanged.
+
+
+### Capacity candidate feedback
+
+All 169 focused planner, selection, pool and calibration safeguards passed in
+19.61 seconds using fresh owned temporary storage. Scoped Ruff/format, docs
+validation (763 Markdown files), whitespace and coherent branch review passed.
+The source-derived audit retains exactly all 386 groups, including 111 historical
+groups, in 111 exhaustive batches instead of 63. Every new shard has one complete
+historical group; all 20 current-only assignments remain exactly unchanged.
+The frozen policy fingerprint is
+`7e97e7e07f19ee422c117c6ccd967418f7ab439d93a0adc485841b65299673be`.
+Estimates and focused tests do not establish native headroom; fresh ordinary
+Auto exhaustive certification remains pending. Earlier local command setup
+errors (incorrect paths/settings and denied shared pytest temp storage) are
+preserved; no test assertion failure was hidden or retried unchanged.

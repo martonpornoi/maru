@@ -95,6 +95,33 @@ Setup/call/teardown remain included; all test selection, isolation, coverage,
 eight-worker, density, budget and measured-headroom rules stay unchanged. The
 helper and timing change itself requires exhaustive acceptance.
 
+## Single historical group refinement (2026-10-18)
+
+Tighten the historical density limit from two to one complete group per shard.
+The seventh exhaustive CI-calibration candidate exhausted the unchanged
+3,200-second measured limit in shard 34 at 3,201.625 seconds. All 54 selected
+calls passed, but the final Workforce history teardown was incomplete. A single
+unchanged diagnostic of the complete frozen shard then passed all 54 cases and
+162 phases in 2,406.72 seconds, with the same coverage, collection and selection
+hooks. Its invitation and Workforce histories together consumed about 2,129
+seconds. Exact source, artifact, case and owned-cleanup checks passed.
+
+This supports reducing serial migration density, without establishing the sole
+cause of the concurrent slowdown or accepting the failed pool. The unchanged
+complete-order diagnostic preserves evidence for the former mixed shard; prior
+contamination repairs and their caller-schema assertions remain required.
+No history body, migration target, restoration or committed behavior is removed.
+Current groups can still share a shard with one historical group within the
+existing cost budget. Shared baselines and parameter variants remain indivisible.
+
+Keep the 128-shard ceiling, eight workers, all cost estimates, selection, coverage,
+timeouts and measured-headroom rules. No failed, partial or diagnostic evidence
+refreshes the timing map. Routine current-only assignments remain unchanged;
+exhaustive work needs more fresh databases and may take longer overall. New
+source-bound local and hosted manifests must independently enforce this limit.
+Fresh complete exact-head certification must demonstrate actual headroom before
+push; the isolated diagnostic is not acceptance or a hosted speed guarantee.
+
 ## Consequences
 
 Suite growth changes the number of bounded jobs rather than silently consuming
