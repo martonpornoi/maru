@@ -1,9 +1,10 @@
 # Current project state
 
 Last updated: 2026-10-19
-Phase: CI calibration and focused historical isolation repairs verified;
-historical capacity, shared-history setup and Applications ACL history isolation
-repairs verified. Fresh exhaustive and Workforce browser acceptance remain pending.
+Phase: CI calibration passed local exhaustive certification; PR #218 review
+identified a shared-history database ownership flaw. Its scoped repair passed
+focused verification; fresh exact-source certification and protected delivery remain.
+Workforce browser acceptance remains at the human password boundary.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and owning requirements.
@@ -173,7 +174,7 @@ The ninth exhaustive run on clean `5a788949` failed after 13,307.828 seconds.
 All 14,304 units passed in 237.74 seconds; 59 batches passed, seven siblings were
 interrupted and 44 never started. All 67 started batches retained headroom and
 their exact containers were independently absent. The complete 4,968-file original
-and archive are hash-verified; the original remains intact in `.local-ci`.
+and archive are hash-verified; the original was preserved intact under its run directory.
 Shard 61 had 88 passes, five failures and 13 setup errors among 106 selected cases:
 all 18 Guidance foundation cases were affected after an Applications ACL history.
 
@@ -200,6 +201,38 @@ These 131 executions cover 113 distinct cases, not ordinary full acceptance.
 Product, schema, pins, permissions, guards, selection, calibration, capacity and
 protected gates are unchanged; fictional demo coverage is unaffected.
 
+## PR #218 database ownership review
+
+The clean `77525db` candidate passed all ten local gates: 14,304 units and 5,270
+native cases, 386 groups, 111 batches, at most eight workers, 91.25% coverage and
+unchanged timing headroom. Every exact owned container was independently absent;
+all 5,761 evidence files and 13 run metadata files were hash-preserved. Normal
+push and [PR #218](https://github.com/martonpornoi/maru/pull/218) followed.
+
+Copilot correctly identified that a configured `test_` name cannot establish
+test-database ownership. An unchanged, database-free fixture probe reproduced
+the skipped setup for `test_demo` when pytest-django initialized no aliases.
+It performed no migration, flush or database access. Hosted acceptance was
+deliberately cancelled before repair, with all available artifacts and logs
+preserved; its aggregate gates failed closed. It is not hosted acceptance.
+
+The fixture now checks the pinned plugin's actual collected-item alias discovery
+after normal session setup. Standalone histories create a fresh default database
+even when the configured name starts with `test_`; mixed sessions retain their
+ordinary owner. Original history bodies, guards, restoration, selection, resource
+limits, timing and product behavior are unchanged. All 39 focused unit cases
+passed. The standalone-prefixed regression passed six native cases in 712.51
+seconds; the mixed-session regression passed 30 in 798.58 seconds, with zero
+failures, errors or skips. Read-only observations proved fresh default creation
+and existing-owner reuse respectively. Both configured databases retained their
+OID/owner, synthetic sentinel, relation inventory and server database inventory.
+All 3,240-entry source inventories and live source, 62 artifact hashes, exact
+case/phase order, 49 original history bodies, two original conftest bodies and
+independent exact cleanup were verified. Common 3,238 source entries matched;
+source was released at 06:39:40 UTC before these status edits. These 36 executions
+cover 30 distinct cases. Fresh ordinary Auto exhaustive certification is pending.
+See [the review checkpoint](../checkpoints/2026-10-19-shared-history-database-ownership.md).
+
 ## Preserved Workforce blocker
 
 Issue #42's tutorial, route checks, inspector, empty browser launcher and evidence
@@ -217,15 +250,14 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Commit the reviewed Applications ACL repair normally, retaining its focused
-   source and evidence proofs. Rehash both 4,968-file ninth-failure copies and run
-   logs, check absolute containment, and preserve the original under its run.
-2. Verify current main and run fresh ordinary Auto exhaustive certification on
-   the clean exact candidate. Derive actual scope/counts and final tree; no older
-   receipt certifies it.
-3. Verify every full gate, coverage, headroom, scope and owned cleanup; preserve
-   evidence, then use normal hooks, exact-head PR review/hosted checks, protected
-   squash and ff-only clean designated main. Keep issues #36/#42 open.
+1. Review and commit the verified PR #218 ownership repair. Preserve the complete
+   older successful original and archive before starting fresh ordinary Auto
+   exhaustive certification on the clean candidate against current main.
+2. Reconcile all gates/counts/identities, coverage, headroom and exact cleanup,
+   then push normally and obtain fresh exact-head review and hosted acceptance.
+   The older `77525db` receipt certifies only its own source.
+3. Complete protected squash, verify exact certified-tree equality and synchronize
+   designated clean main with a fast-forward only.
 4. After verified delivery, select the next useful bounded task from fresh project
    and live issue state under the maintainer's continuing authorization.
 

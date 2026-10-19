@@ -98,9 +98,12 @@ case so an invalid write cannot pass merely because cleanup discards it.
 Shared baselines explicitly request `_shared_history_database` before their
 module setup. Pytest-django's alias discovery only sees database markers and
 per-case database fixtures; a standalone shared-history selection has neither.
-If ordinary session setup leaves a non-`test_` database, this opt-in uses Django's
-normal fresh default test-database setup and owns its session teardown. When a
-mixed selection already has its ordinary test database, that owner is retained.
+After ordinary session setup completes, this opt-in uses the pinned
+pytest-django plugin's same collected-item alias discovery to determine whether
+the default alias was initialized. If it was not, Django's normal fresh default
+test-database setup owns its session teardown. A configured `test_` name does not
+establish ownership and never skips creation. When a mixed selection initialized
+the default alias, its ordinary session owner is retained.
 No per-case transaction, flush, marker or baseline reset is added. Verify these
 modules alone as well as with ordinary database tests; a neighboring marked test
 must not be required for setup to work.
