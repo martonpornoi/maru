@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
+from queue import Queue
+from threading import Event
+from time import monotonic
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError, transaction
+from django.db import DatabaseError, close_old_connections, connection, transaction
 from django.test import Client, override_settings
 from django.urls import include, path, reverse
 from django.utils import timezone
@@ -47,6 +51,7 @@ from maru.charities.bindings import ensure_charity_selection_binding
 from maru.charities.models import CharityPartner, CharitySelection
 from maru.charities.writer_boundary import charity_writer
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events.models import EventEdition
 from maru.registration.models import AdmissionProduct, Entitlement
 from maru.urls import urlpatterns as platform_urlpatterns
 from tests.factories import AccountFactory, EventEditionFactory
@@ -1182,3 +1187,339 @@ def test_catalog_edition_api_distinguishes_authorized_absence_and_bad_query() ->
     assert _catalog_api_evidence_counts() == before
     world.catalog.refresh_from_db()
     assert world.catalog.status == EditionCatalog.Status.ACTIVE
+
+
+@override_settings(ROOT_URLCONF=__name__)
+@pytest.mark.parametrize("advance", [False, True])
+def test_catalog_creation_retry_retains_original_evidence(advance: bool) -> None:
+    """Retain the first result and rationale across changed retry metadata."""
+    edition = EventEditionFactory()
+    actor = AccountFactory(is_staff=True, is_superuser=True)
+    api = APIClient()
+    api.force_authenticate(user=actor)
+    url = reverse("catalog-api-detail", args=(edition.organization_id, edition.id))
+    key, original_request = uuid4(), uuid4()
+    created = api.post(
+        url,
+        {"currency": "EUR", "reason": "Original fictional approval."},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(key),
+        HTTP_X_REQUEST_ID=str(original_request),
+    )
+    payload = _assert_catalog_api_response(
+        created, status=201, request_id=original_request
+    )
+    catalog = EditionCatalog.objects.get(edition=edition)
+    original = CatalogCommandReceipt.objects.filter(catalog=catalog).values().get()
+    if advance:
+        add_product(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            actor=actor,
+            expected_version=1,
+            idempotency_key=uuid4(),
+            correlation_id=uuid4(),
+            reason="Add a fictional support item.",
+            code="retry-item",
+            kind=CatalogProduct.Kind.MERCHANDISE,
+            name="Fictional support item",
+            fulfilment_mode=CatalogProduct.Fulfilment.PICKUP,
+        )
+    before = _catalog_api_evidence_counts()
+    request_id = uuid4()
+    response = api.post(
+        url,
+        {"currency": " eur ", "reason": "A different valid retry explanation."},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(key),
+        HTTP_X_REQUEST_ID=str(request_id),
+    )
+    assert _assert_catalog_api_response(
+        response, status=200, request_id=request_id
+    ) == {**payload, "replayed": True}
+    # The owning command also excludes its trusted source channel from identity.
+    replay = create_catalog(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        currency="eur",
+        actor=actor,
+        reason="Another valid synthetic explanation.",
+        idempotency_key=key,
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    assert replay.replayed
+    assert replay.target_id == catalog.id
+    assert replay.resulting_version == 1
+    assert (
+        CatalogCommandReceipt.objects.filter(pk=original["id"]).values().get()
+        == original
+    )
+    assert _catalog_api_evidence_counts() == before
+    catalog.refresh_from_db()
+    assert catalog.aggregate_version == (2 if advance else 1)
+
+
+@override_settings(ROOT_URLCONF=__name__)
+@pytest.mark.parametrize("collision", ["actor", "key", "blank-reason"])
+def test_catalog_creation_retry_cannot_replace_existing_evidence(
+    collision: str,
+) -> None:
+    """Reject a distinct creator, key or invalid rationale without new evidence."""
+    edition = EventEditionFactory()
+    actor = AccountFactory(is_staff=True, is_superuser=True)
+    other_actor = AccountFactory(is_staff=True, is_superuser=True)
+    key = uuid4()
+    created = create_catalog(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        currency="EUR",
+        actor=actor,
+        reason="Private original synthetic rationale.",
+        idempotency_key=key,
+        correlation_id=uuid4(),
+    )
+    receipt = (
+        CatalogCommandReceipt.objects.filter(result_id=created.target_id).values().get()
+    )
+    before = _catalog_api_evidence_counts()
+    api = APIClient()
+    api.force_authenticate(user=other_actor if collision == "actor" else actor)
+    request_id = uuid4()
+    response = api.post(
+        reverse("catalog-api-detail", args=(edition.organization_id, edition.id)),
+        {"currency": "EUR", "reason": " " if collision == "blank-reason" else "Retry."},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4() if collision == "key" else key),
+        HTTP_X_REQUEST_ID=str(request_id),
+    )
+    _assert_catalog_api_response(response, status=400, request_id=request_id)
+    assert receipt["reason"] not in response.content.decode()
+    assert str(created.target_id) not in response.content.decode()
+    assert (
+        CatalogCommandReceipt.objects.filter(pk=receipt["id"]).values().get() == receipt
+    )
+    assert _catalog_api_evidence_counts() == before
+
+
+@override_settings(ROOT_URLCONF=__name__)
+@pytest.mark.parametrize("same_organization", [False, True])
+def test_catalog_creation_retry_key_is_scoped_to_edition(
+    same_organization: bool,
+) -> None:
+    """Allow independent authorized creations without replaying a foreign receipt."""
+    first = EventEditionFactory()
+    second = EventEditionFactory(
+        **({"series": first.series} if same_organization else {})
+    )
+    actor = AccountFactory(is_staff=True, is_superuser=True)
+    key = uuid4()
+    api = APIClient()
+    api.force_authenticate(user=actor)
+    targets = []
+    for edition in (first, second):
+        request_id = uuid4()
+        response = api.post(
+            reverse("catalog-api-detail", args=(edition.organization_id, edition.id)),
+            {"currency": "EUR", "reason": "Independent fictional edition approval."},
+            format="json",
+            HTTP_IDEMPOTENCY_KEY=str(key),
+            HTTP_X_REQUEST_ID=str(request_id),
+        )
+        payload = _assert_catalog_api_response(
+            response, status=201, request_id=request_id
+        )
+        catalog = EditionCatalog.objects.get(edition=edition)
+        assert payload == {
+            "target_id": str(catalog.id),
+            "resulting_version": 1,
+            "replayed": False,
+        }
+        receipt = CatalogCommandReceipt.objects.get(catalog=catalog)
+        assert receipt.actor_id == actor.id
+        assert receipt.idempotency_key == key
+        assert receipt.correlation_id == request_id
+        targets.append(catalog.id)
+    assert len(set(targets)) == 2
+    assert (
+        first.organization_id == second.organization_id
+        if same_organization
+        else first.organization_id != second.organization_id
+    )
+
+
+@override_settings(ROOT_URLCONF=__name__)
+@pytest.mark.parametrize("boundary", ["publish_domain_event", "append_audit"])
+def test_catalog_creation_retry_after_evidence_failure_is_atomic(monkeypatch, boundary):
+    """Roll back a real late evidence write and allow the same key to recover."""
+    edition = EventEditionFactory()
+    actor = AccountFactory(is_staff=True, is_superuser=True)
+    api = APIClient()
+    api.force_authenticate(user=actor)
+    url = reverse("catalog-api-detail", args=(edition.organization_id, edition.id))
+    key = uuid4()
+    body = {"currency": "EUR", "reason": "Fictional recovery approval."}
+    before = _catalog_api_evidence_counts()
+    original = getattr(catalog_services, boundary)
+    observed = []
+
+    def fail_after_write(record, **kwargs):
+        original(record, **kwargs)
+        observed.append(_catalog_api_evidence_counts())
+        raise DatabaseError("Synthetic evidence writer failure")
+
+    with monkeypatch.context() as fault:
+        fault.setattr(catalog_services, boundary, fail_after_write)
+        with pytest.raises(DatabaseError, match="Synthetic evidence writer failure"):
+            api.post(url, body, format="json", HTTP_IDEMPOTENCY_KEY=str(key))
+    assert len(observed) == 1
+    for model in (EditionCatalog, CatalogCommandReceipt, DomainEvent, OutboxMessage):
+        assert observed[0][model._meta.label] == before[model._meta.label] + 1
+    if boundary == "append_audit":
+        assert observed[0][AuditEvent._meta.label] == before[AuditEvent._meta.label] + 1
+    assert _catalog_api_evidence_counts() == before
+    request_id = uuid4()
+    response = api.post(
+        url,
+        body,
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(key),
+        HTTP_X_REQUEST_ID=str(request_id),
+    )
+    payload = _assert_catalog_api_response(response, status=201, request_id=request_id)
+    assert payload["replayed"] is False
+    assert payload["resulting_version"] == 1
+    receipt = CatalogCommandReceipt.objects.get(idempotency_key=key)
+    assert str(receipt.result_id) == payload["target_id"]
+    assert receipt.correlation_id == request_id
+    expected = before.copy()
+    for model in (
+        EditionCatalog,
+        CatalogCommandReceipt,
+        DomainEvent,
+        OutboxMessage,
+        AuditEvent,
+    ):
+        expected[model._meta.label] += 1
+    assert _catalog_api_evidence_counts() == expected
+
+
+def _catalog_creation_worker(actor, url, body, key, request_id, backend_ids):
+    """Execute one real adapter request on an independently bounded connection."""
+    close_old_connections()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SET statement_timeout = '15s'")
+            cursor.execute("SELECT pg_backend_pid()")
+            backend_ids.put(cursor.fetchone()[0])
+        api = APIClient()
+        api.force_authenticate(user=actor)
+        return api.post(
+            url,
+            body,
+            format="json",
+            HTTP_IDEMPOTENCY_KEY=str(key),
+            HTTP_X_REQUEST_ID=str(request_id),
+        )
+    finally:
+        connection.close()
+
+
+def _observe_catalog_creation_waits(backend_ids):
+    """Require both requests to reach PostgreSQL's edition-row lock boundary."""
+    deadline = monotonic() + 5
+    delay = Event()
+    with connection.cursor() as cursor:
+        while monotonic() < deadline:
+            cursor.execute("SELECT pg_stat_clear_snapshot()")
+            cursor.execute(
+                "SELECT pid, pg_blocking_pids(pid), query FROM pg_stat_activity "
+                "WHERE pid = ANY(%s)",
+                [backend_ids],
+            )
+            rows = cursor.fetchall()
+            if len(rows) == 2 and all(
+                blockers
+                and "events_eventedition" in query.lower()
+                and "for update" in query.lower()
+                for _, blockers, query in rows
+            ):
+                return
+            delay.wait(0.02)
+    pytest.fail("Both Catalog requests must reach a real edition-row lock wait.")
+
+
+@override_settings(ROOT_URLCONF=__name__)
+@pytest.mark.parametrize("competing", ["same-intent", "currency", "key"])
+def test_catalog_creation_concurrent_requests_serialize(competing: str) -> None:
+    """Serialize competing adapter requests and retain exactly one creation."""
+    edition = EventEditionFactory()
+    actor = AccountFactory(is_staff=True, is_superuser=True)
+    url = reverse("catalog-api-detail", args=(edition.organization_id, edition.id))
+    key = uuid4()
+    requests = [
+        ({"currency": "EUR", "reason": "First fictional approval."}, key, uuid4()),
+        (
+            {
+                "currency": "USD" if competing == "currency" else " eur ",
+                "reason": "Second fictional approval.",
+            },
+            uuid4() if competing == "key" else key,
+            uuid4(),
+        ),
+    ]
+    before = _catalog_api_evidence_counts()
+    backend_ids = Queue()
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        with transaction.atomic():
+            EventEdition.objects.select_for_update().get(pk=edition.id)
+            futures = [
+                executor.submit(
+                    _catalog_creation_worker,
+                    actor,
+                    url,
+                    body,
+                    retry_key,
+                    request_id,
+                    backend_ids,
+                )
+                for body, retry_key, request_id in requests
+            ]
+            pids = [backend_ids.get(timeout=5) for _ in futures]
+            assert len(set(pids)) == 2
+            _observe_catalog_creation_waits(pids)
+            assert all(not future.done() for future in futures)
+        responses = [future.result(timeout=20) for future in futures]
+    assert sorted(response.status_code for response in responses) == (
+        [200, 201] if competing == "same-intent" else [201, 400]
+    )
+    winner = next(
+        i for i, response in enumerate(responses) if response.status_code == 201
+    )
+    catalog = EditionCatalog.objects.get(edition=edition)
+    receipt = CatalogCommandReceipt.objects.get(catalog=catalog)
+    winning_body, winning_key, winning_request = requests[winner]
+    assert catalog.currency == winning_body["currency"].strip().upper()
+    assert receipt.reason == winning_body["reason"]
+    assert receipt.idempotency_key == winning_key
+    assert receipt.correlation_id == winning_request
+    for response, (_, _, request_id) in zip(responses, requests, strict=True):
+        payload = _assert_catalog_api_response(
+            response, status=response.status_code, request_id=request_id
+        )
+        if response.status_code < 400:
+            assert payload == {
+                "target_id": str(catalog.id),
+                "resulting_version": 1,
+                "replayed": response.status_code == 200,
+            }
+    expected = before.copy()
+    for model in (
+        EditionCatalog,
+        CatalogCommandReceipt,
+        DomainEvent,
+        OutboxMessage,
+        AuditEvent,
+    ):
+        expected[model._meta.label] += 1
+    assert _catalog_api_evidence_counts() == expected

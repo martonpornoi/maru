@@ -3,8 +3,9 @@
 **Audience:** Catalog maintainers reviewing the next API safety increment\
 **Outcome:** Separate an executable existing-behavior baseline from decisions
 that must precede compatibility or operating changes\
-**Status:** All 20 focused native cases passed; exact certification and protected
-delivery pending; behavioral decisions remain open
+**Status:** The 20-case baseline was protected-delivered in PR #217. Twelve
+additional creation-retry cases passed focused native verification; exact delivery
+and behavioral decisions remain open
 
 The [source review](catalog-edition-api-contract-review.md), delivered in
 [PR #216](https://github.com/martonpornoi/maru/pull/216), identifies the two
@@ -41,6 +42,28 @@ cover the named Catalog, Audit, Effects, admission-product and entitlement table
 They are not a complete catalog-derived unadopted-model inspection or a claim that
 all modules are unchanged. The isolated test runner must preserve source identity,
 every failure and exact owned-resource cleanup. Existing tests remain intact.
+
+## Creation retry evidence increment
+
+The next bounded increment adds 12 cases to the same native adapter module,
+alongside all 28 existing cases. It records existing behavior without choosing
+a new compatibility policy or changing an application command.
+
+| Cases | Required observation | Limit |
+| --- | --- | --- |
+| Two metadata/version replays | A changed valid reason, request ID and trusted source channel preserve the original immutable receipt and creation version, including after a product advances the catalog. | The retained reason is not amended; future reason-digest policy remains open. |
+| Three rejected retries | Another authorized actor, another key or a blank reason rejects with the existing private problem response and no new evidence. | No new public error-code/status contract. |
+| Two scope cases | The same actor/key creates independent catalogs in separate editions of one or two organizations. | Both requests are authorized; this does not grant cross-tenant access. |
+| Two evidence failures | Failure after a real event/outbox or audit write rolls back catalog and all evidence; retrying the same key creates a fresh result. | Existing unhandled dependency exceptions are observed, not a promised public `503`. |
+| Three concurrent requests | Two independent requests demonstrably wait on the edition row before release; identical intent creates once and replays, while changed currency or key creates once and rejects its competitor. | Authority/profile remain stable; concurrent revocation and closure are not tested. |
+
+Tests inspect exact response identities, cache/correlation headers, receipt
+contents and named Catalog/Audit/Effects/admission counts. The original case
+definitions and assertions remain unchanged. Commands and authorization are real;
+only the two evidence append boundaries receive explicit late fault injection.
+The [delivery and retry checkpoint](../checkpoints/2026-10-19-ci-delivery-and-catalog-retry-conformance.md)
+records actual evidence and remaining gates. This does not close issue #36 or
+resolve the behavior-changing decisions below. Demos are unaffected.
 
 ## Decisions before a behavior-changing increment
 
