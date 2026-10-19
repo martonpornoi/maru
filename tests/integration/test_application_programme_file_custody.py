@@ -5,6 +5,7 @@ upload route, a trusted scanner deployment or runtime upload permission.
 """
 
 import hashlib
+from collections.abc import Iterator
 from dataclasses import replace
 from datetime import timedelta
 from functools import partial
@@ -61,11 +62,21 @@ from maru.applications.programme_writer_boundary import (
     programme_application_database_writer,
 )
 from maru.applications.readiness import applications_database_integrity_is_ready
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.events.guidance_setup_readiness import (
+    GUIDANCE_SETUP_SCHEMA_RELATIONS,
+    guidance_setup_database_integrity_is_ready,
+)
 from tests.integration import test_application_programme_services as fixtures
 from tests.integration.test_application_programme_services import (
     _admit_future_programme_effects,
 )
 from tests.support import programme_review as review_fixtures
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    isolated_migration_database,
+    restore_current_migration_graph,
+)
 from tests.unit.test_application_programme_review_inputs import review_policy
 
 pytestmark = [
@@ -74,6 +85,25 @@ pytestmark = [
     pytest.mark.usefixtures(_admit_future_programme_effects.__name__),
 ]
 PDF = b"%PDF-1.7\nSynthetic file-custody fixture only.\n%%EOF\n"
+
+
+@pytest.fixture
+def isolated_file_custody_migration_graph(transactional_db: None) -> Iterator[None]:
+    """Keep the committed file-custody round-trip out of the caller's schema."""
+
+    del transactional_db
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    with isolated_migration_database():
+        restore_current_migration_graph()
+        try:
+            yield
+        finally:
+            flush_then_restore_current_migration_graph()
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
 
 
 @pytest.fixture
@@ -360,7 +390,9 @@ def test_populated_file_fence_preserves_bytes_and_guards(world):
     assert applications_database_integrity_is_ready()
 
 
-@pytest.mark.usefixtures("restores_current_migration_graph")
+@pytest.mark.usefixtures(
+    "restores_current_migration_graph", "isolated_file_custody_migration_graph"
+)
 def test_unused_file_schema_reverses_and_reinstalls_exact_readiness():
     executor = MigrationExecutor(connection)
     current = executor.loader.graph.leaf_nodes()

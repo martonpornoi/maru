@@ -39,6 +39,7 @@ REGISTRATION_AFTER = ("registration", "0036_profile_extension_value_commands")
 
 @pytest.fixture(scope="module")
 def historical_baseline(
+    _shared_history_database: None,
     django_db_setup: None,
     django_db_blocker: DjangoDbBlocker,
 ) -> Iterator[tuple[UUID, UUID, UUID]]:

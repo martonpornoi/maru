@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from typing import TYPE_CHECKING
 
 import pytest
 from django.db import connection
@@ -12,6 +13,19 @@ from maru.applications.readiness import (
     APPLICATIONS_INTEGRITY_CONTRACT,
     applications_database_integrity_is_ready,
 )
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.events.guidance_setup_readiness import (
+    GUIDANCE_SETUP_SCHEMA_RELATIONS,
+    guidance_setup_database_integrity_is_ready,
+)
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    isolated_migration_database,
+    restore_current_migration_graph,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -47,6 +61,25 @@ LEGACY_TRIGGER_NAMES = (
     "applications_receipt_guard",
     "applications_file_guard",
 )
+
+
+@pytest.fixture
+def isolated_applications_acl_history_graph(transactional_db: None) -> Iterator[None]:
+    """Preserve the caller while committed Applications history rewinds the graph."""
+
+    del transactional_db
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    with isolated_migration_database():
+        restore_current_migration_graph()
+        try:
+            yield
+        finally:
+            flush_then_restore_current_migration_graph()
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
 
 
 def _function_acl_catalog(
@@ -136,6 +169,7 @@ def _trigger_catalog(
         return tuple(tuple(row) for row in cursor.fetchall())
 
 
+@pytest.mark.usefixtures("isolated_applications_acl_history_graph")
 def test_acl_migration_reverses_and_reapplies_without_definition_drift() -> None:
     executor = MigrationExecutor(connection)
     executor.migrate([APPLICATIONS_BEFORE_ACL])
@@ -167,6 +201,7 @@ def test_acl_migration_reverses_and_reapplies_without_definition_drift() -> None
     assert _trigger_catalog() == before_triggers
 
 
+@pytest.mark.usefixtures("isolated_applications_acl_history_graph")
 def test_programme_integrity_reverse_restores_legacy_and_reapplies_exactly() -> None:
     initial_executor = MigrationExecutor(connection)
     current_targets = initial_executor.loader.graph.leaf_nodes()

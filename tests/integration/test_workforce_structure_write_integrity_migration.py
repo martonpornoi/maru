@@ -31,6 +31,7 @@ WORKFORCE_AFTER = ("workforce", "0007_structure_write_integrity")
 
 @pytest.fixture(scope="module")
 def historical_baseline(
+    _shared_history_database: None,
     django_db_setup: None,
     django_db_blocker: DjangoDbBlocker,
 ) -> Iterator[None]:

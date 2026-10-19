@@ -71,6 +71,57 @@ test bodies had passed. The unchanged isolated diagnostic then completed in
 does not establish the sole cause or certify the concurrent plan. The refinement
 requires a fresh full run. Partial evidence does not refresh the timing map.
 
+## Complete current-scope calibration refinement (2026-10-17)
+
+A complete successful routine run can refresh only the current groups it
+measured. Require an explicit current-only mode, an exact successful current or
+affected receipt, every current group and no historical groups, and complete
+passing JUnit/selection identities. Failed, interrupted, skipped or diagnostic
+runs cannot supply this calibration. Exhaustive refresh remains the default.
+
+Preserve unmeasured historical costs and their inherited provenance. Missing
+historical costs retain the normal conservative fallback. For current groups,
+take the maximum existing, local and usable hosted observation: do not lower a
+known estimate. Bind all integration sources, the inherited history inventory,
+cost map and provenance to the measured commit. Record inherited commit/hashes
+and the actual calibration scope separately from receipt history scope.
+
+The 2026-10-17 refresh uses PR #217's complete local/hosted current scope. Its 37
+unmeasured current groups had each received the largest fallback, inflating the
+plan from actual costs. Refreshing all 275 current groups while retaining known
+floors reduces the projected current plan from 38 to 20 batches and exhaustive
+planning from 89 to 63. These are plan counts, not measured elapsed-time gains.
+Setup/call/teardown remain included; all test selection, isolation, coverage,
+eight-worker, density, budget and measured-headroom rules stay unchanged. The
+helper and timing change itself requires exhaustive acceptance.
+
+## Single historical group refinement (2026-10-18)
+
+Tighten the historical density limit from two to one complete group per shard.
+The seventh exhaustive CI-calibration candidate exhausted the unchanged
+3,200-second measured limit in shard 34 at 3,201.625 seconds. All 54 selected
+calls passed, but the final Workforce history teardown was incomplete. A single
+unchanged diagnostic of the complete frozen shard then passed all 54 cases and
+162 phases in 2,406.72 seconds, with the same coverage, collection and selection
+hooks. Its invitation and Workforce histories together consumed about 2,129
+seconds. Exact source, artifact, case and owned-cleanup checks passed.
+
+This supports reducing serial migration density, without establishing the sole
+cause of the concurrent slowdown or accepting the failed pool. The unchanged
+complete-order diagnostic preserves evidence for the former mixed shard; prior
+contamination repairs and their caller-schema assertions remain required.
+No history body, migration target, restoration or committed behavior is removed.
+Current groups can still share a shard with one historical group within the
+existing cost budget. Shared baselines and parameter variants remain indivisible.
+
+Keep the 128-shard ceiling, eight workers, all cost estimates, selection, coverage,
+timeouts and measured-headroom rules. No failed, partial or diagnostic evidence
+refreshes the timing map. Routine current-only assignments remain unchanged;
+exhaustive work needs more fresh databases and may take longer overall. New
+source-bound local and hosted manifests must independently enforce this limit.
+Fresh complete exact-head certification must demonstrate actual headroom before
+push; the isolated diagnostic is not acceptance or a hosted speed guarantee.
+
 ## Consequences
 
 Suite growth changes the number of bounded jobs rather than silently consuming

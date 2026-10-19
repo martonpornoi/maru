@@ -153,8 +153,8 @@ def test_historical_density_is_bounded_even_when_cost_estimates_are_small():
         for group in groups(20)
     )
     shards = budget.budget_partition(selected)
-    assert budget.MAX_HISTORICAL_GROUPS_PER_SHARD == 2
-    assert all(sum(group.historical for group in shard) <= 2 for shard in shards)
+    assert budget.MAX_HISTORICAL_GROUPS_PER_SHARD == 1
+    assert all(sum(group.historical for group in shard) <= 1 for shard in shards)
     assert Counter(group.key for shard in shards for group in shard) == Counter(
         group.key for group in selected
     )
@@ -165,8 +165,8 @@ def test_historical_density_is_bounded_even_when_cost_estimates_are_small():
 
 def test_historical_density_cannot_exceed_total_bounded_shard_capacity():
     with pytest.raises(ValueError, match="capacity"):
-        budget.budget_partition(groups(257, 1))
-    assert len(budget.budget_partition(groups(256, 1))) == 128
+        budget.budget_partition(groups(129, 1))
+    assert len(budget.budget_partition(groups(128, 1))) == 128
     assert budget.MAX_WORKERS == 8
 
 
@@ -180,8 +180,8 @@ def test_historical_density_is_bound_into_the_frozen_manifest(monkeypatch):
     monkeypatch.setattr(budget, "source_fingerprint", lambda _: "a" * 64)
     selected = groups(4, 1)
     before = budget.execution_plan(selected, history="all", base="b" * 40)
-    assert before["max_historical_groups_per_shard"] == 2
-    monkeypatch.setattr(budget, "MAX_HISTORICAL_GROUPS_PER_SHARD", 1)
+    assert before["max_historical_groups_per_shard"] == 1
+    monkeypatch.setattr(budget, "MAX_HISTORICAL_GROUPS_PER_SHARD", 2)
     after = budget.execution_plan(selected, history="all", base="b" * 40)
     assert before["shards"] == after["shards"]
     assert before["fingerprint"] != after["fingerprint"]
@@ -238,7 +238,7 @@ def test_main_executes_every_exact_density_constrained_manifest_assignment(
     plan = budget.execution_plan(required, history="all", base=None)
     unconstrained = budget.partition_groups(required, len(plan["shards"]))
     assert [[group.key for group in shard] for shard in unconstrained] != plan["shards"]
-    assert any(sum(group.historical for group in shard) > 2 for shard in unconstrained)
+    assert any(sum(group.historical for group in shard) > 1 for shard in unconstrained)
     manifest = tmp_path / "plan.json"
     manifest.write_text(json.dumps(plan), encoding="utf-8")
 

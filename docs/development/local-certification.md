@@ -84,7 +84,7 @@ pool executing the same budgeted shard manifest as GitHub. At most eight
 PostgreSQL containers run concurrently; each shard receives a fresh database.
 The planner permits up to 128 sequentially scheduled shards as the inventory
 grows; this does not raise concurrency or any per-shard budget. A shard holds at
-most two complete historical groups as well as satisfying its cost budget; shared
+most one complete historical group as well as satisfying its cost budget; shared
 baselines and parameterized functions remain indivisible. The frozen manifest
 binds this density limit without changing the selected inventory. The one-hour
 predicted target, slowdown/overhead allowance, measured acceptance headroom and
@@ -225,6 +225,35 @@ whose provenance must first be independently verified. Explicit repeated
 `--exclude-hosted-file tests/integration/EXACT_FILE.py` omits only an unusable
 hosted cost comparison; the full local cost and every test remain required.
 Review the generated provenance sidecar and certify the resulting candidate.
+
+For a complete passing routine run that measured every current group and no
+historical groups, add `--current-only`. Its exact receipt must say `success`
+with `current` or `affected` historical scope; `diagnostic_success`, failed,
+incomplete and exhaustive receipts are rejected in this explicit mode. The
+default mode still requires all current and historical groups. Do not label a
+routine run as exhaustive to refresh costs.
+
+```powershell
+.venv/Scripts/python.exe -m scripts.update_ci_group_timings --current-only --local-evidence PRESERVED_ROUTINE_EVIDENCE --hosted-evidence VERIFIED_MATCHING_HOSTED_REPORTS --commit EXACT_MEASURED_COMMIT --base EXACT_BASE_COMMIT --destination .tools/refreshed-group-costs.json
+```
+
+Generate to an ignored candidate path first. All integration test sources and the
+inherited history inventory, cost map and provenance must still match the measured
+commit. Review both outputs before copying them to the tracked map and sidecar.
+The mode fills missing current measurements and raises known current costs to the
+largest existing/local/usable-hosted observation; it preserves historical entries
+and leaves unmeasured history on the normal conservative fallback. Provenance
+version 2 identifies the inherited inputs by commit and SHA256, so preserved
+historical estimates are not presented as newly measured. The tool does not
+authenticate hosted downloads: independently verify workflow/head/base and
+artifact digests before supplying them. Review explicit hosted-file exclusions
+with the same unchanged rules described above.
+
+Compare complete old/new group inventories and both current and exhaustive plans
+before accepting a refresh. Fewer planned batches are not a measured speedup.
+Use `CurrentDiagnostic` only for a labelled, same-scope benchmark; it does not
+authorize push or merge. A timing/helper change still requires clean ordinary
+Auto certification with exhaustive harness scope and independent hosted gates.
 
 ADR 0091 retains the following ADR 0089 tooling for whole-file diagnostics.
 It does not update the active group map or choose acceptance scope. Use the

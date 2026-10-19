@@ -95,6 +95,19 @@ each case's rows, DDL, migration-recorder changes, and commit callbacks before
 the next case. It checks deferred constraints before rolling back a successful
 case so an invalid write cannot pass merely because cleanup discards it.
 
+Shared baselines explicitly request `_shared_history_database` before their
+module setup. Pytest-django's alias discovery only sees database markers and
+per-case database fixtures; a standalone shared-history selection has neither.
+After ordinary session setup completes, this opt-in uses the pinned
+pytest-django plugin's same collected-item alias discovery to determine whether
+the default alias was initialized. If it was not, Django's normal fresh default
+test-database setup owns its session teardown. A configured `test_` name does not
+establish ownership and never skips creation. When a mixed selection initialized
+the default alias, its ordinary session owner is retained.
+No per-case transaction, flush, marker or baseline reset is added. Verify these
+modules alone as well as with ordinary database tests; a neighboring marked test
+must not be required for setup to work.
+
 This is an explicit opt-in, not a global replacement for migration execution.
 The helper requires PostgreSQL, a `test_` database, transactional DDL, and an
 idle connection. `migrate_test_targets()` passes Django's native plan unchanged
@@ -115,6 +128,70 @@ and active transactions before creating anything. It adds no container or worker
 and does not replace concurrency, whole-graph recovery or current-runtime tests.
 Use it only for a serial case with no retained secondary connections; native
 regressions must prove source preservation and cleanup after success and failure.
+
+The Programme-import executor's six committed history cases use this isolation.
+Each first installs the real current graph in the empty database, runs its
+unchanged migration targets and assertions, and flushes and restores all current
+leaves before cleanup. Additional before/after Guidance schema fingerprints and
+readiness checks prove the caller remains unchanged. A two-case reproduction
+showed that restoring leaves in the caller otherwise leaves a dropped
+`events_eventedition.adoption_revision` slot and shifts the recreated column.
+Do not relax physical-schema pins or reorder shards to hide that contamination.
+The ordinary current graph/contract case remains on the normal test database.
+
+The single file-custody history round-trip also uses committed empty-database
+isolation. An unchanged two-case reproduction showed the same EventEdition
+physical-slot drift before the next import-history fixture could start. Its
+original Applications reverse/forward readiness assertions and full restoration
+remain intact; added caller Guidance schema/readiness checks preserve the shared
+current database. Ordinary file-custody command and transport cases are unchanged.
+
+The provenance full-graph ownership round-trip uses the same explicit committed
+isolation. Its original reverse/forward ownership and latch assertions run after
+real current-graph setup, with complete leaf restoration before owned cleanup.
+An unchanged history-then-demo reproduction showed that ordinary restoration
+moves all three EventEdition adoption columns to new physical positions. Caller
+schema/readiness checks prevent that contamination without relaxing any pin.
+The five remaining serial provenance history cases also opt into that fixture.
+An unchanged missing-latch history followed by Guidance foundation reproduced the
+same three-column drift. A database-free audit of Django's actual migration plans
+showed that authorization/audit reversals unwind all three adoption fields, while
+the two reserved-audit upgrade targets unwind only the revision field. This plan
+evidence supports isolating the affected historical family; it does not claim
+five separately reproduced failures. Every original body, committed target,
+ownership/latch assertion and full restoration remains intact. ACL history keeps
+its existing isolated database; current-state and concurrency tests are unchanged.
+
+Both invitation-token digest-key migration cases use committed empty-database
+isolation. An unchanged history-then-Knowledge reproduction showed that full-leaf
+restoration leaves a dropped EventEdition revision slot and moves the recreated
+column. Actual Django plans show that both old Identity targets reverse that
+field; this is shared plan exposure, not two separately reproduced failures.
+The original active-token preflight, terminal-evidence upgrade, keyed-token
+downgrade fence and audit retry-uniqueness assertions remain unchanged. Real
+current-graph setup, flush/full restoration, exact cleanup and caller Guidance
+schema/readiness checks retain the same boundary as the earlier opt-ins.
+
+Four serial activation-schema histories use the same committed empty-database
+boundary. An unchanged clean-reverse/forward history followed by Knowledge setup
+reproduced all three EventEdition adoption columns moving to new physical slots
+after full-leaf restoration. Actual plans for Authorization 0005/0006 reverse
+those fields; the removals also precede the runtime-latch downgrade fence in the
+activated-latch refusal plan. This establishes shared exposure, not four separate
+native failure reproductions. Original symmetry, prior-owned and foundational
+function-definition restoration, and activated-latch refusal bodies and assertions
+remain intact, including their original full-graph restoration fixture. Current
+catalog, guard and concurrent-writer tests retain their existing database scope.
+
+Both Applications function-ACL migration histories use the same explicit
+committed empty-database boundary. An unchanged programme-integrity reverse/forward
+case followed by Guidance setup reproduced the EventEdition revision column moving
+from physical slot 18 to 19 despite full-leaf restoration. Actual plans for both
+old Applications targets reverse that field; this is shared exposure, not two
+separately reproduced failures. Original public/owner-only EXECUTE, function-body,
+trigger-catalog, readiness and complete-restoration assertions remain intact.
+Caller Guidance schema/readiness checks detect contamination without changing
+product pins or current/concurrency test scope.
 
 The initial adopters are the Workforce structure-write historical boundary,
 historical organization governance, and historical authorization scope-v2
@@ -436,7 +513,7 @@ It selects between eight and 128 shards (or fewer only when the whole
 scope contains fewer groups), preserving at most eight simultaneous isolated
 databases and the unchanged 120-minute hosted limit. An indivisible oversized
 group or infeasible complete partition fails preflight; it never drops tests.
-Each shard also contains at most two complete historical groups. The planner
+Each shard also contains at most one complete historical group. The planner
 records this limit in the source-bound manifest and preserves shared baselines
 and every parameter variant without splitting them. It does not raise concurrency
 or replace measured headroom with a count-based acceptance claim.
@@ -457,10 +534,17 @@ not the PR selection authority. Record comparable setup, execution and teardown,
 
 `scripts/update_ci_group_timings.py` refreshes active group costs from preserved
 complete local evidence, optionally taking the larger matching hosted observation.
-It checks the exact full-scope receipt/head/base, unchanged measured test files,
-complete selection/JUnit identity equality and no failures, errors, skips or
-duplicate groups. The sidecar `.provenance.json` records source and evidence
-hashes. Explicit diagnostic hosted-file exclusions are only for unusable
+By default it requires the exact exhaustive receipt/head/base. Explicit
+`--current-only` instead requires a successful exact-head current/affected receipt
+whose reports cover every current group and no historical groups. It preserves
+all unmeasured historical entries and missing-history fallbacks, and uses the
+maximum existing/local/usable-hosted cost for each current group. It cannot lower
+known costs or convert diagnostic success into certification. Both modes require
+unchanged measured test files, complete selection/JUnit identity equality and no
+failures, errors, skips or duplicate groups. The current-only mode also binds the
+inherited inventory, cost map and provenance to the measured source revision.
+The sidecar `.provenance.json` records source and evidence hashes; schema version 2
+adds calibration scope and the inherited map/provenance hashes and commit. Explicit diagnostic hosted-file exclusions are only for unusable
 cross-environment comparisons; their local costs and every test remain included.
 They cannot exclude a failed report or all hosted observations. The planner
 adds slowdown and overhead separately, never interpreting timings as acceptance.
