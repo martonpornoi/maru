@@ -108,8 +108,18 @@ before and after. The repaired mixed run passed all 32 cases in 839.73 seconds:
 five review cases, both genuine-runtime cases, all 19 home cases and six isolation
 regressions. Independent verification reconciled every selected JUnit identity,
 all 3,246 source entries, 25 artifact hashes, four unchanged historical bodies
-and exact owned-container absence. Fresh exact clean-source certification and
-independent hosted acceptance remain pending.
+and exact owned-container absence. The third full run passed the original
+922-case readiness shard, then failed a later home destination test: its first
+closing-section splitter truncated the new nested guidance panel. The test now
+extracts the complete labelled section without changing its destination or
+isolation assertions. All 5,242 failed-run files and 100 exact container-absence
+proofs are preserved. The corrected test module and complete owner-guidance
+module passed all 41 cases in 221.34 seconds, with every original assertion
+unchanged. Independent verification reconciled all 3,246 source entries, all 25
+artifact hashes, actual JUnit identities and exact owned cleanup. Two existing
+UUID4 parameter labels differ only between separate process collections; their
+source and every actual result were retained. Fresh exact clean-source
+certification and independent hosted acceptance remain pending.
 
 Final supplied-state component feedback used the full production home template
 inheritance and current assets. Ready, waiting, published, review, read-only and

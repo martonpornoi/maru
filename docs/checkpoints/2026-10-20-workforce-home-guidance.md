@@ -139,3 +139,52 @@ repair evidence; the documented clean candidate still requires a fresh ordinary
 Auto exhaustive run and independent hosted acceptance. No production guard,
 physical schema pin, assertion, historical target, committed behavior, selection,
 resource limit, worker limit, timing allowance or coverage gate was relaxed.
+
+
+## Third exhaustive failure and bounded markup repair
+
+The third ordinary Auto on clean eb74d0679099fbdde456cb6d11db83f2305cfaba failed
+in 18,927.203 seconds. All 14,333 units and quality checks passed. The previously
+failing readiness shard passed all 922 cases. A later shard passed 41 cases and
+failed the existing home manifest-destination test: its first closing-section
+split stopped at the new nested guidance panel, before the workspace grid.
+The pool completed 93 successful shards, one assertion failure and six automatic
+interruptions; 11 shards were not executed. This is not acceptance.
+
+All 22 source hashes were unchanged and all 100 exact owned containers were
+independently absent. The complete 5,242-file original .local-ci was moved intact
+once after complete hash verification and reverified at its retained location.
+Its manifest SHA-256 is
+6d2de66f6067e37279662140aa6bdd729b5ef63451a7f7ad7e57182d1766d993.
+All earlier originals remain intact. No retry or source change preceded this
+preservation.
+
+The scoped test repair extracts each full labelled section with balanced nested
+section tags. Every existing assertion in the module remains structurally
+identical, including exact manifest destinations, forbidden destinations and
+unresolved-profile disclosure. Product markup and behavior are unchanged.
+The focused proof below verifies the complete home-context and owner-guidance
+modules; a changed clean candidate still requires fresh ordinary Auto and hosted
+acceptance.
+
+
+## Complete home-context repair proof
+
+The fresh focused run passed all 41 cases in 221.34 seconds (228.203 seconds
+including the wrapper), with no failures, errors or skips: all 22 existing
+administration-home context cases and all 19 owner-guidance cases. This includes
+the previously failing exact manifest-destination case and the unresolved-profile
+boundary. All original assertions across 19 test definitions remain structurally
+identical. Product behavior, markup and permission checks are unchanged.
+
+Independent verification reconciled before/pre-run/after/live source for all
+3,246 entries, all 25 artifact hashes, actual selected JUnit identities and the
+absence of the exact owned container. The artifact manifest SHA-256 is
+961161f175453d5930b1c4c2c95e1527d517d9af20d81b57dc0f3529fcc27437.
+The initial evidence comparison exposed two existing UUID4 parameter labels that
+vary between fresh Python processes. Source inspection confirmed both original
+expressions; the final verifier records exact old/new labels and every actual
+case/result without changing source, assertions or selection. That diagnostic
+comparison failure is separate from the passing native run. All originals remain
+intact. This focused proof does not replace the new clean commit's ordinary Auto
+exhaustive certification or independent hosted acceptance.

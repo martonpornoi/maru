@@ -63,6 +63,24 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
+def _labelled_section_html(content: str, label: str) -> str:
+    """Keep the complete labelled section when it contains nested sections."""
+    tags = list(re.finditer(r"</?section\b[^>]*>", content))
+    starts = [
+        index
+        for index, tag in enumerate(tags)
+        if f'aria-labelledby="{label}"' in tag.group()
+    ]
+    assert len(starts) == 1
+    start = starts[0]
+    depth = 1
+    for tag in tags[start + 1 :]:
+        depth += -1 if tag.group().startswith("</") else 1
+        if depth == 0:
+            return content[tags[start].end() : tag.start()]
+    raise AssertionError(f"Unclosed labelled section: {label}")
+
+
 def _admin_client() -> Client:
     administrator = AccountFactory(
         is_staff=True,
@@ -236,18 +254,14 @@ def test_admin_home_uses_exact_manifest_destinations() -> None:
 
     assert response.status_code == 200
     content = response.content.decode()
-    work_section = content.split('aria-labelledby="maru-work-heading">', maxsplit=1)[
-        1
-    ].split("</section>", maxsplit=1)[0]
+    work_section = _labelled_section_html(content, "maru-work-heading")
     workspace_grid = work_section.split(
         '<div class="maru-admin-workspace-grid">', maxsplit=1
     )[1].split("</div>", maxsplit=1)[0]
     setup_section = work_section.split("<summary>Setup steps</summary>", maxsplit=1)[
         1
     ].split("</details>", maxsplit=1)[0]
-    account_section = content.split(
-        'aria-labelledby="maru-account-heading">', maxsplit=1
-    )[1].split("</section>", maxsplit=1)[0]
+    account_section = _labelled_section_html(content, "maru-account-heading")
     assert f"{reverse('management-console')}?view=setup" in setup_section
     assert f"{reverse('management-console')}?view=setup" not in workspace_grid
     assert f"{reverse('management-console')}?view=workforce" in workspace_grid
@@ -353,9 +367,7 @@ def test_admin_home_fails_closed_for_unresolved_profile(
 
     assert response.status_code == 200
     content = response.content.decode()
-    work_section = content.split('aria-labelledby="maru-work-heading">', maxsplit=1)[
-        1
-    ].split("</section>", maxsplit=1)[0]
+    work_section = _labelled_section_html(content, "maru-work-heading")
     assert 'class="maru-admin-workspace-grid"' not in work_section
     assert "This event uses tools that this version of Maru cannot open." in content
     assert "Choose another event or ask an administrator to check its setup." in content
