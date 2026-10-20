@@ -95,6 +95,22 @@ absent. Every original artifact is hash-preserved. The exception explanation now
 uses Notes; no checker or gate changed. The corrected commit needs fresh ordinary
 Auto and independent hosted acceptance.
 
+The second exhaustive run passed all quality checks and 14,333 units, then the
+existing genuine-runtime readiness test failed after Applications review history.
+A fresh unchanged two-case sequence reproduced the 503. A narrower catalog probe
+proved EventEdition adoption_revision moved from physical slot 18 to 19, leaving
+a dropped slot; all native function/trigger contracts and Knowledge-owned schema
+pins stayed exact. All failed-run originals and 61 exact cleanups are preserved.
+Only the empty committed review-installation history now uses the existing fresh
+isolated-database fixture; its four original test bodies, targets, assertions and
+full restoration stay unchanged. Caller Guidance schema/readiness is asserted
+before and after. The repaired mixed run passed all 32 cases in 839.73 seconds:
+five review cases, both genuine-runtime cases, all 19 home cases and six isolation
+regressions. Independent verification reconciled every selected JUnit identity,
+all 3,246 source entries, 25 artifact hashes, four unchanged historical bodies
+and exact owned-container absence. Fresh exact clean-source certification and
+independent hosted acceptance remain pending.
+
 Final supplied-state component feedback used the full production home template
 inheritance and current assets. Ready, waiting, published, review, read-only and
 unavailable copy, exact owner links, keyboard continuation, one main/H1 and no
