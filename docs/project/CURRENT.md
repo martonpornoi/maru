@@ -87,7 +87,13 @@ three failures remain preserved with exact source/cleanup evidence. The final fo
 native module passed 19 cases without failures/errors/skips; source/artifact hashes
 and exact container absence were independently verified. Thirty-six database-free
 home tests and scoped lint/types passed. Ordinary clean-source Auto certification
-and independent hosted acceptance remain pending.
+and independent hosted acceptance remain pending. The first ordinary run
+failed the NumPy exception-docstring check before static acceptance. Its 14,333
+units passed, but its eight running native shards were explicitly interrupted
+through the supported cleanup path; all exact containers were independently
+absent. Every original artifact is hash-preserved. The exception explanation now
+uses Notes; no checker or gate changed. The corrected commit needs fresh ordinary
+Auto and independent hosted acceptance.
 
 Final supplied-state component feedback used the full production home template
 inheritance and current assets. Ready, waiting, published, review, read-only and

@@ -35,7 +35,13 @@ Independent verification reconciled before/pre-run/after/live source, every
 artifact hash and absence of the exact owned fresh PostgreSQL container.
 Database-free home feedback passed 36 cases; scoped Ruff and types passed.
 These are focused results, not certification of the later documented commit.
-Ordinary Auto and independent hosted acceptance remain pending.
+Ordinary Auto and independent hosted acceptance remain pending. The first ordinary run
+failed the NumPy exception-docstring check before static acceptance. Its 14,333
+units passed, but its eight running native shards were explicitly interrupted
+through the supported cleanup path; all exact containers were independently
+absent. Every original artifact is hash-preserved. The exception explanation now
+uses Notes; no checker or gate changed. The corrected commit needs fresh ordinary
+Auto and independent hosted acceptance.
 
 Final supplied-state browser feedback rendered the full production home template
 inheritance with current assets. Ready, waiting, published, review, read-only and

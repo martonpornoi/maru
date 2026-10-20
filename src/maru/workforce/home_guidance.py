@@ -229,10 +229,10 @@ def load_workforce_setup_guidance(
     WorkforceSetupGuidance | None
         Fresh bounded guidance, or no contribution for an unadopted profile.
 
-    Raises
-    ------
-    PermissionDenied
-        If current complete structure-read authority is absent.
+    Notes
+    -----
+    PermissionDenied propagates when complete structure-read authority is absent.
+    Snapshot movement and mandatory-audit failures also prevent disclosure.
     """
     if not actor.is_active or not _adopted(organization_id, edition_id):
         return None
