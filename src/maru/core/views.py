@@ -16,6 +16,7 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -1875,6 +1876,7 @@ def update_navigation_pin(request: HttpRequest) -> HttpResponse:
 
 @login_required(login_url="staff-login")
 @ensure_csrf_cookie
+@never_cache
 def administration_index(request: HttpRequest) -> HttpResponse:
     """Serve a policy-filtered home without granting Django staff status.
 

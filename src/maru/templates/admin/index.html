@@ -33,6 +33,17 @@
           {% endif %}
         </div>
         {% if maru_home_edition_context.selected_profile %}
+          {% maru_home_guidance request maru_home_edition_context.selected maru_home_edition_context.selected_profile as maru_next %}
+          {% if maru_next %}
+            <section class="maru-admin-home-guidance" aria-labelledby="maru-next-heading">
+              <p class="maru-admin-section-kicker">Team setup · {{ maru_next.state }}</p>
+              <h3 id="maru-next-heading">{{ maru_next.title }}</h3>
+              <p>{{ maru_next.explanation }}</p>
+              {% if maru_next.action_url %}<p><a href="{{ maru_next.action_url }}">{{ maru_next.action_label }}</a></p>{% endif %}
+              {% if maru_next.checked_at %}<p class="help">Checked <time datetime="{{ maru_next.checked_at|date:'c' }}">{{ maru_next.checked_at|date:"j M Y, H:i T" }}</time>. Refresh this page for current guidance.</p>{% endif %}
+              <p class="help">This guidance covers Departments and Positions. Use Team workspace for assignments, Availability and Shifts.</p>
+            </section>
+          {% endif %}
           <div class="maru-admin-workspace-grid">
             {% for item in maru_home.work %}
               <a href="{{ item.url }}"><strong>{{ item.label }}</strong><span>{{ item.description }}</span></a>

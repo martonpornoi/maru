@@ -35,6 +35,9 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Workforce-only events now have a Team setup continuation on the administration
+  home for Departments, Positions and volunteer opportunities. It explains
+  waiting, read-only and unavailable states without implying staffing readiness.
 - The administration home offers tools available for the selected event and
   your current access. Setup steps stay secondary, no-event guidance points to
   Change event, and incomplete admin logs are no longer called recent work.

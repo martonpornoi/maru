@@ -127,6 +127,8 @@ the system.
 | [0124](0124-evidence-bound-adoption-transition-effects.md) | Accepted; implementation in progress | Retain exact adoption-transition foundation events without widening existing manifests or content authority. |
 | [0125](0125-disposable-convention-practice.md) | Accepted; verification in progress | Separate public disposable convention practice from private acceptance fixtures, using real authority and content commands. |
 
+| [0126](0126-owner-projected-workforce-home-guidance.md) | Accepted | Derive one bounded Workforce setup continuation through current owner state, repeated authorization, audited disclosure and explicit unavailable behavior. |
+
 New ADRs use the next four-digit number and contain:
 
 - status and date;

@@ -154,3 +154,16 @@
     transition: none;
   }
 }
+
+.maru-admin-home-guidance {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--hairline-color);
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.maru-admin-home-guidance h3 {
+  margin-block: 0.25rem 0.5rem;
+  color: var(--body-fg);
+}

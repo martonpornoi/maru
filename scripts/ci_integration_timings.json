@@ -264,6 +264,7 @@
   "tests/integration/test_workforce_department_fk_contract_migration.py": 366.973,
   "tests/integration/test_workforce_edition_write_scope.py": 28.104,
   "tests/integration/test_workforce_guards.py": 11.831,
+  "tests/integration/test_workforce_home_guidance.py": 216.343,
   "tests/integration/test_workforce_onboarding.py": 14.263,
   "tests/integration/test_workforce_only_adoption.py": 20.875,
   "tests/integration/test_workforce_position_api.py": 9.868,

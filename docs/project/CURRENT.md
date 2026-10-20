@@ -1,15 +1,27 @@
 # Current project state
 
-Last updated: 2026-10-19
-Phase: CI calibration and migration-history isolation are protected-delivered.
-The next bounded outcome adds Catalog creation retry and rollback conformance
-evidence. Workforce acceptance remains at the human password boundary.
+Last updated: 2026-10-20
+Phase: first owner-projected Workforce administration-home continuation.
+CI calibration and Catalog retry conformance are protected-delivered.
+Workforce acceptance remains at the human password boundary.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md) and owning requirements.
 Keep one active delivery; preserve unrelated worktrees, stashes and evidence.
 
 ## Last completed outcome
+
+[PR #219](https://github.com/martonpornoi/maru/pull/219) protected-squash merged as
+3c158ad177238d601ad0b44389f86c21d7b3b9e9, with exact certified/merged tree
+27814b27cd4356700158817ebf9cb7d34f2f54f1. Clean designated main was ff-only
+synchronized and verified equal to origin, remote main and protected result.
+All ten local gates and exact hosted run 39333275321 passed: 14,314 unit and
+5,126 native cases, including all 40 Catalog cases; zero failures/errors/skips;
+91.135977% coverage. Hosted had 31 successes and three normal alternative skips.
+All 23 artifacts, 4,701 extracted files and 372 logs are hash-preserved. Requested
+review had no open issues; protected gates and CodeQL provenance were verified.
+This completes the one prior follow-up; umbrella #36 remains open.
+
 
 [PR #218](https://github.com/martonpornoi/maru/pull/218) delivered conservative
 current-group cost calibration, committed empty-database history isolation,
@@ -61,31 +73,49 @@ investigate any recurrence precisely. Older paused monitors remain paused.
 
 ## Current bounded outcome
 
-The [Catalog conformance plan](../development/catalog-edition-api-conformance-plan.md)
-adds 12 native cases for existing creation behavior: original receipt metadata
-and version, actor/key collisions, edition and tenant separation, invalid retry
-rationale, evidence-write rollback and three controlled competing requests.
-Both concurrent requests must reach an observed PostgreSQL edition-row lock
-wait. Fault injection occurs after real evidence writes and checks full rollback
-before the same key creates a fresh result. No command or policy is mocked.
+The maintainer authorized useful autonomous work. The first #35 slice now adds
+Workforce-owned home setup guidance: Departments, Positions, draft opportunity
+review, published copy, view-only waiting, read-only lifecycle and unavailable.
+UX-032 and ADR 0126 define its bounds. Exact-profile filtering, current scope/field
+policy, version-fenced bounded owner state and required minimized read audit
+precede disclosure. Existing destinations independently authorize every action.
 
-All 28 earlier cases and their original definitions remain. Runtime, schema,
-authentication, permissions, generated clients and product behavior are unchanged.
-This is executable evidence for INT-001, NFR-009 and AUD-001, not adoption of a
-new compatibility policy. Reason identity, strict scalar/currency validation,
-concurrent authority changes, read completeness/audit and public dependency
-failure semantics remain owner decisions. The API client supplies synthetic
-authenticated principals in process; this is not real sign-in, CSRF, restricted
-database-role, browser or independent-human acceptance. Demos are unaffected.
+The first native attempt exposed missing Cache-Control on the custom home route;
+it now uses private/no-store. The second fixture correctly hit the existing
+edition aggregate-version guard; it now uses real Events transitions. A third fixture omitted the closure command confirmation, now supplied. All
+three failures remain preserved with exact source/cleanup evidence. The final focused
+native module passed 19 cases without failures/errors/skips; source/artifact hashes
+and exact container absence were independently verified. Thirty-six database-free
+home tests and scoped lint/types passed. Ordinary clean-source Auto certification
+and independent hosted acceptance remain pending.
 
-All 40 native cases passed in 243.83 seconds (250.329-second wrapper), with zero
-failures/errors/skips. All 3,240 before/pre-run/after/live source entries, 25
-artifact hashes and 18 original definitions matched; exact owned-container absence
-was independently verified. Complete unit feedback passed 14,314 cases in 86.63
-seconds before a test-only fault-helper keyword correction; the native run includes
-that correction. Scoped lint/format, 765-file documentation validation and whitespace
-checks passed. Ordinary clean-source Auto certification and independent hosted
-acceptance remain pending. No result from PR #218 certifies this new source.
+Final supplied-state component feedback used the full production home template
+inheritance and current assets. Ready, waiting, published, review, read-only and
+unavailable copy, exact owner links, keyboard continuation, one main/H1 and no
+duplicate IDs passed. Seven widths from 320 to 1,920 CSS pixels had no overflow.
+An inherited faint heading was corrected to the panel foreground and visually
+rechecked at desktop/mobile sizes. No console warning/error was observed. This
+is component evidence, separate from native authorization and real sign-in.
+No genuine 200% zoom, representative screen reader, human, restricted-role or
+production acceptance is claimed. Temporary preview/listener were closed.
+
+All 14,333 database-free unit cases passed after adding the new native file's
+measured timing entry. The first unit run's missing-entry failure and 512 denied
+temporary-directory errors remain preserved; the second used an isolated temp
+directory. Final inspection also closed the retained-Department/missing-control
+edge case and extended its native assertion; final certification must verify it.
+The required timing inventory edit selects exhaustive history under ordinary
+Auto. No selection, cost guard, resources or timing limits are weakened.
+
+Demo gap: maintained practice editions cover Announcements/Guides, not these
+Workforce-only home states. Native fixtures and a read-only component preview
+cover this increment. A prefilled public Workforce practice edition remains
+separate work; no account seed/restart substitutes for #42's human-password gate.
+
+No schema, runtime ACL, permission, dependency, credential, domain transition,
+notification or unrelated-module adoption change. Issues #35, #36 and #42 remain
+open. The prior unreproduced home archive audit-guard rejection remains unfixed.
+See the [home checkpoint](../checkpoints/2026-10-20-workforce-home-guidance.md).
 
 ## Preserved Workforce blocker
 
@@ -104,12 +134,12 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Review and commit the coherent tests/documentation outcome.
-2. Run ordinary Auto certification
-   against current main, and reconcile the exact receipt and cleanup evidence.
-3. Push normally, complete exact-head review and hosted acceptance, protected-squash
-   with head matching, verify certified-tree equality and ff-only main synchronization.
+1. Certify one coherent
+   clean commit through ordinary Auto against current protected main.
+2. Push normally, request one review, verify exact hosted acceptance, required
+   PR gate, CodeQL/all analyses, conversations and current no-bypass protections.
+3. Exact-head squash, verify certified-tree equality and ff-only clean main sync.
 
-Preserve unrelated checkouts, stashes, stopped fixtures and private credentials.
-No deployment, external mail, credential/authority workaround, weakened safety,
-test/coverage/timing gate or additional agent is part of this slice.
+No routine personal review is required under current human authorization.
+Preserve every artifact, unrelated worktree/stash, stopped fixture and private
+credential. No deployment, mail, credential workaround or weakened gate.
