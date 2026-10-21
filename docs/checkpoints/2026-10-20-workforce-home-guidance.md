@@ -286,3 +286,53 @@ to 2233949c. PR #220 remains on that old head until the repaired source complete
 fresh local acceptance; the one completed Copilot review must not be requested
 again automatically. Independent hosted acceptance and protected delivery remain
 required. No production, real sign-in, screen-reader or human acceptance is added.
+
+
+## Fifth failed security gate and bounded Vite patch (2026-10-21)
+
+Ordinary Auto on clean b8c0a4e56cb0f4576b282a1e51dad3cdfe71b6c3, tree
+ed1cb8c619175abc986185c749b6a683a87a19f7, failed at 08:02:47 UTC after
+21,361.359 seconds. Locked inputs, packaging, frozen frontend installation and
+Python vulnerability audit passed. The frontend audit reported Vite 8.1.5 with
+one high and two moderate findings. Later static/documentation/contract/frontend
+checks and combined coverage were not executed. No success receipt was created.
+
+All 14,335 units and 5,304 native cases passed with zero failures, errors or skips.
+Independent verification reconciled every actual selection, JUnit identity,
+setup/call/teardown order and timing, all 387 groups including 111 histories,
+111 shards, actual peak eight workers, unchanged measured headroom, complete
+plan/source fingerprints, 25 source hashes and absence of all 111 exact owned
+containers. All nine unrelated stopped fixtures stayed intact. The complete
+1,860-file original .local-ci was hash-verified, moved intact once and reverified;
+manifest SHA-256 dcd89dc943bfad65d2c1a19c52f601f162e20eccdc8334b6125c41619148d135.
+The full run remains failed; its passing subsets are not certification.
+
+Primary GitHub and npm metadata confirm all three findings affect Vite through
+8.1.5 and are patched in 8.1.6: [GHSA-587h-7wmj-h5pm](https://github.com/advisories/GHSA-587h-7wmj-h5pm),
+[GHSA-698v-4r3x-3vcv](https://github.com/advisories/GHSA-698v-4r3x-3vcv) and
+[GHSA-r825-w8mm-5pxw](https://github.com/advisories/GHSA-r825-w8mm-5pxw).
+The high advisory entered GitHub's reviewed database at 19:48:25 UTC on October
+20, after the fourth local run began. Its Windows editor-launch impact makes
+the development dependency relevant. The [8.1.6 release](https://github.com/vitejs/vite/releases/tag/v8.1.6)
+keeps the existing Node engine range and exports. Its bundled editor fix changes
+no Maru application code, route, permission, runtime dependency or browser journey.
+
+The first update command rejected an unsupported pnpm option before modifying
+files; its output is retained. The corrected command used pnpm 11.9.0. Its broad
+resolver candidate refreshed unrelated transitive packages, so that candidate is
+preserved as feedback only. The final lock retains all 173 other package records;
+only Vite's exact version, verified npm integrity and peer references change.
+Frozen installation validated the 174-entry lock, and fresh pnpm audit reports
+zero known vulnerabilities at every severity. No exemption, override, audit-level
+reduction or tool-version update was added.
+
+Complete generated API/types, frontend typecheck, all 116 tests in ten files and
+production build passed. Generated assets remain byte-identical. All 14,335
+database-free units passed in 77.78 seconds (82.36 seconds including the
+wrapper), with three existing warnings and no failure/error/skip. Independent
+verification reconciled all 3,245 before/after/live source entries and
+984 original artifact hashes; manifest SHA-256 e8f528ce0c6c13933a2083014a03f5d501ee073a0b46faed22a20e6e594a9acd.
+The new clean commit still needs fresh ordinary Auto with all ten required gates,
+exhaustive history and unchanged resources, selection, coverage and timing limits,
+followed by independent exact-head hosted acceptance. PR #220 remains at its old
+head until then; no new Copilot request, merge or human acceptance is claimed.

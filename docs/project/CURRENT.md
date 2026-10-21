@@ -138,7 +138,7 @@ management-only page, and retiring the last Department bypassed retained Positio
 bounds. Both are now repaired with additive regressions, preserving the old test
 bodies/assertions. Published/Review state stays intact with the read-only link;
 retained Positions are bounded before any Ready result. Only the two necessary
-security versions changed; Pillow's removed APIs are unused by Maru's decoder.
+Python security versions changed; Pillow's removed APIs are unused by Maru's decoder.
 All 14,335 database-free units passed in 78.17 seconds. Fresh-cache vulnerability
 audit, scoped lint/types/docstrings and documentation checks passed. Complete
 affected native modules passed all 71 cases in 262.67 seconds (269.468 seconds
@@ -148,6 +148,22 @@ entries, 25 artifact hashes, unchanged original test bodies and exact owned
 container absence. The two existing UUID4 collection labels were source-verified
 and retained. Fresh exact clean-source ordinary Auto and hosted acceptance remain
 required for the repaired candidate. No old receipt certifies the new source.
+
+The fifth ordinary Auto on clean b8c0a4e failed the frontend dependency audit
+after 21,361.359 seconds. All 14,335 units and 5,304 native cases passed, with
+every selection/JUnit/phase identity, 25 source hashes, all 111 histories, peak
+eight workers and exact container absence independently reconciled. All 1,860
+original files were hash-verified and moved intact once. Later quality checks and
+combined coverage did not run; no certification receipt was produced.
+
+The three reported Vite 8.1.5 advisories share the upstream 8.1.6 patch. Only
+that exact version, its registry integrity and peer bindings change; all other
+173 locked package records remain exact. Frozen installation and a fresh audit
+passed with zero known vulnerabilities. Generated API/types, all 116 frontend
+tests and the production build passed; generated assets remain byte-identical.
+All 14,335 units passed again in 77.78 seconds, with three existing warnings.
+Independent source/artifact/JUnit verification passed before documentation edits.
+The new clean candidate still needs fresh ordinary Auto and hosted acceptance.
 
 Final supplied-state component feedback used the full production home template
 inheritance and current assets. Ready, waiting, published, review, read-only and
@@ -173,9 +189,9 @@ cover this increment. A prefilled public Workforce practice edition remains
 separate work; no account seed/restart substitutes for #42's human-password gate.
 
 No schema, runtime ACL, permission, credential, domain transition, notification
-or unrelated-module adoption change. Required security updates now move only
-Pillow to 13.0.0 and certifi to 2026.10.19; the audit gates remain unchanged. Issues #35, #36 and #42 remain
-open. The prior unreproduced home archive audit-guard rejection remains unfixed.
+or unrelated-module adoption change. Required security updates move Pillow to
+13.0.0, certifi to 2026.10.19 and development Vite to 8.1.6; the audit gates remain
+unchanged. Issues #35, #36 and #42 remain open. The prior unreproduced home archive audit-guard rejection remains unfixed.
 See the [home checkpoint](../checkpoints/2026-10-20-workforce-home-guidance.md).
 
 ## Preserved Workforce blocker
