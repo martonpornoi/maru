@@ -217,3 +217,22 @@ def known_organization_person_account_ids(
     if len(account_ids) > limit:
         raise RuntimeError("The organization person relationship limit was exceeded.")
     return account_ids
+
+
+def organization_accepts_planning_changes(*, organization_id: UUID) -> bool:
+    """Project the existing organization lifecycle gate without private labels.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Independently authorized organization whose current stage is checked.
+
+    Returns
+    -------
+    bool
+        Whether Draft or Active currently permits private planning changes.
+    """
+    return Organization.objects.filter(
+        id=organization_id,
+        lifecycle__in=(Organization.Lifecycle.DRAFT, Organization.Lifecycle.ACTIVE),
+    ).exists()

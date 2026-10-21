@@ -35,6 +35,9 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Workforce-only events now have a Team setup continuation on the administration
+  home for Departments, Positions and volunteer opportunities. It explains
+  waiting, read-only and unavailable states without implying staffing readiness.
 - The administration home offers tools available for the selected event and
   your current access. Setup steps stay secondary, no-event guidance points to
   Change event, and incomplete admin logs are no longer called recent work.
@@ -50,6 +53,12 @@ rather than replace the curated summary.
 
 
 ### Fixed
+
+- Workforce home Published and Review continuations now send view-only people
+  to the readable team structure page. Retiring the last Department cannot hide
+  an oversized retained Position tree behind a Ready message.
+- Updated the locked Pillow image decoder, development TLS certificate bundle
+  and Vite tooling to address reported vulnerabilities, retaining the audit gates.
 
 - Guides now accepts drafts without optional task placements, shows pending setup
   and access work on My Maru, and offers setup from eligible event records. The

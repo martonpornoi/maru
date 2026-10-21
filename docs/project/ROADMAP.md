@@ -187,8 +187,10 @@ PR #211 delivered disposable preview startup and clarified routine risk-selected
 testing. PR #212 delivered the bounded first Guides workflow. PR #213 delivered
 ongoing/future fictional Announcements and Guides editions for newcomer trials;
 see the [demo contract](../modules/demo-data.md#next-bounded-demo-outcome).
-The next bounded home-entry repair removes unsupported setup/status implications
-and reuses authorized navigation. The broader state-aware operating home in #35
-requires separate domain projections and acceptance.
+The bounded home entry removes unsupported setup/status implications and reuses
+authorized navigation. The first state-aware #35 increment derives Workforce-only
+Departments/Positions guidance through an owner projection. Broader operation,
+governed recent outcomes and other contributions remain separate contracts and
+acceptance outcomes.
 Broader document governance and unrelated modules remain separate. Exhaustive
 testing is still required for global safety and test infrastructure changes.

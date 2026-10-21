@@ -1,5 +1,33 @@
 # Workforce module
 
+## Administration-home setup guidance
+
+The public owner query home_guidance.load_workforce_setup_guidance serves the
+Workforce-only version 1 contribution under UX-032 and
+[ADR 0126](../architecture/decisions/0126-owner-projected-workforce-home-guidance.md).
+It accepts current principal, exact organization/edition, request correlation and
+HTTP method. Its frozen result contains the setup step, optional exact draft
+Position ID, separate management hint and last authorization time. Other profiles
+contribute nothing; denied complete structure-read authority releases no facts.
+
+The owner reads bounded IDs/statuses, including retained rows in its limits,
+through the existing repeatable-read/version-fenced snapshot. Current view/field
+authority is repeated, and management and planning lifecycle are checked before
+required minimized workforce.structure.read audit. Existing principal/scope,
+correlation, route admin:index, HTTP method and policy metadata use the existing
+workforce-restricted retention class. No names, counts, productivity inference,
+analytics purpose or retention duration is added. Failed mandatory audit prevents
+release. No read path modifies a domain record.
+
+Existing Department, Position and opportunity commands own every transition.
+Published means current non-closed Positions have published opportunity copy;
+it establishes neither open application windows nor complete staffing. See the
+[home state/action table](../product/page-contracts/00-management-experience-shell.md#first-owner-projected-continuation-workforce-setup).
+Every destination checks its own current authorization. View-only Published
+and Review continuations use the readable structure overview, not the management
+page. Retained Position bounds are checked even after the last Department retires.
+
+
 ## Programme stop impact
 
 `programme_stop_queries.load_programme_stop_workforce` reports minimized state

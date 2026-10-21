@@ -45,9 +45,54 @@ Django admin log entries are not an operational activity feed and are omitted
 from the home: they neither cover governed service/API outcomes nor establish
 current object disclosure. No new history query, analytics or task database is
 introduced. Existing advanced records remain behind their authorized gateway.
-This finite entry-point contract addresses part of issue #35. A true state-aware
-home with ordered domain work, explicit blockers and governed recent outcomes
-remains a separate contract and acceptance outcome.
+The finite entry point and first owner-projected continuation below address
+part of issue #35. Other module contributions, full Workforce operation and
+governed recent outcomes remain separate acceptance outcomes.
+
+## First owner-projected continuation: Workforce setup
+
+UX-032 and [ADR 0126](../../architecture/decisions/0126-owner-projected-workforce-home-guidance.md)
+add one **Team setup** panel for the selected exact Workforce-only version 1
+edition. Other profiles and missing-workspace recovery keep their existing
+behavior. Core reads no Workforce models; the public owner query derives
+one minimized step and optional target identifier.
+
+| Current owner state | Home continuation | Separate management authority absent |
+| --- | --- | --- |
+| No current Departments | Set up your Departments; open exact team structure. | Waiting for a team organizer; review structure only. |
+| Departments, no current Positions | Prepare the team's Positions; check templates on Positions. | Waiting; review structure only. |
+| A current draft opportunity | Prepare a volunteer opportunity; open that exact Position. | Waiting; review structure only. |
+| Every current non-closed Position has published opportunity copy | Published; review Positions and their application windows. | Published; review team structure through its read-only destination. |
+| Closed Positions or withdrawn/closed opportunities | Review existing Positions; no ready/published promise. | Review; use the read-only team structure destination. |
+| Read-only organization or edition stage | Review retained team structure. | Same authorized read destination. |
+| Overflow, incomplete owner state, persistent version movement or dependency/audit failure | Unavailable; refresh and retain permitted tools below. | No private facts or primary action. |
+
+The provider requires complete structure-read field authority and checks
+management separately. Missing read authority omits the contribution. Exact
+organization/edition policy precedes state queries and is repeated before
+existing minimized structure-read audit permits disclosure. No Department name,
+Position title, holder, count, private rationale or personal calendar is loaded.
+Bounds include retained records; retirement cannot hide an oversized structure.
+Check retained Positions even when no active Department remains. A view-only
+continuation always uses the read-only structure route, including Published and
+Review states; the state itself is preserved.
+The repeatable-read/version fence rejects moving state after at most one retry.
+
+The panel has a text state, heading, purpose and one ordinary link when authorized.
+Checked-at time names its time zone; refreshing observes later changes. No
+automatic action, background polling, mutable task record or activity feed is
+introduced. The home response is private and no-store. The destination
+reauthorizes current scope and validates lifecycle/version independently.
+
+Publication covers copy only. Application windows, Assignments, Availability,
+Shifts, staffing and whole-event readiness remain outside the check; the panel
+says so and retains Team workspace. Templates and actual publication remain on
+their established owner pages. Existing rows do not prove overall completion.
+
+Synthetic component checks cover seven CSS widths, text semantics and keyboard
+continuation. Native tests separately cover query, policy, lifecycle and the
+actual home-to-owner route. Neither supplies genuine 200% browser zoom,
+representative screen-reader/person, restricted-runtime or #42 account acceptance.
 
 Navigation items have code-owned labels, descriptions, stable task keywords,
 and one of these presentation kinds:

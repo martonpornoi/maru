@@ -18,7 +18,7 @@ dependencies = [
   "drf-spectacular[sidecar]>=0.30.0,<0.31",
   "gunicorn>=23,<24",
   "phonenumbers>=9,<10",
-  "Pillow>=12.1,<13",
+  "Pillow>=13.0,<14",
   "psycopg[binary,pool]>=3.3.4,<3.4",
   "pycountry>=24.6,<25",
   "sqlparse>=0.6,<0.7",
@@ -50,9 +50,9 @@ dev = [
 where = ["src"]
 
 [tool.uv]
-# Security floor for the Requests dependency used by development tooling.
-# CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689 are fixed in 2.8.0.
-constraint-dependencies = ["urllib3>=2.8.0,<3"]
+# Security floors for Requests dependencies used by development tooling.
+# Keep the urllib3 fixes and the certifi emSign root removal (PYSEC-2026-4320).
+constraint-dependencies = ["urllib3>=2.8.0,<3", "certifi>=2026.10.19"]
 
 [tool.setuptools.package-data]
 "*" = ["templates/**/*.html", "static/**/*"]

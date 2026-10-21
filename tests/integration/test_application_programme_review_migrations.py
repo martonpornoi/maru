@@ -1,5 +1,6 @@
 """Fresh review install, empty reversal, and retained-evidence downgrade fences."""
 
+from collections.abc import Iterator
 from importlib import import_module
 
 import pytest
@@ -15,9 +16,19 @@ from maru.core.database_integrity_readiness import (
     inspect_database_integrity_catalog,
     parse_database_integrity_sql_contracts,
 )
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.events.guidance_setup_readiness import (
+    GUIDANCE_SETUP_SCHEMA_RELATIONS,
+    guidance_setup_database_integrity_is_ready,
+)
 from tests.factories import RoleBundleFactory
 from tests.integration.test_application_programme_services import (
     _admit_future_programme_effects,
+)
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    isolated_migration_database,
+    restore_current_migration_graph,
 )
 from tests.support.programme_review import create_review_world
 
@@ -32,6 +43,27 @@ _BEFORE = ("applications", "0012_programme_department_ownership_downgrade_fence"
 _AFTER = ("applications", "0015_programme_review_downgrade_fence")
 
 
+@pytest.fixture
+def isolated_review_installation_migration_graph(
+    restores_current_migration_graph: None,
+) -> Iterator[None]:
+    """Keep this committed review round-trip out of the caller's physical schema."""
+    del restores_current_migration_graph
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    with isolated_migration_database():
+        restore_current_migration_graph()
+        try:
+            yield
+        finally:
+            flush_then_restore_current_migration_graph()
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
+
+
+@pytest.mark.usefixtures("isolated_review_installation_migration_graph")
 def test_empty_review_schema_reverses_and_installs_the_actual_final_guards():
     MigrationExecutor(connection).migrate([_BEFORE])
     with connection.cursor() as cursor:

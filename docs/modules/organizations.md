@@ -29,6 +29,15 @@ by Authorization; it does not mutate organization membership or widen this root.
 See [Events](events.md#guides-adoption-and-public-scope-boundaries) and
 [Authorization](authorization.md#purpose-qualified-guides-responsibility).
 
+## Minimized planning-lifecycle reference
+
+The public query queries.organization_accepts_planning_changes answers only
+whether an independently authorized organization is currently Draft or Active.
+It returns no model or label and grants no authority. The Workforce home provider
+uses that existing lifecycle rule alongside Events' private-planning reference;
+current policy, audit and destination checks remain separate. Suspended, Closed
+and absent organizations do not acquire a setup continuation from this boolean.
+
 ## Purpose and requirements
 
 `personal_timetable_references.resolve_personal_timetable_organizer_labels` is an

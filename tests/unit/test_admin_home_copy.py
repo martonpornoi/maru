@@ -23,6 +23,12 @@ from maru.identity.models import Account
 def _render_home(
     monkeypatch, profile, *, request=None, items=(), selected=True, workspace=True
 ):
+    # This registry-composition fixture excludes the independently tested
+    # domain-state provider; native home tests exercise both together.
+    monkeypatch.setattr(
+        "maru.events.templatetags.admin_edition_context.project_home_guidance",
+        lambda *_args: None,
+    )
     if request is None:
         monkeypatch.setattr(
             "maru.events.templatetags.admin_edition_context.project_shell_navigation",

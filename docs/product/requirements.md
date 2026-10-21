@@ -1143,6 +1143,20 @@ architecture documents, implementation issues, tests, and release notes.
   guidance and tutorials must explain UI wording without making readers learn
   implementation vocabulary first.
 
+- **UX-032 — Owner-projected home continuation:** The canonical administration
+  home may show a bounded read-only next step derived by an adopted module from
+  its authoritative state. Filter the exact profile before asking the owner;
+  authorize scope and fields before reading facts, then reauthorize and satisfy
+  required audit before disclosure. Actions use exact existing routes and
+  independent destination authorization. View-only people receive truthful
+  waiting/review continuations. Missing, stale, incomplete or unavailable
+  evidence must not become an all-clear. Show check time, keep private no-store
+  responses and retain other authorized tools when guidance fails. The first
+  contribution covers Workforce-only Departments, Positions and opportunity
+  publication; it implies no staffing, application-window, whole-event readiness
+  or unrelated workflow completion. Introduce no mutable task database, domain
+  write, authority, identifying disclosure or activity tracking.
+
 ### Registration, orders, and attendee service
 
 - **REG-001 — Configurable registration:** Each edition must support
