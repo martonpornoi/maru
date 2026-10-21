@@ -1,5 +1,6 @@
 """Native authority, lifecycle and owner state behind the Workforce home."""
 
+import re
 from datetime import timedelta
 from unittest.mock import patch
 from uuid import uuid4
@@ -408,3 +409,85 @@ def test_withdrawn_opportunity_never_looks_published():
         source_channel="test",
     )
     assert _read(actor, edition).step == "review"
+
+
+def _close_for_review(actor, edition, position):
+    close_position(
+        confirmation_name=position.title,
+        actor=actor,
+        organization_id=edition.organization_id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+        position_id=position.id,
+        expected_version=EditionStructureControl.objects.get(
+            edition=edition
+        ).aggregate_version,
+        reason="Close the unused synthetic review Position.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+
+
+@pytest.mark.parametrize(
+    ("step", "state"), [("published", "Published"), ("review", "Review")]
+)
+def test_viewer_published_and_review_continuations_follow_a_readable_owner_page(
+    step, state
+):
+    actor, edition = _world()
+    position = _position(actor, edition, _department(actor, edition))
+    _publish(actor, edition, position)
+    if step == "review":
+        _close_for_review(actor, edition, position)
+    viewer = AccountFactory(is_staff=True)
+    CapabilityGrantFactory(
+        organization=edition.organization,
+        edition=edition,
+        principal=viewer,
+        capability_code="workforce.view_structure",
+    )
+    owner = _read(viewer, edition)
+    assert owner.step == step
+    assert not owner.can_manage
+    client = Client()
+    client.force_login(viewer)
+    session = client.session
+    session[ADMIN_EDITION_SESSION_KEY] = str(edition.id)
+    session.save()
+    response = client.get("/admin/")
+    assert response.status_code == 200
+    match = re.search(
+        r'<section[^>]*aria-labelledby="maru-next-heading"[^>]*>(.*?)</section>',
+        response.content.decode(),
+        re.DOTALL,
+    )
+    assert match is not None
+    panel = match.group(1)
+    assert f"Team setup · {state}" in panel
+    assert "Waiting for a team organizer" not in panel
+    links = re.findall(r'<a href="([^"]+)">([^<]+)</a>', panel)
+    args = (edition.organization.slug, edition.series.slug, edition.slug)
+    assert links == [
+        (reverse("organization-structure", args=args), "Review team structure")
+    ]
+    assert client.get(links[0][0]).status_code == 200
+    assert (
+        client.get(reverse("organization-structure-positions", args=args)).status_code
+        == 403
+    )
+
+
+def test_retired_last_department_does_not_hide_closed_position_overflow(monkeypatch):
+    actor, edition = _world()
+    department = _department(actor, edition)
+    position = _position(actor, edition, department)
+    _close_for_review(actor, edition, position)
+    retire_department_for_test(department=department, actor=actor)
+    assert _read(actor, edition).step == "departments"
+    monkeypatch.setattr(home_guidance, "MAX_STRUCTURE_POSITIONS", 0)
+    result = _read(actor, edition)
+    assert result.step == "unavailable"
+    assert result.position_id is None
+    assert Position.objects.filter(id=position.id, status="closed").exists()
+    department.refresh_from_db()
+    assert department.retired_at is not None

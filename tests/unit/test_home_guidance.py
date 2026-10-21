@@ -158,3 +158,23 @@ def test_denial_is_omitted_and_not_misreported_as_ready(monkeypatch):
         )
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("step", "state"), [("published", "Published"), ("review", "Review")]
+)
+def test_viewer_keeps_owner_state_and_uses_the_read_only_destination(
+    monkeypatch, step, state
+):
+    monkeypatch.setattr(
+        home_guidance,
+        "load_workforce_setup_guidance",
+        lambda **_kw: WorkforceSetupGuidance(step, NOW, position_id=UUID(int=9)),
+    )
+    item = home_guidance.project_home_guidance(
+        _request(), _edition(), adoption_profile("workforce_only", 1)
+    )
+    assert item.state == state
+    assert item.action_label == "Review team structure"
+    assert item.action_url.endswith("/structure/")
+    assert str(UUID(int=9)) not in item.action_url

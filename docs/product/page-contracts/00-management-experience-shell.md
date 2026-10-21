@@ -62,8 +62,8 @@ one minimized step and optional target identifier.
 | No current Departments | Set up your Departments; open exact team structure. | Waiting for a team organizer; review structure only. |
 | Departments, no current Positions | Prepare the team's Positions; check templates on Positions. | Waiting; review structure only. |
 | A current draft opportunity | Prepare a volunteer opportunity; open that exact Position. | Waiting; review structure only. |
-| Every current non-closed Position has published opportunity copy | Published; review Positions and their application windows. | Same authorized read destination. |
-| Closed Positions or withdrawn/closed opportunities | Review existing Positions; no ready/published promise. | Same authorized read destination. |
+| Every current non-closed Position has published opportunity copy | Published; review Positions and their application windows. | Published; review team structure through its read-only destination. |
+| Closed Positions or withdrawn/closed opportunities | Review existing Positions; no ready/published promise. | Review; use the read-only team structure destination. |
 | Read-only organization or edition stage | Review retained team structure. | Same authorized read destination. |
 | Overflow, incomplete owner state, persistent version movement or dependency/audit failure | Unavailable; refresh and retain permitted tools below. | No private facts or primary action. |
 
@@ -73,6 +73,9 @@ organization/edition policy precedes state queries and is repeated before
 existing minimized structure-read audit permits disclosure. No Department name,
 Position title, holder, count, private rationale or personal calendar is loaded.
 Bounds include retained records; retirement cannot hide an oversized structure.
+Check retained Positions even when no active Department remains. A view-only
+continuation always uses the read-only structure route, including Published and
+Review states; the state itself is preserved.
 The repeatable-read/version fence rejects moving state after at most one retry.
 
 The panel has a text state, heading, purpose and one ordinary link when authorized.

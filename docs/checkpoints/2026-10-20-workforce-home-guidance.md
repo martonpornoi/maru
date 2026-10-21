@@ -188,3 +188,101 @@ case/result without changing source, assertions or selection. That diagnostic
 comparison failure is separate from the passing native run. All originals remain
 intact. This focused proof does not replace the new clean commit's ordinary Auto
 exhaustive certification or independent hosted acceptance.
+
+
+## Fourth local success and preserved hosted failure (2026-10-21)
+
+Clean 2233949c393624ef38811d5c4bc6efb4534a7cd5, tree
+9ed588dc422a2b81a6cd271357ab012e10d37063, passed ordinary Auto against current
+protected base 3c158ad177238d601ad0b44389f86c21d7b3b9e9. All ten gates passed in
+21,454.359 seconds: 14,333 unit and 5,301 native cases, no failure/error/skip,
+387 groups including all 111 histories, 111 shards, at most eight simultaneous
+databases, 91.25695272149385% combined coverage and unchanged measured headroom.
+Independent reconciliation verified each actual selected JUnit identity and its
+setup/call/teardown sequence, complete plan/source fingerprint, 23 intended source
+hashes, current base and absence of all 111 exact owned containers. All 5,767
+original files were hash-reverified before and after one intact preservation move;
+manifest SHA256 3d3c9842b0232bb209e46647a38df5ab43f519cee49816414bd6878c8ab177ee.
+The original success remains evidence for that source alone.
+
+Normal-hook push opened ready PR #220. Hosted run 39526782507 attempt 1 failed
+Full dependency security, then both aggregate gates. Its unit/native/combined
+coverage jobs did not execute. Other quality checks passed. Exact-head CodeQL
+39526780555 completed its three jobs successfully; it does not certify later
+source. The complete failed-run and CodeQL logs, one contributor-documentation
+artifact and metadata were preserved: artifact 12313759765, digest
+sha256:df7e28a35c00decb5f5df43c4fc207d4b48a1bdf27e6477072c4413b5a0749af.
+All 4,236 hosted original files were hash-reverified, manifest SHA256
+dc22c8ce115dd3c60caec096978338c78ba5d690243ba020cd89b6505ba5b2f4.
+This failed hosted attempt remains failed, not partial acceptance.
+
+The one requested Copilot review completed and identified two valid defects.
+Published and Review states sent a view-only principal to Position management,
+whose independent policy correctly returns 403. All non-managers now receive the
+read-only structure route, retaining Published/Review state; Waiting still applies
+to unfinished setup. A native regression follows both rendered links as a genuine
+view-only staff account and retains the management-page denial assertion.
+
+When no active Departments remained, the provider skipped retained Position
+bounds. Retirement permits closed Positions, so this could produce a false Ready
+result. The bounded Position probe now precedes every planning-state result.
+An additive native case closes a Position and retires its Department through real
+commands, then lowers the bound and requires unavailable guidance with no ID.
+Existing test bodies/assertions, permissions, pins and guards stay unchanged.
+
+The security job reported certifi 2026.7.22 (PYSEC-2026-4320) and Pillow 12.3.0
+(eight reported CVEs). Primary advisory records were published on October 20
+after the local run began. Official PyPI metadata confirms certifi 2026.10.19 and
+Pillow 13.0.0; only those locked versions change. A conservative certifi floor
+retains the current OSV fixed version despite the upstream advisory description's
+earlier 2026.10.18 label. See the [certifi advisory](https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2),
+[PyPI release](https://pypi.org/project/certifi/2026.10.19/) and
+[Pillow release notes](https://pillow.readthedocs.io/en/stable/releasenotes/13.0.0.html).
+Pillow 13 removes Python 3.10 and legacy image APIs that Maru does not use.
+Maru remains Python 3.12–3.14; its scanner, limits, orientation, thumbnail,
+transparency handling, JPEG re-encoding and receipt behavior remain unchanged.
+Existing media/brand unit and real media/onboarding journeys must verify the major
+decoder update. No vulnerability ignore or audit/coverage/resource reduction is
+permitted. Initial repair lint found two overlong lines and the re.S alias; those
+formatting issues were corrected without assertion changes.
+
+Repaired-source feedback passed all 14,335 database-free unit cases in 78.17
+seconds, with three existing warnings. Fresh-cache pip-audit found no known
+vulnerabilities. Scoped Ruff, two-source mypy/docstrings, 767 Markdown files,
+four repository skills, 223 requirement IDs and whitespace checks passed. All
+original test bodies remain AST-identical. The complete affected native home,
+context, public-registration, media-receipt and onboarding modules collected 71
+cases; expected counts are not passes. Focused execution and fresh ordinary
+Auto/hosted acceptance remain pending. No new
+Copilot request, source push, merge, production or human acceptance is claimed.
+
+
+## Independently verified review and media repair proof (2026-10-21)
+
+The fresh native run completed at 01:49:16 UTC. All 71 cases passed in 262.67
+seconds (269.468 seconds including the wrapper), with zero failures, errors or
+skips: 22 administration-context, 22 owner-home, 23 public-registration, one
+media-receipt and three Workforce-onboarding cases. Both viewer continuations
+followed the actual read-only destination; the real close-and-retire overflow
+regression passed. Existing native image and onboarding journeys also passed with
+Pillow 13. This is focused evidence, not whole-suite or human acceptance.
+
+Independent verification at 02:03:42 UTC reconciled every actual JUnit identity,
+all 3,246 before/pre-run/after/live source entries and all 25 original artifact
+hashes. The manifest SHA-256 is
+25f69f02ca0382ea0847283d66a25a78c8fd9f1ef398c0c094b53cfd320c0a65.
+The complete source inventory SHA-256 is
+6cc6ef1d3de3b33b26c9d461ed41c9cdefe058ffd3c6187df89d1624586b4f5a.
+All 18 original native and six unit test-definition bodies remain AST-identical.
+Only the two existing UUID4 labels varied between separate collections; their
+source expressions and exact collection/result labels are retained. The exact
+owned container was independently absent, with nine unrelated stopped fixtures
+retained and no running test resources. Every original remains intact.
+
+The coherent repair now needs a normal clean commit and one fresh ordinary Auto
+certification with all required gates, exhaustive history, unchanged coverage,
+resources and timing limits. The earlier successful receipt and CodeQL apply only
+to 2233949c. PR #220 remains on that old head until the repaired source completes
+fresh local acceptance; the one completed Copilot review must not be requested
+again automatically. Independent hosted acceptance and protected delivery remain
+required. No production, real sign-in, screen-reader or human acceptance is added.

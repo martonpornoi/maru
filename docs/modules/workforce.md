@@ -23,7 +23,9 @@ Existing Department, Position and opportunity commands own every transition.
 Published means current non-closed Positions have published opportunity copy;
 it establishes neither open application windows nor complete staffing. See the
 [home state/action table](../product/page-contracts/00-management-experience-shell.md#first-owner-projected-continuation-workforce-setup).
-Every destination checks its own current authorization.
+Every destination checks its own current authorization. View-only Published
+and Review continuations use the readable structure overview, not the management
+page. Retained Position bounds are checked even after the last Department retires.
 
 
 ## Programme stop impact

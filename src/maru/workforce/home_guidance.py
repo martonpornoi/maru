@@ -146,26 +146,28 @@ def _snapshot(
             .values_list("id", "retired_at")[: MAX_STRUCTURE_DEPARTMENTS + 1]
         )
         if len(departments) <= MAX_STRUCTURE_DEPARTMENTS:
-            active_ids = {
-                identity for identity, retired_at in departments if retired_at is None
-            }
-            if not active_ids and (control is not None or not departments):
-                result = replace(result, step="departments")
-            elif active_ids and version > 0:
-                rows = list(
-                    Position.objects.filter(
-                        organization_id=organization_id,
-                        edition_id=edition_id,
-                    )
-                    .order_by("id")
-                    .values_list(
-                        "id",
-                        "status",
-                        "opportunity__status",
-                        "department_id",
-                    )[: MAX_STRUCTURE_POSITIONS + 1]
+            rows = list(
+                Position.objects.filter(
+                    organization_id=organization_id,
+                    edition_id=edition_id,
                 )
-                if len(rows) <= MAX_STRUCTURE_POSITIONS:
+                .order_by("id")
+                .values_list(
+                    "id",
+                    "status",
+                    "opportunity__status",
+                    "department_id",
+                )[: MAX_STRUCTURE_POSITIONS + 1]
+            )
+            if len(rows) <= MAX_STRUCTURE_POSITIONS:
+                active_ids = {
+                    identity
+                    for identity, retired_at in departments
+                    if retired_at is None
+                }
+                if not active_ids and (control is not None or not departments):
+                    result = replace(result, step="departments")
+                elif active_ids and version > 0:
                     current_rows = [
                         (identity, status, publication)
                         for identity, status, publication, department_id in rows

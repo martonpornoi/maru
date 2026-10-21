@@ -164,16 +164,15 @@ def project_home_guidance(
     args: list[object] = [edition.organization.slug, edition.series.slug, edition.slug]
     if result.step == "opportunities":
         args.append(result.position_id)
-    if (
-        result.step in {"departments", "positions", "opportunities"}
-        and not result.can_manage
-    ):
-        state = "Waiting"
-        title = "Waiting for a team organizer"
-        explanation = (
-            "An organizer with structure-management access can continue this setup. "
-            "You can review the current team structure."
-        )
+    if not result.can_manage:
+        if result.step in {"departments", "positions", "opportunities"}:
+            state = "Waiting"
+            title = "Waiting for a team organizer"
+            explanation = (
+                "An organizer with structure-management access can "
+                "continue this setup. "
+                "You can review the current team structure."
+            )
         label, route = "Review team structure", "organization-structure"
         args = args[:3]
     return HomeGuidance(

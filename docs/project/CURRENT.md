@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-20
+Last updated: 2026-10-21
 Phase: first owner-projected Workforce administration-home continuation.
 CI calibration and Catalog retry conformance are protected-delivered.
 Workforce acceptance remains at the human password boundary.
@@ -121,6 +121,34 @@ UUID4 parameter labels differ only between separate process collections; their
 source and every actual result were retained. Fresh exact clean-source
 certification and independent hosted acceptance remain pending.
 
+The fourth ordinary Auto run on clean 2233949c passed all ten gates in
+21,454.359 seconds: 14,333 units, 5,301 native cases, all 387 groups including 111
+histories across 111 shards, at most eight workers and 91.256953% combined coverage.
+Independent verification reconciled exact selection/JUnit/phase identities,
+source/plan fingerprints, all 23 intended hashes and 111 exact container absences.
+Its 5,767 originals were hash-verified and moved intact once before later reuse.
+
+Ready PR #220 then failed the hosted dependency-security gate: new advisory
+records identify the locked certifi and Pillow versions. The certifi advisory
+was published after local certification started. All hosted originals and exact
+artifact digests are preserved; unit/native hosted jobs did not run. The old
+source's CodeQL passed, which does not certify the repair. Copilot's one requested
+review identified two valid gaps: Published/Review viewers were linked to a
+management-only page, and retiring the last Department bypassed retained Position
+bounds. Both are now repaired with additive regressions, preserving the old test
+bodies/assertions. Published/Review state stays intact with the read-only link;
+retained Positions are bounded before any Ready result. Only the two necessary
+security versions changed; Pillow's removed APIs are unused by Maru's decoder.
+All 14,335 database-free units passed in 78.17 seconds. Fresh-cache vulnerability
+audit, scoped lint/types/docstrings and documentation checks passed. Complete
+affected native modules passed all 71 cases in 262.67 seconds (269.468 seconds
+including the wrapper), with zero failures, errors or skips. Independent proof
+reconciled every actual JUnit identity, all 3,246 before/pre-run/after/live source
+entries, 25 artifact hashes, unchanged original test bodies and exact owned
+container absence. The two existing UUID4 collection labels were source-verified
+and retained. Fresh exact clean-source ordinary Auto and hosted acceptance remain
+required for the repaired candidate. No old receipt certifies the new source.
+
 Final supplied-state component feedback used the full production home template
 inheritance and current assets. Ready, waiting, published, review, read-only and
 unavailable copy, exact owner links, keyboard continuation, one main/H1 and no
@@ -144,8 +172,9 @@ Workforce-only home states. Native fixtures and a read-only component preview
 cover this increment. A prefilled public Workforce practice edition remains
 separate work; no account seed/restart substitutes for #42's human-password gate.
 
-No schema, runtime ACL, permission, dependency, credential, domain transition,
-notification or unrelated-module adoption change. Issues #35, #36 and #42 remain
+No schema, runtime ACL, permission, credential, domain transition, notification
+or unrelated-module adoption change. Required security updates now move only
+Pillow to 13.0.0 and certifi to 2026.10.19; the audit gates remain unchanged. Issues #35, #36 and #42 remain
 open. The prior unreproduced home archive audit-guard rejection remains unfixed.
 See the [home checkpoint](../checkpoints/2026-10-20-workforce-home-guidance.md).
 
@@ -166,10 +195,12 @@ acceptance is claimed. Do not restart or seed accounts to evade that boundary.
 
 ## Smallest next actions
 
-1. Certify one coherent
-   clean commit through ordinary Auto against current protected main.
-2. Push normally, request one review, verify exact hosted acceptance, required
-   PR gate, CodeQL/all analyses, conversations and current no-bypass protections.
+1. Commit the verified coherent repair and certify that exact clean source through
+   ordinary Auto against current protected main.
+2. Push normally to PR #220, address the two requested-review findings with proof,
+   then verify fresh exact-head hosted acceptance, PR gate, CodeQL/all analyses,
+   resolved conversations and current no-bypass protections. Review was requested
+   once and completed; no automatic duplicate request.
 3. Exact-head squash, verify certified-tree equality and ff-only clean main sync.
 
 No routine personal review is required under current human authorization.

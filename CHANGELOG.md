@@ -54,6 +54,12 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Workforce home Published and Review continuations now send view-only people
+  to the readable team structure page. Retiring the last Department cannot hide
+  an oversized retained Position tree behind a Ready message.
+- Updated the locked Pillow image decoder and development TLS certificate bundle
+  to address newly reported vulnerabilities, retaining the existing audit gates.
+
 - Guides now accepts drafts without optional task placements, shows pending setup
   and access work on My Maru, and offers setup from eligible event records. The
   narrow-screen menu no longer covers Save or Resume buttons.
