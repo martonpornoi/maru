@@ -603,6 +603,26 @@ architecture documents, implementation issues, tests, and release notes.
   Published personal composition
   remains governed by SCH-012 rather than exposing private candidates.
 
+- **HR-016 — Bounded Workforce rota portability:** An authorized organizer of an
+  exact `workforce_only@1` edition, using a current active verified account, may
+  download or print a complete bounded Shift
+  and retained-commitment snapshot. Require complete current edition metadata and
+  Shift read fields plus separate existing Shift-management authority; grant no
+  new capability, role or profile meaning. Capture one coherent read-only snapshot,
+  retain source record IDs/versions, UTC and offset-bearing local times with the
+  IANA zone, and distinguish claims, confirmation, removal and completion. Exclude
+  platform account identifiers, identity contacts, exact Availability calendars,
+  applications/documents, decision reasons, authority records and unrelated data.
+  Render before final current-account/scope/field reauthorization and required
+  minimized audit. Denied, changed metadata, overflow, malformed source or failed
+  audit returns no partial output. Ship explicit version-one JSON, closed schema,
+  standalone escaped print HTML, guidance and integrity hashes within 16 MiB;
+  retain existing 1,024-demand/4,096-total-commitment bounds. Private no-store copies
+  visibly state observation time, personal-data custody and stale-copy limitations.
+  A rota does not establish current readiness, complete Workforce history, import,
+  reconciliation, backup/restore, profile expansion, decommissioning or production
+  acceptance. Keep incumbent fallback and approved retention/recovery procedures.
+
 ### Programme, shifts, and timetable planning
 
 - **SCH-001 — Shared planning model:** Programme sessions, shifts, room

@@ -192,11 +192,13 @@ structure template and the purpose-built manual editors. A partner-specific
 bulk importer requires its own schema, provenance, preview, correction,
 authorization, minimization, replay, error, retention, and removal contract.
 
-A complete continuity export, printable rota, offline/manual reconciliation
-pack, and automatic decommissioning are not implemented. Existing authorized
-views and APIs are not a substitute for those operational guarantees. Record
-that limitation in partner acceptance and keep a separately approved incumbent
-fallback until those gates pass.
+A bounded [rota package and printable copy](workforce-rota-package.md) preserves
+the complete current Shift/retained-commitment projection for authorized planners.
+It is not a complete Workforce continuity/history export, offline/manual
+reconciliation pack or automatic decommissioning. Those remain unimplemented.
+Existing views, APIs and the rota do not replace those operational guarantees.
+Record the limitations in partner acceptance and keep a separately approved
+incumbent fallback until the remaining gates pass.
 
 ## Failure and recovery
 

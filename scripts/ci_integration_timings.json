@@ -281,6 +281,7 @@
   "tests/integration/test_workforce_programme_staffing_choices.py": 120.285,
   "tests/integration/test_workforce_programme_staffing_queries.py": 120.285,
   "tests/integration/test_workforce_programme_stop.py": 300.0,
+  "tests/integration/test_workforce_rota.py": 126.911,
   "tests/integration/test_workforce_scope_v2_integrity.py": 1231.602,
   "tests/integration/test_workforce_shift_person_locking.py": 29.955,
   "tests/integration/test_workforce_shifts.py": 120.285,

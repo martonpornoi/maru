@@ -128,6 +128,7 @@ the system.
 | [0125](0125-disposable-convention-practice.md) | Accepted; verification in progress | Separate public disposable convention practice from private acceptance fixtures, using real authority and content commands. |
 
 | [0126](0126-owner-projected-workforce-home-guidance.md) | Accepted | Derive one bounded Workforce setup continuation through current owner state, repeated authorization, audited disclosure and explicit unavailable behavior. |
+| [0127](0127-bounded-workforce-rota-portability.md) | Accepted | Export a bounded Workforce-only rota through complete existing source and management authority, audited disclosure and explicit portable-copy limits. |
 
 New ADRs use the next four-digit number and contain:
 

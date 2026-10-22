@@ -251,6 +251,7 @@ from maru.workforce.api import (
     WorkforceStructureTemplateApplicationView,
     WorkforceStructureView,
 )
+from maru.workforce.rota_views import download_workforce_rota, print_workforce_rota
 from maru.workforce.shift_api import (
     WorkforceMyShiftClaimView,
     WorkforceMyShiftsView,
@@ -763,6 +764,18 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         organization_workforce_shift,
         name="organization-workforce-shift",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/rota/download/",
+        download_workforce_rota,
+        name="download-workforce-rota",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/structure/shifts/rota/print/",
+        print_workforce_rota,
+        name="print-workforce-rota",
     ),
     path(
         (

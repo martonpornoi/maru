@@ -40,6 +40,7 @@ from maru.workforce.models import (
     ShiftDemand,
 )
 from maru.workforce.programme_response import organizer_programme_response
+from maru.workforce.rota import can_export_rota
 from maru.workforce.shift_audit import append_shift_read_audit
 from maru.workforce.shift_commands import (
     ShiftAuthorizationDeniedError,
@@ -344,6 +345,11 @@ def _baseline_context(
             "edition": page.edition,
             "shift_overview": page.overview,
             "can_manage_shifts": page.can_manage,
+            "can_export_rota": can_export_rota(
+                actor=actor,
+                organization_id=page.organization.id,
+                edition_id=page.edition.id,
+            ),
             "shift_access_label": _access_label(page.decision),
         }
     )

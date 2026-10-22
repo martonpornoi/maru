@@ -9,7 +9,7 @@ from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import FieldDoesNotExist, PermissionDenied, ValidationError
 from django.db import DatabaseError
-from django.db.models import Q, QuerySet
+from django.db.models import F, Q, QuerySet
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -1104,3 +1104,73 @@ class EditionContextAdmin(
             request,
             **kwargs,
         )
+
+
+def authorized_admin_edition_identity_for_route(
+    *,
+    request: HttpRequest,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    capability_code: str,
+) -> tuple[UUID, UUID, UUID]:
+    """Resolve only opaque route identity before a destination admits full fields.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Existing authenticated request and candidate-authority cache.
+    actor : Account
+        Request principal; the destination must check its current state again.
+    organization_slug : str
+        Expected exact tenant route locator.
+    series_slug : str
+        Expected exact parent series route locator.
+    edition_slug : str
+        Expected exact edition route locator.
+    capability_code : str
+        Code-owned destination capability used only for candidate discovery.
+
+    Returns
+    -------
+    tuple[UUID, UUID, UUID]
+        Organization, series and edition IDs; no label or ORM object escapes.
+
+    Raises
+    ------
+    PermissionDenied
+        If the coherent route cannot be resolved within admitted candidates.
+        Absent and denied private scopes share the same name-free boundary.
+
+    Notes
+    -----
+    This is a locator seam, not complete field or export authorization. The
+    destination independently admits every source purpose before named reads.
+    Existing object-returning route consumers and their contracts are unchanged.
+    """
+    editions = EventEdition.objects.filter(
+        organization__slug__iexact=organization_slug,
+        series__slug__iexact=series_slug,
+        slug__iexact=edition_slug,
+        series__organization_id=F("organization_id"),
+    )
+    if actor.is_platform_administrator:
+        editions = editions.filter(
+            adoption_profile_filter_for_capabilities({capability_code})
+        )
+    else:
+        editions = editions.filter(
+            id__in=authorized_admin_edition_ids(
+                request,
+                capability_codes=frozenset({capability_code}),
+            )
+        )
+    row = (
+        editions.order_by("id")
+        .values_list("organization_id", "series_id", "id")
+        .first()
+    )
+    if row is None:
+        raise PermissionDenied
+    return row

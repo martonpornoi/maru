@@ -194,3 +194,15 @@ governed recent outcomes and other contributions remain separate contracts and
 acceptance outcomes.
 Broader document governance and unrelated modules remain separate. Exhaustive
 testing is still required for global safety and test infrastructure changes.
+
+
+## Bounded Workforce continuity sequence
+
+Issue #22 separates a useful rota operating copy from the complete reversible
+adoption package. HR-016/ADR 0127 define the first bounded snapshot, portable
+schema and print fallback over existing authority. Import, complete history/exit,
+approved manual reconciliation, stopped-operation/restart, deliberate expansion
+and decommissioning remain separately scoped outcomes. Complete verification and
+human/operational acceptance for each; no exported file or green CI establishes
+production cutover readiness. Preserve the real #42 password boundary and #23
+accessibility matrix while this autonomous work proceeds.

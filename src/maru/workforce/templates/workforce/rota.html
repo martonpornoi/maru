@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>Workforce rota · {{ rota.scope.edition_name }} · Maru</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 1rem; color: #17202a; background: #fff; font: 1rem/1.5 system-ui, sans-serif; overflow-wrap: anywhere; }
+    main { max-width: 64rem; margin-inline: auto; }
+    h1, h2, h3 { line-height: 1.25; }
+    a { color: #174b8a; text-decoration: underline; }
+    a:focus-visible { outline: 3px solid #174b8a; outline-offset: 3px; }
+    article, aside { border: 1px solid #687482; padding: 1rem; margin-block: 1rem; }
+    dt { font-weight: 700; }
+    dd { margin: 0 0 .5rem; white-space: pre-wrap; }
+    li { margin-block: .5rem; }
+    .reference { font-size: .875rem; }
+    .warning { font-weight: 700; }
+    @media print {
+      @page { margin: 16mm; }
+      body { padding: 0; font-size: 10pt; }
+      nav { display: none; }
+      h1, h2, h3 { break-after: avoid; }
+      article { padding: .5rem; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  {% if back_url %}<nav aria-label="Rota navigation"><a href="{{ back_url }}">Return to Shift planning</a><p>Use your browser’s Print command to print or save a PDF. Protect every saved and printed copy.</p></nav>{% endif %}
+  <header>
+    <h1>Workforce rota</h1>
+    <p><strong>{{ rota.scope.edition_name }}</strong> · {{ rota.scope.starts_on }}–{{ rota.scope.ends_on }} · {{ rota.scope.time_zone }}</p>
+    <p>Snapshot observed at <time datetime="{{ rota.observed_at }}">{{ rota.observed_at }} (UTC)</time>. Local Shift times include their UTC offset.</p>
+    <p class="reference">Edition {{ rota.scope.edition_id }} · Edition version {{ rota.scope.edition_version }} · {{ rota.scope.profile_code }}@{{ rota.scope.profile_version }} · Rota format {{ rota.version }}</p>
+    <p class="warning">This copy does not update. Check the live record before changing coverage. A claim is not confirmation.</p>
+  </header>
+  <section aria-labelledby="shifts-title">
+    <h2 id="shifts-title">Shifts and retained commitments</h2>
+    {% for shift in rota.shifts %}
+      <article aria-labelledby="shift-{{ shift.id }}">
+        <h3 id="shift-{{ shift.id }}">{{ shift.title }} — {{ shift.status|capfirst }}</h3>
+        <p>{{ shift.department_name }} · {{ shift.position_title }}</p>
+        <dl>
+          <dt>Starts</dt><dd>{{ shift.local_starts_at }}</dd>
+          <dt>Ends</dt><dd>{{ shift.local_ends_at }}</dd>
+          <dt>Report to</dt><dd>{{ shift.location }}</dd>
+          <dt>Coverage</dt><dd>{{ shift.confirmed_count }} confirmed · {{ shift.claimed_count }} claimed · {{ shift.required_headcount }} needed · {{ shift.remaining_count }} place{{ shift.remaining_count|pluralize }} without a claim</dd>
+          <dt>Break and rest</dt><dd>{{ shift.break_minutes }} minute break · {{ shift.minimum_rest_minutes }} minutes of rest after work</dd>
+          <dt>Briefing</dt><dd>{{ shift.briefing }}</dd>
+          <dt>Supervision</dt><dd>{{ shift.supervision|default:"No additional supervision note." }}</dd>
+        </dl>
+        {% if shift.commitments %}
+          <ul aria-label="Retained commitments">
+            {% for commitment in shift.commitments %}
+              <li>
+                <strong>{{ commitment.display_label }}</strong> — {{ commitment.status|capfirst }}.
+                {% if commitment.status == "claimed" or commitment.status == "confirmed" %}
+                  {% if not commitment.availability_current or not commitment.qualification_current %}<strong>Review required: captured suitability evidence is no longer current.</strong>{% endif %}
+                {% endif %}
+                <span class="reference">Commitment {{ commitment.id }} · Version {{ commitment.version }} · Rest ends {{ commitment.rest_ends_at }} (UTC).</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}<p>No retained commitments. Nobody has claimed or been confirmed for this Shift.</p>{% endif %}
+        <p class="reference">Shift {{ shift.id }} · Version {{ shift.version }}</p>
+      </article>
+    {% empty %}<p>No Shift demand was present in this snapshot. This does not establish staffing readiness.</p>{% endfor %}
+  </section>
+  <aside aria-labelledby="limits-title">
+    <h2 id="limits-title">Using this copy safely</h2>
+    <ul>{% for limitation in rota.limitations %}<li>{{ limitation }}</li>{% endfor %}</ul>
+    <p>Paper notes and edits to this copy do not change Maru. Keep any approved manual record separately and have an authorized organizer review it against current versions before using existing commands. This package has no automatic write-back.</p>
+  </aside>
+</main>
+</body>
+</html>
