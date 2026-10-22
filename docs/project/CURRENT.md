@@ -81,10 +81,25 @@ failed, with later stages explicitly unexecuted. Fresh Ruff, both docstring
 checks, documentation policy, exact timing-inventory unit and whitespace passed;
 source/JUnit/original-artifact readback independently verified the final tail.
 
-This is the pre-certification source checkpoint. Final clean-head Auto, independent
-hosted acceptance and protected delivery outcomes belong in the resulting PR and
-ignored evidence while source is pinned. No old or focused receipt certifies the
-final candidate; no production acceptance is claimed.
+The first exact-head ordinary Auto attempt passed 14,341 units, then stopped on
+two existing demo failures in native shard 43. Forty-one shards completed, seven
+were cancelled and 62 were unstarted; no combined coverage or success receipt
+exists. Complete failed evidence and exact resource cleanup were preserved.
+
+An unchanged 37-case reproduction proved that the scope-v2 history case leaves
+three dropped/recreated EventEdition adoption columns after full-leaf restoration.
+Native function/trigger checks stayed valid; the exact physical-schema guard
+correctly refused Guidance activation. A test-specific fixture now runs that
+committed current-to-historical-to-current sequence in a fresh owned database.
+Every original body, target, assertion and full restoration remains intact.
+The same 37 cases then passed in the original order in 1,022.00 seconds. Independent
+source/selection/JUnit/all-phase/readiness/schema and exact owned database/container
+cleanup verification confirmed the shared database remains unchanged.
+
+Fresh final clean-head Auto, independent hosted acceptance and protected delivery
+remain required. Outcomes belong in the resulting PR and ignored evidence while
+source is pinned. No failed, older or focused receipt certifies this candidate;
+no production acceptance is claimed.
 
 ## Preserved human and operational boundaries
 
@@ -104,10 +119,10 @@ credentials, unrelated stopped fixtures and paused monitors.
 
 ## Smallest next actions
 
-1. Finish final source/doc/security checks and commit the coherent candidate
-   normally; full units and focused/component feedback already passed.
-2. Fetch actual current main and certify the exact clean head through ordinary
-   Auto. Preserve complete originals; any repair requires fresh exact-source proof.
+1. Complete final checks and normally commit the supported history-isolation
+   repair with its documentation; its exact 37-case reproduction now passes.
+2. Fetch actual current main and run fresh ordinary Auto on the exact clean head.
+   Preserve complete originals; any repair requires new exact-source proof.
 3. Push normally, prepare the complete PR and verify exact-head hosted PR gate,
    all CodeQL provenance, requested-review disposition and resolved conversations.
 4. Refresh no-bypass protection/current mergeability, exact-head squash, verify

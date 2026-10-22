@@ -255,3 +255,62 @@ identity and all 32 original artifact hashes. Manifest SHA256 is
 `d66c607e88e697e7a26f61fd2a3ee780fed864e066d051b192f045135e275830`. Originals remain intact in place.
 Final documentation readback precedes the normal coherent commit; the resulting
 clean head still requires ordinary Auto and exact-head hosted acceptance.
+
+
+## First full attempt and proved historical-schema isolation repair
+
+The first ordinary Auto attempt on clean `f59d7a72` failed at 18:33:11 UTC
+after 8,654.719 seconds. Its 14,341 units passed in 231.43 seconds with the three
+existing warnings. Forty-one native shards completed successfully; shard 43
+finished with 35 passes and two existing convention-demo failures. Seven running
+shards were cancelled and 62 were unstarted. No combined coverage or success
+receipt exists. The full 388-group/111-history/111-shard plan, completed actual
+selection/JUnit/all-phase identities/order/durations, complete source hashes,
+actual peak eight, measured headroom and all 49 exact owned-container absences
+were independently reconciled. Nine unrelated stopped fixtures were retained.
+
+All 4,827 original local-CI files were hash-preserved and moved intact exactly
+once after before/readback/after-move verification. Manifest SHA256 is
+`1c74d55870d8e84c1d463fea7a21043487d64bd84fda8e21cda4b83a6c5fdc1c`;
+69 external wrapper/temp originals have manifest
+`eb107b287bc101ff97708411411feebb59ce68286593c6fc09fc3eb19a8f5858`.
+That failed run remains failed; its helpers and originals will not be rerun,
+rehashed, copied or moved again.
+
+The unchanged original 37-case shard sequence reproduced the same two
+`GuidanceSetupUnavailable` failures in 768.07 seconds. Data-free observations
+proved all nine native catalog predicates and logical constraints remained valid.
+The original scope-v2 history rewinds the current graph and restores its leaves;
+this leaves dropped EventEdition adoption-field slots 16 through 18 and recreates
+the same logical columns at 19 through 21. Only the physical EventEdition schema
+fingerprint changes. The exact Guidance readiness guard correctly fails closed.
+The reproduction's 20 originals remain hash-preserved in place; manifest is
+`ae7829309b1e85f162bf286dd7454d964c1f1cfcfde51926a4794d28d429911f`.
+
+Only that test's fixture changes. The existing exact-owned empty-database helper
+contains the committed history. Real full-current migrations and ordinary
+post-migrate initialization precede the unchanged original body; flush and full
+current-leaf restoration still run before the owned database is dropped. The
+original outer restoration fixture remains, with public caller-readiness checks.
+Every original function body AST, migration target and assertion remains exact.
+No production guard, fingerprint pin, migration, shared helper, test selection,
+shard map, timing allowance, resource, worker, permission or coverage rule changes.
+The representative demo data and walkthrough are unaffected by this test repair.
+
+The identical 37-case order passed with no failures, errors or skips at
+19:39:24 UTC: pytest reported 1,022.00 seconds; JUnit recorded 1,021.89 seconds and
+the complete wrapper took 1,027.5 seconds. Independent verification at 19:44:08 UTC
+reconciled every selection/JUnit/setup-call-teardown identity/order/duration,
+all 3,254 source entries and two observer/runner hashes before/after/live, all
+original bodies and all 29 cumulative changed-file hashes. Caller and owned
+current-graph public readiness were true; the caller's exact physical schema and
+18 physical columns remained unchanged. The exact owned history database's
+name/OID/owner and container were absent afterwards, with nine unrelated fixtures
+retained. All 20 new originals are preserved in place; manifest SHA256 is
+`830391df5b02b99b5502aa0d65e992762e913898b5e5d06d641ab2136841565d`.
+
+This proves the supported focused repair, not full acceptance. A fresh normal
+commit, ordinary exact-clean-head Auto, independent exact-head hosted acceptance,
+review disposition, protected squash and designated-main synchronization remain.
+No passing subset or old receipt certifies the final source. All earlier evidence
+and consumed helpers remain intact.
