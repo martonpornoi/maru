@@ -59,6 +59,9 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Patched REST API request-negotiation, charset and token-revocation
+  vulnerabilities while preserving existing positional list-validation errors
+  and edition API/generated-client field contracts.
 - Patched Vitest mock-development tooling for reported code-injection and
   Windows path-traversal vulnerabilities, retaining unrelated dependency pins.
 - Workforce home Published and Review continuations now send view-only people

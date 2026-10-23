@@ -314,3 +314,125 @@ commit, ordinary exact-clean-head Auto, independent exact-head hosted acceptance
 review disposition, protected squash and designated-main synchronization remain.
 No passing subset or old receipt certifies the final source. All earlier evidence
 and consumed helpers remain intact.
+
+
+## Second full attempt and required DRF security repair
+
+The second ordinary Auto on exact clean `1f00882c` ran once from
+2026-10-22 19:50:05 UTC to 2026-10-23 01:43:44 UTC, taking 21,218.953 seconds.
+All 14,341 units and all 5,329 native cases across 111 shards passed. Independent
+verification reconciled all 15,987 native setup/call/teardown phases, identities,
+actual order and durations, the full 388-group/111-history plan, source fingerprint,
+all 3,254 tracked and 30 changed source hashes, actual phase peak eight and
+measured headroom. The largest conservative shard projection was 4,326.5625
+seconds against the unchanged 5,400-second local headroom ceiling. Every exact
+owned container was absent, with all nine unrelated stopped fixtures retained.
+Unit JUnit was complete and unique; no unit phase-observer claim is made.
+
+This attempt failed its Python vulnerability audit, independently of those
+passing tests. It reported CVE-2026-114138, CVE-2026-114136 and CVE-2026-114137
+against djangorestframework 3.17.2. The authoritative GitHub advisory records
+were published on October 22 after the earlier clean precheck. All later
+repository gates, combined coverage and a success receipt remain unexecuted or
+absent. The failed attempt must never be combined with other passing subsets.
+
+All 1,860 local-CI originals were hash-preserved, read back and moved intact once;
+manifest SHA256 is
+`a65763e3ca8957b58da77dd75b1ecd664782361665bc082b2ded72125b9ff16c`.
+The 21 original wrapper/temp artifacts remain in place with manifest
+`ba92622ad1e99705a0811d5d4b888c6c3e2724bc9b0bb66700f50740a8c060c3`.
+The preserver and independent verifier are consumed; preserved originals will
+not be rehashed, copied or moved again.
+
+Official [advisory one](https://github.com/encode/django-rest-framework/security/advisories/GHSA-33wh-fxxf-88vv),
+[advisory two](https://github.com/encode/django-rest-framework/security/advisories/GHSA-3547-9m27-7rxg)
+and [advisory three](https://github.com/encode/django-rest-framework/security/advisories/GHSA-xw6w-gcfp-cf8m)
+identify 3.18.2 as fixed. The [upstream release notes](https://www.django-rest-framework.org/community/release-notes/)
+also document a 3.18.2 ordering-helper regression corrected in 3.18.3. The
+supported repair therefore sets the runtime floor to 3.18.3 with an upper bound
+below 3.19. Official PyPI wheel/sdist hashes and metadata were checked; Python
+3.12 and pinned Django 5.2 remain supported. Only the DRF package and project
+requirement change in the 108-record lock; all 106 unrelated package records and
+top-level lock policy remain exact. The upstream branches diverge, so compatibility
+review compares actual old/new wheel contents rather than treating a merge-base
+comparison as the package diff.
+
+DRF 3.18 changes list errors to indexed dictionaries. Its supported
+`LIST_SERIALIZER_ERRORS_AS_DICT=False` option preserves Maru's existing positional
+list errors, valid-item placeholders and problem codes. No warning suppression,
+test weakening, audit exemption or threshold change is introduced. New regressions
+exercise that problem contract and JSON charset/content-negotiation boundaries,
+including ordinary accepted text encodings and a valid token after an oversized
+one. TokenProxy is not mounted by Maru; its upstream fix is retained in the
+audited dependency. No capability, profile, database schema, runtime grant,
+production guard, history body/target, selection, timing, worker/resource or
+coverage rule changes. Demo fixtures and walkthrough scope remain unchanged.
+
+The repaired source requires focused feedback, coherent normal commit, a fresh
+ordinary exact-clean-head Auto and independent hosted acceptance before protected
+delivery and designated-main synchronization. Both failed runs remain failed;
+no earlier success or passing subset certifies this new candidate.
+
+
+## DRF generated-contract compatibility repair
+
+The fresh non-database dependency feedback passed 25 stages, including fresh
+zero-vulnerability Python/frontend audits, all 14,349 unique units and 116 frontend
+cases, strict types, package checks and fresh warning-fatal documentation. Existing
+Django warnings and the supported list-error option's deprecation warnings remain
+visible. No unit phase observer was used. It failed the generated-asset comparison;
+whitespace was unexecuted. All 10,449 originals were hash-preserved and read back
+in place, manifest SHA256
+`2e8933d2530bf2321fcfdb2c7df09747a08fd34639c1a5bba97b8cbd3d44a8b6`.
+
+Independent whole-schema comparison proved the only delta: DRF 3.18 supplies model
+choices before its non-editable field return, changing EditionBasic's automatic
+read-only adoption code from text to a choice field. Schema deduplication then
+renamed the existing EditionContext enum and its generated TypeScript symbol.
+Every other schema value and operation remained exact. The supported repair makes
+EditionBasic's existing read-only text projection explicit and adds a mounted-schema
+regression for both projections and the unchanged context enum. Normal generators
+must restore byte-identical OpenAPI and TypeScript contracts; generated output is
+not manually discarded. Persisted choices, request validation, profile admission,
+authorization and database schema stay unchanged. The failed feedback remains
+failed; fresh feedback, clean-head Auto and hosted acceptance are still required.
+
+
+Focused verification passed every mounted-schema case with unique JUnit and no
+failures, errors or skips. Independent AST comparison retained all original test
+bodies and every other serializer statement. Normal OpenAPI and TypeScript
+generation restored both checked-in contracts byte-for-byte to HEAD, without
+manual edits or resetting generated files. Focused evidence is preserved in
+place; fresh complete non-database feedback and ordinary clean-head Auto remain
+required for the security-upgraded candidate.
+
+
+## Fresh complete DRF repair feedback
+
+One fresh sequential run completed 2026-10-23 02:59:53 UTC with all 26 stages
+passing. Actual results were 14,350 unique units in 78.22 seconds, 33 focused
+security/compatibility cases in 1.25 seconds and 116 frontend cases across ten
+files. Both fresh vulnerability audits were clean (108 Python dependencies and
+all frontend severities). Packaging, whole-source format/lint, strict types,
+NumPy/semantic docstrings, documentation policy, fresh warning-fatal Sphinx,
+Django contract checks, normal generators, frontend types/build and whitespace
+passed. Generated OpenAPI, TypeScript and static assets were byte-identical to
+HEAD. All 23 existing schema warnings and eleven unit warnings remain honest;
+the supported list-error option emits its deprecation warning. The unreachable
+unit-database migration-history warning and existing Identity invitation warning
+remain visible; no database execution or unit phase observer is claimed.
+
+Independent reconciliation verified every actual stage/order/duration, complete
+unique JUnit without failures/errors/skips, all new security/problem/schema
+regressions, all 3,255 prepared/before/after/live source entries, all 38 cumulative
+changed hashes and matching prelaunch/before/after/live runner hashes. All 10,449
+new original files, including the external runner, were hash-preserved and read
+back in place. Manifest SHA256 is
+`f2ccdd7bd21755605e7d3b9aa24929d2c9928dc4cc8949d362b6dffc8aa39111`.
+These originals and consumed helpers will not be rerun, rehashed, copied or moved.
+
+This outcome append and CURRENT update are the only changes after that feedback;
+fresh documentation policy and whitespace checks precede the normal commit.
+Ordinary Auto must certify the complete exact clean committed candidate, followed
+by independent hosted acceptance, protected squash and designated-main sync.
+Both earlier full attempts and the generated-drift feedback remain failed.

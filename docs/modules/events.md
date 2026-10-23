@@ -815,3 +815,13 @@ candidates and verifies parent coherence; it selects no event or parent labels.
 The rota adapter then uses Authorization's verified-current-principal exact-edition
 policy seam for all source and management purposes before named metadata or Shift
 inventory. Existing object-returning route consumers are unchanged.
+
+
+## Stable adoption-code API projections
+
+The basic edition response exposes `adoption_profile_code` as read-only text.
+Its serializer declares that projection explicitly so dependency changes to model
+choice inference do not narrow the existing OpenAPI/generated-client contract.
+The edition-context response retains its closed profile enum and schema identity.
+Persisted model choices, setup-request validation, exact profile admission and
+field authorization continue to enforce their existing owning contracts.

@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-22
+Last updated: 2026-10-23
 Phase: bounded Workforce rota portability, first operating-copy slice of #22.
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
@@ -41,7 +41,8 @@ existing Shift-management authority. One repeatable-read snapshot, complete
 inventory limits, final scope/field/current-principal admission, metadata comparison
 and required minimized audit protect disclosure. No capability/profile/role meaning,
 schema, runtime privilege, domain writer or notification changes. A necessary
-Vitest development-tool security patch is documented below; other pins remain exact.
+Vitest development-tool patch and DRF runtime security upgrade are documented
+below; unrelated dependency records remain exact.
 The copy excludes platform account IDs, private calendars, identity contact fields,
 application/documents, decision reasons and unrelated module data.
 
@@ -96,6 +97,45 @@ The same 37 cases then passed in the original order in 1,022.00 seconds. Indepen
 source/selection/JUnit/all-phase/readiness/schema and exact owned database/container
 cleanup verification confirmed the shared database remains unchanged.
 
+The second ordinary Auto on clean `1f00882c` completed all 5,329 native cases
+across 111 shards and all 14,341 units, with independently verified native phases,
+identities/order/durations, plan/source, peak eight, measured headroom and exact
+111-container cleanup. It still failed: the Python audit reported three high
+DRF 3.17.2 advisories published after the earlier clean precheck. Later repository
+gates and combined coverage were unexecuted; no success receipt exists. All
+1,860 local-CI and 21 wrapper/temp originals are preserved and verified.
+
+The required DRF 3.18.3 upgrade includes the security fixes and the upstream
+3.18.2 regression correction. Only its locked package and the project's DRF
+requirement change; all 106 other package records and lock policy remain exact.
+The supported list-error compatibility option retains the existing positional
+API problem contract without suppressing its deprecation warning. Focused
+regressions cover charset refusal before body reads, bounded negotiation and
+normal JSON, plus nested problem indices/codes. No permission, profile, schema,
+runtime grant, guard, history, timing, worker or coverage rule changes. Maintained
+demo data and walkthrough scope are unaffected.
+
+Fresh dependency feedback passed both audits, all 14,349 units, all 116 frontend
+cases, types and warning-fatal documentation, then failed generated-asset equality.
+DRF changed the automatic read-only adoption code from text to a choice field.
+An explicit read-only text projection and schema regression now preserve the
+existing edition API and generated-client contract. The failed feedback's 10,449
+originals are independently preserved in place; its passing stages are not full
+acceptance. The focused mounted-schema regressions passed, and normal generators
+restored byte-identical OpenAPI and TypeScript contracts.
+
+Fresh complete non-database feedback then passed all 26 stages: 14,350 units in
+78.22 seconds, 33 focused security/compatibility cases, all 116 frontend cases,
+both zero-vulnerability audits, package/static/type/docstring checks, fresh
+warning-fatal documentation, Django contract checks and byte-identical generated
+assets. Eleven unit warnings remain visible, including the supported DRF list-error
+option's deprecation. Independent reconciliation verified unique JUnit without
+errors/failures/skips, every stage/order/duration, all 3,255 before/after/live
+source hashes, all 38 cumulative changed hashes and the prelaunch/before/after/live
+runner hash. All 10,449 originals are preserved and read back in place. No unit
+phase observer or database acceptance is claimed. Only this outcome append follows
+that feedback; documentation policy and whitespace must validate it before commit.
+
 Fresh final clean-head Auto, independent hosted acceptance and protected delivery
 remain required. Outcomes belong in the resulting PR and ignored evidence while
 source is pinned. No failed, older or focused receipt certifies this candidate;
@@ -119,10 +159,11 @@ credentials, unrelated stopped fixtures and paused monitors.
 
 ## Smallest next actions
 
-1. Complete final checks and normally commit the supported history-isolation
-   repair with its documentation; its exact 37-case reproduction now passes.
+1. Complete final checks and normally commit the supported DRF security repair
+   and API compatibility documentation; retain both failed full attempts.
 2. Fetch actual current main and run fresh ordinary Auto on the exact clean head.
-   Preserve complete originals; any repair requires new exact-source proof.
+   Preserve complete originals; passing tests from an audit-failed run cannot
+   certify the dependency-upgraded candidate.
 3. Push normally, prepare the complete PR and verify exact-head hosted PR gate,
    all CodeQL provenance, requested-review disposition and resolved conversations.
 4. Refresh no-bypass protection/current mergeability, exact-head squash, verify

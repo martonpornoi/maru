@@ -128,6 +128,8 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.JSONParser",
     ],
     "EXCEPTION_HANDLER": "maru.core.problems.problem_exception_handler",
+    # Preserve positional item errors in the existing API problem contract.
+    "LIST_SERIALIZER_ERRORS_AS_DICT": False,
 }
 
 SPECTACULAR_SETTINGS = {

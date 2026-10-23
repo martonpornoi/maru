@@ -71,6 +71,9 @@ def _django_validation_code(
 class EditionBasicSerializer(serializers.ModelSerializer[EventEdition]):
     """Serialize and validate edition basic data."""
 
+    # Retain the public text projection independently of model choice mapping.
+    adoption_profile_code = serializers.CharField(read_only=True)
+
     class Meta:
         """Configure Django's declarative class metadata."""
 
