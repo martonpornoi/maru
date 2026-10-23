@@ -15,6 +15,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Workforce-only Shift planners can keep a versioned rota package with JSON,
+  schema, integrity hashes and a self-contained printable copy. Current read and
+  management permissions are required; private calendars, account IDs and decision
+  reasons stay out. Copies show capture time and versions and do not update.
+
 - The disposable local preview now offers an ongoing and a future fictional
   MaruCon with Announcements and Guides drafts, waiting reviews and approved
   examples. Separate Author, Reviewer and Reader accounts are available on a
@@ -54,6 +59,11 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Patched REST API request-negotiation, charset and token-revocation
+  vulnerabilities while preserving existing positional list-validation errors
+  and edition API/generated-client field contracts.
+- Patched Vitest mock-development tooling for reported code-injection and
+  Windows path-traversal vulnerabilities, retaining unrelated dependency pins.
 - Workforce home Published and Review continuations now send view-only people
   to the readable team structure page. Retiring the last Department cannot hide
   an oversized retained Position tree behind a Ready message.

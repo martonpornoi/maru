@@ -14,7 +14,7 @@ authors = [{ name = "Maru contributors" }]
 dependencies = [
   "cryptography>=50,<51",
   "Django>=5.2.17,<5.3",
-  "djangorestframework>=3.17.1,<3.18",
+  "djangorestframework>=3.18.3,<3.19",
   "drf-spectacular[sidecar]>=0.30.0,<0.31",
   "gunicorn>=23,<24",
   "phonenumbers>=9,<10",

@@ -2,7 +2,7 @@
 
 from collections.abc import Collection
 from dataclasses import dataclass
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Final
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -461,3 +461,74 @@ def platform_editions() -> QuerySet[EventEdition]:
             "id",
         )
     )
+
+
+@dataclass(frozen=True, slots=True)
+class EditionRotaReference:
+    """Project exact edition metadata for an independently admitted rota read.
+
+    Attributes
+    ----------
+    id, organization_id, series_id
+        Coherent owning identity, not authority or a directory.
+    name, lifecycle, aggregate_version
+        Edition label, retained lifecycle and source revision.
+    starts_on, ends_on, time_zone
+        Local date envelope and IANA time zone used for printed work.
+    profile_code, profile_version
+        Exact immutable adoption boundary; callers must admit it independently.
+    """
+
+    id: UUID
+    organization_id: UUID
+    series_id: UUID
+    name: str
+    lifecycle: str
+    aggregate_version: int
+    starts_on: date
+    ends_on: date
+    time_zone: str
+    profile_code: str
+    profile_version: int
+
+
+def resolve_edition_rota_reference(
+    *, organization_id: UUID, edition_id: UUID
+) -> EditionRotaReference | None:
+    """Read minimized owner metadata after independent full-field authorization.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Exact organization owning the operation.
+    edition_id : UUID
+        Exact trusted scope, never an inferred browser selection.
+
+    Returns
+    -------
+    EditionRotaReference | None
+        Coherent metadata or no reference. This internal owner seam grants no
+        authorization and cannot be exposed as a public lookup adapter.
+    """
+    row = (
+        EventEdition.objects.filter(
+            id=edition_id,
+            organization_id=organization_id,
+            series__organization_id=organization_id,
+        )
+        .values_list(
+            "id",
+            "organization_id",
+            "series_id",
+            "name",
+            "lifecycle",
+            "aggregate_version",
+            "starts_on",
+            "ends_on",
+            "time_zone",
+            "adoption_profile_code",
+            "adoption_profile_version",
+        )
+        .first()
+    )
+    return EditionRotaReference(*row) if row is not None else None

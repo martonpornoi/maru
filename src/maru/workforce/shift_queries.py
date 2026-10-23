@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from django.db import models
 from django.utils import timezone
@@ -36,6 +36,20 @@ SHIFT_ORGANIZER_REQUIRED_FIELDS = frozenset(
         "suitability_consequences",
     }
 )
+
+
+class ShiftEditionScope(Protocol):
+    """Accept only the owner identity required to scope organizer Shift rows."""
+
+    @property
+    def id(self) -> UUID:
+        """Return the exact edition identity."""
+        ...
+
+    @property
+    def organization_id(self) -> UUID:
+        """Return the owning organization identity."""
+        ...
 
 
 class ShiftReadLimitExceededError(RuntimeError):
@@ -331,13 +345,15 @@ def _qualification_is_current(commitment: ShiftCommitment) -> bool:
     )
 
 
-def load_organizer_shift_overview(*, edition: EventEdition) -> OrganizerShiftOverview:
+def load_organizer_shift_overview(
+    *, edition: ShiftEditionScope
+) -> OrganizerShiftOverview:
     """Return all Shift demand and coverage for one authorized exact edition.
 
     Parameters
     ----------
-    edition : EventEdition
-        Already scoped and authorized exact edition.
+    edition : ShiftEditionScope
+        Already scoped and authorized exact edition identity.
 
     Returns
     -------

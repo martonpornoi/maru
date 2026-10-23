@@ -219,3 +219,37 @@ read-only, and mutation-role matrix remain required before release acceptance.
 - Check-in, lateness/absence escalation, actual time, handover acceptance,
   benefits, recognition, payroll, or timekeeping.
 - Automatic replacement staffing, bulk scheduling, or silent safety override.
+
+
+## Workforce-only operating copy
+
+HR-016/[ADR 0127](../../architecture/decisions/0127-bounded-workforce-rota-portability.md)
+add **Keep an operating copy** on Shift planning only when complete source-field
+read and separate Shift-management authority currently hold for exact
+`workforce_only@1`. Ordinary readers and volunteers receive no export link.
+Routes under the exact existing organization/series/edition Shift family are
+`rota/download/` and `rota/print/`; both independently authorize GET and accept no
+query parameters or form writes. Every output is private no-store.
+
+The download contains explicit versioned JSON, its closed schema, integrity
+manifest, instructions and a standalone print copy. The print route leads with
+edition, observation time and IANA zone; every Shift shows both local dates and
+offsets, its lifecycle, demand terms, truthful coverage and retained commitment
+states. Names are not unique identifiers. A claim is not confirmation, removed
+rows do not cover work and captured suitability is not future readiness.
+
+Empty is explicit; failed audit, partial field permission, revoked account,
+metadata movement, source/inventory overflow or package overflow returns no
+partial names or download. The adapter renders before final admission/audit and
+returns no lazy sensitive context. Output uses one H1/main, semantic headings,
+wrapping cards, ordinary keyboard links and print styles; the portable HTML loads
+no remote assets or scripts. Native source authorization, responsive/component
+inspection, real sign-in, true zoom, screen-reader and independent-human acceptance
+are separate evidence. No unrun acceptance is implied.
+
+The copy includes no platform account IDs, private calendars, identity contact
+fields, application/document data, decision reasons or unrelated modules. Saved
+and printed copies cannot be recalled: holders must follow approved custody and
+retention/disposal. It is a historical operating snapshot, not complete continuity,
+import, reconciliation or recovery. See the
+[self-contained operating guide](../../operations/workforce-rota-package.md).

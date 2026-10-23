@@ -1,10 +1,12 @@
 """Focused schema evidence for ADR 0041's additive scope-v2 phase."""
 
+from collections.abc import Iterator
 from datetime import date
 from uuid import uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
@@ -13,6 +15,9 @@ from maru.authorization.models import (
     CapabilityGrant,
     RoleAssignment,
     ScopedResourceBinding,
+)
+from maru.events.guidance_setup_readiness import (
+    guidance_setup_database_integrity_is_ready,
 )
 from maru.workforce.models import Department, Position, PositionTemplate
 from tests.factories import (
@@ -23,7 +28,11 @@ from tests.factories import (
     RoleBundleFactory,
     ScopedResourceBindingFactory,
 )
-from tests.support.migrations import workforce_migration_targets
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    isolated_migration_database,
+    workforce_migration_targets,
+)
 from tests.workforce_helpers import (
     create_department_for_test,
     save_position_for_test,
@@ -41,6 +50,31 @@ SCHEMA_DEPENDENCIES = (
     ("organizations", "0012_idn011_convention_subject_guards"),
     ("workforce", "0003_idn011_convention_subject_guards"),
 )
+
+
+@pytest.fixture
+def _scope_v2_history_database(
+    restores_current_migration_graph: None,
+) -> Iterator[None]:
+    """Contain committed scope history without changing the shared physical schema."""
+
+    del restores_current_migration_graph
+    assert guidance_setup_database_integrity_is_ready()
+    try:
+        with isolated_migration_database():
+            call_command(
+                "migrate",
+                verbosity=0,
+                interactive=False,
+                database=connection.alias,
+            )
+            assert guidance_setup_database_integrity_is_ready()
+            try:
+                yield
+            finally:
+                flush_then_restore_current_migration_graph()
+    finally:
+        assert guidance_setup_database_integrity_is_ready()
 
 
 def _workforce_position() -> tuple[Department, Position]:
@@ -271,7 +305,7 @@ def test_database_rejects_partial_persistent_scope_when_model_is_bypassed() -> N
 
 
 @pytest.mark.django_db(transaction=True)
-@pytest.mark.usefixtures("restores_current_migration_graph")
+@pytest.mark.usefixtures("_scope_v2_history_database")
 def test_scope_v2_migration_preserves_existing_authority_without_inference() -> None:
     executor = MigrationExecutor(connection)
     executor.migrate(

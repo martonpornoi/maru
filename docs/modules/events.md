@@ -797,3 +797,31 @@ Identity/Events/Authorization reference seams now exist, but the accepted ADR
 0081 profile, setup route, destinations, current-
 profile effects, accepted-item adapter activation, and user surfaces remain
 unavailable until their runtime and security acceptance issues merge.
+
+
+## Internal rota metadata reference
+
+`resolve_edition_rota_reference` returns only the coherent exact organization,
+series and edition identity, edition name/version/lifecycle, date envelope,
+IANA zone and immutable profile pair. The Workforce rota owner admits every
+`events.view_basic` field before calling it, uses it within its repeatable-read
+snapshot and compares it again before audited disclosure. This reference is not
+a public label lookup, model escape hatch or source of authority (HR-016/ADR 0127).
+
+
+`authorized_admin_edition_identity_for_route` is the preceding opaque locator
+seam. It resolves only organization/series/edition IDs inside compatible admitted
+candidates and verifies parent coherence; it selects no event or parent labels.
+The rota adapter then uses Authorization's verified-current-principal exact-edition
+policy seam for all source and management purposes before named metadata or Shift
+inventory. Existing object-returning route consumers are unchanged.
+
+
+## Stable adoption-code API projections
+
+The basic edition response exposes `adoption_profile_code` as read-only text.
+Its serializer declares that projection explicitly so dependency changes to model
+choice inference do not narrow the existing OpenAPI/generated-client contract.
+The edition-context response retains its closed profile enum and schema identity.
+Persisted model choices, setup-request validation, exact profile admission and
+field authorization continue to enforce their existing owning contracts.

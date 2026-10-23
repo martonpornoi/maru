@@ -1666,3 +1666,30 @@ its two added attachments; Events' stop-preparation probe verifies the complete
 22-table fence. Native trigger functions gain no new runtime EXECUTE grant.
 Retained stop receipts prevent ordinary reversal before the guards are removed.
 This component is not the complete stop command, preview or P11 acceptance.
+
+
+## Bounded Workforce rota copy
+
+HR-016 and [ADR 0127](../architecture/decisions/0127-bounded-workforce-rota-portability.md)
+add a versioned JSON/schema/print package over the existing complete organizer
+Shift projection for exact `workforce_only@1`. Every source field is admitted by
+current `events.view_basic` and `workforce.view_shifts`; existing
+`workforce.manage_shifts` is independently required. No role, profile, capability,
+schema, runtime privilege, domain state or notification changes.
+
+`rota` composes one short repeatable-read snapshot from the public Events metadata
+reference and existing owned Shift projection. It retains source record versions,
+explicit states, UTC and offset-bearing local times, and IANA zone. Platform
+account identifiers, exact calendars, identity contacts and decision reasons are
+not exported. Native owner limits remain 1,024 demands/4,096 total commitments;
+the complete uncompressed package and print output are bounded to 16 MiB.
+
+The browser adapter fully renders before current account/scope/profile/field and
+management admission, metadata comparison and required `workforce.rota.export`
+audit. Failure releases no partial copy. Successful responses are private no-store,
+no-referrer and nosniff; print HTML has no remote assets or scripts. The existing
+Workforce-personal audit marker sets no new legal retention period. Saved copies
+need approved custody, sharing, retention and disposal. This first #22 slice is
+not complete history/exit, import, reconciliation, backup/restore, timekeeping,
+expansion, decommissioning or production acceptance. See the
+[operator guide](../operations/workforce-rota-package.md).

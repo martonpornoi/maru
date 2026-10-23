@@ -1,7 +1,7 @@
 # Integrations and extensions
 
 Status: Active contract baseline
-Last updated: 2026-08-02
+Last updated: 2026-10-23
 
 Maru removes app hell by becoming the canonical event record and action center.
 It does not remove every specialist provider. Integrations must reduce duplicate
@@ -46,6 +46,13 @@ The supported REST API provides:
 
 An API version is a compatibility contract, not a copy of internal Django URLs.
 Breaking change requires a new major boundary or supported transition period.
+
+Nested list-validation errors retain their positional list shape, including empty
+entries for valid items, inside the existing problem response. DRF 3.18's supported
+`LIST_SERIALIZER_ERRORS_AS_DICT=False` compatibility option preserves that contract
+while receiving its parser and content-negotiation security fixes. No warning is
+suppressed. Review the announced removal before any future DRF 3.20 upgrade;
+changing errors to index-keyed objects requires an explicit API transition.
 
 Organization structure read projection demonstrates the read-projection form at
 `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure`.

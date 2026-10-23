@@ -1,3 +1,4 @@
+from rest_framework import serializers
 from rest_framework.exceptions import NotAuthenticated, ValidationError
 from rest_framework.test import APIRequestFactory
 
@@ -33,3 +34,25 @@ def test_problem_handler_preserves_field_errors() -> None:
     assert response is not None
     assert response.status_code == 400
     assert response.data["errors"] == {"email": ["Invalid value."]}
+
+
+def test_nested_list_problem_preserves_positions_and_error_codes() -> None:
+    class ItemSerializer(serializers.Serializer):
+        label = serializers.CharField()
+
+    class EnvelopeSerializer(serializers.Serializer):
+        items = ItemSerializer(many=True)
+
+    serializer = EnvelopeSerializer(data={"items": [{"label": "Present"}, {}]})
+
+    assert serializer.is_valid() is False
+    response = problem_exception_handler(ValidationError(serializer.errors), {})
+
+    assert response is not None
+    assert response.status_code == 400
+    assert response.content_type == "application/problem+json"
+    assert response.data["code"] == "required"
+    assert response.data["errors"] == {
+        "items": [{}, {"label": ["This field is required."]}],
+    }
+    assert response.data["errors"]["items"][1]["label"][0].code == "required"

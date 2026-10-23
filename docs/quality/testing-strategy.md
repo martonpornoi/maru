@@ -139,6 +139,19 @@ showed that restoring leaves in the caller otherwise leaves a dropped
 Do not relax physical-schema pins or reorder shards to hide that contamination.
 The ordinary current graph/contract case remains on the normal test database.
 
+The additive Authorization scope-v2 schema history uses the same boundary.
+An unchanged 37-case sequence reproduced two subsequent convention-demo failures:
+full-leaf restoration left all three EventEdition adoption fields in new physical
+slots while their logical definitions and native trigger/function catalog remained
+valid. Its fixture installs the real full current graph, including ordinary
+post-migrate initialization, in a fresh owned database; the original historical
+body and targets run unchanged, followed by flush/full restoration before cleanup.
+The original outer restoration fixture remains. Public Guidance readiness checks
+before and after protect the caller. Repeating the identical 37-case order passed,
+with independently reconciled selection/JUnit/all phases, unchanged caller physical
+fingerprints and exact owned-database cleanup. No guard pin, shard assignment,
+history selection, resource limit or timing allowance is relaxed.
+
 The single file-custody history round-trip also uses committed empty-database
 isolation. An unchanged two-case reproduction showed the same EventEdition
 physical-slot drift before the next import-history fixture could start. Its

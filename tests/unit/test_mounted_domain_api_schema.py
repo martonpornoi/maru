@@ -467,3 +467,28 @@ def test_mounted_logistics_components_keep_distinct_schema_identities(
         "LogisticsOfflineOperation",
         "OfflineOperation",
     } <= set(schemas)
+
+
+def test_edition_adoption_profile_projections_keep_their_public_schema_contracts(
+    mounted_api_schema: dict[str, Any],
+) -> None:
+    schemas = mounted_api_schema["components"]["schemas"]
+
+    assert schemas["EditionBasic"]["properties"]["adoption_profile_code"] == {
+        "type": "string",
+        "readOnly": True,
+    }
+    assert schemas["EditionContext"]["properties"]["adoption_profile_code"] == {
+        "allOf": [
+            {"$ref": "#/components/schemas/EditionContextAdoptionProfileCodeEnum"}
+        ],
+        "readOnly": True,
+    }
+    assert schemas["EditionContextAdoptionProfileCodeEnum"]["type"] == "string"
+    assert schemas["EditionContextAdoptionProfileCodeEnum"]["enum"] == [
+        "full_convention",
+        "workforce_only",
+        "announcements_only",
+        "guidance_only",
+        "announcements_guidance",
+    ]

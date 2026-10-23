@@ -34,6 +34,14 @@
     {% if can_manage_shifts %}<a class="workforce-structure-action" href="#create-shift">Create a Shift</a>{% endif %}
   </header>
 
+  {% if can_export_rota %}
+    <section class="baseline-panel" aria-labelledby="rota-copy-title">
+      <h2 id="rota-copy-title">Keep an operating copy</h2>
+      <p>Download a versioned rota package or print the same private Shift and commitment snapshot. Copies do not update and do not replace current confirmation, approved fallback procedures or a complete continuity archive.</p>
+      <p><a href="{% url 'download-workforce-rota' organization.slug convention_series.slug edition.slug %}">Download rota package</a> · <a href="{% url 'print-workforce-rota' organization.slug convention_series.slug edition.slug %}">Print rota</a></p>
+    </section>
+  {% endif %}
+
   <details class="maru-access-summary">
     <summary><span class="maru-access-summary__label"><strong>Access</strong><span class="maru-access-summary__scope">{{ shift_access_label }}</span></span><span class="maru-access-summary__policy">Private staffing state</span></summary>
     <div class="maru-access-summary__body"><p>Names, claims, and current suitability are shown only to scoped Shift planners and this read is audited. People see only their own commitments.</p></div>
