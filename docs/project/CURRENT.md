@@ -28,6 +28,17 @@ This candidate is for draft review, not certified merge or production use.
 The maintainer subsequently authorized overnight complete automated
 certification and in-scope failure repair, retaining draft status. Follow the
 [overnight scope](../checkpoints/2026-10-25-interface-repair-overnight-certification.md).
+The first exact-head attempt failed its dependency audit on filelock 3.32.0.
+Its 14,433 units passed; the pool was explicitly cancelled after that known
+failure: eight shards were interrupted and 103 unstarted. All eight owned
+containers were removed, original resources/source remained unchanged, and
+1,010 original evidence files were preserved with equal SHA-256 hashes.
+The bounded [security repair](../checkpoints/2026-10-25-interface-repair-security-dependencies.md)
+updates only filelock to 4.2.1 and the existing undici override to 7.30.1.
+Fresh audits are clean; 107 other Python and 173 other frontend package records
+remain exact. Audit-cache interoperability and all 124 frontend cases pass.
+The repaired clean candidate still needs complete fresh certification; the
+first failed attempt and focused feedback do not certify it.
 The exact pinned receipt and PR #222 own the run outcome; this source checkpoint
 does not predict its result. Hosted merge acceptance and protected delivery
 remain required. Human invitation acceptance, Alex's Crew continuation and the

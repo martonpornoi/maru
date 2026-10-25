@@ -50,9 +50,13 @@ dev = [
 where = ["src"]
 
 [tool.uv]
-# Security floors for Requests dependencies used by development tooling.
-# Keep the urllib3 fixes and the certifi emSign root removal (PYSEC-2026-4320).
-constraint-dependencies = ["urllib3>=2.8.0,<3", "certifi>=2026.10.19"]
+# Security floors for development-tool dependencies: Requests trust/transport
+# fixes and filelock's lock-path/side-file corrections (CVE-2026-112907/913/940).
+constraint-dependencies = [
+  "urllib3>=2.8.0,<3",
+  "certifi>=2026.10.19",
+  "filelock>=4.2.1,<5",
+]
 
 [tool.setuptools.package-data]
 "*" = ["templates/**/*.html", "static/**/*"]

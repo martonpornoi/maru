@@ -13,6 +13,11 @@ rather than replace the curated summary.
 
 ## [Unreleased]
 
+### Security
+
+- Development tooling now uses patched filelock and undici releases, retaining
+  security floors for local audit-cache locking and browser-test HTTP behavior.
+
 ### Fixed
 
 - Organization lists expose their creation action. Volunteer setup uses one
