@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-10-25
-Phase: isolated interface-repair candidate; automated feedback and draft review.
+Phase: PR #222 overnight automated certification; draft review remains open.
 
 ## Latest handoff — 25 October 2026
 
@@ -25,11 +25,14 @@ lint, both docstring checks and a warning-fatal documentation build. All six
 generated API/frontend files reproduce byte-for-byte. The original manual-test
 source snapshot remains unchanged; full native acceptance was not run.
 This candidate is for draft review, not certified merge or production use.
-Final clean-head native certification, hosted acceptance and protected delivery
+The maintainer subsequently authorized overnight complete automated
+certification and in-scope failure repair, retaining draft status. Follow the
+[overnight scope](../checkpoints/2026-10-25-interface-repair-overnight-certification.md).
+The exact pinned receipt and PR #222 own the run outcome; this source checkpoint
+does not predict its result. Hosted merge acceptance and protected delivery
 remain required. Human invitation acceptance, Alex's Crew continuation and the
-broader independent-person/accessibility/recovery gates remain open. Finish
-tomorrow's observations, include any resulting repair, then certify the final
-candidate once rather than running full acceptance before expected feedback.
+broader independent-person/accessibility/recovery gates remain open. Incorporate
+tomorrow's observations separately; any later changed head needs fresh proof.
 
 ## Latest local handoff — 24 October 2026
 
