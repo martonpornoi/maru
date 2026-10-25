@@ -39,6 +39,19 @@ Fresh audits are clean; 107 other Python and 173 other frontend package records
 remain exact. Audit-cache interoperability and all 124 frontend cases pass.
 The repaired clean candidate still needs complete fresh certification; the
 first failed attempt and focused feedback do not certify it.
+The second attempt at `6ac89b41` passed 48 native shards, all units and the
+non-database gates, then found one obsolete integration assertion expecting
+**Set up Workforce** instead of the accepted **Set up a volunteer team** label.
+Seven active shards were cancelled and 55 were unstarted. Original source and
+resources stayed unchanged; all owned containers were removed. Its 4,885 local-CI
+and 5,774 documentation-build originals are hash-verified in preservation storage.
+The assertion now follows UX-031 and the existing page contract, with every
+other lifecycle, input and authorization assertion retained. See the
+[native-title repair](../checkpoints/2026-10-25-interface-repair-native-title.md).
+The complete focused native case passes in a fresh owned database; independent
+AST/resource checks retain every other statement and confirm exact cleanup.
+The new clean candidate requires fresh complete certification; no result is
+borrowed from either failed attempt.
 The exact pinned receipt and PR #222 own the run outcome; this source checkpoint
 does not predict its result. Hosted merge acceptance and protected delivery
 remain required. Human invitation acceptance, Alex's Crew continuation and the

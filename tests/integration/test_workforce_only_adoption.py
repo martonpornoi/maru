@@ -915,7 +915,7 @@ def test_guided_setup_page_explains_the_boundary_and_redirects_to_accountability
 
     assert page.status_code == 200
     content = page.content.decode()
-    assert "Set up Workforce" in content
+    assert "Set up a volunteer team" in content
     assert "Only Workforce is adopted" in content
     assert "Maru operators" in content
     assert "Executive Board" in content
