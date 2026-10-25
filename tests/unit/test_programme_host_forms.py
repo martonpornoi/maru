@@ -105,7 +105,8 @@ def test_native_local_minute_resolves_the_edition_zone(value, expected):
     field = ProgrammeHostLocalMinuteField(zone_name="Europe/Budapest")
     assert field.clean(value) == expected
     assert field.prepare_value(expected) == value
-    assert field.widget.input_type == "datetime-local"
+    assert field.widget.input_type == "text"
+    assert field.widget.attrs["placeholder"] == "YYYY-MM-DD HH:mm:ss"
 
 
 @pytest.mark.parametrize(

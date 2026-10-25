@@ -8,6 +8,7 @@ from uuid import UUID
 from django import forms
 
 from maru.core.forms import CanonicalUUIDField, StrictInputForm
+from maru.core.widgets import ISODateTimeInput
 
 if TYPE_CHECKING:
     from maru.authorization.guidance_access_queries import GuidanceAccessWorkspace
@@ -53,7 +54,7 @@ class GuidanceAccessRequestForm(StrictInputForm):
     expires_at = forms.DateTimeField(
         label="Access ends (optional)",
         required=False,
-        widget=forms.DateTimeInput(
+        widget=ISODateTimeInput(
             attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
         ),
         help_text=(

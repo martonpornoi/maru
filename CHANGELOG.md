@@ -13,6 +13,15 @@ rather than replace the curated summary.
 
 ## [Unreleased]
 
+### Fixed
+
+- Organization lists expose their creation action. Volunteer setup uses one
+  task name, asks explicitly whether to create or reuse an organizer, and links
+  unfinished accountable access to its own continuation. Shared choice controls
+  stay beside their labels and action links retain contrast after visiting.
+- Browser forms accept directly typed ISO dates and 24-hour local times while
+  retaining each workflow's precision, time-zone and daylight-saving validation.
+
 ### Added
 
 - Workforce-only Shift planners can keep a versioned rota package with JSON,

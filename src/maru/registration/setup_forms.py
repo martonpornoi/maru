@@ -16,6 +16,7 @@ from maru.core.forms import (
     StrictBase10IntegerField,
     StrictInputForm,
 )
+from maru.core.widgets import ISODateTimeInput
 from maru.registration.models import (
     ProfileExtensionAudience,
     ProfileExtensionWriter,
@@ -120,7 +121,7 @@ class EditionLocalDateTimeField(forms.Field):
         """
         kwargs.setdefault(
             "widget",
-            forms.DateTimeInput(
+            ISODateTimeInput(
                 format="%Y-%m-%dT%H:%M",
                 attrs={"type": "datetime-local", "step": "60"},
             ),

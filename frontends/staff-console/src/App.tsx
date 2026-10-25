@@ -1,3 +1,4 @@
+import { localDateTimeToISO } from "./localDateTime";
 import {
   createContext,
   type CSSProperties,
@@ -3382,7 +3383,7 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
       const updated = await changeRegistrationPaymentDeadline(
         edition,
         selected.id,
-        new Date(newPaymentDeadline).toISOString(),
+        localDateTimeToISO(newPaymentDeadline),
         exceptionReason.trim(),
       );
       replaceRegistration(updated);
@@ -3896,7 +3897,8 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
                 <label>
                   New payment deadline
                   <input
-                    type="datetime-local"
+                    type="text"
+                    placeholder="YYYY-MM-DD HH:mm:ss"
                     value={newPaymentDeadline}
                     onChange={(event) => setNewPaymentDeadline(event.target.value)}
                   />
@@ -4628,7 +4630,7 @@ function AccessAssignmentCard({
       await onReplace(assignment.id, {
         group_code: groupCode,
         approver_email: approverEmail.trim(),
-        expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+        expires_at: expiresAt ? localDateTimeToISO(expiresAt) : null,
         reason: reason.trim(),
       });
       setEditing(false);
@@ -4706,7 +4708,8 @@ function AccessAssignmentCard({
           <label>
             <span>Expires (optional)</span>
             <input
-              type="datetime-local"
+              type="text"
+              placeholder="YYYY-MM-DD HH:mm:ss"
               value={expiresAt}
               onChange={(event) => setExpiresAt(event.target.value)}
             />
@@ -4894,7 +4897,7 @@ function AccessDrawer({
         person_email: personEmail.trim(),
         group_code: groupCode,
         approver_email: approverEmail.trim(),
-        expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+        expires_at: expiresAt ? localDateTimeToISO(expiresAt) : null,
         reason: reason.trim(),
       });
       setPersonEmail("");
@@ -5093,7 +5096,8 @@ function AccessDrawer({
           <label>
             <span>Expires (optional)</span>
             <input
-              type="datetime-local"
+              type="text"
+              placeholder="YYYY-MM-DD HH:mm:ss"
               value={expiresAt}
               onChange={(event) => setExpiresAt(event.target.value)}
             />

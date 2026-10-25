@@ -28,6 +28,7 @@ from maru.core.forms import (
     StrictBase10IntegerField,
     StrictInputForm,
 )
+from maru.core.widgets import ISODateInput, ISODateTimeInput
 from maru.identity.models import Account
 
 if TYPE_CHECKING:
@@ -797,13 +798,13 @@ def _answer_field(  # noqa: PLR0911, PLR0912
             widget=forms.CheckboxSelectMultiple,
         )
     if question.field_type == ApplicationQuestionType.DATE:
-        return forms.DateField(**common, widget=forms.DateInput(attrs={"type": "date"}))
+        return forms.DateField(**common, widget=ISODateInput(attrs={"type": "date"}))
     if question.field_type == ApplicationQuestionType.TIME:
         return forms.TimeField(**common, widget=forms.TimeInput(attrs={"type": "time"}))
     if question.field_type == ApplicationQuestionType.INSTANT:
         return forms.DateTimeField(
             **common,
-            widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            widget=ISODateTimeInput(attrs={"type": "datetime-local"}),
         )
     if question.field_type == ApplicationQuestionType.EMAIL:
         return forms.EmailField(**common)

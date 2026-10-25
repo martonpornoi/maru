@@ -8,6 +8,7 @@ from django import forms
 
 from maru.core.forms import CanonicalUUIDField, StrictInputForm
 from maru.core.localization import grouped_time_zone_choices, language_labels
+from maru.core.widgets import ISODateInput
 from maru.events.guidance_setup_inputs import (
     GuidanceAdoptionSetupInput,
     GuidanceSetupMode,
@@ -35,10 +36,10 @@ class GuidanceSetupForm(StrictInputForm):
     )
     edition_name = forms.CharField(label="Edition name", max_length=160)
     starts_on = forms.DateField(
-        label="Starts on", widget=forms.DateInput(attrs={"type": "date"})
+        label="Starts on", widget=ISODateInput(attrs={"type": "date"})
     )
     ends_on = forms.DateField(
-        label="Ends on", widget=forms.DateInput(attrs={"type": "date"})
+        label="Ends on", widget=ISODateInput(attrs={"type": "date"})
     )
     time_zone = forms.ChoiceField(
         label="Convention time zone", choices=grouped_time_zone_choices

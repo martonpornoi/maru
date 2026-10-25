@@ -6,9 +6,11 @@ from typing import Any
 
 from django import forms
 
+from maru.core.widgets import ISODateInput, ISODateTimeInput
+
 
 class EditionLocalMinuteWidget(forms.MultiWidget):
-    """Keep the native calendar while making the clock explicitly 00:00-23:59."""
+    """Keep typed ISO dates alongside an explicit 00:00-23:59 clock."""
 
     template_name = "applications/widgets/local_minute.html"
     use_fieldset = False
@@ -25,7 +27,7 @@ class EditionLocalMinuteWidget(forms.MultiWidget):
         self.label = label
         super().__init__(
             widgets={
-                "date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+                "date": ISODateInput(format="%Y-%m-%d", attrs={"type": "date"}),
                 "time": forms.TextInput(
                     attrs={
                         "placeholder": "HH:MM",
@@ -117,7 +119,7 @@ class EditionLocalMinuteWidget(forms.MultiWidget):
             submissions remain supported only when split controls are absent.
         """
         if not any(f"{name}{suffix}" in data for suffix in self.widgets_names):
-            return data.get(name)
+            return ISODateTimeInput().value_from_datadict(data, files, name)
         date, time = super().value_from_datadict(data, files, name)
         if not date and not time:
             return ""

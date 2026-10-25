@@ -825,3 +825,13 @@ choice inference do not narrow the existing OpenAPI/generated-client contract.
 The edition-context response retains its closed profile enum and schema identity.
 Persisted model choices, setup-request validation, exact profile admission and
 field authorization continue to enforce their existing owning contracts.
+
+## Deliberate volunteer-setup foundation choice
+
+The **Set up a volunteer team** form selects no create/reuse mode by default.
+The operator must choose a new foundation, an existing organizer, or an existing
+series. Display names are not identities: reuse choices show the stable organizer
+locator to distinguish same-named records. Existing provisioning workspaces link
+to their own accountable-access setup; another organizer's accepted appointment
+does not confer access. The underlying setup command, immutable profiles,
+idempotency, representation activation and tenant boundaries are unchanged.

@@ -12,6 +12,9 @@ or permission to use production personal data.
 
 ## Explore safely
 
+- [Build a convention from an empty Maru](blank-start-manual-test.md) is the
+  admin-only, GUI-led manual test with a required main path and optional branches.
+
 - [Announcements with existing channels](announcements.md) covers standalone
   setup, reviewed manual publishing, corrections and handover. Implementation and
   browser verification are in progress.
@@ -94,6 +97,7 @@ analogy.
 :hidden:
 :maxdepth: 1
 
+blank-start-manual-test
 maru-hands-on-tutorial
 announcements
 guidance-maintainer-walkthrough

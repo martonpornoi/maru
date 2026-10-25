@@ -7,6 +7,7 @@ from typing import Any
 from django import forms
 
 from maru.core.forms import CanonicalUUIDField, StrictInputForm
+from maru.core.widgets import ISODateTimeInput
 
 
 class _ActionForm(StrictInputForm):
@@ -32,7 +33,9 @@ class PageAccessAssignmentForm(_ActionForm):
         max_length=254,
         label="Independent approver email",
     )
-    expires_at = forms.DateTimeField(required=False, label="Expires (optional)")
+    expires_at = forms.DateTimeField(
+        required=False, label="Expires (optional)", widget=ISODateTimeInput
+    )
     reason = forms.CharField(max_length=240)
 
 

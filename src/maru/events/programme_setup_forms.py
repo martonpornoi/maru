@@ -8,6 +8,7 @@ from django import forms
 
 from maru.core.forms import CanonicalUUIDField, StrictInputForm
 from maru.core.localization import grouped_time_zone_choices
+from maru.core.widgets import ISODateInput
 from maru.events.programme_setup_inputs import (
     ProgrammeSetupInput,
     ProgrammeSetupMode,
@@ -32,8 +33,8 @@ class ProgrammeSetupForm(StrictInputForm):
     department_name = forms.CharField(
         label="First Programme Department name", max_length=160
     )
-    starts_on = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
-    ends_on = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    starts_on = forms.DateField(widget=ISODateInput(attrs={"type": "date"}))
+    ends_on = forms.DateField(widget=ISODateInput(attrs={"type": "date"}))
     time_zone = forms.ChoiceField(
         label="Convention time zone", choices=grouped_time_zone_choices
     )

@@ -17,6 +17,7 @@ from maru.core.forms import (
     StrictBase10IntegerField,
     StrictInputForm,
 )
+from maru.core.widgets import ISODateInput, ISODateTimeInput
 from maru.venues.models import (
     AccommodationRoomType,
     EditionVenueSelection,
@@ -98,7 +99,7 @@ class EditionLocalDateTimeField(forms.Field):
         """
         kwargs.setdefault(
             "widget",
-            forms.DateTimeInput(
+            ISODateTimeInput(
                 format=_DATE_TIME_FORMAT,
                 attrs={"type": "datetime-local", "step": "60"},
             ),
@@ -466,7 +467,7 @@ class AccommodationInventoryForm(VenueRetryForm):
     """Collect and validate accommodation inventory input."""
 
     room_type_id = forms.ChoiceField(choices=())
-    night = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    night = forms.DateField(widget=ISODateInput(attrs={"type": "date"}))
     room_capacity = StrictBase10IntegerField(min_value=0)
     release_at = EditionLocalDateTimeField()
     provider_reference = forms.CharField(max_length=240, required=False)

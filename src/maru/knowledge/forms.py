@@ -13,6 +13,7 @@ from maru.core.forms import (
     StrictInputForm,
 )
 from maru.core.localization import language_labels
+from maru.core.widgets import ISODateInput
 
 from .catalog import MAX_BODY, MAX_NOTE, MAX_TITLE, PLACEMENTS
 from .contracts import GuidanceDraftInput, GuidanceOptions, GuidanceSettingsInput
@@ -48,7 +49,7 @@ class DraftForm(CommandForm):
     review_by = forms.DateField(
         label="Review by",
         required=False,
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=ISODateInput(attrs={"type": "date"}),
         help_text="You can save without a date. Set one before asking for review.",
     )
     placements = forms.MultipleChoiceField(
@@ -172,7 +173,7 @@ class SettingsForm(CommandForm):
     )
     review_on = forms.DateField(
         label="Review these rules by",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=ISODateInput(attrs={"type": "date"}),
     )
     policy_url = HttpsURLField(
         label="Link to the rules", max_length=2000, required=False

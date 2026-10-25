@@ -547,7 +547,7 @@ def workforce_adoption_setup(request: HttpRequest) -> HttpResponse:
             adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
             adoption_profile_version=WORKFORCE_ONLY_PROFILE_VERSION,
         )
-        .select_related("organization", "series")
+        .select_related("organization__representation", "series")
         .order_by("organization__name", "series__name", "starts_on", "id")
     )
     return _baseline_page_response(

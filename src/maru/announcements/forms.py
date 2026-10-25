@@ -14,6 +14,7 @@ from maru.core.forms import (
     StrictInputForm,
 )
 from maru.core.localization import language_labels
+from maru.core.widgets import ISODateInput, ISODateTimeInput
 
 from .catalog import MAX_BODY, MAX_CHANNELS, MAX_HEADLINE, MAX_VARIANTS
 from .contracts import (
@@ -275,7 +276,7 @@ class SettingsForm(CommandForm):
         label="Who is responsible for these records?", max_length=200
     )
     review_on = forms.DateField(
-        label="Review these rules on", widget=forms.DateInput(attrs={"type": "date"})
+        label="Review these rules on", widget=ISODateInput(attrs={"type": "date"})
     )
     policy_url = HttpsURLField(
         label="Link to the rules", max_length=2000, required=False
@@ -485,7 +486,7 @@ class PublicationForm(CommandForm):
     variant_id = CanonicalUUIDField(label="Channel and language", widget=forms.Select)
     published_at = forms.DateTimeField(
         label="When did you post it?",
-        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        widget=ISODateTimeInput(attrs={"type": "datetime-local"}),
     )
     publication_url = HttpsURLField(
         label="Link to the published post", max_length=2000, required=False
@@ -557,7 +558,7 @@ class CorrectReportForm(ReasonForm):
     published_at = forms.DateTimeField(
         label="Correct publication date and time",
         required=False,
-        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        widget=ISODateTimeInput(attrs={"type": "datetime-local"}),
     )
     publication_url = HttpsURLField(
         label="Correct link to the post", max_length=2000, required=False

@@ -38,7 +38,7 @@ def test_adoption_setup_normalizes_names_without_creating_foundation_records() -
     assert form.cleaned_data["series_name"] == "Synthetic convention"
     assert form.cleaned_data["edition_name"] == "Synthetic 2027"
     defaults = WorkforceAdoptionSetupForm()
-    assert defaults.initial["mode"] == "new_foundation"
+    assert "mode" not in defaults.initial
     assert defaults.initial["time_zone"] == "UTC"
     assert defaults.initial["idempotency_key"]
 

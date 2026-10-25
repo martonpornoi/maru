@@ -96,7 +96,7 @@ fix forward or restore the database.
 ## Establish a Workforce-only workspace
 
 1. Sign in with an active platform-administrator account.
-2. Open **Platform administration → Set up Workforce**.
+2. Open **Platform administration → Set up a volunteer team**.
 3. Choose the highest foundation already present:
 
    - start a new organization and convention;

@@ -16,6 +16,7 @@ from maru.core.forms import (
     StrictBase10IntegerField,
     StrictInputForm,
 )
+from maru.core.widgets import ISODateTimeInput
 from maru.workforce.assignment_inputs import (
     MAX_ASSIGNMENT_REASON_LENGTH,
     normalize_assignment_reason,
@@ -650,7 +651,7 @@ class WorkforceEditionLocalDateTimeField(forms.Field):
         """
         kwargs.setdefault(
             "widget",
-            forms.DateTimeInput(
+            ISODateTimeInput(
                 format=_DATE_TIME_FORMAT,
                 attrs={"type": "datetime-local", "step": "60"},
             ),

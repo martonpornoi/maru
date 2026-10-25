@@ -134,8 +134,8 @@
           </div>
           <div>
             {{ assignment_form.expires_at.errors }}
-            <label for="id_access_expires">Expires (optional)</label>
-            <input id="id_access_expires" type="datetime-local" name="expires_at">
+            <label for="{{ assignment_form.expires_at.id_for_label }}">Expires (optional)</label>
+            {{ assignment_form.expires_at.as_widget }}
           </div>
           <div class="maru-access-assignment-form__wide">
             {{ assignment_form.reason.errors }}

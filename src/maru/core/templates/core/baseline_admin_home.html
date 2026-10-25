@@ -19,9 +19,9 @@
         <div class="baseline-panel-heading">
           <div>
             <p class="baseline-kicker">Start with one reliable workflow</p>
-            <h2 id="focused-adoption-title">Set up Workforce without replacing everything</h2>
+            <h2 id="focused-adoption-title">Start with a volunteer team</h2>
           </div>
-          <a class="button" href="{% url 'workforce-adoption-setup' %}">Set up Workforce</a>
+          <a class="button" href="{% url 'workforce-adoption-setup' %}">Set up a volunteer team</a>
         </div>
         <p>
           Create or reuse the minimum convention foundation, then operate
@@ -38,9 +38,12 @@
             <p class="baseline-kicker">Convention organizers</p>
             <h2 id="organization-inventory-title">Organization inventory</h2>
           </div>
-          <span class="baseline-count">
-            {{ organizations|length }} organization{{ organizations|length|pluralize }}
-          </span>
+          <div class="baseline-panel-actions">
+            <span class="baseline-count">{{ organizations|length }} organization{{ organizations|length|pluralize }}</span>
+            {% if not organization_inventory_load_failed %}
+              <a class="baseline-primary-link" href="{% url 'baseline-create-organization' %}">Create organization</a>
+            {% endif %}
+          </div>
         </div>
 
         {% if organization_inventory_load_failed %}

@@ -6,10 +6,10 @@
   <script src="{% static 'core/workforce-adoption-setup.js' %}" defer></script>
 {% endblock %}
 
-{% block baseline_page_title %}Set up Workforce · Maru{% endblock %}
+{% block baseline_page_title %}Set up a volunteer team · Maru{% endblock %}
 {% block baseline_breadcrumbs %}
   <a href="{% url 'baseline-admin-home' %}">Platform administration</a>
-  &rsaquo; Set up Workforce
+  &rsaquo; Set up a volunteer team
 {% endblock %}
 
 {% block baseline_content %}
@@ -17,7 +17,7 @@
 
   <header class="baseline-page-heading">
     <p class="baseline-kicker">Progressive adoption</p>
-    <h1>Set up Workforce</h1>
+    <h1>Set up a volunteer team</h1>
     <p class="baseline-intro">
       Give one convention a complete volunteer-management workspace without
       moving attendee registration, payments, or unrelated operations into
@@ -77,9 +77,12 @@
                 <td data-label="Organization">{{ edition.organization.name }}</td>
                 <td data-label="Dates">{{ edition.starts_on }} – {{ edition.ends_on }}</td>
                 <td data-label="Continue">
-                  <a href="{% url 'organization-structure' edition.organization.slug edition.series.slug edition.slug %}">
-                    Open Workforce
-                  </a>
+                  {% if edition.organization.representation.state != "active" %}
+                    <a href="{% url 'organization-representation' edition.organization.slug %}">Finish accountable access</a>
+                    <p>Invite two controllers, let each accept, then activate before they can open this team.</p>
+                  {% else %}
+                    <a href="{% url 'organization-structure' edition.organization.slug edition.series.slug edition.slug %}">Open volunteer team</a>
+                  {% endif %}
                 </td>
               </tr>
             {% endfor %}
@@ -121,7 +124,7 @@
         <p>
           For a new foundation, enter both names. To reuse an organization,
           select it and enter only the new convention name. To reuse a series,
-          select that series.
+          select that series. Do not re-enter an existing organization name as a new foundation: that creates a separate organization with its own access setup.
         </p>
       </div>
       <div class="baseline-field-grid">
@@ -173,7 +176,7 @@
     </aside>
 
     <div class="baseline-form-actions baseline-form-actions--sticky">
-      <button type="submit">Set up Workforce</button>
+      <button type="submit">Set up a volunteer team</button>
       <a class="baseline-secondary-link" href="{% url 'baseline-admin-home' %}">Cancel</a>
     </div>
   </form>

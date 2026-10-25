@@ -100,7 +100,7 @@ def test_initial_deadline_uses_edition_date_and_explicit_24_hour_clock():
     soup = BeautifulSoup(str(form["opens_at"]), "html.parser")
     calendar = soup.select_one('[name="opens_at_date"]')
     clock = soup.select_one('[name="opens_at_time"]')
-    assert (calendar["type"], calendar["value"]) == ("date", "2027-01-01")
+    assert (calendar["type"], calendar["value"]) == ("text", "2027-01-01")
     assert (clock["type"], clock["value"]) == ("text", "00:00")
     assert clock["aria-label"] == "Opens: Time (24-hour)"
     assert "Midnight is 00:00; noon is 12:00." in soup.get_text()
