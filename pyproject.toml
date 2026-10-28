@@ -51,11 +51,13 @@ where = ["src"]
 
 [tool.uv]
 # Security floors for development-tool dependencies: Requests trust/transport
-# fixes and filelock's lock-path/side-file corrections (CVE-2026-112907/913/940).
+# fixes, filelock's lock-path/side-file corrections (CVE-2026-112907/913/940),
+# and msgpack's parser ownership corrections (CVE-2026-114613).
 constraint-dependencies = [
   "urllib3>=2.8.0,<3",
   "certifi>=2026.10.19",
   "filelock>=4.2.1,<5",
+  "msgpack>=1.2.3,<2",
 ]
 
 [tool.setuptools.package-data]

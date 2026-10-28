@@ -333,5 +333,13 @@ Existing split application controls keep a typed ISO date and labelled 24-hour
 minute clock. Owning fields retain precision, time-zone, DST and error rules;
 minute-precision workflows accept zero seconds and reject nonzero seconds.
 API UTC/offset serialization is unchanged. Invalid input remains correctable.
+Access sharing and replacement show a field-associated parsing error before any
+request, retain the entered expiry and reason, and allow correction and resubmission.
 Choice groups expose legends and individual labels, with the control beside
 its text. Theme-aware action colors apply to visited and unvisited links.
+Panel count/status badges use a matching theme-aware foreground and background.
+Existing volunteer workspaces distinguish provisioning setup from suspended
+accountable access: suspended work points to review and the approved recovery
+process, without offering initial invitation/activation instructions or implying
+that the workspace may resume. Active workspaces retain their team destination;
+missing or unknown accountable state is unavailable.

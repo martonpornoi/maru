@@ -1252,7 +1252,8 @@ button:focus-visible {
 }
 
 .baseline-unified-admin .baseline-panel-heading .baseline-count {
-  color: inherit;
+  color: var(--body-fg);
+  background: var(--darkened-bg);
 }
 
 .baseline-unified-admin .baseline-required {

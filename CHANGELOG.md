@@ -17,6 +17,8 @@ rather than replace the curated summary.
 
 - Development tooling now uses patched filelock and undici releases, retaining
   security floors for local audit-cache locking and browser-test HTTP behavior.
+- Patched the audit tool's MessagePack dependency against parser memory-safety
+  vulnerabilities while retaining its cache format and unrelated dependency pins.
 
 ### Fixed
 
@@ -26,6 +28,9 @@ rather than replace the curated summary.
   stay beside their labels and action links retain contrast after visiting.
 - Browser forms accept directly typed ISO dates and 24-hour local times while
   retaining each workflow's precision, time-zone and daylight-saving validation.
+- Access expiry errors remain visible and correctable before a request is sent.
+  Panel status badges retain dark-mode contrast, and suspended volunteer
+  workspaces show recovery guidance instead of initial access setup instructions.
 
 ### Added
 

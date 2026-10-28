@@ -1,7 +1,48 @@
 # Current project state
 
-Last updated: 2026-10-25
-Phase: PR #222 overnight automated certification; draft review remains open.
+Last updated: 2026-10-28
+Phase: PR #222 hosted-review repairs; fresh exact-head certification pending.
+
+## Latest handoff — 28 October 2026
+
+The maintainer authorized marking PR #222 ready, completing hosted acceptance
+and addressing in-scope findings, with the PR left unmerged. The previously
+certified `61197159` passed all ten local gates on 26 October: 14,433 units,
+5,329 native cases across 111 shards, 124 frontend cases and 91.2797% combined
+coverage. Its complete source and original evidence remain intact in the
+retained checkout. A fresh checkout now owns the repair branch so no sealed
+local-CI or documentation outputs are overwritten.
+
+The ready-state hosted audit found msgpack 1.2.1 affected by CVE-2026-114613;
+the global advisory was published after that local certification. The remaining
+quality job was cancelled after the known failure; no hosted unit/native or
+combined-coverage success is claimed. Complete job pages and run logs are
+preserved with SHA-256 readback. Official upstream evidence supports the bounded
+1.2.3 repair; CacheControl's old and new serialized response bytes match and its
+valid/invalid-cache checks pass. Fresh Python and all-severity frontend audits
+report no known vulnerabilities.
+
+The single Copilot review identified three supported interface defects, repaired
+together: local access-expiry parsing now exposes an associated error while
+retaining inputs; panel badges use paired theme colors; suspended accountable
+access has review/recovery guidance instead of provisioning instructions.
+Focused template/input feedback passes 117 cases; all 128 frontend cases pass,
+and the four expiry regressions pass again after the final accessible-label
+adjustment. Type checking and the normal production build pass. Supplied-state
+browser checks retain readable badge colors and correct recovery text at actual
+320/768/1,280 CSS pixels; dark badge contrast is 16.45:1. Invalid share expiry and
+correction were exercised against synthetic responses only. Replacement submission
+was blocked by automatic browser approval review, so its correction evidence is
+automated component coverage. No signed-in human journey is claimed. Complete
+certification remains pending; failed helper/environment/new-test assumptions
+remain separately recorded. See the
+[hosted-findings checkpoint](../checkpoints/2026-10-28-interface-repair-hosted-findings.md).
+
+Next: complete focused verification, commit normally, run one fresh ordinary Auto
+certification of the clean repaired head, push and independently verify new hosted
+acceptance and review disposition. No merge, deployment, protection changes,
+manual-test restart/data changes, password handling or invitation acceptance is
+authorized. Independent human/accessibility/operational/recovery gates remain open.
 
 ## Latest handoff — 25 October 2026
 

@@ -1533,6 +1533,54 @@ describe("Management Console", () => {
     });
   });
 
+  it.each([
+    ["Share access", "2031-02-30 10:00:00"],
+    ["Share access", "06/06/2031 10:00 AM"],
+    ["Save change", "2031-02-30 10:00:00"],
+    ["Save change", "06/06/2031 10:00 AM"],
+  ])("retains and explains invalid expiry before %s: %s", async (action, invalid) => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: "MaruCon 2026" });
+    await user.click(await screen.findByRole("button", { name: "Manage access" }));
+    const drawer = screen.getByRole("dialog", { name: "Access to Today" });
+    if (action === "Save change") {
+      await user.click(within(drawer).getByRole("button", { name: /^Change$/ }));
+    }
+    const button = within(drawer).getByRole("button", { name: action });
+    const form = button.closest("form")!;
+    const expiry = within(form).getByRole("textbox", { name: "Expires (optional)" });
+    if (action === "Share access") {
+      await user.type(within(form).getByRole("textbox", { name: "Existing account email" }), "helper@example.invalid");
+    }
+    await user.type(within(form).getByRole("textbox", { name: "Independent approver email" }), "approver@example.invalid");
+    const reason = within(form).getByRole("textbox", { name: action === "Share access" ? "Reason" : "Reason for changing access" });
+    await user.type(reason, "Synthetic access correction.");
+    await user.type(expiry, invalid);
+    vi.mocked(fetch).mockClear();
+    await user.click(button);
+    expect(within(form).getByRole("alert")).toHaveTextContent(/Enter a (valid local )?date and time/);
+    expect(expiry).toHaveValue(invalid);
+    expect(expiry).toHaveAttribute("aria-invalid", "true");
+    expect(expiry).toHaveAccessibleDescription(/Enter a (valid local )?date and time/);
+    expect(reason).toHaveValue("Synthetic access correction.");
+    expect(fetch).not.toHaveBeenCalled();
+    await user.clear(expiry);
+    await user.type(expiry, "2031-06-06 10:00:00");
+    expect(within(form).queryByRole("alert")).not.toBeInTheDocument();
+    expect(expiry).not.toHaveAttribute("aria-invalid");
+    await user.click(button);
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringMatching(action === "Share access" ? /\/access$/ : /\/access\/assignments\//),
+        expect.objectContaining({
+          method: action === "Share access" ? "POST" : "PATCH",
+          body: expect.stringContaining(new Date("2031-06-06T10:00:00").toISOString()),
+        }),
+      );
+    });
+  });
+
   it("previews an exact person without impersonation or mutation controls", async () => {
     const user = userEvent.setup();
     render(<App />);

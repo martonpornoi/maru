@@ -77,11 +77,18 @@
                 <td data-label="Organization">{{ edition.organization.name }}</td>
                 <td data-label="Dates">{{ edition.starts_on }} – {{ edition.ends_on }}</td>
                 <td data-label="Continue">
-                  {% if edition.organization.representation.state != "active" %}
+                  {% if edition.organization.representation.state == "provisioning" %}
                     <a href="{% url 'organization-representation' edition.organization.slug %}">Finish accountable access</a>
                     <p>Invite two controllers, let each accept, then activate before they can open this team.</p>
-                  {% else %}
+                  {% elif edition.organization.representation.state == "active" %}
                     <a href="{% url 'organization-structure' edition.organization.slug edition.series.slug edition.slug %}">Open volunteer team</a>
+                  {% elif edition.organization.representation.state == "suspended" %}
+                    <p>Accountable access is suspended. This team is unavailable.</p>
+                    <a href="{% url 'organization-representation' edition.organization.slug %}">Review suspended access</a>
+                    <p>Follow the organization's approved recovery process before work resumes.</p>
+                  {% else %}
+                    <p>Accountable access is unavailable. Review the organization before continuing.</p>
+                    <a href="{% url 'organization-representation' edition.organization.slug %}">Review accountable access</a>
                   {% endif %}
                 </td>
               </tr>

@@ -1,6 +1,7 @@
 """Typed browser dates retain the existing domain precision and zone fences."""
 
 from datetime import UTC, date, datetime
+from types import SimpleNamespace
 
 import pytest
 from django import forms
@@ -144,3 +145,48 @@ def test_choice_groups_reference_their_own_help_and_validation_errors():
         assert html.count(f'id="id_{name}_helptext"') == 1
         assert html.count(f'id="id_{name}_error"') == 1
     assert 'id="_helptext"' not in html
+
+
+@pytest.mark.parametrize(
+    ("state", "action", "message"),
+    [
+        ("provisioning", "Finish accountable access", "Invite two controllers"),
+        ("active", "Open volunteer team", None),
+        ("suspended", "Review suspended access", "approved recovery process"),
+        ("unknown", "Review accountable access", "Accountable access is unavailable"),
+        (None, "Review accountable access", "Accountable access is unavailable"),
+    ],
+)
+def test_existing_workforce_workspace_continuation_matches_accountable_state(
+    state, action, message
+):
+    edition = SimpleNamespace(
+        name="Synthetic crew",
+        slug="synthetic-crew",
+        starts_on=date(2031, 6, 6),
+        ends_on=date(2031, 6, 8),
+        series=SimpleNamespace(name="Synthetic series", slug="synthetic-series"),
+        organization=SimpleNamespace(
+            name="Synthetic organizer",
+            slug="synthetic-organizer",
+            representation=SimpleNamespace(state=state) if state else None,
+        ),
+    )
+    html = render_to_string(
+        "core/workforce_adoption_setup.html",
+        {"existing_workforce_editions": [edition]},
+    )
+    assert action in html
+    if message:
+        assert message in html
+    for alternative in (
+        "Finish accountable access",
+        "Open volunteer team",
+        "Review suspended access",
+        "Review accountable access",
+    ):
+        if alternative != action:
+            assert alternative not in html
+    if state != "provisioning":
+        assert "Invite two controllers" not in html
+        assert "let each accept" not in html

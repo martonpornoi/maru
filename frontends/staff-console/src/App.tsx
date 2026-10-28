@@ -4622,15 +4622,24 @@ function AccessAssignmentCard({
   const [groupCode, setGroupCode] = useState(assignment.group_code);
   const [approverEmail, setApproverEmail] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [expiryError, setExpiryError] = useState<string>();
   const [reason, setReason] = useState("");
 
   async function submitReplacement(event: FormEvent) {
     event.preventDefault();
+    setExpiryError(undefined);
+    let parsedExpiry: string | null;
+    try {
+      parsedExpiry = expiresAt ? localDateTimeToISO(expiresAt) : null;
+    } catch (failure: unknown) {
+      setExpiryError(failure instanceof Error ? failure.message : "Enter a valid expiry date and time.");
+      return;
+    }
     try {
       await onReplace(assignment.id, {
         group_code: groupCode,
         approver_email: approverEmail.trim(),
-        expires_at: expiresAt ? localDateTimeToISO(expiresAt) : null,
+        expires_at: parsedExpiry,
         reason: reason.trim(),
       });
       setEditing(false);
@@ -4711,8 +4720,19 @@ function AccessAssignmentCard({
               type="text"
               placeholder="YYYY-MM-DD HH:mm:ss"
               value={expiresAt}
-              onChange={(event) => setExpiresAt(event.target.value)}
+              aria-label="Expires (optional)"
+              aria-invalid={expiryError ? true : undefined}
+              aria-describedby={expiryError ? `access-expiry-error-${assignment.id}` : undefined}
+              onChange={(event) => {
+                setExpiresAt(event.target.value);
+                setExpiryError(undefined);
+              }}
             />
+            {expiryError && (
+              <small className="form-error" role="alert" id={`access-expiry-error-${assignment.id}`}>
+                {expiryError}
+              </small>
+            )}
           </label>
           <label className="wide-field">
             <span>Reason for changing access</span>
@@ -4871,6 +4891,7 @@ function AccessDrawer({
   const [expiresAt, setExpiresAt] = useState("");
   const [reason, setReason] = useState("");
   const [previewPersonEmail, setPreviewPersonEmail] = useState("");
+  const [expiryError, setExpiryError] = useState<string>();
   const [previewRoleVersionId, setPreviewRoleVersionId] = useState(
     orderedGroups[0]?.role_version_id ?? "",
   );
@@ -4892,12 +4913,20 @@ function AccessDrawer({
 
   async function submitAssignment(event: FormEvent) {
     event.preventDefault();
+    setExpiryError(undefined);
+    let parsedExpiry: string | null;
+    try {
+      parsedExpiry = expiresAt ? localDateTimeToISO(expiresAt) : null;
+    } catch (failure: unknown) {
+      setExpiryError(failure instanceof Error ? failure.message : "Enter a valid expiry date and time.");
+      return;
+    }
     try {
       await onAssign({
         person_email: personEmail.trim(),
         group_code: groupCode,
         approver_email: approverEmail.trim(),
-        expires_at: expiresAt ? localDateTimeToISO(expiresAt) : null,
+        expires_at: parsedExpiry,
         reason: reason.trim(),
       });
       setPersonEmail("");
@@ -5099,8 +5128,19 @@ function AccessDrawer({
               type="text"
               placeholder="YYYY-MM-DD HH:mm:ss"
               value={expiresAt}
-              onChange={(event) => setExpiresAt(event.target.value)}
+              aria-label="Expires (optional)"
+              aria-invalid={expiryError ? true : undefined}
+              aria-describedby={expiryError ? "access-new-expiry-error" : undefined}
+              onChange={(event) => {
+                setExpiresAt(event.target.value);
+                setExpiryError(undefined);
+              }}
             />
+            {expiryError && (
+              <small className="form-error" role="alert" id="access-new-expiry-error">
+                {expiryError}
+              </small>
+            )}
           </label>
           <label className="wide-field">
             <span>Reason</span>
