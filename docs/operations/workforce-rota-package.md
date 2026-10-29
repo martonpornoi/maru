@@ -43,6 +43,57 @@ detect accidental corruption; an attacker can replace the whole package and its
 manifest, so obtain copies through your approved channel. Opening HTML locally
 does not authenticate the exporter or check current Maru permissions.
 
+## Check a saved ZIP locally
+
+In a Maru source checkout with its locked environment installed, run:
+
+```powershell
+.\.venv\Scripts\python.exe -B -m maru.workforce.rota_integrity "C:\Copies\rota.zip"
+```
+
+Use the already installed environment directly; `-B` prevents Python bytecode
+cache writes. No dependency installer or environment synchronization is needed.
+On other systems use that environment's Python with the same `-B -m` arguments.
+
+The command needs only the saved file. It does not start Django, contact Maru or
+another service, extract files, open HTML, or alter the source copy. Success
+prints the fixed five-member count, four matched content hashes and total
+uncompressed bytes. It does not print edition, person, path or rota content.
+
+**A successful check means that the bytes match the supplied manifest.** It
+does not authenticate a sender or make HTML safe to open. An attacker can replace
+both data and hashes. Obtain the copy through an approved channel, then separately
+validate `rota.json` against `schema.json` with a trusted JSON Schema 2020-12
+validator before using it. The command reads the supplied schema as bytes; it
+does not execute it or follow references. Matching integrity is not evidence of
+current permission, freshness, coverage, readiness or a restored database.
+
+| Boundary | Limit or behavior |
+| --- | --- |
+| Archive | One regular file, at most 16 MiB plus 64 KiB. |
+| Complete uncompressed contents | At most 16 MiB across all five members, including the manifest. |
+| Manifest | At most 8 KiB; exact version-one root and four file entries; no duplicate JSON keys or extra fields. |
+| ZIP directory | At most 4 KiB, checked before entries are constructed; exactly five fixed names. |
+| Supported ZIP form | One disk, ordinary terminal end record, stored or deflated regular members; no ZIP64, archive/member comments, encryption, duplicates or special files. |
+
+These additional limits include the current exporter output. Repackaging a ZIP
+may produce a refused form even when its contents look similar; obtain a fresh
+authorized export rather than editing the checker or manifest to force a pass.
+
+Exit `0` means matched integrity, `1` means refusal, and `2` means invalid command
+arguments. A refusal prints one fixed code and asks for a fresh authorized copy:
+
+| Code | Next action |
+| --- | --- |
+| `unavailable_file` | Check that the selected file is readable and regular. |
+| `archive_too_large`, `contents_too_large` | Keep the source; obtain a bounded export from the authorized organizer. |
+| `unsupported_archive_layout`, `unsupported_member`, `invalid_members` | Do not unpack or open the copy; obtain the original exporter ZIP. |
+| `invalid_archive`, `invalid_manifest`, `content_mismatch` | Treat the transfer as damaged or unsupported and request a fresh copy. |
+
+No partial success, extraction or repair mode is provided. Follow the existing
+personal-data custody and retention policy for refused copies too. This command
+does not complete #22's import, reconciliation, history/exit or restore scope.
+
 ## Version-one field meanings
 
 | Object | Fields and meaning |

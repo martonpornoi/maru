@@ -619,6 +619,12 @@ architecture documents, implementation issues, tests, and release notes.
   standalone escaped print HTML, guidance and integrity hashes within 16 MiB;
   retain existing 1,024-demand/4,096-total-commitment bounds. Private no-store copies
   visibly state observation time, personal-data custody and stale-copy limitations.
+  Provide a bounded offline integrity check for a saved version-one ZIP: require
+  its complete fixed member set, closed unambiguous manifest, byte counts and
+  hashes without extraction, HTML execution, network or database access. Report
+  minimized fixed outcomes, never copied personal data. Integrity against the
+  supplied manifest proves neither authenticity nor schema validity, current
+  authority, freshness or operational readiness; retain separate schema validation.
   A rota does not establish current readiness, complete Workforce history, import,
   reconciliation, backup/restore, profile expansion, decommissioning or production
   acceptance. Keep incumbent fallback and approved retention/recovery procedures.

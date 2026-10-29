@@ -1,7 +1,50 @@
 # Current project state
 
-Last updated: 2026-10-28
-Phase: PR #222 hosted-review repairs; fresh exact-head certification pending.
+Last updated: 2026-10-29
+Phase: Offline Workforce rota integrity check (#223); exact-head delivery preparation.
+
+## Latest handoff — 29 October 2026
+
+PR #222 is protected-delivered as `968607e93b92bc5dbb9acca52fd6e7cb6854c935`.
+Its tree `17b572a416bc352367d89c02500fcfa0ddc84766` equals the exact certified
+candidate. Local and hosted acceptance passed 14,438 unit cases, 5,329 native
+cases across 111 shards, 128 frontend cases and 91.2872% combined coverage;
+all three CodeQL analyses were clean and all review threads resolved. Hosted
+headroom and complete original artifacts were independently reconciled. The
+maintainer explicitly authorized merge, and clean designated main was advanced
+fast-forward only with local/origin/remote/protected equality. The temporary
+monitor was deleted. No manual-test environment, accounts, data or checklist changed.
+
+The maintainer then authorized the next bounded task without routine input.
+Issue #223, a native child of #22, adds an offline integrity command for existing
+rota ZIPs under HR-016 and ADR 0127. It checks fixed members, a closed manifest,
+lengths and SHA256 hashes without extraction, HTML/schema execution, network,
+Django, database or domain writes. It adds no dependency, format/profile meaning,
+web route, authority or audit event. Matching hashes do not establish authenticity,
+schema validity, freshness, current permission, restore or operational readiness.
+
+All 14,497 database-free unit cases pass with eleven existing warnings, including
+59 new integrity cases. Whole-source Ruff and strict types (893 files), both
+docstring checks and documentation policy pass. The real `python -B -m` command
+accepts a matching synthetic copy, refuses changed content, preserves both inputs
+and prints no copied content/path. An audit-hook subprocess also rejects network,
+file writes and Django/database imports while checking the copy successfully.
+
+Earlier feedback remains separate: one wrong docstring-tool invocation, one
+test-string line-length failure, and a restricted Windows full-unit run whose
+eight unchanged existing cases could not link/replace files or use loopback.
+The complete unchanged suite then passed with normal file/socket access and a
+fresh task-owned temporary directory. No application assertions were weakened.
+These results are precommit feedback, not native or full certification.
+Next: commit normally, certify the exact clean head, then verify hosted
+checks/review and protected delivery. See the
+[checkpoint](../checkpoints/2026-10-29-workforce-rota-integrity-check.md).
+
+Maintained demos and their role walkthroughs are unchanged: this is an offline
+file command with synthetic CLI examples in the owning runbook, not a new UI
+journey. #22 remains open for import, reconciliation, full history/exit and
+recovery work. Human invitation, browser/accessibility, operational and production
+acceptance remain open. Older notes below retain their historical evidence.
 
 ## Latest handoff — 28 October 2026
 
