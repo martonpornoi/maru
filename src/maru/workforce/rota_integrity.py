@@ -19,6 +19,7 @@ from zipfile import ZIP_DEFLATED, ZIP_STORED, BadZipFile, ZipFile
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from typing import NoReturn
     from zipfile import ZipInfo
 
 MAX_UNCOMPRESSED_BYTES = 16_777_216
@@ -27,6 +28,7 @@ MAX_MANIFEST_BYTES = 8_192
 MAX_DIRECTORY_BYTES = 4_096
 MAX_EXTRACT_VERSION = 20
 ZIP_END = struct.Struct("<4s4H2LH")
+LOCAL_HEADER = struct.Struct("<4s5H3L2H")
 CONTENT_MEMBERS = frozenset({"rota.json", "schema.json", "rota.html", "README.txt"})
 PACKAGE_MEMBERS = CONTENT_MEMBERS | {"manifest.json"}
 ASSURANCE = (
@@ -59,7 +61,9 @@ class RotaIntegritySummary:
 
 
 def _read_archive(path: Path) -> bytes:
-    with path.open("rb") as stream:
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
+    descriptor = os.open(path, flags)
+    with os.fdopen(descriptor, "rb") as stream:
         if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
             raise RotaIntegrityError("unavailable_file")
         raw = stream.read(MAX_ARCHIVE_BYTES + 1)
@@ -68,7 +72,7 @@ def _read_archive(path: Path) -> bytes:
     return raw
 
 
-def _check_directory(raw: bytes) -> None:
+def _check_directory(raw: bytes) -> int:
     # Bound the central directory before ZipFile creates an entry per record.
     if len(raw) < ZIP_END.size:
         raise RotaIntegrityError("invalid_archive")
@@ -85,8 +89,23 @@ def _check_directory(raw: bytes) -> None:
         or not 0 < size <= MAX_DIRECTORY_BYTES
         or offset <= 0
         or offset + size != len(raw) - ZIP_END.size
+        or raw[-42:-38] == b"PK\x06\x07"
     ):
         raise RotaIntegrityError("unsupported_archive_layout")
+    return int(offset)
+
+
+def _check_extra(raw: bytes) -> None:
+    offset = 0
+    while offset < len(raw):
+        if offset + 4 > len(raw):
+            raise RotaIntegrityError("invalid_archive")
+        kind, size = struct.unpack_from("<2H", raw, offset)
+        if kind == 1:
+            raise RotaIntegrityError("unsupported_member")
+        offset += 4 + size
+        if offset > len(raw):
+            raise RotaIntegrityError("invalid_archive")
 
 
 def _members(archive: ZipFile) -> dict[str, ZipInfo]:
@@ -105,16 +124,75 @@ def _members(archive: ZipFile) -> dict[str, ZipInfo]:
             or entry.is_dir()
             or entry.external_attr & 0x10
             or mode not in {0, stat.S_IFREG}
-            or entry.flag_bits & 1
+            or entry.flag_bits & ~0x800
             or entry.compress_type not in {ZIP_STORED, ZIP_DEFLATED}
             or entry.extract_version > MAX_EXTRACT_VERSION
             or entry.comment
         ):
             raise RotaIntegrityError("unsupported_member")
+        _check_extra(entry.extra)
         total += entry.file_size
     if total > MAX_UNCOMPRESSED_BYTES:
         raise RotaIntegrityError("contents_too_large")
     return {entry.filename: entry for entry in entries}
+
+
+def _member_bytes(
+    raw: bytes, entry: ZipInfo, boundary: int, limit: int, overflow: str
+) -> bytes:
+    header = raw[entry.header_offset : entry.header_offset + LOCAL_HEADER.size]
+    if len(header) != LOCAL_HEADER.size:
+        raise RotaIntegrityError("invalid_archive")
+    signature, version, flags, method, _, _, crc, compressed, size, names, extras = (
+        LOCAL_HEADER.unpack(header)
+    )
+    if version > MAX_EXTRACT_VERSION or flags & ~0x800:
+        raise RotaIntegrityError("unsupported_member")
+    if (
+        signature != b"PK\x03\x04"
+        or flags != entry.flag_bits
+        or method != entry.compress_type
+        or crc != entry.CRC
+        or compressed != entry.compress_size
+        or size != entry.file_size
+    ):
+        raise RotaIntegrityError("invalid_archive")
+    name_start = entry.header_offset + LOCAL_HEADER.size
+    extra_start = name_start + names
+    start = extra_start + extras
+    end = start + compressed
+    if start > end or end != boundary or boundary > len(raw):
+        raise RotaIntegrityError("invalid_archive")
+    name = raw[name_start:extra_start].decode("utf-8" if flags & 0x800 else "cp437")
+    if name != entry.filename:
+        raise RotaIntegrityError("invalid_archive")
+    _check_extra(raw[extra_start:start])
+    compressed_bytes = raw[start:end]
+    if method == ZIP_STORED:
+        if len(compressed_bytes) > limit:
+            raise RotaIntegrityError(overflow)
+        content = compressed_bytes
+    else:
+        decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
+        content = decompressor.decompress(compressed_bytes, limit + 1)
+        if len(content) > limit:
+            raise RotaIntegrityError(overflow)
+        if (
+            not decompressor.eof
+            or decompressor.unused_data
+            or decompressor.unconsumed_tail
+        ):
+            raise RotaIntegrityError("invalid_archive")
+    if len(content) != entry.file_size:
+        code = (
+            "invalid_manifest"
+            if entry.filename == "manifest.json"
+            else "content_mismatch"
+        )
+        raise RotaIntegrityError(code)
+    if zlib.crc32(content) != entry.CRC:
+        raise RotaIntegrityError("invalid_archive")
+    return content
 
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -130,13 +208,7 @@ def _reject_constant(_value: str) -> Any:
     raise RotaIntegrityError("invalid_manifest")
 
 
-def _manifest(archive: ZipFile, entry: ZipInfo) -> dict[str, Any]:
-    if entry.file_size > MAX_MANIFEST_BYTES:
-        raise RotaIntegrityError("invalid_manifest")
-    with archive.open(entry) as stream:
-        raw = stream.read(MAX_MANIFEST_BYTES + 1)
-    if len(raw) > MAX_MANIFEST_BYTES:
-        raise RotaIntegrityError("invalid_manifest")
+def _manifest(raw: bytes) -> dict[str, Any]:
     try:
         value = json.loads(
             raw.decode("utf-8"),
@@ -168,18 +240,11 @@ def _manifest(archive: ZipFile, entry: ZipInfo) -> dict[str, Any]:
     return cast("dict[str, Any]", value["files"])
 
 
-def _check_content(archive: ZipFile, entry: ZipInfo, metadata: dict[str, Any]) -> None:
-    if entry.file_size != metadata["bytes"]:
-        raise RotaIntegrityError("content_mismatch")
-    digest = hashlib.sha256()
-    count = 0
-    with archive.open(entry) as stream:
-        while chunk := stream.read(min(65_536, entry.file_size - count + 1)):
-            count += len(chunk)
-            if count > entry.file_size:
-                raise RotaIntegrityError("content_mismatch")
-            digest.update(chunk)
-    if count != metadata["bytes"] or digest.hexdigest() != metadata["sha256"]:
+def _check_content(content: bytes, metadata: dict[str, Any]) -> None:
+    if (
+        len(content) != metadata["bytes"]
+        or hashlib.sha256(content).hexdigest() != metadata["sha256"]
+    ):
         raise RotaIntegrityError("content_mismatch")
 
 
@@ -208,15 +273,38 @@ def verify_rota_package(path: Path) -> RotaIntegritySummary:
     """
     try:
         raw = _read_archive(path)
-        _check_directory(raw)
+        directory = _check_directory(raw)
         with ZipFile(io.BytesIO(raw)) as archive:
             entries = _members(archive)
-            manifest = _manifest(archive, entries["manifest.json"])
+            ordered = sorted(entries.values(), key=lambda entry: entry.header_offset)
+            boundaries = {
+                entry.filename: ordered[index + 1].header_offset
+                if index + 1 < len(ordered)
+                else directory
+                for index, entry in enumerate(ordered)
+            }
+            manifest_bytes = _member_bytes(
+                raw,
+                entries["manifest.json"],
+                boundaries["manifest.json"],
+                min(MAX_MANIFEST_BYTES, MAX_UNCOMPRESSED_BYTES),
+                "invalid_manifest",
+            )
+            manifest = _manifest(manifest_bytes)
+            total = len(manifest_bytes)
             for name in sorted(CONTENT_MEMBERS):
-                _check_content(archive, entries[name], manifest[name])
+                content = _member_bytes(
+                    raw,
+                    entries[name],
+                    boundaries[name],
+                    MAX_UNCOMPRESSED_BYTES - total,
+                    "contents_too_large",
+                )
+                _check_content(content, manifest[name])
+                total += len(content)
             return RotaIntegritySummary(
                 archive_bytes=len(raw),
-                uncompressed_bytes=sum(entry.file_size for entry in entries.values()),
+                uncompressed_bytes=total,
                 checked_content_members=len(manifest),
             )
     except RotaIntegrityError:
@@ -234,6 +322,23 @@ def verify_rota_package(path: Path) -> RotaIntegritySummary:
         raise RotaIntegrityError("invalid_archive") from error
 
 
+class _ArgumentParser(argparse.ArgumentParser):
+    def error(self, message: str) -> NoReturn:
+        """Exit without echoing rejected paths or argument values.
+
+        Parameters
+        ----------
+        message : str
+            Parser detail discarded to preserve minimized failure output.
+
+        Notes
+        -----
+        Delegates to the parser's exit handler with status two and fixed text.
+        """
+        del message
+        self.exit(2, "Rota integrity command failed: invalid_arguments. Use --help.\n")
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the offline package-integrity command with minimized fixed outcomes.
 
@@ -247,7 +352,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     int
         Zero for matching integrity, one for a refused file; argument errors use two.
     """
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = _ArgumentParser(
+        prog="python -m maru.workforce.rota_integrity",
+        description=__doc__,
+        allow_abbrev=False,
+    )
     parser.add_argument("package", type=Path, help="saved version-one rota ZIP")
     arguments = parser.parse_args(argv)
     try:

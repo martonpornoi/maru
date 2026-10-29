@@ -90,6 +90,16 @@ current producer output and provide a documented refusal rather than attempting
 to interpret repackaged or ambiguous inputs. Only stored and deflated members are
 supported. CRC, size or hash failure returns a fixed code and no payload details.
 
+Validate the complete stored or raw-deflate stream, including its actual end,
+length and CRC, within the remaining complete-package budget. Declared ZIP sizes
+must not truncate the bytes whose integrity is checked. Local headers and central
+metadata must agree, and member extents must be contiguous without unaccounted
+bytes. Refuse ZIP64 locators before entry construction and ZIP64 extra fields in
+either header. Data descriptors and flags other than the UTF-8 filename flag are
+unsupported; the existing seekable exporter requires neither. Open the file
+descriptor nonblocking where supported before checking that same descriptor is
+regular. Command-argument errors retain status two but never echo rejected values.
+
 The command never contacts Maru, grants access, writes domain or audit records,
 imports data or proves current state. A failed copy is replaced through the
 existing authorized capture; this checker supplies no repair or extraction mode.

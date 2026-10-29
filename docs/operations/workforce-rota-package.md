@@ -74,7 +74,14 @@ current permission, freshness, coverage, readiness or a restored database.
 | Complete uncompressed contents | At most 16 MiB across all five members, including the manifest. |
 | Manifest | At most 8 KiB; exact version-one root and four file entries; no duplicate JSON keys or extra fields. |
 | ZIP directory | At most 4 KiB, checked before entries are constructed; exactly five fixed names. |
-| Supported ZIP form | One disk, ordinary terminal end record, stored or deflated regular members; no ZIP64, archive/member comments, encryption, duplicates or special files. |
+| Supported ZIP form | One disk, ordinary terminal end record, stored or deflated regular members with matching local/central headers and contiguous member bytes; no ZIP64, data descriptors, archive/member comments, encryption, duplicates or special files. |
+
+The checker measures the complete stored or deflated contents and CRC. A small
+declared ZIP size cannot hide extra bytes or bypass either uncompressed limit;
+deflated data must reach its actual stream end without trailing compressed bytes.
+ZIP64 locators are refused before directory entries are constructed. File opening
+uses a nonblocking descriptor where supported, then checks that same descriptor is
+regular, so a Unix pipe needs no writer to receive a refusal.
 
 These additional limits include the current exporter output. Repackaging a ZIP
 may produce a refused form even when its contents look similar; obtain a fresh
@@ -82,6 +89,10 @@ authorized export rather than editing the checker or manifest to force a pass.
 
 Exit `0` means matched integrity, `1` means refusal, and `2` means invalid command
 arguments. A refusal prints one fixed code and asks for a fresh authorized copy:
+
+Invalid arguments print only `invalid_arguments` guidance, without echoing a
+rejected path or option. Keep a path containing spaces within quotes as shown
+above, and provide exactly one saved ZIP path.
 
 | Code | Next action |
 | --- | --- |

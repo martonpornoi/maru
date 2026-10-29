@@ -10,6 +10,7 @@ import struct
 import subprocess
 import sys
 import zipfile
+import zlib
 from types import SimpleNamespace
 
 import pytest
@@ -259,7 +260,9 @@ def test_compressed_and_uncompressed_limits_are_checked_before_member_reads(
     _refused(path, "archive_too_large")
     monkeypatch.setattr(rota_integrity, "MAX_ARCHIVE_BYTES", 1_000_000)
     monkeypatch.setattr(rota_integrity, "MAX_UNCOMPRESSED_BYTES", 10)
-    monkeypatch.setattr(zipfile.ZipFile, "open", lambda *_: pytest.fail("member read"))
+    monkeypatch.setattr(
+        rota_integrity, "_member_bytes", lambda *_: pytest.fail("member read")
+    )
     _refused(path, "contents_too_large")
 
 
@@ -273,7 +276,9 @@ def test_actual_compressible_overflow_is_refused_before_decompression(
     content = {**CONTENT, "rota.html": b"x" * (16_777_216 + 1)}
     path = _package(tmp_path, content=content)
     assert path.stat().st_size < 65_536
-    monkeypatch.setattr(zipfile.ZipFile, "open", lambda *_: pytest.fail("member read"))
+    monkeypatch.setattr(
+        rota_integrity, "_member_bytes", lambda *_: pytest.fail("member read")
+    )
     _refused(path, "contents_too_large")
 
 
@@ -373,3 +378,244 @@ raise SystemExit(main(sys.argv[1:]))
     assert "Integrity matches the supplied manifest only" in result.stdout
     assert result.stderr == ""
     assert {p.name: p.read_bytes() for p in tmp_path.iterdir()} == before
+
+
+def _prefix_sized_package(tmp_path, member, suffix, compression):
+    members = {
+        **CONTENT,
+        "manifest.json": json.dumps(_manifest(CONTENT)).encode(),
+    }
+    prefix = members[member]
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w", compression=compression) as archive:
+        for name, raw in members.items():
+            archive.writestr(name, raw + suffix if name == member else raw)
+    raw = bytearray(output.getvalue())
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        local = archive.getinfo(member).header_offset
+    central = struct.unpack_from("<L", raw, len(raw) - 6)[0]
+    while True:
+        name_size, extra_size, comment_size = struct.unpack_from(
+            "<3H", raw, central + 28
+        )
+        name = raw[central + 46 : central + 46 + name_size].decode()
+        if name == member:
+            break
+        central += 46 + name_size + extra_size + comment_size
+    for offset, crc_offset, size_offset in [(local, 14, 22), (central, 16, 24)]:
+        struct.pack_into("<L", raw, offset + crc_offset, zlib.crc32(prefix))
+        struct.pack_into("<L", raw, offset + size_offset, len(prefix))
+    path = tmp_path / "misleading-size.zip"
+    path.write_bytes(raw)
+    return path
+
+
+@pytest.mark.parametrize("compression", [zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED])
+@pytest.mark.parametrize("member", sorted(rota_integrity.CONTENT_MEMBERS))
+def test_complete_content_never_accepts_a_matching_declared_prefix(
+    tmp_path, member, compression
+):
+    path = _prefix_sized_package(tmp_path, member, b"concealed bytes", compression)
+    _refused(path, "content_mismatch")
+
+
+def test_actual_inflation_limit_does_not_trust_declared_small_size(tmp_path):
+    path = _prefix_sized_package(
+        tmp_path, "rota.html", b"x" * 16_777_217, zipfile.ZIP_DEFLATED
+    )
+    assert path.stat().st_size < 65_536
+    _refused(path, "contents_too_large")
+
+
+def test_complete_manifest_limit_does_not_trust_a_declared_json_prefix(tmp_path):
+    path = _prefix_sized_package(
+        tmp_path, "manifest.json", b" " * 8193, zipfile.ZIP_DEFLATED
+    )
+    _refused(path, "invalid_manifest")
+
+
+def test_zip64_locator_cannot_override_a_small_ordinary_directory(
+    tmp_path, monkeypatch
+):
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        members = {**CONTENT, "manifest.json": json.dumps(_manifest(CONTENT)).encode()}
+        for name, raw in members.items():
+            entry = zipfile.ZipInfo(name)
+            entry.extra = struct.pack("<2H", 0xCAFE, 900) + b"x" * 900
+            archive.writestr(entry, raw)
+    raw = output.getvalue()
+    end = list(struct.unpack("<4s4H2LH", raw[-22:]))
+    directory_size, directory_offset = end[5:7]
+    assert directory_size > 4096
+    zip64 = struct.pack(
+        "<4sQ2H2L4Q",
+        b"PK\x06\x06",
+        44,
+        45,
+        45,
+        0,
+        0,
+        5,
+        5,
+        directory_size,
+        directory_offset,
+    )
+    locator = struct.pack("<4sLQL", b"PK\x06\x07", 0, len(raw) - 22, 1)
+    end[5:7] = [100, len(raw) - 22 + len(zip64) + len(locator) - 100]
+    path = tmp_path / "zip64-directory-override.zip"
+    path.write_bytes(raw[:-22] + zip64 + locator + struct.pack("<4s4H2LH", *end))
+    with zipfile.ZipFile(path) as archive:
+        assert len(archive.infolist()) == 5
+    monkeypatch.setattr(
+        rota_integrity, "ZipFile", lambda *_: pytest.fail("entries constructed")
+    )
+    _refused(path, "unsupported_archive_layout")
+
+
+def test_nonregular_input_is_opened_nonblocking_before_descriptor_validation(
+    tmp_path, monkeypatch
+):
+    nonblock = getattr(os, "O_NONBLOCK", 0x10000000)
+    monkeypatch.setattr(os, "O_NONBLOCK", nonblock, raising=False)
+    original = os.open
+    flags_seen = []
+
+    def observe(path, flags):
+        flags_seen.append(flags)
+        return original(path, flags & ~nonblock)
+
+    monkeypatch.setattr(os, "open", observe)
+    with pytest.raises(rota_integrity.RotaIntegrityError, match=r"^unavailable_file$"):
+        rota_integrity.verify_rota_package(tmp_path)
+    assert len(flags_seen) == 1
+    assert flags_seen[0] & nonblock
+
+
+def test_real_nonregular_input_never_waits_for_a_fifo_writer(tmp_path):
+    path = tmp_path / "private-SYNTHETIC_SENTINEL"
+    if os.name == "posix":
+        os.mkfifo(path)
+    else:
+        path.mkdir()
+    result = subprocess.run(  # noqa: S603 - fixed interpreter and owned nonregular input
+        [sys.executable, "-B", "-m", "maru.workforce.rota_integrity", str(path)],
+        capture_output=True,
+        text=True,
+        timeout=5,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert "unavailable_file" in result.stderr
+    assert "SYNTHETIC_SENTINEL" not in result.stderr
+    assert result.stdout == ""
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        [],
+        ["private-SYNTHETIC_SENTINEL.zip", "private-edition-SYNTHETIC_SENTINEL.zip"],
+        ["--private-SYNTHETIC_SENTINEL", "private-edition.zip"],
+    ],
+)
+def test_argument_errors_use_fixed_text_without_echoing_rejected_values(
+    arguments, capsys
+):
+    with pytest.raises(SystemExit) as error:
+        rota_integrity.main(arguments)
+    assert error.value.code == 2
+    result = capsys.readouterr()
+    assert result.out == ""
+    assert (
+        result.err == "Rota integrity command failed: invalid_arguments. Use --help.\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "extra", ["private-edition-SYNTHETIC_SENTINEL.zip", "--SYNTHETIC_SENTINEL"]
+)
+def test_real_cli_argument_failures_never_print_a_path_or_unknown_option(
+    tmp_path, extra
+):
+    path = _package(tmp_path)
+    before = path.read_bytes()
+    result = subprocess.run(  # noqa: S603 - fixed interpreter and synthetic arguments
+        [sys.executable, "-B", "-m", "maru.workforce.rota_integrity", str(path), extra],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert (
+        result.stderr
+        == "Rota integrity command failed: invalid_arguments. Use --help.\n"
+    )
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("ending", ["extra", "truncated"])
+def test_deflate_must_reach_its_complete_end_without_trailing_compressed_bytes(
+    tmp_path, ending
+):
+    path = _package(tmp_path)
+    raw = bytearray(path.read_bytes())
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        entry = archive.getinfo("manifest.json")
+    directory = struct.unpack_from("<L", raw, len(raw) - 6)[0]
+    central = directory
+    while True:
+        names, extras, comments = struct.unpack_from("<3H", raw, central + 28)
+        if raw[central + 46 : central + 46 + names] == b"manifest.json":
+            break
+        central += 46 + names + extras + comments
+    if ending == "extra":
+        raw[directory:directory] = b"x"
+        delta = 1
+    else:
+        del raw[directory - 1 : directory]
+        delta = -1
+    struct.pack_into("<L", raw, entry.header_offset + 18, entry.compress_size + delta)
+    struct.pack_into("<L", raw, central + delta + 20, entry.compress_size + delta)
+    struct.pack_into("<L", raw, len(raw) - 6, directory + delta)
+    path.write_bytes(raw)
+    _refused(path, "invalid_archive")
+
+
+def test_matching_false_crc_in_both_headers_is_not_accepted(tmp_path):
+    path = _package(tmp_path)
+    raw = bytearray(path.read_bytes())
+    struct.pack_into("<L", raw, 14, 0)
+    central = raw.index(b"PK\x01\x02")
+    struct.pack_into("<L", raw, central + 16, 0)
+    path.write_bytes(raw)
+    _refused(path, "invalid_archive")
+
+
+@pytest.mark.parametrize("local_only", [False, True])
+def test_zip64_extra_fields_are_refused_even_with_ordinary_extract_version(
+    tmp_path, local_only
+):
+    entry = zipfile.ZipInfo("rota.json")
+    entry.extra = struct.pack("<2H2Q", 0xCAFE if local_only else 1, 16, 100, 100)
+    entries = [
+        (entry if name == "rota.json" else name, raw) for name, raw in CONTENT.items()
+    ]
+    path = _package(tmp_path, entries=entries)
+    if local_only:
+        raw = bytearray(path.read_bytes())
+        struct.pack_into("<H", raw, 30 + len("rota.json"), 1)
+        path.write_bytes(raw)
+    _refused(path, "unsupported_member")
+
+
+def test_complete_measured_contents_can_equal_the_unchanged_limit(tmp_path):
+    content = {**CONTENT, "rota.html": b""}
+    for _ in range(3):
+        other = sum(len(raw) for name, raw in content.items() if name != "rota.html")
+        manifest_size = len(json.dumps(_manifest(content)).encode())
+        content["rota.html"] = b"x" * (16_777_216 - other - manifest_size)
+    path = _package(tmp_path, content=content)
+    summary = rota_integrity.verify_rota_package(path)
+    assert summary.uncompressed_bytes == 16_777_216
