@@ -46,6 +46,9 @@ or permission to use production personal data.
 - [Empty-experience baseline](empty-experience-baseline.md) protects a known
   clean environment.
 - [Workforce-only adoption and recovery](workforce-only-adoption-and-recovery.md)
+- [Practice the Workforce operating home](workforce-operating-home-practice.md)
+  follows independent Assignments, deliberately shared Availability and planned
+  Shift closeout in a separate disposable preview.
 - [Keep a Workforce rota copy](workforce-rota-package.md)
   establishes the first bounded profile without attendee or payment side
   effects.
@@ -110,6 +113,7 @@ programme-onsite-continuity
 clean-convention-onboarding-walkthrough
 empty-experience-baseline
 workforce-only-adoption-and-recovery
+workforce-operating-home-practice
 workforce-rota-package
 identity-invitation-writer-recovery
 marucon-admin-rehearsal

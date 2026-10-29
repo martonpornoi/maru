@@ -1191,6 +1191,20 @@ architecture documents, implementation issues, tests, and release notes.
   publication; it implies no staffing, application-window, whole-event readiness
   or unrelated workflow completion. Introduce no mutable task database, domain
   write, authority, identifying disclosure or activity tracking.
+  Extend that owner projection through existing Assignments, shared Availability
+  consequences, Shift planning/independent confirmation, and retained completion
+  or closeout. Admit each area separately through its existing route's complete
+  read and field boundary; management alone never grants another area's read.
+  Return at most one minimized item per area and four items overall, ordered by
+  actionable operating risks, pending decisions, setup, then informational history.
+  Show one primary continuation and a short remaining attention list. Read no
+  person label, private rationale, document content or exact Availability period
+  for home guidance. Preserve person-owned sharing and independent decisions.
+  Recheck bounded source signatures, current principal, profile, lifecycle and
+  disclosure policy before release. One unavailable area must not suppress other
+  admitted guidance. Scope any quiet state to the checked area; it is never a
+  whole-event readiness or human-acceptance claim. Maintain fictional ongoing and
+  future role scenarios through supported domain commands.
 
 ### Registration, orders, and attendee service
 

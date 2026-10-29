@@ -1,6 +1,39 @@
 # Workforce module
 
-## Administration-home setup guidance
+## Administration-home operating guidance
+
+UX-032 and [ADR 0128](../architecture/decisions/0128-workforce-operating-home.md)
+extend the exact `workforce_only@1` home through Assignments, shared Availability
+consequences and Shifts. The public owner entry point is
+`operating_home.load_workforce_home_guidance`. Core maps its closed immutable
+items to existing routes and shows one primary continuation plus at most three
+other areas. Setup remains a separately admitted contribution.
+
+Each area retains its existing exact-Edition capability and complete field
+admission. Assignment reads also require complete structure-read and Assignment
+management, matching the current owner route. Role issuance/revocation and Shift
+management remain separate action checks; an independent decision is never
+inferred from read access. Missing authority omits the area. Source, bound or audit
+failure produces only generic unavailable guidance for that area.
+
+Complete bounded source signatures are compared in short read-only repeatable
+snapshots, with one whole-component retry on movement. Current principal, policy,
+owner phase and action flags are checked again before/after required audit and
+at aggregate release. The next relevant Assignment expiry or Shift start/end
+also fences release. Refresh after movement to obtain new guidance. Private
+Availability drafts and missing plans share the same signature and explanation.
+No person labels, private rationale, documents or personal Availability periods
+are selected into home facts. Existing read-audit operations retain their purpose
+and retention; no domain record or activity feed is written.
+
+The [state/action contract](../product/page-contracts/00-management-experience-shell.md#workforce-operating-home-milestone)
+and [isolated practice](../operations/workforce-operating-home-practice.md) cover
+independent decisions, shared-empty/withdrawn input, coverage warnings, ended
+locked work and retained closeout. Checked time and work-decision boundaries use
+the edition's named time zone. This is not event readiness, attendance or human
+handover acceptance. Other profiles contribute nothing.
+
+### Retained setup owner query
 
 The public owner query home_guidance.load_workforce_setup_guidance serves the
 Workforce-only version 1 contribution under UX-032 and

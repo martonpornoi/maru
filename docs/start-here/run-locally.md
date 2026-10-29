@@ -77,7 +77,20 @@ synthetic setup, not independent human review. No attendee, payment, Programme,
 Workforce or external-message records are created. The original organizational
 tour remains available with `--scenario legacy`; it prints its public educational
 account and opens `/admin/`, and is not the exact-authority practice scenario.
-See [demo data](../modules/demo-data.md) for the two distinct datasets and limits.
+See [demo data](../modules/demo-data.md) for the distinct datasets and limits.
+
+For a separate volunteer-team example, use:
+
+```sh
+uv run --locked python scripts/try_maru.py --scenario workforce
+```
+
+This creates its own Workforce-only preview at `/demo/workforce/`, with ongoing
+and future editions and separate **Manager**, **Reviewer** and **Volunteer**
+accounts. Follow the [short operating-home practice](../operations/workforce-operating-home-practice.md)
+to review Assignments, deliberately share Availability, review claims and close
+ended planned work. The default Announcements/Guides scenario keeps its original
+meaning. All preview modes use new databases and preserve existing fixtures.
 
 For a repeatable startup check without leaving a server running:
 

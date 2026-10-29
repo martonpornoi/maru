@@ -1,7 +1,70 @@
 # Current project state
 
 Last updated: 2026-10-29
-Phase: Offline Workforce rota integrity check (#223 / PR #224); supported review repair.
+Phase: Workforce operating home (#225, child of #35); pre-merge verification.
+
+## Workforce operating home — 29 October 2026
+
+PR #224 is protected-delivered as `ac5f099e50624fbe7f0824a97b9b4309c45df7bc`;
+the merged tree equals certified `6e0646d5abdb9e6f196c233c1bb60bc31e678575`.
+Fresh local and hosted acceptance passed 14,521 units, 5,173 current native cases
+across 21 shards, 128 frontend cases, and hosted combined coverage 91.1715%.
+All three CodeQL analyses were clean, four review conversations were resolved,
+and clean main was advanced fast-forward only. #223 is closed; #22 stays open.
+The older source-stage record below remains historical.
+
+The maintainer approved completing the Workforce operating-home milestone
+thoroughly, including routine design decisions and protected delivery, without
+waiting for input. #225 is a native child of #35. UX-032 and new ADR 0128 extend
+the existing owner projection through Assignments, shared Availability, Shift
+decisions, completion and closeout, with at most four independently admitted
+items. Existing domain rules, capabilities, field ceilings and independent
+decisions remain authoritative. No migration, profile expansion, new grant,
+mutable task store, attendance or activity tracking is introduced.
+
+The implementation adds pure state choices, an owner work-phase reference,
+bounded current-state metadata queries and a primary/attention presentation.
+It loads no person labels, rationale, documents or exact Availability periods.
+An unavailable area preserves other admitted work; a quiet area makes no
+whole-event readiness claim. The first native run passed all 40 cases, including
+the real Assignment/Availability/Shift closeout sequence and retained setup
+regressions, with identical source/resource inventories and exact owned cleanup.
+Subsequent failure-path regressions exposed setup-only error propagation and
+grant/lifecycle movement during audit. Their repairs recheck after audit and at
+aggregate release, fence upcoming expiry/start/end boundaries and preserve other
+admitted areas. All 182 focused units and the complete 14,621-case unit suite
+pass, with eleven existing warnings. Strict types pass over 897 source files,
+both docstring checks and a fresh warning-fatal Sphinx build pass, and both fresh
+dependency audits report zero vulnerabilities. Expanded native feedback passed the six new
+revocation, time, phase and query-boundary cases and both existing demo cases.
+Its one failed new assertion incorrectly assumed platform oversight was denied;
+the corrected test passed separately without changing the existing policy.
+
+`--scenario workforce` uses its own exact-profile ongoing/future fixtures and
+generated role accounts, genuine owner commands, exact provenance and restricted
+runtime login. The existing Announcements/Guides default keeps its meaning.
+The genuine restricted-runtime browser rehearsal completed independent Assignment
+approval, private/shared/empty/withdrawn Availability, claim confirmation, refused
+stale-coverage locking, renewed evidence/reconfirmation/locking, and actual-time
+Shift completion. Other-edition and role denials disclosed no protected records.
+Seven widths from 320 to 1920 pixels had no horizontal overflow; keyboard drawer,
+focus and owner-link activation worked. The repaired list was repeated at 320,
+390 and 1280 pixels with no stray markers, one named list and three items; light
+and dark rendering were checked. A normal zoom shortcut made no measured change, so 200% zoom and
+specialist screen-reader acceptance remain unverified. All ten original stopped
+fixtures were retained; the preview's owned database and server were stopped,
+with exact before/after source and resource equality. These are development
+observations, not final exact-head local or hosted acceptance. The two new
+diagnostic timing-inventory paths use the established median fallback; every
+prior weight and the authoritative group-cost map remain unchanged. Both new
+groups keep their conservative largest-known fallback for full acceptance.
+
+Next: commit the clean candidate,
+perform fresh exact-head ordinary Auto and independently verify hosted checks,
+CodeQL, review and protected squash/main synchronization. The manual-test
+environment, accounts, saved records and 113-checkbox guide stay untouched.
+Broader #35 contributions, #23 independent accessibility, #24 attendance,
+#42 recipient-owned acceptance and production/operational gates remain open.
 
 ## Latest handoff — 29 October 2026
 
