@@ -1021,8 +1021,8 @@ button:focus-visible {
 .baseline-unified-admin .baseline-panel-heading {
   padding: 0.65rem 1rem;
   border-color: var(--hairline-color);
-  color: var(--header-link-color);
-  background: var(--primary);
+  color: var(--body-fg);
+  background: var(--darkened-bg);
 }
 
 .baseline-unified-admin .baseline-panel-heading h2,
@@ -1200,4 +1200,66 @@ button:focus-visible {
   *::after {
     scroll-behavior: auto !important;
   }
+}
+
+/* Choices keep the control beside its label, including in the shared admin. */
+.baseline-choice-field {
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+}
+
+.baseline-choice-field legend {
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.baseline-form .baseline-choice-field label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-block: 0.65rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.baseline-form input[type="radio"],
+.baseline-form input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  accent-color: #254e7a;
+}
+
+/* A link styled as an action must retain button contrast after visiting it. */
+.baseline-unified-admin a.baseline-primary-link:link,
+.baseline-unified-admin a.baseline-primary-link:visited,
+.baseline-unified-admin a.baseline-primary-button:link,
+.baseline-unified-admin a.baseline-primary-button:visited,
+.baseline-unified-admin a.button:link,
+.baseline-unified-admin a.button:visited {
+  color: var(--button-fg);
+  background: var(--button-bg);
+  border-color: var(--button-bg);
+}
+
+.baseline-unified-admin .baseline-panel-heading .baseline-secondary-link:link,
+.baseline-unified-admin .baseline-panel-heading .baseline-secondary-link:visited {
+  color: var(--link-fg);
+}
+
+.baseline-unified-admin .baseline-panel-heading .baseline-count {
+  color: var(--body-fg);
+  background: var(--darkened-bg);
+}
+
+.baseline-unified-admin .baseline-required {
+  color: var(--link-fg);
+}
+
+.baseline-unified-admin .baseline-field-errors {
+  color: var(--error-fg);
 }

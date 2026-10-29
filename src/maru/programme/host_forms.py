@@ -15,6 +15,7 @@ from maru.core.forms import (
     StrictBase10IntegerField,
     StrictInputForm,
 )
+from maru.core.widgets import ISODateTimeInput
 
 from .host_catalogs import (
     MAX_HOST_AVAILABILITY_PERIODS,
@@ -200,7 +201,7 @@ class ProgrammeHostLocalMinuteField(forms.Field):
         """
         self.zone = ZoneInfo(zone_name)
         super().__init__(
-            widget=forms.DateTimeInput(
+            widget=ISODateTimeInput(
                 format="%Y-%m-%dT%H:%M",
                 attrs={"type": "datetime-local", "step": "60"},
             ),

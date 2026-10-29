@@ -15,6 +15,7 @@ from maru.authorization.programme_role_selection import (
     _selectors,
 )
 from maru.core.forms import CanonicalUUIDField, StrictInputForm
+from maru.core.widgets import ISODateTimeInput
 
 if TYPE_CHECKING:
     from maru.authorization.programme_role_recipes import ProgrammeRoleRecipe
@@ -32,7 +33,7 @@ class ProgrammeRoleUTCMinuteField(forms.Field):
             Standard field options including visible label and optional meaning.
         """
         super().__init__(
-            widget=forms.DateTimeInput(
+            widget=ISODateTimeInput(
                 format="%Y-%m-%dT%H:%M", attrs={"type": "datetime-local", "step": "60"}
             ),
             **kwargs,

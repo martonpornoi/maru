@@ -14,6 +14,7 @@ from django.db.models import Q
 from maru.core.forms import StrictInputForm
 from maru.core.localization import grouped_language_choices, grouped_time_zone_choices
 from maru.core.validators import validate_currency_codes, validate_language_codes
+from maru.core.widgets import ISODateInput
 from maru.events.adoption import (
     GENERIC_EDITION_ADOPTION_PROFILE_CHOICES,
     PERSISTED_ADOPTION_PROFILE_CHOICES,
@@ -88,12 +89,12 @@ class EventEditionDetailsForm(StrictInputForm):
     starts_on = forms.DateField(
         label="Starts on",
         help_text="The first official convention date.",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=ISODateInput(attrs={"type": "date"}),
     )
     ends_on = forms.DateField(
         label="Ends on",
         help_text="The final official date, no more than 31 days after the start.",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=ISODateInput(attrs={"type": "date"}),
     )
     time_zone = forms.ChoiceField(
         label="Time zone",
@@ -323,6 +324,44 @@ class EventEditionUpdateForm(EventEditionDetailsForm):
         return form
 
 
+class _WorkforceOrganizationChoice(forms.ModelChoiceField):  # type: ignore[type-arg]
+    """Distinguish reused foundations without changing their identity or access."""
+
+    def label_from_instance(self, obj: Organization) -> str:
+        """Show a stable locator beside a possibly duplicated display name.
+
+        Parameters
+        ----------
+        obj : Organization
+            Authorized existing foundation offered by the platform setup form.
+
+        Returns
+        -------
+        str
+            Name and stable organization locator used to choose the right scope.
+        """
+        return f"{obj.name} — {obj.slug}"
+
+
+class _WorkforceSeriesChoice(forms.ModelChoiceField):  # type: ignore[type-arg]
+    """Distinguish reused foundations without changing their identity or access."""
+
+    def label_from_instance(self, obj: ConventionSeries) -> str:
+        """Show a stable locator beside a possibly duplicated display name.
+
+        Parameters
+        ----------
+        obj : ConventionSeries
+            Authorized existing foundation offered by the platform setup form.
+
+        Returns
+        -------
+        str
+            Name and stable organization locator used to choose the right scope.
+        """
+        return f"{obj.name} — {obj.organization.name} ({obj.organization.slug})"
+
+
 class WorkforceAdoptionSetupForm(StrictInputForm):
     """Collect the minimum deliberate foundation for Workforce-only use."""
 
@@ -335,13 +374,13 @@ class WorkforceAdoptionSetupForm(StrictInputForm):
             "duplicate an organization or convention series you select."
         ),
     )
-    organization = forms.ModelChoiceField(
+    organization = _WorkforceOrganizationChoice(
         label="Existing organization",
         queryset=Organization.objects.none(),
         required=False,
         empty_label="Choose an organization",
     )
-    series = forms.ModelChoiceField(
+    series = _WorkforceSeriesChoice(
         label="Existing convention series",
         queryset=ConventionSeries.objects.none(),
         required=False,
@@ -369,11 +408,11 @@ class WorkforceAdoptionSetupForm(StrictInputForm):
     )
     starts_on = forms.DateField(
         label="Starts on",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=ISODateInput(attrs={"type": "date"}),
     )
     ends_on = forms.DateField(
         label="Ends on",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=ISODateInput(attrs={"type": "date"}),
     )
     time_zone = forms.ChoiceField(
         label="Convention time zone",
@@ -423,10 +462,6 @@ class WorkforceAdoptionSetupForm(StrictInputForm):
             .order_by("organization__name", "name", "id")
         )
         if not self.is_bound:
-            self.initial.setdefault(
-                "mode",
-                WorkforceAdoptionSetupReceipt.Mode.NEW_FOUNDATION,
-            )
             self.initial.setdefault("time_zone", "UTC")
             self.initial.setdefault("idempotency_key", uuid4())
         self.fields["organization_name"].widget.attrs["autofocus"] = True

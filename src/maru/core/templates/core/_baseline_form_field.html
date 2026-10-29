@@ -1,17 +1,22 @@
+{% if field.widget_type == "radioselect" or field.widget_type == "checkboxselectmultiple" %}
+<fieldset class="baseline-field baseline-choice-field{% if field.errors %} baseline-field--error{% endif %}"{% if field.aria_describedby %} aria-describedby="{{ field.aria_describedby }}"{% endif %}>
+  <legend>{{ field.label }}{% if field.field.required %}<span class="baseline-required">Required</span>{% endif %}</legend>
+{% else %}
 <div class="baseline-field{% if field.errors %} baseline-field--error{% endif %}">
   <label for="{{ field.id_for_label }}">
     {{ field.label }}
     {% if field.field.required %}<span class="baseline-required">Required</span>{% endif %}
   </label>
+{% endif %}
   {{ field }}
   {% if field.errors %}
-    <div class="baseline-field-errors" role="alert">
-      {{ field.errors }}
-    </div>
+    <div class="baseline-field-errors" role="alert">{{ field.errors }}</div>
   {% endif %}
   {% if field.help_text %}
-    <p class="baseline-help" id="{{ field.id_for_label }}_helptext">
-      {{ field.help_text }}
-    </p>
+    <p class="baseline-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>
   {% endif %}
+{% if field.widget_type == "radioselect" or field.widget_type == "checkboxselectmultiple" %}
+</fieldset>
+{% else %}
 </div>
+{% endif %}

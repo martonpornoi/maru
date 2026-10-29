@@ -16,6 +16,7 @@ from maru.core.localization import (
     phone_region_choices,
     split_phone_number,
 )
+from maru.core.widgets import ISODateInput
 from maru.identity.models import Account
 from maru.registration.availability import assess_product_availability
 from maru.registration.models import (
@@ -119,7 +120,7 @@ class AttendeeProfileForm(forms.Form):
     )
     date_of_birth = forms.DateField(
         label="Date of birth",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=ISODateInput(attrs={"type": "date"}),
         help_text="Restricted data used only to evaluate this edition's age policy.",
     )
     pronoun_code = forms.ChoiceField(

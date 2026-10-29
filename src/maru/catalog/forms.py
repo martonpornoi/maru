@@ -18,6 +18,7 @@ from maru.core.forms import (
     StrictBase10IntegerField,
     StrictInputForm,
 )
+from maru.core.widgets import ISODateTimeInput
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -50,7 +51,7 @@ class CatalogEditionLocalDateTimeField(forms.Field):
         """
         kwargs.setdefault(
             "widget",
-            forms.DateTimeInput(
+            ISODateTimeInput(
                 format=_DATE_TIME_FORMAT,
                 attrs={"type": "datetime-local", "step": "60"},
             ),

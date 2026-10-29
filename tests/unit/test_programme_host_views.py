@@ -730,7 +730,7 @@ def test_changed_edition_version_rejects_before_command_and_retains_original_inp
     assert soup.select_one('[name="expected_edition_version"]')["value"] == "10"
     assert (
         soup.select_one('[name="periods-0-starts_at"]')["value"]
-        == data["periods-0-starts_at"]
+        == data["periods-0-starts_at"].replace("T", " ") + ":00"
     )
     assert soup.select_one('[data-programme-pending="true"]') is not None
 

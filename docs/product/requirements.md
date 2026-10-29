@@ -1161,7 +1161,12 @@ architecture documents, implementation issues, tests, and release notes.
   only for related views with correct selection, focus, and keyboard behavior.
   Technical domain names and public API identifiers remain stable. Current task
   guidance and tutorials must explain UI wording without making readers learn
-  implementation vocabulary first.
+  implementation vocabulary first. One ordinary setup task must use consistent
+  menu, breadcrumb, heading and action wording. Browser dates must be directly
+  editable as `YYYY-MM-DD`, with 24-hour local date/time entry as
+  `YYYY-MM-DD HH:mm:ss`; minute-precision workflows accept zero seconds without
+  silently rounding nonzero seconds. Existing typed split date/clock controls,
+  owning time-zone/DST rules and API timestamp formats remain authoritative.
 
 - **UX-032 — Owner-projected home continuation:** The canonical administration
   home may show a bounded read-only next step derived by an adopted module from

@@ -1,7 +1,190 @@
 # Current project state
 
-Last updated: 2026-10-23
-Phase: bounded Workforce rota portability, first operating-copy slice of #22.
+Last updated: 2026-10-28
+Phase: PR #222 hosted-review repairs; fresh exact-head certification pending.
+
+## Latest handoff — 28 October 2026
+
+The maintainer authorized marking PR #222 ready, completing hosted acceptance
+and addressing in-scope findings, with the PR left unmerged. The previously
+certified `61197159` passed all ten local gates on 26 October: 14,433 units,
+5,329 native cases across 111 shards, 124 frontend cases and 91.2797% combined
+coverage. Its complete source and original evidence remain intact in the
+retained checkout. A fresh checkout now owns the repair branch so no sealed
+local-CI or documentation outputs are overwritten.
+
+The ready-state hosted audit found msgpack 1.2.1 affected by CVE-2026-114613;
+the global advisory was published after that local certification. The remaining
+quality job was cancelled after the known failure; no hosted unit/native or
+combined-coverage success is claimed. Complete job pages and run logs are
+preserved with SHA-256 readback. Official upstream evidence supports the bounded
+1.2.3 repair; CacheControl's old and new serialized response bytes match and its
+valid/invalid-cache checks pass. Fresh Python and all-severity frontend audits
+report no known vulnerabilities.
+
+The single Copilot review identified three supported interface defects, repaired
+together: local access-expiry parsing now exposes an associated error while
+retaining inputs; panel badges use paired theme colors; suspended accountable
+access has review/recovery guidance instead of provisioning instructions.
+Focused template/input feedback passes 117 cases; all 128 frontend cases pass,
+and the four expiry regressions pass again after the final accessible-label
+adjustment. Type checking and the normal production build pass. Supplied-state
+browser checks retain readable badge colors and correct recovery text at actual
+320/768/1,280 CSS pixels; dark badge contrast is 16.45:1. Invalid share expiry and
+correction were exercised against synthetic responses only. Replacement submission
+was blocked by automatic browser approval review, so its correction evidence is
+automated component coverage. No signed-in human journey is claimed. Complete
+certification remains pending; failed helper/environment/new-test assumptions
+remain separately recorded. See the
+[hosted-findings checkpoint](../checkpoints/2026-10-28-interface-repair-hosted-findings.md).
+
+Next: complete focused verification, commit normally, run one fresh ordinary Auto
+certification of the clean repaired head, push and independently verify new hosted
+acceptance and review disposition. No merge, deployment, protection changes,
+manual-test restart/data changes, password handling or invitation acceptance is
+authorized. Independent human/accessibility/operational/recovery gates remain open.
+
+## Latest handoff — 25 October 2026
+
+The maintainer requested continued work that needs no manual verification, with
+their browser continuation left for tomorrow. PR #221 is already merged at
+`7bd59c0bf1130a7ebc8b202d0f47b2bc26c9182b`; its old source-checkpoint next steps
+below are historical. No rota certification or implementation was restarted.
+
+The 24 October interface repairs and tutorial are copied into an isolated
+`codex/manual-interface-delivery` candidate based on that protected result.
+The original manual-test worktree, running services, saved records, passwords
+and checklist are unchanged. Automated review also fixes choice-group help
+references: each fieldset describes its own help and errors through unique
+field IDs. New regression coverage checks two invalid groups together. Two
+new widget docstrings now document their default arguments correctly.
+
+Verification results and remaining boundaries are recorded in the
+[automated-preparation checkpoint](../checkpoints/2026-10-25-interface-repair-automated-preparation.md).
+Fresh development feedback passed 14,433 units, 124 frontend cases, strict types,
+lint, both docstring checks and a warning-fatal documentation build. All six
+generated API/frontend files reproduce byte-for-byte. The original manual-test
+source snapshot remains unchanged; full native acceptance was not run.
+This candidate is for draft review, not certified merge or production use.
+The maintainer subsequently authorized overnight complete automated
+certification and in-scope failure repair, retaining draft status. Follow the
+[overnight scope](../checkpoints/2026-10-25-interface-repair-overnight-certification.md).
+The first exact-head attempt failed its dependency audit on filelock 3.32.0.
+Its 14,433 units passed; the pool was explicitly cancelled after that known
+failure: eight shards were interrupted and 103 unstarted. All eight owned
+containers were removed, original resources/source remained unchanged, and
+1,010 original evidence files were preserved with equal SHA-256 hashes.
+The bounded [security repair](../checkpoints/2026-10-25-interface-repair-security-dependencies.md)
+updates only filelock to 4.2.1 and the existing undici override to 7.30.1.
+Fresh audits are clean; 107 other Python and 173 other frontend package records
+remain exact. Audit-cache interoperability and all 124 frontend cases pass.
+The repaired clean candidate still needs complete fresh certification; the
+first failed attempt and focused feedback do not certify it.
+The second attempt at `6ac89b41` passed 48 native shards, all units and the
+non-database gates, then found one obsolete integration assertion expecting
+**Set up Workforce** instead of the accepted **Set up a volunteer team** label.
+Seven active shards were cancelled and 55 were unstarted. Original source and
+resources stayed unchanged; all owned containers were removed. Its 4,885 local-CI
+and 5,774 documentation-build originals are hash-verified in preservation storage.
+The assertion now follows UX-031 and the existing page contract, with every
+other lifecycle, input and authorization assertion retained. See the
+[native-title repair](../checkpoints/2026-10-25-interface-repair-native-title.md).
+The complete focused native case passes in a fresh owned database; independent
+AST/resource checks retain every other statement and confirm exact cleanup.
+The new clean candidate requires fresh complete certification; no result is
+borrowed from either failed attempt.
+The exact pinned receipt and PR #222 own the run outcome; this source checkpoint
+does not predict its result. Hosted merge acceptance and protected delivery
+remain required. Human invitation acceptance, Alex's Crew continuation and the
+broader independent-person/accessibility/recovery gates remain open. Incorporate
+tomorrow's observations separately; any later changed head needs fresh proof.
+
+## Latest local handoff — 24 October 2026
+
+The maintainer completed manual account, governance, registration-draft and
+Department setup, then reported navigation, contrast, choice alignment, typed
+date-entry, naming and tutorial problems. Local repairs now restore the owning
+Create organization action, consistently label Set up a volunteer team, keep
+radio controls beside their labels, use theme-aware action/required/error colors,
+and provide typed ISO dates / 24-hour local times across maintained browser forms
+and staff-console inputs. Existing domain precision, DST validation, API formats,
+authority, native guards and adoption boundaries are unchanged.
+
+The volunteer wizard now requires a deliberate create/reuse choice and shows
+stable organization locators beside reused names. Existing unfinished volunteer
+workspaces point to Finish accountable access. The tutorial's hyphenated question
+keys match their actual validator; its 113 checkbox positions and browser notes
+are retained.
+
+**Actual blocker:** Crew belongs to a second, still-provisioning organizer,
+`synthetic-moonfox-organizers-2`; Alex's active Board appointment belongs to the
+original organizer. No access was copied or granted by this repair. The updated
+[guide](../operations/blank-start-manual-test.md#continue-after-the-24-october-test-reports)
+gives the exact admin invitation → Alex/Blake self-acceptance → Maru-operator
+activation → Crew Structure/Positions continuation. Both editions and every
+existing manual record are preserved; the two editions deliberately exercise
+different profiles, while the accidental second organization explains the access
+gap. A fresh test should explicitly reuse the original series.
+
+14,432 database-free unit cases passed (11 existing warnings), all 124 frontend
+cases passed and the normal frontend type-check/build passed. The first broad
+run remains recorded as failed: two obsolete display expectations and 512
+inaccessible-global-temp-folder setup errors were diagnosed; a fresh owned temp
+directory and exact new display expectations resolved them. Browser smoke
+verified the actual action/title/date/reuse/access continuations. Actual widgets
+were separately measured at 312, 614 and 1,024 CSS pixels in a synthetic preview,
+with no overflow and all six radios beside text; light/dark checks covered
+contrast. This is bounded local feedback, not full certification, native-history,
+hosted, independent-person or production acceptance. See the
+[repair checkpoint](../checkpoints/2026-10-24-manual-test-interface-repairs.md).
+
+**Next:** hard-refresh the running local test and follow the guide's recovery
+section, then continue step 10. The agent has not accepted governance invitations
+or entered any of the maintainer-created people's passwords. No commit/push/PR
+or deployment was requested for this local repair. Maintained demo data is
+unchanged; the from-empty guide records the current representative journey.
+
+## Latest local handoff — 23 October 2026
+
+The maintainer requested a big GUI test from one administrator and zero project
+data. The [from-empty checklist](../operations/blank-start-manual-test.md) has
+13 main steps and seven optional branches, copy-ready fictional inputs, expected
+results and notes. The separate persistent local environment contains one admin
+and no ordinary people, organizations, series, editions or other business data.
+The maintainer will create every further account and convention record manually.
+Private launchers/login/keys/logs remain in ignored local storage; see the
+[preparation checkpoint](../checkpoints/2026-10-23-admin-only-manual-test.md).
+
+Migrations/system checks and actual browser login, one-account/zero-organization
+inventories and supported invitation/organization form smoke checks passed.
+Interactive checklist ticks/notes persisted after reload and were then cleared.
+Stop/Start preserved the initial password and zero business data; all nine
+unrelated stopped containers were unchanged. The organization inventory omits
+its Add link; the guide links the mounted authorized GUI form and records that
+navigation gap. The complete mainline is left unperformed for the maintainer.
+Documentation policy/whitespace checks cover this documentation-only preparation.
+
+Registration supports canonical draft construction; complete activation/public
+checkout remains incomplete. Programme timetable activation is still gated.
+Volunteer Shifts supply this guide's available scheduling journey. No guard,
+profile, authority or recipient-owned password acceptance boundary was bypassed.
+
+PR #221 is now protected-delivered as
+`7bd59c0bf1130a7ebc8b202d0f47b2bc26c9182b`, certified tree
+`2eea52b1fc3ca92522c327b0f993816bbb1e9aa0`; exact-head hosted acceptance,
+three clean CodeQL analyses, protected squash and designated-main fast-forward
+equality are verified. Its heartbeat was deleted. Original failed/successful
+evidence and the separate #42 human-acceptance boundary remain preserved.
+
+**Next:** start the prepared environment on 24 October, follow the GUI checklist,
+record findings and Stop to retain work. No commit/push/PR, application repair or
+production approval is claimed by this local preparation.
+
+**Historical pre-delivery checkpoint below:** retained intact for continuity.
+Its outstanding PR #221 certification/delivery steps were subsequently completed
+as recorded above and in PR #221/ignored delivery evidence. They are not the next
+actions for the newly authorized manual test.
+
 
 Maru is a Django/PostgreSQL modular monolith under synthetic evaluation, not a
 production-ready service. Follow [ROADMAP](ROADMAP.md), requirements and owning

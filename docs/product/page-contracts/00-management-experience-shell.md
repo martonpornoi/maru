@@ -319,3 +319,27 @@ At drawer widths the Menu opener occupies its own row before page content. It
 must not float over fields or submit buttons. Opening still uses the existing
 modal drawer, focus containment, Escape and return-focus behavior; without
 scripts native navigation remains available.
+
+## Typed dates and coherent setup actions
+
+Under UX-007, UX-016, UX-029 and UX-031, creation is visible beside its owning
+inventory and one ordinary task label is reused in its navigation, breadcrumb,
+page heading and action. The volunteer setup task is **Set up a volunteer team**.
+Dynamic record titles still identify their exact organization or edition.
+
+Browser date fields are directly editable as `YYYY-MM-DD`; local date/time
+fields use 24-hour `YYYY-MM-DD HH:mm:ss`, with no browser-dependent AM/PM picker.
+Existing split application controls keep a typed ISO date and labelled 24-hour
+minute clock. Owning fields retain precision, time-zone, DST and error rules;
+minute-precision workflows accept zero seconds and reject nonzero seconds.
+API UTC/offset serialization is unchanged. Invalid input remains correctable.
+Access sharing and replacement show a field-associated parsing error before any
+request, retain the entered expiry and reason, and allow correction and resubmission.
+Choice groups expose legends and individual labels, with the control beside
+its text. Theme-aware action colors apply to visited and unvisited links.
+Panel count/status badges use a matching theme-aware foreground and background.
+Existing volunteer workspaces distinguish provisioning setup from suspended
+accountable access: suspended work points to review and the approved recovery
+process, without offering initial invitation/activation instructions or implying
+that the workspace may resume. Active workspaces retain their team destination;
+missing or unknown accountable state is unavailable.
