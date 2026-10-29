@@ -1693,3 +1693,20 @@ need approved custody, sharing, retention and disposal. This first #22 slice is
 not complete history/exit, import, reconciliation, backup/restore, timekeeping,
 expansion, decommissioning or production acceptance. See the
 [operator guide](../operations/workforce-rota-package.md).
+
+`rota_integrity` is a separate, standard-library-only local command for the
+holder of a saved version-one ZIP (HR-016 / #223). It has no Django, database,
+network, extraction, rendering or domain-write dependency. It bounds the archive
+and directory before loading entries, requires all fixed members and a closed
+manifest, and checks complete CRC, actual byte counts and hashes with minimized
+fixed outcomes. It does not use ZIP readers that truncate to declared output
+sizes: stored bytes or bounded raw-deflate streams must reach their complete end,
+and local headers, central metadata and contiguous member extents must agree.
+ZIP64 locators are refused before entry construction; ZIP64 extra fields and
+data descriptors are unsupported. Nonblocking descriptor opening where supported
+precedes the same descriptor's regular-file check. Argument errors use fixed text
+without echoing rejected values.
+It never interprets supplied schemas or HTML. Success checks corruption against
+the supplied manifest, not authenticity, schema semantics, current authority,
+freshness, recovery or operational readiness. The existing export admission and
+audit remain unchanged; this offline check creates no new audit record or data.

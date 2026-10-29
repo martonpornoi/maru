@@ -1,7 +1,74 @@
 # Current project state
 
-Last updated: 2026-10-28
-Phase: PR #222 hosted-review repairs; fresh exact-head certification pending.
+Last updated: 2026-10-29
+Phase: Offline Workforce rota integrity check (#223 / PR #224); supported review repair.
+
+## Latest handoff — 29 October 2026
+
+PR #222 is protected-delivered as `968607e93b92bc5dbb9acca52fd6e7cb6854c935`.
+Its tree `17b572a416bc352367d89c02500fcfa0ddc84766` equals the exact certified
+candidate. Local and hosted acceptance passed 14,438 unit cases, 5,329 native
+cases across 111 shards, 128 frontend cases and 91.2872% combined coverage;
+all three CodeQL analyses were clean and all review threads resolved. Hosted
+headroom and complete original artifacts were independently reconciled. The
+maintainer explicitly authorized merge, and clean designated main was advanced
+fast-forward only with local/origin/remote/protected equality. The temporary
+monitor was deleted. No manual-test environment, accounts, data or checklist changed.
+
+The maintainer then authorized the next bounded task without routine input.
+Issue #223, a native child of #22, adds an offline integrity command for existing
+rota ZIPs under HR-016 and ADR 0127. It checks fixed members, a closed manifest,
+lengths and SHA256 hashes without extraction, HTML/schema execution, network,
+Django, database or domain writes. It adds no dependency, format/profile meaning,
+web route, authority or audit event. Matching hashes do not establish authenticity,
+schema validity, freshness, current permission, restore or operational readiness.
+
+The first clean head `beecadaf` passed independently reconciled ordinary Auto:
+14,497 unit cases (eleven existing warnings), all 5,173 required current-schema
+native cases across 21 shards, 128 frontend cases and 91.1749% combined coverage.
+All ten gates, complete selections/native phases, source hashes, headroom and
+exact cleanup matched. All 12,155 raw local originals are sealed in place;
+the nine unrelated stopped fixtures and stopped manual database were retained.
+All three exact-head CodeQL analyses were clean. That evidence applies only to
+the first head; it does not certify the current repair.
+
+The single automated review found four supported gaps: ZIP64 directory override,
+size-truncated member reads, FIFO opening before type validation, and argument
+errors echoing rejected paths. New regressions against the first implementation
+recorded 17 failures and one Windows non-regular-input pass. The obsolete hosted
+application run was cancelled; its partial results are not hosted acceptance.
+A fresh checkout retains the old certified outputs unchanged.
+
+The repair measures complete bounded stored/deflated streams and CRCs, validates
+matching contiguous local/central members, refuses ZIP64 locators before entry
+construction and ZIP64 extra fields, opens descriptors nonblocking where supported,
+and uses fixed argument-error output. All 89 focused checker/exporter cases pass,
+including 83 checker cases. Windows covers descriptor flags and a real directory
+refusal; the conditional real Unix FIFO regression still needs its Linux hosted
+run. Maintained exporter bytes, dependencies, server authority and format remain
+unchanged. Whole-source Ruff, strict types over 893 files, both docstring checks
+and documentation policy (780 Markdown files, four skills, 223 requirement IDs)
+pass. Earlier new-test style, binary-unpack type and indirect-exit docstring
+findings remain recorded. Fresh exact-head certification is still required.
+
+Earlier feedback remains separate: one wrong docstring-tool invocation, one
+test-string line-length failure, and a restricted Windows full-unit run whose
+eight unchanged existing cases could not link/replace files or use loopback.
+The complete unchanged suite then passed with normal file/socket access and a
+fresh task-owned temporary directory. No application assertions were weakened.
+These older failures remain separate from both the first exact-head success and
+the supported review repair. Next: commit normally, run fresh ordinary Auto in
+the new checkout, then publish and
+verify new hosted checks, review disposition and protected delivery. The one
+review request is consumed; do not duplicate it. See the
+[initial checkpoint](../checkpoints/2026-10-29-workforce-rota-integrity-check.md)
+and [review repair](../checkpoints/2026-10-29-rota-integrity-review-hardening.md).
+
+Maintained demos and their role walkthroughs are unchanged: this is an offline
+file command with synthetic CLI examples in the owning runbook, not a new UI
+journey. #22 remains open for import, reconciliation, full history/exit and
+recovery work. Human invitation, browser/accessibility, operational and production
+acceptance remain open. Older notes below retain their historical evidence.
 
 ## Latest handoff — 28 October 2026
 

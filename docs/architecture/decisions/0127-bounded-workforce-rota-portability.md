@@ -73,6 +73,38 @@ manual reconciliation, complete Workforce history, stopped-operation/restart,
 profile expansion and decommissioning remain open under #22. No CI result grants
 human, accessibility, deployment, recovery-owner or production acceptance.
 
+## Offline integrity check — 29 October 2026
+
+Issue #223 adds a read-only command over a holder's saved version-one package.
+It checks the five fixed members, closed manifest, byte lengths and SHA256 hashes
+in memory, without extraction, HTML execution, network or Django initialization.
+It does not trust or execute the supplied schema. Schema validation remains a
+separate step, and matching attacker-controlled hashes never authenticates content.
+
+Retain the 16 MiB complete uncompressed limit. The checker additionally bounds the
+archive to 16 MiB plus 64 KiB, the manifest to 8 KiB and central-directory metadata
+to 4 KiB before constructing ZIP entries. Require one terminal ordinary ZIP end
+record for five entries on one disk; refuse ZIP64, comments, encrypted entries,
+duplicate or unexpected paths and non-regular members. These limits include all
+current producer output and provide a documented refusal rather than attempting
+to interpret repackaged or ambiguous inputs. Only stored and deflated members are
+supported. CRC, size or hash failure returns a fixed code and no payload details.
+
+Validate the complete stored or raw-deflate stream, including its actual end,
+length and CRC, within the remaining complete-package budget. Declared ZIP sizes
+must not truncate the bytes whose integrity is checked. Local headers and central
+metadata must agree, and member extents must be contiguous without unaccounted
+bytes. Refuse ZIP64 locators before entry construction and ZIP64 extra fields in
+either header. Data descriptors and flags other than the UTF-8 filename flag are
+unsupported; the existing seekable exporter requires neither. Open the file
+descriptor nonblocking where supported before checking that same descriptor is
+regular. Command-argument errors retain status two but never echo rejected values.
+
+The command never contacts Maru, grants access, writes domain or audit records,
+imports data or proves current state. A failed copy is replaced through the
+existing authorized capture; this checker supplies no repair or extraction mode.
+No migration, runtime privilege, profile, format version or dependency changes.
+
 ## Alternatives considered
 
 - A complete cross-module archive now: too broad for this operating-copy outcome

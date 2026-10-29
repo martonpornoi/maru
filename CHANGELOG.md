@@ -34,6 +34,13 @@ rather than replace the curated summary.
 
 ### Added
 
+- A local command checks a saved Workforce rota ZIP's required files and hashes
+  without extracting or opening its contents. Complete bounded decompression
+  rejects misleading ZIP sizes and ZIP64 overrides. Fixed verification and
+  argument failures reveal no paths or rota
+  details. A match detects corruption only; it does not authenticate the sender
+  or prove schema validity, current permissions or staffing readiness.
+
 - Workforce-only Shift planners can keep a versioned rota package with JSON,
   schema, integrity hashes and a self-contained printable copy. Current read and
   management permissions are required; private calendars, account IDs and decision
