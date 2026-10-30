@@ -1,7 +1,121 @@
 # Current project state
 
-Last updated: 2026-10-29
-Phase: Offline Workforce rota integrity check (#223 / PR #224); supported review repair.
+Last updated: 2026-10-30
+Phase: Workforce operating home (#225, child of #35); PR #226 review repair.
+
+## Workforce operating home — 29 October 2026
+
+PR #224 is protected-delivered as `ac5f099e50624fbe7f0824a97b9b4309c45df7bc`;
+the merged tree equals certified `6e0646d5abdb9e6f196c233c1bb60bc31e678575`.
+Fresh local and hosted acceptance passed 14,521 units, 5,173 current native cases
+across 21 shards, 128 frontend cases, and hosted combined coverage 91.1715%.
+All three CodeQL analyses were clean, four review conversations were resolved,
+and clean main was advanced fast-forward only. #223 is closed; #22 stays open.
+The older source-stage record below remains historical.
+
+The maintainer approved completing the Workforce operating-home milestone
+thoroughly, including routine design decisions and protected delivery, without
+waiting for input. #225 is a native child of #35. UX-032 and new ADR 0128 extend
+the existing owner projection through Assignments, shared Availability, Shift
+decisions, completion and closeout, with at most four independently admitted
+items. Existing domain rules, capabilities, field ceilings and independent
+decisions remain authoritative. No migration, profile expansion, new grant,
+mutable task store, attendance or activity tracking is introduced.
+
+The implementation adds pure state choices, an owner work-phase reference,
+bounded current-state metadata queries and a primary/attention presentation.
+It loads no person labels, rationale, documents or exact Availability periods.
+An unavailable area preserves other admitted work; a quiet area makes no
+whole-event readiness claim. The first native run passed all 40 cases, including
+the real Assignment/Availability/Shift closeout sequence and retained setup
+regressions, with identical source/resource inventories and exact owned cleanup.
+Subsequent failure-path regressions exposed setup-only error propagation and
+grant/lifecycle movement during audit. Their repairs recheck after audit and at
+aggregate release, fence upcoming expiry/start/end boundaries and preserve other
+admitted areas. All 182 focused units and the complete 14,621-case unit suite
+pass, with eleven existing warnings. Strict types pass over 897 source files,
+both docstring checks and a fresh warning-fatal Sphinx build pass, and both fresh
+dependency audits report zero vulnerabilities. Expanded native feedback passed the six new
+revocation, time, phase and query-boundary cases and both existing demo cases.
+Its one failed new assertion incorrectly assumed platform oversight was denied;
+the corrected test passed separately without changing the existing policy.
+
+`--scenario workforce` uses its own exact-profile ongoing/future fixtures and
+generated role accounts, genuine owner commands, exact provenance and restricted
+runtime login. The existing Announcements/Guides default keeps its meaning.
+The genuine restricted-runtime browser rehearsal completed independent Assignment
+approval, private/shared/empty/withdrawn Availability, claim confirmation, refused
+stale-coverage locking, renewed evidence/reconfirmation/locking, and actual-time
+Shift completion. Other-edition and role denials disclosed no protected records.
+Seven widths from 320 to 1920 pixels had no horizontal overflow; keyboard drawer,
+focus and owner-link activation worked. The repaired list was repeated at 320,
+390 and 1280 pixels with no stray markers, one named list and three items; light
+and dark rendering were checked. A normal zoom shortcut made no measured change, so 200% zoom and
+specialist screen-reader acceptance remain unverified. All ten original stopped
+fixtures were retained; the preview's owned database and server were stopped,
+with exact before/after source and resource equality. These are development
+observations, not final exact-head local or hosted acceptance. The two new
+diagnostic timing-inventory paths use the established median fallback; every
+prior weight and the authoritative group-cost map remain unchanged. Both new
+groups keep their conservative largest-known fallback for full acceptance.
+
+The first complete ordinary Auto attempt failed at native shard 57 after all
+14,621 units and 56 native shards passed. Seven running shards were interrupted
+by normal failure cleanup; all 64 owned containers were removed and ten original
+stopped fixtures retained. Failed originals are preserved. Two isolated
+reproductions traced the failure to a historical Programme import test that
+removed and re-added Events' `adoption_revision`, leaving a dropped physical
+column slot in the shared database. Current migration leaves alone do not
+restore its pinned shape. The test now uses the existing committed-history
+isolation fixture, including exact before/after setup schema and readiness
+assertions. Its original body, the genuine-runtime readiness assertion, production
+pins, migration sources, inventory and timing weights are unchanged. Both original
+tests now pass together, with exact source/resource equality and owned cleanup;
+the fixture's before/after schema and readiness checks also pass. See the
+[isolation checkpoint](../checkpoints/2026-10-30-workforce-home-native-isolation.md).
+
+Complete ordinary Auto subsequently passed on clean `ef383e1c`: all ten gates,
+14,621 unit cases, 5,355 native cases across 111 shards and historical groups,
+128 frontend cases and 91.3068% combined coverage. Independent reconciliation
+covered the complete plan and identities, native phases, source pins, measured
+headroom, peak eight, exact owned cleanup and all ten original stopped fixtures.
+All three exact-head CodeQL analyses were clean. These results apply only to that
+commit. All original evidence is preserved.
+
+Ready PR #226 received its single automated review. Two supported gaps remained:
+owner records could change after the initial stable pair without invalidating
+the released continuation, and setup editability could survive a later lifecycle
+change. Twenty new regressions reproduced them. A fresh checkout preserves the
+certified source and outputs. The repair repeats complete bounded source checks
+before/after audit and at aggregate release, checks time fences after the source
+probe, and rechecks existing setup lifecycle gates after operating-area checks.
+Read-only setup loses its target and management hint; unavailable remains
+unavailable. No permission, domain rule, migration, inventory or timing policy
+changes. The obsolete hosted attempt was cancelled and fully preserved; its
+incomplete matrix and red aggregate gates are not acceptance.
+
+Final expanded focused unit feedback passed 132 cases. Expanded native feedback passed
+49 cases and failed seven new assertions that incorrectly expected an empty
+Assignment plan after approval, or unchanged operating items after an edition
+version change. The source-discard and setup read-only checks passed before those
+assertions. Only the new expected-state assertions were corrected. All eight
+affected native cases subsequently passed in 286.76 seconds, including refreshed
+owner consequences after the earlier stopping assertions. Independent readback
+confirmed all 3,288 source hashes before, after and live, unchanged production
+bytes, the helper pin, exact owned cleanup and all ten original stopped fixtures.
+Whole-source lint, strict types, both docstring checks, documentation policy and
+a fresh warning-fatal Sphinx build pass. Result-only prose is policy-checked
+separately; complete certification repeats the documentation gate. These focused
+results do not certify a clean commit or replace complete hosted acceptance.
+Both failed and successful originals remain preserved. See the
+[review checkpoint](../checkpoints/2026-10-30-workforce-home-review-freshness.md).
+
+Next: perform fresh exact-head ordinary Auto on this review repair and independently verify
+new hosted checks, CodeQL, review disposition and protected squash/main
+synchronization. The single review request is consumed. The manual-test
+environment, accounts, saved records and 113-checkbox guide stay untouched.
+Broader #35 contributions, #23 independent accessibility, #24 attendance,
+#42 recipient-owned acceptance and production/operational gates remain open.
 
 ## Latest handoff — 29 October 2026
 

@@ -1,0 +1,66 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Try a volunteer team · Maru</title>
+    <link rel="stylesheet" href="{% static 'demo/convention.css' %}">
+    <script src="{% static 'demo/convention.js' %}" defer></script>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">MARU · LOCAL WORKFORCE PRACTICE</p>
+      <h1>Try running a volunteer team</h1>
+      <p class="intro">Follow responsibility, shared Availability and Shift work through separate fictional roles. Everything here is disposable.</p>
+      <p>This separate example uses <strong>Workforce only</strong>. No attendee, Registration, payment, Announcements or Guides workflow is added.</p>
+      <nav aria-label="Choose a practice event">
+        <a class="button" href="#ongoing">Happening now</a>
+        <a class="button secondary" href="#future">Plan the next gathering</a>
+      </nav>
+      <section class="trial" aria-labelledby="trial-title">
+        <h2 id="trial-title">A short trial</h2>
+        <ol>
+          <li><strong>Future Reviewer:</strong> review the proposed Welcome helper Assignment. Its Manager made the proposal and cannot approve it themselves. Review the requirements and decide using the existing page.</li>
+          <li><strong>Future Volunteer:</strong> open My Availability, review the private draft and choose whether to share it. Organizers cannot see the draft's periods. Sharing an empty plan means deliberately unavailable.</li>
+          <li><strong>Future Manager:</strong> open Shifts, review Future welcome desk and open it for claims. The Volunteer can then claim suitable work in My Shifts; the Reviewer makes the independent confirmation.</li>
+          <li><strong>Ongoing Manager or Reviewer:</strong> open Home and choose this event if needed. Follow the primary suggestion and Other team work. A prepared claim is waiting for review. The short locked practice Shift ends five actual minutes after it was created; refresh Home after that time to see its completion review.</li>
+          <li><strong>Ongoing Manager:</strong> review the ended locked Shift and choose Complete when appropriate. This records planned-work closeout, without claiming attendance or a human handover.</li>
+        </ol>
+        <p>Each account belongs to one event. The Reviewer can review Assignments and Shifts but cannot edit team structure. The Volunteer has self-service access and the minimal role from an approved Assignment. Platform/setup accounts are not displayed. Prepared decisions are synthetic setup, not independent human acceptance.</p>
+        <p>If a decision asks you to confirm it is you, use the current practice role's password again. After confirming, review the record and submit your decision.</p>
+      </section>
+      {% if request.user.is_authenticated %}
+        <form method="post" action="{% url 'staff-logout' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'workforce-demo' %}">
+          <p>Signed in as <strong>{{ request.user.display_name }}</strong>. Sign out before switching roles.</p>
+          <button type="submit">Sign out to switch roles</button>
+        </form>
+      {% endif %}
+      <p id="copy-status" role="status" aria-live="polite"></p>
+      <div class="editions">
+        {% for edition in editions %}
+          <section id="{{ edition.key }}" class="edition" aria-labelledby="{{ edition.key }}-title">
+            <p class="eyebrow">{% if edition.key == 'ongoing' %}HAPPENING NOW{% else %}IN THE FUTURE{% endif %}</p>
+            <h2 id="{{ edition.key }}-title">{{ edition.name }}</h2>
+            <p>{{ edition.starts_on }} to {{ edition.ends_on }} · {{ manifest.time_zone }}</p>
+            {% include "demo/_practice_accounts.html" %}
+            <nav aria-label="{{ edition.name }} workspaces">
+              <a class="button secondary" href="{% url 'admin:index' %}">Open Home</a>
+              <a class="button secondary" href="{{ edition.assignments }}">Assignments for organizers</a>
+              <a class="button secondary" href="{{ edition.shifts }}">Shifts for organizers</a>
+            </nav>
+          </section>
+        {% endfor %}
+      </div>
+      <section aria-labelledby="keep-title">
+        <h2 id="keep-title">Your practice stays here</h2>
+        <p>Dates were set on {{ manifest.anchor }}. Reloading preserves your edits, decisions and their history. Time passes normally; no authority or work is backdated. A new preview starts a separate timeline.</p>
+        <p>Keep the launcher running. When it stops or its time expires, it deletes only this preview's database. Existing fixtures stay untouched. This preview is not production, human or specialist accessibility acceptance.</p>
+        <p>Credentials are generated for this local preview and kept in memory. Keep it on your own computer and do not reuse these passwords. Copying uses the normal clipboard, including any enabled history or synchronization. Clear it when finished.</p>
+        <button type="button" data-clear-clipboard>Clear copied practice data</button>
+      </section>
+    </main>
+  </body>
+</html>

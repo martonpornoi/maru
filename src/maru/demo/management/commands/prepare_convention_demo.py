@@ -10,6 +10,7 @@ from typing import Any
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
 from maru.demo.convention_fixture import bootstrap_demo_accounts, seed_convention_demo
+from maru.demo.workforce_fixture import seed_workforce_demo
 
 
 class Command(BaseCommand):
@@ -26,6 +27,9 @@ class Command(BaseCommand):
             Django's command-line parser.
         """
         parser.add_argument("phase", choices=("accounts", "content"))
+        parser.add_argument(
+            "--scenario", choices=("convention", "workforce"), default="convention"
+        )
 
     def handle(self, *_args: Any, **options: Any) -> None:
         """Execute one phase and emit only non-secret initial state.
@@ -42,14 +46,21 @@ class Command(BaseCommand):
         CommandError
             If preparation fails; credentials and private exception text are withheld.
         """
+        scenario = options.get("scenario", "convention")
         try:
             if options["phase"] == "accounts":
-                bootstrap_demo_accounts(json.loads(os.environ["MARU_DEMO_PASSWORDS"]))
+                bootstrap_demo_accounts(
+                    json.loads(os.environ["MARU_DEMO_PASSWORDS"]),
+                    scenario=scenario,
+                )
                 result = {"accounts_prepared": True}
             else:
-                result = seed_convention_demo(
-                    date.fromisoformat(os.environ["MARU_DEMO_ANCHOR"])
+                seed = (
+                    seed_workforce_demo
+                    if scenario == "workforce"
+                    else seed_convention_demo
                 )
+                result = seed(date.fromisoformat(os.environ["MARU_DEMO_ANCHOR"]))
         except Exception as error:  # noqa: BLE001 -- credentials must not reach command output
             frame = traceback.extract_tb(error.__traceback__)[-1]
             location = f"{Path(frame.filename).name}:{frame.lineno}"

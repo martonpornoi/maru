@@ -5,9 +5,10 @@ The launcher owns database creation and disposal. Existing data is never reset.
 """
 
 import os
+from collections.abc import Callable
 from datetime import date
-from typing import Any
-from uuid import uuid4
+from typing import Any, Literal
+from uuid import UUID, uuid4
 
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
@@ -128,13 +129,31 @@ def _lock_empty_foundation() -> None:
         )
 
 
-def bootstrap_demo_accounts(passwords: dict[str, str]) -> None:
+def _account_plan(
+    scenario: Literal["convention", "workforce"],
+) -> tuple[tuple[str, ...], Callable[[str], tuple[UUID, str]]]:
+    if scenario == "workforce":
+        from maru.demo import workforce_plan  # noqa: PLC0415 -- explicit scenario
+
+        return workforce_plan.ACCOUNT_KEYS, workforce_plan.account_identity
+    if scenario != "convention":
+        raise ConventionDemoConflictError("Unknown local practice scenario.")
+    return ACCOUNT_KEYS, account_identity
+
+
+def bootstrap_demo_accounts(
+    passwords: dict[str, str],
+    *,
+    scenario: Literal["convention", "workforce"] = "convention",
+) -> None:
     """Create only the reserved synthetic identities in an empty database.
 
     Parameters
     ----------
     passwords : dict[str, str]
         Fresh in-memory credentials for the exact closed account set.
+    scenario : Literal['convention', 'workforce'], default='convention'
+        Explicit separate dataset; the existing Announcements/Guides default is fixed.
 
     Raises
     ------
@@ -142,7 +161,8 @@ def bootstrap_demo_accounts(passwords: dict[str, str]) -> None:
         If identities already exist or the credential set is incomplete.
     """
     require_demo_environment()
-    if set(passwords) != set(ACCOUNT_KEYS):
+    keys, identity_for = _account_plan(scenario)
+    if set(passwords) != set(keys):
         raise ConventionDemoConflictError("Provide the complete synthetic account set.")
     for password in passwords.values():
         validate_password(password)
@@ -150,8 +170,8 @@ def bootstrap_demo_accounts(passwords: dict[str, str]) -> None:
         _lock_empty_foundation()
         if Account.objects.exists():
             raise ConventionDemoConflictError("Existing accounts must not be replaced.")
-        for key in ACCOUNT_KEYS:
-            identity, email = account_identity(key)
+        for key in keys:
+            identity, email = identity_for(key)
             create = (
                 Account.objects.create_superuser
                 if key == "platform"
@@ -167,8 +187,15 @@ def bootstrap_demo_accounts(passwords: dict[str, str]) -> None:
             )
 
 
-def _actors() -> dict[str, Account]:
+def _actors(
+    *, scenario: Literal["convention", "workforce"] = "convention"
+) -> dict[str, Account]:
     """Load the exact fixture identities without adopting collisions.
+
+    Parameters
+    ----------
+    scenario : Literal['convention', 'workforce'], default='convention'
+        Exact closed dataset, never a caller-provided identity resolver.
 
     Returns
     -------
@@ -180,12 +207,13 @@ def _actors() -> dict[str, Account]:
     ConventionDemoConflictError
         If another account exists or any reserved identity changed.
     """
+    keys, identity_for = _account_plan(scenario)
     accounts = {row.id: row for row in Account.objects.select_for_update().all()}
-    if len(accounts) != len(ACCOUNT_KEYS):
+    if len(accounts) != len(keys):
         raise ConventionDemoConflictError("The synthetic account inventory differs.")
     result = {}
-    for key in ACCOUNT_KEYS:
-        identity, email = account_identity(key)
+    for key in keys:
+        identity, email = identity_for(key)
         account = accounts.get(identity)
         platform = key == "platform"
         if (

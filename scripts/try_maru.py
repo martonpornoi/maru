@@ -1,8 +1,9 @@
 """Run a disposable, loopback-only Maru demonstration with owned cleanup.
 
 This is a development convenience, not restricted-runtime acceptance or CI.
-The default trial covers Announcements and Guides; --scenario legacy retains
-the separate older educational dataset. Both contain only fictional data.
+The default trial covers Announcements and Guides; --scenario workforce selects
+separate volunteer-team practice, and --scenario legacy retains the older
+educational dataset. All contain only fictional data.
 """
 
 from __future__ import annotations
@@ -257,13 +258,20 @@ class Preview:
                         and 'name="password"' in page
                     ):
                         if "MARU_DEMO_MANIFEST" in self.environment:
+                            workforce = (
+                                self.environment.get("MARU_DEMO_SCENARIO")
+                                == "workforce"
+                            )
+                            path = "demo/workforce/" if workforce else "demo/"
+                            title = (
+                                "Try running a volunteer team"
+                                if workforce
+                                else "Try running a convention"
+                            )
                             with opener.open(
-                                f"http://127.0.0.1:{self.port}/demo/", timeout=2
+                                f"http://127.0.0.1:{self.port}/{path}", timeout=2
                             ) as trial:
-                                if (
-                                    "Try running a convention"
-                                    not in trial.read().decode()
-                                ):
+                                if title not in trial.read().decode():
                                     raise RuntimeError(
                                         "The practice page is unavailable."
                                     )
@@ -315,21 +323,24 @@ def prepare_scenario(preview: Preview, scenario: str) -> tuple[str, str]:
     preview : Preview
         Newly allocated database and exact owned child environment.
     scenario : str
-        Closed convention or legacy CLI selection.
+        Closed convention, workforce or legacy CLI selection.
 
     Returns
     -------
     tuple[str, str]
         Ready page path and non-secret help (legacy retains its public password).
     """
-    if scenario == "convention":
+    if scenario in {"convention", "workforce"}:
         sys.path.insert(0, str(ROOT))
         from scripts.convention_preview import (  # noqa: PLC0415 -- CLI-only preparation
             prepare_convention_preview,
         )
 
-        prepare_convention_preview(preview)
-        destination = "demo/"
+        if scenario == "workforce":
+            prepare_convention_preview(preview, scenario="workforce")
+        else:
+            prepare_convention_preview(preview)
+        destination = "demo/workforce/" if scenario == "workforce" else "demo/"
         account_help = "Choose an event and practice role on the local trial page.\n"
     else:
         preview.manage("migrate", "--noinput", "--verbosity", "0")
@@ -359,9 +370,9 @@ def main() -> int:
     parser.add_argument("--port", type=int, default=8765, metavar="PORT")
     parser.add_argument(
         "--scenario",
-        choices=("convention", "legacy"),
+        choices=("convention", "workforce", "legacy"),
         default="convention",
-        help="Two-edition Announcements/Guides practice, or the older broad dataset.",
+        help="Separate Announcements/Guides or Workforce practice, or legacy data.",
     )
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument(

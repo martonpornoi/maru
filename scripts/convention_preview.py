@@ -9,7 +9,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 from urllib.parse import urlsplit
 
 import psycopg
@@ -89,13 +89,17 @@ def _manage_json(preview: Preview, *arguments: str) -> dict[str, Any]:
     return payload
 
 
-def prepare_convention_preview(preview: Preview) -> None:
+def prepare_convention_preview(
+    preview: Preview, *, scenario: Literal["convention", "workforce"] = "convention"
+) -> None:
     """Migrate with its owner, activate exact lineage, then seed with the runtime login.
 
     Parameters
     ----------
     preview : Preview
         Fresh database created and owned by this one launcher invocation.
+    scenario : Literal['convention', 'workforce'], default='convention'
+        Separate explicit dataset, keeping the existing default adoption fixed.
 
     Raises
     ------
@@ -110,17 +114,28 @@ def prepare_convention_preview(preview: Preview) -> None:
         current_anchor,
     )
 
+    keys = ACCOUNT_KEYS
+    identity_for = account_identity
+    if scenario == "workforce":
+        from maru.demo import workforce_plan  # noqa: PLC0415 -- explicit scenario
+
+        keys, identity_for = (
+            workforce_plan.ACCOUNT_KEYS,
+            workforce_plan.account_identity,
+        )
+
     environment = preview.environment
     administrator_url = environment["MARU_DATABASE_URL"]
     endpoint = urlsplit(administrator_url)
     migration_password, runtime_password = (secrets.token_urlsafe(32) for _ in range(2))
-    passwords = {key: secrets.token_urlsafe(18) for key in ACCOUNT_KEYS}
+    passwords = {key: secrets.token_urlsafe(18) for key in keys}
     environment.update(
         MARU_SYNTHETIC_CONVENTION_DEMO="true",
         MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE="true",
         MARU_RUNTIME_DATABASE_ROLE="maru_runtime",
         MARU_DEMO_PASSWORDS=json.dumps(passwords),
         MARU_DEMO_ANCHOR=current_anchor(datetime.now(UTC)).isoformat(),
+        MARU_DEMO_SCENARIO=scenario,
     )
     # Identifiers are fixed. Psycopg quotes credentials; no shell receives them.
     try:
@@ -155,12 +170,13 @@ def prepare_convention_preview(preview: Preview) -> None:
             "Local database role provisioning failed; no preview was exposed."
         ) from error
 
-    _manage_json(preview, "prepare_convention_demo", "accounts")
+    selection = ("--scenario", "workforce") if scenario == "workforce" else ()
+    _manage_json(preview, "prepare_convention_demo", "accounts", *selection)
     # This maintenance command owns its transaction while no web/worker process runs.
     preview.manage(
         "activate_authority_provenance",
         "--actor",
-        account_identity("platform")[1],
+        identity_for("platform")[1],
         "--reason",
         PREPARATION_REASON,
         "--acknowledge-processes-stopped",
@@ -170,5 +186,5 @@ def prepare_convention_preview(preview: Preview) -> None:
     )
     preview.manage("check")
     print("Preparing ongoing and future MaruCon practice work...", flush=True)
-    manifest = _manage_json(preview, "prepare_convention_demo", "content")
+    manifest = _manage_json(preview, "prepare_convention_demo", "content", *selection)
     environment["MARU_DEMO_MANIFEST"] = json.dumps(manifest)

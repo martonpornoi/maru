@@ -167,3 +167,25 @@
   margin-block: 0.25rem 0.5rem;
   color: var(--body-fg);
 }
+
+.maru-admin-attention-heading {
+  padding-top: 1rem;
+}
+.maru-admin-attention-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+#content-main .maru-admin-attention-list > li {
+  list-style-type: none;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--hairline-color);
+  border-radius: 0.35rem;
+}
+.maru-admin-attention-list h4 {
+  margin-block: 0.25rem 0.5rem;
+  color: var(--body-fg);
+}

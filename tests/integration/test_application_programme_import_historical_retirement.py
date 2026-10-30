@@ -32,6 +32,9 @@ from maru.applications.programme_import_writer_boundary import (
 from maru.authorization.policy import PolicyDecision
 from maru.workforce.models import Department
 from tests.factories import AccountFactory, EventEditionFactory
+from tests.integration.test_application_programme_import_migration_executor import (
+    isolated_import_migration_graph,
+)
 from tests.support.migrations import restore_current_migration_graph
 from tests.workforce_helpers import create_department_for_test
 
@@ -255,6 +258,7 @@ def _retire_historical_owner_directly(
         assert cursor.rowcount == 1
 
 
+@pytest.mark.usefixtures(isolated_import_migration_graph.__name__)
 def test_historical_orphan_staging_remains_disposable_after_upgrade() -> None:
     """Upgrade an old orphan without fabrication, then scrub it explicitly."""
     edition = EventEditionFactory()

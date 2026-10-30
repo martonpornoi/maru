@@ -94,6 +94,49 @@ continuation. Native tests separately cover query, policy, lifecycle and the
 actual home-to-owner route. Neither supplies genuine 200% browser zoom,
 representative screen-reader/person, restricted-runtime or #42 account acceptance.
 
+## Workforce operating-home milestone
+
+UX-032 and [ADR 0128](../../architecture/decisions/0128-workforce-operating-home.md)
+extend the exact Workforce-only home through the existing operating workflow.
+One owner-derived primary continuation leads a bounded attention list, with at
+most one contribution from setup, Assignments, shared Availability and Shifts.
+Each contribution is admitted independently using the complete authority of its
+existing destination. Every destination authorizes again.
+
+| Checked area | Representative continuation |
+| --- | --- |
+| Proposed Assignment | Review an exact proposal, or wait for another authorized organizer when independent approval is required. |
+| Expired active Assignment | Review ending retained authority; explain the separate revocation authority where absent. |
+| No retained Assignments after setup | Open Assignment planning; no staffing or onboarding readiness is inferred. |
+| Missing or private-draft Availability | Waiting for volunteers to share; read-only review only, with no draft details. |
+| Withdrawn or shared-empty Availability | Review the shared consequence; no reminder, editor impersonation or automatic replacement. |
+| Changed Shift eligibility | Review the exact Shift using existing current Position/Availability rules. |
+| Pending Shift claims | Review independent confirmation, or wait for another organizer for one's own claim. |
+| Open underfilled or ended work | Review coverage or reconcile the ended open demand; no automatic risk acceptance. |
+| Ended locked work | Review planned-work completion through the existing command and history. |
+| Future or running locked work | Explain the retained schedule and localized next boundary without a new mutation. |
+| Completed/cancelled work only | Review retained history; no whole-event all-clear. |
+| Closing/read-only stage | Explain cleanup or retained review according to current owner lifecycle, without fabricated setup work. |
+| Source movement, overflow or dependency/audit failure | Unavailable for that area; refresh while other admitted work remains usable. |
+
+Operating risks and ended work precede pending decisions, setup and informational
+history. No private name, hidden count, rationale, document value or exact
+Availability period is loaded or shown. The response remains private/no-store.
+Policy and owner/action state are repeated after required audit and at final
+aggregate release. Those checks compare the complete bounded owner-source
+signature again, including after another area's preparation or audit. The next
+relevant Assignment expiry or Shift start/end also fences a prepared action;
+crossing it during the final source probe requires refresh. Setup editability is
+checked after all operating-area checks through the existing private-planning
+and organization lifecycle projections. Lost editability returns read-only setup
+without a target or management hint; unavailable evidence stays unavailable.
+Setup-only recheck failure does not suppress another independently admitted area.
+Checked times and decision boundaries name the time zone. Ordinary links, text
+states, headings and list semantics remain usable by keyboard and without color.
+This milestone adds no attendance, actual-time, generic task store or activity
+feed. Maintained fictional scenarios cover ongoing and future work; existing
+previews, human acceptance and other profiles remain separate.
+
 Navigation items have code-owned labels, descriptions, stable task keywords,
 and one of these presentation kinds:
 

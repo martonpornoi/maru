@@ -43,26 +43,7 @@
             <p class="eyebrow">{% if edition.key == 'ongoing' %}HAPPENING NOW{% else %}IN THE FUTURE{% endif %}</p>
             <h2 id="{{ edition.key }}-title">{{ edition.name }}</h2>
             <p>{{ edition.starts_on }} to {{ edition.ends_on }} · {{ manifest.time_zone }}</p>
-            {% for role in edition.roles %}
-              <details>
-                <summary>Try as {{ role.name }}</summary>
-                <div class="account">
-                  <label for="{{ role.key }}-email">Practice email</label>
-                  <div class="copy-row">
-                    <input id="{{ role.key }}-email" value="{{ role.email }}" readonly autocomplete="off" spellcheck="false">
-                    <button type="button" data-copy="{{ role.key }}-email">Copy email</button>
-                  </div>
-                  <label for="{{ role.key }}-password">Practice password</label>
-                  <div class="copy-row">
-                    <input id="{{ role.key }}-password" type="password" value="{{ role.password }}" readonly autocomplete="off">
-                    <button type="button" data-copy="{{ role.key }}-password">Copy password</button>
-                  </div>
-                  <label class="show"><input type="checkbox" data-reveal="{{ role.key }}-password"> Show this practice password</label>
-                  <p>Use Copy password while it is hidden. If your browser blocks copying, choose Show this practice password, then select and copy it yourself. Paste the email and password into the normal sign-in form.</p>
-                  <a class="button" href="{{ role.sign_in }}">Sign in as {{ role.name }}</a>
-                </div>
-              </details>
-            {% endfor %}
+            {% include "demo/_practice_accounts.html" %}
             <nav aria-label="{{ edition.name }} workspaces">
               <a class="button secondary" href="{{ edition.guides }}">Open Guides</a>
               <a class="button secondary" href="{{ edition.announcements }}">Announcements for Authors and Reviewers</a>

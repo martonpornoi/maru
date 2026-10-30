@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static admin_edition_context %}
+{% load static admin_edition_context tz %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -36,12 +36,28 @@
           {% maru_home_guidance request maru_home_edition_context.selected maru_home_edition_context.selected_profile as maru_next %}
           {% if maru_next %}
             <section class="maru-admin-home-guidance" aria-labelledby="maru-next-heading">
-              <p class="maru-admin-section-kicker">Team setup · {{ maru_next.state }}</p>
+              <p class="maru-admin-section-kicker">{{ maru_next.area }} · {{ maru_next.state }}</p>
               <h3 id="maru-next-heading">{{ maru_next.title }}</h3>
               <p>{{ maru_next.explanation }}</p>
               {% if maru_next.action_url %}<p><a href="{{ maru_next.action_url }}">{{ maru_next.action_label }}</a></p>{% endif %}
-              {% if maru_next.checked_at %}<p class="help">Checked <time datetime="{{ maru_next.checked_at|date:'c' }}">{{ maru_next.checked_at|date:"j M Y, H:i T" }}</time>. Refresh this page for current guidance.</p>{% endif %}
-              <p class="help">This guidance covers Departments and Positions. Use Team workspace for assignments, Availability and Shifts.</p>
+              {% if maru_next.due_at %}<p>{{ maru_next.due_label }}: <time datetime="{{ maru_next.due_at|date:'c' }}">{{ maru_next.due_at|timezone:maru_next.time_zone|date:"j M Y, H:i T" }}</time> ({{ maru_next.time_zone }}).</p>{% endif %}
+              {% if maru_next.checked_at %}<p class="help">Checked <time datetime="{{ maru_next.checked_at|date:'c' }}">{{ maru_next.checked_at|timezone:maru_next.time_zone|date:"j M Y, H:i T" }}</time> ({{ maru_next.time_zone }}). Refresh this page for current guidance.</p>{% endif %}
+              {% if maru_next.attention %}
+                <h3 id="maru-attention-heading" class="maru-admin-attention-heading">Other team work</h3>
+                <ul class="maru-admin-attention-list" role="list" aria-labelledby="maru-attention-heading">
+                  {% for item in maru_next.attention %}
+                    <li>
+                      <p class="maru-admin-section-kicker">{{ item.area }} · {{ item.state }}</p>
+                      <h4>{{ item.title }}</h4>
+                      <p>{{ item.explanation }}</p>
+                      {% if item.action_url %}<p><a href="{{ item.action_url }}">{{ item.action_label }}</a></p>{% endif %}
+                      {% if item.due_at %}<p>{{ item.due_label }}: <time datetime="{{ item.due_at|date:'c' }}">{{ item.due_at|timezone:item.time_zone|date:"j M Y, H:i T" }}</time> ({{ item.time_zone }}).</p>{% endif %}
+                      {% if item.checked_at %}<p class="help">Checked <time datetime="{{ item.checked_at|date:'c' }}">{{ item.checked_at|timezone:item.time_zone|date:"j M Y, H:i T" }}</time> ({{ item.time_zone }}).</p>{% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+              <p class="help">Guidance covers only the areas shown. Event readiness and final decisions stay on their own pages. Team workspace keeps the full sequence available.</p>
             </section>
           {% endif %}
           <div class="maru-admin-workspace-grid">

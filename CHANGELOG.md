@@ -66,6 +66,12 @@ rather than replace the curated summary.
 
 ### Changed
 
+- Workforce-only Home now follows Assignment decisions, shared Availability
+  consequences and Shift review through planned-work completion. One primary
+  suggestion and at most three other areas retain their separate access rules,
+  privacy, checked times and ordinary owner pages. A separate disposable
+  Workforce practice scenario covers ongoing and future events.
+
 - Workforce-only events now have a Team setup continuation on the administration
   home for Departments, Positions and volunteer opportunities. It explains
   waiting, read-only and unavailable states without implying staffing readiness.

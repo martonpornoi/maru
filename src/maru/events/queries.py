@@ -3,7 +3,7 @@
 from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
-from typing import Final
+from typing import Final, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -19,6 +19,81 @@ _PRIVATE_PLANNING_WRITE_LIFECYCLES: Final = frozenset(
         EventEdition.Lifecycle.PREPARING,
     }
 )
+
+
+@dataclass(frozen=True, slots=True)
+class EditionWorkPhaseReference:
+    """Expose coherent owner lifecycle metadata for admitted home guidance.
+
+    Attributes
+    ----------
+    edition_id, organization_id
+        Exact owning scope, not a discovery or permission result.
+    aggregate_version
+        Current owner revision fencing lifecycle and time-zone changes.
+    phase
+        Planning/operation, cleanup-only closing, or retained review.
+    time_zone
+        IANA zone for authorized Shift decision boundaries.
+    """
+
+    edition_id: UUID
+    organization_id: UUID
+    aggregate_version: int
+    phase: Literal["planning", "closing", "retained"]
+    time_zone: str
+
+
+def resolve_edition_work_phase_reference(
+    *, organization_id: UUID, edition_id: UUID
+) -> EditionWorkPhaseReference | None:
+    """Read minimal phase metadata after the caller admits its complete fields.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Independently authorized owner of both edition and series.
+    edition_id : UUID
+        Exact authorized edition, never authority inferred from selection.
+
+    Returns
+    -------
+    EditionWorkPhaseReference | None
+        Coherent version/phase/zone, or no reference for invalid owner state.
+        This seam grants no authority and is not a public lookup endpoint.
+    """
+    row = (
+        EventEdition.objects.filter(
+            id=edition_id,
+            organization_id=organization_id,
+            series__organization_id=organization_id,
+        )
+        .values_list(
+            "id", "organization_id", "aggregate_version", "lifecycle", "time_zone"
+        )
+        .first()
+    )
+    if row is None:
+        return None
+    phase: Literal["planning", "closing", "retained"]
+    if row[3] in {
+        EventEdition.Lifecycle.DRAFT,
+        EventEdition.Lifecycle.PREPARING,
+        EventEdition.Lifecycle.READY,
+        EventEdition.Lifecycle.LIVE,
+    }:
+        phase = "planning"
+    elif row[3] == EventEdition.Lifecycle.CLOSING:
+        phase = "closing"
+    elif row[3] in {EventEdition.Lifecycle.ARCHIVED, EventEdition.Lifecycle.CANCELLED}:
+        phase = "retained"
+    else:
+        return None
+    try:
+        ZoneInfo(row[4])
+    except (ValueError, ZoneInfoNotFoundError):
+        return None
+    return EditionWorkPhaseReference(row[0], row[1], row[2], phase, row[4])
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,7 +1,7 @@
 # Synthetic demonstration data
 
-Status: Disposable convention practice and a separate legacy educational fixture
-Last updated: 2026-10-15
+Status: Separate disposable convention/Workforce practice and legacy educational data
+Last updated: 2026-10-29
 
 ## Purpose and requirements
 
@@ -326,6 +326,35 @@ refuse; a failed content transaction rolls back its work. Restarting the launche
 creates a new disposable database, not recovery of a previous preview. Cleanup
 is limited to the launcher's exact owned resource. The private acceptance
 facilitator and its stronger clipboard controls remain separate and unchanged.
+
+## Separate Workforce operating-home practice
+
+`scripts/try_maru.py --scenario workforce` selects a separate disposable database
+and exact `workforce_only@1` adoption, following UX-032 and ADR 0128. It does not
+expand the default Announcements/Guides profile. Its ongoing and future editions
+share a creation-time Europe/Budapest calendar and have distinct Manager,
+Reviewer and Volunteer identities per edition. Only these six accounts appear
+on `/demo/workforce/`; the platform and two setup-operator credentials stay hidden.
+Normal sign-in and ordinary owner routes enforce all access.
+
+The real setup ceremony, explicit grants, safe Volunteer starter, Department,
+Position, published opportunity, application and Assignment commands establish
+each scope. Prepared synthetic independent decisions are fixture preparation,
+not two-person human acceptance. The future Assignment awaits the Reviewer;
+the Volunteer has a private Availability draft and the Shift remains a draft.
+The ongoing example has an approved Assignment, deliberately shared Availability,
+a confirmed/locked short Shift and a separate claim awaiting review. The short
+work ends five actual minutes after creation, enabling truthful completion
+practice without backdating any authority or changing the host clock.
+
+No attendee Participation, Registration, payment, attendance, Announcements,
+Guides or external-message work is created. Exact authority provenance and a
+proved restricted runtime login remain mandatory. Setup is atomic, refuses
+existing organizations/accounts and never resets an edited preview. The launcher
+reuses its loopback-only guard, generated in-memory credentials, bounded lifetime
+and exact-resource cleanup. The [practice walkthrough](../operations/workforce-operating-home-practice.md)
+records the ordinary sequence and honest limits. Existing previews, legacy data
+and private manual-test fixtures remain separate.
 
 ## Next bounded demo outcome
 
