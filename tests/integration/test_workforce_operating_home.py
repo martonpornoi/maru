@@ -515,3 +515,153 @@ def test_source_queries_are_bounded_without_loading_labels_or_private_period_val
         and '"reason"' not in entry["sql"]
         for entry in queries
     )
+
+
+@pytest.mark.parametrize(
+    ("area", "stage"),
+    [
+        ("availability", "preparation"),
+        ("shifts", "preparation"),
+        ("availability", "audit"),
+        ("shifts", "audit"),
+        ("availability", "later_audit"),
+    ],
+)
+def test_real_owner_movement_discards_the_prepared_continuation(
+    world, monkeypatch, area, stage
+):
+    assignment = propose_home_assignment(world)
+    approve_home_assignment(world, assignment)
+    share_home_availability(world)
+    demand = create_home_shift(world)
+    open_home_shift(world, demand)
+    commitment = claim_home_shift(world, demand)
+    stable, audit = owner._stable, owner._audit
+    moved = [False]
+
+    def move():
+        if moved[0]:
+            return
+        moved[0] = True
+        if area == "shifts":
+            confirm_home_shift(world, commitment)
+        else:
+            plan = PersonAvailabilityPlan.objects.get(
+                edition=world.edition, account=world.person
+            )
+            withdraw_person_availability(
+                actor=world.person,
+                organization_id=world.edition.organization_id,
+                edition_id=world.edition.id,
+                expected_version=plan.command_version,
+                retry_key=uuid4(),
+                correlation_id=uuid4(),
+                source_channel="test",
+            )
+
+    def prepare(context, current):
+        result = stable(context, current)
+        if stage == "preparation" and current == "shifts":
+            move()
+        return result
+
+    def append(context, current, decision, at):
+        audit(context, current, decision, at)
+        if (stage == "audit" and current == area) or (
+            stage == "later_audit" and current == "shifts"
+        ):
+            move()
+
+    monkeypatch.setattr(owner, "_stable", prepare)
+    monkeypatch.setattr(owner, "_audit", append)
+    result = _read(world)
+    assert moved[0]
+    by_code = {item.code: item for item in result.operating}
+    assert area + "_unavailable" in by_code
+    unavailable = by_code[area + "_unavailable"]
+    assert unavailable.object_id is unavailable.due_at is unavailable.checked_at is None
+    assert "assignment_active" in by_code
+    assert ("shift_lock" if area == "shifts" else "availability_withdrawn") in _codes(
+        _read(world)
+    )
+
+
+@pytest.mark.parametrize("stage", ["preparation", "audit", "final_area"])
+def test_real_ready_transition_removes_a_prepared_setup_edit(world, monkeypatch, stage):
+    before = _read(world).setup
+    assert before.step == "opportunities"
+    assert before.can_manage
+    assert before.position_id == world.position.id
+    grant_board_controllers_edition_capability(world.edition, "events.transition")
+    stable, audit, finalize = owner._stable, owner._audit, owner._finalize_area
+    moved = [False]
+
+    def move():
+        if moved[0]:
+            return
+        moved[0] = True
+        for phase in ("preparing", "ready"):
+            transition_edition(
+                actor=world.manager,
+                organization_id=world.edition.organization_id,
+                edition_id=world.edition.id,
+                to_state=phase,
+                reason="Stop synthetic setup editing while the Home read completes.",
+                correlation_id=uuid4(),
+                source_channel="test",
+            )
+
+    def prepare(context, area):
+        result = stable(context, area)
+        if stage == "preparation" and area == "shifts":
+            move()
+        return result
+
+    def append(context, area, decision, at):
+        audit(context, area, decision, at)
+        if stage == "audit" and area == "shifts":
+            move()
+
+    def release(context, prepared, item):
+        result = finalize(context, prepared, item)
+        if stage == "final_area" and prepared[0] == "shifts":
+            move()
+        return result
+
+    monkeypatch.setattr(owner, "_stable", prepare)
+    monkeypatch.setattr(owner, "_audit", append)
+    monkeypatch.setattr(owner, "_finalize_area", release)
+    result = _read(world)
+    assert moved[0]
+    assert result.setup.step == "read_only"
+    assert not result.setup.can_manage
+    assert result.setup.position_id is None
+    assert _codes(result) == (
+        {"assignment_plan", "shift_plan"}
+        if stage == "final_area"
+        else {"assignments_unavailable", "shifts_unavailable"}
+    )
+
+
+@pytest.mark.parametrize("existing_draft", [False, True])
+def test_private_draft_movement_does_not_change_released_sharing_consequences(
+    world, monkeypatch, existing_draft
+):
+    propose_home_assignment(world)
+    if existing_draft:
+        share_home_availability(world, status="draft")
+    stable = owner._stable
+    moved = [False]
+
+    def prepare(context, area):
+        result = stable(context, area)
+        if area == "shifts" and not moved[0]:
+            moved[0] = True
+            share_home_availability(world, status="draft", empty=True)
+        return result
+
+    monkeypatch.setattr(owner, "_stable", prepare)
+    result = _read(world)
+    assert moved[0]
+    assert {"assignment_review", "availability_wait", "shift_plan"} <= _codes(result)
+    assert "PRIVATE-HOME" not in repr(result)

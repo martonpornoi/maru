@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-10-30
-Phase: Workforce operating home (#225, child of #35); pre-merge verification.
+Phase: Workforce operating home (#225, child of #35); PR #226 review repair.
 
 ## Workforce operating home — 29 October 2026
 
@@ -71,13 +71,48 @@ isolation fixture, including exact before/after setup schema and readiness
 assertions. Its original body, the genuine-runtime readiness assertion, production
 pins, migration sources, inventory and timing weights are unchanged. Both original
 tests now pass together, with exact source/resource equality and owned cleanup;
-the fixture's before/after schema and readiness checks also pass. Fresh complete
-certification remains pending. See the
+the fixture's before/after schema and readiness checks also pass. See the
 [isolation checkpoint](../checkpoints/2026-10-30-workforce-home-native-isolation.md).
 
-Next: commit the verified repair,
-perform fresh exact-head ordinary Auto and independently verify hosted checks,
-CodeQL, review and protected squash/main synchronization. The manual-test
+Complete ordinary Auto subsequently passed on clean `ef383e1c`: all ten gates,
+14,621 unit cases, 5,355 native cases across 111 shards and historical groups,
+128 frontend cases and 91.3068% combined coverage. Independent reconciliation
+covered the complete plan and identities, native phases, source pins, measured
+headroom, peak eight, exact owned cleanup and all ten original stopped fixtures.
+All three exact-head CodeQL analyses were clean. These results apply only to that
+commit. All original evidence is preserved.
+
+Ready PR #226 received its single automated review. Two supported gaps remained:
+owner records could change after the initial stable pair without invalidating
+the released continuation, and setup editability could survive a later lifecycle
+change. Twenty new regressions reproduced them. A fresh checkout preserves the
+certified source and outputs. The repair repeats complete bounded source checks
+before/after audit and at aggregate release, checks time fences after the source
+probe, and rechecks existing setup lifecycle gates after operating-area checks.
+Read-only setup loses its target and management hint; unavailable remains
+unavailable. No permission, domain rule, migration, inventory or timing policy
+changes. The obsolete hosted attempt was cancelled and fully preserved; its
+incomplete matrix and red aggregate gates are not acceptance.
+
+Final expanded focused unit feedback passed 132 cases. Expanded native feedback passed
+49 cases and failed seven new assertions that incorrectly expected an empty
+Assignment plan after approval, or unchanged operating items after an edition
+version change. The source-discard and setup read-only checks passed before those
+assertions. Only the new expected-state assertions were corrected. All eight
+affected native cases subsequently passed in 286.76 seconds, including refreshed
+owner consequences after the earlier stopping assertions. Independent readback
+confirmed all 3,288 source hashes before, after and live, unchanged production
+bytes, the helper pin, exact owned cleanup and all ten original stopped fixtures.
+Whole-source lint, strict types, both docstring checks, documentation policy and
+a fresh warning-fatal Sphinx build pass. Result-only prose is policy-checked
+separately; complete certification repeats the documentation gate. These focused
+results do not certify a clean commit or replace complete hosted acceptance.
+Both failed and successful originals remain preserved. See the
+[review checkpoint](../checkpoints/2026-10-30-workforce-home-review-freshness.md).
+
+Next: perform fresh exact-head ordinary Auto on this review repair and independently verify
+new hosted checks, CodeQL, review disposition and protected squash/main
+synchronization. The single review request is consumed. The manual-test
 environment, accounts, saved records and 113-checkbox guide stay untouched.
 Broader #35 contributions, #23 independent accessibility, #24 attendance,
 #42 recipient-owned acceptance and production/operational gates remain open.

@@ -17,10 +17,16 @@ inferred from read access. Missing authority omits the area. Source, bound or au
 failure produces only generic unavailable guidance for that area.
 
 Complete bounded source signatures are compared in short read-only repeatable
-snapshots, with one whole-component retry on movement. Current principal, policy,
-owner phase and action flags are checked again before/after required audit and
-at aggregate release. The next relevant Assignment expiry or Shift start/end
-also fences release. Refresh after movement to obtain new guidance. Private
+snapshots, with one whole-component retry on movement. The complete signature,
+current principal, policy, owner phase and action flags are checked again
+before/after required audit and at aggregate release. Later preparation or audit
+cannot leave an earlier area's old continuation visible with a new checked time.
+The next relevant Assignment expiry or Shift start/end also fences release,
+including time spent in the final source probe. Setup's existing private-planning
+and organization lifecycle checks follow the last operating-area checks; lost
+editability clears the target and management hint and returns read-only setup.
+An unavailable setup result remains unavailable. Refresh after movement to
+obtain new guidance. Private
 Availability drafts and missing plans share the same signature and explanation.
 No person labels, private rationale, documents or personal Availability periods
 are selected into home facts. Existing read-audit operations retain their purpose

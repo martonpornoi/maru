@@ -123,9 +123,14 @@ Operating risks and ended work precede pending decisions, setup and informationa
 history. No private name, hidden count, rationale, document value or exact
 Availability period is loaded or shown. The response remains private/no-store.
 Policy and owner/action state are repeated after required audit and at final
-aggregate release. The next relevant Assignment expiry or Shift start/end also
-fences a prepared action; crossing it requires refresh. Setup-only recheck failure
-does not suppress another independently admitted area.
+aggregate release. Those checks compare the complete bounded owner-source
+signature again, including after another area's preparation or audit. The next
+relevant Assignment expiry or Shift start/end also fences a prepared action;
+crossing it during the final source probe requires refresh. Setup editability is
+checked after all operating-area checks through the existing private-planning
+and organization lifecycle projections. Lost editability returns read-only setup
+without a target or management hint; unavailable evidence stays unavailable.
+Setup-only recheck failure does not suppress another independently admitted area.
 Checked times and decision boundaries name the time zone. Ordinary links, text
 states, headings and list semantics remain usable by keyboard and without color.
 This milestone adds no attendance, actual-time, generic task store or activity

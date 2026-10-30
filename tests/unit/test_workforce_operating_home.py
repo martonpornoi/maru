@@ -2,7 +2,7 @@
 
 from contextlib import nullcontext
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import Mock
 from uuid import UUID
@@ -55,6 +55,15 @@ def _isolate(monkeypatch):
     monkeypatch.setattr(owner, "_load_setup", lambda _context: None)
     monkeypatch.setattr(owner, "_recheck_setup", lambda _context, value: value)
     monkeypatch.setattr(owner, "_reference", lambda _context: REFERENCE)
+    monkeypatch.setattr(owner, "_read", lambda *_args: _snapshot())
+    monkeypatch.setattr(
+        owner,
+        "resolve_private_planning_edition_reference",
+        lambda **_kwargs: SimpleNamespace(accepts_private_planning_writes=True),
+    )
+    monkeypatch.setattr(
+        owner, "organization_accepts_planning_changes", lambda **_kwargs: True
+    )
     monkeypatch.setattr(
         owner,
         "_flags",
@@ -466,3 +475,162 @@ def test_unknown_owner_code_is_minimized_and_has_no_target():
     assert result.state == "Unavailable"
     assert not result.action_url
     assert "PRIVATE" not in repr(result)
+
+
+def _review_snapshots():
+    return {
+        "assignments": _snapshot("assignment_review", 25, (True, True)),
+        "availability": _snapshot("availability_shared", 50, ()),
+        "shifts": _snapshot("shift_claims", 20, (True,)),
+    }
+
+
+@pytest.mark.parametrize(
+    ("area", "stage"),
+    [
+        ("assignments", "preparation"),
+        ("availability", "preparation"),
+        ("shifts", "preparation"),
+        ("assignments", "audit"),
+        ("availability", "audit"),
+        ("shifts", "audit"),
+        ("assignments", "later_audit"),
+        ("availability", "later_audit"),
+    ],
+)
+def test_changed_owner_source_cannot_release_old_continuation(monkeypatch, area, stage):
+    _isolate(monkeypatch)
+    snapshots = _review_snapshots()
+    moved = [False]
+    trigger = "availability" if area == "assignments" else "shifts"
+
+    def stable(_context, current):
+        result = snapshots[current]
+        if stage == "preparation" and current == trigger:
+            moved[0] = True
+        return result
+
+    def read(_context, current):
+        result = snapshots[current]
+        return (
+            replace(result, signature="new-owner-version")
+            if moved[0] and current == area
+            else result
+        )
+
+    def audit(_context, current, *_args):
+        if (stage == "audit" and current == area) or (
+            stage == "later_audit" and current == "shifts"
+        ):
+            moved[0] = True
+
+    monkeypatch.setattr(owner, "_stable", stable)
+    monkeypatch.setattr(owner, "_read", read)
+    monkeypatch.setattr(owner, "_audit", audit)
+    result = owner.load_workforce_home_guidance(**_arguments())
+    assert moved[0]
+    released = {item.code: item for item in result.operating}
+    assert area + "_unavailable" in released
+    unavailable = released[area + "_unavailable"]
+    assert unavailable.object_id is unavailable.due_at is unavailable.checked_at is None
+    assert {
+        snapshot.item.code for current, snapshot in snapshots.items() if current != area
+    } <= {item.code for item in result.operating}
+
+
+@pytest.mark.parametrize("scope", ["edition", "organization"])
+@pytest.mark.parametrize("step", ["positions", "opportunities"])
+@pytest.mark.parametrize("stage", ["preparation", "audit", "final_area"])
+def test_later_owner_lifecycle_loss_removes_editable_setup(
+    monkeypatch, scope, step, stage
+):
+    recheck = owner._recheck_setup
+    finalize = owner._finalize_area
+    _isolate(monkeypatch)
+    snapshots = _review_snapshots()
+    planning = [True]
+    monkeypatch.setattr(owner, "_recheck_setup", recheck)
+    monkeypatch.setattr(
+        owner,
+        "_load_setup",
+        lambda _context: WorkforceSetupGuidance(
+            step, NOW, can_manage=True, position_id=RECORD
+        ),
+    )
+    monkeypatch.setattr(
+        owner, "_decision", lambda *_args: SimpleNamespace(allowed=True)
+    )
+    monkeypatch.setattr(
+        owner,
+        "resolve_private_planning_edition_reference",
+        lambda **_kwargs: SimpleNamespace(
+            accepts_private_planning_writes=planning[0] if scope == "edition" else True
+        ),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        owner,
+        "organization_accepts_planning_changes",
+        lambda **_kwargs: planning[0] if scope == "organization" else True,
+    )
+    monkeypatch.setattr(owner, "_read", lambda _context, area: snapshots[area])
+
+    def stable(_context, area):
+        if stage == "preparation" and area == "shifts":
+            planning[0] = False
+        return snapshots[area]
+
+    def audit(_context, area, *_args):
+        if stage == "audit" and area == "shifts":
+            planning[0] = False
+
+    def final(context, prepared, item):
+        result = finalize(context, prepared, item)
+        if stage == "final_area" and prepared[0] == "shifts":
+            planning[0] = False
+        return result
+
+    monkeypatch.setattr(owner, "_stable", stable)
+    monkeypatch.setattr(owner, "_audit", audit)
+    monkeypatch.setattr(owner, "_finalize_area", final)
+    result = owner.load_workforce_home_guidance(**_arguments())
+    assert not planning[0]
+    assert result.setup.step == "read_only"
+    assert not result.setup.can_manage
+    assert result.setup.position_id is None
+    assert {snapshot.item.code for snapshot in snapshots.values()} == {
+        item.code for item in result.operating
+    }
+
+
+def test_fresh_source_probe_cannot_cross_the_prepared_action_deadline(monkeypatch):
+    audit = _isolate(monkeypatch)
+    deadline = NOW + timedelta(seconds=1)
+    snapshot = replace(_snapshot(), valid_until=deadline)
+    current = [NOW]
+    monkeypatch.setattr(owner.timezone, "now", lambda: current[0])
+
+    def read(*_args):
+        current[0] = deadline
+        return snapshot
+
+    monkeypatch.setattr(owner, "_read", read)
+    result = owner._release_area(_context(), ("shifts", snapshot.item, snapshot))
+    assert result.code == "shifts_unavailable"
+    assert result.object_id is result.due_at is result.checked_at is None
+    audit.assert_not_called()
+
+
+def test_lifecycle_recheck_preserves_an_unavailable_setup_failure(monkeypatch):
+    recheck = owner._recheck_setup
+    _isolate(monkeypatch)
+    monkeypatch.setattr(
+        owner, "_decision", lambda *_args: SimpleNamespace(allowed=True)
+    )
+    monkeypatch.setattr(
+        owner, "organization_accepts_planning_changes", lambda **_kwargs: False
+    )
+    result = recheck(_context(), WorkforceSetupGuidance("unavailable", NOW))
+    assert result.step == "unavailable"
+    assert not result.can_manage
+    assert result.position_id is None

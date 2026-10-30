@@ -22,6 +22,7 @@ from maru.authorization.policy import decide_verified_principal_exact_edition
 from maru.events.queries import (
     edition_adoption_profile_reference,
     resolve_edition_work_phase_reference,
+    resolve_private_planning_edition_reference,
 )
 from maru.organizations.queries import organization_accepts_planning_changes
 from maru.workforce.assignment_queries import MAX_ASSIGNMENT_RECORDS
@@ -596,10 +597,13 @@ def _release_area(
 
 
 def _check_snapshot(context: _Context, area: Area, snapshot: _Snapshot) -> None:
-    if (
-        snapshot.reference != _reference(context)
-        or snapshot.flags != _flags(context, area)
-        or (snapshot.valid_until is not None and timezone.now() >= snapshot.valid_until)
+    if snapshot.reference != _reference(context) or snapshot.flags != _flags(
+        context, area
+    ):
+        raise OperatingHomeUnavailableError
+    current = _read(context, area)
+    if snapshot.signature != current.signature or (
+        snapshot.valid_until is not None and timezone.now() >= snapshot.valid_until
     ):
         raise OperatingHomeUnavailableError
 
@@ -634,6 +638,22 @@ def _recheck_setup(
         can_manage = _decision(
             context, "workforce.manage_structure", frozenset()
         ).allowed
+        reference = resolve_private_planning_edition_reference(
+            organization_id=context.organization_id, edition_id=context.edition_id
+        )
+        if (
+            reference is None
+            or not reference.accepts_private_planning_writes
+            or not organization_accepts_planning_changes(
+                organization_id=context.organization_id
+            )
+        ):
+            return replace(
+                setup,
+                step="unavailable" if setup.step == "unavailable" else "read_only",
+                can_manage=False,
+                position_id=None,
+            )
     except PermissionDenied:
         return None
     except (DatabaseError, RuntimeError, ValueError):
@@ -686,7 +706,6 @@ def load_workforce_home_guidance(
         for candidate in prepared
         if (released := _release_area(context, candidate)) is not None
     )
-    setup = _recheck_setup(context, setup)
     if not _adopted(context):
         return None
     items = tuple(
@@ -699,6 +718,7 @@ def load_workforce_home_guidance(
             _require(context, "events.view_basic", _EDITION_FIELDS)
         except PermissionDenied:
             items = ()
+    setup = _recheck_setup(context, setup)
     if not _adopted(context):
         return None
     return WorkforceHomeGuidance(setup, items) if setup is not None or items else None
