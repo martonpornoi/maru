@@ -200,6 +200,15 @@ certifications, or the populated Programme rehearsal and the full eight-database
 pool. The next clean candidate still requires complete risk-selected acceptance,
 the unchanged coverage/headroom gates and independent protected GitHub checks.
 
+Committed migration tests that remove and re-add fields must use the existing
+`isolated_migration_database` boundary when the shared current-schema database
+would otherwise retain dropped PostgreSQL column slots. Returning to current
+migration leaves does not restore those physical positions. Keep real autocommit
+and every historical assertion, initialize and restore the owned history graph,
+and verify exact current schema fingerprints and readiness before and after the
+isolated case. Do not relax production schema pins or omit the following runtime
+tests to accommodate historical test residue.
+
 ## Diagnostic whole-file cost calibration
 
 For a cheap current budget/assignment preview without starting PostgreSQL:

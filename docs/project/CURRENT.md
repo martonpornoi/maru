@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-10-29
+Last updated: 2026-10-30
 Phase: Workforce operating home (#225, child of #35); pre-merge verification.
 
 ## Workforce operating home — 29 October 2026
@@ -59,7 +59,23 @@ diagnostic timing-inventory paths use the established median fallback; every
 prior weight and the authoritative group-cost map remain unchanged. Both new
 groups keep their conservative largest-known fallback for full acceptance.
 
-Next: commit the clean candidate,
+The first complete ordinary Auto attempt failed at native shard 57 after all
+14,621 units and 56 native shards passed. Seven running shards were interrupted
+by normal failure cleanup; all 64 owned containers were removed and ten original
+stopped fixtures retained. Failed originals are preserved. Two isolated
+reproductions traced the failure to a historical Programme import test that
+removed and re-added Events' `adoption_revision`, leaving a dropped physical
+column slot in the shared database. Current migration leaves alone do not
+restore its pinned shape. The test now uses the existing committed-history
+isolation fixture, including exact before/after setup schema and readiness
+assertions. Its original body, the genuine-runtime readiness assertion, production
+pins, migration sources, inventory and timing weights are unchanged. Both original
+tests now pass together, with exact source/resource equality and owned cleanup;
+the fixture's before/after schema and readiness checks also pass. Fresh complete
+certification remains pending. See the
+[isolation checkpoint](../checkpoints/2026-10-30-workforce-home-native-isolation.md).
+
+Next: commit the verified repair,
 perform fresh exact-head ordinary Auto and independently verify hosted checks,
 CodeQL, review and protected squash/main synchronization. The manual-test
 environment, accounts, saved records and 113-checkbox guide stay untouched.
