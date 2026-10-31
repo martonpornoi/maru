@@ -34,6 +34,12 @@ rather than replace the curated summary.
 
 ### Added
 
+- A local Workforce proposal checker validates a versioned JSON file's fields,
+  duplicate records, references, Shift times and declared capacity. Its bounded
+  report omits supplied values. Fictional examples and a structural schema help
+  correct files without accounts, a server or live-record changes; a valid
+  report grants no import or staffing approval.
+
 - A local command checks a saved Workforce rota ZIP's required files and hashes
   without extracting or opening its contents. Complete bounded decompression
   rejects misleading ZIP sizes and ZIP64 overrides. Fixed verification and

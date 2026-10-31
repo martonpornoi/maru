@@ -52,6 +52,8 @@ or permission to use production personal data.
 - [Keep a Workforce rota copy](workforce-rota-package.md)
   establishes the first bounded profile without attendee or payment side
   effects.
+- [Check a Workforce proposal file](workforce-import-validation.md) validates a
+  bounded local format and its internal references without changing live data.
 
 ## Deploy, observe, and recover
 
@@ -115,6 +117,7 @@ empty-experience-baseline
 workforce-only-adoption-and-recovery
 workforce-operating-home-practice
 workforce-rota-package
+workforce-import-validation
 identity-invitation-writer-recovery
 marucon-admin-rehearsal
 page-01-platform-home

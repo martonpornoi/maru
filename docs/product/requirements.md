@@ -633,6 +633,33 @@ architecture documents, implementation issues, tests, and release notes.
   reconciliation, backup/restore, profile expansion, decommissioning or production
   acceptance. Keep incumbent fallback and approved retention/recovery procedures.
 
+- **HR-017 — Offline Workforce import-proposal validation:** Provide a closed
+  version-one `maru.workforce-import` UTF-8 JSON format for proposed Departments,
+  Positions, people, Assignments, Shifts and commitments in one declared
+  `workforce_only@1` scope. Organization, edition and record keys are file-local
+  aliases, never live identity or authorization evidence. Require complete fields,
+  strict types, unique local keys, valid typed references, acyclic Department
+  ancestry of at most 16 levels, positive offset-bearing Shift intervals coherent
+  with the declared IANA zone, and consistent proposed Position/capacity links.
+  Bound input to 1 MiB and JSON nesting to 16; cap Departments at 128, Positions
+  at 512, people at 2,048, Assignments and commitments at 4,096 each, and Shifts
+  at 1,024. Reject duplicate JSON members, unknown fields, unsupported versions,
+  floating/non-finite number tokens, integer tokens over 19 digits (excluding
+  their sign), malformed input and unavailable/non-regular
+  files. An offline command returns deterministic JSON with fixed error codes,
+  explanations and section/row/known-field locations, at most 64 issues and an
+  explicit truncation marker; it never echoes supplied labels, keys, values,
+  paths or parser errors. A valid file report contains bounded record counts.
+  Revalidation after correction changes no source file or Maru record. The
+  standard-library implementation emits its code-owned schema, makes no network
+  request and initializes no Django or database service. It creates no account,
+  grant, audit event, migration, profile change or retained input. Validation
+  establishes format and internal consistency only, never authenticity, current
+  identity, scope, authority, eligibility, Availability, approval, live coverage,
+  import readiness or production acceptance. Applying proposals, partner mapping,
+  reconciliation, history/restore and operational acceptance remain separate
+  contracts; the HR-016 rota snapshot remains a different, non-import format.
+
 ### Programme, shifts, and timetable planning
 
 - **SCH-001 — Shared planning model:** Programme sessions, shifts, room

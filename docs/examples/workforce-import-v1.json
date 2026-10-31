@@ -1,0 +1,34 @@
+{
+  "format": "maru.workforce-import",
+  "version": 1,
+  "profile": "workforce_only@1",
+  "scope": {
+    "organization_key": "fictional-moonfox",
+    "edition_key": "moonfox-2027",
+    "time_zone": "Europe/Budapest"
+  },
+  "departments": [
+    {"key": "welcome", "name": "Welcome team", "parent_key": null}
+  ],
+  "positions": [
+    {"key": "desk", "department_key": "welcome", "title": "Welcome desk"}
+  ],
+  "people": [
+    {"key": "person-a", "label": "Fictional volunteer A"}
+  ],
+  "assignments": [
+    {"key": "assignment-a", "person_key": "person-a", "position_key": "desk"}
+  ],
+  "shifts": [
+    {
+      "key": "morning",
+      "position_key": "desk",
+      "starts_at": "2027-07-10T09:00:00+02:00",
+      "ends_at": "2027-07-10T11:00:00+02:00",
+      "capacity": 1
+    }
+  ],
+  "commitments": [
+    {"key": "commitment-a", "assignment_key": "assignment-a", "shift_key": "morning"}
+  ]
+}

@@ -366,9 +366,10 @@ Both current exact manifests pin the versioned, copy-on-write
 governed safe-starter provisioning route remains limited to the exact
 Workforce-only setup contract. Commands recheck those literal entries against
 the edition profile after locking its scope; catalog growth therefore cannot
-enter an existing edition implicitly. General partner imports, a complete
-continuity export, printable rota, offline/manual reconciliation, and automated
-profile removal remain declared production gates rather than hidden promises.
+enter an existing edition implicitly. The bounded rota copy and offline import
+proposal check below are separate increments. General partner imports, a complete
+continuity export, offline/manual reconciliation and automated profile removal
+remain declared production gates rather than hidden promises.
 
 After an accountable operator creates the first Department, a fresh
 Workforce-only organization may still lack the immutable Position meaning
@@ -1749,3 +1750,29 @@ It never interprets supplied schemas or HTML. Success checks corruption against
 the supplied manifest, not authenticity, schema semantics, current authority,
 freshness, recovery or operational readiness. The existing export admission and
 audit remain unchanged; this offline check creates no new audit record or data.
+
+## Offline import-proposal validation
+
+HR-017 and [ADR 0129](../architecture/decisions/0129-offline-workforce-import-validation.md)
+define the closed `maru.workforce-import` version-one format under #227, child
+of #22. `import_format.validate_import_bytes` accepts at most 1 MiB of UTF-8
+JSON and returns an immutable minimized `ImportValidationReport`; `import_schema`
+exports its structural JSON Schema. The standard-library command
+`python -m maru.workforce.import_validation FILE` reads a regular file and emits
+JSON without Django startup, a database, network access or domain writes.
+
+Department/Position/person/Assignment/Shift/commitment proposals use typed local
+keys in one declared organizer/edition scope. Validation checks closed fields,
+duplicates, references, bounded acyclic ancestry, real offset-bearing instants
+against an available IANA zone, positive duration, Position equality and declared
+capacity. It never resolves live identities, inspects another organizer, grants
+authority, approves work or establishes actual coverage. No private account,
+contact, Availability or rationale fields are accepted. Reports omit source
+values and paths, cap issues at 64 and explain their limited assurance.
+
+No command applies data. Correction edits the source and runs validation again;
+there is no persisted staging state, audit retention rule or database rollback.
+Future application needs a separately governed import contract. See the
+[format and operator guide](../operations/workforce-import-validation.md) for
+all fields, ceilings, exit codes, failure behavior and fictional examples.
+Current management routes and ongoing/future UI demo fixtures are unaffected.
