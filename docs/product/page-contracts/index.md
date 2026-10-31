@@ -33,6 +33,7 @@ contract for the surface being changed, and compare its status with the
 - [Assignment management](assignment-management.md)
 - [Availability management](availability-management.md)
 - [Shift planning and My shifts](shift-planning-and-my-shifts.md)
+- [Work records and handover: future contract](workforce-work-records.md)
 - [Set up Workforce](workforce-only-adoption-setup.md)
 - [Set up Programme Operations](programme-operations-adoption-setup.md)
 - [Request and approve the Volunteer starter](programme-volunteer-starter.md)
@@ -77,6 +78,7 @@ position-management
 assignment-management
 availability-management
 shift-planning-and-my-shifts
+workforce-work-records
 workforce-only-adoption-setup
 announcements
 guidance

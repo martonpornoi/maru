@@ -1,49 +1,68 @@
 # Current project state
 
 Last updated: 2026-10-31
-Phase: Offline Workforce import-proposal validation (#227, child of #22).
+Phase: Workforce work-observation and actual-time contract (#24).
 
-## Offline Workforce proposal checker — 31 October 2026
+## Work records contract — 31 October 2026
 
-The maintainer approved a bounded versioned input format and offline validator,
-including implementation, synthetic tests, documentation and protected delivery
-without routine input. HR-017 and ADR 0129 define closed UTF-8 JSON with typed
-file-local Department, Position, person, Assignment, Shift and commitment keys.
-The standard-library command checks required fields, duplicates, references,
-bounded ancestry, zone-aware instants, interval order and declared capacity.
-A minimized JSON report caps issues at 64 and omits supplied values and paths.
-Schema output and fictional valid/invalid examples support local correction.
+The maintainer authorized proceeding through successive bounded tasks and PRs,
+including automated preparation for issues with later human validation. HR-018,
+ADR 0130 and the Work records page contract now separate existing planned Shift
+completion, observations, reported actual intervals, independent verification,
+correction/dispute, recipient-owned handover and Scheduling-owned publication.
+The first implementation slice is a person's actual-time report for retained
+ended confirmed work and a different authorized reviewer's exact-version decision.
 
-No live identity matching, Django startup, database/network access, domain write,
-account, grant, approval, migration, retained audit, notification or profile
-expansion is introduced. A valid file establishes no current authority,
-eligibility, Availability, coverage or readiness. Existing UI routes and the
-ongoing/future demos are unaffected. Manual-test records and credentials remain
-untouched. Applying imports, partner adapters, complete history/exit and
-reconciliation remain future contracts under #22.
+The contract defines trusted scope/person/source, explicit intervals and breaks,
+policy/horizon/retention prerequisites, closed input/query bounds, replay,
+concurrency, minimized evidence, disclosure, manual fallback, restore and exit.
+Current profiles, permissions, code, models, migrations, API schemas, routes and
+ongoing fictional demos are unchanged. An accepted contract creates no authority,
+collection or runtime readiness. Future implementation must add its synthetic
+subject/reviewer demo and complete the separately identified human/owner,
+accessibility, operational and production gates.
 
-Final focused feedback passes 168 cases with 100 percent line/branch coverage of
-the two new modules; the POSIX pipe case is Windows-skipped. It covers hostile
-JSON, every reference/required field, Unicode, ancestry/cycles, DST, capacity,
-resource ceilings, minimized CLI failures and correction. A fresh interpreter
-validates the fictional file with application imports, network/process access
-and file writes blocked. Full inexpensive unit feedback passed 14,808 cases
-(eleven existing warnings) before the final three schema newline regressions;
-all three reproduced the structural-schema gap and now pass in focused feedback.
-The initial unit attempt encountered eight OS access denials; fresh execution
-with the fixtures' normal file/local-connection permissions passed unchanged.
-Integer tokens now have an explicit 19-digit ceiling independent of Python's
-configuration. Whole-source lint/types, both docstring checks, documentation
-policy and a fresh warning-fatal Sphinx build passed during iteration.
-Full final exact-head local certification and hosted acceptance remain pending;
-focused observations do not certify a commit. See the
-[checkpoint](../checkpoints/2026-10-31-workforce-import-validation.md) and
-[operator guide](../operations/workforce-import-validation.md).
+Documentation policy passes for 791 Markdown files, four repository skills and
+223 identifiers covered by the policy's three-letter requirement scan. The
+whitespace check passes after restoring CURRENT's original LF line endings.
+Complete inexpensive unit feedback passes 14,811 cases with one expected Windows
+platform skip and eleven existing warnings. The first command stopped before
+collection because its report-path argument was parsed incorrectly; that output
+is retained separately and the actual suite ran unchanged with a corrected path.
+Fresh full local certification and protected exact-head delivery are pending. See
+[the checkpoint](../checkpoints/2026-10-31-workforce-work-records-contract.md) and
+[acceptance matrix](../product/page-contracts/workforce-work-records.md#observable-acceptance-and-human-handoff).
+Next: finish checks, commit/certify and protected-deliver this documentation-only
+contract. Close #24 only for its stated product/architecture scope; keep #22,
+#23, #42 and all actual implementation/human acceptance open. Recheck pending PRs
+before publishing another; after an earlier merge, synchronize clean main and
+update/re-certify dependent candidates rather than reuse old-head results.
 
-Next: finish focused and repository-wide checks, certify the final clean head,
-then independently verify protected PR delivery and clean main synchronization.
-Close only #227 after delivery; #22 stays open. No production activation or human
-acceptance is claimed.
+## Last protected delivery — Offline Workforce proposal checker
+
+[PR #228](https://github.com/martonpornoi/maru/pull/228) delivered HR-017/ADR 0129
+as `a42205cb7d18fc59575982824a43bf66f9ff8139`, tree-identical to certified
+`5bc391efbf84d07dad9ae65a791865e6d8d06f75`, sole parent
+`b70f63f8035b287aeff2e8fab995940441745339`. Independent local and hosted
+acceptance reconciled all ten local gates, 5,209 current native cases/23 shards,
+128 frontend tests and 91.220268% coverage. Hosted units passed all 14,812 cases,
+including the real POSIX pipe test skipped on Windows. All 26 published artifact
+digests, 24 original coverage parts, selection/JUnit/native phases, timing, a peak
+and bound of eight and exact cleanup agreed. Three current CodeQL analyses were clean;
+no reviews, requests or conversations remained under the unchanged zero-approval
+policy. Protected squash and clean main normal fetch/ff-only synchronization
+were verified with local/origin/remote/API equality. #227 is closed; #22 stays open.
+
+The versioned offline checker, schema and fictional examples change no live
+record or authority. Existing development-only moderate minimatch advisory
+GHSA-g3hv-75wg-m249 remains documented; the required high-threshold audit passes,
+without a zero-vulnerability claim. Local verifier/saver bookkeeping failures and
+all originals remain retained; no failing helper was treated as a failed test,
+and no successful API/download/test/collection/check was repeated to repair them.
+Certified source stays pinned. See the [operator guide](../operations/workforce-import-validation.md).
+Manual accounts/passwords/records, the 113-checkbox guide, ten stopped fixtures,
+unrelated worktrees/stashes and paused automations remain preserved. No new
+heartbeat was created; the old operating-home and PR222 heartbeats stay deleted.
 
 ## Last protected delivery — Workforce operating home
 
@@ -467,12 +486,11 @@ credentials, unrelated stopped fixtures and paused monitors.
 
 ## Smallest next actions
 
-1. Complete final checks and normally commit the supported DRF security repair
-   and API compatibility documentation; retain both failed full attempts.
-2. Fetch actual current main and run fresh ordinary Auto on the exact clean head.
-   Preserve complete originals; passing tests from an audit-failed run cannot
-   certify the dependency-upgraded candidate.
-3. Push normally, prepare the complete PR and verify exact-head hosted PR gate,
-   all CodeQL provenance, requested-review disposition and resolved conversations.
-4. Refresh no-bypass protection/current mergeability, exact-head squash, verify
-   identical certified tree and fast-forward-only designated clean-main equality.
+1. Finish documentation feedback, commit the #24 contract and certify its exact
+   clean head with ordinary Auto; preserve all earlier evidence.
+2. Publish one ready PR, verify its selected hosted checks and current CodeQL,
+   then exact-head protected squash and clean designated-main ff-only equality.
+3. While hosted checks run, prepare the next bounded issue on a separate branch;
+   recheck the queue before publishing and update/re-certify after main advances.
+4. Keep implementation and genuine human acceptance separate. Preserve the
+   manual rehearsal, certified sources, sealed outputs and unrelated work.
