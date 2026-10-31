@@ -1,0 +1,18 @@
+{
+  "format": "maru.workforce-import",
+  "version": 1,
+  "profile": "workforce_only@1",
+  "scope": {
+    "organization_key": "fictional-moonfox",
+    "edition_key": "moonfox-2027",
+    "time_zone": "UTC"
+  },
+  "departments": [],
+  "positions": [
+    {"key": "desk", "department_key": "missing-team", "title": "Fictional desk"}
+  ],
+  "people": [],
+  "assignments": [],
+  "shifts": [],
+  "commitments": []
+}

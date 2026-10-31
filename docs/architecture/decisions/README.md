@@ -129,7 +129,8 @@ the system.
 
 | [0126](0126-owner-projected-workforce-home-guidance.md) | Accepted | Derive one bounded Workforce setup continuation through current owner state, repeated authorization, audited disclosure and explicit unavailable behavior. |
 | [0127](0127-bounded-workforce-rota-portability.md) | Accepted | Export a bounded Workforce-only rota through complete existing source and management authority, audited disclosure and explicit portable-copy limits. |
-| [0128](0128-workforce-operating-home.md) | Accepted; implementation in progress | Extend bounded owner-projected home guidance through existing Assignments, shared Availability, Shift decisions and closeout without new authority or domain writes. |
+| [0128](0128-workforce-operating-home.md) | Accepted | Extend bounded owner-projected home guidance through existing Assignments, shared Availability, Shift decisions and closeout without new authority or domain writes. |
+| [0129](0129-offline-workforce-import-validation.md) | Accepted | Define a closed Workforce proposal file and bounded offline format/internal-consistency validation without live identity resolution or domain writes. |
 
 New ADRs use the next four-digit number and contain:
 
