@@ -10,6 +10,13 @@ replace independent human, specialist screen-reader or operational acceptance.
 Never use the saved maintainer manual-test environment, accounts, passwords or
 113-checkbox guide for this rehearsal.
 
+Earlier [PR #226 operating-home evidence](https://github.com/martonpornoi/maru/pull/226#issuecomment-6536111582)
+separately records restricted-runtime Assignment, Availability, Shift, recovery
+and actual-time closeout paths, seven widths, keyboard and theme observations.
+Those named-source observations remain valid within their recorded scope. The
+new signed-out probes below neither repeat nor replace them and do not establish
+later-head authenticated, real-zoom, specialist or human acceptance.
+
 ## Start with a separate preview
 
 From the repository root, with the [local prerequisites](../start-here/run-locally.md):

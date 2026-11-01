@@ -30,10 +30,48 @@ separates these observations from unexercised W02–W15, real 200% zoom, dark/mo
 full focus/drawer, specialist/owner, recovery, operational and production gates.
 #23 remains open. No full UX-029 or human acceptance is claimed.
 
-This branch is prepared while #229 completes its own verification. Next: incorporate
-that protected outcome normally, update this handoff, then commit and run fresh
-ordinary exact-head certification and independent protected hosted delivery of
-the guide. Earlier screenshot/source and test receipts cannot certify this branch.
+The branch now incorporates protected PR #231 normally, preserving its offline
+comparison and the earlier work-records contract. Fresh warning-fatal Sphinx and
+documentation policy passed during preparation. A bounded rendered-document
+review found one heading/main landmark and fifteen cards without horizontal
+overflow at 1,280 CSS pixels; this was contributor-document evidence only.
+Next: commit the final guide, run ordinary exact-head certification and verify
+its selected hosted lane and protected delivery independently. Earlier source
+receipts and screenshots do not certify this head.
+
+
+## Last protected delivery — Offline proposal revision comparison
+
+[PR #231](https://github.com/martonpornoi/maru/pull/231) delivered HR-019/ADR 0131
+as `382175fbffd683c76f852e6844f1f695f0868b38`, tree-identical to certified
+`8c1a540426ff1e0eb808dcf5cecce15e92fc2653`, sole parent
+`82a351478773ab60ce6f195db4e9996e8832ba9f`. The offline comparison checks two
+HR-017-valid proposals with equal declared file-local scope. Its complete bounded
+report omits supplied values and applies no live records, identities or approvals.
+See the [operator guide](../operations/workforce-import-comparison.md).
+
+Independent ordinary Auto passed all ten gates, 14,853 units plus one expected
+Windows POSIX skip, 5,209 native cases/23 current shards/279 groups/15,627 phases,
+128 frontend cases and 91.232962 percent combined coverage. All source hashes,
+fresh collection, complete plan, selections, identities, outcomes, durations,
+peak eight, headroom and exact cleanup agreed. All 12,550 local originals remain
+sealed in place; local individual coverage inputs were consumed by normal combine.
+
+Hosted acceptance passed 14,854 Linux units including the real POSIX pipe case,
+all selected native/frontend/static/security/documentation gates and app 15368.
+All 26 artifact digests and 24 original coverage inputs independently reconciled
+with the same 91.232962 percent coverage; all three current CodeQL analyses and
+app 57789 were clean. No reviews, reviewer requests or conversations remained
+under the unchanged zero-approval policy. All 5,648 hosted originals and 431
+further delivery metadata files are sealed. Helper-only API/policy/interpreter
+bookkeeping errors remain recorded; no test or collection was rerun to repair them.
+
+Protected exact-head squash, certified tree/sole parent, complete final PR body
+and clean designated-main normal-fetch/ff-only local/origin/remote/API equality
+were verified. #229 is closed; #22 retains live mapping/application, governed
+reconciliation, full history/exit and recovery. #23, #35 and #42 remain open.
+Original manual data and ten stopped fixtures remain untouched. No deployment,
+protection change, live import or human/operational/production acceptance.
 
 ## Work records contract — 31 October 2026
 
@@ -83,7 +121,7 @@ expansion, human or production acceptance was inferred. See the
 [contract checkpoint](../checkpoints/2026-10-31-workforce-work-records-contract.md)
 and [future acceptance matrix](../product/page-contracts/workforce-work-records.md#observable-acceptance-and-human-handoff).
 
-## Last protected delivery — Offline Workforce proposal checker
+## Prior protected delivery — Offline Workforce proposal checker
 
 [PR #228](https://github.com/martonpornoi/maru/pull/228) delivered HR-017/ADR 0129
 as `a42205cb7d18fc59575982824a43bf66f9ff8139`, tree-identical to certified
@@ -109,7 +147,7 @@ Manual accounts/passwords/records, the 113-checkbox guide, ten stopped fixtures,
 unrelated worktrees/stashes and paused automations remain preserved. No new
 heartbeat was created; the old operating-home and PR222 heartbeats stay deleted.
 
-## Last protected delivery — Workforce operating home
+## Prior protected delivery — Workforce operating home
 
 PR #226 is protected-delivered as `b70f63f8035b287aeff2e8fab995940441745339`.
 Its tree equals certified `089c28d76a09f179b0e376664b8017eded78cb22`; the sole
@@ -123,7 +161,8 @@ delivery is [recorded in PR #226](https://github.com/martonpornoi/maru/pull/226#
 The temporary heartbeat was deleted. Retained exact-head source and sealed
 original evidence stay pinned. Genuine 200% zoom, specialist screen reader,
 representative-owner, recovery, operational and production gates remain open,
-as do #23, #24 and recipient-owned #42 acceptance.
+as do #23 and recipient-owned #42 acceptance. #24's later contract delivery is
+recorded above; it does not implement attendance or actual time.
 
 ## Latest handoff — 29 October 2026
 

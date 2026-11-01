@@ -67,3 +67,34 @@ Preparation feedback at protected base `82a35147` passed documentation policy
 for 793 Markdown files, four repository skills and 223 identifiers covered by
 its three-letter scan. Whitespace passed. This is development feedback only;
 the subsequent main update and final exact-head acceptance remain required.
+
+
+## Main update and contributor-document review — 1 November 2026
+
+PR #231 protected-delivered the offline comparison as
+`382175fbffd683c76f852e6844f1f695f0868b38`, with the exact certified tree and
+sole parent `82a351478773ab60ce6f195db4e9996e8832ba9f`. Complete local and hosted
+evidence, all three current CodeQL analyses, protected merge and clean designated
+main synchronization independently passed. #229 alone closed. This guide's branch
+normally incorporates that main; conflict resolution preserves both outcomes and
+the previously delivered #24 contract. The final guide still needs its own fresh
+exact-head certification and selected hosted acceptance.
+
+Preparation at guide commit `802a3a64bb8d1c0402a3607842db2c3cf1fe3db0` passed
+documentation policy (793 Markdown files, four skills, 223 scanned identifiers)
+and a fresh warning-fatal Sphinx build. Its rendered guide was read in the isolated
+in-app browser at 1,280 CSS pixels (1,265 content/scroll width), with one heading,
+one semantic main landmark and fifteen task cards. The observed dark desktop
+presentation was readable without horizontal page overflow. This was a bounded
+contributor-document review, not application, zoom or screen-reader acceptance.
+An inaccessible table-of-contents target and later unchanged PageDown were
+retained as tool limits, without inventing full keyboard traversal. The owned
+static documentation server was stopped and no listener remained on its port.
+The successful task tab closed; a generated error tab could not be controlled
+through the documented browser API and was left for normal ephemeral cleanup.
+
+The guide now links the earlier PR #226 evidence without treating old source or
+the new signed-out probes as acceptance of this later head. Original accounts,
+passwords, records, guide and stopped database fixtures remain unchanged. #23 and
+the named human, real-zoom, specialist, owner, recovery, operational and production
+gates remain open. No runtime, fixture, schema, authority or deployment change.
