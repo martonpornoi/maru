@@ -1,7 +1,39 @@
 # Current project state
 
-Last updated: 2026-10-31
-Phase: Workforce work-observation and actual-time contract (#24).
+Last updated: 2026-11-01
+Phase: Workforce accessibility rehearsal and bounded evidence (#23).
+
+## Accessibility rehearsal — 1 November 2026
+
+The maintainer authorized successive bounded work without routine human input.
+The new [rehearsal guide](../operations/workforce-accessibility-rehearsal.md)
+maps #23 to fifteen task cards, distinct ongoing/future synthetic roles,
+seven widths, actual zoom, keyboard/drawer, semantics, disclosure, failure and
+exact owned cleanup. Existing UX-007/008/029/032 and ADRs 0077/0078/0080/0128
+remain unchanged; this increment changes documentation only.
+
+Two separate ordinary previews recorded bounded signed-out evidence at source
+`a42205cb7d18fc59575982824a43bf66f9ff8139` and then protected main
+`82a351478773ab60ce6f195db4e9996e8832ba9f`. Route redirection, role-picker/sign-in
+layouts, labels, landmarks, IDs and basic keyboard sequence passed in the first
+path. Native control timed out before real zoom. In-app credential reads were
+redacted; the second preview's ordinary Copy control reported success but its
+virtual clipboard remained empty, preventing normal paste. One initial
+placeholder sign-in was rejected; no authentication was submitted in the second
+probe. No supported product defect or valid-credential failure is inferred.
+
+Both previews and their exact containers/volumes were cleaned normally; all ten
+original stopped fixtures and the original manual accounts, data and 113-checkbox
+guide remain untouched. No alternate credential route or human invitation was
+used. The [checkpoint](../checkpoints/2026-11-01-workforce-accessibility-rehearsal.md)
+separates these observations from unexercised W02–W15, real 200% zoom, dark/motion,
+full focus/drawer, specialist/owner, recovery, operational and production gates.
+#23 remains open. No full UX-029 or human acceptance is claimed.
+
+This branch is prepared while #229 completes its own verification. Next: incorporate
+that protected outcome normally, update this handoff, then commit and run fresh
+ordinary exact-head certification and independent protected hosted delivery of
+the guide. Earlier screenshot/source and test receipts cannot certify this branch.
 
 ## Work records contract — 31 October 2026
 
@@ -22,21 +54,34 @@ collection or runtime readiness. Future implementation must add its synthetic
 subject/reviewer demo and complete the separately identified human/owner,
 accessibility, operational and production gates.
 
-Documentation policy passes for 791 Markdown files, four repository skills and
-223 identifiers covered by the policy's three-letter requirement scan. The
-whitespace check passes after restoring CURRENT's original LF line endings.
-Complete inexpensive unit feedback passes 14,811 cases with one expected Windows
-platform skip and eleven existing warnings. The first command stopped before
-collection because its report-path argument was parsed incorrectly; that output
-is retained separately and the actual suite ran unchanged with a corrected path.
-Fresh full local certification and protected exact-head delivery are pending. See
-[the checkpoint](../checkpoints/2026-10-31-workforce-work-records-contract.md) and
-[acceptance matrix](../product/page-contracts/workforce-work-records.md#observable-acceptance-and-human-handoff).
-Next: finish checks, commit/certify and protected-deliver this documentation-only
-contract. Close #24 only for its stated product/architecture scope; keep #22,
-#23, #42 and all actual implementation/human acceptance open. Recheck pending PRs
-before publishing another; after an earlier merge, synchronize clean main and
-update/re-certify dependent candidates rather than reuse old-head results.
+[PR #230](https://github.com/martonpornoi/maru/pull/230) protected-delivered this
+contract as `82a351478773ab60ce6f195db4e9996e8832ba9f`. Its tree equals certified
+`cc0de5719916ef7bef68a9043cee92faa9a95285`; its sole parent is
+`a42205cb7d18fc59575982824a43bf66f9ff8139`. Ordinary Auto independently passed all
+ten gates, 14,811 units plus one expected Windows skip, 5,209 current native cases
+across 23 shards, 128 frontend cases and 91.220268% combined coverage. Exact
+selection/JUnit/native phases, source/plan hashes, timing/peak eight and cleanup
+agree. All 6,662 local originals remain sealed and the certified source pinned.
+
+The selected hosted documentation lane independently passed static checks,
+30 licensing/metadata cases, warning-fatal Sphinx and PR gate app 15368; unused
+unit/native/full alternatives were skipped. It did not repeat full units,
+native, frontend or combined coverage. Both run log ZIPs, complete APIs and the
+published documentation artifact/digest are sealed. All three current CodeQL
+analyses/SARIF uploads and app 57789 aggregate were clean, with no open alerts,
+reviews, requests or conversations under unchanged zero-approval policy.
+Protected exact-head squash, certified tree/sole parent and clean designated-main
+normal fetch/ff-only local/origin/remote/API equality were verified. Final PR body
+exactly records delivery; 259 further metadata originals are sealed without
+rehashing earlier evidence. Helper-only environment/output-stream assumptions
+remain retained and no test/collection was retried during independent readback.
+
+#24 is closed for its contract scope. Runtime implementation and actual
+organization policy, #22 continuity, #23 accessibility, #42 human rehearsal and
+#35 broader home work remain open. No deployment, protection change, profile
+expansion, human or production acceptance was inferred. See the
+[contract checkpoint](../checkpoints/2026-10-31-workforce-work-records-contract.md)
+and [future acceptance matrix](../product/page-contracts/workforce-work-records.md#observable-acceptance-and-human-handoff).
 
 ## Last protected delivery — Offline Workforce proposal checker
 
