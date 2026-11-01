@@ -1,7 +1,43 @@
 # Current project state
 
 Last updated: 2026-11-01
-Phase: Offline Workforce proposal revision comparison (#229, child of #22).
+Phase: Recent governed Workforce outcome contract (#233, child of #35).
+
+## Recent Shift outcome contract — 1 November 2026
+
+The maintainer authorized successive bounded tasks and protected delivery without
+routine input. UX-033 and accepted ADR 0132 define the next Home contract:
+up to five distinct current matching locked/completed/cancelled Shift outcomes
+from existing immutable demand receipts over seven elapsed UTC days. The owner
+requires the complete existing organizer Shift-read field boundary, with a
+128-candidate/129th-overflow limit, deterministic order, current authorized labels
+and exact ordinary links. The bound can make the optional panel unavailable at
+busy editions; it is not complete history or an event-readiness indicator.
+
+Current source diagnosis inspected Shift receipts, command actions, organizer
+read/field authorization, retained detail history and existing Home guards/tests.
+The new [page contract](../product/page-contracts/workforce-recent-outcomes.md)
+defines source/version/lifecycle/window/deadline fences before/after required
+minimized audit and final release, independent destination authorization,
+no-partial failure, recovery and future measured/native/browser/demo acceptance.
+People, rationale, contact/Availability values and raw security-audit or retry
+payloads stay out. No click/activity tracking, polling or Task store is added.
+
+This increment changes documentation only. There is no runtime query/panel,
+registered audit operation, code, profile, grant, model/migration/API or maintained
+demo change. Original manual accounts/passwords/records, the 113-checkbox guide,
+stopped manual database and nine other fixtures remain untouched. Human,
+specialist, owner, recovery, operational and production gates stay separate.
+
+PR #231 already protected-delivered comparison as
+`382175fbffd683c76f852e6844f1f695f0868b38`; #229 closed and clean main synchronized.
+PR #232's accessibility guide has its own certified pinned source and hosted
+checks in progress. This separate contract branch must normally incorporate its
+actual protected delivery before final commit/certification. Next: finish #232,
+update this branch, then run fresh ordinary exact-head local and independently
+verified selected hosted acceptance. Close only #233 for contract delivery;
+#35, #23, #22 and #42 remain open. Earlier results do not certify this branch.
+See the [checkpoint](../checkpoints/2026-11-01-workforce-recent-outcomes-contract.md).
 
 ## Offline proposal revision comparison — 31 October 2026
 

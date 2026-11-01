@@ -34,6 +34,10 @@ rather than replace the curated summary.
 
 ### Added
 
+- Define a future Home list of recent governed Shift outcomes, using existing
+  authorization and retained command evidence. This is a bounded contract;
+  the current home, permissions and records are unchanged.
+
 - Compare two valid Workforce proposal revisions offline using changed row
   positions and field names, with original-byte hashes and no printed personal
   values. The comparison applies no data or approvals to Maru.

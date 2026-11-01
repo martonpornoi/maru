@@ -212,6 +212,18 @@ human/operational acceptance for each; no exported file or green CI establishes
 production cutover readiness. Preserve the real #42 password boundary and #23
 accessibility matrix while this autonomous work proceeds.
 
+## Recent governed Workforce outcomes
+
+Issue #233 defines the next bounded part of #35 under UX-033 and
+[ADR 0132](../architecture/decisions/0132-workforce-recent-shift-outcomes.md):
+a receipt-backed list of up to five current-authorized recent Shift outcomes.
+The contract preserves existing next-step guidance and excludes Django click
+logs, activity tracking, new authority and domain writes. Implementation,
+measured bounds, fictional demos and automated/browser/human/operational acceptance
+remain separate; no runtime panel or audit registration is delivered by the
+contract. The [page contract](../product/page-contracts/workforce-recent-outcomes.md)
+defines its exact privacy, failure, recovery and completeness limits.
+
 ## Work observations after planned Shift completion
 
 Issue #24's HR-018/[ADR 0130](../architecture/decisions/0130-workforce-work-observations-and-actual-time.md)
