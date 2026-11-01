@@ -1,6 +1,13 @@
-# Maru hands-on tutorial: organization authority to edition
+# Historical tutorial: organization authority to edition
 
-Status: M1.1/M2.1 plus Department management mounted; the definitive
+Status: Archived foundation-only procedure and evidence from 2026-08-16.
+Use [Rehearse the Workforce-only journey](workforce-only-rehearsal.md) for the
+current setup, Positions, Assignments, Availability and Shifts procedure. Those
+workflows are implemented; this historical stopping point does not describe
+their current availability. The commands and synthetic credentials below belong
+only to the earlier exercise, never to a preserved current environment.
+
+Historical verification: M1.1/M2.1 plus Department management mounted; the definitive
 adapter-expanded repository gate passes 1,693 tests in 1,653.43 seconds at
 90.50 percent total branch-inclusive coverage. Authenticated narrow-viewport,
 accessibility/state-matrix, deployment-recovery, and owner-rehearsal evidence
@@ -548,12 +555,12 @@ work.
 | 503 | Keep the submitted values, restore the named dependency, and retry; do not create a parallel record through raw model saves |
 | Outbox remains pending | Follow the effects worker runbook; do not edit domain-event or receipt rows |
 
-## Current stopping point
+## Historical stopping point — 16 August 2026
 
 You have followed the implemented organization → representation → series →
 edition → versioned Department-structure journey. Local migration, restore,
 frontend, sensitive-read/denial, and the earlier responsive shell gates pass.
-The command/database baseline passes 1,471 tests at 90.13 percent branch
+At that checkpoint, the command/database baseline passed 1,471 tests at 90.13 percent branch
 coverage and the strict mutation API focus passes 48 tests. The adapter-expanded
 combined Organization structure gate passes 159 tests in 102.89 seconds, and the definitive
 repository gate passes 1,693 tests at 90.50 percent total branch-inclusive
@@ -563,6 +570,7 @@ evidence until representative deployment/PITR recovery, keyboard/automated
 accessibility, complete visual states, and owner rehearsal pass. Ongoing Board
 term management, Position editing, typed applications, venues, timetable
 planning, shifts, storage/logistics, governed documents, and on-site
-communications remain ordered milestones in
-`docs/project/PRODUCTION_CONSOLIDATION.md`. Reachable preserved screens or APIs
-do not change their honest capability-ledger state.
+communications were later milestones at that date. Consult
+[CURRENT](../project/CURRENT.md) and the
+[canonical Workforce rehearsal](workforce-only-rehearsal.md) for current behavior
+and verification. These historical counts do not certify the current source.

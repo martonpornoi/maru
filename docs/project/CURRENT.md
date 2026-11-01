@@ -5,6 +5,25 @@ Phase: Recent governed Workforce outcomes implementation (#235, child of #35).
 
 ## Current implementation — 1 November 2026
 
+While #235's sole ordinary certification runs on its pinned separate checkout,
+#42's existing public draft is being refreshed in another branch. The
+[canonical rehearsal](../operations/workforce-only-rehearsal.md) names twenty
+steps, four role sessions, ordinary invitation and activation, private/shared
+Availability, independent decisions, real-clock planned Shift completion and
+before/after absence checks. README and the adoption runbook now point to it;
+the earlier foundation-only tutorial is explicitly historical. The dedicated
+launcher initializes only its synthetic bootstrap administrator, runs the real
+restricted login and separate local invitation worker, and owns exact cleanup.
+All 64 focused route/actor/launcher/inspection units passed. Fresh whole-source
+static, NumPy, warning-fatal Sphinx, generated contracts, frontend and required
+audits passed, followed by all 14,959 unit cases plus one expected Windows skip
+and eleven existing warnings. All 3,326 raw/normalized source hashes remained
+unchanged during that feedback. It is not clean exact-head certification;
+native/startup/browser/complete acceptance is pending. No second database
+workload or new browser input was started, and the preserved earlier human trial
+remains incomplete. See the
+[preparation checkpoint](../checkpoints/2026-11-01-workforce-rehearsal-preparation.md).
+
 The maintainer resumed one-agent work and authorized ordinary computer/browser
 verification for #235, #42, #35, #23 and #22 in that order, closing only verified
 scopes. Live issue bodies/comments and protected main were refreshed. #42 is a

@@ -112,7 +112,7 @@ def preflight(port: int) -> str:
 class Preview:
     """Own exactly one disposable database and one foreground server process."""
 
-    def __init__(self, docker: str, port: int) -> None:
+    def __init__(self, docker: str, port: int, *, image: str = IMAGE) -> None:
         """Initialize ownership without starting any process.
 
         Parameters
@@ -121,9 +121,12 @@ class Preview:
             Resolved Docker executable returned by preflight.
         port : int
             Loopback web port selected by the caller.
+        image : str, default=IMAGE
+            PostgreSQL image selected by the owning launcher.
         """
         self.docker = docker
         self.port = port
+        self.image = image
         self.token = secrets.token_hex(12)
         self.container = ""
         self.server: subprocess.Popen[str] | None = None
@@ -176,7 +179,7 @@ class Preview:
             "POSTGRES_USER=maru",
             "--env",
             "POSTGRES_DB=maru",
-            IMAGE,
+            self.image,
         )
         print(f"Disposable database: {self.container}", flush=True)
         self.docker_command("start", self.container)
