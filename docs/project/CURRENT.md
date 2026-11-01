@@ -38,6 +38,19 @@ warning-fatal Sphinx build passed. The final 160-character escaped-label render
 checks also passed all three states. The unchanged classifier
 selects the ordinary final Auto scope; no earlier receipt certifies this source.
 
+The first clean candidate `16c9dd7d` passed its complete unit process but failed
+the NumPy documentation gate: two new function descriptions grouped their scope
+arguments. Remaining native work was cancelled once, its eight exact owned
+containers were removed, and all failed/interrupted originals were sealed with
+source and original fixtures unchanged. A fresh checkout separates the two
+parameter declarations; executable syntax, every other product file and all
+tests/policies remain unchanged. Fresh repaired-source feedback passed the NumPy
+gate, all 14,895 unit cases plus one expected Windows skip/eleven warnings, and
+the complete unchanged static, Sphinx, generated-contract, frontend and required
+security gates. Complete new exact-head acceptance remains required.
+The browser observations below apply to the named predecessor with the same
+executable behavior, rather than being relabelled as a fresh browser run.
+
 A fresh disposable, genuine restricted-runtime rehearsal used separate Reviewer
 and Volunteer sign-ins. Seven widths, light/dark themes, reduced-motion preference,
 keyboard navigation, retained cancellation, real-elapsed completion, fresh Home

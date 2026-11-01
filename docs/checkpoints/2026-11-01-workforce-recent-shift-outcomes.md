@@ -107,3 +107,33 @@ rendered-state cases also passed with the full escaped 160-character label.
 The last CURRENT/checkpoint evidence wording is included in the final clean
 candidate and will receive its own ordinary exact-head certification. No
 production source changed after the recorded browser observations.
+
+
+## Preserved certification failure and fresh documentation repair
+
+Candidate `16c9dd7d76fea89c567657bac314a05a4c9ce2d2` passed 14,895 units plus
+one expected Windows skip and eleven existing warnings. Its ordinary Auto
+correctly failed the NumPy documentation gate: two public function docstrings
+grouped the organization and edition arguments instead of declaring each
+parameter separately. Remaining eight native batches were cancelled once; every
+exact owned container was removed, all ten original fixtures remained stopped,
+and every source hash stayed unchanged. Incomplete native work is not acceptance.
+
+Complete failed/interrupted originals and development evidence were sealed in
+place. A fresh checkout changes only those two parameter descriptions and this
+maintained evidence wording. AST comparison excluding exactly those two function
+docstrings proves executable syntax unchanged; every other product file matches
+the predecessor after normal line-ending normalization. Browser observations
+remain explicitly bound to that named predecessor. Complete new exact-head
+certification and independent hosted acceptance remain mandatory.
+
+
+## Repaired-source feedback
+
+The fresh checkout passed the repaired NumPy descriptions, all 14,895 units
+plus one expected Windows skip/eleven existing warnings, and the complete
+unchanged static/documentation/generated-contract/frontend/security check. The
+existing moderate development advisory remains below the unchanged required
+threshold; no zero-vulnerability claim is made. Those feedback outputs remain
+in place. Final certification uses another clean checkout at the repaired commit
+so the ordinary runner cannot overwrite any original feedback artifact.

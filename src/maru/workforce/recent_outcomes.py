@@ -123,7 +123,9 @@ def select_outcome_candidates(
     ----------
     rows : tuple[OutcomeCandidate, ...]
         Complete horizon or inconsistent-evidence cohort, including overflow row.
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Independently admitted organization.
+    edition_id : UUID
         Independently admitted exact owner scope.
     at : datetime
         Trusted aware UTC-comparable check instant.
@@ -178,7 +180,9 @@ def read_recent_outcome_facts(
 
     Parameters
     ----------
-    organization_id, edition_id : UUID
+    organization_id : UUID
+        Independently admitted organization.
+    edition_id : UUID
         Exact scope already admitted by the owner inside its coherent snapshot.
     at : datetime
         Trusted aware instant defining the inclusive seven-day UTC horizon.
