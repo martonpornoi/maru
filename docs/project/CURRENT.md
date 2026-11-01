@@ -1,7 +1,54 @@
 # Current project state
 
-Last updated: 2026-10-31
-Phase: Workforce work-observation and actual-time contract (#24).
+Last updated: 2026-11-01
+Phase: Offline Workforce proposal revision comparison (#229, child of #22).
+
+## Offline proposal revision comparison — 31 October 2026
+
+The maintainer authorized successive bounded work without routine input. HR-019
+and accepted ADR 0131 add a standard-library comparison of two independently
+HR-017-valid proposals with exactly equal declared file-local scope. Typed keys
+locate rows, literal field values determine changes, and renamed keys are
+removal plus addition. Formatting/member/row order is ignored. A complete report
+contains at most 128 changed row positions/known field names, six section counts
+and both original-byte SHA256 hashes; it omits supplied values, aliases, labels
+and paths. Every failure returns no partial changes/counts/hashes. Combined
+validation issues retain a 64-issue cap with side and explicit truncation.
+
+The owner reuses its unchanged validator and bounded regular-file reader. There
+is no Django startup, database/network access, source/domain write, identity
+mapping, grant, approval, audit, staging state, migration, profile expansion or
+new UI. Current ongoing/future fictional demos are unaffected; the original
+manual-test environment, data and human password boundary remain untouched.
+
+Final focused feedback passed 210 cases with the existing Windows POSIX pipe
+skip and 100 percent line/branch coverage of the new comparison module.
+New cases cover every typed section, row/field ordering, key renames, literal
+UTC spelling, original-byte hashes, complete 128-change boundaries, hostile
+input, minimized files/arguments and a fresh interpreter with application,
+network/process and file-write access blocked. The initial new oversized-input
+test name exceeded Windows' environment-value ceiling before its test ran;
+short explicit parameter IDs preserve the identical input assertion. Lint,
+strict module types and both docstring checks pass. One incorrect docstring
+tool invocation is retained separately from its successful normal executable.
+Full unit feedback passes 14,853 cases with one expected platform skip and
+eleven existing warnings. Whole-source lint/types (900 files), both docstring
+checks, documentation policy and a fresh warning-fatal Sphinx build pass.
+The first coverage attempt could not prepare six fixtures in the pre-existing
+global pytest temporary folder; the unchanged cases pass in fresh task-owned
+folders. Failed originals remain separate from the successful feedback.
+Complete final local certification and hosted acceptance remain pending.
+The later main update changed documentation only; the development results above
+do not certify the updated head.
+
+The branch now incorporates protected main after PR #230, preserving both
+HR-018/ADR 0130 and HR-019/ADR 0131. Next: certify the clean updated head and
+independently verify protected PR delivery and
+main synchronization. Close only #229 after delivery. #22 remains open for live
+mapping/application, governed reconciliation, full history/exit and operational
+recovery; human/accessibility/production acceptance is not inferred. See the
+[checkpoint](../checkpoints/2026-10-31-workforce-import-comparison.md) and
+[operator guide](../operations/workforce-import-comparison.md).
 
 ## Work records contract — 31 October 2026
 
@@ -22,23 +69,36 @@ collection or runtime readiness. Future implementation must add its synthetic
 subject/reviewer demo and complete the separately identified human/owner,
 accessibility, operational and production gates.
 
-Documentation policy passes for 791 Markdown files, four repository skills and
-223 identifiers covered by the policy's three-letter requirement scan. The
-whitespace check passes after restoring CURRENT's original LF line endings.
-Complete inexpensive unit feedback passes 14,811 cases with one expected Windows
-platform skip and eleven existing warnings. The first command stopped before
-collection because its report-path argument was parsed incorrectly; that output
-is retained separately and the actual suite ran unchanged with a corrected path.
-Fresh full local certification and protected exact-head delivery are pending. See
-[the checkpoint](../checkpoints/2026-10-31-workforce-work-records-contract.md) and
-[acceptance matrix](../product/page-contracts/workforce-work-records.md#observable-acceptance-and-human-handoff).
-Next: finish checks, commit/certify and protected-deliver this documentation-only
-contract. Close #24 only for its stated product/architecture scope; keep #22,
-#23, #42 and all actual implementation/human acceptance open. Recheck pending PRs
-before publishing another; after an earlier merge, synchronize clean main and
-update/re-certify dependent candidates rather than reuse old-head results.
+[PR #230](https://github.com/martonpornoi/maru/pull/230) protected-delivered this
+contract as `82a351478773ab60ce6f195db4e9996e8832ba9f`. Its tree equals certified
+`cc0de5719916ef7bef68a9043cee92faa9a95285`; its sole parent is
+`a42205cb7d18fc59575982824a43bf66f9ff8139`. Ordinary Auto independently passed all
+ten gates, 14,811 units plus one expected Windows skip, 5,209 current native cases
+across 23 shards, 128 frontend cases and 91.220268% combined coverage. Exact
+selection/JUnit/native phases, source/plan hashes, timing/peak eight and cleanup
+agree. All 6,662 local originals remain sealed and the certified source pinned.
 
-## Last protected delivery — Offline Workforce proposal checker
+The selected hosted documentation lane independently passed static checks,
+30 licensing/metadata cases, warning-fatal Sphinx and PR gate app 15368; unused
+unit/native/full alternatives were skipped. It did not repeat full units,
+native, frontend or combined coverage. Both run log ZIPs, complete APIs and the
+published documentation artifact/digest are sealed. All three current CodeQL
+analyses/SARIF uploads and app 57789 aggregate were clean, with no open alerts,
+reviews, requests or conversations under unchanged zero-approval policy.
+Protected exact-head squash, certified tree/sole parent and clean designated-main
+normal fetch/ff-only local/origin/remote/API equality were verified. Final PR body
+exactly records delivery; 259 further metadata originals are sealed without
+rehashing earlier evidence. Helper-only environment/output-stream assumptions
+remain retained and no test/collection was retried during independent readback.
+
+#24 is closed for its contract scope. Runtime implementation and actual
+organization policy, #22 continuity, #23 accessibility, #42 human rehearsal and
+#35 broader home work remain open. No deployment, protection change, profile
+expansion, human or production acceptance was inferred. See the
+[contract checkpoint](../checkpoints/2026-10-31-workforce-work-records-contract.md)
+and [future acceptance matrix](../product/page-contracts/workforce-work-records.md#observable-acceptance-and-human-handoff).
+
+## Prior protected delivery — Offline Workforce proposal checker
 
 [PR #228](https://github.com/martonpornoi/maru/pull/228) delivered HR-017/ADR 0129
 as `a42205cb7d18fc59575982824a43bf66f9ff8139`, tree-identical to certified
@@ -64,7 +124,7 @@ Manual accounts/passwords/records, the 113-checkbox guide, ten stopped fixtures,
 unrelated worktrees/stashes and paused automations remain preserved. No new
 heartbeat was created; the old operating-home and PR222 heartbeats stay deleted.
 
-## Last protected delivery — Workforce operating home
+## Prior protected delivery — Workforce operating home
 
 PR #226 is protected-delivered as `b70f63f8035b287aeff2e8fab995940441745339`.
 Its tree equals certified `089c28d76a09f179b0e376664b8017eded78cb22`; the sole
@@ -78,7 +138,8 @@ delivery is [recorded in PR #226](https://github.com/martonpornoi/maru/pull/226#
 The temporary heartbeat was deleted. Retained exact-head source and sealed
 original evidence stay pinned. Genuine 200% zoom, specialist screen reader,
 representative-owner, recovery, operational and production gates remain open,
-as do #23, #24 and recipient-owned #42 acceptance.
+as do #23 and recipient-owned #42 acceptance. #24's later contract delivery is
+recorded above; it does not implement attendance or actual time.
 
 ## Latest handoff — 29 October 2026
 

@@ -34,6 +34,9 @@ rather than replace the curated summary.
 
 ### Added
 
+- Compare two valid Workforce proposal revisions offline using changed row
+  positions and field names, with original-byte hashes and no printed personal
+  values. The comparison applies no data or approvals to Maru.
 - Define the future Workforce Work records journey, separating planned Shift
   completion from observations, reported actual time, independent review,
   corrections, disputes and handover acceptance. This is a documented contract;

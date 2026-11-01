@@ -140,6 +140,10 @@ may be remote: no general local-storage or interruption-recovery claim is made.
 
 ## Remaining adoption boundaries
 
+To locate changes between two valid revisions without printing their values,
+use the separate [proposal comparison](workforce-import-comparison.md). It does
+not turn validation into a live reconciliation or import approval.
+
 This is separate from the [rota ZIP and integrity check](workforce-rota-package.md).
 A rota copy is not accepted as an import proposal. Applying data later needs its
 own trusted scope, identity mapping, current permission checks, preview and

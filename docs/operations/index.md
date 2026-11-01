@@ -54,6 +54,8 @@ or permission to use production personal data.
   effects.
 - [Check a Workforce proposal file](workforce-import-validation.md) validates a
   bounded local format and its internal references without changing live data.
+- [Compare Workforce proposal revisions](workforce-import-comparison.md) locates
+  changed rows and fields without printing their values or applying records.
 
 ## Deploy, observe, and recover
 
@@ -118,6 +120,7 @@ workforce-only-adoption-and-recovery
 workforce-operating-home-practice
 workforce-rota-package
 workforce-import-validation
+workforce-import-comparison
 identity-invitation-writer-recovery
 marucon-admin-rehearsal
 page-01-platform-home
