@@ -41,11 +41,13 @@ from maru.workforce.availability_inputs import AvailabilityWindowInput
 from maru.workforce.models import EditionStructureControl, Position, ShiftDemand
 from maru.workforce.services import submit_volunteer_application
 from maru.workforce.shift_commands import (
+    cancel_shift_demand,
     claim_shift,
     confirm_shift_commitment,
     create_shift_demand,
     lock_shift_demand,
     open_shift_demand,
+    reopen_shift_demand,
 )
 from maru.workforce.starter_templates import provision_workforce_starter_template
 from maru.workforce.structure_commands import (
@@ -360,6 +362,55 @@ def _open_and_claim(
         )
 
 
+def _outcome_examples(
+    manager: Account,
+    edition: EventEdition,
+    position: Position,
+    interval: tuple[datetime, datetime],
+    *,
+    ongoing: bool,
+) -> dict[str, str]:
+    scope = {
+        "actor": manager,
+        "organization_id": edition.organization_id,
+        "series_id": edition.series_id,
+        "edition_id": edition.id,
+        "reason": PREPARATION_REASON,
+        "source_channel": CHANNEL,
+    }
+    cancelled = _create_demand(
+        manager, edition, position, interval, "Cancelled welcome desk example"
+    )
+    cancel_shift_demand(
+        **scope,
+        demand_id=cancelled.id,
+        expected_version=cancelled.command_version,
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    references = {"cancelled_shift": str(cancelled.id)}
+    if ongoing:
+        reopened = _create_demand(
+            manager, edition, position, interval, "Reopened coverage example"
+        )
+        for command in (open_shift_demand, lock_shift_demand, reopen_shift_demand):
+            arguments = {
+                **scope,
+                "demand_id": reopened.id,
+                "expected_version": reopened.command_version,
+                "retry_key": uuid4(),
+                "correlation_id": uuid4(),
+            }
+            if command is lock_shift_demand:
+                # An explicit synthetic underfill decision creates retained
+                # history to reopen; it is not a live staffing recommendation.
+                arguments["allow_understaffed"] = True
+            command(**arguments)  # type: ignore[arg-type]
+            reopened.refresh_from_db()
+        references["reopened_shift"] = str(reopened.id)
+    return references
+
+
 def _content(
     actors: dict[str, Account], edition: EventEdition, plan: DemoEdition
 ) -> dict[str, str]:
@@ -404,6 +455,15 @@ def _content(
         )
         _open_and_claim(actors, edition, pending, locked=False)
         references["pending_shift"] = str(pending.id)
+    references.update(
+        _outcome_examples(
+            manager,
+            edition,
+            position,
+            (end + timedelta(hours=2), end + timedelta(hours=3)),
+            ongoing=plan.key == "ongoing",
+        )
+    )
     return references
 
 

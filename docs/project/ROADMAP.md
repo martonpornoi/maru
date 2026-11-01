@@ -214,15 +214,17 @@ accessibility matrix while this autonomous work proceeds.
 
 ## Recent governed Workforce outcomes
 
-Issue #233 defines the next bounded part of #35 under UX-033 and
+Issue #233 defined the next bounded part of #35 under UX-033 and
 [ADR 0132](../architecture/decisions/0132-workforce-recent-shift-outcomes.md):
 a receipt-backed list of up to five current-authorized recent Shift outcomes.
 The contract preserves existing next-step guidance and excludes Django click
-logs, activity tracking, new authority and domain writes. Implementation,
-measured bounds, fictional demos and automated/browser/human/operational acceptance
-remain separate; no runtime panel or audit registration is delivered by the
-contract. The [page contract](../product/page-contracts/workforce-recent-outcomes.md)
-defines its exact privacy, failure, recovery and completeness limits.
+logs, activity tracking, new authority and domain writes. #235 implements that
+optional owner projection, minimized read audit and Home panel with bounded
+metadata, source/window/policy fences and separate ongoing/future practice.
+Consult CURRENT for actual verification and protected delivery; human/specialist,
+owner, recovery, operational and production acceptance remain separate.
+The [page contract](../product/page-contracts/workforce-recent-outcomes.md)
+defines exact privacy, failure, recovery and completeness limits.
 
 ## Work observations after planned Shift completion
 

@@ -1,44 +1,83 @@
 # Current project state
 
 Last updated: 2026-11-01
-Phase: Recent governed Workforce outcome contract (#233, child of #35).
+Phase: Recent governed Workforce outcomes implementation (#235, child of #35).
 
-## Recent Shift outcome contract — 1 November 2026
+## Current implementation — 1 November 2026
 
-The maintainer authorized successive bounded tasks and protected delivery without
-routine input. UX-033 and accepted ADR 0132 define the next Home contract:
-up to five distinct current matching locked/completed/cancelled Shift outcomes
-from existing immutable demand receipts over seven elapsed UTC days. The owner
-requires the complete existing organizer Shift-read field boundary, with a
-128-candidate/129th-overflow limit, deterministic order, current authorized labels
-and exact ordinary links. The bound can make the optional panel unavailable at
-busy editions; it is not complete history or an event-readiness indicator.
+The maintainer resumed one-agent work and authorized ordinary computer/browser
+verification for #235, #42, #35, #23 and #22 in that order, closing only verified
+scopes. Live issue bodies/comments and protected main were refreshed. #42 is a
+complete operator/volunteer tutorial and rehearsal; #22 still includes import,
+reconciliation and recovery scope. They are not merely password or UI sign-offs.
 
-Current source diagnosis inspected Shift receipts, command actions, organizer
-read/field authorization, retained detail history and existing Home guards/tests.
-The new [page contract](../product/page-contracts/workforce-recent-outcomes.md)
-defines source/version/lifecycle/window/deadline fences before/after required
-minimized audit and final release, independent destination authorization,
-no-partial failure, recovery and future measured/native/browser/demo acceptance.
-People, rationale, contact/Availability values and raw security-audit or retry
-payloads stay out. No click/activity tracking, polling or Task store is added.
+UX-033/ADR 0132 now have an owner projection and optional Home panel. The
+complete existing Shift-read boundary admits exact Workforce-only scope; platform
+administration alone is withheld. Minimal exact-version receipts, the complete
+128-candidate cohort, selected five current labels, coherent source signatures,
+mandatory minimized audit and final policy/window/clock checks preserve existing
+next-step priority and direct tools. Both complete attempts share a five-second
+release budget; source snapshots use one-second statement timeouts. No schema,
+permission, profile, runtime ACL, domain write, tracking or polling is added.
+See the [owning page contract](../product/page-contracts/workforce-recent-outcomes.md).
 
-This increment changes documentation only. There is no runtime query/panel,
-registered audit operation, code, profile, grant, model/migration/API or maintained
-demo change. Original manual accounts/passwords/records, the 113-checkbox guide,
-stopped manual database and nine other fixtures remain untouched. Human,
-specialist, owner, recovery, operational and production gates stay separate.
+Protected PR #234 main was normally incorporated without changing any draft file.
+Focused feedback passed 148 units and strict types. Native feedback passed the
+new receipt/cohort/query/denial/audit/runtime cases. Three test assumptions were
+corrected without weakening production guards: a required controller cannot be
+deactivated, late lifecycle movement discards every old area snapshot, and an
+approved Volunteer starter may retain minimal setup read while omitting this
+organizer panel. Interrupted and failed feedback remains preserved separately.
+The inexpensive full unit run found only the new native file missing from the
+legacy diagnostic cost inventory; its registration uses the existing maximum,
+explicitly unmeasured estimate. Existing weights, active group costs, tests and
+all resource/coverage/time limits remain unchanged. Fresh complete inexpensive
+unit feedback passed 14,895 cases plus one expected Windows skip and eleven
+existing warnings; whole-source lint, formatting, documentation policy and a fresh
+warning-fatal Sphinx build passed. The final 160-character escaped-label render
+checks also passed all three states. The unchanged classifier
+selects the ordinary final Auto scope; no earlier receipt certifies this source.
 
-This branch now normally incorporates protected main after PR #232, preserving
-the accessibility guide, offline comparison and work-records contract. #229 is
-closed; #23 remains open. Focused documentation policy passed for 799 Markdown
-files, four repository skills and 223 identifiers covered by its three-letter
-scan; a fresh warning-fatal Sphinx build passed. Next: final commit,
-fresh ordinary exact-head local certification and independently verified selected
-hosted acceptance. Close only #233 for its contract scope; #35, #23, #22 and #42
-remain open. Earlier results and screenshots do not certify this branch.
-See the [checkpoint](../checkpoints/2026-11-01-workforce-recent-outcomes-contract.md).
+A fresh disposable, genuine restricted-runtime rehearsal used separate Reviewer
+and Volunteer sign-ins. Seven widths, light/dark themes, reduced-motion preference,
+keyboard navigation, retained cancellation, real-elapsed completion, fresh Home
+outcomes, reopened-lock exclusion and exact-edition/direct-destination denials
+were observed. The original stopped fixtures remained unchanged after exact
+owned cleanup. Real Chrome zoom was stopped by the Windows browser URL-safety
+control and remains unverified; no alternate input bypass was used. Long-label
+live layout remains unexercised; empty and unavailable states retain
+rendered/native evidence only.
+Specialist screen-reader, representative owner/two-human, recovery, operational
+and production acceptance stay separate. The implementation PR records final
+exact-head local/hosted checks and protected delivery independently of this
+development feedback. See the
+[implementation checkpoint](../checkpoints/2026-11-01-workforce-recent-shift-outcomes.md).
+Original manual accounts/passwords/records, 113-checkbox guide and stopped databases
+remain untouched.
 
+## Last protected delivery — Recent outcome contract
+
+[PR #234](https://github.com/martonpornoi/maru/pull/234) delivered #233 as
+`f101e42d6e1139f3f9f708a96dde1986d40830c3`, tree-identical to certified
+`004ee2aeef18a50580bd833c518f1cc09f6a6921`, sole parent
+`e45c4b4e6d8d8c53dface9dcc15a35f490be5c88`. It changed documentation only.
+Fresh ordinary local Auto passed all ten gates: 14,853 unit passes plus one
+expected Windows skip/eleven existing warnings, 5,209 native cases/23 current
+shards/279 groups/15,627 phases, 128 frontend cases and 91.228070 percent combined
+branch coverage. Complete source hashes, fresh collection/plan, identities,
+phase outcomes/durations, peak/bound eight, headroom and exact cleanup agreed.
+All 12,566 new local originals are sealed; ordinary combine consumed local parts.
+
+Selected hosted run `41319256115` passed its documentation lane, 30 fixed licensing
+cases and PR gate app 15368; three unused alternatives were skipped. It did not
+repeat full units/native/frontend/coverage. Its documentation artifact digest,
+complete APIs/jobs/logs and CodeQL run `41319254210` with all three exact-head clean
+analyses/SARIF provenance were independently verified. All 4,410 hosted originals
+and 259 further delivery metadata files are sealed. Live reviews/requests/threads
+were empty under unchanged zero-approval policy. Protected exact-head squash,
+certified tree/sole parent, final PR body and designated clean-main normal
+fetch/ff-only local/origin/remote/API equality were verified. Only #233 closed;
+#35, #23, #22 and #42 remain open. Contract delivery did not implement this panel.
 
 ## Last protected delivery — Accessibility rehearsal
 

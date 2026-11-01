@@ -51,6 +51,9 @@ def _snapshot(code="shift_complete", priority=5, flags=(True,)):
 
 
 def _isolate(monkeypatch):
+    # This fixture isolates the original action areas; the optional receipt
+    # component has independent source/audit/final-release tests.
+    monkeypatch.setattr(owner, "_prepare_recent", lambda *_args: None)
     monkeypatch.setattr(owner, "_adopted", lambda _context: True)
     monkeypatch.setattr(owner, "_load_setup", lambda _context: None)
     monkeypatch.setattr(owner, "_recheck_setup", lambda _context, value: value)

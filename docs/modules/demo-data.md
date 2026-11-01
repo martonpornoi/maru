@@ -347,6 +347,16 @@ a confirmed/locked short Shift and a separate claim awaiting review. The short
 work ends five actual minutes after creation, enabling truthful completion
 practice without backdating any authority or changing the host clock.
 
+UX-033 adds a cancelled welcome-desk example in each edition and an ongoing
+reopened-coverage example through the existing create/open/lock/reopen/cancel
+commands. Its preparatory underfilled lock is an explicit synthetic exception,
+not a staffing recommendation or independent human decision. Home shows the
+current cancellation/lock outcomes; the old lock on reopened work is excluded.
+The existing short Shift supplies completion only after its real end and an
+ordinary authorized completion command. Dates, grants and receipts are never
+backdated to manufacture an outcome. Volunteers and platform-only oversight do
+not receive this organizer panel; direct retained history authorizes separately.
+
 No attendee Participation, Registration, payment, attendance, Announcements,
 Guides or external-message work is created. Exact authority provenance and a
 proved restricted runtime login remain mandatory. Setup is atomic, refuses

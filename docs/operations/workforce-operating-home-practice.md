@@ -2,7 +2,7 @@
 
 **Audience:** Contributors and evaluators using fictional local data\
 **Outcome:** Follow Assignments, shared Availability and Shift closeout from Home\
-**Contracts:** UX-032, HR-012–014 and ADR 0128
+**Contracts:** UX-032–033, HR-012–014 and ADRs 0128/0132
 
 This is a separate disposable Workforce-only preview. It creates no attendee,
 Registration, payment, attendance, Announcements or Guides workflow. Existing
@@ -74,6 +74,24 @@ does not approve the record for you.
    appropriate. Refresh Home again. The completed record remains in authorized
    history and the next existing work becomes the continuation. Completion records
    planned work; it does not establish attendance or a human handover.
+
+## Find recent recorded outcomes
+
+As either edition's Manager or Reviewer, open Home and review **Recent Shift
+outcomes · past 7 days · up to 5 Shifts** after the attention list. Both editions
+contain **Cancelled welcome desk example**. The ongoing edition also contains
+**Reopened coverage example**, whose retained old lock must not appear as a
+current Home outcome. Its preparatory underfill exception is fictional setup.
+Open its ordinary Shifts detail to inspect the separate retained history.
+
+After completing the ended short Shift above, refresh Home and follow its new
+**Shift completed** outcome. There is no automatic polling. Each label links to
+the existing independently authorized detail page. This list is a bounded recent
+record of planning decisions; it is not attendance, actual-time evidence, complete
+history or event readiness. The Volunteer and platform-only account receive no
+organizer outcome panel. Empty means no eligible recent outcomes in the checked
+scope. Unavailable means the complete optional list could not be safely checked;
+refresh or use the ordinary Shifts page without inventing a successful read.
 
 ## Failure, privacy and stopping
 

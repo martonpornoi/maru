@@ -34,6 +34,10 @@ rather than replace the curated summary.
 
 ### Added
 
+- Workforce-only Home can show up to five current authorized recent Shift
+  outcomes with local recording times and ordinary history links. The bounded
+  seven-day list preserves existing next steps and withholds all rows when it
+  cannot be checked safely; it makes no attendance or readiness claim.
 - Define a future Home list of recent governed Shift outcomes, using existing
   authorization and retained command evidence. This is a bounded contract;
   the current home, permissions and records are unchanged.

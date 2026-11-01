@@ -117,11 +117,25 @@ def test_two_workforce_only_editions_have_real_independent_work_and_no_attendee_
         )
         assert platform.allowed
         assert platform.reason_code == "platform_administration"
-        assert _read(actors["platform"], edition) is not None
+        platform_home = _read(actors["platform"], edition)
+        assert platform_home is not None
+        assert platform_home.recent_outcomes is None
         assert not PositionAssignment.objects.filter(
             account=actors["platform"]
         ).exists()
         result = _read(reviewer, edition)
+        assert result.recent_outcomes.state == "present"
+        assert any(
+            str(row.demand_id) == entry["items"]["cancelled_shift"]
+            for row in result.recent_outcomes.items
+        )
+        volunteer_home = _read(volunteer, edition)
+        assert volunteer_home is None or volunteer_home.recent_outcomes is None
+        if entry["key"] == "ongoing":
+            assert all(
+                str(row.demand_id) != entry["items"]["reopened_shift"]
+                for row in result.recent_outcomes.items
+            )
         codes = {item.code for item in result.operating}
         if entry["key"] == "future":
             assert {"assignment_review", "availability_wait", "shift_draft"} <= codes
