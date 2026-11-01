@@ -10,6 +10,12 @@
 
 ## Purpose and outcome
 
+[HR-018's future Work records contract](workforce-work-records.md) keeps
+check-in/out observations, actual intervals, independent review, disputes and
+handover acceptance separate from this implemented planned lifecycle.
+**Complete shift** does not establish those facts. No new Work record route,
+permission or collection is implemented by that contract.
+
 The #108 Programme connection adds optional fixed-label item, timetable and
 release links to organizer list/detail pages and their validation responses.
 Each destination independently admits its own complete fields and exact scope;

@@ -660,6 +660,42 @@ architecture documents, implementation issues, tests, and release notes.
   reconciliation, history/restore and operational acceptance remain separate
   contracts; the HR-016 rota snapshot remains a different, non-import format.
 
+- **HR-018 — Workforce work observations and actual time:** Keep planned Shift
+  completion, check-in/out observations, reported inability to attend, actual
+  work intervals, independent verification, disputes and handover acceptance as
+  separate facts. Workforce owns these exact-commitment records; Scheduling
+  owns deliberate personal-schedule publication. HR-009 completion must never
+  manufacture attendance, worked hours, a break or accepted handover. Missing
+  observations mean unknown, not absence. Each observation distinguishes its
+  claimed occurrence time, server recording time, authenticated author and
+  self/operator/manual source. No automatic lateness, discipline or performance
+  conclusion follows a timer. Any lateness threshold needs a versioned reviewed
+  edition policy and an explicit authorized declaration.
+  New collection requires explicit purpose-specific authorization, approved
+  organizational retention/visibility rules and deliberate profile adoption;
+  existing Shift permissions or profile versions gain no implicit authority.
+  A person may submit their own bounded actual intervals for retained ended
+  confirmed work and inspect subsequent corrections. A different authorized
+  reviewer verifies or returns an exact submitted version. Corrections append
+  superseding evidence, preserve the original and allow a fixed-code dispute;
+  acknowledgement, agreement and independent verification remain distinct.
+  Actual breaks are explicit intervals, never deductions inferred from the plan.
+  No medical, safeguarding or personal absence narrative belongs in this record.
+  A handover names exact work, a currently authorized recipient and a versioned
+  operational checklist; only that recipient can accept that exact version.
+  Unavailable acceptance stays pending and uses the documented manual fallback.
+  Offline notes confer no authority: later reconciliation reauthorizes exact
+  scope, checks versions/retry identity and retains minimized source evidence.
+  Browser and API commands must share closed bounded inputs, tenant/edition/
+  person isolation, optimistic idempotency, atomic audit/event/receipt evidence,
+  database invariants and complete-or-unavailable protected projections.
+  Approved policy must govern purpose, review, retention, holds, subject access,
+  export, correction, disposal and recovery before collection. No payroll,
+  geolocation, biometric data, automatic benefits, attendee Participation,
+  Registration, payment, public schedule or unadopted-module effect is implied.
+  ADR 0130 and the Work records page contract define the first implementation
+  slice and its separately required human/operational acceptance; this requirement
+  does not claim that these future records or routes are implemented.
 - **HR-019 — Offline Workforce proposal comparison:** Compare two independently
   HR-017-valid version-one proposals only when their declared scope objects
   match exactly. Match rows by typed file-local keys, never labels or guessed

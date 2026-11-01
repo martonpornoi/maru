@@ -131,6 +131,7 @@ the system.
 | [0127](0127-bounded-workforce-rota-portability.md) | Accepted | Export a bounded Workforce-only rota through complete existing source and management authority, audited disclosure and explicit portable-copy limits. |
 | [0128](0128-workforce-operating-home.md) | Accepted | Extend bounded owner-projected home guidance through existing Assignments, shared Availability, Shift decisions and closeout without new authority or domain writes. |
 | [0129](0129-offline-workforce-import-validation.md) | Accepted | Define a closed Workforce proposal file and bounded offline format/internal-consistency validation without live identity resolution or domain writes. |
+| [0130](0130-workforce-work-observations-and-actual-time.md) | Accepted contract; implementation pending | Separate planned completion, observations, reported actual time, independent review, disputes and recipient-owned handover without expanding existing profiles. |
 | [0131](0131-offline-workforce-proposal-comparison.md) | Accepted | Compare validated file-local Workforce proposals with complete bounded row/field changes and original-byte hashes, without values or live reconciliation. |
 
 New ADRs use the next four-digit number and contain:

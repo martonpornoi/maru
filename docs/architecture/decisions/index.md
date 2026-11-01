@@ -20,6 +20,12 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0130](0130-workforce-work-observations-and-actual-time.md) defines future
+Workforce work observations and actual-time reports independently from existing
+planned Shift completion. It resolves ownership, privacy, correction, handover,
+manual recovery and a first report/review slice. No current route, profile or
+record changes; implementation and human/operational acceptance remain pending.
+
 [ADR 0117](0117-standalone-manual-announcements.md) defines the standalone
 Announcements workflow, purpose-specific setup and reviewed manual publication.
 Implementation and verification are in progress.

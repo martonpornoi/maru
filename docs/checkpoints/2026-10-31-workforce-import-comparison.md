@@ -68,3 +68,16 @@ the pre-existing global pytest temporary directory. Fresh task-owned paths let
 the unchanged cases execute successfully; no input assertion or product guard
 changed. Originals and both helper runs remain retained. This is development
 feedback on the editable branch, not final exact-head or hosted acceptance.
+
+## Earlier delivery incorporated — 1 November 2026
+
+PR #230 delivered the separate HR-018/ADR 0130 contract as protected squash
+`82a351478773ab60ce6f195db4e9996e8832ba9f`, with certified tree/sole-parent and
+clean main equality verified. This branch normally merges that main revision;
+four own-document overlaps retain both requirements, both ADRs and truthful
+current status. No comparison implementation or test changes are needed.
+Merged documentation policy passes 794 Markdown files, four skills and the
+223 identifiers covered by its three-letter scan. A new clean commit's ordinary
+Auto and hosted evidence remain required; earlier feedback is not reused as
+exact-head certification. #24 is closed only for its contract, while #22 and
+the genuine human/accessibility/operational gates stay open.

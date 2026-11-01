@@ -1,5 +1,22 @@
 # Workforce module
 
+## Future work observations and actual time
+
+HR-018 and [ADR 0130](../architecture/decisions/0130-workforce-work-observations-and-actual-time.md)
+define Workforce-owned exact-commitment Work records, separate from HR-009
+planned completion. The first implementation slice is exact-self reporting of
+actual intervals for retained ended confirmed work and independent versioned
+review, with correction/dispute lineage. Dedicated purpose/field authority,
+actual approved policy and deliberate profile adoption must precede collection;
+current grants and `workforce_only@1` gain no implicit behavior.
+
+Live observations, late/absence declarations and recipient-owned handover remain
+later increments. Scheduling continues to own deliberate personal publication.
+No new model, command, event, permission, route, migration or runtime behavior is
+implemented here. The [page contract and acceptance matrix](../product/page-contracts/workforce-work-records.md)
+cover privacy, bounds, source versions, manual reconciliation, recovery, genuine
+human/owner validation and the future synthetic demo requirement.
+
 ## Administration-home operating guidance
 
 UX-032 and [ADR 0128](../architecture/decisions/0128-workforce-operating-home.md)
