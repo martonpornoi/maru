@@ -29,62 +29,86 @@ demo change. Original manual accounts/passwords/records, the 113-checkbox guide,
 stopped manual database and nine other fixtures remain untouched. Human,
 specialist, owner, recovery, operational and production gates stay separate.
 
-PR #231 already protected-delivered comparison as
-`382175fbffd683c76f852e6844f1f695f0868b38`; #229 closed and clean main synchronized.
-PR #232's accessibility guide has its own certified pinned source and hosted
-checks in progress. This separate contract branch must normally incorporate its
-actual protected delivery before final commit/certification. Next: finish #232,
-update this branch, then run fresh ordinary exact-head local and independently
-verified selected hosted acceptance. Close only #233 for contract delivery;
-#35, #23, #22 and #42 remain open. Earlier results do not certify this branch.
+This branch now normally incorporates protected main after PR #232, preserving
+the accessibility guide, offline comparison and work-records contract. #229 is
+closed; #23 remains open. Focused documentation policy passed for 799 Markdown
+files, four repository skills and 223 identifiers covered by its three-letter
+scan; a fresh warning-fatal Sphinx build passed. Next: final commit,
+fresh ordinary exact-head local certification and independently verified selected
+hosted acceptance. Close only #233 for its contract scope; #35, #23, #22 and #42
+remain open. Earlier results and screenshots do not certify this branch.
 See the [checkpoint](../checkpoints/2026-11-01-workforce-recent-outcomes-contract.md).
 
-## Offline proposal revision comparison — 31 October 2026
 
-The maintainer authorized successive bounded work without routine input. HR-019
-and accepted ADR 0131 add a standard-library comparison of two independently
-HR-017-valid proposals with exactly equal declared file-local scope. Typed keys
-locate rows, literal field values determine changes, and renamed keys are
-removal plus addition. Formatting/member/row order is ignored. A complete report
-contains at most 128 changed row positions/known field names, six section counts
-and both original-byte SHA256 hashes; it omits supplied values, aliases, labels
-and paths. Every failure returns no partial changes/counts/hashes. Combined
-validation issues retain a 64-issue cap with side and explicit truncation.
+## Last protected delivery — Accessibility rehearsal
 
-The owner reuses its unchanged validator and bounded regular-file reader. There
-is no Django startup, database/network access, source/domain write, identity
-mapping, grant, approval, audit, staging state, migration, profile expansion or
-new UI. Current ongoing/future fictional demos are unaffected; the original
-manual-test environment, data and human password boundary remain untouched.
+[PR #232](https://github.com/martonpornoi/maru/pull/232) delivered the contributor
+guide as `e45c4b4e6d8d8c53dface9dcc15a35f490be5c88`, tree-identical to certified
+`9f14734aa35a3e629b785d7264fec6dad6a760d6`, sole parent
+`382175fbffd683c76f852e6844f1f695f0868b38`. The guide maps fifteen role/state
+cards, seven widths, real zoom, keyboard, semantics, disclosure and recovery.
+Its signed-out and rendered-document observations retain exact named-source
+limits; prior PR #226 restricted-runtime evidence remains separately valid.
 
-Final focused feedback passed 210 cases with the existing Windows POSIX pipe
-skip and 100 percent line/branch coverage of the new comparison module.
-New cases cover every typed section, row/field ordering, key renames, literal
-UTC spelling, original-byte hashes, complete 128-change boundaries, hostile
-input, minimized files/arguments and a fresh interpreter with application,
-network/process and file-write access blocked. The initial new oversized-input
-test name exceeded Windows' environment-value ceiling before its test ran;
-short explicit parameter IDs preserve the identical input assertion. Lint,
-strict module types and both docstring checks pass. One incorrect docstring
-tool invocation is retained separately from its successful normal executable.
-Full unit feedback passes 14,853 cases with one expected platform skip and
-eleven existing warnings. Whole-source lint/types (900 files), both docstring
-checks, documentation policy and a fresh warning-fatal Sphinx build pass.
-The first coverage attempt could not prepare six fixtures in the pre-existing
-global pytest temporary folder; the unchanged cases pass in fresh task-owned
-folders. Failed originals remain separate from the successful feedback.
-Complete final local certification and hosted acceptance remain pending.
-The later main update changed documentation only; the development results above
-do not certify the updated head.
+Fresh ordinary Auto independently passed all ten gates: 14,853 units plus one
+expected Windows POSIX skip/eleven existing warnings, 5,209 native cases across
+23 current shards/279 groups/15,627 phases, 128 frontend cases and 91.228070
+percent reconstructed combined coverage. All 3,308 source hashes, fresh metadata,
+complete plan, identities/order/outcomes/durations, peak/bound eight, unchanged
+headroom and exact cleanup agreed. All 12,536 new local originals are sealed;
+normal combine consumed local individual coverage inputs.
 
-The branch now incorporates protected main after PR #230, preserving both
-HR-018/ADR 0130 and HR-019/ADR 0131. Next: certify the clean updated head and
-independently verify protected PR delivery and
-main synchronization. Close only #229 after delivery. #22 remains open for live
-mapping/application, governed reconciliation, full history/exit and operational
-recovery; human/accessibility/production acceptance is not inferred. See the
-[checkpoint](../checkpoints/2026-10-31-workforce-import-comparison.md) and
-[operator guide](../operations/workforce-import-comparison.md).
+Selected hosted run `41310515890` passed its documentation lane: static checks,
+30 fixed licensing/metadata cases, warning-fatal Sphinx and PR gate app 15368.
+Its three unused alternatives were skipped; it did not repeat full units,
+native, frontend or combined coverage. Complete APIs/jobs/log ZIPs and the exact
+published documentation artifact/digest were preserved; 4,404 hosted originals
+and 262 further delivery metadata files are sealed. CodeQL run `41310513544`
+passed all three current clean analyses with exact upload/SARIF provenance.
+Actual reviews/requests/conversations were empty under unchanged zero-approval
+policy. Protected squash/tree/sole parent, final body and clean designated-main
+normal-fetch/ff-only local/origin/remote/API equality were verified.
+
+#23 remains open. Authenticated W02–W15 and real zoom were blocked by supported
+browser-input/native-control limits, with no valid-credential product failure
+inferred. Human/specialist/owner, recovery, operational and production gates
+remain separate. Original manual accounts/records/113-checkbox guide and ten
+stopped fixtures remain unchanged. No runtime, profile, authority or deployment
+change was made. See the [guide](../operations/workforce-accessibility-rehearsal.md)
+and [checkpoint](../checkpoints/2026-11-01-workforce-accessibility-rehearsal.md).
+
+## Last protected delivery — Offline proposal revision comparison
+
+[PR #231](https://github.com/martonpornoi/maru/pull/231) delivered HR-019/ADR 0131
+as `382175fbffd683c76f852e6844f1f695f0868b38`, tree-identical to certified
+`8c1a540426ff1e0eb808dcf5cecce15e92fc2653`, sole parent
+`82a351478773ab60ce6f195db4e9996e8832ba9f`. The offline comparison checks two
+HR-017-valid proposals with equal declared file-local scope. Its complete bounded
+report omits supplied values and applies no live records, identities or approvals.
+See the [operator guide](../operations/workforce-import-comparison.md).
+
+Independent ordinary Auto passed all ten gates, 14,853 units plus one expected
+Windows POSIX skip, 5,209 native cases/23 current shards/279 groups/15,627 phases,
+128 frontend cases and 91.232962 percent combined coverage. All source hashes,
+fresh collection, complete plan, selections, identities, outcomes, durations,
+peak eight, headroom and exact cleanup agreed. All 12,550 local originals remain
+sealed in place; local individual coverage inputs were consumed by normal combine.
+
+Hosted acceptance passed 14,854 Linux units including the real POSIX pipe case,
+all selected native/frontend/static/security/documentation gates and app 15368.
+All 26 artifact digests and 24 original coverage inputs independently reconciled
+with the same 91.232962 percent coverage; all three current CodeQL analyses and
+app 57789 were clean. No reviews, reviewer requests or conversations remained
+under the unchanged zero-approval policy. All 5,648 hosted originals and 431
+further delivery metadata files are sealed. Helper-only API/policy/interpreter
+bookkeeping errors remain recorded; no test or collection was rerun to repair them.
+
+Protected exact-head squash, certified tree/sole parent, complete final PR body
+and clean designated-main normal-fetch/ff-only local/origin/remote/API equality
+were verified. #229 is closed; #22 retains live mapping/application, governed
+reconciliation, full history/exit and recovery. #23, #35 and #42 remain open.
+Original manual data and ten stopped fixtures remain untouched. No deployment,
+protection change, live import or human/operational/production acceptance.
 
 ## Work records contract — 31 October 2026
 

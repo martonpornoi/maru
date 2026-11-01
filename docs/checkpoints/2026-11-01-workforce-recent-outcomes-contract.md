@@ -48,3 +48,34 @@ ordinary exact-head local certification and independent selected hosted
 documentation/CodeQL/protected-main verification remain required after the normal
 update to the preceding PR's actual merged main. No earlier receipt certifies
 this branch.
+
+
+## Preceding protected delivery incorporated — 1 November 2026
+
+PR #232 merged as `e45c4b4e6d8d8c53dface9dcc15a35f490be5c88`, with its exact
+certified tree and sole parent `382175fbffd683c76f852e6844f1f695f0868b38`.
+Independent local all-gate acceptance and the selected hosted documentation lane,
+all three current CodeQL analyses, protected squash and clean designated main
+normal-fetch/ff-only equality passed. The final PR description exactly records
+delivery; all originals/metadata are sealed and its source pinned. #23 stays open.
+
+This separate contract branch normally merges that main and resolves only its
+own Changelog/CURRENT overlap, preserving both outcomes. Final focused feedback,
+commit, fresh ordinary Auto and independent hosted/protected acceptance remain
+pending. The earlier draft, guide tests and screenshots do not certify the
+updated contract head. No source/runtime/manual-data or policy guard changed.
+
+## Focused documentation feedback — 1 November 2026
+
+The normally resolved merge content passed documentation policy for 799 Markdown
+files, four repository skills and 223 identifiers covered by its three-letter
+scan, whitespace and a fresh warning-fatal Sphinx build. No runtime test or
+database work ran in this development feedback. Final commit and its own ordinary
+Auto/hosted acceptance still remain required.
+
+Preparation bookkeeping failures remain retained separately: the successful
+child-link API returned the parent payload, and an index-count assertion counted
+three unmerged stages for two resolved paths. New read-only continuations verified
+the actual native child relationship and 3,311 unique paths. No link mutation,
+content resolution or checkpoint append was repeated, and no test or guard was
+weakened. An inline inspection syntax error executed no API or acceptance stage.

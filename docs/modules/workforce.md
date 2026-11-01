@@ -1499,6 +1499,13 @@ evidence exists.
 
 ## Workforce verification
 
+The [accessibility rehearsal](../operations/workforce-accessibility-rehearsal.md)
+maps #23 to distinct synthetic roles, states, widths, keyboard, disclosure and
+failure checks under UX-029/UX-032. Its recorded signed-out observations are
+bounded evidence. Authenticated role journeys, real 200% zoom, representative
+screen-reader/owner, recovery and production acceptance remain open. No runtime
+authority, profile, record or maintained demo fixture changes in that guide.
+
 Programme ownership-continuity verification covers call/import
 `clear`/`blocked`/`unavailable` aggregation, known-block precedence,
 unconditional probes, expired staging, draft-call and clean-batch

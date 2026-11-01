@@ -12,6 +12,11 @@ or permission to use production personal data.
 
 ## Explore safely
 
+- [Rehearse Workforce access and accessibility](workforce-accessibility-rehearsal.md)
+  supplies distinct role/state task cards, layout and keyboard checks, and the
+  recorded signed-out evidence. Authenticated roles, real zoom and genuine
+  human/specialist acceptance remain open.
+
 - [Build a convention from an empty Maru](blank-start-manual-test.md) is the
   admin-only, GUI-led manual test with a required main path and optional branches.
 
@@ -118,6 +123,7 @@ clean-convention-onboarding-walkthrough
 empty-experience-baseline
 workforce-only-adoption-and-recovery
 workforce-operating-home-practice
+workforce-accessibility-rehearsal
 workforce-rota-package
 workforce-import-validation
 workforce-import-comparison
