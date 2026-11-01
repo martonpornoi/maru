@@ -202,7 +202,9 @@ Issue #22 separates a useful rota operating copy from the complete reversible
 adoption package. HR-016/ADR 0127 define the first bounded snapshot, portable
 schema and print fallback over existing authority. HR-017/ADR 0129 add a separate
 file-local import-proposal format and offline consistency check under #227;
-validation creates no account, approval or live record. Applying imports,
+validation creates no account, approval or live record. HR-019/ADR 0131 add
+offline comparison of two valid proposals with minimized row/field differences
+and original-byte hashes; no live identity or application is inferred. Applying imports,
 complete history/exit,
 approved manual reconciliation, stopped-operation/restart, deliberate expansion
 and decommissioning remain separately scoped outcomes. Complete verification and

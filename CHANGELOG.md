@@ -34,6 +34,9 @@ rather than replace the curated summary.
 
 ### Added
 
+- Compare two valid Workforce proposal revisions offline using changed row
+  positions and field names, with original-byte hashes and no printed personal
+  values. The comparison applies no data or approvals to Maru.
 - A local Workforce proposal checker validates a versioned JSON file's fields,
   duplicate records, references, Shift times and declared capacity. Its bounded
   report omits supplied values. Fictional examples and a structural schema help

@@ -660,6 +660,25 @@ architecture documents, implementation issues, tests, and release notes.
   reconciliation, history/restore and operational acceptance remain separate
   contracts; the HR-016 rota snapshot remains a different, non-import format.
 
+- **HR-019 — Offline Workforce proposal comparison:** Compare two independently
+  HR-017-valid version-one proposals only when their declared scope objects
+  match exactly. Match rows by typed file-local keys, never labels or guessed
+  live identities. Ignore formatting/member/row order; compare other validated
+  values literally and treat key changes as removal plus addition. Emit a
+  complete deterministic report of at most 128 changes with known sections,
+  actions, zero-based before/after row positions and changed known field names,
+  never supplied values, aliases, labels, paths or parser text. Include all six
+  section counts and SHA256 hashes of both complete original byte inputs only
+  on success. Hashes establish byte identity, never authenticity, freshness,
+  permission or approval. Cap combined input issues at 64 with side and explicit
+  truncation. Scope mismatch, invalid input, unavailable files/arguments and the
+  change ceiling fail closed with no partial counts, hashes or changes. Reuse
+  bounded read-only regular-file access and all existing validation ceilings.
+  The standard-library command starts no application, database or network,
+  writes no file/domain record and creates no identity, grant, audit, migration,
+  staging state or profile change. Live reconciliation, mapping and application,
+  complete history/exit, restore and human/operational acceptance remain separate.
+
 ### Programme, shifts, and timetable planning
 
 - **SCH-001 — Shared planning model:** Programme sessions, shifts, room

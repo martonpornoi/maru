@@ -1776,3 +1776,25 @@ Future application needs a separately governed import contract. See the
 [format and operator guide](../operations/workforce-import-validation.md) for
 all fields, ceilings, exit codes, failure behavior and fictional examples.
 Current management routes and ongoing/future UI demo fixtures are unaffected.
+
+## Offline proposal comparison
+
+HR-019 and [ADR 0131](../architecture/decisions/0131-offline-workforce-proposal-comparison.md)
+add `import_comparison.compare_import_bytes` and the standard-library command
+`python -m maru.workforce.import_comparison BEFORE AFTER`. Both immutable byte
+inputs pass the unchanged HR-017 validator first and must declare exactly equal
+scope. Typed local keys match rows; no live identity or label matching occurs.
+Formatting/member/row order is ignored, while other validated values compare
+literally. Key renames are removal plus addition.
+
+The immutable complete report has at most 128 changes: known sections/actions,
+zero-based before/after rows and changed known field names, never aliases,
+labels, values or paths. Successful counts cover all six arrays; original-byte
+SHA256 hashes bind the two inputs without proving authenticity or authority.
+Invalid input issues share a 64-issue limit with side and truncation. Every
+failure, including the change limit, returns no partial changes/counts/hashes.
+The owner reuses its existing minimized argument parser and bounded regular-file
+reader without changing the validator or format. No Django, database, network,
+source write, domain command, audit, grant, migration, profile or UI is involved.
+See the [comparison guide](../operations/workforce-import-comparison.md) for
+ordering, exact bounds, literal-value semantics, failure behavior and examples.

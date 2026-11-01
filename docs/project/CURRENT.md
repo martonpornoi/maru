@@ -1,7 +1,52 @@
 # Current project state
 
-Last updated: 2026-10-31
-Phase: Offline Workforce import-proposal validation (#227, child of #22).
+Last updated: 2026-11-01
+Phase: Offline Workforce proposal revision comparison (#229, child of #22).
+
+## Offline proposal revision comparison — 31 October 2026
+
+The maintainer authorized successive bounded work without routine input. HR-019
+and accepted ADR 0131 add a standard-library comparison of two independently
+HR-017-valid proposals with exactly equal declared file-local scope. Typed keys
+locate rows, literal field values determine changes, and renamed keys are
+removal plus addition. Formatting/member/row order is ignored. A complete report
+contains at most 128 changed row positions/known field names, six section counts
+and both original-byte SHA256 hashes; it omits supplied values, aliases, labels
+and paths. Every failure returns no partial changes/counts/hashes. Combined
+validation issues retain a 64-issue cap with side and explicit truncation.
+
+The owner reuses its unchanged validator and bounded regular-file reader. There
+is no Django startup, database/network access, source/domain write, identity
+mapping, grant, approval, audit, staging state, migration, profile expansion or
+new UI. Current ongoing/future fictional demos are unaffected; the original
+manual-test environment, data and human password boundary remain untouched.
+
+Final focused feedback passed 210 cases with the existing Windows POSIX pipe
+skip and 100 percent line/branch coverage of the new comparison module.
+New cases cover every typed section, row/field ordering, key renames, literal
+UTC spelling, original-byte hashes, complete 128-change boundaries, hostile
+input, minimized files/arguments and a fresh interpreter with application,
+network/process and file-write access blocked. The initial new oversized-input
+test name exceeded Windows' environment-value ceiling before its test ran;
+short explicit parameter IDs preserve the identical input assertion. Lint,
+strict module types and both docstring checks pass. One incorrect docstring
+tool invocation is retained separately from its successful normal executable.
+Full unit feedback passes 14,853 cases with one expected platform skip and
+eleven existing warnings. Whole-source lint/types (900 files), both docstring
+checks, documentation policy and a fresh warning-fatal Sphinx build pass.
+The first coverage attempt could not prepare six fixtures in the pre-existing
+global pytest temporary folder; the unchanged cases pass in fresh task-owned
+folders. Failed originals remain separate from the successful feedback.
+Complete final local certification and hosted acceptance remain pending.
+
+Next: update this branch to verified current main after the earlier attendance
+contract delivery, finish documentation/rendered review and final feedback, then
+certify one clean exact head and independently verify protected PR delivery and
+main synchronization. Close only #229 after delivery. #22 remains open for live
+mapping/application, governed reconciliation, full history/exit and operational
+recovery; human/accessibility/production acceptance is not inferred. See the
+[checkpoint](../checkpoints/2026-10-31-workforce-import-comparison.md) and
+[operator guide](../operations/workforce-import-comparison.md).
 
 ## Offline Workforce proposal checker — 31 October 2026
 
