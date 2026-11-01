@@ -34,6 +34,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- Define the future Workforce Work records journey, separating planned Shift
+  completion from observations, reported actual time, independent review,
+  corrections, disputes and handover acceptance. This is a documented contract;
+  current pages, records, permissions and adoption profiles are unchanged.
+
 - A local Workforce proposal checker validates a versioned JSON file's fields,
   duplicate records, references, Shift times and declared capacity. Its bounded
   report omits supplied values. Fictional examples and a structural schema help

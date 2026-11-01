@@ -209,3 +209,16 @@ and decommissioning remain separately scoped outcomes. Complete verification and
 human/operational acceptance for each; no exported file or green CI establishes
 production cutover readiness. Preserve the real #42 password boundary and #23
 accessibility matrix while this autonomous work proceeds.
+
+## Work observations after planned Shift completion
+
+Issue #24's HR-018/[ADR 0130](../architecture/decisions/0130-workforce-work-observations-and-actual-time.md)
+contract separates planning, observations, reported intervals, independent review,
+correction/dispute, handover and personal publication. The first implementation
+slice is a person's report for retained ended confirmed work plus an independent
+review. It requires deliberate purpose/profile adoption and actual organizational
+policy before collection. Existing Shift behavior and profiles are unchanged.
+Live check-in, lateness, handover persistence and new publication follow in
+separately reviewed increments. Contract delivery is not implementation or human,
+recovery, operational or production acceptance; see the
+[observable acceptance matrix](../product/page-contracts/workforce-work-records.md#observable-acceptance-and-human-handoff).
