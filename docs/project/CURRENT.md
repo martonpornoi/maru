@@ -1,9 +1,9 @@
 # Current project state
 
-Last updated: 2026-11-01
+Last updated: 2026-11-02
 Phase: Recent governed Workforce outcomes implementation (#235, child of #35).
 
-## Current implementation — 1 November 2026
+## Current implementation — 2 November 2026
 
 The maintainer authorized one-agent verification of #235, #42, #35, #23 and #22
 in that order, closing only verified scopes. Live issue bodies/comments and
@@ -54,6 +54,22 @@ identifier; this is not a zero-vulnerability claim. See the
 [clock-order checkpoint](../checkpoints/2026-11-01-native-authority-clock-ordering.md).
 Complete fresh exact-head local/hosted certification and protected delivery
 remain pending. Operational clock validation remains a separate deployment gate.
+
+The production-clock candidate's full Auto then stopped at 34 existing Home
+fixture setup errors: its simulated 2030 clock also created authority whose
+effective start was future to the native 2026 evaluation. All 6,265 new originals
+are sealed; exact cleanup retained the ten stopped fixtures. A separate original
+setup reproduced the refusal with actual native/root timestamps and no changed
+guard or result; its 52 new originals are sealed. A fresh fixture correction now
+creates Home-world foundations at native time, restoring the caller's unchanged
+2030 journey clock afterwards. Production source, subject cases and guards are
+unchanged. Fresh complete feedback then passed all 56 affected native cases,
+14,908 units plus the expected skip/eleven warnings and every unchanged shared
+check. Independent identities/order/outcomes/durations and all 3,321 source
+hashes agreed, with exact cleanup and ten stopped fixtures retained. All 5,955
+new originals are sealed. Fresh complete exact-head Auto, independent hosted
+acceptance and protected delivery remain required; no older receipt certifies
+the fixture correction.
 
 Browser observations apply only to named predecessor `16c9dd7d`, before the
 authority-clock repairs. Separate genuine restricted Reviewer and Volunteer

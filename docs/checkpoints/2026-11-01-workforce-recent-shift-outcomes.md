@@ -206,3 +206,30 @@ moderate development advisory without an identifier. Complete fresh exact-head
 local/hosted acceptance and protected delivery remain pending; prior failed or
 partial receipts cannot certify this source. See the
 [clock-order checkpoint](2026-11-01-native-authority-clock-ordering.md).
+
+
+## Native-time synthetic foundations for the existing Home journey
+
+The production-clock candidate's required full Auto failed in 34 existing Home
+fixture setups. A fresh unchanged setup with read-only telemetry proved its
+2030 synthetic controller did not yet exist at the native 2026 evaluation. All 6,265
+failed-run and 52 diagnostic originals are separately sealed with source/fixture
+preservation and exact cleanup. A fresh test-only correction seeds the same
+Home-world foundations at actual native time, then restores the caller's fixed
+2030 journey clock. Subject cases, product code, authority and guards are unchanged.
+Affected feedback and complete new exact-head local/hosted acceptance remain
+pending. See the [clock-order checkpoint](2026-11-01-native-authority-clock-ordering.md).
+
+
+## Fixture correction development verification — 2 November
+
+Fresh feedback passed all 56 existing native cases across the complete Home and
+recent-outcome files, all 14,908 units plus the expected Windows skip/eleven
+warnings, and every unchanged shared check. Independent identities/order/outcomes/
+durations, all 3,321 source hashes and exact owned cleanup agreed; ten original
+stopped fixtures remained unchanged. All 5,955 new originals are sealed separately.
+The ordinary Node audit reports one moderate development advisory without an
+identifier. Production, guards and subject assertions remain unchanged. Another
+fresh clean final commit/source/output and complete exact-head local/hosted
+acceptance are required before publication and protected delivery. The earlier
+failed Auto and intentional red diagnostic retain their original dispositions.

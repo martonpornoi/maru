@@ -125,3 +125,55 @@ clock failures and bounded no-backstep observation stay preserved with their
 original limits. No guard, clock setting, acceptance threshold, runtime profile
 or authority was weakened. Browser/human, representative recovery, operational
 and production gates remain separate.
+
+
+## Full Auto exposes a future synthetic Home foundation
+
+The clean production-clock candidate `4cfc07cf` completed ordinary Auto with failure
+after 2,037.25 seconds. Original shard 19 retained one historical pass and 34 Home
+fixture setup errors; 17 other shards passed and seven were ordinarily interrupted
+by the pool. All headroom flags remained true. All 3,321 before/after/live raw and
+normalized source hashes agreed, all 25 exact owned databases were absent, and
+the ten original stopped fixtures were retained. All 6,265 new originals are sealed;
+no partial coverage or earlier development pass certifies this failed run.
+
+A new isolated original setup retained the original selector and refusal. Its
+read-only observation captured native evaluation 2026-11-01T23:32:22.050682Z
+against an actual synthetic root effective start 2030-08-01T06:00:00Z, the same
+2030 application anchor used by the Home journey. The unchanged source predicate
+correctly refuses authority which has not begun. All 3,321 source hashes remained
+unchanged, exact owned cleanup retained the ten fixtures, and all 52 new diagnostic
+originals are sealed. This intentional red diagnostic is not acceptance.
+
+The bounded fixture correction creates its existing synthetic Home foundations
+through the same real owner commands under actual native time, then restores the
+caller's 2030 journey clock. ANCHOR, edition dates, subject lifecycle inputs and all
+subject assertions remain unchanged. No production code, native guard, authority
+source/horizon, runtime profile, clock setting or acceptance policy changes.
+Fresh whole affected-file feedback and complete new exact-head Auto/hosted
+acceptance are required. Earlier failed sources/output remain pinned and sealed.
+
+
+## Independently green fixture correction feedback — 2 November
+
+All 56 cases across the complete existing Home and recent-outcome native files
+passed, retaining the original subject inputs/assertions and fixed 2030 journey
+clock. All 14,908 units passed with one expected Windows POSIX skip and eleven
+existing warnings. Every unchanged shared static/type/NumPy/Sphinx/Django/OpenAPI/
+generated/frontend/required-audit check passed. The ordinary Node audit retains
+one moderate development advisory without an identifier, not zero vulnerabilities.
+
+Independent review reconciled unique JUnit identities, order, outcomes and finite
+nonnegative durations against unchanged subject declarations; only the existing
+source-audited process-random parameters varied. Every original subject file,
+production file, runner and guard remained unchanged. All 3,321 before/after/live
+raw and normalized source hashes agreed. Exact owned cleanup retained all ten
+original stopped fixtures. All 5,955 new feedback/package/documentation originals
+and current metadata are sealed in place with hash/readback proof; earlier sealed
+originals were untouched. No database inspection or test retry was repeated.
+
+A normal final commit, another clean output-free checkout and complete new
+exact-head ordinary Auto plus independent hosted acceptance remain required.
+Focused declarations are not relabelled as a fresh final-head collection. The
+failed 4cfc07cf run remains failed; neither its partial results nor the earlier
+production-clock development pass can certify a later head.

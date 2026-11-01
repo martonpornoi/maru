@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+import time_machine
+from django.db import connection
+
 from maru.workforce.assignment_commands import (
     approve_position_assignment,
     propose_position_assignment,
@@ -54,22 +57,29 @@ class HomeWorld:
 
 
 def create_home_world():
-    base = _assignment_world(headcount=4, adoption_profile_code="workforce_only")
-    for code in [
-        "events.view_basic",
-        "workforce.manage_structure",
-        "workforce.view_availability",
-        "workforce.view_shifts",
-        "workforce.manage_shifts",
-    ]:
-        grant_board_controllers_edition_capability(base.edition, code)
-    person = AccountFactory(display_name="PRIVATE-HOME-VOLUNTEER")
-    OrganizationMembershipFactory(
-        organization=base.edition.organization,
-        account=person,
-        relationship_label="Workforce volunteer",
-    )
-    return HomeWorld(base, person)
+    """Seed current authority before restoring the caller's fictional journey time."""
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        native_now = cursor.fetchone()[0]
+    # The subject journey still runs at ANCHOR. Its synthetic governance must
+    # already exist when the unchanged native provenance selector evaluates it.
+    with time_machine.travel(native_now, tick=True):
+        base = _assignment_world(headcount=4, adoption_profile_code="workforce_only")
+        for code in [
+            "events.view_basic",
+            "workforce.manage_structure",
+            "workforce.view_availability",
+            "workforce.view_shifts",
+            "workforce.manage_shifts",
+        ]:
+            grant_board_controllers_edition_capability(base.edition, code)
+        person = AccountFactory(display_name="PRIVATE-HOME-VOLUNTEER")
+        OrganizationMembershipFactory(
+            organization=base.edition.organization,
+            account=person,
+            relationship_label="Workforce volunteer",
+        )
+        return HomeWorld(base, person)
 
 
 def propose_home_assignment(world, *, expires_at=None):
