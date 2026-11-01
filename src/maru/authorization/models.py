@@ -11,6 +11,7 @@ from django.db import models
 from django.utils import timezone
 
 from maru.authorization.catalog import ScopeLevel, capability
+from maru.authorization.fields import DatabaseCreatedAtField
 from maru.authorization.guidance_authority_models import (
     GuidanceAccessDecision as GuidanceAccessDecision,  # noqa: PLC0414 - Django discovery and typed public model
 )
@@ -935,6 +936,8 @@ class RoleBundle(UUIDTimeStampedModel):
 
 class RoleAssignment(UUIDTimeStampedModel):
     """Store role assignment records."""
+
+    created_at = DatabaseCreatedAtField(auto_now_add=True, editable=False)
 
     organization = models.ForeignKey(
         "organizations.Organization",

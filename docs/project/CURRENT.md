@@ -5,68 +5,67 @@ Phase: Recent governed Workforce outcomes implementation (#235, child of #35).
 
 ## Current implementation — 1 November 2026
 
-The maintainer resumed one-agent work and authorized ordinary computer/browser
-verification for #235, #42, #35, #23 and #22 in that order, closing only verified
-scopes. Live issue bodies/comments and protected main were refreshed. #42 is a
-complete operator/volunteer tutorial and rehearsal; #22 still includes import,
-reconciliation and recovery scope. They are not merely password or UI sign-offs.
+The maintainer authorized one-agent verification of #235, #42, #35, #23 and #22
+in that order, closing only verified scopes. Live issue bodies/comments and
+protected main were refreshed. #42 requires a complete operator/volunteer
+rehearsal; #22 includes import, reconciliation and recovery functionality.
 
 UX-033/ADR 0132 now have an owner projection and optional Home panel. The
-complete existing Shift-read boundary admits exact Workforce-only scope; platform
-administration alone is withheld. Minimal exact-version receipts, the complete
-128-candidate cohort, selected five current labels, coherent source signatures,
-mandatory minimized audit and final policy/window/clock checks preserve existing
-next-step priority and direct tools. Both complete attempts share a five-second
-release budget; source snapshots use one-second statement timeouts. No schema,
-permission, profile, runtime ACL, domain write, tracking or polling is added.
-See the [owning page contract](../product/page-contracts/workforce-recent-outcomes.md).
+complete existing Shift-read boundary admits exact Workforce-only scope;
+platform administration alone is withheld. Minimal exact-version receipts,
+the complete 128-candidate cohort, five current labels, coherent source
+signatures, mandatory minimized audit and final policy/window/clock checks
+preserve next-step priority and direct tools. Both complete attempts share a
+five-second release budget; source snapshots use one-second statement timeouts.
+The panel adds no schema, permission, profile, runtime ACL, domain write,
+tracking or polling. See the [page contract](../product/page-contracts/workforce-recent-outcomes.md).
 
-Protected PR #234 main was normally incorporated without changing any draft file.
-Focused feedback passed 148 units and strict types. Native feedback passed the
-new receipt/cohort/query/denial/audit/runtime cases. Three test assumptions were
-corrected without weakening production guards: a required controller cannot be
-deactivated, late lifecycle movement discards every old area snapshot, and an
-approved Volunteer starter may retain minimal setup read while omitting this
-organizer panel. Interrupted and failed feedback remains preserved separately.
-The inexpensive full unit run found only the new native file missing from the
-legacy diagnostic cost inventory; its registration uses the existing maximum,
-explicitly unmeasured estimate. Existing weights, active group costs, tests and
-all resource/coverage/time limits remain unchanged. Fresh complete inexpensive
-unit feedback passed 14,895 cases plus one expected Windows skip and eleven
-existing warnings; whole-source lint, formatting, documentation policy and a fresh
-warning-fatal Sphinx build passed. The final 160-character escaped-label render
-checks also passed all three states. The unchanged classifier
-selects the ordinary final Auto scope; no earlier receipt certifies this source.
+Protected PR #234 main was normally incorporated. Focused units, native
+receipt/cohort/query/denial/audit/runtime feedback and escaped 160-character
+label rendering passed. Required clean-candidate acceptance exposed two NumPy
+docstring declarations and then an existing authority-clock ordering defect.
+All failed/interrupted originals remain sealed; neither a successful subset
+nor an earlier head certifies this source. The
+[implementation checkpoint](../checkpoints/2026-11-01-workforce-recent-shift-outcomes.md)
+retains the precise failures and their supported repairs.
 
-The first clean candidate `16c9dd7d` passed its complete unit process but failed
-the NumPy documentation gate: two new function descriptions grouped their scope
-arguments. Remaining native work was cancelled once, its eight exact owned
-containers were removed, and all failed/interrupted originals were sealed with
-source and original fixtures unchanged. A fresh checkout separates the two
-parameter declarations; executable syntax, every other product file and all
-tests/policies remain unchanged. Fresh repaired-source feedback passed the NumPy
-gate, all 14,895 unit cases plus one expected Windows skip/eleven warnings, and
-the complete unchanged static, Sphinx, generated-contract, frontend and required
-security gates. Complete new exact-head acceptance remains required.
-The browser observations below apply to the named predecessor with the same
-executable behavior, rather than being relabelled as a fresh browser run.
+[ADR 0133](../architecture/decisions/0133-native-authority-creation-time.md)
+clarifies native creation time for new authority evidence. Locked controller
+provenance and the exact-bundle proof use validated database time. Assignment
+creation and owner-controlled Programme request time use their actual INSERT;
+the request deadline is exactly 168 elapsed hours later. Stored aware values
+are returned normally. The ORM-state migration changes no physical columns,
+data, defaults, guards, runtime privileges, source/horizon predicates or profiles.
+Raw invalid-time probes retain their supplied values. There is no clamp,
+tolerance, clock-setting change, sleep or retry-until-accepted behavior.
 
-A fresh disposable, genuine restricted-runtime rehearsal used separate Reviewer
-and Volunteer sign-ins. Seven widths, light/dark themes, reduced-motion preference,
+Fresh complete development feedback passed 14,908 unit cases plus one expected
+Windows POSIX skip and eleven existing warnings, all 91 native role cases,
+and every unchanged shared static/type/NumPy/Sphinx/Django/OpenAPI/generated/
+frontend/required-audit check. Native cases include held-host-clock approval,
+future preflight observation with actual INSERT time, retained retries, atomic
+rollback, all exact-new-grant faults and raw future/pre-transaction rejection.
+Real unused-schema reverse/reapply passed. Forward/reverse three-field 0048
+SQL contains no physical DDL or data writes. All 3,321 before/after/live raw and
+normalized source hashes agreed; exact cleanup retained all ten original
+stopped fixtures. All 5,971 new originals are sealed with independent readback.
+The ordinary Node audit reports one moderate development advisory without an
+identifier; this is not a zero-vulnerability claim. See the
+[clock-order checkpoint](../checkpoints/2026-11-01-native-authority-clock-ordering.md).
+Complete fresh exact-head local/hosted certification and protected delivery
+remain pending. Operational clock validation remains a separate deployment gate.
+
+Browser observations apply only to named predecessor `16c9dd7d`, before the
+authority-clock repairs. Separate genuine restricted Reviewer and Volunteer
+sessions exercised seven widths, light/dark themes, reduced-motion preference,
 keyboard navigation, retained cancellation, real-elapsed completion, fresh Home
-outcomes, reopened-lock exclusion and exact-edition/direct-destination denials
-were observed. The original stopped fixtures remained unchanged after exact
-owned cleanup. Real Chrome zoom was stopped by the Windows browser URL-safety
-control and remains unverified; no alternate input bypass was used. Long-label
-live layout remains unexercised; empty and unavailable states retain
-rendered/native evidence only.
-Specialist screen-reader, representative owner/two-human, recovery, operational
-and production acceptance stay separate. The implementation PR records final
-exact-head local/hosted checks and protected delivery independently of this
-development feedback. See the
-[implementation checkpoint](../checkpoints/2026-11-01-workforce-recent-shift-outcomes.md).
-Original manual accounts/passwords/records, 113-checkbox guide and stopped databases
-remain untouched.
+outcomes, reopened-lock exclusion and exact-edition/direct-destination denials.
+They are not a fresh browser run of the current source. The Windows browser
+URL-safety control stopped real Chrome zoom; no alternate input bypass was used.
+Real 200-percent zoom, long-label live layout, live empty/unavailable states,
+specialist screen-reader, representative owner/two-human, recovery, operational
+and production acceptance remain separate. Original manual accounts/passwords/
+records, the 113-checkbox guide and stopped databases remain untouched.
 
 ## Last protected delivery — Recent outcome contract
 

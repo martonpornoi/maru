@@ -137,3 +137,72 @@ existing moderate development advisory remains below the unchanged required
 threshold; no zero-vulnerability claim is made. Those feedback outputs remain
 in place. Final certification uses another clean checkout at the repaired commit
 so the ordinary runner cannot overwrite any original feedback artifact.
+
+
+## Preserved native fixture failure and clock-order repair
+
+Candidate `c2cda9bf4d7042f8a2183cde0efc9dc0f18c255a` passed the shared gates
+and 14,895 units plus one expected Windows skip/eleven existing warnings, then
+failed the positive existing Programme exact-new-grant native case. That batch
+retained 138 passes. The ordinary pool stopped automatically after its complete
+failed session; 45 other batches passed, seven were interrupted and all 53 exact
+owned containers were removed. All ten original stopped fixtures and source
+hashes remained unchanged. All 13,372 new originals are sealed in place; partial
+coverage and interrupted batches do not establish acceptance.
+
+Five unchanged original cases passed in a fresh isolated diagnostic. Minimized
+read telemetry confirmed that the synthetic decision uses PostgreSQL time while
+the public assignment command uses the application clock for grant/provenance
+timestamps. A separate controlled application instant one microsecond before
+the database decision reproduced the exact native guard error with both grant
+timestamps earlier than the decision. Original failing grant timestamps were
+not captured, so no exact offset is attributed to the original failure. Both
+diagnostics, their exact cleanup/source evidence and 81 originals are separately
+sealed; the original failed certification remains failed.
+
+The repair uses narrowly controlled application clocks only to construct the
+synthetic definition and grant through their unchanged public owner commands.
+It asserts creation and provenance evaluation at the sampled native decision
+instant. The old-output case now retains a matching future effective start,
+isolating its freshness denial from the separate start-time predicate. All
+five original outcomes, actual database bounds, controllers, lineage, atomicity
+and negative checks remain required. Production sources, SQL guards, authority,
+profiles, migrations, test inventory, time/resource/coverage limits and hooks
+are unchanged. Operational clock synchronization, dormant Programme acceptance
+and real browser/human gates remain separate. Fresh focused feedback and full
+new exact-head local/hosted acceptance are required before protected delivery.
+
+
+## Actual public approval clock finding
+
+Broader feedback showed the fixture-only attempt was insufficient: nine native
+cases passed and three real public approval cases failed. A fresh controlled
+public-command observation isolated both application-clock timestamps while
+every other exact new-grant predicate matched. The supported production repair,
+preserved failures and remaining verification are recorded in the separate
+[native authority clock checkpoint](2026-11-01-native-authority-clock-ordering.md)
+and [ADR 0133](../architecture/decisions/0133-native-authority-creation-time.md).
+The original failed attempts remain failed; no native guard is relaxed.
+
+
+## Supported native authority-clock repair development result
+
+The required existing Programme approval defect is repaired under ADR 0133:
+new locked controller provenance and exact-bundle proof use native time;
+assignment and owning request creation retain actual INSERT time, with the
+request's exact elapsed 168-hour deadline returned from storage. Native raw
+invalid-time guards, exact new-grant checks, source/horizon predicates, current
+profiles, runtime privileges and audit boundaries remain intact.
+
+Fresh complete development feedback passed 14,908 units plus one expected
+Windows skip/eleven warnings, all 91 native role cases and every unchanged
+shared check. The held-host-clock and future-preflight regressions passed,
+as did raw timestamp rejection, retained retries, rollback and real unused-schema
+reverse/reapply. Actual three-field 0048 forward/reverse SQL emits no physical
+DDL or data writes. All 3,321 source hashes and ten stopped fixtures agreed;
+exact owned cleanup and independent reconciliation passed. All 5,971 new
+originals are sealed separately. The ordinary Node audit summary retains one
+moderate development advisory without an identifier. Complete fresh exact-head
+local/hosted acceptance and protected delivery remain pending; prior failed or
+partial receipts cannot certify this source. See the
+[clock-order checkpoint](2026-11-01-native-authority-clock-ordering.md).

@@ -354,6 +354,29 @@ or pre-transaction. Invalid/unavailable database time fails closed without a hos
 fallback; native bounds, deadlines, assignment provenance and actual-person
 checks remain unchanged. Direct native fixtures likewise use the database clock
 and separately prove that pre-transaction/future timestamps are rejected.
+New ordinary dual-control provenance also uses the database clock after locking
+the controllers. New RoleAssignment creation uses its actual INSERT statement
+time and returns that stored aware datetime through the pinned Django protocol.
+This preserves native decision/evaluation/creation order without accepting a
+caller time or changing any approval, horizon, lineage or audit predicate. The
+field implementation has an explicit ORM-state migration with no physical DDL
+or retained-data rewrite; see [ADR 0133](../architecture/decisions/0133-native-authority-creation-time.md).
+The exact Programme recipe-bundle proof also observes a fresh validated native
+instant under the existing locks, retaining every version, capability and
+historical-lineage comparison after definition creation.
+For a new proposal, the existing owner append scope generates the durable request
+instant and its exact 168-hour deadline in the INSERT, after admission and audit.
+Both stored aware datetimes are returned; replay never saves or renews them.
+Explicit raw probes outside that owner scope keep their supplied timestamps,
+including invalid dates that the unchanged native guards must reject. The early
+native sample remains a preflight/horizon observation, not a durable timestamp
+carried across later application work. No clamp, tolerance or retry is added.
+The old-output native case retains a matching future effective start and is
+still rejected for older evidence. A real public approval regression holds the
+application clock and requires valid native grant ordering. Database bounds and
+negative timestamp cases remain active. This does not establish cross-host clock
+synchronization or remove operational clock validation before reliance on the
+dormant Programme approval workflow.
 
 Exact retries require the actual actor's current persistent controller source and
 return only original minimized result IDs; they do not renew deadlines, replace

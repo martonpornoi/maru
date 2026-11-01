@@ -9,6 +9,17 @@ from django.core.exceptions import ValidationError
 _WRITER: ContextVar[bool] = ContextVar("programme_role_writer", default=False)
 
 
+def _programme_role_writer_is_active() -> bool:
+    """Identify the existing owner scope for generated proposal timestamps.
+
+    Returns
+    -------
+    bool
+        Whether the current context is already inside the owning append scope.
+    """
+    return _WRITER.get()
+
+
 @contextmanager
 def _programme_role_writer() -> Iterator[None]:
     token = _WRITER.set(True)

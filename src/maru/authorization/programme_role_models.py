@@ -10,6 +10,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 
 from maru.authorization.catalog import ScopeLevel
+from maru.authorization.fields import ProgrammeRequestTimeField
 from maru.authorization.programme_role_writer import _require_programme_role_writer
 from maru.core.models import UUIDTimeStampedModel
 
@@ -164,8 +165,8 @@ class ProgrammeRoleRequest(_ProgrammeRoleEvidence):
         max_length=64,
         validators=[RegexValidator(r"^[0-9a-f]{64}\Z", "Use a SHA-256 digest.")],
     )
-    requested_at = models.DateTimeField()
-    approval_deadline = models.DateTimeField()
+    requested_at = ProgrammeRequestTimeField()
+    approval_deadline = ProgrammeRequestTimeField(deadline=True)
     not_before = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
 
