@@ -49,6 +49,14 @@ The finite entry point and first owner-projected continuation below address
 part of issue #35. Other module contributions, full Workforce operation and
 governed recent outcomes remain separate acceptance outcomes.
 
+## Future recent Shift outcomes
+
+The separate future [recent Shift outcomes contract](workforce-recent-outcomes.md)
+under UX-033/ADR 0132 defines receipt-backed current-authorized history rather
+than a Django click log. It is not implemented and does not alter the current
+four-area guidance, primary action or profile meaning. Its own bounded source,
+field, audit and manual acceptance must pass before a panel is mounted.
+
 ## First owner-projected continuation: Workforce setup
 
 UX-032 and [ADR 0126](../../architecture/decisions/0126-owner-projected-workforce-home-guidance.md)

@@ -19,6 +19,15 @@ human/owner validation and the future synthetic demo requirement.
 
 ## Administration-home operating guidance
 
+The separate future UX-033/[ADR 0132](../architecture/decisions/0132-workforce-recent-shift-outcomes.md)
+contract defines a receipt-backed recent Shift outcome list. The owner would
+release only five bounded current-authorized labels/outcomes/times/detail links,
+with complete existing Shift-read fields and repeated source/policy/audit fences.
+It creates no new permission, profile meaning, domain write or activity tracking.
+The [page contract](../product/page-contracts/workforce-recent-outcomes.md) records
+bounds, failure and future automated/browser/human acceptance. No query, panel,
+audit-operation registration or demo change is implemented by that contract.
+
 UX-032 and [ADR 0128](../architecture/decisions/0128-workforce-operating-home.md)
 extend the exact `workforce_only@1` home through Assignments, shared Availability
 consequences and Shifts. The public owner entry point is

@@ -1288,6 +1288,28 @@ architecture documents, implementation issues, tests, and release notes.
   whole-event readiness or human-acceptance claim. Maintain fictional ongoing and
   future role scenarios through supported domain commands.
 
+- **UX-033 — Recent governed Workforce outcomes:** The canonical home may show
+  a separate request-local list of recent Shift outcomes for exact
+  `workforce_only@1` scope, after existing complete organizer Shift-read field
+  admission. Workforce owns the projection; the shell reads no domain, Django
+  log or raw Audit tables. Show at most five distinct current matching demand
+  receipts for locked/completed/cancelled work over seven elapsed UTC days,
+  newest first with deterministic ties. The complete candidate cohort is bounded
+  at 128 with a 129th overflow probe; missing/corrupt evidence or overflow releases
+  no partial list. Old locks followed by a newer version or reopen cannot appear
+  current. Only the current authorized Shift label, closed outcome text, recorded
+  time and exact independently authorized detail link may be released; omit
+  people, rationale, contact/Availability fields and raw receipt/retry data.
+  Recheck complete source, current principal/profile/lifecycle/field policy before
+  and after mandatory minimized read audit and at aggregate release. Check the
+  deadline and horizon boundary after the final source probe. Movement, future/
+  backward time or dependency/audit failure yields generic unavailable guidance
+  without suppressing other work. Preserve the existing four-area next-step
+  limit and priority. Add no activity store/tracking, polling, notification,
+  domain write, grant/profile meaning or implied attendance/actual-time/human
+  acceptance. ADR 0132 and the owning page contract define the future acceptance;
+  documentation alone does not implement or activate this panel.
+
 ### Registration, orders, and attendee service
 
 - **REG-001 — Configurable registration:** Each edition must support

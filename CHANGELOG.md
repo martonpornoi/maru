@@ -34,6 +34,10 @@ rather than replace the curated summary.
 
 ### Added
 
+- Define a future Home list of recent governed Shift outcomes, using existing
+  authorization and retained command evidence. This is a bounded contract;
+  the current home, permissions and records are unchanged.
+
 - Contributors can follow a Workforce accessibility rehearsal with distinct
   role/state tasks and an explicit evidence matrix. It records limited signed-out
   checks and identifies the authenticated, zoom and human acceptance still needed;

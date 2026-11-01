@@ -1,44 +1,81 @@
 # Current project state
 
 Last updated: 2026-11-01
-Phase: Workforce accessibility rehearsal and bounded evidence (#23).
+Phase: Recent governed Workforce outcome contract (#233, child of #35).
 
-## Accessibility rehearsal — 1 November 2026
+## Recent Shift outcome contract — 1 November 2026
 
-The maintainer authorized successive bounded work without routine human input.
-The new [rehearsal guide](../operations/workforce-accessibility-rehearsal.md)
-maps #23 to fifteen task cards, distinct ongoing/future synthetic roles,
-seven widths, actual zoom, keyboard/drawer, semantics, disclosure, failure and
-exact owned cleanup. Existing UX-007/008/029/032 and ADRs 0077/0078/0080/0128
-remain unchanged; this increment changes documentation only.
+The maintainer authorized successive bounded tasks and protected delivery without
+routine input. UX-033 and accepted ADR 0132 define the next Home contract:
+up to five distinct current matching locked/completed/cancelled Shift outcomes
+from existing immutable demand receipts over seven elapsed UTC days. The owner
+requires the complete existing organizer Shift-read field boundary, with a
+128-candidate/129th-overflow limit, deterministic order, current authorized labels
+and exact ordinary links. The bound can make the optional panel unavailable at
+busy editions; it is not complete history or an event-readiness indicator.
 
-Two separate ordinary previews recorded bounded signed-out evidence at source
-`a42205cb7d18fc59575982824a43bf66f9ff8139` and then protected main
-`82a351478773ab60ce6f195db4e9996e8832ba9f`. Route redirection, role-picker/sign-in
-layouts, labels, landmarks, IDs and basic keyboard sequence passed in the first
-path. Native control timed out before real zoom. In-app credential reads were
-redacted; the second preview's ordinary Copy control reported success but its
-virtual clipboard remained empty, preventing normal paste. One initial
-placeholder sign-in was rejected; no authentication was submitted in the second
-probe. No supported product defect or valid-credential failure is inferred.
+Current source diagnosis inspected Shift receipts, command actions, organizer
+read/field authorization, retained detail history and existing Home guards/tests.
+The new [page contract](../product/page-contracts/workforce-recent-outcomes.md)
+defines source/version/lifecycle/window/deadline fences before/after required
+minimized audit and final release, independent destination authorization,
+no-partial failure, recovery and future measured/native/browser/demo acceptance.
+People, rationale, contact/Availability values and raw security-audit or retry
+payloads stay out. No click/activity tracking, polling or Task store is added.
 
-Both previews and their exact containers/volumes were cleaned normally; all ten
-original stopped fixtures and the original manual accounts, data and 113-checkbox
-guide remain untouched. No alternate credential route or human invitation was
-used. The [checkpoint](../checkpoints/2026-11-01-workforce-accessibility-rehearsal.md)
-separates these observations from unexercised W02–W15, real 200% zoom, dark/motion,
-full focus/drawer, specialist/owner, recovery, operational and production gates.
-#23 remains open. No full UX-029 or human acceptance is claimed.
+This increment changes documentation only. There is no runtime query/panel,
+registered audit operation, code, profile, grant, model/migration/API or maintained
+demo change. Original manual accounts/passwords/records, the 113-checkbox guide,
+stopped manual database and nine other fixtures remain untouched. Human,
+specialist, owner, recovery, operational and production gates stay separate.
 
-The branch now incorporates protected PR #231 normally, preserving its offline
-comparison and the earlier work-records contract. Fresh warning-fatal Sphinx and
-documentation policy passed during preparation. A bounded rendered-document
-review found one heading/main landmark and fifteen cards without horizontal
-overflow at 1,280 CSS pixels; this was contributor-document evidence only.
-Next: commit the final guide, run ordinary exact-head certification and verify
-its selected hosted lane and protected delivery independently. Earlier source
-receipts and screenshots do not certify this head.
+This branch now normally incorporates protected main after PR #232, preserving
+the accessibility guide, offline comparison and work-records contract. #229 is
+closed; #23 remains open. Focused documentation policy passed for 799 Markdown
+files, four repository skills and 223 identifiers covered by its three-letter
+scan; a fresh warning-fatal Sphinx build passed. Next: final commit,
+fresh ordinary exact-head local certification and independently verified selected
+hosted acceptance. Close only #233 for its contract scope; #35, #23, #22 and #42
+remain open. Earlier results and screenshots do not certify this branch.
+See the [checkpoint](../checkpoints/2026-11-01-workforce-recent-outcomes-contract.md).
 
+
+## Last protected delivery — Accessibility rehearsal
+
+[PR #232](https://github.com/martonpornoi/maru/pull/232) delivered the contributor
+guide as `e45c4b4e6d8d8c53dface9dcc15a35f490be5c88`, tree-identical to certified
+`9f14734aa35a3e629b785d7264fec6dad6a760d6`, sole parent
+`382175fbffd683c76f852e6844f1f695f0868b38`. The guide maps fifteen role/state
+cards, seven widths, real zoom, keyboard, semantics, disclosure and recovery.
+Its signed-out and rendered-document observations retain exact named-source
+limits; prior PR #226 restricted-runtime evidence remains separately valid.
+
+Fresh ordinary Auto independently passed all ten gates: 14,853 units plus one
+expected Windows POSIX skip/eleven existing warnings, 5,209 native cases across
+23 current shards/279 groups/15,627 phases, 128 frontend cases and 91.228070
+percent reconstructed combined coverage. All 3,308 source hashes, fresh metadata,
+complete plan, identities/order/outcomes/durations, peak/bound eight, unchanged
+headroom and exact cleanup agreed. All 12,536 new local originals are sealed;
+normal combine consumed local individual coverage inputs.
+
+Selected hosted run `41310515890` passed its documentation lane: static checks,
+30 fixed licensing/metadata cases, warning-fatal Sphinx and PR gate app 15368.
+Its three unused alternatives were skipped; it did not repeat full units,
+native, frontend or combined coverage. Complete APIs/jobs/log ZIPs and the exact
+published documentation artifact/digest were preserved; 4,404 hosted originals
+and 262 further delivery metadata files are sealed. CodeQL run `41310513544`
+passed all three current clean analyses with exact upload/SARIF provenance.
+Actual reviews/requests/conversations were empty under unchanged zero-approval
+policy. Protected squash/tree/sole parent, final body and clean designated-main
+normal-fetch/ff-only local/origin/remote/API equality were verified.
+
+#23 remains open. Authenticated W02–W15 and real zoom were blocked by supported
+browser-input/native-control limits, with no valid-credential product failure
+inferred. Human/specialist/owner, recovery, operational and production gates
+remain separate. Original manual accounts/records/113-checkbox guide and ten
+stopped fixtures remain unchanged. No runtime, profile, authority or deployment
+change was made. See the [guide](../operations/workforce-accessibility-rehearsal.md)
+and [checkpoint](../checkpoints/2026-11-01-workforce-accessibility-rehearsal.md).
 
 ## Last protected delivery — Offline proposal revision comparison
 
