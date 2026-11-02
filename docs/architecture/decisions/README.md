@@ -133,7 +133,8 @@ the system.
 | [0129](0129-offline-workforce-import-validation.md) | Accepted | Define a closed Workforce proposal file and bounded offline format/internal-consistency validation without live identity resolution or domain writes. |
 | [0130](0130-workforce-work-observations-and-actual-time.md) | Accepted contract; implementation pending | Separate planned completion, observations, reported actual time, independent review, disputes and recipient-owned handover without expanding existing profiles. |
 | [0131](0131-offline-workforce-proposal-comparison.md) | Accepted | Compare validated file-local Workforce proposals with complete bounded row/field changes and original-byte hashes, without values or live reconciliation. |
-| [0132](0132-workforce-recent-shift-outcomes.md) | Accepted contract; implementation follow-up #235 | Define a bounded current-authorized receipt-backed Shift outcome list on Home, without click tracking or new authority; retain the dated implementation follow-up. |
+| [0132](0132-workforce-recent-shift-outcomes.md) | Accepted; bounded implementation delivered in PR #236 | Define a bounded current-authorized receipt-backed Shift outcome list on Home, without click tracking or new authority; retain separate browser and human acceptance gates. |
+| [0133](0133-native-authority-creation-time.md) | Accepted; protected delivery in PR #236 | Keep new dual-control provenance and RoleAssignment creation on the database clock without relaxing native approval or lineage guards. |
 
 New ADRs use the next four-digit number and contain:
 

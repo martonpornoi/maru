@@ -240,7 +240,8 @@ The earlier preserved human trial reached local invitation delivery and stopped
 at recipient-owned password entry; its intermediate zero inventory is not a final
 lifecycle report. A new fixture must complete every row and the final inspection
 before issue #42 can be accepted. See the
-[current preparation checkpoint](../checkpoints/2026-11-01-workforce-rehearsal-preparation.md).
+[preparation checkpoint](../checkpoints/2026-11-01-workforce-rehearsal-preparation.md)
+and the separate [current-source native/startup feedback](../checkpoints/2026-11-02-workforce-rehearsal-native-startup-feedback.md).
 
 ## Evidence and completion boundary
 

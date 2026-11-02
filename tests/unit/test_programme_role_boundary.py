@@ -1,12 +1,14 @@
 """Exercise exact scope and persistent source admission without a database."""
 
 from dataclasses import replace
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db import DatabaseError
 
 from maru.authorization import programme_role_boundary as boundary
 from maru.authorization.catalog import ScopeLevel
@@ -299,12 +301,21 @@ def bundle_world(monkeypatch):
     monkeypatch.setattr(boundary.RoleBundle, "objects", manager)
     proof = MagicMock(return_value=True)
     monkeypatch.setattr(boundary, "role_bundle_provenance_is_historical", proof)
+    native_now = datetime(2030, 8, 1, tzinfo=UTC)
+    clock = MagicMock(return_value=native_now)
+    monkeypatch.setattr(boundary, "_database_control_time", clock)
     target = object()
     monkeypatch.setattr(boundary, "resolve_organization_target", lambda **_: target)
     creator = MagicMock(return_value=bundle)
     monkeypatch.setattr(boundary.authority, "create_role_bundle_version", creator)
     return SimpleNamespace(
-        bundle=bundle, manager=manager, proof=proof, creator=creator, target=target
+        bundle=bundle,
+        manager=manager,
+        proof=proof,
+        creator=creator,
+        target=target,
+        native_now=native_now,
+        clock=clock,
     )
 
 
@@ -341,6 +352,18 @@ def test_exact_bundle_reuse_never_upgrades_existing_role(bundle_world):
     assert exact_bundle() is bundle_world.bundle
     bundle_world.creator.assert_not_called()
     assert bundle_world.proof.call_args.kwargs["lock"] is True
+    assert (
+        bundle_world.proof.call_args.kwargs["evaluated_at"] == bundle_world.native_now
+    )
+    bundle_world.clock.assert_called_once_with()
+
+
+def test_bundle_clock_failure_does_not_fall_back_to_host_time(bundle_world):
+    bundle_world.clock.side_effect = DatabaseError("synthetic unavailable clock")
+    with pytest.raises(DatabaseError, match="synthetic unavailable clock"):
+        exact_bundle()
+    bundle_world.proof.assert_not_called()
+    bundle_world.creator.assert_not_called()
 
 
 def test_new_role_uses_existing_dual_control_owner_command(bundle_world):

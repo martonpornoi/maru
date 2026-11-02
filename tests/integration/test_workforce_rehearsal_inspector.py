@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+import time
+from datetime import datetime, timedelta
 from functools import partial
 from uuid import uuid4
 
@@ -39,6 +40,12 @@ from tests.integration.test_workforce_shifts import (
 from tests.support import workforce_home as fixture
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
+
+
+def _native_now() -> datetime:
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        return cursor.fetchone()[0]
 
 
 def test_empty_dedicated_rehearsal_inventory_reads_every_unadopted_model():
@@ -198,73 +205,82 @@ def test_complete_workforce_only_outcome_passes_exact_baseline_and_all_absence_c
     )
     assert inspector.evaluate(baseline, None) == []
     baseline.update(status="passed", failures=[])
-    # Controlled clocks belong to this owner-command regression, never browser
-    # evidence. Past synthetic dates also test the independent PostgreSQL clock.
-    anchor = datetime(2020, 8, 1, 6, tzinfo=UTC)
-    monkeypatch.setattr(fixture, "ANCHOR", anchor)
+    # Current native authority must exist before every ordinary owner command.
+    # A finite real elapsed Shift end also exercises the independent inspector
+    # clock without backdating authority or patching its observed native time.
+    native_now = _native_now()
     monkeypatch.setattr(
         assignment_fixture,
         "EventEditionFactory",
         partial(
             EventEditionFactory,
-            starts_on=date(2020, 8, 1),
-            ends_on=date(2020, 8, 4),
+            starts_on=(native_now - timedelta(days=1)).date(),
+            ends_on=(native_now + timedelta(days=2)).date(),
         ),
     )
-    with time_machine.travel(anchor, tick=False):
-        world = fixture.create_home_world()
-        scope = {
-            "organization_id": world.edition.organization_id,
-            "series_id": world.edition.series_id,
-            "edition_id": world.edition.pk,
-            "source_channel": "test",
-        }
-        update_position_opportunity(
-            **scope,
-            actor=world.manager,
-            position_id=world.position.pk,
-            status="published",
-            headline="A fictional welcome responsibility",
-            description="Practice welcoming synthetic volunteers.",
-            applications_open_at=None,
-            applications_close_at=None,
-            visible_when_filled=True,
-            expected_version=EditionStructureControl.objects.get(
-                edition=world.edition
-            ).aggregate_version,
-            reason="Open the synthetic opportunity for this inspector regression.",
-            correlation_id=uuid4(),
-        )
-        opportunity = VolunteerOpportunity.objects.get(position=world.position)
-        submit_volunteer_application(
-            actor=world.person,
-            opportunity_id=opportunity.pk,
-            motivation="Practice this fictional responsibility.",
-            correlation_id=uuid4(),
-        )
-        assignment = fixture.propose_home_assignment(world)
-        fixture.approve_home_assignment(world, assignment)
-        fixture.share_home_availability(world)
-        demand = fixture.create_home_shift(world)
-        fixture.open_home_shift(world, demand)
-        commitment = fixture.claim_home_shift(world, demand)
-        fixture.confirm_home_shift(world, commitment)
-        lock_shift_demand(
-            allow_understaffed=False,
-            **fixture.home_transition_arguments(world, demand),
-        )
-    with time_machine.travel(demand.ends_at, tick=False):
-        complete_shift_demand(**fixture.home_transition_arguments(world, demand))
-        assignment.refresh_from_db()
-        end_position_assignment(
-            **scope,
-            actor=world.reviewer,
-            assignment_id=assignment.pk,
-            expected_version=assignment.command_version,
-            reason="End the completed fictional responsibility.",
-            retry_key=uuid4(),
-            correlation_id=uuid4(),
-        )
+    world = fixture.create_home_world()
+    monkeypatch.setattr(fixture, "ANCHOR", _native_now())
+    scope = {
+        "organization_id": world.edition.organization_id,
+        "series_id": world.edition.series_id,
+        "edition_id": world.edition.pk,
+        "source_channel": "test",
+    }
+    update_position_opportunity(
+        **scope,
+        actor=world.manager,
+        position_id=world.position.pk,
+        status="published",
+        headline="A fictional welcome responsibility",
+        description="Practice welcoming synthetic volunteers.",
+        applications_open_at=None,
+        applications_close_at=None,
+        visible_when_filled=True,
+        expected_version=EditionStructureControl.objects.get(
+            edition=world.edition
+        ).aggregate_version,
+        reason="Open the synthetic opportunity for this inspector regression.",
+        correlation_id=uuid4(),
+    )
+    opportunity = VolunteerOpportunity.objects.get(position=world.position)
+    submit_volunteer_application(
+        actor=world.person,
+        opportunity_id=opportunity.pk,
+        motivation="Practice this fictional responsibility.",
+        correlation_id=uuid4(),
+    )
+    assignment = fixture.propose_home_assignment(world)
+    fixture.approve_home_assignment(world, assignment)
+    fixture.share_home_availability(world)
+    planned_at = _native_now()
+    demand = fixture.create_home_shift(
+        world,
+        starts_at=planned_at + timedelta(seconds=10),
+        ends_at=planned_at + timedelta(seconds=32),
+    )
+    fixture.open_home_shift(world, demand)
+    commitment = fixture.claim_home_shift(world, demand)
+    fixture.confirm_home_shift(world, commitment)
+    lock_shift_demand(
+        allow_understaffed=False,
+        **fixture.home_transition_arguments(world, demand),
+    )
+    # Wait once for this declared planned end; never retry an authority refusal.
+    remaining = (demand.ends_at - _native_now()).total_seconds()
+    assert 0 < remaining <= 32
+    time.sleep(remaining + 0.05)
+    assert _native_now() >= demand.ends_at
+    complete_shift_demand(**fixture.home_transition_arguments(world, demand))
+    assignment.refresh_from_db()
+    end_position_assignment(
+        **scope,
+        actor=world.reviewer,
+        assignment_id=assignment.pk,
+        expected_version=assignment.command_version,
+        reason="End the completed fictional responsibility.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+    )
     report = inspector._read_snapshot(
         phase="final",
         platform_email=platform.email,

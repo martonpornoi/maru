@@ -13,7 +13,7 @@ from django.utils import timezone
 
 from maru.authorization import commands as authority
 from maru.authorization.catalog import ScopeLevel
-from maru.authorization.commands import _lock_target
+from maru.authorization.commands import _database_control_time, _lock_target
 from maru.authorization.models import AuthorityControl, RoleBundle
 from maru.authorization.policy import (
     ResolvedAuthorizationTarget,
@@ -308,7 +308,7 @@ def _exact_bundle(
         or bundle.name != recipe.name
         or tuple(bundle.capability_codes) != recipe.capability_codes
         or not role_bundle_provenance_is_historical(
-            bundle=bundle, evaluated_at=timezone.now(), lock=True
+            bundle=bundle, evaluated_at=_database_control_time(), lock=True
         )
     ):
         raise _conflict("The reviewed role version is unavailable.", "recipe_conflict")

@@ -1,93 +1,94 @@
 # Current project state
 
-Last updated: 2026-11-01
-Phase: Recent governed Workforce outcomes implementation (#235, child of #35).
+Last updated: 2026-11-02
+Phase: Canonical Workforce-only rehearsal technical delivery (#42).
 
-## Current implementation — 1 November 2026
+## Current implementation — 2 November 2026
 
-While #235's sole ordinary certification runs on its pinned separate checkout,
-#42's existing public draft is being refreshed in another branch. The
-[canonical rehearsal](../operations/workforce-only-rehearsal.md) names twenty
-steps, four role sessions, ordinary invitation and activation, private/shared
-Availability, independent decisions, real-clock planned Shift completion and
-before/after absence checks. README and the adoption runbook now point to it;
-the earlier foundation-only tutorial is explicitly historical. The dedicated
-launcher initializes only its synthetic bootstrap administrator, runs the real
-restricted login and separate local invitation worker, and owns exact cleanup.
-All 64 focused route/actor/launcher/inspection units passed. Fresh whole-source
-static, NumPy, warning-fatal Sphinx, generated contracts, frontend and required
-audits passed, followed by all 14,959 unit cases plus one expected Windows skip
-and eleven existing warnings. All 3,326 raw/normalized source hashes remained
-unchanged during that feedback. It is not clean exact-head certification;
-native/startup/browser/complete acceptance is pending. No second database
-workload or new browser input was started, and the preserved earlier human trial
-remains incomplete. See the
-[preparation checkpoint](../checkpoints/2026-11-01-workforce-rehearsal-preparation.md).
+[PR #236](https://github.com/martonpornoi/maru/pull/236) delivered the bounded
+recent Shift-outcome component and native authority creation-time correction.
+#235 is closed after independent local/hosted acceptance, protected squash,
+certified-tree/sole-parent verification and clean-main synchronization.
+The [delivery checkpoint](../checkpoints/2026-11-02-workforce-recent-outcomes-protected-delivery.md)
+records the exact result and separate browser/human gates.
 
-The maintainer resumed one-agent work and authorized ordinary computer/browser
-verification for #235, #42, #35, #23 and #22 in that order, closing only verified
-scopes. Live issue bodies/comments and protected main were refreshed. #42 is a
-complete operator/volunteer tutorial and rehearsal; #22 still includes import,
-reconciliation and recovery scope. They are not merely password or UI sign-offs.
+The maintainer authorized one-agent work on #235, #42, #35, #23 and #22 in order,
+closing only verified scopes. #42's separate preparation now incorporates the
+actual protected result. Its [canonical rehearsal](../operations/workforce-only-rehearsal.md)
+names twenty steps and four role sessions through invitations, activation,
+Structure, Positions, applications, independent Assignment decisions,
+person-owned Availability, Shift completion, retained ending and absence checks.
+README and the adoption runbook link it; the older foundation tutorial is historical.
+The dedicated source launcher initializes only its synthetic bootstrap account,
+uses the restricted web runtime and separate invitation worker, and owns cleanup.
 
-UX-033/ADR 0132 now have an owner projection and optional Home panel. The
-complete existing Shift-read boundary admits exact Workforce-only scope; platform
-administration alone is withheld. Minimal exact-version receipts, the complete
-128-candidate cohort, selected five current labels, coherent source signatures,
-mandatory minimized audit and final policy/window/clock checks preserve existing
-next-step priority and direct tools. Both complete attempts share a five-second
-release budget; source snapshots use one-second statement timeouts. No schema,
-permission, profile, runtime ACL, domain write, tracking or polling is added.
-See the [owning page contract](../product/page-contracts/workforce-recent-outcomes.md).
+Current-source feedback passed all 14,972 unit cases, including the 64 focused
+route/actor/launcher/inspection units, plus the exact Windows POSIX skip and
+eleven existing warnings. All five native inspector cases passed. The first
+native attempt's guarded refusal is preserved: its positive fixture restored a
+2020 clock after creating current native authority. That new fixture now uses
+current foundations and one finite real planned-end wait, retaining every
+lifecycle, independence, privacy and absence assertion. Production source and
+guards remain equal to the protected result.
 
-Protected PR #234 main was normally incorporated without changing any draft file.
-Focused feedback passed 148 units and strict types. Native feedback passed the
-new receipt/cohort/query/denial/audit/runtime cases. Three test assumptions were
-corrected without weakening production guards: a required controller cannot be
-deactivated, late lifecycle movement discards every old area snapshot, and an
-approved Volunteer starter may retain minimal setup read while omitting this
-organizer panel. Interrupted and failed feedback remains preserved separately.
-The inexpensive full unit run found only the new native file missing from the
-legacy diagnostic cost inventory; its registration uses the existing maximum,
-explicitly unmeasured estimate. Existing weights, active group costs, tests and
-all resource/coverage/time limits remain unchanged. Fresh complete inexpensive
-unit feedback passed 14,895 cases plus one expected Windows skip and eleven
-existing warnings; whole-source lint, formatting, documentation policy and a fresh
-warning-fatal Sphinx build passed. The final 160-character escaped-label render
-checks also passed all three states. The unchanged classifier
-selects the ordinary final Auto scope; no earlier receipt certifies this source.
+The restricted source-development startup smoke passed its empty baseline over
+all 223 unadopted models, readiness and exact owned cleanup. All 3,332 source
+hashes agreed during feedback; ten original stopped fixtures remained unchanged.
+The 71 public and ten private new originals are separately sealed in place.
+No ordinary account or browser journey was prefilled or claimed. See the
+[current-source feedback checkpoint](../checkpoints/2026-11-02-workforce-rehearsal-native-startup-feedback.md)
+and the historical [preparation checkpoint](../checkpoints/2026-11-01-workforce-rehearsal-preparation.md).
+Fresh clean-commit complete local/hosted certification and protected technical
+delivery remain pending; HTTP-loopback startup is not TLS or production acceptance.
 
-The first clean candidate `16c9dd7d` passed its complete unit process but failed
-the NumPy documentation gate: two new function descriptions grouped their scope
-arguments. Remaining native work was cancelled once, its eight exact owned
-containers were removed, and all failed/interrupted originals were sealed with
-source and original fixtures unchanged. A fresh checkout separates the two
-parameter declarations; executable syntax, every other product file and all
-tests/policies remain unchanged. Fresh repaired-source feedback passed the NumPy
-gate, all 14,895 unit cases plus one expected Windows skip/eleven warnings, and
-the complete unchanged static, Sphinx, generated-contract, frontend and required
-security gates. Complete new exact-head acceptance remains required.
-The browser observations below apply to the named predecessor with the same
-executable behavior, rather than being relabelled as a fresh browser run.
+#42 requires the complete four-role browser journey and its final absence proof
+before closure. The current-URL safety control stopped browser input in this
+logical task; no retry or alternate mechanism bypasses it. The original incomplete
+human trial, private invitation material, manual accounts/passwords/records,
+113-checkbox guide and all ten stopped fixtures remain untouched.
+#35, #23 and #22 remain open. Their full role/lifecycle/accessibility,
+continuity/import/reconciliation/exit and representative recovery scopes are not
+completed by the tutorial or by #235.
 
-A fresh disposable, genuine restricted-runtime rehearsal used separate Reviewer
-and Volunteer sign-ins. Seven widths, light/dark themes, reduced-motion preference,
-keyboard navigation, retained cancellation, real-elapsed completion, fresh Home
-outcomes, reopened-lock exclusion and exact-edition/direct-destination denials
-were observed. The original stopped fixtures remained unchanged after exact
-owned cleanup. Real Chrome zoom was stopped by the Windows browser URL-safety
-control and remains unverified; no alternate input bypass was used. Long-label
-live layout remains unexercised; empty and unavailable states retain
-rendered/native evidence only.
-Specialist screen-reader, representative owner/two-human, recovery, operational
-and production acceptance stay separate. The implementation PR records final
-exact-head local/hosted checks and protected delivery independently of this
-development feedback. See the
-[implementation checkpoint](../checkpoints/2026-11-01-workforce-recent-shift-outcomes.md).
-Original manual accounts/passwords/records, 113-checkbox guide and stopped databases
-remain untouched.
+## Last protected delivery — Recent Shift outcomes and authority clock
 
-## Last protected delivery — Recent outcome contract
+[PR #236](https://github.com/martonpornoi/maru/pull/236) merged at 13:31:05 UTC on
+2 November as `92f59d227e2bdd247c404f7131cd0e58651504a9`, tree-identical to
+certified `35f8dc7de8241699532570bfeb166a886543dcf0`; its sole parent is
+`f101e42d6e1139f3f9f708a96dde1986d40830c3`. Exact-head PR gate app 15368,
+all three current CodeQL app 57789 analyses/uploads, current protections and
+resolved conversations passed before the no-bypass squash. Designated clean
+main was normally fetched and fast-forwarded; local/origin/remote/API equality
+was verified before #235 closed.
+
+Local and hosted acceptance independently reconcile all 391 groups, 111 native
+shards, 5,389 native passes and 16,167 phase records, plus 128 frontend passes
+and every actual quality gate. Local units passed 14,908 with one exact Windows
+POSIX skip; hosted Linux passed all 14,909. Eleven existing warnings remain.
+Original local combined SQLite reconstructs 91.348679-percent branch coverage;
+all 112 original hosted individual parts reconstruct 91.353558 percent and every
+original XML condition, above the unchanged 90-percent threshold. Local individual
+parts were consumed by ordinary combine and are not claimed retained.
+
+Actual native/container interval peaks and enforced concurrency were eight;
+all exact owned resources were cleaned up. Conservative projections including
+cleanup, rounding margin, 50-percent slowdown and ten-minute reserve were
+4,544.1345 local / 5,109 hosted seconds, below 5,400. Full hosted originals include
+every paginated API/job/attempt, the complete log ZIP and all 114 artifacts by
+actual ID/digest. New originals and independent derivations are sealed in place;
+failed/interrupted evidence retains its disposition. Ordinary Node audit still
+reports one moderate development advisory without an identifier.
+
+UX-033/ADR 0132 retain the five-second optional-component budget and minimized
+mandatory audit; ADR 0133 retains native creation time and all existing authority,
+source, horizon, deadline, privacy and runtime safeguards. The three-field ORM
+state migration changes no physical column or privilege. Current-head browser
+acceptance is not claimed: prior observations name predecessor `16c9dd7d`.
+Real 200-percent zoom, live long-label/empty/unavailable layouts, specialist
+screen-reader, representative owner/two-human, recovery, operational and
+production gates remain separate.
+
+## Earlier protected delivery — Recent outcome contract
 
 [PR #234](https://github.com/martonpornoi/maru/pull/234) delivered #233 as
 `f101e42d6e1139f3f9f708a96dde1986d40830c3`, tree-identical to certified

@@ -17,6 +17,7 @@ from types import ModuleType, SimpleNamespace
 from uuid import UUID, uuid4
 
 import pytest
+import time_machine
 from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
@@ -39,6 +40,7 @@ from maru.authorization.commands import (
     revoke_role_assignment,
 )
 from maru.authorization.models import (
+    AuthorityIssuance,
     ProgrammeRoleDecisionRecord,
     ProgrammeRoleRequest,
     RoleAssignment,
@@ -1034,39 +1036,55 @@ def test_native_role_evidence_rejects_timestamps_outside_database_bounds(
 def test_approval_requires_exact_new_provenance_backed_assignment(world, fault):
     organization, edition, author, approver, recipient = world
     recipe = PROGRAMME_ROLE_RECIPES[("coverage-reader", 1)]
-    role = create_role_bundle_version(
-        actor=author,
-        approver=approver,
-        target=resolve_organization_target(organization_id=organization.id),
-        code=recipe.role_code,
-        name=recipe.name,
-        capability_codes=recipe.capability_codes,
-        reason="Synthetic role definition.",
-        correlation_id=uuid4(),
-        source_channel="test",
-    )
-    original = _insert_request(_request_values(world))
+    # The synthetic definition must precede the native decision even when the
+    # application and PostgreSQL clocks differ. Keep the real owner command.
+    with time_machine.travel(_native_time(), tick=False):
+        role = create_role_bundle_version(
+            actor=author,
+            approver=approver,
+            target=resolve_organization_target(organization_id=organization.id),
+            code=recipe.role_code,
+            name=recipe.name,
+            capability_codes=recipe.capability_codes,
+            reason="Synthetic role definition.",
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+    request_values = _request_values(world)
+    if fault == "old_output":
+        # Preserve the requested effective start when the later decision moves,
+        # so this case isolates output freshness from the start-time guard.
+        request_values["not_before"] = _native_time() + timedelta(days=1)
+    original = _insert_request(request_values)
     values = _decision_values(world, original, "approve")
-    assignment = assign_role(
-        actor=author,
-        approver=approver,
-        recipient=AccountFactory() if fault == "recipient" else recipient,
-        target=resolve_edition_target(
-            organization_id=organization.id,
-            edition_id=edition.id,
-        ),
-        role_bundle_id=role.id,
-        effective_from=values["decided_at"] + timedelta(days=1)
-        if fault == "start"
-        else values["decided_at"],
-        expires_at=None,
-        reason="Different rationale" if fault == "reason" else original.reason,
-        correlation_id=values["correlation_id"],
-        source_channel="test",
-    )
+    start = max(original.not_before or values["decided_at"], values["decided_at"])
+    # Supply a known new synthetic grant at the exact database decision instant.
+    # PostgreSQL's real clock and every native approval predicate remain active.
+    with time_machine.travel(values["decided_at"], tick=False):
+        assignment = assign_role(
+            actor=author,
+            approver=approver,
+            recipient=AccountFactory() if fault == "recipient" else recipient,
+            target=resolve_edition_target(
+                organization_id=organization.id,
+                edition_id=edition.id,
+            ),
+            role_bundle_id=role.id,
+            effective_from=start + timedelta(days=1) if fault == "start" else start,
+            expires_at=None,
+            reason="Different rationale" if fault == "reason" else original.reason,
+            correlation_id=values["correlation_id"],
+            source_channel="test",
+        )
+    issuance = AuthorityIssuance.objects.get(role_assignment_id=assignment.id)
+    assert values["decided_at"] <= issuance.evaluated_at <= assignment.created_at
+    assert assignment.created_at <= _native_time()
     values.update(role_bundle_id=role.id, role_assignment_id=assignment.id)
     if fault == "old_output":
         values["decided_at"] = _native_time()
+        assert assignment.created_at < values["decided_at"]
+        assert issuance.evaluated_at < values["decided_at"]
+        assert assignment.effective_from > values["decided_at"]
     if fault:
         with pytest.raises(IntegrityError), transaction.atomic():
             _insert_decision(values)
@@ -1075,6 +1093,36 @@ def test_approval_requires_exact_new_provenance_backed_assignment(world, fault):
     decision = _insert_decision(values)
     assert decision.role_assignment_id == assignment.id
     assert decision.actor_id == approver.id
+
+
+def test_actual_approval_retains_native_grant_time_when_host_clock_stops(command_world):
+    original = _command_request(command_world)
+    # Holding the application instant predates the real decision and reproduces
+    # the old writer's ordering failure without changing PostgreSQL's clock.
+    with time_machine.travel(_native_time(), tick=False):
+        before = _native_time()
+        result = _command_decision(command_world, original)
+    decision = ProgrammeRoleDecisionRecord.objects.get(pk=result.decision_id)
+    assignment = RoleAssignment.objects.get(pk=decision.role_assignment_id)
+    issuance = AuthorityIssuance.objects.get(role_assignment_id=assignment.id)
+    assert before <= decision.decided_at <= issuance.evaluated_at
+    assert issuance.evaluated_at <= assignment.created_at <= _native_time()
+    assert assignment.effective_from == decision.decided_at
+
+
+def test_actual_request_owns_insert_time_after_stale_preflight_observation(
+    command_world, monkeypatch
+):
+    before = _native_time()
+    observed = before + timedelta(days=1)
+    monkeypatch.setattr(role_commands, "_database_now", lambda: observed)
+    result = _command_request(command_world)
+    after = _native_time()
+    stored = ProgrammeRoleRequest.objects.get(pk=result.request_id)
+    assert before <= stored.requested_at <= after
+    assert stored.requested_at < observed
+    assert stored.approval_deadline == stored.requested_at + timedelta(hours=168)
+    assert result.approval_deadline == stored.approval_deadline
 
 
 @pytest.mark.parametrize("world", ["full_convention", "workforce_only"], indirect=True)

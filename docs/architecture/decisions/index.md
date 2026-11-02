@@ -20,6 +20,12 @@ For present implementation status, use the
 
 ## Current documentation decisions
 
+[ADR 0133](0133-native-authority-creation-time.md) keeps new ordinary controller
+provenance and RoleAssignment creation on the database clock. It preserves the
+native exact-new-grant and lineage guards and records the ORM field change
+without physical schema or retained-data changes. Exact-head verification is
+pending; this repair activates no profile or authority.
+
 [ADR 0130](0130-workforce-work-observations-and-actual-time.md) defines future
 Workforce work observations and actual-time reports independently from existing
 planned Shift completion. It resolves ownership, privacy, correction, handover,
