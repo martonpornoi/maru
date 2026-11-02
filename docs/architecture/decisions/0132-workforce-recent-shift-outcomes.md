@@ -79,3 +79,27 @@ No migration, runtime ACL, account/grant, domain write, task/activity database,
 notification, polling, activity tracking, profile expansion or deployment is
 included. Future source rollback removes the optional projection/presentation;
 domain receipts and their existing retention remain unchanged.
+
+## Implementation follow-up — 1 November 2026 (#235)
+
+The accepted decision above remains the contract recorded by #233. The bounded
+implementation uses the existing public Home owner entry point, adding a closed
+optional result rather than a second shell provider. All component audits
+precede the original areas' final source/policy fences; a recent-component retry
+repeats those final fences before any contribution is returned.
+
+Source completeness uses existing bounded parent metadata and unique
+`(demand, resulting_version)` receipt lookups. Candidate queries include absent
+or inconsistent matching evidence, then enforce 128 candidates/129th overflow
+and resolve only five current labels. Both complete attempts share a five-second
+release budget; short read-only source snapshots cap each statement at one second.
+These are added limits for this optional component, not changes to existing
+test, worker, coverage, hosted-time or database-role policy.
+
+Ordinary Workforce policy can produce `platform_administration` before scoped
+grants. That shortcut is withheld by this component; no alternative authority
+evaluator or expanded grant is introduced. Existing platform tools are unchanged.
+The operation `workforce.shift_outcomes.read` is registered in the
+[Audit module](../../modules/audit.md#recent-shift-outcome-reads) for the existing
+operational-continuity purpose and `workforce-personal` retention. The owning
+page contract and CURRENT retain actual verification and remaining human gates.

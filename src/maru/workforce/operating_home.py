@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 import logging
 from dataclasses import dataclass, replace
+from time import monotonic
 from typing import TYPE_CHECKING, Literal
 
 from django.core.exceptions import PermissionDenied
-from django.db import DatabaseError, models
+from django.db import DatabaseError, connection, models
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
@@ -53,6 +54,13 @@ from maru.workforce.models import (
     ShiftDemand,
 )
 from maru.workforce.queries import WORKFORCE_STRUCTURE_REQUIRED_FIELDS
+from maru.workforce.recent_outcomes import (
+    RECENT_OUTCOME_RELEASE_SECONDS,
+    RECENT_OUTCOME_STATEMENT_MILLISECONDS,
+    RecentOutcomeFacts,
+    RecentShiftOutcomes,
+    read_recent_outcome_facts,
+)
 from maru.workforce.shift_audit import append_shift_read_audit
 from maru.workforce.shift_queries import (
     MAX_SHIFT_COMMITMENTS,
@@ -102,10 +110,13 @@ class WorkforceHomeGuidance:
         Separately admitted existing setup continuation, if available.
     operating
         At most three independently admitted operating-area continuations.
+    recent_outcomes
+        Separately admitted recent Shift facts, never a priority/action area.
     """
 
     setup: WorkforceSetupGuidance | None
     operating: tuple[OperatingHomeItem, ...] = ()
+    recent_outcomes: RecentShiftOutcomes | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +135,158 @@ class _Snapshot:
     reference: EditionWorkPhaseReference
     flags: tuple[bool, ...]
     valid_until: datetime | None = None
+
+
+class _RecentMovedError(OperatingHomeUnavailableError):
+    """Retry the complete optional component once after source movement."""
+
+
+@dataclass(frozen=True, slots=True)
+class _RecentSnapshot:
+    facts: RecentOutcomeFacts
+    reference: EditionWorkPhaseReference
+    at: datetime
+
+
+@dataclass(slots=True)
+class _RecentBudget:
+    deadline: float
+    last_at: datetime | None = None
+
+
+def _observe_recent_time(budget: _RecentBudget, at: datetime) -> None:
+    if timezone.is_naive(at) or (budget.last_at is not None and at < budget.last_at):
+        raise OperatingHomeUnavailableError
+    budget.last_at = at
+
+
+def _authorize_recent(context: _Context) -> PolicyDecision:
+    decision = _authorize(context, "shifts")
+    if decision.reason_code == "platform_administration":
+        raise PermissionDenied
+    return decision
+
+
+def _read_recent(context: _Context, budget: _RecentBudget) -> _RecentSnapshot:
+    with repeatable_read_only_snapshot():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT set_config('statement_timeout', %s, true)",
+                [str(RECENT_OUTCOME_STATEMENT_MILLISECONDS)],
+            )
+        _authorize_recent(context)
+        if not _adopted(context):
+            raise PermissionDenied
+        reference = _reference(context)
+        at = timezone.now()
+        _observe_recent_time(budget, at)
+        facts = read_recent_outcome_facts(
+            organization_id=context.organization_id,
+            edition_id=context.edition_id,
+            at=at,
+        )
+        _observe_recent_time(budget, timezone.now())
+        if monotonic() >= budget.deadline:
+            raise OperatingHomeUnavailableError
+        return _RecentSnapshot(facts, reference, at)
+
+
+def _check_recent(
+    context: _Context, snapshot: _RecentSnapshot, budget: _RecentBudget
+) -> datetime:
+    current = _read_recent(context, budget)
+    now = timezone.now()
+    _observe_recent_time(budget, now)
+    # Check elapsed/window boundaries AFTER the final source probe. The lower
+    # horizon is inclusive, so equality at expiry still belongs to the window.
+    if (
+        monotonic() >= budget.deadline
+        or now < current.at
+        or current.at < snapshot.at
+        or now < snapshot.at
+    ):
+        raise OperatingHomeUnavailableError
+    if (
+        current.reference != snapshot.reference
+        or current.facts.signature != snapshot.facts.signature
+        or (snapshot.facts.valid_until is not None and now > snapshot.facts.valid_until)
+    ):
+        raise _RecentMovedError
+    return now
+
+
+def _prepare_recent(context: _Context, budget: _RecentBudget) -> _RecentSnapshot | None:
+    try:
+        snapshot = _read_recent(context, budget)
+        _check_recent(context, snapshot, budget)
+        decision = _authorize_recent(context)
+        audit_at = timezone.now()
+        _observe_recent_time(budget, audit_at)
+        _audit_recent(context, decision, audit_at)
+        _authorize_recent(context)
+        _check_recent(context, snapshot, budget)
+    except PermissionDenied:
+        return None
+    return snapshot
+
+
+def _audit_recent(context: _Context, decision: PolicyDecision, at: datetime) -> None:
+    if not decision.allowed:
+        raise ValueError("Recent Shift outcomes require an allowed read decision.")
+    append_audit(
+        AuditRecord(
+            principal_kind="account",
+            principal_id=context.actor.id,
+            principal_context_id=None,
+            organization_id=context.organization_id,
+            event_edition_id=context.edition_id,
+            capability_code="workforce.view_shifts",
+            operation="workforce.shift_outcomes.read",
+            target_type="events.event_edition",
+            target_id=context.edition_id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code=decision.reason_code,
+            correlation_id=context.correlation_id,
+            request_id=context.correlation_id,
+            source_channel="web",
+            obligations=tuple(
+                sorted(frozenset(decision.obligations) | {"audit_sensitive_read"})
+            ),
+            changed_fields=(),
+            safe_metadata={
+                "policy_version": POLICY_VERSION,
+                "route_name": "admin:index",
+                "http_method": context.http_method,
+            },
+            retention_class="workforce-personal",
+        ),
+        occurred_at=at,
+    )
+
+
+def _unavailable_recent(context: _Context) -> RecentShiftOutcomes | None:
+    try:
+        _authorize_recent(context)
+        if not _adopted(context):
+            return None
+    except (PermissionDenied, DatabaseError, RuntimeError, ValueError):
+        return None
+    return RecentShiftOutcomes("unavailable")
+
+
+def _finalize_recent(
+    context: _Context, snapshot: _RecentSnapshot | None, budget: _RecentBudget
+) -> RecentShiftOutcomes | None:
+    if snapshot is None:
+        return None
+    _authorize_recent(context)
+    at = _check_recent(context, snapshot, budget)
+    return RecentShiftOutcomes(
+        "present" if snapshot.facts.items else "empty",
+        snapshot.facts.items,
+        at,
+        snapshot.reference.time_zone,
+    )
 
 
 def _decision(
@@ -661,6 +824,58 @@ def _recheck_setup(
     return replace(setup, can_manage=setup.can_manage and can_manage)
 
 
+def _finalize_components(
+    context: _Context,
+    setup: WorkforceSetupGuidance | None,
+    released_items: tuple[
+        tuple[tuple[Area, OperatingHomeItem, _Snapshot | None], OperatingHomeItem], ...
+    ],
+) -> tuple[
+    WorkforceSetupGuidance | None,
+    tuple[OperatingHomeItem, ...],
+    RecentShiftOutcomes | None,
+]:
+    # Every optional-component audit precedes the existing areas' final fences.
+    # A complete recent-component retry repeats those fences, never its peers'
+    # audits. No audit runs after the successful final aggregate checks.
+    budget = _RecentBudget(monotonic() + RECENT_OUTCOME_RELEASE_SECONDS)
+    recent: RecentShiftOutcomes | None = None
+    items: tuple[OperatingHomeItem, ...] = ()
+    for attempt in range(2):
+        snapshot = None
+        failed = False
+        try:
+            snapshot = _prepare_recent(context, budget)
+        except _RecentMovedError:
+            if attempt == 0:
+                continue
+            failed = True
+        except (DatabaseError, RuntimeError, ValueError):
+            failed = True
+        items = tuple(
+            final
+            for candidate, item in released_items
+            if (final := _finalize_area(context, candidate, item)) is not None
+        )
+        setup = _recheck_setup(context, setup)
+        try:
+            recent = (
+                _unavailable_recent(context)
+                if failed
+                else _finalize_recent(context, snapshot, budget)
+            )
+        except PermissionDenied:
+            recent = None
+        except _RecentMovedError:
+            if attempt == 0:
+                continue
+            recent = _unavailable_recent(context)
+        except (DatabaseError, RuntimeError, ValueError):
+            recent = _unavailable_recent(context)
+        break
+    return setup, items, recent
+
+
 def load_workforce_home_guidance(
     *,
     actor: Account,
@@ -708,17 +923,17 @@ def load_workforce_home_guidance(
     )
     if not _adopted(context):
         return None
-    items = tuple(
-        final
-        for candidate, item in released_items
-        if (final := _finalize_area(context, candidate, item)) is not None
-    )
-    if items:
+    setup, items, recent = _finalize_components(context, setup, released_items)
+    if items or recent is not None:
         try:
             _require(context, "events.view_basic", _EDITION_FIELDS)
         except PermissionDenied:
             items = ()
-    setup = _recheck_setup(context, setup)
+            recent = None
     if not _adopted(context):
         return None
-    return WorkforceHomeGuidance(setup, items) if setup is not None or items else None
+    return (
+        WorkforceHomeGuidance(setup, items, recent)
+        if setup is not None or items or recent is not None
+        else None
+    )

@@ -1,7 +1,7 @@
 # Recent governed Shift outcomes on Home
 
-- Status: Accepted future contract; no runtime implementation or activation
-- Parent: #35; bounded contract issue #233
+- Status: Optional component implemented in #235; verification and delivery pending
+- Parent: #35; accepted contract #233; bounded implementation #235
 - Host: Existing `/admin/`, exact `workforce_only@1` selected organization/edition
 - Requirements: UX-033, UX-029, UX-031, AUD-003–005, NFR-001–003 and NFR-013
 - Decisions: ADRs 0078, 0080, 0126, 0128 and 0132
@@ -16,12 +16,13 @@ Existing `ShiftDemandCommandReceipt` records are append-only, organization/editi
 scoped and unique per demand/resulting version. Their closed actions include
 locking, reopening, completion and cancellation. The current organizer Shift
 detail independently authorizes the existing complete read boundary and shows
-retained history. Home's current operating projection supplies next actions,
-not this receipt list. Django administration log entries remain omitted.
+retained history. Home keeps its existing next actions and adds this separate
+optional receipt list. Django administration log entries remain omitted.
 
-This documentation changes none of those implementations. A future owner query
-must be implemented and verified before the shell displays the panel. Core may
-consume only its closed immutable result; no cross-module private model import.
+The public `operating_home.load_workforce_home_guidance` result includes a closed
+immutable `recent_outcomes` component. Core maps it to ordinary detail links;
+there is no second provider call after the owner has finalized its other areas,
+and no cross-module private model import.
 
 ## Admission and disclosure
 
@@ -30,6 +31,12 @@ real principal and exact organization/edition through documented public owner
 boundaries. Require `workforce.view_shifts` and every field in the existing
 `SHIFT_ORGANIZER_REQUIRED_FIELDS`, matching the ordinary organizer destination.
 No role, field exception or global platform shortcut is added.
+
+The existing ordinary Workforce policy can return `platform_administration`
+before considering scoped organizer grants. This component withholds that
+decision: platform oversight by itself cannot establish its exact organizer
+admission. A separately admitted organizer account can use the panel. Existing
+platform tools, their policy and all account/grant definitions are unchanged.
 
 | Principal/state | Result |
 | --- | --- |
@@ -89,6 +96,26 @@ it is neither a complete history nor a count of hidden/older work. There is no
 pagination, hidden total or automatic polling. The 128-candidate ceiling can make
 this optional panel unavailable at a busy convention; do not silently sample it.
 
+### Bounded owner implementation
+
+Each coherent source read first loads only parent ID, command version and status
+under the existing 1,024-demand foundation ceiling, with a 1,025th overflow probe.
+Within that bounded parent set, correlated point lookups use the existing unique
+`(demand, resulting_version)` receipt index. Candidate selection includes recent
+current outcomes **and** missing/inconsistent evidence, so an inner join cannot
+turn corruption into an apparent empty result. It returns at most 129 minimal
+candidate rows. Only the selected five current labels are then loaded. No count,
+arbitrary historical scan, people lookup or rationale selection is needed.
+
+A five-second optional-component **release budget** covers both permitted whole
+attempts and the other areas' final checks. Short read-only source snapshots set
+a transaction-local one-second statement timeout. Elapsed and observed wall-clock
+movement are checked after source probes, after audit and at aggregate release;
+an expired budget releases no rows. This is not a promise that the HTTP request
+or an unavailable external dependency is forcibly terminated at five seconds.
+The original Home had row/version bounds, not an elapsed deadline to inherit.
+No existing certification, worker, timing, coverage or database policy is relaxed.
+
 ## Coherence, lifecycle and audit
 
 Keep the existing four-area next-step projection and its priority unchanged.
@@ -109,7 +136,7 @@ existing bounded deadline and window-expiry boundary **after** the final source
 probe; crossing either requires a new coherent attempt or unavailability.
 Do not relabel old facts with a later checked time.
 
-Before any fact is released, implementation must register and persist minimized
+Before any fact is released, implementation registers and persists minimized
 `workforce.shift_outcomes.read` evidence through Audit's public service. Its
 purpose is existing operational Shift continuity, with the existing
 `workforce-personal` retention class and no newly invented duration. Use current
@@ -163,8 +190,10 @@ Before runtime delivery, prove:
    separately recorded specialist, representative owner, recovery, operational
    and production gates. Synthetic receipts do not supply human acceptance.
 
-The current increment delivers this contract only. There is no implemented
-query, mounted panel, registered audit operation, migration or activation. Source
-rollback of this documentation changes no record. A future optional-panel rollback
-must preserve domain receipts, their retention and direct Shift workflows.
+The implementation adds this optional projection/presentation and its registered
+read-audit operation. It adds no migration, runtime ACL, permission or adoption
+profile. Source rollback removes the optional contribution while preserving all
+domain receipts, their retention and direct Shift workflows. Verification results
+and remaining browser/human gates belong in CURRENT and the implementation
+checkpoint; implementation does not itself constitute activation or acceptance.
 #35, #23 and #42 remain open; actual-time/handover and full continuity remain separate.

@@ -1,44 +1,111 @@
 # Current project state
 
-Last updated: 2026-11-01
-Phase: Recent governed Workforce outcome contract (#233, child of #35).
+Last updated: 2026-11-02
+Phase: Recent governed Workforce outcomes implementation (#235, child of #35).
 
-## Recent Shift outcome contract — 1 November 2026
+## Current implementation — 2 November 2026
 
-The maintainer authorized successive bounded tasks and protected delivery without
-routine input. UX-033 and accepted ADR 0132 define the next Home contract:
-up to five distinct current matching locked/completed/cancelled Shift outcomes
-from existing immutable demand receipts over seven elapsed UTC days. The owner
-requires the complete existing organizer Shift-read field boundary, with a
-128-candidate/129th-overflow limit, deterministic order, current authorized labels
-and exact ordinary links. The bound can make the optional panel unavailable at
-busy editions; it is not complete history or an event-readiness indicator.
+The maintainer authorized one-agent verification of #235, #42, #35, #23 and #22
+in that order, closing only verified scopes. Live issue bodies/comments and
+protected main were refreshed. #42 requires a complete operator/volunteer
+rehearsal; #22 includes import, reconciliation and recovery functionality.
 
-Current source diagnosis inspected Shift receipts, command actions, organizer
-read/field authorization, retained detail history and existing Home guards/tests.
-The new [page contract](../product/page-contracts/workforce-recent-outcomes.md)
-defines source/version/lifecycle/window/deadline fences before/after required
-minimized audit and final release, independent destination authorization,
-no-partial failure, recovery and future measured/native/browser/demo acceptance.
-People, rationale, contact/Availability values and raw security-audit or retry
-payloads stay out. No click/activity tracking, polling or Task store is added.
+UX-033/ADR 0132 now have an owner projection and optional Home panel. The
+complete existing Shift-read boundary admits exact Workforce-only scope;
+platform administration alone is withheld. Minimal exact-version receipts,
+the complete 128-candidate cohort, five current labels, coherent source
+signatures, mandatory minimized audit and final policy/window/clock checks
+preserve next-step priority and direct tools. Both complete attempts share a
+five-second release budget; source snapshots use one-second statement timeouts.
+The panel adds no schema, permission, profile, runtime ACL, domain write,
+tracking or polling. See the [page contract](../product/page-contracts/workforce-recent-outcomes.md).
 
-This increment changes documentation only. There is no runtime query/panel,
-registered audit operation, code, profile, grant, model/migration/API or maintained
-demo change. Original manual accounts/passwords/records, the 113-checkbox guide,
-stopped manual database and nine other fixtures remain untouched. Human,
-specialist, owner, recovery, operational and production gates stay separate.
+Protected PR #234 main was normally incorporated. Focused units, native
+receipt/cohort/query/denial/audit/runtime feedback and escaped 160-character
+label rendering passed. Required clean-candidate acceptance exposed two NumPy
+docstring declarations and then an existing authority-clock ordering defect.
+All failed/interrupted originals remain sealed; neither a successful subset
+nor an earlier head certifies this source. The
+[implementation checkpoint](../checkpoints/2026-11-01-workforce-recent-shift-outcomes.md)
+retains the precise failures and their supported repairs.
 
-This branch now normally incorporates protected main after PR #232, preserving
-the accessibility guide, offline comparison and work-records contract. #229 is
-closed; #23 remains open. Focused documentation policy passed for 799 Markdown
-files, four repository skills and 223 identifiers covered by its three-letter
-scan; a fresh warning-fatal Sphinx build passed. Next: final commit,
-fresh ordinary exact-head local certification and independently verified selected
-hosted acceptance. Close only #233 for its contract scope; #35, #23, #22 and #42
-remain open. Earlier results and screenshots do not certify this branch.
-See the [checkpoint](../checkpoints/2026-11-01-workforce-recent-outcomes-contract.md).
+[ADR 0133](../architecture/decisions/0133-native-authority-creation-time.md)
+clarifies native creation time for new authority evidence. Locked controller
+provenance and the exact-bundle proof use validated database time. Assignment
+creation and owner-controlled Programme request time use their actual INSERT;
+the request deadline is exactly 168 elapsed hours later. Stored aware values
+are returned normally. The ORM-state migration changes no physical columns,
+data, defaults, guards, runtime privileges, source/horizon predicates or profiles.
+Raw invalid-time probes retain their supplied values. There is no clamp,
+tolerance, clock-setting change, sleep or retry-until-accepted behavior.
 
+Fresh complete development feedback passed 14,908 unit cases plus one expected
+Windows POSIX skip and eleven existing warnings, all 91 native role cases,
+and every unchanged shared static/type/NumPy/Sphinx/Django/OpenAPI/generated/
+frontend/required-audit check. Native cases include held-host-clock approval,
+future preflight observation with actual INSERT time, retained retries, atomic
+rollback, all exact-new-grant faults and raw future/pre-transaction rejection.
+Real unused-schema reverse/reapply passed. Forward/reverse three-field 0048
+SQL contains no physical DDL or data writes. All 3,321 before/after/live raw and
+normalized source hashes agreed; exact cleanup retained all ten original
+stopped fixtures. All 5,971 new originals are sealed with independent readback.
+The ordinary Node audit reports one moderate development advisory without an
+identifier; this is not a zero-vulnerability claim. See the
+[clock-order checkpoint](../checkpoints/2026-11-01-native-authority-clock-ordering.md).
+Complete fresh exact-head local/hosted certification and protected delivery
+remain pending. Operational clock validation remains a separate deployment gate.
+
+The production-clock candidate's full Auto then stopped at 34 existing Home
+fixture setup errors: its simulated 2030 clock also created authority whose
+effective start was future to the native 2026 evaluation. All 6,265 new originals
+are sealed; exact cleanup retained the ten stopped fixtures. A separate original
+setup reproduced the refusal with actual native/root timestamps and no changed
+guard or result; its 52 new originals are sealed. A fresh fixture correction now
+creates Home-world foundations at native time, restoring the caller's unchanged
+2030 journey clock afterwards. Production source, subject cases and guards are
+unchanged. Fresh complete feedback then passed all 56 affected native cases,
+14,908 units plus the expected skip/eleven warnings and every unchanged shared
+check. Independent identities/order/outcomes/durations and all 3,321 source
+hashes agreed, with exact cleanup and ten stopped fixtures retained. All 5,955
+new originals are sealed. Fresh complete exact-head Auto, independent hosted
+acceptance and protected delivery remain required; no older receipt certifies
+the fixture correction.
+
+Browser observations apply only to named predecessor `16c9dd7d`, before the
+authority-clock repairs. Separate genuine restricted Reviewer and Volunteer
+sessions exercised seven widths, light/dark themes, reduced-motion preference,
+keyboard navigation, retained cancellation, real-elapsed completion, fresh Home
+outcomes, reopened-lock exclusion and exact-edition/direct-destination denials.
+They are not a fresh browser run of the current source. The Windows browser
+URL-safety control stopped real Chrome zoom; no alternate input bypass was used.
+Real 200-percent zoom, long-label live layout, live empty/unavailable states,
+specialist screen-reader, representative owner/two-human, recovery, operational
+and production acceptance remain separate. Original manual accounts/passwords/
+records, the 113-checkbox guide and stopped databases remain untouched.
+
+## Last protected delivery — Recent outcome contract
+
+[PR #234](https://github.com/martonpornoi/maru/pull/234) delivered #233 as
+`f101e42d6e1139f3f9f708a96dde1986d40830c3`, tree-identical to certified
+`004ee2aeef18a50580bd833c518f1cc09f6a6921`, sole parent
+`e45c4b4e6d8d8c53dface9dcc15a35f490be5c88`. It changed documentation only.
+Fresh ordinary local Auto passed all ten gates: 14,853 unit passes plus one
+expected Windows skip/eleven existing warnings, 5,209 native cases/23 current
+shards/279 groups/15,627 phases, 128 frontend cases and 91.228070 percent combined
+branch coverage. Complete source hashes, fresh collection/plan, identities,
+phase outcomes/durations, peak/bound eight, headroom and exact cleanup agreed.
+All 12,566 new local originals are sealed; ordinary combine consumed local parts.
+
+Selected hosted run `41319256115` passed its documentation lane, 30 fixed licensing
+cases and PR gate app 15368; three unused alternatives were skipped. It did not
+repeat full units/native/frontend/coverage. Its documentation artifact digest,
+complete APIs/jobs/logs and CodeQL run `41319254210` with all three exact-head clean
+analyses/SARIF provenance were independently verified. All 4,410 hosted originals
+and 259 further delivery metadata files are sealed. Live reviews/requests/threads
+were empty under unchanged zero-approval policy. Protected exact-head squash,
+certified tree/sole parent, final PR body and designated clean-main normal
+fetch/ff-only local/origin/remote/API equality were verified. Only #233 closed;
+#35, #23, #22 and #42 remain open. Contract delivery did not implement this panel.
 
 ## Last protected delivery — Accessibility rehearsal
 

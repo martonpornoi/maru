@@ -6,7 +6,7 @@ from typing import Never
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import connection, transaction
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
@@ -404,6 +404,36 @@ def require_authorized_control_horizon(  # noqa: DOC502 - selector owns failures
     )
 
 
+def _database_control_time() -> datetime:
+    """Sample the native clock for immutable new controller provenance.
+
+    Returns
+    -------
+    datetime
+        An aware database timestamp sampled after the controller locks.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the database does not supply one valid aware timestamp. Database
+        errors propagate without using a host-clock fallback.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_catalog.clock_timestamp()")
+        row = cursor.fetchone()
+    if (
+        row is None
+        or len(row) != 1
+        or not isinstance(row[0], datetime)
+        or timezone.is_naive(row[0])
+    ):
+        raise AuthorizationDenied(
+            "Exact controller authority is unavailable.",
+            reason_code="authority_source_unavailable",
+        )
+    return row[0]
+
+
 def _select_dual_control_sources(
     *,
     actor: Account,
@@ -447,7 +477,7 @@ def _select_dual_control_sources(
         actor=actor,
         approver=approver,
     )
-    evaluated_at = timezone.now()
+    evaluated_at = _database_control_time()
     actor_source = _select_one_control_source(
         principal=locked_actor,
         role=AuthorityControl.Role.ACTOR,

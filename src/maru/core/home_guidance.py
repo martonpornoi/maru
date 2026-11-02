@@ -24,8 +24,44 @@ if TYPE_CHECKING:
     from maru.events.models import EventEdition
     from maru.workforce.home_guidance import WorkforceSetupGuidance
     from maru.workforce.home_states import OperatingHomeItem
+    from maru.workforce.recent_outcomes import RecentShiftOutcomes
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class HomeRecentOutcome:
+    """One escaped current label, closed outcome, time and ordinary link.
+
+    Attributes
+    ----------
+    label, outcome, recorded_at, url
+        Current owner label, human outcome text, receipt time and detail target.
+    """
+
+    label: str
+    outcome: str
+    recorded_at: datetime
+    url: str
+
+
+@dataclass(frozen=True, slots=True)
+class HomeRecentOutcomes:
+    """Presentation of a separately admitted optional owner component.
+
+    Attributes
+    ----------
+    state, items
+        Present, empty or unavailable state and minimized selected links.
+    checked_at, time_zone, fallback_url
+        Final check instant, edition zone and existing Shift planning route.
+    """
+
+    state: str
+    items: tuple[HomeRecentOutcome, ...]
+    checked_at: datetime | None
+    time_zone: str
+    fallback_url: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,6 +86,8 @@ class HomeGuidance:
         Checked area and an optional authorized edition-local decision boundary.
     attention
         At most three other independently admitted owner continuations.
+    recent_outcomes
+        Optional outcome component; an empty title means no primary guidance.
     """
 
     state: str
@@ -63,6 +101,7 @@ class HomeGuidance:
     due_label: str = ""
     time_zone: str = "UTC"
     attention: tuple[HomeGuidance, ...] = ()
+    recent_outcomes: HomeRecentOutcomes | None = None
 
 
 _COPY = {
@@ -507,12 +546,46 @@ def project_home_guidance(
             result.setup.step, 45
         )
         candidates.append((priority, _setup_item(result.setup, edition)))
+    recent = _recent_component(result.recent_outcomes, edition)
     if not candidates:
-        return None
+        return HomeGuidance("", "", "", recent_outcomes=recent) if recent else None
     ordered = tuple(
         item
         for _priority, item in sorted(
             candidates, key=lambda pair: (pair[0], pair[1].area)
         )
     )
-    return replace(ordered[0], attention=ordered[1:4])
+    return replace(ordered[0], attention=ordered[1:4], recent_outcomes=recent)
+
+
+def _recent_component(
+    result: RecentShiftOutcomes | None, edition: EventEdition
+) -> HomeRecentOutcomes | None:
+    if result is None:
+        return None
+    args = [edition.organization.slug, edition.series.slug, edition.slug]
+    fallback = reverse("organization-workforce-shifts", args=args)
+    try:
+        ZoneInfo(result.time_zone)
+    except (TypeError, ValueError, ZoneInfoNotFoundError):
+        return HomeRecentOutcomes("unavailable", (), None, "UTC", fallback)
+    wording = {
+        "locked": "Coverage locked",
+        "completed": "Shift completed",
+        "cancelled": "Shift cancelled",
+    }
+    return HomeRecentOutcomes(
+        result.state,
+        tuple(
+            HomeRecentOutcome(
+                item.label,
+                wording[item.outcome],
+                item.recorded_at,
+                reverse("organization-workforce-shift", args=[*args, item.demand_id]),
+            )
+            for item in result.items
+        ),
+        result.checked_at,
+        result.time_zone,
+        fallback,
+    )

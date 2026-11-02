@@ -19,14 +19,25 @@ human/owner validation and the future synthetic demo requirement.
 
 ## Administration-home operating guidance
 
-The separate future UX-033/[ADR 0132](../architecture/decisions/0132-workforce-recent-shift-outcomes.md)
-contract defines a receipt-backed recent Shift outcome list. The owner would
-release only five bounded current-authorized labels/outcomes/times/detail links,
-with complete existing Shift-read fields and repeated source/policy/audit fences.
+UX-033/[ADR 0132](../architecture/decisions/0132-workforce-recent-shift-outcomes.md)
+add a separate receipt-backed recent Shift outcome component through the same
+public `operating_home.load_workforce_home_guidance` entry point. Its immutable
+`recent_outcomes` value is omitted on denial, or has present/empty/unavailable
+state and at most five current authorized labels/outcomes/times/detail targets.
+Core consumes only this closed value. It never becomes a fifth action area or
+changes the existing primary/attention priorities.
+
+`recent_outcomes.read_recent_outcome_facts` is an internal owner query: bounded
+parent metadata, exact unique-version receipt probes, a complete 128-candidate
+cohort plus overflow row, then only five current labels. Complete existing
+Shift-read fields, exact adopted scope, repeated principal/lifecycle/source/window
+checks and mandatory minimized `workforce.shift_outcomes.read` audit precede
+release. A platform-administration shortcut is not sufficient for this panel.
+Both complete attempts share a five-second release budget; source snapshots use
+one-second local statement timeouts. No partial list survives a failure.
 It creates no new permission, profile meaning, domain write or activity tracking.
 The [page contract](../product/page-contracts/workforce-recent-outcomes.md) records
-bounds, failure and future automated/browser/human acceptance. No query, panel,
-audit-operation registration or demo change is implemented by that contract.
+precise bounds, empty/unavailable behavior, recovery and acceptance boundaries.
 
 UX-032 and [ADR 0128](../architecture/decisions/0128-workforce-operating-home.md)
 extend the exact `workforce_only@1` home through Assignments, shared Availability

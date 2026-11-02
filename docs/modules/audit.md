@@ -48,6 +48,22 @@ cross-tenant counts.
 
 ## Integrated behavior
 
+### Recent Shift outcome reads
+
+`workforce.shift_outcomes.read` is registered for the existing Workforce
+operational-continuity read purpose under AUD-003–005 and UX-033. Its existing
+capability is `workforce.view_shifts`, its target is the exact Event edition, and
+its retention class is `workforce-personal`. No new retention duration, analytics
+purpose, activity-frequency record or Audit-table timeline is added.
+
+The owner persists the principal, organization/edition, policy reason/obligation,
+request correlation, source channel and only policy version, route name and HTTP
+method as safe metadata through `append_audit(AuditRecord(...))`. It records no
+displayed Shift title, outcome row, holder, organizer rationale or raw receipt.
+Failure withholds the whole optional component. The ordinary Audit schema and
+append-only/runtime boundaries already support this operation; no migration,
+allowlist expansion or retention store is required.
+
 ### Minimized Programme exit manifest (#189)
 
 The `audit.programme-exit@1` section contains only the generating requester's

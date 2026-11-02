@@ -636,11 +636,10 @@ def test_real_ready_transition_removes_a_prepared_setup_edit(world, monkeypatch,
     assert result.setup.step == "read_only"
     assert not result.setup.can_manage
     assert result.setup.position_id is None
-    assert _codes(result) == (
-        {"assignment_plan", "shift_plan"}
-        if stage == "final_area"
-        else {"assignments_unavailable", "shifts_unavailable"}
-    )
+    # The optional receipt component also observes this late phase movement.
+    # Its whole-component retry repeats all original-area fences, withholding
+    # their earlier planning snapshots rather than relabelling them as current.
+    assert _codes(result) == {"assignments_unavailable", "shifts_unavailable"}
 
 
 @pytest.mark.parametrize("existing_draft", [False, True])

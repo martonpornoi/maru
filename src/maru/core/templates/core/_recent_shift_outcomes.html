@@ -1,0 +1,22 @@
+{% load tz %}
+<section class="maru-admin-home-guidance" aria-labelledby="maru-recent-shifts-heading">
+  <h3 id="maru-recent-shifts-heading">Recent Shift outcomes</h3>
+  <p>Past 7 days · up to 5 Shifts</p>
+  {% if recent.state == "unavailable" %}
+    <p>Recent Shift outcomes are unavailable. Refresh or use Shifts.</p>
+  {% elif recent.items %}
+    <ol class="maru-admin-attention-list" role="list" aria-labelledby="maru-recent-shifts-heading">
+      {% for item in recent.items %}
+        <li>
+          <p><a href="{{ item.url }}">{{ item.label }}</a></p>
+          <p>{{ item.outcome }} · <time datetime="{{ item.recorded_at|date:'c' }}">{{ item.recorded_at|timezone:recent.time_zone|date:"j M Y, H:i T" }}</time> ({{ recent.time_zone }}).</p>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p>No recent Shift outcomes in this checked scope.</p>
+  {% endif %}
+  {% if recent.checked_at %}<p class="help">Checked <time datetime="{{ recent.checked_at|date:'c' }}">{{ recent.checked_at|timezone:recent.time_zone|date:"j M Y, H:i T" }}</time> ({{ recent.time_zone }}). Refresh this page to check again.</p>{% endif %}
+  <p class="help">These are recorded planning outcomes, not attendance, actual time, complete history or event readiness.</p>
+  <p><a href="{{ recent.fallback_url }}">Open Shifts</a> to review the retained details.</p>
+</section>

@@ -1307,8 +1307,11 @@ architecture documents, implementation issues, tests, and release notes.
   without suppressing other work. Preserve the existing four-area next-step
   limit and priority. Add no activity store/tracking, polling, notification,
   domain write, grant/profile meaning or implied attendance/actual-time/human
-  acceptance. ADR 0132 and the owning page contract define the future acceptance;
-  documentation alone does not implement or activate this panel.
+  acceptance. ADR 0132 and the owning page contract define acceptance and the
+  bounded owner implementation: the existing 1,024-parent foundation ceiling,
+  exact current-version receipt probes, one-second source-statement timeouts and
+  one shared five-second optional release budget. This does not weaken existing
+  acceptance/resource limits or establish human or production approval.
 
 ### Registration, orders, and attendee service
 
