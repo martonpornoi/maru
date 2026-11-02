@@ -38,8 +38,18 @@ The 71 public and ten private new originals are separately sealed in place.
 No ordinary account or browser journey was prefilled or claimed. See the
 [current-source feedback checkpoint](../checkpoints/2026-11-02-workforce-rehearsal-native-startup-feedback.md)
 and the historical [preparation checkpoint](../checkpoints/2026-11-01-workforce-rehearsal-preparation.md).
-Fresh clean-commit complete local/hosted certification and protected technical
-delivery remain pending; HTTP-loopback startup is not TLS or production acceptance.
+The first clean final candidate's all-history Auto failed after committed
+authority-issuance history left three dropped/re-added edition-column slots in
+the shared test database. An unchanged 26-case native reproduction verified
+that the exact Guidance schema guard correctly refuses that residue. Failed
+originals and independent catalog proofs are sealed. The historical case now
+uses the existing isolated migration database and checks the caller's exact
+Guidance fingerprints and readiness before and after. Fresh repaired feedback
+passed all 26 original cases and 78 phases; all 3,334 source hashes and exact
+owned cleanup independently reconcile. Production source remains equal to
+protected main. See the [isolation checkpoint](../checkpoints/2026-11-02-workforce-rehearsal-migration-isolation.md).
+Complete new-head local/hosted certification and protected technical delivery
+remain pending; HTTP-loopback startup is not TLS or production acceptance.
 
 #42 requires the complete four-role browser journey and its final absence proof
 before closure. The current-URL safety control stopped browser input in this

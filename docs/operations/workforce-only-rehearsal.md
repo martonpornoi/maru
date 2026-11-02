@@ -242,6 +242,9 @@ lifecycle report. A new fixture must complete every row and the final inspection
 before issue #42 can be accepted. See the
 [preparation checkpoint](../checkpoints/2026-11-01-workforce-rehearsal-preparation.md)
 and the separate [current-source native/startup feedback](../checkpoints/2026-11-02-workforce-rehearsal-native-startup-feedback.md).
+The [migration-isolation checkpoint](../checkpoints/2026-11-02-workforce-rehearsal-migration-isolation.md)
+records the later failed final certification and focused verification of its
+bounded test-only repair; it supplies no browser-journey evidence.
 
 ## Evidence and completion boundary
 
