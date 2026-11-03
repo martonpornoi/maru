@@ -6,8 +6,8 @@
   state-matrix, width/zoom, and release accessibility evidence remains pending
 - Canonical authenticated route: `/admin/`
 - Requirements: UX-001 through UX-013, UX-019, UX-020, UX-024, UX-026, UX-027,
-  UX-029, UX-031, and NFR-001 through NFR-004
-- Decisions: ADRs 0026, 0027, 0039, 0040, 0049, 0055, and 0116
+  UX-029, UX-031 through UX-033, and NFR-001 through NFR-004
+- Decisions: ADRs 0026, 0027, 0039, 0040, 0049, 0055, 0116, 0126, 0128, and 0132
 
 ## Purpose and boundaries
 
@@ -41,21 +41,27 @@ explanation without work links. Without a selected event, the home asks the user
 to choose one; only admitted platform links offer organization/account management.
 Scoped users get a safe organizer-access handoff, not a platform setup link.
 
-Django admin log entries are not an operational activity feed and are omitted
-from the home: they neither cover governed service/API outcomes nor establish
-current object disclosure. No new history query, analytics or task database is
-introduced. Existing advanced records remain behind their authorized gateway.
-The finite entry point and first owner-projected continuation below address
-part of issue #35. Other module contributions, full Workforce operation and
-governed recent outcomes remain separate acceptance outcomes.
+Django admin log entries stay off Home because they do not establish governed
+service/API outcomes or current object disclosure. Existing advanced records
+remain behind their authorized gateway. The finite entry point and the
+Workforce projections below address part of issue #35. Broader module
+contributions and the complete role, lifecycle and accessibility rehearsal
+remain open.
 
-## Future recent Shift outcomes
+## Recent Shift outcomes
 
-The separate future [recent Shift outcomes contract](workforce-recent-outcomes.md)
-under UX-033/ADR 0132 defines receipt-backed current-authorized history rather
-than a Django click log. It is not implemented and does not alter the current
-four-area guidance, primary action or profile meaning. Its own bounded source,
-field, audit and manual acceptance must pass before a panel is mounted.
+The optional [recent Shift outcomes panel](workforce-recent-outcomes.md) shows
+at most five receipt-backed planning outcomes from the past seven days after
+the Workforce attention list. It requires current, complete Shift-read
+authority for the selected `workforce_only@1` edition. It uses existing
+minimized read audit and links to the ordinary Shift detail, which authorizes
+the request again. Empty and unavailable states describe only this bounded
+check. The primary continuation still comes from the four operating areas.
+
+[PR #236](https://github.com/martonpornoi/maru/pull/236) delivered the panel
+with automated evidence. Live long-label, empty and unavailable layouts at
+real 200% browser zoom and representative screen-reader acceptance remain
+separate.
 
 ## First owner-projected continuation: Workforce setup
 
