@@ -1,9 +1,10 @@
 # Current project state
 
-Last updated: 2026-11-02
-Phase: Canonical Workforce-only rehearsal technical delivery (#42).
+Last updated: 2026-11-03
+Phase: Workforce operating-home verification (#35), following the protected
+technical delivery of the canonical Workforce-only rehearsal.
 
-## Current implementation — 2 November 2026
+## Current implementation — 3 November 2026
 
 [PR #236](https://github.com/martonpornoi/maru/pull/236) delivered the bounded
 recent Shift-outcome component and native authority creation-time correction.
@@ -13,8 +14,9 @@ The [delivery checkpoint](../checkpoints/2026-11-02-workforce-recent-outcomes-pr
 records the exact result and separate browser/human gates.
 
 The maintainer authorized one-agent work on #235, #42, #35, #23 and #22 in order,
-closing only verified scopes. #42's separate preparation now incorporates the
-actual protected result. Its [canonical rehearsal](../operations/workforce-only-rehearsal.md)
+closing only verified scopes. [PR #237](https://github.com/martonpornoi/maru/pull/237)
+delivered the bounded technical scope for #42. Its
+[canonical rehearsal](../operations/workforce-only-rehearsal.md)
 names twenty steps and four role sessions through invitations, activation,
 Structure, Positions, applications, independent Assignment decisions,
 person-owned Availability, Shift completion, retained ending and absence checks.
@@ -48,17 +50,30 @@ Guidance fingerprints and readiness before and after. Fresh repaired feedback
 passed all 26 original cases and 78 phases; all 3,334 source hashes and exact
 owned cleanup independently reconcile. Production source remains equal to
 protected main. See the [isolation checkpoint](../checkpoints/2026-11-02-workforce-rehearsal-migration-isolation.md).
-Complete new-head local/hosted certification and protected technical delivery
-remain pending; HTTP-loopback startup is not TLS or production acceptance.
+Exact-head local and hosted all-history verification passed. Hosted Linux
+passed all 14,973 unit tests, 5,394 native cases across 111 shards and 128
+frontend tests. Independent reconstruction from 112 original hosted coverage
+parts measured 91.348679% and matched every original XML condition.
+The protected squash `8c6ccd52fa46b1cc2b4f225512b5b0dadcd095a5` has the
+certified tree and sole parent. The designated clean main was fetched and
+fast-forwarded and agrees with GitHub. See the
+[protected delivery checkpoint](../checkpoints/2026-11-03-workforce-rehearsal-protected-delivery.md).
 
 #42 requires the complete four-role browser journey and its final absence proof
 before closure. The current-URL safety control stopped browser input in this
 logical task; no retry or alternate mechanism bypasses it. The original incomplete
 human trial, private invitation material, manual accounts/passwords/records,
 113-checkbox guide and all ten stopped fixtures remain untouched.
-#35, #23 and #22 remain open. Their full role/lifecycle/accessibility,
-continuity/import/reconciliation/exit and representative recovery scopes are not
-completed by the tutorial or by #235.
+#35 remains open. Its bounded Workforce Home guidance and recent Shift outcomes
+have automated evidence for authorization, lifecycle, provider failure and
+destination reauthorization. The full role and lifecycle matrix, real browser
+zoom and representative assistive-technology acceptance still need evidence.
+The management-shell and recent-outcomes contracts now describe the delivered
+panel. #23 and #22 remain open for their accessibility matrix and continuity,
+import, reconciliation, exit and representative recovery scopes.
+
+Next, finish this #35 documentation correction through the normal delivery
+checks. Then review #23 and #22 in order against their live acceptance criteria.
 
 ## Last protected delivery — Recent Shift outcomes and authority clock
 

@@ -1,6 +1,8 @@
 # Recent governed Shift outcomes on Home
 
-- Status: Optional component implemented in #235; verification and delivery pending
+- Status: Optional component delivered through PR #236 with independent local
+  and hosted verification. Live browser and specialist accessibility acceptance
+  remain open.
 - Parent: #35; accepted contract #233; bounded implementation #235
 - Host: Existing `/admin/`, exact `workforce_only@1` selected organization/edition
 - Requirements: UX-033, UX-029, UX-031, AUD-003–005, NFR-001–003 and NFR-013
