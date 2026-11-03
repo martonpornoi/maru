@@ -3,17 +3,18 @@
 **Audience:** Catalog maintainers reviewing the next API safety increment\
 **Outcome:** Separate an executable existing-behavior baseline from decisions
 that must precede compatibility or operating changes\
-**Status:** The 20-case baseline was protected-delivered in PR #217. Twelve
-additional creation-retry cases passed focused native verification; exact delivery
-and behavioral decisions remain open
+**Status:** The 20-case baseline and twelve creation-retry cases were delivered
+in PRs #217 and #219. The generated schema now describes the verified handled
+responses for both edition Catalog operations. The behavior decisions below
+remain open.
 
 The [source review](catalog-edition-api-contract-review.md), delivered in
 [PR #216](https://github.com/martonpornoi/maru/pull/216), identifies the two
 operations at the edition Catalog route. This plan applies only to
 `catalog_retrieve_edition_catalog` and `catalog_create_edition_catalog`.
-Issue #36 remains a planning umbrella, not API-wide implementation or production
-approval. This increment adds evidence for existing behavior without changing
-runtime, schema, authentication, profiles, permissions or earlier assertions.
+Issue #36 remains a planning umbrella. The original increments exercised
+existing behavior. The schema increment describes that behavior for consumers
+using the same adapters and authority boundaries.
 
 INT-001, NFR-009, NFR-013 and AUD-001 apply. ADRs 0001, 0003, 0050 and 0056
 remain unchanged. Catalog owns its adapters and services; Authorization, Audit

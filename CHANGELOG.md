@@ -22,6 +22,8 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- The edition Catalog API reference documents verified error responses, response
+  headers and the distinction between new drafts and replayed creation receipts.
 - Organization lists expose their creation action. Volunteer setup uses one
   task name, asks explicitly whether to create or reuse an organizer, and links
   unfinished accountable access to its own continuation. Shared choice controls

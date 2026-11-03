@@ -11,46 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * @description Retrieve the edition catalog.
-         *
-         *     Keep authenticated catalog data and safe errors out of shared caches.
-         *
-         *     Parameters
-         *     ----------
-         *     request : Request
-         *         The incoming HTTP request and authenticated principal context.
-         *     organization_id : UUID
-         *         The organization identifier that owns the requested resource.
-         *     edition_id : UUID
-         *         The event edition identifier that scopes the operation.
-         *
-         *     Returns
-         *     -------
-         *     Response
-         *         The HTTP response for the requested operation.
-         */
+        /** @description Read the products available to the signed-in person for the specified organization and edition. The operation requires Catalog self-service access to that scope and accepts no query parameters. */
         get: operations["catalog_retrieve_edition_catalog"];
         put?: never;
-        /**
-         * @description Create the edition catalog.
-         *
-         *     Keep authenticated catalog data and safe errors out of shared caches.
-         *
-         *     Parameters
-         *     ----------
-         *     request : Request
-         *         The incoming HTTP request and authenticated principal context.
-         *     organization_id : UUID
-         *         The organization identifier that owns the requested resource.
-         *     edition_id : UUID
-         *         The event edition identifier that scopes the operation.
-         *
-         *     Returns
-         *     -------
-         *     Response
-         *         The HTTP response for the requested operation.
-         */
+        /** @description Create the single draft catalog for the specified edition. The caller needs Catalog management authority in that organization and edition. Reusing the key with the same actor, edition and normalized currency returns the original receipt and creation version. The original reason is retained. */
         post: operations["catalog_create_edition_catalog"];
         delete?: never;
         options?: never;
@@ -9189,6 +9153,18 @@ export interface components {
             result: components["schemas"]["ResultEnum"];
             reason: string;
         };
+        /** @description Describe the problem details emitted by the edition Catalog adapters. */
+        CatalogProblem: {
+            /** Format: uri */
+            readonly type: string;
+            readonly title: string;
+            readonly status: number;
+            readonly detail: string;
+            readonly code: string;
+            /** Format: uuid */
+            request_id?: string;
+            errors?: unknown;
+        };
         /** @description Serialize and validate catalog product add data. */
         CatalogProductAdd: {
             expected_version: number;
@@ -14245,12 +14221,56 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Catalog version, currency and available products. */
             200: {
                 headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogDetail"];
+                };
+            };
+            /** @description The request contains an unsupported query parameter. */
+            400: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description The operation is unavailable to the caller for the requested scope. The response does not disclose whether a protected catalog exists. */
+            403: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description Catalog unavailable after scope authorization. */
+            404: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
                 };
             };
         };
@@ -14274,20 +14294,56 @@ export interface operations {
             };
         };
         responses: {
+            /** @description The original creation receipt for a matching retry. */
             200: {
                 headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogCommandResult"];
                 };
             };
+            /** @description The receipt for a newly created draft catalog. */
             201: {
                 headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+            /** @description Invalid query, JSON or idempotency key, or a conflict with the edition's existing catalog or creation receipt. */
+            400: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description The operation is unavailable to the caller for the requested scope. The response does not disclose whether a protected catalog exists. */
+            403: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
                 };
             };
         };

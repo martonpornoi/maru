@@ -1,9 +1,24 @@
 # Current project state
 
 Last updated: 2026-11-03
-Phase: Workforce continuity and reversible-adoption verification (#22).
+Phase: Edition Catalog API reference conformance (#36).
 
-## Current implementation — 3 November 2026
+## Edition Catalog API reference — 3 November 2026
+
+This bounded INT-001 increment documents the edition Catalog read and draft
+creation operations. OpenAPI and the generated TypeScript declarations now
+describe verified success and problem responses, correlation and cache headers,
+and fictional examples for a catalog read, draft creation and receipt replay.
+The focused run passed 40 Catalog PostgreSQL tests, including validation of
+actual HTTP bodies against the generated schema, and 119 focused unit tests.
+See the [Catalog API contract](../modules/catalog-api.md#edition-catalog-responses)
+and the [verification checkpoint](../checkpoints/2026-11-03-catalog-edition-openapi-contract.md).
+
+Issue #36 remains open. Read completeness, read-audit policy, dependency
+failure handling and broader compatibility work require separate review under
+the [Catalog conformance plan](../development/catalog-edition-api-conformance-plan.md).
+
+## Previous Workforce verification — 3 November 2026
 
 [PR #236](https://github.com/martonpornoi/maru/pull/236) delivered the bounded
 recent Shift-outcome component and native authority creation-time correction.

@@ -209,6 +209,18 @@ class CatalogCommandResultSerializer(serializers.Serializer[dict[str, Any]]):
     replayed = serializers.BooleanField()
 
 
+class CatalogProblemSerializer(serializers.Serializer[dict[str, object]]):
+    """Describe the problem details emitted by the edition Catalog adapters."""
+
+    type = serializers.URLField(read_only=True)
+    title = serializers.CharField(read_only=True)
+    status = serializers.IntegerField(read_only=True)
+    detail = serializers.CharField(read_only=True)
+    code = serializers.CharField(read_only=True)
+    request_id = serializers.UUIDField(required=False)
+    errors = serializers.JSONField(required=False)  # type: ignore[assignment]
+
+
 class CatalogVariantProjectionSerializer(serializers.Serializer[dict[str, Any]]):
     """Serialize and validate catalog variant projection data."""
 

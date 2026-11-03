@@ -1,7 +1,7 @@
 # Catalog API contract
 
 Status: mounted versioned adapter contract
-Last updated: 2026-10-19
+Last updated: 2026-11-03
 
 The [dated edition GET/POST review](../development/catalog-edition-api-contract-review.md)
 records exact observed behavior, authentication modes, normalization, retry identity
@@ -55,6 +55,29 @@ Activity is a bounded, audited projection of allowlisted catalog actions. It
 returns action, minimized actor label, occurrence time, and target count; it
 does not return command reasons, payment-provider payloads, attendee order
 contents, or unrestricted audit records.
+
+## Edition catalog responses
+
+The generated OpenAPI reference documents these responses for the edition
+Catalog route. The two operations have separate authority requirements.
+
+| Operation | Successful responses | Handled problems |
+| --- | --- | --- |
+| Read the edition catalog | `200` with the version, currency and products available to the caller. A catalog can have no available products. | `400` for an unsupported query, `403` for denied access, and `404` for a catalog unavailable after scope authorization. |
+| Create the edition catalog | `201` for a new draft and `200` for replay of the original creation receipt. | `400` for invalid input or conflicting creation intent, and `403` for denied access. |
+
+These handled problems use `application/problem+json`. The documented success
+and problem responses include `Cache-Control` with `private` and `no-store`
+directives and an `X-Request-ID` UUID for correlation. A matching creation
+retry uses the same key, actor, edition and normalized currency. It returns the
+original target and creation version and preserves the original reason even
+if a later valid retry supplies different wording.
+
+The generated examples use fictional data. The native HTTP tests validate the
+documented statuses, media types, headers and body schemas against actual
+responses. The [conformance plan](../development/catalog-edition-api-conformance-plan.md)
+tracks separate decisions about read completeness, read-audit policy and
+dependency failures.
 
 ## Same-shell browser adapters
 
