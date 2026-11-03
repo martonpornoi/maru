@@ -1,8 +1,7 @@
 # Current project state
 
 Last updated: 2026-11-03
-Phase: Workforce operating-home verification (#35), following the protected
-technical delivery of the canonical Workforce-only rehearsal.
+Phase: Workforce continuity and reversible-adoption verification (#22).
 
 ## Current implementation — 3 November 2026
 
@@ -68,12 +67,29 @@ human trial, private invitation material, manual accounts/passwords/records,
 have automated evidence for authorization, lifecycle, provider failure and
 destination reauthorization. The full role and lifecycle matrix, real browser
 zoom and representative assistive-technology acceptance still need evidence.
-The management-shell and recent-outcomes contracts now describe the delivered
-panel. #23 and #22 remain open for their accessibility matrix and continuity,
-import, reconciliation, exit and representative recovery scopes.
+[PR #238](https://github.com/martonpornoi/maru/pull/238) aligned the
+management-shell and recent-outcomes contracts with the delivered panel.
+Its protected squash was 32517c2e16f3f679942ebd296e5b7e285dc66b8f. Independent
+local current-history acceptance and the selected hosted documentation lane
+passed. The designated clean main fast-forwarded to the certified tree.
 
-Next, finish this #35 documentation correction through the normal delivery
-checks. Then review #23 and #22 in order against their live acceptance criteria.
+#23 remains open. A review of nine passing protected-tree cases found automated
+evidence for drawer markup and Shift authorization, recovery and disclosure.
+The full authenticated role and state matrix, required widths, real 200% zoom,
+keyboard and drawer behavior, reduced motion and representative screen-reader
+checks still need live evidence.
+
+#22 remains open. An isolated fictional database restarted on the same owned
+volume. PostgreSQL logical restore preserved 323 table fingerprints and passed
+restricted-runtime, Guidance and authority readiness. The broader catalog
+comparison found five compacted dropped-column slots across three tables, so
+the drill exited nonzero. See the
+[recovery checkpoint](../checkpoints/2026-11-03-workforce-continuity-recovery.md).
+The offline validator, revision comparison and authorized rota remain bounded
+deliveries. The next technical work is a trusted live import mapping and
+confirmation contract, minimized reconciliation, scoped continuity/history/exit
+and governed stop/restart/expansion/decommission. Representative restore/PITR
+and operator acceptance require separate evidence.
 
 ## Last protected delivery — Recent Shift outcomes and authority clock
 
