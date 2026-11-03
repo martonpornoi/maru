@@ -232,6 +232,27 @@ PUBLIC grants, runtime grants, role attributes, and relation ACLs against the
 current code-owned catalog. Never make a readiness probe pass by granting broad
 function or table privileges.
 
+### Logical restore verification
+
+Before reopening writes, verify the restored data and the actual runtime role
+against the current readiness contracts. A successful restore command or a
+match of row counts alone cannot establish those conditions. Check the retained
+data and audit scope, exact guarded relation definitions, function and trigger
+integrity, ownership, grants and excluded-module absence where applicable.
+
+In the [isolated Workforce recovery drill](../checkpoints/2026-11-03-workforce-continuity-recovery.md),
+logical restore preserved row fingerprints and passed the restricted-runtime
+readiness checks. The broader comparison found that three tables lost
+dropped-column slots and their remaining columns shifted to fill the gaps.
+A recovery method that requires identical catalog slots needs independent
+verification of that property.
+
+For a disposable Docker preview with an automatically allocated loopback
+port, confirm the container and volume after restart and resolve the current
+binding before reconnecting. The binding can change across a same-volume
+restart. Representative deployment restore and point-in-time recovery require
+their own acceptance.
+
 ### Assignment evidence does not match the edition profile
 
 A null `participation_capacity_id` is required for a governed active or ended
