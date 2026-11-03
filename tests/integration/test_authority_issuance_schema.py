@@ -7,6 +7,7 @@ from datetime import timedelta
 from queue import Queue
 from threading import Event
 from time import monotonic, sleep
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -23,6 +24,11 @@ from django.utils import timezone
 
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.models import AuthorityControl, AuthorityIssuance
+from maru.core.relation_schema_readiness import collect_relation_schema_fingerprints
+from maru.events.guidance_setup_readiness import (
+    GUIDANCE_SETUP_SCHEMA_RELATIONS,
+    guidance_setup_database_integrity_is_ready,
+)
 from maru.organizations.models import Organization
 from maru.organizations.representation import (
     invite_representation_controller,
@@ -39,7 +45,14 @@ from tests.factories import (
     OrganizationFactory,
     RoleBundleFactory,
 )
-from tests.support.migrations import restore_current_migration_graph
+from tests.support.migrations import (
+    flush_then_restore_current_migration_graph,
+    isolated_migration_database,
+    restore_current_migration_graph,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -49,6 +62,25 @@ pytestmark = [
 
 AUTHORIZATION_BEFORE_ISSUANCE = ("authorization", "0005_scope_v2_activation")
 AUTHORIZATION_AFTER_ISSUANCE = ("authorization", "0006_authority_issuance_schema")
+
+
+@pytest.fixture
+def isolated_issuance_downgrade_graph(transactional_db: None) -> Iterator[None]:
+    """Keep committed issuance history off the shared current schema."""
+
+    del transactional_db
+    before = collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS)
+    assert guidance_setup_database_integrity_is_ready()
+    with isolated_migration_database():
+        restore_current_migration_graph()
+        try:
+            yield
+        finally:
+            flush_then_restore_current_migration_graph()
+    assert (
+        collect_relation_schema_fingerprints(GUIDANCE_SETUP_SCHEMA_RELATIONS) == before
+    )
+    assert guidance_setup_database_integrity_is_ready()
 
 
 def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
@@ -199,6 +231,7 @@ def test_fresh_forward_and_clean_reverse_are_symmetric() -> None:
         restore_current_migration_graph()
 
 
+@pytest.mark.usefixtures("isolated_issuance_downgrade_graph")
 def test_nonempty_ledger_refuses_schema_downgrade() -> None:
     AuthorityIssuanceFactory()
 

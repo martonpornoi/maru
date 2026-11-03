@@ -34,6 +34,11 @@ rather than replace the curated summary.
 
 ### Added
 
+- A canonical Workforce-only rehearsal names four synthetic roles and the full
+  setup, invitation, assignment, Availability and planned Shift lifecycle. Its
+  dedicated source launcher and read-only before/after check preserve unrelated
+  environments and distinguish software checks from human acceptance.
+
 - Workforce-only Home can show up to five current authorized recent Shift
   outcomes with local recording times and ordinary history links. The bounded
   seven-day list preserves existing next steps and withholds all rows when it

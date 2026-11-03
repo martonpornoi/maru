@@ -95,6 +95,13 @@ fix forward or restore the database.
 
 ## Establish a Workforce-only workspace
 
+For the complete synthetic procedure, use
+[Rehearse the Workforce-only journey](workforce-only-rehearsal.md). It names the
+four actors, ordinary account invitations and acceptance, independent decisions,
+private/shared Availability, planned Shift closeout and final absence inspection.
+The summary below explains the adoption boundary; it is not a substitute for the
+step-by-step rehearsal or its recorded evidence.
+
 1. Sign in with an active platform-administrator account.
 2. Open **Platform administration → Set up a volunteer team**.
 3. Choose the highest foundation already present:
@@ -176,8 +183,8 @@ For the exact edition, verify all of the following:
 - the specialist record index stays collapsed unless the person explicitly
   asks to browse it.
 
-Use the focused integration test and browser-rehearsal instructions referenced
-by `CURRENT.md` for reproducible local evidence. Absence of rows should be
+Use the [canonical rehearsal](workforce-only-rehearsal.md) and its focused
+regressions for reproducible local evidence. Absence of rows should be
 checked by exact app/model ownership, not inferred from an empty page.
 
 ## Coexistence and data movement

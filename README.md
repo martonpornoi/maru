@@ -52,7 +52,7 @@ The repository contains these concrete starting points:
 | Area | What is available to explore |
 | --- | --- |
 | Organizer setup | A shared management shell, fictional organizations, recurring convention series, and dated editions with explicit authority. |
-| Volunteer coordination | Tested Workforce workflows for structure, positions, assignments, availability, and shifts, including a Workforce-only adoption path. |
+| Volunteer coordination | Tested Workforce workflows for structure, positions, assignments, availability, and shifts. [Rehearse the complete Workforce-only journey](docs/operations/workforce-only-rehearsal.md) with separate synthetic roles; check its recorded verification limits. |
 | Announcements | A standalone workflow for writing, independent review, manual posting records and corrections while keeping your existing website and social channels. [Try the workflow](docs/operations/announcements.md). |
 | Guides | Reviewed instructions and FAQs, approved reading and downloads, private working history and stop/resume. Try it beside Announcements in the disposable preview. |
 | Programme Operations | Implemented planning, publication, continuity, and recovery work under isolated synthetic evaluation; activation and human acceptance remain separate gates. |

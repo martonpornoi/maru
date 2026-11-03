@@ -209,8 +209,18 @@ complete history/exit,
 approved manual reconciliation, stopped-operation/restart, deliberate expansion
 and decommissioning remain separately scoped outcomes. Complete verification and
 human/operational acceptance for each; no exported file or green CI establishes
-production cutover readiness. Preserve the real #42 password boundary and #23
-accessibility matrix while this autonomous work proceeds.
+production cutover readiness. Preserve the earlier #42 human trial and #23
+accessibility matrix while independent synthetic verification proceeds.
+
+## Reproducible Workforce evaluation
+
+Issue #42's [canonical rehearsal](../operations/workforce-only-rehearsal.md)
+separates four actors and every setup-to-completion step from prepared demos.
+Its read-only baseline/final inspection checks the full unadopted model inventory
+and retained planned-work outcome. Current-source regressions and protected
+delivery are recorded in CURRENT and the PR. The original trial's recipient
+password boundary remains incomplete; neither software checks nor the tutorial
+establish two-human, representative-owner, accessibility or production acceptance.
 
 ## Recent governed Workforce outcomes
 

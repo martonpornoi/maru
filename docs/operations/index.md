@@ -44,8 +44,12 @@ or permission to use production personal data.
 - [Programme now and offline continuity](programme-onsite-continuity.md) covers
   now/next, complete run sheets, dedicated signing, independent offline trust,
   protected history and disposal; it does not authorize production activation.
-- [Hands-on tutorial](maru-hands-on-tutorial.md) follows the main synthetic
-  organization-to-edition journey.
+- [Rehearse the Workforce-only journey](workforce-only-rehearsal.md) is the
+  canonical empty-database setup-to-completion tutorial with four role sessions,
+  invitation/activation, a real-clock Shift and final absence checks. Read its
+  verification status before treating a rehearsal as complete.
+- [Historical organization-to-edition tutorial](maru-hands-on-tutorial.md) retains
+  the earlier foundation-only procedure; it is not the current Workforce guide.
 - [Clean convention onboarding](clean-convention-onboarding-walkthrough.md)
   rehearses setup without a pre-populated demo database.
 - [Empty-experience baseline](empty-experience-baseline.md) protects a known
@@ -122,6 +126,7 @@ programme-onsite-continuity
 clean-convention-onboarding-walkthrough
 empty-experience-baseline
 workforce-only-adoption-and-recovery
+workforce-only-rehearsal
 workforce-operating-home-practice
 workforce-accessibility-rehearsal
 workforce-rota-package
