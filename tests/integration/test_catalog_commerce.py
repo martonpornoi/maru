@@ -925,7 +925,7 @@ def _catalog_openapi() -> dict[str, Any]:
 
 
 def _assert_catalog_api_response(
-    response: HttpResponse, *, status: int, request_id: UUID
+    response: HttpResponse, *, status: int, request_id: UUID, suffix: str = ""
 ) -> dict[str, object]:
     assert response.status_code == status
     assert response.headers["X-Request-ID"] == str(request_id)
@@ -942,12 +942,10 @@ def _assert_catalog_api_response(
     else:
         assert response.headers["Content-Type"] == "application/json"
     schema = _catalog_openapi()
-    edition_catalog = schema["paths"][
-        "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/"
+    path = schema["paths"][
+        f"/api/v1/catalog/organizations/{{organization_id}}/editions/{{edition_id}}/{suffix}"
     ]
-    declared = edition_catalog[response.wsgi_request.method.lower()]["responses"][
-        str(status)
-    ]
+    declared = path[response.wsgi_request.method.lower()]["responses"][str(status)]
     assert set(declared["headers"]) == {"Cache-Control", "X-Request-ID"}
     content = declared["content"][response.headers["Content-Type"]]
     Draft202012Validator(
@@ -1128,6 +1126,277 @@ def test_catalog_edition_api_create_replay_preserves_atomic_evidence() -> None:
     receipt.refresh_from_db()
     assert receipt.reason == body["reason"]
     assert receipt.correlation_id == request_id
+
+
+@override_settings(ROOT_URLCONF=__name__)
+@pytest.mark.parametrize("resource", ["product", "variant"])
+def test_catalog_definition_api_creation_and_replay(resource: str) -> None:  # noqa: PLR0915
+    edition = EventEditionFactory()
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    api = APIClient()
+    api.force_authenticate(user=administrator)
+    scope = {"organization_id": edition.organization_id, "edition_id": edition.id}
+    reason = "Prepare the fictional edition merchandise."
+    catalog_result = create_catalog(
+        **scope,
+        currency="EUR",
+        actor=administrator,
+        reason=reason,
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    if resource == "product":
+        model = CatalogProduct
+        suffix = "products/"
+        url = reverse("catalog-api-products", kwargs=scope)
+        identifier = "code"
+        fields = {"code": "practice-pin", "kind": "merchandise", "name": "Practice pin"}
+        version = catalog_result.resulting_version
+        resource_scope = {"catalog_id": catalog_result.target_id}
+    else:
+        model = CatalogVariant
+        suffix = "products/{product_id}/variants/"
+        product = add_product(
+            **scope,
+            actor=administrator,
+            reason=reason,
+            expected_version=catalog_result.resulting_version,
+            idempotency_key=uuid4(),
+            correlation_id=uuid4(),
+            code="practice-pin",
+            kind="merchandise",
+            name="Practice pin",
+        )
+        url = reverse(
+            "catalog-api-variants", kwargs={**scope, "product_id": product.target_id}
+        )
+        identifier = "sku"
+        fields = {
+            "sku": "practice-pin-blue",
+            "name": "Blue",
+            "price_minor": 500,
+            "initial_stock": 20,
+            "stock_ceiling": 25,
+        }
+        version = product.resulting_version
+        resource_scope = {"product_id": product.target_id}
+
+    body = {"expected_version": version, "reason": reason, **fields}
+    key, request_id = uuid4(), uuid4()
+
+    def post(
+        payload: dict[str, object], idempotency_key: UUID, correlation: UUID
+    ) -> HttpResponse:
+        return api.post(
+            url,
+            payload,
+            format="json",
+            HTTP_IDEMPOTENCY_KEY=str(idempotency_key),
+            HTTP_X_REQUEST_ID=str(correlation),
+        )
+
+    expected = _catalog_api_evidence_counts()
+    response = post(body, key, request_id)
+    created = _assert_catalog_api_response(
+        response, status=201, request_id=request_id, suffix=suffix
+    )
+    target = model.objects.get(**resource_scope, **{identifier: fields[identifier]})
+    assert created == {
+        "target_id": str(target.id),
+        "resulting_version": version + 1,
+        "replayed": False,
+    }
+    for evidence_model in (
+        model,
+        CatalogCommandReceipt,
+        AuditEvent,
+        DomainEvent,
+        OutboxMessage,
+    ):
+        expected[evidence_model._meta.label] += 1
+    assert _catalog_api_evidence_counts() == expected
+
+    retry_id = uuid4()
+    replay = _assert_catalog_api_response(
+        post(body, key, retry_id), status=200, request_id=retry_id, suffix=suffix
+    )
+    assert replay == {**created, "replayed": True}
+    assert _catalog_api_evidence_counts() == expected
+    # Advance the aggregate to distinguish the original receipt from current state.
+    other = {
+        **body,
+        identifier: "second-practice-item",
+        "expected_version": version + 1,
+    }
+    advance_id = uuid4()
+    advanced = _assert_catalog_api_response(
+        post(other, uuid4(), advance_id),
+        status=201,
+        request_id=advance_id,
+        suffix=suffix,
+    )
+    assert advanced["resulting_version"] == version + 2
+    expected = _catalog_api_evidence_counts()
+
+    retry_id = uuid4()
+    retry = {**body, "expected_version": version + 2, "reason": "Retry the request."}
+    assert _assert_catalog_api_response(
+        post(retry, key, retry_id), status=200, request_id=retry_id, suffix=suffix
+    ) == {**created, "replayed": True}
+    invalid = [
+        (
+            {**body, identifier: "stale-practice-item"},
+            uuid4(),
+            {"non_field_errors": ["The catalog changed; reload before retrying."]},
+        ),
+        (
+            {**body, "name": "Changed intent"},
+            key,
+            {
+                "non_field_errors": [
+                    "The idempotency key belongs to a different catalog command."
+                ]
+            },
+        ),
+        (
+            {**body, "organization_id": str(edition.organization_id)},
+            uuid4(),
+            ["Remove unsupported input fields: organization_id."],
+        ),
+    ]
+    if resource == "variant":
+        incomplete_stock = {
+            name: value for name, value in body.items() if name != "stock_ceiling"
+        }
+        invalid.append(
+            (
+                incomplete_stock,
+                uuid4(),
+                {
+                    "stock": [
+                        "Supply both initial_stock and stock_ceiling, or omit both."
+                    ]
+                },
+            )
+        )
+    for invalid_body, invalid_key, errors in invalid:
+        invalid_id = uuid4()
+        problem = _assert_catalog_api_response(
+            post(invalid_body, invalid_key, invalid_id),
+            status=400,
+            request_id=invalid_id,
+            suffix=suffix,
+        )
+        assert problem["errors"] == errors
+    assert _catalog_api_evidence_counts() == expected
+    receipt = CatalogCommandReceipt.objects.get(
+        catalog_id=catalog_result.target_id, idempotency_key=key, actor=administrator
+    )
+    assert (receipt.reason, receipt.correlation_id, receipt.result_id) == (
+        reason,
+        request_id,
+        target.id,
+    )
+    assert receipt.resulting_version == version + 1
+    assert (
+        AuditEvent.objects.get(
+            operation=f"catalog.{resource}.add", target_id=target.id
+        ).correlation_id
+        == request_id
+    )
+    event = DomainEvent.objects.get(
+        event_name="catalog.definition.changed.v1",
+        aggregate_id=catalog_result.target_id,
+        aggregate_version=version + 1,
+    )
+    assert event.correlation_id == request_id
+    assert reason not in json.dumps(event.payload)
+
+
+@override_settings(ROOT_URLCONF=__name__)
+def test_catalog_definition_api_denial_and_scoped_absence() -> None:
+    edition = EventEditionFactory()
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    foreign = _active_catalog()
+    api = APIClient()
+    scope = {"organization_id": edition.organization_id, "edition_id": edition.id}
+    product_url = reverse("catalog-api-products", kwargs=scope)
+    foreign_product_url = reverse(
+        "catalog-api-variants", kwargs={**scope, "product_id": foreign.product.id}
+    )
+    unknown_product_url = reverse(
+        "catalog-api-variants", kwargs={**scope, "product_id": uuid4()}
+    )
+    variant_suffix = "products/{product_id}/variants/"
+    api.force_authenticate(user=AccountFactory())
+    before = _catalog_api_evidence_counts()
+    for url, suffix in (
+        (product_url, "products/"),
+        (foreign_product_url, variant_suffix),
+    ):
+        request_id = uuid4()
+        response = api.post(
+            url, "{", content_type="application/json", HTTP_X_REQUEST_ID=str(request_id)
+        )
+        problem = _assert_catalog_api_response(
+            response, status=403, request_id=request_id, suffix=suffix
+        )
+        assert "errors" not in problem
+    assert _catalog_api_evidence_counts() == before
+
+    api.force_authenticate(user=administrator)
+    request_id = uuid4()
+    missing_catalog = api.post(
+        product_url,
+        {
+            "expected_version": 1,
+            "reason": "Prepare a practice product.",
+            "code": "practice-product",
+            "kind": "merchandise",
+            "name": "Practice product",
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+        HTTP_X_REQUEST_ID=str(request_id),
+    )
+    _assert_catalog_api_response(
+        missing_catalog, status=404, request_id=request_id, suffix="products/"
+    )
+    assert _catalog_api_evidence_counts() == before
+
+    catalog = create_catalog(
+        **scope,
+        currency="EUR",
+        actor=administrator,
+        reason="Prepare a practice catalog.",
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+    )
+    before = _catalog_api_evidence_counts()
+    problems = []
+    for url in (foreign_product_url, unknown_product_url):
+        request_id = uuid4()
+        response = api.post(
+            url,
+            {
+                "expected_version": catalog.resulting_version,
+                "reason": "Prepare a practice variant.",
+                "sku": "practice-option",
+                "name": "Practice option",
+                "price_minor": 500,
+            },
+            format="json",
+            HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+            HTTP_X_REQUEST_ID=str(request_id),
+        )
+        problem = _assert_catalog_api_response(
+            response, status=404, request_id=request_id, suffix=variant_suffix
+        )
+        problems.append(
+            {name: value for name, value in problem.items() if name != "request_id"}
+        )
+    assert problems[0] == problems[1]
+    assert _catalog_api_evidence_counts() == before
 
 
 @override_settings(ROOT_URLCONF=__name__)

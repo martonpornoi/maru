@@ -1,11 +1,23 @@
 # Current project state
 
-Last updated: 2026-11-03
-Phase: Edition Catalog API reference conformance (#36).
+Last updated: 2026-11-04
+Phase: Catalog API reference conformance (#36).
+
+## Catalog product and variant creation reference — 4 November 2026
+
+This bounded INT-001 increment documents the existing product and variant
+creation commands. The OpenAPI reference and generated TypeScript describe
+new and replayed receipts, invalid and conflicting requests, denied access,
+and unavailable catalogs or parent products. All 43 focused Catalog
+PostgreSQL tests and 18 Catalog and Venues API unit tests passed. The native
+cases compare HTTP responses with the schema and check that replay and
+rejection preserve the original command evidence.
+See the [Catalog API contract](../modules/catalog-api.md#product-and-variant-creation-responses)
+and the [verification checkpoint](../checkpoints/2026-11-04-catalog-product-variant-openapi-contract.md).
 
 ## Edition Catalog API reference — 3 November 2026
 
-This bounded INT-001 increment documents the edition Catalog read and draft
+The previous INT-001 increment documents the edition Catalog read and draft
 creation operations. OpenAPI and the generated TypeScript declarations now
 describe verified success and problem responses, correlation and cache headers,
 and fictional examples for a catalog read, draft creation and receipt replay.
