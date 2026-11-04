@@ -106,6 +106,11 @@ def _assert_required_idempotency(operation: dict[str, object]) -> None:
     }
 
 
+_EDITION_CATALOG_PATH = (
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/"
+)
+
+
 def test_catalog_openapi_types_all_eleven_operations_and_requires_authentication() -> (
     None
 ):
@@ -137,11 +142,59 @@ def test_catalog_openapi_types_all_eleven_operations_and_requires_authentication
     for operation in mutations:
         responses = operation["responses"]
         assert isinstance(responses, dict)
-        assert set(responses) == (
+        expected = (
             {"200", "201"}
             if operation["operationId"] in create_operation_ids
             else {"200"}
         )
+        if operation["operationId"] == "catalog_create_edition_catalog":
+            expected.update({"400", "403"})
+        assert set(responses) == expected
+
+
+@pytest.mark.parametrize(
+    ("method", "successes", "problems"),
+    [("get", {"200"}, {"400", "403", "404"}), ("post", {"200", "201"}, {"400", "403"})],
+)
+def test_edition_catalog_schema_explains_verified_responses(
+    method: str, successes: set[str], problems: set[str]
+) -> None:
+    responses = _operation(_EDITION_CATALOG_PATH, method)["responses"]
+    assert isinstance(responses, dict)
+    assert set(responses) == successes | problems
+    for status_code, response in responses.items():
+        assert response["description"]
+        headers = response["headers"]
+        assert headers["Cache-Control"]["schema"] == {"type": "string"}
+        assert headers["X-Request-ID"]["schema"] == {
+            "type": "string",
+            "format": "uuid",
+        }
+        assert all(header["required"] for header in headers.values())
+        if status_code in problems:
+            assert response["content"] == {
+                "application/problem+json": {
+                    "schema": {"$ref": "#/components/schemas/CatalogProblem"},
+                },
+            }
+        else:
+            assert response["content"]["application/json"]["examples"]
+
+
+def test_edition_catalog_schema_examples_distinguish_creation_from_replay() -> None:
+    operation = _operation(_EDITION_CATALOG_PATH, "post")
+    request_body = operation["requestBody"]
+    assert isinstance(request_body, dict)
+    (request_example,) = request_body["content"]["application/json"][
+        "examples"
+    ].values()
+    assert set(request_example["value"]) == {"currency", "reason"}
+    responses = operation["responses"]
+    assert isinstance(responses, dict)
+    (created,) = responses["201"]["content"]["application/json"]["examples"].values()
+    (replay,) = responses["200"]["content"]["application/json"]["examples"].values()
+    assert created["value"]["replayed"] is False
+    assert replay["value"] == {**created["value"], "replayed": True}
 
 
 def test_catalog_openapi_documents_the_finite_stock_pair() -> None:

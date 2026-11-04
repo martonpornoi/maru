@@ -14,7 +14,12 @@ from django.core.exceptions import (
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework import serializers, status
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
@@ -38,6 +43,7 @@ from maru.catalog.serializers import (
     CatalogOrderListSerializer,
     CatalogPaymentCreateSerializer,
     CatalogPaymentReconcileSerializer,
+    CatalogProblemSerializer,
     CatalogProductAddSerializer,
     CatalogStockAdjustSerializer,
     CatalogVariantAddSerializer,
@@ -85,6 +91,32 @@ _IDEMPOTENCY_PARAMETER = OpenApiParameter(
     description=(
         "Canonical lower-case hyphenated UUID. Exact retries return HTTP 200; "
         "new resources return HTTP 201. The key is not accepted in JSON."
+    ),
+)
+_PROBLEM_MEDIA_TYPE = "application/problem+json"
+_EDITION_CATALOG_HEADERS = [
+    OpenApiParameter(
+        name="Cache-Control",
+        type=OpenApiTypes.STR,
+        location=OpenApiParameter.HEADER,
+        required=True,
+        response=True,
+        description="Includes private and no-store directives for this response.",
+    ),
+    OpenApiParameter(
+        name="X-Request-ID",
+        type=OpenApiTypes.UUID,
+        location=OpenApiParameter.HEADER,
+        required=True,
+        response=True,
+        description="Correlation ID for this response and its recorded evidence.",
+    ),
+]
+_EDITION_CATALOG_DENIED = OpenApiResponse(
+    response=CatalogProblemSerializer,
+    description=(
+        "The operation is unavailable to the caller for the requested scope. "
+        "The response does not disclose whether a protected catalog exists."
     ),
 )
 
@@ -307,7 +339,33 @@ class CatalogDetailApi(PrivateCatalogAPIView):
 
     @extend_schema(
         operation_id="catalog_retrieve_edition_catalog",
-        responses={200: CatalogDetailSerializer},
+        description=(
+            "Read the products available to the signed-in person for the specified "
+            "organization and edition. The operation requires Catalog self-service "
+            "access to that scope and accepts no query parameters."
+        ),
+        parameters=_EDITION_CATALOG_HEADERS,
+        responses={
+            200: OpenApiResponse(
+                response=CatalogDetailSerializer,
+                description="Catalog version, currency and available products.",
+                examples=[
+                    OpenApiExample(
+                        "Catalog with no available products",
+                        value={"catalog_version": 1, "currency": "EUR", "products": []},
+                    ),
+                ],
+            ),
+            (400, _PROBLEM_MEDIA_TYPE): OpenApiResponse(
+                response=CatalogProblemSerializer,
+                description="The request contains an unsupported query parameter.",
+            ),
+            (403, _PROBLEM_MEDIA_TYPE): _EDITION_CATALOG_DENIED,
+            (404, _PROBLEM_MEDIA_TYPE): OpenApiResponse(
+                response=CatalogProblemSerializer,
+                description="Catalog unavailable after scope authorization.",
+            ),
+        },
     )
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
@@ -353,11 +411,62 @@ class CatalogDetailApi(PrivateCatalogAPIView):
 
     @extend_schema(
         operation_id="catalog_create_edition_catalog",
-        parameters=[_IDEMPOTENCY_PARAMETER],
+        description=(
+            "Create the single draft catalog for the specified edition. The caller "
+            "needs Catalog management authority in that organization and edition. "
+            "Reusing the key with the same actor, edition and normalized currency "
+            "returns the original receipt and creation version. The original reason "
+            "is retained."
+        ),
+        parameters=[_IDEMPOTENCY_PARAMETER, *_EDITION_CATALOG_HEADERS],
         request=CatalogCreateSerializer,
+        examples=[
+            OpenApiExample(
+                "Create a fictional draft catalog",
+                value={
+                    "currency": "EUR",
+                    "reason": "Prepare the practice edition catalog.",
+                },
+                request_only=True,
+            ),
+        ],
         responses={
-            200: CatalogCommandResultSerializer,
-            201: CatalogCommandResultSerializer,
+            200: OpenApiResponse(
+                response=CatalogCommandResultSerializer,
+                description="The original creation receipt for a matching retry.",
+                examples=[
+                    OpenApiExample(
+                        "Replay the original receipt",
+                        value={
+                            "target_id": "c0a10000-0000-4000-8000-000000000001",
+                            "resulting_version": 1,
+                            "replayed": True,
+                        },
+                    ),
+                ],
+            ),
+            201: OpenApiResponse(
+                response=CatalogCommandResultSerializer,
+                description="The receipt for a newly created draft catalog.",
+                examples=[
+                    OpenApiExample(
+                        "New draft catalog receipt",
+                        value={
+                            "target_id": "c0a10000-0000-4000-8000-000000000001",
+                            "resulting_version": 1,
+                            "replayed": False,
+                        },
+                    ),
+                ],
+            ),
+            (400, _PROBLEM_MEDIA_TYPE): OpenApiResponse(
+                response=CatalogProblemSerializer,
+                description=(
+                    "Invalid query, JSON or idempotency key, or a conflict with the "
+                    "edition's existing catalog or creation receipt."
+                ),
+            ),
+            (403, _PROBLEM_MEDIA_TYPE): _EDITION_CATALOG_DENIED,
         },
     )
     def post(

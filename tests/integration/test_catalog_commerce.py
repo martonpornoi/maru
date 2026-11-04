@@ -6,6 +6,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import cache
 from queue import Queue
 from threading import Event
 from time import monotonic
@@ -18,6 +19,8 @@ from django.db import DatabaseError, close_old_connections, connection, transact
 from django.test import Client, override_settings
 from django.urls import include, path, reverse
 from django.utils import timezone
+from drf_spectacular.generators import SchemaGenerator
+from jsonschema import Draft202012Validator, FormatChecker
 from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
@@ -47,6 +50,7 @@ from maru.catalog.services import (
     create_catalog,
     place_order,
 )
+from maru.catalog.urls import urlpatterns as catalog_urlpatterns
 from maru.charities.bindings import ensure_charity_selection_binding
 from maru.charities.models import CharityPartner, CharitySelection
 from maru.charities.writer_boundary import charity_writer
@@ -58,6 +62,8 @@ from tests.factories import AccountFactory, EventEditionFactory
 from tests.workforce_helpers import create_department_for_test
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from django.http import HttpResponse
 
 urlpatterns = [path("", include("maru.catalog.urls")), *platform_urlpatterns]
@@ -911,6 +917,13 @@ def _catalog_api_evidence_counts() -> dict[str, int]:
     }
 
 
+@cache
+def _catalog_openapi() -> dict[str, Any]:
+    return SchemaGenerator(patterns=catalog_urlpatterns).get_schema(
+        request=None, public=True
+    )
+
+
 def _assert_catalog_api_response(
     response: HttpResponse, *, status: int, request_id: UUID
 ) -> dict[str, object]:
@@ -928,6 +941,19 @@ def _assert_catalog_api_response(
         assert payload["request_id"] == str(request_id)
     else:
         assert response.headers["Content-Type"] == "application/json"
+    schema = _catalog_openapi()
+    edition_catalog = schema["paths"][
+        "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/"
+    ]
+    declared = edition_catalog[response.wsgi_request.method.lower()]["responses"][
+        str(status)
+    ]
+    assert set(declared["headers"]) == {"Cache-Control", "X-Request-ID"}
+    content = declared["content"][response.headers["Content-Type"]]
+    Draft202012Validator(
+        {"components": schema["components"], **content["schema"]},
+        format_checker=FormatChecker(),
+    ).validate(payload)
     return payload
 
 
