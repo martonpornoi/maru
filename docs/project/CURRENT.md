@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-11-03
+Last updated: 2026-11-04
 Phase: Edition Catalog API reference conformance (#36).
 
 ## Edition Catalog API reference — 3 November 2026
@@ -17,6 +17,22 @@ and the [verification checkpoint](../checkpoints/2026-11-03-catalog-edition-open
 Issue #36 remains open. Read completeness, read-audit policy, dependency
 failure handling and broader compatibility work require separate review under
 the [Catalog conformance plan](../development/catalog-edition-api-conformance-plan.md).
+
+### Catalog route and read-cost review — 4 November 2026
+
+The mounted Django routes, generated OpenAPI, checked-in schema, TypeScript
+operation mappings and module route list agree on 11 operations across nine
+paths. The 22 focused schema tests passed. Handled problem responses are
+documented for two operations on protected main and four on the reviewed
+candidate in [PR #241](https://github.com/martonpornoi/maru/pull/241).
+
+On disposable PostgreSQL, the populated catalog detail used five statements for
+stockless variants and two more reads per finite-stock variant. The populated
+own-orders and audited activity reads held at six and eight statements across
+the measured cases. The [checkpoint](../checkpoints/2026-11-04-catalog-route-and-read-cost-baseline.md)
+records the fixtures, counts and limits. A batched finite-stock read is the
+smallest technical follow-up once its stock and snapshot expectations are
+defined.
 
 ## Previous Workforce verification — 3 November 2026
 
