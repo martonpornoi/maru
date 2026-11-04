@@ -26,13 +26,15 @@ paths. The 22 focused schema tests passed. Handled problem responses are
 documented for two operations on protected main and four on the reviewed
 candidate in [PR #241](https://github.com/martonpornoi/maru/pull/241).
 
-On disposable PostgreSQL, the populated catalog detail used five statements for
-stockless variants and two more reads per finite-stock variant. The populated
-own-orders and audited activity reads held at six and eight statements across
-the measured cases. The [checkpoint](../checkpoints/2026-11-04-catalog-route-and-read-cost-baseline.md)
-records the fixtures, counts and limits. A batched finite-stock read is the
-smallest technical follow-up once its stock and snapshot expectations are
-defined.
+The [query-cost baseline](../checkpoints/2026-11-04-catalog-route-and-read-cost-baseline.md)
+found two reads per finite-stock variant. The attendee Catalog API and page now
+derive stock and commitments in the scoped variant query. The new native case
+uses five SQL statements with either one or twelve variants and verifies the
+latest adjustment, pending and paid quantities, zero stock and stockless
+output. The 41 Catalog PostgreSQL cases and 119 focused unit cases passed.
+See the [stock projection checkpoint](../checkpoints/2026-11-04-catalog-batched-stock-projection.md).
+Read completeness and consistency across the full response remain separate
+decisions under #36.
 
 ## Previous Workforce verification — 3 November 2026
 

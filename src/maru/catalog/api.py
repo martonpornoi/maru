@@ -61,12 +61,12 @@ from maru.catalog.services import (
     authorize_catalog_payment_api_scope,
     authorize_catalog_self_api_scope,
     available_products_for_actor,
-    available_stock,
     catalog_activity,
     create_catalog,
     create_payment_intent,
     own_orders,
     place_order,
+    projected_available_stock,
     reconcile_payment,
 )
 from maru.core.api_input import reject_unknown_fields
@@ -252,7 +252,7 @@ def _variant_payload(variant: CatalogVariant) -> dict[str, object]:
         "price_minor": variant.price_minor,
         "currency": variant.currency,
         "stock_limited": variant.is_stock_limited,
-        "available_stock": available_stock(variant),
+        "available_stock": projected_available_stock(variant),
         "preorder_allowed": variant.product.preorder_allowed,
     }
 
