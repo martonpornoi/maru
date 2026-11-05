@@ -3,6 +3,39 @@
 Last updated: 2026-11-05
 Phase: Catalog API reference conformance (#36).
 
+## Catalog protected delivery — 5 November 2026
+
+[PR #241](https://github.com/martonpornoi/maru/pull/241) delivered the product
+and variant reference through protected squash
+`f8510bcf01994bd76e67af56e3b4bdcbc189d60d`. Its tree matched the certified
+candidate, and the clean local main was fetched and fast-forwarded with
+local, remote and GitHub equality verified.
+[PR #242](https://github.com/martonpornoi/maru/pull/242) then delivered the
+batched stock projection through protected squash
+`8c243d8d88f1973704f93105b8b83f58146f4daf`. Its tree matched the independently
+verified candidate and its sole parent was the protected #241 result. The
+designated clean main was fetched and fast-forwarded with local, origin,
+remote and GitHub equality verified.
+
+The combined read-reference increment in [PR #243](https://github.com/martonpornoi/maru/pull/243)
+retains both delivered outcomes. Its full exact-head local and hosted acceptance
+is tracked in that PR; the [review checkpoint](../checkpoints/2026-11-05-catalog-protected-review-and-read-reference.md)
+records scope and focused feedback. The next #36 work is the remaining handled
+response contracts and the documented completeness, consistency, audit,
+dependency-failure and compatibility decisions.
+
+## Catalog product and variant creation reference — 4 November 2026
+
+This bounded INT-001 increment documents the existing product and variant
+creation commands. The OpenAPI reference and generated TypeScript describe
+new and replayed receipts, invalid and conflicting requests, denied access,
+and unavailable catalogs or parent products. All 43 focused Catalog
+PostgreSQL tests and 18 Catalog and Venues API unit tests passed. The native
+cases compare HTTP responses with the schema and check that replay and
+rejection preserve the original command evidence.
+See the [Catalog API contract](../modules/catalog-api.md#product-and-variant-creation-responses)
+and the [verification checkpoint](../checkpoints/2026-11-04-catalog-product-variant-openapi-contract.md).
+
 ## Catalog order history and activity reference — 5 November 2026
 
 This INT-001 increment documents the observed order-history and staff-activity
@@ -10,7 +43,8 @@ responses. Order history returns only the caller's orders and can return an
 empty list without a catalog. Staff activity is scoped to an authorized edition
 and records its read audit before unsupported-query rejection. The native
 matrix checks those existing effects against the generated response schemas.
-The 41 focused Catalog PostgreSQL tests and 121 focused unit tests passed.
+The combined source passed 136 focused unit checks and documentation
+validation. PR #243 tracks complete acceptance for its final integrated head.
 See the [Catalog API contract](../modules/catalog-api.md#order-history-and-activity-responses)
 and [checkpoint](../checkpoints/2026-11-05-catalog-read-openapi-contract.md).
 
@@ -31,6 +65,23 @@ and the [verification checkpoint](../checkpoints/2026-11-03-catalog-edition-open
 Issue #36 remains open. Read completeness, read-audit policy, dependency
 failure handling and broader compatibility work require separate review under
 the [Catalog conformance plan](../development/catalog-edition-api-conformance-plan.md).
+
+### Catalog route and read-cost review — 4 November 2026
+
+The mounted Django routes, generated OpenAPI, checked-in schema, TypeScript
+operation mappings and module route list agree on 11 operations across nine
+paths. The 22 focused schema tests passed. Handled problem responses are
+documented for six operations in the combined Catalog reference.
+
+The [query-cost baseline](../checkpoints/2026-11-04-catalog-route-and-read-cost-baseline.md)
+found two reads per finite-stock variant. The attendee Catalog API and page now
+derive stock and commitments in the scoped variant query. The new native case
+uses five SQL statements with either one or twelve variants and verifies the
+latest adjustment, pending and paid quantities, zero stock and stockless
+output. The 41 Catalog PostgreSQL cases and 119 focused unit cases passed.
+See the [stock projection checkpoint](../checkpoints/2026-11-04-catalog-batched-stock-projection.md).
+Read completeness and consistency across the full response remain separate
+decisions under #36.
 
 ## Previous Workforce verification — 3 November 2026
 

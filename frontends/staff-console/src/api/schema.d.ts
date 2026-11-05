@@ -193,25 +193,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description Add the product.
-         *
-         *     Keep authenticated catalog data and safe errors out of shared caches.
-         *
-         *     Parameters
-         *     ----------
-         *     request : Request
-         *         The incoming HTTP request and authenticated principal context.
-         *     organization_id : UUID
-         *         The organization identifier that owns the requested resource.
-         *     edition_id : UUID
-         *         The event edition identifier that scopes the operation.
-         *
-         *     Returns
-         *     -------
-         *     Response
-         *         The HTTP response for the requested operation.
-         */
+        /** @description Add a product to the organization's draft edition catalog. This operation requires Catalog management authority and accepts no query parameters. Use the current catalog version for a new command. A matching retry returns the original creation receipt. */
         post: operations["catalog_add_product"];
         delete?: never;
         options?: never;
@@ -228,27 +210,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description Add the variant.
-         *
-         *     Keep authenticated catalog data and safe errors out of shared caches.
-         *
-         *     Parameters
-         *     ----------
-         *     request : Request
-         *         The incoming HTTP request and authenticated principal context.
-         *     organization_id : UUID
-         *         The organization identifier that owns the requested resource.
-         *     edition_id : UUID
-         *         The event edition identifier that scopes the operation.
-         *     product_id : UUID
-         *         The product identifier within the requested scope.
-         *
-         *     Returns
-         *     -------
-         *     Response
-         *         The HTTP response for the requested operation.
-         */
+        /** @description Add a variant to a product in the organization's draft edition catalog. This operation requires Catalog management authority and accepts no query parameters. Use the current catalog version for a new command. Supply both stock fields for finite stock, or omit both for stockless variants. A matching retry returns the original creation receipt. */
         post: operations["catalog_add_variant"];
         delete?: never;
         options?: never;
@@ -14584,20 +14546,69 @@ export interface operations {
             };
         };
         responses: {
+            /** @description The original product receipt for a matching retry. */
             200: {
                 headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogCommandResult"];
                 };
             };
+            /** @description The receipt for a newly created product. */
             201: {
                 headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+            /** @description Invalid query, JSON or idempotency key, a stale catalog version, a catalog that is no longer a draft, or conflicting command intent. */
+            400: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description The operation is unavailable to the caller for the requested scope. The response does not disclose whether a protected catalog exists. */
+            403: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description Catalog unavailable after scope authorization. */
+            404: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
                 };
             };
         };
@@ -14622,20 +14633,69 @@ export interface operations {
             };
         };
         responses: {
+            /** @description The original variant receipt for a matching retry. */
             200: {
                 headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogCommandResult"];
                 };
             };
+            /** @description The receipt for a newly created variant. */
             201: {
                 headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+            /** @description Invalid query, JSON or idempotency key, a stale catalog version, a catalog that is no longer a draft, or conflicting command intent. */
+            400: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description The operation is unavailable to the caller for the requested scope. The response does not disclose whether a protected catalog exists. */
+            403: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description Catalog or parent product unavailable in the authorized edition. */
+            404: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
                 };
             };
         };

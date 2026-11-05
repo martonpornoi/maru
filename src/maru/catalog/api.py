@@ -61,12 +61,12 @@ from maru.catalog.services import (
     authorize_catalog_payment_api_scope,
     authorize_catalog_self_api_scope,
     available_products_for_actor,
-    available_stock,
     catalog_activity,
     create_catalog,
     create_payment_intent,
     own_orders,
     place_order,
+    projected_available_stock,
     reconcile_payment,
 )
 from maru.core.api_input import reject_unknown_fields
@@ -117,6 +117,13 @@ _CATALOG_ACCESS_DENIED = OpenApiResponse(
     description=(
         "The operation is unavailable to the caller for the requested scope. "
         "The response does not disclose whether a protected catalog exists."
+    ),
+)
+_DRAFT_CATALOG_COMMAND_INVALID = OpenApiResponse(
+    response=CatalogProblemSerializer,
+    description=(
+        "Invalid query, JSON or idempotency key, a stale catalog version, "
+        "a catalog that is no longer a draft, or conflicting command intent."
     ),
 )
 
@@ -252,7 +259,7 @@ def _variant_payload(variant: CatalogVariant) -> dict[str, object]:
         "price_minor": variant.price_minor,
         "currency": variant.currency,
         "stock_limited": variant.is_stock_limited,
-        "available_stock": available_stock(variant),
+        "available_stock": projected_available_stock(variant),
         "preorder_allowed": variant.product.preorder_allowed,
     }
 
@@ -516,11 +523,62 @@ class CatalogProductCollectionApi(PrivateCatalogAPIView):
 
     @extend_schema(
         operation_id="catalog_add_product",
-        parameters=[_IDEMPOTENCY_PARAMETER],
+        description=(
+            "Add a product to the organization's draft edition catalog. This "
+            "operation requires Catalog management authority and accepts no query "
+            "parameters. Use the current catalog version for a new command. A "
+            "matching retry returns the original creation receipt."
+        ),
+        parameters=[_IDEMPOTENCY_PARAMETER, *_CATALOG_RESPONSE_HEADERS],
         request=CatalogProductAddSerializer,
+        examples=[
+            OpenApiExample(
+                "Add a convention merchandise product",
+                value={
+                    "expected_version": 1,
+                    "reason": "Prepare the practice edition merchandise.",
+                    "code": "practice-pin",
+                    "kind": "merchandise",
+                    "name": "Practice edition pin",
+                },
+                request_only=True,
+            ),
+        ],
         responses={
-            200: CatalogCommandResultSerializer,
-            201: CatalogCommandResultSerializer,
+            200: OpenApiResponse(
+                response=CatalogCommandResultSerializer,
+                description="The original product receipt for a matching retry.",
+                examples=[
+                    OpenApiExample(
+                        "Replay the original product receipt",
+                        value={
+                            "target_id": "c0a10000-0000-4000-8000-000000000002",
+                            "resulting_version": 2,
+                            "replayed": True,
+                        },
+                    ),
+                ],
+            ),
+            201: OpenApiResponse(
+                response=CatalogCommandResultSerializer,
+                description="The receipt for a newly created product.",
+                examples=[
+                    OpenApiExample(
+                        "New product receipt",
+                        value={
+                            "target_id": "c0a10000-0000-4000-8000-000000000002",
+                            "resulting_version": 2,
+                            "replayed": False,
+                        },
+                    ),
+                ],
+            ),
+            (400, _PROBLEM_MEDIA_TYPE): _DRAFT_CATALOG_COMMAND_INVALID,
+            (403, _PROBLEM_MEDIA_TYPE): _CATALOG_ACCESS_DENIED,
+            (404, _PROBLEM_MEDIA_TYPE): OpenApiResponse(
+                response=CatalogProblemSerializer,
+                description="Catalog unavailable after scope authorization.",
+            ),
         },
     )
     def post(
@@ -570,11 +628,67 @@ class CatalogVariantCollectionApi(PrivateCatalogAPIView):
 
     @extend_schema(
         operation_id="catalog_add_variant",
-        parameters=[_IDEMPOTENCY_PARAMETER],
+        description=(
+            "Add a variant to a product in the organization's draft edition catalog. "
+            "This operation requires Catalog management authority and accepts no "
+            "query parameters. Use the current catalog version for a new command. "
+            "Supply both stock fields for finite stock, or omit both for stockless "
+            "variants. A matching retry returns the original creation receipt."
+        ),
+        parameters=[_IDEMPOTENCY_PARAMETER, *_CATALOG_RESPONSE_HEADERS],
         request=CatalogVariantAddSerializer,
+        examples=[
+            OpenApiExample(
+                "Add a finite-stock variant",
+                value={
+                    "expected_version": 2,
+                    "reason": "Prepare the blue pin option for pickup.",
+                    "sku": "practice-pin-blue",
+                    "name": "Blue",
+                    "price_minor": 500,
+                    "initial_stock": 20,
+                    "stock_ceiling": 25,
+                },
+                request_only=True,
+            ),
+        ],
         responses={
-            200: CatalogCommandResultSerializer,
-            201: CatalogCommandResultSerializer,
+            200: OpenApiResponse(
+                response=CatalogCommandResultSerializer,
+                description="The original variant receipt for a matching retry.",
+                examples=[
+                    OpenApiExample(
+                        "Replay the original variant receipt",
+                        value={
+                            "target_id": "c0a10000-0000-4000-8000-000000000003",
+                            "resulting_version": 3,
+                            "replayed": True,
+                        },
+                    ),
+                ],
+            ),
+            201: OpenApiResponse(
+                response=CatalogCommandResultSerializer,
+                description="The receipt for a newly created variant.",
+                examples=[
+                    OpenApiExample(
+                        "New variant receipt",
+                        value={
+                            "target_id": "c0a10000-0000-4000-8000-000000000003",
+                            "resulting_version": 3,
+                            "replayed": False,
+                        },
+                    ),
+                ],
+            ),
+            (400, _PROBLEM_MEDIA_TYPE): _DRAFT_CATALOG_COMMAND_INVALID,
+            (403, _PROBLEM_MEDIA_TYPE): _CATALOG_ACCESS_DENIED,
+            (404, _PROBLEM_MEDIA_TYPE): OpenApiResponse(
+                response=CatalogProblemSerializer,
+                description=(
+                    "Catalog or parent product unavailable in the authorized edition."
+                ),
+            ),
         },
     )
     def post(

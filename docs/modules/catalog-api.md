@@ -1,7 +1,7 @@
 # Catalog API contract
 
 Status: mounted versioned adapter contract
-Last updated: 2026-11-03
+Last updated: 2026-11-05
 
 The [dated edition GET/POST review](../development/catalog-edition-api-contract-review.md)
 records exact observed behavior, authentication modes, normalization, retry identity
@@ -44,6 +44,12 @@ Product input distinguishes `merchandise`, `donation`, and `supporter`, plus
 requires concrete `initial_stock` and `stock_ceiling` values together; stockless
 variants omit both fields. Supplying only one field or JSON null is invalid.
 
+In the attendee catalog, finite availability uses the latest stock adjustment
+or the initial stock, less quantities on payment-pending and paid orders, with
+a floor of zero. Stockless variants return `null`. The API and attendee page
+derive both stock inputs in their scoped variant query. Order placement still
+checks current stock under the command's existing locks.
+
 Order creation accepts one to fifty strict `{variant_id, quantity}` objects and returns
 the target order plus resulting catalog version. The service snapshots the
 current product, variant, beneficiary, price, and fulfilment values under lock.
@@ -78,6 +84,28 @@ documented statuses, media types, headers and body schemas against actual
 responses. The [conformance plan](../development/catalog-edition-api-conformance-plan.md)
 tracks separate decisions about read completeness, read-audit policy and
 dependency failures.
+
+## Product and variant creation responses
+
+Both creation routes require Catalog management authority for the requested
+organization and edition. A new command requires a draft catalog and its
+current version. The variant route also requires a product in that catalog.
+
+| Status | Meaning |
+| --- | --- |
+| `201` | The product or variant was created. The receipt gives its ID and the resulting catalog version. |
+| `200` | The key matched an existing receipt for the same actor, catalog, operation and creation intent. The response gives the original target and version, with `replayed` set to `true`. |
+| `400` | The request is invalid, the version is stale, the catalog is out of draft, or the key already belongs to a different command. |
+| `403` | The caller lacks access to the requested scope. The adapter checks scope before parsing the body. |
+| `404` | The catalog is unavailable in the authorized edition, or the variant's parent product is unavailable in that catalog. A foreign product receives the same response as an unknown product. |
+
+The documented responses include the same private cache and correlation
+headers as the edition routes. Handled errors use `application/problem+json`.
+The reference includes fictional examples for a merchandise product and a
+finite-stock variant. A matching retry preserves the original receipt and
+reason even if the current version has advanced or the retry supplies a
+different valid reason. Clients should use the original payload and key when
+retrying the same command.
 
 ## Order-history and activity responses
 

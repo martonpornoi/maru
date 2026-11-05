@@ -22,6 +22,11 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Attendee Catalog availability reads use fewer database round trips as finite-
+  stock options are added, preserving stockless and finite availability values.
+- The Catalog API reference documents product and variant creation, including
+  how to recognize a replayed receipt, a stale catalog version or an unavailable
+  parent product.
 - The edition Catalog API reference documents verified error responses, response
   headers and the distinction between new drafts and replayed creation receipts.
 - Organization lists expose their creation action. Volunteer setup uses one

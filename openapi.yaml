@@ -729,24 +729,10 @@ paths:
   /api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/products/:
     post:
       operationId: catalog_add_product
-      description: |-
-        Add the product.
-
-        Keep authenticated catalog data and safe errors out of shared caches.
-
-        Parameters
-        ----------
-        request : Request
-            The incoming HTTP request and authenticated principal context.
-        organization_id : UUID
-            The organization identifier that owns the requested resource.
-        edition_id : UUID
-            The event edition identifier that scopes the operation.
-
-        Returns
-        -------
-        Response
-            The HTTP response for the requested operation.
+      description: Add a product to the organization's draft edition catalog. This
+        operation requires Catalog management authority and accepts no query parameters.
+        Use the current catalog version for a new command. A matching retry returns
+        the original creation receipt.
       parameters:
       - in: header
         name: Idempotency-Key
@@ -778,46 +764,134 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CatalogProductAdd'
+            examples:
+              AddAConventionMerchandiseProduct:
+                value:
+                  expected_version: 1
+                  reason: Prepare the practice edition merchandise.
+                  code: practice-pin
+                  kind: merchandise
+                  name: Practice edition pin
+                summary: Add a convention merchandise product
         required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
         '200':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogCommandResult'
-          description: ''
+              examples:
+                ReplayTheOriginalProductReceipt:
+                  value:
+                    target_id: c0a10000-0000-4000-8000-000000000002
+                    resulting_version: 2
+                    replayed: true
+                  summary: Replay the original product receipt
+          description: The original product receipt for a matching retry.
         '201':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogCommandResult'
-          description: ''
+              examples:
+                NewProductReceipt:
+                  value:
+                    target_id: c0a10000-0000-4000-8000-000000000002
+                    resulting_version: 2
+                    replayed: false
+                  summary: New product receipt
+          description: The receipt for a newly created product.
+        '400':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: Invalid query, JSON or idempotency key, a stale catalog version,
+            a catalog that is no longer a draft, or conflicting command intent.
+        '403':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: The operation is unavailable to the caller for the requested
+            scope. The response does not disclose whether a protected catalog exists.
+        '404':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: Catalog unavailable after scope authorization.
   /api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/products/{product_id}/variants/:
     post:
       operationId: catalog_add_variant
-      description: |-
-        Add the variant.
-
-        Keep authenticated catalog data and safe errors out of shared caches.
-
-        Parameters
-        ----------
-        request : Request
-            The incoming HTTP request and authenticated principal context.
-        organization_id : UUID
-            The organization identifier that owns the requested resource.
-        edition_id : UUID
-            The event edition identifier that scopes the operation.
-        product_id : UUID
-            The product identifier within the requested scope.
-
-        Returns
-        -------
-        Response
-            The HTTP response for the requested operation.
+      description: Add a variant to a product in the organization's draft edition
+        catalog. This operation requires Catalog management authority and accepts
+        no query parameters. Use the current catalog version for a new command. Supply
+        both stock fields for finite stock, or omit both for stockless variants. A
+        matching retry returns the original creation receipt.
       parameters:
       - in: header
         name: Idempotency-Key
@@ -856,23 +930,128 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CatalogVariantAdd'
+            examples:
+              AddAFinite-stockVariant:
+                value:
+                  expected_version: 2
+                  reason: Prepare the blue pin option for pickup.
+                  sku: practice-pin-blue
+                  name: Blue
+                  price_minor: 500
+                  initial_stock: 20
+                  stock_ceiling: 25
+                summary: Add a finite-stock variant
         required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
         '200':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogCommandResult'
-          description: ''
+              examples:
+                ReplayTheOriginalVariantReceipt:
+                  value:
+                    target_id: c0a10000-0000-4000-8000-000000000003
+                    resulting_version: 3
+                    replayed: true
+                  summary: Replay the original variant receipt
+          description: The original variant receipt for a matching retry.
         '201':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogCommandResult'
-          description: ''
+              examples:
+                NewVariantReceipt:
+                  value:
+                    target_id: c0a10000-0000-4000-8000-000000000003
+                    resulting_version: 3
+                    replayed: false
+                  summary: New variant receipt
+          description: The receipt for a newly created variant.
+        '400':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: Invalid query, JSON or idempotency key, a stale catalog version,
+            a catalog that is no longer a draft, or conflicting command intent.
+        '403':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: The operation is unavailable to the caller for the requested
+            scope. The response does not disclose whether a protected catalog exists.
+        '404':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: Catalog or parent product unavailable in the authorized edition.
   /api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/variants/{variant_id}/stock-adjustments/:
     post:
       operationId: catalog_adjust_variant_stock
