@@ -221,6 +221,38 @@ def test_catalog_openapi_documents_the_finite_stock_pair() -> None:
         assert partner_name in field["description"]
 
 
+@pytest.mark.parametrize(
+    ("suffix", "statuses"),
+    [
+        ("orders/", {"200", "400", "403"}),
+        ("activity/", {"200", "400", "403", "404"}),
+    ],
+)
+def test_catalog_read_schema_documents_authority_and_handled_responses(
+    suffix: str, statuses: set[str]
+) -> None:
+    operation = _operation(_EDITION_CATALOG_PATH + suffix, "get")
+    assert "requestBody" not in operation
+    assert operation["description"]
+    assert {} not in operation["security"]
+    assert {parameter["in"] for parameter in operation["parameters"]} == {"path"}
+    responses = operation["responses"]
+    assert set(responses) == statuses
+    for status_code, response in responses.items():
+        assert response["description"]
+        assert set(response["headers"]) == {"Cache-Control", "X-Request-ID"}
+        if status_code == "200":
+            assert response["content"]["application/json"]["examples"]
+        else:
+            assert response["content"] == {
+                "application/problem+json": {
+                    "schema": {"$ref": "#/components/schemas/CatalogProblem"},
+                },
+            }
+    if suffix == "activity/":
+        assert "audit entry" in responses["400"]["description"]
+
+
 def test_venues_openapi_types_all_twenty_one_operations() -> None:
     operations = [
         *_operations("/api/v1/my/"),

@@ -79,6 +79,28 @@ responses. The [conformance plan](../development/catalog-edition-api-conformance
 tracks separate decisions about read completeness, read-audit policy and
 dependency failures.
 
+## Order-history and activity responses
+
+These GET operations accept no query parameters and retain their distinct
+authority and audit behavior.
+
+| Operation | Successful responses | Handled problems |
+| --- | --- | --- |
+| Read own orders | `200` with only the caller's orders in the requested edition. A valid scope without a catalog or owned orders returns `orders: []`. | `400` for an unsupported query and `403` for denied access. |
+| Read staff activity | `200` with up to 50 recent allowlisted activity entries. Each row contains an action, minimized actor label, occurrence time and target count. | `400` for an unsupported query, `403` for denied access and `404` for an unavailable catalog after scope authorization. |
+
+Both operations return private, non-cacheable responses with an
+`X-Request-ID` correlation UUID. Handled problems use
+`application/problem+json`. The staff activity query records its authorized
+read before the adapter validates query parameters. An unsupported query can
+therefore return `400` while retaining that read's audit entry. Denied staff
+activity requests do not execute the authorized activity read.
+
+The native response matrix validates actual HTTP bodies against the schema
+and checks both ownership and audit records. Its own-order requests append no
+audit rows. Reconciliation of the self-read audit obligation and broader
+failure and concurrency policies remains part of issue #36.
+
 ## Same-shell browser adapters
 
 The app also owns these authenticated browser boundaries:

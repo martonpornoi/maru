@@ -34,6 +34,9 @@ rather than replace the curated summary.
   Panel status badges retain dark-mode contrast, and suspended volunteer
   workspaces show recovery guidance instead of initial access setup instructions.
 
+- Catalog order-history and staff-activity references describe their verified
+  errors, response headers and activity-read audit timing.
+
 ### Added
 
 - A canonical Workforce-only rehearsal names four synthetic roles and the full

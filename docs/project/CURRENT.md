@@ -1,11 +1,25 @@
 # Current project state
 
-Last updated: 2026-11-03
-Phase: Edition Catalog API reference conformance (#36).
+Last updated: 2026-11-05
+Phase: Catalog API reference conformance (#36).
+
+## Catalog order history and activity reference — 5 November 2026
+
+This INT-001 increment documents the observed order-history and staff-activity
+responses. Order history returns only the caller's orders and can return an
+empty list without a catalog. Staff activity is scoped to an authorized edition
+and records its read audit before unsupported-query rejection. The native
+matrix checks those existing effects against the generated response schemas.
+The 41 focused Catalog PostgreSQL tests and 121 focused unit tests passed.
+See the [Catalog API contract](../modules/catalog-api.md#order-history-and-activity-responses)
+and [checkpoint](../checkpoints/2026-11-05-catalog-read-openapi-contract.md).
+
+Issue #36 retains the wider compatibility, self-read audit, completeness,
+dependency-failure and concurrent-change decisions.
 
 ## Edition Catalog API reference — 3 November 2026
 
-This bounded INT-001 increment documents the edition Catalog read and draft
+The previous INT-001 increment documents the edition Catalog read and draft
 creation operations. OpenAPI and the generated TypeScript declarations now
 describe verified success and problem responses, correlation and cache headers,
 and fictional examples for a catalog read, draft creation and receipt replay.

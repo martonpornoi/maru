@@ -58,7 +58,7 @@ from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.models import EventEdition
 from maru.registration.models import AdmissionProduct, Entitlement
 from maru.urls import urlpatterns as platform_urlpatterns
-from tests.factories import AccountFactory, EventEditionFactory
+from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.workforce_helpers import create_department_for_test
 
 if TYPE_CHECKING:
@@ -1549,3 +1549,173 @@ def test_catalog_creation_concurrent_requests_serialize(competing: str) -> None:
     ):
         expected[model._meta.label] += 1
     assert _catalog_api_evidence_counts() == expected
+
+
+def test_order_history_and_activity_follow_their_scoped_response_contracts() -> None:
+    primary = _active_catalog(stock=20, ceiling=20)
+    foreign = _active_catalog()
+    absent = EventEditionFactory()
+    owner, other, activity_reader = AccountFactory(), AccountFactory(), AccountFactory()
+    scope = {
+        "organization_id": primary.edition.organization_id,
+        "edition_id": primary.edition.id,
+    }
+    CapabilityGrantFactory(
+        principal=activity_reader,
+        organization=primary.edition.organization,
+        edition=primary.edition,
+        capability_code="catalog.view_activity",
+    )
+    version = primary.catalog.aggregate_version
+    identities = {}
+    for actor, quantity in ((owner, 1), (other, 2)):
+        placed = place_order(
+            **scope,
+            actor=actor,
+            lines=(OrderLineRequest(primary.variant.id, quantity),),
+            expected_version=version,
+            idempotency_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+        version = placed.resulting_version
+        identities[actor.id] = str(placed.target_id)
+
+    schema = _catalog_openapi()
+    prefix = "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/"
+    api = APIClient()
+    fixtures = (
+        ("orders-owned", "orders", owner, primary.edition, "", 200, 0),
+        ("orders-other-owner", "orders", other, primary.edition, "", 200, 0),
+        ("orders-empty", "orders", AccountFactory(), primary.edition, "", 200, 0),
+        ("orders-missing-catalog", "orders", owner, absent, "", 200, 0),
+        (
+            "orders-unsupported-query",
+            "orders",
+            owner,
+            primary.edition,
+            "?unsupported=yes",
+            400,
+            0,
+        ),
+        (
+            "orders-anonymous",
+            "orders",
+            None,
+            primary.edition,
+            "?unsupported=yes",
+            403,
+            0,
+        ),
+        ("activity-reader", "activity", activity_reader, primary.edition, "", 200, 1),
+        (
+            "activity-unsupported-query",
+            "activity",
+            activity_reader,
+            primary.edition,
+            "?unsupported=yes",
+            400,
+            1,
+        ),
+        (
+            "activity-no-grant",
+            "activity",
+            owner,
+            primary.edition,
+            "?unsupported=yes",
+            403,
+            0,
+        ),
+        ("activity-foreign", "activity", activity_reader, foreign.edition, "", 403, 0),
+        (
+            "activity-missing-catalog",
+            "activity",
+            primary.administrator,
+            absent,
+            "",
+            404,
+            0,
+        ),
+    )
+    for (
+        label,
+        operation,
+        actor,
+        edition,
+        query,
+        expected_status,
+        new_audits,
+    ) in fixtures:
+        api.force_authenticate(user=actor)
+        request_id = uuid4()
+        url = reverse(
+            f"catalog-api-{operation}", args=(edition.organization_id, edition.id)
+        )
+        before = _catalog_api_evidence_counts()
+        response = api.get(url + query, HTTP_X_REQUEST_ID=str(request_id))
+        assert response.status_code == expected_status, label
+        assert response.headers["X-Request-ID"] == str(request_id)
+        assert {"private", "no-store"} <= {
+            part.strip() for part in response.headers["Cache-Control"].split(",")
+        }
+        declared = schema["paths"][f"{prefix}{operation}/"]["get"]["responses"][
+            str(expected_status)
+        ]
+        assert set(declared["headers"]) == {"Cache-Control", "X-Request-ID"}
+        payload = response.json()
+        media_type = response.headers["Content-Type"]
+        Draft202012Validator(
+            {
+                "components": schema["components"],
+                **declared["content"][media_type]["schema"],
+            },
+            format_checker=FormatChecker(),
+        ).validate(payload)
+        if expected_status == 200:
+            assert media_type == "application/json"
+            if operation == "orders":
+                assert set(payload) == {"orders"}
+                expected_orders = (
+                    [identities[actor.id]]
+                    if label in {"orders-owned", "orders-other-owner"}
+                    else []
+                )
+                assert [order["id"] for order in payload["orders"]] == expected_orders
+            else:
+                assert set(payload) == {"activity"}
+                assert len(payload["activity"]) == 6
+                assert all(
+                    set(row) == {"action", "actor_label", "occurred_at", "target_count"}
+                    for row in payload["activity"]
+                )
+        else:
+            assert media_type == "application/problem+json"
+            assert payload["status"] == expected_status
+            assert payload["request_id"] == str(request_id)
+        before[AuditEvent._meta.label] += new_audits
+        assert _catalog_api_evidence_counts() == before
+        audits = AuditEvent.objects.filter(correlation_id=request_id)
+        assert audits.count() == new_audits
+        if new_audits:
+            audit = audits.get()
+            assert {
+                "operation": audit.operation,
+                "actor": audit.principal_id,
+                "organization": audit.organization_id,
+                "edition": audit.event_edition_id,
+                "request": audit.request_id,
+                "capability": audit.capability_code,
+                "source": audit.source_channel,
+                "outcome": audit.outcome,
+                "target_count": audit.safe_metadata["target_count"],
+            } == {
+                "operation": "catalog.activity.list",
+                "actor": actor.id,
+                "organization": edition.organization_id,
+                "edition": edition.id,
+                "request": request_id,
+                "capability": "catalog.view_activity",
+                "source": "api",
+                "outcome": AuditEvent.Outcome.ALLOW,
+                "target_count": 6,
+            }
