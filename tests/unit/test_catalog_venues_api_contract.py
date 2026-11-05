@@ -147,19 +147,35 @@ def test_catalog_openapi_types_all_eleven_operations_and_requires_authentication
             if operation["operationId"] in create_operation_ids
             else {"200"}
         )
-        if operation["operationId"] == "catalog_create_edition_catalog":
+        if operation["operationId"] in {
+            "catalog_create_edition_catalog",
+            "catalog_add_product",
+            "catalog_add_variant",
+        }:
             expected.update({"400", "403"})
+        if operation["operationId"] in {"catalog_add_product", "catalog_add_variant"}:
+            expected.add("404")
         assert set(responses) == expected
 
 
 @pytest.mark.parametrize(
-    ("method", "successes", "problems"),
-    [("get", {"200"}, {"400", "403", "404"}), ("post", {"200", "201"}, {"400", "403"})],
+    ("suffix", "method", "successes", "problems"),
+    [
+        ("", "get", {"200"}, {"400", "403", "404"}),
+        ("", "post", {"200", "201"}, {"400", "403"}),
+        ("products/", "post", {"200", "201"}, {"400", "403", "404"}),
+        (
+            "products/{product_id}/variants/",
+            "post",
+            {"200", "201"},
+            {"400", "403", "404"},
+        ),
+    ],
 )
-def test_edition_catalog_schema_explains_verified_responses(
-    method: str, successes: set[str], problems: set[str]
+def test_catalog_schema_explains_verified_responses(
+    suffix: str, method: str, successes: set[str], problems: set[str]
 ) -> None:
-    responses = _operation(_EDITION_CATALOG_PATH, method)["responses"]
+    responses = _operation(_EDITION_CATALOG_PATH + suffix, method)["responses"]
     assert isinstance(responses, dict)
     assert set(responses) == successes | problems
     for status_code, response in responses.items():
@@ -181,19 +197,44 @@ def test_edition_catalog_schema_explains_verified_responses(
             assert response["content"]["application/json"]["examples"]
 
 
-def test_edition_catalog_schema_examples_distinguish_creation_from_replay() -> None:
-    operation = _operation(_EDITION_CATALOG_PATH, "post")
+@pytest.mark.parametrize(
+    ("suffix", "version", "request_fields"),
+    [
+        ("", 1, {"currency", "reason"}),
+        ("products/", 2, {"expected_version", "reason", "code", "kind", "name"}),
+        (
+            "products/{product_id}/variants/",
+            3,
+            {
+                "expected_version",
+                "reason",
+                "sku",
+                "name",
+                "price_minor",
+                "initial_stock",
+                "stock_ceiling",
+            },
+        ),
+    ],
+)
+def test_catalog_schema_examples_distinguish_creation_from_replay(
+    suffix: str, version: int, request_fields: set[str]
+) -> None:
+    operation = _operation(_EDITION_CATALOG_PATH + suffix, "post")
     request_body = operation["requestBody"]
     assert isinstance(request_body, dict)
     (request_example,) = request_body["content"]["application/json"][
         "examples"
     ].values()
-    assert set(request_example["value"]) == {"currency", "reason"}
+    assert set(request_example["value"]) == request_fields
+    if suffix:
+        assert request_example["value"]["expected_version"] == version - 1
     responses = operation["responses"]
     assert isinstance(responses, dict)
     (created,) = responses["201"]["content"]["application/json"]["examples"].values()
     (replay,) = responses["200"]["content"]["application/json"]["examples"].values()
     assert created["value"]["replayed"] is False
+    assert created["value"]["resulting_version"] == version
     assert replay["value"] == {**created["value"], "replayed": True}
 
 
