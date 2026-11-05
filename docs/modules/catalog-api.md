@@ -1,7 +1,7 @@
 # Catalog API contract
 
 Status: mounted versioned adapter contract
-Last updated: 2026-11-03
+Last updated: 2026-11-04
 
 The [dated edition GET/POST review](../development/catalog-edition-api-contract-review.md)
 records exact observed behavior, authentication modes, normalization, retry identity
@@ -84,6 +84,28 @@ documented statuses, media types, headers and body schemas against actual
 responses. The [conformance plan](../development/catalog-edition-api-conformance-plan.md)
 tracks separate decisions about read completeness, read-audit policy and
 dependency failures.
+
+## Product and variant creation responses
+
+Both creation routes require Catalog management authority for the requested
+organization and edition. A new command requires a draft catalog and its
+current version. The variant route also requires a product in that catalog.
+
+| Status | Meaning |
+| --- | --- |
+| `201` | The product or variant was created. The receipt gives its ID and the resulting catalog version. |
+| `200` | The key matched an existing receipt for the same actor, catalog, operation and creation intent. The response gives the original target and version, with `replayed` set to `true`. |
+| `400` | The request is invalid, the version is stale, the catalog is out of draft, or the key already belongs to a different command. |
+| `403` | The caller lacks access to the requested scope. The adapter checks scope before parsing the body. |
+| `404` | The catalog is unavailable in the authorized edition, or the variant's parent product is unavailable in that catalog. A foreign product receives the same response as an unknown product. |
+
+The documented responses include the same private cache and correlation
+headers as the edition routes. Handled errors use `application/problem+json`.
+The reference includes fictional examples for a merchandise product and a
+finite-stock variant. A matching retry preserves the original receipt and
+reason even if the current version has advanced or the retry supplies a
+different valid reason. Clients should use the original payload and key when
+retrying the same command.
 
 ## Same-shell browser adapters
 
