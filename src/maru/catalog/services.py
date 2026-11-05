@@ -7,12 +7,21 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
-from django.db.models import Prefetch, Sum
+from django.db.models import (
+    BigIntegerField,
+    Case,
+    OuterRef,
+    Prefetch,
+    Subquery,
+    Sum,
+    When,
+)
+from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
@@ -44,7 +53,15 @@ from maru.events.models import EventEdition
 from maru.identity.queries import account_display_labels
 
 if TYPE_CHECKING:
+    from typing import TypedDict
+
+    from django_stubs_ext import WithAnnotations
+
     from maru.identity.models import Account
+
+    class _CatalogReadStock(TypedDict):
+        projected_available_stock: int | None
+
 
 MANAGE_CATALOG = "catalog.manage"
 MANAGE_STOCK = "catalog.manage_stock"
@@ -57,6 +74,11 @@ MAX_ORDER_LINES = 50
 MAX_PROVIDER_EVENT_ID_LENGTH = 160
 CURRENCY_CODE_LENGTH = 3
 PAYMENT_WINDOW = timedelta(minutes=30)
+_STOCK_ADJUSTMENT_ORDER = ("-control_version", "-id")
+_COMMITTED_ORDER_STATES = (
+    CatalogOrder.Status.PAYMENT_PENDING,
+    CatalogOrder.Status.PAID,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -957,7 +979,7 @@ def effective_stock(variant: CatalogVariant) -> int | None:
         return None
     latest = (
         CatalogStockAdjustment.objects.filter(variant=variant)
-        .order_by("-control_version", "-id")
+        .order_by(*_STOCK_ADJUSTMENT_ORDER)
         .values_list("new_stock", flat=True)
         .first()
     )
@@ -978,11 +1000,7 @@ def committed_quantity(variant: CatalogVariant) -> int:
         The effective numeric value for committed quantity.
     """
     value = CatalogOrderLine.objects.filter(
-        variant=variant,
-        order__status__in=(
-            CatalogOrder.Status.PAYMENT_PENDING,
-            CatalogOrder.Status.PAID,
-        ),
+        variant=variant, order__status__in=_COMMITTED_ORDER_STATES
     ).aggregate(total=Sum("quantity"))["total"]
     return int(value or 0)
 
@@ -1002,6 +1020,24 @@ def available_stock(variant: CatalogVariant) -> int | None:
     """
     stock = effective_stock(variant)
     return None if stock is None else max(0, stock - committed_quantity(variant))
+
+
+def projected_available_stock(variant: CatalogVariant) -> int | None:
+    """Read the stock value prefetched by the authorized product projection.
+
+    Parameters
+    ----------
+    variant : CatalogVariant
+        A variant loaded by `available_products_for_actor`.
+
+    Returns
+    -------
+    int | None
+        Finite availability from the projection or `None` for stockless items.
+    """
+    return cast(
+        "WithAnnotations[CatalogVariant, _CatalogReadStock]", variant
+    ).projected_available_stock
 
 
 def adjust_stock(
@@ -2004,7 +2040,7 @@ def available_products_for_actor(
     Returns
     -------
     tuple[CatalogProduct, ...]
-        The available products for actor.
+        The available products in deterministic order with prefetched variant stock.
     """
     _authorize(
         actor=actor,
@@ -2016,13 +2052,35 @@ def available_products_for_actor(
         ),
     )
     evaluated_at = now or timezone.now()
-    return tuple(
-        CatalogProduct.objects.prefetch_related(
-            Prefetch(
-                "variants",
-                queryset=CatalogVariant.objects.filter(active=True),
-            )
+    latest_stock = (
+        CatalogStockAdjustment.objects.filter(variant_id=OuterRef("pk"))
+        .order_by(*_STOCK_ADJUSTMENT_ORDER)
+        .values("new_stock")[:1]
+    )
+    commitments = (
+        CatalogOrderLine.objects.filter(
+            variant_id=OuterRef("pk"), order__status__in=_COMMITTED_ORDER_STATES
         )
+        .order_by()
+        .values("variant_id")
+        .annotate(total=Sum("quantity"))
+        .values("total")
+    )
+    # Compute both stock inputs in the variant query, without changing command reads.
+    variants = CatalogVariant.objects.filter(active=True).annotate(
+        projected_available_stock=Case(
+            When(initial_stock__isnull=True, then=None),
+            default=Greatest(
+                Coalesce(Subquery(latest_stock), "initial_stock")
+                - Coalesce(Subquery(commitments), 0),
+                0,
+                output_field=BigIntegerField(),
+            ),
+            output_field=BigIntegerField(),
+        )
+    )
+    return tuple(
+        CatalogProduct.objects.prefetch_related(Prefetch("variants", queryset=variants))
         .select_related("charity_selection__partner")
         .filter(
             catalog__organization_id=organization_id,

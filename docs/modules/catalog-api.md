@@ -44,6 +44,12 @@ Product input distinguishes `merchandise`, `donation`, and `supporter`, plus
 requires concrete `initial_stock` and `stock_ceiling` values together; stockless
 variants omit both fields. Supplying only one field or JSON null is invalid.
 
+In the attendee catalog, finite availability uses the latest stock adjustment
+or the initial stock, less quantities on payment-pending and paid orders, with
+a floor of zero. Stockless variants return `null`. The API and attendee page
+derive both stock inputs in their scoped variant query. Order placement still
+checks current stock under the command's existing locks.
+
 Order creation accepts one to fifty strict `{variant_id, quantity}` objects and returns
 the target order plus resulting catalog version. The service snapshots the
 current product, variant, beneficiary, price, and fulfilment values under lock.

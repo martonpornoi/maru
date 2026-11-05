@@ -59,6 +59,7 @@ from maru.catalog.services import (
     effective_stock,
     own_orders,
     place_order,
+    projected_available_stock,
 )
 from maru.charities.models import CharitySelection
 from maru.events.models import EventEdition
@@ -239,7 +240,7 @@ def my_catalog_page(request: HttpRequest, edition_id: UUID) -> HttpResponse:
             variants.append(  # noqa: PERF401 - each card owns a bound command form.
                 {
                     "variant": variant,
-                    "available_stock": available_stock(variant),
+                    "available_stock": projected_available_stock(variant),
                     "form": CatalogOrderForm(
                         initial={
                             "variant_id": variant.id,

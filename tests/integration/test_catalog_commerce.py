@@ -17,6 +17,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, close_old_connections, connection, transaction
 from django.test import Client, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.urls import include, path, reverse
 from django.utils import timezone
 from drf_spectacular.generators import SchemaGenerator
@@ -84,6 +85,7 @@ def _active_catalog(
     *,
     stock: int = 5,
     ceiling: int = 10,
+    additional_stock: tuple[int | None, ...] = (),
     edition=None,  # type: ignore[no-untyped-def]
 ) -> _CatalogWorld:
     edition = edition or EventEditionFactory()
@@ -130,6 +132,25 @@ def _active_catalog(
         stock_ceiling=ceiling,
         source_channel="test",
     )
+    version = variant_result.resulting_version
+    for index, initial_stock in enumerate(additional_stock):
+        added = add_variant(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            product_id=product_result.target_id,
+            actor=administrator,
+            expected_version=version,
+            idempotency_key=uuid4(),
+            correlation_id=uuid4(),
+            reason="Add a fictional option for the catalog projection.",
+            sku=f"shirt-option-{index}",
+            name=f"Option {index:02}",
+            price_minor=3_000,
+            initial_stock=initial_stock,
+            stock_ceiling=ceiling if initial_stock is not None else None,
+            source_channel="test",
+        )
+        version = added.resulting_version
     catalog.refresh_from_db()
     activate_catalog(
         organization_id=edition.organization_id,
@@ -1460,6 +1481,93 @@ def test_catalog_edition_api_self_projection_is_exact_and_private() -> None:
         )
         _assert_catalog_api_response(response, status=status, request_id=request_id)
         assert _catalog_api_evidence_counts() == before
+
+
+@override_settings(ROOT_URLCONF=__name__)
+def test_catalog_edition_api_batches_finite_variant_availability() -> None:
+    small = _active_catalog()
+    large = _active_catalog(additional_stock=(5,) * 10 + (None,))
+    attendee = AccountFactory()
+    buyer = AccountFactory()
+    api = APIClient()
+    api.force_authenticate(user=attendee)
+    scope = {
+        "organization_id": large.edition.organization_id,
+        "edition_id": large.edition.id,
+    }
+    version = large.catalog.aggregate_version
+    for stock in (8, 6):
+        adjustment = adjust_stock(
+            **scope,
+            variant_id=large.variant.id,
+            new_stock=stock,
+            actor=large.administrator,
+            expected_version=version,
+            idempotency_key=uuid4(),
+            correlation_id=uuid4(),
+            reason="Record confirmed stock for the fictional edition.",
+            source_channel="test",
+        )
+        version = adjustment.resulting_version
+    paid_order = place_order(
+        **scope,
+        actor=buyer,
+        lines=(OrderLineRequest(large.variant.id, 2),),
+        expected_version=version,
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    paid = complete_demo_payment(
+        **scope,
+        order_id=paid_order.target_id,
+        actor=buyer,
+        expected_catalog_version=paid_order.resulting_version,
+        expected_order_version=1,
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    place_order(
+        **scope,
+        actor=buyer,
+        lines=(OrderLineRequest(large.variant.id, 4),),
+        expected_version=paid.resulting_version,
+        idempotency_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+
+    def read(world: _CatalogWorld) -> tuple[dict[str, object], int]:
+        request_id = uuid4()
+        url = reverse(
+            "catalog-api-detail", args=(world.edition.organization_id, world.edition.id)
+        )
+        with CaptureQueriesContext(connection) as queries:
+            response = api.get(url, HTTP_X_REQUEST_ID=str(request_id))
+        return _assert_catalog_api_response(
+            response, status=200, request_id=request_id
+        ), len(queries)
+
+    before = _catalog_api_evidence_counts()
+    small_payload, small_queries = read(small)
+    large_payload, large_queries = read(large)
+    assert small_queries == large_queries == 5
+    (small_product,) = small_payload["products"]
+    (large_product,) = large_payload["products"]
+    assert small_product["id"] == str(small.product.id)
+    assert large_product["id"] == str(large.product.id)
+    assert [
+        (row["sku"], row["available_stock"]) for row in small_product["variants"]
+    ] == [("shirt-m", 5)]
+    assert [
+        (row["sku"], row["available_stock"]) for row in large_product["variants"]
+    ] == [
+        ("shirt-m", 0),
+        *((f"shirt-option-{index}", 5) for index in range(10)),
+        ("shirt-option-10", None),
+    ]
+    assert _catalog_api_evidence_counts() == before
 
 
 @override_settings(ROOT_URLCONF=__name__)

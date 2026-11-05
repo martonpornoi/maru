@@ -1,7 +1,16 @@
 # Current project state
 
-Last updated: 2026-11-04
+Last updated: 2026-11-05
 Phase: Catalog API reference conformance (#36).
+
+## Catalog protected delivery — 5 November 2026
+
+[PR #241](https://github.com/martonpornoi/maru/pull/241) delivered the product
+and variant reference through protected squash
+`f8510bcf01994bd76e67af56e3b4bdcbc189d60d`. Its tree matched the certified
+candidate, and the clean local main was fetched and fast-forwarded with
+local, remote and GitHub equality verified. The stock projection in #242 is
+being verified against that protected result.
 
 ## Catalog product and variant creation reference — 4 November 2026
 
@@ -29,6 +38,24 @@ and the [verification checkpoint](../checkpoints/2026-11-03-catalog-edition-open
 Issue #36 remains open. Read completeness, read-audit policy, dependency
 failure handling and broader compatibility work require separate review under
 the [Catalog conformance plan](../development/catalog-edition-api-conformance-plan.md).
+
+### Catalog route and read-cost review — 4 November 2026
+
+The mounted Django routes, generated OpenAPI, checked-in schema, TypeScript
+operation mappings and module route list agree on 11 operations across nine
+paths. The 22 focused schema tests passed. Handled problem responses are
+documented for four operations after protected
+[PR #241](https://github.com/martonpornoi/maru/pull/241).
+
+The [query-cost baseline](../checkpoints/2026-11-04-catalog-route-and-read-cost-baseline.md)
+found two reads per finite-stock variant. The attendee Catalog API and page now
+derive stock and commitments in the scoped variant query. The new native case
+uses five SQL statements with either one or twelve variants and verifies the
+latest adjustment, pending and paid quantities, zero stock and stockless
+output. The 41 Catalog PostgreSQL cases and 119 focused unit cases passed.
+See the [stock projection checkpoint](../checkpoints/2026-11-04-catalog-batched-stock-projection.md).
+Read completeness and consistency across the full response remain separate
+decisions under #36.
 
 ## Previous Workforce verification — 3 November 2026
 
