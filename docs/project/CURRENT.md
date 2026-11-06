@@ -9,8 +9,20 @@ Phase: Catalog API reference conformance (#36).
 and variant reference through protected squash
 `f8510bcf01994bd76e67af56e3b4bdcbc189d60d`. Its tree matched the certified
 candidate, and the clean local main was fetched and fast-forwarded with
-local, remote and GitHub equality verified. The stock projection in #242 is
-being verified against that protected result.
+local, remote and GitHub equality verified.
+[PR #242](https://github.com/martonpornoi/maru/pull/242) then delivered the
+batched stock projection through protected squash
+`8c243d8d88f1973704f93105b8b83f58146f4daf`. Its tree matched the independently
+verified candidate and its sole parent was the protected #241 result. The
+designated clean main was fetched and fast-forwarded with local, origin,
+remote and GitHub equality verified.
+
+The combined read-reference increment in [PR #243](https://github.com/martonpornoi/maru/pull/243)
+retains both delivered outcomes. Its full exact-head local and hosted acceptance
+is tracked in that PR; the [review checkpoint](../checkpoints/2026-11-05-catalog-protected-review-and-read-reference.md)
+records scope and focused feedback. The next #36 work is the remaining handled
+response contracts and the documented completeness, consistency, audit,
+dependency-failure and compatibility decisions.
 
 ## Catalog product and variant creation reference — 4 November 2026
 
@@ -23,6 +35,21 @@ cases compare HTTP responses with the schema and check that replay and
 rejection preserve the original command evidence.
 See the [Catalog API contract](../modules/catalog-api.md#product-and-variant-creation-responses)
 and the [verification checkpoint](../checkpoints/2026-11-04-catalog-product-variant-openapi-contract.md).
+
+## Catalog order history and activity reference — 5 November 2026
+
+This INT-001 increment documents the observed order-history and staff-activity
+responses. Order history returns only the caller's orders and can return an
+empty list without a catalog. Staff activity is scoped to an authorized edition
+and records its read audit before unsupported-query rejection. The native
+matrix checks those existing effects against the generated response schemas.
+The combined source passed 136 focused unit checks and documentation
+validation. PR #243 tracks complete acceptance for its final integrated head.
+See the [Catalog API contract](../modules/catalog-api.md#order-history-and-activity-responses)
+and [checkpoint](../checkpoints/2026-11-05-catalog-read-openapi-contract.md).
+
+Issue #36 retains the wider compatibility, self-read audit, completeness,
+dependency-failure and concurrent-change decisions.
 
 ## Edition Catalog API reference — 3 November 2026
 
@@ -44,8 +71,7 @@ the [Catalog conformance plan](../development/catalog-edition-api-conformance-pl
 The mounted Django routes, generated OpenAPI, checked-in schema, TypeScript
 operation mappings and module route list agree on 11 operations across nine
 paths. The 22 focused schema tests passed. Handled problem responses are
-documented for four operations after protected
-[PR #241](https://github.com/martonpornoi/maru/pull/241).
+documented for six operations in the combined Catalog reference.
 
 The [query-cost baseline](../checkpoints/2026-11-04-catalog-route-and-read-cost-baseline.md)
 found two reads per finite-stock variant. The attendee Catalog API and page now

@@ -64,25 +64,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * @description List the activity.
-         *
-         *     Keep authenticated catalog data and safe errors out of shared caches.
-         *
-         *     Parameters
-         *     ----------
-         *     request : Request
-         *         The incoming HTTP request and authenticated principal context.
-         *     organization_id : UUID
-         *         The organization identifier that owns the requested resource.
-         *     edition_id : UUID
-         *         The event edition identifier that scopes the operation.
-         *
-         *     Returns
-         *     -------
-         *     Response
-         *         The HTTP response for the requested operation.
-         */
+        /** @description Read up to 50 recent Catalog activity entries for the specified organization and edition. Requires Catalog activity-view authority and accepts no query parameters. An authorized activity read is audited before query-parameter validation. */
         get: operations["catalog_list_activity"];
         put?: never;
         post?: never;
@@ -99,25 +81,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * @description List the current account's orders.
-         *
-         *     Keep authenticated catalog data and safe errors out of shared caches.
-         *
-         *     Parameters
-         *     ----------
-         *     request : Request
-         *         The incoming HTTP request and authenticated principal context.
-         *     organization_id : UUID
-         *         The organization identifier that owns the requested resource.
-         *     edition_id : UUID
-         *         The event edition identifier that scopes the operation.
-         *
-         *     Returns
-         *     -------
-         *     Response
-         *         The HTTP response for the requested operation.
-         */
+        /** @description Read only the signed-in person's orders in the specified organization and edition. Requires Catalog self-service access and accepts no query parameters. A valid scope without a catalog or owned orders returns an empty orders array. */
         get: operations["catalog_list_own_orders"];
         put?: never;
         /**
@@ -14351,12 +14315,56 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Recent allowlisted activity with minimized actor labels. */
             200: {
                 headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogActivityList"];
+                };
+            };
+            /** @description The request contains an unsupported query parameter. The authorized activity read has already recorded its audit entry. */
+            400: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description The operation is unavailable to the caller for the requested scope. The response does not disclose whether a protected catalog exists. */
+            403: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description Catalog unavailable after scope authorization. */
+            404: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
                 };
             };
         };
@@ -14373,12 +14381,43 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description The caller's order history, including an empty history. */
             200: {
                 headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogOrderList"];
+                };
+            };
+            /** @description The request contains an unsupported query parameter. */
+            400: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
+                };
+            };
+            /** @description The operation is unavailable to the caller for the requested scope. The response does not disclose whether a protected catalog exists. */
+            403: {
+                headers: {
+                    /** @description Includes private and no-store directives for this response. */
+                    "Cache-Control": string;
+                    /** @description Correlation ID for this response and its recorded evidence. */
+                    "X-Request-ID": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["CatalogProblem"];
                 };
             };
         };

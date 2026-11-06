@@ -854,7 +854,27 @@ class CatalogOrderCollectionApi(PrivateCatalogAPIView):
 
     @extend_schema(
         operation_id="catalog_list_own_orders",
-        responses={200: CatalogOrderListSerializer},
+        description=(
+            "Read only the signed-in person's orders in the specified organization "
+            "and edition. Requires Catalog self-service access and accepts no query "
+            "parameters. A valid scope without a catalog or owned orders returns "
+            "an empty orders array."
+        ),
+        parameters=_CATALOG_RESPONSE_HEADERS,
+        responses={
+            200: OpenApiResponse(
+                response=CatalogOrderListSerializer,
+                description="The caller's order history, including an empty history.",
+                examples=[
+                    OpenApiExample("No owned orders", value={"orders": []}),
+                ],
+            ),
+            (400, _PROBLEM_MEDIA_TYPE): OpenApiResponse(
+                response=CatalogProblemSerializer,
+                description="The request contains an unsupported query parameter.",
+            ),
+            (403, _PROBLEM_MEDIA_TYPE): _CATALOG_ACCESS_DENIED,
+        },
     )
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
@@ -1068,7 +1088,46 @@ class CatalogActivityApi(PrivateCatalogAPIView):
 
     @extend_schema(
         operation_id="catalog_list_activity",
-        responses={200: CatalogActivityListSerializer},
+        description=(
+            "Read up to 50 recent Catalog activity entries for the specified "
+            "organization and edition. Requires Catalog activity-view authority "
+            "and accepts no query parameters. An authorized activity read is "
+            "audited before query-parameter validation."
+        ),
+        parameters=_CATALOG_RESPONSE_HEADERS,
+        responses={
+            200: OpenApiResponse(
+                response=CatalogActivityListSerializer,
+                description="Recent allowlisted activity with minimized actor labels.",
+                examples=[
+                    OpenApiExample(
+                        "Fictional catalog activity",
+                        value={
+                            "activity": [
+                                {
+                                    "action": "Changed the edition catalog",
+                                    "actor_label": "Practice operator",
+                                    "occurred_at": "2026-11-05T10:00:00Z",
+                                    "target_count": 1,
+                                },
+                            ],
+                        },
+                    ),
+                ],
+            ),
+            (400, _PROBLEM_MEDIA_TYPE): OpenApiResponse(
+                response=CatalogProblemSerializer,
+                description=(
+                    "The request contains an unsupported query parameter. The "
+                    "authorized activity read has already recorded its audit entry."
+                ),
+            ),
+            (403, _PROBLEM_MEDIA_TYPE): _CATALOG_ACCESS_DENIED,
+            (404, _PROBLEM_MEDIA_TYPE): OpenApiResponse(
+                response=CatalogProblemSerializer,
+                description="Catalog unavailable after scope authorization.",
+            ),
+        },
     )
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID

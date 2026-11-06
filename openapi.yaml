@@ -313,24 +313,10 @@ paths:
   /api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/activity/:
     get:
       operationId: catalog_list_activity
-      description: |-
-        List the activity.
-
-        Keep authenticated catalog data and safe errors out of shared caches.
-
-        Parameters
-        ----------
-        request : Request
-            The incoming HTTP request and authenticated principal context.
-        organization_id : UUID
-            The organization identifier that owns the requested resource.
-        edition_id : UUID
-            The event edition identifier that scopes the operation.
-
-        Returns
-        -------
-        Response
-            The HTTP response for the requested operation.
+      description: Read up to 50 recent Catalog activity entries for the specified
+        organization and edition. Requires Catalog activity-view authority and accepts
+        no query parameters. An authorized activity read is audited before query-parameter
+        validation.
       parameters:
       - in: path
         name: edition_id
@@ -353,32 +339,94 @@ paths:
       - basicAuth: []
       responses:
         '200':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogActivityList'
-          description: ''
+              examples:
+                FictionalCatalogActivity:
+                  value:
+                    activity:
+                    - action: Changed the edition catalog
+                      actor_label: Practice operator
+                      occurred_at: '2026-11-05T10:00:00Z'
+                      target_count: 1
+                  summary: Fictional catalog activity
+          description: Recent allowlisted activity with minimized actor labels.
+        '400':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: The request contains an unsupported query parameter. The authorized
+            activity read has already recorded its audit entry.
+        '403':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: The operation is unavailable to the caller for the requested
+            scope. The response does not disclose whether a protected catalog exists.
+        '404':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: Catalog unavailable after scope authorization.
   /api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/orders/:
     get:
       operationId: catalog_list_own_orders
-      description: |-
-        List the current account's orders.
-
-        Keep authenticated catalog data and safe errors out of shared caches.
-
-        Parameters
-        ----------
-        request : Request
-            The incoming HTTP request and authenticated principal context.
-        organization_id : UUID
-            The organization identifier that owns the requested resource.
-        edition_id : UUID
-            The event edition identifier that scopes the operation.
-
-        Returns
-        -------
-        Response
-            The HTTP response for the requested operation.
+      description: Read only the signed-in person's orders in the specified organization
+        and edition. Requires Catalog self-service access and accepts no query parameters.
+        A valid scope without a catalog or owned orders returns an empty orders array.
       parameters:
       - in: path
         name: edition_id
@@ -401,11 +449,65 @@ paths:
       - basicAuth: []
       responses:
         '200':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogOrderList'
-          description: ''
+              examples:
+                NoOwnedOrders:
+                  value:
+                    orders: []
+                  summary: No owned orders
+          description: The caller's order history, including an empty history.
+        '400':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: The request contains an unsupported query parameter.
+        '403':
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Includes private and no-store directives for this response.
+              required: true
+            X-Request-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Correlation ID for this response and its recorded evidence.
+              required: true
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/CatalogProblem'
+          description: The operation is unavailable to the caller for the requested
+            scope. The response does not disclose whether a protected catalog exists.
     post:
       operationId: catalog_place_order
       description: |-

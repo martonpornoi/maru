@@ -22,6 +22,8 @@ rather than replace the curated summary.
 
 ### Fixed
 
+- Attendee Catalog availability reads use fewer database round trips as finite-
+  stock options are added, preserving stockless and finite availability values.
 - The Catalog API reference documents product and variant creation, including
   how to recognize a replayed receipt, a stale catalog version or an unavailable
   parent product.
@@ -36,6 +38,9 @@ rather than replace the curated summary.
 - Access expiry errors remain visible and correctable before a request is sent.
   Panel status badges retain dark-mode contrast, and suspended volunteer
   workspaces show recovery guidance instead of initial access setup instructions.
+
+- Catalog order-history and staff-activity references describe their verified
+  errors, response headers and activity-read audit timing.
 
 ### Added
 
