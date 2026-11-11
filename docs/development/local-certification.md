@@ -166,8 +166,9 @@ mixed changes stay on the ordinary path. A classifier failure stops the run.
 The documentation path runs locked input and Actions policy checks, Ruff,
 strict typing, documentation validation, the two hosted licensing/release
 test files, package build and inspection when selected, docstring checks and
-a fresh warning-fatal Sphinx HTML build. Each run retains its logs, artifacts
-and exact base/head/tree in a new directory under
+a fresh warning-fatal Sphinx HTML build. It ignores local `PYTEST_ADDOPTS`
+so interactive filters cannot skip the selected tests. Each run retains its logs,
+artifacts and exact base/head/tree in a new directory under
 `.tools/documentation-certification/`. A failed run leaves its output and does
 not write a success receipt. A successful run writes `documentation_success`,
 with PostgreSQL and combined branch coverage explicitly unselected.

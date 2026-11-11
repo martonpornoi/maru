@@ -174,3 +174,46 @@ def test_documentation_receipts_preserve_prior_evidence_and_only_record_success(
     assert (outputs[0] / "fixture_gate.log").is_file()
     assert (outputs[0] / "certification.json").exists() is (returncode == 0)
     assert previous.read_text(encoding="utf-8") == "Original native receipt"
+
+
+def test_local_pytest_options_cannot_hide_a_failing_licensing_case(
+    repository, tmp_path, monkeypatch
+):
+    _, base, head = repository
+    fixture = tmp_path / ".tools" / "test_licensing.py"
+    fixture.parent.mkdir()
+    fixture.write_text(
+        "def test_license_contract():\n    assert False, 'license contract failed'\n",
+        encoding="utf-8",
+    )
+    plan = certification._candidate_plan(base, head)
+    assert plan is not None
+    monkeypatch.setenv("PYTEST_ADDOPTS", "--collect-only")
+    monkeypatch.setattr(
+        certification,
+        "_checks",
+        lambda _plan, output, _uv: [
+            (
+                "license_contracts",
+                [
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    str(fixture),
+                    "-q",
+                    "-p",
+                    "no:cacheprovider",
+                    f"--basetemp={output / 'pytest-tmp'}",
+                ],
+            )
+        ],
+    )
+
+    with pytest.raises(RuntimeError, match=r"license_contracts failed \(1\)"):
+        certification._certify(tmp_path.resolve(), base, head, *plan, Path("uv"))
+
+    (output,) = (fixture.parent / "documentation-certification").iterdir()
+    assert "license contract failed" in (output / "license_contracts.log").read_text(
+        encoding="utf-8"
+    )
+    assert not (output / "certification.json").exists()

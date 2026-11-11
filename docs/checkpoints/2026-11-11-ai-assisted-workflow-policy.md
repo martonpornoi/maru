@@ -55,3 +55,15 @@ The original local logs, reports and receipts stay with the runs. The
 implementation is a test-harness change; protected delivery still requires
 exhaustive exact-head local and independent hosted acceptance. Human,
 representative accessibility and operational gates retain their own evidence.
+
+## Pull request verification review
+
+The maintainer requested a testing review and pull request. The review showed
+that setting `PYTEST_ADDOPTS=--collect-only` let the licensing command exit
+successfully after collecting 30 cases and running zero. The documentation
+certifier now ignores this environment variable in its child processes. A
+regression runs a failing pytest case under the same setting and checks that
+certification retains the failure log and produces no success receipt.
+The focused classifier, workflow, certification and rehearsal suite passed
+145 tests. Full certification and the GitHub checks will be recorded against
+the commit submitted for review.

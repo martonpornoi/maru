@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-11-11
-Phase: Locally verified AI-assisted workflow policy; protected delivery not started.
+Phase: Reviewing and verifying the AI-assisted workflow policy for a pull request.
 
 ## AI-assisted workflow policy — 11 November 2026
 
@@ -19,9 +19,11 @@ separate receipt does not claim PostgreSQL or coverage. The unit suite passed
 all 12 selected checks without Docker, and the prepared-sign-in fixture passed
 startup and owned cleanup. The
 [policy checkpoint](../checkpoints/2026-11-11-ai-assisted-workflow-policy.md)
-records the exact scopes. The implementation changes the certification
-harness; a future protected delivery needs exhaustive exact-head local and
-independent hosted evidence. Browser and human acceptance remain separate.
+records the exact scopes. Delivery review found that a local pytest option
+could suppress the licensing test run. The documentation path now ignores
+that option and 145 focused tests passed, including a regression for a failing
+case. The certification harness requires exhaustive local and hosted checks
+for this pull request. Browser and human acceptance remain separate.
 
 ## Catalog protected delivery — 5 November 2026
 

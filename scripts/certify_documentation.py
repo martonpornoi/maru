@@ -240,6 +240,8 @@ def _certify(
     temporary = output / "tmp"
     temporary.mkdir()
     environment = os.environ.copy()
+    # Certification runs the entire selected test files regardless of local filters.
+    environment.pop("PYTEST_ADDOPTS", None)
     environment.update(
         CI="true",
         MYPY_CACHE_DIR=str(output / "mypy"),
