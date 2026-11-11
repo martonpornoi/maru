@@ -22,8 +22,10 @@ startup and owned cleanup. The
 records the exact scopes. Delivery review found that a local pytest option
 could suppress the licensing test run. The documentation path now ignores
 that option and 145 focused tests passed, including a regression for a failing
-case. The certification harness requires exhaustive local and hosted checks
-for this pull request. Browser and human acceptance remain separate.
+case. The README-only run passed all 12 checks with collection-only set in the
+parent shell. Alex, Blake and Casey each signed in and out through one browser
+using the prepared fixture. Full local and hosted certification of the
+submitted commit will be recorded in the pull request.
 
 ## Catalog protected delivery — 5 November 2026
 

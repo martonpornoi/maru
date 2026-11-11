@@ -65,5 +65,20 @@ certifier now ignores this environment variable in its child processes. A
 regression runs a failing pytest case under the same setting and checks that
 certification retains the failure log and produces no success receipt.
 The focused classifier, workflow, certification and rehearsal suite passed
-145 tests. Full certification and the GitHub checks will be recorded against
-the commit submitted for review.
+145 tests. A clean README-only commit, `99850cf64462da10cc7bcfba5535fb989fd5623e`,
+exercised the certifier from `b5e0c075a6435b2afa6d64326ce1af418ffae12d` with
+collection-only set in the caller. Its receipt and JUnit report confirmed all
+30 tests executed and passed. All 12 checks passed, including package inspection
+and the fresh documentation build. The prior native report was retained.
+
+On the same implementation, Alex, Blake and Casey each signed in through the
+ordinary form and signed out before the next person signed in. The browser
+showed the correct account each time and Alex had no convention-management
+authority. The fixture passed eight startup checks and left all 223 unadopted
+model counts at zero. It removed its own resources and the pre-existing
+container and volume inventory matched afterward. This check covered prepared
+sign-ins. The browser account-creation flow and Workforce lifecycle have their
+own acceptance evidence.
+
+Full certification and the GitHub checks will be recorded against the commit
+submitted for review.
