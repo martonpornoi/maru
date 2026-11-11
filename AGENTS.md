@@ -5,7 +5,12 @@ cycles and agent or maintainer handoffs.
 
 ## Required reading order
 
-At the start of every material task:
+At the start of every material task, identify the intended checkout, branch and
+commit. Use verified current protected main for project policy and the selected
+candidate for its unmerged work. An older workspace can contain valid work;
+preserve it and use a separate checkout when the baselines differ.
+
+Then:
 
 1. Read `docs/project/CURRENT.md`.
 2. Read `docs/project/ROADMAP.md`.
@@ -18,7 +23,23 @@ contains a newer checkpoint. Read the roadmap's active direction and the section
 relevant to the task; search stable requirement identifiers and ADR subjects
 before loading unrelated history. Keep one active delivery outcome, use focused
 checks during iteration, and exercise visible changes in the browser early.
-The full certification and protected delivery requirements remain unchanged.
+Use the applicable certification scope before delivery; protected delivery
+requirements still apply.
+
+## Authorized work
+
+Continue routine prerequisites, repairs, verification and owned cleanup within
+the authorized task without asking again. Authorization carries across turns
+while the scope remains the same. Pause for materially different scope, an
+unapproved consequential action, human consent or a tool-required handoff.
+Keep independent work moving when a particular action needs a person.
+
+For authorized software testing, an agent may use a dedicated disposable
+fictional fixture, switch between its prepared accounts and exercise ordinary
+forms and approvals. Record that as synthetic evidence. Real accounts, consent,
+representative acceptance and operational approval retain their own boundaries.
+Follow the [agent workflow guide](docs/development/agent-workflows.md) for
+verification tool reuse and evidence preservation.
 
 ## Repository skill routing
 

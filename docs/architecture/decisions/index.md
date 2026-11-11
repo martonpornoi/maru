@@ -86,6 +86,11 @@ ADR [0098](0098-budgeted-postgresql-shard-planning.md) replaces only its fixed
 counts and differing local/hosted assignments with runtime-budgeted manifests
 and measured local headroom, retaining every selection and coverage requirement.
 
+[ADR 0134](0134-bounded-ai-assisted-work-and-local-documentation-checks.md)
+adds a local prose-only route using the shared documentation classifier and
+records the boundaries for authorized fictional testing and reusable evidence
+checkers. Protected acceptance and the ordinary PostgreSQL paths remain.
+
 | ADR | Status | Decision |
 | --- | --- | --- |
 | [0072](0072-protected-exact-main-sphinx-pages-publication.md) | Accepted | Publish warning-fatal Sphinx output from protected `main` through a least-privilege Pages boundary. |

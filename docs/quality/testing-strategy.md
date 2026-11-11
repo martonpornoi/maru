@@ -8,7 +8,7 @@ acceptance criterion.
 
 ## Routine and scheduled acceptance
 
-Use risk-selected `Auto` certification for ordinary changes, with all current
+Use risk-selected `Auto` certification for ordinary code changes, with all current
 PostgreSQL behavior and the existing coverage/security gates. Exhaustive history
 remains required before merging global safety or harness changes, nightly on
 changed `main`, on demand, and before release. The reviewed standalone preview
@@ -16,6 +16,12 @@ launcher is ordinary tooling; all unreviewed scripts remain exhaustive. Adding
 another exception requires review of its dependencies and effects, plus tests
 that mixed high-risk diffs cannot inherit the exception. See the
 [lane and workflow instructions](../development/local-certification.md#choose-the-routine-or-exhaustive-lane).
+
+For a verified prose-only diff, Auto uses the
+[documentation path](../development/local-certification.md#documentation-only-local-certification).
+It records the exact local scope and no database or combined coverage result.
+The hosted gate still runs independently. Mixed and unclassified changes use
+the existing PostgreSQL path.
 
 ## Fast feedback and retained documentation acceptance
 

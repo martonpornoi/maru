@@ -16,6 +16,10 @@ Perform only the stages the user requested or that are ordinary prerequisites
 of that requested stage. Never merge merely because checks are green. Do not
 mutate repository settings, release, or deploy without separate authorization.
 
+Carry the user's existing authorization through the requested stages. A
+routine repair and a new exact-head check do not need a new confirmation when
+the approved scope is the same. A changed head still needs its own evidence.
+
 Read [repository governance](../../../docs/development/repository-governance.md),
 [local certification](../../../docs/development/local-certification.md), and
 the [pull-request template](../../../.github/pull_request_template.md). Use

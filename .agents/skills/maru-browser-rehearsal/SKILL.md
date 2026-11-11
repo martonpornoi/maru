@@ -33,6 +33,24 @@ error language, access explanations, field labels, keyboard behavior, focus,
 landmarks, overflow, and console output. Reauthorize at each destination and
 confirm that denied or other-tenant states disclose no hidden person or record.
 
+When handing a guide to a maintainer, first rehearse its core path yourself with
+dedicated fictional accounts where the available controls permit it. One browser
+may sign out and switch accounts sequentially; Incognito is optional convenience.
+Keep the maintainer's notes and results separate. State any prepared identities
+or omitted credential setup explicitly. At each step name the account, exact
+visible menu and button labels, copy-ready input, and expected result. Record
+each obstruction, correct its owning guide or product behavior, and repeat the
+affected path. A final all-pass core run must not conceal earlier failures or
+claim unexercised setup, accessibility, independent-person, or operational work.
+
+After changing a viewport, confirm the measured page width and screenshot
+dimensions before accepting that cell. A requested size or filename alone is
+not evidence; wait for the layout to settle and record any display scale.
+Resolve label and ARIA description references to unique existing targets,
+including invalid forms. A missing target remains a defect even when the
+ordinary submission path succeeds. Preserve the failed observation, repair it
+and repeat the affected path on frozen source.
+
 When the task asks for diagnosis or evidence only, report findings without
 editing. When it asks for a fix, correct the smallest owning contract, rerun
 focused automated checks, and repeat the affected browser path.

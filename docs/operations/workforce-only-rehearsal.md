@@ -6,7 +6,7 @@ availability, and complete one short planned Shift without attendee records
 **Status:** Current-source procedure and regression checks under validation;
 the preserved earlier human trial stopped at recipient-owned password entry.
 No complete new browser journey or final absence report is claimed.
-**Last updated:** 2026-11-01
+**Last updated:** 2026-11-11
 
 This is the canonical synthetic walkthrough for
 [issue #42](https://github.com/martonpornoi/maru/issues/42), following evaluation
@@ -96,12 +96,39 @@ If using one browser for software checks, sign out fully before each handoff and
 confirm the newly signed-in account; multiple tabs share a session. Never reuse
 another role's CSRF token or impersonate it through a database connection.
 
+## Short software rehearsal with prepared sign-ins
+
+For an authorized agent-led software test, start a fresh, dedicated run:
+
+```powershell
+uv run --locked python -m scripts.rehearse_workforce_browser start --directory .tools/workforce-software-01 --port 8766 --minutes 120 --prepared-sign-ins
+```
+
+Use a new directory and an available loopback port. The owned restricted
+runtime prepares only the reserved fictional accounts through the normal
+invitation, local delivery and acceptance commands. It creates no organization,
+operator appointment, Position, assignment, Availability or Shift. The
+baseline inspection still runs before the site becomes ready.
+
+Use the existing sign-ins from `identities.private.json` within that run. Keep
+them private, and sign out before changing roles. Start at **1. Workspace**
+with the platform sign-in. The invitations in **Representation & access**
+are still required: those give the prepared people organization access.
+Complete the normal volunteer workflow, final inspection and owned cleanup.
+The agent can perform these fictional actions without a person clicking each form.
+
+Prepared sign-ins cover software behavior after account creation. Use the
+default blank-start mode for browser account invitation delivery and password
+setup. Real recipients, representative people and independent human approval
+have their own acceptance steps. Never reuse the maintainer's preserved trial
+or carry its marks into a fresh run.
+
+## Core journey
+
 Keep a small private run sheet with the origin, source/image identity, date,
 `Europe/Budapest` time zone, actor labels, actual generated organization/series/
 edition slugs, and relevant object links. Copy links from the interface; do not
 guess UUIDs. This information is fixture evidence, not authority.
-
-## Core journey
 
 Each row gives the starting state, actor, action, expected visible outcome and
 minimal evidence. Record an actual result for every row; do not pre-check it.

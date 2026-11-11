@@ -141,8 +141,9 @@ Matrix growth preserves complete selected coverage; it does not reduce total
 migration work. Before the matrix fans out, a lightweight preflight
 requires a current `uv.lock` and exact parity between every workflow reference
 and `.github/actions-allowlist.json`. `scripts/certify.ps1` remains the required
-local pre-review command, but its unsigned receipt is contributor evidence
-rather than a server trust boundary. Details are in
+local pre-review command. Its Auto mode selects a separate local documentation
+receipt for verified prose-only diffs under ADR 0134. Its unsigned receipts
+remain contributor evidence rather than a server trust boundary. Details are in
 [local exact-commit certification](local-certification.md), ADR 0063, and ADR
 0064. The unit layer remains database-free. Default local certification selects
 the required historical scope from an exact base-to-head diff; a diagnostic-only

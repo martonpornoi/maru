@@ -75,6 +75,42 @@ change, release, deployment, external message, destructive operation, or
 production-data access. Those actions still require the user's request and the
 repository's normal controls.
 
+Record the approved outcome and delivery stages once. Continue the routine
+work needed to reach that outcome, including supported repairs, verification
+and cleanup, until the scope changes or a tool requires a handoff. Recheck
+actual branch, base and head before relying on an older checkpoint. Use current
+protected main for shared policy and the selected candidate for its unmerged
+changes. Keep unrelated checkouts and their edits intact.
+
+## Fictional browser work
+
+An authorized software rehearsal can be run by the agent from start to finish
+in a fresh, isolated fixture with reserved fictional accounts. Use the normal
+sign-in, form and approval paths. Switch accounts in one browser as needed and
+check the active role after each switch. Keep the earlier human test state
+separate. The [Workforce rehearsal](../operations/workforce-only-rehearsal.md#short-software-rehearsal-with-prepared-sign-ins)
+offers an explicit prepared-sign-in mode for this purpose.
+
+Record browser setup, synthetic software behavior, genuine consent, independent
+human decisions, representative accessibility and operational acceptance as
+different evidence. Only the applicable checks belong in a completion claim.
+Follow the tool's controls when a real person must act.
+
+## Reuse verification tools and retain original evidence
+
+Keep original run outputs, including failures, immutable. Prefer maintained
+read-only checkers that can be corrected, versioned and run again. Record the
+checker version, the inputs it actually used and its result in a new output
+directory. A corrected analysis can supersede an earlier interpretation
+without editing its report or repeating the underlying test.
+
+Use only evidence the task permits you to read. A frozen run, its resource
+ownership rules and any special handling of sealed originals still apply.
+Keep setup, mutation and cleanup scoped to the exact disposable run. Do not
+turn temporary restrictions from a completed task into permanent repository
+policy. Preserve the original logs and reports needed to explain results,
+without duplicating rebuildable output unless the acceptance contract needs it.
+
 Do not put secrets, credentials, private data, personal memories, transient
 branch status, or copied conversation history in a skill. Use synthetic data
 for examples. Current project state belongs in `CURRENT.md`; historical detail
@@ -123,10 +159,11 @@ working procedure under ADR 0079, not a new acceptance policy.
    fixtures when a workflow requires them; the general demo cannot establish
    exact authority provenance. State untested roles and states explicitly.
 4. Run focused checks while iterating. Once the coherent change is ready, perform
-   the existing full exact-commit certification and independent hosted acceptance
-   required by the protected delivery flow. Stop populated previews first; preserve
-   failed evidence. Neither a fast smoke check nor more tokens permits skipping
-   migration history, tenant isolation, coverage or permission checks.
+   the applicable exact-commit local certification and independent hosted
+   acceptance required by the protected delivery flow. Stop populated previews
+   before the PostgreSQL pool and preserve failed evidence. A smoke check cannot
+   replace required migration history, tenant isolation, coverage or permission
+   checks.
 5. Leave a concise `CURRENT.md`: active outcome, delivered baseline, verification,
    blockers and next action. Move detailed evidence into an append-only checkpoint
    and link it. Report completed journeys and observed limitations, not module

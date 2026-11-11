@@ -135,6 +135,7 @@ the system.
 | [0131](0131-offline-workforce-proposal-comparison.md) | Accepted | Compare validated file-local Workforce proposals with complete bounded row/field changes and original-byte hashes, without values or live reconciliation. |
 | [0132](0132-workforce-recent-shift-outcomes.md) | Accepted; bounded implementation delivered in PR #236 | Define a bounded current-authorized receipt-backed Shift outcome list on Home, without click tracking or new authority; retain separate browser and human acceptance gates. |
 | [0133](0133-native-authority-creation-time.md) | Accepted; protected delivery in PR #236 | Keep new dual-control provenance and RoleAssignment creation on the database clock without relaxing native approval or lineage guards. |
+| [0134](0134-bounded-ai-assisted-work-and-local-documentation-checks.md) | Accepted | Use dedicated fictional sign-ins, reusable read-only evidence checks and a scoped local documentation route; preserve independent delivery and human gates. |
 
 New ADRs use the next four-digit number and contain:
 

@@ -1,8 +1,9 @@
 """Start a fresh restricted-runtime Workforce browser rehearsal, or inspect its end.
 
-Only a bootstrap platform account is created. Every ordinary account and all
-Workforce work are entered through the normal browser. Secrets and local mail
-remain in an ignored private run directory; no real mail provider is contacted.
+By default only a bootstrap platform account is created. The optional short
+software rehearsal prepares three fictional existing sign-ins through real
+invitation delivery and acceptance commands. All convention authority and
+Workforce work still use the browser. Secrets and local mail remain private.
 """
 
 from __future__ import annotations
@@ -325,7 +326,7 @@ def _ready(port: int) -> None:
             raise RuntimeError("Restricted runtime readiness did not pass.")
 
 
-def _start(args: argparse.Namespace) -> int:
+def _start(args: argparse.Namespace) -> int:  # noqa: PLR0915 -- keep owned lifecycle and its cleanup together
     docker = preflight(args.port)
     preview = Preview(docker, args.port, image=IMAGE)
     if preview.docker_command("ps", "-q"):
@@ -348,7 +349,23 @@ def _start(args: argparse.Namespace) -> int:
         _save(
             directory / "resource.json", _verify_resource(preview, preview.environment)
         )
+        if args.prepared_sign_ins:
+            _run(
+                directory,
+                preview.environment,
+                "-m",
+                "scripts.workforce_rehearsal_accounts",
+                "queue",
+            )
         _worker(directory, preview.environment, private_keys)
+        if args.prepared_sign_ins:
+            _run(
+                directory,
+                preview.environment,
+                "-m",
+                "scripts.workforce_rehearsal_accounts",
+                "accept",
+            )
         _inspect(directory, preview.environment)
         if _source() != source:
             raise RuntimeError("Source changed while preparing the fixture.")
@@ -394,6 +411,10 @@ def _start(args: argparse.Namespace) -> int:
                     "started_at": datetime.now(UTC).isoformat(),
                     "minutes": args.minutes,
                     "baseline": "before.json",
+                    "prepared_sign_ins": args.prepared_sign_ins,
+                    "credential_setup_acceptance": "untested"
+                    if args.prepared_sign_ins
+                    else "browser required",
                 },
             )
             print(
@@ -402,7 +423,14 @@ def _start(args: argparse.Namespace) -> int:
                 f"Private local letters: {directory / 'mail.private'}\n"
                 "Stop: Ctrl+C, or create an empty 'stop' file in this run directory.\n"
                 f"Automatic cleanup after {args.minutes} minutes.\n"
-                "No ordinary accounts or Workforce work were prefilled.",
+                + (
+                    "Private existing sign-ins: "
+                    f"{directory / 'identities.private.json'}\n"
+                    "Account creation is preparation, not browser acceptance.\n"
+                    "No convention authority or Workforce work was prefilled."
+                    if args.prepared_sign_ins
+                    else "No ordinary accounts or Workforce work were prefilled."
+                ),
                 flush=True,
             )
             deadline = time.monotonic() + args.minutes * 60
@@ -486,6 +514,11 @@ def main() -> int:
     start = commands.add_parser("start")
     start.add_argument("--directory", type=Path, required=True)
     start.add_argument("--port", type=int, default=8766)
+    start.add_argument(
+        "--prepared-sign-ins",
+        action="store_true",
+        help="Prepare fictional sign-ins; browser account creation stays untested.",
+    )
     start.add_argument(
         "--minutes", type=int, choices=range(1, 241), default=120, metavar="MINUTES"
     )
