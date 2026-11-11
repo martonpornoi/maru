@@ -28,3 +28,30 @@ documentation path and the disposable prepared-sign-in startup. A smoke run
 does not certify the candidate for protected merge or repeat the wider
 Workforce browser acceptance. No issue closure, push, merge or deployment is
 part of this local checkpoint.
+
+## Local verification
+
+- Implementation commit `891d73a74a77a6217f62e15f959109373fa5fb88` selected
+  ordinary certification against the protected baseline. Ruff, docstring,
+  documentation policy, PowerShell parsing and whitespace checks passed.
+  The full unit suite passed 15,007 tests; one POSIX named-pipe case was
+  expectedly skipped on Windows and 11 existing deprecation warnings remain.
+- In a separate clean checkout, README-only commit
+  `c7445e5ef061280048a370c96a2c4d6e4b056f17` ran ordinary Auto against the
+  implementation commit with Docker unavailable to the certifier. All 12
+  selected checks passed, including 30 licensing/release cases, both
+  distribution archives and the warning-fatal contributor HTML build.
+  The `documentation_success` receipt records PostgreSQL and combined
+  coverage as unselected. Prior native evidence in that checkout was unchanged.
+- The prepared-sign-in startup on the implementation commit used its own
+  restricted PostgreSQL fixture. It prepared three ordinary fictional
+  accounts through normal invitations, passed all eight baseline checks
+  with 223 zero unadopted model counts, reached web readiness, and removed
+  its own resources. The existing container and volume inventory and the
+  tested source were unchanged. Browser password setup and the full browser
+  journey were not run in this check.
+
+The original local logs, reports and receipts stay with the runs. The
+implementation is a test-harness change; protected delivery still requires
+exhaustive exact-head local and independent hosted acceptance. Human,
+representative accessibility and operational gates retain their own evidence.

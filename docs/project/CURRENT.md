@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-11-11
-Phase: Local AI-assisted workflow improvements; protected delivery pending.
+Phase: Locally verified AI-assisted workflow policy; protected delivery not started.
 
 ## AI-assisted workflow policy — 11 November 2026
 
@@ -14,11 +14,14 @@ protected main and leaves the older workspace and GUI branch intact.
 The Workforce launcher offers prepared fictional sign-ins in a fresh strict
 fixture. Auto selects the local documentation checks only after the shared
 classifier and exact tree diff agree on an eligible prose-only change. Its
-separate receipt does not claim PostgreSQL or coverage. The native and hosted
-routes, real human acceptance, demo coverage and production behavior remain
-unchanged. The [policy checkpoint](../checkpoints/2026-11-11-ai-assisted-workflow-policy.md)
-records verification. Next: complete focused checks and real local smoke runs,
-then obtain applicable exact-head evidence before any protected delivery.
+separate receipt does not claim PostgreSQL or coverage. The unit suite passed
+15,007 tests with one expected Windows skip. The real prose-only run passed
+all 12 selected checks without Docker, and the prepared-sign-in fixture passed
+startup and owned cleanup. The
+[policy checkpoint](../checkpoints/2026-11-11-ai-assisted-workflow-policy.md)
+records the exact scopes. The implementation changes the certification
+harness; a future protected delivery needs exhaustive exact-head local and
+independent hosted evidence. Browser and human acceptance remain separate.
 
 ## Catalog protected delivery — 5 November 2026
 
