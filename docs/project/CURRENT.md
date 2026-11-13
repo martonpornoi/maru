@@ -1,7 +1,31 @@
 # Current project state
 
-Last updated: 2026-11-05
-Phase: Catalog API reference conformance (#36).
+Last updated: 2026-11-11
+Phase: Reviewing and verifying the AI-assisted workflow policy for a pull request.
+
+## AI-assisted workflow policy — 11 November 2026
+
+The maintainer approved normal agent-operated fictional rehearsals, a local
+documentation certification path, reusable read-only checkers and continued
+routine work within the approved scope. [ADR 0134](../architecture/decisions/0134-bounded-ai-assisted-work-and-local-documentation-checks.md)
+records those boundaries. The isolated candidate starts from verified
+protected main and leaves the older workspace and GUI branch intact.
+
+The Workforce launcher offers prepared fictional sign-ins in a fresh strict
+fixture. Auto selects the local documentation checks only after the shared
+classifier and exact tree diff agree on an eligible prose-only change. Its
+separate receipt does not claim PostgreSQL or coverage. The unit suite passed
+15,007 tests with one expected Windows skip. The real prose-only run passed
+all 12 selected checks without Docker, and the prepared-sign-in fixture passed
+startup and owned cleanup. The
+[policy checkpoint](../checkpoints/2026-11-11-ai-assisted-workflow-policy.md)
+records the exact scopes. Delivery review found that a local pytest option
+could suppress the licensing test run. The documentation path now ignores
+that option and 145 focused tests passed, including a regression for a failing
+case. The README-only run passed all 12 checks with collection-only set in the
+parent shell. Alex, Blake and Casey each signed in and out through one browser
+using the prepared fixture. Full local and hosted certification of the
+submitted commit will be recorded in the pull request.
 
 ## Catalog protected delivery — 5 November 2026
 

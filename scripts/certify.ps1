@@ -17,7 +17,6 @@ if ($IntegrationShards -ne 8 -and $Mode -ne "CurrentDiagnostic") {
 $RepositoryRoot = Split-Path -Parent $PSScriptRoot
 $env:UV_CACHE_DIR = Join-Path $RepositoryRoot ".uv-cache"
 $ArtifactRoot = [IO.Path]::GetFullPath((Join-Path $RepositoryRoot ".local-ci"))
-$env:MYPY_CACHE_DIR = Join-Path $ArtifactRoot "mypy"
 $RepositoryPrefix = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd(
     [IO.Path]::DirectorySeparatorChar
 ) + [IO.Path]::DirectorySeparatorChar
@@ -131,9 +130,7 @@ if ($PolicyMode -eq "deferred") {
     & (Join-Path $PSScriptRoot "certify_deferred.ps1") -Base $Base
     return
 }
-$Docker = Resolve-RequiredCommand -Name "docker"
 $Git = Resolve-RequiredCommand -Name "git"
-$PowerShell = Resolve-RequiredCommand -Name "pwsh"
 
 Push-Location $RepositoryRoot
 $Jobs = [Collections.Generic.List[object]]::new()
@@ -158,6 +155,25 @@ try {
     if ($LASTEXITCODE -ne 0 -or $BaseCommit -notmatch "^[0-9a-f]{40}$") {
         throw "Could not resolve the exact certification base."
     }
+    if ($Mode -eq "Auto") {
+        $DocumentationArguments = @(
+            "run", "--locked", "--all-groups", "python", "-m", "scripts.certify_documentation"
+        )
+        $Lane = & $Uv @DocumentationArguments plan --base $BaseCommit --head $Commit
+        if ($LASTEXITCODE -ne 0 -or @($Lane).Count -ne 1 -or $Lane -notin @("documentation", "native")) {
+            throw "Could not select the exact local certification path."
+        }
+        if ($Lane -eq "documentation") {
+            Invoke-Checked $Uv ($DocumentationArguments + @(
+                "run", "--base", $BaseCommit, "--head", $Commit, "--uv", $Uv
+            ))
+            return
+        }
+    }
+
+    $Docker = Resolve-RequiredCommand -Name "docker"
+    $PowerShell = Resolve-RequiredCommand -Name "pwsh"
+    $env:MYPY_CACHE_DIR = Join-Path $ArtifactRoot "mypy"
     $HistoryScope = if ($Mode -eq "Full" -or $BaseCommit -eq $Commit) { "all" } else { "auto" }
     if ($Mode -eq "CurrentDiagnostic") { $HistoryScope = "current" }
 

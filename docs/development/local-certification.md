@@ -1,7 +1,7 @@
 # Local exact-commit certification
 
 Status: Required contributor evidence; GitHub independently verifies pull requests
-Last updated: 2026-10-01
+Last updated: 2026-11-11
 
 Routine PR, full CI and local documentation acceptance use the same warning-fatal,
 fresh-environment Sphinx HTML build with `-j auto`. This requests platform-supported
@@ -61,7 +61,8 @@ CurrentDiagnostic certification are fenced. The remaining procedure describes
 that retained full-certification boundary, not checks silently claimed by the
 temporary development path.
 
-`scripts/certify.ps1` checks one clean local commit and covers:
+The ordinary PostgreSQL path in `scripts/certify.ps1` checks one clean local
+commit and covers:
 
 - locked Python and Staff Console dependencies plus vulnerability audits;
 - Ruff formatting and lint, strict mypy, NumPy docstrings, semantic docstring
@@ -131,7 +132,7 @@ unmeasured until the corresponding lane completes; no fixed duration is promised
 
 ## Run it directly
 
-Start Docker Desktop, make the working tree clean, and run:
+Use a clean checkout and a current exact base. Run:
 
 ```powershell
 ./scripts/certify.ps1
@@ -139,11 +140,43 @@ Start Docker Desktop, make the working tree clean, and run:
 
 Default `Auto` compares the clean head to the resolved `origin/main` commit;
 fetch first and pass `-Base EXACT_BASE` for another reviewed comparison.
+Under the required PostgreSQL policy, Auto selects the documentation path
+below only for eligible prose changes. Start Docker Desktop for the ordinary
+PostgreSQL path.
+
 The local and hosted paths use the same ADR 0090 classification and migration
 dependency closure. Global safety/harness changes require exhaustive history;
 ordinary code changes no longer require an exhaustive local run. Running on
 the base itself fails conservatively to exhaustive mode. Use `-Mode Full` for
-explicit complete certification. Pre-review runs require eight isolated databases.
+explicit complete certification. PostgreSQL pre-review runs require eight
+isolated databases.
+
+### Documentation-only local certification
+
+[ADR 0134](../architecture/decisions/0134-bounded-ai-assisted-work-and-local-documentation-checks.md)
+allows a clean Auto candidate to follow the hosted documentation plan without
+Docker. The exact base must be an ancestor of the head. The complete tree diff
+must contain only additions or edits to regular, non-executable Markdown or
+reStructuredText under `docs/` or `.agents/skills/`, or a listed root Markdown
+file. The shared CI classifier must also select documentation without Python,
+frontend, database, dependency-review, security or destructive gates.
+Renames, deletions, executable documentation configuration, empty diffs and
+mixed changes stay on the ordinary path. A classifier failure stops the run.
+
+The documentation path runs locked input and Actions policy checks, Ruff,
+strict typing, documentation validation, the two hosted licensing/release
+test files, package build and inspection when selected, docstring checks and
+a fresh warning-fatal Sphinx HTML build. It ignores local `PYTEST_ADDOPTS`
+so interactive filters cannot skip the selected tests. Each run retains its logs,
+artifacts and exact base/head/tree in a new directory under
+`.tools/documentation-certification/`. A failed run leaves its output and does
+not write a success receipt. A successful run writes `documentation_success`,
+with PostgreSQL and combined branch coverage explicitly unselected.
+
+The ordinary PostgreSQL receipt stays separate in `.local-ci/`. Do not use a
+documentation receipt for code certification, a timing baseline, a release,
+or hosted acceptance. `-Mode Full`, `CurrentDiagnostic` and the explicit
+deferred-development policy keep their existing paths.
 
 `-Mode CurrentDiagnostic` benchmarks only unit/current-schema PostgreSQL tests
 and their unchanged 90-percent combined branch coverage. It skips non-database
@@ -152,7 +185,7 @@ cannot replace the required scope for a high-risk diff. Only that diagnostic
 mode accepts fewer than eight databases; results from different worker counts
 are not comparable whole-suite speedup evidence.
 
-Successful local evidence is written below `.local-ci/` and includes
+Successful PostgreSQL evidence is written below `.local-ci/` and includes
 `certification.json`, JUnit reports, process logs, XML/HTML coverage, and the
 generated contributor site in `docs/_build/html`. Receipts record the
 exact head, resolved base, historical scope, elapsed time and gates actually run.
